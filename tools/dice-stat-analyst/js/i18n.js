@@ -1,207 +1,215 @@
-const I18N = {
+/* =========================================================
+   Dice Stat Analyst - i18n
+   日本語 / English 表示文言
+   ========================================================= */
+
+window.DICE_STAT_I18N = {
   ja: {
-    "nav.backToTools": "← TRPG Web ツール",
-    "tag.diceLogInput": "ダイスログインプット",
-    "tag.coc67": "CoC 6版 / 7版",
-    "tag.growthCheckerLink": "成長チェッカーと連携",
-    "language.switchToEnglish": "英語表示に切替",
-    "language.switchToJapanese": "日本語表示に切替",
+    appTitle: 'Dice Stat Analyst',
+    appDescription:
+      'セッションログHTML / テキストからd100ロールを抽出し、キャラクター別にクリティカル・ファンブル率、10刻み分布を生成します。',
 
-    "theme.switchToLight": "ライトモードに切替",
-    "theme.switchToDark": "ナイトモードに切替",
+    langToggle: 'JP / EN',
 
-    "common.unknown": "不明",
+    inputTitle: '入力',
+    fileLabel: 'セッションログHTMLファイル',
+    pasteLabel: 'またはログ本文を貼り付け',
+    pastePlaceholder: 'HTMLまたはテキストログを貼り付け',
 
-    "app.title": "ダイス統計アナライザー",
-    "app.description": "セッションログHTML / テキストからd100ロールを抽出し、キャラクター別にクリティカル・ファンブル率、10刻み分布を生成します。",
-    "app.tip": "Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で分析 ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> でスクショ表示 ｜ <kbd>?</kbd> でショートカット一覧",
+    thresholdTitle: '判定範囲',
+    criticalMax: 'クリティカル上限',
+    fumbleMin: 'ファンブル下限',
 
-    "input.title": "入力",
-    "input.fileLabel": "セッションログHTMLファイル",
-    "input.pasteLabel": "またはログ本文を貼り付け",
-    "input.placeholder": "HTMLまたはテキストログを貼り付け",
-    "input.thresholdTitle": "判定範囲",
-    "input.critMax": "クリティカル上限",
-    "input.fumbleMin": "ファンブル下限",
-    "input.checklistTitle": "ダイスログ解析チェックリスト",
-    "input.dropTabs": "[雑談] / [other] / [info] 系の行を除外する",
-    "input.onlyD100": "d100系ロールのみ抽出する",
-    "input.autoHideMaxRolls": "自動非表示にする総ロール数",
-    "input.note": "対応例：CCB&lt;=80、CC&lt;=60、RESB(10-16)、1d100&lt;=55、s1d100、D100、判定結果の「出目 03 / 100 / ＞ 96」など。<br>キャラクター名は「名前：CC」「名前：CCB」「[main] 名前：CC」「[main] 名前：CCB」形式などから自動検出します。検出されたキャラクターはチェックを外すことで非表示にできます。<br>タブ除外ONの場合、[main] / [メイン] / [HO系] は解析対象、[雑談] / [other] / [info] / [おはらい] / [お祓い] / [運試し] は除外対象になります。<br>総ロール数が指定値以下のキャラクターはNPC想定として、分析直後は自動で非表示になります。",
+    checklistTitle: 'ダイスログ解析チェックリスト',
+    dropTabs: '[雑談] / [other] / [info] 系の行を除外する',
+    onlyD100: 'd100系ロールのみ抽出する',
+    autoHide: '自動非表示にする総ロール数',
 
-    "button.analyze": "分析する",
-    "button.clear": "クリア",
-    "button.showCharacterControls": "表示キャラ設定を開く",
-    "button.hideCharacterControls": "表示キャラ設定を隠す",
-    "button.openInputPanel": "入力パネルを開く",
-    "button.collapseInputPanel": "入力パネルを畳む",
-    "button.shortcuts": "⌨ Shortcuts",
-    "button.screenshot": "📷 スクショ表示",
-    "button.exitScreenshot": "通常表示に戻す",
-    "button.growthChecker": "成長チェックツール →",
-    
+    analyze: '分析する',
+    clear: 'クリア',
 
-    "tab.summary": "キャラクター別サマリー",
-    "tab.chart": "分布チャート",
-    "tab.rolls": "抽出ロール",
+    inputHelp:
+      '対応例：CCB<=80、CC<=60、1d100<=55、RESB(10-16)、D100 など。\n' +
+      'キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。\n' +
+      '[雑談] / [other] / [info] 系は除外できます。少数ロールのキャラは初期状態で非表示になります。',
 
-    "summary.characterTitle": "キャラクター別サマリー",
-    "summary.overallTitle": "全体サマリー",
-    "summary.memoTitle": "メモ",
-    "summary.selectLog": "ログデータを選択ください。",
-    "summary.noVisibleRolls": "表示対象のロールがありません。キャラクターのチェックを戻してください。",
-    "summary.noVisibleCharacters": "表示対象のキャラクターがありません。キャラクターのチェックを戻してください。",
-    "summary.memo": "検出した{all}件のd100ロールのうち、表示対象{total}件を集計しました。検出キャラクター数は{characters}です。非表示ロール数は{hidden}件です。総ロール数{threshold}以下のキャラクターは初期状態で非表示です。クリティカル判定は{critMax}以下、ファンブル判定は{fumbleMin}以上です。",
+    tabSummary: 'キャラクター別サマリー',
+    tabChart: '分布チャート',
+    tabRolls: '抽出ロール',
+    screenshotView: '📷 スクショ表示',
+    exitScreenshotView: '通常表示に戻す',
 
-    "card.totalRolls": "総ロール数",
-    "card.totalRollsSub": "d100として抽出された件数",
-    "card.successFail": "成功 / 失敗",
-    "card.critFumble": "クリティカル / ファンブル",
-    "card.averageRoll": "平均出目",
-    "card.averageRollSub": "抽出値の平均",
+    characterSummaryTitle: 'キャラクター別サマリー',
+    openCharacterSettings: '表示キャラ設定を開く',
+    closeCharacterSettings: '表示キャラ設定を隠す',
 
-    "label.totalRolls": "総ロール",
-    "label.averageRoll": "平均出目",
-    "label.successFail": "成功 / 失敗",
-    "label.critFumble": "クリティカル / ファンブル",
+    overallSummaryTitle: '全体サマリー',
+    totalRolls: '総ロール数',
+    totalRollsSub: 'd100として抽出された件数',
+    successFail: '成功 / 失敗',
+    criticalFumble: 'クリティカル / ファンブル',
+    averageRoll: '平均出目',
+    averageRollSub: '抽出値の平均',
 
-    "chart.title": "出目分布：10刻み",
-    "chart.noVisibleRolls": "表示対象のロールがありません。",
-    "chart.countRate": "{count}件 / {rate}%",
+    memoTitle: 'メモ',
+    initialMemo: 'ログを入力して「分析する」を押してください。',
+    noRollsMemo: 'ログデータを選択ください。',
+    noVisibleRollsMemo: '表示対象のロールがありません。キャラクターのチェックを戻してください。',
 
-    "rolls.title": "抽出ロール一覧",
-    "rolls.index": "#",
-    "rolls.character": "キャラクター",
-    "rolls.value": "出目",
-    "rolls.classification": "分類",
-    "rolls.sourceLine": "元ログ行",
+    detectedMemoPrefix: '検出した',
+    detectedMemoMiddle: '件のd100ロールのうち、表示対象',
+    detectedMemoSuffix: '件を集計しました。',
+    detectedCharacters: '検出キャラクター数',
+    hiddenRolls: '非表示ロール数',
+    autoHiddenNotePrefix: '総ロール数',
+    autoHiddenNoteSuffix: '以下のキャラクターは初期状態で非表示です。',
+    criticalRule: 'クリティカル判定',
+    fumbleRule: 'ファンブル判定',
 
-    "classification.critical": "Critical",
-    "classification.fumble": "Fumble",
-    "classification.success": "Success",
-    "classification.fail": "Fail",
-    "classification.normal": "Normal",
+    chartTitle: '出目分布：10刻み',
 
-    "shortcut.eyebrow": "Keyboard Guide",
-    "shortcut.title": "ショートカット一覧",
-    "shortcut.file": "ファイル選択",
-    "shortcut.analyze": "分析する",
-    "shortcut.focusInput": "入力欄にフォーカス",
-    "shortcut.toggleInput": "入力パネル開閉",
-    "shortcut.summaryTab": "キャラクター別サマリーへ移動",
-    "shortcut.chartTab": "分布チャートへ移動",
-    "shortcut.rollsTab": "抽出ロールへ移動",
-    "shortcut.characterSettings": "表示キャラ設定の開閉",
-    "shortcut.theme": "ナイトモード切替",
-    "shortcut.screenshot": "スクショ表示 / 通常表示",
-    "shortcut.clear": "確認後クリア",
-    "shortcut.openHelp": "このショートカット一覧を開く",
-    "shortcut.esc": "モーダル / スクショ表示を閉じる。通常時は確認後クリア",
-    "shortcut.note": "※ 一部ブラウザでは既定ショートカットが優先される場合があります。",
+    rollsTitle: '抽出ロール一覧',
+    tableIndex: '#',
+    tableCharacter: 'キャラクター',
+    tableValue: '出目',
+    tableClassification: '分類',
+    tableSourceLine: '元ログ行',
 
-    "confirm.clear": "入力内容と解析結果をクリアします。よろしいですか？"
+    noVisibleCharacters: '表示対象のキャラクターがありません。キャラクターのチェックを戻してください。',
+
+    statTotalRolls: '総ロール',
+    statAverageRoll: '平均出目',
+    statSuccessFail: '成功 / 失敗',
+    statCriticalFumble: 'クリティカル / ファンブル',
+
+    countUnit: '件',
+
+    classificationCritical: 'Critical',
+    classificationSuccess: 'Success',
+    classificationNormal: 'Normal',
+    classificationFail: 'Fail',
+    classificationFumble: 'Fumble',
+
+    shortcutTitle: 'ショートカット一覧',
+    shortcutFile: 'ファイル選択',
+    shortcutTheme: 'ナイトモード / ライトモード切替',
+    shortcutScreenshot: 'スクショ表示 / 通常表示切替',
+    shortcutEscScreenshot: 'スクショ表示中：通常表示に戻る',
+    shortcutEscNormal: '通常表示中：入力内容・分析結果をクリア'
   },
 
   en: {
-    "nav.backToTools": "← TRPG Web Tools",
-    "tag.diceLogInput": "Dice Log Input",
-    "tag.coc67": "CoC 6e / 7e",
-    "tag.growthCheckerLink": "Growth Checker Linked",
-        
-    "language.switchToEnglish": "Switch to English",
-    "language.switchToJapanese": "Switch to Japanese",
+    appTitle: 'Dice Stat Analyst',
+    appDescription:
+      'Extract d100 rolls from session log HTML or text, then summarize criticals, fumbles, and roll distribution by character.',
 
-    "theme.switchToLight": "Switch to Light Mode",
-    "theme.switchToDark": "Switch to Night Mode",
+    langToggle: 'EN / JP',
 
-    "common.unknown": "Unknown",
+    inputTitle: 'Input',
+    fileLabel: 'Session Log HTML File',
+    pasteLabel: 'Or paste log text',
+    pastePlaceholder: 'Paste HTML or text log here',
 
-    "app.title": "Dice Stat Analyst",
-    "app.description": "Extract d100 rolls from session log HTML or text, then generate character-based critical/fumble rates and roll distributions.",
-    "app.tip": "Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> to analyze ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> for screenshot view ｜ <kbd>?</kbd> for shortcut list",
+    thresholdTitle: 'Roll Thresholds',
+    criticalMax: 'Critical Maximum',
+    fumbleMin: 'Fumble Minimum',
 
-    "input.title": "Input",
-    "input.fileLabel": "Session Log HTML File",
-    "input.pasteLabel": "Or paste log text",
-    "input.placeholder": "Paste HTML or text log here",
-    "input.thresholdTitle": "Roll Thresholds",
-    "input.critMax": "Critical Max",
-    "input.fumbleMin": "Fumble Min",
-    "input.checklistTitle": "Dice Log Parsing Options",
-    "input.dropTabs": "Exclude [雑談] / [other] / [info] style lines",
-    "input.onlyD100": "Extract d100-style rolls only",
-    "input.autoHideMaxRolls": "Auto-hide characters with rolls up to",
-    "input.note": "Supported examples: CCB&lt;=80, CC&lt;=60, RESB(10-16), 1d100&lt;=55, s1d100, D100, and result lines such as “出目 03 / 100 / ＞ 96”.<br>Character names are automatically detected from formats such as “Name: CC”, “Name: CCB”, “[main] Name: CC”, and “[main] Name: CCB”. Detected characters can be hidden or shown from the character settings.<br>When tab filtering is enabled, [main] / [メイン] / [HO] are included, while [雑談] / [other] / [info] / [おはらい] / [お祓い] / [運試し] are excluded.<br>Characters with total rolls at or below the specified number are treated as likely NPCs and hidden by default after analysis.",
+    checklistTitle: 'Dice Log Analysis Options',
+    dropTabs: 'Exclude [雑談] / [other] / [info] style lines',
+    onlyD100: 'Extract only d100-style rolls',
+    autoHide: 'Auto-hide characters with total rolls up to',
 
-    "button.analyze": "Analyze",
-    "button.clear": "Clear",
-    "button.showCharacterControls": "Show Character Settings",
-    "button.hideCharacterControls": "Hide Character Settings",
-    "button.openInputPanel": "Open Input Panel",
-    "button.collapseInputPanel": "Collapse Input Panel",
-    "button.shortcuts": "⌨ Shortcuts",
-    "button.screenshot": "📷 Screenshot View",
-    "button.exitScreenshot": "Exit Screenshot View",
-    "button.growthChecker": "Growth Checker →",
+    analyze: 'Analyze',
+    clear: 'Clear',
 
-    "tab.summary": "Character Summary",
-    "tab.chart": "Distribution Chart",
-    "tab.rolls": "Extracted Rolls",
+    inputHelp:
+      'Examples: CCB<=80, CC<=60, 1d100<=55, RESB(10-16), or D100.\n' +
+      'Character names are detected from formats like “Name: CC” or “[main] Name: CCB”.\n' +
+      'Chat/info tabs can be excluded. Characters with few rolls are hidden by default.',
 
-    "summary.characterTitle": "Character Summary",
-    "summary.overallTitle": "Overall Summary",
-    "summary.memoTitle": "Memo",
-    "summary.selectLog": "Please select or paste a log file.",
-    "summary.noVisibleRolls": "There are no visible rolls. Please re-enable characters from the character settings.",
-    "summary.noVisibleCharacters": "There are no visible characters. Please re-enable characters from the character settings.",
-    "summary.memo": "Detected {all} d100 rolls and summarized {total} visible rolls. Detected characters: {characters}. Hidden rolls: {hidden}. Characters with {threshold} rolls or fewer are hidden by default. Critical threshold: {critMax} or lower. Fumble threshold: {fumbleMin} or higher.",
+    tabSummary: 'Character Summary',
+    tabChart: 'Distribution Chart',
+    tabRolls: 'Extracted Rolls',
+    screenshotView: '📷 Screenshot View',
+    exitScreenshotView: 'Back to Normal View',
 
-    "card.totalRolls": "Total Rolls",
-    "card.totalRollsSub": "Number of rolls extracted as d100",
-    "card.successFail": "Success / Fail",
-    "card.critFumble": "Critical / Fumble",
-    "card.averageRoll": "Average Roll",
-    "card.averageRollSub": "Average of extracted roll values",
+    characterSummaryTitle: 'Character Summary',
+    openCharacterSettings: 'Open Character Display Settings',
+    closeCharacterSettings: 'Hide Character Display Settings',
 
-    "label.totalRolls": "Total Rolls",
-    "label.averageRoll": "Average Roll",
-    "label.successFail": "Success / Fail",
-    "label.critFumble": "Critical / Fumble",
+    overallSummaryTitle: 'Overall Summary',
+    totalRolls: 'Total Rolls',
+    totalRollsSub: 'Number of extracted d100 rolls',
+    successFail: 'Success / Failure',
+    criticalFumble: 'Critical / Fumble',
+    averageRoll: 'Average Roll',
+    averageRollSub: 'Average of extracted values',
 
-    "chart.title": "Roll Distribution: 10-point Bins",
-    "chart.noVisibleRolls": "There are no visible rolls.",
-    "chart.countRate": "{count} rolls / {rate}%",
+    memoTitle: 'Memo',
+    initialMemo: 'Paste or load a log, then click “Analyze”.',
+    noRollsMemo: 'Please select or paste log data.',
+    noVisibleRollsMemo: 'No visible rolls. Re-enable characters in the display settings.',
 
-    "rolls.title": "Extracted Rolls",
-    "rolls.index": "#",
-    "rolls.character": "Character",
-    "rolls.value": "Roll",
-    "rolls.classification": "Classification",
-    "rolls.sourceLine": "Source Log Line",
+    detectedMemoPrefix: 'Detected ',
+    detectedMemoMiddle: ' d100 rolls; ',
+    detectedMemoSuffix: ' rolls are currently displayed.',
+    detectedCharacters: 'Detected characters',
+    hiddenRolls: 'Hidden rolls',
+    autoHiddenNotePrefix: 'Characters with ',
+    autoHiddenNoteSuffix: ' rolls or fewer are hidden by default.',
+    criticalRule: 'Critical threshold',
+    fumbleRule: 'Fumble threshold',
 
-    "classification.critical": "Critical",
-    "classification.fumble": "Fumble",
-    "classification.success": "Success",
-    "classification.fail": "Fail",
-    "classification.normal": "Normal",
+    chartTitle: 'Roll Distribution: 10-point Bins',
 
-    "shortcut.eyebrow": "Keyboard Guide",
-    "shortcut.title": "Shortcut List",
-    "shortcut.file": "Choose File",
-    "shortcut.analyze": "Analyze",
-    "shortcut.focusInput": "Focus input field",
-    "shortcut.toggleInput": "Toggle input panel",
-    "shortcut.summaryTab": "Go to Character Summary",
-    "shortcut.chartTab": "Go to Distribution Chart",
-    "shortcut.rollsTab": "Go to Extracted Rolls",
-    "shortcut.characterSettings": "Toggle character settings",
-    "shortcut.theme": "Toggle night mode",
-    "shortcut.screenshot": "Screenshot view / normal view",
-    "shortcut.clear": "Clear after confirmation",
-    "shortcut.openHelp": "Open this shortcut list",
-    "shortcut.esc": "Close modal / screenshot view. In normal view, clear after confirmation",
-    "shortcut.note": "Some browsers may prioritize their built-in shortcuts.",
+    rollsTitle: 'Extracted Roll List',
+    tableIndex: '#',
+    tableCharacter: 'Character',
+    tableValue: 'Roll',
+    tableClassification: 'Classification',
+    tableSourceLine: 'Source Line',
 
-    "confirm.clear": "This will clear the input and analysis results. Continue?"
+    noVisibleCharacters: 'No visible characters. Re-enable characters in the display settings.',
+
+    statTotalRolls: 'Total Rolls',
+    statAverageRoll: 'Average Roll',
+    statSuccessFail: 'Success / Failure',
+    statCriticalFumble: 'Critical / Fumble',
+
+    countUnit: 'rolls',
+
+    classificationCritical: 'Critical',
+    classificationSuccess: 'Success',
+    classificationNormal: 'Normal',
+    classificationFail: 'Fail',
+    classificationFumble: 'Fumble',
+
+    shortcutTitle: 'Keyboard Shortcuts',
+    shortcutFile: 'Choose File',
+    shortcutTheme: 'Toggle Night / Light Mode',
+    shortcutScreenshot: 'Toggle Screenshot View',
+    shortcutEscScreenshot: 'In screenshot view: return to normal view',
+    shortcutEscNormal: 'In normal view: clear input and analysis results'
   }
+};
+
+/**
+ * 現在言語の辞書を取得
+ * @param {string} lang - "ja" or "en"
+ * @returns {object}
+ */
+window.getDiceStatI18n = function getDiceStatI18n(lang) {
+  const safeLang = window.DICE_STAT_I18N[lang] ? lang : 'ja';
+  return window.DICE_STAT_I18N[safeLang];
+};
+
+/**
+ * 指定キーの翻訳文を取得
+ * @param {string} key
+ * @param {string} lang
+ * @returns {string}
+ */
+window.tDiceStat = function tDiceStat(key, lang) {
+  const dict = window.getDiceStatI18n(lang);
+  return dict[key] || window.DICE_STAT_I18N.ja[key] || key;
 };

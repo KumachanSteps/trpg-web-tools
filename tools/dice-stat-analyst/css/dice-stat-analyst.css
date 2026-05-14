@@ -2279,3 +2279,91 @@ header.site-header{
     transform:translateX(58px);
   }
 }
+/* =========================================================
+   Input Panel Compact Layout
+   左入力パネルの省スペース化
+   ========================================================= */
+
+#inputPanel {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#inputPanel h3 {
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+
+#inputPanel label {
+  margin: 6px 0;
+}
+
+#inputPanel .row {
+  gap: 8px;
+}
+
+/* ログ貼り付け欄の高さを圧縮 */
+#rawInput {
+  min-height: 96px;
+  max-height: 140px;
+  resize: vertical;
+}
+
+/* 下部ヘルプ文を小さく、詰めて表示 */
+.input-help {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-height: 96px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* スクロールバーが目立ちすぎないようにする */
+.input-help::-webkit-scrollbar {
+  width: 6px;
+}
+
+.input-help::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+}
+
+.input-help::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 入力パネルが狭い時はさらに圧縮 */
+@media (max-height: 820px) {
+  #inputPanel {
+    padding: 14px;
+  }
+
+  #inputPanel h3 {
+    margin-top: 12px;
+  }
+
+  #rawInput {
+    min-height: 84px;
+    max-height: 116px;
+  }
+
+  .input-help {
+    max-height: 72px;
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+}
+
+/* かなり縦が狭い画面向け */
+@media (max-height: 720px) {
+  #rawInput {
+    min-height: 72px;
+    max-height: 96px;
+  }
+
+  .input-help {
+    max-height: 56px;
+  }
+}
