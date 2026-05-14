@@ -324,8 +324,8 @@
         <button id="clearBtn" class="secondary" data-i18n="button.clear">クリア</button>
 
         <p class="note input-help" data-i18n="inputHelp">
-          対応例：CCB&lt;=80、CC&lt;=60、1d100&lt;=55、RESB(10-16)、D100 など。<br>
-          キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。<br>
+          対応例：CCB&lt;=80、CC&lt;=60、1d100&lt;=55、RESB(10-16)、D100 など。
+          キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。
           [雑談] / [other] / [info] 系は除外できます。少数ロールのキャラは初期状態で非表示になります。
         </p>
       </div>
@@ -369,7 +369,7 @@
 
       <div id="summary" class="tab-panel active">
         <div class="character-control-bar">
-          <button id="characterControlToggleBtn" class="character-control-toggle" type="button">
+          <button id="characterControlToggleBtn" class="character-control-toggle" type="button" data-i18n="openCharacterSettings">
             表示キャラ設定を開く▼
           </button>
         </div>
@@ -377,37 +377,39 @@
         <div id="characterControls" class="character-controls"></div>
         <div id="characterSummary" class="character-summary-grid"></div>
 
-        <h2>全体サマリー</h2>
+        <h2 data-i18n="overallSummaryTitle">全体サマリー</h2>
 
         <div class="grid-results">
           <div class="card">
-            <div class="label">総ロール数</div>
+            <div class="label" data-i18n="totalRolls">総ロール数</div>
             <div id="totalRolls" class="value">0</div>
-            <div class="sub">d100として抽出された件数</div>
+            <div class="sub" data-i18n="totalRollsSub">d100として抽出された件数</div>
           </div>
 
           <div class="card">
-            <div class="label">成功 / 失敗</div>
+            <div class="label" data-i18n="successFail">成功 / 失敗</div>
             <div id="successFailCount" class="value">0 / 0</div>
             <div id="successFailRate" class="sub">0.00% / 0.00%</div>
           </div>
 
           <div class="card">
-            <div class="label">クリティカル / ファンブル</div>
+            <div class="label" data-i18n="criticalFumble">クリティカル / ファンブル</div>
             <div id="critFumbleCount" class="value">0 / 0</div>
             <div id="critFumbleRate" class="sub">0.00% / 0.00%</div>
           </div>
 
           <div class="card">
-            <div class="label">平均出目</div>
+            <div class="label" data-i18n="averageRoll">平均出目</div>
             <div id="averageRoll" class="value">-</div>
-            <div class="sub">抽出値の平均</div>
+            <div class="sub" data-i18n="averageRollSub">抽出値の平均</div>
           </div>
         </div>
 
-        <div class="card">
-          <h3>メモ</h3>
-          <p id="summaryMemo" class="note">ログを入力して「分析する」を押してください。</p>
+        <div class="card summary-memo-card">
+          <h3 data-i18n="memoTitle">メモ</h3>
+          <p id="summaryMemo" class="note" data-i18n="initialMemo">
+            ログを入力して「分析する」を押してください。
+          </p>
         </div>
       </div>
 

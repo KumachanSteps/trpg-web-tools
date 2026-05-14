@@ -39,7 +39,6 @@ window.DICE_STAT_I18N = {
     screenshotView: '📷 スクショ表示',
     exitScreenshotView: '通常表示に戻す',
 
-    characterSummaryTitle: 'キャラクター別サマリー',
     openCharacterSettings: '表示キャラ設定を開く',
     closeCharacterSettings: '表示キャラ設定を隠す',
 
@@ -55,16 +54,6 @@ window.DICE_STAT_I18N = {
     initialMemo: 'ログを入力して「分析する」を押してください。',
     noRollsMemo: 'ログデータを選択ください。',
     noVisibleRollsMemo: '表示対象のロールがありません。キャラクターのチェックを戻してください。',
-
-    detectedMemoPrefix: '検出した',
-    detectedMemoMiddle: '件のd100ロールのうち、表示対象',
-    detectedMemoSuffix: '件を集計しました。',
-    detectedCharacters: '検出キャラクター数',
-    hiddenRolls: '非表示ロール数',
-    autoHiddenNotePrefix: '総ロール数',
-    autoHiddenNoteSuffix: '以下のキャラクターは初期状態で非表示です。',
-    criticalRule: 'クリティカル判定',
-    fumbleRule: 'ファンブル判定',
 
     chartTitle: '出目分布：10刻み',
 
@@ -88,14 +77,7 @@ window.DICE_STAT_I18N = {
     classificationSuccess: 'Success',
     classificationNormal: 'Normal',
     classificationFail: 'Fail',
-    classificationFumble: 'Fumble',
-
-    shortcutTitle: 'ショートカット一覧',
-    shortcutFile: 'ファイル選択',
-    shortcutTheme: 'ナイトモード / ライトモード切替',
-    shortcutScreenshot: 'スクショ表示 / 通常表示切替',
-    shortcutEscScreenshot: 'スクショ表示中：通常表示に戻る',
-    shortcutEscNormal: '通常表示中：入力内容・分析結果をクリア'
+    classificationFumble: 'Fumble'
   },
 
   en: {
@@ -133,7 +115,6 @@ window.DICE_STAT_I18N = {
     screenshotView: '📷 Screenshot View',
     exitScreenshotView: 'Back to Normal View',
 
-    characterSummaryTitle: 'Character Summary',
     openCharacterSettings: 'Open Character Display Settings',
     closeCharacterSettings: 'Hide Character Display Settings',
 
@@ -149,16 +130,6 @@ window.DICE_STAT_I18N = {
     initialMemo: 'Paste or load a log, then click “Analyze”.',
     noRollsMemo: 'Please select or paste log data.',
     noVisibleRollsMemo: 'No visible rolls. Re-enable characters in the display settings.',
-
-    detectedMemoPrefix: 'Detected ',
-    detectedMemoMiddle: ' d100 rolls; ',
-    detectedMemoSuffix: ' rolls are currently displayed.',
-    detectedCharacters: 'Detected characters',
-    hiddenRolls: 'Hidden rolls',
-    autoHiddenNotePrefix: 'Characters with ',
-    autoHiddenNoteSuffix: ' rolls or fewer are hidden by default.',
-    criticalRule: 'Critical threshold',
-    fumbleRule: 'Fumble threshold',
 
     chartTitle: 'Roll Distribution: 10-point Bins',
 
@@ -182,33 +153,15 @@ window.DICE_STAT_I18N = {
     classificationSuccess: 'Success',
     classificationNormal: 'Normal',
     classificationFail: 'Fail',
-    classificationFumble: 'Fumble',
-
-    shortcutTitle: 'Keyboard Shortcuts',
-    shortcutFile: 'Choose File',
-    shortcutTheme: 'Toggle Night / Light Mode',
-    shortcutScreenshot: 'Toggle Screenshot View',
-    shortcutEscScreenshot: 'In screenshot view: return to normal view',
-    shortcutEscNormal: 'In normal view: clear input and analysis results'
+    classificationFumble: 'Fumble'
   }
 };
 
-/**
- * 現在言語の辞書を取得
- * @param {string} lang - "ja" or "en"
- * @returns {object}
- */
 window.getDiceStatI18n = function getDiceStatI18n(lang) {
   const safeLang = window.DICE_STAT_I18N[lang] ? lang : 'ja';
   return window.DICE_STAT_I18N[safeLang];
 };
 
-/**
- * 指定キーの翻訳文を取得
- * @param {string} key
- * @param {string} lang
- * @returns {string}
- */
 window.tDiceStat = function tDiceStat(key, lang) {
   const dict = window.getDiceStatI18n(lang);
   return dict[key] || window.DICE_STAT_I18N.ja[key] || key;

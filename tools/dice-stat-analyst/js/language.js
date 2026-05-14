@@ -56,3 +56,53 @@ function applyTranslations() {
     element.setAttribute("aria-label", t(key, element.getAttribute("aria-label") || ""));
   });
 }
+
+function applyLanguage() {
+  const lang = state.lang || 'ja';
+
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (!key) return;
+
+    const text = window.tDiceStat
+      ? window.tDiceStat(key, lang)
+      : key;
+
+    if (el.classList.contains('input-help')) {
+      el.textContent = text;
+    } else {
+      el.textContent = text;
+    }
+  });
+
+  const rawInput = $('rawInput');
+  if (rawInput) {
+    rawInput.placeholder = window.tDiceStat
+      ? window.tDiceStat('pastePlaceholder', lang)
+      : 'HTMLまたはテキストログを貼り付け';
+  }
+
+  const langBtn = $('langToggleBtn');
+  if (langBtn) {
+    langBtn.textContent = window.tDiceStat
+      ? window.tDiceStat('langToggle', lang)
+      : 'JP / EN';
+  }
+
+  const characterBtn = $('characterControlToggleBtn');
+  if (characterBtn) {
+    const openText = window.tDiceStat
+      ? window.tDiceStat('openCharacterSettings', lang)
+      : '表示キャラ設定を開く';
+
+    const closeText = window.tDiceStat
+      ? window.tDiceStat('closeCharacterSettings', lang)
+      : '表示キャラ設定を隠す';
+
+    characterBtn.textContent = state.showCharacterControls
+      ? `${closeText}▲`
+      : `${openText}▼`;
+  }
+}

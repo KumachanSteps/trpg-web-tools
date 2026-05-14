@@ -2370,7 +2370,7 @@ header.site-header{
 
 /* =========================================================
    Summary Tab Header Cleanup
-   キャラクター別サマリー見出しの重複削除後の配置調整
+   キャラクター別サマリー見出し削除後の配置調整
    ========================================================= */
 
 .character-control-bar {
@@ -2403,17 +2403,99 @@ header.site-header{
   display: flex;
 }
 
-/* タブ直下に設定ボタンが来るため、余白を少し整える */
-.tabs {
-  margin-bottom: 14px;
-}
-
-/* キャラカードが出た時に、全体サマリーとの間隔を確保 */
 .character-summary-grid {
   margin-bottom: 22px;
 }
 
-/* キャラカードが空の時に余白が広がりすぎないよう調整 */
 .character-summary-grid:empty {
   margin-bottom: 0;
+}
+
+.summary-memo-card {
+  margin-top: 18px;
+}
+
+/* =========================================================
+   Input Panel Compact Layout
+   左入力パネル省スペース化
+   ========================================================= */
+
+#inputPanel {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#inputPanel h3 {
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+
+#inputPanel label {
+  margin: 6px 0;
+}
+
+#inputPanel .row {
+  gap: 8px;
+}
+
+#rawInput {
+  min-height: 96px;
+  max-height: 140px;
+  resize: vertical;
+}
+
+.input-help {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-height: 96px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-line;
+}
+
+.input-help::-webkit-scrollbar {
+  width: 6px;
+}
+
+.input-help::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+}
+
+.input-help::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (max-height: 820px) {
+  #inputPanel {
+    padding: 14px;
+  }
+
+  #inputPanel h3 {
+    margin-top: 12px;
+  }
+
+  #rawInput {
+    min-height: 84px;
+    max-height: 116px;
+  }
+
+  .input-help {
+    max-height: 72px;
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+}
+
+@media (max-height: 720px) {
+  #rawInput {
+    min-height: 72px;
+    max-height: 96px;
+  }
+
+  .input-help {
+    max-height: 56px;
+  }
 }
