@@ -293,3 +293,4 @@ updateStatusCounts();
 updateCategoryButtons();
 initMode();
 renderTools();
+

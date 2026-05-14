@@ -1029,3 +1029,34 @@ footer {
     min-height: 102px;
   }
 }
+
+.language-buttons {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.language-buttons::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 999px;
+}
+
+.language-buttons:focus-visible {
+  outline: 3px solid rgba(139, 211, 255, 0.34);
+  outline-offset: 4px;
+}
+
+.language-button {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.language-buttons:hover {
+  border-color: rgba(139, 211, 255, 0.72);
+  box-shadow:
+    0 0 28px rgba(139, 211, 255, 0.14),
+    var(--shadow-soft);
+}

@@ -26,6 +26,10 @@
     return getDefaultLanguage();
   }
 
+  function getNextLanguage() {
+    return getLanguage() === "ja" ? "en" : "ja";
+  }
+
   function getLocalizedValue(value, language = getLanguage()) {
     if (value && typeof value === "object") {
       return value[language] || value.ja || value.en || "";
@@ -96,6 +100,14 @@
       button.classList.toggle("is-active", isActive);
       button.setAttribute("aria-pressed", String(isActive));
     });
+
+    document.querySelectorAll(".language-buttons").forEach((switchElement) => {
+      switchElement.dataset.currentLang = language;
+      switchElement.setAttribute(
+        "aria-label",
+        language === "ja" ? "Switch language to English" : "言語を日本語に切り替え"
+      );
+    });
   }
 
   function applyLanguage() {
@@ -127,10 +139,42 @@
     listeners.push(listener);
   }
 
+  function handleLanguageSwitchClick(event, switchElement) {
+    const directButton = event.target.closest(".language-button[data-lang]");
+
+    if (directButton) {
+      setLanguage(directButton.dataset.lang);
+      return;
+    }
+
+    setLanguage(getNextLanguage());
+  }
+
   function initLanguageButtons() {
-    document.querySelectorAll(".language-button[data-lang]").forEach((button) => {
-      button.addEventListener("click", () => {
-        setLanguage(button.dataset.lang);
+    document.querySelectorAll(".language-buttons").forEach((switchElement) => {
+      switchElement.setAttribute("role", "group");
+      switchElement.setAttribute("tabindex", "0");
+
+      switchElement.addEventListener(
+        "click", (event) => {
+        handleLanguageSwitchClick(event, switchElement);
+      });
+
+      switchElement.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setLanguage(getNextLanguage());
+        }
+
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          setLanguage("ja");
+        }
+
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          setLanguage("en");
+        }
       });
     });
   }
