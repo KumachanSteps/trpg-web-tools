@@ -3158,3 +3158,125 @@ main.input-collapsed .input-panel-top h2{
     height:36px;
   }
 }
+
+
+/* =========================================================
+   Title / description / shortcut typography adjustment
+   ========================================================= */
+
+/* タイトルの詰まりを緩和 */
+.site-title{
+  letter-spacing:.015em !important;
+  font-feature-settings:"palt" 0 !important;
+  font-kerning:normal;
+}
+
+/* 説明文のボールド解除 */
+.site-description{
+  font-weight:400 !important;
+  font-size:13.5px !important;
+  line-height:1.75 !important;
+  letter-spacing:.01em;
+}
+
+/* Tip 全体のボールド解除・小さめ化 */
+.shortcut-tip,
+.shortcut-tip-rich{
+  font-weight:400 !important;
+  font-size:11.5px !important;
+  line-height:1.75 !important;
+  letter-spacing:.01em;
+  color:var(--text-muted);
+}
+
+/* flexで各キーが縦にばらけるのを防ぎ、自然な文章折り返しにする */
+.shortcut-tip-rich{
+  display:block !important;
+  max-width:980px;
+}
+
+/* キーキャップを小さめ・軽めに調整 */
+.shortcut-tip kbd,
+.shortcut-tip-rich kbd,
+.shortcut-key{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:20px !important;
+  padding:2px 7px !important;
+  margin:0 2px;
+  border:1px solid rgba(15,23,42,.10);
+  border-bottom-color:rgba(15,23,42,.22);
+  border-radius:6px;
+  background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.92));
+  color:#172033;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:10.5px !important;
+  font-weight:700 !important;
+  line-height:1;
+  vertical-align:baseline;
+  box-shadow:
+    0 1.5px 0 rgba(15,23,42,.12),
+    0 5px 10px rgba(15,23,42,.06),
+    inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+body.dark .shortcut-tip kbd,
+body.dark .shortcut-tip-rich kbd,
+body.dark .shortcut-key{
+  border-color:rgba(255,255,255,.12);
+  border-bottom-color:rgba(255,255,255,.22);
+  background:linear-gradient(180deg, rgba(30,41,59,.98), rgba(15,23,42,.94));
+  color:#e0f2fe;
+  box-shadow:
+    0 1.5px 0 rgba(0,0,0,.34),
+    0 8px 16px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+/* 区切り線も控えめに */
+.tip-separator{
+  margin:0 5px;
+  color:var(--text-muted);
+  opacity:.55;
+  font-weight:400 !important;
+}
+
+/* ヘッダー内の説明ブロックを少し整える */
+.title-copy{
+  max-width:940px !important;
+}
+
+.header-main-row .header-title-area{
+  max-width:960px !important;
+}
+
+/* 720px以下でも縦に崩れすぎないようにする */
+@media(max-width:720px){
+  .site-title{
+    letter-spacing:.01em !important;
+  }
+
+  .site-description{
+    font-size:12.5px !important;
+    line-height:1.65 !important;
+  }
+
+  .shortcut-tip,
+  .shortcut-tip-rich{
+    font-size:10.8px !important;
+    line-height:1.65 !important;
+  }
+
+  .shortcut-tip kbd,
+  .shortcut-tip-rich kbd,
+  .shortcut-key{
+    min-height:18px !important;
+    padding:2px 6px !important;
+    font-size:10px !important;
+  }
+
+  .tip-separator{
+    margin:0 3px;
+  }
+}
