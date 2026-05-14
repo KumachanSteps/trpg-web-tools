@@ -130,9 +130,9 @@ window.TRPG_PORTAL_I18N = {
       icon: "📊",
       status: "available",
       category: "logAnalysis",
-      href: "./dice-stat-analyst/",
+      href: "./tools/dice-stat-analyst/",
       name: {
-        ja: "ダイス解析アナライザー",
+        ja: "Dice Stat Analyst",
         en: "Dice Stat Analyst",
       },
       description: {
@@ -146,9 +146,9 @@ window.TRPG_PORTAL_I18N = {
       icon: "🌱",
       status: "production",
       category: "logAnalysis",
-      href: "./coc-growth-checker/",
+      href: "./tools/coc-growth-checker/",
       name: {
-        ja: "CoC 6版/7版成長ツール",
+        ja: "CoC 6e/7e Growth Checker",
         en: "CoC 6e/7e Growth Checker",
       },
       description: {
@@ -161,9 +161,9 @@ window.TRPG_PORTAL_I18N = {
       icon: "📝",
       status: "production",
       category: "reportWriting",
-      href: "./session-report-generator/",
+      href: "./tools/session-report-generator/",
       name: {
-        ja: "卓報告ジェネレーター",
+        ja: "Session Report Generator",
         en: "Session Report Generator",
       },
       description: {
@@ -176,9 +176,9 @@ window.TRPG_PORTAL_I18N = {
       icon: "✂️",
       status: "production",
       category: "scenarioPrep",
-      href: "./scenario-snippet-builder/",
+      href: "./tools/scenario-snippet-builder/",
       name: {
-        ja: "シナリオ情報カード作成ツール",
+        ja: "Scenario Info Snippet Builder",
         en: "Scenario Info Snippet Builder",
       },
       description: {
@@ -191,7 +191,7 @@ window.TRPG_PORTAL_I18N = {
       icon: "#️⃣",
       status: "production",
       category: "haishinTracking",
-      href: "./trpg-hashtag-searcher/",
+      href: "./tools/trpg-hashtag-searcher/",
       name: {
         ja: "使えるハッシュタグ検索",
         en: "Usable Hashtag Finder",
@@ -205,7 +205,7 @@ window.TRPG_PORTAL_I18N = {
     {
       id: "chat-palette-formatter",
       icon: "💬",
-      status: "production",
+      status: "idea",
       category: "characterUtility",
       href: "",
       name: {
@@ -258,7 +258,7 @@ window.TRPG_PORTAL_I18N = {
         en: "TRPG Scenario Organizer",
       },
       description: {
-        ja: "BOOTHやPixivなどで見つけたTRPGシナリオを、システム・人数・時間・秘匿有無・テーマ・お気に入り数などで整理、検索するデータベース構想です。",
+        ja: "BOOTHやPixivなどで見つけたTRPGシナリオを、システム・人数・時間・秘匿有無・テーマなどで整理、検索するデータベース構想です。",
         en: "A future database concept for organizing TRPG scenarios by system, player count, playtime, hidden handouts, themes, and favorites.",
       },
     },
