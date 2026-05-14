@@ -368,55 +368,46 @@
       </div>
 
       <div id="summary" class="tab-panel active">
-        <h2 data-i18n="summary.characterTitle">キャラクター別サマリー</h2>
-
         <div class="character-control-bar">
-          <button
-            id="characterControlToggleBtn"
-            class="character-control-toggle"
-            type="button"
-            data-i18n="button.showCharacterControls"
-          >
-            表示キャラ設定を開く
+          <button id="characterControlToggleBtn" class="character-control-toggle" type="button">
+            表示キャラ設定を開く▼
           </button>
         </div>
 
         <div id="characterControls" class="character-controls"></div>
         <div id="characterSummary" class="character-summary-grid"></div>
 
-        <h2 data-i18n="summary.overallTitle">全体サマリー</h2>
+        <h2>全体サマリー</h2>
 
         <div class="grid-results">
           <div class="card">
-            <div class="label" data-i18n="card.totalRolls">総ロール数</div>
+            <div class="label">総ロール数</div>
             <div id="totalRolls" class="value">0</div>
-            <div class="sub" data-i18n="card.totalRollsSub">d100として抽出された件数</div>
+            <div class="sub">d100として抽出された件数</div>
           </div>
 
           <div class="card">
-            <div class="label" data-i18n="card.successFail">成功 / 失敗</div>
+            <div class="label">成功 / 失敗</div>
             <div id="successFailCount" class="value">0 / 0</div>
             <div id="successFailRate" class="sub">0.00% / 0.00%</div>
           </div>
 
           <div class="card">
-            <div class="label" data-i18n="card.critFumble">クリティカル / ファンブル</div>
+            <div class="label">クリティカル / ファンブル</div>
             <div id="critFumbleCount" class="value">0 / 0</div>
             <div id="critFumbleRate" class="sub">0.00% / 0.00%</div>
           </div>
 
           <div class="card">
-            <div class="label" data-i18n="card.averageRoll">平均出目</div>
+            <div class="label">平均出目</div>
             <div id="averageRoll" class="value">-</div>
-            <div class="sub" data-i18n="card.averageRollSub">抽出値の平均</div>
+            <div class="sub">抽出値の平均</div>
           </div>
         </div>
 
         <div class="card">
-          <h3 data-i18n="summary.memoTitle">メモ</h3>
-          <p id="summaryMemo" class="note" data-i18n="summary.selectLog">
-            ログデータを選択ください。
-          </p>
+          <h3>メモ</h3>
+          <p id="summaryMemo" class="note">ログを入力して「分析する」を押してください。</p>
         </div>
       </div>
 

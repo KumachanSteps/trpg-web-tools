@@ -124,30 +124,30 @@ function renderSummary() {
 
 function renderCharacterControls() {
   const box = $('characterControls');
-  const button = $('characterControlToggleBtn');
-  const characters = getDetectedCharacters();
+  const btn = $('characterControlToggleBtn');
+  const chars = getDetectedCharacters();
 
   if (!box) return;
 
   box.classList.toggle('visible', state.showCharacterControls);
 
-  if (button) {
-    button.textContent = state.showCharacterControls
-      ? tr('button.hideCharacterControls', '表示キャラ設定を隠す')
-      : tr('button.showCharacterControls', '表示キャラ設定を開く');
+  if (btn) {
+    btn.textContent = state.showCharacterControls
+      ? '表示キャラ設定を隠す▲'
+      : '表示キャラ設定を開く▼';
   }
 
-  if (!characters.length) {
+  if (!chars.length) {
     box.innerHTML = '';
-    if (button) button.style.display = 'none';
+    if (btn) btn.style.display = 'none';
     return;
   }
 
-  if (button) button.style.display = 'inline-flex';
+  if (btn) btn.style.display = 'inline-flex';
 
-  box.innerHTML = characters.map(name => {
+  box.innerHTML = chars.map(name => {
     const checked = state.hiddenCharacters.has(name) ? '' : 'checked';
-    const count = state.rolls.filter(roll => (roll.character || tr('common.unknown', '不明')) === name).length;
+    const count = state.rolls.filter(r => (r.character || '不明') === name).length;
 
     return `
       <label class="character-toggle">
@@ -159,7 +159,7 @@ function renderCharacterControls() {
 
   box.querySelectorAll('input[data-character]').forEach(input => {
     input.addEventListener('change', () => {
-      const name = input.getAttribute('data-character') || tr('common.unknown', '不明');
+      const name = input.getAttribute('data-character') || '不明';
 
       if (input.checked) {
         state.hiddenCharacters.delete(name);
@@ -167,7 +167,6 @@ function renderCharacterControls() {
         state.hiddenCharacters.add(name);
       }
 
-      state.inputPanelMode = state.inputPanelMode === 'open' ? 'open' : 'auto';
       render();
     });
   });

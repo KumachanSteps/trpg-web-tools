@@ -2367,3 +2367,53 @@ header.site-header{
     max-height: 56px;
   }
 }
+
+/* =========================================================
+   Summary Tab Header Cleanup
+   キャラクター別サマリー見出しの重複削除後の配置調整
+   ========================================================= */
+
+.character-control-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.character-control-toggle {
+  width: auto;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.character-controls {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -6px 0 18px;
+}
+
+.character-controls.visible {
+  display: flex;
+}
+
+/* タブ直下に設定ボタンが来るため、余白を少し整える */
+.tabs {
+  margin-bottom: 14px;
+}
+
+/* キャラカードが出た時に、全体サマリーとの間隔を確保 */
+.character-summary-grid {
+  margin-bottom: 22px;
+}
+
+/* キャラカードが空の時に余白が広がりすぎないよう調整 */
+.character-summary-grid:empty {
+  margin-bottom: 0;
+}
