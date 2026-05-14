@@ -12,18 +12,18 @@
       <div class="header-top-row">
         <div class="header-top-tags">
           <a class="portal-link" href="../index.html">
-            TRPG Web Tools | Growth Checker
-            <span class="portal-tooltip">Return to TRPG Web Tools Portal</span>
+            <span data-i18n="portalLink">TRPG Web Tools | 成長ツール</span>
+            <span class="portal-tooltip" data-i18n="portalTooltip">TRPG Web Tools ポータルに戻る</span>
           </a>
-          <span class="header-pill header-pill-cyan">Dice Log input</span>
-          <span class="header-pill header-pill-violet">CoC 6e / 7e</span>
-          <span class="header-pill header-pill-amber">ダイス統計アナライザーと連携</span>
+          <span class="header-pill header-pill-cyan" data-i18n="tagDiceInput">ダイスログ入力</span>
+          <span class="header-pill header-pill-violet" data-i18n="tagEdition">CoC 6版 / 7版</span>
+          <span class="header-pill header-pill-amber" data-i18n="tagDiceStatLink">ダイス統計アナライザーと連携</span>
         </div>
 
         <div class="header-actions">
           <div class="header-mini-actions">
             <button id="languageToggleBtn" class="language-toggle-button" type="button">EN</button>
-            <button id="shortcutHelpBtn" class="shortcut-help-button" type="button">Shortcuts</button>
+            <button id="shortcutHelpBtn" class="shortcut-help-button" type="button" data-i18n="shortcutButton">ショートカット</button>
           </div>
 
           <button id="themeBtn" class="theme-switch" type="button" aria-label="Toggle dark mode">
@@ -43,16 +43,16 @@
         <div class="header-title-area">
           <div class="title-row">
             <div class="tool-icon" aria-hidden="true">
-              <span class="tool-icon-main">✦</span>
+              <span class="tool-icon-main" data-i18n="toolIcon">✦</span>
               <span class="tool-icon-star">✧</span>
             </div>
 
             <div>
-              <h1 class="site-title">CoC6版/7版成長ツール</h1>
-              <p class="site-description">
+              <h1 class="site-title" data-i18n="pageTitle">CoC6版/7版成長ツール</h1>
+              <p class="site-description" data-i18n="pageDescription">
                 セッションログから、探索者ごとの「成長チェック候補技能」を抽出します。CoC6版・7版のハウスルール運用に合わせて、成功・クリティカル・ファンブルの表示条件を切り替えできます。
               </p>
-              <p class="shortcut-tip">
+              <p class="shortcut-tip" data-i18n="shortcutTip">
                 Shortcut: Ctrl / Cmd + O でファイル選択、Ctrl / Cmd + Enter で解析、Ctrl / Cmd + Shift + M でナイトモード切替。
               </p>
             </div>
@@ -65,75 +65,87 @@
   <main id="mainLayout">
     <section id="inputPanel">
       <div class="input-panel-top">
-        <h2>入力欄</h2>
-        <button id="inputToggleBtn" class="input-toggle-button" type="button" title="入力パネルを折りたたむ">◀</button>
+        <h2 data-i18n="inputTitle">入力欄</h2>
+        <button id="inputToggleBtn" class="input-toggle-button" type="button" data-i18n-title="collapseInputTitle" title="入力パネルを折りたたむ">◀</button>
       </div>
 
       <div class="input-content">
-        <textarea id="inputLog" placeholder="セッションログHTML / テキストをコピー＆ペーストしてください"></textarea>
+        <textarea id="inputLog" data-i18n-placeholder="inputPlaceholder" placeholder="セッションログHTML / テキストをコピー＆ペーストしてください"></textarea>
 
         <div class="button-row">
-          <label class="file-label secondary" for="fileInput">📂 Open File</label>
+          <label class="file-label secondary" for="fileInput" data-i18n="openFileButton">📂 ファイルを開く</label>
           <input id="fileInput" type="file" accept=".txt,.log,.html,.htm,.json,text/plain,text/html,application/json" />
-          <button class="primary" id="analyzeBtn" type="button">成長チェックを抽出</button>
+          <button class="primary" id="analyzeBtn" type="button" data-i18n="analyzeButton">成長チェックを抽出</button>
         </div>
 
-        <button class="danger" id="clearBtn" type="button">入力をクリア</button>
+        <button class="danger" id="clearBtn" type="button" data-i18n="clearButton">入力をクリア</button>
 
         <div class="rule-panel" style="margin-top:14px;">
-          <p class="control-title">成長チェック候補の表示ルール</p>
+          <p class="control-title" data-i18n="growthRuleTitle">成長チェック候補の表示ルール</p>
 
           <div class="radio-list">
             <label class="option">
               <input type="radio" name="growthRule" value="rulebook" checked>
-              <span>Rulebook <small>成功・スペシャル・クリティカルを技能ごとに1回だけ表示</small></span>
+              <span>
+                <span data-i18n="rulebookName">Rulebook</span>
+                <small data-i18n="rulebookDescription">成功・スペシャル・クリティカルを技能ごとに1回だけ表示</small>
+              </span>
             </label>
 
             <label class="option">
               <input type="radio" name="growthRule" value="critFumble">
-              <span>Critical / Fumble <small>クリティカル・ファンブルをすべて表示。同じ技能の重複も表示</small></span>
+              <span>
+                <span data-i18n="critFumbleName">Critical / Fumble</span>
+                <small data-i18n="critFumbleDescription">クリティカル・ファンブルをすべて表示。同じ技能の重複も表示</small>
+              </span>
             </label>
 
             <label class="option">
               <input type="radio" name="growthRule" value="both">
-              <span>Both <small>クリティカル・ファンブルはすべて、通常成功・スペシャルは技能ごとに1回だけ表示</small></span>
+              <span>
+                <span data-i18n="bothName">Both</span>
+                <small data-i18n="bothDescription">クリティカル・ファンブルはすべて、通常成功・スペシャルは技能ごとに1回だけ表示</small>
+              </span>
             </label>
 
             <label class="option">
               <input type="radio" name="growthRule" value="bothPrime">
-              <span>Both' <small>クリティカルはすべて、通常成功・スペシャルは技能ごとに1回だけ表示。ファンブルは除外</small></span>
-            </label>
-          </div>
-        </div>
-
-        <div class="rule-panel">
-          <p class="control-title">除外ルール</p>
-
-          <div class="check-list">
-            <label class="option">
-              <input id="excludeSan" type="checkbox" checked>
-              <span>SANチェック / 正気度ロールを除外</span>
-            </label>
-
-            <label class="option">
-              <input id="excludeParams" type="checkbox" checked>
               <span>
-                知識・アイデア・幸運・能力値ロールを除外
-                <small>STR / CON / POW / DEX / APP / SIZ / INT / EDU / アイデア / 知識 / 幸運など</small>
+                <span data-i18n="bothPrimeName">Both'</span>
+                <small data-i18n="bothPrimeDescription">クリティカルはすべて、通常成功・スペシャルは技能ごとに1回だけ表示。ファンブルは除外</small>
               </span>
             </label>
           </div>
         </div>
 
         <div class="rule-panel">
-          <p class="control-title">キャラクター表示</p>
+          <p class="control-title" data-i18n="excludeRuleTitle">除外ルール</p>
+
+          <div class="check-list">
+            <label class="option">
+              <input id="excludeSan" type="checkbox" checked>
+              <span data-i18n="excludeSanLabel">SANチェック / 正気度ロールを除外</span>
+            </label>
+
+            <label class="option">
+              <input id="excludeParams" type="checkbox" checked>
+              <span>
+                <span data-i18n="excludeParamsLabel">知識・アイデア・幸運・能力値ロールを除外</span>
+                <small data-i18n="excludeParamsDescription">STR / CON / POW / DEX / APP / SIZ / INT / EDU / アイデア / 知識 / 幸運など</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="rule-panel">
+          <p class="control-title" data-i18n="characterDisplayTitle">キャラクター表示</p>
 
           <div class="inline-control">
-            <label for="minRolls">NPC除外しきい値：</label>
+            <label for="minRolls" data-i18n="minRollsLabel">NPC除外しきい値：</label>
             <input id="minRolls" type="number" min="0" value="15" />
           </div>
 
-          <p class="note">この回数未満のキャラクターは初期状態で非表示になります。</p>
+          <p class="note" data-i18n="minRollsNote">この回数未満のキャラクターは初期状態で非表示になります。</p>
         </div>
       </div>
     </section>
@@ -141,13 +153,13 @@
     <aside>
       <div class="result-tools">
         <div class="result-tools-left">
-          <button id="copyTextBtn" type="button">Copy Text</button>
-          <button id="selectAllCharsBtn" type="button">全員表示</button>
-          <button id="thresholdCharsBtn" type="button">しきい値以上のみ</button>
+          <button id="copyTextBtn" type="button" data-i18n="copyTextButton">テキストコピー</button>
+          <button id="selectAllCharsBtn" type="button" data-i18n="showAllButton">全員表示</button>
+          <button id="thresholdCharsBtn" type="button" data-i18n="thresholdOnlyButton">しきい値以上のみ</button>
         </div>
 
         <div class="result-tools-right">
-          <button id="jumpDiceStatBtn" class="dice-stat-link" type="button" data-tooltip="ダイス統計アナライザーへ移動しますか？">
+          <button id="jumpDiceStatBtn" class="dice-stat-link" type="button" data-i18n="diceStatButton" data-i18n-tooltip="diceStatTooltip" data-tooltip="ダイス統計アナライザーへ移動しますか？">
             ダイス統計アナライザー →
           </button>
         </div>
@@ -155,7 +167,7 @@
 
       <div id="summary" class="summary"></div>
       <div id="characterFilter" class="character-filter" hidden></div>
-      <div id="results" class="empty">ログを入力して「成長チェックを抽出」を押してください。</div>
+      <div id="results" class="empty" data-i18n="emptyInitial">ログを入力して「成長チェックを抽出」を押してください。</div>
     </aside>
   </main>
 
