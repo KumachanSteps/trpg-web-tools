@@ -5,8 +5,8 @@ const I18N = {
     documentTitle: "CoC6版/7版成長ツール",
     htmlLang: "ja",
 
-    portalLink: "TRPG Web Tools | 成長ツール",
-    portalTooltip: "TRPG Web Tools ポータルに戻る",
+    portalLink: "← TRPG Web ツール観測所",
+    portalTooltip: "TRPG Web ツール観測所に戻る",
     tagDiceInput: "ダイスログ入力",
     tagEdition: "CoC 6版 / 7版",
     tagDiceStatLink: "ダイス統計アナライザーと連携",
@@ -28,10 +28,12 @@ const I18N = {
       { keys: ["?"], action: "このショートカット一覧を開く" }
     ],
 
-    inputTitle: "入力欄",
+    inputTitle: "入力",
+    fileInputLabel: "セッションログHTMLファイル",
+    pasteInputLabel: "またはログ本文を貼り付け",
+    inputPlaceholder: "HTMLまたはテキストログを貼り付け",
     collapseInputTitle: "入力パネルを折りたたむ",
     expandInputTitle: "入力パネルを開く",
-    inputPlaceholder: "セッションログHTML / テキストをコピー＆ペーストしてください",
     openFileButton: "📂 ファイルを開く",
     analyzeButton: "成長チェックを抽出",
     clearButton: "入力をクリア",
@@ -118,8 +120,8 @@ const I18N = {
     documentTitle: "CoC 6e/7e Growth Checker",
     htmlLang: "en",
 
-    portalLink: "TRPG Web Tools | Growth Checker",
-    portalTooltip: "Return to TRPG Web Tools Portal",
+    portalLink: "← TRPG Web Tools Observatory",
+    portalTooltip: "Return to TRPG Web Tools Observatory",
     tagDiceInput: "Dice Log Input",
     tagEdition: "CoC 6e / 7e",
     tagDiceStatLink: "Linked with Dice Stat Analyst",
@@ -142,9 +144,13 @@ const I18N = {
     ],
 
     inputTitle: "Input",
+    fileInputLabel: "Session Log HTML File",
+    pasteInputLabel: "Or paste log text",
+    inputPlaceholder: "Paste HTML or text log",
+    
     collapseInputTitle: "Collapse input panel",
     expandInputTitle: "Open input panel",
-    inputPlaceholder: "Paste your session log HTML or plain text here",
+    
     openFileButton: "📂 Open File",
     analyzeButton: "Extract Growth Checks",
     clearButton: "Clear Input",

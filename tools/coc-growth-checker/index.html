@@ -81,25 +81,28 @@
   <main id="mainLayout">
     <section id="inputPanel">
       <div class="input-panel-top">
-        <h2 data-i18n="inputTitle">入力欄</h2>
-        <button id="inputToggleBtn" class="input-toggle-button" type="button" data-i18n-title="collapseInputTitle" title="入力パネルを折りたたむ">◀</button>
+        <h2 data-i18n="inputTitle">入力</h2>
+        <button id="inputToggleBtn" class="input-toggle-button" type="button" data-i18n-title="collapseInputTitle" title="入力パネルを折りたたむ">↤</button>
       </div>
 
       <div class="input-content">
-        <textarea id="inputLog" data-i18n-placeholder="inputPlaceholder" placeholder="セッションログHTML / テキストをコピー＆ペーストしてください"></textarea>
+        <label class="input-field-label" for="fileInput" data-i18n="fileInputLabel">セッションログHTMLファイル</label>
+        <input id="fileInput" class="native-file-input" type="file" accept=".txt,.log,.html,.htm,.json,text/plain,text/html,application/json" />
 
-        <div class="button-row">
-          <label class="file-label secondary" for="fileInput" data-i18n="openFileButton">📂 ファイルを開く</label>
-          <input id="fileInput" type="file" accept=".txt,.log,.html,.htm,.json,text/plain,text/html,application/json" />
+        <label class="input-field-label" for="inputLog" data-i18n="pasteInputLabel">またはログ本文を貼り付け</label>
+        <textarea id="inputLog" data-i18n-placeholder="inputPlaceholder" placeholder="HTMLまたはテキストログを貼り付け"></textarea>
+
+        <div class="button-row compact-button-row">
+          <label class="file-label secondary compact-file-button" for="fileInput" data-i18n="openFileButton">📂 ファイルを開く</label>
           <button class="primary" id="analyzeBtn" type="button" data-i18n="analyzeButton">成長チェックを抽出</button>
         </div>
 
         <button class="danger" id="clearBtn" type="button" data-i18n="clearButton">入力をクリア</button>
 
-        <div class="rule-panel" style="margin-top:14px;">
+        <div class="rule-panel compact-rule-panel">
           <p class="control-title" data-i18n="growthRuleTitle">成長チェック候補の表示ルール</p>
 
-          <div class="radio-list">
+          <div class="radio-list compact-radio-list">
             <label class="option">
               <input type="radio" name="growthRule" value="rulebook" checked>
               <span>
@@ -134,10 +137,10 @@
           </div>
         </div>
 
-        <div class="rule-panel">
+        <div class="rule-panel compact-rule-panel">
           <p class="control-title" data-i18n="excludeRuleTitle">除外ルール</p>
 
-          <div class="check-list">
+          <div class="check-list compact-check-list">
             <label class="option">
               <input id="excludeSan" type="checkbox" checked>
               <span data-i18n="excludeSanLabel">SANチェック / 正気度ロールを除外</span>
@@ -153,10 +156,10 @@
           </div>
         </div>
 
-        <div class="rule-panel">
+        <div class="rule-panel compact-rule-panel">
           <p class="control-title" data-i18n="characterDisplayTitle">キャラクター表示</p>
 
-          <div class="inline-control">
+          <div class="inline-control compact-inline-control">
             <label for="minRolls" data-i18n="minRollsLabel">NPC除外しきい値：</label>
             <input id="minRolls" type="number" min="0" value="15" />
           </div>
