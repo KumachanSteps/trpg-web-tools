@@ -19,6 +19,14 @@ const I18N = {
 
     languageButton: "EN",
     shortcutButton: "Shortcuts",
+    shortcutTipHtml: 'Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>O</kbd> でファイル選択 <span class="tip-separator">｜</span> <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で抽出 <span class="tip-separator">｜</span> <kbd>?</kbd> でショートカット一覧',
+    shortcutRows: [
+      { keys: ["Ctrl/Cmd", "O"], action: "ファイル選択" },
+      { keys: ["Ctrl/Cmd", "Enter"], action: "成長チェックを抽出" },
+      { keys: ["Ctrl/Cmd", "Shift", "M"], action: "ナイトモード切替" },
+      { keys: ["Esc"], action: "入力パネルを折りたたむ / 開く" },
+      { keys: ["?"], action: "このショートカット一覧を開く" }
+    ],
 
     inputTitle: "入力欄",
     collapseInputTitle: "入力パネルを折りたたむ",
@@ -124,6 +132,14 @@ const I18N = {
 
     languageButton: "JP",
     shortcutButton: "Shortcuts",
+    shortcutTipHtml: 'Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>O</kbd> to open file <span class="tip-separator">｜</span> <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> to extract <span class="tip-separator">｜</span> <kbd>?</kbd> for shortcuts',
+    shortcutRows: [
+      { keys: ["Ctrl/Cmd", "O"], action: "Open file" },
+      { keys: ["Ctrl/Cmd", "Enter"], action: "Extract growth checks" },
+      { keys: ["Ctrl/Cmd", "Shift", "M"], action: "Toggle night mode" },
+      { keys: ["Esc"], action: "Collapse / open input panel" },
+      { keys: ["?"], action: "Open this shortcut list" }
+    ],
 
     inputTitle: "Input",
     collapseInputTitle: "Collapse input panel",
