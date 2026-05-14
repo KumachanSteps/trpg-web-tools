@@ -63,8 +63,13 @@
               <p class="site-description" data-i18n="pageDescription">
                 セッションログから、探索者ごとの「成長チェック候補技能」を抽出します。CoC6版・7版のハウスルール運用に合わせて、成功・クリティカル・ファンブルの表示条件を切り替えできます。
               </p>
-              <p class="shortcut-tip" data-i18n="shortcutTip">
-                Shortcut: Ctrl / Cmd + O でファイル選択、Ctrl / Cmd + Enter で解析、Ctrl / Cmd + Shift + M でナイトモード切替。
+              <p class="shortcut-tip shortcut-tip-rich" data-i18n-html="shortcutTipHtml">
+                Tip:
+                <kbd>Ctrl/Cmd</kbd> + <kbd>O</kbd> でファイル選択
+                <span class="tip-separator">｜</span>
+                <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で抽出
+                <span class="tip-separator">｜</span>
+                <kbd>?</kbd> でショートカット一覧
               </p>
             </div>
           </div>
@@ -181,6 +186,24 @@
       <div id="results" class="empty" data-i18n="emptyInitial">ログを入力して「成長チェックを抽出」を押してください。</div>
     </aside>
   </main>
+  
+  <div id="shortcutModal" class="shortcut-modal" hidden>
+    <div class="shortcut-modal-backdrop" data-shortcut-close></div>
+
+    <section class="shortcut-modal-panel" role="dialog" aria-modal="true" aria-labelledby="shortcutModalTitle">
+      <div class="shortcut-modal-header">
+        <p class="shortcut-modal-kicker" data-i18n="shortcutModalKicker">Keyboard Guide</p>
+        <h2 id="shortcutModalTitle" data-i18n="shortcutModalTitle">ショートカット一覧</h2>
+        <button id="shortcutCloseBtn" class="shortcut-close-button" type="button" aria-label="Close">×</button>
+      </div>
+
+      <div id="shortcutList" class="shortcut-list"></div>
+
+      <p class="shortcut-modal-note" data-i18n="shortcutModalNote">
+        ※ 一部ブラウザでは既定ショートカットが優先される場合があります。
+      </p>
+    </section>
+  </div>
 
   <script src="./js/parser.js"></script>
   <script src="./js/growth_checker.js"></script>

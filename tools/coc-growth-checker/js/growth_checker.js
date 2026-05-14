@@ -4,17 +4,22 @@ const I18N = {
   ja: {
     documentTitle: "CoC6版/7版成長ツール",
     htmlLang: "ja",
-    portalLink: "← TRPG Web ツール観測所",
-    portalTooltip: "TRPG Web ツール観測所 ポータルに戻る",
+
+    portalLink: "TRPG Web Tools | 成長ツール",
+    portalTooltip: "TRPG Web Tools ポータルに戻る",
     tagDiceInput: "ダイスログ入力",
     tagEdition: "CoC 6版 / 7版",
     tagDiceStatLink: "ダイス統計アナライザーと連携",
+
     toolIcon: "✦",
     pageTitle: "CoC6版/7版成長ツール",
     pageDescription: "セッションログから、探索者ごとの「成長チェック候補技能」を抽出します。CoC6版・7版のハウスルール運用に合わせて、成功・クリティカル・ファンブルの表示条件を切り替えできます。",
     shortcutTip: "Shortcut: Ctrl / Cmd + O でファイル選択、Ctrl / Cmd + Enter で解析、Ctrl / Cmd + Shift + M でナイトモード切替。",
+    shortcutTipHtml: 'Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>O</kbd> でファイル選択 <span class="tip-separator">｜</span> <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で抽出 <span class="tip-separator">｜</span> <kbd>?</kbd> でショートカット一覧',
+
     languageButton: "EN",
-    shortcutButton: "ショートカット",
+    shortcutButton: "Shortcuts",
+
     inputTitle: "入力欄",
     collapseInputTitle: "入力パネルを折りたたむ",
     expandInputTitle: "入力パネルを開く",
@@ -22,6 +27,7 @@ const I18N = {
     openFileButton: "📂 ファイルを開く",
     analyzeButton: "成長チェックを抽出",
     clearButton: "入力をクリア",
+
     growthRuleTitle: "成長チェック候補の表示ルール",
     rulebookName: "Rulebook",
     rulebookDescription: "成功・スペシャル・クリティカルを技能ごとに1回だけ表示",
@@ -31,13 +37,16 @@ const I18N = {
     bothDescription: "クリティカル・ファンブルはすべて、通常成功・スペシャルは技能ごとに1回だけ表示",
     bothPrimeName: "Both'",
     bothPrimeDescription: "クリティカルはすべて、通常成功・スペシャルは技能ごとに1回だけ表示。ファンブルは除外",
+
     excludeRuleTitle: "除外ルール",
     excludeSanLabel: "SANチェック / 正気度ロールを除外",
     excludeParamsLabel: "知識・アイデア・幸運・能力値ロールを除外",
     excludeParamsDescription: "STR / CON / POW / DEX / APP / SIZ / INT / EDU / アイデア / 知識 / 幸運など",
+
     characterDisplayTitle: "キャラクター表示",
     minRollsLabel: "NPC除外しきい値：",
     minRollsNote: "この回数未満のキャラクターは初期状態で非表示になります。",
+
     copyTextButton: "テキストコピー",
     copyDoneButton: "コピー完了",
     copyFailedButton: "コピー失敗",
@@ -45,52 +54,77 @@ const I18N = {
     thresholdOnlyButton: "しきい値以上のみ",
     diceStatButton: "ダイス統計アナライザー →",
     diceStatTooltip: "ダイス統計アナライザーへ移動しますか？",
+
     emptyInitial: "ログを入力して「成長チェックを抽出」を押してください。",
     emptyNoRolls: "ダイスロールを検出できませんでした。CC / CCB / RESB / CBRB 形式、またはキャラクター名：コマンド形式のログか確認してください。",
     emptyAfterFilters: "除外ルール適用後に表示できるダイスロールがありません。",
     emptyNoVisibleCharacter: "表示対象のキャラクターがありません。キャラクター表示チェックをONにしてください。",
     noGrowthCandidates: "成長チェック候補はありません。",
     showOrganizedLog: "整理済みダイスログを表示",
+
     summaryCharacters: "検出キャラクター",
     summaryVisibleCharacters: "表示中キャラクター",
     summaryGrowthCandidates: "成長チェック候補",
     summaryCritFumble: "Critical / Fumble",
+
     tableSkill: "技能",
     tableResult: "結果",
     tableRoll: "出目",
     tableRawLog: "元ログ",
+
     thresholdAbove: "しきい値以上",
     thresholdBelow: "しきい値未満",
     rollsLabel: "rolls",
     checksLabel: "checks",
+
     chancePow: "Chance to grow <POW>",
     textOutputTitle: "CoC 成長チェック候補",
     textOutputRolls: "ロール数",
     textOutputGrowthChecks: "成長チェック候補",
     textOutputNoGrowth: "- 成長チェック候補なし",
+
+    parserMissing: "parser.js が読み込まれていません。index.html で parser.js を growth_checker.js より先に読み込んでください。",
+
+    shortcutModalKicker: "Keyboard Guide",
+    shortcutModalTitle: "ショートカット一覧",
+    shortcutModalNote: "※ 一部ブラウザでは既定ショートカットが優先される場合があります。",
+    shortcutRows: [
+      { keys: ["Ctrl/Cmd", "O"], action: "ファイル選択" },
+      { keys: ["Ctrl/Cmd", "Enter"], action: "成長チェックを抽出" },
+      { keys: ["Ctrl/Cmd", "Shift", "M"], action: "ナイトモード切替" },
+      { keys: ["Esc"], action: "入力パネルを折りたたむ / 開く" },
+      { keys: ["?"], action: "このショートカット一覧を開く" }
+    ],
     shortcutAlert: [
       "ショートカット一覧",
       "",
       "Ctrl / Cmd + O：ファイルを開く",
       "Ctrl / Cmd + Enter：解析実行",
       "Ctrl / Cmd + Shift + M：ナイトモード切替",
-      "Esc：入力パネルを折りたたむ / 開く"
+      "Esc：入力パネルを折りたたむ / 開く",
+      "?：ショートカット一覧を開く"
     ]
   },
+
   en: {
     documentTitle: "CoC 6e/7e Growth Checker",
     htmlLang: "en",
-    portalLink: "← TRPG Web Tools　Portal",
+
+    portalLink: "TRPG Web Tools | Growth Checker",
     portalTooltip: "Return to TRPG Web Tools Portal",
     tagDiceInput: "Dice Log Input",
     tagEdition: "CoC 6e / 7e",
     tagDiceStatLink: "Linked with Dice Stat Analyst",
+
     toolIcon: "✦",
     pageTitle: "CoC 6e/7e Growth Checker",
     pageDescription: "Extract skill growth check candidates for each character from a session log. Switch output rules based on your CoC 6e / 7e house rules for successes, criticals, and fumbles.",
     shortcutTip: "Shortcuts: Ctrl / Cmd + O to open a file, Ctrl / Cmd + Enter to analyze, Ctrl / Cmd + Shift + M to toggle night mode.",
+    shortcutTipHtml: 'Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>O</kbd> to open file <span class="tip-separator">｜</span> <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> to extract <span class="tip-separator">｜</span> <kbd>?</kbd> for shortcuts',
+
     languageButton: "JP",
     shortcutButton: "Shortcuts",
+
     inputTitle: "Input",
     collapseInputTitle: "Collapse input panel",
     expandInputTitle: "Open input panel",
@@ -98,6 +132,7 @@ const I18N = {
     openFileButton: "📂 Open File",
     analyzeButton: "Extract Growth Checks",
     clearButton: "Clear Input",
+
     growthRuleTitle: "Growth Check Rule",
     rulebookName: "Rulebook",
     rulebookDescription: "List successes, specials, and criticals once per skill.",
@@ -107,13 +142,16 @@ const I18N = {
     bothDescription: "List all criticals and fumbles. Regular successes and specials appear once per skill.",
     bothPrimeName: "Both'",
     bothPrimeDescription: "List all criticals. Regular successes and specials appear once per skill. Fumbles are excluded.",
+
     excludeRuleTitle: "Exclusion Rules",
     excludeSanLabel: "Exclude SAN checks / sanity rolls",
     excludeParamsLabel: "Exclude Knowledge, Idea, Luck, and ability rolls",
     excludeParamsDescription: "STR / CON / POW / DEX / APP / SIZ / INT / EDU / Idea / Knowledge / Luck, etc.",
+
     characterDisplayTitle: "Character Display",
     minRollsLabel: "NPC filter threshold:",
     minRollsNote: "Characters below this roll count are hidden by default.",
+
     copyTextButton: "Copy Text",
     copyDoneButton: "Copied!",
     copyFailedButton: "Copy Failed",
@@ -121,36 +159,55 @@ const I18N = {
     thresholdOnlyButton: "Above Threshold Only",
     diceStatButton: "Dice Stat Analyst →",
     diceStatTooltip: "Do you want to move to Dice Stat Analyst?",
+
     emptyInitial: "Paste a log and click “Extract Growth Checks.”",
     emptyNoRolls: "No dice rolls were detected. Please check whether the log uses CC / CCB / RESB / CBRB format or character-name command format.",
     emptyAfterFilters: "No dice rolls remain after applying the exclusion filters.",
     emptyNoVisibleCharacter: "No characters are currently visible. Turn on at least one character checkbox.",
     noGrowthCandidates: "No growth check candidates.",
     showOrganizedLog: "Show organized dice log",
+
     summaryCharacters: "Detected Characters",
     summaryVisibleCharacters: "Visible Characters",
     summaryGrowthCandidates: "Growth Candidates",
     summaryCritFumble: "Critical / Fumble",
+
     tableSkill: "Skill",
     tableResult: "Result",
     tableRoll: "Roll",
     tableRawLog: "Raw Log",
+
     thresholdAbove: "Above Threshold",
     thresholdBelow: "Below Threshold",
     rollsLabel: "rolls",
     checksLabel: "checks",
+
     chancePow: "Chance to grow <POW>",
     textOutputTitle: "CoC Growth Check Candidates",
     textOutputRolls: "Rolls",
     textOutputGrowthChecks: "Growth Checks",
     textOutputNoGrowth: "- No growth check candidates",
+
+    parserMissing: "parser.js is not loaded. In index.html, load parser.js before growth_checker.js.",
+
+    shortcutModalKicker: "Keyboard Guide",
+    shortcutModalTitle: "Shortcut List",
+    shortcutModalNote: "Some browsers may prioritize default shortcuts.",
+    shortcutRows: [
+      { keys: ["Ctrl/Cmd", "O"], action: "Open file" },
+      { keys: ["Ctrl/Cmd", "Enter"], action: "Extract growth checks" },
+      { keys: ["Ctrl/Cmd", "Shift", "M"], action: "Toggle night mode" },
+      { keys: ["Esc"], action: "Collapse / open input panel" },
+      { keys: ["?"], action: "Open this shortcut list" }
+    ],
     shortcutAlert: [
       "Shortcut List",
       "",
       "Ctrl / Cmd + O: Open file",
       "Ctrl / Cmd + Enter: Analyze",
       "Ctrl / Cmd + Shift + M: Toggle night mode",
-      "Esc: Collapse / open input panel"
+      "Esc: Collapse / open input panel",
+      "?: Open shortcut list"
     ]
   }
 };
@@ -170,6 +227,9 @@ const el = {
   inputToggleBtn: document.getElementById("inputToggleBtn"),
   languageToggleBtn: document.getElementById("languageToggleBtn"),
   shortcutHelpBtn: document.getElementById("shortcutHelpBtn"),
+  shortcutModal: document.getElementById("shortcutModal"),
+  shortcutCloseBtn: document.getElementById("shortcutCloseBtn"),
+  shortcutList: document.getElementById("shortcutList"),
   inputLog: document.getElementById("inputLog"),
   fileInput: document.getElementById("fileInput"),
   analyzeBtn: document.getElementById("analyzeBtn"),
@@ -194,11 +254,16 @@ function t(key) {
 function applyLanguage(lang) {
   currentLang = lang;
   localStorage.setItem("cocGrowthCheckerLang", lang);
+
   document.documentElement.lang = t("htmlLang");
   document.title = t("documentTitle");
 
   document.querySelectorAll("[data-i18n]").forEach(node => {
     node.textContent = t(node.dataset.i18n);
+  });
+
+  document.querySelectorAll("[data-i18n-html]").forEach(node => {
+    node.innerHTML = t(node.dataset.i18nHtml);
   });
 
   document.querySelectorAll("[data-i18n-placeholder]").forEach(node => {
@@ -213,9 +278,13 @@ function applyLanguage(lang) {
     node.dataset.tooltip = t(node.dataset.i18nTooltip);
   });
 
-  el.languageToggleBtn.textContent = t("languageButton");
+  if (el.languageToggleBtn) {
+    el.languageToggleBtn.textContent = t("languageButton");
+  }
 
-  if (!state.rolls.length && el.results.classList.contains("empty")) {
+  renderShortcutGuide();
+
+  if (!state.rolls.length && el.results && el.results.classList.contains("empty")) {
     el.results.innerHTML = t("emptyInitial");
   }
 
@@ -311,7 +380,9 @@ function sortCharacters(chars, minRolls) {
   return [...chars.values()].sort((a, b) => {
     const aPass = a.rolls.length >= minRolls ? 0 : 1;
     const bPass = b.rolls.length >= minRolls ? 0 : 1;
+
     if (aPass !== bPass) return aPass - bPass;
+
     return a.name.localeCompare(b.name, currentLang === "ja" ? "ja" : "en");
   });
 }
@@ -321,7 +392,7 @@ function analyze() {
 
   if (!window.CocDiceParser || typeof window.CocDiceParser.parse !== "function") {
     el.results.className = "empty";
-    el.results.innerHTML = "parser.js が読み込まれていません。";
+    el.results.innerHTML = t("parserMissing");
     return;
   }
 
@@ -344,7 +415,9 @@ function renderAll(resetVisible = false) {
 
   if (resetVisible) {
     state.visibleCharacters = new Set(
-      sorted.filter(char => char.rolls.length >= minRolls).map(char => char.name)
+      sorted
+        .filter(char => char.rolls.length >= minRolls)
+        .map(char => char.name)
     );
   } else {
     state.visibleCharacters = new Set(
@@ -546,6 +619,41 @@ function buildTextOutput(chars) {
   return lines.join("\n");
 }
 
+function renderShortcutGuide() {
+  if (!el.shortcutList) return;
+
+  const rows = t("shortcutRows");
+
+  el.shortcutList.innerHTML = rows.map(row => {
+    const keys = row.keys.map((key, index) => {
+      const plus = index > 0 ? '<span class="shortcut-plus">+</span>' : "";
+      return `${plus}<span class="shortcut-key">${escapeHtml(key)}</span>`;
+    }).join("");
+
+    return `
+      <div class="shortcut-row">
+        <div class="shortcut-combo">${keys}</div>
+        <div class="shortcut-action">${escapeHtml(row.action)}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openShortcutGuide() {
+  if (!el.shortcutModal) {
+    alert(t("shortcutAlert").join("\n"));
+    return;
+  }
+
+  renderShortcutGuide();
+  el.shortcutModal.hidden = false;
+}
+
+function closeShortcutGuide() {
+  if (!el.shortcutModal) return;
+  el.shortcutModal.hidden = true;
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -627,8 +735,14 @@ el.inputToggleBtn.addEventListener("click", () => {
   el.inputToggleBtn.title = isCollapsed ? t("expandInputTitle") : t("collapseInputTitle");
 });
 
-el.shortcutHelpBtn.addEventListener("click", () => {
-  alert(t("shortcutAlert").join("\n"));
+el.shortcutHelpBtn.addEventListener("click", openShortcutGuide);
+
+if (el.shortcutCloseBtn) {
+  el.shortcutCloseBtn.addEventListener("click", closeShortcutGuide);
+}
+
+document.querySelectorAll("[data-shortcut-close]").forEach(node => {
+  node.addEventListener("click", closeShortcutGuide);
 });
 
 el.languageToggleBtn.addEventListener("click", () => {
@@ -683,19 +797,34 @@ el.minRolls.addEventListener("change", () => {
 document.addEventListener("keydown", event => {
   const mod = event.ctrlKey || event.metaKey;
 
+  if (event.key === "Escape" && el.shortcutModal && !el.shortcutModal.hidden) {
+    event.preventDefault();
+    closeShortcutGuide();
+    return;
+  }
+
+  if (event.key === "?") {
+    event.preventDefault();
+    openShortcutGuide();
+    return;
+  }
+
   if (mod && event.key.toLowerCase() === "o") {
     event.preventDefault();
     el.fileInput.click();
+    return;
   }
 
   if (mod && event.shiftKey && event.key.toLowerCase() === "m") {
     event.preventDefault();
     el.themeBtn.click();
+    return;
   }
 
   if (event.key === "Escape") {
     event.preventDefault();
     el.inputToggleBtn.click();
+    return;
   }
 
   if (mod && event.key === "Enter") {
