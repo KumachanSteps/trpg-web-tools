@@ -16,16 +16,17 @@
   <title>TRPG WEBツール観測所</title>
   <meta
     name="description"
-    content="TRPGセッション準備・ログ解析・卓報告作成・シナリオ情報整理を補助するためのWebツール集です。"
+    content="TRPGセッション準備・ログ解析・卓報告作成・シナリオ情報整理を補助するためのWebツール観測所です。"
   />
 
-  <link rel="icon" href="./shared/assets/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="./assets/css/portal.css" />
+  <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="./assets/css/portal.css?v=20260513-04" />
 </head>
 
 <body class="theme-dawn">
   <div class="background-space" aria-hidden="true">
     <div class="stars"></div>
+    <div id="twinkleStars" class="twinkle-stars"></div>
     <div class="nebula nebula-a"></div>
     <div class="nebula nebula-b"></div>
     <div class="nebula nebula-c"></div>
@@ -49,7 +50,7 @@
           <button class="language-button" type="button" data-lang="en" aria-pressed="false">EN</button>
         </div>
 
-        <button id="modeToggle" class="mode-button" type="button" aria-label="Switch to deep space mode">
+        <button id="modeToggle" class="mode-button" type="button" aria-label="Deep Spaceモードに切り替え">
           <span id="modeIcon" aria-hidden="true">☾</span>
           <span id="modeText">Deep Space</span>
         </button>
@@ -66,8 +67,7 @@
         <h1 data-i18n="hero.title">TRPG WEBツール観測所</h1>
 
         <p class="lead" data-i18n="hero.lead">
-          TRPGセッション準備・ログ解析・卓報告作成・シナリオ情報整理を支援するポータルページです。
-          星図のように並ぶツール群から、目的に合うものを選択してください。
+          TRPG準備・ログ解析・卓報告・シナリオ整理を支援するポータルです。星図のように並ぶツールから、目的に合うものを選択してください。
         </p>
       </div>
 
@@ -80,7 +80,7 @@
 
           <div class="summary-item">
             <p id="productionCount" class="summary-number">0</p>
-            <p class="summary-label" data-i18n="status.production">制作中</p>
+            <p class="summary-label" data-i18n="status.production">開発中</p>
           </div>
 
           <div class="summary-item">
@@ -125,8 +125,8 @@
     </footer>
   </main>
 
-  <script src="./assets/js/i18n.js"></script>
-  <script src="./assets/js/language.js"></script>
-  <script src="./assets/js/portal.js"></script>
+  <script src="./assets/js/i18n.js?v=20260513-04"></script>
+  <script src="./assets/js/language.js?v=20260513-04"></script>
+  <script src="./assets/js/portal.js?v=20260513-04"></script>
 </body>
 </html>
