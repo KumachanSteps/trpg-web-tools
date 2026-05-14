@@ -132,7 +132,7 @@ window.TRPG_PORTAL_I18N = {
       category: "logAnalysis",
       href: "./tools/dice-stat-analyst/",
       name: {
-        ja: "Dice Stat Analyst",
+        ja: "ダイス解析アナライザー",
         en: "Dice Stat Analyst",
       },
       description: {
@@ -148,7 +148,7 @@ window.TRPG_PORTAL_I18N = {
       category: "logAnalysis",
       href: "./tools/coc-growth-checker/",
       name: {
-        ja: "CoC 6e/7e Growth Checker",
+        ja: "CoC 6版/7版 成長チェッカー",
         en: "CoC 6e/7e Growth Checker",
       },
       description: {
@@ -163,7 +163,7 @@ window.TRPG_PORTAL_I18N = {
       category: "reportWriting",
       href: "./tools/session-report-generator/",
       name: {
-        ja: "Session Report Generator",
+        ja: "卓報告ジェネレーター",
         en: "Session Report Generator",
       },
       description: {
@@ -178,7 +178,7 @@ window.TRPG_PORTAL_I18N = {
       category: "scenarioPrep",
       href: "./tools/scenario-snippet-builder/",
       name: {
-        ja: "Scenario Info Snippet Builder",
+        ja: "シナリオ情報カードビルダー",
         en: "Scenario Info Snippet Builder",
       },
       description: {
@@ -254,7 +254,7 @@ window.TRPG_PORTAL_I18N = {
       category: "scenarioPrep",
       href: "",
       name: {
-        ja: "TRPG Scenario Organizer",
+        ja: "TRPGシナリオ データベース",
         en: "TRPG Scenario Organizer",
       },
       description: {
@@ -269,7 +269,7 @@ window.TRPG_PORTAL_I18N = {
       category: "gmSupport",
       href: "",
       name: {
-        ja: "GM Charashi Viewer",
+        ja: "GM用キャラシビューワー",
         en: "GM Character Sheet Viewer",
       },
       description: {
