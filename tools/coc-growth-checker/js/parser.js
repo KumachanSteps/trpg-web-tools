@@ -1,4 +1,4 @@
-const CocDiceParser = (() => {
+window.CocDiceParser = (() => {
   const COMMAND_PATTERN = String.raw`(?:s?CCB?|s?RESB|s?CBRB|CBRB|RESB|CCB|CC)`;
   const COMMAND_REGEX = new RegExp(String.raw`\b${COMMAND_PATTERN}\b`, "i");
   const D100_REGEX = /(?:1D100|D100|1d100|d100)/i;
@@ -320,8 +320,7 @@ const CocDiceParser = (() => {
   function detectResult(text, rollValue) {
     const upper = text.toUpperCase();
 
-    if (/決定的成功|クリティカル|CRITICAL|C決定的|スペシャル/.test(text) || /\bCRIT\b/.test(upper)) {
-      if (/スペシャル|SPECIAL/.test(text)) return "special";
+    if (/決定的成功|クリティカル|CRITICAL|C決定的/.test(text) || /\bCRIT\b/.test(upper)) {
       return "critical";
     }
 

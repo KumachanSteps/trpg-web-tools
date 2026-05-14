@@ -4,21 +4,17 @@ const I18N = {
   ja: {
     documentTitle: "CoC6版/7版成長ツール",
     htmlLang: "ja",
-
-    portalLink: "← TRPG Web ツール観測所",
+    portalLink: "TRPG Web Tools | 成長ツール",
     portalTooltip: "TRPG Web Tools ポータルに戻る",
     tagDiceInput: "ダイスログ入力",
     tagEdition: "CoC 6版 / 7版",
     tagDiceStatLink: "ダイス統計アナライザーと連携",
-
     toolIcon: "✦",
     pageTitle: "CoC6版/7版成長ツール",
     pageDescription: "セッションログから、探索者ごとの「成長チェック候補技能」を抽出します。CoC6版・7版のハウスルール運用に合わせて、成功・クリティカル・ファンブルの表示条件を切り替えできます。",
     shortcutTip: "Shortcut: Ctrl / Cmd + O でファイル選択、Ctrl / Cmd + Enter で解析、Ctrl / Cmd + Shift + M でナイトモード切替。",
-
     languageButton: "EN",
     shortcutButton: "ショートカット",
-
     inputTitle: "入力欄",
     collapseInputTitle: "入力パネルを折りたたむ",
     expandInputTitle: "入力パネルを開く",
@@ -26,7 +22,6 @@ const I18N = {
     openFileButton: "📂 ファイルを開く",
     analyzeButton: "成長チェックを抽出",
     clearButton: "入力をクリア",
-
     growthRuleTitle: "成長チェック候補の表示ルール",
     rulebookName: "Rulebook",
     rulebookDescription: "成功・スペシャル・クリティカルを技能ごとに1回だけ表示",
@@ -36,16 +31,13 @@ const I18N = {
     bothDescription: "クリティカル・ファンブルはすべて、通常成功・スペシャルは技能ごとに1回だけ表示",
     bothPrimeName: "Both'",
     bothPrimeDescription: "クリティカルはすべて、通常成功・スペシャルは技能ごとに1回だけ表示。ファンブルは除外",
-
     excludeRuleTitle: "除外ルール",
     excludeSanLabel: "SANチェック / 正気度ロールを除外",
     excludeParamsLabel: "知識・アイデア・幸運・能力値ロールを除外",
     excludeParamsDescription: "STR / CON / POW / DEX / APP / SIZ / INT / EDU / アイデア / 知識 / 幸運など",
-
     characterDisplayTitle: "キャラクター表示",
     minRollsLabel: "NPC除外しきい値：",
     minRollsNote: "この回数未満のキャラクターは初期状態で非表示になります。",
-
     copyTextButton: "テキストコピー",
     copyDoneButton: "コピー完了",
     copyFailedButton: "コピー失敗",
@@ -53,35 +45,29 @@ const I18N = {
     thresholdOnlyButton: "しきい値以上のみ",
     diceStatButton: "ダイス統計アナライザー →",
     diceStatTooltip: "ダイス統計アナライザーへ移動しますか？",
-
     emptyInitial: "ログを入力して「成長チェックを抽出」を押してください。",
     emptyNoRolls: "ダイスロールを検出できませんでした。CC / CCB / RESB / CBRB 形式、またはキャラクター名：コマンド形式のログか確認してください。",
     emptyAfterFilters: "除外ルール適用後に表示できるダイスロールがありません。",
     emptyNoVisibleCharacter: "表示対象のキャラクターがありません。キャラクター表示チェックをONにしてください。",
     noGrowthCandidates: "成長チェック候補はありません。",
     showOrganizedLog: "整理済みダイスログを表示",
-
     summaryCharacters: "検出キャラクター",
     summaryVisibleCharacters: "表示中キャラクター",
     summaryGrowthCandidates: "成長チェック候補",
     summaryCritFumble: "Critical / Fumble",
-
     tableSkill: "技能",
     tableResult: "結果",
     tableRoll: "出目",
     tableRawLog: "元ログ",
-
     thresholdAbove: "しきい値以上",
     thresholdBelow: "しきい値未満",
     rollsLabel: "rolls",
     checksLabel: "checks",
-
     chancePow: "Chance to grow <POW>",
     textOutputTitle: "CoC 成長チェック候補",
     textOutputRolls: "ロール数",
     textOutputGrowthChecks: "成長チェック候補",
     textOutputNoGrowth: "- 成長チェック候補なし",
-
     shortcutAlert: [
       "ショートカット一覧",
       "",
@@ -91,25 +77,20 @@ const I18N = {
       "Esc：入力パネルを折りたたむ / 開く"
     ]
   },
-
   en: {
     documentTitle: "CoC 6e/7e Growth Checker",
     htmlLang: "en",
-
-    portalLink: "← TRPG Web Tools　Portal",
+    portalLink: "TRPG Web Tools | Growth Checker",
     portalTooltip: "Return to TRPG Web Tools Portal",
     tagDiceInput: "Dice Log Input",
     tagEdition: "CoC 6e / 7e",
     tagDiceStatLink: "Linked with Dice Stat Analyst",
-
     toolIcon: "✦",
     pageTitle: "CoC 6e/7e Growth Checker",
     pageDescription: "Extract skill growth check candidates for each character from a session log. Switch output rules based on your CoC 6e / 7e house rules for successes, criticals, and fumbles.",
     shortcutTip: "Shortcuts: Ctrl / Cmd + O to open a file, Ctrl / Cmd + Enter to analyze, Ctrl / Cmd + Shift + M to toggle night mode.",
-
     languageButton: "JP",
     shortcutButton: "Shortcuts",
-
     inputTitle: "Input",
     collapseInputTitle: "Collapse input panel",
     expandInputTitle: "Open input panel",
@@ -117,7 +98,6 @@ const I18N = {
     openFileButton: "📂 Open File",
     analyzeButton: "Extract Growth Checks",
     clearButton: "Clear Input",
-
     growthRuleTitle: "Growth Check Rule",
     rulebookName: "Rulebook",
     rulebookDescription: "List successes, specials, and criticals once per skill.",
@@ -127,16 +107,13 @@ const I18N = {
     bothDescription: "List all criticals and fumbles. Regular successes and specials appear once per skill.",
     bothPrimeName: "Both'",
     bothPrimeDescription: "List all criticals. Regular successes and specials appear once per skill. Fumbles are excluded.",
-
     excludeRuleTitle: "Exclusion Rules",
     excludeSanLabel: "Exclude SAN checks / sanity rolls",
     excludeParamsLabel: "Exclude Knowledge, Idea, Luck, and ability rolls",
     excludeParamsDescription: "STR / CON / POW / DEX / APP / SIZ / INT / EDU / Idea / Knowledge / Luck, etc.",
-
     characterDisplayTitle: "Character Display",
     minRollsLabel: "NPC filter threshold:",
     minRollsNote: "Characters below this roll count are hidden by default.",
-
     copyTextButton: "Copy Text",
     copyDoneButton: "Copied!",
     copyFailedButton: "Copy Failed",
@@ -144,35 +121,29 @@ const I18N = {
     thresholdOnlyButton: "Above Threshold Only",
     diceStatButton: "Dice Stat Analyst →",
     diceStatTooltip: "Do you want to move to Dice Stat Analyst?",
-
     emptyInitial: "Paste a log and click “Extract Growth Checks.”",
     emptyNoRolls: "No dice rolls were detected. Please check whether the log uses CC / CCB / RESB / CBRB format or character-name command format.",
     emptyAfterFilters: "No dice rolls remain after applying the exclusion filters.",
     emptyNoVisibleCharacter: "No characters are currently visible. Turn on at least one character checkbox.",
     noGrowthCandidates: "No growth check candidates.",
     showOrganizedLog: "Show organized dice log",
-
     summaryCharacters: "Detected Characters",
     summaryVisibleCharacters: "Visible Characters",
     summaryGrowthCandidates: "Growth Candidates",
     summaryCritFumble: "Critical / Fumble",
-
     tableSkill: "Skill",
     tableResult: "Result",
     tableRoll: "Roll",
     tableRawLog: "Raw Log",
-
     thresholdAbove: "Above Threshold",
     thresholdBelow: "Below Threshold",
     rollsLabel: "rolls",
     checksLabel: "checks",
-
     chancePow: "Chance to grow <POW>",
     textOutputTitle: "CoC Growth Check Candidates",
     textOutputRolls: "Rolls",
     textOutputGrowthChecks: "Growth Checks",
     textOutputNoGrowth: "- No growth check candidates",
-
     shortcutAlert: [
       "Shortcut List",
       "",
@@ -186,8 +157,6 @@ const I18N = {
 
 let currentLang = localStorage.getItem("cocGrowthCheckerLang") || "ja";
 
-const DICE_PARSER_FALLBACK_MESSAGE = "parser.js が読み込まれていません。index.html で parser.js を growth_checker.js より先に読み込んでください。";
-
 const state = {
   rawInput: "",
   rolls: [],
@@ -197,7 +166,6 @@ const state = {
 };
 
 const el = {
-  body: document.body,
   mainLayout: document.getElementById("mainLayout"),
   inputToggleBtn: document.getElementById("inputToggleBtn"),
   languageToggleBtn: document.getElementById("languageToggleBtn"),
@@ -226,33 +194,26 @@ function t(key) {
 function applyLanguage(lang) {
   currentLang = lang;
   localStorage.setItem("cocGrowthCheckerLang", lang);
-
   document.documentElement.lang = t("htmlLang");
   document.title = t("documentTitle");
 
   document.querySelectorAll("[data-i18n]").forEach(node => {
-    const key = node.dataset.i18n;
-    node.textContent = t(key);
+    node.textContent = t(node.dataset.i18n);
   });
 
   document.querySelectorAll("[data-i18n-placeholder]").forEach(node => {
-    const key = node.dataset.i18nPlaceholder;
-    node.placeholder = t(key);
+    node.placeholder = t(node.dataset.i18nPlaceholder);
   });
 
   document.querySelectorAll("[data-i18n-title]").forEach(node => {
-    const key = node.dataset.i18nTitle;
-    node.title = t(key);
+    node.title = t(node.dataset.i18nTitle);
   });
 
   document.querySelectorAll("[data-i18n-tooltip]").forEach(node => {
-    const key = node.dataset.i18nTooltip;
-    node.dataset.tooltip = t(key);
+    node.dataset.tooltip = t(node.dataset.i18nTooltip);
   });
 
-  if (el.languageToggleBtn) {
-    el.languageToggleBtn.textContent = t("languageButton");
-  }
+  el.languageToggleBtn.textContent = t("languageButton");
 
   if (!state.rolls.length && el.results.classList.contains("empty")) {
     el.results.innerHTML = t("emptyInitial");
@@ -268,12 +229,9 @@ function getCurrentRule() {
 }
 
 function getFilteredRolls() {
-  const excludeSan = el.excludeSan.checked;
-  const excludeParams = el.excludeParams.checked;
-
   return state.rolls.filter(roll => {
-    if (excludeSan && roll.isSan) return false;
-    if (excludeParams && roll.isParam && !roll.isLuckCritical) return false;
+    if (el.excludeSan.checked && roll.isSan) return false;
+    if (el.excludeParams.checked && roll.isParam && !roll.isLuckCritical) return false;
     return true;
   });
 }
@@ -322,9 +280,7 @@ function buildGrowthCandidates(charRolls, rule) {
     }
 
     if (rule === "critFumble") {
-      if (isCritical || isFumble) {
-        candidates.push(roll);
-      }
+      if (isCritical || isFumble) candidates.push(roll);
       continue;
     }
 
@@ -355,9 +311,7 @@ function sortCharacters(chars, minRolls) {
   return [...chars.values()].sort((a, b) => {
     const aPass = a.rolls.length >= minRolls ? 0 : 1;
     const bPass = b.rolls.length >= minRolls ? 0 : 1;
-
     if (aPass !== bPass) return aPass - bPass;
-
     return a.name.localeCompare(b.name, currentLang === "ja" ? "ja" : "en");
   });
 }
@@ -367,7 +321,7 @@ function analyze() {
 
   if (!window.CocDiceParser || typeof window.CocDiceParser.parse !== "function") {
     el.results.className = "empty";
-    el.results.innerHTML = DICE_PARSER_FALLBACK_MESSAGE;
+    el.results.innerHTML = "parser.js が読み込まれていません。";
     return;
   }
 
@@ -390,15 +344,12 @@ function renderAll(resetVisible = false) {
 
   if (resetVisible) {
     state.visibleCharacters = new Set(
-      sorted
-        .filter(char => char.rolls.length >= minRolls)
-        .map(char => char.name)
+      sorted.filter(char => char.rolls.length >= minRolls).map(char => char.name)
     );
   } else {
-    const remainingVisible = [...state.visibleCharacters]
-      .filter(name => state.characters.has(name));
-
-    state.visibleCharacters = new Set(remainingVisible);
+    state.visibleCharacters = new Set(
+      [...state.visibleCharacters].filter(name => state.characters.has(name))
+    );
   }
 
   renderSummary(sorted, filteredRolls);
@@ -486,10 +437,7 @@ function renderResults(chars, minRolls) {
   }
 
   el.results.className = "";
-  el.results.innerHTML = visible
-    .map(char => renderCharacterCard(char, minRolls))
-    .join("");
-
+  el.results.innerHTML = visible.map(char => renderCharacterCard(char, minRolls)).join("");
   state.lastTextOutput = buildTextOutput(visible);
 }
 
@@ -566,9 +514,7 @@ function renderResultTag(result) {
     unknown: "UNKNOWN"
   }[result] || result;
 
-  const cls = ["critical", "fumble", "special", "success"].includes(result)
-    ? result
-    : "";
+  const cls = ["critical", "fumble", "special", "success"].includes(result) ? result : "";
 
   return `<span class="tag ${cls}">${label}</span>`;
 }
@@ -642,11 +588,9 @@ function sendToDiceStatAnalyst() {
 
 el.fileInput.addEventListener("change", async event => {
   const file = event.target.files?.[0];
-
   if (!file) return;
 
   const text = await file.text();
-
   el.inputLog.value = text;
   analyze();
 });
@@ -671,10 +615,7 @@ el.clearBtn.addEventListener("click", () => {
 
 el.themeBtn.addEventListener("click", () => {
   document.body.classList.toggle("dark");
-
-  const isDark = document.body.classList.contains("dark");
-
-  localStorage.setItem("cocGrowthCheckerTheme", isDark ? "dark" : "light");
+  localStorage.setItem("cocGrowthCheckerTheme", document.body.classList.contains("dark") ? "dark" : "light");
 });
 
 el.inputToggleBtn.addEventListener("click", () => {
@@ -763,9 +704,7 @@ document.addEventListener("keydown", event => {
   }
 });
 
-const savedTheme = localStorage.getItem("cocGrowthCheckerTheme");
-
-if (savedTheme === "dark") {
+if (localStorage.getItem("cocGrowthCheckerTheme") === "dark") {
   document.body.classList.add("dark");
 }
 
