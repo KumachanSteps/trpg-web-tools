@@ -15,6 +15,12 @@ const diceCommands = [
   'D%'
 ];
 
+/*
+  Note:
+  CC1 / CC2 / CCB1 / SCC1 などの数字付きバリエーションは、
+  findDiceCommandIndex() 内の正規表現で検出する。
+*/
+
 const includedTabs = ['main', 'メイン', 'ho'];
 const excludedTabs = ['雑談', 'other', 'info', 'おはらい', 'お祓い', '運試し'];
 
@@ -128,15 +134,45 @@ function extractRollsFromLine(line) {
 }
 
 function findDiceCommandIndex(text) {
-  const upper = String(text || '').toUpperCase();
+  const source = String(text || '');
+  const upper = source.toUpperCase();
   const indexes = [];
 
-  diceCommands.forEach(command => {
-    let from = 0;
+  /*
+    CoC 7版のボーナス・ペナルティダイス付きコマンド対応
+    CC1, CC2, CC3...
+    CCB1, CCB2...
+    SCC1, SCCB1...
+    SCBR1, CBR1...
+    などを、CC / CCB / SCC / CBR 系と同じダイスコマンドとして扱う。
+  */
+  const commandPatterns = [
+    /SRESB/i,
+    /RESB/i,
 
-    while (from < upper.length) {
-      const index = upper.indexOf(command, from);
-      if (index < 0) break;
+    /SCCB\d*/i,
+    /SCBR\d*/i,
+    /SCC\d*/i,
+
+    /CCB\d*/i,
+    /CBR\d*/i,
+    /CC\d*/i,
+
+    /S1D100/i,
+    /1D100/i,
+    /SD100/i,
+    /D100/i,
+    /D％/i,
+    /D%/i
+  ];
+
+  commandPatterns.forEach(pattern => {
+    let match;
+    const regex = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
+
+    while ((match = regex.exec(source)) !== null) {
+      const index = match.index;
+      const command = match[0];
 
       const prev = index > 0 ? upper[index - 1] : '';
       const next = upper[index + command.length] || '';
@@ -144,9 +180,9 @@ function findDiceCommandIndex(text) {
       const validPrev = !prev || !isAsciiAlphaNumber(prev);
       const validNext = !next || !isAsciiAlphaNumber(next);
 
-      if (validPrev && validNext) indexes.push(index);
-
-      from = index + command.length;
+      if (validPrev && validNext) {
+        indexes.push(index);
+      }
     }
   });
 
