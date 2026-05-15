@@ -150,15 +150,6 @@
           <p class="growth-rule-help" data-i18n="input.ruleHelp">まずは外側準備版として、ダイスログから技能名・成功/失敗/クリファンを読み取り、候補表に整理します。</p>
         </label>
 
-        <h3 data-i18n="input.thresholdTitle">判定範囲</h3>
-        <div class="row">
-          <label><span data-i18n="input.critMax">クリティカル上限</span><input id="critMax" type="number" min="1" max="100" value="5" /></label>
-          <label><span data-i18n="input.fumbleMin">ファンブル下限</span><input id="fumbleMin" type="number" min="1" max="100" value="96" /></label>
-        </div>
-
-        <h3 data-i18n="input.checklistTitle">ログ解析チェックリスト</h3>
-        <label class="checkline"><input id="dropTabs" type="checkbox" checked /><span data-i18n="input.dropTabs">[雑談] / [other] / [info] 系の行を除外する</span></label>
-        <label class="checkline"><input id="onlyD100" type="checkbox" checked /><span data-i18n="input.onlyD100">d100系ロールのみ抽出する</span></label>
         <label><span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span><input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" /></label>
 
         <button id="analyzeBtn" data-i18n="button.analyze">成長候補を抽出</button>

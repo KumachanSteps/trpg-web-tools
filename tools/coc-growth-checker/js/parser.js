@@ -66,8 +66,14 @@ function extractHtmlLogLine(paragraph) {
 function filterLines(lines) {
   return lines.filter(line => {
     if (isRuleExplanationLine(line)) return false;
-    if ($("dropTabs")?.checked && !shouldKeepTabLine(line)) return false;
-    if ($("onlyD100")?.checked && !looksLikeD100Roll(line)) return false;
+
+    // UIではなく内部ルールとして常時適用：
+    // [雑談] / [other] / [info] / [お祓い] / [おはらい] / [運試し] 系のタブ行は除外する。
+    if (!shouldKeepTabLine(line)) return false;
+
+    // 成長チェック対象はd100系ロールのみに絞る。
+    if (!looksLikeD100Roll(line)) return false;
+
     return true;
   });
 }
@@ -152,15 +158,19 @@ function extractTargetNumber(line) {
 }
 
 function classifyRoll(value, target, line) {
-  const critMax = clampNumber($("critMax")?.value, 1, 100, 5);
-  const fumbleMin = clampNumber($("fumbleMin")?.value, 1, 100, 96);
   const text = String(line || "").toLowerCase();
 
-  if (value <= critMax || text.includes("決定的成功") || text.includes("critical") || text.includes("クリティカル")) return "critical";
-  if (value >= fumbleMin || text.includes("致命的失敗") || text.includes("fumble") || text.includes("ファンブル")) return "fumble";
-  if (target !== null) return value <= target ? "success" : "fail";
+  // クリティカル / ファンブルは、ダイスログに出力された結果表記を優先して判定する。
+  // 例：決定的成功、クリティカル、Critical、致命的失敗、ファンブル、Fumble など。
+  if (text.includes("決定的成功") || text.includes("クリティカル") || text.includes("critical")) return "critical";
+  if (text.includes("致命的失敗") || text.includes("ファンブル") || text.includes("fumble")) return "fumble";
+
   if (text.includes("成功") || text.includes("success")) return "success";
   if (text.includes("失敗") || text.includes("fail")) return "fail";
+
+  // ログに成功/失敗表記がない場合のみ、補助的に目標値から成功/失敗を推定する。
+  if (target !== null) return value <= target ? "success" : "fail";
+
   return "normal";
 }
 
@@ -455,8 +465,6 @@ function renderSummary() {
         characters: Object.keys(counts).length,
         hidden,
         threshold: autoHideMax,
-        critMax: $("critMax")?.value || 5,
-        fumbleMin: $("fumbleMin")?.value || 96,
       })
     : t("summary.selectLog", "ログを入力して「成長候補を抽出」を押してください。");
 

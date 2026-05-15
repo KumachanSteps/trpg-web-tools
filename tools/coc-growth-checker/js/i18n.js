@@ -22,14 +22,8 @@ const I18N = {
     "input.ruleTitle": "成長チェックルール",
     "input.ruleMode": "抽出方式",
     "input.ruleHelp": "まずは外側準備版として、ダイスログから技能名・成功/失敗/クリファンを読み取り、候補表に整理します。",
-    "input.thresholdTitle": "判定範囲",
-    "input.critMax": "クリティカル上限",
-    "input.fumbleMin": "ファンブル下限",
-    "input.checklistTitle": "ログ解析チェックリスト",
-    "input.dropTabs": "[雑談] / [other] / [info] 系の行を除外する",
-    "input.onlyD100": "d100系ロールのみ抽出する",
     "input.autoHideMaxRolls": "自動非表示にする総ロール数",
-    "input.note": "対応例：CCB&lt;=80 【目星】、CC&lt;=60 【図書館】、RESB(10-16)、1d100&lt;=55 など。キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。総ロール数が指定値以下のキャラクターは、分析直後は自動で非表示になります。",
+    "input.note": "対応例：CCB&lt;=80 【目星】、CC&lt;=60 【図書館】、RESB(10-16)、1d100&lt;=55 など。キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。[雑談] / [other] / [info] / [お祓い] / [おはらい] / [運試し] 系の行は内部処理で自動除外します。",
 
     "rule.rulebook": "基本ルルブ準拠：成功技能を1技能につき1回",
     "rule.critFumble": "クリティカル / ファンブル：該当ロールをすべて抽出",
@@ -66,7 +60,7 @@ const I18N = {
 
     "summary.memoTitle": "メモ",
     "summary.selectLog": "ログを入力して「成長候補を抽出」を押してください。",
-    "summary.memo": "検出した{all}件のd100ロールのうち、表示対象{visible}件から成長候補{candidates}件を抽出しました。検出キャラクター数は{characters}です。非表示ロール数は{hidden}件です。総ロール数{threshold}以下のキャラクターは初期状態で非表示です。クリティカル判定は{critMax}以下、ファンブル判定は{fumbleMin}以上です。",
+    "summary.memo": "検出した{all}件のd100ロールのうち、表示対象{visible}件から成長候補{candidates}件を抽出しました。検出キャラクター数は{characters}です。非表示ロール数は{hidden}件です。総ロール数{threshold}以下のキャラクターは初期状態で非表示です。クリティカル / ファンブルはログ本文の結果表記をもとに判定します。",
     "summary.noCandidates": "表示対象の成長候補はありません。表示キャラ設定や抽出方式を確認してください。",
 
     "candidates.title": "成長チェック候補一覧",
@@ -137,14 +131,8 @@ const I18N = {
     "input.ruleTitle": "Growth Check Rule",
     "input.ruleMode": "Extraction Mode",
     "input.ruleHelp": "This first outer-shell version reads skill names, success/fail, criticals, and fumbles from dice logs and organizes them into a candidate table.",
-    "input.thresholdTitle": "Roll Thresholds",
-    "input.critMax": "Critical Max",
-    "input.fumbleMin": "Fumble Min",
-    "input.checklistTitle": "Log Parsing Options",
-    "input.dropTabs": "Exclude [雑談] / [other] / [info] style lines",
-    "input.onlyD100": "Extract d100-style rolls only",
     "input.autoHideMaxRolls": "Auto-hide characters with rolls up to",
-    "input.note": "Supported examples: CCB&lt;=80 【Spot Hidden】, CC&lt;=60 【Library Use】, RESB(10-16), 1d100&lt;=55, etc. Character names are automatically detected from formats such as “Name: CC” and “[main] Name: CCB”. Characters with rolls at or below the specified number are hidden by default after extraction.",
+    "input.note": "Supported examples: CCB&lt;=80 【Spot Hidden】, CC&lt;=60 【Library Use】, RESB(10-16), 1d100&lt;=55, etc. Character names are automatically detected from formats such as “Name: CC” and “[main] Name: CCB”. Lines in [雑談] / [other] / [info] / [お祓い] / [おはらい] / [運試し] style tabs are automatically excluded internally.",
 
     "rule.rulebook": "Rulebook: one successful skill once per skill",
     "rule.critFumble": "Critical / Fumble: extract every matching roll",
@@ -181,7 +169,7 @@ const I18N = {
 
     "summary.memoTitle": "Memo",
     "summary.selectLog": "Paste a log and click “Extract Growth Candidates.”",
-    "summary.memo": "Detected {all} d100 rolls and extracted {candidates} growth candidates from {visible} visible rolls. Detected characters: {characters}. Hidden rolls: {hidden}. Characters with {threshold} rolls or fewer are hidden by default. Critical threshold: {critMax} or lower. Fumble threshold: {fumbleMin} or higher.",
+    "summary.memo": "Detected {all} d100 rolls and extracted {candidates} growth candidates from {visible} visible rolls. Detected characters: {characters}. Hidden rolls: {hidden}. Characters with {threshold} rolls or fewer are hidden by default. Criticals and fumbles are detected from the result wording in the log text.",
     "summary.noCandidates": "No visible growth candidates. Check character visibility or the extraction mode.",
 
     "candidates.title": "Growth Check Candidates",
