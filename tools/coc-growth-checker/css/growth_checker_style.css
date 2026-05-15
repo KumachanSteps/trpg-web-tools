@@ -3957,3 +3957,14 @@ body.dark .theme-switch-thumb-moon::after{
     transform:translateX(54px);
   }
 }
+
+/* =========================================================
+   Header tag font weight adjustment
+   ========================================================= */
+
+.header-pill,
+.header-pill-cyan,
+.header-pill-violet,
+.header-pill-amber{
+  font-weight:400 !important;
+}
