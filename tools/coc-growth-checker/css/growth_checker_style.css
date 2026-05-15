@@ -3968,3 +3968,379 @@ body.dark .theme-switch-thumb-moon::after{
 .header-pill-amber{
   font-weight:400 !important;
 }
+
+/* =========================================================
+   Font Size Scale Override
+   CoC6版/7版成長ツール 推奨フォントサイズ基準
+   ========================================================= */
+
+/*
+ページタイトル          : 22px / weight default or 800
+ヘッダー説明文          : 13px / line-height 1.5
+セクション見出し h2     : 16px
+小見出し h3             : 14px
+通常ラベル              : 13px
+通常テーブル            : 13px
+補足文 note             : 12px / line-height 1.5
+省スペース補足 input-help: 11px / line-height 1.45
+カード大数値            : 24px / weight 900
+カード小数値            : 18px / weight 900
+小ラベル                : 9px〜12px
+ボタン                  : weight 800
+*/
+
+/* =========================================================
+   Header Typography
+   ========================================================= */
+
+.site-title{
+  font-size:22px !important;
+  line-height:1.25 !important;
+  font-weight:800 !important;
+  letter-spacing:.02em !important;
+  font-feature-settings:"palt" 0 !important;
+  font-kerning:normal;
+}
+
+.site-description{
+  font-size:13px !important;
+  line-height:1.5 !important;
+  font-weight:400 !important;
+  letter-spacing:.01em;
+}
+
+.shortcut-tip,
+.shortcut-tip-rich{
+  font-size:11px !important;
+  line-height:1.45 !important;
+  font-weight:400 !important;
+  letter-spacing:.01em;
+  color:var(--text-muted);
+}
+
+.shortcut-tip kbd,
+.shortcut-tip-rich kbd,
+.shortcut-key{
+  min-height:19px !important;
+  padding:2px 6px !important;
+  border-radius:6px;
+  font-size:10px !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+}
+
+.tip-separator{
+  margin:0 4px;
+  font-size:11px;
+  font-weight:400 !important;
+  opacity:.55;
+}
+
+/* =========================================================
+   Header Tags / Pills
+   ========================================================= */
+
+.portal-link,
+.header-pill{
+  font-size:12px !important;
+  line-height:1.3 !important;
+}
+
+.header-pill,
+.header-pill-cyan,
+.header-pill-violet,
+.header-pill-amber{
+  font-weight:400 !important;
+}
+
+/* =========================================================
+   Section Headings
+   ========================================================= */
+
+h2,
+.input-panel-top h2{
+  font-size:16px !important;
+  line-height:1.35 !important;
+  font-weight:800 !important;
+  letter-spacing:.01em;
+}
+
+h3,
+.char-head h3{
+  font-size:14px !important;
+  line-height:1.4 !important;
+  font-weight:800 !important;
+}
+
+/* =========================================================
+   Labels / Form Text
+   ========================================================= */
+
+label,
+.input-field-label,
+.inline-control label,
+.compact-inline-control label{
+  font-size:13px !important;
+  line-height:1.45 !important;
+  font-weight:400 !important;
+}
+
+input[type=file],
+input[type=number],
+textarea,
+.native-file-input,
+#inputLog{
+  font-size:13px !important;
+  line-height:1.5 !important;
+}
+
+textarea::placeholder,
+#inputLog::placeholder{
+  font-size:13px !important;
+  font-weight:400 !important;
+}
+
+/* =========================================================
+   Notes / Helper Text
+   ========================================================= */
+
+.note{
+  font-size:12px !important;
+  line-height:1.5 !important;
+  font-weight:400 !important;
+}
+
+.input-help,
+label.option small,
+.rule-panel small,
+.compact-rule-panel small{
+  font-size:11px !important;
+  line-height:1.45 !important;
+  font-weight:400 !important;
+}
+
+/* =========================================================
+   Rule Panels
+   ========================================================= */
+
+.rule-panel .control-title,
+.compact-rule-panel .control-title{
+  font-size:13px !important;
+  line-height:1.45 !important;
+  font-weight:800 !important;
+}
+
+label.option{
+  font-size:13px !important;
+  line-height:1.45 !important;
+  font-weight:400 !important;
+}
+
+label.option span{
+  font-weight:400;
+}
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+button,
+.file-label,
+.language-toggle-button,
+.shortcut-help-button,
+.input-toggle-button,
+.result-tools button,
+.result-tools .dice-stat-link{
+  font-weight:800 !important;
+}
+
+button,
+.file-label{
+  font-size:13px !important;
+  line-height:1.35 !important;
+}
+
+.language-toggle-button,
+.shortcut-help-button,
+.result-tools button{
+  font-size:12px !important;
+  line-height:1 !important;
+}
+
+#analyzeBtn,
+#clearBtn{
+  font-size:13px !important;
+  font-weight:800 !important;
+}
+
+/* =========================================================
+   Cards / Summary
+   ========================================================= */
+
+.stat b,
+.card .value{
+  font-size:24px !important;
+  line-height:1.1 !important;
+  font-weight:900 !important;
+}
+
+.card .small-value,
+.stat .small-value,
+.char-meta .value-small{
+  font-size:18px !important;
+  line-height:1.15 !important;
+  font-weight:900 !important;
+}
+
+.stat span,
+.card .label,
+.card .sub,
+.pill,
+.tag{
+  font-size:12px !important;
+  line-height:1.35 !important;
+}
+
+.pill,
+.tag{
+  font-weight:800 !important;
+}
+
+/* =========================================================
+   Tables
+   ========================================================= */
+
+table,
+.log-table{
+  font-size:13px !important;
+  line-height:1.5 !important;
+}
+
+th,
+td,
+.log-table th,
+.log-table td{
+  font-size:13px !important;
+  line-height:1.5 !important;
+}
+
+th,
+.log-table th{
+  font-weight:800 !important;
+}
+
+/* =========================================================
+   Result Cards
+   ========================================================= */
+
+.growth-item strong{
+  font-size:13px !important;
+  line-height:1.4 !important;
+  font-weight:800 !important;
+}
+
+.raw-line{
+  font-size:12px !important;
+  line-height:1.5 !important;
+}
+
+summary{
+  font-size:13px !important;
+  line-height:1.45 !important;
+  font-weight:800 !important;
+}
+
+.empty{
+  font-size:13px !important;
+  line-height:1.6 !important;
+}
+
+/* =========================================================
+   Shortcut Modal
+   ========================================================= */
+
+.shortcut-modal-kicker{
+  font-size:11px !important;
+  line-height:1.4 !important;
+  font-weight:800 !important;
+}
+
+.shortcut-modal-header h2{
+  font-size:16px !important;
+  line-height:1.35 !important;
+  font-weight:800 !important;
+}
+
+.shortcut-action{
+  font-size:13px !important;
+  line-height:1.5 !important;
+  font-weight:400 !important;
+}
+
+.shortcut-modal-note{
+  font-size:12px !important;
+  line-height:1.5 !important;
+}
+
+/* =========================================================
+   Responsive Font Scale
+   ========================================================= */
+
+@media(max-width:720px){
+  .site-title{
+    font-size:20px !important;
+    line-height:1.25 !important;
+  }
+
+  .site-description{
+    font-size:12px !important;
+    line-height:1.5 !important;
+  }
+
+  .shortcut-tip,
+  .shortcut-tip-rich{
+    font-size:10.5px !important;
+    line-height:1.45 !important;
+  }
+
+  h2,
+  .input-panel-top h2{
+    font-size:16px !important;
+  }
+
+  h3,
+  .char-head h3{
+    font-size:14px !important;
+  }
+
+  label,
+  .input-field-label,
+  input[type=file],
+  input[type=number],
+  textarea,
+  .native-file-input,
+  #inputLog{
+    font-size:13px !important;
+  }
+
+  .note{
+    font-size:12px !important;
+  }
+
+  .input-help,
+  label.option small,
+  .rule-panel small{
+    font-size:11px !important;
+  }
+}
+
+@media(max-width:460px){
+  .site-title{
+    font-size:18px !important;
+  }
+
+  .portal-link,
+  .header-pill{
+    font-size:11px !important;
+  }
+}
