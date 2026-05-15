@@ -2367,3 +2367,57 @@ header.site-header{
     max-height: 56px;
   }
 }
+
+/* =========================================================
+   Screenshot Mode Height Optimization
+   スクショ表示時の不要な下部余白を削減
+   ========================================================= */
+
+body.screenshot-mode {
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 100vh;
+  height: auto;
+  padding: 84px 24px 24px;
+}
+
+body.screenshot-mode main,
+body.screenshot-mode main.input-collapsed {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin: 0 auto;
+}
+
+body.screenshot-mode main > section {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}
+
+body.screenshot-mode #summary {
+  height: auto;
+  min-height: 0;
+}
+
+body.screenshot-mode .summary-memo-card {
+  margin-bottom: 0;
+}
+
+body.screenshot-mode #summaryMemo {
+  margin-bottom: 0;
+}
+
+/* 最後のカード以降に余白が残らないようにする */
+body.screenshot-mode #summary > *:last-child {
+  margin-bottom: 0;
+}
+
+/* キャラカード・全体サマリー・メモの下余白を詰める */
+body.screenshot-mode .character-summary-grid {
+  margin-bottom: 18px;
+}
+
+body.screenshot-mode .grid-results {
+  margin-bottom: 12px;
+}
