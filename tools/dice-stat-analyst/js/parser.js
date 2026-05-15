@@ -51,8 +51,12 @@ function extractHtmlLogLine(paragraph) {
 function filterLines(lines) {
   return lines.filter(line => {
     if (isRuleExplanationLine(line)) return false;
-    if ($('dropTabs').checked && !shouldKeepTabLine(line)) return false;
-    if ($('onlyD100').checked && !looksLikeD100Roll(line)) return false;
+
+    const dropTabs = $('dropTabs');
+    const onlyD100 = $('onlyD100');
+
+    if (dropTabs && dropTabs.checked && !shouldKeepTabLine(line)) return false;
+    if (onlyD100 && onlyD100.checked && !looksLikeD100Roll(line)) return false;
     return true;
   });
 }
@@ -135,7 +139,12 @@ function findDiceCommandIndex(text) {
       if (index < 0) break;
 
       const prev = index > 0 ? upper[index - 1] : '';
-      if (!prev || !isAsciiAlphaNumber(prev)) indexes.push(index);
+      const next = upper[index + command.length] || '';
+
+      const validPrev = !prev || !isAsciiAlphaNumber(prev);
+      const validNext = !next || !isAsciiAlphaNumber(next);
+
+      if (validPrev && validNext) indexes.push(index);
 
       from = index + command.length;
     }
@@ -239,11 +248,14 @@ function isRuleExplanationLine(line) {
   const body = removeLeadingTab(text).trim();
   const compact = normalizeTabName(body);
 
+  if (!text) return true;
   if (tab === 'info' || tab.includes('info')) return true;
-  if (tab.includes('ルール')) return true;
+  if (tab.includes('ルール') || tab.includes('rule')) return true;
   if (body.startsWith('ルール説明：') || body.startsWith('ルール説明:')) return true;
   if (body.startsWith('【7版ルール】') || body.startsWith('[7版ルール]')) return true;
+  if (compact.startsWith('ルール説明')) return true;
   if (compact.startsWith('7版ルール')) return true;
+  if (compact.startsWith('◆7版ルール')) return true;
 
   return false;
 }

@@ -25,7 +25,8 @@ function switchTab(button) {
   document.querySelectorAll('.tab-panel').forEach(item => item.classList.remove('active'));
 
   button.classList.add('active');
-  $(button.dataset.tab).classList.add('active');
+  const target = $(button.dataset.tab);
+  if (target) target.classList.add('active');
 }
 
 function toggleSort(key) {
@@ -68,10 +69,6 @@ function render() {
   renderChart();
   renderTable();
   applyInputPanelLayout();
-
-  if (typeof applyTranslations === 'function') {
-    applyTranslations();
-  }
 }
 
 function renderSummary() {
@@ -124,33 +121,30 @@ function renderSummary() {
 
 function renderCharacterControls() {
   const box = $('characterControls');
-  const btn = $('characterControlToggleBtn');
-  const chars = getDetectedCharacters();
+  const button = $('characterControlToggleBtn');
+  const characters = getDetectedCharacters();
 
   if (!box) return;
 
   box.classList.toggle('visible', state.showCharacterControls);
 
-  if (btn) {
-    const openText = typeof t === 'function' ? t('openCharacterSettings') : '表示キャラ設定を開く';
-    const closeText = typeof t === 'function' ? t('closeCharacterSettings') : '表示キャラ設定を隠す';
-
-    btn.textContent = state.showCharacterControls
-      ? `${closeText}▲`
-      : `${openText}▼`;
+  if (button) {
+    button.textContent = state.showCharacterControls
+      ? tr('button.hideCharacterControls', '表示キャラ設定を隠す▲')
+      : tr('button.showCharacterControls', '表示キャラ設定を開く▼');
   }
 
-  if (!chars.length) {
+  if (!characters.length) {
     box.innerHTML = '';
-    if (btn) btn.style.display = 'none';
+    if (button) button.style.display = 'none';
     return;
   }
 
-  if (btn) btn.style.display = 'inline-flex';
+  if (button) button.style.display = 'inline-flex';
 
-  box.innerHTML = chars.map(name => {
+  box.innerHTML = characters.map(name => {
     const checked = state.hiddenCharacters.has(name) ? '' : 'checked';
-    const count = state.rolls.filter(r => (r.character || '不明') === name).length;
+    const count = state.rolls.filter(roll => (roll.character || tr('common.unknown', '不明')) === name).length;
 
     return `
       <label class="character-toggle">
@@ -162,7 +156,7 @@ function renderCharacterControls() {
 
   box.querySelectorAll('input[data-character]').forEach(input => {
     input.addEventListener('change', () => {
-      const name = input.getAttribute('data-character') || '不明';
+      const name = input.getAttribute('data-character') || tr('common.unknown', '不明');
 
       if (input.checked) {
         state.hiddenCharacters.delete(name);
@@ -170,6 +164,7 @@ function renderCharacterControls() {
         state.hiddenCharacters.add(name);
       }
 
+      state.inputPanelMode = state.inputPanelMode === 'open' ? 'open' : 'auto';
       render();
     });
   });
@@ -182,25 +177,24 @@ function renderCharacterSummary() {
   const grouped = groupRollsByCharacter(getVisibleRolls());
   const names = Object.keys(grouped).sort(compareCharacterNames);
 
-  const noCharacterText = typeof t === 'function'
-    ? t('noVisibleCharacters')
-    : '表示対象のキャラクターがありません。キャラクターのチェックを戻してください。';
-
   box.innerHTML = names.length
     ? names.map(name => renderCharacterCard(name, grouped[name])).join('')
-    : `<div class="card"><p class="note">${noCharacterText}</p></div>`;
+    : `
+      <div class="card">
+        <p class="note">
+          ${escapeHtml(tr('summary.noVisibleCharacters', '表示対象のキャラクターがありません。キャラクターのチェックを戻してください。'))}
+        </p>
+      </div>
+    `;
 }
 
 function renderCharacterCard(name, rolls) {
-  const values = rolls.map(r => r.value);
+  const values = rolls.map(roll => roll.value);
   const total = values.length;
-  const out = getOutcomeCounts(rolls);
-  const avg = total ? values.reduce((a, b) => a + b, 0) / total : 0;
-
-  const totalLabel = typeof t === 'function' ? t('statTotalRolls') : '総ロール';
-  const averageLabel = typeof t === 'function' ? t('statAverageRoll') : '平均出目';
-  const successFailLabel = typeof t === 'function' ? t('statSuccessFail') : '成功 / 失敗';
-  const criticalFumbleLabel = typeof t === 'function' ? t('statCriticalFumble') : 'クリティカル / ファンブル';
+  const outcome = getOutcomeCounts(rolls);
+  const average = total
+    ? values.reduce((a, b) => a + b, 0) / total
+    : 0;
 
   return `
     <div class="card character-card">
@@ -208,25 +202,25 @@ function renderCharacterCard(name, rolls) {
 
       <div class="mini-stats">
         <div class="mini-stat">
-          <div class="label">${totalLabel}</div>
+          <div class="label">${escapeHtml(tr('label.totalRolls', '総ロール'))}</div>
           <div class="value">${total}</div>
         </div>
 
         <div class="mini-stat">
-          <div class="label">${averageLabel}</div>
-          <div class="value">${avg.toFixed(2)}</div>
+          <div class="label">${escapeHtml(tr('label.averageRoll', '平均出目'))}</div>
+          <div class="value">${average.toFixed(2)}</div>
         </div>
 
         <div class="mini-stat">
-          <div class="label">${successFailLabel}</div>
-          <div class="value">${out.success} / ${out.fail}</div>
-          <div class="label">${rate(out.success, total)}% / ${rate(out.fail, total)}%</div>
+          <div class="label">${escapeHtml(tr('label.successFail', '成功 / 失敗'))}</div>
+          <div class="value">${outcome.success} / ${outcome.fail}</div>
+          <div class="label">${rate(outcome.success, total)}% / ${rate(outcome.fail, total)}%</div>
         </div>
 
         <div class="mini-stat">
-          <div class="label">${criticalFumbleLabel}</div>
-          <div class="value">${out.critical} / ${out.fumble}</div>
-          <div class="label">${rate(out.critical, total)}% / ${rate(out.fumble, total)}%</div>
+          <div class="label">${escapeHtml(tr('label.critFumble', 'クリティカル / ファンブル'))}</div>
+          <div class="value">${outcome.critical} / ${outcome.fumble}</div>
+          <div class="label">${rate(outcome.critical, total)}% / ${rate(outcome.fumble, total)}%</div>
         </div>
       </div>
 
@@ -282,7 +276,10 @@ function renderBins(values) {
 }
 
 function renderTable() {
-  $('rollTableBody').innerHTML = getSortedVisibleRolls().map((roll, index) => {
+  const body = $('rollTableBody');
+  if (!body) return;
+
+  body.innerHTML = getSortedVisibleRolls().map((roll, index) => {
     const label = classifyRoll(roll);
     const pill = label === 'Critical'
       ? 'crit'

@@ -15,10 +15,10 @@ const state = {
   dark: localStorage.getItem(THEME_STORAGE_KEY) === 'dark'
 };
 
-bindEvents();
-initializeApp();
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 function initializeApp() {
+  bindEvents();
   syncThemeSwitch();
   initializeLanguageUI();
 
@@ -35,7 +35,7 @@ function bindEvents() {
     themeToggleBtn.addEventListener('click', toggleTheme);
   }
 
-  const languageToggleBtn = $('languageToggleBtn');
+  const languageToggleBtn = $('languageToggleBtn') || $('langToggleBtn');
   if (languageToggleBtn) {
     languageToggleBtn.addEventListener('click', toggleLanguage);
   }
@@ -115,7 +115,10 @@ async function handleFileInput(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
 
-  $('rawInput').value = await file.text();
+  const rawInput = $('rawInput');
+  if (!rawInput) return;
+
+  rawInput.value = await file.text();
   state.inputPanelMode = 'auto';
   analyze();
 }
@@ -127,8 +130,11 @@ function toggleInputPanel() {
 }
 
 function clearAll() {
-  $('fileInput').value = '';
-  $('rawInput').value = '';
+  const fileInput = $('fileInput');
+  const rawInput = $('rawInput');
+
+  if (fileInput) fileInput.value = '';
+  if (rawInput) rawInput.value = '';
   state.rolls = [];
   state.filteredLines = [];
   state.hiddenCharacters = new Set();
@@ -197,18 +203,10 @@ function toggleLanguage() {
   const next = current === 'ja' ? 'en' : 'ja';
 
   setLanguage(next);
-  updateLanguageToggleLabel();
-
-  if (typeof applyTranslations === 'function') {
-    applyTranslations();
-  }
-
-  render();
-  syncThemeSwitch();
 }
 
 function updateLanguageToggleLabel() {
-  const button = $('languageToggleBtn');
+  const button = $('languageToggleBtn') || $('langToggleBtn');
   if (!button) return;
 
   let current = 'ja';

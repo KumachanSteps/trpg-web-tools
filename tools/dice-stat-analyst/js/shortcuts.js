@@ -54,6 +54,7 @@ function exitScreenshotMode() {
 function handleGlobalKeydown(event) {
   const key = String(event.key || '').toLowerCase();
   const isCommand = event.ctrlKey || event.metaKey;
+  const isAltOnly = event.altKey && !event.ctrlKey && !event.metaKey;
   const isCommandShift = isCommand && event.shiftKey;
   const isScreenshotMode = document.body.classList.contains('screenshot-mode');
   const isModalOpen = typeof isShortcutModalOpen === 'function' && isShortcutModalOpen();
@@ -77,7 +78,7 @@ function handleGlobalKeydown(event) {
       return;
     }
 
-    const confirmed = window.confirm('入力内容と解析結果をクリアします。よろしいですか？');
+    const confirmed = window.confirm(tr('confirm.clear', '入力内容と解析結果をクリアします。よろしいですか？'));
     if (confirmed) {
       clearAll();
     }
@@ -110,7 +111,7 @@ function handleGlobalKeydown(event) {
     Ctrl / Cmd + Shift + O:
     ファイル選択
   */
-  if (isCommandShift && key === 'o') {
+  if ((isAltOnly || isCommandShift) && key === 'o') {
     event.preventDefault();
     $('fileInput').click();
     return;
@@ -191,7 +192,7 @@ function handleGlobalKeydown(event) {
     Ctrl / Cmd + Shift + T:
     ナイトモード切替
   */
-  if (isCommandShift && key === 't') {
+  if ((isAltOnly || isCommandShift) && key === 't') {
     event.preventDefault();
     toggleTheme();
     return;
@@ -201,7 +202,7 @@ function handleGlobalKeydown(event) {
     Ctrl / Cmd + Shift + V:
     スクショ表示 / 通常表示
   */
-  if (isCommandShift && key === 'v') {
+  if ((isAltOnly || isCommandShift) && (key === 's' || key === 'v')) {
     event.preventDefault();
 
     if (isScreenshotMode) {
@@ -220,7 +221,7 @@ function handleGlobalKeydown(event) {
   if (isCommand && event.key === 'Backspace') {
     event.preventDefault();
 
-    const confirmed = window.confirm('入力内容と解析結果をクリアします。よろしいですか？');
+    const confirmed = window.confirm(tr('confirm.clear', '入力内容と解析結果をクリアします。よろしいですか？'));
 
     if (confirmed) {
       clearAll();
