@@ -3280,3 +3280,128 @@ body.dark .shortcut-key{
     margin:0 3px;
   }
 }
+
+/* =========================================================
+   Header Sizing Reference
+   ヘッダー内アイテムのサイズ調整用
+   ========================================================= */
+
+header {
+  flex: 0 0 auto;
+  padding: 16px 24px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header-left {
+  min-width: 0;
+}
+
+.header-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+}
+
+header p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.lang-toggle {
+  width: auto;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   Theme Switch Sizing Reference
+   ナイトモードスイッチのサイズ調整用
+   ========================================================= */
+
+.theme-switch {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.theme-switch-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 132px;
+  height: 60px;
+  padding: 0 18px;
+
+  border-radius: 999px;
+}
+
+.theme-switch-side {
+  position: relative;
+  z-index: 0;
+  font-size: 24px;
+  line-height: 1;
+  user-select: none;
+}
+
+.theme-switch-thumb {
+  position: absolute;
+  z-index: 2;
+
+  left: 4px;
+  top: 4px;
+
+  width: 52px;
+  height: 52px;
+
+  border-radius: 50%;
+}
+
+.theme-switch-thumb-icon {
+  position: absolute;
+  font-size: 28px;
+  line-height: 1;
+}
+
+body.dark .theme-switch-thumb {
+  transform: translateX(72px);
+}
