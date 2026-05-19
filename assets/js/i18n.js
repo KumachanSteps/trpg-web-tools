@@ -157,21 +157,6 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "session-log-tool",
-      icon: "🗒️",
-      status: "production",
-      category: "reportWriting",
-      href: "./tools/session-log-tool/",
-      name: {
-        ja: "卓ログトラッカー",
-        en: "Session Log Tracker",
-      },
-      description: {
-        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
-        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists. Organize history in a table and send each row to the Session Report Generator.",
-      },
-    },
-    {
       id: "session-report-generator",
       icon: "📝",
       status: "production",
@@ -187,33 +172,18 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "scenario-info-snippet-builder",
-      icon: "✂️",
+      id: "session-log-tool",
+      icon: "🗒️",
       status: "production",
-      category: "scenarioPrep",
-      href: "./tools/scenario-snippet-builder/",
+      category: "reportWriting",
+      href: "./tools/session-log-tool/",
       name: {
-        ja: "シナリオ情報カードビルダー",
-        en: "Scenario Info Snippet Builder",
+        ja: "卓ログトラッカー",
+        en: "Session Log Tracker",
       },
       description: {
-        ja: "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
-        en: "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord.",
-      },
-    },
-    {
-      id: "trpg-hashtag-searcher",
-      icon: "#️⃣",
-      status: "production",
-      category: "haishinTracking",
-      href: "./tools/trpg-hashtag-searcher/",
-      name: {
-        ja: "使えるハッシュタグ検索",
-        en: "Usable Hashtag Finder",
-      },
-      description: {
-        ja: "TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。",
-        en: "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
+        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
+        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists. Organize history in a table and send each row to the Session Report Generator.",
       },
     },
     {
@@ -261,6 +231,38 @@ window.TRPG_PORTAL_I18N = {
         en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
       },
     },
+
+    {
+      id: "scenario-info-snippet-builder",
+      icon: "✂️",
+      status: "production",
+      category: "scenarioPrep",
+      href: "./tools/scenario-snippet-builder/",
+      name: {
+        ja: "シナリオ情報カードビルダー",
+        en: "Scenario Info Snippet Builder",
+      },
+      description: {
+        ja: "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
+        en: "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord.",
+      },
+    },
+    {
+      id: "trpg-hashtag-searcher",
+      icon: "#️⃣",
+      status: "production",
+      category: "haishinTracking",
+      href: "./tools/trpg-hashtag-searcher/",
+      name: {
+        ja: "使えるハッシュタグ検索",
+        en: "Usable Hashtag Finder",
+      },
+      description: {
+        ja: "TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。",
+        en: "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
+      },
+    },
+
 
     {
       id: "trpg-haishin-observatory",
