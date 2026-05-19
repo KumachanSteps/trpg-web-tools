@@ -157,6 +157,21 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
+      id: "session-log-tool",
+      icon: "🗒️",
+      status: "production",
+      category: "reportWriting",
+      href: "./tools/session-log-tool/",
+      name: {
+        ja: "卓ログトラッカー",
+        en: "Session Log Tracker",
+      },
+      description: {
+        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
+        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists. Organize history in a table and send each row to the Session Report Generator.",
+      },
+    },
+    {
       id: "session-report-generator",
       icon: "📝",
       status: "production",
