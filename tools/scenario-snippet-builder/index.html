@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <title>TRPGシナリオ情報カード作成ツール Beta</title>
-  <link rel="stylesheet" href="snippet_builder.css">
+  <link rel="stylesheet" href="css/snippet_builder_style.css">
 </head>
 
 <body>
   <div class="app" id="appRoot">
     <header class="app-header">
       <div class="header-title-group">
-        <div class="app-title">TRPGシナリオ情報カード作成ツール</div>
+        <div class="app-title">TRPGシナリオ情報カード作成ツール｜TRPG Webツール観測所</div>
         <div class="app-subtitle">シナリオ本文を貼り付け、編集用本文から必要情報をカード化し、ココフォリア用スニペットとしてコピーできます。</div>
       </div>
+
       <button id="themeToggle" class="theme-switch" type="button" aria-label="ライトモードとナイトモードを切り替え">
         <span class="theme-switch-track">
           <span class="theme-icon">☀</span>
@@ -94,6 +95,11 @@
     </main>
   </div>
 
-  <script src="snippet_builder.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/shortcut.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
