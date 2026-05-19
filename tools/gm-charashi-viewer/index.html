@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="pageTitle">KP用キャラシビューアー</title>
+  <link rel="stylesheet" href="css/charashi_viewer_style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="brand-kicker" data-i18n="brandKicker">TRPG WEBツール</div>
+        <h1 class="brand-title" data-i18n="appTitle">KP用キャラシビューアー</h1>
+        <p class="brand-desc" data-i18n="appDesc">いあきゃらのコマ出力データを貼り付けると、KP用のPCカードをすぐ表示します。</p>
+      </div>
+      <div class="top-actions">
+        <label class="toggle-control" title="貼り付けたチャットパレットを整形して表示・コピーします" data-i18n-title="formatToggleTitle">
+          <input type="checkbox" id="formatPaletteToggle" checked>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-label" data-i18n="formatToggle">チャパレ整形</span>
+        </label>
+        <button class="btn-danger" id="deleteAllBtn" type="button" data-i18n="deleteAll">全データ削除</button>
+      </div>
+    </header>
+
+    <main class="viewer-panel">
+      <div class="paste-layer">
+        <div>
+          <span class="paste-layer-title" data-i18n="pasteTitle">いあきゃら コマ出力データを貼り付け</span>
+          <p class="paste-layer-note" data-i18n="pasteNote">このエリア上で Ctrl / Cmd + V すると、いあきゃらのコマ出力データを読み込んでカードを生成します。カードはこのレイヤーの上に表示されます。</p>
+        </div>
+      </div>
+      <div class="toast error" id="errorToast"></div>
+      <div class="toast info" id="infoToast"></div>
+      <div class="card-lane" id="cardLane"></div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="deleteModal" aria-hidden="true">
+    <div class="modal-panel narrow" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+      <h2 class="modal-title" id="deleteTitle" data-i18n="deleteTitle">すべてのPCカードを削除しますか？</h2>
+      <p class="modal-text" id="deleteText" data-i18n="deleteTextDefault">現在表示されているPCカードをすべて削除します。この操作は取り消せません。</p>
+      <div class="modal-actions">
+        <button class="btn-soft" id="cancelDeleteBtn" type="button" data-i18n="cancel">キャンセル</button>
+        <button class="btn-danger" id="confirmDeleteBtn" type="button" data-i18n="deleteAllConfirm">すべて削除</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="copyModal" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="copyTitle">
+      <h2 class="modal-title" id="copyTitle" data-i18n="manualCopyTitle">手動コピーが必要です</h2>
+      <p class="modal-text" data-i18n="manualCopyText">この環境ではClipboard APIがブロックされています。下のテキストを選択済みなので、Ctrl / Cmd + Cでコピーしてください。</p>
+      <textarea class="modal-textarea" id="copyTextArea" readonly></textarea>
+      <div class="modal-actions">
+        <button class="btn-soft" id="closeCopyBtn" type="button" data-i18n="close">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/i18l.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/perser.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
