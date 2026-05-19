@@ -221,9 +221,9 @@ window.TRPG_PORTAL_I18N = {
       icon: "📋",
       status: "production",
       category: "characterUtility",
-      href: "./tools/charamemo-generator/",
+      href: "./tools/iachara-charamemo-creator/",
       name: {
-        ja: "キャラメモ抽出ツール",
+        ja: "いあキャラMEMOジェネレータ",
         en: "Charamemo Generator",
       },
       description: {
