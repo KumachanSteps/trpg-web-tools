@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>卓ログトラッカー | TRPG WEBツール観測所</title>
+  <link rel="stylesheet" href="css/log_tool_style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="header-layout">
+        <div class="header-left">
+          <div class="header-tags">
+            <a class="portal-link" href="../index.html" data-i18n="portalLink">← TRPG Webツール観測所</a>
+            <a class="header-pill header-pill-violet" href="../session-report-generator/index.html" data-i18n="reportLink">卓報告ジェネレーターと連携</a>
+          </div>
+
+          <div class="title-row">
+            <div class="tool-icon" aria-hidden="true">
+              <span class="tool-icon-main">▤</span>
+              <span class="tool-icon-star">✦</span>
+              <span class="tool-icon-stats">
+                <span class="tool-icon-stat-bar tool-icon-stat-bar-1"></span>
+                <span class="tool-icon-stat-bar tool-icon-stat-bar-2"></span>
+                <span class="tool-icon-stat-bar tool-icon-stat-bar-3"></span>
+              </span>
+            </div>
+            <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー</h1>
+          </div>
+
+          <p class="site-description" data-i18n="siteDescription">
+            遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。
+          </p>
+        </div>
+
+        <div class="header-actions">
+          <div class="header-action-row">
+            <button id="importJsonBtn" class="header-button primary" type="button" data-i18n="jsonInput">JSON入力</button>
+            <button id="exportJsonBtn" class="header-button secondary-cyan" type="button" data-i18n="jsonOutput">JSON出力</button>
+            <button id="exportTextBtn" class="header-button secondary-amber" type="button" data-i18n="textOutput">テキスト出力</button>
+          </div>
+          <div class="header-action-row">
+            <button id="languageToggleBtn" class="header-button plain" type="button">JP/EN</button>
+            <button id="shortcutHelpBtn" class="header-button secondary-cyan" type="button" data-i18n="shortcut">ショートカット</button>
+          </div>
+        </div>
+      </div>
+      <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
+    </header>
+
+    <section class="stats-grid" aria-label="summary stats">
+      <article class="stat-card"><div><p data-i18n="statSessions">卓数</p><strong id="statSessions">0</strong></div><span>日</span></article>
+      <article class="stat-card"><div><p data-i18n="statScenarios">シナリオ数</p><strong id="statScenarios">0</strong></div><span>本</span></article>
+      <article class="stat-card"><div><p data-i18n="statPlayedTime">総プレイ時間</p><strong id="statPlayedTime">0h</strong></div><span>時</span></article>
+      <article class="stat-card"><div><p data-i18n="statPlayedWith">同卓者</p><strong id="statPlayedWith">0</strong></div><span>人</span></article>
+    </section>
+
+    <section class="filter-panel">
+      <label class="search-box">
+        <span>⌕</span>
+        <input id="searchInput" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="シナリオ名、PC、GM/KP、PL、メモを検索..." />
+      </label>
+      <select id="systemFilter" aria-label="system filter">
+        <option value="" data-i18n="allSystems">すべてのシステム</option>
+      </select>
+      <select id="roleFilter" aria-label="role filter">
+        <option value="" data-i18n="allRoles">すべての役割</option>
+      </select>
+      <select id="sortSelect" aria-label="sort">
+        <option value="newest" data-i18n="newestFirst">新しい順</option>
+        <option value="oldest" data-i18n="oldestFirst">古い順</option>
+        <option value="scenario" data-i18n="byScenario">シナリオ別</option>
+        <option value="gm" data-i18n="byGm">GM/KP別</option>
+      </select>
+      <button id="addSessionTopBtn" class="accent-button" type="button"><span>＋</span><span data-i18n="addSession">卓を追加</span></button>
+    </section>
+
+    <main class="main-panel">
+      <section class="table-panel">
+        <div class="table-header">
+          <div>
+            <h2 data-i18n="tableTitle">卓ログテーブル</h2>
+            <p data-i18n="tableDescription">編集可能な卓ログテーブルです。項目ヘッダーをドラッグすると列の並び順を変更できます。「＋ 項目追加」からFav、HO、エンディング、リンク、カスタム項目などを追加できます。</p>
+          </div>
+          <div class="table-actions">
+            <div class="field-panel-wrap">
+              <button id="toggleFieldPanelBtn" class="mini-button active-soft" type="button" data-i18n="addFields">＋ 項目追加</button>
+              <div id="fieldPanel" class="field-panel" hidden>
+                <div class="field-panel-head">
+                  <div>
+                    <strong data-i18n="additionalFields">追加データ項目</strong>
+                    <p data-i18n="additionalFieldsDesc">テーブルに追加する任意項目を選択できます。これらの項目は卓報告ジェネレーターにも渡せます。</p>
+                  </div>
+                  <button id="closeFieldPanelBtn" type="button" class="icon-button">×</button>
+                </div>
+                <div id="optionalFieldsList" class="optional-fields-list"></div>
+                <button id="createCustomFieldBtn" type="button" class="custom-field-button" data-i18n="createCustomField">＋ カスタム項目を作成</button>
+              </div>
+            </div>
+            <button id="resetFieldsBtn" class="mini-button" type="button" data-i18n="resetFields">項目リセット</button>
+            <button class="mini-button selected" type="button" data-i18n="tableView">テーブル表示</button>
+            <button class="mini-button muted" type="button" data-i18n="cardView">カード表示</button>
+            <button class="mini-button muted" type="button" data-i18n="compactView">コンパクト</button>
+          </div>
+        </div>
+
+        <div class="drag-tip" data-i18n="dragTip">ドラッグ操作：項目ヘッダーの ⋮⋮ を掴んで、表示したい位置にドロップできます。</div>
+
+        <div class="table-scroll">
+          <table id="sessionTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <button id="kansouTab" class="kansou-tab" type="button" data-i18n="kansouTab">感想</button>
+      <div id="drawerOverlay" class="drawer-overlay" hidden></div>
+      <aside id="kansouDrawer" class="kansou-drawer" aria-hidden="true">
+        <div class="drawer-header">
+          <div>
+            <h2 data-i18n="drawerTitle">詳細メモ・感想</h2>
+            <p data-i18n="drawerSub">選択中の卓の詳細</p>
+          </div>
+          <button id="closeDrawerBtn" class="icon-button" type="button">×</button>
+        </div>
+        <div id="drawerContent" class="drawer-content"></div>
+      </aside>
+    </main>
+
+    <section class="export-section">
+      <div class="export-card">
+        <h2 data-i18n="exportTitle">プレイ済みシナリオ一覧出力</h2>
+        <p data-i18n="exportDesc">プレイ済みシナリオ一覧を、日付順・システム別・GM別・PL別などでテキスト出力できます。</p>
+        <div class="export-buttons">
+          <button type="button" data-export-mode="date"><strong data-i18n="exportByDate">日付順</strong><small data-i18n="numberedList">番号付き一覧</small></button>
+          <button type="button" data-export-mode="system"><strong data-i18n="exportBySystem">システム別</strong><small>CoC / エモクロア</small></button>
+          <button type="button" data-export-mode="gm"><strong data-i18n="exportByGm">GM/KP別</strong><small>KP・DL別</small></button>
+          <button type="button" data-export-mode="players"><strong data-i18n="exportByPl">PL別</strong><small data-i18n="byPlayersSmall">同卓者別</small></button>
+        </div>
+        <textarea id="textExportOutput" data-i18n-placeholder="textExportPlaceholder" placeholder="ここにテキスト出力が表示されます。"></textarea>
+      </div>
+      <div class="notice-card">
+        <h2 data-i18n="localSaveTitle">ブラウザ保存について</h2>
+        <p data-i18n="localSaveDesc">このツールのデータは、お使いのブラウザ内に保存されます。別端末・別ブラウザには自動同期されません。大切な記録は、定期的にJSON出力でバックアップしてください。</p>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <p>TRPG WEBツール観測所 / 卓ログトラッカー</p>
+    </footer>
+  </div>
+
+  <dialog id="sessionDialog" class="session-dialog">
+    <form id="sessionForm" method="dialog">
+      <div class="dialog-header">
+        <h2 id="sessionDialogTitle" data-i18n="sessionDialogTitle">卓情報を編集</h2>
+        <button id="closeSessionDialogBtn" type="button" class="icon-button">×</button>
+      </div>
+      <div id="sessionFormFields" class="dialog-grid"></div>
+      <label class="full-field">
+        <span data-i18n="longKansouLabel">長文感想</span>
+        <textarea id="longNoteInput" name="longNote"></textarea>
+      </label>
+      <div class="dialog-actions">
+        <button id="deleteSessionBtn" class="danger-button" type="button" data-i18n="delete">削除</button>
+        <button id="saveSessionBtn" class="accent-button" type="submit" data-i18n="save">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="shortcutModal" class="shortcut-modal">
+    <div class="shortcut-modal-header">
+      <div>
+        <p>SHORTCUTS</p>
+        <h2 data-i18n="shortcutTitle">ショートカット</h2>
+      </div>
+      <button id="closeShortcutBtn" type="button" class="icon-button">×</button>
+    </div>
+    <div class="shortcut-list">
+      <div><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>J</kbd><span data-i18n="shortcutImport">JSON入力</span></div>
+      <div><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>E</kbd><span data-i18n="shortcutExport">JSON出力</span></div>
+      <div><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>N</kbd><span data-i18n="shortcutNew">卓を追加</span></div>
+      <div><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd><span data-i18n="shortcutSearch">検索欄へ移動</span></div>
+      <div><kbd>Esc</kbd><span data-i18n="shortcutEsc">モーダル / Drawerを閉じる</span></div>
+    </div>
+  </dialog>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/shortcut.js"></script>
+  <script src="js/log_tool.js"></script>
+</body>
+</html>
