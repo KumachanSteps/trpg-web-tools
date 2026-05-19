@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GM用キャラシビューアー｜TRPG Webツール観測所</title>
+  <title>GM用キャラシビューアー</title>
   <link rel="stylesheet" href="./css/charashi_viewer_style.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="header-inner">
         <div class="header-left-area">
           <div class="header-top-tags">
-            <a class="portal-link" href="../../index.html">← TRPG Webツール観測所</a>
+            <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/">← TRPG Webツール観測所</a>
             <span class="header-pill header-pill-cyan">CoC 6版 / 7版</span>
             <span class="header-pill header-pill-violet">いあきゃらコマ出力</span>
             <span class="header-pill header-pill-amber">チャパレ</span>
@@ -22,13 +22,8 @@
             <p class="site-description">いあきゃらのコマ出力データを貼り付けると、GM用のPCカードをすぐ表示します。</p>
           </div>
         </div>
-
         <div class="header-side-actions">
-          <label class="toggle-control header-toggle" title="貼り付けたチャットパレットを整形して表示・コピーします">
-            <input type="checkbox" id="formatPaletteToggle" checked>
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            <span class="toggle-label">チャパレ整形</span>
-          </label>
+          <button class="header-format-button" id="formatPaletteBtn" type="button">チャパレ整形</button>
           <button class="btn-danger header-delete-button" id="deleteAllBtn" type="button">全データ削除</button>
         </div>
       </div>
