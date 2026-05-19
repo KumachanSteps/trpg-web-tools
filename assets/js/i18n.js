@@ -201,37 +201,52 @@ window.TRPG_PORTAL_I18N = {
         en: "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
       },
     },
-
     {
       id: "chat-palette-formatter",
       icon: "💬",
-      status: "idea",
+      status: "production",
       category: "characterUtility",
-      href: "",
+      href: "./tools/chat-palette-formatter/",
       name: {
         ja: "チャットパレット整形ツール",
         en: "Chat Palette Formatter",
       },
       description: {
-        ja: "CoC 6版・7版のチャットパレットを判定し、読みやすい形式へ整形するツール構想です。",
-        en: "A tool concept for formatting CoC 6e/7e chat palettes into a cleaner and more readable structure.",
+        ja: "CoC 6版・7版のチャットパレットを判定し、読みやすい形式へ整形するツールです。",
+        en: "A tool for formatting CoC 6e/7e chat palettes into a cleaner and more readable structure.",
       },
     },
     {
       id: "charamemo-generator",
       icon: "📋",
-      status: "idea",
+      status: "production",
       category: "characterUtility",
-      href: "",
+      href: "./tools/charamemo-generator/",
       name: {
         ja: "キャラメモ抽出ツール",
         en: "Charamemo Generator",
       },
       description: {
-        ja: "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツール構想です。",
-        en: "A tool concept for generating character memo and token-ready data from Iachara character information.",
+        ja: "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツールです。",
+        en: "A tool for generating character memo and token-ready data from Iachara character information.",
       },
     },
+    {
+      id: "gm-charashi-viewer",
+      icon: "👥",
+      status: "production",
+      category: "gmSupport",
+      href: "./tools/gm-charashi-viewer/",
+      name: {
+        ja: "GM用キャラシビューワー",
+        en: "GM Character Sheet Viewer",
+      },
+      description: {
+        ja: "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
+        en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
+      },
+    },
+
     {
       id: "trpg-haishin-observatory",
       icon: "🔭",
@@ -260,21 +275,6 @@ window.TRPG_PORTAL_I18N = {
       description: {
         ja: "BOOTHやPixivなどで見つけたTRPGシナリオを、システム・人数・時間・秘匿有無・テーマなどで整理、検索するデータベース構想です。",
         en: "A future database concept for organizing TRPG scenarios by system, player count, playtime, hidden handouts, themes, and favorites.",
-      },
-    },
-    {
-      id: "gm-charashi-viewer",
-      icon: "👥",
-      status: "idea",
-      category: "gmSupport",
-      href: "",
-      name: {
-        ja: "GM用キャラシビューワー",
-        en: "GM Character Sheet Viewer",
-      },
-      description: {
-        ja: "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューア構想です。",
-        en: "A GM/KP support concept for viewing and managing multiple character sheets on one screen.",
       },
     },
   ],
