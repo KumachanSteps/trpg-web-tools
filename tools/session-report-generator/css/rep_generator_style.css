@@ -752,3 +752,18 @@ button:active {
     width: calc(100% - 24px);
   }
 }
+
+  .app-shell {
+  width: 100%;
+  max-width: 1120px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+  align-items: stretch;
+}
+
+@media (min-width: 860px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
