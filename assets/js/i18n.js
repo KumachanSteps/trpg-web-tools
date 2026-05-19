@@ -140,22 +140,6 @@ window.TRPG_PORTAL_I18N = {
         en: "Analyze session logs and review each character’s success rate, criticals, fumbles, and dice roll distribution.",
       },
     },
-
-    {
-      id: "coc-growth-checker",
-      icon: "🌱",
-      status: "production",
-      category: "logAnalysis",
-      href: "./tools/coc-growth-checker/",
-      name: {
-        ja: "CoC 6版/7版 成長チェッカー",
-        en: "CoC 6e/7e Growth Checker",
-      },
-      description: {
-        ja: "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
-        en: "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules.",
-      },
-    },
     {
       id: "session-report-generator",
       icon: "📝",
@@ -172,18 +156,34 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "session-log-tool",
-      icon: "🗒️",
+      id: "gm-charashi-viewer",
+      icon: "👥",
       status: "production",
-      category: "reportWriting",
-      href: "./tools/session-log-tool/",
+      category: "gmSupport",
+      href: "./tools/gm-charashi-viewer/",
       name: {
-        ja: "卓ログトラッカー",
-        en: "Session Log Tracker",
+        ja: "GM用キャラシビューワー",
+        en: "GM Character Sheet Viewer",
       },
       description: {
-        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
-        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists. Organize history in a table and send each row to the Session Report Generator.",
+        ja: "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
+        en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
+      },
+    },
+
+    {
+      id: "coc-growth-checker",
+      icon: "🌱",
+      status: "production",
+      category: "logAnalysis",
+      href: "./tools/coc-growth-checker/",
+      name: {
+        ja: "CoC 6版/7版 成長チェッカー",
+        en: "CoC 6e/7e Growth Checker",
+      },
+      description: {
+        ja: "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
+        en: "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules.",
       },
     },
     {
@@ -217,21 +217,20 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "gm-charashi-viewer",
-      icon: "👥",
+      id: "session-log-tool",
+      icon: "🗒️",
       status: "production",
-      category: "gmSupport",
-      href: "./tools/gm-charashi-viewer/",
+      category: "reportWriting",
+      href: "./tools/session-log-tool/",
       name: {
-        ja: "GM用キャラシビューワー",
-        en: "GM Character Sheet Viewer",
+        ja: "卓ログトラッカー",
+        en: "Session Log Tracker",
       },
       description: {
-        ja: "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
-        en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
+        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
+        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists. Organize history in a table and send each row to the Session Report Generator.",
       },
     },
-
     {
       id: "scenario-info-snippet-builder",
       icon: "✂️",
@@ -262,8 +261,6 @@ window.TRPG_PORTAL_I18N = {
         en: "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
       },
     },
-
-
     {
       id: "trpg-haishin-observatory",
       icon: "🔭",
