@@ -1,4 +1,8 @@
-export const I18N = {
-  ja: { ok: 'OK', copied: 'コピーしました。' },
-  en: { ok: 'OK', copied: 'Copied.' }
+window.REPORT_GEN_I18N = window.REPORT_GEN_I18N || {
+  ja: {
+    copied: 'コピーしました。'
+  },
+  en: {
+    copied: 'Copied.'
+  }
 };
