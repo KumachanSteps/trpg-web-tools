@@ -24,8 +24,12 @@
         <span class="header-pill header-pill-violet">卓報告</span>
         <span class="header-pill header-pill-amber">テンプレ生成</span>
       </div>
+
       <div class="header-title-area">
-        <h1 class="site-title"><span class="site-title-icon" aria-hidden="true">✦</span><span>卓報告ジェネレーター</span></h1>
+        <h1 class="site-title">
+          <span class="site-title-icon" aria-hidden="true">✦</span>
+          <span>卓報告ジェネレーター</span>
+        </h1>
         <p class="site-description">
           <span>SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
           <span>シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
@@ -43,7 +47,7 @@
           <div class="field-block">
             <label for="reportStyle">卓報告サンプルリスト</label>
             <select id="reportStyle"></select>
-            <p class="hint">テンプレートは <code>js/template.js</code> の <code>REPORT_STYLES</code> から自動生成されます。</p>
+            <p class="hint">スタイルは js/template.js の REPORT_STYLES に追加できます。</p>
           </div>
 
           <div class="field-block">
@@ -56,11 +60,11 @@
               <option value="serifBold">𝐀 ボールド（セリフ）</option>
               <option value="serifItalic">𝐴 イタリック（セリフ）</option>
               <option value="smallCaps">ᴀ スモールキャップ</option>
-              <option value="typewriter">𝙰 タイプライタースタイル（モノスペース セリフ）</option>
-              <option value="modernSans">𝖠 モダンスタイル（サンセリフ）</option>
+              <option value="typewriter">𝙰 タイプライター（モノスペース）</option>
+              <option value="modernSans">𝖠 モダン（サンセリフ）</option>
               <option value="plain">A 変換なし</option>
             </select>
-            <p class="hint">テンプレートごとの <code>styleTargets</code> に登録された要素だけ変換します。</p>
+            <p class="hint">template.js の styleTargets に登録されたパーツだけ変換します。</p>
           </div>
         </div>
 
@@ -95,7 +99,7 @@
         <div class="grid-2 stacked-grid">
           <div class="field-block">
             <label for="scenarioTitle">シナリオ名</label>
-            <input id="scenarioTitle" placeholder="例：黒き嵐が来る前に" />
+            <input id="scenarioTitle" placeholder="例：CODE-INCARCATION" />
           </div>
 
           <div class="field-block">
@@ -139,7 +143,7 @@
         <div class="btns">
           <button id="addPlayerButton" type="button">＋ 参加者を追加</button>
         </div>
-        <p class="hint">選択肢は PC / PC1 / HO1 / PC/PL / PL/PC / 自由です。1行目が PC1 なら PC2, PC3、HO1 なら HO2, HO3 のように自動で続きます。</p>
+        <p class="hint">1行目が PC1 なら PC2, PC3、HO1 なら HO2, HO3 のように続きます。</p>
       </section>
 
       <section class="section misc-section" aria-label="補足情報">
@@ -158,7 +162,7 @@
 
       <section class="section decoration-panel" aria-label="アスキーアートと装飾">
         <label>アスキーアート / 装飾</label>
-        <p class="hint">クリックすると、右側プレビューの編集中カーソル位置に挿入されます。候補は <code>template.js</code> で管理します。</p>
+        <p class="hint">候補は js/template.js の ASCII_ART_COLLECTION に追加できます。</p>
         <div id="asciiArtContainer" class="ascii-preview-panel"></div>
       </section>
     </section>
@@ -175,9 +179,11 @@
           </div>
         </div>
 
-        <div class="preview-editor-wrap">
+        <div id="fontQuickButtons" class="font-quick-buttons" aria-label="文字スタイルショートカット"></div>
+
+        <div class="preview-textbox-wrap">
           <textarea id="tweetPreview" placeholder="ここに生成結果が表示されます。直接編集もできます。"></textarea>
-          <div id="previewResizeGrab" class="preview-resize-grab" title="ドラッグして高さを変更"></div>
+          <div id="previewResizeGrip" class="preview-resize-grip" role="separator" aria-label="プレビュー高さ調整" tabindex="0"></div>
         </div>
 
         <div class="count-line">
@@ -187,8 +193,8 @@
 
         <div class="btns preview-actions">
           <button id="copyButton" type="button" class="primary">コピー</button>
-          <button id="newlineButton" type="button">改行を追加</button>
-          <button id="spaceButton" type="button">空白を追加</button>
+          <button id="undoButton" type="button">元に戻す</button>
+          <button id="redoButton" type="button">やり直す</button>
           <button id="clearPreviewButton" type="button" class="danger">消去</button>
         </div>
       </div>

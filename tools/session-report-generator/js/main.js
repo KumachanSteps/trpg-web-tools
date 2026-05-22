@@ -1,10 +1,6 @@
 (() => {
   const $ = id => document.getElementById(id);
 
-  let lastPreviewSelection = { start: 0, end: 0 };
-  let isResetting = false;
-  let manualPreviewHeight = null;
-
   const SYSTEM_NAMES = {
     call_of_cthulhu: 'Call of Cthulhu',
     coc: 'CoC',
@@ -22,21 +18,31 @@
   };
 
   const FONT_MAPS = {
-    sansBoldItalic: { upper: 0x1D63C, lower: 0x1D656, digit: 0x1D7EC },
-    sansBold: { upper: 0x1D5D4, lower: 0x1D5EE, digit: 0x1D7EC },
-    sansItalic: { upper: 0x1D608, lower: 0x1D622, digit: null },
-    serifBoldItalic: { upper: 0x1D468, lower: 0x1D482, digit: 0x1D7CE },
-    serifBold: { upper: 0x1D400, lower: 0x1D41A, digit: 0x1D7CE },
-    serifItalic: { upper: 0x1D434, lower: 0x1D44E, digit: null, lowerExceptions: { h: 'ℎ' } },
-    typewriter: { upper: 0x1D670, lower: 0x1D68A, digit: 0x1D7F6 },
-    modernSans: { upper: 0x1D5A0, lower: 0x1D5BA, digit: 0x1D7E2 },
+    sansBoldItalic: { label: '𝘼', upper: 0x1D63C, lower: 0x1D656, digit: 0x1D7EC },
+    sansBold: { label: '𝗔', upper: 0x1D5D4, lower: 0x1D5EE, digit: 0x1D7EC },
+    sansItalic: { label: '𝘈', upper: 0x1D608, lower: 0x1D622, digit: null },
+    serifBoldItalic: { label: '𝑨', upper: 0x1D468, lower: 0x1D482, digit: 0x1D7CE },
+    serifBold: { label: '𝐀', upper: 0x1D400, lower: 0x1D41A, digit: 0x1D7CE },
+    serifItalic: { label: '𝐴', upper: 0x1D434, lower: 0x1D44E, digit: null, lowerExceptions: { h: 'ℎ' } },
     smallCaps: {
+      label: 'ᴀ',
       chars: {
-        A:'ᴀ',B:'ʙ',C:'ᴄ',D:'ᴅ',E:'ᴇ',F:'ꜰ',G:'ɢ',H:'ʜ',I:'ɪ',J:'ᴊ',K:'ᴋ',L:'ʟ',M:'ᴍ',N:'ɴ',O:'ᴏ',P:'ᴘ',Q:'ꞯ',R:'ʀ',S:'ꜱ',T:'ᴛ',U:'ᴜ',V:'ᴠ',W:'ᴡ',X:'x',Y:'ʏ',Z:'ᴢ',
-        a:'ᴀ',b:'ʙ',c:'ᴄ',d:'ᴅ',e:'ᴇ',f:'ꜰ',g:'ɢ',h:'ʜ',i:'ɪ',j:'ᴊ',k:'ᴋ',l:'ʟ',m:'ᴍ',n:'ɴ',o:'ᴏ',p:'ᴘ',q:'ꞯ',r:'ʀ',s:'ꜱ',t:'ᴛ',u:'ᴜ',v:'ᴠ',w:'ᴡ',x:'x',y:'ʏ',z:'ᴢ'
+        A: 'ᴀ', B: 'ʙ', C: 'ᴄ', D: 'ᴅ', E: 'ᴇ', F: 'ꜰ', G: 'ɢ', H: 'ʜ', I: 'ɪ', J: 'ᴊ', K: 'ᴋ', L: 'ʟ', M: 'ᴍ', N: 'ɴ', O: 'ᴏ', P: 'ᴘ', Q: 'ꞯ', R: 'ʀ', S: 'ꜱ', T: 'ᴛ', U: 'ᴜ', V: 'ᴠ', W: 'ᴡ', X: 'x', Y: 'ʏ', Z: 'ᴢ',
+        a: 'ᴀ', b: 'ʙ', c: 'ᴄ', d: 'ᴅ', e: 'ᴇ', f: 'ꜰ', g: 'ɢ', h: 'ʜ', i: 'ɪ', j: 'ᴊ', k: 'ᴋ', l: 'ʟ', m: 'ᴍ', n: 'ɴ', o: 'ᴏ', p: 'ᴘ', q: 'ꞯ', r: 'ʀ', s: 'ꜱ', t: 'ᴛ', u: 'ᴜ', v: 'ᴠ', w: 'ᴡ', x: 'x', y: 'ʏ', z: 'ᴢ'
       }
-    }
+    },
+    typewriter: { label: '𝙰', upper: 0x1D670, lower: 0x1D68A, digit: 0x1D7F6 },
+    modernSans: { label: '𝖠', upper: 0x1D5A0, lower: 0x1D5BA, digit: 0x1D7E2 },
+    plain: { label: 'A' }
   };
+
+  let lastPreviewSelection = { start: 0, end: 0 };
+  let isResetting = false;
+  let undoStack = [];
+  let redoStack = [];
+  let isApplyingHistory = false;
+  let manualPreviewHeight = null;
+  let lastPreviewValue = '';
 
   function cp(ch, start, base) {
     return base === null ? ch : String.fromCodePoint(base + ch.charCodeAt(0) - start);
@@ -80,18 +86,47 @@
     return text + suffix;
   }
 
+  function sample(index, type) {
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    return type === 'pc' ? '探索者' + (letters[index] || index + 1) : 'PL名' + (letters[index] || index + 1);
+  }
+
   function populateReportStyles() {
     const select = $('reportStyle');
-    if (!select || !window.ReportTemplate?.REPORT_STYLES) return;
+    select.innerHTML = '';
+    window.ReportTemplate.REPORT_STYLES.forEach(style => {
+      const option = document.createElement('option');
+      option.value = style.id;
+      option.textContent = style.label;
+      select.appendChild(option);
+    });
+  }
 
-    const current = select.value || 'classic';
-    select.innerHTML = window.ReportTemplate.REPORT_STYLES
-      .map(style => `<option value="${escapeHtml(style.id)}">${escapeHtml(style.label)}</option>`)
-      .join('');
+  function renderFontQuickButtons() {
+    const container = $('fontQuickButtons');
+    container.innerHTML = '';
 
-    select.value = window.ReportTemplate.REPORT_STYLES.some(style => style.id === current)
-      ? current
-      : window.ReportTemplate.REPORT_STYLES[0]?.id || 'classic';
+    Array.from($('fontVariant').options).forEach(option => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.fontVariant = option.value;
+      button.textContent = FONT_MAPS[option.value]?.label || option.textContent.slice(0, 1);
+      button.title = option.textContent;
+      button.addEventListener('click', () => {
+        $('fontVariant').value = option.value;
+        updateFontQuickActive();
+        renderPreviewFromInputs(true);
+      });
+      container.appendChild(button);
+    });
+
+    updateFontQuickActive();
+  }
+
+  function updateFontQuickActive() {
+    document.querySelectorAll('#fontQuickButtons button').forEach(button => {
+      button.classList.toggle('is-active', button.dataset.fontVariant === $('fontVariant').value);
+    });
   }
 
   function addGM(value = '', role = 'KP') {
@@ -114,16 +149,15 @@
         <label>名前</label>
         <input class="gm-name" value="${escapeHtml(value)}" placeholder="例：KPC名 / KP名">
       </div>
-      <button class="icon-button add-inline" type="button">＋</button>
-      <button class="icon-button danger-inline" type="button">×</button>
+      <button class="icon-button add-inline" type="button" aria-label="進行役を追加">＋</button>
+      <button class="icon-button danger-inline" type="button" aria-label="削除">×</button>
     `;
-
     $('gmContainer').appendChild(row);
     row.querySelector('.gm-role').value = role;
     row.querySelector('.add-inline').addEventListener('click', () => addGM());
     row.querySelector('.danger-inline').addEventListener('click', () => {
       row.remove();
-      previewSelectedStyle();
+      renderPreviewFromInputs(true);
     });
   }
 
@@ -138,12 +172,9 @@
     return base;
   }
 
-  function slotOptions(selected, first) {
-    const options = first ? ['PC', 'PC1', 'HO1', 'PC/PL', 'PL/PC', '自由'] : [selected];
-
-    return options
-      .map(value => `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`)
-      .join('');
+  function slotOptions(selected, isFirst) {
+    const options = isFirst ? ['PC', 'PC1', 'HO1', 'PC/PL', 'PL/PC', '自由'] : [selected];
+    return options.map(value => `<option value="${value}" ${value === selected ? 'selected' : ''}>${value}</option>`).join('');
   }
 
   function syncSlots() {
@@ -152,9 +183,7 @@
       if (!select) return;
 
       if (index === 0) {
-        const current = select.value || 'HO1';
-        select.innerHTML = slotOptions(current, true);
-        select.value = current;
+        select.innerHTML = slotOptions(select.value || 'HO1', true);
         select.disabled = false;
       } else {
         const slot = slotFor(index + 1);
@@ -175,17 +204,14 @@
 
   function addPlayer(pl = '', pc = '', slot = '', ho = '') {
     const index = document.querySelectorAll('#playerContainer .participant-row').length + 1;
-    const first = index === 1;
+    const isFirst = index === 1;
     const selected = slot || slotFor(index);
     const row = document.createElement('div');
-
     row.className = 'participant-row name-order-' + $('nameInputOrder').value;
     row.innerHTML = `
       <div class="slot-field">
         <label>枠</label>
-        <select class="player-slot" ${first ? '' : 'disabled'}>
-          ${slotOptions(selected, first)}
-        </select>
+        <select class="player-slot" ${isFirst ? '' : 'disabled'}>${slotOptions(selected, isFirst)}</select>
       </div>
       <div class="ho-field">
         <label>HO補足</label>
@@ -201,83 +227,116 @@
       </div>
       <button class="danger delete-field" type="button">×</button>
     `;
-
     $('playerContainer').appendChild(row);
     row.querySelector('.player-slot').addEventListener('change', () => {
       syncSlots();
-      previewSelectedStyle();
+      renderPreviewFromInputs(true);
     });
     row.querySelector('.delete-field').addEventListener('click', () => {
       row.remove();
       syncSlots();
-      previewSelectedStyle();
+      renderPreviewFromInputs(true);
     });
-
     syncSlots();
     updateNameOrder();
   }
 
-  function sample(index, type) {
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-    return type === 'pc' ? '探索者' + (letters[index] || index + 1) : 'PL名' + (letters[index] || index + 1);
-  }
-
-  function collectData(useSample = true) {
+  function collectData() {
     const suffix = getSuffix();
-
     let gms = Array.from(document.querySelectorAll('#gmContainer .row')).map((row, index) => {
-      const raw = row.querySelector('.gm-name').value.trim();
-
+      const rawName = row.querySelector('.gm-name').value.trim();
       return {
         role: row.querySelector('.gm-role').value || 'KP',
-        name: addSuffix(raw || (useSample && index === 0 ? 'KP名' : ''), suffix)
+        name: addSuffix(rawName || (index === 0 ? 'KP名' : ''), suffix)
       };
     }).filter(item => item.name);
 
     let players = Array.from(document.querySelectorAll('#playerContainer .participant-row')).map((row, index) => {
       const rawPc = row.querySelector('.pc-name').value.trim();
       const rawPl = row.querySelector('.pl-name').value.trim();
-
       return {
         slot: row.querySelector('.player-slot').value,
         ho: row.querySelector('.ho-name').value.trim(),
-        pc: rawPc || (useSample ? sample(index, 'pc') : ''),
-        pl: addSuffix(rawPl || (useSample ? sample(index, 'pl') : ''), suffix)
+        pc: rawPc || sample(index, 'pc'),
+        pl: addSuffix(rawPl || sample(index, 'pl'), suffix)
       };
     }).filter(item => item.pc || item.pl || item.ho);
 
-    if (useSample && !gms.length) gms = [{ role: 'KP', name: 'KP名' }];
-    if (useSample && !players.length) players = [{ slot: 'HO1', ho: '', pc: '探索者A', pl: 'PL名A' }];
+    if (!gms.length) gms = [{ role: 'KP', name: 'KP名' }];
+    if (!players.length) players = [{ slot: 'HO1', ho: '', pc: '探索者A', pl: 'PL名A' }];
 
     return {
-      style: $('reportStyle').value || 'classic',
-      fontVariant: $('fontVariant').value || 'plain',
+      style: $('reportStyle').value,
+      fontVariant: $('fontVariant').value,
       system: getSystemName(),
-      scenario: $('scenarioTitle').value.trim() || (useSample ? 'シナリオ名' : ''),
-      author: $('authorText').value.trim() || (useSample ? '作者名' : ''),
-      result: $('resultText').value.trim() || (useSample ? 'END A 両生還' : ''),
-      date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder : ''),
+      scenario: $('scenarioTitle').value.trim() || 'シナリオ名',
+      author: $('authorText').value.trim() || '作者名',
+      result: $('resultText').value.trim() || 'END A 両生還',
+      date: $('dateText').value.trim() || $('dateText').placeholder || getTodayString(),
       hashtags: $('hashtagText').value.trim(),
       gms,
       players
     };
   }
 
-  function renderPreview() {
-    const data = collectData(true);
-    const variant = data.style === 'minimal' ? 'plain' : data.fontVariant;
-    const output = window.ReportTemplate.render(data, value => styleText(value, variant));
-    $('tweetPreview').value = output;
+  function renderPreviewFromInputs(saveHistory = false) {
+    if (isResetting) return;
+    const output = window.ReportTemplate.renderParts(collectData(), styleText);
+    setPreviewValue(output, saveHistory);
+  }
+
+  function setPreviewValue(value, saveHistory = true) {
+    const preview = $('tweetPreview');
+    if (saveHistory && preview.value !== value) pushUndo(preview.value);
+    isApplyingHistory = true;
+    preview.value = value;
+    isApplyingHistory = false;
+    lastPreviewValue = value;
+    savePreviewSelection();
     updateCount();
     requestAnimationFrame(fitPreviewTextBox);
   }
 
-  function previewSelectedStyle() {
-    if (!isResetting) renderPreview();
+  function pushUndo(value) {
+    if (undoStack[undoStack.length - 1] !== value) undoStack.push(value);
+    if (undoStack.length > 100) undoStack.shift();
+    redoStack = [];
+    updateHistoryButtons();
   }
 
-  function generateTweet() {
-    renderPreview();
+  function undoPreview() {
+    const preview = $('tweetPreview');
+    if (!undoStack.length) return;
+    redoStack.push(preview.value);
+    const value = undoStack.pop();
+    isApplyingHistory = true;
+    preview.value = value;
+    isApplyingHistory = false;
+    lastPreviewValue = value;
+    updateCount();
+    savePreviewSelection();
+    lastPreviewValue = $('tweetPreview').value;
+    updateHistoryButtons();
+  }
+
+  function redoPreview() {
+    const preview = $('tweetPreview');
+    if (!redoStack.length) return;
+    undoStack.push(preview.value);
+    const value = redoStack.pop();
+    isApplyingHistory = true;
+    preview.value = value;
+    isApplyingHistory = false;
+    lastPreviewValue = value;
+    updateCount();
+    savePreviewSelection();
+    lastPreviewValue = $('tweetPreview').value;
+    updateHistoryButtons();
+  }
+
+  function updateHistoryButtons() {
+    $('undoButton').disabled = !undoStack.length;
+    $('redoButton').disabled = !redoStack.length;
   }
 
   function tweetLength(text) {
@@ -298,27 +357,26 @@
 
   function fitPreviewTextBox() {
     const panel = document.querySelector('.preview-panel');
+    const wrap = document.querySelector('.preview-textbox-wrap');
+    if (!panel || !wrap || window.innerWidth <= 920) return;
+    if (manualPreviewHeight !== null) {
+      wrap.style.height = manualPreviewHeight + 'px';
+      return;
+    }
+
     const card = document.querySelector('.twitter-card');
-    const wrap = document.querySelector('.preview-editor-wrap');
-
-    if (!panel || !card || !wrap || window.innerWidth <= 920 || manualPreviewHeight) return;
-
-    const h2 = panel.querySelector('h2');
     const head = card.querySelector('.tweet-head');
+    const fonts = card.querySelector('.font-quick-buttons');
     const count = card.querySelector('.count-line');
     const buttons = card.querySelector('.preview-actions');
-    const hint = panel.querySelector(':scope > .hint');
-
-    const available =
-      panel.clientHeight -
-      (h2?.offsetHeight || 0) -
-      (head?.offsetHeight || 0) -
-      (count?.offsetHeight || 0) -
-      (buttons?.offsetHeight || 0) -
-      (hint?.offsetHeight || 0) -
-      50;
-
-    wrap.style.height = Math.max(window.innerHeight < 760 ? 180 : 240, Math.min(620, available)) + 'px';
+    const available = panel.clientHeight
+      - (panel.querySelector('h2')?.offsetHeight || 0)
+      - (head?.offsetHeight || 0)
+      - (fonts?.offsetHeight || 0)
+      - (count?.offsetHeight || 0)
+      - (buttons?.offsetHeight || 0)
+      - 64;
+    wrap.style.height = Math.max(window.innerHeight < 760 ? 210 : 280, available) + 'px';
   }
 
   function savePreviewSelection() {
@@ -329,36 +387,66 @@
     };
   }
 
-  function insertAtCursor(text) {
+  function insertDecorationAtPreviewCursor(text) {
     const preview = $('tweetPreview');
     const focused = document.activeElement === preview;
     const start = focused ? preview.selectionStart : lastPreviewSelection.start;
     const end = focused ? preview.selectionEnd : lastPreviewSelection.end;
-
+    pushUndo(preview.value);
     preview.value = preview.value.slice(0, start) + text + preview.value.slice(end);
-
     const next = start + text.length;
     preview.focus();
     preview.selectionStart = next;
     preview.selectionEnd = next;
     lastPreviewSelection = { start: next, end: next };
-
     updateCount();
     requestAnimationFrame(fitPreviewTextBox);
   }
 
+  function renderAsciiArtButtons() {
+    const container = $('asciiArtContainer');
+    const collection = window.ReportTemplate.ASCII_ART_COLLECTION;
+    container.innerHTML = '';
+    Object.entries(collection).forEach(([key, groupData]) => {
+      const group = document.createElement('div');
+      group.className = 'ascii-group';
+      group.dataset.group = key;
+
+      const title = document.createElement('div');
+      title.className = 'ascii-group-title';
+      title.textContent = groupData.label || key.toUpperCase();
+
+      const buttons = document.createElement('div');
+      buttons.className = 'ascii-buttons';
+
+      groupData.items.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = item.label;
+        button.dataset.decoration = item.value;
+        button.addEventListener('click', () => insertDecorationAtPreviewCursor(item.value));
+        buttons.appendChild(button);
+      });
+
+      group.appendChild(title);
+      group.appendChild(buttons);
+      container.appendChild(group);
+    });
+  }
+
   function clearPreview() {
+    pushUndo($('tweetPreview').value);
     $('tweetPreview').value = '';
+    lastPreviewValue = '';
     lastPreviewSelection = { start: 0, end: 0 };
     updateCount();
+    updateHistoryButtons();
     $('tweetPreview').focus();
   }
 
   async function copyTweet() {
-    const text = $('tweetPreview').value;
-
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText($('tweetPreview').value);
       alert('コピーしました。');
     } catch {
       $('tweetPreview').select();
@@ -367,9 +455,13 @@
     }
   }
 
-  function setTodayPlaceholder() {
+  function getTodayString() {
     const now = new Date();
-    $('dateText').placeholder = now.getFullYear() + '/' + (now.getMonth() + 1) + '/' + now.getDate();
+    return now.getFullYear() + '/' + (now.getMonth() + 1) + '/' + now.getDate();
+  }
+
+  function setTodayPlaceholder() {
+    $('dateText').placeholder = getTodayString();
   }
 
   function updateCustomSystemInput() {
@@ -378,101 +470,57 @@
 
   function resetAll() {
     isResetting = true;
-
-    document.querySelectorAll('.input-panel input:not([type="checkbox"])').forEach(input => {
-      input.value = '';
-    });
-
+    document.querySelectorAll('.input-panel input:not([type="checkbox"])').forEach(input => { input.value = ''; });
     $('systemSelect').value = 'call_of_cthulhu';
-    $('reportStyle').value = 'classic';
+    $('reportStyle').value = window.ReportTemplate.REPORT_STYLES[0].id;
     $('fontVariant').value = 'sansBoldItalic';
     $('nameInputOrder').value = 'pcpl';
-
     document.querySelectorAll('input[name="suffixChoice"]').forEach(input => {
       input.checked = input.value === 'none';
     });
-
     $('gmContainer').innerHTML = '';
     $('playerContainer').innerHTML = '';
     addGM();
     addPlayer();
-
-    manualPreviewHeight = null;
-    document.querySelector('.preview-editor-wrap').style.height = '';
     setTodayPlaceholder();
     updateCustomSystemInput();
-    clearPreview();
-
+    manualPreviewHeight = null;
+    undoStack = [];
+    redoStack = [];
     isResetting = false;
-    previewSelectedStyle();
+    renderPreviewFromInputs(false);
+    updateFontQuickActive();
+    updateHistoryButtons();
   }
 
-  function renderAsciiArtButtons() {
-    const container = $('asciiArtContainer');
-    const collection = window.ReportTemplate?.ASCII_ART_COLLECTION;
-
-    if (!container || !collection) return;
-
-    container.innerHTML = '';
-
-    Object.entries(collection).forEach(([groupKey, group]) => {
-      const groupElement = document.createElement('div');
-      groupElement.className = 'ascii-group';
-      groupElement.dataset.group = groupKey;
-
-      const title = document.createElement('div');
-      title.className = 'ascii-group-title';
-      title.textContent = group.label || groupKey.toUpperCase();
-
-      const buttons = document.createElement('div');
-      buttons.className = 'ascii-buttons';
-
-      group.items.forEach(item => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = item.label;
-        button.addEventListener('click', () => insertAtCursor(item.value));
-        buttons.appendChild(button);
-      });
-
-      groupElement.appendChild(title);
-      groupElement.appendChild(buttons);
-      container.appendChild(groupElement);
-    });
-  }
-
-  function bindResizeGrab() {
-    const grab = $('previewResizeGrab');
-    const wrap = document.querySelector('.preview-editor-wrap');
-
-    if (!grab || !wrap) return;
-
+  function bindPreviewResize() {
+    const grip = $('previewResizeGrip');
+    const wrap = document.querySelector('.preview-textbox-wrap');
     let startY = 0;
     let startHeight = 0;
 
-    grab.addEventListener('pointerdown', event => {
+    grip.addEventListener('pointerdown', event => {
       startY = event.clientY;
-      startHeight = wrap.offsetHeight;
-      grab.setPointerCapture(event.pointerId);
+      startHeight = wrap.getBoundingClientRect().height;
+      grip.setPointerCapture(event.pointerId);
       document.body.classList.add('is-resizing-preview');
     });
 
-    grab.addEventListener('pointermove', event => {
-      if (!document.body.classList.contains('is-resizing-preview')) return;
-      const next = Math.max(180, Math.min(760, startHeight + event.clientY - startY));
+    grip.addEventListener('pointermove', event => {
+      if (!grip.hasPointerCapture(event.pointerId)) return;
+      const next = Math.max(180, Math.min(900, startHeight + event.clientY - startY));
       manualPreviewHeight = next;
       wrap.style.height = next + 'px';
     });
 
-    grab.addEventListener('pointerup', event => {
+    grip.addEventListener('pointerup', event => {
+      if (grip.hasPointerCapture(event.pointerId)) grip.releasePointerCapture(event.pointerId);
       document.body.classList.remove('is-resizing-preview');
-      grab.releasePointerCapture(event.pointerId);
     });
   }
 
   function bindEvents() {
     window.clearAll = resetAll;
-
     window.addEventListener('resize', fitPreviewTextBox);
 
     document.querySelectorAll('input[name="suffixChoice"]').forEach(input => {
@@ -480,59 +528,67 @@
         document.querySelectorAll('input[name="suffixChoice"]').forEach(item => {
           item.checked = item === input;
         });
-        previewSelectedStyle();
+        renderPreviewFromInputs(true);
       });
     });
 
-    $('addPlayerButton').addEventListener('click', () => addPlayer());
-    $('generateButton').addEventListener('click', generateTweet);
+    $('addPlayerButton').addEventListener('click', () => {
+      addPlayer();
+      renderPreviewFromInputs(true);
+    });
+    $('generateButton').addEventListener('click', () => renderPreviewFromInputs(true));
     $('clearAllButton').addEventListener('click', resetAll);
     $('copyButton').addEventListener('click', copyTweet);
-    $('newlineButton').addEventListener('click', () => insertAtCursor('\n'));
-    $('spaceButton').addEventListener('click', () => insertAtCursor(' '));
+    $('undoButton').addEventListener('click', undoPreview);
+    $('redoButton').addEventListener('click', redoPreview);
     $('clearPreviewButton').addEventListener('click', clearPreview);
 
-    $('reportStyle').addEventListener('change', previewSelectedStyle);
-    $('fontVariant').addEventListener('change', previewSelectedStyle);
+    $('reportStyle').addEventListener('change', () => renderPreviewFromInputs(true));
+    $('fontVariant').addEventListener('change', () => {
+      updateFontQuickActive();
+      renderPreviewFromInputs(true);
+    });
     $('nameInputOrder').addEventListener('change', () => {
       updateNameOrder();
-      previewSelectedStyle();
+      renderPreviewFromInputs(true);
     });
-
     $('systemSelect').addEventListener('change', () => {
       updateCustomSystemInput();
       if (['emoklore_en', 'emoklore_ja'].includes($('systemSelect').value)) {
-        document.querySelectorAll('.gm-role').forEach(role => {
-          role.value = 'DL';
-        });
+        document.querySelectorAll('.gm-role').forEach(role => { role.value = 'DL'; });
       }
-      previewSelectedStyle();
+      renderPreviewFromInputs(true);
     });
+    document.querySelector('.input-panel').addEventListener('input', () => renderPreviewFromInputs(true));
 
-    document.querySelector('.input-panel').addEventListener('input', previewSelectedStyle);
-
+    $('tweetPreview').addEventListener('beforeinput', () => {
+      if (!isApplyingHistory) pushUndo($('tweetPreview').value);
+    });
     $('tweetPreview').addEventListener('input', () => {
+      lastPreviewValue = $('tweetPreview').value;
       savePreviewSelection();
       updateCount();
+      updateHistoryButtons();
     });
+    ['click', 'keyup', 'select'].forEach(eventName => $('tweetPreview').addEventListener(eventName, savePreviewSelection));
 
-    ['click', 'keyup', 'select'].forEach(eventName => {
-      $('tweetPreview').addEventListener(eventName, savePreviewSelection);
-    });
-
-    bindResizeGrab();
+    bindPreviewResize();
   }
 
   function init() {
     populateReportStyles();
+    renderFontQuickButtons();
+    renderAsciiArtButtons();
     bindEvents();
     addGM();
     addPlayer();
     setTodayPlaceholder();
     updateCustomSystemInput();
-    renderAsciiArtButtons();
-    previewSelectedStyle();
+    renderPreviewFromInputs(false);
+    savePreviewSelection();
+    lastPreviewValue = $('tweetPreview').value;
+    updateHistoryButtons();
   }
 
-  init();
+  document.addEventListener('DOMContentLoaded', init);
 })();

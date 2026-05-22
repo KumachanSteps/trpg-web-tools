@@ -9,6 +9,8 @@ window.HASHTAG_TEMPLATES = (() => {
     インセイン: '("インセイン" OR "inSane" OR "マルチジャンル・ホラーRPG インセイン")',
     ソードワールド: '("ソード・ワールド" OR "ソードワールド" OR "Sword World" OR "SW2.5" OR "SW2.0")',
     "D&D": '("D&D" OR "DnD" OR "Dungeons & Dragons" OR "ダンジョンズ＆ドラゴンズ" OR "ダンジョンズ&ドラゴンズ" OR "ダンドラ")',
+    シノビガミ: '("シノビガミ" OR "忍術バトルRPG シノビガミ" OR "Shinobigami")',
+    ダブルクロス: '("ダブルクロス" OR "ダブルクロスThe 3rd Edition" OR "ダブルクロス3rd" OR "DX3rd" OR "DX3")',
   };
 
   const wordQueries = {
@@ -29,10 +31,7 @@ window.HASHTAG_TEMPLATES = (() => {
   };
 
   const modes = ["卓募集", "素材探し", "シナリオ探し", "プリセット検索カード"];
-
-  const modeVisualWordMap = {
-    卓募集: ["PL募集", "KP募集", "GM募集"],
-  };
+  const modeVisualWordMap = { 卓募集: ["PL募集", "KP募集", "GM募集"] };
 
   const modePresets = {
     卓募集: {
@@ -57,7 +56,7 @@ window.HASHTAG_TEMPLATES = (() => {
   };
 
   const addWords = ["ソロ", "タイマン", "2PL", "3PL", "4PL", "PL募集", "KP募集", "GM募集", "テストプレイ", "初心者歓迎", "ボイセ", "テキセ", "BOOTH", "ココフォリア", "部屋素材", "ルームZIP付き"];
-  const filters = ["filter:images", "filter:videos", "filter:links", "filter:media", "filter:verified", "-filter:retweets", "min_faves:50", "min_faves:100", "min_faves:500", "min_faves:1000", "lang:ja", "from:", "until:", "since:", "since:1day", "since:3days", "since:1week", "since:1month"];
+  const filters = ["filter:images", "filter:videos", "filter:links", "filter:media", "filter:verified", "min_faves:50", "min_faves:100", "min_faves:500", "lang:ja", "from:", "since:1day", "since:3days", "since:1week", "since:1month"];
   const excludes = ["-ネタバレ", "-現行未通過", "-R18", "-R18G", "-募集終了"];
 
   const chipDescriptions = {
@@ -82,15 +81,11 @@ window.HASHTAG_TEMPLATES = (() => {
     "filter:links": "リンク付き投稿だけを検索します。",
     "filter:media": "画像または動画付き投稿を検索します。",
     "filter:verified": "認証済みアカウントの投稿を検索します。",
-    "-filter:retweets": "リポストを除外して、元投稿を見つけやすくします。",
     "min_faves:50": "いいね数50以上の投稿を検索します。",
     "min_faves:100": "いいね数100以上の投稿を検索します。",
     "min_faves:500": "いいね数500以上の投稿を検索します。",
-    "min_faves:1000": "いいね数1000以上の投稿を検索します。",
     "lang:ja": "日本語投稿を優先して検索します。",
     "from:": "特定アカウントからの投稿に絞ります。例：from:username",
-    "until:": "指定日より前の投稿に絞ります。例：until:2026-01-01",
-    "since:": "指定日以降の投稿に絞ります。例：since:2026-01-01",
     "since:1day": "今日から1日前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。",
     "since:3days": "今日から3日前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。",
     "since:1week": "今日から1週間前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。",
@@ -109,6 +104,8 @@ window.HASHTAG_TEMPLATES = (() => {
     インセイン: "インセイン関連の表記ゆれをまとめて検索します。",
     ソードワールド: "ソード・ワールド関連の表記ゆれをまとめて検索します。",
     "D&D": "D&D / ダンジョンズ＆ドラゴンズ関連の表記ゆれをまとめて検索します。",
+    シノビガミ: "シノビガミ関連の表記ゆれをまとめて検索します。",
+    ダブルクロス: "ダブルクロス関連の表記ゆれをまとめて検索します。",
   };
 
   const defaultFavorites = [
@@ -127,15 +124,7 @@ window.HASHTAG_TEMPLATES = (() => {
     { title: "最新 TRPG配信", desc: "直近3日以内のTRPG配信・告知を探す", query: "TRPG配信 (filter:images OR filter:links OR filter:videos) __SINCE_3DAYS__", tag: "Stream" },
   ];
 
-  const defaultScenarioSearches = [
-    '"星環のダ・カーポ"',
-    '"星環のダ・カーポ" filter:images',
-    '"星環のダ・カーポ" 卓報告',
-    '"星環のダ・カーポ" -ネタバレ',
-  ];
+  const defaultScenarioSearches = ['"星環のダ・カーポ"', '"星環のダ・カーポ" filter:images', '"星環のダ・カーポ" 卓報告', '"星環のダ・カーポ" -ネタバレ'];
 
-  return {
-    systemQueries, wordQueries, excludeQueries, modes, modeVisualWordMap, modePresets,
-    addWords, filters, excludes, chipDescriptions, defaultFavorites, defaultPresets, defaultScenarioSearches
-  };
+  return { systemQueries, wordQueries, excludeQueries, modes, modeVisualWordMap, modePresets, addWords, filters, excludes, chipDescriptions, defaultFavorites, defaultPresets, defaultScenarioSearches };
 })();

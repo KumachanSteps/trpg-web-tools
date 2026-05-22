@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>使えるハッシュタグ検索 | TRPG Web Tools</title>
+  <title>使えるハッシュタグ検索 | TRPG Webツール観測所</title>
   <meta name="description" content="TRPGでよく使うX検索をワンクリックで作成できるハッシュタグ検索ツールです。" />
   <link rel="stylesheet" href="./css/hashtag_searcher_style.css" />
 </head>
@@ -20,8 +20,8 @@
       <div class="header-top">
         <div class="header-left">
           <a class="portal-link" href="https://kumachansteps.github.io/coc-tools/trpg-web-tools/index.html">
-            ← TRPG Web Tools
-            <span class="portal-tooltip">TRPG WEB Tools ポータルサイトに戻る</span>
+            ← TRPG Webツール観測所
+            <span class="portal-tooltip">TRPG WEBツール観測所に戻る</span>
           </a>
           <span class="tag-pill tag-cyan">X/Twitter検索</span>
           <span class="tag-pill tag-violet">TRPG日常利用</span>
@@ -65,7 +65,7 @@
     </section>
 
     <section class="three-column-layout">
-      <aside class="left-column">
+      <aside class="left-column sticky-column">
         <section class="panel">
           <h2>検索モード</h2>
           <div id="modeButtons" class="mode-list"></div>
@@ -81,7 +81,7 @@
         </section>
       </aside>
 
-      <section id="composerPanel" class="panel center-column">
+      <section id="composerPanel" class="panel center-column sticky-column">
         <div class="composer-header">
           <div>
             <h2>検索クエリ作成</h2>
@@ -114,7 +114,7 @@
         <section class="generated-box">
           <div class="generated-header">
             <h3>生成された検索文</h3>
-            <button type="button" id="resetButton" class="reset-button">リセット</button>
+            <button type="button" id="resetButton" class="danger-button compact">リセット</button>
           </div>
           <textarea id="generatedQuery" spellcheck="false"></textarea>
           <div class="button-row">
@@ -130,9 +130,9 @@
           <div class="panel-header compact">
             <div>
               <h2>シナリオ名検索</h2>
-              <p class="note">検索文を編集して追加できます。</p>
+              <p class="note">検索文を編集して追加できます。追加した検索文は下に保存されます。</p>
             </div>
-            <button type="button" id="scenarioToggleButton" class="soft-button small" aria-expanded="true">たたむ</button>
+            <button type="button" id="scenarioToggleButton" class="soft-button small" aria-expanded="true">△ 最小化</button>
           </div>
           <div class="scenario-add-row">
             <input id="scenarioSearchInput" type="text" placeholder="シナリオ名・検索文を入力" />
@@ -142,14 +142,12 @@
         </section>
 
         <section id="presetCardsSection" class="panel preset-panel">
-          <div class="panel-header">
+          <div class="panel-header compact">
             <div>
               <h2>プリセット検索カード</h2>
               <p>TRPGの日常利用に向けた、すぐ使える検索セットです。</p>
             </div>
-            <div class="panel-actions">
-              <button type="button" id="addPresetButton" class="cyan-button">検索カードを追加</button>
-            </div>
+            <button type="button" id="addPresetButton" class="cyan-button">検索カードを追加</button>
           </div>
           <div id="presetCardList" class="preset-grid"></div>
         </section>

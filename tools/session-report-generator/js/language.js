@@ -1,1 +1,3 @@
-window.Language = window.Language || {};
+window.ReportGeneratorLanguage = window.ReportGeneratorLanguage || {
+  init() {}
+};

@@ -33,8 +33,8 @@
       "shortcutButton", "shortcutCloseButton", "shortcutPanel", "modeButtons", "favoriteList", "favoriteCount",
       "systemButtons", "baseQueryDisplay", "addWordButtons", "filterButtons", "excludeButtons", "generatedQuery",
       "resetButton", "openXButton", "copyQueryButton", "saveFavoriteButton", "scenarioPanel", "scenarioSearchInput",
-      "addScenarioSearchButton", "scenarioSearchList", "scenarioToggleButton", "addWordsSection", "composerPanel", "presetCardsSection",
-      "presetCardList", "addPresetButton", "languageButton"
+      "addScenarioSearchButton", "scenarioSearchList", "scenarioToggleButton", "addWordsSection", "composerPanel",
+      "presetCardsSection", "presetCardList", "addPresetButton", "languageButton"
     ].forEach((id) => { els[id] = $(id); });
   }
 
@@ -300,7 +300,7 @@
   function renderScenarioSearches() {
     els.scenarioSearchInput.value = state.scenarioSearchInput;
     els.scenarioSearchList.classList.toggle("is-hidden", state.scenarioCollapsed);
-    els.scenarioToggleButton.textContent = state.scenarioCollapsed ? "開く" : "たたむ";
+    els.scenarioToggleButton.textContent = state.scenarioCollapsed ? "▽ 展開" : "△ 最小化";
     els.scenarioToggleButton.setAttribute("aria-expanded", String(!state.scenarioCollapsed));
     els.scenarioSearchList.innerHTML = "";
 
