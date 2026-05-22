@@ -19,6 +19,7 @@
     presetCards: templates.defaultPresets.map((preset, index) => ({ ...preset, query: parser.resolveDynamicQuery(preset.query), id: `default-${index}` })),
     scenarioSearchInput: '"星環のダ・カーポ"',
     scenarioSearches: [...templates.defaultScenarioSearches],
+    scenarioCollapsed: false,
     generatedQuery: "",
     showShortcutPanel: false,
     favoriteCopyStatus: "",
@@ -32,8 +33,8 @@
       "shortcutButton", "shortcutCloseButton", "shortcutPanel", "modeButtons", "favoriteList", "favoriteCount",
       "systemButtons", "baseQueryDisplay", "addWordButtons", "filterButtons", "excludeButtons", "generatedQuery",
       "resetButton", "openXButton", "copyQueryButton", "saveFavoriteButton", "scenarioPanel", "scenarioSearchInput",
-      "addScenarioSearchButton", "scenarioSearchList", "addWordsSection", "composerPanel", "presetCardsSection",
-      "presetCardList", "addPresetButton", "copyPresetMarkdownButton", "languageButton"
+      "addScenarioSearchButton", "scenarioSearchList", "scenarioToggleButton", "addWordsSection", "composerPanel", "presetCardsSection",
+      "presetCardList", "addPresetButton", "languageButton"
     ].forEach((id) => { els[id] = $(id); });
   }
 
@@ -298,6 +299,9 @@
 
   function renderScenarioSearches() {
     els.scenarioSearchInput.value = state.scenarioSearchInput;
+    els.scenarioSearchList.classList.toggle("is-hidden", state.scenarioCollapsed);
+    els.scenarioToggleButton.textContent = state.scenarioCollapsed ? "開く" : "たたむ";
+    els.scenarioToggleButton.setAttribute("aria-expanded", String(!state.scenarioCollapsed));
     els.scenarioSearchList.innerHTML = "";
 
     state.scenarioSearches.forEach((query, index) => {
@@ -376,16 +380,6 @@
         savePresetCards();
       });
       card.appendChild(desc);
-
-      const tag = document.createElement("input");
-      tag.className = "preset-tag-input";
-      tag.value = preset.tag;
-      tag.placeholder = "Tag";
-      tag.addEventListener("input", () => {
-        preset.tag = tag.value;
-        savePresetCards();
-      });
-      card.appendChild(tag);
 
       const query = document.createElement("textarea");
       query.className = "preset-query-input";
@@ -507,6 +501,11 @@
       state.scenarioSearchInput = els.scenarioSearchInput.value;
     });
 
+    els.scenarioToggleButton.addEventListener("click", () => {
+      state.scenarioCollapsed = !state.scenarioCollapsed;
+      renderScenarioSearches();
+    });
+
     els.addScenarioSearchButton.addEventListener("click", () => {
       const query = parser.normalizeSpaces(state.scenarioSearchInput);
       if (!query) return;
@@ -552,13 +551,6 @@
       savePresetCards();
       renderPresetCards();
       scrollToElement(els.presetCardsSection, "end");
-    });
-
-    els.copyPresetMarkdownButton.addEventListener("click", async () => {
-      const markdown = state.presetCards.map((preset) => `${preset.title}\n${preset.query}`).join("\n\n");
-      const copied = await copyTextToClipboard(markdown);
-      els.copyPresetMarkdownButton.textContent = copied ? "コピーしました" : "コピー失敗";
-      window.setTimeout(() => { els.copyPresetMarkdownButton.textContent = "Markdownでコピー"; }, 1600);
     });
 
     els.shortcutButton.addEventListener("click", () => {

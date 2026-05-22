@@ -114,7 +114,7 @@
         <section class="generated-box">
           <div class="generated-header">
             <h3>生成された検索文</h3>
-            <button type="button" id="resetButton" class="soft-button">リセット</button>
+            <button type="button" id="resetButton" class="reset-button">リセット</button>
           </div>
           <textarea id="generatedQuery" spellcheck="false"></textarea>
           <div class="button-row">
@@ -127,8 +127,13 @@
 
       <aside class="right-column">
         <section id="scenarioPanel" class="panel">
-          <h2>シナリオ名検索</h2>
-          <p class="note">検索文を編集して追加できます。追加した検索文は下に保存されます。</p>
+          <div class="panel-header compact">
+            <div>
+              <h2>シナリオ名検索</h2>
+              <p class="note">検索文を編集して追加できます。</p>
+            </div>
+            <button type="button" id="scenarioToggleButton" class="soft-button small" aria-expanded="true">たたむ</button>
+          </div>
           <div class="scenario-add-row">
             <input id="scenarioSearchInput" type="text" placeholder="シナリオ名・検索文を入力" />
             <button type="button" id="addScenarioSearchButton" class="primary-button small">追加</button>
@@ -144,7 +149,6 @@
             </div>
             <div class="panel-actions">
               <button type="button" id="addPresetButton" class="cyan-button">検索カードを追加</button>
-              <button type="button" id="copyPresetMarkdownButton" class="soft-button">Markdownでコピー</button>
             </div>
           </div>
           <div id="presetCardList" class="preset-grid"></div>
