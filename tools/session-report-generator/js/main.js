@@ -18,22 +18,23 @@
   };
 
   const FONT_MAPS = {
-    sansBoldItalic: { label: '𝘼', upper: 0x1D63C, lower: 0x1D656, digit: 0x1D7EC },
-    sansBold: { label: '𝗔', upper: 0x1D5D4, lower: 0x1D5EE, digit: 0x1D7EC },
-    sansItalic: { label: '𝘈', upper: 0x1D608, lower: 0x1D622, digit: null },
-    serifBoldItalic: { label: '𝑨', upper: 0x1D468, lower: 0x1D482, digit: 0x1D7CE },
-    serifBold: { label: '𝐀', upper: 0x1D400, lower: 0x1D41A, digit: 0x1D7CE },
-    serifItalic: { label: '𝐴', upper: 0x1D434, lower: 0x1D44E, digit: null, lowerExceptions: { h: 'ℎ' } },
+    sansBoldItalic: { label: 'BI', tooltip: 'ボールド + イタリック（サンセリフ）', upper: 0x1D63C, lower: 0x1D656, digit: 0x1D7EC },
+    sansBold: { label: 'B', tooltip: 'ボールド（サンセリフ）', upper: 0x1D5D4, lower: 0x1D5EE, digit: 0x1D7EC },
+    sansItalic: { label: 'I', tooltip: 'イタリック（サンセリフ）', upper: 0x1D608, lower: 0x1D622, digit: null },
+    serifBoldItalic: { label: 'SBI', tooltip: 'ボールド + イタリック（セリフ）', upper: 0x1D468, lower: 0x1D482, digit: 0x1D7CE },
+    serifBold: { label: 'SB', tooltip: 'ボールド（セリフ）', upper: 0x1D400, lower: 0x1D41A, digit: 0x1D7CE },
+    serifItalic: { label: 'SI', tooltip: 'イタリック（セリフ）', upper: 0x1D434, lower: 0x1D44E, digit: null, lowerExceptions: { h: 'ℎ' } },
     smallCaps: {
-      label: 'ᴀ',
+      label: 'SC',
+      tooltip: 'スモールキャップ',
       chars: {
         A: 'ᴀ', B: 'ʙ', C: 'ᴄ', D: 'ᴅ', E: 'ᴇ', F: 'ꜰ', G: 'ɢ', H: 'ʜ', I: 'ɪ', J: 'ᴊ', K: 'ᴋ', L: 'ʟ', M: 'ᴍ', N: 'ɴ', O: 'ᴏ', P: 'ᴘ', Q: 'ꞯ', R: 'ʀ', S: 'ꜱ', T: 'ᴛ', U: 'ᴜ', V: 'ᴠ', W: 'ᴡ', X: 'x', Y: 'ʏ', Z: 'ᴢ',
         a: 'ᴀ', b: 'ʙ', c: 'ᴄ', d: 'ᴅ', e: 'ᴇ', f: 'ꜰ', g: 'ɢ', h: 'ʜ', i: 'ɪ', j: 'ᴊ', k: 'ᴋ', l: 'ʟ', m: 'ᴍ', n: 'ɴ', o: 'ᴏ', p: 'ᴘ', q: 'ꞯ', r: 'ʀ', s: 'ꜱ', t: 'ᴛ', u: 'ᴜ', v: 'ᴠ', w: 'ᴡ', x: 'x', y: 'ʏ', z: 'ᴢ'
       }
     },
-    typewriter: { label: '𝙰', upper: 0x1D670, lower: 0x1D68A, digit: 0x1D7F6 },
-    modernSans: { label: '𝖠', upper: 0x1D5A0, lower: 0x1D5BA, digit: 0x1D7E2 },
-    plain: { label: 'A' }
+    typewriter: { label: 'TW', tooltip: 'タイプライター（モノスペース）', upper: 0x1D670, lower: 0x1D68A, digit: 0x1D7F6 },
+    modernSans: { label: 'MS', tooltip: 'モダン（サンセリフ）', upper: 0x1D5A0, lower: 0x1D5BA, digit: 0x1D7E2 },
+    plain: { label: 'A', tooltip: '変換なし' }
   };
 
   let lastPreviewSelection = { start: 0, end: 0 };
@@ -110,8 +111,10 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.fontVariant = option.value;
-      button.textContent = FONT_MAPS[option.value]?.label || option.textContent.slice(0, 1);
-      button.title = option.textContent;
+      const fontMeta = FONT_MAPS[option.value] || {};
+      button.textContent = fontMeta.label || option.textContent.slice(0, 2);
+      button.title = fontMeta.tooltip || option.textContent;
+      button.dataset.tooltip = fontMeta.tooltip || option.textContent;
       button.addEventListener('click', () => {
         $('fontVariant').value = option.value;
         updateFontQuickActive();
@@ -429,8 +432,9 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'ascii-art-chip';
-        button.textContent = item.label;
-        button.title = item.value;
+        button.textContent = item.display || item.label;
+        button.title = item.tooltip || item.value;
+        button.dataset.tooltip = item.tooltip || item.value;
         button.dataset.decoration = item.value;
         button.addEventListener('click', () => insertDecorationAtPreviewCursor(item.value));
         buttons.appendChild(button);

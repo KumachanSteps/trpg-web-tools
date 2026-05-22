@@ -10,13 +10,24 @@ window.TRPG_PORTAL_I18N = {
       },
       header: {
         eyebrow: "TRPG セッション支援ツール",
-        subtitle: "星明かりのポータル / ツール観測所",
+        subtitle: "TRPG WEBツール観測所",
       },
       hero: {
         label: "自作TRPG Webツール集",
         title: "TRPG WEBツール観測所",
+        postButton: "TRPG WEBツール観測所 を Post する",
         lead:
-          "TRPG準備・ログ解析・卓報告・シナリオ整理を支援するポータルです。星図のように並ぶツールから、目的に合うものを選択してください。",
+          "ここはTRPGをもっと楽しく手軽に！セッション準備・ログ解析・卓報告・シナリオ整理を支援するツールサイトです。\n星図のように並ぶツールの中から、ぜひ目的に合うものをお使いください✨",
+      },
+      nav: {
+        qa: "Q&A",
+        x: "X",
+      },
+      siteLinks: {
+        changelog: "更新履歴",
+        contact: "Q&A・不具合報告・要望",
+        privacy: "プライバシー",
+        terms: "利用規約・免責事項",
       },
       search: {
         placeholder: "ツールを検索...",
@@ -96,13 +107,24 @@ window.TRPG_PORTAL_I18N = {
       },
       header: {
         eyebrow: "TRPG SESSION SUPPORT TOOLS",
-        subtitle: "Starlit Portal / Tool Observatory",
+        subtitle: "TRPG Web Tools Observatory",
       },
       hero: {
         label: "Custom TRPG Web Tool Suite",
         title: "TRPG Web Tools Observatory",
+        postButton: "Post TRPG Web Tools Observatory",
         lead:
-          "A portal for TRPG prep, log analysis, session reports, and scenario organization. Choose the tool that fits your purpose from the constellation below.",
+          "Make TRPG sessions more fun and easier to prepare. This tool site supports session prep, log analysis, session reports, and scenario organization.\nChoose the tool that fits your purpose from the constellation below ✨",
+      },
+      nav: {
+        qa: "Q&A",
+        x: "X",
+      },
+      siteLinks: {
+        changelog: "Changelog",
+        contact: "Q&A / Bug Reports / Requests",
+        privacy: "Privacy",
+        terms: "Terms & Disclaimer",
       },
       search: {
         placeholder: "Search tools...",

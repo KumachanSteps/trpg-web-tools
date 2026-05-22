@@ -457,12 +457,12 @@
         { label: '⟡ line', value: '⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·' },
         { label: 'plain line', value: '──────────────────' },
         { label: '─ ⋅ ✩ ⋅ ─ line', value: '──────── ⋅ ✩ ⋅ ────────' },
-        { label: '꒰ঌ line ໒꒱', value: '꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱' },
-        { label: '◇ line', value: '◇─◇──◇────◇──◇─◇' },
-        { label: '◆◇ line', value: '◆◇◆◇◆◇◆◇◆◇◆◇◆' },
+        { label: '꒰ঌ line ໒꒱', display: 'wing line', tooltip: '꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱', value: '꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱' },
+        { label: '◇ line', display: '◇ line', tooltip: '◇─◇──◇────◇──◇─◇', value: '◇─◇──◇────◇──◇─◇' },
+        { label: '◆◇ line', display: '◆◇ line', tooltip: '◆◇◆◇◆◇◆◇◆◇◆◇◆', value: '◆◇◆◇◆◇◆◇◆◇◆◇◆' },
         { label: '◈ line', value: '◈ ━━━━━━━━━━━━━━ ◈' },
-        { label: '▣ line', value: '▣──────────────▣' },
-        { label: '╋ line', value: '╋━━━━━━━━━━━━━━╋' }
+        { label: '▣ line', display: 'square line', tooltip: '▣──────────────▣', value: '▣──────────────▣' },
+        { label: '╋ line', display: 'cross line', tooltip: '╋━━━━━━━━━━━━━━╋', value: '╋━━━━━━━━━━━━━━╋' }
       ]
     },
     single: {
@@ -482,14 +482,14 @@
       label: 'DESIGNS',
       items: [
         { label: '.+:ﾟ+｡.☆', value: '.+:ﾟ+｡.☆' },
-        { label: '｡:+* ﾟ', value: '｡:+* ﾟ ゜ﾟ *+:｡:+* ﾟ ゜ﾟ *+:｡' },
-        { label: '✧･ﾟ:*', value: '✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧' },
-        { label: '✦⋆˙₊⟡', value: '✦⋆˙₊⟡' },
-        { label: '⊹₊⋆ ✦. ݁', value: '⊹₊⋆ ✦. ݁' },
-        { label: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', value: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ' },
+        { label: '｡:+* ﾟ', display: 'star dust', tooltip: '｡:+* ﾟ ゜ﾟ *+:｡:+* ﾟ ゜ﾟ *+:｡', value: '｡:+* ﾟ ゜ﾟ *+:｡:+* ﾟ ゜ﾟ *+:｡' },
+        { label: '✧･ﾟ:*', display: 'glitter', tooltip: '✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧', value: '✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧' },
+        { label: '✦⋆˙₊⟡', display: 'sparkle', tooltip: '✦⋆˙₊⟡', value: '✦⋆˙₊⟡' },
+        { label: '⊹₊⋆ ✦. ݁', display: 'stardust', tooltip: '⊹₊⋆ ✦. ݁', value: '⊹₊⋆ ✦. ݁' },
+        { label: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', display: 'Call of Cthulhu', tooltip: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', value: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ' },
         { label: '◤￣￣', value: '◤￣￣￣￣￣￣￣￣￣￣￣￣￣￣' },
         { label: '＿＿◢', value: '＿＿＿＿＿＿＿＿＿＿＿＿＿＿◢' },
-        { label: '𓂃𓈒𓏸', value: '𓂃𓈒𓏸︎︎︎︎ 🕊' }
+        { label: '𓂃𓈒𓏸', display: 'trail', tooltip: '𓂃𓈒𓏸︎︎︎︎ 🕊', value: '𓂃𓈒𓏸︎︎︎︎ 🕊' }
       ]
     }
   };

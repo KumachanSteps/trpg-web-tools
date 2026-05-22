@@ -126,29 +126,27 @@
       </section>
 
       <aside class="right-column">
-        <section id="scenarioPanel" class="panel">
-          <div class="panel-header compact">
+        <section id="scenarioPanel" class="panel scenario-panel">
+          <div class="scenario-title-row">
             <div>
               <h2>シナリオ名検索</h2>
-              <p class="note">検索文を編集して追加できます。追加した検索文は下に保存されます。</p>
+              <p class="note">シナリオ名を記入して、お好みのテンプレートで検索できます。</p>
             </div>
-            <button type="button" id="scenarioToggleButton" class="soft-button small" aria-expanded="true">△ 最小化</button>
           </div>
-          <div class="scenario-add-row">
-            <input id="scenarioSearchInput" type="text" placeholder="シナリオ名・検索文を入力" />
+          <div class="scenario-control-row">
+            <input id="scenarioSearchInput" type="text" placeholder="調べたいシナリオタイトルを入力" />
             <button type="button" id="addScenarioSearchButton" class="primary-button small">追加</button>
+            <button type="button" id="scenarioToggleButton" class="soft-button small" aria-expanded="true">△ 最小化</button>
           </div>
           <div id="scenarioSearchList" class="scenario-search-list"></div>
         </section>
 
         <section id="presetCardsSection" class="panel preset-panel">
-          <div class="panel-header compact">
-            <div>
-              <h2>プリセット検索カード</h2>
-              <p>TRPGの日常利用に向けた、すぐ使える検索セットです。</p>
-            </div>
+          <div class="preset-title-row">
+            <h2>プリセット検索カード</h2>
             <button type="button" id="addPresetButton" class="cyan-button">検索カードを追加</button>
           </div>
+          <p class="note preset-note">様々な用途に合わせた、すぐ使える検索セットです。</p>
           <div id="presetCardList" class="preset-grid"></div>
         </section>
       </aside>
