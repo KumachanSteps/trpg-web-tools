@@ -8,7 +8,6 @@
     gtag('js', new Date());
     gtag('config', 'G-NJD5JZML31');
   </script>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>卓報告ジェネレーター</title>
@@ -28,7 +27,7 @@
         <h1 class="site-title"><span class="site-title-icon" aria-hidden="true">✦</span><span>卓報告ジェネレーター</span></h1>
         <p class="site-description">
           <span>SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
-          <span>シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
+          <span>新しい報告スタイルやアスキーアートは <code>template.js</code> に追加するだけで反映できます。</span>
         </p>
       </div>
     </div>
@@ -42,26 +41,8 @@
         <div class="grid-2">
           <div class="field-block">
             <label for="reportStyle">卓報告サンプルリスト</label>
-            <select id="reportStyle">
-              <option value="classic">クラシック：標準・読みやすい</option>
-              <option value="minimal">ミニマル：短文シンプル</option>
-              <option value="frame">✦フレーム：✦ ┈┈┈┈┈┈ ✦</option>
-              <option value="asterisk-frame">✼フレーム：✼••┈┈••✼••┈┈••✼</option>
-              <option value="fancy">⟡フレーム：⟡.·*.·····················⟡.·*.</option>
-              <option value="block">▮ ブロック：▮ システム名 ▮</option>
-              <option value="ho-focus">HO一覧スタイル：HO一覧重視</option>
-              <option value="kpc-pair">KPCタイマン：| ᴋᴘᴄ・ᴋᴘ ＆ | ᴘᴄ・ᴘʟ</option>
-              <option value="emoklore">✧上下囲み：✧　　　　　　　　✧</option>
-              <option value="wide-title">◤ シナリオ名 ◢ ɢᴍ: ᴘʟ/ᴘᴄ</option>
-              <option value="zigzag">◢◤◢ シナリオ名 ◢◤◢</option>
-              <option value="corner-frame">◤￣￣￣ title ＿＿＿◢</option>
-              <option value="triangle-heading">▸ system ▸ ɢᴍ: ▸ ᴘᴄ/ᴘʟ:</option>
-              <option value="scenario-clear">⧉ system |ɢᴍ |ᴘᴄ・ᴘʟ</option>
-              <option value="handwritten-title">⌜ TITLE ⌟ / ✧𝐊𝐏・✧𝐏𝐋</option>
-              <option value="double-line">════════ / ᴋᴘ・ʜᴏ</option>
-              <option value="ribbon-title">‧₊˚ ୨ Title ୧ ˚₊ 𝗞𝗣…𝗣𝗖/𝗣𝗟…</option>
-            </select>
-            <p class="hint">SNS実例の構造だけを参考にしたテンプレートです。</p>
+            <select id="reportStyle"></select>
+            <p class="hint">テンプレートは <code>template.js</code> の <code>REPORT_STYLES</code> で管理します。</p>
           </div>
 
           <div class="field-block">
@@ -78,7 +59,7 @@
               <option value="modernSans">𝖠 モダンスタイル（サンセリフ）</option>
               <option value="plain">A 変換なし</option>
             </select>
-            <p class="hint">英数字のみ変換します。日本語・記号・装飾はそのままです。</p>
+            <p class="hint">テンプレートごとの <code>styleTargets</code> に指定された部分だけ変換します。</p>
           </div>
         </div>
 
@@ -157,7 +138,7 @@
         <div class="btns">
           <button id="addPlayerButton" type="button">＋ 参加者を追加</button>
         </div>
-        <p class="hint">選択肢は PC / PC1 / HO1 / PC/PL / PL/PC / 自由です。1行目が PC1 なら PC2, PC3、HO1 なら HO2, HO3 のように自動で続きます。</p>
+        <p class="hint">1行目が PC1 なら PC2, PC3、HO1 なら HO2, HO3 のように自動で続きます。</p>
       </section>
 
       <section class="section misc-section" aria-label="補足情報">
@@ -172,6 +153,12 @@
             <input id="hashtagText" placeholder="例：#卓報告 #クトゥルフ神話TRPG" />
           </div>
         </div>
+      </section>
+
+      <section class="section decoration-panel" aria-label="アスキーアートと装飾">
+        <label>アスキーアート / 装飾</label>
+        <p class="hint">クリックすると、右側プレビューの編集中カーソル位置に挿入されます。候補は <code>template.js</code> の <code>ASCII_ART_COLLECTION</code> で管理します。</p>
+        <div id="asciiArtContainer" class="ascii-preview-panel"></div>
       </section>
     </section>
 
@@ -211,10 +198,10 @@
     <button id="clearAllButton" type="button" class="subtle bottom-action-button">入力をクリア</button>
   </div>
 
-  <script src="js/template.js"></script>
   <script src="js/i18l.js"></script>
   <script src="js/language.js"></script>
   <script src="js/perser.js"></script>
+  <script src="js/template.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
