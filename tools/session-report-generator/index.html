@@ -8,6 +8,7 @@
     gtag('js', new Date());
     gtag('config', 'G-NJD5JZML31');
   </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>卓報告ジェネレーター</title>
@@ -27,7 +28,7 @@
         <h1 class="site-title"><span class="site-title-icon" aria-hidden="true">✦</span><span>卓報告ジェネレーター</span></h1>
         <p class="site-description">
           <span>SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
-          <span>テンプレート、変換対象、アスキーアートは <code>template.js</code> で管理します。</span>
+          <span>シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
         </p>
       </div>
     </div>
@@ -42,8 +43,9 @@
           <div class="field-block">
             <label for="reportStyle">卓報告サンプルリスト</label>
             <select id="reportStyle"></select>
-            <p class="hint">REPORT_STYLES から自動生成されます。</p>
+            <p class="hint">テンプレートは <code>js/template.js</code> の <code>REPORT_STYLES</code> から自動生成されます。</p>
           </div>
+
           <div class="field-block">
             <label for="fontVariant">文字スタイル</label>
             <select id="fontVariant">
@@ -58,7 +60,7 @@
               <option value="modernSans">𝖠 モダンスタイル（サンセリフ）</option>
               <option value="plain">A 変換なし</option>
             </select>
-            <p class="hint">各テンプレートの styleTargets と連動します。</p>
+            <p class="hint">テンプレートごとの <code>styleTargets</code> に登録された要素だけ変換します。</p>
           </div>
         </div>
 
@@ -83,6 +85,7 @@
             </select>
             <input id="customSystemText" class="custom-system-input" placeholder="システム名を入力" />
           </div>
+
           <div class="field-block">
             <label for="authorText">作者 / 作</label>
             <input id="authorText" placeholder="例：〇〇様 / 〇〇 様" />
@@ -94,6 +97,7 @@
             <label for="scenarioTitle">シナリオ名</label>
             <input id="scenarioTitle" placeholder="例：黒き嵐が来る前に" />
           </div>
+
           <div class="field-block">
             <label for="resultText">通過 / END / 結果</label>
             <input id="resultText" placeholder="例：END A 両生還 / 全生還" />
@@ -112,7 +116,7 @@
           </div>
         </div>
         <div id="gmContainer" data-default-rows="1"></div>
-        <p class="hint">緑の＋で進行役を追加できます。</p>
+        <p class="hint">緑の＋で進行役を追加できます。KPC/KP型では、名前欄に「KPC名 / KP名」のように入れると綺麗です。</p>
       </section>
 
       <section class="section player-section" aria-label="参加者情報">
@@ -121,6 +125,7 @@
             <label>HO / PC / PL</label>
             <p class="hint">HO、PC名、PL名を1行で入力します。HO補足は通常未入力でOKです。</p>
           </div>
+
           <div class="field-block">
             <label for="nameInputOrder">PC名・PL名の入力順</label>
             <select id="nameInputOrder">
@@ -129,37 +134,57 @@
             </select>
           </div>
         </div>
+
         <div id="playerContainer" class="participant-container" data-default-rows="1"></div>
-        <div class="btns"><button id="addPlayerButton" type="button">＋ 参加者を追加</button></div>
-        <p class="hint">1行目が HO1 なら HO2、PC1 なら PC2 のように自動で続きます。</p>
+        <div class="btns">
+          <button id="addPlayerButton" type="button">＋ 参加者を追加</button>
+        </div>
+        <p class="hint">選択肢は PC / PC1 / HO1 / PC/PL / PL/PC / 自由です。1行目が PC1 なら PC2, PC3、HO1 なら HO2, HO3 のように自動で続きます。</p>
       </section>
 
       <section class="section misc-section" aria-label="補足情報">
         <div class="grid-2">
-          <div class="field-block"><label for="dateText">日付</label><input id="dateText" placeholder="今日の日付" /></div>
-          <div class="field-block"><label for="hashtagText">ハッシュタグ</label><input id="hashtagText" placeholder="例：#卓報告 #クトゥルフ神話TRPG" /></div>
+          <div class="field-block">
+            <label for="dateText">日付</label>
+            <input id="dateText" placeholder="今日の日付" />
+          </div>
+
+          <div class="field-block">
+            <label for="hashtagText">ハッシュタグ</label>
+            <input id="hashtagText" placeholder="例：#卓報告 #クトゥルフ神話TRPG" />
+          </div>
         </div>
       </section>
 
       <section class="section decoration-panel" aria-label="アスキーアートと装飾">
         <label>アスキーアート / 装飾</label>
-        <p class="hint">候補は <code>template.js</code> の <code>ASCII_ART_COLLECTION</code> から自動生成されます。</p>
+        <p class="hint">クリックすると、右側プレビューの編集中カーソル位置に挿入されます。候補は <code>template.js</code> で管理します。</p>
         <div id="asciiArtContainer" class="ascii-preview-panel"></div>
       </section>
     </section>
 
     <section class="panel preview-panel" aria-labelledby="previewPanelTitle">
       <h2 id="previewPanelTitle">X風プレビュー / 編集</h2>
+
       <div class="twitter-card">
         <div class="tweet-head">
           <div class="avatar"></div>
-          <div class="account"><strong>Session Report</strong><span>@taku_houkoku</span></div>
+          <div class="account">
+            <strong>Session Report</strong>
+            <span>@taku_houkoku</span>
+          </div>
         </div>
-        <div class="preview-edit-wrap">
+
+        <div class="preview-editor-wrap">
           <textarea id="tweetPreview" placeholder="ここに生成結果が表示されます。直接編集もできます。"></textarea>
-          <div id="previewHeightGrab" class="preview-height-grab" role="separator" aria-label="プレビュー高さ調整" title="ドラッグして高さを調整"></div>
+          <div id="previewResizeGrab" class="preview-resize-grab" title="ドラッグして高さを変更"></div>
         </div>
-        <div class="count-line"><span id="charCount">0 / 280</span><span id="limitStatus" class="count-ok">OK</span></div>
+
+        <div class="count-line">
+          <span id="charCount">0 / 280</span>
+          <span id="limitStatus" class="count-ok">OK</span>
+        </div>
+
         <div class="btns preview-actions">
           <button id="copyButton" type="button" class="primary">コピー</button>
           <button id="newlineButton" type="button">改行を追加</button>
@@ -167,6 +192,7 @@
           <button id="clearPreviewButton" type="button" class="danger">消去</button>
         </div>
       </div>
+
       <p class="hint">文字数は簡易カウントです。URL短縮や絵文字幅など、X本体の厳密な仕様とは異なる場合があります。</p>
     </section>
   </main>

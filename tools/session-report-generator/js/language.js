@@ -1,1 +1,1 @@
-window.Language = window.Language || { current: 'ja' };
+window.Language = window.Language || {};

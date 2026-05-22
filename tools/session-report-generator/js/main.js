@@ -1,8 +1,9 @@
 (() => {
   const $ = id => document.getElementById(id);
+
   let lastPreviewSelection = { start: 0, end: 0 };
   let isResetting = false;
-  let isDraggingPreviewHeight = false;
+  let manualPreviewHeight = null;
 
   const SYSTEM_NAMES = {
     call_of_cthulhu: 'Call of Cthulhu',
@@ -30,7 +31,10 @@
     typewriter: { upper: 0x1D670, lower: 0x1D68A, digit: 0x1D7F6 },
     modernSans: { upper: 0x1D5A0, lower: 0x1D5BA, digit: 0x1D7E2 },
     smallCaps: {
-      chars: { A:'ᴀ',B:'ʙ',C:'ᴄ',D:'ᴅ',E:'ᴇ',F:'ꜰ',G:'ɢ',H:'ʜ',I:'ɪ',J:'ᴊ',K:'ᴋ',L:'ʟ',M:'ᴍ',N:'ɴ',O:'ᴏ',P:'ᴘ',Q:'ꞯ',R:'ʀ',S:'ꜱ',T:'ᴛ',U:'ᴜ',V:'ᴠ',W:'ᴡ',X:'x',Y:'ʏ',Z:'ᴢ',a:'ᴀ',b:'ʙ',c:'ᴄ',d:'ᴅ',e:'ᴇ',f:'ꜰ',g:'ɢ',h:'ʜ',i:'ɪ',j:'ᴊ',k:'ᴋ',l:'ʟ',m:'ᴍ',n:'ɴ',o:'ᴏ',p:'ᴘ',q:'ꞯ',r:'ʀ',s:'ꜱ',t:'ᴛ',u:'ᴜ',v:'ᴠ',w:'ᴡ',x:'x',y:'ʏ',z:'ᴢ' }
+      chars: {
+        A:'ᴀ',B:'ʙ',C:'ᴄ',D:'ᴅ',E:'ᴇ',F:'ꜰ',G:'ɢ',H:'ʜ',I:'ɪ',J:'ᴊ',K:'ᴋ',L:'ʟ',M:'ᴍ',N:'ɴ',O:'ᴏ',P:'ᴘ',Q:'ꞯ',R:'ʀ',S:'ꜱ',T:'ᴛ',U:'ᴜ',V:'ᴠ',W:'ᴡ',X:'x',Y:'ʏ',Z:'ᴢ',
+        a:'ᴀ',b:'ʙ',c:'ᴄ',d:'ᴅ',e:'ᴇ',f:'ꜰ',g:'ɢ',h:'ʜ',i:'ɪ',j:'ᴊ',k:'ᴋ',l:'ʟ',m:'ᴍ',n:'ɴ',o:'ᴏ',p:'ᴘ',q:'ꞯ',r:'ʀ',s:'ꜱ',t:'ᴛ',u:'ᴜ',v:'ᴠ',w:'ᴡ',x:'x',y:'ʏ',z:'ᴢ'
+      }
     }
   };
 
@@ -40,8 +44,9 @@
 
   function styleText(text, variant) {
     const map = FONT_MAPS[variant];
-    if (!map || variant === 'plain') return String(text || '');
-    return Array.from(String(text || '').normalize('NFKD')).map(ch => {
+    if (!map || variant === 'plain') return text;
+
+    return Array.from(String(text).normalize('NFKD')).map(ch => {
       if (map.chars) return map.chars[ch] || ch;
       if (/[A-Z]/.test(ch)) return cp(ch, 65, map.upper);
       if (/[a-z]/.test(ch)) return map.lowerExceptions?.[ch] || cp(ch, 97, map.lower);
@@ -75,13 +80,18 @@
     return text + suffix;
   }
 
-  function updateStyleOptions() {
+  function populateReportStyles() {
     const select = $('reportStyle');
-    const styles = window.ReportTemplate?.REPORT_STYLES || [];
-    if (!select || !styles.length) return;
-    const current = select.value;
-    select.innerHTML = styles.map(style => `<option value="${escapeHtml(style.id)}">${escapeHtml(style.label)}</option>`).join('');
-    if (styles.some(style => style.id === current)) select.value = current;
+    if (!select || !window.ReportTemplate?.REPORT_STYLES) return;
+
+    const current = select.value || 'classic';
+    select.innerHTML = window.ReportTemplate.REPORT_STYLES
+      .map(style => `<option value="${escapeHtml(style.id)}">${escapeHtml(style.label)}</option>`)
+      .join('');
+
+    select.value = window.ReportTemplate.REPORT_STYLES.some(style => style.id === current)
+      ? current
+      : window.ReportTemplate.REPORT_STYLES[0]?.id || 'classic';
   }
 
   function addGM(value = '', role = 'KP') {
@@ -104,9 +114,10 @@
         <label>名前</label>
         <input class="gm-name" value="${escapeHtml(value)}" placeholder="例：KPC名 / KP名">
       </div>
-      <button class="icon-button add-inline" type="button" aria-label="進行役を追加">＋</button>
-      <button class="icon-button danger-inline" type="button" aria-label="削除">×</button>
+      <button class="icon-button add-inline" type="button">＋</button>
+      <button class="icon-button danger-inline" type="button">×</button>
     `;
+
     $('gmContainer').appendChild(row);
     row.querySelector('.gm-role').value = role;
     row.querySelector('.add-inline').addEventListener('click', () => addGM());
@@ -129,15 +140,21 @@
 
   function slotOptions(selected, first) {
     const options = first ? ['PC', 'PC1', 'HO1', 'PC/PL', 'PL/PC', '自由'] : [selected];
-    return options.map(value => `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('');
+
+    return options
+      .map(value => `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`)
+      .join('');
   }
 
   function syncSlots() {
     Array.from(document.querySelectorAll('#playerContainer .participant-row')).forEach((row, index) => {
       const select = row.querySelector('.player-slot');
       if (!select) return;
+
       if (index === 0) {
-        select.innerHTML = slotOptions(select.value || 'HO1', true);
+        const current = select.value || 'HO1';
+        select.innerHTML = slotOptions(current, true);
+        select.value = current;
         select.disabled = false;
       } else {
         const slot = slotFor(index + 1);
@@ -161,11 +178,14 @@
     const first = index === 1;
     const selected = slot || slotFor(index);
     const row = document.createElement('div');
+
     row.className = 'participant-row name-order-' + $('nameInputOrder').value;
     row.innerHTML = `
       <div class="slot-field">
         <label>枠</label>
-        <select class="player-slot" ${first ? '' : 'disabled'}>${slotOptions(selected, first)}</select>
+        <select class="player-slot" ${first ? '' : 'disabled'}>
+          ${slotOptions(selected, first)}
+        </select>
       </div>
       <div class="ho-field">
         <label>HO補足</label>
@@ -181,6 +201,7 @@
       </div>
       <button class="danger delete-field" type="button">×</button>
     `;
+
     $('playerContainer').appendChild(row);
     row.querySelector('.player-slot').addEventListener('change', () => {
       syncSlots();
@@ -191,6 +212,7 @@
       syncSlots();
       previewSelectedStyle();
     });
+
     syncSlots();
     updateNameOrder();
   }
@@ -200,10 +222,12 @@
     return type === 'pc' ? '探索者' + (letters[index] || index + 1) : 'PL名' + (letters[index] || index + 1);
   }
 
-  function collect(useSample = false) {
+  function collectData(useSample = true) {
     const suffix = getSuffix();
+
     let gms = Array.from(document.querySelectorAll('#gmContainer .row')).map((row, index) => {
       const raw = row.querySelector('.gm-name').value.trim();
+
       return {
         role: row.querySelector('.gm-role').value || 'KP',
         name: addSuffix(raw || (useSample && index === 0 ? 'KP名' : ''), suffix)
@@ -213,6 +237,7 @@
     let players = Array.from(document.querySelectorAll('#playerContainer .participant-row')).map((row, index) => {
       const rawPc = row.querySelector('.pc-name').value.trim();
       const rawPl = row.querySelector('.pl-name').value.trim();
+
       return {
         slot: row.querySelector('.player-slot').value,
         ho: row.querySelector('.ho-name').value.trim(),
@@ -225,8 +250,8 @@
     if (useSample && !players.length) players = [{ slot: 'HO1', ho: '', pc: '探索者A', pl: 'PL名A' }];
 
     return {
-      style: $('reportStyle').value,
-      fontVariant: $('fontVariant').value,
+      style: $('reportStyle').value || 'classic',
+      fontVariant: $('fontVariant').value || 'plain',
       system: getSystemName(),
       scenario: $('scenarioTitle').value.trim() || (useSample ? 'シナリオ名' : ''),
       author: $('authorText').value.trim() || (useSample ? '作者名' : ''),
@@ -238,14 +263,11 @@
     };
   }
 
-  function hasInput() {
-    return Array.from(document.querySelectorAll('.input-panel input:not([type="checkbox"])')).some(input => input.value.trim());
-  }
-
-  function renderPreview(text) {
-    const data = collect(!hasInput());
+  function renderPreview() {
+    const data = collectData(true);
     const variant = data.style === 'minimal' ? 'plain' : data.fontVariant;
-    $('tweetPreview').value = text ?? window.ReportTemplate.render(data, variant, styleText);
+    const output = window.ReportTemplate.render(data, value => styleText(value, variant));
+    $('tweetPreview').value = output;
     updateCount();
     requestAnimationFrame(fitPreviewTextBox);
   }
@@ -255,14 +277,12 @@
   }
 
   function generateTweet() {
-    const data = collect(true);
-    const variant = data.style === 'minimal' ? 'plain' : data.fontVariant;
-    renderPreview(window.ReportTemplate.render(data, variant, styleText));
+    renderPreview();
   }
 
   function tweetLength(text) {
     let total = 0;
-    for (const ch of Array.from(String(text || '').normalize('NFC'))) {
+    for (const ch of Array.from(String(text).normalize('NFC'))) {
       const code = ch.codePointAt(0);
       total += (code <= 0x10FF || (code >= 0x2000 && code <= 0x201F) || (code >= 0x2032 && code <= 0x2037)) ? 1 : 2;
     }
@@ -279,21 +299,34 @@
   function fitPreviewTextBox() {
     const panel = document.querySelector('.preview-panel');
     const card = document.querySelector('.twitter-card');
-    const text = $('tweetPreview');
-    if (!panel || !card || !text || window.innerWidth <= 920) return;
+    const wrap = document.querySelector('.preview-editor-wrap');
+
+    if (!panel || !card || !wrap || window.innerWidth <= 920 || manualPreviewHeight) return;
+
     const h2 = panel.querySelector('h2');
     const head = card.querySelector('.tweet-head');
     const count = card.querySelector('.count-line');
     const buttons = card.querySelector('.preview-actions');
     const hint = panel.querySelector(':scope > .hint');
-    const available = panel.clientHeight - (h2?.offsetHeight || 0) - (head?.offsetHeight || 0) - (count?.offsetHeight || 0) - (buttons?.offsetHeight || 0) - (hint?.offsetHeight || 0) - 80;
-    text.style.height = Math.max(window.innerHeight < 760 ? 190 : 260, Math.min(620, available)) + 'px';
+
+    const available =
+      panel.clientHeight -
+      (h2?.offsetHeight || 0) -
+      (head?.offsetHeight || 0) -
+      (count?.offsetHeight || 0) -
+      (buttons?.offsetHeight || 0) -
+      (hint?.offsetHeight || 0) -
+      50;
+
+    wrap.style.height = Math.max(window.innerHeight < 760 ? 180 : 240, Math.min(620, available)) + 'px';
   }
 
   function savePreviewSelection() {
     const preview = $('tweetPreview');
-    if (!preview) return;
-    lastPreviewSelection = { start: preview.selectionStart ?? preview.value.length, end: preview.selectionEnd ?? preview.value.length };
+    lastPreviewSelection = {
+      start: preview.selectionStart ?? preview.value.length,
+      end: preview.selectionEnd ?? preview.value.length
+    };
   }
 
   function insertAtCursor(text) {
@@ -301,13 +334,17 @@
     const focused = document.activeElement === preview;
     const start = focused ? preview.selectionStart : lastPreviewSelection.start;
     const end = focused ? preview.selectionEnd : lastPreviewSelection.end;
+
     preview.value = preview.value.slice(0, start) + text + preview.value.slice(end);
+
     const next = start + text.length;
     preview.focus();
     preview.selectionStart = next;
     preview.selectionEnd = next;
     lastPreviewSelection = { start: next, end: next };
+
     updateCount();
+    requestAnimationFrame(fitPreviewTextBox);
   }
 
   function clearPreview() {
@@ -317,19 +354,17 @@
     $('tweetPreview').focus();
   }
 
-  function copyTweet() {
+  async function copyTweet() {
     const text = $('tweetPreview').value;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => alert('コピーしました。')).catch(fallbackCopy);
-    } else {
-      fallbackCopy();
-    }
-  }
 
-  function fallbackCopy() {
-    $('tweetPreview').select();
-    document.execCommand('copy');
-    alert('コピーしました。');
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('コピーしました。');
+    } catch {
+      $('tweetPreview').select();
+      document.execCommand('copy');
+      alert('コピーしました。');
+    }
   }
 
   function setTodayPlaceholder() {
@@ -341,24 +376,58 @@
     $('customSystemText').classList.toggle('is-active', $('systemSelect').value === 'custom');
   }
 
+  function resetAll() {
+    isResetting = true;
+
+    document.querySelectorAll('.input-panel input:not([type="checkbox"])').forEach(input => {
+      input.value = '';
+    });
+
+    $('systemSelect').value = 'call_of_cthulhu';
+    $('reportStyle').value = 'classic';
+    $('fontVariant').value = 'sansBoldItalic';
+    $('nameInputOrder').value = 'pcpl';
+
+    document.querySelectorAll('input[name="suffixChoice"]').forEach(input => {
+      input.checked = input.value === 'none';
+    });
+
+    $('gmContainer').innerHTML = '';
+    $('playerContainer').innerHTML = '';
+    addGM();
+    addPlayer();
+
+    manualPreviewHeight = null;
+    document.querySelector('.preview-editor-wrap').style.height = '';
+    setTodayPlaceholder();
+    updateCustomSystemInput();
+    clearPreview();
+
+    isResetting = false;
+    previewSelectedStyle();
+  }
+
   function renderAsciiArtButtons() {
     const container = $('asciiArtContainer');
     const collection = window.ReportTemplate?.ASCII_ART_COLLECTION;
+
     if (!container || !collection) return;
+
     container.innerHTML = '';
-    Object.entries(collection).forEach(([groupKey, groupData]) => {
-      const group = document.createElement('div');
-      group.className = 'ascii-group';
-      group.dataset.group = groupKey;
+
+    Object.entries(collection).forEach(([groupKey, group]) => {
+      const groupElement = document.createElement('div');
+      groupElement.className = 'ascii-group';
+      groupElement.dataset.group = groupKey;
 
       const title = document.createElement('div');
       title.className = 'ascii-group-title';
-      title.textContent = groupData.label || groupKey.toUpperCase();
+      title.textContent = group.label || groupKey.toUpperCase();
 
       const buttons = document.createElement('div');
       buttons.className = 'ascii-buttons';
 
-      groupData.items.forEach(item => {
+      group.items.forEach(item => {
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = item.label;
@@ -366,63 +435,54 @@
         buttons.appendChild(button);
       });
 
-      group.appendChild(title);
-      group.appendChild(buttons);
-      container.appendChild(group);
+      groupElement.appendChild(title);
+      groupElement.appendChild(buttons);
+      container.appendChild(groupElement);
     });
   }
 
-  function resetAll() {
-    isResetting = true;
-    document.querySelectorAll('.input-panel input:not([type="checkbox"])').forEach(input => input.value = '');
-    $('systemSelect').value = 'call_of_cthulhu';
-    $('reportStyle').value = window.ReportTemplate?.REPORT_STYLES?.[0]?.id || 'classic';
-    $('fontVariant').value = 'sansBoldItalic';
-    $('nameInputOrder').value = 'pcpl';
-    document.querySelectorAll('input[name="suffixChoice"]').forEach(input => input.checked = input.value === 'none');
-    $('gmContainer').innerHTML = '';
-    $('playerContainer').innerHTML = '';
-    addGM();
-    addPlayer();
-    setTodayPlaceholder();
-    updateCustomSystemInput();
-    clearPreview();
-    isResetting = false;
-  }
+  function bindResizeGrab() {
+    const grab = $('previewResizeGrab');
+    const wrap = document.querySelector('.preview-editor-wrap');
 
-  function bindPreviewHeightGrab() {
-    const grab = $('previewHeightGrab');
-    const preview = $('tweetPreview');
-    if (!grab || !preview) return;
+    if (!grab || !wrap) return;
 
-    grab.addEventListener('mousedown', event => {
-      isDraggingPreviewHeight = true;
-      event.preventDefault();
+    let startY = 0;
+    let startHeight = 0;
+
+    grab.addEventListener('pointerdown', event => {
+      startY = event.clientY;
+      startHeight = wrap.offsetHeight;
+      grab.setPointerCapture(event.pointerId);
       document.body.classList.add('is-resizing-preview');
     });
 
-    window.addEventListener('mousemove', event => {
-      if (!isDraggingPreviewHeight) return;
-      const rect = preview.getBoundingClientRect();
-      const nextHeight = Math.max(180, Math.min(760, event.clientY - rect.top));
-      preview.style.height = nextHeight + 'px';
+    grab.addEventListener('pointermove', event => {
+      if (!document.body.classList.contains('is-resizing-preview')) return;
+      const next = Math.max(180, Math.min(760, startHeight + event.clientY - startY));
+      manualPreviewHeight = next;
+      wrap.style.height = next + 'px';
     });
 
-    window.addEventListener('mouseup', () => {
-      if (!isDraggingPreviewHeight) return;
-      isDraggingPreviewHeight = false;
+    grab.addEventListener('pointerup', event => {
       document.body.classList.remove('is-resizing-preview');
+      grab.releasePointerCapture(event.pointerId);
     });
   }
 
   function bindEvents() {
     window.clearAll = resetAll;
+
     window.addEventListener('resize', fitPreviewTextBox);
 
-    document.querySelectorAll('input[name="suffixChoice"]').forEach(input => input.addEventListener('change', () => {
-      document.querySelectorAll('input[name="suffixChoice"]').forEach(item => item.checked = item === input);
-      previewSelectedStyle();
-    }));
+    document.querySelectorAll('input[name="suffixChoice"]').forEach(input => {
+      input.addEventListener('change', () => {
+        document.querySelectorAll('input[name="suffixChoice"]').forEach(item => {
+          item.checked = item === input;
+        });
+        previewSelectedStyle();
+      });
+    });
 
     $('addPlayerButton').addEventListener('click', () => addPlayer());
     $('generateButton').addEventListener('click', generateTweet);
@@ -431,28 +491,48 @@
     $('newlineButton').addEventListener('click', () => insertAtCursor('\n'));
     $('spaceButton').addEventListener('click', () => insertAtCursor(' '));
     $('clearPreviewButton').addEventListener('click', clearPreview);
+
     $('reportStyle').addEventListener('change', previewSelectedStyle);
     $('fontVariant').addEventListener('change', previewSelectedStyle);
-    $('nameInputOrder').addEventListener('change', () => { updateNameOrder(); previewSelectedStyle(); });
+    $('nameInputOrder').addEventListener('change', () => {
+      updateNameOrder();
+      previewSelectedStyle();
+    });
+
     $('systemSelect').addEventListener('change', () => {
       updateCustomSystemInput();
       if (['emoklore_en', 'emoklore_ja'].includes($('systemSelect').value)) {
-        document.querySelectorAll('.gm-role').forEach(role => { role.value = 'DL'; });
+        document.querySelectorAll('.gm-role').forEach(role => {
+          role.value = 'DL';
+        });
       }
       previewSelectedStyle();
     });
+
     document.querySelector('.input-panel').addEventListener('input', previewSelectedStyle);
-    $('tweetPreview').addEventListener('input', () => { savePreviewSelection(); updateCount(); });
-    ['click', 'keyup', 'select'].forEach(eventName => $('tweetPreview').addEventListener(eventName, savePreviewSelection));
-    bindPreviewHeightGrab();
+
+    $('tweetPreview').addEventListener('input', () => {
+      savePreviewSelection();
+      updateCount();
+    });
+
+    ['click', 'keyup', 'select'].forEach(eventName => {
+      $('tweetPreview').addEventListener(eventName, savePreviewSelection);
+    });
+
+    bindResizeGrab();
   }
 
-  updateStyleOptions();
-  renderAsciiArtButtons();
-  bindEvents();
-  addGM();
-  addPlayer();
-  setTodayPlaceholder();
-  updateCustomSystemInput();
-  previewSelectedStyle();
+  function init() {
+    populateReportStyles();
+    bindEvents();
+    addGM();
+    addPlayer();
+    setTodayPlaceholder();
+    updateCustomSystemInput();
+    renderAsciiArtButtons();
+    previewSelectedStyle();
+  }
+
+  init();
 })();

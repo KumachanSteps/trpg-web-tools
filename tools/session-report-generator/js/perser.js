@@ -1,1 +1,1 @@
-window.ReportParser = window.ReportParser || {};
+window.Parser = window.Parser || {};
