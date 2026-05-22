@@ -20,7 +20,7 @@
   />
 
   <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="./assets/css/portal.css?v=20260513-07" />
+  <link rel="stylesheet" href="./assets/css/portal.css?v=20260513-10" />
 </head>
 
 <body class="theme-dawn">
@@ -120,13 +120,86 @@
 
     <section id="toolsGrid" class="tools-grid" aria-label="Tool list"></section>
 
+    <section class="portal-info-section" aria-label="Portal information">
+      <details class="portal-info-card" open>
+        <summary>
+          <span class="info-summary-icon" aria-hidden="true">✦</span>
+          <span data-i18n="info.about.title">About</span>
+        </summary>
+
+        <div class="portal-info-body">
+          <p data-i18n="info.about.body1">
+            TRPG WEBツール観測所は、TRPGのセッション準備、ログ整理、卓報告、シナリオ情報管理を補助するための個人制作Webツール集です。
+          </p>
+          <p data-i18n="info.about.body2">
+            KP/GM・PLそれぞれの作業を少し軽くし、遊んだ卓の記録や次のセッション準備につなげることを目的としています。
+          </p>
+          <p data-i18n="info.about.body3">
+            開発や設計補助にはChatGPTを使用しており、UI案・文章整理・コード作成支援などを取り入れながら制作しています。
+          </p>
+        </div>
+      </details>
+
+      <details class="portal-info-card">
+        <summary>
+          <span class="info-summary-icon" aria-hidden="true">⚙</span>
+          <span data-i18n="info.status.title">Status</span>
+        </summary>
+
+        <div class="portal-info-body status-note-grid">
+          <div>
+            <h3 data-i18n="info.status.availableTitle">使用可能</h3>
+            <p data-i18n="info.status.availableBody">
+              現在公開中で、実際に利用できるツールです。
+            </p>
+          </div>
+
+          <div>
+            <h3 data-i18n="info.status.productionTitle">開発中</h3>
+            <p data-i18n="info.status.productionBody">
+              基本設計またはUIを作成中のツールです。ページが存在する場合は、先にデザインや操作感を確認できます。
+            </p>
+          </div>
+
+          <div>
+            <h3 data-i18n="info.status.ideaTitle">アイデア</h3>
+            <p data-i18n="info.status.ideaBody">
+              今後制作予定の構想段階のツールです。内容や仕様は変更される可能性があります。
+            </p>
+          </div>
+        </div>
+      </details>
+
+      <details class="portal-info-card">
+        <summary>
+          <span class="info-summary-icon" aria-hidden="true">※</span>
+          <span data-i18n="info.notes.title">Notes</span>
+        </summary>
+
+        <div class="portal-info-body">
+          <p data-i18n="info.notes.body1">
+            本サイトのツールは、基本的にブラウザ上で動作する個人制作の補助ツールです。
+          </p>
+          <p data-i18n="info.notes.body2">
+            セッションログ、キャラクター情報、秘匿情報などを扱う場合は、公開範囲やネタバレに注意してご利用ください。
+          </p>
+          <p data-i18n="info.notes.body3">
+            一部のツールでは、入力内容やお気に入り情報をブラウザの localStorage に保存する場合があります。このデータは利用中のブラウザ内に保存されるため、別端末や別ブラウザには自動で引き継がれません。
+          </p>
+          <p data-i18n="info.notes.body4">
+            各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
+          </p>
+        </div>
+      </details>
+    </section>
+
     <footer>
       <p data-i18n="footer.copy">© TRPG WEBツール観測所 / Created for TRPG Session Support</p>
     </footer>
   </main>
 
-  <script src="./assets/js/i18n.js?v=20260513-09"></script>
-  <script src="./assets/js/language.js?v=20260513-09"></script>
-  <script src="./assets/js/portal.js?v=20260513-09"></script>
+  <script src="./assets/js/i18n.js?v=20260513-10"></script>
+  <script src="./assets/js/language.js?v=20260513-10"></script>
+  <script src="./assets/js/portal.js?v=20260513-10"></script>
 </body>
 </html>

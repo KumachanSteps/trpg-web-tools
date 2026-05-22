@@ -50,6 +50,39 @@ window.TRPG_PORTAL_I18N = {
         title: "該当するツールがありません",
         text: "検索キーワードまたはカテゴリ条件に一致するツールが見つかりませんでした。",
       },
+      info: {
+        about: {
+          title: "About",
+          body1:
+            "TRPG WEBツール観測所は、TRPGのセッション準備、ログ整理、卓報告、シナリオ情報管理を補助するための個人制作Webツール集です。",
+          body2:
+            "KP/GM・PLそれぞれの作業を少し軽くし、遊んだ卓の記録や次のセッション準備につなげることを目的としています。",
+          body3:
+            "開発や設計補助にはChatGPTを使用しており、UI案・文章整理・コード作成支援などを取り入れながら制作しています。",
+        },
+        status: {
+          title: "Status",
+          availableTitle: "使用可能",
+          availableBody: "現在公開中で、実際に利用できるツールです。",
+          productionTitle: "開発中",
+          productionBody:
+            "基本設計またはUIを作成中のツールです。ページが存在する場合は、先にデザインや操作感を確認できます。",
+          ideaTitle: "アイデア",
+          ideaBody:
+            "今後制作予定の構想段階のツールです。内容や仕様は変更される可能性があります。",
+        },
+        notes: {
+          title: "Notes",
+          body1:
+            "本サイトのツールは、基本的にブラウザ上で動作する個人制作の補助ツールです。",
+          body2:
+            "セッションログ、キャラクター情報、秘匿情報などを扱う場合は、公開範囲やネタバレに注意してご利用ください。",
+          body3:
+            "一部のツールでは、入力内容やお気に入り情報をブラウザの localStorage に保存する場合があります。このデータは利用中のブラウザ内に保存されるため、別端末や別ブラウザには自動で引き継がれません。",
+          body4:
+            "各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。",
+        },
+      },
       footer: {
         copy: "© TRPG WEBツール観測所 / Created for TRPG Session Support",
       },
@@ -102,6 +135,39 @@ window.TRPG_PORTAL_I18N = {
       empty: {
         title: "No tools found",
         text: "Search keyword or category filter did not match any tool.",
+      },
+      info: {
+        about: {
+          title: "About",
+          body1:
+            "TRPG Web Tools Observatory is a personal collection of browser-based tools for TRPG session preparation, log organization, session reports, and scenario information management.",
+          body2:
+            "It is designed to make KP/GM and player workflows a little lighter and to help connect played sessions with future preparation.",
+          body3:
+            "ChatGPT is used as a development and design support tool, including UI planning, wording refinement, and code drafting assistance.",
+        },
+        status: {
+          title: "Status",
+          availableTitle: "Available",
+          availableBody: "Tools that are currently published and ready to use.",
+          productionTitle: "In Development",
+          productionBody:
+            "Tools currently under design or implementation. If a page exists, you may be able to preview the design or interaction first.",
+          ideaTitle: "Idea",
+          ideaBody:
+            "Tool concepts planned for future development. Details and specifications may change.",
+        },
+        notes: {
+          title: "Notes",
+          body1:
+            "These tools are personal support utilities that generally run in the browser.",
+          body2:
+            "When handling session logs, character information, hidden handouts, or spoiler-sensitive data, please be mindful of visibility and disclosure.",
+          body3:
+            "Some tools may store input or favorite data in the browser's localStorage. This data stays within the browser you use and does not automatically transfer to other devices or browsers.",
+          body4:
+            "Please check the terms, licenses, and rights notices of each TRPG system, scenario, and external service you use with these tools.",
+        },
       },
       footer: {
         copy: "© TRPG Web Tools Observatory / Created for TRPG Session Support",
