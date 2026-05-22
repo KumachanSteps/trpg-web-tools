@@ -17,8 +17,8 @@
     modeQueryParts: [],
     favorites: structuredClone(templates.defaultFavorites),
     presetCards: templates.defaultPresets.map((preset, index) => ({ ...preset, query: parser.resolveDynamicQuery(preset.query), id: `default-${index}` })),
-    scenarioSearchInput: '"星環のダ・カーポ"',
-    scenarioSearches: [...templates.defaultScenarioSearches],
+    scenarioSearchInput: "星環のダ・カーポ",
+    scenarioSearches: [],
     scenarioCollapsed: false,
     generatedQuery: "",
     showShortcutPanel: false,
@@ -27,6 +27,42 @@
 
   const els = {};
   const $ = (id) => document.getElementById(id);
+
+  const scenarioQueryTemplates = [
+    {
+      label: "感想",
+      build: (name) => `${quoteScenarioName(name)} lang:ja 感想 (fusetter OR poipiku)`,
+    },
+    {
+      label: "立ち絵",
+      build: (name) => `${quoteScenarioName(name)} filter:images ("CoC" OR "Call of Cthulhu" OR "HO" OR "クトゥルフ神話TRPG" OR 立ち絵)`,
+    },
+    {
+      label: "お部屋",
+      build: (name) => `${quoteScenarioName(name)} filter:images 部屋`,
+    },
+  ];
+
+  function normalizeScenarioName(value) {
+    return String(value || "")
+      .trim()
+      .replace(/^["“”「『]+/, "")
+      .replace(/["“”」』]+$/, "");
+  }
+
+  function quoteScenarioName(value) {
+    const name = normalizeScenarioName(value);
+    return name ? `"${name}"` : '""';
+  }
+
+  function buildScenarioSearches(name) {
+    return scenarioQueryTemplates.map((template) => ({
+      label: template.label,
+      query: template.build(name),
+      auto: true,
+    }));
+  }
+
 
   function cacheElements() {
     [
@@ -86,14 +122,7 @@
   }
 
   function loadScenarioSearches() {
-    try {
-      const stored = localStorage.getItem(storageKeys.scenarios);
-      if (!stored) return;
-      const parsed = JSON.parse(stored);
-      if (!Array.isArray(parsed)) return;
-      const normalized = parsed.filter((item) => typeof item === "string" && item.trim());
-      if (normalized.length > 0) state.scenarioSearches = normalized;
-    } catch {}
+    state.scenarioSearches = buildScenarioSearches(state.scenarioSearchInput);
   }
 
   function saveFavorites() { try { localStorage.setItem(storageKeys.favorites, JSON.stringify(state.favorites)); } catch {} }
@@ -304,19 +333,30 @@
     els.scenarioToggleButton.setAttribute("aria-expanded", String(!state.scenarioCollapsed));
     els.scenarioSearchList.innerHTML = "";
 
-    state.scenarioSearches.forEach((query, index) => {
+    state.scenarioSearches.forEach((item, index) => {
+      const current = typeof item === "string" ? { label: "検索", query: item, auto: false } : item;
       const row = document.createElement("article");
       row.className = "scenario-search-row";
 
+      const top = document.createElement("div");
+      top.className = "scenario-row-top";
+
+      const label = document.createElement("span");
+      label.className = "scenario-row-label";
+      label.textContent = current.label || "検索";
+      top.appendChild(label);
+
       const input = document.createElement("input");
       input.className = "scenario-row-input";
-      input.value = query;
+      input.value = current.query || "";
       input.spellcheck = false;
       input.addEventListener("input", () => {
-        state.scenarioSearches[index] = input.value;
+        state.scenarioSearches[index] = { ...current, query: input.value, auto: false };
         saveScenarioSearches();
       });
-      row.appendChild(input);
+      top.appendChild(input);
+
+      row.appendChild(top);
 
       const actions = document.createElement("div");
       actions.className = "scenario-row-actions";
@@ -499,6 +539,9 @@
 
     els.scenarioSearchInput.addEventListener("input", () => {
       state.scenarioSearchInput = els.scenarioSearchInput.value;
+      state.scenarioSearches = buildScenarioSearches(state.scenarioSearchInput);
+      saveScenarioSearches();
+      renderScenarioSearches();
     });
 
     els.scenarioToggleButton.addEventListener("click", () => {
@@ -507,13 +550,11 @@
     });
 
     els.addScenarioSearchButton.addEventListener("click", () => {
-      const query = parser.normalizeSpaces(state.scenarioSearchInput);
-      if (!query) return;
-      if (!state.scenarioSearches.includes(query)) {
-        state.scenarioSearches.push(query);
-        saveScenarioSearches();
-        renderScenarioSearches();
-      }
+      const query = quoteScenarioName(state.scenarioSearchInput);
+      if (!normalizeScenarioName(state.scenarioSearchInput)) return;
+      state.scenarioSearches.push({ label: "追加", query, auto: false });
+      saveScenarioSearches();
+      renderScenarioSearches();
     });
 
     els.resetButton.addEventListener("click", () => {

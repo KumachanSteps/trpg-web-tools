@@ -124,7 +124,11 @@ window.HASHTAG_TEMPLATES = (() => {
     { title: "最新 TRPG配信", desc: "直近3日以内のTRPG配信・告知を探す", query: "TRPG配信 (filter:images OR filter:links OR filter:videos) __SINCE_3DAYS__", tag: "Stream" },
   ];
 
-  const defaultScenarioSearches = ['"星環のダ・カーポ"', '"星環のダ・カーポ" filter:images', '"星環のダ・カーポ" 卓報告', '"星環のダ・カーポ" -ネタバレ'];
+  const defaultScenarioSearches = [
+    { label: "感想", query: '"星環のダ・カーポ" lang:ja 感想 (fusetter OR poipiku)' },
+    { label: "立ち絵", query: '"星環のダ・カーポ" filter:images ("CoC" OR "Call of Cthulhu" OR "HO" OR "クトゥルフ神話TRPG" OR 立ち絵)' },
+    { label: "お部屋", query: '"星環のダ・カーポ" filter:images 部屋' },
+  ];
 
   return { systemQueries, wordQueries, excludeQueries, modes, modeVisualWordMap, modePresets, addWords, filters, excludes, chipDescriptions, defaultFavorites, defaultPresets, defaultScenarioSearches };
 })();

@@ -39,10 +39,10 @@ h2{font-size:20px}
 .site-description,.note,.composer-header p,.panel-header p{color:#cbd5e1;font-size:14px;line-height:1.7}
 .three-column-layout{display:grid;grid-template-columns:280px minmax(0,1.05fr) minmax(340px,.95fr);gap:20px;align-items:start}
 .left-column,.right-column{display:flex;flex-direction:column;gap:20px}
-.sticky-column{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(103,232,249,.35) rgba(255,255,255,.06)}
+.sticky-column{position:sticky;top:20px;max-height:none;overflow:visible}
 .center-column.sticky-column{align-self:start}
 .panel,.shortcut-panel{padding:20px}
-.panel-header.compact{align-items:flex-start;justify-content:space-between}
+.panel-header.compact{align-items:flex-start;justify-content:space-between;gap:12px}.panel-header.compact .soft-button.small{margin-left:auto;white-space:nowrap}
 .is-hidden{display:none!important}
 .mode-list,.favorite-list,.scenario-search-list{display:grid;gap:8px;margin-top:12px}
 .mode-button{width:100%;border-radius:16px;background:rgba(255,255,255,.05);padding:12px 16px;color:#cbd5e1;text-align:left;font-size:14px}
@@ -69,15 +69,15 @@ h2{font-size:20px}
 .composer-section{margin-top:20px;scroll-margin-top:24px}
 .composer-section h3,.generated-header h3{color:#94a3b8;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .generated-header{justify-content:space-between}
-.chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.chip{position:relative;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.05);padding:6px 12px;color:#cbd5e1;font-size:14px;transition:transform .16s ease,background-color .16s ease,border-color .16s ease,color .16s ease}
-.chip:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}
+.chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;overflow:visible}
+.chip{position:relative;z-index:1;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.05);padding:6px 12px;color:#cbd5e1;font-size:14px;transition:transform .16s ease,background-color .16s ease,border-color .16s ease,color .16s ease}
+.chip:hover{z-index:10000;transform:translateY(-1px);background:rgba(255,255,255,.1)}
 .chip.is-active{border-color:rgba(196,181,253,.4);background:rgba(196,181,253,.2);color:#ede9fe}
 .chip-cyan.is-active{border-color:rgba(103,232,249,.4);background:rgba(103,232,249,.2);color:#ecfeff}
 .chip-danger.is-active{border-color:rgba(253,164,175,.4);background:rgba(253,164,175,.2);color:#fff1f2}
 .chip.is-disabled{opacity:.5}
-.chip-tooltip{pointer-events:none;position:absolute;left:50%;top:100%;z-index:30;width:256px;margin-top:8px;transform:translateX(-50%);border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(2,6,23,.95);padding:8px 12px;color:#f1f5f9;text-align:left;font-size:12px;line-height:1.5;opacity:0;box-shadow:0 18px 42px rgba(0,0,0,.32);backdrop-filter:blur(16px);transition:opacity .16s ease,transform .16s ease}
-.chip:hover .chip-tooltip{opacity:1;transform:translateX(-50%) translateY(2px)}
+.chip-tooltip{pointer-events:none;position:absolute;left:50%;bottom:calc(100% + 10px);top:auto;z-index:99999;width:min(300px,80vw);margin-top:0;transform:translateX(-50%) translateY(4px);border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(2,6,23,.98);padding:9px 12px;color:#f8fafc;text-align:left;font-size:12px;line-height:1.55;opacity:0;box-shadow:0 20px 48px rgba(0,0,0,.55);backdrop-filter:blur(16px);transition:opacity .16s ease,transform .16s ease}
+.chip:hover .chip-tooltip{opacity:1;transform:translateX(-50%) translateY(0)}
 .query-preview,.scenario-add-row input,.scenario-row-input,.generated-box textarea,.preset-query-input,.preset-title-input,.preset-desc-input{border:1px solid rgba(255,255,255,.1);color:#e2e8f0;outline:none}
 .query-preview{margin-top:8px;min-height:48px;border-radius:16px;background:rgba(2,6,23,.8);padding:12px;overflow-wrap:anywhere}
 .query-preview b{margin-left:4px;color:#67e8f9;animation:pulse 1.4s ease-in-out infinite}
@@ -86,7 +86,7 @@ h2{font-size:20px}
 .button-row{margin-top:14px}
 .scenario-add-row{display:flex;gap:8px;margin-top:14px}
 .scenario-add-row input,.scenario-row-input{min-width:0;width:100%;border-radius:16px;background:rgba(2,6,23,.8);padding:11px 12px;font-size:13px}
-.scenario-row-actions{margin-top:8px}
+.scenario-row-top{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;align-items:center}.scenario-row-label{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:rgba(103,232,249,.12);color:#cffafe;font-size:11px;font-weight:800;line-height:1;padding:7px 8px;white-space:nowrap}.scenario-row-actions{margin-top:8px}
 .preset-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:20px}
 .preset-card{border-radius:22px}
 .preset-title-input,.preset-desc-input,.preset-query-input{width:100%;background:rgba(2,6,23,.72)}

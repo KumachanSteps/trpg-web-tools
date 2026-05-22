@@ -165,6 +165,11 @@
     return document.querySelector('#playerContainer .participant-row .player-slot')?.value || 'HO1';
   }
 
+  function participantHeaderChoice() {
+    const selected = document.querySelector('#playerContainer .participant-row .player-slot')?.value || '';
+    return selected === 'PC/PL' || selected === 'PL/PC' ? selected : '';
+  }
+
   function slotFor(index) {
     const base = slotBase();
     if (/^PC\d+$/i.test(base)) return 'PC' + index;
@@ -268,6 +273,7 @@
     return {
       style: $('reportStyle').value,
       fontVariant: $('fontVariant').value,
+      participantHeader: participantHeaderChoice(),
       system: getSystemName(),
       scenario: $('scenarioTitle').value.trim() || 'シナリオ名',
       author: $('authorText').value.trim() || '作者名',
@@ -422,7 +428,9 @@
       groupData.items.forEach(item => {
         const button = document.createElement('button');
         button.type = 'button';
+        button.className = 'ascii-art-chip';
         button.textContent = item.label;
+        button.title = item.value;
         button.dataset.decoration = item.value;
         button.addEventListener('click', () => insertDecorationAtPreviewCursor(item.value));
         buttons.appendChild(button);

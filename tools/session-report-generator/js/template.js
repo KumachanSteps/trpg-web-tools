@@ -97,9 +97,48 @@
     return parts.length > 1 ? parts.join(' | ') : text;
   }
 
+  function isParticipantHeaderSlot(slot) {
+    return slot === 'PC/PL' || slot === 'PL/PC';
+  }
+
   function playerLabel(player) {
-    const slot = player.slot === '自由' ? '' : player.slot;
+    const slot = player.slot === '自由' || isParticipantHeaderSlot(player.slot) ? '' : player.slot;
     return slot && player.ho ? `${slot} ${player.ho}` : slot;
+  }
+
+  function playerNameOrder(player) {
+    return player.slot === 'PL/PC' ? 'plpc' : 'pcpl';
+  }
+
+  function addPlayerNamePair(parts, player, separator = ' / ') {
+    if (playerNameOrder(player) === 'plpc') {
+      parts.push(part(TARGET_TYPES.PL_NAME, player.pl), fixed(separator), part(TARGET_TYPES.PC_NAME, player.pc));
+    } else {
+      parts.push(part(TARGET_TYPES.PC_NAME, player.pc), fixed(separator), part(TARGET_TYPES.PL_NAME, player.pl));
+    }
+  }
+
+  function participantHeader(data, defaultValue = 'PC/PL') {
+    const selected = data.participantHeader === 'PL/PC' || data.participantHeader === 'PC/PL'
+      ? data.participantHeader
+      : '';
+    if (!selected) return defaultValue;
+
+    const map = {
+      'PC/PL': { pcpl: 'PC/PL', plpc: 'PL/PC' },
+      'PL/PC': { pcpl: 'PC/PL', plpc: 'PL/PC' },
+      'ᴘᴄ┊ᴘʟ': { pcpl: 'ᴘᴄ┊ᴘʟ', plpc: 'ᴘʟ┊ᴘᴄ' },
+      'ᴘᴄ・ᴘʟ': { pcpl: 'ᴘᴄ・ᴘʟ', plpc: 'ᴘʟ・ᴘᴄ' },
+      'PcᐟPL': { pcpl: 'PcᐟPL', plpc: 'PLᐟPc' },
+      'ᴘʟᴘᴄ': { pcpl: 'ᴘᴄᴘʟ', plpc: 'ᴘʟᴘᴄ' },
+      'PL/PC': { pcpl: 'PC/PL', plpc: 'PL/PC' },
+      '𝐏𝐋': { pcpl: '𝐏𝐂/𝐏𝐋', plpc: '𝐏𝐋/𝐏𝐂' },
+      '𝗣𝗖/𝗣𝗟': { pcpl: '𝗣𝗖/𝗣𝗟', plpc: '𝗣𝗟/𝗣𝗖' }
+    };
+
+    const entry = map[defaultValue];
+    if (!entry) return selected;
+    return selected === 'PL/PC' ? entry.plpc : entry.pcpl;
   }
 
   function addGMs(parts, data, options = {}) {
@@ -123,39 +162,49 @@
 
       if (mode === 'pipe') {
         if (label) parts.push(part(slotType, label), fixed(' '));
-        parts.push(part(TARGET_TYPES.PC_NAME, player.pc), fixed(' | '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+        addPlayerNamePair(parts, player, ' | ');
+        parts.push(br());
         return;
       }
 
       if (mode === 'plain') {
-        parts.push(part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+        addPlayerNamePair(parts, player, ' / ');
+        parts.push(br());
         return;
       }
 
       if (mode === 'arrow') {
         parts.push(fixed('┗ '));
         if (label) parts.push(part(slotType, label), fixed(' '));
-        parts.push(part(TARGET_TYPES.PC_NAME, player.pc), fixed(' | '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+        addPlayerNamePair(parts, player, ' | ');
+        parts.push(br());
         return;
       }
 
       if (mode === 'dash') {
-        parts.push(part(slotType, label || 'PC'), br(), fixed('　　- '), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+        parts.push(part(slotType, label || 'PC'), br(), fixed('　　- '));
+        addPlayerNamePair(parts, player, ' / ');
+        parts.push(br());
         return;
       }
 
       if (mode === 'fancy') {
-        parts.push(part(slotType, boldLabel(label || 'PC')), br(), fixed(' ┗ '), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' | '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+        parts.push(part(slotType, boldLabel(label || 'PC')), br(), fixed(' ┗ '));
+        addPlayerNamePair(parts, player, ' | ');
+        parts.push(br());
         return;
       }
 
       if (mode === 'split-ho') {
-        parts.push(part(slotType, label || 'PC'), fixed(' '), part(hoType, player.ho || 'HO name'), br(), fixed('　　 '), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+        parts.push(part(slotType, label || 'PC'), fixed(' '), part(hoType, player.ho || 'HO name'), br(), fixed('　　 '));
+        addPlayerNamePair(parts, player, ' / ');
+        parts.push(br());
         return;
       }
 
       if (label) parts.push(part(slotType, label), fixed(': '));
-      parts.push(part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+      addPlayerNamePair(parts, player, ' / ');
+      parts.push(br());
     });
   }
 
@@ -165,7 +214,7 @@
       fixed('「'), part(TARGET_TYPES.SCENARIO, data.scenario), fixed('」'), blank()
     ];
     addGMs(parts, data);
-    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, 'PC/PL'), br());
+    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'PC/PL')), br());
     addPlayers(parts, data, 'classic');
     parts.push(blank(), part(TARGET_TYPES.END, data.result), blank(), part(TARGET_TYPES.DATE, data.date), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
@@ -189,12 +238,13 @@
       fixed('  　　'), part(TARGET_TYPES.SCENARIO, data.scenario), blank()
     ];
     addGMs(parts, data, { sep: '┊', roleTransform: smallRole });
-    parts.push(fixed('  　'), part(TARGET_TYPES.PARTICIPANT_HEADER, 'ᴘᴄ┊ᴘʟ'), br());
+    parts.push(fixed('  　'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'ᴘᴄ┊ᴘʟ')), br());
     data.players.forEach(player => {
       parts.push(fixed('  　'));
       const label = playerLabel(player);
       if (label) parts.push(part(TARGET_TYPES.SLOT, label), fixed(' '));
-      parts.push(part(TARGET_TYPES.PC_NAME, player.pc), fixed(' | '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+      addPlayerNamePair(parts, player, ' | ');
+      parts.push(br());
     });
     parts.push(fixed('  　── '), part(TARGET_TYPES.END, data.result), fixed(' ──'), blank(), fixed('✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦'), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
@@ -204,7 +254,7 @@
     const border = '✼••┈┈••✼••┈┈••✼';
     const parts = [fixed(border), br(), fixed('    '), part(TARGET_TYPES.SYSTEM, data.system), br(), fixed('　'), part(TARGET_TYPES.SCENARIO, data.scenario), br(), fixed(border), br()];
     addGMs(parts, data);
-    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, 'PC/PL'), br());
+    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'PC/PL')), br());
     addPlayers(parts, data, 'classic');
     parts.push(blank(), part(TARGET_TYPES.END, data.result || 'END'), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
@@ -230,12 +280,13 @@
       fixed('  『  '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed('  』'), blank()
     ];
     data.gms.forEach(gm => parts.push(part(TARGET_TYPES.ROLE, smallRole(gm.role)), fixed(' '), part(TARGET_TYPES.GM_NAME, gm.name), br()));
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, 'ᴘʟᴘᴄ'), br());
+    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'ᴘʟᴘᴄ')), br());
     data.players.forEach(player => {
       parts.push(fixed('   '));
       const label = playerLabel(player);
       if (label) parts.push(part(TARGET_TYPES.SLOT, label), fixed(' '));
-      parts.push(part(TARGET_TYPES.PC_NAME, player.pc), fixed(' | '), part(TARGET_TYPES.PL_NAME, player.pl), br());
+      addPlayerNamePair(parts, player, ' | ');
+      parts.push(br());
     });
     parts.push(br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
@@ -244,7 +295,7 @@
   function buildHoFocus(data) {
     const parts = [part(TARGET_TYPES.SYSTEM, data.system), br(), fixed('『 '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' 』'), blank()];
     addGMs(parts, data, { sep: ' ' });
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, 'PC/PL'), br());
+    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'PC/PL')), br());
     addPlayers(parts, data, 'dash');
     parts.push(blank(), fixed('-　'), part(TARGET_TYPES.END, data.result), fixed('　-'), blank(), part(TARGET_TYPES.DATE, data.date), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
@@ -252,19 +303,24 @@
 
   function buildKpcPair(data) {
     const gm = data.gms[0] || { name: 'KPC名 | KP名' };
-    const player = data.players[0] || { pc: '探索者A', pl: 'PL名A' };
-    return normalizeParts([
-      part(TARGET_TYPES.SYSTEM, data.system), br(), fixed('【 '), part(TARGET_TYPES.SCENARIO, data.scenario || 'タイトル'), fixed(' 】'), blank(),
-      fixed('| '), part(TARGET_TYPES.PARTICIPANT_HEADER, 'ᴋᴘᴄ・ᴋᴘ'), br(), fixed('  '), part(TARGET_TYPES.GM_NAME, normalizeKpcName(gm.name)), br(),
-      fixed('| '), part(TARGET_TYPES.PARTICIPANT_HEADER, 'ᴘᴄ・ᴘʟ'), br(), fixed('  '), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' | '), part(TARGET_TYPES.PL_NAME, player.pl), blank(),
-      part(TARGET_TYPES.DATE, data.date), br(), part(TARGET_TYPES.HASHTAG, data.hashtags)
-    ]);
+    const player = data.players[0] || { pc: '探索者A', pl: 'PL名A', slot: 'PC/PL' };
+    const parts = [
+      part(TARGET_TYPES.SYSTEM, data.system), br(),
+      fixed('【 '), part(TARGET_TYPES.SCENARIO, data.scenario || 'タイトル'), fixed(' 】'), blank(),
+      fixed('| '), part(TARGET_TYPES.ROLE, 'ᴋᴘᴄ・ᴋᴘ'), br(),
+      fixed('  '), part(TARGET_TYPES.GM_NAME, normalizeKpcName(gm.name)), br(),
+      fixed('| '), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'ᴘᴄ・ᴘʟ')), br(),
+      fixed('  ')
+    ];
+    addPlayerNamePair(parts, player, ' | ');
+    parts.push(blank(), part(TARGET_TYPES.DATE, data.date), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
+    return normalizeParts(parts);
   }
 
   function buildEmoklore(data) {
     const parts = [fixed('✧\n   '), part(TARGET_TYPES.SYSTEM, data.system), br(), fixed('     「 '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' 」'), br(), fixed(' 　　    Date. '), part(TARGET_TYPES.DATE, data.date), blank()];
     addGMs(parts, data, { sep: ' ' });
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, 'PcᐟPL'), br());
+    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'PcᐟPL')), br());
     addPlayers(parts, data, 'arrow');
     parts.push(blank(), fixed('✧ '), part(TARGET_TYPES.END, data.result), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
@@ -273,7 +329,7 @@
   function buildWideTitle(data) {
     const parts = [part(TARGET_TYPES.SYSTEM, data.system), br(), fixed('◤　'), part(TARGET_TYPES.SCENARIO, data.scenario), fixed('　◢'), blank()];
     addGMs(parts, data, { sep: '：' });
-    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, 'PL/PC'), br());
+    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'PL/PC')), br());
     addPlayers(parts, data, 'classic');
     parts.push(blank(), part(TARGET_TYPES.END, data.result), br(), part(TARGET_TYPES.DATE, data.date), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
@@ -283,8 +339,12 @@
     const border = '◢◤◢◤◢◤◢◤◢◤◢';
     const parts = [fixed(border), br(), fixed('　'), part(TARGET_TYPES.SYSTEM, data.system), br(), fixed('　　　'), part(TARGET_TYPES.SCENARIO, data.scenario), blank(), fixed(border), br()];
     addGMs(parts, data, { sep: ' ' });
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, 'PC/PL'), br());
-    data.players.forEach(player => parts.push(part(TARGET_TYPES.SLOT, playerLabel(player) || 'PC'), br(), fixed('  - '), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br()));
+    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'PC/PL')), br());
+    data.players.forEach(player => {
+      parts.push(part(TARGET_TYPES.SLOT, playerLabel(player) || 'PC'), br(), fixed('  - '));
+      addPlayerNamePair(parts, player, ' / ');
+      parts.push(br());
+    });
     parts.push(blank(), fixed('- '), part(TARGET_TYPES.END, data.result), fixed(' -'), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
   }
@@ -292,8 +352,12 @@
   function buildCornerFrame(data) {
     const parts = [fixed('◤￣￣￣￣￣￣￣￣￣\n '), part(TARGET_TYPES.SYSTEM, data.system), br(), fixed('        '), part(TARGET_TYPES.SCENARIO, data.scenario), blank(), fixed('＿＿＿＿＿＿＿＿＿◢\n')];
     addGMs(parts, data);
-    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, 'PC/PL'), br());
-    data.players.forEach(player => parts.push(fixed(' '), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br()));
+    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'PC/PL')), br());
+    data.players.forEach(player => {
+      parts.push(fixed(' '));
+      addPlayerNamePair(parts, player, ' / ');
+      parts.push(br());
+    });
     parts.push(blank(), part(TARGET_TYPES.END, data.result), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
   }
@@ -303,8 +367,12 @@
     data.gms.forEach(gm => parts.push(fixed('▸ '), part(TARGET_TYPES.ROLE, gm.role), fixed(': '), part(TARGET_TYPES.GM_NAME, gm.name), br()));
     if (data.players.length) {
       const [first, ...rest] = data.players;
-      parts.push(fixed('▸ '), part(TARGET_TYPES.PARTICIPANT_HEADER, 'PC/PL'), fixed(': '), part(TARGET_TYPES.PC_NAME, first.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, first.pl), br());
-      rest.forEach(player => parts.push(fixed('               '), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br()));
+      parts.push(fixed('▸ '), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'PC/PL')), fixed(': ')); addPlayerNamePair(parts, first, ' / '); parts.push(br());
+      rest.forEach(player => {
+        parts.push(fixed('               '));
+        addPlayerNamePair(parts, player, ' / ');
+        parts.push(br());
+      });
     }
     parts.push(blank(), fixed('▸ '), part(TARGET_TYPES.END, data.result), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
@@ -315,8 +383,12 @@
     if (data.author) parts.push(fixed('.　　　　'), part(TARGET_TYPES.AUTHOR, data.author), br());
     parts.push(br());
     data.gms.forEach(gm => parts.push(fixed('｜'), part(TARGET_TYPES.ROLE, smallRole(gm.role)), br(), fixed('　'), part(TARGET_TYPES.GM_NAME, gm.name), blank()));
-    parts.push(fixed('｜'), part(TARGET_TYPES.PARTICIPANT_HEADER, 'ᴘᴄ・ᴘʟ'), br());
-    data.players.forEach(player => parts.push(fixed('　'), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br()));
+    parts.push(fixed('｜'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, 'ᴘᴄ・ᴘʟ')), br());
+    data.players.forEach(player => {
+      parts.push(fixed('　'));
+      addPlayerNamePair(parts, player, ' / ');
+      parts.push(br());
+    });
     parts.push(blank(), fixed('　- '), part(TARGET_TYPES.END, 'ꜱᴄᴇɴᴀʀɪᴏ ᴄʟᴇᴀʀ'), fixed(' -'), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
   }
@@ -325,8 +397,12 @@
     const border = '┈┈┈┈┈┈┈┈┈';
     const parts = [part(TARGET_TYPES.SYSTEM, '𝐜𝐚𝐥𝐥 𝐨𝐟 𝐜𝐭𝐡𝐮𝐥𝐡𝐮'), br(), fixed('⌜ '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' ⌟'), br(), fixed(border), br(), fixed('✧'), part(TARGET_TYPES.ROLE, '𝐊𝐏'), br()];
     data.gms.forEach(gm => parts.push(fixed('  ▹'), part(TARGET_TYPES.GM_NAME, gm.name), br()));
-    parts.push(blank(), fixed('✧'), part(TARGET_TYPES.PARTICIPANT_HEADER, '𝐏𝐋'), br());
-    data.players.forEach(player => parts.push(fixed('  ▹'), part(TARGET_TYPES.SLOT, boldLabel(playerLabel(player) || 'PC')), fixed(' '), part(TARGET_TYPES.HO, player.ho || 'HO name'), fixed('   '), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br()));
+    parts.push(blank(), fixed('✧'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, '𝐏𝐋')), br());
+    data.players.forEach(player => {
+      parts.push(fixed('  ▹'), part(TARGET_TYPES.SLOT, boldLabel(playerLabel(player) || 'PC')), fixed(' '), part(TARGET_TYPES.HO, player.ho || 'HO name'), fixed('   '));
+      addPlayerNamePair(parts, player, ' / ');
+      parts.push(br());
+    });
     parts.push(blank(), fixed('✧'), part(TARGET_TYPES.END, '𝐄𝐍𝐃 ' + (data.result || 'title')), br(), fixed(border + 'ᝰ✍︎ ꙳⋆'), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
   }
@@ -343,8 +419,12 @@
   function buildRibbonTitle(data) {
     const parts = [part(TARGET_TYPES.SYSTEM, data.system), br(), fixed('　‧₊˚ ୨  '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed('  ୧ ˚₊'), blank(), part(TARGET_TYPES.ROLE, '𝗞𝗣'), fixed('…'), br()];
     data.gms.forEach(gm => parts.push(fixed('　'), part(TARGET_TYPES.GM_NAME, gm.name), br()));
-    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, '𝗣𝗖/𝗣𝗟'), fixed('…'), br());
-    data.players.forEach(player => parts.push(fixed('　'), part(TARGET_TYPES.PC_NAME, player.pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl), br()));
+    parts.push(blank(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeader(data, '𝗣𝗖/𝗣𝗟')), fixed('…'), br());
+    data.players.forEach(player => {
+      parts.push(fixed('　'));
+      addPlayerNamePair(parts, player, ' / ');
+      parts.push(br());
+    });
     parts.push(blank(), part(TARGET_TYPES.END, data.result), br(), part(TARGET_TYPES.HASHTAG, data.hashtags));
     return normalizeParts(parts);
   }
