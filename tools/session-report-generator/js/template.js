@@ -1,4 +1,4 @@
-(function () {
+(() => {
   const TARGET_TYPES = Object.freeze({
     SYSTEM: 'system',
     ROLE: 'role',
@@ -15,331 +15,16 @@
     FIXED: 'fixed'
   });
 
-  const DEFAULT_STYLE_TARGETS = [
+  const COMMON_STYLE_TARGETS = [
     TARGET_TYPES.SYSTEM,
     TARGET_TYPES.ROLE,
+    TARGET_TYPES.GM_NAME,
     TARGET_TYPES.SLOT,
     TARGET_TYPES.HO,
     TARGET_TYPES.PC_NAME,
     TARGET_TYPES.PL_NAME,
-    TARGET_TYPES.END
-  ];
-
-  function part(type, value) {
-    return { type, value: value ?? '' };
-  }
-
-  function fixed(value) { return part(TARGET_TYPES.FIXED, value); }
-  function newline(count = 1) { return fixed('\n'.repeat(count)); }
-
-  function roleSmall(role) {
-    return {
-      KP: 'ᴋᴘ',
-      DL: 'ᴅʟ',
-      GM: 'ɢᴍ',
-      'KPC/KP': 'ᴋᴘᴄ/ᴋᴘ',
-      SKP: 'ꜱᴋᴘ',
-      '作/KP': '作/ᴋᴘ',
-      進行: '進行'
-    }[role] || String(role || '').toLowerCase();
-  }
-
-  function playerLabel(player) {
-    const slot = player.slot === '自由' ? '' : player.slot;
-    return slot && player.ho ? `${slot} ${player.ho}` : slot;
-  }
-
-  function boldLabel(label) {
-    return String(label || 'PC')
-      .replace(/^HO([0-9])$/i, (_, n) => '𝐇𝐎' + String.fromCodePoint(0x1D7CE + Number(n)))
-      .replace(/^PC([0-9])$/i, (_, n) => '𝐏𝐂' + String.fromCodePoint(0x1D7CE + Number(n)))
-      .replace(/^HO/i, '𝐇𝐎')
-      .replace(/^PC/i, '𝐏𝐂');
-  }
-
-  function normalizeKpcName(name) {
-    const text = String(name || '').trim();
-    if (!text || text === 'KP名') return 'KPC名 | KP名';
-    const parts = text.replaceAll('｜', '/').replaceAll('|', '/').split('/').map(v => v.trim()).filter(Boolean);
-    return parts.length > 1 ? parts.join(' | ') : text;
-  }
-
-  function clean(parts) {
-    return parts.filter(p => p && p.value !== undefined && p.value !== null && p.value !== '');
-  }
-
-  function appendGms(parts, data, separator = ': ') {
-    data.gms.forEach(gm => {
-      parts.push(part(TARGET_TYPES.ROLE, gm.role), fixed(separator), part(TARGET_TYPES.GM_NAME, gm.name), newline());
-    });
-  }
-
-  function appendPlayers(parts, data, mode = 'classic') {
-    data.players.forEach(player => {
-      const label = playerLabel(player);
-      const pc = player.pc || 'PC未入力';
-      const pl = player.pl || 'PL未入力';
-
-      if (mode === 'pipe') {
-        if (label) parts.push(part(TARGET_TYPES.SLOT, label), fixed(' '));
-        parts.push(part(TARGET_TYPES.PC_NAME, pc), fixed(' | '), part(TARGET_TYPES.PL_NAME, pl), newline());
-        return;
-      }
-
-      if (mode === 'plain') {
-        parts.push(part(TARGET_TYPES.PC_NAME, pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, pl), newline());
-        return;
-      }
-
-      if (mode === 'arrow') {
-        parts.push(fixed('┗ '));
-        if (label) parts.push(part(TARGET_TYPES.SLOT, label), fixed(' '));
-        parts.push(part(TARGET_TYPES.PC_NAME, pc), fixed(' | '), part(TARGET_TYPES.PL_NAME, pl), newline());
-        return;
-      }
-
-      if (mode === 'dash') {
-        parts.push(part(TARGET_TYPES.SLOT, label || 'PC'), newline(), fixed('　　- '), part(TARGET_TYPES.PC_NAME, pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, pl), newline());
-        return;
-      }
-
-      if (label) parts.push(part(TARGET_TYPES.SLOT, label), fixed(': '));
-      parts.push(part(TARGET_TYPES.PC_NAME, pc), fixed(' / '), part(TARGET_TYPES.PL_NAME, pl), newline());
-    });
-  }
-
-  const REPORT_STYLES = [
-    {
-      id: 'classic',
-      label: 'クラシック：標準・読みやすい',
-      styleTargets: DEFAULT_STYLE_TARGETS,
-      build(data) {
-        const parts = [part(TARGET_TYPES.SYSTEM, data.system), newline(), fixed('「'), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed('」'), newline(2)];
-        appendGms(parts, data, ': ');
-        parts.push(newline(), fixed('PC/PL'), newline());
-        appendPlayers(parts, data);
-        parts.push(newline(), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.DATE, data.date), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'minimal',
-      label: 'ミニマル：短文シンプル',
-      styleTargets: [],
-      build(data) {
-        const parts = [part(TARGET_TYPES.SYSTEM, data.system), newline(), fixed('『'), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed('』'), newline(2)];
-        appendGms(parts, data, '：');
-        appendPlayers(parts, data);
-        parts.push(newline(), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'frame',
-      label: '✦フレーム：✦ ┈┈┈┈┈┈ ✦',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.END],
-      build(data) {
-        const parts = [fixed('✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦\n      '), part(TARGET_TYPES.SYSTEM, data.system), fixed('\n  　　'), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), newline(2)];
-        data.gms.forEach(gm => parts.push(fixed('  　'), part(TARGET_TYPES.ROLE, roleSmall(gm.role)), fixed('┊'), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        parts.push(fixed('  　ᴘᴄ┊ᴘʟ'), newline());
-        appendPlayers(parts, data, 'pipe');
-        if (data.result) parts.push(fixed('  　── '), part(TARGET_TYPES.END, data.result), fixed(' ──'), newline(2));
-        parts.push(fixed('✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦'), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'asterisk-frame',
-      label: '✼フレーム：✼••┈┈••✼••┈┈••✼',
-      styleTargets: DEFAULT_STYLE_TARGETS,
-      build(data) {
-        const border = '✼••┈┈••✼••┈┈••✼';
-        const parts = [fixed(border + '\n    '), part(TARGET_TYPES.SYSTEM, data.system), fixed('\n　'), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed('\n' + border), newline()];
-        appendGms(parts, data, ': ');
-        parts.push(newline(), fixed('PC/PL'), newline());
-        appendPlayers(parts, data);
-        parts.push(newline(), part(TARGET_TYPES.END, data.result || 'END'), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'fancy',
-      label: '⟡フレーム：⟡.·*.·····················⟡.·*.',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.ROLE, TARGET_TYPES.SLOT, TARGET_TYPES.END],
-      build(data) {
-        const parts = [fixed('⟡.·*.····························⟡.·*.\n '), part(TARGET_TYPES.SYSTEM, data.system), fixed('\n　     ◤ '), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed(' ◢'), newline(2)];
-        data.gms.forEach(gm => parts.push(fixed(' '), part(TARGET_TYPES.ROLE, gm.role), fixed(' '), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        data.players.forEach(player => parts.push(fixed(' '), part(TARGET_TYPES.SLOT, boldLabel(playerLabel(player) || 'PC')), newline(), fixed(' ┗ '), part(TARGET_TYPES.PC_NAME, player.pc || 'PC未入力'), fixed(' | '), part(TARGET_TYPES.PL_NAME, player.pl || 'PL未入力'), newline()));
-        parts.push(newline(), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'block',
-      label: '▮ ブロック：▮ システム名 ▮',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.ROLE, TARGET_TYPES.SLOT],
-      build(data) {
-        const parts = [fixed('▮     '), part(TARGET_TYPES.SYSTEM, data.system), fixed('     ▮'), newline(2), fixed('  『  '), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed('  』'), newline(2)];
-        data.gms.forEach(gm => parts.push(part(TARGET_TYPES.ROLE, roleSmall(gm.role)), fixed(' '), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        parts.push(fixed('ᴘʟᴘᴄ'), newline());
-        appendPlayers(parts, data, 'pipe');
-        parts.push(part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'ho-focus',
-      label: 'HO一覧スタイル：HO一覧重視',
-      styleTargets: DEFAULT_STYLE_TARGETS,
-      build(data) {
-        const parts = [part(TARGET_TYPES.SYSTEM, data.system), newline(), fixed('『 '), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed(' 』'), newline(2)];
-        appendGms(parts, data, ' ');
-        parts.push(fixed('PC/PL'), newline());
-        appendPlayers(parts, data, 'dash');
-        parts.push(newline(), data.result ? fixed('-　') : fixed(''), part(TARGET_TYPES.END, data.result), data.result ? fixed('　-') : fixed(''), newline(), part(TARGET_TYPES.DATE, data.date), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'kpc-pair',
-      label: 'KPCタイマン：| ᴋᴘᴄ・ᴋᴘ ＆ | ᴘᴄ・ᴘʟ',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.PC_NAME, TARGET_TYPES.PL_NAME],
-      build(data) {
-        const gm = data.gms[0];
-        const player = data.players[0];
-        return clean([
-          part(TARGET_TYPES.SYSTEM, data.system), newline(), fixed('【 '), part(TARGET_TYPES.SCENARIO, data.scenario || 'タイトル'), fixed(' 】'), newline(2),
-          fixed('| ᴋᴘᴄ・ᴋᴘ\n  '), part(TARGET_TYPES.GM_NAME, normalizeKpcName(gm ? gm.name : 'KPC名 | KP名')), newline(),
-          fixed('| ᴘᴄ・ᴘʟ\n  '), part(TARGET_TYPES.PC_NAME, player ? player.pc || '探索者A' : '探索者A'), fixed(' | '), part(TARGET_TYPES.PL_NAME, player ? player.pl || 'PL名A' : 'PL名A'), newline(2),
-          part(TARGET_TYPES.DATE, data.date), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags)
-        ]);
-      }
-    },
-    {
-      id: 'emoklore',
-      label: '✧上下囲み：✧　　　　　　　　✧',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.ROLE, TARGET_TYPES.SLOT, TARGET_TYPES.END],
-      build(data) {
-        const parts = [fixed('✧\n   '), part(TARGET_TYPES.SYSTEM, data.system), fixed('\n     「 '), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed(' 」'), data.date ? fixed('\n 　　    Date. ') : fixed(''), part(TARGET_TYPES.DATE, data.date), newline(2)];
-        data.gms.forEach(gm => parts.push(part(TARGET_TYPES.ROLE, gm.role), fixed(' '), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        parts.push(fixed('PcᐟPL'), newline());
-        appendPlayers(parts, data, 'arrow');
-        parts.push(newline(), data.result ? fixed('✧ ') : fixed(''), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'wide-title',
-      label: '◤ シナリオ名 ◢ ɢᴍ: ᴘʟ/ᴘᴄ',
-      styleTargets: DEFAULT_STYLE_TARGETS,
-      build(data) {
-        const parts = [part(TARGET_TYPES.SYSTEM, data.system), newline(), fixed('◤　'), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed('　◢'), newline(2)];
-        appendGms(parts, data, '：');
-        parts.push(newline(), fixed('PL/PC'), newline());
-        appendPlayers(parts, data);
-        parts.push(newline(), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.DATE, data.date), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'zigzag',
-      label: '◢◤◢ シナリオ名 ◢◤◢',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.ROLE, TARGET_TYPES.SLOT, TARGET_TYPES.PC_NAME, TARGET_TYPES.PL_NAME, TARGET_TYPES.END],
-      build(data) {
-        const border = '◢◤◢◤◢◤◢◤◢◤◢';
-        const parts = [fixed(border + '\n　'), part(TARGET_TYPES.SYSTEM, data.system), fixed('\n　　　'), part(TARGET_TYPES.SCENARIO, data.scenario || 'タイトル'), newline(2), fixed(border), newline()];
-        data.gms.forEach(gm => parts.push(part(TARGET_TYPES.ROLE, gm.role), fixed(' '), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        parts.push(fixed('PC/PL'), newline());
-        data.players.forEach(player => parts.push(part(TARGET_TYPES.SLOT, playerLabel(player) || 'PC'), newline(), fixed('  - '), part(TARGET_TYPES.PC_NAME, player.pc || 'PC未入力'), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl || 'PL未入力'), newline()));
-        parts.push(newline(), data.result ? fixed('- ') : fixed(''), part(TARGET_TYPES.END, data.result), data.result ? fixed(' -') : fixed(''), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'corner-frame',
-      label: '◤￣￣￣ title ＿＿＿◢',
-      styleTargets: DEFAULT_STYLE_TARGETS,
-      build(data) {
-        const parts = [fixed('◤￣￣￣￣￣￣￣￣￣\n '), part(TARGET_TYPES.SYSTEM, data.system), fixed('\n        '), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), newline(2), fixed('＿＿＿＿＿＿＿＿＿◢'), newline()];
-        appendGms(parts, data, ': ');
-        parts.push(newline(), fixed('PC/PL'), newline());
-        appendPlayers(parts, data, 'plain');
-        parts.push(newline(), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'triangle-heading',
-      label: '▸ system ▸ ɢᴍ: ▸ ᴘᴄ/ᴘʟ:',
-      styleTargets: DEFAULT_STYLE_TARGETS,
-      build(data) {
-        const parts = [fixed('▸ '), part(TARGET_TYPES.SYSTEM, data.system), newline(2), fixed('- '), part(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), fixed(' -'), newline(2)];
-        data.gms.forEach(gm => parts.push(fixed('▸ '), part(TARGET_TYPES.ROLE, gm.role), fixed(': '), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        if (data.players.length) {
-          const first = data.players[0];
-          parts.push(fixed('▸ PC/PL: '), part(TARGET_TYPES.PC_NAME, first.pc || 'PC未入力'), fixed(' / '), part(TARGET_TYPES.PL_NAME, first.pl || 'PL未入力'), newline());
-          data.players.slice(1).forEach(player => parts.push(fixed('               '), part(TARGET_TYPES.PC_NAME, player.pc || 'PC未入力'), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl || 'PL未入力'), newline()));
-        }
-        parts.push(newline(), data.result ? fixed('▸ ') : fixed(''), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'scenario-clear',
-      label: '⧉ system |ɢᴍ |ᴘᴄ・ᴘʟ',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.ROLE, TARGET_TYPES.PC_NAME, TARGET_TYPES.PL_NAME],
-      build(data) {
-        const parts = [fixed('⧉ ᴄᴏᴄ 𝟨ᴛʜ\n.　　'), part(TARGET_TYPES.SCENARIO, data.scenario || 'Title')];
-        if (data.author) parts.push(newline(), fixed('.　　　　'), part(TARGET_TYPES.AUTHOR, data.author));
-        parts.push(newline(2));
-        data.gms.forEach(gm => parts.push(fixed('｜'), part(TARGET_TYPES.ROLE, roleSmall(gm.role)), newline(), fixed('　'), part(TARGET_TYPES.GM_NAME, gm.name), newline(2)));
-        parts.push(fixed('｜ᴘᴄ・ᴘʟ'), newline());
-        data.players.forEach(player => parts.push(fixed('　'), part(TARGET_TYPES.PC_NAME, player.pc || 'Tansakusha'), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl || 'PL name'), newline()));
-        parts.push(newline(), fixed('　- ꜱᴄᴇɴᴀʀɪᴏ ᴄʟᴇᴀʀ -'), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'handwritten-title',
-      label: '⌜ TITLE ⌟ / ✧𝐊𝐏・✧𝐏𝐋',
-      styleTargets: [TARGET_TYPES.PC_NAME, TARGET_TYPES.PL_NAME, TARGET_TYPES.END],
-      build(data) {
-        const border = '┈┈┈┈┈┈┈┈┈';
-        const parts = [fixed('𝐜𝐚𝐥𝐥 𝐨𝐟 𝐜𝐭𝐡𝐮𝐥𝐡𝐮\n⌜ '), part(TARGET_TYPES.SCENARIO, data.scenario || 'TITLE'), fixed(' ⌟\n' + border + '\n')];
-        parts.push(fixed('✧𝐊𝐏'), newline());
-        data.gms.forEach(gm => parts.push(fixed('  ▹'), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        parts.push(newline(), fixed('✧𝐏𝐋'), newline());
-        data.players.forEach(player => parts.push(fixed('  ▹'), part(TARGET_TYPES.SLOT, boldLabel(playerLabel(player) || 'PC')), fixed(' '), part(TARGET_TYPES.HO, player.ho || 'HO name'), fixed('   '), part(TARGET_TYPES.PC_NAME, player.pc || 'Character Name'), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl || 'PL Name'), newline()));
-        parts.push(newline(), fixed('✧𝐄𝐍𝐃 '), part(TARGET_TYPES.END, data.result || 'title'), newline(), fixed(border + 'ᝰ✍︎ ꙳⋆'), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'double-line',
-      label: '════════ / ᴋᴘ・ʜᴏ',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.ROLE, TARGET_TYPES.SLOT, TARGET_TYPES.HO, TARGET_TYPES.PC_NAME, TARGET_TYPES.PL_NAME, TARGET_TYPES.END],
-      build(data) {
-        const border = '══════════════';
-        const parts = [fixed(border + '\n   '), part(TARGET_TYPES.SYSTEM, data.system), fixed('\n　'), part(TARGET_TYPES.SCENARIO, data.scenario || 'TITLE'), fixed('\n' + border), newline(2)];
-        data.gms.forEach(gm => parts.push(part(TARGET_TYPES.ROLE, roleSmall(gm.role)), fixed('：'), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        data.players.forEach(player => parts.push(part(TARGET_TYPES.SLOT, (playerLabel(player) || 'ʜᴏ').toLowerCase()), fixed(' '), part(TARGET_TYPES.HO, player.ho || 'HO name'), newline(), fixed('　　 '), part(TARGET_TYPES.PC_NAME, player.pc || 'Character Name'), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl || 'PL Name'), newline()));
-        parts.push(newline(), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.DATE, data.date), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    },
-    {
-      id: 'ribbon-title',
-      label: '‧₊˚ ୨ Title ୧ ˚₊ 𝗞𝗣…𝗣𝗖/𝗣𝗟…',
-      styleTargets: [TARGET_TYPES.SYSTEM, TARGET_TYPES.PC_NAME, TARGET_TYPES.PL_NAME, TARGET_TYPES.END],
-      build(data) {
-        const parts = [part(TARGET_TYPES.SYSTEM, data.system), newline(), fixed('　‧₊˚ ୨  '), part(TARGET_TYPES.SCENARIO, data.scenario || 'title'), fixed('  ୧ ˚₊'), newline(2), fixed('𝗞𝗣…'), newline()];
-        data.gms.forEach(gm => parts.push(fixed('　'), part(TARGET_TYPES.GM_NAME, gm.name), newline()));
-        parts.push(newline(), fixed('𝗣𝗖/𝗣𝗟…'), newline());
-        data.players.forEach(player => parts.push(fixed('　'), part(TARGET_TYPES.PC_NAME, player.pc || 'Character Name'), fixed(' / '), part(TARGET_TYPES.PL_NAME, player.pl || 'PL Name'), newline()));
-        parts.push(newline(), part(TARGET_TYPES.END, data.result), newline(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-        return clean(parts);
-      }
-    }
+    TARGET_TYPES.END,
+    TARGET_TYPES.DATE
   ];
 
   const ASCII_ART_COLLECTION = {
@@ -391,22 +76,355 @@
     }
   };
 
-  function renderTemplate(data, styleTextFn) {
-    const style = REPORT_STYLES.find(item => item.id === data.style) || REPORT_STYLES[0];
-    const targets = new Set(style.styleTargets || DEFAULT_STYLE_TARGETS);
-    const fontVariant = data.style === 'minimal' ? 'plain' : data.fontVariant;
-    const parts = style.build(data);
-    return parts.map(item => {
-      const value = String(item.value || '');
-      return targets.has(item.type) && typeof styleTextFn === 'function' ? styleTextFn(value, fontVariant) : value;
-    }).join('').replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
+  function p(type, value) {
+    return { type, value: value == null ? '' : String(value) };
+  }
+
+  function lineBreak() { return p(TARGET_TYPES.FIXED, '\n'); }
+  function blankLine() { return p(TARGET_TYPES.FIXED, '\n\n'); }
+  function text(value) { return p(TARGET_TYPES.FIXED, value); }
+  function lineJoin(parts) {
+    return parts;
+  }
+
+  function smallRole(role) {
+    return {
+      KP: 'ᴋᴘ',
+      DL: 'ᴅʟ',
+      GM: 'ɢᴍ',
+      'KPC/KP': 'ᴋᴘᴄ/ᴋᴘ',
+      SKP: 'ꜱᴋᴘ',
+      '作/KP': '作/ᴋᴘ',
+      進行: '進行'
+    }[role] || String(role || '').toLowerCase();
+  }
+
+  function boldLabel(label) {
+    return String(label || 'PC')
+      .replace(/^HO([0-9])$/i, (_, n) => '𝐇𝐎' + String.fromCodePoint(0x1D7CE + Number(n)))
+      .replace(/^PC([0-9])$/i, (_, n) => '𝐏𝐂' + String.fromCodePoint(0x1D7CE + Number(n)))
+      .replace(/^HO/i, '𝐇𝐎')
+      .replace(/^PC/i, '𝐏𝐂');
+  }
+
+  function normalizeKpcName(name) {
+    const textValue = String(name || '').trim();
+    if (!textValue || textValue === 'KP名') return 'KPC名 | KP名';
+    const parts = textValue.replaceAll('｜', '/').replaceAll('|', '/').split('/').map(x => x.trim()).filter(Boolean);
+    return parts.length > 1 ? parts.join(' | ') : textValue;
+  }
+
+  function playerLabel(player) {
+    const slot = player.slot === '自由' ? '' : player.slot;
+    return slot && player.ho ? `${slot} ${player.ho}` : slot;
+  }
+
+  function playerParts(player, mode = 'classic') {
+    const label = playerLabel(player);
+    const pc = player.pc || 'PC未入力';
+    const pl = player.pl || 'PL未入力';
+    const parts = [];
+
+    if (mode === 'plain') {
+      parts.push(p(TARGET_TYPES.PC_NAME, pc), text(' / '), p(TARGET_TYPES.PL_NAME, pl));
+      return parts;
+    }
+    if (mode === 'pipe') {
+      if (label) parts.push(p(TARGET_TYPES.SLOT, label), text(' '));
+      parts.push(p(TARGET_TYPES.PC_NAME, pc), text(' | '), p(TARGET_TYPES.PL_NAME, pl));
+      return parts;
+    }
+    if (mode === 'arrow') {
+      parts.push(text('┗ '));
+      if (label) parts.push(p(TARGET_TYPES.SLOT, label), text(' '));
+      parts.push(p(TARGET_TYPES.PC_NAME, pc), text(' | '), p(TARGET_TYPES.PL_NAME, pl));
+      return parts;
+    }
+    if (mode === 'dash') {
+      parts.push(p(TARGET_TYPES.SLOT, label || 'PC'), text('\n　　- '), p(TARGET_TYPES.PC_NAME, pc), text(' / '), p(TARGET_TYPES.PL_NAME, pl));
+      return parts;
+    }
+
+    if (label) parts.push(p(TARGET_TYPES.SLOT, label), text(': '));
+    parts.push(p(TARGET_TYPES.PC_NAME, pc), text(' / '), p(TARGET_TYPES.PL_NAME, pl));
+    return parts;
+  }
+
+  function addPlayers(parts, data, mode = 'classic', prefix = '') {
+    data.players.forEach(player => {
+      if (prefix) parts.push(text(prefix));
+      parts.push(...playerParts(player, mode), lineBreak());
+    });
+  }
+
+  function addGMs(parts, data, mode = 'colon', prefix = '') {
+    data.gms.forEach(gm => {
+      if (prefix) parts.push(text(prefix));
+      const roleValue = mode === 'small' ? smallRole(gm.role) : gm.role;
+      parts.push(p(TARGET_TYPES.ROLE, roleValue));
+      parts.push(text(mode === 'space' ? ' ' : mode === 'pipe' ? '┊' : mode === 'jpcolon' ? '：' : ': '));
+      parts.push(p(TARGET_TYPES.GM_NAME, gm.name), lineBreak());
+    });
+  }
+
+  const REPORT_STYLES = [
+    {
+      id: 'classic',
+      label: 'クラシック：標準・読みやすい',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [p(TARGET_TYPES.SYSTEM, data.system), lineBreak(), text('「'), p(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), text('」'), blankLine()];
+        addGMs(parts, data);
+        parts.push(blankLine(), text('PC/PL'), lineBreak());
+        addPlayers(parts, data, 'classic');
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result), blankLine(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'minimal',
+      label: 'ミニマル：短文シンプル',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [p(TARGET_TYPES.SYSTEM, data.system), lineBreak(), text('『'), p(TARGET_TYPES.SCENARIO, data.scenario || 'シナリオ名'), text('』'), blankLine()];
+        addGMs(parts, data, 'jpcolon');
+        addPlayers(parts, data, 'classic');
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'frame',
+      label: '✦フレーム：✦ ┈┈┈┈┈┈ ✦',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [text('✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦\n      '), p(TARGET_TYPES.SYSTEM, data.system), text('\n   　　'), p(TARGET_TYPES.SCENARIO, data.scenario), blankLine()];
+        addGMs(parts, data, 'small', '  　');
+        parts.push(text('  　ᴘᴄ┊ᴘʟ\n'));
+        addPlayers(parts, data, 'pipe', '  　');
+        parts.push(p(TARGET_TYPES.END, data.result ? '  　── ' + data.result + ' ──' : ''), lineBreak(), text('✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦'), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'asterisk-frame',
+      label: '✼フレーム：✼••┈┈••✼••┈┈••✼',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const border = '✼••┈┈••✼••┈┈••✼';
+        const parts = [text(border + '\n    '), p(TARGET_TYPES.SYSTEM, data.system), text('\n　'), p(TARGET_TYPES.SCENARIO, data.scenario), text('\n' + border + '\n')];
+        addGMs(parts, data);
+        parts.push(blankLine(), text('PC/PL\n'));
+        addPlayers(parts, data, 'classic');
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result || 'END'), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'fancy',
+      label: '⟡フレーム：⟡.·*.·····················⟡.·*.',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [text('⟡.·*.····························⟡.·*.\n '), p(TARGET_TYPES.SYSTEM, data.system), text('\n　     ◤ '), p(TARGET_TYPES.SCENARIO, data.scenario), text(' ◢\n\n')];
+        data.gms.forEach(gm => parts.push(text(' '), p(TARGET_TYPES.ROLE, gm.role), text(' '), p(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
+        data.players.forEach(player => {
+          parts.push(text(' '), p(TARGET_TYPES.SLOT, boldLabel(playerLabel(player) || 'PC')), lineBreak(), text(' ┗ '), p(TARGET_TYPES.PC_NAME, player.pc || 'PC未入力'), text(' | '), p(TARGET_TYPES.PL_NAME, player.pl || 'PL未入力'), lineBreak());
+        });
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'block',
+      label: '▮ ブロック：▮ システム名 ▮',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [text('▮     '), p(TARGET_TYPES.SYSTEM, data.system), text('     ▮\n\n  『  '), p(TARGET_TYPES.SCENARIO, data.scenario), text('  』\n\n')];
+        addGMs(parts, data, 'small');
+        parts.push(text('ᴘʟᴘᴄ\n'));
+        addPlayers(parts, data, 'pipe', '   ');
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'ho-focus',
+      label: 'HO一覧スタイル：HO一覧重視',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [p(TARGET_TYPES.SYSTEM, data.system), lineBreak(), text('『 '), p(TARGET_TYPES.SCENARIO, data.scenario), text(' 』'), blankLine()];
+        addGMs(parts, data, 'space');
+        parts.push(text('PC/PL\n'));
+        addPlayers(parts, data, 'dash');
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result ? '-　' + data.result + '　-' : ''), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'kpc-pair',
+      label: 'KPCタイマン：| ᴋᴘᴄ・ᴋᴘ ＆ | ᴘᴄ・ᴘʟ',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const gm = data.gms[0];
+        const player = data.players[0];
+        return lineJoin([p(TARGET_TYPES.SYSTEM, data.system), lineBreak(), text('【 '), p(TARGET_TYPES.SCENARIO, data.scenario || 'タイトル'), text(' 】\n\n| ᴋᴘᴄ・ᴋᴘ\n  '), p(TARGET_TYPES.GM_NAME, normalizeKpcName(gm ? gm.name : 'KPC名 | KP名')), text('\n| ᴘᴄ・ᴘʟ\n  '), p(TARGET_TYPES.PC_NAME, player ? player.pc : '探索者A'), text(' | '), p(TARGET_TYPES.PL_NAME, player ? player.pl : 'PL名A'), blankLine(), p(TARGET_TYPES.END, data.result), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags)]);
+      }
+    },
+    {
+      id: 'emoklore',
+      label: '✧上下囲み：✧　　　　　　　　✧',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [text('✧\n   '), p(TARGET_TYPES.SYSTEM, data.system), text('\n     「 '), p(TARGET_TYPES.SCENARIO, data.scenario), text(' 」\n'), p(TARGET_TYPES.DATE, data.date ? ' 　　    Date. ' + data.date : ''), blankLine()];
+        addGMs(parts, data, 'space');
+        parts.push(text('PcᐟPL\n'));
+        addPlayers(parts, data, 'arrow');
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result ? '✧ ' + data.result : ''), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'wide-title',
+      label: '◤ シナリオ名 ◢ ɢᴍ: ᴘʟ/ᴘᴄ',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [p(TARGET_TYPES.SYSTEM, data.system), lineBreak(), text('◤　'), p(TARGET_TYPES.SCENARIO, data.scenario), text('　◢\n\n')];
+        addGMs(parts, data, 'jpcolon');
+        parts.push(blankLine(), text('PL/PC\n'));
+        addPlayers(parts, data, 'classic');
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'zigzag',
+      label: '◢◤◢ シナリオ名 ◢◤◢',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const border = '◢◤◢◤◢◤◢◤◢◤◢';
+        const parts = [text(border + '\n　'), p(TARGET_TYPES.SYSTEM, data.system), text('\n　　　'), p(TARGET_TYPES.SCENARIO, data.scenario || 'タイトル'), text('\n\n' + border + '\n')];
+        addGMs(parts, data, 'space');
+        parts.push(text('PC/PL\n'));
+        data.players.forEach(player => parts.push(p(TARGET_TYPES.SLOT, playerLabel(player) || 'PC'), lineBreak(), text('  - '), p(TARGET_TYPES.PC_NAME, player.pc || 'PC未入力'), text(' / '), p(TARGET_TYPES.PL_NAME, player.pl || 'PL未入力'), lineBreak()));
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result ? '- ' + data.result + ' -' : ''), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'corner-frame',
+      label: '◤￣￣￣ title ＿＿＿◢',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [text('◤￣￣￣￣￣￣￣￣￣\n '), p(TARGET_TYPES.SYSTEM, data.system), text('\n        '), p(TARGET_TYPES.SCENARIO, data.scenario), text('\n\n＿＿＿＿＿＿＿＿＿◢\n')];
+        addGMs(parts, data);
+        parts.push(blankLine(), text('PC/PL\n'));
+        data.players.forEach(player => parts.push(text(' '), p(TARGET_TYPES.PC_NAME, player.pc || 'PC未入力'), text(' / '), p(TARGET_TYPES.PL_NAME, player.pl || 'PL未入力'), lineBreak()));
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'triangle-heading',
+      label: '▸ system ▸ ɢᴍ: ▸ ᴘᴄ/ᴘʟ:',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [text('▸ '), p(TARGET_TYPES.SYSTEM, data.system), blankLine(), text('- '), p(TARGET_TYPES.SCENARIO, data.scenario), text(' -\n\n')];
+        data.gms.forEach(gm => parts.push(text('▸ '), p(TARGET_TYPES.ROLE, gm.role), text(': '), p(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
+        if (data.players.length) {
+          const first = data.players[0];
+          parts.push(text('▸ PC/PL: '), p(TARGET_TYPES.PC_NAME, first.pc || 'PC未入力'), text(' / '), p(TARGET_TYPES.PL_NAME, first.pl || 'PL未入力'), lineBreak());
+          data.players.slice(1).forEach(player => parts.push(text('               '), p(TARGET_TYPES.PC_NAME, player.pc || 'PC未入力'), text(' / '), p(TARGET_TYPES.PL_NAME, player.pl || 'PL未入力'), lineBreak()));
+        }
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result ? '▸ ' + data.result : ''), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'scenario-clear',
+      label: '⧉ system |ɢᴍ |ᴘᴄ・ᴘʟ',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [text('⧉ '), p(TARGET_TYPES.SYSTEM, data.system), text('\n.　　'), p(TARGET_TYPES.SCENARIO, data.scenario || 'Title'), lineBreak(), data.author ? p(TARGET_TYPES.AUTHOR, '.　　　　' + data.author) : text(''), blankLine()];
+        data.gms.forEach(gm => parts.push(text('｜'), p(TARGET_TYPES.ROLE, smallRole(gm.role)), lineBreak(), text('　'), p(TARGET_TYPES.GM_NAME, gm.name), blankLine()));
+        parts.push(text('｜ᴘᴄ・ᴘʟ\n'));
+        data.players.forEach(player => parts.push(text('　'), p(TARGET_TYPES.PC_NAME, player.pc || 'Tansakusha'), text(' / '), p(TARGET_TYPES.PL_NAME, player.pl || 'PL name'), lineBreak()));
+        parts.push(blankLine(), p(TARGET_TYPES.END, '　- ꜱᴄᴇɴᴀʀɪᴏ ᴄʟᴇᴀʀ -'), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'handwritten-title',
+      label: '⌜ TITLE ⌟ / ✧𝐊𝐏・✧𝐏𝐋',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const border = '┈┈┈┈┈┈┈┈┈';
+        const parts = [p(TARGET_TYPES.SYSTEM, 'call of cthulhu'), lineBreak(), text('⌜ '), p(TARGET_TYPES.SCENARIO, data.scenario || 'TITLE'), text(' ⌟\n'), text(border + '\n✧'), p(TARGET_TYPES.ROLE, 'KP'), lineBreak()];
+        data.gms.forEach(gm => parts.push(text('  ▹'), p(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
+        parts.push(blankLine(), text('✧'), p(TARGET_TYPES.ROLE, 'PL'), lineBreak());
+        data.players.forEach(player => parts.push(text('  ▹'), p(TARGET_TYPES.SLOT, boldLabel(playerLabel(player) || 'PC')), text(' '), p(TARGET_TYPES.HO, player.ho || 'HO name'), text('   '), p(TARGET_TYPES.PC_NAME, player.pc || 'Character Name'), text(' / '), p(TARGET_TYPES.PL_NAME, player.pl || 'PL Name'), lineBreak()));
+        parts.push(blankLine(), text('✧'), p(TARGET_TYPES.END, 'END ' + (data.result || 'title')), lineBreak(), text(border + 'ᝰ✍︎ ꙳⋆'), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'double-line',
+      label: '════════ / ᴋᴘ・ʜᴏ',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const border = '══════════════';
+        const parts = [text(border + '\n   '), p(TARGET_TYPES.SYSTEM, data.system), text('\n　'), p(TARGET_TYPES.SCENARIO, data.scenario || 'TITLE'), text('\n' + border + '\n\n')];
+        data.gms.forEach(gm => parts.push(p(TARGET_TYPES.ROLE, smallRole(gm.role)), text('：'), p(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
+        data.players.forEach(player => parts.push(p(TARGET_TYPES.SLOT, (playerLabel(player) || 'ʜᴏ').toLowerCase()), text(' '), p(TARGET_TYPES.HO, player.ho || 'HO name'), lineBreak(), text('　　 '), p(TARGET_TYPES.PC_NAME, player.pc || 'Character Name'), text(' / '), p(TARGET_TYPES.PL_NAME, player.pl || 'PL Name'), lineBreak()));
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    },
+    {
+      id: 'ribbon-title',
+      label: '‧₊˚ ୨ Title ୧ ˚₊ 𝗞𝗣…𝗣𝗖/𝗣𝗟…',
+      styleTargets: COMMON_STYLE_TARGETS,
+      build(data) {
+        const parts = [p(TARGET_TYPES.SYSTEM, data.system), text('\n　‧₊˚ ୨  '), p(TARGET_TYPES.SCENARIO, data.scenario || 'title'), text('  ୧ ˚₊\n\n'), p(TARGET_TYPES.ROLE, 'KP'), text('…\n')];
+        data.gms.forEach(gm => parts.push(text('　'), p(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
+        parts.push(blankLine(), p(TARGET_TYPES.ROLE, 'PC/PL'), text('…\n'));
+        data.players.forEach(player => parts.push(text('　'), p(TARGET_TYPES.PC_NAME, player.pc || 'Character Name'), text(' / '), p(TARGET_TYPES.PL_NAME, player.pl || 'PL Name'), lineBreak()));
+        parts.push(blankLine(), p(TARGET_TYPES.END, data.result), lineBreak(), p(TARGET_TYPES.DATE, data.date), lineBreak(), p(TARGET_TYPES.HASHTAG, data.hashtags));
+        return lineJoin(parts);
+      }
+    }
+  ];
+
+  function cleanOutput(textValue) {
+    return String(textValue).replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  function renderParts(parts, styleTargets, fontVariant, styleText) {
+    const targets = new Set(styleTargets || COMMON_STYLE_TARGETS);
+    return cleanOutput(parts.map(part => {
+      const value = part && part.value != null ? String(part.value) : '';
+      if (!value) return '';
+      return targets.has(part.type) ? styleText(value, fontVariant) : value;
+    }).join(''));
+  }
+
+  function getStyle(id) {
+    return REPORT_STYLES.find(style => style.id === id) || REPORT_STYLES[0];
+  }
+
+  function render(data, fontVariant, styleText) {
+    const style = getStyle(data.style);
+    return renderParts(style.build(data), style.styleTargets, fontVariant, styleText);
   }
 
   window.ReportTemplate = {
     TARGET_TYPES,
-    DEFAULT_STYLE_TARGETS,
+    COMMON_STYLE_TARGETS,
     REPORT_STYLES,
     ASCII_ART_COLLECTION,
-    renderTemplate
+    getStyle,
+    render,
+    renderParts,
+    playerLabel,
+    smallRole
   };
 })();
