@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>更新履歴・お知らせ | TRPG WEBツール観測所</title>
+  <meta
+    name="description"
+    content="TRPG WEBツール観測所の更新履歴、お知らせ、リリースノートを掲載しています。"
+  />
+
+  <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="./assets/css/portal.css?v=20260513-12" />
+
+  <style>
+    .subpage {
+      position: relative;
+      z-index: 1;
+      width: min(980px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 24px 0 56px;
+    }
+
+    .subpage-header,
+    .subpage-card {
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--card);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(22px);
+    }
+
+    .subpage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 18px 22px;
+    }
+
+    .subpage-brand {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .subpage-brand-title {
+      margin: 0;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 950;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .subpage-brand-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .subpage-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .subpage-nav a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 8px 13px;
+      border: 1px solid var(--border-bright);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 0.84rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .subpage-hero {
+      margin: 30px 0 24px;
+    }
+
+    .subpage-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 8px 15px;
+      border: 1px solid rgba(139, 211, 255, 0.24);
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.88rem;
+      font-weight: 900;
+    }
+
+    .subpage h1 {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.055em;
+    }
+
+    .subpage-lead {
+      max-width: 780px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+
+    .subpage-card {
+      padding: 24px;
+    }
+
+    .release-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .release-item {
+      padding: 18px;
+      border: 1px solid rgba(226, 232, 240, 0.12);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .release-date {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .release-item h2 {
+      margin: 0 0 10px;
+      color: var(--text);
+      font-size: 1.1rem;
+    }
+
+    .release-item ul {
+      margin: 0;
+      padding-left: 1.2em;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .subpage-footer {
+      margin-top: 28px;
+      color: var(--muted-2);
+      text-align: center;
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 680px) {
+      .subpage {
+        width: min(100% - 24px, 980px);
+      }
+
+      .subpage-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .subpage-nav {
+        width: 100%;
+      }
+
+      .subpage-nav a {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+
+<body class="theme-dawn">
+  <div class="background-space" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="nebula nebula-a"></div>
+    <div class="nebula nebula-b"></div>
+    <div class="nebula nebula-c"></div>
+    <div class="orbit-line"></div>
+  </div>
+
+  <main class="subpage">
+    <header class="subpage-header">
+      <a class="subpage-brand" href="./">
+        <p class="subpage-brand-title">TRPG WEBツール観測所</p>
+        <p class="subpage-brand-subtitle">更新履歴・お知らせ・リリースノート</p>
+      </a>
+
+      <nav class="subpage-nav" aria-label="Subpage navigation">
+        <a href="./">Home</a>
+        <a href="./contact.html">Q&amp;A</a>
+        <a href="./privacy.html">Privacy</a>
+        <a href="./terms.html">Terms</a>
+      </nav>
+    </header>
+
+    <section class="subpage-hero">
+      <div class="subpage-label">✦ Changelog</div>
+      <h1>更新履歴・お知らせ</h1>
+      <p class="subpage-lead">
+        TRPG WEBツール観測所の更新情報、公開ツールの追加、仕様変更、今後の制作予定などをまとめています。
+      </p>
+    </section>
+
+    <section class="subpage-card">
+      <div class="release-list">
+        <article class="release-item">
+          <p class="release-date">Latest</p>
+          <h2>ポータルサイト整備</h2>
+          <ul>
+            <li>ポータルページの名称を「TRPG WEBツール観測所」に統一しました。</li>
+            <li>ツールカードのステータスを「使用可能」「開発中」「アイデア」で整理しました。</li>
+            <li>About / Status / Notes の折り畳みカードを追加しました。</li>
+            <li>星空背景、流れ星、UFOアイコン演出を追加しました。</li>
+          </ul>
+        </article>
+
+        <article class="release-item">
+        <p class="release-date">Notice</p>
+        <h2>お知らせ</h2>
+        <ul>
+            <li>本サイトは、開発者 <strong>@KumachanSteps</strong> による個人制作のTRPG支援ツール集です。</li>
+            <li>各ツールは随時調整中のため、仕様・名称・画面構成が変更される場合があります。</li>
+            <li>不具合報告や要望は Q&amp;A / Contact ページをご確認ください。</li>
+            <li>重要な更新や仕様変更は、可能な範囲で本ページに記録します。</li>
+        </ul>
+        </article>
+
+        <article class="release-item">
+          <p class="release-date">Notice</p>
+          <h2>お知らせ</h2>
+          <ul>
+            <li>本サイトは個人制作のTRPG支援ツール集です。</li>
+            <li>各ツールは随時調整中のため、仕様・名称・画面構成が変更される場合があります。</li>
+            <li>不具合報告や要望は Q&amp;A / Contact ページをご確認ください。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <footer class="subpage-footer">
+      © TRPG WEBツール観測所 / Created for TRPG Session Support
+    </footer>
+  </main>
+</body>
+</html>

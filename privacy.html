@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>プライバシー | TRPG WEBツール観測所</title>
+  <meta
+    name="description"
+    content="TRPG WEBツール観測所のプライバシー、localStorage、データ保存方針についてのページです。"
+  />
+
+  <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="./assets/css/portal.css?v=20260513-12" />
+
+  <style>
+    .subpage {
+      position: relative;
+      z-index: 1;
+      width: min(980px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 24px 0 56px;
+    }
+
+    .subpage-header,
+    .subpage-card {
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--card);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(22px);
+    }
+
+    .subpage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 18px 22px;
+    }
+
+    .subpage-brand {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .subpage-brand-title {
+      margin: 0;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 950;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .subpage-brand-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .subpage-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .subpage-nav a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 8px 13px;
+      border: 1px solid var(--border-bright);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 0.84rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .subpage-hero {
+      margin: 30px 0 24px;
+    }
+
+    .subpage-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 8px 15px;
+      border: 1px solid rgba(139, 211, 255, 0.24);
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.88rem;
+      font-weight: 900;
+    }
+
+    .subpage h1 {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.055em;
+    }
+
+    .subpage-lead {
+      max-width: 780px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+
+    .subpage-card {
+      padding: 24px;
+    }
+
+    .policy-section + .policy-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(226, 232, 240, 0.12);
+    }
+
+    .policy-section h2 {
+      margin: 0 0 10px;
+      color: var(--text);
+      font-size: 1.15rem;
+    }
+
+    .policy-section p,
+    .policy-section li {
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .policy-section p {
+      margin: 0;
+    }
+
+    .policy-section p + p {
+      margin-top: 10px;
+    }
+
+    .policy-section ul {
+      margin: 10px 0 0;
+      padding-left: 1.2em;
+    }
+
+    .subpage-footer {
+      margin-top: 28px;
+      color: var(--muted-2);
+      text-align: center;
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 680px) {
+      .subpage {
+        width: min(100% - 24px, 980px);
+      }
+
+      .subpage-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .subpage-nav {
+        width: 100%;
+      }
+
+      .subpage-nav a {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+
+<body class="theme-dawn">
+  <div class="background-space" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="nebula nebula-a"></div>
+    <div class="nebula nebula-b"></div>
+    <div class="nebula nebula-c"></div>
+    <div class="orbit-line"></div>
+  </div>
+
+  <main class="subpage">
+    <header class="subpage-header">
+      <a class="subpage-brand" href="./">
+        <p class="subpage-brand-title">TRPG WEBツール観測所</p>
+        <p class="subpage-brand-subtitle">プライバシー・localStorage・データ保存方針</p>
+      </a>
+
+      <nav class="subpage-nav" aria-label="Subpage navigation">
+        <a href="./">Home</a>
+        <a href="./changelog.html">Changelog</a>
+        <a href="./contact.html">Q&amp;A</a>
+        <a href="./terms.html">Terms</a>
+      </nav>
+    </header>
+
+    <section class="subpage-hero">
+      <div class="subpage-label">✦ Privacy</div>
+      <h1>プライバシー</h1>
+      <p class="subpage-lead">
+        本ページでは、TRPG WEBツール観測所におけるデータの扱い、localStorageの利用、アクセス解析について説明します。
+      </p>
+    </section>
+
+    <section class="subpage-card">
+      <section class="policy-section">
+        <h2>基本方針</h2>
+        <p>
+          TRPG WEBツール観測所は、TRPGセッション準備やログ整理を補助するための個人制作Webツール集です。
+          入力されたテキスト、セッションログ、キャラクター情報などは、原則として利用者のブラウザ上で処理されます。
+        </p>
+        <p>
+          ただし、各ツールの仕様や今後の機能追加により、外部サービスやブラウザ保存機能を利用する場合があります。
+          その場合は、可能な範囲で各ツール内に説明を記載します。
+        </p>
+      </section>
+
+      <section class="policy-section">
+        <h2>localStorage について</h2>
+        <p>
+          一部のツールでは、入力内容、表示設定、お気に入り、履歴などをブラウザの localStorage に保存する場合があります。
+        </p>
+        <ul>
+          <li>保存内容は、利用中のブラウザ内に保存されます。</li>
+          <li>別端末や別ブラウザには自動で引き継がれません。</li>
+          <li>ブラウザのキャッシュ削除、サイトデータ削除、プライベートブラウズの利用などにより、保存内容が消える場合があります。</li>
+          <li>共有PCや他人が触れる端末では、秘匿情報やネタバレを含む情報の保存に注意してください。</li>
+        </ul>
+      </section>
+
+      <section class="policy-section">
+        <h2>アクセス解析について</h2>
+        <p>
+          本サイトでは、利用状況の把握や改善のために Google Analytics などのアクセス解析を使用する場合があります。
+          これにより、閲覧ページ、利用環境、アクセス状況などの情報が取得されることがあります。
+        </p>
+        <p>
+          アクセス解析で得られた情報は、サイト改善や利用状況の確認を目的として使用します。
+        </p>
+      </section>
+
+      <section class="policy-section">
+        <h2>入力データ・秘匿情報について</h2>
+        <p>
+          TRPGのセッションログ、キャラクター情報、シナリオ情報、秘匿HO、ネタバレを含む情報を扱う場合は、利用者自身の判断で入力してください。
+          公開範囲、共有範囲、シナリオ制作者の規約などに十分注意してください。
+        </p>
+      </section>
+
+      <section class="policy-section">
+        <h2>外部サービスへのリンク</h2>
+        <p>
+          本サイトには、X、YouTube、Google Sheets、いあきゃら、CCFOLIA、BOOTH、Pixivなど外部サービスへのリンクや連携を想定したツールが含まれる場合があります。
+          外部サービスの利用については、それぞれのサービスの規約・プライバシーポリシーをご確認ください。
+        </p>
+      </section>
+    </section>
+
+    <footer class="subpage-footer">
+      © TRPG WEBツール観測所 / Created for TRPG Session Support
+    </footer>
+  </main>
+</body>
+</html>
