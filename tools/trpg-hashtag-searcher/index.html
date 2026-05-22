@@ -4,37 +4,160 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>使えるハッシュタグ検索 | TRPG Web Tools</title>
-  <meta name="description" content="TRPGでよく使うX検索をワンクリックで作成できる、ハッシュタグ検索ランチャーです。" />
+  <meta name="description" content="TRPGでよく使うX検索をワンクリックで作成できるハッシュタグ検索ツールです。" />
   <link rel="stylesheet" href="./css/hashtag_searcher_style.css" />
 </head>
 <body>
-  <div class="page-shell">
-    <div class="bg-effects" aria-hidden="true"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-blob bg-blob-3"></div><div class="bg-stars"></div></div>
-    <main class="page">
-      <header class="site-header">
-        <div class="header-top">
-          <div class="header-left">
-            <a class="portal-link" href="https://kumachansteps.github.io/coc-tools/trpg-web-tools/index.html">← TRPG Web Tools<span class="portal-tooltip">TRPG WEB Tools ポータルサイトに戻る</span></a>
-            <span class="tag-pill tag-cyan">X/Twitter検索</span><span class="tag-pill tag-violet">TRPG日常利用</span><span class="tag-pill tag-amber">ローカル保存</span>
-          </div>
-          <div class="header-actions"><button type="button" id="languageButton" class="header-button">JP / EN</button><button type="button" id="shortcutButton" class="header-button" aria-expanded="false">Shortcut</button></div>
-        </div>
-        <div class="title-row">
-          <div class="tool-icon"><svg viewBox="0 0 64 64" class="tool-icon-bird" fill="currentColor" aria-hidden="true"><path d="M55.8 18.7c-1.7.8-3.5 1.3-5.4 1.6 1.9-1.2 3.4-3 4.1-5.1-1.8 1.1-3.8 1.9-5.9 2.4a9.2 9.2 0 0 0-15.9 6.3c0 .7.1 1.4.2 2C25.3 25.5 18.5 22 13.9 16.6c-.8 1.3-1.2 2.9-1.2 4.5 0 3.2 1.6 6 4.1 7.6-1.5 0-2.9-.5-4.2-1.2v.1c0 4.4 3.1 8.1 7.3 9-1.3.4-2.7.5-4.1.2 1.1 3.5 4.4 6.1 8.2 6.2A18.5 18.5 0 0 1 12 46.9c-.8 0-1.5 0-2.3-.1A26.1 26.1 0 0 0 23.8 51c16.9 0 26.2-14 26.2-26.2v-1.2c1.8-1.2 3.4-2.9 4.7-4.9Z"></path></svg><span class="tool-icon-star">✦</span><span class="tool-icon-search">⌕</span></div>
-          <div><h1>使えるハッシュタグ検索</h1><p class="site-description">TRPGでよく使うX検索をワンクリックで作成できます。ハッシュタグ、検索ワード、フィルター、ネタバレ回避用の除外ワードを組み合わせて、目的に合った検索をすばやく開けます。</p></div>
-        </div>
-      </header>
-      <section id="shortcutPanel" class="shortcut-panel is-hidden"><div class="panel-header"><div><h2>ショートカット</h2><p>キーボード操作で検索・コピー・パネル表示を素早く行えます。</p></div><button type="button" id="shortcutCloseButton" class="soft-button">閉じる</button></div><div class="shortcut-grid"><div class="shortcut-card"><strong>⌘ / Ctrl + K</strong><span>ショートカットパネルを開閉</span></div><div class="shortcut-card"><strong>⌘ / Ctrl + Enter</strong><span>現在の検索文でX検索を開く</span></div><div class="shortcut-card"><strong>⌘ / Ctrl + Shift + C</strong><span>現在の検索文をコピー</span></div><div class="shortcut-card"><strong>Esc</strong><span>ショートカットパネルを閉じる</span></div></div></section>
-      <section class="main-layout">
-        <aside class="sidebar"><section class="panel"><h2>検索モード</h2><div id="modeButtons" class="mode-list"></div></section><section class="panel"><div class="panel-title-row"><h2>お気に入り</h2><span id="favoriteCount" class="count-badge">0</span></div><p class="note">お気に入りはこのブラウザ内にのみ保存され、別端末には引き継がれません。</p><div id="favoriteList" class="favorite-list"></div></section></aside>
-        <div class="content-layout">
-          <section id="composerPanel" class="panel composer-panel"><div class="composer-header"><div><h2>検索クエリ作成</h2><p>チップを押して、X検索用のクエリを組み立てます。</p></div><span class="spoiler-badge">ネタバレ回避 ON</span></div><section class="composer-section"><h3>基本タグ / キーワード</h3><div id="systemButtons" class="chip-list"></div><div id="baseQueryDisplay" class="query-preview"><span></span><b>|</b></div></section><section id="addWordsSection" class="composer-section"><h3>追加ワード</h3><div id="addWordButtons" class="chip-list"></div></section><section class="composer-section"><h3>フィルター</h3><div id="filterButtons" class="chip-list"></div></section><section class="composer-section"><h3>除外ワード</h3><div id="excludeButtons" class="chip-list"></div></section><section class="generated-box"><div class="generated-header"><h3>生成された検索文</h3><button type="button" id="resetButton" class="soft-button">リセット</button></div><textarea id="generatedQuery" spellcheck="false"></textarea><div class="button-row"><button type="button" id="openXButton" class="primary-button">X検索を開く →</button><button type="button" id="copyQueryButton" class="soft-button">検索文をコピー</button><button type="button" id="saveFavoriteButton" class="violet-button">お気に入りに保存</button></div></section></section>
-          <section class="right-column"><section id="scenarioPanel" class="panel"><h2>シナリオ名検索</h2><p class="note">シナリオ名から関連検索をまとめて作成します。</p><div class="scenario-name-box">星環のダ・カーポ</div><div class="search-line-list"><button type="button" class="search-line" data-query='"星環のダ・カーポ"'><span>"星環のダ・カーポ"</span><b>開く</b></button><button type="button" class="search-line" data-query='"星環のダ・カーポ" filter:images'><span>"星環のダ・カーポ" filter:images</span><b>開く</b></button><button type="button" class="search-line" data-query='"星環のダ・カーポ" 卓報告'><span>"星環のダ・カーポ" 卓報告</span><b>開く</b></button><button type="button" class="search-line" data-query='"星環のダ・カーポ" -ネタバレ'><span>"星環のダ・カーポ" -ネタバレ</span><b>開く</b></button></div></section><section class="panel"><h2>今日の巡回</h2><p class="note">日常的に見るTRPG検索へワンクリックで移動します。</p><div id="dailyPatrolButtons" class="daily-grid"></div></section></section>
-        </div>
-      </section>
-      <section id="presetCardsSection" class="panel preset-panel"><div class="panel-header"><div><h2>プリセット検索カード</h2><p>TRPGの日常利用に向けた、すぐ使える検索セットです。</p></div><div class="panel-actions"><button type="button" id="addPresetButton" class="cyan-button">検索カードを追加</button><button type="button" id="copyPresetMarkdownButton" class="soft-button">選択項目をMarkdownでコピー</button></div></div><div id="presetCardList" class="preset-grid"></div></section>
-    </main>
+  <div class="bg-effects" aria-hidden="true">
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
+    <div class="bg-stars"></div>
   </div>
-  <script src="./js/templates.js"></script><script src="./js/parser.js"></script><script src="./js/i18l.js"></script><script src="./js/language.js"></script><script src="./js/shortcut.js"></script><script src="./js/main.js"></script>
+
+  <main class="page">
+    <header class="site-header">
+      <div class="header-top">
+        <div class="header-left">
+          <a class="portal-link" href="https://kumachansteps.github.io/coc-tools/trpg-web-tools/index.html">
+            ← TRPG Web Tools
+            <span class="portal-tooltip">TRPG WEB Tools ポータルサイトに戻る</span>
+          </a>
+          <span class="tag-pill tag-cyan">X/Twitter検索</span>
+          <span class="tag-pill tag-violet">TRPG日常利用</span>
+          <span class="tag-pill tag-amber">ローカル保存</span>
+        </div>
+        <div class="header-actions">
+          <button type="button" id="languageButton" class="header-button">JP / EN</button>
+          <button type="button" id="shortcutButton" class="header-button" aria-expanded="false">Shortcut</button>
+        </div>
+      </div>
+
+      <div class="title-row">
+        <div class="tool-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" class="tool-icon-bird" fill="currentColor">
+            <path d="M55.8 18.7c-1.7.8-3.5 1.3-5.4 1.6 1.9-1.2 3.4-3 4.1-5.1-1.8 1.1-3.8 1.9-5.9 2.4a9.2 9.2 0 0 0-15.9 6.3c0 .7.1 1.4.2 2C25.3 25.5 18.5 22 13.9 16.6c-.8 1.3-1.2 2.9-1.2 4.5 0 3.2 1.6 6 4.1 7.6-1.5 0-2.9-.5-4.2-1.2v.1c0 4.4 3.1 8.1 7.3 9-1.3.4-2.7.5-4.1.2 1.1 3.5 4.4 6.1 8.2 6.2A18.5 18.5 0 0 1 12 46.9c-.8 0-1.5 0-2.3-.1A26.1 26.1 0 0 0 23.8 51c16.9 0 26.2-14 26.2-26.2v-1.2c1.8-1.2 3.4-2.9 4.7-4.9Z"></path>
+          </svg>
+          <span class="tool-icon-star">✦</span>
+          <span class="tool-icon-search">⌕</span>
+        </div>
+        <div>
+          <h1>使えるハッシュタグ検索</h1>
+          <p class="site-description">TRPGでよく使うX検索をワンクリックで作成できます。ハッシュタグ、検索ワード、フィルター、ネタバレ回避用の除外ワードを組み合わせて、目的に合った検索をすばやく開けます。</p>
+        </div>
+      </div>
+    </header>
+
+    <section id="shortcutPanel" class="shortcut-panel is-hidden">
+      <div class="panel-header">
+        <div>
+          <h2>ショートカット</h2>
+          <p>キーボード操作で検索・コピー・パネル表示を素早く行えます。</p>
+        </div>
+        <button type="button" id="shortcutCloseButton" class="soft-button">閉じる</button>
+      </div>
+      <div class="shortcut-grid">
+        <div class="shortcut-card"><strong>⌘ / Ctrl + K</strong><span>ショートカットパネルを開閉</span></div>
+        <div class="shortcut-card"><strong>⌘ / Ctrl + Enter</strong><span>現在の検索文でX検索を開く</span></div>
+        <div class="shortcut-card"><strong>⌘ / Ctrl + Shift + C</strong><span>現在の検索文をコピー</span></div>
+        <div class="shortcut-card"><strong>Esc</strong><span>ショートカットパネルを閉じる</span></div>
+      </div>
+    </section>
+
+    <section class="three-column-layout">
+      <aside class="left-column">
+        <section class="panel">
+          <h2>検索モード</h2>
+          <div id="modeButtons" class="mode-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title-row">
+            <h2>お気に入り</h2>
+            <span id="favoriteCount" class="count-badge">0</span>
+          </div>
+          <p class="note">お気に入りはこのブラウザ内にのみ保存され、別端末には引き継がれません。</p>
+          <div id="favoriteList" class="favorite-list"></div>
+        </section>
+      </aside>
+
+      <section id="composerPanel" class="panel center-column">
+        <div class="composer-header">
+          <div>
+            <h2>検索クエリ作成</h2>
+            <p>チップを押して、X検索用のクエリを組み立てます。</p>
+          </div>
+          <span class="spoiler-badge">ネタバレ回避 ON</span>
+        </div>
+
+        <section class="composer-section">
+          <h3>基本タグ / キーワード</h3>
+          <div id="systemButtons" class="chip-list"></div>
+          <div id="baseQueryDisplay" class="query-preview"><span></span><b>|</b></div>
+        </section>
+
+        <section id="addWordsSection" class="composer-section">
+          <h3>追加ワード</h3>
+          <div id="addWordButtons" class="chip-list"></div>
+        </section>
+
+        <section class="composer-section">
+          <h3>フィルター</h3>
+          <div id="filterButtons" class="chip-list"></div>
+        </section>
+
+        <section class="composer-section">
+          <h3>除外ワード</h3>
+          <div id="excludeButtons" class="chip-list"></div>
+        </section>
+
+        <section class="generated-box">
+          <div class="generated-header">
+            <h3>生成された検索文</h3>
+            <button type="button" id="resetButton" class="soft-button">リセット</button>
+          </div>
+          <textarea id="generatedQuery" spellcheck="false"></textarea>
+          <div class="button-row">
+            <button type="button" id="openXButton" class="primary-button">X検索を開く →</button>
+            <button type="button" id="copyQueryButton" class="soft-button">検索文をコピー</button>
+            <button type="button" id="saveFavoriteButton" class="violet-button">お気に入りに保存</button>
+          </div>
+        </section>
+      </section>
+
+      <aside class="right-column">
+        <section id="scenarioPanel" class="panel">
+          <h2>シナリオ名検索</h2>
+          <p class="note">検索文を編集して追加できます。追加した検索文は下に保存されます。</p>
+          <div class="scenario-add-row">
+            <input id="scenarioSearchInput" type="text" placeholder="シナリオ名・検索文を入力" />
+            <button type="button" id="addScenarioSearchButton" class="primary-button small">追加</button>
+          </div>
+          <div id="scenarioSearchList" class="scenario-search-list"></div>
+        </section>
+
+        <section id="presetCardsSection" class="panel preset-panel">
+          <div class="panel-header">
+            <div>
+              <h2>プリセット検索カード</h2>
+              <p>TRPGの日常利用に向けた、すぐ使える検索セットです。</p>
+            </div>
+            <div class="panel-actions">
+              <button type="button" id="addPresetButton" class="cyan-button">検索カードを追加</button>
+              <button type="button" id="copyPresetMarkdownButton" class="soft-button">Markdownでコピー</button>
+            </div>
+          </div>
+          <div id="presetCardList" class="preset-grid"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script src="./js/templates.js"></script>
+  <script src="./js/parser.js"></script>
+  <script src="./js/i18l.js"></script>
+  <script src="./js/language.js"></script>
+  <script src="./js/shortcut.js"></script>
+  <script src="./js/main.js"></script>
 </body>
 </html>

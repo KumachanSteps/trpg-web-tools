@@ -3,12 +3,12 @@ window.HASHTAG_TEMPLATES = (() => {
     CoC: '("CoC" OR "CoC6" OR "CoC7" OR "Call of Cthulhu" OR "Call of Cthulhu 6th" OR "クトゥルフ神話TRPG" OR "新クトゥルフ神話TRPG" OR "クトゥルフTRPG" OR "新クトゥルフTRPG" OR "クトゥルフ" OR "6版" OR "7版")',
     CoC6: '("CoC" OR "CoC6" OR "Call of Cthulhu 6th" OR "Call of Cthulhu" OR "クトゥルフ神話TRPG" OR "クトゥルフTRPG" OR "クトゥルフ" OR "6版") -("CoC7" OR "新クトゥルフ神話TRPG" OR "Call of Cthulhu 7th" OR "新クトゥルフTRPG" OR "7版")',
     CoC7: '("CoC7" OR "新クトゥルフ神話TRPG" OR "Call of Cthulhu 7th" OR "新クトゥルフTRPG" OR "7版") -("CoC6" OR "Call of Cthulhu 6th" OR "6版")',
-    Emoklore: '("エモクロア" OR "エモクロアTRPG" OR "Emoklore")',
-    Gaiakea: '("ガイアケア" OR "Gaiakea")',
-    madamiss: '("マダミス" OR "マーダーミステリー")',
-    inSane: '("インセイン" OR "inSane" OR "マルチジャンル・ホラーRPG インセイン")',
-    "Sword World": '("ソード・ワールド" OR "ソードワールド" OR "Sword World" OR "SW2.5" OR "SW2.0")',
-    "Dungeon&Dragon": '("D&D" OR "DnD" OR "Dungeons & Dragons" OR "ダンジョンズ＆ドラゴンズ" OR "ダンジョンズ&ドラゴンズ" OR "ダンドラ")',
+    エモクロア: '("エモクロア" OR "エモクロアTRPG" OR "Emoklore")',
+    ガイアケア: '("ガイアケア" OR "Gaiakea")',
+    マダミス: '("マダミス" OR "マーダーミステリー")',
+    インセイン: '("インセイン" OR "inSane" OR "マルチジャンル・ホラーRPG インセイン")',
+    ソードワールド: '("ソード・ワールド" OR "ソードワールド" OR "Sword World" OR "SW2.5" OR "SW2.0")',
+    "D&D": '("D&D" OR "DnD" OR "Dungeons & Dragons" OR "ダンジョンズ＆ドラゴンズ" OR "ダンジョンズ&ドラゴンズ" OR "ダンドラ")',
   };
 
   const wordQueries = {
@@ -24,12 +24,23 @@ window.HASHTAG_TEMPLATES = (() => {
     "ルームZIP付き": '("ココフォリア部屋付き" OR "部屋付きセット" OR "部屋データ付き" OR "ココフォリア部屋zip" OR "サウンドマスター対応" OR "ココフォリア部屋（前景・NPC駒付）" OR "投げるだけルームzipつき" OR "ココフォリア部屋・NPC立ち絵・背景画像同梱" OR "ココフォリア部屋セット")',
   };
 
-  const excludeQueries = { "-現行未通過": '-("現行未通過" OR "現未" OR "現行" OR "げんみ")' };
-  const modes = ["今日の巡回", "卓募集", "素材探し", "シナリオ探し", "プリセット検索カード"];
-  const modeVisualWordMap = { 卓募集: ["PL募集", "KP募集", "GM募集"] };
+  const excludeQueries = {
+    "-現行未通過": '-("現行未通過" OR "現未" OR "現行" OR "げんみ")',
+  };
+
+  const modes = ["卓募集", "素材探し", "シナリオ探し", "プリセット検索カード"];
+
+  const modeVisualWordMap = {
+    卓募集: ["PL募集", "KP募集", "GM募集"],
+  };
 
   const modePresets = {
-    卓募集: { words: [], filters: ["lang:ja"], excludes: [], extra: ["(#PL募集 OR #KP募集 OR #GM募集)"] },
+    卓募集: {
+      words: [],
+      filters: ["lang:ja"],
+      excludes: [],
+      extra: ["(#PL募集 OR #KP募集 OR #GM募集)"],
+    },
     素材探し: {
       words: [],
       filters: ["filter:images", "filter:links", "lang:ja"],
@@ -50,15 +61,54 @@ window.HASHTAG_TEMPLATES = (() => {
   const excludes = ["-ネタバレ", "-現行未通過", "-R18", "-R18G", "-募集終了"];
 
   const chipDescriptions = {
-    ソロ: '検索文には "ソロ" を追加します。一人用・ソロ系の投稿を探す用途です。', タイマン: '検索文には ("タイマン" OR "KPC") を追加します。タイマン・KPC関連の表記ゆれを拾います。',
-    "2PL": '検索文には "2PL" を追加します。2人用シナリオや募集を探す用途です。', "3PL": '検索文には "3PL" を追加します。3人用シナリオや募集を探す用途です。', "4PL": '検索文には "4PL" を追加します。4人用シナリオや募集を探す用途です。',
-    PL募集: "検索文には #PL募集 を追加します。プレイヤー募集を含む投稿を探します。", KP募集: "検索文には #KP募集 を追加します。KP募集を含む投稿を探します。", GM募集: "検索文には #GM募集 を追加します。GM募集を含む投稿を探します。", テストプレイ: "テストプレイ募集・試遊募集に関する投稿を探します。",
-    初心者歓迎: "初心者歓迎の募集を探しやすくします。", ボイセ: "ボイスセッション関連の投稿を探します。", テキセ: "テキストセッション関連の投稿を探します。", BOOTH: "BOOTHの商品・シナリオ告知に絞りやすくします。", ココフォリア: "ココフォリア部屋や素材関連の投稿を探します。", 部屋素材: "部屋作成向けの素材投稿を探します。", ルームZIP付き: "ココフォリア部屋付き・部屋データ付き・投げるだけルームzipつき等の表記ゆれをまとめて検索します。",
-    "filter:images": "画像付き投稿だけを検索します。部屋・素材・卓報告探しに便利です。", "filter:videos": "動画付き投稿だけを検索します。配信や切り抜き探しに便利です。", "filter:links": "リンク付き投稿だけを検索します。BOOTHや配信URL探しに便利です。", "filter:media": "画像または動画付き投稿を検索します。", "filter:verified": "認証済みアカウントの投稿を検索します。", "-filter:retweets": "リポストを除外して、元投稿を見つけやすくします。",
-    "min_faves:50": "いいね数50以上の投稿を検索します。", "min_faves:100": "いいね数100以上の投稿を検索します。", "min_faves:500": "いいね数500以上の投稿を検索します。", "min_faves:1000": "いいね数1000以上の投稿を検索します。", "lang:ja": "日本語投稿を優先して検索します。", "from:": "特定アカウントからの投稿に絞ります。例：from:username", "until:": "指定日より前の投稿に絞ります。例：until:2026-01-01", "since:": "指定日以降の投稿に絞ります。例：since:2026-01-01",
-    "since:1day": "今日から1日前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。", "since:3days": "今日から3日前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。", "since:1week": "今日から1週間前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。", "since:1month": "今日から1か月前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。",
-    "-ネタバレ": "『ネタバレ』を含む投稿を検索結果から除外します。", "-現行未通過": "『現行未通過』『現未』『現行』『げんみ』を含む投稿を除外します。", "-R18": "R18表記を含む投稿を除外します。", "-R18G": "R18G表記を含む投稿を除外します。", "-募集終了": "募集終了済みの投稿を除外します。",
-    CoC: "CoC全般を、6版・7版両方の表記ゆれ込みで検索します。", CoC6: "CoC 6版系の表記ゆれをまとめ、7版系の表記を除外して検索します。", CoC7: "CoC 7版・新クトゥルフ神話TRPG系の表記ゆれをまとめ、6版系の表記を除外して検索します。", Emoklore: "エモクロアTRPG関連の表記ゆれをまとめて検索します。", Gaiakea: "Gaiakea / ガイアケア関連の投稿を検索します。", madamiss: "マダミス・マーダーミステリー関連の表記ゆれをまとめて検索します。", inSane: "インセイン関連の表記ゆれをまとめて検索します。", "Sword World": "ソード・ワールド関連の表記ゆれをまとめて検索します。", "Dungeon&Dragon": "D&D / ダンジョンズ＆ドラゴンズ関連の表記ゆれをまとめて検索します。",
+    ソロ: '検索文には "ソロ" を追加します。一人用・ソロ系の投稿を探す用途です。',
+    タイマン: '検索文には ("タイマン" OR "KPC") を追加します。タイマン・KPC関連の表記ゆれを拾います。',
+    "2PL": '検索文には "2PL" を追加します。2人用シナリオや募集を探す用途です。',
+    "3PL": '検索文には "3PL" を追加します。3人用シナリオや募集を探す用途です。',
+    "4PL": '検索文には "4PL" を追加します。4人用シナリオや募集を探す用途です。',
+    PL募集: "検索文には #PL募集 を追加します。プレイヤー募集を含む投稿を探します。",
+    KP募集: "検索文には #KP募集 を追加します。KP募集を含む投稿を探します。",
+    GM募集: "検索文には #GM募集 を追加します。GM募集を含む投稿を探します。",
+    テストプレイ: "テストプレイ募集・試遊募集に関する投稿を探します。",
+    初心者歓迎: "初心者歓迎の募集を探しやすくします。",
+    ボイセ: "ボイスセッション関連の投稿を探します。",
+    テキセ: "テキストセッション関連の投稿を探します。",
+    BOOTH: "BOOTHの商品・シナリオ告知に絞りやすくします。",
+    ココフォリア: "ココフォリア部屋や素材関連の投稿を探します。",
+    部屋素材: "部屋作成向けの素材投稿を探します。",
+    ルームZIP付き: "ココフォリア部屋付き・部屋データ付き・投げるだけルームzipつき等の表記ゆれをまとめて検索します。",
+    "filter:images": "画像付き投稿だけを検索します。",
+    "filter:videos": "動画付き投稿だけを検索します。",
+    "filter:links": "リンク付き投稿だけを検索します。",
+    "filter:media": "画像または動画付き投稿を検索します。",
+    "filter:verified": "認証済みアカウントの投稿を検索します。",
+    "-filter:retweets": "リポストを除外して、元投稿を見つけやすくします。",
+    "min_faves:50": "いいね数50以上の投稿を検索します。",
+    "min_faves:100": "いいね数100以上の投稿を検索します。",
+    "min_faves:500": "いいね数500以上の投稿を検索します。",
+    "min_faves:1000": "いいね数1000以上の投稿を検索します。",
+    "lang:ja": "日本語投稿を優先して検索します。",
+    "from:": "特定アカウントからの投稿に絞ります。例：from:username",
+    "until:": "指定日より前の投稿に絞ります。例：until:2026-01-01",
+    "since:": "指定日以降の投稿に絞ります。例：since:2026-01-01",
+    "since:1day": "今日から1日前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。",
+    "since:3days": "今日から3日前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。",
+    "since:1week": "今日から1週間前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。",
+    "since:1month": "今日から1か月前の日付を自動計算し、since:YYYY-MM-DD として検索文に追加します。",
+    "-ネタバレ": "『ネタバレ』を含む投稿を検索結果から除外します。",
+    "-現行未通過": "『現行未通過』『現未』『現行』『げんみ』を含む投稿を除外します。",
+    "-R18": "R18表記を含む投稿を除外します。",
+    "-R18G": "R18G表記を含む投稿を除外します。",
+    "-募集終了": "募集終了済みの投稿を除外します。",
+    CoC: "CoC全般を、6版・7版両方の表記ゆれ込みで検索します。",
+    CoC6: "CoC 6版系の表記ゆれをまとめ、7版系の表記を除外して検索します。",
+    CoC7: "CoC 7版・新クトゥルフ神話TRPG系の表記ゆれをまとめ、6版系の表記を除外して検索します。",
+    エモクロア: "エモクロアTRPG関連の表記ゆれをまとめて検索します。",
+    ガイアケア: "Gaiakea / ガイアケア関連の投稿を検索します。",
+    マダミス: "マダミス・マーダーミステリー関連の表記ゆれをまとめて検索します。",
+    インセイン: "インセイン関連の表記ゆれをまとめて検索します。",
+    ソードワールド: "ソード・ワールド関連の表記ゆれをまとめて検索します。",
+    "D&D": "D&D / ダンジョンズ＆ドラゴンズ関連の表記ゆれをまとめて検索します。",
   };
 
   const defaultFavorites = [
@@ -77,5 +127,15 @@ window.HASHTAG_TEMPLATES = (() => {
     { title: "最新 TRPG配信", desc: "直近3日以内のTRPG配信・告知を探す", query: "TRPG配信 (filter:images OR filter:links OR filter:videos) __SINCE_3DAYS__", tag: "Stream" },
   ];
 
-  return { systemQueries, wordQueries, excludeQueries, modes, modeVisualWordMap, modePresets, addWords, filters, excludes, chipDescriptions, defaultFavorites, defaultPresets };
+  const defaultScenarioSearches = [
+    '"星環のダ・カーポ"',
+    '"星環のダ・カーポ" filter:images',
+    '"星環のダ・カーポ" 卓報告',
+    '"星環のダ・カーポ" -ネタバレ',
+  ];
+
+  return {
+    systemQueries, wordQueries, excludeQueries, modes, modeVisualWordMap, modePresets,
+    addWords, filters, excludes, chipDescriptions, defaultFavorites, defaultPresets, defaultScenarioSearches
+  };
 })();
