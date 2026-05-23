@@ -34,8 +34,8 @@
             href="https://kumachansteps.github.io/trpg-web-tools/"
             data-i18n="nav.backToTools"
           >
-            ← TRPG Web ツール観測所
-            <span class="portal-tooltip">Return to TRPG Web Tools Portal</span>
+            ← TRPG Webツール観測所
+            <span class="portal-tooltip">TRPG Webツール観測所 に戻る</span>
           </a>
 
           <span class="header-pill header-pill-cyan" data-i18n="tag.diceLogInput">
@@ -258,13 +258,42 @@
   <!-- Screenshot Mode Floating Action -->
   <div id="screenshotActionBar" class="screenshot-action-bar">
     <button
+      id="screenshotPostXBtn"
+      class="screenshot-action-button screenshot-x-button"
+      type="button"
+      data-i18n="button.postX"
+    >
+      Xに投稿
+    </button>
+
+    <button
+      id="screenshotDownloadBtn"
+      class="screenshot-action-button screenshot-download-button"
+      type="button"
+      data-i18n="button.downloadScreenshot"
+    >
+      ダウンロード
+    </button>
+
+    <button
+      id="screenshotCopyBtn"
+      class="screenshot-action-button screenshot-copy-button"
+      type="button"
+      data-i18n="button.copyScreenshot"
+    >
+      コピー＆ペースト
+    </button>
+
+    <button
       id="screenshotExitBtn"
-      class="screenshot-exit-button"
+      class="screenshot-action-button screenshot-exit-button"
       type="button"
       data-i18n="button.exitScreenshot"
     >
       通常表示に戻す
     </button>
+
+    <div id="screenshotStatus" class="screenshot-status" role="status" aria-live="polite"></div>
   </div>
 
   <main id="appLayout">

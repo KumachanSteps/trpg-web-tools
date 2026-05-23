@@ -30,3 +30,16 @@ UI adjustment applied:
 - Favicon path confirmed: ../../assets/img/kuma_icon.ico.
 - Footer note is now a minimal low-height panel shown below the main viewport area.
 - Main input/output panels use the initial viewport height on desktop, so footer appears after scrolling.
+
+
+Footer / portal tooltip update:
+- .tool-footer-note p を display:block に変更し、2つ目の<p>が改行表示されるように調整。
+- [← TRPG Webツール観測所] に hover/focus tooltip「TRPG Webツール観測所 に戻る」を追加。
+
+
+Screenshot action update:
+- Screenshot view hides the memo card.
+- Floating screenshot buttons added: Xに投稿 / ダウンロード / コピー＆ペースト / 通常表示に戻す.
+- Download uses client-side PNG generation.
+- Copy uses ClipboardItem image/png when browser-supported.
+- X post copies the screenshot when possible, then opens the X compose screen. Due to browser security, automatic image attachment is not possible; paste/attach on X when needed.

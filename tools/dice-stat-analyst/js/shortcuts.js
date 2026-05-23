@@ -51,6 +51,280 @@ function exitScreenshotMode() {
     → ショートカット一覧を閉じる / スクショ表示を閉じる / 通常時は確認後クリア
 */
 
+
+function getScreenshotTargetElement() {
+  const target = document.querySelector('body.screenshot-mode main') || document.querySelector('main');
+  return target;
+}
+
+function prepareScreenshotCaptureMode() {
+  const wasScreenshotMode = document.body.classList.contains('screenshot-mode');
+
+  if (!wasScreenshotMode) {
+    enterScreenshotMode();
+  }
+
+  const memoCard = document.querySelector('#summaryMemo')?.closest('.card');
+  if (memoCard) {
+    memoCard.classList.add('screenshot-hidden-memo');
+  }
+
+  return {
+    wasScreenshotMode,
+    cleanup() {
+      if (memoCard) {
+        memoCard.classList.remove('screenshot-hidden-memo');
+      }
+
+      if (!wasScreenshotMode) {
+        exitScreenshotMode();
+      }
+    }
+  };
+}
+
+async function captureScreenshotCanvas() {
+  const mode = prepareScreenshotCaptureMode();
+
+  try {
+    await waitForAnimationFrame();
+
+    const target = getScreenshotTargetElement();
+
+    if (!target) {
+      throw new Error('Screenshot target was not found.');
+    }
+
+    const rect = target.getBoundingClientRect();
+    const width = Math.ceil(Math.max(target.scrollWidth, rect.width));
+    const height = Math.ceil(Math.max(target.scrollHeight, rect.height));
+
+    if (!width || !height) {
+      throw new Error('Screenshot target has no visible size.');
+    }
+
+    const clone = target.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+
+    inlineComputedStyles(target, clone);
+
+    const background = document.body.classList.contains('dark') ? '#0f172a' : '#ffffff';
+
+    const wrapper = document.createElement('div');
+    wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    wrapper.style.width = `${width}px`;
+    wrapper.style.minHeight = `${height}px`;
+    wrapper.style.background = background;
+    wrapper.style.padding = '0';
+    wrapper.style.margin = '0';
+    wrapper.appendChild(clone);
+
+    const serialized = new XMLSerializer().serializeToString(wrapper);
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <foreignObject width="100%" height="100%">
+          ${serialized}
+        </foreignObject>
+      </svg>
+    `;
+
+    const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    try {
+      const image = await loadImage(url);
+      const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(width * scale);
+      canvas.height = Math.ceil(height * scale);
+
+      const context = canvas.getContext('2d');
+      context.fillStyle = background;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.scale(scale, scale);
+      context.drawImage(image, 0, 0, width, height);
+
+      return canvas;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  } finally {
+    mode.cleanup();
+  }
+}
+
+function inlineComputedStyles(source, clone) {
+  if (!(source instanceof Element) || !(clone instanceof Element)) return;
+
+  const computed = window.getComputedStyle(source);
+  const cssText = Array.from(computed)
+    .map(property => `${property}:${computed.getPropertyValue(property)};`)
+    .join('');
+
+  clone.setAttribute('style', cssText);
+
+  const sourceChildren = Array.from(source.children);
+  const cloneChildren = Array.from(clone.children);
+
+  sourceChildren.forEach((child, index) => {
+    inlineComputedStyles(child, cloneChildren[index]);
+  });
+}
+
+function waitForAnimationFrame() {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+}
+
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Failed to render screenshot image.'));
+    image.src = url;
+  });
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error('Failed to create PNG blob.'));
+    }, 'image/png');
+  });
+}
+
+function getScreenshotFileName() {
+  const now = new Date();
+  const stamp = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+    String(now.getHours()).padStart(2, '0'),
+    String(now.getMinutes()).padStart(2, '0')
+  ].join('');
+  return `dice-stat-analyst-${stamp}.png`;
+}
+
+async function downloadScreenshotView() {
+  try {
+    setScreenshotActionBusy(true);
+    showScreenshotStatus(tr('screenshot.downloadWorking', 'スクショ画像を生成しています...'), 'success');
+
+    const canvas = await captureScreenshotCanvas();
+    const blob = await canvasToBlob(canvas);
+    const url = URL.createObjectURL(blob);
+
+    try {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = getScreenshotFileName();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+
+    showScreenshotStatus(tr('screenshot.downloadSuccess', 'スクショ画像をダウンロードしました。'), 'success');
+  } catch (error) {
+    console.error(error);
+    showScreenshotStatus(tr('screenshot.downloadError', 'ダウンロードに失敗しました。ブラウザ設定をご確認ください。'), 'error');
+  } finally {
+    setScreenshotActionBusy(false);
+  }
+}
+
+async function copyScreenshotView() {
+  try {
+    setScreenshotActionBusy(true);
+    showScreenshotStatus(tr('screenshot.copyWorking', 'スクショ画像をコピーしています...'), 'success');
+
+    if (!navigator.clipboard || typeof ClipboardItem === 'undefined') {
+      throw new Error('Clipboard image copy is not supported in this browser.');
+    }
+
+    const canvas = await captureScreenshotCanvas();
+    const blob = await canvasToBlob(canvas);
+
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+
+    showScreenshotStatus(tr('screenshot.copySuccess', 'スクショ画像をクリップボードにコピーしました。'), 'success');
+  } catch (error) {
+    console.error(error);
+    showScreenshotStatus(tr('screenshot.copyError', 'コピーに失敗しました。Chrome / Edgeなど対応ブラウザでお試しください。'), 'error');
+  } finally {
+    setScreenshotActionBusy(false);
+  }
+}
+
+async function postScreenshotToX() {
+  try {
+    setScreenshotActionBusy(true);
+    showScreenshotStatus(tr('screenshot.xWorking', '画像をコピーしてX投稿画面を開きます...'), 'success');
+
+    let copied = false;
+
+    try {
+      if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+        const canvas = await captureScreenshotCanvas();
+        const blob = await canvasToBlob(canvas);
+
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+
+        copied = true;
+      }
+    } catch (copyError) {
+      console.warn(copyError);
+    }
+
+    const text = encodeURIComponent('ダイス統計アナライザーでセッションログを解析しました。 #TRPG');
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank', 'noopener,noreferrer');
+
+    showScreenshotStatus(
+      copied
+        ? tr('screenshot.xSuccess', '画像をコピーしました。X投稿画面で貼り付けてください。')
+        : tr('screenshot.xCopyFallback', 'X投稿画面を開きました。画像は手動で添付してください。'),
+      copied ? 'success' : 'error'
+    );
+  } catch (error) {
+    console.error(error);
+    showScreenshotStatus(tr('screenshot.xError', 'X投稿画面を開けませんでした。'), 'error');
+  } finally {
+    setScreenshotActionBusy(false);
+  }
+}
+
+function setScreenshotActionBusy(isBusy) {
+  ['screenshotPostXBtn', 'screenshotDownloadBtn', 'screenshotCopyBtn'].forEach(id => {
+    const button = $(id);
+    if (button) {
+      button.disabled = isBusy;
+      button.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+    }
+  });
+}
+
+function showScreenshotStatus(message, type = 'success') {
+  const status = $('screenshotStatus');
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.remove('success', 'error', 'visible');
+  status.classList.add(type === 'error' ? 'error' : 'success', 'visible');
+
+  window.clearTimeout(showScreenshotStatus.timer);
+  showScreenshotStatus.timer = window.setTimeout(() => {
+    status.classList.remove('visible');
+  }, 4200);
+}
+
+
 function handleGlobalKeydown(event) {
   const key = String(event.key || '').toLowerCase();
   const isCommand = event.ctrlKey || event.metaKey;
