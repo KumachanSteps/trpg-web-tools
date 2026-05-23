@@ -43,6 +43,7 @@ window.TRPG_PORTAL_I18N = {
         reportWriting: "卓報告",
         scenarioPrep: "シナリオ準備",
         characterUtility: "キャラクター支援",
+        infoGathering: "情報収集",
         haishinTracking: "配信観測",
         gmSupport: "GM支援",
       },
@@ -140,6 +141,7 @@ window.TRPG_PORTAL_I18N = {
         reportWriting: "Report Writing",
         scenarioPrep: "Scenario Prep",
         characterUtility: "Character Utility",
+        infoGathering: "Info Gathering",
         haishinTracking: "Haishin Tracking",
         gmSupport: "GM Support",
       },
@@ -338,7 +340,7 @@ window.TRPG_PORTAL_I18N = {
       id: "trpg-hashtag-searcher",
       icon: "#️⃣",
       status: "production",
-      category: "haishinTracking",
+      category: "infoGathering",
       href: "./tools/trpg-hashtag-searcher/",
       name: {
         ja: "使えるハッシュタグ検索",
@@ -368,7 +370,7 @@ window.TRPG_PORTAL_I18N = {
       id: "trpg-scenario-organizer",
       icon: "🗂️",
       status: "idea",
-      category: "scenarioPrep",
+      category: "infoGathering",
       href: "",
       name: {
         ja: "TRPGシナリオ データベース",
