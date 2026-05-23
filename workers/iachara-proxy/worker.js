@@ -1,4 +1,5 @@
 const ALLOWED_HOSTS = new Set([
+  "apiv3.iachara.com",
   "iachara.com",
   "www.iachara.com"
 ]);
