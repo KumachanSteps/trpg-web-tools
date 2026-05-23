@@ -231,11 +231,11 @@ window.TRPG_PORTAL_I18N = {
     {
       id: "session-report-generator",
       icon: "📝",
-      status: "production",
+      status: "available",
       category: "reportWriting",
       href: "./tools/session-report-generator/",
       name: {
-        ja: "卓報告ジェネレーター",
+        ja: "卓報告ジェネレータ",
         en: "Session Report Generator",
       },
       description: {
