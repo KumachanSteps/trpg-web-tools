@@ -447,7 +447,7 @@
 
   function splitPeople(value){
     return String(value || "")
-      .split(/[、,\/／&＆＋+・]|\s+と\s+|\s+and\s+/i)
+      .split(/[、,，\/／&＆＋+・;；\n\r]+|\s+と\s+|\s+and\s+/i)
       .map(v=>v.trim())
       .filter(Boolean);
   }
@@ -456,9 +456,13 @@
     const selfNames = getSelfNames();
     const people = new Set();
     rows.forEach(row=>{
-      splitPeople(row.players).forEach(name=>{
-        const normalized = normalizePersonName(name);
-        if(normalized && !selfNames.has(normalized)) people.add(normalized);
+      // Count both GM/KP/DL and PL fields as people played with.
+      // Example: GM=「のあ」, PL=「くま。、とこ」 and self=「くま。」 => counts 「のあ」 and 「とこ」.
+      [row.gm, row.players].forEach(fieldValue=>{
+        splitPeople(fieldValue).forEach(name=>{
+          const normalized = normalizePersonName(name);
+          if(normalized && !selfNames.has(normalized)) people.add(normalized);
+        });
       });
     });
     return people.size;

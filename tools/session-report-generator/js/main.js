@@ -461,8 +461,8 @@
     const count = card.querySelector('.count-line')?.offsetHeight || 0;
     const actions = card.querySelector('.preview-actions')?.offsetHeight || 0;
     const hint = panel.querySelector('.hint')?.offsetHeight || 0;
-    const available = panel.clientHeight - h2 - head - toolbar - count - actions - hint - 70;
-    text.style.height = `${Math.max(220, Math.min(620, available))}px`;
+    const available = panel.clientHeight - h2 - head - toolbar - count - actions - hint - 54;
+    text.style.height = `${Math.max(140, Math.min(620, available))}px`;
   }
 
   function bindPreviewResizer() {
