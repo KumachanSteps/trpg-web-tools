@@ -2540,8 +2540,8 @@ body.dark .tool-footer-note {
 }
 
 .tool-footer-note p {
-  display: inline;
-  margin: 0 10px 0 0;
+  display: block;
+  margin: 2px 0 0;
   color: inherit;
   font-size: 10.5px;
   line-height: 1.4;
