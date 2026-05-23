@@ -22,3 +22,11 @@ Current rollback point:
 - main, section, and #summary are height:auto with min-height:0 / max-height:none.
 - Summary memo card bottom margin is removed.
 - Footer minimalization changes are not applied in this package.
+
+
+UI adjustment applied:
+- Header description is kept on one line on desktop using white-space: nowrap / ellipsis.
+- Shortcut button Japanese label changed to ショートカット一覧.
+- Favicon path confirmed: ../../assets/img/kuma_icon.ico.
+- Footer note is now a minimal low-height panel shown below the main viewport area.
+- Main input/output panels use the initial viewport height on desktop, so footer appears after scrolling.

@@ -2461,3 +2461,162 @@ body.screenshot-mode .tool-footer-note {
     margin-bottom: 14px;
   }
 }
+
+
+/* =========================================================
+   UI Adjustment: Full-height tool panels + compact footer
+   基本表示では入力/出力パネルを画面高いっぱいに使い、
+   フッターはスクロール後に最低限の高さで表示する
+   ========================================================= */
+
+body {
+  height: auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ヘッダー説明文を1行表示に寄せる */
+.header-main-row {
+  padding-right: 250px;
+}
+
+.header-main-row .header-title-area {
+  max-width: none;
+}
+
+.site-description {
+  max-width: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+  font-size: 13px;
+}
+
+/* ツール本体は初期表示の画面高を優先して使う */
+main {
+  flex: 0 0 calc(100vh - 174px);
+  height: calc(100vh - 174px);
+  min-height: 560px;
+  max-height: none;
+  overflow: hidden;
+}
+
+main > section {
+  height: 100%;
+  min-height: 0;
+}
+
+/* フッターはパネル感を抑えた最小表示。ただしスクロール後に見える位置へ置く */
+.tool-footer-note {
+  flex: 0 0 auto;
+  width: min(100% - 48px, 1480px);
+  margin: 0 auto 16px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,.48);
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 14px;
+  box-shadow: none;
+  color: var(--text-muted);
+  text-align: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.dark .tool-footer-note {
+  background: rgba(15,23,42,.36);
+  border-color: rgba(148,163,184,.16);
+  color: var(--text-muted);
+}
+
+.tool-footer-note h2 {
+  display: inline;
+  margin: 0 10px 0 0;
+  font-size: 10.5px;
+  font-weight: 850;
+  line-height: 1.4;
+  color: inherit;
+}
+
+.tool-footer-note p {
+  display: inline;
+  margin: 0 10px 0 0;
+  color: inherit;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+/* スクショ表示時はフッターを出さない */
+body.screenshot-mode .tool-footer-note {
+  display: none !important;
+}
+
+/* ヘッダー内ショートカットボタンの日本語表示に合わせて少し幅を確保 */
+.shortcut-help-button {
+  min-width: 124px;
+}
+
+/* 中間幅では説明文を少し縮めて1行維持 */
+@media (max-width: 1180px) {
+  .site-description {
+    font-size: 12.5px;
+  }
+
+  .header-main-row,
+  .header-top-row {
+    padding-right: 230px;
+  }
+}
+
+/* モバイル/狭幅では1行固定を解除して崩れを防ぐ */
+@media (max-width: 980px) {
+  body {
+    min-height: 100vh;
+  }
+
+  main,
+  main.input-collapsed {
+    height: auto;
+    min-height: 0;
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .site-description {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.45;
+  }
+
+  .tool-footer-note {
+    width: calc(100% - 24px);
+    margin: 0 auto 12px;
+    padding: 8px 10px;
+  }
+
+  .tool-footer-note h2,
+  .tool-footer-note p {
+    display: block;
+    margin: 2px 0 0;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+}
+
+/* 高さが低い画面ではmain高さを少し調整 */
+@media (max-height: 780px) and (min-width: 981px) {
+  main {
+    flex-basis: calc(100vh - 154px);
+    height: calc(100vh - 154px);
+    min-height: 500px;
+  }
+
+  header.site-header {
+    margin-top: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
