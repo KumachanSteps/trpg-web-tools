@@ -26,6 +26,10 @@
         <span class="header-pill header-pill-cyan">X / Twitter</span>
         <span class="header-pill header-pill-violet">卓報告</span>
         <span class="header-pill header-pill-amber">テンプレ生成</span>
+        <div class="header-actions" aria-label="ヘルプメニュー">
+          <button id="usageToggleButton" class="header-action-button" type="button" aria-controls="usagePanel" aria-expanded="false">使い方</button>
+          <button id="shortcutToggleButton" class="header-action-button" type="button" aria-controls="shortcutPanel" aria-expanded="false">ショートカット</button>
+        </div>
       </div>
       <div class="header-title-area">
         <h1 class="site-title">
@@ -40,6 +44,26 @@
           <span>SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
           <span>シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
         </p>
+      </div>
+      <div class="header-help-panels" aria-live="polite">
+        <section id="usagePanel" class="header-help-panel" hidden>
+          <h2>使い方</h2>
+          <ol>
+            <li>卓報告サンプルリストから使いたい文面スタイルを選びます。</li>
+            <li>システム、シナリオ名、KP / GM / DL、PC / PL、ENDなどを入力します。</li>
+            <li>必要に応じて文字スタイルやアスキーアートを選び、右側のプレビューを直接編集します。</li>
+            <li>完成したら「コピー」または下部の「卓報告を生成」を使って文面を整えます。</li>
+          </ol>
+        </section>
+        <section id="shortcutPanel" class="header-help-panel" hidden>
+          <h2>ショートカット</h2>
+          <dl>
+            <div><dt>Cmd + Option + ↑</dt><dd>卓報告サンプルリストを1つ前へ切り替えます。</dd></div>
+            <div><dt>Cmd + Option + ↓</dt><dd>卓報告サンプルリストを1つ次へ切り替えます。</dd></div>
+            <div><dt>Esc</dt><dd>使い方 / ショートカットのパネルを閉じます。</dd></div>
+          </dl>
+          <p>Windowsでは Ctrl + Alt + ↑ / ↓ でも同じ操作ができます。</p>
+        </section>
       </div>
     </div>
   </header>

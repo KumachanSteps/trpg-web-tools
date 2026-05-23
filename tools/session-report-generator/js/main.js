@@ -528,9 +528,87 @@
     renderPreview('');
   }
 
+
+  function closeHeaderPanels() {
+    const panels = ['usagePanel', 'shortcutPanel'];
+    const buttons = ['usageToggleButton', 'shortcutToggleButton'];
+    panels.forEach(id => {
+      const panel = $(id);
+      if (panel) panel.hidden = true;
+    });
+    buttons.forEach(id => {
+      const button = $(id);
+      if (button) {
+        button.classList.remove('is-active');
+        button.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  function toggleHeaderPanel(panelId, buttonId) {
+    const panel = $(panelId);
+    const button = $(buttonId);
+    if (!panel || !button) return;
+
+    const willOpen = panel.hidden;
+    closeHeaderPanels();
+
+    if (willOpen) {
+      panel.hidden = false;
+      button.classList.add('is-active');
+      button.setAttribute('aria-expanded', 'true');
+      requestAnimationFrame(fitPreviewTextBox);
+    }
+  }
+
+  function cycleReportStyle(direction) {
+    const select = $('reportStyle');
+    if (!select || !select.options.length) return;
+
+    const count = select.options.length;
+    const current = select.selectedIndex < 0 ? 0 : select.selectedIndex;
+    select.selectedIndex = (current + direction + count) % count;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function bindHeaderHelpEvents() {
+    const usageButton = $('usageToggleButton');
+    const shortcutButton = $('shortcutToggleButton');
+
+    if (usageButton) {
+      usageButton.addEventListener('click', () => toggleHeaderPanel('usagePanel', 'usageToggleButton'));
+    }
+
+    if (shortcutButton) {
+      shortcutButton.addEventListener('click', () => toggleHeaderPanel('shortcutPanel', 'shortcutToggleButton'));
+    }
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closeHeaderPanels();
+        return;
+      }
+
+      const isMacShortcut = event.metaKey && event.altKey;
+      const isWinShortcut = event.ctrlKey && event.altKey;
+      if (!(isMacShortcut || isWinShortcut)) return;
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        cycleReportStyle(-1);
+      }
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        cycleReportStyle(1);
+      }
+    });
+  }
+
   function bindEvents() {
     window.clearAll = resetAll;
     window.addEventListener('resize', fitPreviewTextBox);
+    bindHeaderHelpEvents();
 
     document.querySelectorAll('input[name="suffixChoice"]').forEach(input => {
       input.addEventListener('change', () => {

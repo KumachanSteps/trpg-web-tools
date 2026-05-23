@@ -1,6 +1,7 @@
 const LF = "\n";
 const TAB = "\t";
 const THEME_STORAGE_KEY = "cocGrowthCheckerTheme";
+const AUTO_HIDE_MAX_ROLLS = 15;
 
 const state = {
   allRolls: [],
@@ -32,12 +33,6 @@ function decodeHtml(value) {
   return textarea.value;
 }
 
-function clampNumber(value, min, max, fallback) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.max(min, Math.min(max, number));
-}
-
 const includedTabs = ["main", "メイン", "ho"];
 const excludedTabs = ["雑談", "other", "info", "おはらい", "お祓い", "運試し"];
 
@@ -58,6 +53,7 @@ function extractHtmlLogLine(paragraph) {
   const spans = Array.from(paragraph.querySelectorAll("span"))
     .map(span => cleanLine(decodeHtml(span.textContent || "")))
     .filter(Boolean);
+
   return spans.length >= 3 && isTabLabel(spans[0])
     ? `${spans[0]} ${spans[1]}：${spans.slice(2).join(" ")}`
     : cleanLine(decodeHtml(paragraph.textContent || ""));
@@ -66,14 +62,8 @@ function extractHtmlLogLine(paragraph) {
 function filterLines(lines) {
   return lines.filter(line => {
     if (isRuleExplanationLine(line)) return false;
-
-    // UIではなく内部ルールとして常時適用：
-    // [雑談] / [other] / [info] / [お祓い] / [おはらい] / [運試し] 系のタブ行は除外する。
     if (!shouldKeepTabLine(line)) return false;
-
-    // 成長チェック対象はd100系ロールのみに絞る。
     if (!looksLikeD100Roll(line)) return false;
-
     return true;
   });
 }
@@ -135,15 +125,15 @@ function extractCharacterName(line) {
 
 function extractSkillName(line) {
   const text = String(line || "");
-  const bracketPatterns = [
-    /【([^】]+)】/,
-    /《([^》]+)》/,
-    /\[([^\]]+)\]/,
-  ];
+  const diceIndex = findDiceCommandIndex(text);
+  const searchText = diceIndex >= 0 ? text.slice(diceIndex) : text;
+  const bracketPatterns = [/【([^】]+)】/, /《([^》]+)》/];
+
   for (const pattern of bracketPatterns) {
-    const match = text.match(pattern);
-    if (match && match[1] && !isTabLabel(match[0])) return cleanLine(match[1]);
+    const match = searchText.match(pattern);
+    if (match && match[1]) return cleanLine(match[1]);
   }
+
   return tr("skill.unknown", "技能名不明");
 }
 
@@ -159,18 +149,11 @@ function extractTargetNumber(line) {
 
 function classifyRoll(value, target, line) {
   const text = String(line || "").toLowerCase();
-
-  // クリティカル / ファンブルは、ダイスログに出力された結果表記を優先して判定する。
-  // 例：決定的成功、クリティカル、Critical、致命的失敗、ファンブル、Fumble など。
-  if (text.includes("決定的成功") || text.includes("クリティカル") || text.includes("critical")) return "critical";
-  if (text.includes("致命的失敗") || text.includes("ファンブル") || text.includes("fumble")) return "fumble";
-
+  if (text.includes("決定的成功") || text.includes("critical") || text.includes("クリティカル")) return "critical";
+  if (text.includes("致命的失敗") || text.includes("fumble") || text.includes("ファンブル")) return "fumble";
   if (text.includes("成功") || text.includes("success")) return "success";
   if (text.includes("失敗") || text.includes("fail")) return "fail";
-
-  // ログに成功/失敗表記がない場合のみ、補助的に目標値から成功/失敗を推定する。
   if (target !== null) return value <= target ? "success" : "fail";
-
   return "normal";
 }
 
@@ -203,11 +186,10 @@ function findDiceCommandIndex(text) {
       const command = match[0];
       const prev = index > 0 ? upper[index - 1] : "";
       const next = upper[index + command.length] || "";
-      const validPrev = !prev || !isAsciiAlphaNumber(prev);
-      const validNext = !next || !isAsciiAlphaNumber(next);
-      if (validPrev && validNext) indexes.push(index);
+      if ((!prev || !isAsciiAlphaNumber(prev)) && (!next || !isAsciiAlphaNumber(next))) indexes.push(index);
     }
   });
+
   return indexes.length ? Math.min(...indexes) : -1;
 }
 
@@ -243,7 +225,9 @@ function isValidRollResultTail(tail) {
     || ["＞", ">", "→", "#"].some(marker => text.startsWith(marker))
     || ["成功", "失敗", "決定的成功", "致命的失敗", "クリティカル", "ファンブル"].some(word => text.startsWith(word))
     || lower.startsWith("success")
-    || lower.startsWith("fail");
+    || lower.startsWith("fail")
+    || lower.startsWith("critical")
+    || lower.startsWith("fumble");
 }
 
 function extractNumbersAfterWords(text, words) {
@@ -349,36 +333,27 @@ function trimTrailingRollPrefix(value) {
 
 function cleanCharacterName(name) {
   let source = String(name || "");
-  ["[", "]", "「", "」", "『", "』", "【", "】"].forEach(character => { source = source.replaceAll(character, ""); });
+  ["[", "]", "「", "」", "『", "』", "【", "】"].forEach(character => source = source.replaceAll(character, ""));
   return source.trim() || tr("common.unknown", "不明");
 }
 
 function isUsableCharacterName(name) {
   const source = String(name || "").trim();
-  if (!source || source === "不明" || source === "Unknown") return false;
+  if (!source || source === tr("common.unknown", "不明")) return false;
   if (["(", ")", "（", "）"].includes(source)) return false;
   return source.replaceAll("(", "").replaceAll(")", "").replaceAll("（", "").replaceAll("）", "").trim() !== "";
 }
 
 function analyze() {
   const raw = $("rawInput")?.value || "";
-  const prepared = prepareText(raw);
-  const lines = filterLines(prepared.split(/\r?\n/).map(cleanLine).filter(Boolean));
-  const rolls = extractRollData(lines);
+  const lines = filterLines(prepareText(raw).split(/\r?\n/).map(cleanLine).filter(Boolean));
+  const rolls = extractRollData(lines).filter(roll => roll.skill && roll.skill !== tr("skill.unknown", "技能名不明"));
   state.allRolls = rolls;
-
   const counts = countByCharacter(rolls);
-  const autoHideMax = clampNumber($("autoHideMaxRolls")?.value, 0, 999, 15);
-  state.visibleCharacters = new Set(
-    Object.entries(counts)
-      .filter(([, count]) => count > autoHideMax)
-      .map(([character]) => character)
-  );
-  if (state.visibleCharacters.size === 0) {
-    Object.keys(counts).forEach(character => state.visibleCharacters.add(character));
-  }
-
+  state.visibleCharacters = new Set(Object.entries(counts).filter(([, count]) => count > AUTO_HIDE_MAX_ROLLS).map(([character]) => character));
+  if (!state.visibleCharacters.size) state.visibleCharacters = new Set(Object.keys(counts));
   renderAll();
+  activateTabByName("summary");
 }
 
 function countByCharacter(rolls) {
@@ -392,12 +367,18 @@ function getVisibleRolls() {
   return state.allRolls.filter(roll => state.visibleCharacters.has(roll.character));
 }
 
+function isExcludedGrowthSkill(skill) {
+  const normalized = String(skill || "").toLowerCase().replace(/[\s　・_\-]/g, "");
+  return normalized === "クトゥルフ神話" || normalized === "クトゥルフ神話技能" || normalized === "cthulhumythos" || normalized === "cthulhumythosskill";
+}
+
 function buildGrowthCandidates(rolls) {
   const mode = $("ruleMode")?.value || "rulebook";
   const candidates = [];
   const successSeen = new Set();
 
   rolls.forEach(roll => {
+    if (isExcludedGrowthSkill(roll.skill)) return;
     const base = { ...roll };
     const successKey = `${roll.character}///${roll.skill}`;
 
@@ -440,62 +421,49 @@ function buildGrowthCandidates(rolls) {
 function renderAll() {
   applyTranslations();
   renderCharacterControls();
-  renderSummary();
+  renderGrowthOutput();
   renderCandidatesTable();
   renderRollTable();
 }
 
-function renderSummary() {
+function renderGrowthOutput() {
+  const output = $("growthOutput");
+  if (!output) return;
+  if (!state.allRolls.length) {
+    output.value = "";
+    return;
+  }
   const visibleRolls = getVisibleRolls();
+  if (!visibleRolls.length) {
+    output.value = t("summary.noVisibleCharacters", "表示対象のキャラクターがありません。表示キャラ設定を確認してください。");
+    return;
+  }
   const candidates = buildGrowthCandidates(visibleRolls);
-  const counts = countByCharacter(state.allRolls);
-  const autoHideMax = clampNumber($("autoHideMaxRolls")?.value, 0, 999, 15);
-
-  $("totalRolls").textContent = String(state.allRolls.length);
-  $("candidateCount").textContent = String(candidates.length);
-  $("characterCount").textContent = String(Object.keys(counts).length);
-  $("ruleModeLabel").textContent = t(`ruleLabel.${$("ruleMode")?.value || "rulebook"}`, "-");
-
-  const hidden = state.allRolls.length - visibleRolls.length;
-  $("summaryMemo").textContent = state.allRolls.length
-    ? t("summary.memo", "", {
-        all: state.allRolls.length,
-        visible: visibleRolls.length,
-        candidates: candidates.length,
-        characters: Object.keys(counts).length,
-        hidden,
-        threshold: autoHideMax,
-      })
-    : t("summary.selectLog", "ログを入力して「成長候補を抽出」を押してください。");
-
-  renderCandidateCards(candidates);
+  output.value = formatGrowthSummary(candidates);
 }
 
-function renderCandidateCards(candidates) {
-  const container = $("candidateSummary");
+function formatGrowthSummary(candidates) {
+  if (!candidates.length) return t("summary.noCandidates", "成長チェック候補はありません。");
   const grouped = candidates.reduce((acc, item) => {
     if (!acc[item.character]) acc[item.character] = [];
     acc[item.character].push(item);
     return acc;
   }, {});
 
-  if (!candidates.length) {
-    container.innerHTML = `<div class="card"><p class="note">${escapeHtml(t("summary.noCandidates", "表示対象の成長候補はありません。"))}</p></div>`;
-    return;
-  }
-
-  container.innerHTML = Object.entries(grouped).map(([character, items]) => {
-    const chips = items.slice(0, 18).map(item => {
-      return `<span class="candidate-chip reason-${item.reason}">${escapeHtml(item.skill)} <small>${escapeHtml(t(`reason.${item.reason}`, item.reason))}</small></span>`;
-    }).join("");
-    const more = items.length > 18 ? `<span class="candidate-chip">+${items.length - 18}</span>` : "";
-    return `<div class="card candidate-card"><h3>${escapeHtml(character)} <span class="note">${items.length}</span></h3><div class="candidate-list">${chips}${more}</div></div>`;
-  }).join("");
+  return Object.entries(grouped).map(([character, items]) => {
+    const skills = [];
+    items.forEach(item => {
+      if (!skills.includes(item.skill)) skills.push(item.skill);
+    });
+    const lines = items.map(item => item.line);
+    return `${character}：${skills.join(" / ")}\n${lines.join("\n")}`;
+  }).join("\n\n");
 }
 
 function renderCandidatesTable() {
-  const candidates = buildGrowthCandidates(getVisibleRolls());
   const tbody = $("candidateTableBody");
+  if (!tbody) return;
+  const candidates = buildGrowthCandidates(getVisibleRolls());
   tbody.innerHTML = candidates.map((item, index) => `
     <tr>
       <td>${index + 1}</td>
@@ -510,6 +478,7 @@ function renderCandidatesTable() {
 
 function renderRollTable() {
   const tbody = $("rollTableBody");
+  if (!tbody) return;
   const rolls = getVisibleRolls();
   tbody.innerHTML = rolls.map((roll, index) => `
     <tr>
@@ -526,6 +495,7 @@ function renderRollTable() {
 function renderCharacterControls() {
   const controls = $("characterControls");
   const button = $("characterControlToggleBtn");
+  if (!controls || !button) return;
   const counts = countByCharacter(state.allRolls);
   controls.classList.toggle("visible", state.showCharacterControls);
   button.textContent = state.showCharacterControls
@@ -542,7 +512,7 @@ function renderCharacterControls() {
       const character = input.getAttribute("data-character");
       if (input.checked) state.visibleCharacters.add(character);
       else state.visibleCharacters.delete(character);
-      renderSummary();
+      renderGrowthOutput();
       renderCandidatesTable();
       renderRollTable();
     });
@@ -555,6 +525,12 @@ function switchTab(button) {
   state.currentTab = tabName;
   document.querySelectorAll(".tab-button").forEach(item => item.classList.toggle("active", item === button));
   document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.toggle("active", panel.id === tabName));
+}
+
+function activateTabByName(tabName) {
+  const targetButton = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
+  if (!targetButton) return;
+  switchTab(targetButton);
 }
 
 function toggleInputPanel() {
@@ -602,26 +578,51 @@ function clearAll() {
   renderAll();
 }
 
+function enterScreenshotMode() {
+  document.body.classList.add("screenshot-mode");
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+}
+
+function exitScreenshotMode() {
+  document.body.classList.remove("screenshot-mode");
+}
+
+async function copyGrowthOutput() {
+  const output = $("growthOutput");
+  if (!output) return;
+  output.select();
+  try {
+    await navigator.clipboard.writeText(output.value);
+  } catch (_) {
+    document.execCommand("copy");
+  }
+}
+
+function deleteGrowthOutput() {
+  if (!window.confirm(t("confirm.deleteOutput", "成長候補サマリーを削除します。よろしいですか？"))) return;
+  if ($("growthOutput")) $("growthOutput").value = "";
+}
+
 function initializeGrowthChecker() {
   if (localStorage.getItem(THEME_STORAGE_KEY) === "dark") document.body.classList.add("dark");
-
   applyTranslations();
   updateThemeButton();
 
   $("languageToggleBtn")?.addEventListener("click", () => setLanguage(getCurrentLanguage() === "ja" ? "en" : "ja"));
   document.addEventListener("languagechange", () => {
-    $("languageToggleBtn").textContent = getCurrentLanguage() === "ja" ? "EN" : "JP";
+    if ($("languageToggleBtn")) $("languageToggleBtn").textContent = getCurrentLanguage() === "ja" ? "EN" : "JP";
     updateThemeButton();
     renderAll();
   });
-  $("languageToggleBtn").textContent = getCurrentLanguage() === "ja" ? "EN" : "JP";
+  if ($("languageToggleBtn")) $("languageToggleBtn").textContent = getCurrentLanguage() === "ja" ? "EN" : "JP";
 
   $("themeToggleBtn")?.addEventListener("click", toggleTheme);
   $("shortcutHelpBtn")?.addEventListener("click", openShortcutModal);
   $("shortcutModalCloseBtn")?.addEventListener("click", closeShortcutModal);
   $("shortcutModalBackdrop")?.addEventListener("click", closeShortcutModal);
-  $("screenshotExitBtn")?.addEventListener("click", () => document.body.classList.remove("screenshot-mode"));
-  $("summaryShotBtn")?.addEventListener("click", () => document.body.classList.add("screenshot-mode"));
+  $("screenshotExitBtn")?.addEventListener("click", exitScreenshotMode);
+  $("summaryShotBtn")?.addEventListener("click", enterScreenshotMode);
   $("inputToggleBtn")?.addEventListener("click", toggleInputPanel);
   $("characterControlToggleBtn")?.addEventListener("click", () => {
     state.showCharacterControls = !state.showCharacterControls;
@@ -632,6 +633,8 @@ function initializeGrowthChecker() {
     if (window.confirm(t("confirm.clear", "入力内容と抽出結果をクリアします。よろしいですか？"))) clearAll();
   });
   $("ruleMode")?.addEventListener("change", renderAll);
+  $("copyGrowthOutputBtn")?.addEventListener("click", copyGrowthOutput);
+  $("deleteGrowthOutputBtn")?.addEventListener("click", deleteGrowthOutput);
 
   $("fileInput")?.addEventListener("change", async event => {
     const file = event.target.files && event.target.files[0];
@@ -640,7 +643,6 @@ function initializeGrowthChecker() {
   });
 
   document.querySelectorAll(".tab-button").forEach(button => button.addEventListener("click", () => switchTab(button)));
-
   renderAll();
 }
 

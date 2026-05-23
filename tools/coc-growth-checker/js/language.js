@@ -21,9 +21,7 @@ function t(key, fallback = "", vars = {}) {
   });
 }
 
-function tr(key, fallback = "", vars = {}) {
-  return t(key, fallback, vars);
-}
+const tr = t;
 
 function applyTranslations() {
   document.documentElement.lang = currentLanguage;
