@@ -2806,3 +2806,46 @@ body.dark .screenshot-status {
   }
 }
 
+
+/* =========================================================
+   Screenshot View Exit-only Controls
+   スクショビュー操作は「通常表示に戻す」のみに整理
+   ========================================================= */
+
+.screenshot-action-bar {
+  display: none;
+  position: fixed;
+  right: 24px;
+  top: 18px;
+  z-index: 9998;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.screenshot-action-button,
+.screenshot-exit-button {
+  width: auto;
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--cyan, var(--accent));
+  color: #020617;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .22);
+}
+
+body.screenshot-mode .screenshot-action-bar {
+  display: flex;
+}
+
+/* スクショビューではメモカードを表示しない */
+body.screenshot-mode .summary-memo-card,
+body.screenshot-mode #summary > .card:last-child:has(#summaryMemo),
+body.screenshot-mode #summaryMemo,
+body.screenshot-mode .screenshot-hidden-memo {
+  display: none !important;
+}
+

@@ -51,3 +51,11 @@ Screenshot capture reliability update:
 - Download should now generate a PNG from the screenshot view more reliably.
 - Clipboard image copy still depends on browser support and HTTPS. Chrome / Edge are recommended.
 - X posting opens the X compose window; browser security does not allow automatic image attachment, so the copied/downloaded image may need to be pasted/attached manually.
+
+
+Screenshot view exit-only update:
+- Removed X post / download / copy buttons from screenshot view.
+- Removed related event listeners and screenshot capture helper functions.
+- Removed html2canvas CDN loading because image generation is no longer used.
+- Screenshot view now only shows the "通常表示に戻す" button.
+- Memo card remains hidden in screenshot view.

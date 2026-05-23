@@ -86,23 +86,7 @@ function bindEvents() {
   if (summaryShotBtn) {
     summaryShotBtn.addEventListener('click', enterScreenshotMode);
   }
-
-  const screenshotPostXBtn = $('screenshotPostXBtn');
-  if (screenshotPostXBtn) {
-    screenshotPostXBtn.addEventListener('click', postScreenshotToX);
-  }
-
-  const screenshotDownloadBtn = $('screenshotDownloadBtn');
-  if (screenshotDownloadBtn) {
-    screenshotDownloadBtn.addEventListener('click', downloadScreenshotView);
-  }
-
-  const screenshotCopyBtn = $('screenshotCopyBtn');
-  if (screenshotCopyBtn) {
-    screenshotCopyBtn.addEventListener('click', copyScreenshotView);
-  }
-
-  const screenshotExitBtn = $('screenshotExitBtn');
+const screenshotExitBtn = $('screenshotExitBtn');
   if (screenshotExitBtn) {
     screenshotExitBtn.addEventListener('click', exitScreenshotMode);
   }
