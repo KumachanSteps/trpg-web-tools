@@ -53,8 +53,7 @@ function exitScreenshotMode() {
 
 
 function getScreenshotTargetElement() {
-  const target = document.querySelector('body.screenshot-mode main') || document.querySelector('main');
-  return target;
+  return document.querySelector('body.screenshot-mode main') || document.querySelector('main');
 }
 
 function prepareScreenshotCaptureMode() {
@@ -89,100 +88,35 @@ async function captureScreenshotCanvas() {
   try {
     await waitForAnimationFrame();
 
+    if (typeof html2canvas !== 'function') {
+      throw new Error('html2canvas is not loaded. Please check the CDN script tag.');
+    }
+
     const target = getScreenshotTargetElement();
 
     if (!target) {
       throw new Error('Screenshot target was not found.');
     }
 
-    const rect = target.getBoundingClientRect();
-    const width = Math.ceil(Math.max(target.scrollWidth, rect.width));
-    const height = Math.ceil(Math.max(target.scrollHeight, rect.height));
-
-    if (!width || !height) {
-      throw new Error('Screenshot target has no visible size.');
-    }
-
-    const clone = target.cloneNode(true);
-    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-
-    inlineComputedStyles(target, clone);
-
-    const background = document.body.classList.contains('dark') ? '#0f172a' : '#ffffff';
-
-    const wrapper = document.createElement('div');
-    wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    wrapper.style.width = `${width}px`;
-    wrapper.style.minHeight = `${height}px`;
-    wrapper.style.background = background;
-    wrapper.style.padding = '0';
-    wrapper.style.margin = '0';
-    wrapper.appendChild(clone);
-
-    const serialized = new XMLSerializer().serializeToString(wrapper);
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-        <foreignObject width="100%" height="100%">
-          ${serialized}
-        </foreignObject>
-      </svg>
-    `;
-
-    const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-
-    try {
-      const image = await loadImage(url);
-      const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.ceil(width * scale);
-      canvas.height = Math.ceil(height * scale);
-
-      const context = canvas.getContext('2d');
-      context.fillStyle = background;
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      context.scale(scale, scale);
-      context.drawImage(image, 0, 0, width, height);
-
-      return canvas;
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+    return await html2canvas(target, {
+      backgroundColor: document.body.classList.contains('dark') ? '#0f172a' : '#ffffff',
+      scale: Math.max(1, Math.min(2, window.devicePixelRatio || 1)),
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight
+    });
   } finally {
     mode.cleanup();
   }
 }
 
-function inlineComputedStyles(source, clone) {
-  if (!(source instanceof Element) || !(clone instanceof Element)) return;
-
-  const computed = window.getComputedStyle(source);
-  const cssText = Array.from(computed)
-    .map(property => `${property}:${computed.getPropertyValue(property)};`)
-    .join('');
-
-  clone.setAttribute('style', cssText);
-
-  const sourceChildren = Array.from(source.children);
-  const cloneChildren = Array.from(clone.children);
-
-  sourceChildren.forEach((child, index) => {
-    inlineComputedStyles(child, cloneChildren[index]);
-  });
-}
-
 function waitForAnimationFrame() {
   return new Promise(resolve => {
     requestAnimationFrame(() => requestAnimationFrame(resolve));
-  });
-}
-
-function loadImage(url) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('Failed to render screenshot image.'));
-    image.src = url;
   });
 }
 

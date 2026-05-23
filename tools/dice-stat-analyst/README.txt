@@ -43,3 +43,11 @@ Screenshot action update:
 - Download uses client-side PNG generation.
 - Copy uses ClipboardItem image/png when browser-supported.
 - X post copies the screenshot when possible, then opens the X compose screen. Due to browser security, automatic image attachment is not possible; paste/attach on X when needed.
+
+
+Screenshot capture reliability update:
+- Replaced the fragile SVG foreignObject capture path with html2canvas 1.4.1.
+- index.html now loads html2canvas from jsDelivr before local JS files.
+- Download should now generate a PNG from the screenshot view more reliably.
+- Clipboard image copy still depends on browser support and HTTPS. Chrome / Edge are recommended.
+- X posting opens the X compose window; browser security does not allow automatic image attachment, so the copied/downloaded image may need to be pasted/attached manually.
