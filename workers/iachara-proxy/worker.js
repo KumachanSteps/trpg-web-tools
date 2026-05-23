@@ -49,27 +49,40 @@ export default {
       const body = await upstream.text();
       const contentType = upstream.headers.get("content-type") || "text/html; charset=utf-8";
 
-      if (debug) {
-        return corsResponse(
-          JSON.stringify({
+    if (debug) {
+      const scriptSrcs = Array.from(body.matchAll(/<script[^>]+src=["']([^"']+)["']/g)).map((m) => m[1]);
+
+      const nextDataMatch = body.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+      let nextData = null;
+
+      if (nextDataMatch) {
+        try {
+          nextData = JSON.parse(nextDataMatch[1]);
+        } catch {
+          nextData = nextDataMatch[1].slice(0, 2000);
+        }
+      }
+
+      return corsResponse(
+        JSON.stringify(
+          {
             ok: upstream.ok,
             status: upstream.status,
             statusText: upstream.statusText,
             url: targetUrl.toString(),
             contentType,
-            bodyPreview: body.slice(0, 1200)
-          }, null, 2),
-          200,
-          "application/json; charset=utf-8"
-        );
-      }
-
-      return corsResponse(body, upstream.status, contentType);
-    } catch (error) {
-      return corsResponse(
-        error instanceof Error ? error.message : "Proxy fetch failed",
-        502,
-        "text/plain; charset=utf-8"
+            bodyLength: body.length,
+            hasNextData: Boolean(nextDataMatch),
+            nextData,
+            scriptSrcs,
+            bodyStart: body.slice(0, 1200),
+            bodyEnd: body.slice(-1200)
+          },
+          null,
+          2
+        ),
+        200,
+        "application/json; charset=utf-8"
       );
     }
   }
