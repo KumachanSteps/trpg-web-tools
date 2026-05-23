@@ -17,6 +17,7 @@ export default {
       const target = requestUrl.searchParams.get("url");
       const debug = requestUrl.searchParams.get("debug") === "1";
       const scan = requestUrl.searchParams.get("scan") === "1";
+      const deep = requestUrl.searchParams.get("deep") === "1";
 
       if (!target) {
         return corsResponse("Missing url", 400, "text/plain; charset=utf-8");
@@ -49,6 +50,73 @@ export default {
 
       const body = await upstream.text();
       const contentType = upstream.headers.get("content-type") || "text/html; charset=utf-8";
+
+      if (deep) {
+        const scriptSrcs = extractScriptSrcs(body);
+        const absoluteScriptUrls = scriptSrcs.map((src) => new URL(src, targetUrl.origin).toString());
+        const results = [];
+
+        for (const scriptUrl of absoluteScriptUrls) {
+          if (!scriptUrl.includes("/_next/static/")) continue;
+
+          const scriptResponse = await fetch(scriptUrl, {
+            method: "GET",
+            redirect: "follow",
+            headers: {
+              "User-Agent": "Mozilla/5.0",
+              "Accept": "application/javascript,text/javascript,*/*"
+            }
+          });
+
+          const scriptText = await scriptResponse.text();
+
+          results.push({
+            url: scriptUrl,
+            status: scriptResponse.status,
+            length: scriptText.length,
+            hits: extractDeepHits(scriptText, [
+              "getCharasheet",
+              "saveCharasheet",
+              "createCharasheet",
+              "viewCharasheet",
+              "api is not initialized",
+              "initializeApp",
+              "apiKey",
+              "projectId",
+              "firestore",
+              "collection",
+              "doc(",
+              "getDoc",
+              "getDocs",
+              "charasheet",
+              "charasheets",
+              "characters",
+              "profile",
+              "profession",
+              "belongings",
+              "battle",
+              "additionalMemo"
+            ])
+          });
+        }
+
+        return corsResponse(
+          JSON.stringify(
+            {
+              ok: upstream.ok,
+              status: upstream.status,
+              url: targetUrl.toString(),
+              bodyLength: body.length,
+              scriptCount: scriptSrcs.length,
+              results
+            },
+            null,
+            2
+          ),
+          200,
+          "application/json; charset=utf-8"
+        );
+      }
 
       if (scan) {
         const scriptSrcs = extractScriptSrcs(body);
@@ -159,9 +227,33 @@ function extractScriptSrcs(html) {
   return result;
 }
 
+function extractDeepHits(text, needles) {
+  const hits = [];
+
+  for (const needle of needles) {
+    let index = 0;
+    let count = 0;
+
+    while (count < 12) {
+      const found = text.indexOf(needle, index);
+      if (found < 0) break;
+
+      hits.push({
+        needle,
+        index: found,
+        preview: text.slice(Math.max(0, found - 900), Math.min(text.length, found + 1400))
+      });
+
+      index = found + needle.length;
+      count += 1;
+    }
+  }
+
+  return hits;
+}
+
 function extractCandidateStrings(text) {
   const candidates = new Set();
-
   const stringPattern = /["'`]([^"'`]{3,500})["'`]/g;
   let match;
 
@@ -187,15 +279,14 @@ function isCandidate(value) {
     lower.includes("view") ||
     lower.includes("firebase") ||
     lower.includes("firestore") ||
-    lower.includes("supabase") ||
     lower.includes("graphql") ||
     lower.includes("axios") ||
     lower.includes("fetch") ||
-    lower.includes("id") ||
     lower.includes("memo") ||
     lower.includes("items") ||
     lower.includes("weapons") ||
     lower.includes("occupation") ||
+    lower.includes("profession") ||
     lower.includes("age") ||
     lower.includes("gender") ||
     lower.includes("profile") ||
