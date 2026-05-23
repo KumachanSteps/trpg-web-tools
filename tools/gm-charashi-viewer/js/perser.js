@@ -420,6 +420,33 @@ const CharashiParser = (() => {
   const PRIORITY_SKILLS = ["目星", "聞き耳", "図書館"];
   const COMBAT_SKILLS = ["回避", "こぶし", "拳", "パンチ", "キック", "組み付き", "組付き", "頭突き", "頭突", "マーシャルアーツ", "MA", "近接戦闘", "近接", "格闘", "ナイフ", "剣", "刀", "日本刀", "槍", "斧", "銃剣", "居合", "拳銃", "射撃", "ショットガン", "ライフル", "マシンガン", "サブマシンガン"];
 
+  const CARD_INITIAL_6E = {
+    "こぶし": 50, "こぶし：パンチ": 50, "パンチ": 50, "キック": 25, "組み付き": 25, "頭突き": 10, "投擲": 25,
+    "マーシャルアーツ": 1, "拳銃": 20, "サブマシンガン": 15, "ショットガン": 30, "マシンガン": 15, "ライフル": 25,
+    "応急手当": 30, "鍵開け": 1, "隠す": 15, "隠れる": 10, "忍び歩き": 10, "写真術": 10,
+    "精神分析": 1, "追跡": 10, "登攀": 40, "運転": 20, "機械修理": 20, "重機械操作": 1,
+    "乗馬": 5, "水泳": 25, "製作": 5, "操縦": 1, "跳躍": 25, "電気修理": 10, "ナビゲート": 10, "変装": 1,
+    "言いくるめ": 5, "信用": 15, "説得": 15, "値切り": 5,
+    "医学": 5, "オカルト": 5, "化学": 1, "芸術": 5, "経理": 10, "考古学": 1, "コンピューター": 1,
+    "心理学": 5, "人類学": 1, "生物学": 1, "地質学": 1, "電子工学": 1, "天文学": 1, "博物学": 10,
+    "物理学": 1, "法律": 5, "薬学": 1, "歴史": 20, "クトゥルフ神話": 0, "クトゥルフ神話技能": 0,
+    "目星": 25, "聞き耳": 25, "図書館": 25
+  };
+
+  const CARD_INITIAL_7E = {
+    "目星": 25, "聞き耳": 20, "図書館": 20, "回避": null, "近接戦闘": 25, "近接戦闘：格闘": 25, "投擲": 20,
+    "射撃：拳銃": 20, "射撃：サブマシンガン": 15, "射撃：重火器": 10, "射撃：マシンガン": 10,
+    "射撃：ライフル": 25, "射撃：ショットガン": 25, "射撃：弓": 15,
+    "応急手当": 30, "鍵開け": 1, "手さばき": 10, "隠密": 20, "精神分析": 1, "追跡": 10, "登攀": 20,
+    "鑑定": 5, "運転": 20, "機械修理": 10, "重機械操作": 1, "乗馬": 5, "水泳": 20, "製作": 5,
+    "操縦": 1, "跳躍": 20, "電気修理": 10, "ナビゲート": 10, "変装": 5, "ダイビング": 1,
+    "言いくるめ": 5, "説得": 10, "威圧": 15, "魅惑": 15, "信用": 0,
+    "医学": 1, "オカルト": 5, "芸術": 5, "経理": 5, "考古学": 1, "コンピューター": 5, "科学": 1,
+    "心理学": 10, "人類学": 1, "電子工学": 1, "自然": 10, "法律": 5, "歴史": 5, "サバイバル": 10, "伝承": 1,
+    "クトゥルフ神話": 0, "クトゥルフ神話技能": 0
+  };
+
+
   function normalizeCharacterData(json) {
     const source = isPlainObject(json) ? json : {};
     const data = isPlainObject(source.data) ? source.data : isPlainObject(source.character) ? source.character : source;
@@ -496,13 +523,75 @@ const CharashiParser = (() => {
   }
 
   function filterDisplaySkills(skills, edition = "6e", params = {}) {
-    const hidden = new Set(COMMON_SKILL_NAMES.map(normalizeSkillName));
-    return Array.isArray(skills)
-      ? skills.filter(skill => {
-          if (!skill || hidden.has(normalizeSkillName(skill.name))) return false;
-          return shouldShowCardSkill(skill, edition, params);
-        })
-      : [];
+    const hidden = new Set([...COMMON_SKILL_NAMES, "STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU", "STR × 5", "CON × 5", "POW × 5", "DEX × 5", "APP × 5", "SIZ × 5", "INT × 5", "EDU × 5"].map(normalizeSkillName));
+    if (!Array.isArray(skills)) return [];
+    const filtered = skills.filter(skill => {
+      if (!skill || hidden.has(normalizeSkillName(skill.name))) return false;
+      return shouldShowCardSkill(skill, edition, params);
+    });
+    const hasKobushiPunch = filtered.some(skill => {
+      const name = normalizeSkillName(skill.name);
+      return name.includes("こぶし") && name.includes("パンチ");
+    });
+    return hasKobushiPunch
+      ? filtered.filter(skill => normalizeSkillName(skill.name) !== "こぶし")
+      : filtered;
+  }
+
+  function shouldShowCardSkill(skill, edition = "6e", params = {}) {
+    const name = normalizeSkillName(skill.name);
+    const value = Number(skill.value);
+    if (!name || Number.isNaN(value)) return false;
+    if (isAlwaysVisibleSkill(name)) return true;
+    const initial = getInitialSkillValue(name, edition, params);
+    if (initial === null || initial === undefined || Number.isNaN(Number(initial))) return true;
+    return value !== Number(initial);
+  }
+
+  function isAlwaysVisibleSkill(name) {
+    const normalized = normalizeSkillName(name);
+    return normalized.includes("目星")
+      || normalized.includes("聞き耳")
+      || normalized.includes("図書館")
+      || normalized.includes("母国語")
+      || normalized.includes("こぶし")
+      || normalized.includes("パンチ");
+  }
+
+  function getInitialSkillValue(name, edition = "6e", params = {}) {
+    const normalized = normalizeSkillName(name);
+    if (normalized.includes("母国語")) return motherTongueInitial(edition, params);
+    if (edition === "7e") {
+      if (normalized === "回避") return halfDexInitial(params);
+      if (normalized.includes("近接戦闘") && normalized.includes("格闘")) return 25;
+      if (normalized === "近接戦闘") return 25;
+      return findInitialValue(normalized, CARD_INITIAL_7E);
+    }
+    if (normalized.includes("こぶし") || normalized.includes("パンチ")) return 50;
+    return findInitialValue(normalized, CARD_INITIAL_6E);
+  }
+
+  function findInitialValue(normalizedName, table) {
+    for (const [key, value] of Object.entries(table || {})) {
+      if (value === null) continue;
+      const normalizedKey = normalizeSkillName(key);
+      if (normalizedName === normalizedKey || normalizedName.includes(normalizedKey) || normalizedKey.includes(normalizedName)) return Number(value);
+    }
+    return null;
+  }
+
+  function motherTongueInitial(edition, params = {}) {
+    const eduRaw = params.EDU ?? params.edu ?? "";
+    const edu = Number(String(eduRaw).split("/")[0].replace(/[^0-9]/g, ""));
+    if (!Number.isFinite(edu)) return null;
+    return edition === "7e" ? edu : edu * 5;
+  }
+
+  function halfDexInitial(params = {}) {
+    const dexRaw = params.DEX ?? params.dex ?? "";
+    const dex = Number(String(dexRaw).split("/")[0].replace(/[^0-9]/g, ""));
+    if (!Number.isFinite(dex)) return null;
+    return Math.floor(dex / 2);
   }
 
   function shouldShowCardSkill(skill, edition = "6e", params = {}) {
@@ -531,11 +620,11 @@ const CharashiParser = (() => {
     if (edition === "7e") {
       if (normalized.includes("近接戦闘") && normalized.includes("格闘")) return 25;
       if (normalized === "近接戦闘") return 25;
-      const found7 = findInitialValue(normalized, INITIAL_7E);
+      const found7 = findInitialValue(normalized, CARD_INITIAL_7E);
       return found7;
     }
     if (normalized.includes("こぶし") || normalized.includes("パンチ")) return 50;
-    const found6 = findInitialValue(normalized, INITIAL_6E);
+    const found6 = findInitialValue(normalized, CARD_INITIAL_6E);
     return found6;
   }
 
