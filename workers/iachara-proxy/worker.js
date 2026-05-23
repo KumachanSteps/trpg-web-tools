@@ -16,6 +16,7 @@ export default {
       const requestUrl = new URL(request.url);
       const target = requestUrl.searchParams.get("url");
       const debug = requestUrl.searchParams.get("debug") === "1";
+      const scan = requestUrl.searchParams.get("scan") === "1";
 
       if (!target) {
         return corsResponse("Missing url", 400, "text/plain; charset=utf-8");
@@ -29,36 +30,79 @@ export default {
       }
 
       if (!ALLOWED_HOSTS.has(targetUrl.hostname)) {
-        return corsResponse(
-          "Forbidden host: " + targetUrl.hostname,
-          403,
-          "text/plain; charset=utf-8"
-        );
+        return corsResponse("Forbidden host: " + targetUrl.hostname, 403, "text/plain; charset=utf-8");
       }
 
-      if (!targetUrl.pathname.startsWith("/view/")) {
-        return corsResponse(
-          "Forbidden path: " + targetUrl.pathname,
-          403,
-          "text/plain; charset=utf-8"
-        );
+      if (!isAllowedPath(targetUrl.pathname)) {
+        return corsResponse("Forbidden path: " + targetUrl.pathname, 403, "text/plain; charset=utf-8");
       }
 
       const upstream = await fetch(targetUrl.toString(), {
         method: "GET",
         redirect: "follow",
         headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/122 Safari/537.36",
-          "Accept":
-            "text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.7",
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/122 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.7",
           "Accept-Language": "ja,en-US;q=0.9,en;q=0.8"
         }
       });
 
       const body = await upstream.text();
-      const contentType =
-        upstream.headers.get("content-type") || "text/html; charset=utf-8";
+      const contentType = upstream.headers.get("content-type") || "text/html; charset=utf-8";
+
+      if (scan) {
+        const scriptSrcs = extractScriptSrcs(body);
+        const absoluteScriptUrls = scriptSrcs.map((src) => new URL(src, targetUrl.origin).toString());
+        const chunkResults = [];
+
+        for (const scriptUrl of absoluteScriptUrls) {
+          if (!scriptUrl.includes("/_next/static/")) continue;
+
+          try {
+            const scriptResponse = await fetch(scriptUrl, {
+              method: "GET",
+              redirect: "follow",
+              headers: {
+                "User-Agent": "Mozilla/5.0",
+                "Accept": "application/javascript,text/javascript,*/*"
+              }
+            });
+
+            const scriptText = await scriptResponse.text();
+            const candidates = extractCandidateStrings(scriptText);
+
+            chunkResults.push({
+              url: scriptUrl,
+              status: scriptResponse.status,
+              length: scriptText.length,
+              candidates
+            });
+          } catch (error) {
+            chunkResults.push({
+              url: scriptUrl,
+              error: error instanceof Error ? error.message : "script fetch failed"
+            });
+          }
+        }
+
+        return corsResponse(
+          JSON.stringify(
+            {
+              ok: upstream.ok,
+              status: upstream.status,
+              url: targetUrl.toString(),
+              bodyLength: body.length,
+              scriptCount: scriptSrcs.length,
+              scriptSrcs,
+              chunkResults
+            },
+            null,
+            2
+          ),
+          200,
+          "application/json; charset=utf-8"
+        );
+      }
 
       if (debug) {
         const scriptSrcs = extractScriptSrcs(body);
@@ -99,6 +143,10 @@ export default {
   }
 };
 
+function isAllowedPath(pathname) {
+  return pathname.startsWith("/view/") || pathname.startsWith("/_next/static/");
+}
+
 function extractScriptSrcs(html) {
   const result = [];
   const pattern = /<script[^>]+src=["']([^"']+)["']/g;
@@ -111,9 +159,53 @@ function extractScriptSrcs(html) {
   return result;
 }
 
+function extractCandidateStrings(text) {
+  const candidates = new Set();
+
+  const stringPattern = /["'`]([^"'`]{3,500})["'`]/g;
+  let match;
+
+  while ((match = stringPattern.exec(text)) !== null) {
+    const value = match[1];
+
+    if (isCandidate(value)) {
+      candidates.add(value);
+    }
+  }
+
+  return Array.from(candidates).slice(0, 300);
+}
+
+function isCandidate(value) {
+  const lower = value.toLowerCase();
+
+  return (
+    lower.includes("api") ||
+    lower.includes("character") ||
+    lower.includes("chara") ||
+    lower.includes("sheet") ||
+    lower.includes("view") ||
+    lower.includes("firebase") ||
+    lower.includes("firestore") ||
+    lower.includes("supabase") ||
+    lower.includes("graphql") ||
+    lower.includes("axios") ||
+    lower.includes("fetch") ||
+    lower.includes("id") ||
+    lower.includes("memo") ||
+    lower.includes("items") ||
+    lower.includes("weapons") ||
+    lower.includes("occupation") ||
+    lower.includes("age") ||
+    lower.includes("gender") ||
+    lower.includes("profile") ||
+    lower.includes("https://") ||
+    lower.includes("/api/")
+  );
+}
+
 function extractNextDataRaw(html) {
-  const pattern =
-    /<script[^>]+id=["']__NEXT_DATA__["'][^>]*type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/;
+  const pattern = /<script[^>]+id=["']__NEXT_DATA__["'][^>]*type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/;
   const match = html.match(pattern);
 
   if (match && match[1]) {
