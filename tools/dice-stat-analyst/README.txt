@@ -15,3 +15,10 @@ trpg-web-tools/tools/dice-stat-analyst/
 index.html
 css/dice-stat-analyst.css
 js/*.js
+
+
+Current rollback point:
+- Screenshot mode keeps align-items:flex-start / justify-content:flex-start.
+- main, section, and #summary are height:auto with min-height:0 / max-height:none.
+- Summary memo card bottom margin is removed.
+- Footer minimalization changes are not applied in this package.
