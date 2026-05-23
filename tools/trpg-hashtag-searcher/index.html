@@ -38,7 +38,8 @@
         </div>
         <div class="header-actions">
           <button type="button" id="languageButton" class="header-button">JP / EN</button>
-          <button type="button" id="shortcutButton" class="header-button" aria-expanded="false">Shortcut</button>
+          <button type="button" id="howToButton" class="header-button" aria-expanded="false">使い方</button>
+          <button type="button" id="shortcutButton" class="header-button" aria-expanded="false">ショートカット</button>
         </div>
       </div>
 
@@ -56,6 +57,38 @@
         </div>
       </div>
     </header>
+
+    <section id="howToPanel" class="help-panel is-hidden">
+      <div class="panel-header">
+        <div>
+          <h2>使い方</h2>
+          <p>検索モードやチップを組み合わせて、TRPG向けのX検索文をすばやく作成できます。</p>
+        </div>
+        <button type="button" id="howToCloseButton" class="soft-button">閉じる</button>
+      </div>
+      <div class="help-grid">
+        <article class="help-card">
+          <h3>検索モード</h3>
+          <p>目的に合わせて検索セットを自動入力します。卓募集は募集タグ、素材探しは素材向けフィルター、シナリオ探しは右側のシナリオ名検索へ移動します。</p>
+        </article>
+        <article class="help-card">
+          <h3>検索クエリ作成</h3>
+          <p>基本タグ、追加ワード、フィルター、除外ワードのチップを押すと、下の検索文に反映されます。生成された検索文は直接編集できます。</p>
+        </article>
+        <article class="help-card">
+          <h3>シナリオ名検索</h3>
+          <p>調べたいシナリオタイトルを入力すると、感想・立ち絵・お部屋用の検索テンプレートに自動反映されます。各検索文は個別に編集できます。</p>
+        </article>
+        <article class="help-card">
+          <h3>プリセット検索カード</h3>
+          <p>よく使う検索セットをカード形式で保存・編集できます。検索、コピー、お気に入り登録、削除ができます。</p>
+        </article>
+        <article class="help-card">
+          <h3>お気に入り</h3>
+          <p>よく使う検索文をブラウザ内に保存できます。保存先はローカルストレージのため、別端末や別ブラウザには引き継がれません。</p>
+        </article>
+      </div>
+    </section>
 
     <section id="shortcutPanel" class="shortcut-panel is-hidden">
       <div class="panel-header">

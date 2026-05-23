@@ -22,6 +22,7 @@
     scenarioCollapsed: false,
     generatedQuery: "",
     showShortcutPanel: false,
+    showHowToPanel: false,
     favoriteCopyStatus: "",
   };
 
@@ -66,7 +67,7 @@
 
   function cacheElements() {
     [
-      "shortcutButton", "shortcutCloseButton", "shortcutPanel", "modeButtons", "favoriteList", "favoriteCount",
+      "howToButton", "howToCloseButton", "howToPanel", "shortcutButton", "shortcutCloseButton", "shortcutPanel", "modeButtons", "favoriteList", "favoriteCount",
       "systemButtons", "baseQueryDisplay", "addWordButtons", "filterButtons", "excludeButtons", "generatedQuery",
       "resetButton", "openXButton", "copyQueryButton", "saveFavoriteButton", "scenarioPanel", "scenarioSearchInput",
       "addScenarioSearchButton", "scenarioSearchList", "scenarioToggleButton", "addWordsSection", "composerPanel",
@@ -484,6 +485,11 @@
     });
   }
 
+  function renderHowToPanel() {
+    els.howToPanel.classList.toggle("is-hidden", !state.showHowToPanel);
+    els.howToButton.setAttribute("aria-expanded", String(state.showHowToPanel));
+  }
+
   function renderShortcutPanel() {
     els.shortcutPanel.classList.toggle("is-hidden", !state.showShortcutPanel);
     els.shortcutButton.setAttribute("aria-expanded", String(state.showShortcutPanel));
@@ -503,6 +509,7 @@
     renderFavorites();
     renderScenarioSearches();
     renderPresetCards();
+    renderHowToPanel();
     renderShortcutPanel();
     setGeneratedQueryFromState();
   }
@@ -594,9 +601,23 @@
       scrollToElement(els.presetCardsSection, "end");
     });
 
+    els.howToButton.addEventListener("click", () => {
+      state.showHowToPanel = !state.showHowToPanel;
+      if (state.showHowToPanel) state.showShortcutPanel = false;
+      renderHowToPanel();
+      renderShortcutPanel();
+    });
+
+    els.howToCloseButton.addEventListener("click", () => {
+      state.showHowToPanel = false;
+      renderHowToPanel();
+    });
+
     els.shortcutButton.addEventListener("click", () => {
       state.showShortcutPanel = !state.showShortcutPanel;
+      if (state.showShortcutPanel) state.showHowToPanel = false;
       renderShortcutPanel();
+      renderHowToPanel();
     });
 
     els.shortcutCloseButton.addEventListener("click", () => {
@@ -616,7 +637,9 @@
       },
       closeShortcutPanel: () => {
         state.showShortcutPanel = false;
+        state.showHowToPanel = false;
         renderShortcutPanel();
+        renderHowToPanel();
       },
       openGeneratedQuery: () => openXSearch(state.generatedQuery, state.selectedFilters.includes("最新順")),
       copyGeneratedQuery: async () => {
