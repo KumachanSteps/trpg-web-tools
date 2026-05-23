@@ -1,4 +1,4 @@
-const CharamemoParser = (() => {
+(() => {
   const NL = "\n";
 
   const INITIAL_6E = {
@@ -147,9 +147,7 @@ const CharamemoParser = (() => {
     let skill = String(skillName || "").trim();
     if (skill.startsWith("技能：") || skill.startsWith("技能:")) skill = skill.slice(3).trim();
     skill = skill.replaceAll("：", ":").replaceAll("（", "(").replaceAll("）", ")").replaceAll("【", "").replaceAll("】", "").trim();
-    while (skill.endsWith(")") && countChar(skill, "(") < countChar(skill, ")")) {
-      skill = skill.slice(0, -1).trim();
-    }
+    while (skill.endsWith(")") && countChar(skill, "(") < countChar(skill, ")")) skill = skill.slice(0, -1).trim();
     if (skill === "クトゥルフ神話") return "クトゥルフ神話技能";
     if (skill === "クトゥルフ神話技能") return skill;
     const parenStart = skill.indexOf("(");
@@ -294,8 +292,8 @@ const CharamemoParser = (() => {
     const command = commandForEdition(edition);
     const hasSanRoll = buckets.dice.some((line) => line.includes("【正気度ロール】") || line.includes("【SAN】"));
     const hasLuckRoll = buckets.dice.some((line) => line.includes("【幸運】"));
-    if (!hasSanRoll) addUnique(buckets.dice, edition === "6e" ? "1d100<={SAN} 【正気度ロール】" : `${command}<={SAN} 【正気度ロール】`, seen);
-    if (edition === "7e" && !hasLuckRoll) addUnique(buckets.dice, `${command}<={幸運} 【幸運】`, seen);
+    if (!hasSanRoll) addUnique(buckets.dice, edition === "6e" ? "1d100<={SAN} 【正気度ロール】" : command + "<={SAN} 【正気度ロール】", seen);
+    if (edition === "7e" && !hasLuckRoll) addUnique(buckets.dice, command + "<={幸運} 【幸運】", seen);
     for (const skill of ["目星", "聞き耳", "図書館"]) {
       if (!buckets.explore.some((line) => line.includes(`【${skill}】`))) buckets.explore.unshift(lineForSkill(edition, present.get(skill) || initial[skill], skill));
     }
@@ -384,9 +382,7 @@ const CharamemoParser = (() => {
     removePlainMeleeWhenSpecializedExists(buckets, edition);
     removePlainCombatWhenSpecializedExists6e(buckets, edition);
     const orderTable = edition === "6e" ? CATEGORY_6E : CATEGORY_7E;
-    for (const key of ["dice", "explore", "combat", "action", "social", "knowledge"]) {
-      buckets[key] = sortSection(buckets[key], orderTable[key]);
-    }
+    for (const key of ["dice", "explore", "combat", "action", "social", "knowledge"]) buckets[key] = sortSection(buckets[key], orderTable[key]);
     const output = [];
     pushSection(output, SECTION_LABELS.dice, buckets.dice);
     pushSection(output, SECTION_LABELS.explore, buckets.explore);
@@ -402,13 +398,12 @@ const CharamemoParser = (() => {
     return output.join(NL).trim();
   }
 
-  return {
+  window.CharamemoParser = {
     parseKomaJson,
-    normalizeText,
     detectEdition,
     editionLabel,
-    buildPaletteOutput
+    buildPaletteOutput,
+    normalizeText,
+    normalizeSkillName
   };
 })();
-
-window.CharamemoParser = CharamemoParser;

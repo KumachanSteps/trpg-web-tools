@@ -3,21 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>いあキャラMEMOジェネレータ｜TRPG Webツール観測所</title>
+  <title>いあキャラMEMOジェネレータ</title>
+  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/charamemo-creator-style.css" />
 </head>
 <body>
   <div class="page-shell">
     <header class="app-header">
-      <div class="header-tags">
-        <a class="tag tag-home" href="https://kumachansteps.github.io/trpg-web-tools/">← TRPG Webツール観測所</a>
-        <span class="tag">駒JSON入力</span>
-        <span class="tag">キャラメモ編集</span>
-        <span class="tag">CCFOLIA用コピー</span>
-      </div>
-      <div>
-        <h1>いあキャラMEMOジェネレータ</h1>
-        <p>CCFOLIA駒JSONを読み込み、externalUrl / iconUrl / ステータス / パラメータ / チャットパレットを解析して、キャラメモと駒データを再生成します。</p>
+      <div class="header-layout">
+        <div>
+          <div class="header-tags">
+            <a class="tag tag-home" href="../../index.html" title="TRPG Webツール観測所 に戻る">← TRPG Webツール観測所</a>
+            <span class="tag">駒JSON入力</span>
+            <span class="tag">キャラメモ編集</span>
+            <span class="tag">CCFOLIA用コピー</span>
+          </div>
+          <h1>いあキャラMEMOジェネレータ</h1>
+          <p>CCFOLIA駒JSONを読み込み、externalUrl / iconUrl / ステータス / パラメータ / チャットパレットを解析して、キャラメモと駒データを再生成します。</p>
+        </div>
+        <div class="header-actions">
+          <button id="themeToggle" class="header-button plain" type="button">Night Mode</button>
+        </div>
       </div>
     </header>
 
@@ -49,7 +55,8 @@
             </button>
             <button id="fetchBtn" class="btn btn-blue" type="button">取得</button>
           </div>
-          <input id="proxyUrlInput" class="proxy-input" value="https://your-worker.example.com/fetch?url=" />
+          <input id="proxyUrlInput" class="proxy-input" value="https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/?url=" />
+          <p id="fetchMessage" class="fetch-message"></p>
         </section>
 
         <section class="panel panel-options">
@@ -76,9 +83,12 @@
           <section class="panel summary-panel">
             <div class="panel-title"><span class="panel-icon">◉</span><h2>解析キャラクター概要</h2></div>
             <div class="summary-card">
-              <div class="icon-frame"><img id="iconPreview" alt="character icon" /></div>
+              <div id="iconFrame" class="icon-frame"><img id="iconPreview" alt="character icon" /></div>
               <div class="summary-main">
-                <h3 id="characterNameView">未解析</h3>
+                <div class="name-row">
+                  <h3 id="characterNameView">未解析</h3>
+                  <span id="editionBadge" class="edition-badge hidden"></span>
+                </div>
                 <p id="externalUrlSummary">externalUrl 未検出</p>
                 <div id="statusChips" class="status-chips"></div>
               </div>
@@ -130,6 +140,8 @@
   <script src="js/i18l.js"></script>
   <script src="js/language.js"></script>
   <script src="js/parser.js"></script>
+  <script src="js/iachara-parser.js"></script>
+  <script src="js/iachara-fetcher.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
