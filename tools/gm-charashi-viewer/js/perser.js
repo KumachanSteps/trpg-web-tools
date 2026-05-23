@@ -428,7 +428,7 @@ const CharashiParser = (() => {
     const rawChatPalette = String(data.commands || data.command || data.chatPalette || data.palette || "");
     const edition = detectEditionFromCharacter(rawChatPalette, params);
     const allSkills = parseSkillsFromCommands(rawChatPalette);
-    return { id: createId(), name: safeText(data.name || data.characterName || data.charaName || "名称未設定"), iconUrl: safeText(data.iconUrl || data.imageUrl || data.portrait || ""), externalUrl: safeText(data.externalUrl || data.url || data.sheetUrl || source.externalUrl || ""), edition, status, params, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills)), chatPalette: rawChatPalette, rawChatPalette, raw: source };
+    return { id: createId(), name: safeText(data.name || data.characterName || data.charaName || "名称未設定"), iconUrl: safeText(data.iconUrl || data.imageUrl || data.portrait || ""), externalUrl: safeText(data.externalUrl || data.url || data.sheetUrl || source.externalUrl || ""), edition, status, params, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params)), chatPalette: rawChatPalette, rawChatPalette, raw: source };
   }
 
   function normalizePairs(items) {
@@ -451,7 +451,8 @@ const CharashiParser = (() => {
     const chatPalette = String(safePc.chatPalette || rawChatPalette || "");
     const edition = safePc.edition || detectEditionFromCharacter(rawChatPalette, safePc.params || {});
     const allSkills = parseSkillsFromCommands(chatPalette);
-    return { ...safePc, id: safePc.id || createId(), name: safeText(safePc.name || "名称未設定"), iconUrl: safeText(safePc.iconUrl || ""), externalUrl: safeText(safePc.externalUrl || ""), edition, status: isPlainObject(safePc.status) ? safePc.status : {}, params: isPlainObject(safePc.params) ? safePc.params : {}, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills)), chatPalette, rawChatPalette: String(rawChatPalette || ""), raw: isPlainObject(safePc.raw) ? safePc.raw : {} };
+    const params = isPlainObject(safePc.params) ? safePc.params : {};
+    return { ...safePc, id: safePc.id || createId(), name: safeText(safePc.name || "名称未設定"), iconUrl: safeText(safePc.iconUrl || ""), externalUrl: safeText(safePc.externalUrl || ""), edition, status: isPlainObject(safePc.status) ? safePc.status : {}, params, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params)), chatPalette, rawChatPalette: String(rawChatPalette || ""), raw: isPlainObject(safePc.raw) ? safePc.raw : {} };
   }
 
   function formatPcPalette(pc) {
@@ -459,7 +460,8 @@ const CharashiParser = (() => {
     const edition = detectEditionFromCharacter(raw, pc.params || {});
     const chatPalette = CharamemoParser.buildPaletteOutput(raw, edition);
     const allSkills = parseSkillsFromCommands(chatPalette);
-    return { ...pc, edition, chatPalette, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills)) };
+    const params = isPlainObject(pc.params) ? pc.params : {};
+    return { ...pc, edition, chatPalette, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params)) };
   }
 
   function detectEditionFromCharacter(text, params = {}) {
@@ -493,9 +495,63 @@ const CharashiParser = (() => {
     return Array.from(skillMap.values());
   }
 
-  function filterDisplaySkills(skills) {
+  function filterDisplaySkills(skills, edition = "6e", params = {}) {
     const hidden = new Set(COMMON_SKILL_NAMES.map(normalizeSkillName));
-    return Array.isArray(skills) ? skills.filter(skill => !hidden.has(normalizeSkillName(skill.name))) : [];
+    return Array.isArray(skills)
+      ? skills.filter(skill => {
+          if (!skill || hidden.has(normalizeSkillName(skill.name))) return false;
+          return shouldShowCardSkill(skill, edition, params);
+        })
+      : [];
+  }
+
+  function shouldShowCardSkill(skill, edition = "6e", params = {}) {
+    const name = normalizeSkillName(skill.name);
+    const value = Number(skill.value);
+    if (!name || Number.isNaN(value)) return false;
+    if (isAlwaysVisibleSkill(name)) return true;
+    const initial = getInitialSkillValue(name, edition, params);
+    if (initial === null || initial === undefined || Number.isNaN(Number(initial))) return true;
+    return value !== Number(initial);
+  }
+
+  function isAlwaysVisibleSkill(name) {
+    const normalized = normalizeSkillName(name);
+    return normalized.includes("目星")
+      || normalized.includes("聞き耳")
+      || normalized.includes("図書館")
+      || normalized.includes("母国語")
+      || normalized.includes("こぶし")
+      || normalized.includes("パンチ");
+  }
+
+  function getInitialSkillValue(name, edition = "6e", params = {}) {
+    const normalized = normalizeSkillName(name);
+    if (normalized.includes("母国語")) return motherTongueInitial(edition, params);
+    if (edition === "7e") {
+      if (normalized.includes("近接戦闘") && normalized.includes("格闘")) return 25;
+      if (normalized === "近接戦闘") return 25;
+      const found7 = findInitialValue(normalized, INITIAL_7E);
+      return found7;
+    }
+    if (normalized.includes("こぶし") || normalized.includes("パンチ")) return 50;
+    const found6 = findInitialValue(normalized, INITIAL_6E);
+    return found6;
+  }
+
+  function findInitialValue(normalizedName, table) {
+    for (const [key, value] of Object.entries(table || {})) {
+      const normalizedKey = normalizeSkillName(key);
+      if (normalizedName === normalizedKey || normalizedName.includes(normalizedKey) || normalizedKey.includes(normalizedName)) return Number(value);
+    }
+    return null;
+  }
+
+  function motherTongueInitial(edition, params = {}) {
+    const eduRaw = params.EDU ?? params.edu ?? "";
+    const edu = Number(String(eduRaw).split("/")[0].replace(/[^0-9]/g, ""));
+    if (!Number.isFinite(edu)) return null;
+    return edition === "7e" ? edu : edu * 5;
   }
 
   function sortDisplaySkills(skills) {

@@ -1,6 +1,6 @@
 (() => {
   const STORAGE_KEY = "gm-character-sheet-viewer:v8";
-  const formatPaletteBtn = document.getElementById("formatPaletteBtn");
+  const formatPaletteToggle = document.getElementById("formatPaletteToggle");
   const deleteAllBtn = document.getElementById("deleteAllBtn");
   const viewerPanel = document.querySelector(".viewer-panel");
   const cardLane = document.getElementById("cardLane");
@@ -17,7 +17,9 @@
   let draggedIndex = null;
   let isViewerHover = false;
 
-  formatPaletteBtn.addEventListener("click", formatAllPalettes);
+  formatPaletteToggle.addEventListener("change", () => {
+    if (formatPaletteToggle.checked) formatAllPalettes();
+  });
   deleteAllBtn.addEventListener("click", openDeleteModal);
   cancelDeleteBtn.addEventListener("click", closeDeleteModal);
   confirmDeleteBtn.addEventListener("click", deleteAllCards);
@@ -37,7 +39,10 @@
     try {
       const parsed = JSON.parse(rawText.trim());
       const list = Array.isArray(parsed) ? parsed : [parsed];
-      pcs.push(...list.map(CharashiParser.normalizeCharacterData));
+      pcs.push(...list.map(item => {
+        const pc = CharashiParser.normalizeCharacterData(item);
+        return formatPaletteToggle.checked ? CharashiParser.formatPcPalette(pc) : pc;
+      }));
       saveCards();
       renderCards();
     } catch (error) {
