@@ -37,6 +37,19 @@
     plain: { label: 'A', tooltip: '変換なし' }
   };
 
+  const FONT_CHIP_CLASSES = {
+    sansBoldItalic: 'f-sans-bi',
+    sansBold: 'f-sans-b',
+    sansItalic: 'f-sans-i',
+    serifBoldItalic: 'f-serif-bi',
+    serifBold: 'f-serif-b',
+    serifItalic: 'f-serif-i',
+    smallCaps: 'f-smallcaps',
+    typewriter: 'f-typewriter',
+    modernSans: 'f-modern',
+    plain: 'f-plain'
+  };
+
   let lastPreviewSelection = { start: 0, end: 0 };
   let isResetting = false;
   let undoStack = [];
@@ -110,9 +123,10 @@
     Array.from($('fontVariant').options).forEach(option => {
       const button = document.createElement('button');
       button.type = 'button';
+      button.className = 'font-chip ' + (FONT_CHIP_CLASSES[option.value] || 'f-plain');
       button.dataset.fontVariant = option.value;
       const fontMeta = FONT_MAPS[option.value] || {};
-      button.textContent = fontMeta.label || option.textContent.slice(0, 2);
+      button.textContent = 'A';
       button.title = fontMeta.tooltip || option.textContent;
       button.dataset.tooltip = fontMeta.tooltip || option.textContent;
       button.addEventListener('click', () => {
@@ -431,7 +445,7 @@
       groupData.items.forEach(item => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'ascii-art-chip';
+        button.className = 'ascii-art-chip ' + (item.className || '');
         button.textContent = item.display || item.label;
         button.title = item.tooltip || item.value;
         button.dataset.tooltip = item.tooltip || item.value;

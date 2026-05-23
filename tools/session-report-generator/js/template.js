@@ -453,16 +453,16 @@
     line: {
       label: 'LINE',
       items: [
-        { label: '✦ line', value: '✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦' },
-        { label: '⟡ line', value: '⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·' },
-        { label: 'plain line', value: '──────────────────' },
-        { label: '─ ⋅ ✩ ⋅ ─ line', value: '──────── ⋅ ✩ ⋅ ────────' },
-        { label: '꒰ঌ line ໒꒱', display: 'wing line', tooltip: '꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱', value: '꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱' },
-        { label: '◇ line', display: '◇ line', tooltip: '◇─◇──◇────◇──◇─◇', value: '◇─◇──◇────◇──◇─◇' },
-        { label: '◆◇ line', display: '◆◇ line', tooltip: '◆◇◆◇◆◇◆◇◆◇◆◇◆', value: '◆◇◆◇◆◇◆◇◆◇◆◇◆' },
-        { label: '◈ line', value: '◈ ━━━━━━━━━━━━━━ ◈' },
-        { label: '▣ line', display: 'square line', tooltip: '▣──────────────▣', value: '▣──────────────▣' },
-        { label: '╋ line', display: 'cross line', tooltip: '╋━━━━━━━━━━━━━━╋', value: '╋━━━━━━━━━━━━━━╋' }
+        { label: '✦ line', display: '✦ ┈┈ ✦', tooltip: '✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦', value: '✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦', className: 'ascii-chip-line' },
+        { label: '⟡ line', display: '⟡ ⎯⎯ ⟡', tooltip: '⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·', value: '⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·', className: 'ascii-chip-line' },
+        { label: 'plain line', display: '──────', tooltip: '──────────────────', value: '──────────────────', className: 'ascii-chip-line' },
+        { label: '─ ⋅ ✩ ⋅ ─ line', display: '─ ⋅ ✩ ⋅ ─', tooltip: '──────── ⋅ ✩ ⋅ ────────', value: '──────── ⋅ ✩ ⋅ ────────', className: 'ascii-chip-line' },
+        { label: '꒰ঌ line ໒꒱', display: '꒰ঌ ┈┈ ໒꒱', tooltip: '꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱', value: '꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱', className: 'ascii-chip-line' },
+        { label: '◇ line', display: '◇─◇', tooltip: '◇─◇──◇────◇──◇─◇', value: '◇─◇──◇────◇──◇─◇', className: 'ascii-chip-line' },
+        { label: '◆◇ line', display: '◆◇◆◇', tooltip: '◆◇◆◇◆◇◆◇◆◇◆◇◆', value: '◆◇◆◇◆◇◆◇◆◇◆◇◆', className: 'ascii-chip-line' },
+        { label: '◈ line', display: '◈ ━━ ◈', tooltip: '◈ ━━━━━━━━━━━━━━ ◈', value: '◈ ━━━━━━━━━━━━━━ ◈', className: 'ascii-chip-line' },
+        { label: '▣ line', display: '▣──▣', tooltip: '▣──────────────▣', value: '▣──────────────▣', className: 'ascii-chip-line' },
+        { label: '╋ line', display: '╋━━╋', tooltip: '╋━━━━━━━━━━━━━━╋', value: '╋━━━━━━━━━━━━━━╋', className: 'ascii-chip-line' }
       ]
     },
     single: {
@@ -481,15 +481,15 @@
     designs: {
       label: 'DESIGNS',
       items: [
-        { label: '.+:ﾟ+｡.☆', value: '.+:ﾟ+｡.☆' },
-        { label: '｡:+* ﾟ', display: 'star dust', tooltip: '｡:+* ﾟ ゜ﾟ *+:｡:+* ﾟ ゜ﾟ *+:｡', value: '｡:+* ﾟ ゜ﾟ *+:｡:+* ﾟ ゜ﾟ *+:｡' },
-        { label: '✧･ﾟ:*', display: 'glitter', tooltip: '✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧', value: '✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧' },
-        { label: '✦⋆˙₊⟡', display: 'sparkle', tooltip: '✦⋆˙₊⟡', value: '✦⋆˙₊⟡' },
-        { label: '⊹₊⋆ ✦. ݁', display: 'stardust', tooltip: '⊹₊⋆ ✦. ݁', value: '⊹₊⋆ ✦. ݁' },
-        { label: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', display: 'Call of Cthulhu', tooltip: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', value: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ' },
-        { label: '◤￣￣', value: '◤￣￣￣￣￣￣￣￣￣￣￣￣￣￣' },
-        { label: '＿＿◢', value: '＿＿＿＿＿＿＿＿＿＿＿＿＿＿◢' },
-        { label: '𓂃𓈒𓏸', display: 'trail', tooltip: '𓂃𓈒𓏸︎︎︎︎ 🕊', value: '𓂃𓈒𓏸︎︎︎︎ 🕊' }
+        { label: '.+:ﾟ+｡.☆', display: '.+:ﾟ+｡.☆', tooltip: '.+:ﾟ+｡.☆', value: '.+:ﾟ+｡.☆', className: 'ascii-chip-design' },
+        { label: '｡:+* ﾟ', display: '｡:+* ﾟ', tooltip: '｡:+* ﾟ ゜ﾟ *+:｡:+* ﾟ ゜ﾟ *+:｡', value: '｡:+* ﾟ ゜ﾟ *+:｡:+* ﾟ ゜ﾟ *+:｡', className: 'ascii-chip-design' },
+        { label: '✧･ﾟ:*', display: '✧･ﾟ:*', tooltip: '✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧', value: '✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧', className: 'ascii-chip-design' },
+        { label: '✦⋆˙₊⟡', display: '✦⋆˙₊⟡', tooltip: '✦⋆˙₊⟡', value: '✦⋆˙₊⟡', className: 'ascii-chip-design' },
+        { label: '⊹₊⋆ ✦. ݁', display: '⊹₊⋆ ✦', tooltip: '⊹₊⋆ ✦. ݁', value: '⊹₊⋆ ✦. ݁', className: 'ascii-chip-design' },
+        { label: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', display: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', tooltip: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', value: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', className: 'ascii-chip-wide' },
+        { label: '◤￣￣', display: '◤￣￣', tooltip: '◤￣￣￣￣￣￣￣￣￣￣￣￣￣￣', value: '◤￣￣￣￣￣￣￣￣￣￣￣￣￣￣', className: 'ascii-chip-line' },
+        { label: '＿＿◢', display: '＿＿◢', tooltip: '＿＿＿＿＿＿＿＿＿＿＿＿＿＿◢', value: '＿＿＿＿＿＿＿＿＿＿＿＿＿＿◢', className: 'ascii-chip-line' },
+        { label: '𓂃𓈒𓏸', display: '𓂃𓈒𓏸', tooltip: '𓂃𓈒𓏸︎︎︎︎ 🕊', value: '𓂃𓈒𓏸︎︎︎︎ 🕊', className: 'ascii-chip-design' }
       ]
     }
   };
