@@ -401,7 +401,21 @@
         { label: '┊', value: '┊' },
         { label: '▎', value: '▎' },
         { label: '◤', value: '◤' },
-        { label: '◢', value: '◢' }
+        { label: '◢', value: '◢' },
+        { label: '◈', value: '◈' },
+        { label: '❖', value: '❖' },
+        { label: '‖', value: '‖' },
+        { label: '▸', value: '▸' },
+        { label: '†', value: '†' },
+        { label: '◎', value: '◎' },
+        { label: '⚪', value: '⚪' },
+        { label: '⚫', value: '⚫' },
+        { label: '▣', value: '▣' },
+        { label: '◻︎', value: '◻︎' },
+        { label: '◼︎', value: '◼︎' },
+        { label: '◬', value: '◬' },
+        { label: '∇', value: '∇' },
+        { label: '∆', value: '∆' }
       ]
     },
     designs: {
