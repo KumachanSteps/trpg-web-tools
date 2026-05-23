@@ -1,4 +1,1 @@
-window.ReportGeneratorI18n = window.ReportGeneratorI18n || {
-  current: 'ja',
-  messages: {}
-};
+window.REPORT_GEN_I18N = window.REPORT_GEN_I18N || {};

@@ -1,14 +1,15 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
+  const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
+  const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
 
   const defaultRows = [
-    { id: cryptoId(), date: "2026-05-13", scenario: "星環のダ・カーポ", system: "CoC 6版", role: "PL", gm: "さけひよ", players: "Kuma / Pino", pc: "HO2 星の探究者", status: "新規", time: "4h", note: "DAY3。宇宙への恐怖とRPの噛み合いが最高。", hashtag: "#さけひよダカーポ", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
-    { id: cryptoId(), date: "2026-04-20", scenario: "Good-bye, John･Doe", system: "CoC 6版", role: "PL", gm: "Pino", players: "Kuma / Hoshimi", pc: "HO2 法医学探索者", status: "継続", time: "4h", note: "短時間で鮮烈にテーマが刺さるシナリオ。", hashtag: "#GoodbyeJohnDoe", longNote: "" },
-    { id: cryptoId(), date: "2026-03-15", scenario: "累卵", system: "エモクロアTRPG", role: "DL", gm: "自分", players: "Pino / Madoka", pc: "女子高生と人外探索者", status: "新規", time: "6h", note: "刀を振るう女子高生と怪異のコンビが美しい。", hashtag: "#累卵", longNote: "" },
-    { id: cryptoId(), date: "2026-02-28", scenario: "黒き嵐が来る前に", system: "CoC 7版", role: "KP", gm: "自分", players: "Test PLs", pc: "博物館探索者たち", status: "新規", time: "3h", note: "黒きファラオ召喚導線のテストプレイ。", hashtag: "#黒き嵐が来る前に", longNote: "" }
+    { id: cryptoId(), date: "2026-05-13", scenario: "サンプルシナリオA", system: "CoC 6版", role: "PL", gm: "GMサンプル01", players: "PL-A、PL-B", pc: "PC-A", status: "新規", time: "4h", note: "初回セッション。導入と探索中心。", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
+    { id: cryptoId(), date: "2026-04-20", scenario: "サンプルシナリオB", system: "CoC 7版", role: "KP", gm: "自分", players: "PL-C、PL-D、PL-E", pc: "PC-B / PC-C / PC-D", status: "新規", time: "5h", note: "日程調整済み。次回は中盤から再開。", longNote: "" },
+    { id: cryptoId(), date: "2026-03-15", scenario: "サンプルシナリオC", system: "エモクロアTRPG", role: "DL", gm: "自分", players: "PL-F、PL-G", pc: "共鳴者A / 共鳴者B", status: "継続", time: "3.5h", note: "継続キャラクターで参加。感想メモあり。", longNote: "" },
+    { id: cryptoId(), date: "2026-02-28", scenario: "サンプルキャンペーン 第2話", system: "マルチシステム", role: "PL", gm: "GMサンプル02", players: "PL-H、PL-I、PL-J", pc: "PC-E", status: "継続", time: "6h", note: "キャンペーン進行中。公開用メモは別途作成予定。", longNote: "" }
   ];
-
   const defaultColumns = [
     { key: "date", label: "日付", type: "date" },
     { key: "scenario", label: "シナリオ" },
@@ -19,7 +20,6 @@
     { key: "pc", label: "PC" },
     { key: "status", label: "新規 / 継続" },
     { key: "time", label: "時間" },
-    { key: "hashtag", label: "ハッシュタグ" },
     { key: "note", label: "メモ" },
     { key: "report", label: "卓報告", locked: true }
   ];
@@ -30,6 +30,7 @@
     { key: "ending", label: "Ending", desc: "エンディング名・ルート" },
     { key: "survival", label: "Lost / Survived", desc: "CoCの生還・ロスト結果" },
     { key: "campaign", label: "Campaign", desc: "キャンペーン・シリーズ名" },
+    { key: "hashtag", label: "Hashtag", desc: "卓報告・検索用ハッシュタグ" },
     { key: "sessionUrl", label: "Session URL", desc: "ログ、ふせったー、note、X投稿" },
     { key: "scenarioUrl", label: "Scenario URL", desc: "Booth・公式ページ" },
     { key: "kansouUrl", label: "Kansou URL", desc: "公開感想リンク" }
@@ -91,6 +92,12 @@
   }
 
   function normalizeState(){
+    if(!Array.isArray(state.columns)) state.columns = clone(defaultColumns);
+    if(!state.migrations?.hashtagOptional){
+      state.columns = state.columns.filter(col=>col.key !== "hashtag");
+      state.migrations = { ...(state.migrations || {}), hashtagOptional: true };
+      saveState();
+    }
     if(!state.rows.length){
       state.rows = [];
       activeId = null;
@@ -114,9 +121,7 @@
     document.getElementById("statSessions").textContent = String(state.rows.length);
     document.getElementById("statScenarios").textContent = String(unique(state.rows.map(r=>r.scenario).filter(Boolean)).length);
     document.getElementById("statPlayedTime").textContent = `${sumHours(state.rows)}h`;
-    const people = new Set();
-    state.rows.forEach(row=>splitPeople(row.players).concat(splitPeople(row.gm)).forEach(p=>p && people.add(p)));
-    document.getElementById("statPlayedWith").textContent = String(people.size);
+    document.getElementById("statPlayedWith").textContent = String(countCoPlayers(state.rows));
   }
 
   function renderOptionalFields(){
@@ -167,12 +172,15 @@
       const th = document.createElement("th");
       th.dataset.key = col.key;
       th.draggable = !col.locked;
-      th.className = `${col.locked ? "" : "draggable-header"} ${draggingKey===col.key ? "dragging" : ""} ${dragOverKey===col.key ? "drag-over" : ""}`;
+      th.className = col.locked ? "" : "draggable-header";
       th.title = col.locked ? "この列は固定です" : "ドラッグで項目を並び替え";
-      th.innerHTML = `${col.locked ? "" : '<span class="drag-handle">⋮⋮</span>'}<span>${escapeHtml(col.label)}</span>${col.locked ? '<span class="fixed-label">固定</span>' : ""}`;
-      th.addEventListener("dragstart",event=>handleDragStart(event,col.key));
-      th.addEventListener("dragover",event=>handleDragOver(event,col.key));
-      th.addEventListener("drop",event=>handleDrop(event,col.key));
+      th.innerHTML = `${col.locked ? "" : '<span class="drag-handle" draggable="true">⋮⋮</span>'}<span>${escapeHtml(col.label)}</span>${col.locked ? '<span class="fixed-label">固定</span>' : ""}`;
+
+      const dragHandle = th.querySelector(".drag-handle") || th;
+      dragHandle.addEventListener("dragstart",event=>handleDragStart(event,col.key,th));
+      th.addEventListener("dragover",event=>handleDragOver(event,col.key,th));
+      th.addEventListener("dragleave",event=>handleDragLeave(event,th));
+      th.addEventListener("drop",event=>handleDrop(event,col.key,th));
       th.addEventListener("dragend",handleDragEnd);
       tr.appendChild(th);
     });
@@ -215,9 +223,9 @@
       </div>
       <div class="drawer-card"><p class="drawer-label">GM / KP / DL</p><strong>${escapeHtml(row.gm || "")}</strong></div>
       <div class="drawer-card"><p class="drawer-label">PL / PC</p><strong>${escapeHtml(row.players || "")}</strong><p>${escapeHtml(row.pc || "")}</p></div>
-      <div class="drawer-card"><p class="drawer-label">短いメモ</p><p>${escapeHtml(row.note || "")}</p><p class="hashtag-cell">卓報告用ハッシュタグ: ${escapeHtml(row.hashtag || "")}</p></div>
+      <div class="drawer-card"><p class="drawer-label">短いメモ</p><p>${escapeHtml(row.note || "")}</p><p class="drawer-muted">ハッシュタグは「＋ 項目追加」から任意項目として追加できます。</p></div>
       <div class="drawer-card"><p class="drawer-label">長文感想</p><textarea id="drawerLongNote">${escapeHtml(row.longNote || "")}</textarea></div>
-      <div class="drawer-card report-link-card"><strong>卓報告ジェネレーター連携</strong><p>この行のシナリオ / システム / GM / PL / PC / ハッシュタグ情報を卓報告ジェネレーターに渡す想定です。</p><button id="drawerReportBtn" type="button">卓報告ジェネレーターを開く ›</button></div>
+      <div class="drawer-card report-link-card"><strong>卓報告ジェネレーター連携</strong><p>この行のシナリオ / システム / GM / PL / PC情報を卓報告ジェネレーターに渡す想定です。ハッシュタグなどの任意項目も追加して渡せます。</p><button id="drawerReportBtn" type="button">卓報告ジェネレーターを開く ›</button></div>
       <div class="drawer-actions"><button id="drawerDuplicateBtn" type="button">複製</button><button id="drawerDeleteBtn" class="danger-soft" type="button">⌫ 削除</button></div>
     `;
     document.getElementById("drawerLongNote")?.addEventListener("input",event=>{
@@ -305,35 +313,57 @@
     saveAndRender();
   }
 
-  function handleDragStart(event,key){
+  function handleDragStart(event,key,headerEl){
     const col = state.columns.find(c=>c.key===key);
     if(col?.locked){ event.preventDefault(); return; }
     draggingKey = key;
+    dragOverKey = null;
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain",key);
-    renderTableHead();
+    headerEl?.classList.add("dragging");
   }
-  function handleDragOver(event,key){
+
+  function handleDragOver(event,key,headerEl){
+    if(!draggingKey || draggingKey === key) return;
     event.preventDefault();
-    dragOverKey = key;
-    renderTableHead();
+    event.dataTransfer.dropEffect = "move";
+    if(dragOverKey !== key){
+      document.querySelectorAll("#tableHead th.drag-over").forEach(el=>el.classList.remove("drag-over"));
+      dragOverKey = key;
+      headerEl?.classList.add("drag-over");
+    }
   }
-  function handleDrop(event,targetKey){
+
+  function handleDragLeave(event,headerEl){
+    const related = event.relatedTarget;
+    if(related && headerEl?.contains(related)) return;
+    headerEl?.classList.remove("drag-over");
+  }
+
+  function handleDrop(event,targetKey,headerEl){
     event.preventDefault();
     const sourceKey = event.dataTransfer.getData("text/plain") || draggingKey;
+    headerEl?.classList.remove("drag-over");
     if(sourceKey && targetKey && sourceKey !== targetKey){
       const sourceIndex = state.columns.findIndex(c=>c.key===sourceKey);
       const targetIndex = state.columns.findIndex(c=>c.key===targetKey);
-      if(sourceIndex >= 0 && targetIndex >= 0){
+      const targetColumn = state.columns[targetIndex];
+      if(sourceIndex >= 0 && targetIndex >= 0 && !targetColumn?.locked){
         const [moved] = state.columns.splice(sourceIndex,1);
-        state.columns.splice(targetIndex,0,moved);
+        const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+        state.columns.splice(adjustedTargetIndex,0,moved);
         saveState();
       }
     }
     handleDragEnd();
     renderTable();
   }
-  function handleDragEnd(){ draggingKey = null; dragOverKey = null; renderTableHead(); }
+
+  function handleDragEnd(){
+    draggingKey = null;
+    dragOverKey = null;
+    document.querySelectorAll("#tableHead th.dragging, #tableHead th.drag-over").forEach(el=>el.classList.remove("dragging","drag-over"));
+  }
 
   function openDrawer(){ els.kansouDrawer.classList.add("open"); els.drawerOverlay.hidden = false; els.kansouDrawer.setAttribute("aria-hidden","false"); els.kansouTab.classList.add("hide"); renderDrawer(); }
   function closeDrawer(){ els.kansouDrawer.classList.remove("open"); els.drawerOverlay.hidden = true; els.kansouDrawer.setAttribute("aria-hidden","true"); els.kansouTab.classList.remove("hide"); }
@@ -400,7 +430,40 @@
   function clone(value){ return JSON.parse(JSON.stringify(value)); }
   function cryptoId(){ return `session_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
   function unique(values){ return [...new Set(values)]; }
-  function splitPeople(value){ return String(value||"").split(/[、,\/]/).map(v=>v.trim()).filter(Boolean); }
+
+  function getSelfNames(){
+    const stored = localStorage.getItem(SELF_NAMES_KEY);
+    const userNames = stored ? stored.split(/[、,\/\n]/).map(normalizePersonName).filter(Boolean) : [];
+    return new Set([...DEFAULT_SELF_NAMES.map(normalizePersonName), ...userNames]);
+  }
+
+  function normalizePersonName(value){
+    return String(value || "")
+      .normalize("NFKC")
+      .trim()
+      .replace(/[\s　]+/g, "")
+      .replace(/[。．.]+$/g, "。");
+  }
+
+  function splitPeople(value){
+    return String(value || "")
+      .split(/[、,\/／&＆＋+・]|\s+と\s+|\s+and\s+/i)
+      .map(v=>v.trim())
+      .filter(Boolean);
+  }
+
+  function countCoPlayers(rows){
+    const selfNames = getSelfNames();
+    const people = new Set();
+    rows.forEach(row=>{
+      splitPeople(row.players).forEach(name=>{
+        const normalized = normalizePersonName(name);
+        if(normalized && !selfNames.has(normalized)) people.add(normalized);
+      });
+    });
+    return people.size;
+  }
+
   function sumHours(rows){ return rows.reduce((sum,row)=>sum + (parseFloat(String(row.time||"").match(/[\d.]+/)?.[0] || "0") || 0),0); }
   function getCellClass(key){ return key === "note" ? "note-cell" : ""; }
   function html(markup){ const span = document.createElement("span"); span.innerHTML = markup; return span; }
@@ -411,7 +474,13 @@
     return window.SESSION_LOG_I18N?.[lang]?.[key] || window.SESSION_LOG_I18N?.ja?.[key] || key;
   }
 
+  function setSelfNames(names){
+    const value = Array.isArray(names) ? names.join("、") : String(names || "");
+    localStorage.setItem(SELF_NAMES_KEY, value);
+    renderStats();
+  }
+
   function exposeApi(){
-    window.SessionLogApp = { exportJson, openSessionDialog, closeDrawer };
+    window.SessionLogApp = { exportJson, openSessionDialog, closeDrawer, setSelfNames };
   }
 })();

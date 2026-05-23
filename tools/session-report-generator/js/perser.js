@@ -1,3 +1,1 @@
-window.ReportGeneratorParser = window.ReportGeneratorParser || {
-  parse() { return null; }
-};
+window.REPORT_GEN_PARSER = window.REPORT_GEN_PARSER || {};

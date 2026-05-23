@@ -15,12 +15,6 @@ const diceCommands = [
   'D%'
 ];
 
-/*
-  Note:
-  CC1 / CC2 / CCB1 / SCC1 などの数字付きバリエーションは、
-  findDiceCommandIndex() 内の正規表現で検出する。
-*/
-
 const includedTabs = ['main', 'メイン', 'ho'];
 const excludedTabs = ['雑談', 'other', 'info', 'おはらい', 'お祓い', '運試し'];
 
@@ -139,12 +133,9 @@ function findDiceCommandIndex(text) {
   const indexes = [];
 
   /*
-    CoC 7版のボーナス・ペナルティダイス付きコマンド対応
-    CC1, CC2, CC3...
-    CCB1, CCB2...
-    SCC1, SCCB1...
-    SCBR1, CBR1...
-    などを、CC / CCB / SCC / CBR 系と同じダイスコマンドとして扱う。
+    CC1 / CC2 / CCB1 / SCC1 など、CoC 7版の
+    ボーナス・ペナルティダイス付きコマンドも
+    CC / CCB / SCC と同じ系列のダイスコマンドとして扱う。
   */
   const commandPatterns = [
     /SRESB/i,
@@ -167,8 +158,9 @@ function findDiceCommandIndex(text) {
   ];
 
   commandPatterns.forEach(pattern => {
+    const flags = pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g';
+    const regex = new RegExp(pattern.source, flags);
     let match;
-    const regex = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
 
     while ((match = regex.exec(source)) !== null) {
       const index = match.index;
@@ -180,9 +172,7 @@ function findDiceCommandIndex(text) {
       const validPrev = !prev || !isAsciiAlphaNumber(prev);
       const validNext = !next || !isAsciiAlphaNumber(next);
 
-      if (validPrev && validNext) {
-        indexes.push(index);
-      }
+      if (validPrev && validNext) indexes.push(index);
     }
   });
 

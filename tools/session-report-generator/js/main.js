@@ -1,5 +1,44 @@
-(() => {
+(function () {
+  'use strict';
+
   const $ = id => document.getElementById(id);
+
+  let isResetting = false;
+  let lastPreviewSelection = { start: 0, end: 0 };
+  let historyStack = [];
+  let redoStack = [];
+  let isApplyingHistory = false;
+  let manualPreviewHeight = null;
+
+  const FONT_VARIANTS = [
+    { id: 'sansBoldItalic', label: '𝘼 ボールド + イタリック（サンセリフ）', tooltip: 'ボールド + イタリック（サンセリフ）', chipClass: 'f-sans-bi' },
+    { id: 'sansBold', label: '𝗔 ボールド（サンセリフ）', tooltip: 'ボールド（サンセリフ）', chipClass: 'f-sans-b' },
+    { id: 'sansItalic', label: '𝘈 イタリック（サンセリフ）', tooltip: 'イタリック（サンセリフ）', chipClass: 'f-sans-i' },
+    { id: 'serifBoldItalic', label: '𝑨 ボールド + イタリック（セリフ）', tooltip: 'ボールド + イタリック（セリフ）', chipClass: 'f-serif-bi' },
+    { id: 'serifBold', label: '𝐀 ボールド（セリフ）', tooltip: 'ボールド（セリフ）', chipClass: 'f-serif-b' },
+    { id: 'serifItalic', label: '𝐴 イタリック（セリフ）', tooltip: 'イタリック（セリフ）', chipClass: 'f-serif-i' },
+    { id: 'smallCaps', label: 'ᴀ スモールキャップ', tooltip: 'スモールキャップ', chipClass: 'f-smallcaps' },
+    { id: 'typewriter', label: '𝙰 タイプライタースタイル（モノスペース）', tooltip: 'タイプライター（モノスペース）', chipClass: 'f-typewriter' },
+    { id: 'modernSans', label: '𝖠 モダンスタイル（サンセリフ）', tooltip: 'モダン（サンセリフ）', chipClass: 'f-modern' },
+    { id: 'plain', label: 'A 変換なし', tooltip: '変換なし', chipClass: 'f-plain' }
+  ];
+
+  const FONT_MAPS = {
+    sansBoldItalic: { upper: 0x1D63C, lower: 0x1D656, digit: 0x1D7EC },
+    sansBold: { upper: 0x1D5D4, lower: 0x1D5EE, digit: 0x1D7EC },
+    sansItalic: { upper: 0x1D608, lower: 0x1D622, digit: null },
+    serifBoldItalic: { upper: 0x1D468, lower: 0x1D482, digit: 0x1D7CE },
+    serifBold: { upper: 0x1D400, lower: 0x1D41A, digit: 0x1D7CE },
+    serifItalic: { upper: 0x1D434, lower: 0x1D44E, digit: null, lowerExceptions: { h: 'ℎ' } },
+    typewriter: { upper: 0x1D670, lower: 0x1D68A, digit: 0x1D7F6 },
+    modernSans: { upper: 0x1D5A0, lower: 0x1D5BA, digit: 0x1D7E2 },
+    smallCaps: {
+      chars: {
+        A:'ᴀ',B:'ʙ',C:'ᴄ',D:'ᴅ',E:'ᴇ',F:'ꜰ',G:'ɢ',H:'ʜ',I:'ɪ',J:'ᴊ',K:'ᴋ',L:'ʟ',M:'ᴍ',N:'ɴ',O:'ᴏ',P:'ᴘ',Q:'ꞯ',R:'ʀ',S:'ꜱ',T:'ᴛ',U:'ᴜ',V:'ᴠ',W:'ᴡ',X:'x',Y:'ʏ',Z:'ᴢ',
+        a:'ᴀ',b:'ʙ',c:'ᴄ',d:'ᴅ',e:'ᴇ',f:'ꜰ',g:'ɢ',h:'ʜ',i:'ɪ',j:'ᴊ',k:'ᴋ',l:'ʟ',m:'ᴍ',n:'ɴ',o:'ᴏ',p:'ᴘ',q:'ꞯ',r:'ʀ',s:'ꜱ',t:'ᴛ',u:'ᴜ',v:'ᴠ',w:'ᴡ',x:'x',y:'ʏ',z:'ᴢ'
+      }
+    }
+  };
 
   const SYSTEM_NAMES = {
     call_of_cthulhu: 'Call of Cthulhu',
@@ -17,56 +56,14 @@
     futari_sousa: 'フタリソウサ'
   };
 
-  const FONT_MAPS = {
-    sansBoldItalic: { label: 'BI', tooltip: 'ボールド + イタリック（サンセリフ）', upper: 0x1D63C, lower: 0x1D656, digit: 0x1D7EC },
-    sansBold: { label: 'B', tooltip: 'ボールド（サンセリフ）', upper: 0x1D5D4, lower: 0x1D5EE, digit: 0x1D7EC },
-    sansItalic: { label: 'I', tooltip: 'イタリック（サンセリフ）', upper: 0x1D608, lower: 0x1D622, digit: null },
-    serifBoldItalic: { label: 'SBI', tooltip: 'ボールド + イタリック（セリフ）', upper: 0x1D468, lower: 0x1D482, digit: 0x1D7CE },
-    serifBold: { label: 'SB', tooltip: 'ボールド（セリフ）', upper: 0x1D400, lower: 0x1D41A, digit: 0x1D7CE },
-    serifItalic: { label: 'SI', tooltip: 'イタリック（セリフ）', upper: 0x1D434, lower: 0x1D44E, digit: null, lowerExceptions: { h: 'ℎ' } },
-    smallCaps: {
-      label: 'SC',
-      tooltip: 'スモールキャップ',
-      chars: {
-        A: 'ᴀ', B: 'ʙ', C: 'ᴄ', D: 'ᴅ', E: 'ᴇ', F: 'ꜰ', G: 'ɢ', H: 'ʜ', I: 'ɪ', J: 'ᴊ', K: 'ᴋ', L: 'ʟ', M: 'ᴍ', N: 'ɴ', O: 'ᴏ', P: 'ᴘ', Q: 'ꞯ', R: 'ʀ', S: 'ꜱ', T: 'ᴛ', U: 'ᴜ', V: 'ᴠ', W: 'ᴡ', X: 'x', Y: 'ʏ', Z: 'ᴢ',
-        a: 'ᴀ', b: 'ʙ', c: 'ᴄ', d: 'ᴅ', e: 'ᴇ', f: 'ꜰ', g: 'ɢ', h: 'ʜ', i: 'ɪ', j: 'ᴊ', k: 'ᴋ', l: 'ʟ', m: 'ᴍ', n: 'ɴ', o: 'ᴏ', p: 'ᴘ', q: 'ꞯ', r: 'ʀ', s: 'ꜱ', t: 'ᴛ', u: 'ᴜ', v: 'ᴠ', w: 'ᴡ', x: 'x', y: 'ʏ', z: 'ᴢ'
-      }
-    },
-    typewriter: { label: 'TW', tooltip: 'タイプライター（モノスペース）', upper: 0x1D670, lower: 0x1D68A, digit: 0x1D7F6 },
-    modernSans: { label: 'MS', tooltip: 'モダン（サンセリフ）', upper: 0x1D5A0, lower: 0x1D5BA, digit: 0x1D7E2 },
-    plain: { label: 'A', tooltip: '変換なし' }
-  };
-
-  const FONT_CHIP_CLASSES = {
-    sansBoldItalic: 'f-sans-bi',
-    sansBold: 'f-sans-b',
-    sansItalic: 'f-sans-i',
-    serifBoldItalic: 'f-serif-bi',
-    serifBold: 'f-serif-b',
-    serifItalic: 'f-serif-i',
-    smallCaps: 'f-smallcaps',
-    typewriter: 'f-typewriter',
-    modernSans: 'f-modern',
-    plain: 'f-plain'
-  };
-
-  let lastPreviewSelection = { start: 0, end: 0 };
-  let isResetting = false;
-  let undoStack = [];
-  let redoStack = [];
-  let isApplyingHistory = false;
-  let manualPreviewHeight = null;
-  let lastPreviewValue = '';
-
   function cp(ch, start, base) {
     return base === null ? ch : String.fromCodePoint(base + ch.charCodeAt(0) - start);
   }
 
   function styleText(text, variant) {
     const map = FONT_MAPS[variant];
-    if (!map || variant === 'plain') return text;
-
-    return Array.from(String(text).normalize('NFKD')).map(ch => {
+    if (!map || variant === 'plain') return String(text || '');
+    return Array.from(String(text || '').normalize('NFKD')).map(ch => {
       if (map.chars) return map.chars[ch] || ch;
       if (/[A-Z]/.test(ch)) return cp(ch, 65, map.upper);
       if (/[a-z]/.test(ch)) return map.lowerExceptions?.[ch] || cp(ch, 97, map.lower);
@@ -82,6 +79,93 @@
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#039;');
+  }
+
+  function populateReportStyles() {
+    const select = $('reportStyle');
+    const styles = window.ReportTemplate?.REPORT_STYLES || [];
+    select.innerHTML = styles.map(style => `<option value="${escapeHtml(style.id)}">${escapeHtml(style.label)}</option>`).join('');
+  }
+
+  function populateFontVariants() {
+    const select = $('fontVariant');
+    select.innerHTML = FONT_VARIANTS.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`).join('');
+    select.value = 'sansBoldItalic';
+  }
+
+  function renderFontToolbar() {
+    const toolbar = $('fontToolbar');
+    if (!toolbar) return;
+    toolbar.innerHTML = '';
+    FONT_VARIANTS.forEach(item => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `font-chip ${item.chipClass}`;
+      button.dataset.variant = item.id;
+      button.dataset.tooltip = item.tooltip;
+      button.title = item.tooltip;
+      button.textContent = 'A';
+      button.addEventListener('click', () => {
+        pushHistory();
+        $('fontVariant').value = item.id;
+        updateFontToolbarActive();
+        previewSelectedStyle();
+      });
+      toolbar.appendChild(button);
+    });
+    updateFontToolbarActive();
+  }
+
+  function updateFontToolbarActive() {
+    const value = $('fontVariant')?.value;
+    document.querySelectorAll('.font-chip').forEach(button => {
+      button.classList.toggle('is-active', button.dataset.variant === value);
+    });
+  }
+
+  function renderAsciiArtButtons() {
+    const container = $('asciiArtContainer');
+    const collection = window.ReportTemplate?.ASCII_ART_COLLECTION;
+    if (!container || !collection) return;
+
+    container.innerHTML = '';
+    Object.entries(collection).forEach(([groupKey, groupData]) => {
+      const group = document.createElement('div');
+      group.className = 'ascii-group';
+      group.dataset.group = groupKey;
+
+      const title = document.createElement('div');
+      title.className = 'ascii-group-title';
+      title.textContent = groupData.label || groupKey.toUpperCase();
+
+      const buttons = document.createElement('div');
+      buttons.className = 'ascii-buttons';
+
+      (groupData.items || []).forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = item.label;
+        button.title = item.value;
+        button.dataset.decoration = item.value;
+        if (String(item.value).length > 20) button.classList.add('ascii-chip-line');
+        if (String(item.label).length > 10) button.classList.add('ascii-chip-wide');
+        button.addEventListener('click', () => insertDecorationAtPreviewCursor(item.value));
+        buttons.appendChild(button);
+      });
+
+      group.appendChild(title);
+      group.appendChild(buttons);
+      container.appendChild(group);
+    });
+  }
+
+  function getTodayString() {
+    const d = new Date();
+    return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+  }
+
+  function setTodayPlaceholder() {
+    $('dateText').placeholder = getTodayString();
   }
 
   function getSystemName() {
@@ -100,50 +184,9 @@
     return text + suffix;
   }
 
-  function sample(index, type) {
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-    return type === 'pc' ? '探索者' + (letters[index] || index + 1) : 'PL名' + (letters[index] || index + 1);
-  }
-
-  function populateReportStyles() {
-    const select = $('reportStyle');
-    select.innerHTML = '';
-    window.ReportTemplate.REPORT_STYLES.forEach(style => {
-      const option = document.createElement('option');
-      option.value = style.id;
-      option.textContent = style.label;
-      select.appendChild(option);
-    });
-  }
-
-  function renderFontQuickButtons() {
-    const container = $('fontQuickButtons');
-    container.innerHTML = '';
-
-    Array.from($('fontVariant').options).forEach(option => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'font-chip ' + (FONT_CHIP_CLASSES[option.value] || 'f-plain');
-      button.dataset.fontVariant = option.value;
-      const fontMeta = FONT_MAPS[option.value] || {};
-      button.textContent = 'A';
-      button.title = fontMeta.tooltip || option.textContent;
-      button.dataset.tooltip = fontMeta.tooltip || option.textContent;
-      button.addEventListener('click', () => {
-        $('fontVariant').value = option.value;
-        updateFontQuickActive();
-        renderPreviewFromInputs(true);
-      });
-      container.appendChild(button);
-    });
-
-    updateFontQuickActive();
-  }
-
-  function updateFontQuickActive() {
-    document.querySelectorAll('#fontQuickButtons button').forEach(button => {
-      button.classList.toggle('is-active', button.dataset.fontVariant === $('fontVariant').value);
-    });
+  function sampleName(index, type) {
+    const letters = ['A','B','C','D','E','F','G','H','I'];
+    return type === 'pc' ? `探索者${letters[index] || index + 1}` : `PL名${letters[index] || index + 1}`;
   }
 
   function addGM(value = '', role = 'KP') {
@@ -174,42 +217,36 @@
     row.querySelector('.add-inline').addEventListener('click', () => addGM());
     row.querySelector('.danger-inline').addEventListener('click', () => {
       row.remove();
-      renderPreviewFromInputs(true);
+      previewSelectedStyle();
     });
   }
 
-  function slotBase() {
+  function baseSlot() {
     return document.querySelector('#playerContainer .participant-row .player-slot')?.value || 'HO1';
   }
 
-  function participantHeaderChoice() {
-    const selected = document.querySelector('#playerContainer .participant-row .player-slot')?.value || '';
-    return selected === 'PC/PL' || selected === 'PL/PC' ? selected : '';
-  }
-
   function slotFor(index) {
-    const base = slotBase();
-    if (/^PC\d+$/i.test(base)) return 'PC' + index;
-    if (/^HO\d+$/i.test(base)) return 'HO' + index;
+    const base = baseSlot();
+    if (/^PC\d+$/i.test(base)) return `PC${index}`;
+    if (/^HO\d+$/i.test(base)) return `HO${index}`;
     return base;
   }
 
-  function slotOptions(selected, isFirst) {
-    const options = isFirst ? ['PC', 'PC1', 'HO1', 'PC/PL', 'PL/PC', '自由'] : [selected];
-    return options.map(value => `<option value="${value}" ${value === selected ? 'selected' : ''}>${value}</option>`).join('');
+  function buildSlotOptions(selected, isFirst) {
+    const options = isFirst ? ['PC','PC1','HO1','PC/PL','PL/PC','自由'] : [selected];
+    return options.map(value => `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('');
   }
 
   function syncSlots() {
     Array.from(document.querySelectorAll('#playerContainer .participant-row')).forEach((row, index) => {
       const select = row.querySelector('.player-slot');
       if (!select) return;
-
       if (index === 0) {
-        select.innerHTML = slotOptions(select.value || 'HO1', true);
+        select.innerHTML = buildSlotOptions(select.value || 'HO1', true);
         select.disabled = false;
       } else {
         const slot = slotFor(index + 1);
-        select.innerHTML = slotOptions(slot, false);
+        select.innerHTML = buildSlotOptions(slot, false);
         select.value = slot;
         select.disabled = true;
       }
@@ -229,11 +266,11 @@
     const isFirst = index === 1;
     const selected = slot || slotFor(index);
     const row = document.createElement('div');
-    row.className = 'participant-row name-order-' + $('nameInputOrder').value;
+    row.className = `participant-row name-order-${$('nameInputOrder').value}`;
     row.innerHTML = `
       <div class="slot-field">
         <label>枠</label>
-        <select class="player-slot" ${isFirst ? '' : 'disabled'}>${slotOptions(selected, isFirst)}</select>
+        <select class="player-slot" ${isFirst ? '' : 'disabled'}>${buildSlotOptions(selected, isFirst)}</select>
       </div>
       <div class="ho-field">
         <label>HO補足</label>
@@ -252,158 +289,108 @@
     $('playerContainer').appendChild(row);
     row.querySelector('.player-slot').addEventListener('change', () => {
       syncSlots();
-      renderPreviewFromInputs(true);
+      previewSelectedStyle();
     });
     row.querySelector('.delete-field').addEventListener('click', () => {
       row.remove();
       syncSlots();
-      renderPreviewFromInputs(true);
+      previewSelectedStyle();
     });
     syncSlots();
     updateNameOrder();
   }
 
-  function collectData() {
+  function collectData(useSample = true) {
     const suffix = getSuffix();
     let gms = Array.from(document.querySelectorAll('#gmContainer .row')).map((row, index) => {
-      const rawName = row.querySelector('.gm-name').value.trim();
+      const raw = row.querySelector('.gm-name')?.value.trim() || '';
       return {
-        role: row.querySelector('.gm-role').value || 'KP',
-        name: addSuffix(rawName || (index === 0 ? 'KP名' : ''), suffix)
+        role: row.querySelector('.gm-role')?.value || 'KP',
+        name: addSuffix(raw || (useSample && index === 0 ? 'KP名' : ''), suffix)
       };
     }).filter(item => item.name);
 
     let players = Array.from(document.querySelectorAll('#playerContainer .participant-row')).map((row, index) => {
-      const rawPc = row.querySelector('.pc-name').value.trim();
-      const rawPl = row.querySelector('.pl-name').value.trim();
+      const rawPc = row.querySelector('.pc-name')?.value.trim() || '';
+      const rawPl = row.querySelector('.pl-name')?.value.trim() || '';
       return {
-        slot: row.querySelector('.player-slot').value,
-        ho: row.querySelector('.ho-name').value.trim(),
-        pc: rawPc || sample(index, 'pc'),
-        pl: addSuffix(rawPl || sample(index, 'pl'), suffix)
+        slot: row.querySelector('.player-slot')?.value || 'HO1',
+        ho: row.querySelector('.ho-name')?.value.trim() || '',
+        pc: rawPc || (useSample ? sampleName(index, 'pc') : ''),
+        pl: addSuffix(rawPl || (useSample ? sampleName(index, 'pl') : ''), suffix)
       };
     }).filter(item => item.pc || item.pl || item.ho);
 
-    if (!gms.length) gms = [{ role: 'KP', name: 'KP名' }];
-    if (!players.length) players = [{ slot: 'HO1', ho: '', pc: '探索者A', pl: 'PL名A' }];
+    if (useSample && !gms.length) gms = [{ role: 'KP', name: 'KP名' }];
+    if (useSample && !players.length) players = [{ slot: 'HO1', ho: '', pc: '探索者A', pl: 'PL名A' }];
 
     return {
-      style: $('reportStyle').value,
-      fontVariant: $('fontVariant').value,
-      participantHeader: participantHeaderChoice(),
+      style: $('reportStyle').value || 'classic',
+      fontVariant: $('fontVariant').value || 'sansBoldItalic',
+      styleText,
       system: getSystemName(),
-      scenario: $('scenarioTitle').value.trim() || 'シナリオ名',
-      author: $('authorText').value.trim() || '作者名',
-      result: $('resultText').value.trim() || 'END A 両生還',
-      date: $('dateText').value.trim() || $('dateText').placeholder || getTodayString(),
+      scenario: $('scenarioTitle').value.trim() || (useSample ? 'シナリオ名' : ''),
+      author: $('authorText').value.trim() || (useSample ? '作者名' : ''),
+      result: $('resultText').value.trim() || (useSample ? 'END A 両生還' : ''),
+      date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder || getTodayString() : ''),
       hashtags: $('hashtagText').value.trim(),
       gms,
       players
     };
   }
 
-  function renderPreviewFromInputs(saveHistory = false) {
-    if (isResetting) return;
-    const output = window.ReportTemplate.renderParts(collectData(), styleText);
-    setPreviewValue(output, saveHistory);
-  }
-
-  function setPreviewValue(value, saveHistory = true) {
+  function renderPreview(text = null, push = false) {
     const preview = $('tweetPreview');
-    if (saveHistory && preview.value !== value) pushUndo(preview.value);
-    isApplyingHistory = true;
-    preview.value = value;
-    isApplyingHistory = false;
-    lastPreviewValue = value;
+    if (!preview) return;
+    if (push) pushHistory();
+    const output = text !== null ? text : window.ReportTemplate.renderParts(collectData(true));
+    preview.value = output;
     savePreviewSelection();
     updateCount();
-    requestAnimationFrame(fitPreviewTextBox);
+    fitPreviewTextBox();
   }
 
-  function pushUndo(value) {
-    if (undoStack[undoStack.length - 1] !== value) undoStack.push(value);
-    if (undoStack.length > 100) undoStack.shift();
+  function previewSelectedStyle() {
+    if (!isResetting) renderPreview();
+  }
+
+  function pushHistory() {
+    if (isApplyingHistory) return;
+    const preview = $('tweetPreview');
+    if (!preview) return;
+    const current = preview.value;
+    if (!historyStack.length || historyStack[historyStack.length - 1] !== current) {
+      historyStack.push(current);
+      if (historyStack.length > 80) historyStack.shift();
+    }
     redoStack = [];
-    updateHistoryButtons();
   }
 
   function undoPreview() {
     const preview = $('tweetPreview');
-    if (!undoStack.length) return;
-    redoStack.push(preview.value);
-    const value = undoStack.pop();
+    if (!preview || !historyStack.length) return;
     isApplyingHistory = true;
-    preview.value = value;
-    isApplyingHistory = false;
-    lastPreviewValue = value;
+    redoStack.push(preview.value);
+    preview.value = historyStack.pop();
     updateCount();
     savePreviewSelection();
-    lastPreviewValue = $('tweetPreview').value;
-    updateHistoryButtons();
+    isApplyingHistory = false;
   }
 
   function redoPreview() {
     const preview = $('tweetPreview');
-    if (!redoStack.length) return;
-    undoStack.push(preview.value);
-    const value = redoStack.pop();
+    if (!preview || !redoStack.length) return;
     isApplyingHistory = true;
-    preview.value = value;
-    isApplyingHistory = false;
-    lastPreviewValue = value;
+    historyStack.push(preview.value);
+    preview.value = redoStack.pop();
     updateCount();
     savePreviewSelection();
-    lastPreviewValue = $('tweetPreview').value;
-    updateHistoryButtons();
-  }
-
-  function updateHistoryButtons() {
-    $('undoButton').disabled = !undoStack.length;
-    $('redoButton').disabled = !redoStack.length;
-  }
-
-  function tweetLength(text) {
-    let total = 0;
-    for (const ch of Array.from(String(text).normalize('NFC'))) {
-      const code = ch.codePointAt(0);
-      total += (code <= 0x10FF || (code >= 0x2000 && code <= 0x201F) || (code >= 0x2032 && code <= 0x2037)) ? 1 : 2;
-    }
-    return total;
-  }
-
-  function updateCount() {
-    const count = tweetLength($('tweetPreview').value);
-    $('charCount').textContent = count + ' / 280';
-    $('limitStatus').textContent = count <= 280 ? 'OK' : (count - 280) + '字オーバー';
-    $('limitStatus').className = count <= 280 ? 'count-ok' : 'count-bad';
-  }
-
-  function fitPreviewTextBox() {
-    const panel = document.querySelector('.preview-panel');
-    const wrap = document.querySelector('.preview-textbox-wrap');
-    if (!panel || !wrap || window.innerWidth <= 920) return;
-    if (manualPreviewHeight !== null) {
-      wrap.style.height = manualPreviewHeight + 'px';
-      return;
-    }
-
-    const card = document.querySelector('.twitter-card');
-    const head = card.querySelector('.tweet-head');
-    const fonts = card.querySelector('.font-quick-buttons');
-    const count = card.querySelector('.count-line');
-    const buttons = card.querySelector('.preview-actions');
-    const available = panel.clientHeight
-      - (panel.querySelector('h2')?.offsetHeight || 0)
-      - (head?.offsetHeight || 0)
-      - (fonts?.offsetHeight || 0)
-      - (count?.offsetHeight || 0)
-      - (buttons?.offsetHeight || 0)
-      - 64;
-    wrap.style.height = Math.max(window.innerHeight < 760 ? 210 : 280, available) + 'px';
+    isApplyingHistory = false;
   }
 
   function savePreviewSelection() {
     const preview = $('tweetPreview');
+    if (!preview) return;
     lastPreviewSelection = {
       start: preview.selectionStart ?? preview.value.length,
       end: preview.selectionEnd ?? preview.value.length
@@ -412,82 +399,106 @@
 
   function insertDecorationAtPreviewCursor(text) {
     const preview = $('tweetPreview');
-    const focused = document.activeElement === preview;
-    const start = focused ? preview.selectionStart : lastPreviewSelection.start;
-    const end = focused ? preview.selectionEnd : lastPreviewSelection.end;
-    pushUndo(preview.value);
+    if (!preview) return;
+    pushHistory();
+    const hasFocus = document.activeElement === preview;
+    const start = hasFocus ? preview.selectionStart ?? preview.value.length : lastPreviewSelection.start ?? preview.value.length;
+    const end = hasFocus ? preview.selectionEnd ?? preview.value.length : lastPreviewSelection.end ?? preview.value.length;
     preview.value = preview.value.slice(0, start) + text + preview.value.slice(end);
-    const next = start + text.length;
+    const next = start + String(text).length;
     preview.focus();
     preview.selectionStart = next;
     preview.selectionEnd = next;
     lastPreviewSelection = { start: next, end: next };
     updateCount();
-    requestAnimationFrame(fitPreviewTextBox);
-  }
-
-  function renderAsciiArtButtons() {
-    const container = $('asciiArtContainer');
-    const collection = window.ReportTemplate.ASCII_ART_COLLECTION;
-    container.innerHTML = '';
-    Object.entries(collection).forEach(([key, groupData]) => {
-      const group = document.createElement('div');
-      group.className = 'ascii-group';
-      group.dataset.group = key;
-
-      const title = document.createElement('div');
-      title.className = 'ascii-group-title';
-      title.textContent = groupData.label || key.toUpperCase();
-
-      const buttons = document.createElement('div');
-      buttons.className = 'ascii-buttons';
-
-      groupData.items.forEach(item => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'ascii-art-chip ' + (item.className || '');
-        button.textContent = item.display || item.label;
-        button.title = item.tooltip || item.value;
-        button.dataset.tooltip = item.tooltip || item.value;
-        button.dataset.decoration = item.value;
-        button.addEventListener('click', () => insertDecorationAtPreviewCursor(item.value));
-        buttons.appendChild(button);
-      });
-
-      group.appendChild(title);
-      group.appendChild(buttons);
-      container.appendChild(group);
-    });
   }
 
   function clearPreview() {
-    pushUndo($('tweetPreview').value);
+    pushHistory();
     $('tweetPreview').value = '';
-    lastPreviewValue = '';
     lastPreviewSelection = { start: 0, end: 0 };
     updateCount();
-    updateHistoryButtons();
     $('tweetPreview').focus();
   }
 
   async function copyTweet() {
+    const preview = $('tweetPreview');
+    if (!preview) return;
     try {
-      await navigator.clipboard.writeText($('tweetPreview').value);
+      await navigator.clipboard.writeText(preview.value);
       alert('コピーしました。');
-    } catch {
-      $('tweetPreview').select();
+    } catch (e) {
+      preview.select();
       document.execCommand('copy');
       alert('コピーしました。');
     }
   }
 
-  function getTodayString() {
-    const now = new Date();
-    return now.getFullYear() + '/' + (now.getMonth() + 1) + '/' + now.getDate();
+  function tweetLength(text) {
+    let total = 0;
+    for (const ch of Array.from(String(text || '').normalize('NFC'))) {
+      const code = ch.codePointAt(0);
+      total += (code <= 0x10FF || (code >= 0x2000 && code <= 0x201F) || (code >= 0x2032 && code <= 0x2037)) ? 1 : 2;
+    }
+    return total;
   }
 
-  function setTodayPlaceholder() {
-    $('dateText').placeholder = getTodayString();
+  function updateCount() {
+    const count = tweetLength($('tweetPreview').value);
+    $('charCount').textContent = `${count} / 280`;
+    $('limitStatus').textContent = count <= 280 ? 'OK' : `${count - 280}字オーバー`;
+    $('limitStatus').className = count <= 280 ? 'count-ok' : 'count-bad';
+  }
+
+  function fitPreviewTextBox() {
+    const text = $('tweetPreview');
+    const panel = document.querySelector('.preview-panel');
+    const card = document.querySelector('.twitter-card');
+    if (!text || !panel || !card || window.innerWidth <= 920 || manualPreviewHeight) return;
+    const h2 = panel.querySelector('h2')?.offsetHeight || 0;
+    const head = card.querySelector('.tweet-head')?.offsetHeight || 0;
+    const toolbar = card.querySelector('.font-toolbar')?.offsetHeight || 0;
+    const count = card.querySelector('.count-line')?.offsetHeight || 0;
+    const actions = card.querySelector('.preview-actions')?.offsetHeight || 0;
+    const hint = panel.querySelector('.hint')?.offsetHeight || 0;
+    const available = panel.clientHeight - h2 - head - toolbar - count - actions - hint - 70;
+    text.style.height = `${Math.max(220, Math.min(620, available))}px`;
+  }
+
+  function bindPreviewResizer() {
+    const handle = $('previewResizeHandle');
+    const preview = $('tweetPreview');
+    if (!handle || !preview) return;
+
+    let startY = 0;
+    let startH = 0;
+
+    function move(e) {
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      manualPreviewHeight = Math.max(180, Math.min(720, startH + clientY - startY));
+      preview.style.height = `${manualPreviewHeight}px`;
+    }
+
+    function end() {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('touchend', end);
+    }
+
+    function start(e) {
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      startY = clientY;
+      startH = preview.offsetHeight;
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', end);
+      document.addEventListener('touchmove', move, { passive: false });
+      document.addEventListener('touchend', end);
+      e.preventDefault();
+    }
+
+    handle.addEventListener('mousedown', start);
+    handle.addEventListener('touchstart', start, { passive: false });
   }
 
   function updateCustomSystemInput() {
@@ -498,51 +509,23 @@
     isResetting = true;
     document.querySelectorAll('.input-panel input:not([type="checkbox"])').forEach(input => { input.value = ''; });
     $('systemSelect').value = 'call_of_cthulhu';
-    $('reportStyle').value = window.ReportTemplate.REPORT_STYLES[0].id;
+    $('reportStyle').value = 'classic';
     $('fontVariant').value = 'sansBoldItalic';
+    document.querySelectorAll('input[name="suffixChoice"]').forEach(input => { input.checked = input.value === 'none'; });
     $('nameInputOrder').value = 'pcpl';
-    document.querySelectorAll('input[name="suffixChoice"]').forEach(input => {
-      input.checked = input.value === 'none';
-    });
     $('gmContainer').innerHTML = '';
     $('playerContainer').innerHTML = '';
     addGM();
     addPlayer();
     setTodayPlaceholder();
     updateCustomSystemInput();
-    manualPreviewHeight = null;
-    undoStack = [];
+    historyStack = [];
     redoStack = [];
+    manualPreviewHeight = null;
+    $('tweetPreview').style.height = '';
     isResetting = false;
-    renderPreviewFromInputs(false);
-    updateFontQuickActive();
-    updateHistoryButtons();
-  }
-
-  function bindPreviewResize() {
-    const grip = $('previewResizeGrip');
-    const wrap = document.querySelector('.preview-textbox-wrap');
-    let startY = 0;
-    let startHeight = 0;
-
-    grip.addEventListener('pointerdown', event => {
-      startY = event.clientY;
-      startHeight = wrap.getBoundingClientRect().height;
-      grip.setPointerCapture(event.pointerId);
-      document.body.classList.add('is-resizing-preview');
-    });
-
-    grip.addEventListener('pointermove', event => {
-      if (!grip.hasPointerCapture(event.pointerId)) return;
-      const next = Math.max(180, Math.min(900, startHeight + event.clientY - startY));
-      manualPreviewHeight = next;
-      wrap.style.height = next + 'px';
-    });
-
-    grip.addEventListener('pointerup', event => {
-      if (grip.hasPointerCapture(event.pointerId)) grip.releasePointerCapture(event.pointerId);
-      document.body.classList.remove('is-resizing-preview');
-    });
+    updateFontToolbarActive();
+    renderPreview('');
   }
 
   function bindEvents() {
@@ -551,69 +534,60 @@
 
     document.querySelectorAll('input[name="suffixChoice"]').forEach(input => {
       input.addEventListener('change', () => {
-        document.querySelectorAll('input[name="suffixChoice"]').forEach(item => {
-          item.checked = item === input;
-        });
-        renderPreviewFromInputs(true);
+        document.querySelectorAll('input[name="suffixChoice"]').forEach(item => { item.checked = item === input; });
+        previewSelectedStyle();
       });
     });
 
-    $('addPlayerButton').addEventListener('click', () => {
-      addPlayer();
-      renderPreviewFromInputs(true);
-    });
-    $('generateButton').addEventListener('click', () => renderPreviewFromInputs(true));
+    $('addPlayerButton').addEventListener('click', () => addPlayer());
+    $('generateButton').addEventListener('click', () => renderPreview(null, true));
     $('clearAllButton').addEventListener('click', resetAll);
     $('copyButton').addEventListener('click', copyTweet);
     $('undoButton').addEventListener('click', undoPreview);
     $('redoButton').addEventListener('click', redoPreview);
     $('clearPreviewButton').addEventListener('click', clearPreview);
 
-    $('reportStyle').addEventListener('change', () => renderPreviewFromInputs(true));
+    $('reportStyle').addEventListener('change', previewSelectedStyle);
     $('fontVariant').addEventListener('change', () => {
-      updateFontQuickActive();
-      renderPreviewFromInputs(true);
+      updateFontToolbarActive();
+      previewSelectedStyle();
     });
     $('nameInputOrder').addEventListener('change', () => {
       updateNameOrder();
-      renderPreviewFromInputs(true);
+      previewSelectedStyle();
     });
     $('systemSelect').addEventListener('change', () => {
       updateCustomSystemInput();
       if (['emoklore_en', 'emoklore_ja'].includes($('systemSelect').value)) {
         document.querySelectorAll('.gm-role').forEach(role => { role.value = 'DL'; });
       }
-      renderPreviewFromInputs(true);
+      previewSelectedStyle();
     });
-    document.querySelector('.input-panel').addEventListener('input', () => renderPreviewFromInputs(true));
 
-    $('tweetPreview').addEventListener('beforeinput', () => {
-      if (!isApplyingHistory) pushUndo($('tweetPreview').value);
-    });
-    $('tweetPreview').addEventListener('input', () => {
-      lastPreviewValue = $('tweetPreview').value;
+    document.querySelector('.input-panel').addEventListener('input', previewSelectedStyle);
+    document.querySelector('.input-panel').addEventListener('change', previewSelectedStyle);
+
+    const preview = $('tweetPreview');
+    preview.addEventListener('beforeinput', pushHistory);
+    preview.addEventListener('input', () => {
       savePreviewSelection();
       updateCount();
-      updateHistoryButtons();
     });
-    ['click', 'keyup', 'select'].forEach(eventName => $('tweetPreview').addEventListener(eventName, savePreviewSelection));
-
-    bindPreviewResize();
+    ['click', 'keyup', 'select', 'mouseup'].forEach(eventName => preview.addEventListener(eventName, savePreviewSelection));
   }
 
   function init() {
     populateReportStyles();
-    renderFontQuickButtons();
+    populateFontVariants();
+    renderFontToolbar();
     renderAsciiArtButtons();
-    bindEvents();
     addGM();
     addPlayer();
     setTodayPlaceholder();
     updateCustomSystemInput();
-    renderPreviewFromInputs(false);
-    savePreviewSelection();
-    lastPreviewValue = $('tweetPreview').value;
-    updateHistoryButtons();
+    bindPreviewResizer();
+    bindEvents();
+    renderPreview();
   }
 
   document.addEventListener('DOMContentLoaded', init);

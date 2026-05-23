@@ -1,6 +1,6 @@
 const I18N = {
   ja: {
-    "nav.backToTools": "← TRPG Web ツール",
+    "nav.backToTools": "← TRPG Webツール観測所",
     "tag.diceLogInput": "ダイスログインプット",
     "tag.coc67": "CoC 6版 / 7版",
     "tag.growthCheckerLink": "成長チェッカーと連携",
@@ -27,7 +27,7 @@ const I18N = {
     "input.dropTabs": "[雑談] / [other] / [info] 系の行を除外する",
     "input.onlyD100": "d100系ロールのみ抽出する",
     "input.autoHideMaxRolls": "自動非表示にする総ロール数",
-    "input.note": "対応例：CCB&lt;=80、CC&lt;=60、RESB(10-16)、1d100&lt;=55、s1d100、D100、判定結果の「出目 03 / 100 / ＞ 96」など。<br>キャラクター名は「名前：CC」「名前：CCB」「[main] 名前：CC」「[main] 名前：CCB」形式などから自動検出します。検出されたキャラクターはチェックを外すことで非表示にできます。<br>タブ除外ONの場合、[main] / [メイン] / [HO系] は解析対象、[雑談] / [other] / [info] / [おはらい] / [お祓い] / [運試し] は除外対象になります。<br>総ロール数が指定値以下のキャラクターはNPC想定として、分析直後は自動で非表示になります。",
+    "input.note": "対応例：CCB&lt;=80、CC&lt;=60、1d100&lt;=55、RESB(10-16)、D100 など。<br>キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。<br>[雑談] / [other] / [info] 系は除外できます。少数ロールのキャラは初期状態で非表示になります。",
 
     "button.analyze": "分析する",
     "button.clear": "クリア",
@@ -103,7 +103,7 @@ const I18N = {
   },
 
   en: {
-    "nav.backToTools": "← TRPG Web Tools",
+    "nav.backToTools": "← TRPG Web Tools Observatory",
     "tag.diceLogInput": "Dice Log Input",
     "tag.coc67": "CoC 6e / 7e",
     "tag.growthCheckerLink": "Growth Checker Linked",
@@ -131,7 +131,7 @@ const I18N = {
     "input.dropTabs": "Exclude [雑談] / [other] / [info] style lines",
     "input.onlyD100": "Extract d100-style rolls only",
     "input.autoHideMaxRolls": "Auto-hide characters with rolls up to",
-    "input.note": "Supported examples: CCB&lt;=80, CC&lt;=60, RESB(10-16), 1d100&lt;=55, s1d100, D100, and result lines such as “出目 03 / 100 / ＞ 96”.<br>Character names are automatically detected from formats such as “Name: CC”, “Name: CCB”, “[main] Name: CC”, and “[main] Name: CCB”. Detected characters can be hidden or shown from the character settings.<br>When tab filtering is enabled, [main] / [メイン] / [HO] are included, while [雑談] / [other] / [info] / [おはらい] / [お祓い] / [運試し] are excluded.<br>Characters with total rolls at or below the specified number are treated as likely NPCs and hidden by default after analysis.",
+    "input.note": "Examples: CCB&lt;=80, CC&lt;=60, 1d100&lt;=55, RESB(10-16), or D100.<br>Character names are detected from formats like “Name: CC” or “[main] Name: CCB”.<br>Chat/info tabs can be excluded. Characters with few rolls are hidden by default.",
 
     "button.analyze": "Analyze",
     "button.clear": "Clear",
