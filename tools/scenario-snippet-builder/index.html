@@ -3,14 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <title>TRPGシナリオ情報カード作成ツール Beta</title>
+  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/snippet_builder_style.css">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
+  </script>
 </head>
 
 <body>
   <div class="app" id="appRoot">
     <header class="app-header">
       <div class="header-title-group">
-        <div class="app-title">TRPGシナリオ情報カード作成ツール｜TRPG Webツール観測所</div>
+        <div class="app-title">TRPGシナリオ情報カード作成ツール</div>
         <div class="app-subtitle">シナリオ本文を貼り付け、編集用本文から必要情報をカード化し、ココフォリア用スニペットとしてコピーできます。</div>
       </div>
 
@@ -93,6 +103,18 @@
         <div id="cardsList" class="cards-list"></div>
       </section>
     </main>
+
+    <section class="tool-footer-note">
+      <h2>利用上の注意</h2>
+      <p>
+        本ツールは、開発者 @KumachanSteps による個人制作の非公式TRPG支援ツールです。
+        各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
+      </p>
+      <p>
+        不具合報告や要望は、Xの @KumachanSteps 宛のDMにてお送りください。
+        ただし、すべての報告や要望に返信・対応できるとは限りません。
+      </p>
+    </section>
   </div>
 
   <script src="js/i18n.js"></script>

@@ -1,19 +1,46 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-NJD5JZML31');
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
   </script>
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓報告ジェネレーター</title>
-  <link rel="icon" href="kuma_icon.ico" type="image/x-icon" />
+  <title>卓報告ジェネレータ｜TRPG WEBツール観測所</title>
+  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/report_gen_style.css" />
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f6f8fb;padding:22px 18px 96px}
+    .site-header{width:min(1280px,100%);position:relative;margin:0 auto 16px;padding:14px 18px 13px;border:1px solid rgba(15,23,42,.10);border-radius:28px;background:rgba(255,255,255,.90);box-shadow:0 16px 34px rgba(15,23,42,.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+    .header-inner{min-width:0;display:flex;flex-direction:column;gap:8px}.header-top-tags{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0}.portal-link,.header-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:750;line-height:1.35;white-space:nowrap;text-decoration:none}.portal-link{border:1px solid rgba(15,23,42,.10);background:rgba(255,255,255,.68);color:#0ea5e9;box-shadow:0 4px 14px rgba(15,23,42,.08);transition:transform 160ms ease,background 160ms ease,border-color 160ms ease,box-shadow 160ms ease}.portal-link:hover{transform:translateY(-2px);border-color:rgba(29,155,240,.48);background:rgba(29,155,240,.12);box-shadow:0 14px 28px rgba(29,155,240,.16)}.header-pill-cyan{border:1px solid rgba(29,155,240,.30);background:rgba(29,155,240,.10);color:#0ea5e9}.header-pill-violet{border:1px solid rgba(124,58,237,.24);background:rgba(124,58,237,.10);color:#6d28d9}.header-pill-amber{border:1px solid rgba(217,119,6,.28);background:rgba(217,119,6,.10);color:#b45309}.header-title-area{min-width:0}.site-title{margin:0;color:#172033;font-size:clamp(24px,3vw,34px);line-height:1.1;font-weight:800;letter-spacing:-.025em;display:flex;align-items:center;gap:10px}.site-title-icon{position:relative;display:inline-grid;place-items:center;width:42px;height:42px;border-radius:16px;background:linear-gradient(135deg,rgba(29,155,240,.18),rgba(124,58,237,.14));border:1px solid rgba(29,155,240,.24);box-shadow:0 8px 18px rgba(15,23,42,.08);line-height:1;flex:0 0 auto;overflow:hidden}.site-title-icon .icon-bird{position:absolute;left:8px;top:11px;width:25px;height:25px;color:#0f1419;transform:rotate(-8deg);filter:drop-shadow(0 2px 3px rgba(15,23,42,.14))}.site-title-icon .icon-bird svg{display:block;width:100%;height:100%;fill:currentColor}.site-title-icon .icon-star{position:absolute;right:5px;top:4px;color:#7c3aed;font-size:15px;line-height:1;filter:drop-shadow(0 2px 3px rgba(124,58,237,.16))}.site-title-icon .icon-style-a{position:absolute;right:5px;bottom:3px;color:#0f1419;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:700;font-size:14px;line-height:1;transform:skew(-8deg);filter:drop-shadow(0 2px 3px rgba(15,23,42,.12))}.site-description{max-width:980px;margin:6px 0 0;color:#334155;font-size:13.5px;line-height:1.6}.site-description span{display:block}
+    .main,.app-shell{width:min(1280px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(560px,1fr) minmax(460px,600px);gap:18px;align-items:start}
+    .panel{background:#fff;border:1px solid #dfe6f0;border-radius:22px;padding:18px;box-shadow:0 16px 34px rgba(15,23,42,.08)}
+    .input-panel,.preview-panel{max-height:calc(100vh - 170px);overflow:auto}.panel h2{margin:0 0 14px;font-size:18px}
+    .section{border-top:1px solid #e5edf5;padding-top:14px;margin-top:14px}.section:first-of-type{border-top:0;margin-top:0;padding-top:0}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stacked-grid{margin-top:12px}.field-block{min-width:0}
+    label{display:block;margin-bottom:6px;font-weight:800;font-size:13px;color:#172033}.hint{font-size:12px;color:#667085;margin:6px 0 0;line-height:1.5}
+    input,select,textarea{width:100%;border:1px solid #cfd9de;border-radius:13px;padding:10px 12px;background:#fff;color:#172033;font:inherit}input:focus,select:focus,textarea:focus{outline:none;border-color:#1d9bf0;box-shadow:0 0 0 2px rgba(29,155,240,.15)}
+    .custom-system-input{display:none;margin-top:8px}.custom-system-input.is-active{display:block}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.suffix-checks{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.suffix-checks label{margin:0;font-size:12px;color:#667085}.suffix-checks input{width:auto;margin-right:3px}
+    .row{display:grid;grid-template-columns:92px 1fr 42px 42px;gap:8px;align-items:end;margin-bottom:8px}.participant-row{display:grid;grid-template-columns:96px 1fr 1fr 1fr 42px;gap:8px;align-items:end;margin-bottom:8px}.participant-container{margin-top:10px}
+    .slot-field{order:1}.ho-field{order:2}.pc-field{order:3}.pl-field{order:4}.delete-field{order:5}.participant-row.name-order-plpc .pl-field{order:3}.participant-row.name-order-plpc .pc-field{order:4}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}button{border:0;border-radius:999px;padding:9px 13px;background:#e8f5fd;color:#1d9bf0;font-weight:800;cursor:pointer}button:hover{background:#dff1fb}.primary{background:#1d9bf0;color:#fff}.primary:hover{background:#1a8cd8}.subtle{background:#fff;color:#172033;border:1px solid #cfd9de}.danger,.danger-inline{background:#fee2e2;color:#991b1b}.add-inline{background:#dcfce7;color:#166534}.icon-button{width:42px;height:42px;padding:0;font-size:20px}
+    .twitter-card{border:1px solid #cfd9de;border-radius:18px;overflow:hidden;background:#fff}.tweet-head{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:14px 16px 10px;border-bottom:1px solid #eff3f4}.tweet-head::after{content:'•••';color:#667085}.avatar{width:44px;height:44px;border-radius:50%;background:#0f1419;position:relative}.avatar::after{content:'SR';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:900}.account strong{display:block}.account span{color:#667085;font-size:13px}
+    #tweetPreview{height:360px;min-height:180px;border:0;border-radius:0;resize:none;padding:16px 18px 12px 70px;line-height:1.55;overflow:auto}.count-line{display:flex;justify-content:space-between;padding:8px 16px 8px 70px;border-top:1px solid #eff3f4;color:#667085;font-size:13px}.count-ok{color:#00ba7c;font-weight:800}.count-bad{color:#f4212e;font-weight:800}.preview-actions{display:grid;grid-template-columns:repeat(4,1fr);padding:10px 14px 14px;border-top:1px solid #eff3f4;margin:0}.preview-actions button{font-size:13px;padding:8px;white-space:nowrap}
+    .ascii-preview-panel{background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #dfe6f0;border-radius:18px;padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+    .ascii-group{margin-top:12px}.ascii-group:first-of-type{margin-top:0}.ascii-group-title{display:flex;align-items:center;gap:8px;margin-bottom:7px;color:#667085;font-size:11px;font-weight:900;letter-spacing:.08em}.ascii-group-title::before{content:"";width:7px;height:7px;border-radius:50%;background:#1d9bf0;box-shadow:0 0 0 4px rgba(29,155,240,.10)}.ascii-buttons{display:flex;flex-wrap:wrap;gap:7px}.ascii-buttons button{min-height:34px;padding:7px 11px;font-size:13px;background:#fff;border:1px solid #dfe6f0;color:#334155;box-shadow:0 2px 8px rgba(15,23,42,.04);font-family:"Times New Roman","Yu Mincho","Hiragino Mincho ProN","Noto Serif JP","Apple Symbols","Segoe UI Symbol",serif;letter-spacing:.01em}.ascii-buttons button:hover{background:#f8fbff;color:#1d9bf0;border-color:rgba(29,155,240,.28)}.ascii-chip-wide{min-width:88px}.ascii-chip-line{min-width:118px}.ascii-chip-design{min-width:80px}.font-toolbar{display:flex;gap:7px;flex-wrap:nowrap;overflow-x:auto;padding:10px 14px;border-bottom:1px solid #eff3f4;background:#fff}.font-chip{display:inline-grid;place-items:center;min-width:46px;height:32px;border:1px solid #dfe6f0;border-radius:999px;background:#fff;color:#172033;font-size:16px;line-height:1;box-shadow:0 2px 8px rgba(15,23,42,.04);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.font-chip:hover,.font-chip.is-active{background:#e8f5fd;color:#1d9bf0;border-color:rgba(29,155,240,.32)}.f-sans-bi{font-style:italic;font-weight:900}.f-sans-b{font-weight:900}.f-sans-i{font-style:italic}.f-serif-bi{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:900}.f-serif-b{font-family:Georgia,"Times New Roman",serif;font-weight:900}.f-serif-i{font-family:Georgia,"Times New Roman",serif;font-style:italic}.f-smallcaps{font-variant:small-caps;letter-spacing:.03em}.f-typewriter{font-family:"Courier New",monospace}.f-modern{font-family:Arial,"Helvetica Neue",sans-serif;font-weight:500}.f-plain{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .tool-footer-note{width:min(1280px,100%);margin:18px auto 0;padding:18px 20px;background:rgba(255,255,255,.90);border:1px solid #dfe6f0;border-radius:22px;box-shadow:0 10px 26px rgba(15,23,42,.06);color:#334155}.tool-footer-note h2{margin:0 0 8px;font-size:16px;color:#172033}.tool-footer-note p{margin:8px 0 0;font-size:13px;line-height:1.7;color:#526072}
+    .bottom-actions{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:min(500px,calc(100% - 32px));display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px;background:rgba(255,255,255,.92);border:1px solid #dfe6f0;border-radius:999px;box-shadow:0 4px 18px rgba(15,20,25,.10);z-index:20}.bottom-action-button{min-height:40px}
+    @media(max-width:760px){.site-header{padding:14px 14px 13px;border-radius:22px}.header-top-tags{gap:5px}.site-title{font-size:24px}.site-description{font-size:13px}}
+    @media(max-width:920px){body{padding:14px 12px 96px}.main,.app-shell{grid-template-columns:1fr}.input-panel,.preview-panel{max-height:none}.grid-2,.row,.participant-row{grid-template-columns:1fr}.preview-actions{grid-template-columns:1fr 1fr}#tweetPreview{height:320px;padding-left:16px}.count-line{padding-left:16px}}
+  </style>
 </head>
 <body>
   <header class="site-header">
@@ -24,12 +51,8 @@
         <span class="header-pill header-pill-violet">卓報告</span>
         <span class="header-pill header-pill-amber">テンプレ生成</span>
       </div>
-
       <div class="header-title-area">
-        <h1 class="site-title">
-          <span class="site-title-icon" aria-hidden="true">✦</span>
-          <span>卓報告ジェネレーター</span>
-        </h1>
+        <h1 class="site-title"><span class="site-title-icon" aria-hidden="true"><span class="icon-bird"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 5.2c-.7.3-1.4.5-2.2.6.8-.5 1.3-1.2 1.6-2.1-.7.4-1.5.7-2.4.9a3.8 3.8 0 0 0-6.6 3.4A10.8 10.8 0 0 1 4.2 4a3.8 3.8 0 0 0 1.2 5.1c-.6 0-1.2-.2-1.7-.5v.1c0 1.8 1.3 3.3 3 3.7-.3.1-.7.1-1 .1-.2 0-.5 0-.7-.1.5 1.5 1.9 2.6 3.6 2.6A7.6 7.6 0 0 1 3 16.6a10.7 10.7 0 0 0 5.8 1.7c7 0 10.8-5.8 10.8-10.8v-.5c.7-.5 1.4-1.2 2-1.8z"/></svg></span><span class="icon-star">✦</span><span class="icon-style-a">A</span></span><span>卓報告ジェネレータ</span></h1>
         <p class="site-description">
           <span>SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
           <span>シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
@@ -46,8 +69,27 @@
         <div class="grid-2">
           <div class="field-block">
             <label for="reportStyle">卓報告サンプルリスト</label>
-            <select id="reportStyle"></select>
-                      </div>
+            <select id="reportStyle">
+              <option value="classic">クラシック：標準・読みやすい</option>
+              <option value="minimal">ミニマル：短文シンプル</option>
+              <option value="frame">✦フレーム：✦ ┈┈┈┈┈┈ ✦</option>
+              <option value="asterisk-frame">✼フレーム：✼••┈┈••✼••┈┈••✼</option>
+              <option value="fancy">⟡フレーム：⟡.·*.·····················⟡.·*.</option>
+              <option value="block">▮ ブロック：▮ システム名 ▮</option>
+              <option value="ho-focus">HO一覧スタイル：HO一覧重視</option>
+              <option value="kpc-pair">KPCタイマン：| ᴋᴘᴄ・ᴋᴘ ＆ | ᴘᴄ・ᴘʟ</option>
+              <option value="emoklore">✧上下囲み：✧　　　　　　　　✧</option>
+              <option value="wide-title">◤ シナリオ名 ◢ ɢᴍ: ᴘʟ/ᴘᴄ</option>
+              <option value="zigzag">◢◤◢ シナリオ名 ◢◤◢</option>
+              <option value="corner-frame">◤￣￣￣ title ＿＿＿◢</option>
+              <option value="triangle-heading">▸ system ▸ ɢᴍ: ▸ ᴘᴄ/ᴘʟ:</option>
+              <option value="scenario-clear">⧉ system |ɢᴍ |ᴘᴄ・ᴘʟ</option>
+              <option value="handwritten-title">⌜ TITLE ⌟ / ✧𝐊𝐏・✧𝐏𝐋</option>
+              <option value="double-line">════════ / ᴋᴘ・ʜᴏ</option>
+              <option value="ribbon-title">‧₊˚ ୨ Title ୧ ˚₊ 𝗞𝗣…𝗣𝗖/𝗣𝗟…</option>
+            </select>
+            <p class="hint">SNS実例の構造だけを参考にしたテンプレートです。</p>
+          </div>
 
           <div class="field-block">
             <label for="fontVariant">文字スタイル</label>
@@ -59,11 +101,12 @@
               <option value="serifBold">𝐀 ボールド（セリフ）</option>
               <option value="serifItalic">𝐴 イタリック（セリフ）</option>
               <option value="smallCaps">ᴀ スモールキャップ</option>
-              <option value="typewriter">𝙰 タイプライター（モノスペース）</option>
-              <option value="modernSans">𝖠 モダン（サンセリフ）</option>
+              <option value="typewriter">𝙰 タイプライタースタイル（モノスペース セリフ）</option>
+              <option value="modernSans">𝖠 モダンスタイル（サンセリフ）</option>
               <option value="plain">A 変換なし</option>
             </select>
-                      </div>
+            <p class="hint">英数字のみ変換します。日本語・記号・装飾はそのままです。</p>
+          </div>
         </div>
 
         <div class="grid-2 stacked-grid">
@@ -141,7 +184,7 @@
         <div class="btns">
           <button id="addPlayerButton" type="button">＋ 参加者を追加</button>
         </div>
-        <p class="hint">1行目が PC1 なら PC2, PC3、HO1 なら HO2, HO3 のように続きます。</p>
+        <p class="hint">選択肢は PC / PC1 / HO1 / PC/PL / PL/PC / 自由です。1行目が PC1 なら PC2, PC3、HO1 なら HO2, HO3 のように自動で続きます。</p>
       </section>
 
       <section class="section misc-section" aria-label="補足情報">
@@ -160,9 +203,51 @@
 
       <section class="section decoration-panel" aria-label="アスキーアートと装飾">
         <label>アスキーアート / 装飾</label>
-        <p class="hint">クリックすると、右側プレビューの編集中カーソル位置に挿入されます。</p>
-        <div id="asciiArtContainer" class="ascii-preview-panel"></div>
+        <p class="hint">クリックすると、右側プレビューの編集中カーソル位置に挿入される想定です。</p>
+
+        <div class="ascii-preview-panel">
+          <div class="ascii-group">
+            <div class="ascii-group-title">LINE</div>
+            <div class="ascii-buttons">
+              <button type="button" class="ascii-chip-line" title="✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦">✦ ┈┈ ✦</button>
+              <button type="button" class="ascii-chip-line" title="⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·">⟡ ⎯⎯ ⟡</button>
+              <button type="button" class="ascii-chip-line" title="──────────────────">──────</button>
+              <button type="button" class="ascii-chip-line" title="──────── ⋅ ✩ ⋅ ────────">─ ⋅ ✩ ⋅ ─</button>
+              <button type="button" class="ascii-chip-line" title="꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱">꒰ঌ ┈┈ ໒꒱</button>
+              <button type="button" class="ascii-chip-line" title="◈ ━━━━━━━━━━━━━━ ◈">◈ ━━ ◈</button>
+              <button type="button" class="ascii-chip-line" title="╋━━━━━━━━━━━━━━╋">╋━━╋</button>
+            </div>
+          </div>
+
+          <div class="ascii-group">
+            <div class="ascii-group-title">SINGLE CHARACTER</div>
+            <div class="ascii-buttons">
+              <button type="button" title="❏">❏</button>
+              <button type="button" title="✦">✦</button>
+              <button type="button" title="✧">✧</button>
+              <button type="button" title="┗ ">┗</button>
+              <button type="button" title="┊">┊</button>
+              <button type="button" title="▎">▎</button>
+              <button type="button" title="◤">◤</button>
+              <button type="button" title="◢">◢</button>
+            </div>
+          </div>
+
+          <div class="ascii-group">
+            <div class="ascii-group-title">DESIGNS</div>
+            <div class="ascii-buttons">
+              <button type="button" class="ascii-chip-design" title=".+:ﾟ+｡.☆">.+:ﾟ+｡.☆</button>
+              <button type="button" class="ascii-chip-design" title="✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧">✧･ﾟ:*</button>
+              <button type="button" class="ascii-chip-design" title="✦⋆˙₊⟡">✦⋆˙₊⟡</button>
+              <button type="button" class="ascii-chip-design" title="⊹₊⋆ ✦. ݁">⊹₊⋆ ✦</button>
+              <button type="button" class="ascii-chip-wide" title="Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ">Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ</button>
+              <button type="button" class="ascii-chip-line" title="◤￣￣￣￣￣￣￣￣￣￣￣￣￣￣">◤￣￣</button>
+              <button type="button" class="ascii-chip-line" title="＿＿＿＿＿＿＿＿＿＿＿＿＿＿◢">＿＿◢</button>
+            </div>
+          </div>
+        </div>
       </section>
+
     </section>
 
     <section class="panel preview-panel" aria-labelledby="previewPanelTitle">
@@ -177,12 +262,20 @@
           </div>
         </div>
 
-        <div id="fontQuickButtons" class="font-quick-buttons" aria-label="文字スタイルショートカット"></div>
-
-        <div class="preview-textbox-wrap">
-          <textarea id="tweetPreview" placeholder="ここに生成結果が表示されます。直接編集もできます。"></textarea>
-          <div id="previewResizeGrip" class="preview-resize-grip" role="separator" aria-label="プレビュー高さ調整" tabindex="0"></div>
+        <div class="font-toolbar" aria-label="文字スタイルショートカット">
+          <button type="button" class="font-chip f-sans-bi is-active" title="ボールド + イタリック（サンセリフ）">A</button>
+          <button type="button" class="font-chip f-sans-b" title="ボールド（サンセリフ）">A</button>
+          <button type="button" class="font-chip f-sans-i" title="イタリック（サンセリフ）">A</button>
+          <button type="button" class="font-chip f-serif-bi" title="ボールド + イタリック（セリフ）">A</button>
+          <button type="button" class="font-chip f-serif-b" title="ボールド（セリフ）">A</button>
+          <button type="button" class="font-chip f-serif-i" title="イタリック（セリフ）">A</button>
+          <button type="button" class="font-chip f-smallcaps" title="スモールキャップ">A</button>
+          <button type="button" class="font-chip f-typewriter" title="タイプライター（モノスペース）">A</button>
+          <button type="button" class="font-chip f-modern" title="モダン（サンセリフ）">A</button>
+          <button type="button" class="font-chip f-plain" title="変換なし">A</button>
         </div>
+
+        <textarea id="tweetPreview" placeholder="ここに生成結果が表示されます。直接編集もできます。"></textarea>
 
         <div class="count-line">
           <span id="charCount">0 / 280</span>
@@ -191,8 +284,8 @@
 
         <div class="btns preview-actions">
           <button id="copyButton" type="button" class="primary">コピー</button>
-          <button id="undoButton" type="button">元に戻す</button>
-          <button id="redoButton" type="button">やり直す</button>
+          <button id="newlineButton" type="button">改行を追加</button>
+          <button id="spaceButton" type="button">空白を追加</button>
           <button id="clearPreviewButton" type="button" class="danger">消去</button>
         </div>
       </div>
@@ -201,15 +294,47 @@
     </section>
   </main>
 
+  <section class="tool-footer-note">
+    <h2>利用上の注意</h2>
+    <p>
+      本ツールは、開発者 @KumachanSteps による個人制作の非公式TRPG支援ツールです。
+      各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
+    </p>
+    <p>
+      不具合報告や要望は、Xの @KumachanSteps 宛のDMにてお送りください。
+      ただし、すべての報告や要望に返信・対応できるとは限りません。
+    </p>
+  </section>
+
   <div class="bottom-actions" aria-label="生成操作">
     <button id="generateButton" type="button" class="primary bottom-action-button">卓報告を生成</button>
-    <button id="clearAllButton" type="button" class="subtle bottom-action-button">入力をクリア</button>
+    <button id="clearAllButton" type="button" class="subtle bottom-action-button" onclick="clearAll()">入力をクリア</button>
   </div>
 
   <script src="js/i18l.js"></script>
   <script src="js/language.js"></script>
   <script src="js/perser.js"></script>
-  <script src="js/template.js"></script>
   <script src="js/main.js"></script>
+  <script>
+    (() => {
+      function keepOneDefaultRow(containerId, rowSelector) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const rows = Array.from(container.querySelectorAll(rowSelector));
+        rows.slice(1).forEach(row => row.remove());
+      }
+
+      function normalizeDefaultRows() {
+        keepOneDefaultRow('gmContainer', '.row');
+        keepOneDefaultRow('playerContainer', '.participant-row');
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        normalizeDefaultRows();
+        requestAnimationFrame(normalizeDefaultRows);
+        setTimeout(normalizeDefaultRows, 0);
+      });
+    })();
+  </script>
 </body>
 </html>

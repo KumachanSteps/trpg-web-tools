@@ -28,9 +28,7 @@
   --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.28);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -154,9 +152,7 @@ body {
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.45);
 }
 
-.panel {
-  padding: 14px;
-}
+.panel { padding: 14px; }
 
 .upper-panel {
   position: fixed;
@@ -182,9 +178,7 @@ body {
   backdrop-filter: blur(3px);
 }
 
-.app.source-hidden .upper-panel {
-  display: none;
-}
+.app.source-hidden .upper-panel { display: none; }
 
 .source-toggle {
   position: fixed;
@@ -201,13 +195,8 @@ body {
   background: var(--panel-solid);
 }
 
-.source-toggle:hover {
-  transform: translateX(-50%) translateY(-1px);
-}
-
-.source-toggle:active {
-  transform: translateX(-50%) translateY(0);
-}
+.source-toggle:hover { transform: translateX(-50%) translateY(-1px); }
+.source-toggle:active { transform: translateX(-50%) translateY(0); }
 
 .source-toggle::after {
   content: "▼";
@@ -215,9 +204,7 @@ body {
   font-size: 11px;
 }
 
-.app:not(.source-hidden) .source-toggle {
-  display: none;
-}
+.app:not(.source-hidden) .source-toggle { display: none; }
 
 .main-layout {
   flex: 1;
@@ -227,11 +214,7 @@ body {
   gap: 12px;
 }
 
-h1,
-h2,
-h3 {
-  margin: 0;
-}
+h1, h2, h3 { margin: 0; }
 
 h1 {
   font-size: 20px;
@@ -268,12 +251,7 @@ h2 {
   flex-wrap: wrap;
 }
 
-button,
-select,
-input,
-textarea {
-  font: inherit;
-}
+button, select, input, textarea { font: inherit; }
 
 button {
   border: 1px solid var(--border);
@@ -291,9 +269,7 @@ button:hover {
   transform: translateY(-1px);
 }
 
-button:active {
-  transform: translateY(0);
-}
+button:active { transform: translateY(0); }
 
 .primary {
   background: linear-gradient(135deg, #6366f1, var(--accent));
@@ -302,13 +278,9 @@ button:active {
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.22);
 }
 
-.danger {
-  color: var(--danger);
-}
+.danger { color: var(--danger); }
 
-textarea,
-input,
-select {
+textarea, input, select {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--panel-solid);
@@ -323,10 +295,7 @@ textarea {
   line-height: 1.58;
 }
 
-input,
-select {
-  padding: 7px 9px;
-}
+input, select { padding: 7px 9px; }
 
 textarea:focus,
 input:focus,
@@ -395,9 +364,7 @@ select:focus {
   margin-bottom: 8px;
 }
 
-.search-row input {
-  min-width: 0;
-}
+.search-row input { min-width: 0; }
 
 .search-nav-btn {
   min-width: 34px;
@@ -426,9 +393,7 @@ select:focus {
   margin-top: 8px;
 }
 
-.new-card-controls {
-  gap: 6px;
-}
+.new-card-controls { gap: 6px; }
 
 .new-card-controls select,
 .new-card-controls button {
@@ -475,9 +440,7 @@ select:focus {
   white-space: nowrap;
 }
 
-.type-filter-btn:hover {
-  border-color: var(--icon-color);
-}
+.type-filter-btn:hover { border-color: var(--icon-color); }
 
 .type-filter-btn.active {
   background: var(--icon-color, var(--accent));
@@ -506,9 +469,7 @@ select:focus {
 }
 
 .cards-list::-webkit-scrollbar,
-textarea::-webkit-scrollbar {
-  width: 10px;
-}
+textarea::-webkit-scrollbar { width: 10px; }
 
 .cards-list::-webkit-scrollbar-thumb,
 textarea::-webkit-scrollbar-thumb {
@@ -577,9 +538,7 @@ textarea::-webkit-scrollbar-thumb {
   padding: 0;
 }
 
-.type-icon-btn:hover {
-  border-color: var(--icon-color);
-}
+.type-icon-btn:hover { border-color: var(--icon-color); }
 
 .type-icon-btn.active {
   background: var(--icon-color);
@@ -650,9 +609,7 @@ textarea::-webkit-scrollbar-thumb {
   font-size: 12px;
 }
 
-.status {
-  min-height: 14px;
-}
+.status { min-height: 14px; }
 
 [data-theme="dark"] button {
   background: #1e293b;
@@ -705,4 +662,32 @@ textarea::-webkit-scrollbar-thumb {
   border-color: #f87171;
   color: #ffffff;
   box-shadow: none;
+}
+
+.tool-footer-note {
+  flex: 0 0 auto;
+  background: var(--panel);
+  border: 1px solid rgba(216, 222, 233, 0.86);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(10px);
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.tool-footer-note h2 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tool-footer-note p {
+  margin: 4px 0;
+}
+
+[data-theme="dark"] .tool-footer-note {
+  border-color: rgba(51, 65, 85, 0.86);
 }
