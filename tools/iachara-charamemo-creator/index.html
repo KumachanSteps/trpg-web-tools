@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>いあキャラMEMOジェネレータ v1.6 | TRPG Webツール観測所</title>
-  <meta name="description" content="CCFOLIA駒JSONを読み込み、externalUrl / iconUrl / ステータス / パラメータ / チャットパレットを解析して、キャラメモと駒データを再生成します。" />
-  <!-- Google tag (gtag.js) -->
+  <meta name="description" content="CCFOLIA駒JSONを読み込み、キャラメモとチャットパレットを整形して再生成するTRPG支援ツールです。" />
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -16,8 +15,8 @@
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="./css/charamemo-creator-style.css" />
 </head>
-<body>
-  <div id="app" class="page-shell theme-night">
+<body class="theme-night">
+  <div class="page-shell">
     <div class="page-inner">
       <header class="site-header">
         <div class="header-top">
@@ -31,10 +30,10 @@
             <span class="tag-pill tag-amber">CCFOLIA用コピー</span>
           </div>
           <div class="header-actions">
-            <button id="langToggle" class="header-button" type="button">EN/JP</button>
-            <button id="helpToggle" class="header-button" type="button"><span aria-hidden="true">?</span>使い方</button>
-            <button id="shortcutToggle" class="header-button" type="button"><span aria-hidden="true">⌨</span>ショートカット</button>
-            <button id="themeToggle" class="header-button" type="button"><span id="themeIcon">☾</span><span id="themeLabel">ナイトモード</span></button>
+            <button class="header-button" id="languageToggle" type="button">EN/JP</button>
+            <button class="header-button" id="helpToggle" type="button">？ 使い方</button>
+            <button class="header-button" id="shortcutToggle" type="button">⌨ ショートカット</button>
+            <button class="header-button" id="themeToggle" type="button">☾ ナイトモード</button>
           </div>
         </div>
         <div class="title-row">
@@ -48,47 +47,36 @@
             <p class="site-description">CCFOLIA駒JSONを読み込み、externalUrl / iconUrl / ステータス / パラメータ / チャットパレットを解析して、キャラメモと駒データを再生成します。</p>
           </div>
         </div>
-        <div id="helpPanel" class="header-info-panel hidden">CCFOLIA駒JSONを貼り付け、URL取得設定と生成オプションを確認してから、キャラメモ・チャットパレット・生成済み駒JSONを編集/コピーします。</div>
-        <div id="shortcutPanel" class="header-info-panel hidden">Esc：パネルを閉じる、Alt + T：ライト/ナイト切替、Ctrl / Cmd + Shift + C：生成済み駒JSONコピー。</div>
+        <div class="header-info-panel hidden" id="helpPanel">CCFOLIA駒JSONを貼り付けると、駒データ・版情報・チャットパレットを解析します。生成オプションを選び、キャラメモと整形済みチャットパレットを確認してから、生成済み駒JSONをコピーしてください。</div>
+        <div class="header-info-panel hidden" id="shortcutPanel">Esc：ヘルプ/ショートカットを閉じる　Alt + T：ライト/ナイト切替　Ctrl / Cmd + Shift + C：生成済み駒JSONコピー</div>
       </header>
 
       <div class="layout-grid">
         <aside class="left-column">
           <section class="panel panel-input">
-            <div class="panel-title"><span class="panel-icon">▣</span><h2>1. 入力データ</h2></div>
+            <div class="panel-title"><span class="panel-icon">JSON</span><h2>1. 入力データ</h2></div>
             <label class="field-label" for="jsonInput">CCFOLIA駒JSONデータ</label>
-            <textarea id="jsonInput" class="json-input" placeholder="キャラ出力▶︎ココフォリア駒出力 からコピー&ペースト"></textarea>
-            <div id="jsonError" class="error-box hidden"></div>
-            <div class="url-list">
-              <div class="input-line"><label>externalUrl</label><div class="input-line-box"><span>↗</span><span id="externalUrlView">未検出</span></div></div>
-              <div class="input-line"><label>iconUrl</label><div class="input-line-box"><span>▧</span><span id="iconUrlView">未検出</span></div></div>
-            </div>
+            <textarea class="json-input" id="jsonInput" placeholder="キャラ出力▶︎ココフォリア駒出力 からコピー&ペースト"></textarea>
+            <div class="error-box hidden" id="jsonError"></div>
           </section>
 
           <section class="panel panel-fetch">
-            <div class="panel-title"><span class="panel-icon">↗</span><h2>2. URL取得設定</h2></div>
+            <div class="panel-title"><span class="panel-icon">URL</span><h2>2. URL取得設定</h2></div>
             <div class="fetch-row">
-              <button id="useProxyToggle" class="switch-row active" type="button"><span><strong>Proxy使用</strong><small>CORS制限対策</small></span><span class="switch"><span></span></span></button>
-              <button id="fetchButton" class="btn btn-blue" type="button">取得</button>
+              <button class="switch-row active" id="proxyToggle" type="button"><span><strong>Proxy使用</strong><small>CORS制限対策</small></span><span class="switch"><span></span></span></button>
+              <button class="btn btn-blue" id="fetchButton" type="button">取得</button>
             </div>
-            <input id="proxyUrl" class="proxy-input" value="https://your-worker.example.com/fetch?url=" />
+            <input class="proxy-input" id="proxyUrl" value="https://your-worker.example.com/fetch?url=" />
           </section>
 
           <section class="panel panel-options">
-            <div class="panel-title"><span class="panel-icon">⚙</span><h2>3. 生成オプション</h2></div>
+            <div class="panel-title"><span class="panel-icon">OPT</span><h2>3. 生成オプション</h2></div>
             <div class="option-list">
-              <button id="includeProfile" class="switch-row active" type="button"><span><strong>基本プロフィールを含める</strong></span><span class="switch"><span></span></span></button>
-              <button id="includeWeapons" class="switch-row active" type="button"><span><strong>武器・防具を含める</strong></span><span class="switch"><span></span></span></button>
-              <button id="includeItems" class="switch-row active" type="button"><span><strong>所持品を含める</strong></span><span class="switch"><span></span></span></button>
-              <button id="formatPalette" class="switch-row active" type="button"><span><strong>チャットパレット整形</strong></span><span class="switch"><span></span></span></button>
-            </div>
-            <div class="output-mode-wrap">
-              <label class="field-label">出力対象</label>
-              <div class="mode-grid">
-                <button class="mode-btn active" data-mode="both" type="button">両方</button>
-                <button class="mode-btn" data-mode="memo" type="button">メモ</button>
-                <button class="mode-btn" data-mode="koma" type="button">駒</button>
-              </div>
+              <button class="switch-row active" data-option="includeWeapons" type="button"><span><strong>戦闘・武器・防具を含める</strong></span><span class="switch"><span></span></span></button>
+              <button class="switch-row active" data-option="includeItems" type="button"><span><strong>所持品を含める</strong></span><span class="switch"><span></span></span></button>
+              <button class="switch-row active" data-option="includeKnowledge" type="button"><span><strong>新たに得た知識・経験を含める</strong></span><span class="switch"><span></span></span></button>
+              <button class="switch-row active" data-option="includeTxtMemo" type="button"><span><strong>TXT内メモを含める</strong></span><span class="switch"><span></span></span></button>
+              <button class="switch-row active" data-option="formatPalette" type="button"><span><strong>チャットパレット整形</strong></span><span class="switch"><span></span></span></button>
             </div>
           </section>
         </aside>
@@ -96,51 +84,51 @@
         <main class="main-grid">
           <section class="middle-column">
             <section class="panel summary-panel">
-              <div class="panel-title"><span class="panel-icon">◎</span><h2>解析キャラクター概要</h2></div>
+              <div class="panel-title"><span class="panel-icon">VIEW</span><h2>解析キャラクター概要</h2></div>
               <div class="summary-card">
-                <div id="iconFrame" class="icon-frame">▧</div>
+                <div class="icon-frame" id="summaryIcon"><span class="icon-placeholder">▧</span></div>
                 <div class="summary-main">
                   <h3 id="summaryName">未解析</h3>
-                  <p id="summaryExternalUrl">externalUrl 未検出</p>
-                  <div id="statusChips" class="status-chips"></div>
+                  <div class="summary-badges">
+                    <span class="edition-badge edition-empty" id="editionBadge">未判定</span>
+                    <span class="sheet-link-badge is-disabled" id="sheetLinkBadge">🔗 未検出</span>
+                  </div>
+                  <div class="status-chips" id="statusChips"></div>
                 </div>
               </div>
-              <div id="paramsGrid" class="params-grid"></div>
+              <div class="params-grid" id="paramsGrid"></div>
             </section>
 
             <section class="panel memo-panel">
-              <div class="panel-title"><span class="panel-icon">✎</span><h2>4. プロフィール補足 / キャラメモ編集</h2></div>
+              <div class="panel-title"><span class="panel-icon">MEMO</span><h2>4. プロフィール補足 / キャラメモ編集</h2></div>
               <label class="field-label" for="manualProfile">externalUrl取得後に入るプロフィール欄の仮入力</label>
-              <textarea id="manualProfile" class="profile-input">職業: 未取得
+              <textarea class="profile-input" id="manualProfile">職業: 未取得
 年齢: 未取得 / 性別: 未取得
 身長: 未取得 / 体重: 未取得
 カラーコード: #008080</textarea>
               <div class="memo-actions">
-                <button id="regenerateMemo" class="btn btn-dark" type="button">✦ オプションからメモ再生成</button>
-                <button id="copyMemo" class="btn btn-green" type="button">⧉ メモコピー</button>
+                <button class="btn btn-dark" id="regenMemoButton" type="button">✦ オプションからメモ再生成</button>
+                <button class="btn btn-green" id="copyMemoButton" type="button">⧉ メモコピー</button>
               </div>
-              <textarea id="memoEditor" class="memo-editor"></textarea>
+              <textarea class="memo-editor" id="memoEditor" placeholder="キャラメモがここに表示されます"></textarea>
             </section>
           </section>
 
           <section class="right-column">
             <section class="panel palette-panel">
-              <div class="panel-title"><span class="panel-icon">◈</span><h2>5. チャットパレットプレビュー</h2></div>
-              <textarea id="palettePreview" class="palette-preview" readonly></textarea>
-              <div class="preview-footer">
-                <span id="editionView">自動判定: 未判定</span>
-                <button id="copyPalette" type="button">パレットコピー</button>
-              </div>
+              <div class="panel-title"><span class="panel-icon">PAL</span><h2>5. チャットパレットプレビュー</h2></div>
+              <textarea class="palette-preview" id="palettePreview" readonly placeholder="チャットパレットがここに表示されます"></textarea>
+              <div class="preview-footer"><span id="editionStatus">自動判定: 未判定</span><button type="button" id="copyPaletteButton">パレットコピー</button></div>
             </section>
 
             <section class="panel generated-panel">
-              <div class="panel-title"><span class="panel-icon">▣</span><h2>6. 生成済み駒JSON</h2></div>
-              <textarea id="generatedJson" class="generated-json" readonly></textarea>
+              <div class="panel-title"><span class="panel-icon">OUT</span><h2>6. 生成済み駒JSON</h2></div>
+              <textarea class="generated-json" id="generatedJson" readonly placeholder="生成済み駒JSONがここに表示されます"></textarea>
               <div class="json-actions">
-                <button id="copyJson" class="btn btn-green" type="button">✓ 再生成してコピー</button>
-                <button id="clearInput" class="btn btn-dark" type="button">↻ 入力をクリア</button>
+                <button class="btn btn-green" id="copyJsonButton" type="button">✓ 再生成してコピー</button>
+                <button class="btn btn-dark" id="clearButton" type="button">↻ 入力をクリア</button>
               </div>
-              <p id="statusMessage" class="status-message"></p>
+              <p class="status-message" id="statusMessage"></p>
             </section>
           </section>
         </main>
@@ -148,6 +136,9 @@
       <footer class="footer-note">わざわざキャラメモを手打ちしないですむキャラ駒をあなたに</footer>
     </div>
   </div>
+  <script src="./js/parser.js"></script>
+  <script src="./js/i18n.js"></script>
+  <script src="./js/language.js"></script>
   <script src="./js/main.js"></script>
 </body>
 </html>

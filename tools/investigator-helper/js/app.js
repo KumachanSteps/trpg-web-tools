@@ -65,12 +65,18 @@
   };
 
   const SKILL_ALIASES = {
-    近接戦闘: ["近接戦闘", "近接格闘", "キック", "組み付き", "こぶし（パンチ）", "こぶし", "頭突き"],
-    MA: ["MA", "マーシャルアーツ"],
-    射撃: ["射撃", "拳銃", "サブマシンガン", "ショットガン", "マシンガン", "ライフル"],
+    近接戦闘: ["近接戦闘", "近接格闘", "近接戦", "こぶし", "こぶし（パンチ）", "こぶし(パンチ)", "パンチ", "キック", "組み付き", "組みつき", "頭突き", "任意の近接戦技能", "任意の素手の近接戦技能", "素手の近接戦技能", "任意の素手の戦闘技能"],
+    MA: ["MA", "マーシャルアーツ", "武道", "武道（任意）", "武道(任意)"],
+    射撃: ["射撃", "火器", "拳銃", "サブマシンガン", "ショットガン", "マシンガン", "ライフル", "砲", "任意の火器技能"],
     手さばき: ["手さばき", "隠す"],
     隠密: ["隠密", "隠れる", "忍び歩き"],
     他の言語: ["他の言語", "ほかの言語", "別の言語"],
+    科学: ["科学", "科学（専門分野）", "科学(専門分野)"],
+    芸術: ["芸術", "芸術（任意）", "芸術(任意)", "芸術／製作", "芸術または製作", "芸術 or 製作"],
+    製作: ["製作", "製作（任意）", "製作(任意)", "芸術／製作", "芸術または製作", "芸術 or 製作"],
+    運転: ["運転", "運転（自動車）", "運転(自動車)", "運転（二輪車）", "運転(二輪車)"],
+    操縦: ["操縦", "操縦（船舶）", "操縦(船舶)", "操縦（ボート）", "操縦(ボート)", "操縦（航空機）", "操縦(航空機)"],
+    サバイバル: ["サバイバル", "サバイバル（山）", "サバイバル(山)", "サバイバル（海）", "サバイバル(海)", "サバイバル（砂漠）", "サバイバル(砂漠)"],
   };
 
   const state = {
@@ -78,7 +84,7 @@
     ruleType: "all",
     query: "",
     source: "すべて",
-    selectedSkills: new Set(["目星", "心理学"]),
+    selectedSkills: new Set(),
     selectedOccupationId: OCCUPATIONS[0]?.id || "",
     selectedPackageId: EXPERIENCE_PACKAGES[0]?.id || "",
     selectedFeatureId: FEATURES[0]?.id || "",
@@ -86,6 +92,7 @@
     rolledFeatures: FEATURES.slice(0, 3),
     skillExpanded: false,
     theme: "light",
+    toastTimer: null,
   };
 
   const el = {
@@ -110,6 +117,8 @@
     outputText: document.getElementById("outputText"),
     copyOutputButton: document.getElementById("copyOutputButton"),
     clearOutputButton: document.getElementById("clearOutputButton"),
+    leftColumnScrollTop: document.getElementById("leftColumnScrollTop"),
+    toastContainer: document.getElementById("toastContainer"),
   };
 
   function escapeHtml(value) {
@@ -119,6 +128,17 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function normalizeText(value) {
+    return String(value ?? "")
+      .toLowerCase()
+      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+      .replace(/[（）]/g, (char) => (char === "（" ? "(" : ")"))
+      .replace(/[／]/g, "/")
+      .replace(/[・･]/g, "")
+      .replace(/\s+/g, "")
+      .trim();
   }
 
   function sourceLabel(item) {
@@ -141,9 +161,9 @@
     if (!label) return options.join(" / ");
     if (!options.length) return label;
 
-    const normalizedLabel = label.replace(/\s/g, "");
+    const normalizedLabel = normalizeText(label);
     const labelAlreadyIncludesAllOptions = options.every((skill) =>
-      normalizedLabel.includes(String(skill).replace(/\s/g, ""))
+      normalizedLabel.includes(normalizeText(skill))
     );
 
     if (labelAlreadyIncludesAllOptions) return label;
@@ -170,11 +190,37 @@
     ].join("、");
   }
 
+  function getSkillAliases(skill) {
+    return [skill, ...(SKILL_ALIASES[skill] || [])];
+  }
+
+  function skillTextMatchesChip(skillText, selectedSkill) {
+    const normalizedText = normalizeText(skillText);
+
+    return getSkillAliases(selectedSkill).some((alias) => {
+      const normalizedAlias = normalizeText(alias);
+      if (!normalizedAlias || !normalizedText) return false;
+      return normalizedText.includes(normalizedAlias) || normalizedAlias.includes(normalizedText);
+    });
+  }
+
+  function occupationMatchesSkill(item, selectedSkill) {
+    return getOccupationSkillTexts(item).some((skillText) => skillTextMatchesChip(skillText, selectedSkill));
+  }
+
+  function getOccupationSkillMatchScore(item) {
+    return [...state.selectedSkills].filter((skill) => occupationMatchesSkill(item, skill)).length;
+  }
+
+  function occupationMatchesSelectedSkills(item) {
+    if (!state.selectedSkills.size) return true;
+    return getOccupationSkillMatchScore(item) > 0;
+  }
+
   function formatOccupation(item) {
     if (!item) return "";
 
     const lines = [];
-
     lines.push(`職業サンプル：${item.name} （${sourceLabel(item)}）`);
     lines.push(`職業技能：${(item.skills || []).join("、")}`);
 
@@ -236,7 +282,6 @@ ${notes}`;
 
   function appendOutput(text) {
     if (!text) return;
-
     const current = el.outputText.value.trim();
     el.outputText.value = current ? `${current}\n\n${text}` : text;
   }
@@ -285,29 +330,82 @@ ${notes}`;
       ...skillOptions,
       ...(item.keywords || []),
       ...(item.ruleLabels || []),
+      item.note,
+      item.special,
+      item.credit,
+      item.alliesExample,
+      item.pointFormula,
     ].join(" ").toLowerCase();
   }
 
   function getFilteredOccupations() {
     const query = state.query.trim().toLowerCase();
 
-    return OCCUPATIONS
+    const mapped = OCCUPATIONS.map((item, index) => ({
+      ...item,
+      originalIndex: index,
+      score: getOccupationSkillMatchScore(item),
+    }))
       .filter((item) => state.ruleType === "all" || item.ruleType === state.ruleType)
       .filter(sourceMatches)
+      .filter(occupationMatchesSelectedSkills)
       .filter((item) => {
         if (!query) return true;
         return getSearchText(item).includes(query);
-      })
-      .map((item) => ({
-        ...item,
-        score: [...state.selectedSkills].filter((skill) => {
-          const aliases = SKILL_ALIASES[skill] || [skill];
-          const skillTexts = getOccupationSkillTexts(item);
-          return skillTexts.some((s) =>
-            aliases.some((alias) => s.includes(alias) || alias.includes(s))
-          );
-        }).length,
-      }));
+      });
+
+    if (!state.selectedSkills.size) {
+      return mapped;
+    }
+
+    return mapped.sort((a, b) => b.score - a.score || a.originalIndex - b.originalIndex);
+  }
+
+  function ensureToastContainer() {
+    if (el.toastContainer) return el.toastContainer;
+
+    const container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-container";
+    container.setAttribute("aria-live", "polite");
+    container.setAttribute("aria-atomic", "true");
+    document.body.appendChild(container);
+    el.toastContainer = container;
+    return container;
+  }
+
+  function showToast(message, type = "success") {
+    const container = ensureToastContainer();
+    container.innerHTML = `<div class="toast toast-${escapeHtml(type)}">${escapeHtml(message)}</div>`;
+
+    if (state.toastTimer) clearTimeout(state.toastTimer);
+
+    state.toastTimer = window.setTimeout(() => {
+      container.innerHTML = "";
+      state.toastTimer = null;
+    }, 1800);
+  }
+
+  async function copyText(text, successMessage = "コピーしました") {
+    const value = String(text ?? "");
+
+    if (!value.trim()) {
+      showToast("コピーする内容がありません", "warning");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(value);
+      showToast(successMessage);
+    } catch {
+      const temp = document.createElement("textarea");
+      temp.value = value;
+      document.body.appendChild(temp);
+      temp.select();
+      const copied = document.execCommand("copy");
+      temp.remove();
+      showToast(copied ? successMessage : "コピーに失敗しました", copied ? "success" : "error");
+    }
   }
 
   function renderSources() {
@@ -357,7 +455,13 @@ ${notes}`;
 
     if (!items.length) {
       el.occupationList.innerHTML = `<div class="occupation-card"><p class="card-text">条件に一致する職業サンプルがありません。</p></div>`;
+      el.occupationDetail.innerHTML = "";
       return;
+    }
+
+    const currentSelectedExists = items.some((item) => item.id === state.selectedOccupationId);
+    if (!currentSelectedExists && items[0]) {
+      state.selectedOccupationId = items[0].id;
     }
 
     el.occupationList.innerHTML = items.map((item) => {
@@ -389,7 +493,7 @@ ${notes}`;
   }
 
   function renderOccupationDetail() {
-    const item = OCCUPATIONS.find((occ) => occ.id === state.selectedOccupationId) || OCCUPATIONS[0];
+    const item = OCCUPATIONS.find((occ) => occ.id === state.selectedOccupationId) || getFilteredOccupations()[0] || OCCUPATIONS[0];
 
     if (!item) {
       el.occupationDetail.innerHTML = "";
@@ -427,18 +531,18 @@ ${notes}`;
     });
 
     document.getElementById("copySkillsButton")?.addEventListener("click", () => {
-      copyText(getOccupationCopySkills(item));
+      copyText(getOccupationCopySkills(item), "職業技能をコピーしました");
     });
+  }
+
+  function normalizeDice(dice) {
+    return String(dice || "").replace("-0", "-");
   }
 
   function rollFeatureDice() {
     const d6 = Math.floor(Math.random() * 6) + 1;
     const d10 = Math.floor(Math.random() * 10) + 1;
     return `${d6}-${d10}`;
-  }
-
-  function normalizeDice(dice) {
-    return String(dice || "").replace("-0", "-");
   }
 
   function rollUniqueFeatures(count) {
@@ -448,7 +552,6 @@ ${notes}`;
 
     while (results.length < count && guard < 300) {
       guard += 1;
-
       const dice = rollFeatureDice();
       if (used.has(dice)) continue;
 
@@ -462,7 +565,6 @@ ${notes}`;
     if (results.length < count) {
       FEATURES.forEach((feature) => {
         const dice = normalizeDice(feature.dice);
-
         if (results.length < count && !used.has(dice)) {
           used.add(dice);
           results.push(feature);
@@ -589,19 +691,6 @@ ${notes}`;
     });
   }
 
-  async function copyText(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const temp = document.createElement("textarea");
-      temp.value = text;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand("copy");
-      temp.remove();
-    }
-  }
-
   function render() {
     renderTabs();
     renderRuleButtons();
@@ -712,11 +801,18 @@ ${notes}`;
     });
 
     el.copyOutputButton.addEventListener("click", () => {
-      copyText(el.outputText.value);
+      copyText(el.outputText.value, "メモをコピーしました");
     });
 
     el.clearOutputButton.addEventListener("click", () => {
       el.outputText.value = "";
+    });
+
+    el.leftColumnScrollTop?.addEventListener("click", () => {
+      document.querySelector(".left-column")?.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     });
 
     el.themeToggle.addEventListener("click", () => {
@@ -743,18 +839,15 @@ ${notes}`;
       }
 
       if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-        copyText(el.outputText.value);
+        copyText(el.outputText.value, "メモをコピーしました");
       }
     });
   }
 
   function init() {
     renderSources();
-
-    if (OCCUPATIONS[0]) {
-      el.outputText.value = formatOccupation(OCCUPATIONS[0]);
-    }
-
+    el.outputText.value = "";
+    el.outputText.placeholder = "「出力に追加」使用でテキストが表示されます。";
     document.body.classList.add("theme-light");
     bindEvents();
     render();

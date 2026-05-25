@@ -1,342 +1,304 @@
-const NL = "\n";
-
 const state = {
   data: null,
-  parsedJson: { ok: false, error: "" },
+  edition: "",
+  paletteText: "",
+  generatedMemo: "",
+  generatedJson: "",
   useProxy: true,
-  outputMode: "both",
+  options: {
+    includeWeapons: true,
+    includeItems: true,
+    includeKnowledge: true,
+    includeTxtMemo: true,
+    formatPalette: true
+  }
 };
 
-const els = {};
+const $ = (id) => document.getElementById(id);
 
-window.addEventListener("DOMContentLoaded", () => {
-  bindElements();
+function init() {
   bindEvents();
-  parseAndRender();
-});
-
-function bindElements() {
-  [
-    "app",
-    "jsonInput",
-    "jsonError",
-    "externalUrlView",
-    "iconUrlView",
-    "useProxyToggle",
-    "fetchButton",
-    "proxyUrl",
-    "includeProfile",
-    "includeWeapons",
-    "includeItems",
-    "formatPalette",
-    "manualProfile",
-    "memoEditor",
-    "palettePreview",
-    "editionView",
-    "generatedJson",
-    "summaryName",
-    "summaryExternalUrl",
-    "statusChips",
-    "paramsGrid",
-    "iconFrame",
-    "regenerateMemo",
-    "copyMemo",
-    "copyPalette",
-    "copyJson",
-    "clearInput",
-    "statusMessage",
-    "themeToggle",
-    "themeIcon",
-    "themeLabel",
-    "helpToggle",
-    "shortcutToggle",
-    "helpPanel",
-    "shortcutPanel",
-    "langToggle"
-  ].forEach((id) => {
-    els[id] = document.getElementById(id);
-  });
+  updateAll();
 }
 
 function bindEvents() {
-  els.jsonInput.addEventListener("input", () => {
-    els.memoEditor.value = "";
-    parseAndRender();
+  $("jsonInput").addEventListener("input", updateAll);
+  $("manualProfile").addEventListener("input", updateAll);
+  $("memoEditor").addEventListener("input", updateGeneratedJsonOnly);
+  $("themeToggle").addEventListener("click", toggleTheme);
+  $("languageToggle").addEventListener("click", toggleLanguage);
+  $("helpToggle").addEventListener("click", () => togglePanel("helpPanel"));
+  $("shortcutToggle").addEventListener("click", () => togglePanel("shortcutPanel"));
+  $("proxyToggle").addEventListener("click", toggleProxy);
+  $("fetchButton").addEventListener("click", fetchExternalUrl);
+  $("regenMemoButton").addEventListener("click", regenerateMemo);
+  $("copyMemoButton").addEventListener("click", () => copyText($("memoEditor").value, "メモ"));
+  $("copyPaletteButton").addEventListener("click", () => copyText($("palettePreview").value, "パレット"));
+  $("copyJsonButton").addEventListener("click", () => copyText($("generatedJson").value, "駒JSON"));
+  $("clearButton").addEventListener("click", clearAll);
+  document.querySelectorAll("[data-option]").forEach((button) => {
+    button.addEventListener("click", () => toggleOption(button));
   });
-  els.manualProfile.addEventListener("input", render);
-  els.memoEditor.addEventListener("input", render);
-  els.useProxyToggle.addEventListener("click", () => {
-    state.useProxy = !state.useProxy;
-    els.useProxyToggle.classList.toggle("active", state.useProxy);
-  });
-  els.fetchButton.addEventListener("click", fetchExternalUrl);
-  [els.includeProfile, els.includeWeapons, els.includeItems, els.formatPalette].forEach((button) => {
-    button.addEventListener("click", () => {
-      button.classList.toggle("active");
-      render();
-    });
-  });
-  document.querySelectorAll(".mode-btn").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.outputMode = button.dataset.mode || "both";
-      document.querySelectorAll(".mode-btn").forEach((item) => item.classList.toggle("active", item === button));
-      render();
-    });
-  });
-  els.regenerateMemo.addEventListener("click", () => {
-    els.memoEditor.value = buildMemo(getData(), getOptions());
-    render();
-  });
-  els.copyMemo.addEventListener("click", () => copyText(getActiveMemo(), "メモ"));
-  els.copyPalette.addEventListener("click", () => copyText(getPaletteText(), "パレット"));
-  els.copyJson.addEventListener("click", () => copyText(els.generatedJson.value, "駒JSON"));
-  els.clearInput.addEventListener("click", clearInput);
-  els.themeToggle.addEventListener("click", toggleTheme);
-  els.helpToggle.addEventListener("click", () => toggleInfoPanel("help"));
-  els.shortcutToggle.addEventListener("click", () => toggleInfoPanel("shortcut"));
-  document.addEventListener("keydown", handleShortcut);
+  document.addEventListener("keydown", handleKeydown);
 }
 
-function parseAndRender() {
-  state.parsedJson = parseKomaJson(els.jsonInput.value);
-  state.data = state.parsedJson.ok ? state.parsedJson.data : null;
-  render();
+function toggleLanguage() {
+  const next = window.CharamemoLanguage ? window.CharamemoLanguage.toggle() : "ja";
+  setStatus(`Language: ${next.toUpperCase()}`);
 }
 
-function render() {
-  const data = getData();
-  const edition = detectEdition(data?.commands || "");
-  const paletteText = getPaletteText();
-  const generatedJson = generateKomaJson(data, getActiveMemo(), paletteText, state.outputMode);
-
-  if (els.jsonInput.value.trim() && !state.parsedJson.ok) {
-    els.jsonError.textContent = `JSON解析エラー: ${state.parsedJson.error}`;
-    els.jsonError.classList.remove("hidden");
-  } else {
-    els.jsonError.textContent = "";
-    els.jsonError.classList.add("hidden");
-  }
-
-  els.externalUrlView.textContent = data?.externalUrl || "未検出";
-  els.iconUrlView.textContent = data?.iconUrl || "未検出";
-  els.summaryName.textContent = data?.name || "未解析";
-  els.summaryExternalUrl.textContent = data?.externalUrl || "externalUrl 未検出";
-  renderIcon(data?.iconUrl || "");
-  renderStatus(data);
-  renderParams(data);
-
-  if (!els.memoEditor.value) {
-    els.memoEditor.value = buildMemo(data, getOptions());
-  }
-  els.palettePreview.value = paletteText;
-  els.generatedJson.value = generatedJson;
-  els.editionView.textContent = `自動判定: ${edition ? editionLabel(edition) : "未判定"}`;
-}
-
-function getData() {
-  return state.data;
-}
-
-function getOptions() {
-  return {
-    includeProfile: els.includeProfile.classList.contains("active"),
-    includeWeapons: els.includeWeapons.classList.contains("active"),
-    includeItems: els.includeItems.classList.contains("active"),
-    formatPalette: els.formatPalette.classList.contains("active"),
-    manualProfile: els.manualProfile.value,
-  };
-}
-
-function getActiveMemo() {
-  return els.memoEditor.value || buildMemo(getData(), getOptions());
-}
-
-function getPaletteText() {
-  const data = getData();
-  if (!data?.commands) return "";
-  const edition = detectEdition(data.commands);
-  return getOptions().formatPalette ? formatCommands(data.commands, edition) : normalizeText(data.commands);
-}
-
-function buildMemo(data, options) {
-  if (!data) return "";
-  const parts = [];
-  if (options.includeProfile) {
-    parts.push(`名前: ${data.name || ""}${NL}${options.manualProfile || ""}`.trim());
-  }
-  if (options.includeWeapons) {
-    parts.push("【武器・防具】\n※ externalUrl取得後に、いあきゃらの武器・防具情報をここへ反映します。");
-  }
-  if (options.includeItems) {
-    parts.push("【所持品】\n※ externalUrl取得後に、いあきゃらの所持品情報をここへ反映します。");
-  }
-  if (data.memo) {
-    parts.push(`【既存メモ】${NL}${data.memo}`);
-  }
-  return parts.filter(Boolean).join(NL + NL);
-}
-
-function generateKomaJson(data, memo, commands, outputMode) {
-  if (!data) return "";
-  const nextData = { ...data };
-  if (outputMode === "both" || outputMode === "memo") nextData.memo = memo;
-  if (outputMode === "both" || outputMode === "koma") nextData.commands = commands;
-  return JSON.stringify({ kind: "character", data: nextData });
-}
-
-function parseKomaJson(input) {
-  const trimmed = String(input || "").trim();
-  if (!trimmed) return { ok: false, error: "" };
-  try {
-    const parsed = JSON.parse(trimmed);
-    if (!parsed || parsed.kind !== "character" || !parsed.data || typeof parsed.data !== "object") {
-      return { ok: false, error: "kind:'character' と data を持つCCFOLIA駒JSONではありません" };
-    }
-    return { ok: true, data: parsed.data };
-  } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "JSONを解析できませんでした" };
-  }
-}
-
-function detectEdition(commands) {
-  const text = normalizeText(commands);
-  if (!text) return "";
-  if (text.includes("近接戦闘") || text.includes("射撃（") || text.includes("射撃:")) return "7e";
-  if (text.includes("CCB<=") || text.includes("こぶし") || text.includes("忍び歩き")) return "6e";
-  return text.includes("CC<=") ? "7e" : "6e";
-}
-
-function editionLabel(edition) {
-  return edition === "6e" ? "CoC 6版" : "CoC 7版";
-}
-
-function formatCommands(commands, edition) {
-  const command = edition === "6e" ? "CCB" : "CC";
-  return normalizeText(commands)
-    .split(NL)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => replaceCommand(line, command))
-    .join(NL);
-}
-
-function replaceCommand(line, command) {
-  const prefixes = ["sCCB<=", "sCC<=", "CCB<=", "CC<=", "1d100<=", "1D100<="];
-  const hit = prefixes.find((prefix) => line.startsWith(prefix));
-  if (!hit) return line;
-  return command + "<=" + line.slice(hit.length);
-}
-
-function normalizeText(text) {
-  return String(text || "").replaceAll("\\n", NL).replaceAll("\r\n", NL).replaceAll("\r", NL);
-}
-
-function renderIcon(iconUrl) {
-  els.iconFrame.innerHTML = "";
-  if (!iconUrl) {
-    els.iconFrame.textContent = "▧";
-    return;
-  }
-  const image = document.createElement("img");
-  image.src = iconUrl;
-  image.alt = "character icon";
-  image.onerror = () => {
-    els.iconFrame.innerHTML = "";
-    els.iconFrame.textContent = "▧";
-  };
-  els.iconFrame.appendChild(image);
-}
-
-function renderStatus(data) {
-  els.statusChips.innerHTML = "";
-  const statuses = Array.isArray(data?.status) ? data.status.slice(0, 4) : [];
-  statuses.forEach((item) => {
-    const chip = document.createElement("span");
-    chip.textContent = `${item.label} ${item.value}`;
-    els.statusChips.appendChild(chip);
-  });
-}
-
-function renderParams(data) {
-  els.paramsGrid.innerHTML = "";
-  const params = Array.isArray(data?.params) ? data.params : [];
-  params.forEach((item) => {
-    const chip = document.createElement("div");
-    chip.className = "param-chip";
-    const label = document.createElement("span");
-    label.textContent = item.label;
-    const value = document.createElement("strong");
-    value.textContent = item.value;
-    chip.appendChild(label);
-    chip.appendChild(value);
-    els.paramsGrid.appendChild(chip);
-  });
-}
-
-function fetchExternalUrl() {
-  if (!state.data?.externalUrl) {
-    showStatus("externalUrlが見つかりません", true);
-    return;
-  }
-  const prefix = state.useProxy ? (els.proxyUrl.value || "") : "";
-  const target = prefix ? `${prefix}${encodeURIComponent(state.data.externalUrl)}` : state.data.externalUrl;
-  showStatus(`取得先: ${target}`, false);
-}
-
-function clearInput() {
-  els.jsonInput.value = "";
-  els.memoEditor.value = "";
-  state.parsedJson = { ok: false, error: "" };
-  state.data = null;
-  render();
-  showStatus("入力をクリアしました", false);
-}
-
-function toggleTheme() {
-  const light = els.app.classList.toggle("theme-light");
-  els.app.classList.toggle("theme-night", !light);
-  els.themeIcon.textContent = light ? "☀" : "☾";
-  els.themeLabel.textContent = light ? "ライトモード" : "ナイトモード";
-}
-
-function toggleInfoPanel(type) {
-  const target = type === "help" ? els.helpPanel : els.shortcutPanel;
-  const other = type === "help" ? els.shortcutPanel : els.helpPanel;
+function togglePanel(id) {
+  const target = $(id);
+  const other = id === "helpPanel" ? $("shortcutPanel") : $("helpPanel");
   other.classList.add("hidden");
   target.classList.toggle("hidden");
 }
 
-function handleShortcut(event) {
-  if (event.key === "Escape") {
-    els.helpPanel.classList.add("hidden");
-    els.shortcutPanel.classList.add("hidden");
-  }
+function closePanels() {
+  $("helpPanel").classList.add("hidden");
+  $("shortcutPanel").classList.add("hidden");
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("theme-light");
+  document.body.classList.toggle("theme-night");
+  const isLight = document.body.classList.contains("theme-light");
+  $("themeToggle").textContent = isLight ? "☀ ライトモード" : "☾ ナイトモード";
+}
+
+function toggleProxy() {
+  state.useProxy = !state.useProxy;
+  $("proxyToggle").classList.toggle("active", state.useProxy);
+}
+
+function toggleOption(button) {
+  const key = button.dataset.option;
+  state.options[key] = !state.options[key];
+  button.classList.toggle("active", state.options[key]);
+  updateAll(false);
+}
+
+function handleKeydown(event) {
+  if (event.key === "Escape") closePanels();
   if (event.altKey && event.key.toLowerCase() === "t") {
     event.preventDefault();
     toggleTheme();
   }
   if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "c") {
     event.preventDefault();
-    copyText(els.generatedJson.value, "駒JSON");
+    copyText($("generatedJson").value, "駒JSON");
   }
+}
+
+function updateAll(clearEditedMemo = true) {
+  const parsed = CharamemoParser.parseKomaJson($("jsonInput").value);
+  updateError(parsed);
+  state.data = parsed.ok ? parsed.data : null;
+  if (clearEditedMemo) $("memoEditor").dataset.edited = "";
+  const params = normalizeParams(state.data?.params || []);
+  const commandText = String(state.data?.commands || "");
+  state.edition = commandText ? CharamemoParser.detectEdition(commandText, params) : "";
+  state.paletteText = commandText ? (state.options.formatPalette ? CharamemoParser.buildPaletteOutput(commandText, state.edition) : CharamemoParser.normalizeText(commandText)) : "";
+  state.generatedMemo = buildMemo(state.data, $("manualProfile").value, state.options);
+  if (!$("memoEditor").dataset.edited) $("memoEditor").value = state.generatedMemo;
+  renderSummary();
+  renderPalette();
+  updateGeneratedJsonOnly();
+}
+
+function updateGeneratedJsonOnly() {
+  const memo = $("memoEditor").value;
+  if (document.activeElement === $("memoEditor")) $("memoEditor").dataset.edited = "1";
+  state.generatedJson = generateKomaJson(state.data, memo, state.paletteText);
+  $("generatedJson").value = state.generatedJson;
+}
+
+function updateError(parsed) {
+  const errorBox = $("jsonError");
+  if ($("jsonInput").value.trim() && !parsed.ok) {
+    errorBox.textContent = `JSON解析エラー: ${parsed.error}`;
+    errorBox.classList.remove("hidden");
+  } else {
+    errorBox.textContent = "";
+    errorBox.classList.add("hidden");
+  }
+}
+
+function renderSummary() {
+  const data = state.data;
+  $("summaryName").textContent = data?.name || "未解析";
+  renderIcon(data?.iconUrl || "");
+  renderEditionBadge(state.edition);
+  renderSheetLink(data?.externalUrl || "");
+  renderStatusChips(data?.status || []);
+  renderParams(data?.params || []);
+}
+
+function renderIcon(iconUrl) {
+  const box = $("summaryIcon");
+  box.innerHTML = "";
+  if (iconUrl) {
+    const img = document.createElement("img");
+    img.src = iconUrl;
+    img.alt = "character icon";
+    box.appendChild(img);
+    box.classList.add("has-image");
+  } else {
+    const span = document.createElement("span");
+    span.className = "icon-placeholder";
+    span.textContent = "▧";
+    box.appendChild(span);
+    box.classList.remove("has-image");
+  }
+}
+
+function renderEditionBadge(edition) {
+  const badge = $("editionBadge");
+  badge.className = "edition-badge";
+  if (edition === "6e") {
+    badge.classList.add("edition-6");
+    badge.textContent = "6版";
+  } else if (edition === "7e") {
+    badge.classList.add("edition-7");
+    badge.textContent = "7版";
+  } else {
+    badge.classList.add("edition-empty");
+    badge.textContent = "未判定";
+  }
+}
+
+function renderSheetLink(url) {
+  const badge = $("sheetLinkBadge");
+  const parent = badge.parentElement;
+  const replacement = url ? document.createElement("a") : document.createElement("span");
+  replacement.id = "sheetLinkBadge";
+  replacement.className = url ? "sheet-link-badge" : "sheet-link-badge is-disabled";
+  replacement.textContent = url ? "🔗 キャラシリンク" : "🔗 未検出";
+  if (url) {
+    replacement.href = url;
+    replacement.target = "_blank";
+    replacement.rel = "noreferrer";
+  }
+  parent.replaceChild(replacement, badge);
+}
+
+function renderStatusChips(status) {
+  const box = $("statusChips");
+  box.innerHTML = "";
+  const rows = Array.isArray(status) ? status.slice(0, 4) : [];
+  rows.forEach((item) => {
+    const span = document.createElement("span");
+    span.textContent = `${item.label || "-"} ${currentValue(item)}`;
+    box.appendChild(span);
+  });
+}
+
+function renderParams(params) {
+  const box = $("paramsGrid");
+  box.innerHTML = "";
+  const rows = Array.isArray(params) ? params : [];
+  rows.forEach((item) => {
+    const div = document.createElement("div");
+    div.className = "param-chip";
+    const label = document.createElement("span");
+    label.textContent = item.label || "-";
+    const value = document.createElement("strong");
+    value.textContent = currentValue(item);
+    div.append(label, value);
+    box.appendChild(div);
+  });
+}
+
+function renderPalette() {
+  $("palettePreview").value = state.paletteText;
+  $("editionStatus").textContent = `自動判定: ${state.edition ? CharamemoParser.editionLabel(state.edition) : "未判定"}`;
+}
+
+function normalizeParams(params) {
+  const result = {};
+  if (!Array.isArray(params)) return result;
+  params.forEach((item) => {
+    if (!item || !item.label) return;
+    result[item.label] = currentValue(item);
+  });
+  return result;
+}
+
+function currentValue(item) {
+  if (!item || typeof item !== "object") return "-";
+  return item.value ?? item.current ?? item.max ?? "-";
+}
+
+function buildMemo(data, manualProfile, options) {
+  if (!data) return "";
+  const parts = [];
+  parts.push(`名前: ${data.name || ""}\n${manualProfile}`.trim());
+  if (options.includeWeapons) parts.push("【戦闘・武器・防具】\n※ いあきゃらTXTやキャラシ情報から追記してください。");
+  if (options.includeItems) parts.push("【所持品】\n※ いあきゃらTXTやキャラシ情報から追記してください。");
+  if (options.includeKnowledge) parts.push("【新たに得た知識・経験】\n※ 通過シナリオや成長メモを追記してください。");
+  if (options.includeTxtMemo) parts.push("【TXT内メモ】\n※ TXT内メモがある場合はここへ反映してください。");
+  if (data.memo) parts.push(`【既存メモ】\n${data.memo}`);
+  return parts.filter(Boolean).join("\n\n");
+}
+
+function generateKomaJson(data, memo, commands) {
+  if (!data) return "";
+  return JSON.stringify({ kind: "character", data: { ...data, memo, commands } });
+}
+
+function regenerateMemo() {
+  $("memoEditor").dataset.edited = "";
+  $("memoEditor").value = state.generatedMemo;
+  updateGeneratedJsonOnly();
+}
+
+function fetchExternalUrl() {
+  if (!state.data?.externalUrl) {
+    setStatus("externalUrlが見つかりません", "error");
+    return;
+  }
+  setStatus("現在の版では外部ページ取得ではなく、駒JSON内の情報を元に整形します。", "info");
+}
+
+function clearAll() {
+  $("jsonInput").value = "";
+  $("memoEditor").value = "";
+  $("memoEditor").dataset.edited = "";
+  setStatus("入力欄をクリアしました。", "info");
+  updateAll();
 }
 
 async function copyText(text, label) {
   if (!text) {
-    showStatus("コピーする内容がありません", true);
+    setStatus("コピーする内容がありません。", "error");
     return;
   }
   try {
     await navigator.clipboard.writeText(text);
-    showStatus(`${label}をコピーしました`, false);
-  } catch {
-    showStatus("コピーできませんでした。テキスト欄から手動でコピーしてください", true);
+    setStatus(`${label}をコピーしました。`, "info");
+  } catch (error) {
+    fallbackCopyText(text);
+    setStatus(`${label}を選択コピー用に準備しました。`, "info");
   }
 }
 
-function showStatus(message, isError) {
-  els.statusMessage.textContent = isError ? `⚠ ${message}` : message;
-  window.setTimeout(() => {
-    els.statusMessage.textContent = "";
-  }, 2500);
+function fallbackCopyText(text) {
+  const temp = document.createElement("textarea");
+  temp.value = text;
+  temp.style.position = "fixed";
+  temp.style.left = "-9999px";
+  document.body.appendChild(temp);
+  temp.focus();
+  temp.select();
+  try { document.execCommand("copy"); } catch (error) { console.warn(error); }
+  temp.remove();
 }
+
+function setStatus(message, type = "info") {
+  const status = $("statusMessage");
+  status.textContent = message;
+  status.style.color = type === "error" ? "#fecaca" : "#6ee7b7";
+  if (message) window.setTimeout(() => { if (status.textContent === message) status.textContent = ""; }, 2600);
+}
+
+document.addEventListener("DOMContentLoaded", init);

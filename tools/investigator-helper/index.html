@@ -3,7 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>探索者ヘルパーv1.6</title>
+  <title>探索者ヘルパーv1.9</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
+  </script>
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body class="theme-light">
@@ -16,7 +24,7 @@
             <span class="header-pill header-pill-violet">CoC 6版 / 7版 / パルプ</span>
             <span class="header-pill">開発用データJS管理</span>
           </div>
-          <h1 class="site-title">探索者ヘルパーv1.6</h1>
+          <h1 class="site-title">探索者ヘルパーv1.9</h1>
           <p class="site-description">職業サンプル、特徴表、経験パッケージを検索・閲覧し、キャラシ貼り付け用に整形できるクローズド環境向け支援ツール。</p>
         </div>
         <div class="header-actions">
@@ -109,6 +117,10 @@
             <div id="packageList" class="card-list"></div>
           </div>
         </section>
+
+        <button id="leftColumnScrollTop" class="left-scroll-top-button" type="button" title="左カラムの先頭へ戻る">
+          ⬆
+        </button>
       </section>
 
       <aside class="right-column">
@@ -126,11 +138,8 @@
               <button id="clearOutputButton" class="btn btn-soft" type="button">クリア</button>
             </div>
           </div>
-          <textarea id="outputText" spellcheck="false"></textarea>
+          <textarea id="outputText" spellcheck="false" placeholder="「出力に追加」使用でテキストが表示されます。"></textarea>
         </section>
-        <footer class="tool-footer-note">
-          本ツールは、探索者作成時の情報整理・検索・メモ作成を補助するための非公式ツールです。使用するデータは、利用者自身が所持する資料に基づいて管理してください。
-        </footer>
       </aside>
     </main>
   </div>
@@ -138,6 +147,7 @@
   <script src="./js/data-occupations.js"></script>
   <script src="./js/data-features.js"></script>
   <script src="./js/data-experience-packages.js"></script>
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
   <script src="./js/app.js"></script>
 </body>
 </html>
