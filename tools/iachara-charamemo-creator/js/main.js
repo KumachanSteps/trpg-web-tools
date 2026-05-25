@@ -101,7 +101,7 @@ function updateAll(clearEditedMemo = true) {
   if (clearEditedMemo) $("memoEditor").dataset.edited = "";
   const params = normalizeParams(state.data?.params || []);
   const commandText = String(state.data?.commands || "");
-  const txtCommands = state.txtData ? buildCommandsFromTxtData(state.txtData) : "";
+  const txtCommands = window.IacharaTextParser && state.txtData ? window.IacharaTextParser.buildCommandsFromTxtData(state.txtData) : "";
   const commandSource = commandText || txtCommands;
   state.edition = commandSource ? CharamemoParser.detectEdition(commandSource, params) : detectTxtEdition(state.txtData);
   state.paletteText = commandSource ? (state.options.formatPalette ? CharamemoParser.buildPaletteOutput(commandSource, state.edition) : CharamemoParser.normalizeText(commandSource)) : "";
@@ -115,7 +115,7 @@ function updateAll(clearEditedMemo = true) {
 function updateGeneratedJsonOnly() {
   const memo = $("memoEditor").value;
   if (document.activeElement === $("memoEditor")) $("memoEditor").dataset.edited = "1";
-  state.generatedJson = generateKomaJson(state.data, memo, state.paletteText);
+  state.generatedJson = generateKomaJson(state.data, state.txtData, memo, state.paletteText);
   $("generatedJson").value = state.generatedJson;
 }
 
@@ -134,21 +134,8 @@ async function handleTxtFileSelect(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
   try {
-    const text = await file.text();
-    const parsed = parseIacharaTxt(text);
-    if (!parsed.found) {
-      state.txtText = "";
-      state.txtData = null;
-      setTxtStatus("TXTの解析に失敗しました。いあきゃらTXT形式か確認してください。", "error");
-      updateAll();
-      return;
-    }
-    state.txtText = text;
-    state.txtData = parsed;
-    $("manualProfile").value = buildManualProfileFromTxt(parsed.profile);
-    $("memoEditor").dataset.edited = "";
-    setTxtStatus(`${file.name} を読み込みました。`, "info");
-    updateAll();
+    const txtContent = await file.text();
+    applyIacharaTxtToForm(txtContent, file.name);
   } catch (error) {
     state.txtText = "";
     state.txtData = null;
@@ -157,6 +144,41 @@ async function handleTxtFileSelect(event) {
   } finally {
     event.target.value = "";
   }
+}
+
+function applyIacharaTxtToForm(txtContent, fileName = "TXTファイル") {
+  if (!window.IacharaTextParser) {
+    setTxtStatus("いあきゃらTXT解析スクリプトが読み込まれていません。", "error");
+    return;
+  }
+  const parsed = window.IacharaTextParser.parse(txtContent);
+  if (!parsed.found) {
+    state.txtText = "";
+    state.txtData = null;
+    setTxtStatus("TXTの解析に失敗しました。いあきゃらTXT形式か確認してください。", "error");
+    updateAll();
+    return;
+  }
+  state.txtText = txtContent;
+  state.txtData = parsed;
+
+  const profileText = window.IacharaTextParser.buildProfileSupplementFromIacharaText(txtContent);
+  const profileTextarea = document.querySelector("#manualProfile");
+  if (profileTextarea) {
+    profileTextarea.value = profileText;
+    profileTextarea.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  const memoText = buildMemo(state.data, profileText, state.options, parsed);
+  const memoTextarea = document.querySelector("#memoEditor");
+  if (memoTextarea && memoText) {
+    memoTextarea.dataset.edited = "";
+    memoTextarea.value = memoText;
+    memoTextarea.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  setTxtStatus(`${fileName} を読み込み、プロフィール補足とキャラメモへ反映しました。`, "info");
+  updateAll(false);
 }
 
 function resetTxtFile() {
@@ -174,137 +196,14 @@ function setTxtStatus(message, type = "info") {
   status.className = type === "error" ? "txt-load-status is-error" : "txt-load-status is-success";
 }
 
-function parseIacharaTxt(text) {
-  const normalized = normalizeText(text);
-  const sections = splitSections(normalized);
-  const profile = parseBasicProfile(sections["基本情報"] || "");
-  const abilities = parseAbilities(sections["能力値"] || "");
-  const skills = parseSkills(sections["技能値"] || "");
-  const icons = extractUrls(sections["アイコン"] || "");
-  const found = Boolean(profile.name || profile.occupation || Object.keys(sections).length || skills.length || Object.keys(abilities).length);
-  return { found, raw: normalized, sections, profile, abilities, skills, icons };
-}
-
-function splitSections(text) {
-  const sections = {};
-  let current = "";
-  normalizeText(text).split("\n").forEach((line) => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("【") && trimmed.endsWith("】")) {
-      current = trimmed.slice(1, -1).trim();
-      sections[current] = "";
-    } else if (current) {
-      sections[current] += line + "\n";
-    }
-  });
-  return sections;
-}
-
-function parseBasicProfile(text) {
-  const profile = {
-    name: pickLineValue(text, "名前"),
-    occupation: pickLineValue(text, "職業"),
-    age: "",
-    gender: "",
-    height: "",
-    weight: ""
-  };
-  normalizeText(text).split("\n").forEach((line) => {
-    const normalized = line.replaceAll("：", ":");
-    if (normalized.includes("年齢:")) profile.age = pickInlineValue(normalized, "年齢");
-    if (normalized.includes("性別:")) profile.gender = pickInlineValue(normalized, "性別");
-    if (normalized.includes("身長:")) profile.height = pickInlineValue(normalized, "身長");
-    if (normalized.includes("体重:")) profile.weight = pickInlineValue(normalized, "体重");
-  });
-  return profile;
-}
-
-function pickLineValue(text, key) {
-  const line = normalizeText(text).split("\n").find((row) => row.trim().replaceAll("：", ":").startsWith(`${key}:`));
-  if (!line) return "";
-  return line.replaceAll("：", ":").slice(key.length + 1).trim();
-}
-
-function pickInlineValue(line, key) {
-  const index = line.indexOf(`${key}:`);
-  if (index < 0) return "";
-  const rest = line.slice(index + key.length + 1);
-  const slash = rest.indexOf("/");
-  return (slash >= 0 ? rest.slice(0, slash) : rest).trim();
-}
-
-function parseAbilities(text) {
-  const abilities = {};
-  normalizeText(text).split("\n").forEach((line) => {
-    const trimmed = line.trim();
-    const match = trimmed.match(/^(STR|CON|POW|DEX|APP|SIZ|INT|EDU|HP|MP|SAN|IDE|幸運|知識)\s+([0-9]+)/i);
-    if (match) abilities[match[1].toUpperCase ? match[1].toUpperCase() : match[1]] = match[2];
-    if (trimmed.startsWith("現在SAN値")) {
-      const sanMatch = trimmed.match(/現在SAN値\s+([0-9]+)/);
-      if (sanMatch) abilities.SAN = sanMatch[1];
-    }
-  });
-  return abilities;
-}
-
-function parseSkills(text) {
-  const skills = [];
-  normalizeText(text).split("\n").forEach((line) => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("『") || trimmed.startsWith("技能名") || trimmed.includes("ポイント")) return;
-    const match = trimmed.match(/^(.+?)\s+([0-9]+)\s+[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+\s*$/);
-    if (!match) return;
-    skills.push({ name: normalizeSkillNameForTxt(match[1].trim()), value: match[2] });
-  });
-  return skills;
-}
-
-function normalizeSkillNameForTxt(name) {
-  return String(name || "").trim().replaceAll("（", "(").replaceAll("）", ")").replace(/\((.+?)\)/g, "：$1");
-}
-
-function extractUrls(text) {
-  return normalizeText(text).split("\n").map((line) => line.trim().replace(/^:/, "")).filter((line) => line.startsWith("http"));
-}
-
-function buildManualProfileFromTxt(profile) {
-  return [
-    `職業: ${profile.occupation || "未取得"}`,
-    `年齢: ${profile.age || "未取得"} / 性別: ${profile.gender || "未取得"}`,
-    `身長: ${profile.height || "未取得"} / 体重: ${profile.weight || "未取得"}`,
-    "カラーコード: #008080"
-  ].join("\n");
-}
-
-function buildCommandsFromTxtData(txtData) {
-  if (!txtData || !Array.isArray(txtData.skills)) return "";
-  const command = detectTxtEdition(txtData) === "7e" ? "CC" : "CCB";
-  const lines = [];
-  if (txtData.abilities?.SAN) lines.push(`${command}<=${txtData.abilities.SAN} 【正気度ロール】`);
-  if (txtData.abilities?.IDE) lines.push(`${command}<=${txtData.abilities.IDE} 【アイデア】`);
-  if (txtData.abilities?.幸運) lines.push(`${command}<=${txtData.abilities.幸運} 【幸運】`);
-  if (txtData.abilities?.知識) lines.push(`${command}<=${txtData.abilities.知識} 【知識】`);
-  txtData.skills.forEach((skill) => lines.push(`${command}<=${skill.value} 【${skill.name}】`));
-  return lines.join("\n");
-}
-
 function detectTxtEdition(txtData) {
-  if (!txtData) return "";
-  const header = txtData.raw.split("\n").slice(0, 3).join(" ");
-  if (header.includes("7版")) return "7e";
-  if (header.includes("6版")) return "6e";
-  const bigStats = Object.values(txtData.abilities || {}).some((value) => Number(value) > 30);
-  const has7eSkill = (txtData.skills || []).some((skill) => ["近接戦闘", "手さばき", "隠密", "鑑定", "自然", "サバイバル", "威圧", "魅惑"].some((word) => skill.name.includes(word)));
-  return bigStats || has7eSkill ? "7e" : "6e";
+  if (!window.IacharaTextParser || !txtData) return "";
+  return window.IacharaTextParser.detectEdition(txtData);
 }
 
 function sectionText(txtData, sectionName) {
-  if (!txtData?.sections?.[sectionName]) return "";
-  return cleanSectionText(txtData.sections[sectionName]);
-}
-
-function cleanSectionText(text) {
-  return normalizeText(text).split("\n").map((line) => line.trimEnd()).join("\n").trim();
+  if (!window.IacharaTextParser || !txtData) return "";
+  return window.IacharaTextParser.sectionText(txtData, sectionName);
 }
 
 function renderSummary() {
@@ -440,9 +339,20 @@ function buildSectionBlock(label, content, fallback) {
   return `【${label}】\n${content || fallback}`;
 }
 
-function generateKomaJson(data, memo, commands) {
-  if (!data) return "";
-  return JSON.stringify({ kind: "character", data: { ...data, memo, commands } });
+function generateKomaJson(data, txtData, memo, commands) {
+  if (data) return JSON.stringify({ kind: "character", data: { ...data, memo, commands } });
+  if (!txtData) return "";
+  return JSON.stringify({
+    kind: "character",
+    data: {
+      name: txtData.profile?.name || "いあきゃらTXTキャラクター",
+      iconUrl: txtData.icons?.[0] || "",
+      memo,
+      commands,
+      status: statusFromTxt(txtData),
+      params: paramsFromTxt(txtData)
+    }
+  });
 }
 
 function regenerateMemo() {
