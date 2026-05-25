@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>いあキャラMEMOジェネレータ v1.4 | TRPG Webツール観測所</title>
-  <meta name="description" content="CCFOLIA駒JSONといあきゃらTXTから、キャラメモとチャットパレットを整形してCCFOLIA用駒JSONを生成するTRPG支援ツールです。" />
+  <title>いあキャラMEMOジェネレータ v1.6 | TRPG Webツール観測所</title>
+  <meta name="description" content="CCFOLIA駒JSONを読み込み、externalUrl / iconUrl / ステータス / パラメータ / チャットパレットを解析して、キャラメモと駒データを再生成します。" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="./css/charamemo-creator-style.css" />
 </head>
 <body>
-  <div id="appShell" class="app-shell theme-night">
+  <div id="app" class="page-shell theme-night">
     <div class="page-inner">
       <header class="site-header">
         <div class="header-top">
@@ -27,195 +27,127 @@
               <span class="portal-tooltip">TRPG WEBツール観測所に戻る</span>
             </a>
             <span class="tag-pill tag-cyan">駒JSON入力</span>
-            <span class="tag-pill tag-violet">いあきゃらTXT入力</span>
+            <span class="tag-pill tag-violet">キャラメモ編集</span>
             <span class="tag-pill tag-amber">CCFOLIA用コピー</span>
           </div>
           <div class="header-actions">
-            <button id="languageToggle" class="header-button" type="button">EN/JP</button>
-            <button id="usageToggle" class="header-button" type="button">使い方</button>
-            <button id="shortcutToggle" class="header-button" type="button">ショートカット</button>
-            <button id="themeToggle" class="header-button" type="button">🌙 ナイトモード</button>
+            <button id="langToggle" class="header-button" type="button">EN/JP</button>
+            <button id="helpToggle" class="header-button" type="button"><span aria-hidden="true">?</span>使い方</button>
+            <button id="shortcutToggle" class="header-button" type="button"><span aria-hidden="true">⌨</span>ショートカット</button>
+            <button id="themeToggle" class="header-button" type="button"><span id="themeIcon">☾</span><span id="themeLabel">ナイトモード</span></button>
           </div>
         </div>
-
         <div class="title-row">
           <div class="tool-icon" aria-hidden="true">
-            <svg class="tool-icon-main" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M7 3.75h7.6L19 8.15v12.1H7V3.75Z" stroke="currentColor" stroke-width="1.7" />
-              <path d="M14.5 4v4.5H19" stroke="currentColor" stroke-width="1.7" />
-              <path d="M9.5 12h7M9.5 15h7M9.5 18h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-            </svg>
+            <span class="tool-icon-main">▤</span>
             <span class="tool-icon-star">✦</span>
-            <span class="tool-icon-copy">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true">
-                <path d="M8 8h10v12H8V8Z" stroke="currentColor" stroke-width="2" />
-                <path d="M6 16H4V4h10v2" stroke="currentColor" stroke-width="2" />
-              </svg>
-            </span>
+            <span class="tool-icon-copy">⧉</span>
           </div>
           <div>
-            <h1 class="site-title">いあキャラMEMOジェネレータ v1.4</h1>
-            <p class="site-description">
-              CCFOLIA駒JSONと、いあきゃらのテキスト出力を読み込み、プロフィール・所持品・バックストーリー・メモを整理して、CCFOLIA用のキャラメモ入り駒JSONを再生成します。
-            </p>
+            <h1 class="site-title">いあキャラMEMOジェネレータ v1.6</h1>
+            <p class="site-description">CCFOLIA駒JSONを読み込み、externalUrl / iconUrl / ステータス / パラメータ / チャットパレットを解析して、キャラメモと駒データを再生成します。</p>
           </div>
         </div>
-
-        <div id="usagePanel" class="header-info-panel hidden">
-          <strong>使い方：</strong>
-          1. CCFOLIA駒JSONを貼り付けます。2. いあきゃらTXTを貼り付けるか、txtファイルを開きます。3. 必要な生成オプションを選び、キャラメモとチャットパレットを確認して、生成駒JSONデータをコピーしてください。
-        </div>
-        <div id="shortcutPanel" class="header-info-panel hidden">
-          <strong>ショートカット：</strong>
-          Ctrl / Cmd + Shift + C：生成駒JSONコピー、Ctrl / Cmd + Shift + X：入力クリア、Esc：ヘルプパネルを閉じる
-        </div>
+        <div id="helpPanel" class="header-info-panel hidden">CCFOLIA駒JSONを貼り付け、URL取得設定と生成オプションを確認してから、キャラメモ・チャットパレット・生成済み駒JSONを編集/コピーします。</div>
+        <div id="shortcutPanel" class="header-info-panel hidden">Esc：パネルを閉じる、Alt + T：ライト/ナイト切替、Ctrl / Cmd + Shift + C：生成済み駒JSONコピー。</div>
       </header>
 
-      <main class="workspace-grid">
-        <section class="tool-column">
-          <section class="tool-panel fill-panel">
-            <div class="panel-heading">
-              <span class="panel-icon" aria-hidden="true">▣</span>
-              <h2 class="panel-title">1. CCFOLIA駒JSON</h2>
-            </div>
-            <div class="panel-body">
-              <label class="input-label" for="komaJsonInput">キャラ出力▶︎ココフォリア駒出力 からコピー&ペースト</label>
-              <textarea id="komaJsonInput" class="input-textarea code-textarea" placeholder="{&quot;kind&quot;:&quot;character&quot;,&quot;data&quot;:{...}}"></textarea>
-              <div id="jsonError" class="error-box hidden"></div>
-            </div>
-          </section>
-
-          <section class="tool-panel fill-panel">
-            <div class="panel-heading">
-              <span class="panel-icon" aria-hidden="true">TXT</span>
-              <h2 class="panel-title">2. いあきゃらTXT</h2>
-            </div>
-            <div class="panel-body">
-              <div class="button-grid-2 txt-button-row">
-                <button id="txtFileBtn" class="tool-button button-blue" type="button">txtファイルを開く</button>
-                <button id="txtClearBtn" class="tool-button button-muted" type="button">TXTクリア</button>
-              </div>
-              <input id="txtFileInput" type="file" accept=".txt,text/plain" hidden />
-              <textarea id="iacharaTxtInput" class="input-textarea code-textarea" placeholder="いあきゃらのテキスト出力をここに貼り付け"></textarea>
-              <p id="txtMessage" class="helper-text"></p>
+      <div class="layout-grid">
+        <aside class="left-column">
+          <section class="panel panel-input">
+            <div class="panel-title"><span class="panel-icon">▣</span><h2>1. 入力データ</h2></div>
+            <label class="field-label" for="jsonInput">CCFOLIA駒JSONデータ</label>
+            <textarea id="jsonInput" class="json-input" placeholder="キャラ出力▶︎ココフォリア駒出力 からコピー&ペースト"></textarea>
+            <div id="jsonError" class="error-box hidden"></div>
+            <div class="url-list">
+              <div class="input-line"><label>externalUrl</label><div class="input-line-box"><span>↗</span><span id="externalUrlView">未検出</span></div></div>
+              <div class="input-line"><label>iconUrl</label><div class="input-line-box"><span>▧</span><span id="iconUrlView">未検出</span></div></div>
             </div>
           </section>
 
-          <section class="tool-panel">
-            <div class="panel-heading">
-              <span class="panel-icon" aria-hidden="true">⚙</span>
-              <h2 class="panel-title">3. 生成オプション</h2>
+          <section class="panel panel-fetch">
+            <div class="panel-title"><span class="panel-icon">↗</span><h2>2. URL取得設定</h2></div>
+            <div class="fetch-row">
+              <button id="useProxyToggle" class="switch-row active" type="button"><span><strong>Proxy使用</strong><small>CORS制限対策</small></span><span class="switch"><span></span></span></button>
+              <button id="fetchButton" class="btn btn-blue" type="button">取得</button>
             </div>
-            <div class="panel-body">
-              <div class="switch-list">
-                <button id="includeWeaponsToggle" class="switch-row is-active" type="button">
-                  <span class="switch-label">戦闘・武器・防具を含める</span>
-                  <span class="switch-track is-on"><span class="switch-knob"></span></span>
-                </button>
-                <button id="includeItemsToggle" class="switch-row is-active" type="button">
-                  <span class="switch-label">所持品を含める</span>
-                  <span class="switch-track is-on"><span class="switch-knob"></span></span>
-                </button>
-                <button id="includeKnowledgeExperienceToggle" class="switch-row is-active" type="button">
-                  <span class="switch-label">新たに得た知識・経験を含める</span>
-                  <span class="switch-track is-on"><span class="switch-knob"></span></span>
-                </button>
-                <button id="includeTxtMemoToggle" class="switch-row is-active" type="button">
-                  <span class="switch-label">TXT内メモを含める</span>
-                  <span class="switch-track is-on"><span class="switch-knob"></span></span>
-                </button>
-                <button id="formatPaletteToggle" class="switch-row is-active" type="button">
-                  <span class="switch-label">チャットパレット整形</span>
-                  <span class="switch-track is-on"><span class="switch-knob"></span></span>
-                </button>
+            <input id="proxyUrl" class="proxy-input" value="https://your-worker.example.com/fetch?url=" />
+          </section>
+
+          <section class="panel panel-options">
+            <div class="panel-title"><span class="panel-icon">⚙</span><h2>3. 生成オプション</h2></div>
+            <div class="option-list">
+              <button id="includeProfile" class="switch-row active" type="button"><span><strong>基本プロフィールを含める</strong></span><span class="switch"><span></span></span></button>
+              <button id="includeWeapons" class="switch-row active" type="button"><span><strong>武器・防具を含める</strong></span><span class="switch"><span></span></span></button>
+              <button id="includeItems" class="switch-row active" type="button"><span><strong>所持品を含める</strong></span><span class="switch"><span></span></span></button>
+              <button id="formatPalette" class="switch-row active" type="button"><span><strong>チャットパレット整形</strong></span><span class="switch"><span></span></span></button>
+            </div>
+            <div class="output-mode-wrap">
+              <label class="field-label">出力対象</label>
+              <div class="mode-grid">
+                <button class="mode-btn active" data-mode="both" type="button">両方</button>
+                <button class="mode-btn" data-mode="memo" type="button">メモ</button>
+                <button class="mode-btn" data-mode="koma" type="button">駒</button>
               </div>
             </div>
           </section>
-        </section>
+        </aside>
 
-        <section class="tool-column">
-          <section class="tool-panel">
-            <div class="panel-heading">
-              <span class="panel-icon" aria-hidden="true">◉</span>
-              <h2 class="panel-title">解析キャラクター概要</h2>
-            </div>
-            <div class="panel-body">
+        <main class="main-grid">
+          <section class="middle-column">
+            <section class="panel summary-panel">
+              <div class="panel-title"><span class="panel-icon">◎</span><h2>解析キャラクター概要</h2></div>
               <div class="summary-card">
-                <div class="summary-icon">
-                  <img id="iconPreview" alt="character icon" />
-                  <span id="iconPlaceholder" class="summary-icon-placeholder">▧</span>
-                </div>
+                <div id="iconFrame" class="icon-frame">▧</div>
                 <div class="summary-main">
-                  <div class="summary-title-row">
-                    <h3 id="characterNameView" class="summary-name">未解析</h3>
-                    <span id="editionBadge" class="edition-badge hidden"></span>
-                  </div>
-                  <p id="externalUrlSummary" class="summary-sub">externalUrl 未検出</p>
-                  <div id="statusChips" class="summary-status-row"></div>
+                  <h3 id="summaryName">未解析</h3>
+                  <p id="summaryExternalUrl">externalUrl 未検出</p>
+                  <div id="statusChips" class="status-chips"></div>
                 </div>
               </div>
-              <div id="paramsGrid" class="summary-param-grid"></div>
-            </div>
+              <div id="paramsGrid" class="params-grid"></div>
+            </section>
+
+            <section class="panel memo-panel">
+              <div class="panel-title"><span class="panel-icon">✎</span><h2>4. プロフィール補足 / キャラメモ編集</h2></div>
+              <label class="field-label" for="manualProfile">externalUrl取得後に入るプロフィール欄の仮入力</label>
+              <textarea id="manualProfile" class="profile-input">職業: 未取得
+年齢: 未取得 / 性別: 未取得
+身長: 未取得 / 体重: 未取得
+カラーコード: #008080</textarea>
+              <div class="memo-actions">
+                <button id="regenerateMemo" class="btn btn-dark" type="button">✦ オプションからメモ再生成</button>
+                <button id="copyMemo" class="btn btn-green" type="button">⧉ メモコピー</button>
+              </div>
+              <textarea id="memoEditor" class="memo-editor"></textarea>
+            </section>
           </section>
 
-          <section class="tool-panel fill-panel">
-            <div class="panel-heading">
-              <span class="panel-icon" aria-hidden="true">▤</span>
-              <h2 class="panel-title">4. プロフィール補足 / キャラメモ編集</h2>
-            </div>
-            <div class="panel-body">
-              <label class="input-label" for="memoEditor">TXT解析結果と生成オプションから作成されたメモを編集できます</label>
-              <div class="button-row memo-action-row">
-                <button id="regenerateMemoBtn" class="tool-button button-muted" type="button">オプションからメモ生成</button>
-                <button id="copyMemoBtn" class="tool-button button-primary" type="button">メモコピー</button>
-              </div>
-              <textarea id="memoEditor" class="memo-textarea"></textarea>
-            </div>
-          </section>
-        </section>
-
-        <section class="tool-column">
-          <section class="tool-panel fill-panel">
-            <div class="panel-heading">
-              <span class="panel-icon" aria-hidden="true">✦</span>
-              <h2 class="panel-title">5. チャットパレットプレビュー</h2>
-            </div>
-            <div class="panel-body">
-              <div class="button-row palette-action-row">
-                <button id="regeneratePaletteBtn" class="tool-button button-muted" type="button">パレット再生成</button>
-                <button id="copyPaletteBtn" class="tool-button button-blue" type="button">パレットコピー</button>
-              </div>
-              <textarea id="palettePreview" class="preview-textarea code-textarea" placeholder="駒JSONのcommands、またはいあきゃらTXTの技能値からチャットパレットを生成します"></textarea>
+          <section class="right-column">
+            <section class="panel palette-panel">
+              <div class="panel-title"><span class="panel-icon">◈</span><h2>5. チャットパレットプレビュー</h2></div>
+              <textarea id="palettePreview" class="palette-preview" readonly></textarea>
               <div class="preview-footer">
                 <span id="editionView">自動判定: 未判定</span>
+                <button id="copyPalette" type="button">パレットコピー</button>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section class="tool-panel">
-            <div class="panel-heading">
-              <span class="panel-icon" aria-hidden="true">▣</span>
-              <h2 class="panel-title">6. 生成済み駒JSON</h2>
-            </div>
-            <div class="panel-body">
-              <textarea id="generatedJson" class="generated-json code-textarea" readonly placeholder="生成された駒JSONデータがここに表示されます"></textarea>
+            <section class="panel generated-panel">
+              <div class="panel-title"><span class="panel-icon">▣</span><h2>6. 生成済み駒JSON</h2></div>
+              <textarea id="generatedJson" class="generated-json" readonly></textarea>
               <div class="json-actions">
-                <button id="copyJsonBtn" class="tool-button button-primary" type="button">生成駒JSONデータをコピー</button>
-                <button id="clearInputBtn" class="tool-button button-muted" type="button">データを削除</button>
+                <button id="copyJson" class="btn btn-green" type="button">✓ 再生成してコピー</button>
+                <button id="clearInput" class="btn btn-dark" type="button">↻ 入力をクリア</button>
               </div>
-              <p id="statusMessage" class="copy-message"></p>
-            </div>
+              <p id="statusMessage" class="status-message"></p>
+            </section>
           </section>
-        </section>
-      </main>
-
-      <footer class="tool-footer">URL取得ではなく、ローカルTXT入力で安定してキャラメモを整える版</footer>
+        </main>
+      </div>
+      <footer class="footer-note">わざわざキャラメモを手打ちしないですむキャラ駒をあなたに</footer>
     </div>
   </div>
-
-  <script src="./js/i18l.js"></script>
-  <script src="./js/language.js"></script>
-  <script src="./js/parser.js"></script>
   <script src="./js/main.js"></script>
 </body>
 </html>
