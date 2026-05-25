@@ -1,0 +1,32 @@
+window.FEATURES = [
+  {
+    id: "feature_2_7",
+    dice: "2-7",
+    name: "特徴名サンプルA",
+    effect: "ここに特徴表の効果を記載。キャラクター作成時に反映する内容を表示する。",
+    source: "クトゥルフ2015",
+    sourceShort: "クトゥルフ2015",
+    page: "p.x",
+    tags: ["技能"],
+  },
+  {
+    id: "feature_4_3",
+    dice: "4-3",
+    name: "特徴名サンプルB",
+    effect: "ランダム抽出結果には、名称だけでなく効果も一緒に表示する。",
+    source: "クトゥルフ2015",
+    sourceShort: "クトゥルフ2015",
+    page: "p.x",
+    tags: ["探索"],
+  },
+  {
+    id: "feature_5_8",
+    dice: "5-8",
+    name: "特徴名サンプルC",
+    effect: "重複は自動的に避ける。設定変更ボタンは置かない。",
+    source: "クトゥルフ2015",
+    sourceShort: "クトゥルフ2015",
+    page: "p.x",
+    tags: ["能力"],
+  },
+];

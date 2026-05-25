@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>探索者作成ヘルパー | TRPG Webツール観測所</title>
+  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="page-shell" id="appRoot" data-theme="light">
+    <div class="page-container">
+      <header class="site-header glass-panel">
+        <div class="header-layout">
+          <div class="header-main">
+            <div class="header-pills">
+              <a class="portal-link" href="../../index.html" title="TRPG Webツール観測所に戻る">← TRPG Webツール観測所</a>
+              <span class="header-pill header-pill-violet">CoC 6版 / 7版 / パルプ</span>
+              <span class="header-pill header-pill-muted">開発用データJS管理</span>
+            </div>
+            <div>
+              <h1 class="site-title">探索者作成ヘルパー</h1>
+              <p class="site-description">
+                職業サンプル、特徴表、経験パッケージを検索・閲覧し、キャラシ貼り付け用に整形できるクローズド環境向け支援ツール。
+              </p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-soft" type="button" id="usageToggle">使い方</button>
+            <button class="btn btn-soft" type="button" id="shortcutToggle">ショートカット</button>
+            <button class="btn btn-soft" type="button" id="themeToggle">ナイトモード</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="info-panel is-hidden" id="usagePanel">
+        <h2>使い方</h2>
+        <p>対象ルールを選び、職業名・技能チップ・出典で職業サンプルを検索します。選択した項目は右側の詳細からキャラシ貼り付け用メモへ追加できます。</p>
+        <p>特徴表は2〜5個をランダム抽出します。重複は自動で避けます。経験パッケージは7版探索者用データとして管理します。</p>
+      </section>
+
+      <section class="info-panel is-hidden" id="shortcutPanel">
+        <h2>ショートカット</h2>
+        <p><kbd>Esc</kbd>：開いているパネルを閉じる / <kbd>Ctrl</kbd> + <kbd>C</kbd>：通常のコピー操作</p>
+      </section>
+
+      <section class="control-bar glass-panel">
+        <div class="tabs" role="tablist" aria-label="表示タブ">
+          <button class="tab-button is-active" type="button" data-tab="occupation">職業サンプル</button>
+          <button class="tab-button" type="button" data-tab="feature">特徴表</button>
+          <button class="tab-button" type="button" data-tab="package">経験パッケージ</button>
+        </div>
+        <div class="rule-switch">
+          <span class="small-label">対象ルール</span>
+          <button class="rule-button rule-all is-active" type="button" data-rule="all">全て</button>
+          <button class="rule-button rule-6e" type="button" data-rule="6e">CoC 6版</button>
+          <button class="rule-button rule-7e" type="button" data-rule="7e">CoC 7版</button>
+          <button class="rule-button rule-pulp" type="button" data-rule="pulp">パルプクトゥルフ</button>
+        </div>
+      </section>
+
+      <main class="main-grid">
+        <section class="left-column">
+          <section class="tab-content" id="occupationTab">
+            <div class="search-panel glass-panel-soft">
+              <div class="search-grid">
+                <label class="field-block">
+                  <span class="field-label">キーワード検索</span>
+                  <input id="keywordInput" class="text-input" type="search" placeholder="職業名・技能・説明・キーワードで検索" />
+                </label>
+                <label class="field-block">
+                  <span class="field-label">出典フィルター</span>
+                  <select id="sourceSelect" class="text-input"></select>
+                </label>
+              </div>
+
+              <div class="skill-search-block">
+                <div class="skill-search-header">
+                  <div class="skill-title-actions">
+                    <span class="skill-title" id="skillChipTitle">技能チップ検索（全て）</span>
+                    <button class="btn btn-soft btn-mini" type="button" id="skillExpandToggle">▽ 展開</button>
+                  </div>
+                  <button class="btn-link" type="button" id="clearSkillsButton">選択解除</button>
+                </div>
+                <div class="skill-chip-area is-collapsed" id="skillChipArea"></div>
+              </div>
+            </div>
+
+            <div class="card-list" id="occupationList"></div>
+          </section>
+
+          <section class="tab-content is-hidden" id="featureTab">
+            <div class="feature-panel glass-panel-soft">
+              <div class="section-heading-row">
+                <div>
+                  <h2>特徴表ランダム抽出</h2>
+                  <p>1d6 + 1d10で2〜5個を抽出します。重複は自動的に避けます。</p>
+                </div>
+                <div class="feature-controls">
+                  <div class="feature-count-buttons" id="featureCountButtons">
+                    <button class="count-button" type="button" data-count="2">2個</button>
+                    <button class="count-button is-active" type="button" data-count="3">3個</button>
+                    <button class="count-button" type="button" data-count="4">4個</button>
+                    <button class="count-button" type="button" data-count="5">5個</button>
+                  </div>
+                  <button class="btn btn-primary" type="button" id="rollFeaturesButton">ランダム抽出</button>
+                </div>
+              </div>
+              <div class="feature-results" id="featureResults"></div>
+            </div>
+          </section>
+
+          <section class="tab-content is-hidden" id="packageTab">
+            <div class="package-panel glass-panel-soft">
+              <div class="section-heading-row">
+                <div>
+                  <h2>経験パッケージ</h2>
+                  <p>7版探索者用の経験パッケージを閲覧し、出力欄へ追加します。</p>
+                </div>
+                <span class="data-badge">CoC 7版用データ</span>
+              </div>
+              <div class="card-list" id="packageList"></div>
+            </div>
+          </section>
+        </section>
+
+        <aside class="right-column">
+          <section class="detail-panel glass-panel-soft" id="occupationDetail"></section>
+          <section class="detail-panel glass-panel-soft is-hidden" id="packageDetail"></section>
+
+          <section class="output-panel glass-panel-soft">
+            <div class="output-header">
+              <div>
+                <h2>キャラシ貼り付け用メモ</h2>
+                <p>編集してからコピーできます。</p>
+              </div>
+              <div class="output-actions">
+                <button class="btn btn-soft btn-mini" type="button" id="copyOutputButton">コピー</button>
+                <button class="btn btn-soft btn-mini" type="button" id="clearOutputButton">クリア</button>
+              </div>
+            </div>
+            <textarea id="outputText" class="output-textarea"></textarea>
+          </section>
+
+          <footer class="tool-footer-note">
+            本ツールは、探索者作成時の情報整理・検索・メモ作成を補助するための非公式ツールです。使用するデータは、利用者自身が所持する資料に基づいて管理してください。
+          </footer>
+        </aside>
+      </main>
+    </div>
+  </div>
+
+  <script src="./js/data-occupations.js"></script>
+  <script src="./js/data-features.js"></script>
+  <script src="./js/data-experience-packages.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
