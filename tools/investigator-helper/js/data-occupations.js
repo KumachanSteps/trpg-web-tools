@@ -81,3 +81,744 @@ window.OCCUPATIONS = [
     note: "",
   },
 ];
+
+window.OCCUPATIONS_7E_EXTRA = [
+  {
+    id: "salesperson_playing_guide",
+    name: "外交販売員／セールスマン",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "多くのビジネスにおいて欠かせない存在であり、雇い主の商品やサービスを宣伝したり販売したりする職業。",
+    skills: ["運転（自動車）", "聞き耳", "経理", "心理学"],
+    skillOptions: [
+      {
+        label: "隠密 または 手さばき",
+        choose: 1,
+        options: ["隠密", "手さばき"]
+      },
+      {
+        label: "対人関係技能から2つ",
+        choose: 2,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      },
+      {
+        label: "任意のほかの1つの技能",
+        choose: 1,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ APP × 2",
+    credit: "9～40％",
+    special: "",
+    alliesExample: "同じ区域内のビジネス、お気に入りの顧客",
+    keywords: ["外交販売員", "セールスマン", "営業", "販売", "ビジネス"],
+    note: "",
+  },
+  {
+    id: "scientist_playing_guide",
+    name: "科学者／サイエンティスト",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "企業や大学に雇われ、研究を行なう職業。1つの科学分野を専門にしていても、複数の分野に精通していることがある。",
+    skills: ["目星", "ほかの言語", "母国語"],
+    skillOptions: [
+      {
+        label: "任意の専門分野の〈科学〉を3つ",
+        choose: 3,
+        options: ["科学（天文学）", "科学（生物学）", "科学（化学）", "科学（地質学）", "科学（数学）", "科学（物理学）", "科学（薬学）", "科学（植物学）", "科学（動物学）", "科学（専門分野）"]
+      },
+      {
+        label: "コンピューター または 図書館",
+        choose: 1,
+        options: ["コンピューター", "図書館"]
+      },
+      {
+        label: "対人関係技能から1つ",
+        choose: 1,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      }
+    ],
+    pointFormula: "EDU × 4",
+    credit: "9〜50%",
+    special: "",
+    alliesExample: "ほかの科学者や教員、大学、現在および過去の雇い主。",
+    keywords: ["科学者", "サイエンティスト", "研究者", "大学", "企業研究"],
+    note: "",
+  },
+  {
+    id: "student_intern_playing_guide",
+    name: "学生／インターン",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "カレッジもしくは大学に在籍する学生、あるいは会社に雇われて実習訓練を受けている人。",
+    skills: ["聞き耳", "図書館"],
+    skillOptions: [
+      {
+        label: "ほかの言語 または 母国語",
+        choose: 1,
+        options: ["ほかの言語", "母国語"]
+      },
+      {
+        label: "専攻分野として3つの技能",
+        choose: 3,
+        options: ["専攻分野に関連する技能"]
+      },
+      {
+        label: "個人的な専門または時代に関連する任意のほかの2つの技能",
+        choose: 2,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 4",
+    credit: "5〜10%",
+    special: "",
+    alliesExample: "教員やほかの学生。一方でインターンはビジネス関係者も知っているだろう。",
+    keywords: ["学生", "インターン", "大学生", "カレッジ", "実習"],
+    note: "",
+  },
+  {
+    id: "cult_leader_playing_guide",
+    name: "カルト指導者／Cult Leader",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "教義を固く信じている者、あるいは金と権力のために教義を授ける者など、カルトを導く指導者。",
+    skills: ["オカルト", "経理", "心理学", "目星"],
+    skillOptions: [
+      {
+        label: "対人関係技能から2つ",
+        choose: 2,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      },
+      {
+        label: "個人的な専門に関連する任意のほかの2つの技能",
+        choose: 2,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ APP × 2",
+    credit: "30〜60%",
+    special: "",
+    alliesExample: "信徒の大多数はありふれた人々だが、リーダーのカリスマ性が高ければ、映画スターや金持ちの寡婦、有名人といった信徒を得る可能性が高くなる。",
+    keywords: ["カルト指導者", "Cult Leader", "宗教", "教祖", "信徒"],
+    note: "",
+  },
+  {
+    id: "book_dealer_playing_guide",
+    name: "書籍商／Book Dealer",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "小売店のオーナー、あるいは専門書だけを通信販売で扱うなど、本を商う職業。",
+    skills: ["運転（自動車）", "鑑定", "経理", "図書館", "歴史", "母国語", "ほかの言語"],
+    skillOptions: [
+      {
+        label: "対人関係技能から1つ",
+        choose: 1,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      }
+    ],
+    pointFormula: "EDU × 4",
+    credit: "20〜40％",
+    special: "",
+    alliesExample: "書誌学者、ほかの書籍商、図書館や大学、顧客。",
+    keywords: ["書籍商", "Book Dealer", "古書店", "本屋", "書誌学"],
+    note: "",
+  },
+  {
+    id: "psychologist_psychoanalyst_playing_guide",
+    name: "心理学者／精神分析学者",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "心理療法やカウンセリング、組織心理学、心理学研究、教育などを担う専門家。",
+    skills: ["聞き耳", "経理", "心理学", "精神分析", "説得", "図書館"],
+    skillOptions: [
+      {
+        label: "学術的もしくは個人的な専門または時代に関連する任意のほかの2つの技能",
+        choose: 2,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 4",
+    credit: "10〜40%",
+    special: "",
+    alliesExample: "心理学分野、患者",
+    keywords: ["心理学者", "精神分析学者", "カウンセラー", "心理療法", "研究者"],
+    note: "",
+  },
+  {
+    id: "stuntman_playing_guide",
+    name: "スタントマン／Stuntman",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "テレビや映画などで危険なアクションを担当する職業。現代では組合に加入し、資格を証明することも多い。",
+    skills: ["応急手当", "回避", "近接戦闘", "水泳", "跳躍", "登攀"],
+    skillOptions: [
+      {
+        label: "機械修理 または 電気修理",
+        choose: 1,
+        options: ["機械修理", "電気修理"]
+      },
+      {
+        label: "以下から1つの技能",
+        choose: 1,
+        options: ["運転（自動車）", "乗馬", "ダイビング"]
+      }
+    ],
+    pointFormula: "EDU × 2 + DEX × 2 または EDU × 2 + STR × 2",
+    credit: "10〜50%",
+    special: "",
+    alliesExample: "映画・テレビ業界、さまざまな発破屋や花火師、役者や監督。",
+    keywords: ["スタントマン", "Stuntman", "映画", "テレビ", "アクション"],
+    note: "",
+  },
+  {
+    id: "diver_playing_guide",
+    name: "ダイバー／Diver",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "軍組織や法執行機関、民間の潜水漁、サルベージ、自然保護、宝探しなどに従事する潜水の専門家。",
+    skills: ["応急手当", "科学（生物学）", "機械修理", "水泳", "操縦（ボート）", "ダイビング", "目星"],
+    skillOptions: [
+      {
+        label: "個人的な専門または時代的な専門として任意のほかの1つの技能",
+        choose: 1,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 + DEX × 2",
+    credit: "9〜30%",
+    special: "",
+    alliesExample: "沿岸警備隊（海上保安庁）、船長、軍人、法執行機関、密輸人。",
+    keywords: ["ダイバー", "Diver", "潜水", "サルベージ", "海"],
+    note: "",
+  },
+  {
+    id: "mountain_climber_playing_guide",
+    name: "登山家／Mountain Climber",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "登山指導者、ガイド、アスリート、山岳救助など、山岳環境で活動する職業。",
+    skills: ["応急手当", "聞き耳", "サバイバル（山岳）", "跳躍", "追跡", "登攀", "ナビゲート", "ほかの言語"],
+    skillOptions: [],
+    pointFormula: "EDU × 2 + DEX × 2 または EDU × 2 + STR × 2",
+    credit: "30〜60%",
+    special: "",
+    alliesExample: "ほかの登山家、環境保護団体、後援者、スポンサー、地元の山岳救助員や法執行機関、公園のレンジャー、スポーツクラブ",
+    keywords: ["登山家", "Mountain Climber", "登山", "山岳", "ガイド"],
+    note: "",
+  },
+
+  {
+    id: "assassin_playing_guide",
+    name: "暗殺者",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "裏社会に生き、標的を秘密裏に始末することを専門とする犯罪者職業。",
+    skills: ["隠密", "鍵開け", "機械修理", "近接戦闘", "射撃", "心理学", "電気修理", "変装"],
+    skillOptions: [],
+    pointFormula: "EDU × 2 ＋ DEX × 2 または EDU × 2 ＋ STR × 2",
+    credit: "30〜60％",
+    special: "",
+    alliesExample: "ごくわずかで、ほとんどは裏社会の人間。他人は彼らのことを知らない。最高の連中はストリートで身のすくむような名声を勝ち得てしまうかもしれない。",
+    keywords: ["暗殺者", "犯罪者", "殺し屋", "裏社会"],
+    note: "",
+  },
+  {
+    id: "lone_criminal_playing_guide",
+    name: "一匹狼の犯罪者",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "組織に強く依存せず、単独または少人数で犯罪行為を行う犯罪者職業。",
+    skills: ["隠密", "鑑定", "心理学", "目星"],
+    skillOptions: [
+      {
+        label: "鍵開け または 機械修理",
+        choose: 1,
+        options: ["鍵開け", "機械修理"]
+      },
+      {
+        label: "近接戦闘 または 射撃",
+        choose: 1,
+        options: ["近接戦闘", "射撃"]
+      },
+      {
+        label: "芸術／製作（演技） または 変装",
+        choose: 1,
+        options: ["芸術／製作（演技）", "変装"]
+      },
+      {
+        label: "対人関係技能から1つ",
+        choose: 1,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ DEX × 2 または EDU × 2 ＋ APP × 2",
+    credit: "5〜65％",
+    special: "",
+    alliesExample: "ほかの軽犯罪者、ストリート周りの法執行機関",
+    keywords: ["一匹狼", "犯罪者", "軽犯罪", "裏社会"],
+    note: "",
+  },
+  {
+    id: "home_invader_playing_guide",
+    name: "押し込み強盗",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "住居や建物へ押し入り、盗みや強奪を行う犯罪者職業。",
+    skills: ["隠密", "鑑定", "鍵開け", "聞き耳", "手さばき", "登攀", "目星"],
+    skillOptions: [
+      {
+        label: "機械修理 または 電気修理",
+        choose: 1,
+        options: ["機械修理", "電気修理"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ DEX × 2",
+    credit: "5〜40％",
+    special: "",
+    alliesExample: "故買人、ほかの押し込み強盗",
+    keywords: ["押し込み強盗", "強盗", "犯罪者", "侵入"],
+    note: "",
+  },
+  {
+    id: "forger_counterfeiter_playing_guide",
+    name: "偽造犯／偽金造り",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "文書、金銭、証明書などの偽造を行う犯罪者職業。",
+    skills: ["鑑定", "芸術／製作（文書偽造）", "経理", "手さばき", "図書館", "目星", "歴史"],
+    skillOptions: [
+      {
+        label: "個人的な専門あるいは時代に関連する任意のほかの1つの技能",
+        choose: 1,
+        options: ["コンピューター", "任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 4",
+    credit: "20〜40％",
+    special: "",
+    alliesExample: "犯罪組織、ビジネスマン",
+    keywords: ["偽造犯", "偽金造り", "犯罪者", "文書偽造"],
+    note: "",
+  },
+  {
+    id: "bank_robber_playing_guide",
+    name: "銀行強盗",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "銀行や金融機関を襲撃し、金銭を強奪する犯罪者職業。",
+    skills: ["威圧", "運転（自動車）", "鍵開け", "近接戦闘", "射撃", "重機械操作"],
+    skillOptions: [
+      {
+        label: "機械修理 または 電気修理",
+        choose: 1,
+        options: ["機械修理", "電気修理"]
+      },
+      {
+        label: "個人的専門あるいは時代に関連する任意のほかの1つ",
+        choose: 1,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ STR × 2 または EDU × 2 ＋ DEX × 2",
+    credit: "5〜75％",
+    special: "",
+    alliesExample: "ほかのギャング（現役もしくは引退した）、フリーランスの犯罪者、犯罪組織",
+    keywords: ["銀行強盗", "強盗", "犯罪者", "ギャング"],
+    note: "",
+  },
+  {
+    id: "fence_playing_guide",
+    name: "故買人（こかいにん）",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "盗品や非合法な品物を売買し、闇市場や合法的な買い手との橋渡しをする犯罪者職業。",
+    skills: ["鑑定", "芸術／製作（偽造）", "経理", "図書館", "目星", "歴史"],
+    skillOptions: [
+      {
+        label: "対人関係技能から1つ",
+        choose: 1,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      },
+      {
+        label: "ほかの1つ",
+        choose: 1,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ APP × 2",
+    credit: "20〜40％",
+    special: "",
+    alliesExample: "犯罪組織、商売相手、闇市場および合法的な買い手",
+    keywords: ["故買人", "盗品商", "犯罪者", "闇市場"],
+    note: "",
+  },
+  {
+    id: "con_artist_playing_guide",
+    name: "詐欺師",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "言葉や演技、心理操作を用いて相手を欺く犯罪者職業。",
+    skills: ["鑑定", "聞き耳", "芸術／製作（演技）", "心理学", "手さばき"],
+    skillOptions: [
+      {
+        label: "法律 または ほかの言語",
+        choose: 1,
+        options: ["法律", "ほかの言語"]
+      },
+      {
+        label: "対人関係技能から2つ",
+        choose: 2,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ APP × 2",
+    credit: "10〜65％",
+    special: "",
+    alliesExample: "ほかの詐欺師、フリーランスの犯罪者",
+    keywords: ["詐欺師", "ペテン師", "犯罪者", "演技"],
+    note: "",
+  },
+  {
+    id: "bootlegger_gangster_playing_guide",
+    name: "酒密売人／ギャング",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "密造酒や違法な商売、組織犯罪に関わる犯罪者職業。",
+    skills: ["運転（自動車）", "隠密", "近接戦闘", "射撃", "心理学", "目星"],
+    skillOptions: [
+      {
+        label: "対人関係技能から2つ",
+        choose: 2,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ STR × 2",
+    credit: "5〜30％",
+    special: "",
+    alliesExample: "犯罪組織、ストリート周りの法執行機関、地元の商店主",
+    keywords: ["酒密売人", "ギャング", "犯罪者", "密売"],
+    note: "",
+  },
+  {
+    id: "female_criminal_1920s_playing_guide",
+    name: "女性犯罪者［1920年代］",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者", "1920年代"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "1920年代における犯罪組織や裏社会と関わりを持つ女性犯罪者職業。",
+    skills: ["運転（自動車）", "隠密", "聞き耳"],
+    skillOptions: [
+      {
+        label: "近接戦闘（格闘） または 射撃（ピストル）",
+        choose: 1,
+        options: ["近接戦闘（格闘）", "射撃（ピストル）"]
+      },
+      {
+        label: "芸術／製作（専門分野を選ぶ）",
+        choose: 1,
+        options: ["芸術／製作（専門分野）"]
+      },
+      {
+        label: "対人関係技能から2つ",
+        choose: 2,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      },
+      {
+        label: "個人的な専門に関連する任意のほかの1つ",
+        choose: 1,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ APP × 2",
+    credit: "10〜80％",
+    special: "収入はボーイフレンドの収入に依存している。",
+    alliesExample: "ギャング、法執行機関、地元のビジネスマン",
+    keywords: ["女性犯罪者", "1920年代", "犯罪者", "ギャング"],
+    note: "",
+  },
+  {
+    id: "street_punk_playing_guide",
+    name: "ストリート・パンク",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "街頭で活動する若い犯罪者や荒事に慣れた不良の職業。",
+    skills: ["隠密", "近接戦闘", "射撃", "跳躍", "手さばき", "投擲", "登攀"],
+    skillOptions: [
+      {
+        label: "対人関係技能から1つ",
+        choose: 1,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ DEX × 2 または EDU × 2 ＋ STR × 2",
+    credit: "5〜10％",
+    special: "",
+    alliesExample: "軽犯罪者、ほかのパンク、地元の故売人、そのほか地元のギャングスターにもいるだろうし間違いなく地元の警察にもいる。",
+    keywords: ["ストリート・パンク", "不良", "犯罪者", "軽犯罪"],
+    note: "",
+  },
+  {
+    id: "smuggler_playing_guide",
+    name: "密輸人",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "犯罪者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "品物や人員を秘密裏に運び、税関や法執行機関を避けて活動する犯罪者職業。",
+    skills: ["聞き耳", "射撃", "心理学", "手さばき", "ナビゲート", "目星"],
+    skillOptions: [
+      {
+        label: "運転（自動車） または 操縦（航空機またはボート）",
+        choose: 1,
+        options: ["運転（自動車）", "操縦（航空機）", "操縦（ボート）"]
+      },
+      {
+        label: "対人関係技能から1つ",
+        choose: 1,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      }
+    ],
+    pointFormula: "EDU × 2 ＋ APP × 2 または EDU × 2 ＋ DEX × 2",
+    credit: "20〜60％",
+    special: "",
+    alliesExample: "犯罪組織、沿岸警備隊、税関職員",
+    keywords: ["密輸人", "密輸", "犯罪者", "税関"],
+    note: "",
+  },
+
+  {
+    id: "secretary_playing_guide",
+    name: "秘書／Secretary",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "企業や事務所において組織を支える中核的な存在。書類整理やスケジュール管理、来客対応や社内外とのやりとりを担う。",
+    skills: ["経理", "図書館", "目星", "心理学", "説得", "魅惑", "聞き耳", "母国語"],
+    skillOptions: [],
+    pointFormula: "EDU × 2 + DEX × 2 または EDU × 2 + APP × 2",
+    credit: "9〜30%",
+    special: "",
+    alliesExample: "ほかの事務職、雇われている会社の重役",
+    keywords: ["秘書", "Secretary", "事務職", "スケジュール管理"],
+    note: "",
+  },
+  {
+    id: "editor_playing_guide",
+    name: "編集者／Editor",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "本や新聞、雑誌の発行に関わり、文章への理解と幅広い人脈を持つ職業。記事のチェックや取材対応など、情報の交通整理を担うこともある。",
+    skills: ["経理", "心理学", "目星", "歴史", "母国語"],
+    skillOptions: [
+      {
+        label: "対人関係技能から2つ",
+        choose: 2,
+        options: ["威圧", "言いくるめ", "説得", "魅惑"]
+      },
+      {
+        label: "その他の任意の技能1つ",
+        choose: 1,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 4",
+    credit: "10〜30%",
+    special: "",
+    alliesExample: "新聞産業、地元の官公庁、専門家、出版者",
+    keywords: ["編集者", "Editor", "出版", "新聞", "雑誌"],
+    note: "",
+  },
+  {
+    id: "boxer_wrestler_playing_guide",
+    name: "ボクサー／レスラー／Boxer / Wrestler",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "鍛え抜かれた肉体と精神で観客を魅了する格闘家。犯罪組織やプロモーターとの繋がりを持つこともある。",
+    skills: ["威圧", "回避", "近接戦闘（格闘）", "心理学", "跳躍", "目星"],
+    skillOptions: [
+      {
+        label: "個人的な専門または時代に関連する任意の2技能",
+        choose: 2,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 + STR × 2",
+    credit: "9〜60%",
+    special: "",
+    alliesExample: "スポーツのプロモーター、ジャーナリスト、犯罪組織、プロのトレーナー",
+    keywords: ["ボクサー", "レスラー", "Boxer", "Wrestler", "格闘家"],
+    note: "",
+  },
+  {
+    id: "big_game_hunter_playing_guide",
+    name: "猛獣ハンター／Big Game Hunter",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "異国の地で猛獣を狩る、サバイバル技術と地理的知識に長けた冒険家。富裕層の依頼や闇市場との関係を持つこともある。",
+    skills: ["隠密", "自然", "射撃", "追跡", "ナビゲート"],
+    skillOptions: [
+      {
+        label: "科学分野から1つ",
+        choose: 1,
+        options: ["科学（植物学）", "科学（生物学）", "科学（動物学）"]
+      },
+      {
+        label: "聞き耳 または 目星",
+        choose: 1,
+        options: ["聞き耳", "目星"]
+      },
+      {
+        label: "サバイバル または ほかの言語",
+        choose: 1,
+        options: ["サバイバル", "ほかの言語"]
+      }
+    ],
+    pointFormula: "EDU × 2 + DEX × 2 または EDU × 2 + STR × 2",
+    credit: "20〜50%",
+    special: "",
+    alliesExample: "外国政府の官吏、猟場の管理人、裕福な顧客、闇市場の売人、動物園のオーナー",
+    keywords: ["猛獣ハンター", "Big Game Hunter", "狩猟", "冒険家", "サバイバル"],
+    note: "",
+  },
+
+  {
+    id: "unskilled_laborer_playing_guide",
+    name: "未熟練労働者／Unskilled Laborer",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "労働者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "工具、製粉工、紡績工、港湾労働者、道路工事作業者、鉱山労働者、建設作業員などを含む労働者のうち、特別な技能を持たない現場労働者。",
+    skills: ["運転（自動車）", "応急手当", "機械修理", "近接戦闘", "重機械操作", "電気修理", "投擲"],
+    skillOptions: [
+      {
+        label: "個人的な専門あるいは時代に関連する任意のほかの1つの技能",
+        choose: 1,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 + DEX × 2 または EDU × 2 + STR × 2",
+    credit: "9〜30%",
+    special: "",
+    alliesExample: "その産業に従事するほかの労働者や監督。",
+    keywords: ["未熟練労働者", "Unskilled Laborer", "労働者", "現場", "工事"],
+    note: "",
+  },
+  {
+    id: "lumberjack_playing_guide",
+    name: "木こり／Lumberjack",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "労働者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "林業に従事し、斧やチェーンソーなどを扱いながら森林で働く労働者。",
+    skills: ["応急手当", "回避", "機械修理", "近接戦闘（チェーンソー）", "跳躍", "投擲", "登攀"],
+    skillOptions: [
+      {
+        label: "科学（生物学または植物学） もしくは 自然",
+        choose: 1,
+        options: ["科学（生物学）", "科学（植物学）", "自然"]
+      }
+    ],
+    pointFormula: "EDU × 2 + DEX × 2 または EDU × 2 + STR × 2",
+    credit: "9〜30%",
+    special: "",
+    alliesExample: "林業従事者、野外ガイドや自然保護活動家。",
+    keywords: ["木こり", "Lumberjack", "林業", "チェーンソー", "労働者"],
+    note: "",
+  },
+  {
+    id: "miner_playing_guide",
+    name: "鉱山労働者／Miner",
+    ruleType: "7e",
+    ruleLabels: ["7版", "プレイングガイド", "労働者"],
+    source: "クトゥルフ神話TRPGプレイングガイド",
+    sourceShort: "プレイングガイド",
+    page: "p.242-255",
+    description: "鉱山で採掘や現場作業に従事し、地質や重機の扱いにも関わる労働者。",
+    skills: ["隠密", "科学（地質学）", "機械修理", "重機械操作", "跳躍", "登攀", "目星"],
+    skillOptions: [
+      {
+        label: "個人的な専門あるいは時代に関連する任意のほかの1つの技能",
+        choose: 1,
+        options: ["任意の技能"]
+      }
+    ],
+    pointFormula: "EDU × 2 + DEX × 2 または EDU × 2 + STR × 2",
+    credit: "9〜30%",
+    special: "",
+    alliesExample: "労働組合員、政治結社。",
+    keywords: ["鉱山労働者", "Miner", "鉱山", "採掘", "労働者"],
+    note: "",
+  },
+];

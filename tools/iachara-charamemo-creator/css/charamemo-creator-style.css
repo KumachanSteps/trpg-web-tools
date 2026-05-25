@@ -974,3 +974,83 @@ input:focus {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   v1.4 Summary / Generated JSON Fixes
+   ========================================================= */
+
+.summary-card {
+  min-height: 88px;
+}
+
+.summary-icon {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+}
+
+.summary-icon img {
+  display: none;
+}
+
+.summary-icon.has-image img {
+  display: block;
+}
+
+.summary-status-row {
+  min-height: 22px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+}
+
+.summary-param-grid {
+  min-height: 30px;
+}
+
+.param-chip {
+  min-height: 28px;
+  align-items: center;
+}
+
+.generated-json {
+  width: 100%;
+  min-height: 220px;
+  height: 260px;
+  overflow: auto;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.json-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.copy-message {
+  min-height: 18px;
+  margin: 8px 0 0;
+}
+
+.option-list .switch-label {
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .json-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .generated-json {
+    min-height: 180px;
+    height: 220px;
+  }
+}

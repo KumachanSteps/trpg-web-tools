@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>いあキャラMEMOジェネレータ v1.3 | TRPG Webツール観測所</title>
+  <title>いあキャラMEMOジェネレータ v1.4 | TRPG Webツール観測所</title>
   <meta name="description" content="CCFOLIA駒JSONといあきゃらTXTから、キャラメモとチャットパレットを整形してCCFOLIA用駒JSONを生成するTRPG支援ツールです。" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
@@ -54,7 +54,7 @@
             </span>
           </div>
           <div>
-            <h1 class="site-title">いあキャラMEMOジェネレータ v1.3</h1>
+            <h1 class="site-title">いあキャラMEMOジェネレータ v1.4</h1>
             <p class="site-description">
               CCFOLIA駒JSONと、いあきゃらのテキスト出力を読み込み、プロフィール・所持品・バックストーリー・メモを整理して、CCFOLIA用のキャラメモ入り駒JSONを再生成します。
             </p>
@@ -198,11 +198,12 @@
               <h2 class="panel-title">6. 生成済み駒JSON</h2>
             </div>
             <div class="panel-body">
-              <div class="action-card">
+              <textarea id="generatedJson" class="generated-json code-textarea" readonly placeholder="生成された駒JSONデータがここに表示されます"></textarea>
+              <div class="json-actions">
                 <button id="copyJsonBtn" class="tool-button button-primary" type="button">生成駒JSONデータをコピー</button>
                 <button id="clearInputBtn" class="tool-button button-muted" type="button">データを削除</button>
-                <p id="statusMessage" class="copy-message"></p>
               </div>
+              <p id="statusMessage" class="copy-message"></p>
             </div>
           </section>
         </section>

@@ -64,6 +64,7 @@
     el.editionView = document.getElementById("editionView");
     el.copyPaletteBtn = document.getElementById("copyPaletteBtn");
 
+    el.generatedJson = document.getElementById("generatedJson");
     el.copyJsonBtn = document.getElementById("copyJsonBtn");
     el.clearInputBtn = document.getElementById("clearInputBtn");
     el.statusMessage = document.getElementById("statusMessage");
@@ -237,7 +238,13 @@
   function renderStatusChips(data, txt) {
     const status = getStatusCards(data, txt);
     el.statusChips.innerHTML = "";
-    for (const item of status) {
+    const displayStatus = status.length ? status : [
+      { label: "HP", value: "--" },
+      { label: "MP", value: "--" },
+      { label: "SAN", value: "--" },
+      { label: "幸運", value: "--" }
+    ];
+    for (const item of displayStatus) {
       const chip = document.createElement("span");
       chip.className = "status-chip";
       chip.textContent = `${item.label} ${item.value}`;
@@ -248,7 +255,17 @@
   function renderParams(data, txt) {
     const params = getParamCards(data, txt);
     el.paramsGrid.innerHTML = "";
-    for (const item of params) {
+    const displayParams = params.length ? params : [
+      { label: "STR", value: "--" },
+      { label: "CON", value: "--" },
+      { label: "POW", value: "--" },
+      { label: "DEX", value: "--" },
+      { label: "APP", value: "--" },
+      { label: "SIZ", value: "--" },
+      { label: "INT", value: "--" },
+      { label: "EDU", value: "--" }
+    ];
+    for (const item of displayParams) {
       const chip = document.createElement("div");
       chip.className = "param-chip";
       chip.innerHTML = `<span class="param-label">${escapeHtml(item.label)}</span><span class="param-value">${escapeHtml(item.value)}</span>`;
@@ -269,6 +286,7 @@
   function renderGeneratedOnly() {
     const data = currentData();
     state.generatedJson = generateKomaJson(data);
+    if (el.generatedJson) el.generatedJson.value = state.generatedJson;
   }
 
   function generateMemo() {

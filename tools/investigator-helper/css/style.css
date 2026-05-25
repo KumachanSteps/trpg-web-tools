@@ -155,7 +155,6 @@ textarea { width: 100%; min-height: 360px; margin-top: 14px; border-radius: 18px
   .header-actions { justify-content: flex-start; }
 }
 
-/* Package notes: keep a visible Japanese bullet without doubling browser list markers */
 .package-note-list {
   margin: 14px 0;
   display: grid;
@@ -183,4 +182,82 @@ textarea { width: 100%; min-height: 360px; margin-top: 14px; border-radius: 18px
 
 .package-note-text {
   min-width: 0;
+}
+
+.card-content {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.occupation-content,
+.occupation-detail-box {
+  background: linear-gradient(180deg, rgba(220, 252, 231, 0.78), rgba(240, 253, 244, 0.68));
+  border-color: rgba(34, 197, 94, 0.22);
+}
+
+.feature-content,
+.feature-detail-box {
+  background: linear-gradient(180deg, rgba(219, 234, 254, 0.78), rgba(239, 246, 255, 0.68));
+  border-color: rgba(59, 130, 246, 0.22);
+}
+
+.package-content,
+.package-detail-box {
+  background: linear-gradient(180deg, rgba(254, 226, 226, 0.78), rgba(255, 241, 242, 0.68));
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+body.theme-dark .occupation-content,
+body.theme-dark .occupation-detail-box {
+  background: rgba(34, 197, 94, 0.13);
+  border-color: rgba(34, 197, 94, 0.26);
+}
+
+body.theme-dark .feature-content,
+body.theme-dark .feature-detail-box {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(59, 130, 246, 0.28);
+}
+
+body.theme-dark .package-content,
+body.theme-dark .package-detail-box {
+  background: rgba(239, 68, 68, 0.13);
+  border-color: rgba(239, 68, 68, 0.26);
+}
+
+.feature-card {
+  color: var(--text);
+  transition: transform .15s ease, border .15s ease, background .15s ease;
+}
+
+.feature-card.is-selected {
+  border-color: rgba(59, 130, 246, 0.48);
+  background: rgba(239, 246, 255, 0.92);
+}
+
+body.theme-dark .feature-card.is-selected {
+  border-color: rgba(96, 165, 250, 0.58);
+  background: rgba(59, 130, 246, 0.13);
+}
+
+.feature-card .btn,
+.detail-box + .btn {
+  margin-top: 14px;
+}
+
+.feature-note {
+  margin: 8px 0 0;
+  color: #b45309;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.feature-note-detail {
+  font-size: 12px;
+}
+
+body.theme-dark .feature-note {
+  color: #fde68a;
 }
