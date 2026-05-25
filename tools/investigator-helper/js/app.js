@@ -68,6 +68,7 @@
     selectedSkills: new Set(["目星", "心理学"]),
     selectedOccupationId: OCCUPATIONS[0]?.id || "",
     selectedPackageId: EXPERIENCE_PACKAGES[0]?.id || "",
+    selectedFeatureId: FEATURES[0]?.id || "",
     featureCount: 3,
     rolledFeatures: [],
     skillExpanded: false,
@@ -89,6 +90,7 @@
     occupationList: document.getElementById("occupationList"),
     occupationDetail: document.getElementById("occupationDetail"),
     featureResults: document.getElementById("featureResults"),
+    featureDetail: document.getElementById("featureDetail"),
     rollFeaturesButton: document.getElementById("rollFeaturesButton"),
     packageList: document.getElementById("packageList"),
     packageDetail: document.getElementById("packageDetail"),
@@ -126,7 +128,9 @@
 
   function formatFeature(item) {
     if (!item) return "";
-    return `[${item.dice}]  ${item.name}\n効果：${item.effect}`;
+    const lines = [`[${item.dice}]  ${item.name}`, `効果：${item.effect || ""}`];
+    if (item.note) lines.push(`注記：${item.note}`);
+    return lines.join("\n");
   }
 
   function isIndentedPackageNote(note) {
@@ -213,6 +217,7 @@ ${notes}`;
     document.getElementById("featureTab").classList.toggle("is-hidden", state.tab !== "feature");
     document.getElementById("packageTab").classList.toggle("is-hidden", state.tab !== "package");
     el.occupationDetail.classList.toggle("is-hidden", state.tab !== "occupation");
+    el.featureDetail.classList.toggle("is-hidden", state.tab !== "feature");
     el.packageDetail.classList.toggle("is-hidden", state.tab !== "package");
   }
 
@@ -229,10 +234,12 @@ ${notes}`;
       return `
         <button class="occupation-card${selected}" type="button" data-id="${escapeHtml(item.id)}">
           <div class="card-title-row"><h3 class="card-title">${escapeHtml(item.name)}</h3><span class="source-line">[${escapeHtml((item.ruleLabels || []).join("/"))}]</span>${score}</div>
-          <p class="source-line">出典：${escapeHtml(sourceLabel(item))}</p>
-          <p class="card-text">技能：${escapeHtml((item.skills || []).join(" / "))}</p>
-          ${meta}
-          <p class="card-text">職業P：${escapeHtml(item.pointFormula || "")}</p>
+          <div class="card-content occupation-content">
+            <p class="source-line">出典：${escapeHtml(sourceLabel(item))}</p>
+            <p class="card-text">技能：${escapeHtml((item.skills || []).join(" / "))}</p>
+            ${meta}
+            <p class="card-text">職業P：${escapeHtml(item.pointFormula || "")}</p>
+          </div>
         </button>`;
     }).join("");
   }
@@ -245,7 +252,7 @@ ${notes}`;
       <div class="card-title-row"><h2>${escapeHtml(item.name)} <span class="source-line">[${escapeHtml((item.ruleLabels || []).join("/"))}]</span></h2><span class="score-badge">詳細</span></div>
       <p class="source-line">出典：${escapeHtml(sourceLabel(item))}</p>
       <p class="detail-text">${escapeHtml(item.description || "")}</p>
-      <div class="detail-box">
+      <div class="detail-box occupation-detail-box">
         <p><strong>職業技能</strong><br>${escapeHtml((item.skills || []).join(" / "))}</p>
         <p><strong>職業技能ポイント</strong><br>${escapeHtml(item.pointFormula || "")}</p>
         ${meta}
@@ -291,12 +298,21 @@ ${notes}`;
 
   function renderFeatures() {
     const items = state.rolledFeatures.length ? state.rolledFeatures : FEATURES.slice(0, state.featureCount);
-    el.featureResults.innerHTML = items.map((item) => `
-      <div class="feature-card">
-        <div class="card-title-row"><h3 class="card-title">[${escapeHtml(item.dice)}] ${escapeHtml(item.name)}</h3><span class="source-line">${escapeHtml(sourceLabel(item))}</span></div>
-        <p class="card-text">効果：${escapeHtml(item.effect)}</p>
-        <button class="btn btn-soft add-feature-button" type="button" data-id="${escapeHtml(item.id)}">出力に追加</button>
-      </div>`).join("");
+    if (!state.selectedFeatureId && items[0]) state.selectedFeatureId = items[0].id;
+    el.featureResults.innerHTML = items.map((item) => {
+      const selected = item.id === state.selectedFeatureId ? " is-selected" : "";
+      const note = item.note ? `<p class="feature-note">${escapeHtml(item.note)}</p>` : "";
+      const tags = (item.tags || []).map((tag) => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join("");
+      return `
+        <div class="feature-card${selected}" data-id="${escapeHtml(item.id)}">
+          <div class="card-title-row"><h3 class="card-title">[${escapeHtml(item.dice)}] ${escapeHtml(item.name)}</h3><span class="source-line">${escapeHtml(sourceLabel(item))}</span>${tags}</div>
+          <div class="card-content feature-content">
+            <p class="card-text">効果：${escapeHtml(item.effect || "")}</p>
+            ${note}
+          </div>
+          <button class="btn btn-soft add-feature-button" type="button" data-id="${escapeHtml(item.id)}">出力に追加</button>
+        </div>`;
+    }).join("");
   }
 
   function renderPackageList() {
@@ -310,10 +326,29 @@ ${notes}`;
       return `
         <button class="package-card${selected}" type="button" data-id="${escapeHtml(item.id)}">
           <div class="card-title-row"><h3 class="card-title">${escapeHtml(item.name)}</h3>${tags}</div>
-          <p class="source-line">出典：${escapeHtml(sourceLabel(item))}</p>
-          <p class="card-text">内容：${escapeHtml(item.description || "")}</p>
+          <div class="card-content package-content">
+            <p class="source-line">出典：${escapeHtml(sourceLabel(item))}</p>
+            <p class="card-text">内容：${escapeHtml(item.description || "")}</p>
+          </div>
         </button>`;
     }).join("");
+  }
+
+  function renderFeatureDetail() {
+    const item = FEATURES.find((feature) => feature.id === state.selectedFeatureId) || state.rolledFeatures[0] || FEATURES[0];
+    if (!item) { el.featureDetail.innerHTML = ""; return; }
+    state.selectedFeatureId = item.id;
+    const note = item.note ? `<p class="feature-note feature-note-detail">${escapeHtml(item.note)}</p>` : "";
+    const tags = (item.tags || []).map((tag) => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join("");
+    el.featureDetail.innerHTML = `
+      <div class="card-title-row"><h2>[${escapeHtml(item.dice)}] ${escapeHtml(item.name)}</h2>${tags}</div>
+      <p class="source-line">出典：${escapeHtml(sourceLabel(item))}</p>
+      <div class="detail-box feature-detail-box">
+        <p class="detail-text">効果：${escapeHtml(item.effect || "")}</p>
+        ${note}
+      </div>
+      <button class="btn btn-primary" type="button" id="addFeatureDetailButton">出力に追加</button>`;
+    document.getElementById("addFeatureDetailButton")?.addEventListener("click", () => appendOutput(formatFeature(item)));
   }
 
   function renderPackageDetail() {
@@ -327,8 +362,10 @@ ${notes}`;
     el.packageDetail.innerHTML = `
       <h2>${escapeHtml(item.name)}</h2>
       <p class="source-line">出典：${escapeHtml(sourceLabel(item))}</p>
-      <p class="detail-text">内容：${escapeHtml(item.description || "")}</p>
-      <div class="package-note-list">${notes}</div>
+      <div class="detail-box package-detail-box">
+        <p class="detail-text">内容：${escapeHtml(item.description || "")}</p>
+        <div class="package-note-list">${notes}</div>
+      </div>
       <button class="btn btn-primary" type="button" id="addPackageButton">出力に追加</button>`;
     document.getElementById("addPackageButton")?.addEventListener("click", () => appendOutput(formatPackage(item)));
   }
@@ -354,6 +391,7 @@ ${notes}`;
     renderOccupationDetail();
     renderFeatureCountButtons();
     renderFeatures();
+    renderFeatureDetail();
     renderPackageList();
     renderPackageDetail();
   }
@@ -386,12 +424,22 @@ ${notes}`;
     document.querySelectorAll(".count-button").forEach((button) => {
       button.addEventListener("click", () => { state.featureCount = Number(button.dataset.count); renderFeatureCountButtons(); });
     });
-    el.rollFeaturesButton.addEventListener("click", () => { state.rolledFeatures = rollUniqueFeatures(state.featureCount); renderFeatures(); });
+    el.rollFeaturesButton.addEventListener("click", () => {
+      state.rolledFeatures = rollUniqueFeatures(state.featureCount);
+      state.selectedFeatureId = state.rolledFeatures[0]?.id || FEATURES[0]?.id || "";
+      render();
+    });
     el.featureResults.addEventListener("click", (event) => {
-      const button = event.target.closest(".add-feature-button");
-      if (!button) return;
-      const item = FEATURES.find((feature) => feature.id === button.dataset.id);
-      appendOutput(formatFeature(item));
+      const addButton = event.target.closest(".add-feature-button");
+      if (addButton) {
+        const item = FEATURES.find((feature) => feature.id === addButton.dataset.id);
+        appendOutput(formatFeature(item));
+        return;
+      }
+      const card = event.target.closest(".feature-card[data-id]");
+      if (!card) return;
+      state.selectedFeatureId = card.dataset.id;
+      render();
     });
     el.packageList.addEventListener("click", (event) => {
       const card = event.target.closest(".package-card[data-id]");
