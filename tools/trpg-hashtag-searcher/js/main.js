@@ -22,6 +22,7 @@
     scenarioCollapsed: false,
     generatedQuery: "",
     showShortcutPanel: false,
+    theme: "night",
     showHowToPanel: false,
     favoriteCopyStatus: "",
   };
@@ -67,7 +68,7 @@
 
   function cacheElements() {
     [
-      "howToButton", "howToCloseButton", "howToPanel", "shortcutButton", "shortcutCloseButton", "shortcutPanel", "modeButtons", "favoriteList", "favoriteCount",
+      "howToButton", "howToCloseButton", "howToPanel", "shortcutButton", "shortcutCloseButton", "shortcutPanel", "themeToggleButton", "modeButtons", "favoriteList", "favoriteCount",
       "systemButtons", "baseQueryDisplay", "addWordButtons", "filterButtons", "excludeButtons", "generatedQuery",
       "resetButton", "openXButton", "copyQueryButton", "saveFavoriteButton", "scenarioPanel", "scenarioSearchInput",
       "addScenarioSearchButton", "scenarioSearchList", "scenarioToggleButton", "addWordsSection", "composerPanel",
@@ -490,6 +491,17 @@
     els.howToButton.setAttribute("aria-expanded", String(state.showHowToPanel));
   }
 
+  function renderTheme() {
+    const isLightMode = state.theme === "light";
+    document.body.classList.toggle("light-mode", isLightMode);
+    document.documentElement.classList.toggle("light-mode", isLightMode);
+    els.themeToggleButton.textContent = isLightMode ? "ナイトモード" : "ライトモード";
+    els.themeToggleButton.setAttribute("aria-pressed", String(isLightMode));
+    try {
+      localStorage.setItem("tsukaeru-hashtag-theme", state.theme);
+    } catch {}
+  }
+
   function renderShortcutPanel() {
     els.shortcutPanel.classList.toggle("is-hidden", !state.showShortcutPanel);
     els.shortcutButton.setAttribute("aria-expanded", String(state.showShortcutPanel));
@@ -511,6 +523,7 @@
     renderPresetCards();
     renderHowToPanel();
     renderShortcutPanel();
+    renderTheme();
     setGeneratedQueryFromState();
   }
 
@@ -625,6 +638,11 @@
       renderShortcutPanel();
     });
 
+    els.themeToggleButton.addEventListener("click", () => {
+      state.theme = state.theme === "light" ? "night" : "light";
+      renderTheme();
+    });
+
     els.languageButton.addEventListener("click", () => {
       const lang = window.HASHTAG_LANGUAGE.toggleLanguage();
       els.languageButton.textContent = lang === "ja" ? "JP / EN" : "EN / JP";
@@ -652,6 +670,10 @@
 
   function init() {
     cacheElements();
+    try {
+      const storedTheme = localStorage.getItem("tsukaeru-hashtag-theme");
+      if (storedTheme === "light" || storedTheme === "night") state.theme = storedTheme;
+    } catch {}
     loadFavorites();
     loadPresetCards();
     loadScenarioSearches();

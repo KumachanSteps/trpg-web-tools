@@ -256,3 +256,216 @@ h2{font-size:20px}
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   Light Mode
+   ========================================================= */
+
+.theme-toggle-button {
+  min-width: 104px;
+}
+
+html.light-mode,
+html.light-mode body,
+body.light-mode {
+  background: #f6f2ea;
+  color: #2f251b;
+}
+
+body.light-mode .bg-blob-1 { background: rgba(250, 204, 21, .22); }
+body.light-mode .bg-blob-2 { background: rgba(34, 197, 94, .14); }
+body.light-mode .bg-blob-3 { background: rgba(244, 114, 182, .12); }
+
+body.light-mode .bg-stars {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(120, 92, 55, .18) 1px, transparent 1px),
+    radial-gradient(circle at 80% 30%, rgba(120, 92, 55, .12) 1px, transparent 1px),
+    radial-gradient(circle at 40% 70%, rgba(120, 92, 55, .1) 1px, transparent 1px);
+}
+
+body.light-mode .site-header,
+body.light-mode .panel,
+body.light-mode .shortcut-panel,
+body.light-mode .help-panel,
+body.light-mode .tool-footer-note {
+  border-color: rgba(120, 92, 55, .18);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.78), rgba(255,248,238,.58)),
+    rgba(255, 251, 244, .86);
+  box-shadow:
+    0 22px 54px rgba(120, 92, 55, .16),
+    inset 0 1px 0 rgba(255,255,255,.72);
+  color: #2f251b;
+}
+
+body.light-mode .portal-link,
+body.light-mode .header-button,
+body.light-mode .soft-button,
+body.light-mode .mini-button,
+body.light-mode .count-badge {
+  border-color: rgba(120, 92, 55, .18);
+  background: rgba(255,255,255,.62);
+  color: #5b4632;
+}
+
+body.light-mode .portal-link { color: #7c4a12; }
+
+body.light-mode .portal-link:hover,
+body.light-mode .header-button:hover,
+body.light-mode .soft-button:hover {
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 10px 22px rgba(120, 92, 55, .12);
+}
+
+body.light-mode .portal-tooltip,
+body.light-mode .chip-tooltip {
+  border-color: rgba(120, 92, 55, .18);
+  background: rgba(255, 251, 244, .98);
+  color: #3b2d20;
+  box-shadow: 0 18px 38px rgba(120, 92, 55, .22);
+}
+
+body.light-mode .tag-cyan,
+body.light-mode .cyan-button,
+body.light-mode .cyan-mini {
+  border-color: rgba(14, 116, 144, .22);
+  background: rgba(14, 116, 144, .09);
+  color: #155e75;
+}
+
+body.light-mode .tag-violet,
+body.light-mode .violet-button,
+body.light-mode .violet-mini {
+  border-color: rgba(124, 58, 237, .2);
+  background: rgba(124, 58, 237, .08);
+  color: #5b21b6;
+}
+
+body.light-mode .tag-amber,
+body.light-mode .spoiler-badge {
+  border-color: rgba(180, 83, 9, .22);
+  background: rgba(245, 158, 11, .12);
+  color: #92400e;
+}
+
+body.light-mode .tool-icon {
+  border-color: rgba(120, 92, 55, .18);
+  background:
+    radial-gradient(circle at 72% 25%, rgba(245,158,11,.22), transparent 32%),
+    rgba(255, 251, 244, .82);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.72), 0 12px 28px rgba(120, 92, 55, .12);
+}
+
+body.light-mode .tool-icon-bird { color: #5b4632; }
+body.light-mode .tool-icon-star { color: #b45309; text-shadow: 0 0 8px rgba(245, 158, 11, .32); }
+body.light-mode .tool-icon-search {
+  border-color: rgba(180, 83, 9, .28);
+  background: rgba(245, 158, 11, .14);
+  color: #92400e;
+}
+
+body.light-mode .site-description,
+body.light-mode .note,
+body.light-mode .composer-header p,
+body.light-mode .panel-header p,
+body.light-mode .help-card p,
+body.light-mode .tool-footer-note p,
+body.light-mode .favorite-query,
+body.light-mode .preset-desc-input {
+  color: #6b5a46;
+}
+
+body.light-mode h1,
+body.light-mode h2,
+body.light-mode h3,
+body.light-mode .help-card h3,
+body.light-mode .tool-footer-note h2,
+body.light-mode .favorite-label {
+  color: #2f251b;
+}
+
+body.light-mode .mode-button,
+body.light-mode .favorite-card,
+body.light-mode .scenario-search-row,
+body.light-mode .preset-card,
+body.light-mode .shortcut-card,
+body.light-mode .help-card {
+  border-color: rgba(120, 92, 55, .14);
+  background: rgba(255,255,255,.58);
+  color: #3b2d20;
+}
+
+body.light-mode .mode-button { color: #5b4632; }
+body.light-mode .mode-button:hover { background: rgba(255,255,255,.86); color: #2f251b; }
+body.light-mode .mode-button.is-active,
+body.light-mode .primary-button,
+body.light-mode .primary-mini {
+  background: #f59e0b;
+  color: #fffaf0;
+  box-shadow: 0 14px 32px rgba(245, 158, 11, .22);
+}
+
+body.light-mode .danger-button,
+body.light-mode .danger-mini {
+  border-color: rgba(190, 18, 60, .18);
+  background: rgba(244, 63, 94, .09);
+  color: #9f1239;
+}
+
+body.light-mode .composer-section h3,
+body.light-mode .generated-header h3 {
+  color: #806a52;
+}
+
+body.light-mode .chip {
+  border-color: rgba(120, 92, 55, .14);
+  background: rgba(255,255,255,.58);
+  color: #5b4632;
+}
+
+body.light-mode .chip:hover { background: rgba(255,255,255,.86); }
+body.light-mode .chip.is-active {
+  border-color: rgba(124, 58, 237, .2);
+  background: rgba(124, 58, 237, .09);
+  color: #5b21b6;
+}
+body.light-mode .chip-cyan.is-active {
+  border-color: rgba(14, 116, 144, .22);
+  background: rgba(14, 116, 144, .1);
+  color: #155e75;
+}
+body.light-mode .chip-danger.is-active {
+  border-color: rgba(190, 18, 60, .2);
+  background: rgba(244, 63, 94, .1);
+  color: #9f1239;
+}
+
+body.light-mode .query-preview,
+body.light-mode .scenario-add-row input,
+body.light-mode .scenario-control-row input,
+body.light-mode .scenario-row-input,
+body.light-mode .generated-box textarea,
+body.light-mode .preset-query-input,
+body.light-mode .preset-title-input,
+body.light-mode .preset-desc-input {
+  border-color: rgba(120, 92, 55, .16);
+  background: rgba(255, 251, 244, .78);
+  color: #3b2d20;
+}
+
+body.light-mode .query-preview b { color: #d97706; }
+
+body.light-mode .generated-box {
+  border-color: rgba(245, 158, 11, .24);
+  background: rgba(245, 158, 11, .1);
+}
+
+body.light-mode .scenario-row-label {
+  background: rgba(245, 158, 11, .14);
+  color: #92400e;
+}
+
+body.light-mode .sticky-column {
+  scrollbar-color: rgba(245, 158, 11, .45) rgba(120, 92, 55, .08);
+}
