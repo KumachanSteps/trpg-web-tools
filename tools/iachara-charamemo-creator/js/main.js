@@ -1,10 +1,18 @@
+const DEFAULT_PROFILE_TEXT = [
+  "職業: 未取得",
+  "年齢: 未取得 / 性別: 未取得",
+  "身長: 未取得 / 体重: 未取得",
+  "カラーコード: #008080"
+].join("\n");
+
 const state = {
   data: null,
   edition: "",
   paletteText: "",
   generatedMemo: "",
   generatedJson: "",
-  useProxy: true,
+  txtText: "",
+  txtData: null,
   options: {
     includeWeapons: true,
     includeItems: true,
@@ -29,8 +37,9 @@ function bindEvents() {
   $("languageToggle").addEventListener("click", toggleLanguage);
   $("helpToggle").addEventListener("click", () => togglePanel("helpPanel"));
   $("shortcutToggle").addEventListener("click", () => togglePanel("shortcutPanel"));
-  $("proxyToggle").addEventListener("click", toggleProxy);
-  $("fetchButton").addEventListener("click", fetchExternalUrl);
+  $("openTxtButton").addEventListener("click", () => $("txtFileInput").click());
+  $("resetTxtButton").addEventListener("click", resetTxtFile);
+  $("txtFileInput").addEventListener("change", handleTxtFileSelect);
   $("regenMemoButton").addEventListener("click", regenerateMemo);
   $("copyMemoButton").addEventListener("click", () => copyText($("memoEditor").value, "メモ"));
   $("copyPaletteButton").addEventListener("click", () => copyText($("palettePreview").value, "パレット"));
@@ -66,11 +75,6 @@ function toggleTheme() {
   $("themeToggle").textContent = isLight ? "☀ ライトモード" : "☾ ナイトモード";
 }
 
-function toggleProxy() {
-  state.useProxy = !state.useProxy;
-  $("proxyToggle").classList.toggle("active", state.useProxy);
-}
-
 function toggleOption(button) {
   const key = button.dataset.option;
   state.options[key] = !state.options[key];
@@ -97,9 +101,11 @@ function updateAll(clearEditedMemo = true) {
   if (clearEditedMemo) $("memoEditor").dataset.edited = "";
   const params = normalizeParams(state.data?.params || []);
   const commandText = String(state.data?.commands || "");
-  state.edition = commandText ? CharamemoParser.detectEdition(commandText, params) : "";
-  state.paletteText = commandText ? (state.options.formatPalette ? CharamemoParser.buildPaletteOutput(commandText, state.edition) : CharamemoParser.normalizeText(commandText)) : "";
-  state.generatedMemo = buildMemo(state.data, $("manualProfile").value, state.options);
+  const txtCommands = state.txtData ? buildCommandsFromTxtData(state.txtData) : "";
+  const commandSource = commandText || txtCommands;
+  state.edition = commandSource ? CharamemoParser.detectEdition(commandSource, params) : detectTxtEdition(state.txtData);
+  state.paletteText = commandSource ? (state.options.formatPalette ? CharamemoParser.buildPaletteOutput(commandSource, state.edition) : CharamemoParser.normalizeText(commandSource)) : "";
+  state.generatedMemo = buildMemo(state.data, $("manualProfile").value, state.options, state.txtData);
   if (!$("memoEditor").dataset.edited) $("memoEditor").value = state.generatedMemo;
   renderSummary();
   renderPalette();
@@ -124,14 +130,202 @@ function updateError(parsed) {
   }
 }
 
+async function handleTxtFileSelect(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const parsed = parseIacharaTxt(text);
+    if (!parsed.found) {
+      state.txtText = "";
+      state.txtData = null;
+      setTxtStatus("TXTの解析に失敗しました。いあきゃらTXT形式か確認してください。", "error");
+      updateAll();
+      return;
+    }
+    state.txtText = text;
+    state.txtData = parsed;
+    $("manualProfile").value = buildManualProfileFromTxt(parsed.profile);
+    $("memoEditor").dataset.edited = "";
+    setTxtStatus(`${file.name} を読み込みました。`, "info");
+    updateAll();
+  } catch (error) {
+    state.txtText = "";
+    state.txtData = null;
+    setTxtStatus("TXTファイルの読み込みに失敗しました。", "error");
+    updateAll();
+  } finally {
+    event.target.value = "";
+  }
+}
+
+function resetTxtFile() {
+  state.txtText = "";
+  state.txtData = null;
+  $("manualProfile").value = DEFAULT_PROFILE_TEXT;
+  $("memoEditor").dataset.edited = "";
+  setTxtStatus("いあきゃらTXT情報をリセットしました。", "info");
+  updateAll();
+}
+
+function setTxtStatus(message, type = "info") {
+  const status = $("txtLoadStatus");
+  status.textContent = message;
+  status.className = type === "error" ? "txt-load-status is-error" : "txt-load-status is-success";
+}
+
+function parseIacharaTxt(text) {
+  const normalized = normalizeText(text);
+  const sections = splitSections(normalized);
+  const profile = parseBasicProfile(sections["基本情報"] || "");
+  const abilities = parseAbilities(sections["能力値"] || "");
+  const skills = parseSkills(sections["技能値"] || "");
+  const icons = extractUrls(sections["アイコン"] || "");
+  const found = Boolean(profile.name || profile.occupation || Object.keys(sections).length || skills.length || Object.keys(abilities).length);
+  return { found, raw: normalized, sections, profile, abilities, skills, icons };
+}
+
+function splitSections(text) {
+  const sections = {};
+  let current = "";
+  normalizeText(text).split("\n").forEach((line) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("【") && trimmed.endsWith("】")) {
+      current = trimmed.slice(1, -1).trim();
+      sections[current] = "";
+    } else if (current) {
+      sections[current] += line + "\n";
+    }
+  });
+  return sections;
+}
+
+function parseBasicProfile(text) {
+  const profile = {
+    name: pickLineValue(text, "名前"),
+    occupation: pickLineValue(text, "職業"),
+    age: "",
+    gender: "",
+    height: "",
+    weight: ""
+  };
+  normalizeText(text).split("\n").forEach((line) => {
+    const normalized = line.replaceAll("：", ":");
+    if (normalized.includes("年齢:")) profile.age = pickInlineValue(normalized, "年齢");
+    if (normalized.includes("性別:")) profile.gender = pickInlineValue(normalized, "性別");
+    if (normalized.includes("身長:")) profile.height = pickInlineValue(normalized, "身長");
+    if (normalized.includes("体重:")) profile.weight = pickInlineValue(normalized, "体重");
+  });
+  return profile;
+}
+
+function pickLineValue(text, key) {
+  const line = normalizeText(text).split("\n").find((row) => row.trim().replaceAll("：", ":").startsWith(`${key}:`));
+  if (!line) return "";
+  return line.replaceAll("：", ":").slice(key.length + 1).trim();
+}
+
+function pickInlineValue(line, key) {
+  const index = line.indexOf(`${key}:`);
+  if (index < 0) return "";
+  const rest = line.slice(index + key.length + 1);
+  const slash = rest.indexOf("/");
+  return (slash >= 0 ? rest.slice(0, slash) : rest).trim();
+}
+
+function parseAbilities(text) {
+  const abilities = {};
+  normalizeText(text).split("\n").forEach((line) => {
+    const trimmed = line.trim();
+    const match = trimmed.match(/^(STR|CON|POW|DEX|APP|SIZ|INT|EDU|HP|MP|SAN|IDE|幸運|知識)\s+([0-9]+)/i);
+    if (match) abilities[match[1].toUpperCase ? match[1].toUpperCase() : match[1]] = match[2];
+    if (trimmed.startsWith("現在SAN値")) {
+      const sanMatch = trimmed.match(/現在SAN値\s+([0-9]+)/);
+      if (sanMatch) abilities.SAN = sanMatch[1];
+    }
+  });
+  return abilities;
+}
+
+function parseSkills(text) {
+  const skills = [];
+  normalizeText(text).split("\n").forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("『") || trimmed.startsWith("技能名") || trimmed.includes("ポイント")) return;
+    const match = trimmed.match(/^(.+?)\s+([0-9]+)\s+[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+\s*$/);
+    if (!match) return;
+    skills.push({ name: normalizeSkillNameForTxt(match[1].trim()), value: match[2] });
+  });
+  return skills;
+}
+
+function normalizeSkillNameForTxt(name) {
+  return String(name || "").trim().replaceAll("（", "(").replaceAll("）", ")").replace(/\((.+?)\)/g, "：$1");
+}
+
+function extractUrls(text) {
+  return normalizeText(text).split("\n").map((line) => line.trim().replace(/^:/, "")).filter((line) => line.startsWith("http"));
+}
+
+function buildManualProfileFromTxt(profile) {
+  return [
+    `職業: ${profile.occupation || "未取得"}`,
+    `年齢: ${profile.age || "未取得"} / 性別: ${profile.gender || "未取得"}`,
+    `身長: ${profile.height || "未取得"} / 体重: ${profile.weight || "未取得"}`,
+    "カラーコード: #008080"
+  ].join("\n");
+}
+
+function buildCommandsFromTxtData(txtData) {
+  if (!txtData || !Array.isArray(txtData.skills)) return "";
+  const command = detectTxtEdition(txtData) === "7e" ? "CC" : "CCB";
+  const lines = [];
+  if (txtData.abilities?.SAN) lines.push(`${command}<=${txtData.abilities.SAN} 【正気度ロール】`);
+  if (txtData.abilities?.IDE) lines.push(`${command}<=${txtData.abilities.IDE} 【アイデア】`);
+  if (txtData.abilities?.幸運) lines.push(`${command}<=${txtData.abilities.幸運} 【幸運】`);
+  if (txtData.abilities?.知識) lines.push(`${command}<=${txtData.abilities.知識} 【知識】`);
+  txtData.skills.forEach((skill) => lines.push(`${command}<=${skill.value} 【${skill.name}】`));
+  return lines.join("\n");
+}
+
+function detectTxtEdition(txtData) {
+  if (!txtData) return "";
+  const header = txtData.raw.split("\n").slice(0, 3).join(" ");
+  if (header.includes("7版")) return "7e";
+  if (header.includes("6版")) return "6e";
+  const bigStats = Object.values(txtData.abilities || {}).some((value) => Number(value) > 30);
+  const has7eSkill = (txtData.skills || []).some((skill) => ["近接戦闘", "手さばき", "隠密", "鑑定", "自然", "サバイバル", "威圧", "魅惑"].some((word) => skill.name.includes(word)));
+  return bigStats || has7eSkill ? "7e" : "6e";
+}
+
+function sectionText(txtData, sectionName) {
+  if (!txtData?.sections?.[sectionName]) return "";
+  return cleanSectionText(txtData.sections[sectionName]);
+}
+
+function cleanSectionText(text) {
+  return normalizeText(text).split("\n").map((line) => line.trimEnd()).join("\n").trim();
+}
+
 function renderSummary() {
   const data = state.data;
-  $("summaryName").textContent = data?.name || "未解析";
-  renderIcon(data?.iconUrl || "");
+  const txt = state.txtData;
+  $("summaryName").textContent = data?.name || txt?.profile?.name || "未解析";
+  renderIcon(data?.iconUrl || txt?.icons?.[0] || "");
   renderEditionBadge(state.edition);
   renderSheetLink(data?.externalUrl || "");
-  renderStatusChips(data?.status || []);
-  renderParams(data?.params || []);
+  renderStatusChips(data?.status || statusFromTxt(txt));
+  renderParams(data?.params || paramsFromTxt(txt));
+}
+
+function statusFromTxt(txtData) {
+  if (!txtData?.abilities) return [];
+  return ["HP", "MP", "SAN", "幸運"].filter((key) => txtData.abilities[key]).map((key) => ({ label: key, value: txtData.abilities[key] }));
+}
+
+function paramsFromTxt(txtData) {
+  if (!txtData?.abilities) return [];
+  return ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"].filter((key) => txtData.abilities[key]).map((key) => ({ label: key, value: txtData.abilities[key] }));
 }
 
 function renderIcon(iconUrl) {
@@ -229,16 +423,21 @@ function currentValue(item) {
   return item.value ?? item.current ?? item.max ?? "-";
 }
 
-function buildMemo(data, manualProfile, options) {
-  if (!data) return "";
+function buildMemo(data, manualProfile, options, txtData) {
+  if (!data && !txtData) return "";
   const parts = [];
-  parts.push(`名前: ${data.name || ""}\n${manualProfile}`.trim());
-  if (options.includeWeapons) parts.push("【戦闘・武器・防具】\n※ いあきゃらTXTやキャラシ情報から追記してください。");
-  if (options.includeItems) parts.push("【所持品】\n※ いあきゃらTXTやキャラシ情報から追記してください。");
-  if (options.includeKnowledge) parts.push("【新たに得た知識・経験】\n※ 通過シナリオや成長メモを追記してください。");
-  if (options.includeTxtMemo) parts.push("【TXT内メモ】\n※ TXT内メモがある場合はここへ反映してください。");
-  if (data.memo) parts.push(`【既存メモ】\n${data.memo}`);
+  const name = data?.name || txtData?.profile?.name || "";
+  parts.push(`名前: ${name}\n${manualProfile}`.trim());
+  if (options.includeWeapons) parts.push(buildSectionBlock("戦闘・武器・防具", sectionText(txtData, "戦闘・武器・防具"), "※ いあきゃらTXTやキャラシ情報から追記してください。"));
+  if (options.includeItems) parts.push(buildSectionBlock("所持品", sectionText(txtData, "所持品"), "※ いあきゃらTXTやキャラシ情報から追記してください。"));
+  if (options.includeKnowledge) parts.push(buildSectionBlock("新たに得た知識・経験", sectionText(txtData, "通過したシナリオ名"), "※ 通過シナリオや成長メモを追記してください。"));
+  if (options.includeTxtMemo) parts.push(buildSectionBlock("TXT内メモ", sectionText(txtData, "メモ"), "※ TXT内メモがある場合はここへ反映してください。"));
+  if (data?.memo) parts.push(`【既存メモ】\n${data.memo}`);
   return parts.filter(Boolean).join("\n\n");
+}
+
+function buildSectionBlock(label, content, fallback) {
+  return `【${label}】\n${content || fallback}`;
 }
 
 function generateKomaJson(data, memo, commands) {
@@ -252,20 +451,12 @@ function regenerateMemo() {
   updateGeneratedJsonOnly();
 }
 
-function fetchExternalUrl() {
-  if (!state.data?.externalUrl) {
-    setStatus("externalUrlが見つかりません", "error");
-    return;
-  }
-  setStatus("現在の版では外部ページ取得ではなく、駒JSON内の情報を元に整形します。", "info");
-}
-
 function clearAll() {
   $("jsonInput").value = "";
   $("memoEditor").value = "";
   $("memoEditor").dataset.edited = "";
+  resetTxtFile();
   setStatus("入力欄をクリアしました。", "info");
-  updateAll();
 }
 
 async function copyText(text, label) {
