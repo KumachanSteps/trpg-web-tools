@@ -1054,3 +1054,138 @@ body.theme-dark .left-scroll-top-button:hover {
     display: none !important;
   }
 }
+
+/* =========================================================
+   v2.2 Weapons Tab
+   武器タブ / 武器カード / 武器詳細
+   ========================================================= */
+
+.weapon-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.weapon-list {
+  margin-top: 16px;
+}
+
+.weapon-card {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.86);
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: 0 12px 28px rgba(33,42,68,0.08);
+  color: var(--text);
+}
+
+body.theme-dark .weapon-card {
+  background: rgba(255,255,255,0.045);
+}
+
+.weapon-card.is-selected {
+  border-color: rgba(168, 85, 247, 0.46);
+  background: rgba(250, 245, 255, 0.94);
+}
+
+body.theme-dark .weapon-card.is-selected {
+  border-color: rgba(216, 180, 254, 0.58);
+  background: rgba(168, 85, 247, 0.13);
+}
+
+.weapon-content,
+.weapon-detail-box {
+  background: rgba(250, 245, 255, 0.86);
+  border-color: rgba(168, 85, 247, 0.22);
+}
+
+body.theme-dark .weapon-content,
+body.theme-dark .weapon-detail-box {
+  background: rgba(168, 85, 247, 0.13);
+  border-color: rgba(216, 180, 254, 0.24);
+}
+
+.weapon-stat-grid,
+.weapon-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+
+.weapon-stat-grid span {
+  min-width: 0;
+  color: var(--sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.weapon-detail-grid p {
+  min-width: 0;
+}
+
+#weaponDetail {
+  padding: 14px;
+}
+
+#weaponDetail h2 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+#weaponDetail h2 .source-line {
+  display: inline;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: normal;
+}
+
+#weaponDetail > .source-line {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  opacity: 0.78;
+}
+
+#weaponDetail .detail-box {
+  margin-top: 8px;
+  padding: 9px 11px;
+  border-radius: 14px;
+}
+
+#weaponDetail .detail-box p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#weaponDetail .detail-box p:last-child {
+  margin-bottom: 0;
+}
+
+#weaponDetail .detail-box strong {
+  font-size: 11px;
+}
+
+#weaponDetail .btn {
+  margin-top: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .weapon-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .weapon-stat-grid,
+  .weapon-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

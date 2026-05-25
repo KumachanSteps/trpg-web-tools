@@ -73,9 +73,7 @@
       scheduleIacharaTxtAutoApply();
     });
 
-    el.openIacharaTxtFileButton.addEventListener("click", () => {
-      el.iacharaTxtFileInput.click();
-    });
+    el.openIacharaTxtFileButton.addEventListener("click", openIacharaTxtFile);
 
     el.iacharaTxtFileInput.addEventListener("change", handleIacharaTxtFileSelected);
 
@@ -189,18 +187,54 @@
     }, 250);
   }
 
-  async function handleIacharaTxtFileSelected(event) {
-    const file = event.target.files && event.target.files[0];
+  async function openIacharaTxtFile() {
+    if (window.showOpenFilePicker) {
+      try {
+        const handles = await window.showOpenFilePicker({
+          multiple: false,
+          types: [
+            {
+              description: "Text Files",
+              accept: { "text/plain": [".txt"] }
+            }
+          ]
+        });
+        const file = await handles[0].getFile();
+        await loadIacharaTxtFile(file);
+        return;
+      } catch (error) {
+        if (error && error.name === "AbortError") return;
+        showTxtMessage("テキストファイルを開けませんでした。", true);
+        return;
+      }
+    }
+
+    if (!el.iacharaTxtFileInput) {
+      showTxtMessage("ファイル選択欄が見つかりません。", true);
+      return;
+    }
+
+    el.iacharaTxtFileInput.value = "";
+    el.iacharaTxtFileInput.click();
+  }
+
+  async function loadIacharaTxtFile(file) {
     if (!file) return;
 
     try {
       const txtContent = await file.text();
       el.iacharaTxtInput.value = txtContent;
+      el.iacharaTxtInput.dispatchEvent(new Event("input", { bubbles: true }));
       applyIacharaTxtToForm(txtContent, false);
       showTxtMessage(`テキストファイル「${file.name}」を読み込み、反映しました。`, false);
     } catch (error) {
       showTxtMessage("テキストファイルの読み込みに失敗しました。", true);
     }
+  }
+
+  async function handleIacharaTxtFileSelected(event) {
+    const file = event.target.files && event.target.files[0];
+    await loadIacharaTxtFile(file);
   }
 
   function parseKomaInput() {

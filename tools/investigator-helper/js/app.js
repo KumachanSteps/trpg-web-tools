@@ -17,6 +17,7 @@
 
   const FEATURES = Array.isArray(window.FEATURES) ? window.FEATURES : [];
   const EXPERIENCE_PACKAGES = Array.isArray(window.EXPERIENCE_PACKAGES) ? window.EXPERIENCE_PACKAGES : [];
+  const WEAPONS = Array.isArray(window.WEAPONS) ? window.WEAPONS : [];
 
   const SOURCES = [
     "すべて",
@@ -88,6 +89,9 @@
     selectedOccupationId: OCCUPATIONS[0]?.id || "",
     selectedPackageId: EXPERIENCE_PACKAGES[0]?.id || "",
     selectedFeatureId: FEATURES[0]?.id || "",
+    selectedWeaponId: WEAPONS[0]?.id || "",
+    weaponQuery: "",
+    weaponCategory: "すべて",
     featureCount: 3,
     rolledFeatures: FEATURES.slice(0, 3),
     skillExpanded: false,
@@ -114,6 +118,10 @@
     rollFeaturesButton: document.getElementById("rollFeaturesButton"),
     packageList: document.getElementById("packageList"),
     packageDetail: document.getElementById("packageDetail"),
+    weaponList: document.getElementById("weaponList"),
+    weaponDetail: document.getElementById("weaponDetail"),
+    weaponKeywordInput: document.getElementById("weaponKeywordInput"),
+    weaponCategorySelect: document.getElementById("weaponCategorySelect"),
     outputText: document.getElementById("outputText"),
     copyOutputButton: document.getElementById("copyOutputButton"),
     clearOutputButton: document.getElementById("clearOutputButton"),
@@ -280,6 +288,71 @@
 ${notes}`;
   }
 
+
+  function weaponCategoryLabel(item) {
+    return [item.group, item.category].filter(Boolean).join(" / ");
+  }
+
+  function formatWeapon(item) {
+    if (!item) return "";
+
+    const lines = [];
+    lines.push(`【武器：${item.name}】`);
+    if (weaponCategoryLabel(item)) lines.push(`カテゴリ：${weaponCategoryLabel(item)}`);
+    if (item.skill) lines.push(`技能：${item.skill}`);
+    lines.push(`基本命中率/初期値：${item.hit || "―"}`);
+    lines.push(`ダメージ：${item.damage || "―"}`);
+    lines.push(`基本射程：${item.range || "―"}`);
+    lines.push(`攻撃回数：${item.attacks || "―"}`);
+    lines.push(`装弾数：${item.ammo || "―"}`);
+    lines.push(`耐久力：${item.durability || "―"}`);
+    lines.push(`故障ナンバー：${item.malfunction || "―"}`);
+    if (sourceLabel(item)) lines.push(`出典：${sourceLabel(item)}`);
+    if (item.note) lines.push(`備考：${item.note}`);
+    return lines.join("\n");
+  }
+
+  function getWeaponCategories() {
+    return ["すべて", ...Array.from(new Set(WEAPONS.map((item) => item.category).filter(Boolean)))];
+  }
+
+  function weaponMatchesRule(item) {
+    return state.ruleType === "all" || item.ruleType === state.ruleType;
+  }
+
+  function getWeaponSearchText(item) {
+    return [
+      item.name,
+      item.group,
+      item.category,
+      item.skill,
+      item.hit,
+      item.damage,
+      item.range,
+      item.attacks,
+      item.ammo,
+      item.durability,
+      item.malfunction,
+      item.source,
+      item.sourceShort,
+      item.page,
+      ...(item.tags || []),
+      item.note,
+    ].join(" ").toLowerCase();
+  }
+
+  function getFilteredWeapons() {
+    const query = state.weaponQuery.trim().toLowerCase();
+
+    return WEAPONS
+      .filter(weaponMatchesRule)
+      .filter((item) => state.weaponCategory === "すべて" || item.category === state.weaponCategory)
+      .filter((item) => {
+        if (!query) return true;
+        return getWeaponSearchText(item).includes(query);
+      });
+  }
+
   function appendOutput(text) {
     if (!text) return;
     const current = el.outputText.value.trim();
@@ -444,10 +517,12 @@ ${notes}`;
     document.getElementById("occupationTab").classList.toggle("is-hidden", state.tab !== "occupation");
     document.getElementById("featureTab").classList.toggle("is-hidden", state.tab !== "feature");
     document.getElementById("packageTab").classList.toggle("is-hidden", state.tab !== "package");
+    document.getElementById("weaponTab").classList.toggle("is-hidden", state.tab !== "weapon");
 
     el.occupationDetail.classList.toggle("is-hidden", state.tab !== "occupation");
     el.featureDetail.classList.toggle("is-hidden", state.tab !== "feature");
     el.packageDetail.classList.toggle("is-hidden", state.tab !== "package");
+    el.weaponDetail.classList.toggle("is-hidden", state.tab !== "weapon");
   }
 
   function renderOccupationList() {
@@ -691,6 +766,98 @@ ${notes}`;
     });
   }
 
+
+  function renderWeaponCategories() {
+    if (!el.weaponCategorySelect) return;
+
+    el.weaponCategorySelect.innerHTML = getWeaponCategories().map((category) =>
+      `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`
+    ).join("");
+
+    el.weaponCategorySelect.value = state.weaponCategory;
+  }
+
+  function renderWeaponList() {
+    if (!el.weaponList) return;
+
+    const items = getFilteredWeapons();
+
+    if (!items.length) {
+      el.weaponList.innerHTML = `<div class="weapon-card"><p class="card-text">条件に一致する武器がありません。</p></div>`;
+      el.weaponDetail.innerHTML = "";
+      return;
+    }
+
+    const currentSelectedExists = items.some((item) => item.id === state.selectedWeaponId);
+    if (!currentSelectedExists && items[0]) {
+      state.selectedWeaponId = items[0].id;
+    }
+
+    el.weaponList.innerHTML = items.map((item) => {
+      const selected = item.id === state.selectedWeaponId ? " is-selected" : "";
+      const tags = (item.tags || []).map((tag) => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join("");
+
+      return `
+        <button class="weapon-card${selected}" type="button" data-id="${escapeHtml(item.id)}">
+          <div class="card-title-row">
+            <h3 class="card-title">${escapeHtml(item.name)}</h3>
+            <span class="source-line">[${escapeHtml((item.ruleLabels || []).join("/"))}]</span>
+            ${tags}
+          </div>
+          <div class="card-content weapon-content">
+            <p class="card-text">カテゴリ：${escapeHtml(weaponCategoryLabel(item) || "―")}</p>
+            <div class="weapon-stat-grid">
+              <span>命中率：${escapeHtml(item.hit || "―")}</span>
+              <span>ダメージ：${escapeHtml(item.damage || "―")}</span>
+              <span>射程：${escapeHtml(item.range || "―")}</span>
+              <span>攻撃回数：${escapeHtml(item.attacks || "―")}</span>
+              <span>耐久力：${escapeHtml(item.durability || "―")}</span>
+            </div>
+          </div>
+        </button>`;
+    }).join("");
+  }
+
+  function renderWeaponDetail() {
+    if (!el.weaponDetail) return;
+
+    const item = WEAPONS.find((weapon) => weapon.id === state.selectedWeaponId) || getFilteredWeapons()[0] || WEAPONS[0];
+
+    if (!item) {
+      el.weaponDetail.innerHTML = "";
+      return;
+    }
+
+    const tags = (item.tags || []).map((tag) => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join("");
+    const source = sourceLabel(item);
+
+    el.weaponDetail.innerHTML = `
+      <div class="card-title-row">
+        <h2>${escapeHtml(item.name)} <span class="source-line">[${escapeHtml((item.ruleLabels || []).join("/"))}]</span></h2>
+        ${tags}
+      </div>
+      ${source ? `<p class="source-line">出典：${escapeHtml(source)}</p>` : ""}
+      <div class="detail-box weapon-detail-box">
+        <p><strong>カテゴリ</strong><br>${escapeHtml(weaponCategoryLabel(item) || "―")}</p>
+        <p><strong>技能</strong><br>${escapeHtml(item.skill || "―")}</p>
+        <div class="weapon-detail-grid">
+          <p><strong>基本命中率/初期値</strong><br>${escapeHtml(item.hit || "―")}</p>
+          <p><strong>ダメージ</strong><br>${escapeHtml(item.damage || "―")}</p>
+          <p><strong>基本射程</strong><br>${escapeHtml(item.range || "―")}</p>
+          <p><strong>攻撃回数</strong><br>${escapeHtml(item.attacks || "―")}</p>
+          <p><strong>装弾数</strong><br>${escapeHtml(item.ammo || "―")}</p>
+          <p><strong>耐久力</strong><br>${escapeHtml(item.durability || "―")}</p>
+          <p><strong>故障ナンバー</strong><br>${escapeHtml(item.malfunction || "―")}</p>
+        </div>
+        ${item.note ? `<p><strong>備考</strong><br>${escapeHtml(item.note)}</p>` : ""}
+      </div>
+      <button class="btn btn-primary" type="button" id="addWeaponButton">出力に追加</button>`;
+
+    document.getElementById("addWeaponButton")?.addEventListener("click", () => {
+      appendOutput(formatWeapon(item));
+    });
+  }
+
   function render() {
     renderTabs();
     renderRuleButtons();
@@ -702,6 +869,8 @@ ${notes}`;
     renderFeatureDetail();
     renderPackageList();
     renderPackageDetail();
+    renderWeaponList();
+    renderWeaponDetail();
   }
 
   function bindEvents() {
@@ -800,6 +969,24 @@ ${notes}`;
       render();
     });
 
+    el.weaponKeywordInput?.addEventListener("input", () => {
+      state.weaponQuery = el.weaponKeywordInput.value;
+      render();
+    });
+
+    el.weaponCategorySelect?.addEventListener("change", () => {
+      state.weaponCategory = el.weaponCategorySelect.value;
+      render();
+    });
+
+    el.weaponList?.addEventListener("click", (event) => {
+      const card = event.target.closest(".weapon-card[data-id]");
+      if (!card) return;
+
+      state.selectedWeaponId = card.dataset.id;
+      render();
+    });
+
     el.copyOutputButton.addEventListener("click", () => {
       copyText(el.outputText.value, "メモをコピーしました");
     });
@@ -846,6 +1033,7 @@ ${notes}`;
 
   function init() {
     renderSources();
+    renderWeaponCategories();
     el.outputText.value = "";
     el.outputText.placeholder = "「出力に追加」使用でテキストが表示されます。";
     document.body.classList.add("theme-light");
