@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>いあキャラMEMOジェネレータ v1.6 | TRPG Webツール観測所</title>
+  <title>いあキャラMEMOジェネレータ v1.7 | TRPG Webツール観測所</title>
   <meta name="description" content="CCFOLIA駒JSONを読み込み、キャラメモとチャットパレットを整形して再生成するTRPG支援ツールです。" />
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
@@ -43,7 +43,7 @@
             <span class="tool-icon-copy">⧉</span>
           </div>
           <div>
-            <h1 class="site-title">いあキャラMEMOジェネレータ v1.6</h1>
+            <h1 class="site-title">いあキャラMEMOジェネレータ v1.7</h1>
             <p class="site-description">CCFOLIA駒JSONを読み込み、externalUrl / iconUrl / ステータス / パラメータ / チャットパレットを解析して、キャラメモと駒データを再生成します。</p>
           </div>
         </div>
@@ -61,12 +61,13 @@
           </section>
 
           <section class="panel panel-fetch">
-            <div class="panel-title"><span class="panel-icon">URL</span><h2>2. URL取得設定</h2></div>
-            <div class="fetch-row">
-              <button class="switch-row active" id="proxyToggle" type="button"><span><strong>Proxy使用</strong><small>CORS制限対策</small></span><span class="switch"><span></span></span></button>
-              <button class="btn btn-blue" id="fetchButton" type="button">取得</button>
+            <div class="panel-title"><span class="panel-icon">TXT</span><h2>2. いあきゃらTXTを開く</h2></div>
+            <input class="file-input-hidden" id="txtFileInput" type="file" accept=".txt,text/plain" />
+            <div class="txt-actions">
+              <button class="btn btn-blue" id="openTxtButton" type="button">TXTファイルを開く</button>
+              <button class="btn btn-dark" id="resetTxtButton" type="button">リセット</button>
             </div>
-            <input class="proxy-input" id="proxyUrl" value="https://your-worker.example.com/fetch?url=" />
+            <p class="txt-load-status" id="txtLoadStatus"></p>
           </section>
 
           <section class="panel panel-options">
@@ -101,7 +102,7 @@
 
             <section class="panel memo-panel">
               <div class="panel-title"><span class="panel-icon">MEMO</span><h2>4. プロフィール補足 / キャラメモ編集</h2></div>
-              <label class="field-label" for="manualProfile">externalUrl取得後に入るプロフィール欄の仮入力</label>
+              <label class="field-label" for="manualProfile">いあきゃらTXTから取得したプロフィール欄 / 手入力補足</label>
               <textarea class="profile-input" id="manualProfile">職業: 未取得
 年齢: 未取得 / 性別: 未取得
 身長: 未取得 / 体重: 未取得
