@@ -833,3 +833,82 @@ textarea::placeholder {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* =========================================================
+   Panel Icon Override
+   解析キャラクター概要：シルエットの目アイコン
+   ========================================================= */
+
+.summary-panel .panel-icon {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(52, 211, 153, 0.28);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.16), transparent 62%),
+    rgba(15, 23, 42, 0.86);
+  color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 24px rgba(16, 185, 129, 0.12);
+}
+
+.summary-panel .panel-icon svg {
+  display: none;
+}
+
+.summary-panel .panel-icon::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 10px;
+  width: 16px;
+  height: 10px;
+  border-radius: 999px 999px 999px 999px / 70% 70% 70% 70%;
+  background:
+    radial-gradient(circle at 50% 50%, #020617 0 3px, #34d399 3.5px 5px, transparent 5.5px),
+    linear-gradient(135deg, rgba(209, 250, 229, 0.92), rgba(45, 212, 191, 0.72));
+  transform: rotate(-8deg);
+  box-shadow:
+    0 0 0 1px rgba(110, 231, 183, 0.45),
+    0 0 12px rgba(52, 211, 153, 0.55);
+}
+
+.summary-panel .panel-icon::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  width: 22px;
+  height: 14px;
+  border: 2px solid rgba(167, 243, 208, 0.78);
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-radius: 50%;
+  transform: rotate(-28deg);
+  opacity: 0.8;
+}
+
+/* Light Mode */
+.theme-light .summary-panel .panel-icon {
+  border-color: rgba(14, 165, 233, 0.24);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.12), transparent 62%),
+    rgba(255, 255, 255, 0.88);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 24px rgba(14, 165, 233, 0.12);
+}
+
+.theme-light .summary-panel .panel-icon::before {
+  background:
+    radial-gradient(circle at 50% 50%, #0f172a 0 3px, #0284c7 3.5px 5px, transparent 5.5px),
+    linear-gradient(135deg, rgba(186, 230, 253, 0.95), rgba(14, 165, 233, 0.64));
+  box-shadow:
+    0 0 0 1px rgba(14, 165, 233, 0.32),
+    0 0 12px rgba(14, 165, 233, 0.32);
+}
+
+.theme-light .summary-panel .panel-icon::after {
+  border-right-color: rgba(2, 132, 199, 0.62);
+  border-bottom-color: rgba(2, 132, 199, 0.62);
+}
