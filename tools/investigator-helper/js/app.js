@@ -1,9 +1,19 @@
 (() => {
   "use strict";
 
-  const BASE_OCCUPATIONS = Array.isArray(window.OCCUPATIONS) ? window.OCCUPATIONS : [];
-  const EXTRA_7E_OCCUPATIONS = Array.isArray(window.OCCUPATIONS_7E_EXTRA) ? window.OCCUPATIONS_7E_EXTRA : [];
-  const OCCUPATIONS = [...BASE_OCCUPATIONS, ...EXTRA_7E_OCCUPATIONS];
+const BASE_OCCUPATIONS = Array.isArray(window.OCCUPATIONS) ? window.OCCUPATIONS : [];
+const EXTRA_6E_COC2015_OCCUPATIONS = Array.isArray(window.OCCUPATIONS_6E_COC2015)
+  ? window.OCCUPATIONS_6E_COC2015
+  : [];
+const EXTRA_7E_OCCUPATIONS = Array.isArray(window.OCCUPATIONS_7E_EXTRA)
+  ? window.OCCUPATIONS_7E_EXTRA
+  : [];
+
+const OCCUPATIONS = [
+  ...BASE_OCCUPATIONS,
+  ...EXTRA_6E_COC2015_OCCUPATIONS,
+  ...EXTRA_7E_OCCUPATIONS,
+];
   const FEATURES = window.FEATURES || [];
   const EXPERIENCE_PACKAGES = window.EXPERIENCE_PACKAGES || [];
 
