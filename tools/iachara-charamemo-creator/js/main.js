@@ -11,6 +11,7 @@
   };
 
   const el = {};
+  let txtApplyTimer = 0;
 
   document.addEventListener("DOMContentLoaded", () => {
     cacheElements();
@@ -21,9 +22,11 @@
   function cacheElements() {
     [
       "komaJsonInput",
+      "pasteKomaJsonButton",
       "jsonErrorMessage",
       "iacharaTxtInput",
-      "applyIacharaTxtButton",
+      "iacharaTxtFileInput",
+      "openIacharaTxtFileButton",
       "resetIacharaTxtButton",
       "iacharaTxtMessage",
       "includeWeapons",
@@ -64,9 +67,17 @@
       renderAll();
     });
 
-    el.applyIacharaTxtButton.addEventListener("click", () => {
-      applyIacharaTxtToForm(el.iacharaTxtInput.value);
+    el.pasteKomaJsonButton.addEventListener("click", pasteKomaJsonFromClipboard);
+
+    el.iacharaTxtInput.addEventListener("input", () => {
+      scheduleIacharaTxtAutoApply();
     });
+
+    el.openIacharaTxtFileButton.addEventListener("click", () => {
+      el.iacharaTxtFileInput.click();
+    });
+
+    el.iacharaTxtFileInput.addEventListener("change", handleIacharaTxtFileSelected);
 
     el.resetIacharaTxtButton.addEventListener("click", () => {
       resetIacharaTxt();
@@ -110,6 +121,7 @@
     el.clearAllButton.addEventListener("click", () => {
       el.komaJsonInput.value = "";
       el.iacharaTxtInput.value = "";
+      el.iacharaTxtFileInput.value = "";
       resetIacharaTxt(false);
       state.komaData = null;
       state.edition = "";
@@ -141,6 +153,54 @@
         copyText(el.generatedJson.value, "駒JSON");
       }
     });
+  }
+
+  async function pasteKomaJsonFromClipboard() {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      showStatus("クリップボード読み取りに対応していない環境です。", true);
+      return;
+    }
+
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) {
+        showStatus("クリップボードにテキストがありません。", true);
+        return;
+      }
+      el.komaJsonInput.value = text;
+      parseKomaInput();
+      renderAll();
+      showStatus("クリップボードから駒JSONを入力しました。", false);
+    } catch (error) {
+      showStatus("クリップボードからの読み取りに失敗しました。", true);
+    }
+  }
+
+  function scheduleIacharaTxtAutoApply() {
+    window.clearTimeout(txtApplyTimer);
+    txtApplyTimer = window.setTimeout(() => {
+      const value = el.iacharaTxtInput.value;
+      if (!value.trim()) {
+        resetIacharaTxt(false);
+        showTxtMessage("", false);
+        return;
+      }
+      applyIacharaTxtToForm(value, true);
+    }, 250);
+  }
+
+  async function handleIacharaTxtFileSelected(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    try {
+      const txtContent = await file.text();
+      el.iacharaTxtInput.value = txtContent;
+      applyIacharaTxtToForm(txtContent, false);
+      showTxtMessage(`テキストファイル「${file.name}」を読み込み、反映しました。`, false);
+    } catch (error) {
+      showTxtMessage("テキストファイルの読み込みに失敗しました。", true);
+    }
   }
 
   function parseKomaInput() {
@@ -181,7 +241,7 @@
       : window.ChatPaletteParser.normalizeText(commands);
   }
 
-  function applyIacharaTxtToForm(txtContent) {
+  function applyIacharaTxtToForm(txtContent, isAutoApply = false) {
     if (!window.IacharaTextParser) {
       showTxtMessage("いあきゃらTXT解析スクリプトが読み込まれていません。", true);
       return;
@@ -200,7 +260,7 @@
       el.profileSupplementInput.value = profileText;
       updateMemoFromTxt();
       renderAll();
-      showTxtMessage("いあきゃらTXTを読み込み、プロフィール補足とキャラメモへ反映しました。", false);
+      showTxtMessage(isAutoApply ? "テキストボックスの内容を自動反映しました。" : "いあきゃらTXTを読み込み、プロフィール補足とキャラメモへ反映しました。", false);
     } catch (error) {
       showTxtMessage("いあきゃらTXTの解析に失敗しました。", true);
     }
@@ -209,7 +269,9 @@
   function resetIacharaTxt(showMessageFlag = true) {
     state.txtContent = "";
     state.txtMemoText = "";
+    window.clearTimeout(txtApplyTimer);
     el.iacharaTxtInput.value = "";
+    el.iacharaTxtFileInput.value = "";
     el.profileSupplementInput.value = defaultProfileText();
     if (!state.komaData) el.memoEditor.value = "";
     else updateGeneratedMemo();

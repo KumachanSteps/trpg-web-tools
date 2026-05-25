@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>いあキャラMEMOジェネレータ v1.83 | TRPG Webツール観測所</title>
+  <title>いあキャラMEMOジェネレータ v1.84 | TRPG Webツール観測所</title>
   <meta name="description" content="CCFOLIA駒JSONと、いあきゃらTXTを読み込み、キャラメモとチャットパレットを整形して駒JSONを再生成するTRPG支援ツールです。" />
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
@@ -25,7 +25,7 @@
             <span class="portal-tooltip">TRPG WEBツール観測所に戻る</span>
           </a>
           <span class="tag-pill tag-cyan">駒JSON入力</span>
-          <span class="tag-pill tag-violet">いあきゃらTXT貼り付け</span>
+          <span class="tag-pill tag-violet">いあきゃらTXT読込</span>
           <span class="tag-pill tag-amber">CCFOLIA用コピー</span>
         </div>
         <div class="header-actions">
@@ -43,7 +43,7 @@
           <span class="tool-icon-copy">⧉</span>
         </div>
         <div>
-          <h1 class="site-title">いあキャラMEMOジェネレータ v1.83</h1>
+          <h1 class="site-title">いあキャラMEMOジェネレータ v1.84</h1>
           <p class="site-description">
             CCFOLIA駒JSONと、いあきゃらTXTを読み込み、プロフィール・所持品・メモ・チャットパレットを整理して、CCFOLIA用のキャラメモ入り駒JSONを再生成します。
           </p>
@@ -51,7 +51,7 @@
       </div>
 
       <div id="helpPanel" class="header-info-panel hidden">
-        1. CCFOLIA駒JSONを貼り付けます。2. いあきゃらTXTをテキストボックスへ貼り付けて「TXTを反映」を押します。3. 生成オプションを選び、キャラメモ・チャットパレット・生成済み駒JSONを確認してコピーします。
+        1. CCFOLIA駒JSONを貼り付けます。2. いあきゃらTXTをテキストボックスへ貼り付けるか、テキストファイルを開くと自動で反映されます。3. 生成オプションを選び、キャラメモ・チャットパレット・生成済み駒JSONを確認してコピーします。
       </div>
       <div id="shortcutPanel" class="header-info-panel hidden">
         Esc：パネルを閉じる / Alt + T：ライト・ナイト切替 / Ctrl または Cmd + Shift + C：生成済み駒JSONコピー
@@ -64,15 +64,19 @@
           <div class="panel-title"><span class="panel-icon">▣</span><h2>1. 入力データ</h2></div>
           <label class="field-label" for="komaJsonInput">CCFOLIA駒JSONデータ</label>
           <textarea id="komaJsonInput" class="json-input" placeholder="キャラ出力▶︎ココフォリア駒出力 からコピー&ペースト"></textarea>
+          <div class="input-actions">
+            <button id="pasteKomaJsonButton" class="btn btn-blue" type="button">クリップボードから入力</button>
+          </div>
           <p id="jsonErrorMessage" class="error-box hidden"></p>
         </section>
 
         <section class="panel panel-txt">
-          <div class="panel-title"><span class="panel-icon">TXT</span><h2>2. いあきゃらTXTを貼り付け</h2></div>
+          <div class="panel-title"><span class="panel-icon">TXT</span><h2>2. いあきゃらTXTを貼り付け / 開く</h2></div>
           <label class="field-label" for="iacharaTxtInput">いあきゃらTXT</label>
+          <input id="iacharaTxtFileInput" class="visually-hidden-file" type="file" accept=".txt,text/plain" />
           <textarea id="iacharaTxtInput" class="txt-input" placeholder="【基本情報】&#10;名前: ...&#10;職業: ...&#10;年齢: ... / 性別: ... / 身長: ...&#10;体重: ...&#10;&#10;【戦闘・武器・防具】&#10;..."></textarea>
           <div class="txt-actions">
-            <button id="applyIacharaTxtButton" class="btn btn-blue" type="button">TXTを反映</button>
+            <button id="openIacharaTxtFileButton" class="btn btn-blue" type="button">テキストファイルを開く</button>
             <button id="resetIacharaTxtButton" class="btn btn-dark" type="button">リセット</button>
           </div>
           <p id="iacharaTxtMessage" class="txt-load-message"></p>
