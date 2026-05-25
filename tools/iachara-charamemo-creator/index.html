@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>いあキャラMEMOジェネレータ | TRPG Webツール観測所</title>
+  <title>いあキャラMEMOジェネレータ v1.2 | TRPG Webツール観測所</title>
   <meta name="description" content="CCFOLIA駒JSONといあきゃらTXTから、キャラメモとチャットパレットを整えてCCFOLIA用駒JSONを再生成するTRPG支援ツールです。" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
@@ -70,7 +70,7 @@
             <span class="tool-icon-copy" aria-hidden="true">⧉</span>
           </div>
           <div>
-            <h1 class="site-title">いあキャラMEMOジェネレータ</h1>
+            <h1 class="site-title">いあキャラMEMOジェネレータ v1.2</h1>
             <p class="site-description">CCFOLIA駒JSONと、いあきゃらのテキスト出力を読み込み、プロフィール・所持品・バックストーリー・メモを整理して、CCFOLIA用のキャラメモ入り駒JSONを再生成します。</p>
           </div>
         </div>
@@ -148,16 +148,16 @@
               <h2>解析キャラクター概要</h2>
             </div>
             <div class="panel-body">
-              <div class="summary-card">
+              <div class="summary-card is-empty">
                 <div class="character-icon-frame" id="characterIconFrame">
-                  <span class="image-placeholder">IMG</span>
+                  <span class="image-placeholder"></span>
                 </div>
                 <div class="summary-main">
                   <div class="summary-name-row">
                     <h3 id="summaryName">未解析</h3>
                     <span class="edition-badge hidden" id="editionBadge"></span>
                   </div>
-                  <p id="summarySubline">職業未検出 / 年齢未検出 / 性別未検出</p>
+                  <p id="summarySubline">externalUrl 未検出</p>
                   <div class="status-chip-grid" id="statusChipGrid"></div>
                 </div>
               </div>
@@ -168,7 +168,7 @@
           <section class="tool-panel fill-panel" id="memoEditPanel">
             <div class="panel-title-row">
               <div class="panel-icon">✎</div>
-              <h2>4. キャラメモ編集</h2>
+              <h2>4. プロフィール補足 / キャラメモ編集</h2>
             </div>
             <div class="panel-body">
               <div class="button-row">
@@ -181,20 +181,10 @@
         </section>
 
         <section class="tool-column right-column">
-          <section class="tool-panel memo-preview-panel" id="memoPreviewPanel">
-            <div class="panel-title-row">
-              <div class="panel-icon">◉</div>
-              <h2>5. キャラメモ プレビュー</h2>
-            </div>
-            <div class="panel-body">
-              <textarea id="memoPreview" class="memo-preview-textarea" spellcheck="false" placeholder="いあきゃらTXTを貼り付けるか、txtファイルを開くと解析結果が表示されます。"></textarea>
-            </div>
-          </section>
-
           <section class="tool-panel fill-panel" id="palettePreviewPanel">
             <div class="panel-title-row">
               <div class="panel-icon">✧</div>
-              <h2>6. チャットパレットプレビュー</h2>
+              <h2>5. チャットパレットプレビュー</h2>
             </div>
             <div class="panel-body">
               <textarea id="palettePreview" class="preview-textarea" spellcheck="false" placeholder="駒JSONまたはいあきゃらTXTからチャットパレットを生成します。"></textarea>
@@ -208,7 +198,7 @@
           <section class="tool-panel action-panel" id="jsonActionPanel">
             <div class="panel-title-row">
               <div class="panel-icon">{}</div>
-              <h2>7. 生成済み駒JSON</h2>
+              <h2>6. 生成済み駒JSON</h2>
             </div>
             <div class="panel-body action-card">
               <button type="button" class="copy-json-button" id="copyGeneratedJsonButton">✓ 生成駒JSONデータをコピー</button>

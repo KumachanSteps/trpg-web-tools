@@ -270,7 +270,7 @@ body {
   overflow: hidden;
 }
 
-.right-column { overflow: visible; }
+.right-column { overflow: hidden; }
 
 .tool-panel {
   display: flex;
@@ -348,21 +348,6 @@ textarea::placeholder { color: var(--subtle); }
   overflow: auto;
 }
 
-.memo-preview-panel {
-  flex: 0 0 auto;
-  overflow: visible;
-}
-
-.memo-preview-panel .panel-body {
-  flex: 0 0 auto;
-  overflow: visible;
-}
-
-.memo-preview-textarea {
-  min-height: 220px;
-  overflow: hidden;
-  resize: vertical;
-}
 
 .button-grid { display: grid; gap: 10px; margin-bottom: 12px; }
 .two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -552,3 +537,7 @@ textarea::placeholder { color: var(--subtle); }
   .status-chip-grid, .param-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .two-col { grid-template-columns: 1fr; }
 }
+
+.summary-card.is-empty { background: linear-gradient(135deg, rgba(14,165,233,.10), rgba(15,23,42,.34)); border-color: rgba(148,163,184,.18); }
+.summary-card.is-empty .character-icon-frame { background: rgba(51,65,85,.76); }
+.summary-card.is-empty .image-placeholder { color: transparent; }

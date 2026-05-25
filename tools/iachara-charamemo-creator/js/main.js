@@ -37,7 +37,6 @@
     memoEditor: $("memoEditor"),
     applyMemoButton: $("applyMemoButton"),
     copyMemoButton: $("copyMemoButton"),
-    memoPreview: $("memoPreview"),
     palettePreview: $("palettePreview"),
     editionLabel: $("editionLabel"),
     copyPaletteButton: $("copyPaletteButton"),
@@ -76,9 +75,6 @@
 
   function syncDerivedFields() {
     if (!state.memoDirty) elements.memoEditor.value = state.generatedMemo;
-    elements.memoPreview.value = state.generatedMemo || "いあきゃらTXTを貼り付けるか、txtファイルを開くと解析結果が表示されます。";
-    autoResizeTextarea(elements.memoPreview);
-
     if (!state.paletteDirty) elements.palettePreview.value = state.generatedPalette;
   }
 
@@ -93,15 +89,18 @@
   }
 
   function renderSummary() {
+    const hasCharacter = Boolean(state.koma || state.parsedTxt.found);
     const p = state.parsedTxt.profile || {};
-    const name = p.name || state.koma?.name || "未解析";
-    const occupation = p.occupation || "職業未検出";
-    const age = p.age || "年齢未検出";
-    const gender = p.gender || "性別未検出";
-    elements.summaryName.textContent = name;
-    elements.summarySubline.textContent = `${occupation} / ${age} / ${gender}`;
+    const name = hasCharacter ? (p.name || state.koma?.name || "未解析") : "未解析";
+    const externalUrl = hasCharacter ? (state.koma?.externalUrl || "externalUrl 未検出") : "externalUrl 未検出";
 
-    if (state.edition) {
+    elements.summaryName.textContent = name;
+    elements.summarySubline.textContent = externalUrl;
+
+    const summaryCard = elements.characterIconFrame.closest(".summary-card");
+    if (summaryCard) summaryCard.classList.toggle("is-empty", !hasCharacter);
+
+    if (hasCharacter && state.edition) {
       elements.editionBadge.textContent = state.edition === "7e" ? "7版" : "6版";
       elements.editionBadge.className = `edition-badge ${state.edition === "7e" ? "edition-7e" : "edition-6e"}`;
     } else {
@@ -109,7 +108,7 @@
       elements.editionBadge.className = "edition-badge hidden";
     }
 
-    const iconUrl = state.parsedTxt.icons?.[0] || state.koma?.iconUrl || "";
+    const iconUrl = hasCharacter ? (state.parsedTxt.icons?.[0] || state.koma?.iconUrl || "") : "";
     if (iconUrl) {
       elements.characterIconFrame.innerHTML = `<img src="${escapeHtml(iconUrl)}" alt="character icon">`;
     } else {
@@ -117,19 +116,23 @@
     }
 
     elements.statusChipGrid.innerHTML = "";
-    for (const status of parser.getStatusCards(state.koma, state.parsedTxt)) {
-      const span = document.createElement("span");
-      span.className = "status-chip";
-      span.textContent = `${status.label} ${status.value}`;
-      elements.statusChipGrid.appendChild(span);
+    if (hasCharacter) {
+      for (const status of parser.getStatusCards(state.koma, state.parsedTxt).filter((item) => ["HP", "MP", "SAN", "幸運"].includes(item.label)).slice(0, 4)) {
+        const span = document.createElement("span");
+        span.className = "status-chip";
+        span.textContent = `${status.label} ${status.value}`;
+        elements.statusChipGrid.appendChild(span);
+      }
     }
 
     elements.paramGrid.innerHTML = "";
-    for (const param of parser.getParamCards(state.koma, state.parsedTxt)) {
-      const div = document.createElement("div");
-      div.className = "param-chip";
-      div.innerHTML = `<span>${escapeHtml(param.label)}</span><strong>${escapeHtml(param.value)}</strong>`;
-      elements.paramGrid.appendChild(div);
+    if (hasCharacter) {
+      for (const param of parser.getParamCards(state.koma, state.parsedTxt).filter((item) => ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"].includes(item.label)).slice(0, 8)) {
+        const div = document.createElement("div");
+        div.className = "param-chip";
+        div.innerHTML = `<span>${escapeHtml(param.label)}</span><strong>${escapeHtml(param.value)}</strong>`;
+        elements.paramGrid.appendChild(div);
+      }
     }
   }
 
@@ -146,12 +149,30 @@
   }
 
   function generateFinalJson() {
-    if (!state.koma) return "";
-    const nextData = { ...state.koma };
+    const baseData = state.koma || buildKomaDataFromTxt();
+    if (!baseData) return "";
+    const nextData = { ...baseData };
     nextData.memo = elements.memoEditor.value || state.generatedMemo;
     nextData.commands = elements.palettePreview.value || state.generatedPalette;
     if (state.parsedTxt.icons?.[0]) nextData.iconUrl = state.parsedTxt.icons[0];
     return JSON.stringify({ kind: "character", data: nextData });
+  }
+
+  function buildKomaDataFromTxt() {
+    if (!state.parsedTxt.found) return null;
+    const abilities = state.parsedTxt.abilities || {};
+    const status = ["HP", "MP", "SAN", "幸運"].filter((key) => abilities[key]).map((key) => ({ label: key, value: Number(abilities[key]) || abilities[key], max: Number(abilities[key]) || abilities[key] }));
+    const params = ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"].filter((key) => abilities[key]).map((key) => ({ label: key, value: String(abilities[key]) }));
+    return {
+      name: state.parsedTxt.profile.name || "いあきゃらTXTキャラクター",
+      initiative: Number(abilities.DEX) || 0,
+      externalUrl: "",
+      iconUrl: state.parsedTxt.icons?.[0] || "",
+      commands: state.generatedPalette,
+      status,
+      params,
+      color: "#008080"
+    };
   }
 
   async function copyText(text, label) {
@@ -211,7 +232,6 @@
     elements.komaJsonInput.value = "";
     elements.iacharaTxtInput.value = "";
     elements.memoEditor.value = "";
-    elements.memoPreview.value = "";
     elements.palettePreview.value = "";
     elements.txtFileInput.value = "";
     elements.txtStatus.textContent = "";
@@ -249,10 +269,6 @@
 
     elements.memoEditor.addEventListener("input", () => {
       state.memoDirty = true;
-    });
-
-    elements.memoPreview.addEventListener("input", () => {
-      autoResizeTextarea(elements.memoPreview);
     });
 
     elements.palettePreview.addEventListener("input", () => {
