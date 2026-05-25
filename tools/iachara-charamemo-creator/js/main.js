@@ -37,7 +37,7 @@ function bindEvents() {
   $("languageToggle").addEventListener("click", toggleLanguage);
   $("helpToggle").addEventListener("click", () => togglePanel("helpPanel"));
   $("shortcutToggle").addEventListener("click", () => togglePanel("shortcutPanel"));
-  $("openTxtButton").addEventListener("click", () => $("txtFileInput").click());
+  $("openTxtButton").addEventListener("click", openTxtFile);
   $("resetTxtButton").addEventListener("click", resetTxtFile);
   $("txtFileInput").addEventListener("change", handleTxtFileSelect);
   $("regenMemoButton").addEventListener("click", regenerateMemo);
@@ -130,6 +130,30 @@ function updateError(parsed) {
   }
 }
 
+async function openTxtFile() {
+  setTxtStatus("", "info");
+  if (window.showOpenFilePicker) {
+    try {
+      const handles = await window.showOpenFilePicker({
+        multiple: false,
+        types: [{
+          description: "Text files",
+          accept: { "text/plain": [".txt"] }
+        }]
+      });
+      const file = await handles[0].getFile();
+      const txtContent = await file.text();
+      applyIacharaTxtToForm(txtContent, file.name);
+      return;
+    } catch (error) {
+      if (error && error.name === "AbortError") return;
+    }
+  }
+  const input = $("txtFileInput");
+  input.value = "";
+  input.click();
+}
+
 async function handleTxtFileSelect(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
@@ -184,6 +208,7 @@ function applyIacharaTxtToForm(txtContent, fileName = "TXTファイル") {
 function resetTxtFile() {
   state.txtText = "";
   state.txtData = null;
+  $("txtFileInput").value = "";
   $("manualProfile").value = DEFAULT_PROFILE_TEXT;
   $("memoEditor").dataset.edited = "";
   setTxtStatus("いあきゃらTXT情報をリセットしました。", "info");
