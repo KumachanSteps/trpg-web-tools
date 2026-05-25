@@ -1,303 +1,310 @@
 (() => {
+  const $ = (id) => document.getElementById(id);
+  const parser = window.CharamemoParser;
+  const language = window.CharamemoLanguage;
+
   const state = {
-    outputMode: "both",
-    proxyEnabled: true,
-    includeProfile: true,
-    includeWeapons: true,
-    includeItems: true,
-    formatPalette: true,
-    parsed: null,
-    fetchedData: null,
-    memoTouched: false,
-    theme: localStorage.getItem("charamemo-theme") || "night"
+    koma: null,
+    parsedJson: { ok: false, error: "" },
+    parsedTxt: parser.parseIacharaTxt(""),
+    detectedEdition: "",
+    generatedMemo: "",
+    generatedJson: ""
   };
 
-  const el = {};
+  const els = {
+    appShell: $("appShell"),
+    languageToggle: $("languageToggle"),
+    usageToggle: $("usageToggle"),
+    shortcutToggle: $("shortcutToggle"),
+    themeToggle: $("themeToggle"),
+    usagePanel: $("usagePanel"),
+    shortcutPanel: $("shortcutPanel"),
+    jsonInput: $("jsonInput"),
+    jsonError: $("jsonError"),
+    openTxtButton: $("openTxtButton"),
+    clearTxtButton: $("clearTxtButton"),
+    txtFileInput: $("txtFileInput"),
+    txtInput: $("txtInput"),
+    txtMessage: $("txtMessage"),
+    includeWeapons: $("includeWeapons"),
+    includeItems: $("includeItems"),
+    includeKnowledgeExperience: $("includeKnowledgeExperience"),
+    includeTxtMemo: $("includeTxtMemo"),
+    formatPalette: $("formatPalette"),
+    characterIcon: $("characterIcon"),
+    summaryName: $("summaryName"),
+    editionBadge: $("editionBadge"),
+    summaryProfile: $("summaryProfile"),
+    statusCards: $("statusCards"),
+    paramCards: $("paramCards"),
+    generateMemoButton: $("generateMemoButton"),
+    copyMemoButton: $("copyMemoButton"),
+    memoEditor: $("memoEditor"),
+    memoPreview: $("memoPreview"),
+    palettePreview: $("palettePreview"),
+    editionText: $("editionText"),
+    copyPaletteButton: $("copyPaletteButton"),
+    copyGeneratedJsonButton: $("copyGeneratedJsonButton"),
+    clearAllButton: $("clearAllButton"),
+    copyMessage: $("copyMessage")
+  };
 
-  document.addEventListener("DOMContentLoaded", () => {
-    bindElements();
+  function init() {
+    language.applyLanguage(language.getLanguage());
+    const savedTheme = localStorage.getItem("charamemo-theme") || "night";
+    setTheme(savedTheme);
     bindEvents();
-    applyTheme();
     render();
-  });
-
-  function bindElements() {
-    el.komaJsonInput = document.getElementById("komaJsonInput");
-    el.jsonError = document.getElementById("jsonError");
-    el.externalUrlView = document.getElementById("externalUrlView");
-    el.iconUrlView = document.getElementById("iconUrlView");
-    el.proxyToggle = document.getElementById("proxyToggle");
-    el.proxyUrlInput = document.getElementById("proxyUrlInput");
-    el.fetchBtn = document.getElementById("fetchBtn");
-    el.fetchMessage = document.getElementById("fetchMessage");
-    el.includeProfileToggle = document.getElementById("includeProfileToggle");
-    el.includeWeaponsToggle = document.getElementById("includeWeaponsToggle");
-    el.includeItemsToggle = document.getElementById("includeItemsToggle");
-    el.formatPaletteToggle = document.getElementById("formatPaletteToggle");
-    el.modeBtns = [...document.querySelectorAll(".mode-btn")];
-    el.iconFrame = document.getElementById("iconFrame");
-    el.iconPreview = document.getElementById("iconPreview");
-    el.characterNameView = document.getElementById("characterNameView");
-    el.editionBadge = document.getElementById("editionBadge");
-    el.externalUrlSummary = document.getElementById("externalUrlSummary");
-    el.statusChips = document.getElementById("statusChips");
-    el.paramsGrid = document.getElementById("paramsGrid");
-    el.manualProfileInput = document.getElementById("manualProfileInput");
-    el.regenerateMemoBtn = document.getElementById("regenerateMemoBtn");
-    el.copyMemoBtn = document.getElementById("copyMemoBtn");
-    el.memoEditor = document.getElementById("memoEditor");
-    el.palettePreview = document.getElementById("palettePreview");
-    el.editionView = document.getElementById("editionView");
-    el.copyPaletteBtn = document.getElementById("copyPaletteBtn");
-    el.generatedJson = document.getElementById("generatedJson");
-    el.copyJsonBtn = document.getElementById("copyJsonBtn");
-    el.clearInputBtn = document.getElementById("clearInputBtn");
-    el.statusMessage = document.getElementById("statusMessage");
-    el.themeToggle = document.getElementById("themeToggle");
   }
 
   function bindEvents() {
-    el.komaJsonInput.addEventListener("input", () => {
-      state.memoTouched = false;
-      state.fetchedData = null;
-      setFetchMessage("");
+    els.languageToggle.addEventListener("click", () => language.toggleLanguage());
+    els.usageToggle.addEventListener("click", () => togglePanel(els.usagePanel, els.shortcutPanel));
+    els.shortcutToggle.addEventListener("click", () => togglePanel(els.shortcutPanel, els.usagePanel));
+    els.themeToggle.addEventListener("click", () => setTheme(getTheme() === "night" ? "light" : "night"));
+
+    els.jsonInput.addEventListener("input", () => {
+      els.memoEditor.value = "";
       render();
     });
 
-    el.manualProfileInput.addEventListener("input", () => {
-      state.memoTouched = false;
+    els.txtInput.addEventListener("input", () => {
+      els.memoEditor.value = "";
+      hideMessage(els.txtMessage);
       render();
     });
 
-    el.memoEditor.addEventListener("input", () => {
-      state.memoTouched = true;
-      renderGeneratedOnly();
+    els.openTxtButton.addEventListener("click", () => els.txtFileInput.click());
+    els.txtFileInput.addEventListener("change", handleTxtFile);
+    els.clearTxtButton.addEventListener("click", () => {
+      els.txtInput.value = "";
+      els.memoEditor.value = "";
+      if (els.txtFileInput) els.txtFileInput.value = "";
+      showMessage(els.txtMessage, "TXT入力をクリアしました");
+      render();
     });
 
-    bindToggle(el.proxyToggle, "proxyEnabled", () => {
-      el.proxyUrlInput.style.display = state.proxyEnabled ? "block" : "none";
-    });
-    bindToggle(el.includeProfileToggle, "includeProfile", render);
-    bindToggle(el.includeWeaponsToggle, "includeWeapons", render);
-    bindToggle(el.includeItemsToggle, "includeItems", render);
-    bindToggle(el.formatPaletteToggle, "formatPalette", render);
-
-    el.modeBtns.forEach((button) => {
-      button.addEventListener("click", () => {
-        state.outputMode = button.dataset.outputMode;
-        el.modeBtns.forEach((btn) => btn.classList.toggle("active", btn === button));
-        renderGeneratedOnly();
-      });
+    [els.includeWeapons, els.includeItems, els.includeKnowledgeExperience, els.includeTxtMemo, els.formatPalette].forEach((el) => {
+      el.addEventListener("change", render);
     });
 
-    el.fetchBtn.addEventListener("click", fetchExternalUrl);
-    el.regenerateMemoBtn.addEventListener("click", () => {
-      el.memoEditor.value = generateMemo(currentData());
-      state.memoTouched = true;
-      renderGeneratedOnly();
+    els.generateMemoButton.addEventListener("click", () => {
+      els.memoEditor.value = state.generatedMemo;
+      render();
     });
-    el.copyMemoBtn.addEventListener("click", () => copyText(el.memoEditor.value, "メモ"));
-    el.copyPaletteBtn.addEventListener("click", () => copyText(el.palettePreview.value, "チャットパレット"));
-    el.copyJsonBtn.addEventListener("click", () => copyText(el.generatedJson.value, "再生成した駒JSON"));
-    el.clearInputBtn.addEventListener("click", clearAll);
-    el.themeToggle.addEventListener("click", () => {
-      state.theme = state.theme === "night" ? "light" : "night";
-      localStorage.setItem("charamemo-theme", state.theme);
-      applyTheme();
+
+    els.memoEditor.addEventListener("input", render);
+    els.copyMemoButton.addEventListener("click", () => copyText(getActiveMemo(), "メモ"));
+    els.copyPaletteButton.addEventListener("click", () => copyText(els.palettePreview.value, "チャットパレット"));
+    els.copyGeneratedJsonButton.addEventListener("click", () => copyText(state.generatedJson, "生成駒JSONデータ"));
+    els.clearAllButton.addEventListener("click", clearAll);
+
+    document.addEventListener("keydown", (event) => {
+      const modifier = event.ctrlKey || event.metaKey;
+      if (event.key === "Escape") {
+        closePanels();
+      }
+      if (modifier && event.shiftKey && event.key.toLowerCase() === "c") {
+        event.preventDefault();
+        copyText(state.generatedJson, "生成駒JSONデータ");
+      }
+      if (modifier && event.shiftKey && event.key.toLowerCase() === "r") {
+        event.preventDefault();
+        clearAll();
+      }
+      if (modifier && event.shiftKey && event.key.toLowerCase() === "t") {
+        event.preventDefault();
+        setTheme(getTheme() === "night" ? "light" : "night");
+      }
     });
   }
 
-  function bindToggle(button, key, afterChange) {
-    button.addEventListener("click", () => {
-      state[key] = !state[key];
-      button.classList.toggle("active", state[key]);
-      if (typeof afterChange === "function") afterChange();
-    });
-  }
-
-  function applyTheme() {
-    document.body.classList.toggle("light-mode", state.theme === "light");
-    el.themeToggle.textContent = state.theme === "light" ? "Light Mode" : "Night Mode";
-  }
-
-  function currentData() {
-    return state.parsed?.ok ? state.parsed.data : null;
-  }
-
-  function currentEdition() {
-    const data = currentData();
-    return data?.commands ? window.CharamemoParser.detectEdition(data.commands) : "";
-  }
-
-  function currentPalette() {
-    const data = currentData();
-    if (!data?.commands) return "";
-    const edition = currentEdition() || "6e";
-    return state.formatPalette ? window.CharamemoParser.buildPaletteOutput(data.commands, edition) : String(data.commands);
+  async function handleTxtFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".txt")) {
+      showMessage(els.txtMessage, ".txtファイルを選択してください");
+      return;
+    }
+    const text = await file.text();
+    els.txtInput.value = text;
+    els.memoEditor.value = "";
+    showMessage(els.txtMessage, `${file.name} を読み込みました`);
+    render();
   }
 
   function render() {
-    state.parsed = window.CharamemoParser.parseKomaJson(el.komaJsonInput.value);
-    renderInputState();
+    state.parsedJson = parser.parseKomaJson(els.jsonInput.value);
+    state.koma = state.parsedJson.ok ? state.parsedJson.data : null;
+    state.parsedTxt = parser.parseIacharaTxt(els.txtInput.value);
+    state.detectedEdition = parser.detectEditionFromInputs(state.koma, state.parsedTxt);
+
+    renderJsonError();
     renderSummary();
-    renderPalette();
-    renderMemo();
-    renderGeneratedOnly();
+    renderMemoAndPalette();
   }
 
-  function renderInputState() {
-    const hasInput = el.komaJsonInput.value.trim().length > 0;
-    el.jsonError.classList.toggle("hidden", !hasInput || state.parsed.ok);
-    el.jsonError.textContent = !state.parsed.ok && hasInput ? `JSON解析エラー: ${state.parsed.error}` : "";
-    const data = currentData();
-    el.externalUrlView.textContent = data?.externalUrl || "未検出";
-    el.iconUrlView.textContent = data?.iconUrl || "未検出";
+  function renderJsonError() {
+    if (els.jsonInput.value.trim() && !state.parsedJson.ok) {
+      els.jsonError.textContent = `JSON解析エラー: ${state.parsedJson.error}`;
+      els.jsonError.classList.remove("is-hidden");
+    } else {
+      els.jsonError.classList.add("is-hidden");
+      els.jsonError.textContent = "";
+    }
   }
 
   function renderSummary() {
-    const data = currentData();
-    const edition = currentEdition();
-    el.characterNameView.textContent = data?.name || "未解析";
-    el.externalUrlSummary.textContent = data?.externalUrl || "externalUrl 未検出";
-    renderEditionBadge(edition);
-    renderIcon(data?.iconUrl);
-    renderStatusChips(data?.status || []);
-    renderParams(data?.params || []);
-  }
+    const p = state.parsedTxt.profile || {};
+    const name = p.name || (state.koma && state.koma.name) || "未解析";
+    els.summaryName.textContent = name;
+    els.summaryProfile.textContent = `${p.occupation || "職業未検出"} / ${p.age || "年齢未検出"} / ${p.gender || "性別未検出"}`;
 
-  function renderEditionBadge(edition) {
-    el.editionBadge.classList.toggle("hidden", !edition);
-    el.editionBadge.classList.toggle("edition-6e", edition === "6e");
-    el.editionBadge.classList.toggle("edition-7e", edition === "7e");
-    el.editionBadge.textContent = edition === "7e" ? "7版" : edition === "6e" ? "6版" : "";
-  }
-
-  function renderIcon(iconUrl) {
-    if (!iconUrl) {
-      el.iconPreview.removeAttribute("src");
-      el.iconFrame.classList.remove("has-image");
-      return;
+    const iconUrl = state.parsedTxt.icons[0] || (state.koma && state.koma.iconUrl) || "";
+    if (iconUrl) {
+      els.characterIcon.innerHTML = `<img src="${escapeHtml(iconUrl)}" alt="character icon" />`;
+    } else {
+      els.characterIcon.textContent = "▧";
     }
-    el.iconPreview.src = iconUrl;
-    el.iconFrame.classList.add("has-image");
-  }
 
-  function renderStatusChips(status) {
-    el.statusChips.innerHTML = "";
-    status.slice(0, 4).forEach((item) => {
-      const chip = document.createElement("span");
-      chip.textContent = `${item.label} ${item.value}`;
-      el.statusChips.appendChild(chip);
+    if (state.detectedEdition) {
+      els.editionBadge.textContent = state.detectedEdition === "7e" ? "7版" : "6版";
+      els.editionBadge.className = `edition-badge ${state.detectedEdition === "7e" ? "edition-7e" : "edition-6e"}`;
+    } else {
+      els.editionBadge.className = "edition-badge is-hidden";
+      els.editionBadge.textContent = "";
+    }
+
+    els.statusCards.innerHTML = "";
+    parser.getStatusCards(state.koma, state.parsedTxt).forEach((item) => {
+      const span = document.createElement("span");
+      span.className = "status-chip";
+      span.textContent = `${item.label} ${item.value}`;
+      els.statusCards.appendChild(span);
+    });
+
+    els.paramCards.innerHTML = "";
+    parser.getParamCards(state.koma, state.parsedTxt).forEach((item) => {
+      const div = document.createElement("div");
+      div.className = "param-chip";
+      div.innerHTML = `<span>${escapeHtml(item.label)}</span><span>${escapeHtml(String(item.value))}</span>`;
+      els.paramCards.appendChild(div);
     });
   }
 
-  function renderParams(params) {
-    el.paramsGrid.innerHTML = "";
-    params.forEach((param) => {
-      const card = document.createElement("div");
-      card.className = "param-card";
-      const label = document.createElement("span");
-      label.textContent = param.label;
-      const value = document.createElement("span");
-      value.textContent = param.value;
-      card.append(label, value);
-      el.paramsGrid.appendChild(card);
-    });
-  }
+  function renderMemoAndPalette() {
+    const options = getOptions();
+    state.generatedMemo = parser.buildMemo(state.koma, state.parsedTxt, options);
+    const activeMemo = getActiveMemo() || state.generatedMemo;
+    const formattedPalette = state.koma && state.koma.commands
+      ? options.formatPalette
+        ? parser.formatCommands(state.koma.commands, state.detectedEdition)
+        : parser.normalizeText(state.koma.commands)
+      : "";
 
-  function renderPalette() {
-    const edition = currentEdition();
-    el.palettePreview.value = currentPalette();
-    el.editionView.textContent = `自動判定: ${edition ? window.CharamemoParser.editionLabel(edition) : "未判定"}`;
-  }
-
-  function renderMemo() {
-    if (state.memoTouched) return;
-    el.memoEditor.value = generateMemo(currentData());
-  }
-
-  function renderGeneratedOnly() {
-    const data = currentData();
-    if (!data) {
-      el.generatedJson.value = "";
-      return;
+    if (!els.memoEditor.value && state.generatedMemo) {
+      els.memoPreview.value = state.generatedMemo;
+    } else {
+      els.memoPreview.value = activeMemo || parser.buildTxtPreview(state.parsedTxt);
     }
-    const nextData = { ...data };
-    if (state.outputMode === "both" || state.outputMode === "memo") nextData.memo = el.memoEditor.value;
-    if (state.outputMode === "both" || state.outputMode === "koma") nextData.commands = currentPalette();
-    el.generatedJson.value = JSON.stringify({ kind: "character", data: nextData });
+
+    els.palettePreview.value = formattedPalette;
+    els.editionText.textContent = `自動判定: ${state.detectedEdition ? editionLabel(state.detectedEdition) : "未判定"}`;
+
+    if (state.koma) {
+      const nextData = { ...state.koma };
+      nextData.memo = activeMemo;
+      nextData.commands = formattedPalette;
+      if (state.parsedTxt.icons[0]) nextData.iconUrl = state.parsedTxt.icons[0];
+      state.generatedJson = JSON.stringify({ kind: "character", data: nextData });
+    } else {
+      state.generatedJson = "";
+    }
   }
 
-  function generateMemo(data) {
-    if (!data) return "";
-    const parts = [];
-    const fetched = state.fetchedData;
-    const profile = fetched ? window.IacharaParser.buildProfileMemoFromIachara(fetched, data) : "";
-    if (state.includeProfile) parts.push(profile || `名前: ${data.name || ""}\n${el.manualProfileInput.value}`.trim());
-    if (state.includeWeapons) parts.push(window.IacharaParser.buildListSection("武器・防具", fetched?.weapons, "※ externalUrl取得後に、いあきゃらの武器・防具情報をここへ反映します。"));
-    if (state.includeItems) parts.push(window.IacharaParser.buildListSection("所持品", fetched?.items, "※ externalUrl取得後に、いあきゃらの所持品情報をここへ反映します。"));
-    if (fetched?.memo) parts.push(`【キャラメモ】\n${fetched.memo}`);
-    if (data.memo) parts.push(`【既存メモ】\n${data.memo}`);
-    return parts.filter(Boolean).join("\n\n");
+  function getOptions() {
+    return {
+      includeWeapons: els.includeWeapons.checked,
+      includeItems: els.includeItems.checked,
+      includeKnowledgeExperience: els.includeKnowledgeExperience.checked,
+      includeTxtMemo: els.includeTxtMemo.checked,
+      formatPalette: els.formatPalette.checked
+    };
   }
 
-  async function fetchExternalUrl() {
-    const data = currentData();
-    if (!data?.externalUrl) {
-      setFetchMessage("externalUrlが見つかりません");
-      return;
-    }
-    setFetchMessage("取得中...");
-    el.fetchBtn.disabled = true;
-    try {
-      const parsed = await window.IacharaFetcher.fetchAndParse(data.externalUrl, {
-        useProxy: state.proxyEnabled,
-        proxyUrl: el.proxyUrlInput.value
-      });
-      state.fetchedData = parsed;
-      state.memoTouched = false;
-      setFetchMessage(parsed.found ? "いあキャラ情報を取得しました" : "HTMLは取得できましたが、主要項目を十分に検出できませんでした");
-      renderMemo();
-      renderGeneratedOnly();
-    } catch (error) {
-      setFetchMessage(error instanceof Error ? error.message : "externalUrlの取得に失敗しました");
-    } finally {
-      el.fetchBtn.disabled = false;
-    }
+  function getActiveMemo() {
+    return els.memoEditor.value || state.generatedMemo;
+  }
+
+  function togglePanel(target, other) {
+    other.classList.add("is-hidden");
+    target.classList.toggle("is-hidden");
+  }
+
+  function closePanels() {
+    els.usagePanel.classList.add("is-hidden");
+    els.shortcutPanel.classList.add("is-hidden");
+  }
+
+  function setTheme(theme) {
+    const next = theme === "light" ? "light" : "night";
+    els.appShell.setAttribute("data-theme", next);
+    localStorage.setItem("charamemo-theme", next);
+    els.themeToggle.textContent = next === "night" ? "🌙 ナイトモード" : "☀️ ライトモード";
+  }
+
+  function getTheme() {
+    return els.appShell.getAttribute("data-theme") || "night";
   }
 
   function clearAll() {
-    el.komaJsonInput.value = "";
-    el.memoEditor.value = "";
-    el.palettePreview.value = "";
-    el.generatedJson.value = "";
-    state.parsed = null;
-    state.fetchedData = null;
-    state.memoTouched = false;
-    setFetchMessage("");
-    setStatusMessage("");
+    els.jsonInput.value = "";
+    els.txtInput.value = "";
+    els.memoEditor.value = "";
+    if (els.txtFileInput) els.txtFileInput.value = "";
+    hideMessage(els.txtMessage);
+    hideMessage(els.copyMessage);
     render();
   }
 
   async function copyText(text, label) {
     if (!text) {
-      setStatusMessage("コピーする内容がありません");
+      showMessage(els.copyMessage, "コピーする内容がありません");
       return;
     }
     try {
       await navigator.clipboard.writeText(text);
-      setStatusMessage(`${label}をコピーしました`);
+      showMessage(els.copyMessage, `${label}をコピーしました`);
     } catch {
-      setStatusMessage("コピーできませんでした。テキスト欄から手動でコピーしてください");
+      showMessage(els.copyMessage, "コピーできませんでした。テキスト欄から手動でコピーしてください");
     }
   }
 
-  function setFetchMessage(message) {
-    el.fetchMessage.textContent = message || "";
+  function showMessage(el, text) {
+    el.textContent = text;
+    el.classList.remove("is-hidden");
+    window.clearTimeout(el._timer);
+    el._timer = window.setTimeout(() => hideMessage(el), 2500);
   }
 
-  function setStatusMessage(message) {
-    el.statusMessage.textContent = message || "";
-    if (message) window.setTimeout(() => { el.statusMessage.textContent = ""; }, 2500);
+  function hideMessage(el) {
+    el.textContent = "";
+    el.classList.add("is-hidden");
   }
+
+  function editionLabel(edition) {
+    return edition === "6e" ? "CoC 6版" : "CoC 7版";
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
 })();
