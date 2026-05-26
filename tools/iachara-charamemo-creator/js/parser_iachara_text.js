@@ -99,9 +99,9 @@
 
     const parts = [];
     if (weaponRows.length) {
-      parts.push("武器：名称　　　　　 ┊ダメージ┊射程┊1R┊弾数┊耐久┊故障No.");
+      parts.push("武器：名称　　　　　 ┊ダメージ┊　射程┊　1R┊弾数┊耐久┊故障No.");
       weaponRows.forEach((row) => {
-        parts.push(`${padVisual(row.name, 14)}　${row.damage}　${row.range}　${row.attacks}　${row.ammo}　 ${row.durability}　　 ${row.malfunction}`);
+        parts.push(formatWeaponRow(row));
       });
     }
     if (otherLines.length) parts.push(otherLines.join("\n"));
@@ -114,30 +114,60 @@
 
   function isWeaponHeaderLine(line) {
     const src = String(line || "");
-    return src.includes("武器") || (src.includes("名称") && src.includes("ダメージ")) || (src.includes("射程") && src.includes("故障"));
+    return (src.includes("名前") && src.includes("成功率")) || (src.includes("名称") && src.includes("ダメージ")) || (src.includes("射程") && src.includes("故障"));
   }
 
   function parseWeaponRow(line) {
     const tokens = String(line || "").replace(/[｜|┊]/g, " ").split(/[\s　]+/).filter(Boolean);
-    if (tokens.length < 7) return null;
-    const damageIndex = tokens.findIndex((token) => /\d+D\d+/i.test(token) || /^DB$/i.test(token) || /ダメージ/i.test(token));
+    if (tokens.length < 6) return null;
+
+    const damageIndex = tokens.findIndex((token) => isDamageToken(token));
     if (damageIndex <= 0) return null;
 
-    return {
-      name: tokens.slice(0, damageIndex).join(" "),
+    const nameTokens = tokens.slice(0, damageIndex);
+    if (nameTokens.length > 1 && /^\d{1,3}$/.test(nameTokens[nameTokens.length - 1])) nameTokens.pop();
+
+    const row = {
+      name: nameTokens.join(" ") || "-",
       damage: tokens[damageIndex] || "-",
       range: tokens[damageIndex + 1] || "-",
-      attacks: tokens[damageIndex + 2] || "-",
-      ammo: tokens[damageIndex + 3] || "-",
-      durability: tokens[damageIndex + 4] || "-",
-      malfunction: tokens[damageIndex + 5] || "-"
+      attacks: normalizeCountUnit(tokens[damageIndex + 2], "回"),
+      ammo: normalizeCountUnit(tokens[damageIndex + 3], "発"),
+      durability: displayValue(tokens[damageIndex + 4]),
+      malfunction: displayValue(tokens[damageIndex + 5])
     };
+
+    return row.name === "-" ? null : row;
+  }
+
+  function isDamageToken(token) {
+    const src = String(token || "").trim();
+    return /^\d+D\d+([+\-]\d+)?$/i.test(src) || /^\d+D\d+([+\-]DB)?$/i.test(src) || /^DB$/i.test(src) || /^\d+D\d+\+db$/i.test(src) || src.includes("ダメージ");
+  }
+
+  function normalizeCountUnit(value, unit) {
+    const src = displayValue(value);
+    if (src === "-") return "-";
+    return src.endsWith(unit) ? src : `${src}${unit}`;
+  }
+
+  function formatWeaponRow(row) {
+    return [
+      padVisual(row.name, 30),
+      padVisual(row.damage, 10),
+      padVisual(row.range, 10),
+      padVisual(row.attacks, 7),
+      padVisual(row.ammo, 7),
+      padVisual(row.durability, 7),
+      padVisual(row.malfunction, 8)
+    ].join("");
   }
 
   function padVisual(text, width) {
-    const src = String(text || "-");
+    const src = displayValue(text);
     const visualWidth = Array.from(src).reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1), 0);
-    return src + "　".repeat(Math.max(0, Math.ceil((width - visualWidth) / 2)));
+    if (visualWidth >= width) return src + "　";
+    return src + " ".repeat(width - visualWidth);
   }
 
   function buildMemoFromIacharaText(text, options) {
