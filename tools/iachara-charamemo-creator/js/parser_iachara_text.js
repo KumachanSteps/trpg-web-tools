@@ -16,6 +16,11 @@
     return String(value || "").replace(/^[\s:：]+/, "").replace(/\s+$/g, "").trim();
   }
 
+  function displayValue(value) {
+    const clean = cleanValue(value);
+    return clean || "-";
+  }
+
   function extractSection(text, sectionName) {
     const src = normalizeText(text);
     const heading = `【${sectionName}】`;
@@ -34,14 +39,25 @@
 
   function extractLabelValueFromSection(sectionText, label) {
     const lines = normalizeText(sectionText).split("\n").map((line) => line.trim()).filter(Boolean);
-    const pattern = new RegExp(`${escapeRegExp(label)}\\s*[:：]\\s*([^/\\n]+)`);
 
     for (const line of lines) {
-      const match = line.match(pattern);
-      if (match) return cleanValue(match[1]);
+      const value = extractLabelValueFromLine(line, label);
+      if (value !== null) return cleanValue(value);
     }
 
     return "";
+  }
+
+  function extractLabelValueFromLine(line, label) {
+    const src = String(line || "");
+    const labelPattern = new RegExp(`(^|[/\\s　])${escapeRegExp(label)}\\s*[:：]`);
+    const match = src.match(labelPattern);
+    if (!match || match.index == null) return null;
+
+    const valueStart = match.index + match[0].length;
+    const rest = src.slice(valueStart);
+    const slashIndex = rest.indexOf("/");
+    return slashIndex >= 0 ? rest.slice(0, slashIndex) : rest;
   }
 
   function parseIacharaBasicInfo(text) {
@@ -62,10 +78,66 @@
     const info = parseIacharaBasicInfo(text);
 
     return [
-      `職業: ${info.occupation || "未取得"}`,
-      `年齢: ${info.age || "未取得"} / 性別: ${info.gender || "未取得"}`,
-      `身長: ${info.height || "未取得"} / 体重: ${info.weight || "未取得"}`
+      `職業: ${displayValue(info.occupation)}`,
+      `年齢: ${displayValue(info.age)} / 性別: ${displayValue(info.gender)}`,
+      `身長: ${displayValue(info.height)} / 体重: ${displayValue(info.weight)}`
     ].join("\n");
+  }
+
+
+  function formatCombatWeaponsSection(sectionText) {
+    const lines = normalizeText(sectionText).split("\n").map((line) => line.trim()).filter(Boolean);
+    const weaponRows = [];
+    const otherLines = [];
+
+    for (const line of lines) {
+      if (isDecorativeLine(line) || isWeaponHeaderLine(line)) continue;
+      const row = parseWeaponRow(line);
+      if (row) weaponRows.push(row);
+      else otherLines.push(line);
+    }
+
+    const parts = [];
+    if (weaponRows.length) {
+      parts.push("武器：名称　　　　　 ┊ダメージ┊射程┊1R┊弾数┊耐久┊故障No.");
+      weaponRows.forEach((row) => {
+        parts.push(`${padVisual(row.name, 14)}　${row.damage}　${row.range}　${row.attacks}　${row.ammo}　 ${row.durability}　　 ${row.malfunction}`);
+      });
+    }
+    if (otherLines.length) parts.push(otherLines.join("\n"));
+    return parts.join("\n").trim();
+  }
+
+  function isDecorativeLine(line) {
+    return /^[-─━=＿_\s]+$/.test(String(line || ""));
+  }
+
+  function isWeaponHeaderLine(line) {
+    const src = String(line || "");
+    return src.includes("武器") || (src.includes("名称") && src.includes("ダメージ")) || (src.includes("射程") && src.includes("故障"));
+  }
+
+  function parseWeaponRow(line) {
+    const tokens = String(line || "").replace(/[｜|┊]/g, " ").split(/[\s　]+/).filter(Boolean);
+    if (tokens.length < 7) return null;
+    const damageIndex = tokens.findIndex((token) => /\d+D\d+/i.test(token) || /^DB$/i.test(token) || /ダメージ/i.test(token));
+    if (damageIndex <= 0) return null;
+
+    return {
+      name: tokens.slice(0, damageIndex).join(" "),
+      damage: tokens[damageIndex] || "-",
+      range: tokens[damageIndex + 1] || "-",
+      attacks: tokens[damageIndex + 2] || "-",
+      ammo: tokens[damageIndex + 3] || "-",
+      durability: tokens[damageIndex + 4] || "-",
+      malfunction: tokens[damageIndex + 5] || "-"
+    };
+  }
+
+  function padVisual(text, width) {
+    const src = String(text || "-");
+    const visualWidth = Array.from(src).reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1), 0);
+    return src + "　".repeat(Math.max(0, Math.ceil((width - visualWidth) / 2)));
   }
 
   function buildMemoFromIacharaText(text, options) {
@@ -88,7 +160,7 @@
     }
 
     const weapons = extractSection(src, "戦闘・武器・防具");
-    if (config.includeWeapons && weapons) parts.push(`【戦闘・武器・防具】\n${weapons}`);
+    if (config.includeWeapons && weapons) parts.push(`【戦闘・武器・防具】\n${formatCombatWeaponsSection(weapons)}`);
 
     const items = extractSection(src, "所持品");
     if (config.includeItems && items) parts.push(`【所持品】\n${items}`);
@@ -117,6 +189,7 @@
     parseIacharaBasicInfo,
     buildProfileSupplementFromIacharaText,
     buildMemoFromIacharaText,
+    formatCombatWeaponsSection,
     parseIacharaText
   };
 })();

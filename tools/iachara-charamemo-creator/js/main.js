@@ -404,7 +404,7 @@
       return;
     }
 
-    el.summaryIcon.textContent = "🖼";
+    el.summaryIcon.innerHTML = '<span class="icon-placeholder-mark">?</span>';
   }
 
   function renderEditionBadge() {
