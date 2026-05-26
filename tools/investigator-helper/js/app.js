@@ -299,6 +299,7 @@ ${notes}`;
     const lines = [];
     lines.push(`【武器：${item.name}】`);
     if (weaponCategoryLabel(item)) lines.push(`カテゴリ：${weaponCategoryLabel(item)}`);
+    if (item.description) lines.push(`説明：${item.description}`);
     if (item.skill) lines.push(`技能：${item.skill}`);
     lines.push(`基本命中率/初期値：${item.hit || "―"}`);
     lines.push(`ダメージ：${item.damage || "―"}`);
@@ -325,6 +326,7 @@ ${notes}`;
       item.name,
       item.group,
       item.category,
+      item.description,
       item.skill,
       item.hit,
       item.damage,
@@ -838,6 +840,7 @@ ${notes}`;
       </div>
       ${source ? `<p class="source-line">出典：${escapeHtml(source)}</p>` : ""}
       <div class="detail-box weapon-detail-box">
+        ${item.description ? `<p><strong>説明</strong><br>${escapeHtml(item.description)}</p>` : ""}
         <p><strong>カテゴリ</strong><br>${escapeHtml(weaponCategoryLabel(item) || "―")}</p>
         <p><strong>技能</strong><br>${escapeHtml(item.skill || "―")}</p>
         <div class="weapon-detail-grid">
