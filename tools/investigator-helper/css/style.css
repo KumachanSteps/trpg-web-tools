@@ -1189,3 +1189,139 @@ body.theme-dark .weapon-detail-box {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   v2.6 Weapons Compact UI
+   武器タブ：カード表記の圧縮 / タグ表示 / 詳細表示調整
+   ========================================================= */
+
+.weapon-panel .section-head .data-badge {
+  display: none;
+}
+
+.weapon-title-row {
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0;
+}
+
+.weapon-title-row .card-title,
+.weapon-title-row h2 {
+  margin: 0;
+  line-height: 1.25;
+}
+
+.weapon-rule-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(89, 103, 216, 0.2);
+  background: rgba(89, 103, 216, 0.08);
+  color: #424fc0;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.weapon-card {
+  padding: 12px 13px;
+}
+
+.weapon-card .card-title {
+  font-size: 15px;
+}
+
+.weapon-content {
+  margin-top: 7px;
+  padding: 9px 10px;
+  border-radius: 14px;
+}
+
+.weapon-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weapon-info-block p {
+  margin: 0;
+  color: var(--sub);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.weapon-compact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px 12px;
+  margin-top: 0;
+}
+
+.weapon-note-line {
+  margin-top: 2px !important;
+  color: var(--muted) !important;
+}
+
+.weapon-card .weapon-note-line {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#weaponDetail .weapon-title-row {
+  margin-bottom: 0;
+}
+
+#weaponDetail .weapon-title-row h2 {
+  font-size: 17px;
+}
+
+.weapon-description {
+  margin: 6px 0 0;
+  color: var(--sub);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+#weaponDetail .weapon-detail-box {
+  margin-top: 8px;
+  padding: 10px 12px;
+}
+
+#weaponDetail .weapon-info-block {
+  gap: 3px;
+}
+
+#weaponDetail .weapon-info-block p {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#weaponDetail .weapon-note-line {
+  max-height: 9.5em;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+body.theme-dark .weapon-rule-tag {
+  border-color: rgba(103, 232, 249, 0.24);
+  background: rgba(103, 232, 249, 0.1);
+  color: #a5f3fc;
+}
+
+@media (max-width: 1180px) {
+  .weapon-compact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .weapon-compact-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -293,21 +293,44 @@ ${notes}`;
     return [item.group, item.category].filter(Boolean).join(" / ");
   }
 
+  function weaponRuleLabels(item) {
+    return Array.isArray(item.ruleLabels) ? item.ruleLabels : [];
+  }
+
+  function weaponSkillLine(item) {
+    const skill = item.skill || "―";
+    const hit = item.hit || "―";
+    const hitLabel = hit === "―" ? "―" : `${hit}%`;
+    return `${skill}（${hitLabel}）`;
+  }
+
+  function weaponInfoBlockHtml(item) {
+    return `
+      <div class="weapon-info-block">
+        <p>カテゴリ：${escapeHtml(weaponCategoryLabel(item) || "―")}</p>
+        <p>技能：${escapeHtml(weaponSkillLine(item))}</p>
+        <div class="weapon-compact-grid">
+          <p>ダメージ：${escapeHtml(item.damage || "―")}</p>
+          <p>基本射程：${escapeHtml(item.range || "―")}</p>
+          <p>1Rの攻撃回数：${escapeHtml(item.attacks || "―")}</p>
+          <p>装弾数：${escapeHtml(item.ammo || "―")}</p>
+          <p>耐久力：${escapeHtml(item.durability || "―")}</p>
+          <p>故障ナンバー：${escapeHtml(item.malfunction || "―")}</p>
+        </div>
+        ${item.note ? `<p class="weapon-note-line">備考：${escapeHtml(item.note)}</p>` : ""}
+      </div>`;
+  }
+
   function formatWeapon(item) {
     if (!item) return "";
 
     const lines = [];
     lines.push(`【武器：${item.name}】`);
-    if (weaponCategoryLabel(item)) lines.push(`カテゴリ：${weaponCategoryLabel(item)}`);
     if (item.description) lines.push(`説明：${item.description}`);
-    if (item.skill) lines.push(`技能：${item.skill}`);
-    lines.push(`基本命中率/初期値：${item.hit || "―"}`);
-    lines.push(`ダメージ：${item.damage || "―"}`);
-    lines.push(`基本射程：${item.range || "―"}`);
-    lines.push(`攻撃回数：${item.attacks || "―"}`);
-    lines.push(`装弾数：${item.ammo || "―"}`);
-    lines.push(`耐久力：${item.durability || "―"}`);
-    lines.push(`故障ナンバー：${item.malfunction || "―"}`);
+    lines.push(`カテゴリ：${weaponCategoryLabel(item) || "―"}`);
+    lines.push(`技能：${weaponSkillLine(item)}`);
+    lines.push(`ダメージ：${item.damage || "―"}　基本射程：${item.range || "―"}　1Rの攻撃回数：${item.attacks || "―"}`);
+    lines.push(`装弾数：${item.ammo || "―"}　耐久力：${item.durability || "―"}　故障ナンバー：${item.malfunction || "―"}`);
     if (sourceLabel(item)) lines.push(`出典：${sourceLabel(item)}`);
     if (item.note) lines.push(`備考：${item.note}`);
     return lines.join("\n");
@@ -797,24 +820,18 @@ ${notes}`;
 
     el.weaponList.innerHTML = items.map((item) => {
       const selected = item.id === state.selectedWeaponId ? " is-selected" : "";
+      const ruleTags = weaponRuleLabels(item).map((label) => `<span class="weapon-rule-tag">${escapeHtml(label)}</span>`).join("");
       const tags = (item.tags || []).map((tag) => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join("");
 
       return `
         <button class="weapon-card${selected}" type="button" data-id="${escapeHtml(item.id)}">
-          <div class="card-title-row">
+          <div class="card-title-row weapon-title-row">
             <h3 class="card-title">${escapeHtml(item.name)}</h3>
-            <span class="source-line">[${escapeHtml((item.ruleLabels || []).join("/"))}]</span>
+            ${ruleTags}
             ${tags}
           </div>
           <div class="card-content weapon-content">
-            <p class="card-text">カテゴリ：${escapeHtml(weaponCategoryLabel(item) || "―")}</p>
-            <div class="weapon-stat-grid">
-              <span>命中率：${escapeHtml(item.hit || "―")}</span>
-              <span>ダメージ：${escapeHtml(item.damage || "―")}</span>
-              <span>射程：${escapeHtml(item.range || "―")}</span>
-              <span>攻撃回数：${escapeHtml(item.attacks || "―")}</span>
-              <span>耐久力：${escapeHtml(item.durability || "―")}</span>
-            </div>
+            ${weaponInfoBlockHtml(item)}
           </div>
         </button>`;
     }).join("");
@@ -830,29 +847,18 @@ ${notes}`;
       return;
     }
 
+    const ruleTags = weaponRuleLabels(item).map((label) => `<span class="weapon-rule-tag">${escapeHtml(label)}</span>`).join("");
     const tags = (item.tags || []).map((tag) => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join("");
-    const source = sourceLabel(item);
 
     el.weaponDetail.innerHTML = `
-      <div class="card-title-row">
-        <h2>${escapeHtml(item.name)} <span class="source-line">[${escapeHtml((item.ruleLabels || []).join("/"))}]</span></h2>
+      <div class="card-title-row weapon-title-row">
+        <h2>${escapeHtml(item.name)}</h2>
+        ${ruleTags}
         ${tags}
       </div>
-      ${source ? `<p class="source-line">出典：${escapeHtml(source)}</p>` : ""}
+      ${item.description ? `<p class="weapon-description">${escapeHtml(item.description)}</p>` : ""}
       <div class="detail-box weapon-detail-box">
-        ${item.description ? `<p><strong>説明</strong><br>${escapeHtml(item.description)}</p>` : ""}
-        <p><strong>カテゴリ</strong><br>${escapeHtml(weaponCategoryLabel(item) || "―")}</p>
-        <p><strong>技能</strong><br>${escapeHtml(item.skill || "―")}</p>
-        <div class="weapon-detail-grid">
-          <p><strong>基本命中率/初期値</strong><br>${escapeHtml(item.hit || "―")}</p>
-          <p><strong>ダメージ</strong><br>${escapeHtml(item.damage || "―")}</p>
-          <p><strong>基本射程</strong><br>${escapeHtml(item.range || "―")}</p>
-          <p><strong>攻撃回数</strong><br>${escapeHtml(item.attacks || "―")}</p>
-          <p><strong>装弾数</strong><br>${escapeHtml(item.ammo || "―")}</p>
-          <p><strong>耐久力</strong><br>${escapeHtml(item.durability || "―")}</p>
-          <p><strong>故障ナンバー</strong><br>${escapeHtml(item.malfunction || "―")}</p>
-        </div>
-        ${item.note ? `<p><strong>備考</strong><br>${escapeHtml(item.note)}</p>` : ""}
+        ${weaponInfoBlockHtml(item)}
       </div>
       <button class="btn btn-primary" type="button" id="addWeaponButton">出力に追加</button>`;
 
