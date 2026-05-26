@@ -1194,3 +1194,111 @@ body.theme-light .palette-panel .panel-icon::before,
   background: #10b981;
   filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.28));
 }
+/* =========================================================
+   Panel Icon Image Overrides
+   v1.87 icon adjustment / light mode compatible
+   ========================================================= */
+
+:root {
+  --icon-gear: url("../../assets/img/gear_icon.png");
+  --icon-memo: url("../../assets/img/memo_icon.png");
+  --icon-dice: url("../../assets/img/dice_icon.png");
+  --panel-icon-green: #34d399;
+  --panel-icon-green-light: #10b981;
+}
+
+/* 共通：画像アイコン用 */
+.panel-options .panel-icon,
+.memo-panel .panel-icon,
+.palette-panel .panel-icon {
+  position: relative;
+  overflow: hidden;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.14), transparent 68%),
+    rgba(15, 23, 42, 0.88);
+  color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 18px rgba(16, 185, 129, 0.10);
+}
+
+/* 既存SVG/文字を隠す */
+.panel-options .panel-icon svg,
+.memo-panel .panel-icon svg,
+.palette-panel .panel-icon svg {
+  display: none;
+}
+
+/* 画像本体 */
+.panel-options .panel-icon::before,
+.memo-panel .panel-icon::before,
+.palette-panel .panel-icon::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  background: var(--panel-icon-green);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  filter: drop-shadow(0 0 7px rgba(52, 211, 153, 0.38));
+}
+
+/* 3. 生成オプション：ギア */
+.panel-options .panel-icon::before {
+  mask-image: var(--icon-gear);
+  -webkit-mask-image: var(--icon-gear);
+}
+
+/* 4. プロフィール補足 / キャラメモ編集：メモ */
+.memo-panel .panel-icon::before {
+  mask-image: var(--icon-memo);
+  -webkit-mask-image: var(--icon-memo);
+}
+
+/* 5. チャットパレットプレビュー：ダイス */
+.palette-panel .panel-icon::before {
+  mask-image: var(--icon-dice);
+  -webkit-mask-image: var(--icon-dice);
+}
+
+/* Light Mode：他アイコンと同じ緑系で表示 */
+body.theme-light .panel-options .panel-icon,
+body.theme-light .memo-panel .panel-icon,
+body.theme-light .palette-panel .panel-icon,
+.theme-light .panel-options .panel-icon,
+.theme-light .memo-panel .panel-icon,
+.theme-light .palette-panel .panel-icon,
+.page-shell.theme-light .panel-options .panel-icon,
+.page-shell.theme-light .memo-panel .panel-icon,
+.page-shell.theme-light .palette-panel .panel-icon {
+  border-color: rgba(16, 185, 129, 0.22);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.10), transparent 68%),
+    rgba(255, 255, 255, 0.90);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+/* Light Modeでもアイコン本体は緑 */
+body.theme-light .panel-options .panel-icon::before,
+body.theme-light .memo-panel .panel-icon::before,
+body.theme-light .palette-panel .panel-icon::before,
+.theme-light .panel-options .panel-icon::before,
+.theme-light .memo-panel .panel-icon::before,
+.theme-light .palette-panel .panel-icon::before,
+.page-shell.theme-light .panel-options .panel-icon::before,
+.page-shell.theme-light .memo-panel .panel-icon::before,
+.page-shell.theme-light .palette-panel .panel-icon::before {
+  background: var(--panel-icon-green-light);
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.28));
+}
