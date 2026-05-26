@@ -29,6 +29,8 @@
   --radius-pill: 999px;
 
   --shadow: rgba(0, 0, 0, 0.26);
+
+  --summary-eye-icon: url("../assets/img/eye_panel_icon.png");
 }
 
 * {
@@ -431,6 +433,35 @@ body.theme-light .header-info-panel,
   min-width: 0;
 }
 
+.layout-grid > .left-column {
+  grid-column: 1;
+}
+
+.layout-grid > .main-grid {
+  grid-column: 2;
+}
+
+/* fallback: left / middle / right が layout-grid 直下にある場合 */
+.layout-grid > .middle-column {
+  grid-column: 2;
+}
+
+.layout-grid > .right-column {
+  grid-column: 3;
+}
+
+.layout-grid:has(> .middle-column) {
+  grid-template-columns: 390px minmax(0, 1fr) minmax(320px, 420px);
+}
+
+.main-grid > .middle-column {
+  grid-column: 1;
+}
+
+.main-grid > .right-column {
+  grid-column: 2;
+}
+
 /* =========================================================
    Panels
    ========================================================= */
@@ -491,7 +522,7 @@ body.theme-light .panel-icon,
   color: #0284c7;
 }
 
-/* 解析キャラクター概要：緑の目シルエット */
+/* 解析キャラクター概要：添付画像をマスクとして使用 */
 .summary-panel .panel-icon {
   position: relative;
   overflow: hidden;
@@ -502,33 +533,35 @@ body.theme-light .panel-icon,
   color: transparent;
 }
 
-.summary-panel .panel-icon svg {
+.summary-panel .panel-icon svg,
+.summary-panel .panel-icon img {
   display: none;
 }
 
 .summary-panel .panel-icon::before {
   content: "";
   position: absolute;
-  width: 21px;
-  height: 13px;
-  border-radius: 999px / 72%;
-  background: #34d399;
-  opacity: 0.95;
-  clip-path: ellipse(50% 48% at 50% 50%);
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.36);
+  width: 22px;
+  height: 22px;
+  background: var(--emerald2);
+  mask-image: var(--summary-eye-icon);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: var(--summary-eye-icon);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.45));
 }
 
 .summary-panel .panel-icon::after {
   content: "";
   position: absolute;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background:
-    conic-gradient(from 30deg, transparent 0deg 70deg, rgba(15,23,42,.9) 70deg 360deg);
-  box-shadow:
-    0 0 0 3px rgba(15,23,42,.88),
-    0 0 8px rgba(52, 211, 153, 0.4);
+  inset: 6px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.08);
+  z-index: -1;
 }
 
 body.theme-light .summary-panel .panel-icon,
@@ -543,18 +576,8 @@ body.theme-light .summary-panel .panel-icon,
 body.theme-light .summary-panel .panel-icon::before,
 .theme-light .summary-panel .panel-icon::before,
 .page-shell.theme-light .summary-panel .panel-icon::before {
-  background: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.18);
-}
-
-body.theme-light .summary-panel .panel-icon::after,
-.theme-light .summary-panel .panel-icon::after,
-.page-shell.theme-light .summary-panel .panel-icon::after {
-  background:
-    conic-gradient(from 30deg, transparent 0deg 70deg, rgba(255,255,255,.95) 70deg 360deg);
-  box-shadow:
-    0 0 0 3px rgba(255,255,255,.9),
-    0 0 8px rgba(16, 185, 129, 0.25);
+  background: var(--emerald);
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.28));
 }
 
 /* =========================================================
@@ -1027,6 +1050,15 @@ body.theme-light .sheet-link-badge,
   .layout-grid,
   .main-grid {
     grid-template-columns: 1fr;
+  }
+
+  .layout-grid > .left-column,
+  .layout-grid > .main-grid,
+  .layout-grid > .middle-column,
+  .layout-grid > .right-column,
+  .main-grid > .middle-column,
+  .main-grid > .right-column {
+    grid-column: auto;
   }
 
   .page-shell {
