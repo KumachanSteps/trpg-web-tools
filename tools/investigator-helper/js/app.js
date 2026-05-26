@@ -304,7 +304,27 @@ ${notes}`;
     return `${skill}（${hitLabel}）`;
   }
 
-  function weaponInfoBlockHtml(item) {
+  function weaponAmmunitionLine(item) {
+    if (item.ammunition) return item.ammunition;
+    const note = String(item.note || "");
+    const match = note.match(/弾薬：([^\n]+)/);
+    return match ? match[1].trim() : "";
+  }
+
+  function weaponDisplayNote(item) {
+    return String(item.note || "")
+      .replace(/(?:^|\n)弾薬：[^\n]+/g, "")
+      .replace(/貫通武器。\s*弾薬：[^\n]+/g, "貫通武器。")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  function weaponInfoBlockHtml(item, options = {}) {
+    const showNote = Boolean(options.showNote);
+    const showAmmoType = Boolean(options.showAmmoType);
+    const note = weaponDisplayNote(item);
+    const ammunition = weaponAmmunitionLine(item);
+
     return `
       <div class="weapon-info-block">
         <p>カテゴリ：${escapeHtml(weaponCategoryLabel(item) || "―")}</p>
@@ -316,8 +336,9 @@ ${notes}`;
           <p>装弾数：${escapeHtml(item.ammo || "―")}</p>
           <p>耐久力：${escapeHtml(item.durability || "―")}</p>
           <p>故障ナンバー：${escapeHtml(item.malfunction || "―")}</p>
+          ${showAmmoType && ammunition ? `<p>弾薬：${escapeHtml(ammunition)}</p>` : ""}
         </div>
-        ${item.note ? `<p class="weapon-note-line">備考：${escapeHtml(item.note)}</p>` : ""}
+        ${showNote && note ? `<p class="weapon-note-line">備考：${escapeHtml(note)}</p>` : ""}
       </div>`;
   }
 
@@ -325,14 +346,16 @@ ${notes}`;
     if (!item) return "";
 
     const lines = [];
+    const ammunition = weaponAmmunitionLine(item);
+    const note = weaponDisplayNote(item);
     lines.push(`【武器：${item.name}】`);
     if (item.description) lines.push(`説明：${item.description}`);
     lines.push(`カテゴリ：${weaponCategoryLabel(item) || "―"}`);
     lines.push(`技能：${weaponSkillLine(item)}`);
     lines.push(`ダメージ：${item.damage || "―"}　基本射程：${item.range || "―"}　1Rの攻撃回数：${item.attacks || "―"}`);
-    lines.push(`装弾数：${item.ammo || "―"}　耐久力：${item.durability || "―"}　故障ナンバー：${item.malfunction || "―"}`);
+    lines.push(`装弾数：${item.ammo || "―"}　耐久力：${item.durability || "―"}　故障ナンバー：${item.malfunction || "―"}${ammunition ? `　弾薬：${ammunition}` : ""}`);
     if (sourceLabel(item)) lines.push(`出典：${sourceLabel(item)}`);
-    if (item.note) lines.push(`備考：${item.note}`);
+    if (note) lines.push(`備考：${note}`);
     return lines.join("\n");
   }
 
@@ -356,6 +379,7 @@ ${notes}`;
       item.range,
       item.attacks,
       item.ammo,
+      item.ammunition,
       item.durability,
       item.malfunction,
       item.source,
@@ -858,7 +882,7 @@ ${notes}`;
       </div>
       ${item.description ? `<p class="weapon-description">${escapeHtml(item.description)}</p>` : ""}
       <div class="detail-box weapon-detail-box">
-        ${weaponInfoBlockHtml(item)}
+        ${weaponInfoBlockHtml(item, { showNote: true, showAmmoType: true })}
       </div>
       <button class="btn btn-primary" type="button" id="addWeaponButton">出力に追加</button>`;
 
