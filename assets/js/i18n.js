@@ -6,7 +6,7 @@ window.TRPG_PORTAL_I18N = {
       meta: {
         title: "TRPG WEBツール観測所",
         description:
-          "TRPGセッション準備・ログ解析・卓報告作成・シナリオ情報整理を補助するためのWebツール観測所です。",
+          "TRPGをもっと楽しく手軽に。セッション準備・ログ解析・卓報告・シナリオ整理を支援するWebツール観測所です。",
       },
       header: {
         eyebrow: "TRPG セッション支援ツール",
@@ -16,18 +16,13 @@ window.TRPG_PORTAL_I18N = {
         label: "自作TRPG Webツール集",
         title: "TRPG WEBツール観測所",
         postButton: "TRPG WEBツール観測所 を Post する",
+        followButton: "@KumachanSteps を フォローする",
         lead:
-          "ここはTRPGをもっと楽しく手軽に！セッション準備・ログ解析・卓報告・シナリオ整理を支援するツールサイトです。\n星図のように並ぶツールの中から、ぜひ目的に合うものをお使いください✨",
+          "ここはTRPGをもっと楽しく手軽に！セッション準備・ログ解析・卓報告・シナリオ整理を支援するツールサイトです。星図のように並ぶツールの中から、ぜひ目的に合うものをお使いください✨",
       },
       nav: {
         qa: "Q&A",
         x: "X",
-      },
-      siteLinks: {
-        changelog: "更新履歴",
-        contact: "Q&A・不具合報告・要望",
-        privacy: "プライバシー",
-        terms: "利用規約・免責事項",
       },
       search: {
         placeholder: "ツールを検索...",
@@ -93,10 +88,19 @@ window.TRPG_PORTAL_I18N = {
             "一部のツールでは、入力内容やお気に入り情報をブラウザの localStorage に保存する場合があります。このデータは利用中のブラウザ内に保存されるため、別端末や別ブラウザには自動で引き継がれません。",
           body4:
             "各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。",
+          body5:
+            "本サイトで使用している一部アイコンは、るた様に制作いただいたものです。",
         },
+      },
+      siteLinks: {
+        changelog: "更新履歴",
+        contact: "Q&A・不具合報告・要望",
+        privacy: "プライバシー",
+        terms: "利用規約・免責事項",
       },
       footer: {
         copy: "© TRPG WEBツール観測所 / Created for TRPG Session Support",
+        iconCredit: "アイコン制作者：るた様",
       },
     },
 
@@ -104,7 +108,7 @@ window.TRPG_PORTAL_I18N = {
       meta: {
         title: "TRPG Web Tools Observatory",
         description:
-          "A tool observatory for TRPG session preparation, log analysis, session report creation, and scenario information organization.",
+          "Make TRPG sessions more fun and easier to prepare. This tool site supports session prep, log analysis, session reports, and scenario organization.",
       },
       header: {
         eyebrow: "TRPG SESSION SUPPORT TOOLS",
@@ -114,18 +118,13 @@ window.TRPG_PORTAL_I18N = {
         label: "Custom TRPG Web Tool Suite",
         title: "TRPG Web Tools Observatory",
         postButton: "Post TRPG Web Tools Observatory",
+        followButton: "Follow @KumachanSteps",
         lead:
-          "Make TRPG sessions more fun and easier to prepare. This tool site supports session prep, log analysis, session reports, and scenario organization.\nChoose the tool that fits your purpose from the constellation below ✨",
+          "Make TRPG sessions more fun and easier to prepare. This tool site supports session prep, log analysis, session reports, and scenario organization. Choose the tool that fits your purpose from the constellation below ✨",
       },
       nav: {
         qa: "Q&A",
         x: "X",
-      },
-      siteLinks: {
-        changelog: "Changelog",
-        contact: "Q&A / Bug Reports / Requests",
-        privacy: "Privacy",
-        terms: "Terms & Disclaimer",
       },
       search: {
         placeholder: "Search tools...",
@@ -191,10 +190,19 @@ window.TRPG_PORTAL_I18N = {
             "Some tools may store input or favorite data in the browser's localStorage. This data stays within the browser you use and does not automatically transfer to other devices or browsers.",
           body4:
             "Please check the terms, licenses, and rights notices of each TRPG system, scenario, and external service you use with these tools.",
+          body5:
+            "Some icons used on this site were created by Ruta.",
         },
+      },
+      siteLinks: {
+        changelog: "Changelog",
+        contact: "Q&A / Bug Reports / Requests",
+        privacy: "Privacy",
+        terms: "Terms & Disclaimer",
       },
       footer: {
         copy: "© TRPG Web Tools Observatory / Created for TRPG Session Support",
+        iconCredit: "Icon creator: Ruta",
       },
     },
   },
@@ -237,27 +245,12 @@ window.TRPG_PORTAL_I18N = {
       category: "reportWriting",
       href: "./tools/session-report-generator/",
       name: {
-        ja: "卓報告ジェネレータ",
+        ja: "卓報告ジェネレーター",
         en: "Session Report Generator",
       },
       description: {
         ja: "KP・PL・PC情報を入力し、X/Twitter向けの卓報告文を生成・編集・プレビューします。",
         en: "Generate, edit, and preview session report posts for X/Twitter by entering KP, PL, and PC information.",
-      },
-    },
-    {
-      id: "gm-charashi-viewer",
-      icon: "👥",
-      status: "production",
-      category: "gmSupport",
-      href: "./tools/gm-charashi-viewer/",
-      name: {
-        ja: "GM用キャラシビューワー",
-        en: "GM Character Sheet Viewer",
-      },
-      description: {
-        ja: "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
-        en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
       },
     },
 
@@ -274,6 +267,51 @@ window.TRPG_PORTAL_I18N = {
       description: {
         ja: "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
         en: "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules.",
+      },
+    },
+    {
+      id: "session-log-tool",
+      icon: "🗒️",
+      status: "production",
+      category: "reportWriting",
+      href: "./tools/session-log-tool/",
+      name: {
+        ja: "卓ログトラッカー",
+        en: "Session Log Tracker",
+      },
+      description: {
+        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
+        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists.",
+      },
+    },
+    {
+      id: "scenario-info-snippet-builder",
+      icon: "✂️",
+      status: "production",
+      category: "scenarioPrep",
+      href: "./tools/scenario-snippet-builder/",
+      name: {
+        ja: "シナリオ情報カードビルダー",
+        en: "Scenario Info Snippet Builder",
+      },
+      description: {
+        ja: "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
+        en: "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord.",
+      },
+    },
+    {
+      id: "trpg-hashtag-searcher",
+      icon: "#️⃣",
+      status: "production",
+      category: "infoGathering",
+      href: "./tools/trpg-hashtag-searcher/",
+      name: {
+        ja: "使えるハッシュタグ検索",
+        en: "Usable Hashtag Finder",
+      },
+      description: {
+        ja: "TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。",
+        en: "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
       },
     },
     {
@@ -307,50 +345,21 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "session-log-tool",
-      icon: "🗒️",
+      id: "gm-charashi-viewer",
+      icon: "👥",
       status: "production",
-      category: "reportWriting",
-      href: "./tools/session-log-tool/",
+      category: "gmSupport",
+      href: "./tools/gm-charashi-viewer/",
       name: {
-        ja: "卓ログトラッカー",
-        en: "Session Log Tracker",
+        ja: "GM用キャラシビューワー",
+        en: "GM Character Sheet Viewer",
       },
       description: {
-        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
-        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists. Organize history in a table and send each row to the Session Report Generator.",
+        ja: "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
+        en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
       },
     },
-    {
-      id: "scenario-info-snippet-builder",
-      icon: "✂️",
-      status: "production",
-      category: "scenarioPrep",
-      href: "./tools/scenario-snippet-builder/",
-      name: {
-        ja: "シナリオ情報カードビルダー",
-        en: "Scenario Info Snippet Builder",
-      },
-      description: {
-        ja: "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
-        en: "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord.",
-      },
-    },
-    {
-      id: "trpg-hashtag-searcher",
-      icon: "#️⃣",
-      status: "production",
-      category: "infoGathering",
-      href: "./tools/trpg-hashtag-searcher/",
-      name: {
-        ja: "使えるハッシュタグ検索",
-        en: "Usable Hashtag Finder",
-      },
-      description: {
-        ja: "TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。",
-        en: "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
-      },
-    },
+
     {
       id: "trpg-haishin-observatory",
       icon: "🔭",
