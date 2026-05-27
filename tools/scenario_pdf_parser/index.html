@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scenario_pdf_parser v0.2</title>
+  <link rel="stylesheet" href="./css/pdf-parser-style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-main">
+        <div class="tool-chips">
+          <span data-i18n="chip.portal">TRPG Web Tools</span>
+          <span data-i18n="chip.builder">Scenario Info Card Builder</span>
+          <span>scenario_pdf_parser v0.2</span>
+        </div>
+        <h1 data-i18n="app.title">PDF to Flat Text Formatter</h1>
+        <p data-i18n="app.description">TRPGシナリオPDFの複雑な段組み・改行・見出しを、コピー＆ペーストしやすい平文へ整形します。</p>
+      </div>
+      <div class="header-actions">
+        <button id="languageToggleBtn" class="ghost-button" type="button">JP / EN</button>
+        <button id="formatBtn" class="primary-button" type="button" data-i18n="button.format">整形実行</button>
+        <button id="copyTopBtn" class="ghost-button" type="button" data-i18n="button.copyOutput">出力をコピー</button>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <aside class="side-column">
+        <section class="panel">
+          <h2 data-i18n="section.pdfInput">PDF入力</h2>
+          <label id="dropZone" class="drop-zone" for="pdfInput">
+            <input id="pdfInput" type="file" accept="application/pdf" />
+            <strong data-i18n="pdf.dropMain">PDFをドラッグ＆ドロップ、またはクリックして選択</strong>
+            <span id="fileStatus" data-i18n="pdf.sampleStatus">現在のサンプル：著作権フリー生成サンプル</span>
+            <small data-i18n="pdf.dropSub">pdf.jsを使用してブラウザ上でテキスト抽出します。</small>
+          </label>
+        </section>
+
+        <section class="panel">
+          <h2 data-i18n="section.presets">整形プリセット</h2>
+          <div id="presetList" class="preset-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2 data-i18n="section.options">整形オプション</h2>
+          <div id="optionList" class="option-list"></div>
+        </section>
+      </aside>
+
+      <section class="content-column">
+        <section class="panel search-panel">
+          <h2 data-i18n="section.searchReplace">検索・置換</h2>
+          <div class="search-grid">
+            <input id="searchInput" type="text" data-i18n-placeholder="placeholder.search" placeholder="検索ワード" />
+            <input id="replaceInput" type="text" data-i18n-placeholder="placeholder.replace" placeholder="置換後テキスト" />
+            <div class="search-actions">
+              <button id="prevBtn" class="ghost-button small-button" type="button">↑</button>
+              <button id="nextBtn" class="ghost-button small-button" type="button">↓</button>
+              <button id="replaceBtn" class="ghost-button small-button" type="button">Replace</button>
+              <button id="replaceAllBtn" class="accent-button small-button" type="button">Replace All</button>
+              <button id="resetReplaceBtn" class="ghost-button small-button" type="button">Reset</button>
+              <span id="matchCounter">0/0</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel output-panel">
+          <div class="panel-title-row">
+            <h2 data-i18n="section.output">整形済み出力</h2>
+            <div class="output-actions">
+              <button id="copyBtn" class="success-button small-button" type="button">Copy</button>
+              <button id="downloadBtn" class="ghost-button small-button" type="button">.txt</button>
+              <button id="sendSnippetBtn" class="primary-button small-button" type="button" data-i18n="button.sendSnippet">Snippet Toolへ送る</button>
+            </div>
+          </div>
+          <pre id="outputBox" class="output-box" tabindex="-1"></pre>
+        </section>
+
+        <section class="stats-grid">
+          <article class="stat-card">
+            <span data-i18n="stat.chars">文字数</span>
+            <strong id="charCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span data-i18n="stat.lines">行数</span>
+            <strong id="lineCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span data-i18n="stat.blocks">ブロック</span>
+            <strong id="blockCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span data-i18n="stat.preset">プリセット</span>
+            <strong id="presetName">-</strong>
+          </article>
+        </section>
+
+        <section class="panel flow-panel">
+          <h2 data-i18n="section.flow">想定フロー</h2>
+          <div class="flow-grid">
+            <div><strong data-i18n="flow.1.title">1. PDF入力</strong><p data-i18n="flow.1.body">PDFファイルを開き、テキストを自動抽出する。</p></div>
+            <div><strong data-i18n="flow.2.title">2. 整形・編集</strong><p data-i18n="flow.2.body">改行・見出し・資料情報を整え、検索・置換で微調整する。</p></div>
+            <div><strong data-i18n="flow.3.title">3. TXT出力</strong><p data-i18n="flow.3.body">整形済みテキストをコピー、または.txtとして保存する。</p></div>
+            <div class="flow-highlight"><strong data-i18n="flow.4.title">4. Snippet Toolへ送る</strong><p data-i18n="flow.4.body">編集済みTXTをScenario Info Snippet Toolへ渡し、カード化・タグ付けを続行する。</p></div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="./js/sample-data.js"></script>
+  <script src="./js/i18l.js"></script>
+  <script src="./js/language.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>
