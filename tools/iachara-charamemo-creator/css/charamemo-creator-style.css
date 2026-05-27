@@ -31,6 +31,13 @@
   --shadow: rgba(0, 0, 0, 0.26);
 
   --summary-eye-icon: url("../assets/img/eye_panel_icon.png");
+  --icon-gear: url("../assets/img/gear_icon.png");
+  --icon-memo: url("../assets/img/memo_icon.png");
+  --icon-dice: url("../assets/img/dice_icon.png");
+  --icon-header-memo: url("../assets/img/header_memo_icon.png");
+
+  --panel-icon-green: #34d399;
+  --panel-icon-green-light: #10b981;
 }
 
 * {
@@ -320,7 +327,7 @@ body.theme-light .tag-amber,
   background:
     radial-gradient(circle at 72% 25%, rgba(103, 232, 249, 0.12), transparent 32%),
     rgba(15, 23, 42, 0.82);
-  color: #fff;
+  color: transparent;
 }
 
 body.theme-light .tool-icon,
@@ -330,11 +337,40 @@ body.theme-light .tool-icon,
   background:
     radial-gradient(circle at 72% 25%, rgba(14, 165, 233, 0.14), transparent 32%),
     rgba(255, 255, 255, 0.88);
-  color: #0f172a;
 }
 
 .tool-icon-main {
-  font-size: 24px;
+  position: relative;
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+}
+
+.tool-icon-main::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  display: block;
+  background: #f8fafc;
+  mask-image: var(--icon-header-memo);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: var(--icon-header-memo);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+body.theme-light .tool-icon-main::before,
+.theme-light .tool-icon-main::before,
+.page-shell.theme-light .tool-icon-main::before {
+  background: #0f172a;
 }
 
 .tool-icon-star {
@@ -441,7 +477,6 @@ body.theme-light .header-info-panel,
   grid-column: 2;
 }
 
-/* fallback: left / middle / right が layout-grid 直下にある場合 */
 .layout-grid > .middle-column {
   grid-column: 2;
 }
@@ -522,61 +557,104 @@ body.theme-light .panel-icon,
   color: #0284c7;
 }
 
-/* 解析キャラクター概要：添付画像をマスクとして使用 */
-.summary-panel .panel-icon {
+.summary-panel .panel-icon,
+.panel-options .panel-icon,
+.memo-panel .panel-icon,
+.palette-panel .panel-icon {
   position: relative;
   overflow: hidden;
-  border-color: rgba(52, 211, 153, 0.3);
+  border-color: rgba(52, 211, 153, 0.28);
   background:
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.16), transparent 64%),
-    rgba(15, 23, 42, 0.86);
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.14), transparent 68%),
+    rgba(15, 23, 42, 0.88);
   color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 18px rgba(16, 185, 129, 0.10);
 }
 
 .summary-panel .panel-icon svg,
-.summary-panel .panel-icon img {
+.summary-panel .panel-icon img,
+.panel-options .panel-icon svg,
+.panel-options .panel-icon img,
+.memo-panel .panel-icon svg,
+.memo-panel .panel-icon img,
+.palette-panel .panel-icon svg,
+.palette-panel .panel-icon img {
   display: none;
 }
 
-.summary-panel .panel-icon::before {
+.summary-panel .panel-icon::before,
+.panel-options .panel-icon::before,
+.memo-panel .panel-icon::before,
+.palette-panel .panel-icon::before {
   content: "";
   position: absolute;
-  width: 22px;
-  height: 22px;
-  background: var(--emerald2);
-  mask-image: var(--summary-eye-icon);
+  inset: 7px;
+  background: var(--panel-icon-green);
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;
-  -webkit-mask-image: var(--summary-eye-icon);
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
   -webkit-mask-size: contain;
-  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.45));
+  filter: drop-shadow(0 0 7px rgba(52, 211, 153, 0.38));
 }
 
-.summary-panel .panel-icon::after {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 999px;
-  background: rgba(52, 211, 153, 0.08);
-  z-index: -1;
+.summary-panel .panel-icon::before {
+  mask-image: var(--summary-eye-icon);
+  -webkit-mask-image: var(--summary-eye-icon);
+}
+
+.panel-options .panel-icon::before {
+  mask-image: var(--icon-gear);
+  -webkit-mask-image: var(--icon-gear);
+}
+
+.memo-panel .panel-icon::before {
+  mask-image: var(--icon-memo);
+  -webkit-mask-image: var(--icon-memo);
+}
+
+.palette-panel .panel-icon::before {
+  mask-image: var(--icon-dice);
+  -webkit-mask-image: var(--icon-dice);
 }
 
 body.theme-light .summary-panel .panel-icon,
+body.theme-light .panel-options .panel-icon,
+body.theme-light .memo-panel .panel-icon,
+body.theme-light .palette-panel .panel-icon,
 .theme-light .summary-panel .panel-icon,
-.page-shell.theme-light .summary-panel .panel-icon {
+.theme-light .panel-options .panel-icon,
+.theme-light .memo-panel .panel-icon,
+.theme-light .palette-panel .panel-icon,
+.page-shell.theme-light .summary-panel .panel-icon,
+.page-shell.theme-light .panel-options .panel-icon,
+.page-shell.theme-light .memo-panel .panel-icon,
+.page-shell.theme-light .palette-panel .panel-icon {
   border-color: rgba(16, 185, 129, 0.22);
   background:
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.10), transparent 64%),
-    rgba(255, 255, 255, 0.9);
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.10), transparent 68%),
+    rgba(255, 255, 255, 0.90);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
 body.theme-light .summary-panel .panel-icon::before,
+body.theme-light .panel-options .panel-icon::before,
+body.theme-light .memo-panel .panel-icon::before,
+body.theme-light .palette-panel .panel-icon::before,
 .theme-light .summary-panel .panel-icon::before,
-.page-shell.theme-light .summary-panel .panel-icon::before {
-  background: var(--emerald);
+.theme-light .panel-options .panel-icon::before,
+.theme-light .memo-panel .panel-icon::before,
+.theme-light .palette-panel .panel-icon::before,
+.page-shell.theme-light .summary-panel .panel-icon::before,
+.page-shell.theme-light .panel-options .panel-icon::before,
+.page-shell.theme-light .memo-panel .panel-icon::before,
+.page-shell.theme-light .palette-panel .panel-icon::before {
+  background: var(--panel-icon-green-light);
   filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.28));
 }
 
@@ -1087,218 +1165,4 @@ body.theme-light .sheet-link-badge,
   .params-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
-
-/* =========================================================
-   Panel Icon Image Overrides
-   v1.87 icon adjustment
-   ========================================================= */
-
-:root {
-  --icon-gear: url("../../assets/img/gear_icon.png");
-  --icon-memo: url("../../assets/img/memo_icon.png");
-  --icon-dice: url("../../assets/img/dice_icon.png");
-}
-
-/* 共通：画像アイコン用 */
-.panel-options .panel-icon,
-.memo-panel .panel-icon,
-.palette-panel .panel-icon {
-  position: relative;
-  overflow: hidden;
-  width: 32px;
-  min-width: 32px;
-  height: 32px;
-  padding: 0;
-  border-radius: 12px;
-  border: 1px solid rgba(52, 211, 153, 0.28);
-  background:
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.14), transparent 68%),
-    rgba(15, 23, 42, 0.88);
-  color: transparent;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 8px 18px rgba(16, 185, 129, 0.10);
-}
-
-/* 既存SVG/文字を隠す */
-.panel-options .panel-icon svg,
-.memo-panel .panel-icon svg,
-.palette-panel .panel-icon svg {
-  display: none;
-}
-
-/* 画像本体 */
-.panel-options .panel-icon::before,
-.memo-panel .panel-icon::before,
-.palette-panel .panel-icon::before {
-  content: "";
-  position: absolute;
-  inset: 7px;
-  background: #34d399;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
-  filter: drop-shadow(0 0 7px rgba(52, 211, 153, 0.38));
-}
-
-/* 3. 生成オプション：ギア */
-.panel-options .panel-icon::before {
-  mask-image: var(--icon-gear);
-  -webkit-mask-image: var(--icon-gear);
-}
-
-/* 4. プロフィール補足 / キャラメモ編集：メモ */
-.memo-panel .panel-icon::before {
-  mask-image: var(--icon-memo);
-  -webkit-mask-image: var(--icon-memo);
-}
-
-/* 5. チャットパレットプレビュー：ダイス */
-.palette-panel .panel-icon::before {
-  mask-image: var(--icon-dice);
-  -webkit-mask-image: var(--icon-dice);
-}
-
-/* Light Mode */
-body.theme-light .panel-options .panel-icon,
-body.theme-light .memo-panel .panel-icon,
-body.theme-light .palette-panel .panel-icon,
-.theme-light .panel-options .panel-icon,
-.theme-light .memo-panel .panel-icon,
-.theme-light .palette-panel .panel-icon,
-.page-shell.theme-light .panel-options .panel-icon,
-.page-shell.theme-light .memo-panel .panel-icon,
-.page-shell.theme-light .palette-panel .panel-icon {
-  border-color: rgba(16, 185, 129, 0.22);
-  background:
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.10), transparent 68%),
-    rgba(255, 255, 255, 0.90);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    0 8px 18px rgba(15, 23, 42, 0.06);
-}
-
-body.theme-light .panel-options .panel-icon::before,
-body.theme-light .memo-panel .panel-icon::before,
-body.theme-light .palette-panel .panel-icon::before,
-.theme-light .panel-options .panel-icon::before,
-.theme-light .memo-panel .panel-icon::before,
-.theme-light .palette-panel .panel-icon::before,
-.page-shell.theme-light .panel-options .panel-icon::before,
-.page-shell.theme-light .memo-panel .panel-icon::before,
-.page-shell.theme-light .palette-panel .panel-icon::before {
-  background: #10b981;
-  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.28));
-}
-/* =========================================================
-   Panel Icon Image Overrides
-   v1.87 icon adjustment / light mode compatible
-   ========================================================= */
-
-:root {
-  --icon-gear: url("../../assets/img/gear_icon.png");
-  --icon-memo: url("../../assets/img/memo_icon.png");
-  --icon-dice: url("../../assets/img/dice_icon.png");
-  --panel-icon-green: #34d399;
-  --panel-icon-green-light: #10b981;
-}
-
-/* 共通：画像アイコン用 */
-.panel-options .panel-icon,
-.memo-panel .panel-icon,
-.palette-panel .panel-icon {
-  position: relative;
-  overflow: hidden;
-  width: 32px;
-  min-width: 32px;
-  height: 32px;
-  padding: 0;
-  border-radius: 12px;
-  border: 1px solid rgba(52, 211, 153, 0.28);
-  background:
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.14), transparent 68%),
-    rgba(15, 23, 42, 0.88);
-  color: transparent;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 8px 18px rgba(16, 185, 129, 0.10);
-}
-
-/* 既存SVG/文字を隠す */
-.panel-options .panel-icon svg,
-.memo-panel .panel-icon svg,
-.palette-panel .panel-icon svg {
-  display: none;
-}
-
-/* 画像本体 */
-.panel-options .panel-icon::before,
-.memo-panel .panel-icon::before,
-.palette-panel .panel-icon::before {
-  content: "";
-  position: absolute;
-  inset: 7px;
-  background: var(--panel-icon-green);
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
-  filter: drop-shadow(0 0 7px rgba(52, 211, 153, 0.38));
-}
-
-/* 3. 生成オプション：ギア */
-.panel-options .panel-icon::before {
-  mask-image: var(--icon-gear);
-  -webkit-mask-image: var(--icon-gear);
-}
-
-/* 4. プロフィール補足 / キャラメモ編集：メモ */
-.memo-panel .panel-icon::before {
-  mask-image: var(--icon-memo);
-  -webkit-mask-image: var(--icon-memo);
-}
-
-/* 5. チャットパレットプレビュー：ダイス */
-.palette-panel .panel-icon::before {
-  mask-image: var(--icon-dice);
-  -webkit-mask-image: var(--icon-dice);
-}
-
-/* Light Mode：他アイコンと同じ緑系で表示 */
-body.theme-light .panel-options .panel-icon,
-body.theme-light .memo-panel .panel-icon,
-body.theme-light .palette-panel .panel-icon,
-.theme-light .panel-options .panel-icon,
-.theme-light .memo-panel .panel-icon,
-.theme-light .palette-panel .panel-icon,
-.page-shell.theme-light .panel-options .panel-icon,
-.page-shell.theme-light .memo-panel .panel-icon,
-.page-shell.theme-light .palette-panel .panel-icon {
-  border-color: rgba(16, 185, 129, 0.22);
-  background:
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.10), transparent 68%),
-    rgba(255, 255, 255, 0.90);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    0 8px 18px rgba(15, 23, 42, 0.06);
-}
-
-/* Light Modeでもアイコン本体は緑 */
-body.theme-light .panel-options .panel-icon::before,
-body.theme-light .memo-panel .panel-icon::before,
-body.theme-light .palette-panel .panel-icon::before,
-.theme-light .panel-options .panel-icon::before,
-.theme-light .memo-panel .panel-icon::before,
-.theme-light .palette-panel .panel-icon::before,
-.page-shell.theme-light .panel-options .panel-icon::before,
-.page-shell.theme-light .memo-panel .panel-icon::before,
-.page-shell.theme-light .palette-panel .panel-icon::before {
-  background: var(--panel-icon-green-light);
-  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.28));
 }
