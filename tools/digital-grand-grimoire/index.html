@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>電子版グランド・グリモア v0.2</title>
+  <link rel="stylesheet" href="./css/grand-grimoire.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="brand-seal" aria-hidden="true">✦</div>
+        <div>
+          <h1><span>TRPG Web Tools</span><b>|</b>電子版グランド・グリモア <em>v0.2</em></h1>
+          <p>個人用神話データベース / 登録・検索・編集・コピー出力</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="chip chip-spell" data-type-filter="spell">✦ 呪文</button>
+        <button class="chip chip-grimoire" data-type-filter="grimoire">▣ 魔導書</button>
+        <button class="chip chip-artifact" data-type-filter="artifact">◆ アーティファクト</button>
+        <button class="header-btn" id="headerSearchBtn">⌕ 検索</button>
+        <button class="header-btn" id="headerJsonBtn">&lt;/&gt; JSON</button>
+        <span class="version-label">Ver. 0.2.0</span>
+        <button class="icon-btn" id="themeToggle" title="テーマ切替">☾</button>
+      </div>
+    </header>
+
+    <div class="app-main">
+      <aside class="side-nav">
+        <nav class="main-nav" aria-label="メインメニュー">
+          <button class="nav-item" data-view="dashboard">▦ ダッシュボード</button>
+          <button class="nav-item active" data-view="list">▤ 一覧</button>
+          <button class="nav-item" data-action="new-item">✎ 登録</button>
+          <button class="nav-item" data-view="scenario">▣ シナリオセット</button>
+          <button class="nav-item" data-view="json">⇅ インポート/エクスポート</button>
+          <button class="nav-item" data-view="settings">⚙ 設定</button>
+        </nav>
+
+        <div class="side-divider"><span></span>種別フィルター<span></span></div>
+        <div class="type-filter-list">
+          <button class="type-filter active" data-type="all">すべて <span id="countAll">0</span></button>
+          <button class="type-filter" data-type="spell">呪文 <span id="countSpell">0</span></button>
+          <button class="type-filter" data-type="grimoire">魔導書 <span id="countGrimoire">0</span></button>
+          <button class="type-filter" data-type="artifact">アーティファクト <span id="countArtifact">0</span></button>
+        </div>
+
+        <div class="side-utility">
+          <button class="primary-btn" data-action="new-item">＋ 新規登録</button>
+          <button class="gold-btn" id="saveDataBtn">▣ 保存</button>
+          <button class="utility-btn" id="importDataBtn">⇥ JSONインポート</button>
+          <button class="utility-btn" id="exportDataBtn">⇱ JSONエクスポート</button>
+          <input type="file" id="jsonFileInput" accept="application/json,.json" hidden />
+        </div>
+      </aside>
+
+      <section class="list-column">
+        <div class="search-row">
+          <div class="search-box">
+            <span>⌕</span>
+            <input id="searchInput" type="search" placeholder="名称・タグ・カテゴリで検索" />
+          </div>
+          <button class="square-btn" id="clearSearchBtn" title="検索条件をクリア">☷</button>
+        </div>
+
+        <div class="filter-grid">
+          <label>種別
+            <select id="typeSelect">
+              <option value="all">すべて</option>
+              <option value="spell">呪文</option>
+              <option value="grimoire">魔導書</option>
+              <option value="artifact">アーティファクト</option>
+            </select>
+          </label>
+          <label>カテゴリ
+            <select id="categorySelect"><option value="all">すべて</option></select>
+          </label>
+          <label>タグ
+            <select id="tagSelect"><option value="all">すべて</option></select>
+          </label>
+        </div>
+
+        <div class="sort-row">
+          <span>並び替え：更新日（新しい順）</span>
+          <span id="resultCount">全0件</span>
+        </div>
+
+        <div class="item-list" id="itemList" aria-live="polite"></div>
+      </section>
+
+      <main class="detail-column">
+        <section class="detail-header" id="detailHeader"></section>
+        <section class="detail-body" id="detailBody"></section>
+      </main>
+
+      <aside class="scenario-column">
+        <section class="scenario-card">
+          <div class="scenario-card-header">
+            <div>
+              <h2>シナリオ用編集</h2>
+              <p>元データを保持したまま、別名・開示文・処理を調整します。</p>
+            </div>
+            <button class="square-btn" id="scenarioSettingsBtn">⚙</button>
+          </div>
+          <div id="scenarioEditorForm" class="scenario-editor-form"></div>
+          <div class="scenario-actions">
+            <button class="gold-btn" id="saveScenarioBtn">▣ 保存</button>
+            <button class="primary-btn" id="copyScenarioBtn">⧉ コピー</button>
+          </div>
+          <div class="scenario-meta" id="scenarioMeta"></div>
+        </section>
+
+        <section class="copy-card">
+          <h3>コピー形式</h3>
+          <div class="copy-buttons">
+            <button data-copy-format="keeper">KPメモ</button>
+            <button data-copy-format="player">PL開示</button>
+            <button data-copy-format="discord">Discord</button>
+            <button data-copy-format="scenario">シナリオ本文</button>
+          </div>
+          <textarea id="copyOutput" rows="9" placeholder="コピー出力がここに表示されます"></textarea>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <dialog id="editorDialog" class="editor-dialog">
+    <form method="dialog" class="editor-panel" id="editorForm">
+      <div class="dialog-header">
+        <h2 id="editorTitle">データ編集</h2>
+        <button class="icon-btn" value="cancel" aria-label="閉じる">×</button>
+      </div>
+      <div class="editor-grid" id="editorFields"></div>
+      <div class="dialog-actions">
+        <button class="utility-btn" value="cancel">キャンセル</button>
+        <button class="primary-btn" id="applyEditorBtn" value="default">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="./js/grand-grimoire.js"></script>
+</body>
+</html>

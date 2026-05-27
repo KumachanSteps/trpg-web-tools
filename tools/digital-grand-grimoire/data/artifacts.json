@@ -1,0 +1,28 @@
+[
+  {
+    "id": "artifact_001",
+    "type": "artifact",
+    "typeLabel": "アーティファクト",
+    "icon": "◆",
+    "name": "黄金の仮面",
+    "alternative_names": ["Golden Mask", "冥界王の仮面"],
+    "category": "儀式道具",
+    "source": "クトゥルフ2010",
+    "edition": "6e",
+    "page": "P.80",
+    "appearance_summary": "古代王の死面を模した黄金の仮面。内側には細かな傷が残されている。",
+    "activation_summary": "関連する儀式・呪文の焦点具として使用される。",
+    "cost_summary": "使用者の精神、肉体、または儀式上の代償を要求する場合がある。",
+    "effect_summary": "関連儀式の成立条件、補助具、または神話的存在との接点として機能する。",
+    "risk_summary": "装着者の声や意識に変化が起こり、精神汚染や神話的影響を受ける可能性がある。",
+    "destruction_summary": "破壊条件はシナリオごとに設定。通常の物理破壊だけでは不十分としてもよい。",
+    "keeper_note": "召喚儀式のキーアイテム、代償の肩代わり、またはNPCの変質を示す小道具として使いやすい。",
+    "pl_note": "仮面の内側には、誰かが必死に外そうとしたかのような爪痕が残されている。",
+    "tags": ["呪物", "エジプト神話", "装飾品", "儀式"],
+    "audience": ["keeper"],
+    "full_text": "",
+    "updatedAt": "2024-05-10T00:00:00.000Z",
+    "favorite": false,
+    "scenarioEdited": true
+  }
+]

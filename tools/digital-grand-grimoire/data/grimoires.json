@@ -1,0 +1,27 @@
+[
+  {
+    "id": "grimoire_001",
+    "type": "grimoire",
+    "typeLabel": "魔導書",
+    "icon": "▣",
+    "name": "黒きパピルス",
+    "alternative_names": ["Black Papyrus", "黒の葬祭文書"],
+    "category": "魔導書",
+    "source": "マレウス・モンストロルム",
+    "edition": "6e",
+    "page": "P.112",
+    "language_summary": "古代エジプト語に似た文字体系。通常時は判読困難。",
+    "reading_time_summary": "完全読解には長期の研究が必要。シナリオ中は断片的な解読で運用可能。",
+    "contents_summary": "冥界、王権、仮面、死者の門、召喚儀式に関する断片を含む。",
+    "included_spells": ["spell_001"],
+    "effect_summary": "読解により、特定の神話的存在や儀式に関する知識・呪文の手がかりを得る。",
+    "keeper_note": "展示品、遺跡の文書、事件の中心証拠として使いやすい。異界化後にのみ読めるなどのギミックとも相性が良い。",
+    "pl_note": "黒く変色したパピルスには、王の名と冥界への祈りが記されている。祈祷文というより、何かを呼び出す手順に近い。",
+    "tags": ["エジプト神話", "古代文字", "禁断", "召喚"],
+    "audience": ["keeper"],
+    "full_text": "",
+    "updatedAt": "2024-05-14T00:00:00.000Z",
+    "favorite": true,
+    "scenarioEdited": false
+  }
+]
