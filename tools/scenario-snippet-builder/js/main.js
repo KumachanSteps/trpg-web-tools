@@ -114,6 +114,16 @@ cardsList.addEventListener("click", event => {
     return;
   }
 
+  if (action === "ccfoliaChat") {
+    copyCcfPayload(id, "chat");
+    return;
+  }
+
+  if (action === "ccfoliaText") {
+    copyCcfPayload(id, "text");
+    return;
+  }
+
   if (action === "delete") {
     cards = cards.filter(c => c.id !== id);
     renderCards();
@@ -235,6 +245,27 @@ async function copyCard(id) {
   }
 
   setStatus("カード内容をコピーしました。");
+}
+
+async function copyCcfPayload(id, mode) {
+  const card = cards.find(c => c.id === id);
+
+  if (!card) return;
+
+  const payload = buildCcfPayload(card, mode);
+  const output = JSON.stringify(payload, null, 2);
+
+  try {
+    await navigator.clipboard.writeText(output);
+  } catch {
+    fallbackCopy(output);
+  }
+
+  if (mode === "chat") {
+    setStatus("CCFOLIAチャット用データをコピーしました。");
+  } else {
+    setStatus("CCFOLIAテキスト用データをコピーしました。");
+  }
 }
 
 function fallbackCopy(text) {

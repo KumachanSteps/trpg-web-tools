@@ -691,3 +691,130 @@ textarea::-webkit-scrollbar-thumb {
 [data-theme="dark"] .tool-footer-note {
   border-color: rgba(51, 65, 85, 0.86);
 }
+
+
+.right-panel {
+  font-size: 12px;
+}
+
+.card {
+  padding: 8px;
+  gap: 5px;
+  border-left-width: 6px;
+  border-radius: 13px;
+}
+
+.card-header {
+  gap: 6px;
+  min-height: 24px;
+}
+
+.card-type-label {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.card-copy-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.card-copy-btn,
+.card-mini-btn {
+  padding: 2px 6px;
+  min-height: 22px;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.card-mini-btn {
+  border-color: var(--border);
+  color: var(--muted);
+  background: var(--panel-solid);
+}
+
+.card-mini-btn:hover {
+  border-color: var(--card-color, var(--accent));
+  color: var(--card-color, var(--accent));
+  background: var(--panel-solid);
+}
+
+.type-icon-row {
+  gap: 3px;
+  padding: 0;
+}
+
+.type-icon-btn {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+}
+
+.card-title-row {
+  grid-template-columns: 28px auto 1fr auto;
+  gap: 5px;
+}
+
+.card-title-row.skill-title-row {
+  grid-template-columns: 28px auto minmax(70px, 0.7fr) auto minmax(100px, 1.3fr);
+}
+
+.card-title-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.card-title-prefix,
+.card-title-suffix {
+  font-size: 11px;
+}
+
+.card-title-input {
+  font-size: 12px;
+  padding: 5px 7px;
+  border-radius: 8px;
+}
+
+.card-body-textarea {
+  min-height: 150px;
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px;
+  border-radius: 9px;
+}
+
+.card-actions {
+  gap: 4px;
+}
+
+.card-actions button {
+  padding: 2px 6px;
+  min-height: 20px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+.cards-list {
+  gap: 7px;
+}
+
+[data-theme="dark"] .card-mini-btn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #cbd5e1;
+  box-shadow: none;
+}
+
+[data-theme="dark"] .card-mini-btn:hover {
+  background: #263449;
+  border-color: var(--card-color, var(--accent));
+  color: var(--card-color, var(--accent));
+  box-shadow: none;
+}

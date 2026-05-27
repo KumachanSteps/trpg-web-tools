@@ -38,7 +38,21 @@ function renderCards() {
     cardEl.innerHTML = `
       <div class="card-header">
         <div class="card-type-label">${typeInfo.marker} ${getCardHeaderLabel(card.type)}</div>
-        <button class="card-copy-btn" data-action="copy" data-id="${escapeAttribute(card.id)}">コピー</button>
+        <div class="card-copy-group">
+          <button class="card-copy-btn" data-action="copy" data-id="${escapeAttribute(card.id)}">コピー</button>
+          <button
+            class="card-mini-btn"
+            data-action="ccfoliaChat"
+            data-id="${escapeAttribute(card.id)}"
+            title="CCFOLIAチャットへコピー"
+          >チャット用</button>
+          <button
+            class="card-mini-btn"
+            data-action="ccfoliaText"
+            data-id="${escapeAttribute(card.id)}"
+            title="CCFOLIAテキストへコピー"
+          >テキスト用</button>
+        </div>
       </div>
 
       <div class="type-icon-row">
@@ -121,6 +135,36 @@ function buildCardOutput(card) {
   }
 
   return `${typeInfo.marker}${title}\n\n${body}`;
+}
+
+function buildCcfPayload(card, mode) {
+  const title = getCcfTitle(card);
+  const text = getCcfText(card);
+
+  if (mode === "chat") {
+    return {
+      source: "scenario-snippet-builder",
+      mode: "chat",
+      sender: title,
+      message: text
+    };
+  }
+
+  return {
+    source: "scenario-snippet-builder",
+    mode: "text",
+    title,
+    text
+  };
+}
+
+function getCcfTitle(card) {
+  const typeInfo = INFO_TYPES[card.type] || INFO_TYPES.memo;
+  return (card.title || typeInfo.label).trim();
+}
+
+function getCcfText(card) {
+  return (card.body || "").trim();
 }
 
 function getCardHeaderLabel(type) {
