@@ -96,8 +96,8 @@
         <span class="drag-handle" title="ドラッグして並び替え">⋮⋮</span>
       </header>
       <div class="pc-card-body">
-        <div class="stat-block status-grid">${CharashiParser.MAIN_STATUS.map(key => statusChip(key, CharashiParser.currentValue(pc.status[key]))).join("")}</div>
-        <div class="stat-block params-grid">${CharashiParser.PARAMS.map(key => paramChip(key, CharashiParser.paramValue(pc, key))).join("")}</div>
+        <div class="stat-block status-grid">${CharashiParser.mainStatusKeys(pc).map(key => statusChip(key, CharashiParser.currentValue(pc.status[key]))).join("")}</div>
+        <div class="stat-block params-grid">${CharashiParser.paramKeys(pc).map(key => paramChip(key, CharashiParser.paramValue(pc, key))).join("")}</div>
         <div class="stat-block common-grid">${[["アイデア", CharashiParser.commonSkillValue(pc, "アイデア")], ["知識", CharashiParser.commonSkillValue(pc, "知識")], ["幸運", CharashiParser.commonSkillValue(pc, "幸運")]].map(([label, value]) => statusChip(label, value)).join("")}</div>
         <div class="section-label"><span>技能</span><span>${pc.skills.length}件</span></div>
         <div class="skill-list">${pc.skills.length ? pc.skills.map(skillRow).join("") : `<div class="skill-row skill-empty"><span class="skill-name">技能なし</span><span class="skill-value">-</span></div>`}</div>
@@ -105,6 +105,12 @@
         <details><summary>チャットパレット</summary><pre class="palette-box">${escapeHtml(pc.chatPalette)}</pre></details>
       </div>
       <footer class="card-footer"><button class="btn-soft" data-action="copy" data-id="${escapeAttr(pc.id)}" type="button">チャパレコピー</button><button class="btn-soft" data-action="copy-koma" data-id="${escapeAttr(pc.id)}" type="button">コマ出力データコピー</button><button class="btn-danger wide-action" data-action="delete" data-id="${escapeAttr(pc.id)}" type="button">削除</button></footer>`;
+  }
+
+  function commonBlock(pc) {
+    const entries = CharashiParser.commonEntries(pc);
+    if (!entries.length) return "";
+    return `<div class="stat-block common-grid">${entries.map(([label, value]) => statusChip(label, value)).join("")}</div>`;
   }
 
   function editionBadge(pc) { return `<span class="edition-badge ${CharashiParser.editionCss(pc.edition)}">${CharashiParser.editionLabel(pc.edition)}</span>`; }

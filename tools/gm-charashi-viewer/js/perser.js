@@ -413,12 +413,16 @@ const CharamemoParser = (() => {
 
 window.CharamemoParser = CharamemoParser;
 
+
 const CharashiParser = (() => {
   const MAIN_STATUS = ["HP", "MP", "SAN"];
   const PARAMS = ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"];
   const COMMON_SKILL_NAMES = ["アイデア", "知識", "幸運"];
   const PRIORITY_SKILLS = ["目星", "聞き耳", "図書館"];
   const COMBAT_SKILLS = ["回避", "こぶし", "拳", "パンチ", "キック", "組み付き", "組付き", "頭突き", "頭突", "マーシャルアーツ", "MA", "近接戦闘", "近接", "格闘", "ナイフ", "剣", "刀", "日本刀", "槍", "斧", "銃剣", "居合", "拳銃", "射撃", "ショットガン", "ライフル", "マシンガン", "サブマシンガン"];
+
+  const EMOKLORE_PARAM_ORDER = ["身体", "器用", "精神", "五感", "知力", "魅力", "社会", "運勢", "根性"];
+  const EMOKLORE_STATUS_ORDER = ["HP", "MP", "共鳴", "共鳴値", "∞共鳴", "イニシアチブ"];
 
   const CARD_INITIAL_6E = {
     "こぶし": 50, "こぶし：パンチ": 50, "パンチ": 50, "キック": 25, "組み付き": 25, "頭突き": 10, "投擲": 25,
@@ -446,16 +450,29 @@ const CharashiParser = (() => {
     "クトゥルフ神話": 0, "クトゥルフ神話技能": 0
   };
 
-
   function normalizeCharacterData(json) {
     const source = isPlainObject(json) ? json : {};
     const data = isPlainObject(source.data) ? source.data : isPlainObject(source.character) ? source.character : source;
     const status = normalizePairs(data.status || data.statuses || []);
     const params = normalizePairs(data.params || data.parameters || []);
+    if (data.initiative !== undefined && !status["イニシアチブ"]) status["イニシアチブ"] = String(data.initiative);
     const rawChatPalette = String(data.commands || data.command || data.chatPalette || data.palette || "");
-    const edition = detectEditionFromCharacter(rawChatPalette, params);
-    const allSkills = parseSkillsFromCommands(rawChatPalette);
-    return { id: createId(), name: safeText(data.name || data.characterName || data.charaName || "名称未設定"), iconUrl: safeText(data.iconUrl || data.imageUrl || data.portrait || ""), externalUrl: safeText(data.externalUrl || data.url || data.sheetUrl || source.externalUrl || ""), edition, status, params, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params)), chatPalette: rawChatPalette, rawChatPalette, raw: source };
+    const edition = detectEditionFromCharacter(rawChatPalette, params, data);
+    const allSkills = parseSkillsFromCommands(rawChatPalette, edition);
+    return {
+      id: createId(),
+      name: safeText(data.name || data.characterName || data.charaName || "名称未設定"),
+      iconUrl: safeText(data.iconUrl || data.imageUrl || data.portrait || ""),
+      externalUrl: safeText(data.externalUrl || data.url || data.sheetUrl || source.externalUrl || ""),
+      edition,
+      status,
+      params,
+      allSkills,
+      skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params), edition),
+      chatPalette: rawChatPalette,
+      rawChatPalette,
+      raw: source
+    };
   }
 
   function normalizePairs(items) {
@@ -476,55 +493,168 @@ const CharashiParser = (() => {
     const safePc = isPlainObject(pc) ? pc : {};
     const rawChatPalette = safePc.rawChatPalette !== undefined ? safePc.rawChatPalette : safePc.chatPalette || "";
     const chatPalette = String(safePc.chatPalette || rawChatPalette || "");
-    const edition = safePc.edition || detectEditionFromCharacter(rawChatPalette, safePc.params || {});
-    const allSkills = parseSkillsFromCommands(chatPalette);
     const params = isPlainObject(safePc.params) ? safePc.params : {};
-    return { ...safePc, id: safePc.id || createId(), name: safeText(safePc.name || "名称未設定"), iconUrl: safeText(safePc.iconUrl || ""), externalUrl: safeText(safePc.externalUrl || ""), edition, status: isPlainObject(safePc.status) ? safePc.status : {}, params, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params)), chatPalette, rawChatPalette: String(rawChatPalette || ""), raw: isPlainObject(safePc.raw) ? safePc.raw : {} };
+    const edition = safePc.edition || detectEditionFromCharacter(rawChatPalette, params, safePc.raw?.data || safePc.raw || {});
+    const allSkills = parseSkillsFromCommands(chatPalette, edition);
+    return {
+      ...safePc,
+      id: safePc.id || createId(),
+      name: safeText(safePc.name || "名称未設定"),
+      iconUrl: safeText(safePc.iconUrl || ""),
+      externalUrl: safeText(safePc.externalUrl || ""),
+      edition,
+      status: isPlainObject(safePc.status) ? safePc.status : {},
+      params,
+      allSkills,
+      skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params), edition),
+      chatPalette,
+      rawChatPalette: String(rawChatPalette || ""),
+      raw: isPlainObject(safePc.raw) ? safePc.raw : {}
+    };
   }
 
   function formatPcPalette(pc) {
     const raw = pc.rawChatPalette || pc.chatPalette || "";
-    const edition = detectEditionFromCharacter(raw, pc.params || {});
-    const chatPalette = CharamemoParser.buildPaletteOutput(raw, edition);
-    const allSkills = parseSkillsFromCommands(chatPalette);
     const params = isPlainObject(pc.params) ? pc.params : {};
-    return { ...pc, edition, chatPalette, allSkills, skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params)) };
+    const edition = detectEditionFromCharacter(raw, params, pc.raw?.data || pc.raw || {});
+    const chatPalette = edition === "emoklore" ? formatEmoklorePalette(raw) : CharamemoParser.buildPaletteOutput(raw, edition);
+    const allSkills = parseSkillsFromCommands(chatPalette, edition);
+    return {
+      ...pc,
+      edition,
+      chatPalette,
+      allSkills,
+      skills: sortDisplaySkills(filterDisplaySkills(allSkills, edition, params), edition)
+    };
   }
 
-  function detectEditionFromCharacter(text, params = {}) {
+  function detectEditionFromCharacter(text, params = {}, data = {}) {
+    const normalized = normalizeText(text);
+    const paramKeys = Object.keys(params || {}).join(" ");
+    const dataSystem = String(data.system || data.rule || data.ruleType || data.gameSystem || "").toLowerCase();
+    if (dataSystem.includes("emoklore") || dataSystem.includes("エモクロア")) return "emoklore";
+    if (/(^|\n)\s*(\d+)?DM[+\-]?\d*\s*<=/i.test(normalized)) return "emoklore";
+    if (/[〈《][^〉》]+[〉》]/.test(normalized) && /DM/i.test(normalized)) return "emoklore";
+    if (["身体", "器用", "精神", "五感", "知力", "魅力", "社会", "運勢"].some(key => paramKeys.includes(key))) return "emoklore";
     const parserEdition = CharamemoParser.detectEdition(text);
     const hasLargeStat = PARAMS.some(key => Number(String(params[key] || "").split("/")[0]) > 30);
     return hasLargeStat ? "7e" : parserEdition;
   }
 
-  function editionLabel(edition) { return edition === "7e" ? "7版" : "6版"; }
-  function editionCss(edition) { return edition === "7e" ? "edition-7" : "edition-6"; }
+  function editionLabel(edition) {
+    if (edition === "emoklore") return "エモクロア";
+    return edition === "7e" ? "7版" : "6版";
+  }
 
-  function parseSkillsFromCommands(commands) {
+  function editionCss(edition) {
+    if (edition === "emoklore") return "edition-emoklore";
+    return edition === "7e" ? "edition-7" : "edition-6";
+  }
+
+  function mainStatusKeys(pc) {
+    if (pc.edition === "emoklore") return orderedKeys(pc.status, EMOKLORE_STATUS_ORDER, 6);
+    return MAIN_STATUS;
+  }
+
+  function paramKeys(pc) {
+    if (pc.edition === "emoklore") return orderedKeys(pc.params, EMOKLORE_PARAM_ORDER, 12);
+    return PARAMS;
+  }
+
+  function commonEntries(pc) {
+    if (pc.edition === "emoklore") return [];
+    return [
+      ["アイデア", commonSkillValue(pc, "アイデア")],
+      ["知識", commonSkillValue(pc, "知識")],
+      ["幸運", commonSkillValue(pc, "幸運")]
+    ];
+  }
+
+  function orderedKeys(object, preferred, limit) {
+    const keys = Object.keys(object || {});
+    const ordered = [];
+    preferred.forEach(key => {
+      if (keys.includes(key)) ordered.push(key);
+    });
+    keys.forEach(key => {
+      if (!ordered.includes(key)) ordered.push(key);
+    });
+    return ordered.slice(0, limit);
+  }
+
+  function parseSkillsFromCommands(commands, edition = "") {
     const skillMap = new Map();
     normalizeText(commands).split("\n").forEach(line => {
       const text = line.trim();
       if (!text) return;
-      const matches = [text.match(/(?:CCB|CC|sCCB|sCC)\s*<=\s*([^\s]+).*?【([^】]+)】/i), text.match(/1d100\s*<=\s*([^\s]+).*?【([^】]+)】/i), text.match(/【([^】]+)】.*?(\d{1,3})/i)];
-      for (let index = 0; index < matches.length; index += 1) {
-        const match = matches[index];
-        if (!match) continue;
-        const name = index === 2 ? match[1].trim() : normalizeSkillName(match[2].trim());
-        const rawValue = index === 2 ? match[2] : match[1];
-        const value = Number(String(rawValue).replace(/[^0-9]/g, ""));
-        if (!name || Number.isNaN(value) || value < 1 || value > 100) return;
-        const key = normalizeSkillName(name);
-        const existing = skillMap.get(key);
-        if (!existing || existing.value < value) skillMap.set(key, { name, value });
-        break;
-      }
+      const parsed = edition === "emoklore" || isEmokloreLine(text) ? parseEmokloreSkillLine(text) : parseCocSkillLine(text);
+      if (!parsed) return;
+      const key = normalizeSkillName(parsed.name);
+      const existing = skillMap.get(key);
+      if (!existing || Number(existing.value) < Number(parsed.value)) skillMap.set(key, parsed);
     });
     return Array.from(skillMap.values());
   }
 
+  function parseCocSkillLine(text) {
+    const matches = [
+      text.match(/(?:CCB|CC|sCCB|sCC)\s*<=\s*([^\s]+).*?[【〈《]([^】〉》]+)[】〉》]/i),
+      text.match(/1d100\s*<=\s*([^\s]+).*?[【〈《]([^】〉》]+)[】〉》]/i),
+      text.match(/[【〈《]([^】〉》]+)[】〉》].*?(\d{1,3})/i)
+    ];
+    for (let index = 0; index < matches.length; index += 1) {
+      const match = matches[index];
+      if (!match) continue;
+      const name = index === 2 ? normalizeSkillName(match[1].trim()) : normalizeSkillName(match[2].trim());
+      const rawValue = index === 2 ? match[2] : match[1];
+      const digits = String(rawValue).replace(/[^0-9]/g, "");
+      if (!digits) return null;
+      const value = Number(digits);
+      if (!name || Number.isNaN(value) || value <= 0 || value > 100) return null;
+      return { name, value };
+    }
+    return null;
+  }
+
+  function parseEmokloreSkillLine(text) {
+    const match = text.match(/((?:\d+)?DM(?:[+\-]\d+)?)\s*<=\s*([^\s]+).*?[【〈《]([^】〉》]+)[】〉》]/i)
+      || text.match(/[【〈《]([^】〉》]+)[】〉》].*?((?:\d+)?DM(?:[+\-]\d+)?)\s*<=\s*([^\s]+)/i);
+    if (!match) return null;
+    const dice = match[1].toUpperCase().includes("DM") ? match[1].toUpperCase() : match[2].toUpperCase();
+    const rawValue = match[1].toUpperCase().includes("DM") ? match[2] : match[3];
+    const rawName = match[1].toUpperCase().includes("DM") ? match[3] : match[1];
+    const value = Number(String(rawValue).replace(/[^0-9]/g, ""));
+    if (!rawName || Number.isNaN(value)) return null;
+    return { name: normalizeEmokloreSkillName(rawName), value, dice };
+  }
+
+  function isEmokloreLine(text) {
+    return /(^|\s)(\d+)?DM[+\-]?\d*\s*<=/i.test(text) || (/[〈《].+[〉》]/.test(text) && /DM/i.test(text));
+  }
+
+  function formatEmoklorePalette(commands) {
+    const seen = new Set();
+    return normalizeText(commands)
+      .split("\n")
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => line.replaceAll("（", "(").replaceAll("）", ")").replaceAll("：", ":").replace(/\s+/g, " ").replace(/\s*<=\s*/g, "<=").trim())
+      .filter(line => {
+        const key = line.replace(/\s+/g, " ");
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .join("\n");
+  }
+
   function filterDisplaySkills(skills, edition = "6e", params = {}) {
-    const hidden = new Set([...COMMON_SKILL_NAMES, "STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU", "STR × 5", "CON × 5", "POW × 5", "DEX × 5", "APP × 5", "SIZ × 5", "INT × 5", "EDU × 5"].map(normalizeSkillName));
     if (!Array.isArray(skills)) return [];
+    if (edition === "emoklore") {
+      return skills.filter(skill => skill && !isEmokloreHiddenSkill(skill.name));
+    }
+
+    const hidden = new Set([...COMMON_SKILL_NAMES, "STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU", "STR × 5", "CON × 5", "POW × 5", "DEX × 5", "APP × 5", "SIZ × 5", "INT × 5", "EDU × 5"].map(normalizeSkillName));
     const filtered = skills.filter(skill => {
       if (!skill || hidden.has(normalizeSkillName(skill.name))) return false;
       return shouldShowCardSkill(skill, edition, params);
@@ -533,15 +663,19 @@ const CharashiParser = (() => {
       const name = normalizeSkillName(skill.name);
       return name.includes("こぶし") && name.includes("パンチ");
     });
-    return hasKobushiPunch
-      ? filtered.filter(skill => normalizeSkillName(skill.name) !== "こぶし")
-      : filtered;
+    return hasKobushiPunch ? filtered.filter(skill => normalizeSkillName(skill.name) !== "こぶし") : filtered;
+  }
+
+  function isEmokloreHiddenSkill(name) {
+    const normalized = normalizeSkillName(name);
+    return ["HP", "MP", "共鳴", "共鳴値", "∞共鳴"].some(key => normalized.includes(normalizeSkillName(key)));
   }
 
   function shouldShowCardSkill(skill, edition = "6e", params = {}) {
     const name = normalizeSkillName(skill.name);
     const value = Number(skill.value);
     if (!name || Number.isNaN(value)) return false;
+    if (value <= 0 && !name.includes("クトゥルフ神話")) return false;
     if (isAlwaysVisibleSkill(name)) return true;
     const initial = getInitialSkillValue(name, edition, params);
     if (initial === null || initial === undefined || Number.isNaN(Number(initial))) return true;
@@ -594,56 +728,8 @@ const CharashiParser = (() => {
     return Math.floor(dex / 2);
   }
 
-  function shouldShowCardSkill(skill, edition = "6e", params = {}) {
-    const name = normalizeSkillName(skill.name);
-    const value = Number(skill.value);
-    if (!name || Number.isNaN(value)) return false;
-    if (isAlwaysVisibleSkill(name)) return true;
-    const initial = getInitialSkillValue(name, edition, params);
-    if (initial === null || initial === undefined || Number.isNaN(Number(initial))) return true;
-    return value !== Number(initial);
-  }
-
-  function isAlwaysVisibleSkill(name) {
-    const normalized = normalizeSkillName(name);
-    return normalized.includes("目星")
-      || normalized.includes("聞き耳")
-      || normalized.includes("図書館")
-      || normalized.includes("母国語")
-      || normalized.includes("こぶし")
-      || normalized.includes("パンチ");
-  }
-
-  function getInitialSkillValue(name, edition = "6e", params = {}) {
-    const normalized = normalizeSkillName(name);
-    if (normalized.includes("母国語")) return motherTongueInitial(edition, params);
-    if (edition === "7e") {
-      if (normalized.includes("近接戦闘") && normalized.includes("格闘")) return 25;
-      if (normalized === "近接戦闘") return 25;
-      const found7 = findInitialValue(normalized, CARD_INITIAL_7E);
-      return found7;
-    }
-    if (normalized.includes("こぶし") || normalized.includes("パンチ")) return 50;
-    const found6 = findInitialValue(normalized, CARD_INITIAL_6E);
-    return found6;
-  }
-
-  function findInitialValue(normalizedName, table) {
-    for (const [key, value] of Object.entries(table || {})) {
-      const normalizedKey = normalizeSkillName(key);
-      if (normalizedName === normalizedKey || normalizedName.includes(normalizedKey) || normalizedKey.includes(normalizedName)) return Number(value);
-    }
-    return null;
-  }
-
-  function motherTongueInitial(edition, params = {}) {
-    const eduRaw = params.EDU ?? params.edu ?? "";
-    const edu = Number(String(eduRaw).split("/")[0].replace(/[^0-9]/g, ""));
-    if (!Number.isFinite(edu)) return null;
-    return edition === "7e" ? edu : edu * 5;
-  }
-
-  function sortDisplaySkills(skills) {
+  function sortDisplaySkills(skills, edition = "6e") {
+    if (edition === "emoklore") return [...(Array.isArray(skills) ? skills : [])].sort(compareSkillValue);
     const buckets = { priority: [], combat: [], regular: [] };
     (Array.isArray(skills) ? skills : []).forEach(skill => {
       if (matchesAny(skill.name, PRIORITY_SKILLS)) buckets.priority.push(skill);
@@ -696,18 +782,93 @@ const CharashiParser = (() => {
     return JSON.stringify(cloned, null, 2);
   }
 
-  function normalizeText(text) { return String(text || "").replaceAll("\\n", "\n").replace(/\r\n/g, "\n").replace(/\r/g, "\n"); }
-  function normalizeKey(name) { const text = String(name || "").trim(); return /[A-Za-z]/.test(text) ? text.toUpperCase() : text; }
-  function normalizeSkillName(name) { return String(name || "").trim().replaceAll("：", ":").replaceAll("（", "(").replaceAll("）", ")").replace(/[【】]/g, "").toUpperCase(); }
-  function skillValueByNames(skills, names) { const keys = names.map(normalizeSkillName); const found = Array.isArray(skills) ? skills.find(skill => keys.includes(normalizeSkillName(skill.name))) : null; return found ? String(found.value) : ""; }
-  function compareSkillValue(a, b) { return b.value - a.value || a.name.localeCompare(b.name, "ja"); }
-  function priorityIndex(name) { const normalized = normalizeSkillName(name); if (normalized.includes("目星")) return 0; if (normalized.includes("聞き耳")) return 1; if (normalized.includes("図書館")) return 2; return 3; }
-  function matchesAny(name, keywords) { return keywords.some(keyword => normalizeSkillName(name).includes(normalizeSkillName(keyword))); }
-  function multiplyParam(value, multiplier) { const digits = String(value || "").replace(/[^0-9]/g, ""); if (!digits) return "-"; const number = Number(digits); return Number.isFinite(number) ? String(number * multiplier) : "-"; }
-  function cloneSafe(value) { try { if (typeof structuredClone === "function") return structuredClone(value); } catch (error) { console.warn(error); } try { return JSON.parse(JSON.stringify(value)); } catch (error) { console.warn(error); return {}; } }
-  function createId() { if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID(); return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
-  function isPlainObject(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
-  function safeText(value) { return String(value ?? "").trim(); }
+  function normalizeText(text) {
+    return String(text || "").replaceAll("\\n", "\n").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  }
 
-  return { MAIN_STATUS, PARAMS, normalizeCharacterData, rebuildPc, formatPcPalette, editionLabel, editionCss, commonSkillValue, paramValue, currentValue, copyableCharacterData };
+  function normalizeKey(name) {
+    const text = String(name || "").trim();
+    return /[A-Za-z]/.test(text) ? text.toUpperCase() : text;
+  }
+
+  function normalizeSkillName(name) {
+    return String(name || "").trim().replaceAll("：", ":").replaceAll("（", "(").replaceAll("）", ")").replace(/[【】〈〉《》]/g, "").replace(/\s+/g, "").toUpperCase();
+  }
+
+  function normalizeEmokloreSkillName(name) {
+    return String(name || "").trim().replace(/^[＊*]/, "").replaceAll("：", ":").replaceAll("（", "(").replaceAll("）", ")");
+  }
+
+  function skillValueByNames(skills, names) {
+    const keys = names.map(normalizeSkillName);
+    const found = Array.isArray(skills) ? skills.find(skill => keys.includes(normalizeSkillName(skill.name))) : null;
+    return found ? String(found.value) : "";
+  }
+
+  function compareSkillValue(a, b) {
+    return Number(b.value) - Number(a.value) || String(a.name).localeCompare(String(b.name), "ja");
+  }
+
+  function priorityIndex(name) {
+    const normalized = normalizeSkillName(name);
+    if (normalized.includes("目星")) return 0;
+    if (normalized.includes("聞き耳")) return 1;
+    if (normalized.includes("図書館")) return 2;
+    return 3;
+  }
+
+  function matchesAny(name, keywords) {
+    return keywords.some(keyword => normalizeSkillName(name).includes(normalizeSkillName(keyword)));
+  }
+
+  function multiplyParam(value, multiplier) {
+    const digits = String(value || "").replace(/[^0-9]/g, "");
+    if (!digits) return "-";
+    const number = Number(digits);
+    return Number.isFinite(number) ? String(number * multiplier) : "-";
+  }
+
+  function cloneSafe(value) {
+    try {
+      if (typeof structuredClone === "function") return structuredClone(value);
+    } catch (error) {
+      console.warn(error);
+    }
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (error) {
+      console.warn(error);
+      return {};
+    }
+  }
+
+  function createId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+
+  function isPlainObject(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function safeText(value) {
+    return String(value ?? "").trim();
+  }
+
+  return {
+    MAIN_STATUS,
+    PARAMS,
+    normalizeCharacterData,
+    rebuildPc,
+    formatPcPalette,
+    editionLabel,
+    editionCss,
+    mainStatusKeys,
+    paramKeys,
+    commonEntries,
+    commonSkillValue,
+    paramValue,
+    currentValue,
+    copyableCharacterData
+  };
 })();
