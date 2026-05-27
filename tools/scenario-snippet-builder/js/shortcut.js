@@ -1,4 +1,17 @@
 function handleShortcuts(event) {
+  if (
+    event.key.toLowerCase() === "c" &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey &&
+    document.activeElement === parsedText &&
+    parsedText.selectionStart !== parsedText.selectionEnd
+  ) {
+    event.preventDefault();
+    createCardFromSelection();
+    return;
+  }
+
   if (event.key === "Escape") {
     event.preventDefault();
     appRoot.classList.toggle("source-hidden");

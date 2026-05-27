@@ -84,7 +84,10 @@ cardsList.addEventListener("input", event => {
 
   if (action === "title") card.title = event.target.value;
   if (action === "extra") card.extra = event.target.value;
-  if (action === "body") card.body = event.target.value;
+  if (action === "body") {
+    card.body = event.target.value;
+    adjustCardTextareaHeight(event.target);
+  }
 
   saveState();
 });

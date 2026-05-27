@@ -55,17 +55,23 @@ function renderCards() {
         </div>
       </div>
 
-      <div class="type-icon-row">
-        ${Object.entries(INFO_TYPES).map(([key, info]) => `
-          <button
-            class="type-icon-btn ${key === card.type ? "active" : ""}"
-            style="--icon-color: ${info.color};"
-            title="${info.label}"
-            data-action="typeIcon"
-            data-type="${key}"
-            data-id="${escapeAttribute(card.id)}"
-          >${info.marker}</button>
-        `).join("")}
+      <div class="card-utility-row">
+        <div class="type-icon-row">
+          ${Object.entries(INFO_TYPES).map(([key, info]) => `
+            <button
+              class="type-icon-btn ${key === card.type ? "active" : ""}"
+              style="--icon-color: ${info.color};"
+              title="${info.label}"
+              data-action="typeIcon"
+              data-type="${key}"
+              data-id="${escapeAttribute(card.id)}"
+            >${info.marker}</button>
+          `).join("")}
+        </div>
+        <div class="card-actions">
+          <button data-action="duplicate" data-id="${escapeAttribute(card.id)}">複製</button>
+          <button class="danger" data-action="delete" data-id="${escapeAttribute(card.id)}">削除</button>
+        </div>
       </div>
 
       <div class="card-title-row ${card.type === "skill" ? "skill-title-row" : ""}">
@@ -97,16 +103,34 @@ function renderCards() {
         data-action="body"
         data-id="${escapeAttribute(card.id)}"
         placeholder="情報本文"
+        rows="4"
       >${escapeHtml(card.body)}</textarea>
-
-      <div class="card-actions">
-        <button data-action="duplicate" data-id="${escapeAttribute(card.id)}">複製</button>
-        <button class="danger" data-action="delete" data-id="${escapeAttribute(card.id)}">削除</button>
-      </div>
     `;
 
     cardsList.appendChild(cardEl);
+
+    const bodyTextarea = cardEl.querySelector(".card-body-textarea");
+    if (bodyTextarea) {
+      adjustCardTextareaHeight(bodyTextarea);
+    }
   });
+}
+
+function adjustCardTextareaHeight(textarea) {
+  if (!textarea) return;
+
+  textarea.style.height = "auto";
+
+  const computed = window.getComputedStyle(textarea);
+  const lineHeight = parseFloat(computed.lineHeight) || 17.4;
+  const paddingTop = parseFloat(computed.paddingTop) || 0;
+  const paddingBottom = parseFloat(computed.paddingBottom) || 0;
+  const minHeight = lineHeight * 4 + paddingTop + paddingBottom;
+  const maxHeight = lineHeight * 6 + paddingTop + paddingBottom;
+  const nextHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+
+  textarea.style.height = `${nextHeight}px`;
+  textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
 }
 
 function buildCardOutput(card) {

@@ -818,3 +818,64 @@ textarea::-webkit-scrollbar-thumb {
   color: var(--card-color, var(--accent));
   box-shadow: none;
 }
+
+
+/* footer: subtle and hidden by default */
+.tool-footer-note {
+  display: none;
+  flex: 0 0 auto;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 2px 12px 6px;
+  color: rgba(100, 116, 139, 0.72);
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.45;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.app.show-footer .tool-footer-note {
+  display: block;
+}
+
+.tool-footer-note h2 {
+  margin: 0 0 2px;
+  color: rgba(100, 116, 139, 0.8);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tool-footer-note p {
+  margin: 2px 0;
+}
+
+[data-theme="dark"] .tool-footer-note,
+[data-theme="dark"] .tool-footer-note h2 {
+  color: rgba(148, 163, 184, 0.62);
+}
+
+/* compact card utility row */
+.card-utility-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.card-utility-row .type-icon-row {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.card-utility-row .card-actions {
+  flex: 0 0 auto;
+}
+
+.card-body-textarea {
+  min-height: calc(1.45em * 4 + 16px);
+  max-height: calc(1.45em * 6 + 16px);
+  overflow: auto;
+}
