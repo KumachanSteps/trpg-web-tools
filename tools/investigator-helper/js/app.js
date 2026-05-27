@@ -1,23 +1,30 @@
 (() => {
   "use strict";
 
-  const BASE_OCCUPATIONS = Array.isArray(window.OCCUPATIONS) ? window.OCCUPATIONS : [];
-  const EXTRA_6E_COC2015_OCCUPATIONS = Array.isArray(window.OCCUPATIONS_6E_COC2015)
-    ? window.OCCUPATIONS_6E_COC2015
-    : [];
-  const EXTRA_7E_OCCUPATIONS = Array.isArray(window.OCCUPATIONS_7E_EXTRA)
-    ? window.OCCUPATIONS_7E_EXTRA
-    : [];
-
-  const OCCUPATIONS = [
-    ...BASE_OCCUPATIONS,
-    ...EXTRA_6E_COC2015_OCCUPATIONS,
-    ...EXTRA_7E_OCCUPATIONS,
+  const OCCUPATION_DATASETS = [
+    window.OCCUPATIONS,
+    window.OCCUPATIONS_6E_COC2015,
+    window.OCCUPATIONS_7E_BASIC,
+    window.OCCUPATIONS_7E_EXTRA,
+    window.OCCUPATIONS_7E_PULP,
+    window.OCCUPATIONS_GASLIGHT,
+    window.OCCUPATIONS_DREAMLAND,
+    window.OCCUPATIONS_TEIKOKU,
+    window.OCCUPATIONS_HIEIZAN,
   ];
+
+  const OCCUPATIONS = OCCUPATION_DATASETS
+    .filter(Array.isArray)
+    .flatMap((dataset) => dataset)
+    .map((occupation, index) => ({
+      ...occupation,
+      originalIndex: index,
+    }));
 
   const FEATURES = Array.isArray(window.FEATURES) ? window.FEATURES : [];
   const EXPERIENCE_PACKAGES = Array.isArray(window.EXPERIENCE_PACKAGES) ? window.EXPERIENCE_PACKAGES : [];
   const WEAPONS = Array.isArray(window.WEAPONS) ? window.WEAPONS : [];
+  const BELONGINGS = Array.isArray(window.BELONGINGS) ? window.BELONGINGS : [];
 
   const SOURCES = [
     "すべて",
@@ -80,6 +87,12 @@
     サバイバル: ["サバイバル", "サバイバル（山）", "サバイバル(山)", "サバイバル（海）", "サバイバル(海)", "サバイバル（砂漠）", "サバイバル(砂漠)"],
   };
 
+
+  const BELONGING_TAG_CHIPS = [
+    "一般", "探索", "記録", "通信", "医療", "防犯", "アウトドア", "趣味",
+    "職業道具", "身だしなみ", "オカルト", "電子機器", "交通", "非常用品", "小物", "高級品",
+  ];
+
   const state = {
     tab: "occupation",
     ruleType: "all",
@@ -90,8 +103,11 @@
     selectedPackageId: EXPERIENCE_PACKAGES[0]?.id || "",
     selectedFeatureId: FEATURES[0]?.id || "",
     selectedWeaponId: WEAPONS[0]?.id || "",
+    selectedBelongingId: BELONGINGS[0]?.id || "",
     weaponQuery: "",
     weaponCategory: "すべて",
+    belongingQuery: "",
+    selectedBelongingTags: new Set(),
     featureCount: 3,
     rolledFeatures: FEATURES.slice(0, 3),
     skillExpanded: false,
@@ -122,6 +138,11 @@
     weaponDetail: document.getElementById("weaponDetail"),
     weaponKeywordInput: document.getElementById("weaponKeywordInput"),
     weaponCategorySelect: document.getElementById("weaponCategorySelect"),
+    belongingList: document.getElementById("belongingList"),
+    belongingDetail: document.getElementById("belongingDetail"),
+    belongingKeywordInput: document.getElementById("belongingKeywordInput"),
+    belongingChipArea: document.getElementById("belongingChipArea"),
+    clearBelongingTagsButton: document.getElementById("clearBelongingTagsButton"),
     outputText: document.getElementById("outputText"),
     copyOutputButton: document.getElementById("copyOutputButton"),
     clearOutputButton: document.getElementById("clearOutputButton"),
@@ -402,6 +423,27 @@ ${notes}`;
       });
   }
 
+
+  function getBelongingSearchText(item) {
+    return [item.name, item.category, item.description, item.note, ...(item.tags || []), ...(item.keywords || [])].join(" ").toLowerCase();
+  }
+
+  function belongingMatchesSelectedTags(item) {
+    if (!state.selectedBelongingTags.size) return true;
+    const tags = new Set(item.tags || []);
+    return [...state.selectedBelongingTags].every((tag) => tags.has(tag));
+  }
+
+  function getFilteredBelongings() {
+    const query = state.belongingQuery.trim().toLowerCase();
+    return BELONGINGS.filter(belongingMatchesSelectedTags).filter((item) => !query || getBelongingSearchText(item).includes(query));
+  }
+
+  function formatBelonging(item) {
+    if (!item) return "";
+    return [`持ち物：${item.name}`, item.description || ""].filter(Boolean).join("\n");
+  }
+
   function appendOutput(text) {
     if (!text) return;
     const current = el.outputText.value.trim();
@@ -435,7 +477,7 @@ ${notes}`;
 
   function sourceMatches(item) {
     if (state.source === "すべて") return true;
-    return item.source === state.source || item.sourceShort === state.source;
+    return item.source === state.source || item.sourceShort === state.source || (item.ruleLabels || []).includes(state.source);
   }
 
   function getSearchText(item) {
@@ -463,9 +505,8 @@ ${notes}`;
   function getFilteredOccupations() {
     const query = state.query.trim().toLowerCase();
 
-    const mapped = OCCUPATIONS.map((item, index) => ({
+    const mapped = OCCUPATIONS.map((item) => ({
       ...item,
-      originalIndex: index,
       score: getOccupationSkillMatchScore(item),
     }))
       .filter((item) => state.ruleType === "all" || item.ruleType === state.ruleType)
@@ -567,11 +608,13 @@ ${notes}`;
     document.getElementById("featureTab").classList.toggle("is-hidden", state.tab !== "feature");
     document.getElementById("packageTab").classList.toggle("is-hidden", state.tab !== "package");
     document.getElementById("weaponTab").classList.toggle("is-hidden", state.tab !== "weapon");
+    document.getElementById("belongingTab").classList.toggle("is-hidden", state.tab !== "belonging");
 
     el.occupationDetail.classList.toggle("is-hidden", state.tab !== "occupation");
     el.featureDetail.classList.toggle("is-hidden", state.tab !== "feature");
     el.packageDetail.classList.toggle("is-hidden", state.tab !== "package");
     el.weaponDetail.classList.toggle("is-hidden", state.tab !== "weapon");
+    el.belongingDetail.classList.toggle("is-hidden", state.tab !== "belonging");
   }
 
   function renderOccupationList() {
@@ -816,6 +859,57 @@ ${notes}`;
   }
 
 
+
+  function renderBelongingChips() {
+    if (!el.belongingChipArea) return;
+    el.belongingChipArea.innerHTML = BELONGING_TAG_CHIPS.map((tag) => {
+      const active = state.selectedBelongingTags.has(tag) ? " is-active" : "";
+      return `<button class="belonging-chip${active}" type="button" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`;
+    }).join("");
+  }
+
+  function renderBelongingList() {
+    if (!el.belongingList) return;
+    const items = getFilteredBelongings();
+    if (!items.length) {
+      el.belongingList.innerHTML = `<div class="belonging-card"><p class="card-text">条件に一致する持ち物がありません。</p></div>`;
+      if (el.belongingDetail) el.belongingDetail.innerHTML = "";
+      return;
+    }
+    if (!items.some((item) => item.id === state.selectedBelongingId) && items[0]) state.selectedBelongingId = items[0].id;
+    el.belongingList.innerHTML = items.map((item) => {
+      const selected = item.id === state.selectedBelongingId ? " is-selected" : "";
+      const tags = (item.tags || []).map((tag) => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join("");
+      const note = item.note ? `<p class="card-text belonging-note-short">備考：${escapeHtml(item.note)}</p>` : "";
+      return `
+        <button class="belonging-card${selected}" type="button" data-id="${escapeHtml(item.id)}">
+          <div class="card-title-row"><h3 class="card-title">${escapeHtml(item.name)}</h3>${tags}</div>
+          <div class="card-content belonging-content">
+            <p class="card-text">カテゴリ：${escapeHtml(item.category || "―")}</p>
+            <p class="card-text">説明：${escapeHtml(item.description || "")}</p>
+            ${note}
+          </div>
+        </button>`;
+    }).join("");
+  }
+
+  function renderBelongingDetail() {
+    if (!el.belongingDetail) return;
+    const item = BELONGINGS.find((belonging) => belonging.id === state.selectedBelongingId) || getFilteredBelongings()[0] || BELONGINGS[0];
+    if (!item) { el.belongingDetail.innerHTML = ""; return; }
+    const tags = (item.tags || []).map((tag) => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join("");
+    const note = item.note ? `<p class="detail-text belonging-note-line">備考：${escapeHtml(item.note)}</p>` : "";
+    el.belongingDetail.innerHTML = `
+      <div class="card-title-row"><h2>${escapeHtml(item.name)}</h2>${tags}</div>
+      <div class="detail-box belonging-detail-box">
+        <p class="detail-text">${escapeHtml(item.description || "")}</p>
+        <p class="detail-text">カテゴリ：${escapeHtml(item.category || "―")}</p>
+        ${note}
+      </div>
+      <button class="btn btn-primary" type="button" id="addBelongingButton">出力に追加</button>`;
+    document.getElementById("addBelongingButton")?.addEventListener("click", () => appendOutput(formatBelonging(item)));
+  }
+
   function renderWeaponCategories() {
     if (!el.weaponCategorySelect) return;
 
@@ -902,6 +996,9 @@ ${notes}`;
     renderFeatureDetail();
     renderPackageList();
     renderPackageDetail();
+    renderBelongingChips();
+    renderBelongingList();
+    renderBelongingDetail();
     renderWeaponList();
     renderWeaponDetail();
   }
@@ -1017,6 +1114,33 @@ ${notes}`;
       if (!card) return;
 
       state.selectedWeaponId = card.dataset.id;
+      render();
+    });
+
+
+    el.belongingKeywordInput?.addEventListener("input", () => {
+      state.belongingQuery = el.belongingKeywordInput.value;
+      render();
+    });
+
+    el.clearBelongingTagsButton?.addEventListener("click", () => {
+      state.selectedBelongingTags.clear();
+      render();
+    });
+
+    el.belongingChipArea?.addEventListener("click", (event) => {
+      const button = event.target.closest(".belonging-chip");
+      if (!button) return;
+      const tag = button.dataset.tag;
+      if (state.selectedBelongingTags.has(tag)) state.selectedBelongingTags.delete(tag);
+      else state.selectedBelongingTags.add(tag);
+      render();
+    });
+
+    el.belongingList?.addEventListener("click", (event) => {
+      const card = event.target.closest(".belonging-card[data-id]");
+      if (!card) return;
+      state.selectedBelongingId = card.dataset.id;
       render();
     });
 

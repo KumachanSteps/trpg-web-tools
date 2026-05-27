@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>探索者ヘルパーv2.8</title>
+  <title>探索者ヘルパーv2.9</title>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
@@ -24,8 +24,8 @@
             <span class="header-pill header-pill-violet">CoC 6版 / 7版 / パルプ</span>
             <span class="header-pill">開発用データJS管理</span>
           </div>
-          <h1 class="site-title">探索者ヘルパーv2.8</h1>
-          <p class="site-description">職業サンプル、特徴表、経験パッケージ、武器を検索・閲覧し、キャラシ貼り付け用に整形できるクローズド環境向け支援ツール。</p>
+          <h1 class="site-title">探索者ヘルパーv2.9</h1>
+          <p class="site-description">職業サンプル、特徴表、経験パッケージ、武器、持ち物を検索・閲覧し、キャラシ貼り付け用に整形できるクローズド環境向け支援ツール。</p>
         </div>
         <div class="header-actions">
           <button id="usageToggle" class="btn btn-soft" type="button">使い方</button>
@@ -35,7 +35,7 @@
       </div>
       <section id="usagePanel" class="header-panel is-hidden">
         <h2>使い方</h2>
-        <p>対象ルールを選び、職業サンプル・特徴表・経験パッケージ・武器を検索します。選択した情報は右側のメモ欄へ追加し、編集してからコピーできます。</p>
+        <p>対象ルールを選び、職業サンプル・特徴表・経験パッケージ・武器・持ち物を検索します。選択した情報は右側のメモ欄へ追加し、編集してからコピーできます。</p>
       </section>
       <section id="shortcutPanel" class="header-panel is-hidden">
         <h2>ショートカット</h2>
@@ -49,6 +49,7 @@
         <button class="tab-button" type="button" data-tab="feature">特徴表</button>
         <button class="tab-button" type="button" data-tab="package">経験パッケージ</button>
         <button class="tab-button" type="button" data-tab="weapon">武器</button>
+        <button class="tab-button" type="button" data-tab="belonging">持ち物</button>
       </div>
       <div class="rule-buttons">
         <span class="rule-label">対象ルール</span>
@@ -121,6 +122,34 @@
 
 
 
+
+        <section id="belongingTab" class="tool-tab is-hidden">
+          <div class="panel belonging-panel">
+            <div class="section-head">
+              <div>
+                <h2>持ち物アイデア辞典</h2>
+                <p>探索者の個性づけやセッション中の備えに使える持ち物を検索できます。</p>
+              </div>
+              <span class="data-badge">非ルールデータ</span>
+            </div>
+            <p class="belonging-notice">※持ち物データはルールブック出典ではなく、探索者作成用のアイデア辞典です。効果や判定はKP判断で調整してください。</p>
+            <div class="belonging-filter-grid">
+              <label>
+                <span>持ち物検索</span>
+                <input id="belongingKeywordInput" type="search" placeholder="持ち物名・カテゴリ・タグ・説明で検索" />
+              </label>
+              <div class="belonging-chip-panel">
+                <div class="skill-panel-head">
+                  <span class="chip-title">タグチップ検索</span>
+                  <button id="clearBelongingTagsButton" class="text-button" type="button">選択解除</button>
+                </div>
+                <div id="belongingChipArea" class="belonging-chip-area"></div>
+              </div>
+            </div>
+            <div id="belongingList" class="card-list belonging-list"></div>
+          </div>
+        </section>
+
         <section id="weaponTab" class="tool-tab is-hidden">
           <div class="panel weapon-panel">
             <div class="section-head">
@@ -154,6 +183,7 @@
         <section id="featureDetail" class="panel detail-panel is-hidden"></section>
         <section id="packageDetail" class="panel detail-panel is-hidden"></section>
         <section id="weaponDetail" class="panel detail-panel is-hidden"></section>
+        <section id="belongingDetail" class="panel detail-panel is-hidden"></section>
         <section class="panel output-panel">
           <div class="output-head">
             <div>
@@ -175,6 +205,7 @@
   <script src="./js/data-features.js"></script>
   <script src="./js/data-experience-packages.js"></script>
   <script src="./js/data-weapons.js"></script>
+  <script src="./js/data-belongings.js"></script>
   <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
   <script src="./js/app.js"></script>
 </body>

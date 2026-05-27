@@ -1325,3 +1325,22 @@ body.theme-dark .weapon-rule-tag {
     grid-template-columns: 1fr;
   }
 }
+
+
+.belonging-filter-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 14px; }
+.belonging-notice { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.belonging-chip-panel { border: 1px solid var(--line); border-radius: 18px; padding: 12px; background: rgba(255,255,255,0.48); }
+body.theme-dark .belonging-chip-panel { background: rgba(15,23,42,0.36); }
+.belonging-chip-area { display: flex; flex-wrap: wrap; gap: 8px; max-height: 92px; overflow-y: auto; padding-right: 4px; }
+.belonging-chip { border-radius: 999px; padding: 7px 10px; font-size: 12px; font-weight: 800; color: #7c2d12; background: #fff7ed; border: 1px solid #fed7aa; }
+.belonging-chip.is-active { color: #fff; background: #f97316; border-color: #f97316; }
+body.theme-dark .belonging-chip { color: #fed7aa; background: rgba(251,146,60,0.12); border-color: rgba(251,146,60,0.28); }
+body.theme-dark .belonging-chip.is-active { color: #111827; background: #fdba74; border-color: #fdba74; }
+.belonging-card { text-align: left; border: 1px solid var(--line); background: rgba(255,255,255,0.86); border-radius: 22px; padding: 16px; box-shadow: 0 12px 28px rgba(33,42,68,0.08); color: var(--text); }
+body.theme-dark .belonging-card { background: rgba(255,255,255,0.045); }
+.belonging-card.is-selected { border-color: rgba(249, 115, 22, 0.45); background: #fff7ed; }
+body.theme-dark .belonging-card.is-selected { border-color: rgba(251, 146, 60, 0.58); background: rgba(251, 146, 60, 0.12); }
+.belonging-content, .belonging-detail-box { background: rgba(255, 237, 213, 0.72); border-color: rgba(249, 115, 22, 0.22); }
+body.theme-dark .belonging-content, body.theme-dark .belonging-detail-box { background: rgba(251, 146, 60, 0.13); border-color: rgba(251, 146, 60, 0.26); }
+.belonging-note-short, .belonging-note-line { color: #9a3412; }
+body.theme-dark .belonging-note-short, body.theme-dark .belonging-note-line { color: #fed7aa; }
