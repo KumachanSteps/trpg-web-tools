@@ -35,6 +35,7 @@ function getPresets() {
 function getCleanupOptions() {
   return optionData.map((item) => ({ ...item, label: i18n(item.labelKey) }));
 }
+
 const state = {
   preset: "scenario",
   rawText: window.SCENARIO_PDF_PARSER_SAMPLE_TEXT || "",
@@ -108,6 +109,32 @@ function showToast(message) {
   window.setTimeout(() => toast.remove(), 2600);
 }
 
+function normalizeJapaneseText(text) {
+  return (text || "")
+    .normalize("NFKC")
+    .replace(/‧/g, "・")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/[ \t]+\n/g, "\n");
+}
+
+function removeHeaderFooterCandidates(text) {
+  const lines = text.split("\n");
+  return lines
+    .filter((line) => {
+      const trimmed = line.trim();
+      if (/^\d{1,3}$/.test(trimmed)) return false;
+      if (/^Page\s+\d+\s*(\/\s*\d+)?$/i.test(trimmed)) return false;
+      if (/^[-_―─]{3,}$/.test(trimmed)) return false;
+      return true;
+    })
+    .join("\n");
+}
+
 function removeNearDuplicateLines(text) {
   const lines = text.split("\n");
   const result = [];
@@ -124,7 +151,7 @@ function removeNearDuplicateLines(text) {
 
     result.push(line);
     recent.push(normalized);
-    if (recent.length > 8) recent.shift();
+    if (recent.length > 10) recent.shift();
   }
 
   return result.join("\n");
@@ -139,23 +166,165 @@ function replaceRoleTokens(text) {
   });
 }
 
-function formatText(input, preset, options) {
-  let text = input || "";
+function isMajorHeading(line) {
+  return /^(【[^】]+】|\d{2}[.．][^\n]+|[■◆]([^\n]{1,40})|#{1,6}\s+.+)$/.test(line.trim());
+}
 
-  text = text.replace(/[ \t]+/g, " ");
+function isStructuralStart(line) {
+  const current = line.trim();
+  if (!current) return true;
+  if (/^(【[^】]+】|\d{2}[.．]|#{1,6}\s)/.test(current)) return true;
+  if (/^[■◆◇▼●○◎※★▶→↓]/.test(current)) return true;
+  if (/^[・･]\S/.test(current)) return true;
+  if (/^[①②③④⑤⑥⑦⑧⑨⑩]/.test(current)) return true;
+  if (/^[QＱAＡ]\d*[.．]/.test(current)) return true;
+  if (/^\[[^\]]+\]$/.test(current)) return true;
+  if (/^［[^］]+］$/.test(current)) return true;
+  if (/^\[(能力値|技能|武器)\]/.test(current)) return true;
+  if (/^［(探索箇所|図書館情報|追加探索箇所)］/.test(current)) return true;
+  return false;
+}
 
-  if (options.normalizeSpaces) {
-    text = text.replace(/　/g, " ").replace(/ +/g, " ");
+function isDialogueStart(line) {
+  return /^[「『]/.test(line.trim());
+}
+
+function isClosingQuoteOnly(line) {
+  return /^[」』]$/.test(line.trim());
+}
+
+function isOpenDialogue(line) {
+  const trimmed = line.trim();
+  if (!/^[「『]/.test(trimmed)) return false;
+  return !/[」』]$/.test(trimmed);
+}
+
+function isScenarioMetaLine(line) {
+  return /^([●○・･]\s*)?(人数|プレイ人数|時間|ロスト率|必須技能|推奨|推奨技能|想定時間|舞台|備考|職業ポイント|職業技能|特記|必須条件|能力値|技能|武器|装甲|探索箇所|追加探索箇所)[:：]/.test(line.trim());
+}
+
+function isDanglingContinuation(line) {
+  const current = line.trim();
+  if (!current) return false;
+  if (/^(固定|の?ため|する|ている|である|ない|となる|だろう|だった|ました|ください|お願い|よう|こと|もの|場合|以上|以下|など|そして|また|ただし|しかし|そのため|これら|上記|現在|今回|今|あなた|彼|彼女|自身|自分|探索者|PC|PL|KP|HO\d*)/.test(current)) return true;
+  if (/^[ぁ-んァ-ヶ一-龠]/.test(current) && current.length <= 38 && !isStructuralStart(current) && !isDialogueStart(current)) return true;
+  return false;
+}
+
+function shouldKeepBlankBefore(line) {
+  const current = line.trim();
+  if (!current) return false;
+  if (isMajorHeading(current)) return true;
+  if (/^[▼●○★]/.test(current)) return true;
+  if (/^▶/.test(current)) return false;
+  return false;
+}
+
+function concatLines(previous, current) {
+  const prev = previous.trimEnd();
+  const next = current.trimStart();
+  if (!prev) return next;
+  if (!next) return prev;
+  if (isClosingQuoteOnly(next)) return prev + next;
+  if (/[「『（(［\[]$/.test(prev)) return prev + next;
+  if (/^[、。，．！？!?：:；;）」』）\]］]/.test(next)) return prev + next;
+  if (/[A-Za-z0-9]$/.test(prev) && /^[A-Za-z0-9]/.test(next)) return prev + " " + next;
+  return prev + next;
+}
+
+function fixMergedHeadings(text) {
+  return text
+    .replace(/([^\n])([■◆◇▼●○◎※★▶])/g, "$1\n$2")
+    .replace(/([^\n])(【[^】]+】)/g, "$1\n\n$2")
+    .replace(/(【[^】]+】)([^\n])/g, "$1\n$2")
+    .replace(/([^\n])(\d{2}[.．][^\n]+)/g, "$1\n\n$2")
+    .replace(/\n+[」』]/g, (match) => match.endsWith("』") ? "』" : "」");
+}
+
+function joinJapaneseBrokenLines(text, options) {
+  const sourceLines = text.split("\n").map((line) => line.trim()).filter((line, index, array) => {
+    if (line) return true;
+    return array[index - 1]?.trim() && array[index + 1]?.trim();
+  });
+  const result = [];
+
+  for (const rawLine of sourceLines) {
+    const current = rawLine.trim();
+    if (!current) {
+      if (result[result.length - 1] !== "") result.push("");
+      continue;
+    }
+
+    const previous = result[result.length - 1] || "";
+    const previousTrimmed = previous.trim();
+    const previousIsOpenDialogue = options.keepDialogueBreaks && isOpenDialogue(previousTrimmed);
+    const currentStartsDialogue = options.keepDialogueBreaks && isDialogueStart(current);
+    const currentStructural = isStructuralStart(current);
+    const previousStructural = isStructuralStart(previousTrimmed);
+    const currentMeta = options.keepScenarioMetaLines && isScenarioMetaLine(current);
+    const previousMeta = options.keepScenarioMetaLines && isScenarioMetaLine(previousTrimmed);
+    const previousShortSection = /^[●○■◆▼]\s*[^:：]{1,24}$/.test(previousTrimmed);
+    const previousEndsHard = /[。！？!?」』）)]$/.test(previousTrimmed);
+
+    let shouldJoin = false;
+
+    if (previousTrimmed) {
+      if (isClosingQuoteOnly(current)) {
+        shouldJoin = true;
+      } else if (previousIsOpenDialogue) {
+        shouldJoin = true;
+      } else if (currentStartsDialogue) {
+        shouldJoin = false;
+      } else if (currentStructural) {
+        shouldJoin = false;
+      } else if (previousShortSection && !isDanglingContinuation(current)) {
+        shouldJoin = false;
+      } else if (previousMeta && isDanglingContinuation(current)) {
+        shouldJoin = true;
+      } else if (previousStructural && !previousMeta && !isDanglingContinuation(current)) {
+        shouldJoin = false;
+      } else if (currentMeta) {
+        shouldJoin = false;
+      } else if (!previousEndsHard) {
+        shouldJoin = true;
+      } else if (isDanglingContinuation(current)) {
+        shouldJoin = true;
+      } else if (!options.keepDialogueBreaks && !currentStructural) {
+        shouldJoin = true;
+      }
+    }
+
+    if (shouldJoin) {
+      result[result.length - 1] = concatLines(previous, current);
+    } else {
+      if (shouldKeepBlankBefore(current) && result.length && result[result.length - 1] !== "") {
+        result.push("");
+      }
+      result.push(current);
+    }
   }
 
-  if (options.removePageNumbers) {
-    text = text.replace(/^\s*\d+\s*$/gm, "");
+  return result.join("\n");
+}
+
+function splitSections(text) {
+  return text
+    .replace(/\n*(【\d{2}[^】]*】)/g, "\n\n$1")
+    .replace(/\n*(■[^\n]{1,40})/g, "\n\n$1")
+    .replace(/\n*(●[^\n]{1,40})/g, "\n\n$1")
+    .replace(/\n*(▼[^\n]{1,40})/g, "\n\n$1")
+    .replace(/\n{3,}/g, "\n\n");
+}
+
+function formatText(input, preset, options) {
+  let text = normalizeJapaneseText(input || "");
+
+  if (options.removePageNumbers || options.removeHeaders) {
+    text = removeHeaderFooterCandidates(text);
   }
 
   if (options.fixMergedHeadings) {
-    text = text.replace(/([^\n])([■◆◇▼●※◎〓△❖◈])/g, "$1\n$2");
-    text = text.replace(/([^\n])(【[^】]+】)/g, "$1\n\n$2");
-    text = text.replace(/(【[^】]+】)([^\n])/g, "$1\n$2");
+    text = fixMergedHeadings(text);
   }
 
   if (options.removeDuplicateLines) {
@@ -163,34 +332,7 @@ function formatText(input, preset, options) {
   }
 
   if (options.joinBrokenLines) {
-    const labelPattern = /^(人数|時間|ロスト率|推奨技能|舞台|備考|含まれる要素|含まれない要素|成功|失敗|SAN|報酬|後遺症|技能)[:：]/;
-    const headingPattern = /^(【[^】]+】|[■◆◇▼●※◎〓△❖◈]|Call of Cthulhu)/;
-    const lines = text.split("\n");
-    const joined = [];
-
-    for (const line of lines) {
-      const current = line.trim();
-      const previous = joined[joined.length - 1] || "";
-      const prevLooksComplete = /[。！？!?」』】）)]$/.test(previous);
-      const keepByDialogue = options.keepDialogueBreaks && /^「/.test(current);
-      const keepByScenarioMeta = options.keepScenarioMetaLines && (labelPattern.test(current) || labelPattern.test(previous));
-      const shouldKeepLine =
-        !current ||
-        headingPattern.test(current) ||
-        keepByDialogue ||
-        /^（/.test(current) ||
-        keepByScenarioMeta;
-
-      const canJoin = previous && current && !shouldKeepLine && !prevLooksComplete;
-
-      if (canJoin) {
-        joined[joined.length - 1] = previous + current;
-      } else {
-        joined.push(current);
-      }
-    }
-
-    text = joined.join("\n");
+    text = joinJapaneseBrokenLines(text, options);
   }
 
   if (options.replaceRoleTokens) {
@@ -198,13 +340,18 @@ function formatText(input, preset, options) {
   }
 
   if (options.markSkillChecks) {
-    text = text.replace(/<([^>]+)>/g, "●《$1》");
-    text = text.replace(/成功：/g, "● 成功：");
-    text = text.replace(/失敗：/g, "○ 失敗：");
+    text = text.replace(/[<＜]([^>＞]+)[>＞]/g, "●《$1》");
+    text = text.replace(/^成功[:：]/gm, "● 成功：");
+    text = text.replace(/^失敗[:：]/gm, "○ 失敗：");
   }
 
   if (options.markHandouts) {
-    text = text.replace(/^資料：(.+)$/gm, "■ 資料情報：$1");
+    text = text.replace(/^資料[:：](.+)$/gm, "■ 資料情報：$1");
+    text = text.replace(/^・([^\n]{1,40}について)$/gm, "■ 資料情報：$1");
+  }
+
+  if (options.splitSections || preset === "scenario") {
+    text = splitSections(text);
   }
 
   if (preset === "ccfolia") {
@@ -222,7 +369,7 @@ function formatText(input, preset, options) {
     text = text.replace(/\n{3,}/g, "\n\n");
   }
 
-  return text.replace(/\n{3,}/g, "\n\n").trim();
+  return text.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function getMatches(text, term) {
@@ -332,7 +479,7 @@ function downloadText() {
 function sendToSnippetTool() {
   const payload = {
     source: "scenario_pdf_parser",
-    version: "0.2",
+    version: "0.3",
     text: state.outputText,
     preset: state.preset,
     options: state.options,
@@ -378,6 +525,101 @@ function goMatch(direction) {
   renderHighlightedOutput();
 }
 
+function makeTextItem(item) {
+  const transform = item.transform || [1, 0, 0, 1, 0, 0];
+  return {
+    text: item.str || "",
+    x: transform[4] || 0,
+    y: transform[5] || 0,
+    width: item.width || 0,
+    height: item.height || Math.abs(transform[3]) || 10,
+  };
+}
+
+function buildRowsFromItems(items) {
+  const sorted = items
+    .map(makeTextItem)
+    .filter((item) => item.text && item.text.trim())
+    .sort((a, b) => b.y - a.y || a.x - b.x);
+  const rows = [];
+
+  for (const item of sorted) {
+    const tolerance = Math.max(2.5, item.height * 0.45);
+    let row = rows.find((candidate) => Math.abs(candidate.y - item.y) <= tolerance);
+    if (!row) {
+      row = { y: item.y, items: [] };
+      rows.push(row);
+    }
+    row.items.push(item);
+    row.y = (row.y * (row.items.length - 1) + item.y) / row.items.length;
+  }
+
+  return rows
+    .map((row) => {
+      const lineItems = row.items.sort((a, b) => a.x - b.x);
+      let text = "";
+      let lastRight = null;
+      let minX = Infinity;
+      let maxX = -Infinity;
+
+      for (const item of lineItems) {
+        const current = item.text.trim();
+        if (!current) continue;
+        minX = Math.min(minX, item.x);
+        maxX = Math.max(maxX, item.x + item.width);
+
+        if (!text) {
+          text = current;
+        } else {
+          const gap = lastRight === null ? 0 : item.x - lastRight;
+          const needsSpace = gap > Math.max(4, item.height * 0.45) && !/^[、。，．！？!?：:；;）」』）\]］]/.test(current);
+          text += needsSpace ? ` ${current}` : current;
+        }
+        lastRight = item.x + item.width;
+      }
+
+      return { text: normalizeJapaneseText(text).trim(), y: row.y, minX, maxX, centerX: (minX + maxX) / 2 };
+    })
+    .filter((row) => row.text)
+    .sort((a, b) => b.y - a.y || a.minX - b.minX);
+}
+
+function orderRowsForReading(rows, pageWidth) {
+  if (!pageWidth || rows.length < 12) return rows.map((row) => row.text).join("\n");
+
+  const mid = pageWidth / 2;
+  const left = [];
+  const right = [];
+  const full = [];
+
+  for (const row of rows) {
+    const width = row.maxX - row.minX;
+    if (width > pageWidth * 0.55 || (row.minX < mid * 0.75 && row.maxX > mid * 1.25)) {
+      full.push(row);
+    } else if (row.centerX < mid) {
+      left.push(row);
+    } else {
+      right.push(row);
+    }
+  }
+
+  const hasTwoColumns = left.length >= 5 && right.length >= 5;
+  if (!hasTwoColumns) return rows.map((row) => row.text).join("\n");
+
+  const columnTop = Math.max(left[0]?.y || 0, right[0]?.y || 0);
+  const columnBottom = Math.min(left[left.length - 1]?.y || 0, right[right.length - 1]?.y || 0);
+  const topFull = full.filter((row) => row.y > columnTop + 8);
+  const middleFull = full.filter((row) => row.y <= columnTop + 8 && row.y >= columnBottom - 8);
+  const bottomFull = full.filter((row) => row.y < columnBottom - 8);
+  const ordered = [...topFull, ...left, ...right, ...middleFull, ...bottomFull].sort((a, b) => {
+    const groupA = topFull.includes(a) ? 0 : left.includes(a) ? 1 : right.includes(a) ? 2 : middleFull.includes(a) ? 3 : 4;
+    const groupB = topFull.includes(b) ? 0 : left.includes(b) ? 1 : right.includes(b) ? 2 : middleFull.includes(b) ? 3 : 4;
+    return groupA - groupB || b.y - a.y || a.minX - b.minX;
+  });
+
+  return ordered.map((row) => row.text).join("\n");
+}
+
 async function extractTextFromPdf(file) {
   if (!window.pdfjsLib) {
     throw new Error("pdf.jsが読み込まれていません。");
@@ -390,9 +632,11 @@ async function extractTextFromPdf(file) {
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    const pageText = content.items.map((item) => item.str).join("\n");
-    pages.push(pageText);
+    const viewport = page.getViewport({ scale: 1 });
+    const content = await page.getTextContent({ normalizeWhitespace: false, disableCombineTextItems: false });
+    const rows = buildRowsFromItems(content.items || []);
+    const pageText = orderRowsForReading(rows, viewport.width);
+    if (pageText.trim()) pages.push(pageText);
   }
 
   return pages.join("\n\n");
