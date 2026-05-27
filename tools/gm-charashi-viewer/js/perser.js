@@ -422,7 +422,7 @@ const CharashiParser = (() => {
   const COMBAT_SKILLS = ["回避", "こぶし", "拳", "パンチ", "キック", "組み付き", "組付き", "頭突き", "頭突", "マーシャルアーツ", "MA", "近接戦闘", "近接", "格闘", "ナイフ", "剣", "刀", "日本刀", "槍", "斧", "銃剣", "居合", "拳銃", "射撃", "ショットガン", "ライフル", "マシンガン", "サブマシンガン"];
 
   const EMOKLORE_PARAM_ORDER = ["身体", "器用", "精神", "五感", "知力", "魅力", "社会", "運勢", "根性"];
-  const EMOKLORE_STATUS_ORDER = ["HP", "MP", "共鳴", "共鳴値", "∞共鳴", "イニシアチブ"];
+  const EMOKLORE_STATUS_ORDER = ["HP", "MP", "共鳴"];
 
   const CARD_INITIAL_6E = {
     "こぶし": 50, "こぶし：パンチ": 50, "パンチ": 50, "キック": 25, "組み付き": 25, "頭突き": 10, "投擲": 25,
@@ -455,9 +455,9 @@ const CharashiParser = (() => {
     const data = isPlainObject(source.data) ? source.data : isPlainObject(source.character) ? source.character : source;
     const status = normalizePairs(data.status || data.statuses || []);
     const params = normalizePairs(data.params || data.parameters || []);
-    if (data.initiative !== undefined && !status["イニシアチブ"]) status["イニシアチブ"] = String(data.initiative);
     const rawChatPalette = String(data.commands || data.command || data.chatPalette || data.palette || "");
     const edition = detectEditionFromCharacter(rawChatPalette, params, data);
+    if (data.initiative !== undefined && !status["イニシアチブ"] && edition !== "emoklore") status["イニシアチブ"] = String(data.initiative);
     const allSkills = parseSkillsFromCommands(rawChatPalette, edition);
     return {
       id: createId(),
@@ -552,7 +552,11 @@ const CharashiParser = (() => {
   }
 
   function mainStatusKeys(pc) {
-    if (pc.edition === "emoklore") return orderedKeys(pc.status, EMOKLORE_STATUS_ORDER, 6);
+    if (pc.edition === "emoklore") {
+      const status = pc.status || {};
+      const keys = EMOKLORE_STATUS_ORDER.filter(key => Object.prototype.hasOwnProperty.call(status, key));
+      return keys.length ? keys : orderedKeys(status, [], 3).filter(key => key !== "イニシアチブ");
+    }
     return MAIN_STATUS;
   }
 
