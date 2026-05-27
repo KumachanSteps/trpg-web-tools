@@ -52,7 +52,8 @@
         <div>
           <h1 class="site-title">いあキャラMEMOジェネレータ v1.87</h1>
           <p class="site-description">
-            CCFOLIA駒JSONと、いあきゃらTXTを読み込み、プロフィール・所持品・メモ・チャットパレットを整理して、CCFOLIA用のキャラメモ入り駒JSONを再生成します。
+            CCFOLIA駒JSONと、いあきゃらTXTを読み込み、プロフィール・所持品・メモ・チャットパレットを整理して、<br />
+            CCFOLIA用のキャラメモ入り駒JSONを再生成します。
           </p>
         </div>
       </div>
@@ -71,13 +72,14 @@
         <section class="panel panel-input">
           <div class="panel-title">
             <span class="panel-icon">▣</span>
-            <h2>1. 入力データ</h2>
+            <h2>1. 駒データ入力</h2>
           </div>
 
           <label class="field-label" for="jsonInput">CCFOLIA駒JSONデータ</label>
           <textarea
             id="jsonInput"
-            class="json-input"
+            class="json-input compact-one-line"
+            rows="1"
             placeholder="キャラ出力&gt;ココフォリア駒出力 からコピー&amp;ペースト"
           ></textarea>
 
@@ -99,7 +101,8 @@
           <label class="field-label" for="txtInput">いあきゃらTXT</label>
           <textarea
             id="txtInput"
-            class="txt-input"
+            class="txt-input compact-one-line"
+            rows="1"
             placeholder="いあきゃらTXTを貼り付け、またはテキストファイルを開く"
           ></textarea>
 

@@ -710,21 +710,44 @@ textarea::placeholder {
   color: #64748b;
 }
 
+/* =========================================================
+   Compact Input Textareas
+   ========================================================= */
+
 .json-input,
-.txt-input,
-.compact-textarea {
-  height: 110px;
-  padding: 12px;
+.txt-input {
+  height: 44px;
+  min-height: 44px;
+  max-height: 120px;
+  padding: 12px 14px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 11px;
-  line-height: 1.55;
+  line-height: 1.45;
   resize: vertical;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
-.json-input {
-  height: 64px;
-  font-size: 10px;
-  line-height: 1.45;
+.compact-one-line {
+  height: 44px;
+  min-height: 44px;
+}
+
+.site-description br {
+  display: block;
+}
+
+@media (max-width: 720px) {
+  .site-description br {
+    display: none;
+  }
+
+  .json-input,
+  .txt-input {
+    white-space: normal;
+    overflow-y: auto;
+  }
 }
 
 .input-actions,
