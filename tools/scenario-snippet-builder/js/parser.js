@@ -1,37 +1,14 @@
 function parseSourceText(rawText) {
   let text = rawText || "";
+  text = text.replace(/
+/g, "
+").replace(//g, "
+");
+  text = text.replace(/
+{3,}/g, "
 
-  if (document.getElementById("normalizeFullWidthSpaces").checked) {
-    text = text.replace(/　/g, " ");
-  }
-
-  if (document.getElementById("trimLineSpaces").checked) {
-    text = text
-      .split("\n")
-      .map(line => line.trim())
-      .join("\n");
-  }
-
-  if (document.getElementById("mergePdfLines").checked) {
-    text = mergeBrokenLines(text);
-  }
-
-  if (document.getElementById("removeBlankLines").checked) {
-    text = text.replace(/\n{3,}/g, "\n\n");
-  }
-
-  if (!document.getElementById("keepLineBreaks").checked) {
-    text = text.replace(/\n+/g, " ");
-  }
-
-  if (document.getElementById("splitByBlankLines").checked) {
-    text = text
-      .split(/\n\s*\n/)
-      .map((block, index) => `【Block ${index + 1}】\n${block.trim()}`)
-      .join("\n\n");
-  }
-
-  return text;
+");
+  return text.trim();
 }
 
 function mergeBrokenLines(text) {

@@ -879,3 +879,40 @@ textarea::-webkit-scrollbar-thumb {
   max-height: calc(1.45em * 6 + 16px);
   overflow: auto;
 }
+
+/* Bridge / TXT import update */
+.upper-panel,
+.source-toggle {
+  display: none !important;
+}
+
+.panel-title-row {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.text-file-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bridge-note {
+  margin-bottom: 8px;
+  padding: 7px 9px;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--soft-accent), rgba(248, 250, 252, 0.72));
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+[data-theme="dark"] .bridge-note {
+  border-color: rgba(129, 140, 248, 0.45);
+  background: rgba(30, 27, 75, 0.55);
+}

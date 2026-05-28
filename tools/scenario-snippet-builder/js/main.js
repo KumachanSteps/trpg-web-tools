@@ -22,8 +22,8 @@ let currentSearchIndex = -1;
 
 const appRoot = document.getElementById("appRoot");
 const themeToggle = document.getElementById("themeToggle");
-const showSourceBtn = document.getElementById("showSourceBtn");
-const pasteText = document.getElementById("pasteText");
+const openTxtBtn = document.getElementById("openTxtBtn");
+const txtFileInput = document.getElementById("txtFileInput");
 const parsedText = document.getElementById("parsedText");
 const cardsList = document.getElementById("cardsList");
 const statusEl = document.getElementById("status");
@@ -34,10 +34,12 @@ const searchBox = document.getElementById("searchBox");
 const searchCount = document.getElementById("searchCount");
 const prevSearchBtn = document.getElementById("prevSearchBtn");
 const nextSearchBtn = document.getElementById("nextSearchBtn");
+const bridgeNote = document.getElementById("bridgeNote");
+const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 themeToggle.addEventListener("click", toggleTheme);
-showSourceBtn.addEventListener("click", showInputPanel);
-document.getElementById("parseBtn").addEventListener("click", parseText);
+openTxtBtn.addEventListener("click", () => txtFileInput.click());
+txtFileInput.addEventListener("change", openTxtFile);
 document.getElementById("clearBtn").addEventListener("click", clearAll);
 document.getElementById("addCardBtn").addEventListener("click", () => addCard({ type: newCardType.value || "scene" }));
 document.getElementById("createFromSelectionBtn").addEventListener("click", createCardFromSelection);
@@ -52,8 +54,6 @@ searchBox.addEventListener("keydown", event => {
     moveSearchResult(event.shiftKey ? -1 : 1);
   }
 });
-
-pasteText.addEventListener("input", saveState);
 
 parsedText.addEventListener("input", () => {
   updateSearchMatches();
@@ -162,15 +162,69 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = theme === "dark" ? "dark" : "light";
 }
 
-function showInputPanel() {
-  appRoot.classList.remove("source-hidden");
-  saveState();
+
+async function openTxtFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    importSourceText(text, {
+      source: "txt",
+      sourceName: file.name,
+      autoParse: true,
+      clearBridge: false
+    });
+    setStatus(`TXTファイルを読み込みました: ${file.name}`);
+  } catch {
+    setStatus("TXTファイルの読み込みに失敗しました。");
+  } finally {
+    txtFileInput.value = "";
+  }
 }
 
-function hideInputPanel() {
-  appRoot.classList.add("source-hidden");
-  saveState();
+function detectBridgeImport() {
+  const raw = localStorage.getItem(BRIDGE_KEY);
+  if (!raw) return false;
+
+  try {
+    const payload = JSON.parse(raw);
+    const text = typeof payload === "string" ? payload : payload.text || payload.importText || "";
+    const autoParse = payload.autoParse !== false;
+    const sourceName = payload.sourceName || payload.source || "PDF Parser";
+
+    if (!text) {
+      localStorage.removeItem(BRIDGE_KEY);
+      return false;
+    }
+
+    importSourceText(text, {
+      source: "bridge",
+      sourceName,
+      autoParse,
+      clearBridge: true
+    });
+    return true;
+  } catch {
+    localStorage.removeItem(BRIDGE_KEY);
+    return false;
+  }
 }
+
+function importSourceText(text, options = {}) {
+  const importedText = options.autoParse === false ? text : parseSourceText(text);
+  parsedText.value = importedText;
+  updateSearchMatches();
+  saveState();
+
+  if (options.clearBridge) {
+    localStorage.removeItem(BRIDGE_KEY);
+  }
+
+  const label = options.source === "bridge" ? "PDF Parserから本文を受け取りました。" : "本文を読み込みました。";
+  bridgeNote.textContent = options.sourceName ? `${label}（${options.sourceName}）` : label;
+}
+
 
 function initTypeControls() {
   const optionsHtml = Object.entries(INFO_TYPES)
@@ -183,14 +237,6 @@ function initTypeControls() {
   selectionCardType.value = "memo";
 
   renderTypeFilters();
-}
-
-function parseText() {
-  const text = parseSourceText(pasteText.value || "");
-  parsedText.value = text;
-  updateSearchMatches();
-  hideInputPanel();
-  setStatus("本文を編集欄に反映しました。");
 }
 
 function addCard(initial = {}) {
@@ -404,7 +450,6 @@ function updateSearchCount() {
 }
 
 function clearAll() {
-  pasteText.value = "";
   parsedText.value = "";
   searchBox.value = "";
 
@@ -412,8 +457,6 @@ function clearAll() {
   currentSearchIndex = -1;
   cards = [];
   activeFilter = "all";
-
-  appRoot.classList.remove("source-hidden");
   localStorage.removeItem(STORAGE_KEY);
 
   updateSearchCount();
@@ -424,7 +467,6 @@ function clearAll() {
 
 function saveState() {
   const state = {
-    pasteText: pasteText.value,
     parsedText: parsedText.value,
     cards,
     activeFilter,
@@ -446,8 +488,6 @@ function loadState() {
 
   try {
     const state = JSON.parse(raw);
-
-    pasteText.value = state.pasteText || "";
     parsedText.value = state.parsedText || "";
     cards = sanitizeCards(state.cards);
     activeFilter = state.activeFilter === "all" || INFO_TYPES[state.activeFilter] ? state.activeFilter : "all";
@@ -459,8 +499,6 @@ function loadState() {
     if (state.selectionCardType && INFO_TYPES[state.selectionCardType]) {
       selectionCardType.value = state.selectionCardType;
     }
-
-    appRoot.classList.remove("source-hidden");
     updateSearchMatches();
   } catch {
     localStorage.removeItem(STORAGE_KEY);
@@ -510,5 +548,6 @@ function escapeAttribute(str) {
 applyTheme(localStorage.getItem(`${STORAGE_KEY}_theme`) || "light");
 initTypeControls();
 loadState();
+detectBridgeImport();
 renderTypeFilters();
 renderCards();

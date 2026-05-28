@@ -17,11 +17,11 @@
 </head>
 
 <body>
-  <div class="app" id="appRoot">
+  <div class="app source-hidden" id="appRoot">
     <header class="app-header">
       <div class="header-title-group">
         <div class="app-title">TRPGシナリオ情報カード作成ツール</div>
-        <div class="app-subtitle">シナリオ本文を貼り付け、編集用本文から必要情報をカード化し、ココフォリア用スニペットとしてコピーできます。</div>
+        <div class="app-subtitle">PDF Parser / TXTファイルから本文を読み込み、必要情報をカード化してココフォリア用スニペットとしてコピーできます。</div>
       </div>
 
       <button id="themeToggle" class="theme-switch" type="button" aria-label="ライトモードとナイトモードを切り替え">
@@ -32,45 +32,18 @@
         <span class="theme-knob"></span>
       </button>
     </header>
-
-    <button id="showSourceBtn" class="source-toggle">入力パネルを表示</button>
-
-    <section class="panel upper-panel">
-      <div class="toolbar">
-        <h1>TRPGシナリオ情報カード作成ツール Beta</h1>
-      </div>
-
-      <div class="beta-note">
-        <strong>Beta版:</strong> テキスト貼り付け、本文編集、情報カード作成、コピーに対応しています。<br>
-        PDF/ファイル読み込みはまだ未対応です。<br>
-        作業内容はこのブラウザ内に自動保存されます。
-      </div>
-
-      <textarea id="pasteText" placeholder="シナリオ本文をここに貼り付け"></textarea>
-
-      <div class="toolbar">
-        <button class="primary" id="parseBtn">本文を反映</button>
-        <button id="clearBtn">クリア</button>
-        <span class="hint">貼り付け → 本文を反映 → 編集欄に表示</span>
-      </div>
-
-      <section class="format-rules">
-        <h3>整形ルール</h3>
-        <div class="rule-grid">
-          <label class="rule-check"><input type="checkbox" id="keepLineBreaks" checked>元の改行を保持</label>
-          <label class="rule-check"><input type="checkbox" id="removeBlankLines" checked>余分な空行を削除</label>
-          <label class="rule-check"><input type="checkbox" id="trimLineSpaces" checked>行頭・行末の空白を削除</label>
-          <label class="rule-check"><input type="checkbox" id="normalizeFullWidthSpaces">全角スペースを整える</label>
-          <label class="rule-check"><input type="checkbox" id="mergePdfLines">PDF改行を結合</label>
-          <label class="rule-check"><input type="checkbox" id="splitByBlankLines">空行ごとに分割</label>
-          <label class="rule-check"><input type="checkbox" id="preserveHeadings" checked>見出し行を保持</label>
-        </div>
-      </section>
-    </section>
-
     <main class="main-layout">
       <section class="panel left-panel">
-        <h2>編集用本文</h2>
+        <div class="panel-title-row">
+          <h2>編集用本文</h2>
+          <div class="text-file-controls">
+            <input id="txtFileInput" type="file" accept=".txt,text/plain" hidden>
+            <button id="openTxtBtn">シナリオTXTファイルを開く</button>
+          </div>
+        </div>
+        <div class="bridge-note" id="bridgeNote">
+          PDF Parserから送られた本文、またはTXTファイルの本文がここに表示されます。
+        </div>
 
         <div class="search-row">
           <input id="searchBox" type="text" placeholder="本文検索..." />
@@ -80,7 +53,7 @@
           <span id="searchCount" class="search-count">0 / 0</span>
         </div>
 
-        <textarea id="parsedText" placeholder="読み込んだ本文・編集可能テキスト"></textarea>
+        <textarea id="parsedText" placeholder="PDF Parserから送られた本文、またはTXTファイルを開いた本文がここに表示されます。"></textarea>
 
         <div class="selection-controls">
           <select id="selectionCardType"></select>

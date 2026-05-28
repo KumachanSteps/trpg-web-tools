@@ -11,11 +11,8 @@ function handleShortcuts(event) {
     createCardFromSelection();
     return;
   }
-
   if (event.key === "Escape") {
     event.preventDefault();
-    appRoot.classList.toggle("source-hidden");
-    saveState();
     return;
   }
 
