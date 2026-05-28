@@ -13,7 +13,8 @@ const INFO_TYPES = {
   ho4: { label: "HO4", marker: "❖", color: "#7c3aed" }
 };
 
-const STORAGE_KEY = "trpgScenarioSnippetBuilderBeta";
+const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_1";
+const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 let cards = [];
 let activeFilter = "all";
@@ -23,6 +24,7 @@ let currentSearchIndex = -1;
 const appRoot = document.getElementById("appRoot");
 const themeToggle = document.getElementById("themeToggle");
 const openTxtBtn = document.getElementById("openTxtBtn");
+const clearTextBtn = document.getElementById("clearTextBtn");
 const txtFileInput = document.getElementById("txtFileInput");
 const parsedText = document.getElementById("parsedText");
 const cardsList = document.getElementById("cardsList");
@@ -35,12 +37,11 @@ const searchCount = document.getElementById("searchCount");
 const prevSearchBtn = document.getElementById("prevSearchBtn");
 const nextSearchBtn = document.getElementById("nextSearchBtn");
 const bridgeNote = document.getElementById("bridgeNote");
-const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 themeToggle.addEventListener("click", toggleTheme);
 openTxtBtn.addEventListener("click", () => txtFileInput.click());
+clearTextBtn.addEventListener("click", clearTextOnly);
 txtFileInput.addEventListener("change", openTxtFile);
-document.getElementById("clearBtn").addEventListener("click", clearAll);
 document.getElementById("addCardBtn").addEventListener("click", () => addCard({ type: newCardType.value || "scene" }));
 document.getElementById("createFromSelectionBtn").addEventListener("click", createCardFromSelection);
 document.getElementById("searchBtn").addEventListener("click", () => searchParsedText("first"));
@@ -104,7 +105,6 @@ cardsList.addEventListener("click", event => {
 
   if (action === "typeIcon") {
     if (!card) return;
-
     card.type = INFO_TYPES[target.dataset.type] ? target.dataset.type : card.type;
     renderCards();
     saveState();
@@ -137,7 +137,6 @@ cardsList.addEventListener("click", event => {
 
   if (action === "duplicate") {
     if (!card) return;
-
     cards.push({
       id: createId(),
       type: card.type,
@@ -145,7 +144,6 @@ cardsList.addEventListener("click", event => {
       body: card.body,
       extra: card.extra || ""
     });
-
     renderCards();
     saveState();
     setStatus("カードを複製しました。");
@@ -162,9 +160,8 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = theme === "dark" ? "dark" : "light";
 }
 
-
 async function openTxtFile(event) {
-  const file = event.target.files?.[0];
+  const file = event.target.files && event.target.files[0];
   if (!file) return;
 
   try {
@@ -176,7 +173,8 @@ async function openTxtFile(event) {
       clearBridge: false
     });
     setStatus(`TXTファイルを読み込みました: ${file.name}`);
-  } catch {
+  } catch (error) {
+    console.error(error);
     setStatus("TXTファイルの読み込みに失敗しました。");
   } finally {
     txtFileInput.value = "";
@@ -205,7 +203,8 @@ function detectBridgeImport() {
       clearBridge: true
     });
     return true;
-  } catch {
+  } catch (error) {
+    console.error(error);
     localStorage.removeItem(BRIDGE_KEY);
     return false;
   }
@@ -225,17 +224,8 @@ function importSourceText(text, options = {}) {
   bridgeNote.textContent = options.sourceName ? `${label}（${options.sourceName}）` : label;
 }
 
-
 function initTypeControls() {
-  const optionsHtml = Object.entries(INFO_TYPES)
-    .map(([key, info]) => `<option value="${key}">${info.marker} ${info.label}</option>`)
-    .join("");
-
-  newCardType.innerHTML = optionsHtml;
-  selectionCardType.innerHTML = optionsHtml;
-  newCardType.value = "scene";
-  selectionCardType.value = "memo";
-
+  renderTypeSelectOptions();
   renderTypeFilters();
 }
 
@@ -282,7 +272,6 @@ function createCardFromSelection() {
 
 async function copyCard(id) {
   const card = cards.find(c => c.id === id);
-
   if (!card) return;
 
   const output = buildCardOutput(card);
@@ -298,7 +287,6 @@ async function copyCard(id) {
 
 async function copyCcfPayload(id, mode) {
   const card = cards.find(c => c.id === id);
-
   if (!card) return;
 
   const payload = buildCcfPayload(card, mode);
@@ -310,20 +298,14 @@ async function copyCcfPayload(id, mode) {
     fallbackCopy(output);
   }
 
-  if (mode === "chat") {
-    setStatus("CCFOLIAチャット用データをコピーしました。");
-  } else {
-    setStatus("CCFOLIAテキスト用データをコピーしました。");
-  }
+  setStatus(mode === "chat" ? "CCFOLIAチャット用データをコピーしました。" : "CCFOLIAテキスト用データをコピーしました。");
 }
 
 function fallbackCopy(text) {
   const temp = document.createElement("textarea");
-
   temp.value = text;
   temp.style.position = "fixed";
   temp.style.left = "-9999px";
-
   document.body.appendChild(temp);
   temp.focus();
   temp.select();
@@ -347,16 +329,13 @@ function updateSearchMatches() {
 
   while (startIndex <= text.length) {
     const index = text.indexOf(query, startIndex);
-
     if (index === -1) break;
 
     searchMatches.push({ start: index, end: index + query.length });
     startIndex = index + Math.max(query.length, 1);
   }
 
-  if (searchMatches.length > 0) {
-    currentSearchIndex = 0;
-  }
+  if (searchMatches.length > 0) currentSearchIndex = 0;
 
   updateSearchCount();
 }
@@ -374,9 +353,7 @@ function searchParsedText(mode = "first") {
     return;
   }
 
-  if (mode === "first") {
-    currentSearchIndex = 0;
-  }
+  if (mode === "first") currentSearchIndex = 0;
 
   selectCurrentSearchResult();
 }
@@ -387,9 +364,7 @@ function moveSearchResult(direction) {
     return;
   }
 
-  if (searchMatches.length === 0) {
-    updateSearchMatches();
-  }
+  if (searchMatches.length === 0) updateSearchMatches();
 
   if (searchMatches.length === 0) {
     setStatus("検索語が見つかりませんでした。");
@@ -398,20 +373,14 @@ function moveSearchResult(direction) {
 
   currentSearchIndex = currentSearchIndex < 0 ? 0 : currentSearchIndex + direction;
 
-  if (currentSearchIndex < 0) {
-    currentSearchIndex = searchMatches.length - 1;
-  }
-
-  if (currentSearchIndex >= searchMatches.length) {
-    currentSearchIndex = 0;
-  }
+  if (currentSearchIndex < 0) currentSearchIndex = searchMatches.length - 1;
+  if (currentSearchIndex >= searchMatches.length) currentSearchIndex = 0;
 
   selectCurrentSearchResult();
 }
 
 function selectCurrentSearchResult() {
   const match = searchMatches[currentSearchIndex];
-
   if (!match) return;
 
   parsedText.focus({ preventScroll: true });
@@ -428,9 +397,7 @@ function selectCurrentSearchResult() {
 
 function flashSearchHighlight() {
   parsedText.classList.add("search-active");
-
   window.clearTimeout(flashSearchHighlight.timer);
-
   flashSearchHighlight.timer = window.setTimeout(() => {
     parsedText.classList.remove("search-active");
   }, 650);
@@ -439,7 +406,6 @@ function flashSearchHighlight() {
 function scrollParsedTextToIndex(index) {
   const lineNumber = parsedText.value.slice(0, index).split("\n").length - 1;
   const lineHeight = parseFloat(window.getComputedStyle(parsedText).lineHeight) || 20;
-
   parsedText.scrollTop = Math.max(0, lineNumber * lineHeight - parsedText.clientHeight / 2);
 }
 
@@ -449,20 +415,12 @@ function updateSearchCount() {
     : `${currentSearchIndex + 1} / ${searchMatches.length}`;
 }
 
-function clearAll() {
+function clearTextOnly() {
   parsedText.value = "";
-  searchBox.value = "";
-
-  searchMatches = [];
-  currentSearchIndex = -1;
-  cards = [];
-  activeFilter = "all";
-  localStorage.removeItem(STORAGE_KEY);
-
-  updateSearchCount();
-  renderTypeFilters();
-  renderCards();
-  setStatus("内容をクリアしました。");
+  updateSearchMatches();
+  saveState();
+  bridgeNote.textContent = "本文をクリアしました。PDF Parserから送るか、TXTファイルを開いてください。";
+  setStatus("本文をクリアしました。");
 }
 
 function saveState() {
@@ -476,14 +434,14 @@ function saveState() {
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
+  } catch (error) {
+    console.error(error);
     setStatus("自動保存に失敗しました。");
   }
 }
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
-
   if (!raw) return;
 
   try {
@@ -492,15 +450,12 @@ function loadState() {
     cards = sanitizeCards(state.cards);
     activeFilter = state.activeFilter === "all" || INFO_TYPES[state.activeFilter] ? state.activeFilter : "all";
 
-    if (state.newCardType && INFO_TYPES[state.newCardType]) {
-      newCardType.value = state.newCardType;
-    }
+    if (state.newCardType && INFO_TYPES[state.newCardType]) newCardType.value = state.newCardType;
+    if (state.selectionCardType && INFO_TYPES[state.selectionCardType]) selectionCardType.value = state.selectionCardType;
 
-    if (state.selectionCardType && INFO_TYPES[state.selectionCardType]) {
-      selectionCardType.value = state.selectionCardType;
-    }
     updateSearchMatches();
-  } catch {
+  } catch (error) {
+    console.error(error);
     localStorage.removeItem(STORAGE_KEY);
   }
 }
@@ -509,19 +464,17 @@ function sanitizeCards(value) {
   if (!Array.isArray(value)) return [];
 
   return value.map(card => ({
-    id: card?.id ? String(card.id) : createId(),
+    id: card && card.id ? String(card.id) : createId(),
     type: card && INFO_TYPES[card.type] ? card.type : "memo",
-    title: card?.title ? String(card.title) : "",
-    body: card?.body ? String(card.body) : "",
-    extra: card?.extra ? String(card.extra) : ""
+    title: card && card.title ? String(card.title) : "",
+    body: card && card.body ? String(card.body) : "",
+    extra: card && card.extra ? String(card.extra) : ""
   }));
 }
 
 function setStatus(message) {
   statusEl.textContent = message;
-
   window.clearTimeout(setStatus.timer);
-
   setStatus.timer = window.setTimeout(() => {
     statusEl.textContent = "";
   }, 2500);

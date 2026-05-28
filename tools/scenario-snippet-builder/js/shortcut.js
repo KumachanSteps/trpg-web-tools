@@ -11,10 +11,6 @@ function handleShortcuts(event) {
     createCardFromSelection();
     return;
   }
-  if (event.key === "Escape") {
-    event.preventDefault();
-    return;
-  }
 
   if (!(event.altKey || event.metaKey)) return;
 

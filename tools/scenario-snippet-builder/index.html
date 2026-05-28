@@ -2,7 +2,7 @@
 <html lang="ja" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <title>TRPGシナリオ情報カード作成ツール Beta</title>
+  <title>シナリオ情報カード作成ツール v2.1</title>
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/snippet_builder_style.css">
 
@@ -17,10 +17,10 @@
 </head>
 
 <body>
-  <div class="app source-hidden" id="appRoot">
+  <div class="app" id="appRoot">
     <header class="app-header">
       <div class="header-title-group">
-        <div class="app-title">TRPGシナリオ情報カード作成ツール</div>
+        <div class="app-title">シナリオ情報カード作成ツール v2.1</div>
         <div class="app-subtitle">PDF Parser / TXTファイルから本文を読み込み、必要情報をカード化してココフォリア用スニペットとしてコピーできます。</div>
       </div>
 
@@ -32,24 +32,27 @@
         <span class="theme-knob"></span>
       </button>
     </header>
+
     <main class="main-layout">
       <section class="panel left-panel">
         <div class="panel-title-row">
           <h2>編集用本文</h2>
           <div class="text-file-controls">
             <input id="txtFileInput" type="file" accept=".txt,text/plain" hidden>
-            <button id="openTxtBtn">シナリオTXTファイルを開く</button>
+            <button id="openTxtBtn" type="button">シナリオTXTファイルを開く</button>
+            <button id="clearTextBtn" type="button">本文クリア</button>
           </div>
         </div>
+
         <div class="bridge-note" id="bridgeNote">
           PDF Parserから送られた本文、またはTXTファイルの本文がここに表示されます。
         </div>
 
         <div class="search-row">
           <input id="searchBox" type="text" placeholder="本文検索..." />
-          <button id="searchBtn">検索</button>
-          <button id="prevSearchBtn" class="search-nav-btn" title="前の検索結果へ">↑</button>
-          <button id="nextSearchBtn" class="search-nav-btn" title="次の検索結果へ">↓</button>
+          <button id="searchBtn" type="button">検索</button>
+          <button id="prevSearchBtn" class="search-nav-btn" type="button" title="前の検索結果へ">↑</button>
+          <button id="nextSearchBtn" class="search-nav-btn" type="button" title="次の検索結果へ">↓</button>
           <span id="searchCount" class="search-count">0 / 0</span>
         </div>
 
@@ -57,7 +60,7 @@
 
         <div class="selection-controls">
           <select id="selectionCardType"></select>
-          <button class="primary" id="createFromSelectionBtn">選択範囲からカード作成</button>
+          <button class="primary" id="createFromSelectionBtn" type="button">選択範囲からカード作成</button>
           <span class="hint">本文上で範囲選択してカード化（'c'入力でも作動）</span>
         </div>
       </section>
@@ -67,8 +70,21 @@
           <h2>情報カード</h2>
           <div class="new-card-controls">
             <select id="newCardType"></select>
-            <button class="primary" id="addCardBtn">+ 新規カード</button>
+            <button class="primary" id="addCardBtn" type="button">+ 新規カード</button>
           </div>
+        </div>
+
+        <div class="category-guide">
+          <span>情報カテゴリ：</span>
+          <span>◆ シーン</span>
+          <span>▼ 探索</span>
+          <span>■ 資料</span>
+          <span>◇ NPC</span>
+          <span>● 技能</span>
+          <span>・ メモ</span>
+          <span>◈ アイテム</span>
+          <span>※ ルール</span>
+          <span>◎/〓/△/❖ HO</span>
         </div>
 
         <div id="typeFilterRow" class="type-filter-row"></div>

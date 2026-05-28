@@ -1,42 +1,8 @@
 function parseSourceText(rawText) {
   let text = rawText || "";
-  text = text.replace(/
-/g, "
-").replace(//g, "
-");
-  text = text.replace(/
-{3,}/g, "
-
-");
+  text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  text = text.replace(/\n{3,}/g, "\n\n");
   return text.trim();
-}
-
-function mergeBrokenLines(text) {
-  const lines = text.split("\n");
-  const merged = [];
-
-  for (const line of lines) {
-    const current = line.trim();
-
-    if (!current) {
-      merged.push("");
-      continue;
-    }
-
-    const prev = merged[merged.length - 1];
-    const shouldMerge =
-      prev &&
-      !/[。！？.!?」』）)]$/.test(prev) &&
-      !/^#|^◆|^▼|^■|^●|^◎|^〓|^△|^❖|^※|^☆|^◈/.test(current);
-
-    if (shouldMerge) {
-      merged[merged.length - 1] = prev + current;
-    } else {
-      merged.push(current);
-    }
-  }
-
-  return merged.join("\n");
 }
 
 function splitSelectionIntoTitleAndBody(text) {
