@@ -113,44 +113,87 @@
     });
 
     el.copyMemoButton.addEventListener("click", () => copyText(el.memoEditor.value, "メモ"));
-    el.copyPaletteButton.addEventListener("click", () => copyText(el.palettePreview.value, "パレット"));
-    el.copyGeneratedJsonButton.addEventListener("click", () => copyText(el.generatedJson.value, "駒JSON"));
+    el.copyPaletteButton.addEventListener("click", () => copyText(el.palettePreview.value, "チャットパレット"));
+    el.copyGeneratedJsonButton.addEventListener("click", () => copyText(el.generatedJson.value, "生成済みJSON駒データ"));
 
-    el.clearAllButton.addEventListener("click", () => {
-      el.komaJsonInput.value = "";
-      el.iacharaTxtInput.value = "";
-      el.iacharaTxtFileInput.value = "";
-      resetIacharaTxt(false);
-      state.komaData = null;
-      state.edition = "";
-      state.paletteText = "";
-      state.jsonError = "";
-      el.memoEditor.value = "";
-      el.profileSupplementInput.value = defaultProfileText();
-      renderAll();
-      showStatus("入力データを削除しました。", false);
-    });
+    el.clearAllButton.addEventListener("click", clearAllData);
 
     el.themeToggleButton.addEventListener("click", toggleTheme);
     el.helpButton.addEventListener("click", () => togglePanel(el.helpPanel, el.shortcutPanel));
     el.shortcutButton.addEventListener("click", () => togglePanel(el.shortcutPanel, el.helpPanel));
 
     document.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      const mod = event.ctrlKey || event.metaKey;
+
       if (event.key === "Escape") {
-        el.helpPanel.classList.add("hidden");
-        el.shortcutPanel.classList.add("hidden");
+        event.preventDefault();
+        handleEscapeShortcut();
+        return;
       }
 
-      if (event.altKey && event.key.toLowerCase() === "t") {
+      if (mod && !event.shiftKey && key === "o") {
+        event.preventDefault();
+        openIacharaTxtFile();
+        return;
+      }
+
+      if (mod && event.shiftKey && key === "v") {
+        event.preventDefault();
+        pasteKomaJsonFromClipboard();
+        return;
+      }
+
+      if (mod && event.shiftKey && key === "t") {
         event.preventDefault();
         toggleTheme();
+        return;
       }
 
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "c") {
+      if (mod && event.shiftKey && key === "c") {
         event.preventDefault();
-        copyText(el.generatedJson.value, "駒JSON");
+        copyText(el.generatedJson.value, "生成済みJSON駒データ");
       }
     });
+  }
+
+  function handleEscapeShortcut() {
+    const helpWasOpen = el.helpPanel && !el.helpPanel.classList.contains("hidden");
+    const shortcutWasOpen = el.shortcutPanel && !el.shortcutPanel.classList.contains("hidden");
+
+    if (el.helpPanel) el.helpPanel.classList.add("hidden");
+    if (el.shortcutPanel) el.shortcutPanel.classList.add("hidden");
+
+    if (helpWasOpen || shortcutWasOpen) return;
+
+    const hasInput = Boolean(
+      (el.komaJsonInput && el.komaJsonInput.value.trim()) ||
+      (el.iacharaTxtInput && el.iacharaTxtInput.value.trim()) ||
+      (el.memoEditor && el.memoEditor.value.trim()) ||
+      state.komaData ||
+      state.txtContent
+    );
+
+    if (!hasInput) return;
+
+    if (window.confirm("入力データを削除・リセットしますか？")) {
+      clearAllData();
+    }
+  }
+
+  function clearAllData() {
+    el.komaJsonInput.value = "";
+    el.iacharaTxtInput.value = "";
+    el.iacharaTxtFileInput.value = "";
+    resetIacharaTxt(false);
+    state.komaData = null;
+    state.edition = "";
+    state.paletteText = "";
+    state.jsonError = "";
+    el.memoEditor.value = "";
+    el.profileSupplementInput.value = defaultProfileText();
+    renderAll();
+    showStatus("入力データを削除しました。", false);
   }
 
   async function pasteKomaJsonFromClipboard() {
@@ -510,14 +553,19 @@
   async function copyText(text, label) {
     if (!text) {
       showStatus("コピーする内容がありません。", true);
+      showToast("コピーする内容がありません。", true);
       return;
     }
 
     try {
       await navigator.clipboard.writeText(text);
-      showStatus(`${label}をコピーしました。`, false);
+      const message = `${label}をコピーしました。`;
+      showStatus(message, false);
+      showToast(message, false);
     } catch (error) {
-      showStatus("コピーできませんでした。テキスト欄から手動でコピーしてください。", true);
+      const message = "コピーできませんでした。テキスト欄から手動でコピーしてください。";
+      showStatus(message, true);
+      showToast(message, true);
     }
   }
 
@@ -527,6 +575,20 @@
     window.setTimeout(() => {
       el.statusMessage.textContent = "";
     }, 2500);
+  }
+
+  function showToast(message, isError) {
+    const container = document.getElementById("toastContainer");
+    if (!container || !message) return;
+
+    const toast = document.createElement("div");
+    toast.className = isError ? "toast is-error" : "toast";
+    toast.textContent = isError ? `⚠ ${message}` : message;
+    container.appendChild(toast);
+
+    window.setTimeout(() => {
+      toast.remove();
+    }, 3100);
   }
 
   function showTxtMessage(message, isError) {

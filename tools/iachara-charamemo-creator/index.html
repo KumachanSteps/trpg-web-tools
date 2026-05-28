@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>いあキャラMEMOジェネレータ v1.90 | TRPG Webツール観測所</title>
+  <title>いあキャラMEMOジェネレータ v1.91 | TRPG Webツール観測所</title>
   <meta name="description" content="CCFOLIA駒JSONと、いあきゃらTXTを読み込み、キャラメモとチャットパレットを整形して駒JSONを再生成するTRPG支援ツールです。" />
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
@@ -43,7 +43,7 @@
           <span class="tool-icon-copy">⧉</span>
         </div>
         <div>
-          <h1 class="site-title">いあキャラMEMOジェネレータ v1.90</h1>
+          <h1 class="site-title">いあキャラMEMOジェネレータ v1.91</h1>
           <p class="site-description">
             CCFOLIA駒JSONと、いあきゃらTXTを読み込み、プロフィール・所持品・メモ・チャットパレットを整理して、<br />
             CCFOLIA用のキャラメモ入り駒JSONを再生成します。
@@ -55,7 +55,7 @@
         1. CCFOLIA駒JSONを貼り付けます。2. いあきゃらTXTをテキストボックスへ貼り付けるか、テキストファイルを開くと自動で反映されます。3. 生成オプションを選び、キャラメモ・チャットパレット・生成済み駒JSONを確認してコピーします。
       </div>
       <div id="shortcutPanel" class="header-info-panel hidden">
-        Esc：パネルを閉じる / Alt + T：ライト・ナイト切替 / Ctrl または Cmd + Shift + C：生成済み駒JSONコピー
+        Esc：パネルを閉じる / 入力データを削除・リセット（ダイアログ確認表示）<br />Ctrl/Cmd + O：TXTファイルを開く<br />Ctrl/Cmd + Shift + V：クリップボードにあるキャラ駒JSONデータを貼り付け<br />Ctrl/Cmd + Shift + T：ナイト/ライトモード切替<br />Ctrl/Cmd + Shift + C：生成済みJSON駒データをコピー
       </div>
     </header>
 
@@ -148,6 +148,7 @@
       </section>
     </main>
 
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
     <footer class="footer-note">わざわざキャラメモを手打ちしないですむキャラ駒をあなたに</footer>
   </div>
 
