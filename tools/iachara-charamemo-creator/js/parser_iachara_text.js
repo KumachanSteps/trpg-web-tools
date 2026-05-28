@@ -1,11 +1,13 @@
 (function () {
   "use strict";
 
+  const NL = "\n";
+
   function normalizeText(text) {
     return String(text || "")
-      .replace(/\r\n/g, "\n")
-      .replace(/\r/g, "\n")
-      .replace(/\\n/g, "\n");
+      .replace(/\r\n/g, NL)
+      .replace(/\r/g, NL)
+      .replace(/\\n/g, NL);
   }
 
   function escapeRegExp(text) {
@@ -25,35 +27,26 @@
     const src = normalizeText(text);
     const heading = `【${sectionName}】`;
     const start = src.indexOf(heading);
-
     if (start < 0) return "";
-
-    const bodyStart = start + heading.length;
-    const rest = src.slice(bodyStart);
-    const nextSectionMatch = rest.match(/\n【[^】]+】/);
-
-    if (!nextSectionMatch || nextSectionMatch.index == null) return rest.trim();
-
-    return rest.slice(0, nextSectionMatch.index).trim();
+    const rest = src.slice(start + heading.length);
+    const next = rest.match(/\n【[^】]+】/);
+    return (next && next.index != null ? rest.slice(0, next.index) : rest).trim();
   }
 
   function extractLabelValueFromSection(sectionText, label) {
-    const lines = normalizeText(sectionText).split("\n").map((line) => line.trim()).filter(Boolean);
-
+    const lines = normalizeText(sectionText).split(NL).map((line) => line.trim()).filter(Boolean);
     for (const line of lines) {
       const value = extractLabelValueFromLine(line, label);
       if (value !== null) return cleanValue(value);
     }
-
     return "";
   }
 
   function extractLabelValueFromLine(line, label) {
     const src = String(line || "");
-    const labelPattern = new RegExp(`(^|[/\\s　])${escapeRegExp(label)}\\s*[:：]`);
-    const match = src.match(labelPattern);
+    const pattern = new RegExp(`(^|[/\\s　])${escapeRegExp(label)}\\s*[:：]`);
+    const match = src.match(pattern);
     if (!match || match.index == null) return null;
-
     const valueStart = match.index + match[0].length;
     const rest = src.slice(valueStart);
     const slashIndex = rest.indexOf("/");
@@ -62,7 +55,6 @@
 
   function parseIacharaBasicInfo(text) {
     const basicInfo = extractSection(text, "基本情報");
-
     return {
       name: extractLabelValueFromSection(basicInfo, "名前"),
       occupation: extractLabelValueFromSection(basicInfo, "職業"),
@@ -76,17 +68,18 @@
 
   function buildProfileSupplementFromIacharaText(text) {
     const info = parseIacharaBasicInfo(text);
-
     return [
       `職業: ${displayValue(info.occupation)}`,
       `年齢: ${displayValue(info.age)} / 性別: ${displayValue(info.gender)}`,
       `身長: ${displayValue(info.height)} / 体重: ${displayValue(info.weight)}`
-    ].join("\n");
+    ].join(NL);
   }
 
-
   function formatCombatWeaponsSection(sectionText) {
-    const lines = normalizeText(sectionText).split("\n").map((line) => line.trim()).filter(Boolean);
+    const raw = normalizeText(sectionText).trim();
+    if (!raw) return "";
+
+    const lines = raw.split(NL).map((line) => line.trimEnd()).filter((line) => line.trim());
     const weaponRows = [];
     const otherLines = [];
 
@@ -99,22 +92,21 @@
 
     const parts = [];
     if (weaponRows.length) {
-      parts.push("武器：名称　　　　　 ┊ダメージ┊　射程┊　1R┊弾数┊耐久┊故障No.");
-      weaponRows.forEach((row) => {
-        parts.push(formatWeaponRow(row));
-      });
+      parts.push(formatWeaponTable(weaponRows));
     }
-    if (otherLines.length) parts.push(otherLines.join("\n"));
-    return parts.join("\n").trim();
+    if (otherLines.length) parts.push(otherLines.join(NL));
+    return parts.join(NL).trim();
   }
 
   function isDecorativeLine(line) {
-    return /^[-─━=＿_\s]+$/.test(String(line || ""));
+    return /^[-─━=＿_\s　]+$/.test(String(line || ""));
   }
 
   function isWeaponHeaderLine(line) {
     const src = String(line || "");
-    return (src.includes("名前") && src.includes("成功率")) || (src.includes("名称") && src.includes("ダメージ")) || (src.includes("射程") && src.includes("故障"));
+    return (src.includes("名前") && src.includes("成功率")) ||
+      (src.includes("名称") && src.includes("ダメージ")) ||
+      (src.includes("射程") && src.includes("故障"));
   }
 
   function parseWeaponRow(line) {
@@ -142,7 +134,11 @@
 
   function isDamageToken(token) {
     const src = String(token || "").trim();
-    return /^\d+D\d+([+\-]\d+)?$/i.test(src) || /^\d+D\d+([+\-]DB)?$/i.test(src) || /^DB$/i.test(src) || /^\d+D\d+\+db$/i.test(src) || src.includes("ダメージ");
+    return /^\d+D\d+([+\-]\d+)?$/i.test(src) ||
+      /^\d+D\d+([+\-]DB)?$/i.test(src) ||
+      /^DB$/i.test(src) ||
+      /^\d+D\d+\+db$/i.test(src) ||
+      src.includes("ダメージ");
   }
 
   function normalizeCountUnit(value, unit) {
@@ -151,23 +147,66 @@
     return src.endsWith(unit) ? src : `${src}${unit}`;
   }
 
-  function formatWeaponRow(row) {
-    return [
-      padVisual(row.name, 30),
-      padVisual(row.damage, 10),
-      padVisual(row.range, 10),
-      padVisual(row.attacks, 7),
-      padVisual(row.ammo, 7),
-      padVisual(row.durability, 7),
-      padVisual(row.malfunction, 8)
-    ].join("");
+  function formatWeaponTable(rows) {
+    const normalizedRows = rows.map((row) => ({
+      name: displayValue(row.name),
+      damage: displayValue(row.damage),
+      range: displayValue(row.range),
+      attacks: displayValue(row.attacks),
+      ammo: displayValue(row.ammo),
+      durability: displayValue(row.durability),
+      malfunction: displayValue(row.malfunction)
+    }));
+
+    const widths = {
+      name: Math.max(getDisplayWidth("武器：名称"), ...normalizedRows.map((row) => getDisplayWidth(row.name))) + 3,
+      damage: Math.max(getDisplayWidth("ダメージ"), ...normalizedRows.map((row) => getDisplayWidth(row.damage))) + 2,
+      range: Math.max(getDisplayWidth("射程"), ...normalizedRows.map((row) => getDisplayWidth(row.range))) + 2,
+      attacks: Math.max(getDisplayWidth("1R"), ...normalizedRows.map((row) => getDisplayWidth(row.attacks))) + 2,
+      ammo: Math.max(getDisplayWidth("弾数"), ...normalizedRows.map((row) => getDisplayWidth(row.ammo))) + 2,
+      durability: Math.max(getDisplayWidth("耐久"), ...normalizedRows.map((row) => getDisplayWidth(row.durability))) + 2
+    };
+
+    const lines = [];
+    lines.push([
+      padDisplay("武器：名称", widths.name),
+      padDisplay("ダメージ", widths.damage),
+      padDisplay("射程", widths.range),
+      padDisplay("1R", widths.attacks),
+      padDisplay("弾数", widths.ammo),
+      padDisplay("耐久", widths.durability),
+      "故障No."
+    ].join("┊"));
+
+    normalizedRows.forEach((row) => {
+      lines.push([
+        padDisplay(row.name, widths.name),
+        padDisplay(row.damage, widths.damage),
+        padDisplay(row.range, widths.range),
+        padDisplay(row.attacks, widths.attacks),
+        padDisplay(row.ammo, widths.ammo),
+        padDisplay(row.durability, widths.durability),
+        row.malfunction
+      ].join("┊"));
+    });
+
+    return lines.join(NL);
   }
 
-  function padVisual(text, width) {
-    const src = displayValue(text);
-    const visualWidth = Array.from(src).reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1), 0);
-    if (visualWidth >= width) return src + "　";
-    return src + " ".repeat(width - visualWidth);
+  function getDisplayWidth(value) {
+    return Array.from(String(value || "")).reduce((sum, char) => {
+      return sum + (isHalfWidthChar(char) ? 1 : 2);
+    }, 0);
+  }
+
+  function isHalfWidthChar(char) {
+    return /^[\u0020-\u007e｡-ﾟ]$/.test(char);
+  }
+
+  function padDisplay(value, targetWidth) {
+    const src = displayValue(value);
+    const missing = Math.max(0, targetWidth - getDisplayWidth(src));
+    return src + " ".repeat(missing);
   }
 
   function buildMemoFromIacharaText(text, options) {
@@ -184,32 +223,41 @@
 
     if (info.name || info.occupation || info.age || info.gender || info.height || info.weight) {
       parts.push([
-        `名前: ${info.name || "未取得"}`,
+        `名前: ${displayValue(info.name)}`,
         buildProfileSupplementFromIacharaText(src)
-      ].join("\n"));
+      ].join(NL));
     }
 
     const weapons = extractSection(src, "戦闘・武器・防具");
-    if (config.includeWeapons && weapons) parts.push(`【戦闘・武器・防具】\n${formatCombatWeaponsSection(weapons)}`);
+    if (config.includeWeapons && weapons) parts.push(`【戦闘・武器・防具】${NL}${formatCombatWeaponsSection(weapons)}`);
 
     const items = extractSection(src, "所持品");
-    if (config.includeItems && items) parts.push(`【所持品】\n${items}`);
+    if (config.includeItems && items) parts.push(`【所持品】${NL}${items}`);
 
     const scenario = extractSection(src, "通過したシナリオ名");
-    if (config.includeKnowledge && scenario) parts.push(`【新たに得た知識・経験】\n${scenario}`);
+    const knowledge = scenario || extractSection(src, "新たに得た知識・経験");
+    if (config.includeKnowledge && knowledge) parts.push(`【新たに得た知識・経験】${NL}${knowledge}`);
 
     const memo = extractSection(src, "メモ");
-    if (config.includeTxtMemo && memo) parts.push(`【メモ】\n${memo}`);
+    if (config.includeTxtMemo && memo) parts.push(`【メモ】${NL}${memo}`);
 
-    return parts.filter(Boolean).join("\n\n");
+    return parts.filter(Boolean).join(NL + NL);
   }
 
   function parseIacharaText(text) {
+    const src = normalizeText(text);
     return {
-      profile: parseIacharaBasicInfo(text),
-      profileText: buildProfileSupplementFromIacharaText(text),
-      memoText: buildMemoFromIacharaText(text),
-      rawText: normalizeText(text)
+      found: Boolean(extractSection(src, "基本情報") || extractSection(src, "戦闘・武器・防具") || extractSection(src, "所持品") || extractSection(src, "メモ")),
+      profile: parseIacharaBasicInfo(src),
+      sections: {
+        weapons: extractSection(src, "戦闘・武器・防具"),
+        items: extractSection(src, "所持品"),
+        knowledge: extractSection(src, "通過したシナリオ名") || extractSection(src, "新たに得た知識・経験"),
+        memo: extractSection(src, "メモ")
+      },
+      profileText: buildProfileSupplementFromIacharaText(src),
+      memoText: buildMemoFromIacharaText(src),
+      rawText: src
     };
   }
 
@@ -218,8 +266,8 @@
     extractSection,
     parseIacharaBasicInfo,
     buildProfileSupplementFromIacharaText,
-    buildMemoFromIacharaText,
     formatCombatWeaponsSection,
+    buildMemoFromIacharaText,
     parseIacharaText
   };
 })();
