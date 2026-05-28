@@ -117,14 +117,19 @@
     if (damageIndex <= 0) return null;
 
     const nameTokens = tokens.slice(0, damageIndex);
-    if (nameTokens.length > 1 && /^\d{1,3}$/.test(nameTokens[nameTokens.length - 1])) nameTokens.pop();
+    let success = "-";
+
+    if (nameTokens.length > 1 && /^\d{1,3}$/.test(nameTokens[nameTokens.length - 1])) {
+      success = nameTokens.pop();
+    }
 
     const row = {
       name: nameTokens.join(" ") || "-",
+      success,
       damage: tokens[damageIndex] || "-",
       range: tokens[damageIndex + 1] || "-",
-      attacks: normalizeCountUnit(tokens[damageIndex + 2], "回"),
-      ammo: normalizeCountUnit(tokens[damageIndex + 3], "発"),
+      attacks: normalizeAttackCount(tokens[damageIndex + 2]),
+      ammo: normalizeAmmoCount(tokens[damageIndex + 3]),
       durability: displayValue(tokens[damageIndex + 4]),
       malfunction: displayValue(tokens[damageIndex + 5])
     };
@@ -141,6 +146,20 @@
       src.includes("ダメージ");
   }
 
+  function normalizeAttackCount(value) {
+    const src = displayValue(value);
+    if (src === "-") return "-";
+    if (src.endsWith("回") || src.includes("/") || src.includes("連射")) return src;
+    return `${src}回`;
+  }
+
+  function normalizeAmmoCount(value) {
+    const src = displayValue(value);
+    if (src === "-") return "-";
+    if (src.endsWith("発") || src.includes("/")) return src;
+    return `${src}発`;
+  }
+
   function normalizeCountUnit(value, unit) {
     const src = displayValue(value);
     if (src === "-") return "-";
@@ -150,6 +169,7 @@
   function formatWeaponTable(rows) {
     const normalizedRows = rows.map((row) => ({
       name: displayValue(row.name),
+      success: displayValue(row.success),
       damage: displayValue(row.damage),
       range: displayValue(row.range),
       attacks: displayValue(row.attacks),
@@ -158,39 +178,15 @@
       malfunction: displayValue(row.malfunction)
     }));
 
-    const widths = {
-      name: Math.max(getDisplayWidth("武器：名称"), ...normalizedRows.map((row) => getDisplayWidth(row.name))) + 3,
-      damage: Math.max(getDisplayWidth("ダメージ"), ...normalizedRows.map((row) => getDisplayWidth(row.damage))) + 2,
-      range: Math.max(getDisplayWidth("射程"), ...normalizedRows.map((row) => getDisplayWidth(row.range))) + 2,
-      attacks: Math.max(getDisplayWidth("1R"), ...normalizedRows.map((row) => getDisplayWidth(row.attacks))) + 2,
-      ammo: Math.max(getDisplayWidth("弾数"), ...normalizedRows.map((row) => getDisplayWidth(row.ammo))) + 2,
-      durability: Math.max(getDisplayWidth("耐久"), ...normalizedRows.map((row) => getDisplayWidth(row.durability))) + 2
-    };
+    return normalizedRows.map(formatWeaponBlock).join(NL);
+  }
 
-    const lines = [];
-    lines.push([
-      padDisplay("武器：名称", widths.name),
-      padDisplay("ダメージ", widths.damage),
-      padDisplay("射程", widths.range),
-      padDisplay("1R", widths.attacks),
-      padDisplay("弾数", widths.ammo),
-      padDisplay("耐久", widths.durability),
-      "故障No."
-    ].join("┊"));
-
-    normalizedRows.forEach((row) => {
-      lines.push([
-        padDisplay(row.name, widths.name),
-        padDisplay(row.damage, widths.damage),
-        padDisplay(row.range, widths.range),
-        padDisplay(row.attacks, widths.attacks),
-        padDisplay(row.ammo, widths.ammo),
-        padDisplay(row.durability, widths.durability),
-        row.malfunction
-      ].join("┊"));
-    });
-
-    return lines.join(NL);
+  function formatWeaponBlock(row) {
+    return [
+      `武器：${row.name}`,
+      `成功率${row.success}｜ダメージ${row.damage}｜射程${row.range}｜`,
+      `回数${row.attacks}｜装弾数${row.ammo}｜耐久力${row.durability}｜故障${row.malfunction}`
+    ].join(NL);
   }
 
   function getDisplayWidth(value) {

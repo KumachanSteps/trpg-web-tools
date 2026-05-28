@@ -1,5 +1,5 @@
 /* =========================================================
-   いあキャラMEMOジェネレータ v1.91
+   いあキャラMEMOジェネレータ v1.92
    ========================================================= */
 
 :root {
@@ -22,6 +22,7 @@
   --radius-card: 24px;
   --radius-pill: 999px;
   --shadow: rgba(0, 0, 0, 0.26);
+  --cocofolia-memo-width: 46ch;
   --summary-eye-icon: url("../assets/img/eye_panel_icon.png");
   --icon-gear: url("../assets/img/gear_icon.png");
   --icon-memo: url("../assets/img/memo_icon.png");
@@ -1025,6 +1026,23 @@ body.theme-light .sheet-link-badge,
   line-height: 1.6;
   resize: vertical;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans Mono CJK JP", "Yu Gothic UI", monospace;
+}
+
+.memo-editor {
+  width: min(100%, var(--cocofolia-memo-width));
+  max-width: var(--cocofolia-memo-width);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+
+.memo-panel::after {
+  content: "ココフォリアのキャラメモ表示幅に近い横幅でプレビューしています。";
+  display: block;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .palette-preview,
