@@ -604,7 +604,6 @@ textarea::-webkit-scrollbar-thumb {
 
 .card-body-textarea {
   min-height: calc(1.45em * 4 + 16px);
-  max-height: calc(1.45em * 6 + 16px);
   resize: vertical;
   overflow: auto;
   font-size: 12px;
@@ -805,4 +804,55 @@ textarea::-webkit-scrollbar-thumb {
   border-color: rgba(248, 113, 113, 0.72);
   background: rgba(153, 27, 27, 0.70);
   color: #fee2e2;
+}
+
+.card {
+  transition: opacity 0.14s ease, transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.card.dragging {
+  opacity: 0.48;
+  transform: scale(0.995);
+}
+
+.card.drag-over {
+  border-top: 3px solid var(--card-color, var(--accent));
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.10), var(--shadow-card);
+}
+
+.card-drag-handle {
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--panel-solid);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  padding: 0;
+}
+
+.card-drag-handle:hover {
+  border-color: var(--card-color, var(--accent));
+  color: var(--card-color, var(--accent));
+}
+
+.card-drag-handle:active {
+  cursor: grabbing;
+}
+
+[data-theme="dark"] .card-drag-handle {
+  background: #1e293b;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .card-drag-handle:hover {
+  border-color: var(--card-color, var(--accent));
+  color: var(--card-color, var(--accent));
 }

@@ -47,6 +47,8 @@ function renderCards() {
     const cardEl = document.createElement("div");
 
     cardEl.className = "card";
+    cardEl.draggable = true;
+    cardEl.dataset.cardId = card.id;
     cardEl.style.setProperty("--card-color", typeInfo.color);
 
     cardEl.innerHTML = `
@@ -72,6 +74,13 @@ function renderCards() {
       </div>
 
       <div class="card-utility-row">
+        <button
+          class="card-drag-handle"
+          data-action="dragHandle"
+          data-id="${escapeAttribute(card.id)}"
+          title="ドラッグして順番を入れ替え"
+          type="button"
+        >☰</button>
         <div class="type-icon-row">
           ${Object.entries(INFO_TYPES).map(([key, info]) => `
             <button
@@ -134,18 +143,25 @@ function renderCards() {
 function adjustCardTextareaHeight(textarea) {
   if (!textarea) return;
 
-  textarea.style.height = "auto";
-
   const computed = window.getComputedStyle(textarea);
   const lineHeight = parseFloat(computed.lineHeight) || 17.4;
   const paddingTop = parseFloat(computed.paddingTop) || 0;
   const paddingBottom = parseFloat(computed.paddingBottom) || 0;
   const minHeight = lineHeight * 4 + paddingTop + paddingBottom;
-  const maxHeight = lineHeight * 6 + paddingTop + paddingBottom;
-  const nextHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+  const defaultMaxHeight = lineHeight * 6 + paddingTop + paddingBottom;
+  const currentHeight = textarea.offsetHeight || 0;
+
+  if (currentHeight > defaultMaxHeight + 4) {
+    textarea.style.overflowY = "auto";
+    return;
+  }
+
+  textarea.style.height = "auto";
+
+  const nextHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), defaultMaxHeight);
 
   textarea.style.height = `${nextHeight}px`;
-  textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+  textarea.style.overflowY = textarea.scrollHeight > defaultMaxHeight ? "auto" : "hidden";
 }
 
 function buildCardOutput(card) {

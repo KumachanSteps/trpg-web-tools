@@ -20,6 +20,7 @@ let cards = [];
 let activeFilter = "all";
 let searchMatches = [];
 let currentSearchIndex = -1;
+let draggingCardId = null;
 
 const appRoot = document.getElementById("appRoot");
 const themeToggle = document.getElementById("themeToggle");
@@ -74,6 +75,59 @@ typeFilterRow.addEventListener("click", event => {
   renderCards();
   cardsList.scrollTop = 0;
   saveState();
+});
+
+
+cardsList.addEventListener("dragstart", event => {
+  const cardEl = event.target.closest(".card");
+  if (!cardEl) return;
+
+  draggingCardId = cardEl.dataset.cardId;
+  cardEl.classList.add("dragging");
+
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", draggingCardId);
+  }
+});
+
+cardsList.addEventListener("dragend", () => {
+  draggingCardId = null;
+  clearCardDragState();
+});
+
+cardsList.addEventListener("dragover", event => {
+  if (!draggingCardId) return;
+
+  const overCard = event.target.closest(".card");
+  if (!overCard || overCard.dataset.cardId === draggingCardId) return;
+
+  event.preventDefault();
+  clearCardDragOverState();
+  overCard.classList.add("drag-over");
+
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "move";
+  }
+});
+
+cardsList.addEventListener("dragleave", event => {
+  const overCard = event.target.closest(".card");
+  if (overCard) {
+    overCard.classList.remove("drag-over");
+  }
+});
+
+cardsList.addEventListener("drop", event => {
+  if (!draggingCardId) return;
+
+  const targetCard = event.target.closest(".card");
+  if (!targetCard || targetCard.dataset.cardId === draggingCardId) return;
+
+  event.preventDefault();
+  reorderCardByDrop(draggingCardId, targetCard.dataset.cardId);
+  draggingCardId = null;
+  clearCardDragState();
 });
 
 cardsList.addEventListener("input", event => {
@@ -149,6 +203,34 @@ cardsList.addEventListener("click", event => {
     setStatus("カードを複製しました。");
   }
 });
+
+
+function reorderCardByDrop(sourceId, targetId) {
+  const sourceIndex = cards.findIndex(card => card.id === sourceId);
+  const targetIndex = cards.findIndex(card => card.id === targetId);
+
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return;
+
+  const [movedCard] = cards.splice(sourceIndex, 1);
+  const adjustedTargetIndex = cards.findIndex(card => card.id === targetId);
+
+  cards.splice(adjustedTargetIndex, 0, movedCard);
+  renderCards();
+  saveState();
+  setStatus("カードの順番を変更しました。");
+}
+
+function clearCardDragState() {
+  cardsList.querySelectorAll(".card.dragging, .card.drag-over").forEach(card => {
+    card.classList.remove("dragging", "drag-over");
+  });
+}
+
+function clearCardDragOverState() {
+  cardsList.querySelectorAll(".card.drag-over").forEach(card => {
+    card.classList.remove("drag-over");
+  });
+}
 
 function toggleTheme() {
   const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
