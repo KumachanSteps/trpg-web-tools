@@ -3,25 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scenario_pdf_parser v0.3</title>
+  <title>シナリオPDF整形機 Ver.0.3.1</title>
   <link rel="stylesheet" href="./css/pdf-parser-style.css" />
 </head>
 <body>
   <div class="app-shell">
-    <header class="app-header">
-      <div class="header-main">
-        <div class="tool-chips">
-          <span data-i18n="chip.portal">TRPG Web Tools</span>
-          <span data-i18n="chip.builder">Scenario Info Card Builder</span>
-          <span>scenario_pdf_parser v0.3</span>
+    <header class="site-header">
+      <div class="header-top">
+        <div class="header-left">
+          <a class="portal-link" href="../index.html">
+            TRPG Web Tools
+            <span class="portal-tooltip" data-i18n="tooltip.portal">TRPG WEB Tools ポータルサイトに戻る</span>
+          </a>
+          <span class="tag-pill tag-cyan" data-i18n="chip.parser">PDF整形</span>
+          <span class="tag-pill tag-violet" data-i18n="chip.builder">Scenario Info Card Builder</span>
+          <span class="tag-pill tag-amber">Ver.0.3.1</span>
         </div>
-        <h1 data-i18n="app.title">PDF to Flat Text Formatter</h1>
-        <p data-i18n="app.description">TRPGシナリオPDFの複雑な段組み・改行・見出しを、コピー＆ペーストしやすい平文へ整形します。</p>
+        <div class="header-actions">
+          <button id="languageToggleBtn" class="header-button" type="button">JP / EN</button>
+          <button id="formatBtn" class="header-button header-button-primary" type="button" data-i18n="button.format">整形実行</button>
+          <button id="copyTopBtn" class="header-button" type="button" data-i18n="button.copyOutput">出力をコピー</button>
+        </div>
       </div>
-      <div class="header-actions">
-        <button id="languageToggleBtn" class="ghost-button" type="button">JP / EN</button>
-        <button id="formatBtn" class="primary-button" type="button" data-i18n="button.format">整形実行</button>
-        <button id="copyTopBtn" class="ghost-button" type="button" data-i18n="button.copyOutput">出力をコピー</button>
+      <div class="title-row">
+        <div class="tool-icon" aria-hidden="true">
+          <span class="tool-icon-main">PDF</span>
+          <span class="tool-icon-star">✦</span>
+          <span class="tool-icon-copy">txt</span>
+        </div>
+        <div class="title-copy">
+          <h1 class="site-title" data-i18n="app.title">シナリオPDF整形機</h1>
+          <p class="site-description" data-i18n="app.description">TRPGシナリオPDFの段組み・不要改行・見出し崩れを整え、コピーしやすいTXTへ変換します。</p>
+        </div>
       </div>
     </header>
 

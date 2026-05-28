@@ -44,6 +44,270 @@ button {
   padding: 24px 0 40px;
 }
 
+/* =========================================================
+   Header UI Reference
+   TRPG Web Tools Style
+   ========================================================= */
+
+:root {
+  --radius-panel: 28px;
+  --radius-pill: 999px;
+  --header-bg-night: rgba(15, 23, 42, 0.78);
+  --header-bg-light: rgba(241, 245, 249, 0.82);
+  --header-border-night: rgba(255, 255, 255, 0.1);
+  --header-border-light: rgba(15, 23, 42, 0.1);
+  --header-text-night: #e2e8f0;
+  --header-text-light: #334155;
+  --cyan-text-night: #a5f3fc;
+  --cyan-text-light: #0284c7;
+  --site-description-night: #cbd5e1;
+  --site-description-light: #475569;
+  --emerald: #10b981;
+  --emerald2: #34d399;
+}
+
+.site-header {
+  position: relative;
+  z-index: 100;
+  max-width: 1440px;
+  margin: 0 auto 20px;
+  padding: 20px 24px;
+  border: 1px solid var(--header-border-night);
+  border-radius: var(--radius-panel);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.06)),
+    var(--header-bg-night);
+  box-shadow:
+    0 26px 70px rgba(0,0,0,.36),
+    inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter: blur(18px);
+}
+
+.header-top,
+.header-left,
+.header-actions,
+.title-row {
+  display: flex;
+  align-items: center;
+}
+
+.header-top {
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-left,
+.header-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.title-row {
+  margin-top: 18px;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.portal-link,
+.tag-pill,
+.header-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: var(--radius-pill);
+  line-height: 1.3;
+  transition:
+    transform .16s ease,
+    background-color .16s ease,
+    border-color .16s ease,
+    color .16s ease,
+    box-shadow .16s ease;
+}
+
+.portal-link,
+.header-button {
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.1);
+  color: var(--header-text-night);
+}
+
+.portal-link {
+  position: relative;
+  z-index: 1000;
+  padding: 4px 12px;
+  color: var(--cyan-text-night);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.header-button {
+  min-height: auto;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.header-button-primary {
+  border-color: rgba(34,211,238,.38);
+  background: rgba(34,211,238,.18);
+  color: #ecfeff;
+}
+
+.portal-link:hover,
+.header-button:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.15);
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
+}
+
+.portal-tooltip {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  z-index: 9999;
+  width: max-content;
+  margin-top: 8px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  background: rgba(2,6,23,.98);
+  padding: 8px 12px;
+  color: #ecfeff;
+  font-size: 12px;
+  opacity: 0;
+  box-shadow: 0 18px 42px rgba(0,0,0,.45);
+  backdrop-filter: blur(16px);
+  transition:
+    opacity .16s ease,
+    transform .16s ease;
+  white-space: nowrap;
+}
+
+.portal-link:hover .portal-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(2px);
+}
+
+.tag-pill {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tag-cyan {
+  border: 1px solid rgba(103,232,249,.3);
+  background: rgba(103,232,249,.1);
+  color: #cffafe;
+}
+
+.tag-violet {
+  border: 1px solid rgba(196,181,253,.3);
+  background: rgba(196,181,253,.1);
+  color: #ede9fe;
+}
+
+.tag-amber {
+  border: 1px solid rgba(252,211,77,.3);
+  background: rgba(252,211,77,.1);
+  color: #fef3c7;
+}
+
+.tool-icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 72% 25%, rgba(103,232,249,.12), transparent 32%),
+    rgba(15,23,42,.82);
+}
+
+.tool-icon-main {
+  display: inline-flex;
+  width: 32px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(248,250,252,.18);
+  border-radius: 7px;
+  color: #f8fafc;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.tool-icon-star {
+  position: absolute;
+  right: -5px;
+  top: -6px;
+  color: #a5f3fc;
+  font-size: 14px;
+  text-shadow: 0 0 8px rgba(103,232,249,.8);
+}
+
+.tool-icon-copy {
+  position: absolute;
+  right: -8px;
+  bottom: -7px;
+  display: flex;
+  width: 26px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(165,243,252,.5);
+  border-radius: 999px;
+  background: rgba(103,232,249,.15);
+  color: #cffafe;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.site-title {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -.035em;
+  font-weight: 900;
+}
+
+.site-description {
+  margin: 8px 0 0;
+  color: var(--site-description-night);
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 880px;
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    border-radius: 22px;
+    padding: 18px;
+  }
+
+  .title-row {
+    gap: 12px;
+  }
+
+  .site-title {
+    font-size: 26px;
+  }
+
+  .site-description {
+    font-size: 13px;
+  }
+}
+
+
 .app-header,
 .panel,
 .stat-card {
