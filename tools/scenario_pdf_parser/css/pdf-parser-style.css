@@ -636,7 +636,7 @@ h2 {
   border-radius: 18px;
   padding: 0 16px;
   font-weight: 900;
-  transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease;
+  transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .primary-button:hover,
@@ -989,4 +989,56 @@ body.theme-light .filename-field input {
   .filename-field input {
     width: 100%;
   }
+}
+
+
+/* =========================================================
+   v0.4.2 Button Icon / Light Color Adjustments
+   ========================================================= */
+
+.icon-button {
+  gap: 8px;
+}
+
+.button-icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.button-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+body.theme-light .replace-all-button {
+  border: 1px solid rgba(16, 185, 129, 0.26);
+  background: rgba(209, 250, 229, 0.92);
+  color: #065f46;
+}
+
+body.theme-light .replace-all-button:hover {
+  background: rgba(167, 243, 208, 0.96);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.14);
+}
+
+body.theme-light .tool-icon-main {
+  border-color: rgba(14, 165, 233, 0.34);
+  background: rgba(224, 242, 254, 0.92);
+  color: #075985;
+}
+
+body.theme-light .tool-icon-copy {
+  border-color: rgba(14, 165, 233, 0.26);
+  background: rgba(186, 230, 253, 0.72);
+  color: #075985;
 }

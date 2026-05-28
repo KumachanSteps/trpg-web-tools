@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>シナリオPDF整形機 Ver.0.4.1</title>
+  <title>シナリオPDF整形機 Ver.0.4.2</title>
   <link rel="stylesheet" href="./css/pdf-parser-style.css" />
 </head>
 <body class="theme-light">
@@ -17,7 +17,7 @@
           </a>
           <span class="tag-pill tag-cyan" data-i18n="chip.parser">PDF整形</span>
           <span class="tag-pill tag-violet" data-i18n="chip.builder">シナリオ情報カードツールと連携</span>
-          <span class="tag-pill tag-amber">Ver.0.4.1</span>
+          <span class="tag-pill tag-amber">Ver.0.4.2</span>
         </div>
         <div class="header-actions">
           <button id="languageToggleBtn" class="header-button" type="button">EN/JP</button>
@@ -80,7 +80,7 @@
               <button id="prevBtn" class="ghost-button small-button" type="button">↑</button>
               <button id="nextBtn" class="ghost-button small-button" type="button">↓</button>
               <button id="replaceBtn" class="ghost-button small-button" type="button" data-i18n="button.replaceCurrent">置換</button>
-              <button id="replaceAllBtn" class="accent-button small-button" type="button" data-i18n="button.replaceAll">すべて置換</button>
+              <button id="replaceAllBtn" class="accent-button small-button replace-all-button" type="button" data-i18n="button.replaceAll">すべて置換</button>
               <button id="resetReplaceBtn" class="ghost-button small-button" type="button" data-i18n="button.resetReplace">置換リセット</button>
               <span id="matchCounter">0/0</span>
             </div>
@@ -97,9 +97,35 @@
               </label>
             </div>
             <div class="output-actions">
-              <button id="copyBtn" class="success-button small-button" type="button" data-i18n="button.copyShort">📋 コピー</button>
-              <button id="downloadBtn" class="ghost-button small-button" type="button" data-i18n="button.downloadTxt">💾 .txt</button>
-              <button id="sendSnippetBtn" class="primary-button small-button" type="button" data-i18n="button.sendSnippet">📨 Snippet Toolへ送る</button>
+              <button id="copyBtn" class="success-button small-button icon-button" type="button">
+                <span class="button-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <rect x="8" y="8" width="11" height="11" rx="2" />
+                    <path d="M5 16V7a2 2 0 0 1 2-2h9" />
+                  </svg>
+                </span>
+                <span data-i18n="button.copyShort">コピー</span>
+              </button>
+              <button id="downloadBtn" class="ghost-button small-button icon-button" type="button">
+                <span class="button-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M12 4v11" />
+                    <path d="m7 10 5 5 5-5" />
+                    <path d="M5 19h14" />
+                  </svg>
+                </span>
+                <span data-i18n="button.downloadTxt">.txt</span>
+              </button>
+              <button id="sendSnippetBtn" class="primary-button small-button icon-button" type="button">
+                <span class="button-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M4 12h13" />
+                    <path d="m12 7 5 5-5 5" />
+                    <path d="M20 5v14" />
+                  </svg>
+                </span>
+                <span data-i18n="button.sendSnippet">Snippet Toolへ送る</span>
+              </button>
             </div>
           </div>
           <pre id="outputBox" class="output-box" tabindex="-1"></pre>
