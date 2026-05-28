@@ -5,8 +5,9 @@ function renderTypeSelectOptions() {
 
   newCardType.innerHTML = optionsHtml;
   selectionCardType.innerHTML = optionsHtml;
-  newCardType.value = "scene";
-  selectionCardType.value = "memo";
+
+  if (!newCardType.value || !INFO_TYPES[newCardType.value]) newCardType.value = "scene";
+  if (!selectionCardType.value || !INFO_TYPES[selectionCardType.value]) selectionCardType.value = "memo";
 }
 
 function renderTypeFilters() {

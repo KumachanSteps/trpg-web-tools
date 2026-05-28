@@ -13,7 +13,7 @@ const INFO_TYPES = {
   ho4: { label: "HO4", marker: "❖", color: "#7c3aed" }
 };
 
-const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_1";
+const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_2";
 const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 let cards = [];
