@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>シナリオPDF整形機 Ver.0.4</title>
+  <title>シナリオPDF整形機 Ver.0.4.1</title>
   <link rel="stylesheet" href="./css/pdf-parser-style.css" />
 </head>
 <body class="theme-light">
@@ -17,7 +17,7 @@
           </a>
           <span class="tag-pill tag-cyan" data-i18n="chip.parser">PDF整形</span>
           <span class="tag-pill tag-violet" data-i18n="chip.builder">シナリオ情報カードツールと連携</span>
-          <span class="tag-pill tag-amber">Ver.0.4</span>
+          <span class="tag-pill tag-amber">Ver.0.4.1</span>
         </div>
         <div class="header-actions">
           <button id="languageToggleBtn" class="header-button" type="button">EN/JP</button>
@@ -26,13 +26,13 @@
           <button id="themeToggleBtn" class="header-button" type="button" data-i18n="button.nightMode">ナイトモード</button>
         </div>
       </div>
-      <div id="usagePanel" class="header-info-panel" hidden>
+      <div id="usagePanel" class="header-info-panel">
         <strong data-i18n="usage.title">使い方</strong>
         <p data-i18n="usage.body">PDFを読み込むと本文を抽出し、プリセットと整形オプションで不要改行・見出し・資料情報を整理します。検索・置換で微調整したあと、コピー、.txt保存、またはシナリオ情報カードツールへ送ることができます。</p>
       </div>
-      <div id="shortcutPanel" class="header-info-panel" hidden>
+      <div id="shortcutPanel" class="header-info-panel">
         <strong data-i18n="shortcuts.title">ショートカット</strong>
-        <p data-i18n="shortcuts.body">Ctrl/⌘+Enter：整形実行 ／ Ctrl/⌘+S：TXT保存 ／ Ctrl/⌘+Shift+C：出力コピー ／ Esc：ヘッダーパネルを閉じる</p>
+        <p data-i18n="shortcuts.body">Ctrl/⌘+O：PDFを開く ／ Ctrl/⌘+Shift+F：検索欄へ移動 ／ Ctrl/⌘+Shift+T：モード切替 ／ Ctrl/⌘+Shift+C：出力コピー ／ Ctrl/⌘+Shift+S：TXT保存 ／ Esc：パネルを閉じる／通常時はリセット</p>
       </div>
       <div class="title-row compact-title-row">
         <div class="tool-icon" aria-hidden="true">
@@ -79,21 +79,27 @@
             <div class="search-actions">
               <button id="prevBtn" class="ghost-button small-button" type="button">↑</button>
               <button id="nextBtn" class="ghost-button small-button" type="button">↓</button>
-              <button id="replaceBtn" class="ghost-button small-button" type="button">Replace</button>
-              <button id="replaceAllBtn" class="accent-button small-button" type="button">Replace All</button>
-              <button id="resetReplaceBtn" class="ghost-button small-button" type="button">Reset</button>
+              <button id="replaceBtn" class="ghost-button small-button" type="button" data-i18n="button.replaceCurrent">置換</button>
+              <button id="replaceAllBtn" class="accent-button small-button" type="button" data-i18n="button.replaceAll">すべて置換</button>
+              <button id="resetReplaceBtn" class="ghost-button small-button" type="button" data-i18n="button.resetReplace">置換リセット</button>
               <span id="matchCounter">0/0</span>
             </div>
           </div>
         </section>
 
         <section class="panel output-panel">
-          <div class="panel-title-row">
-            <h2 data-i18n="section.output">整形済み出力</h2>
+          <div class="panel-title-row output-title-row">
+            <div class="output-title-left">
+              <h2 data-i18n="section.output">整形済み出力</h2>
+              <label class="filename-field">
+                <span data-i18n="label.filename">ファイル名</span>
+                <input id="filenameInput" type="text" value="scenario_parsed_text.txt" aria-label="ファイル名.txt" />
+              </label>
+            </div>
             <div class="output-actions">
-              <button id="copyBtn" class="success-button small-button" type="button">Copy</button>
-              <button id="downloadBtn" class="ghost-button small-button" type="button">.txt</button>
-              <button id="sendSnippetBtn" class="primary-button small-button" type="button" data-i18n="button.sendSnippet">Snippet Toolへ送る</button>
+              <button id="copyBtn" class="success-button small-button" type="button" data-i18n="button.copyShort">📋 コピー</button>
+              <button id="downloadBtn" class="ghost-button small-button" type="button" data-i18n="button.downloadTxt">💾 .txt</button>
+              <button id="sendSnippetBtn" class="primary-button small-button" type="button" data-i18n="button.sendSnippet">📨 Snippet Toolへ送る</button>
             </div>
           </div>
           <pre id="outputBox" class="output-box" tabindex="-1"></pre>

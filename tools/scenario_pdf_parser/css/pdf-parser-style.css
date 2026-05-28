@@ -69,8 +69,9 @@ button {
 .site-header {
   position: relative;
   z-index: 100;
-  max-width: 1440px;
-  margin: 0 auto 20px;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 20px;
   padding: 20px 24px;
   border: 1px solid var(--header-border-night);
   border-radius: var(--radius-panel);
@@ -887,8 +888,29 @@ body.theme-light .toast {
   margin-top: 14px;
 }
 
-.header-info-panel[hidden] {
-  display: none;
+.header-info-panel {
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  border: 1px solid rgba(103,232,249,.24);
+  border-radius: 16px;
+  background: rgba(2,6,23,.28);
+  padding: 0 14px;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.7;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: max-height .22s ease, margin-top .22s ease, padding .22s ease, opacity .18s ease, transform .18s ease;
+}
+
+.header-info-panel.is-open {
+  max-height: 220px;
+  margin-top: 14px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .header-info-panel strong {
@@ -906,5 +928,65 @@ body.theme-light .toast {
 @media (max-width: 720px) {
   .compact-title-row {
     margin-top: 12px;
+  }
+}
+
+
+/* =========================================================
+   v0.4.1 UI Adjustments
+   ========================================================= */
+
+.output-title-row {
+  align-items: center;
+}
+
+.output-title-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+
+.filename-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: min(100%, 320px);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.filename-field input {
+  width: min(320px, 52vw);
+  border: 1px solid #334155;
+  border-radius: 13px;
+  background: rgba(2, 6, 23, 0.82);
+  color: var(--text);
+  padding: 8px 11px;
+  outline: none;
+}
+
+.filename-field input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.12);
+}
+
+body.theme-light .filename-field input {
+  border-color: rgba(15, 23, 42, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+}
+
+@media (max-width: 760px) {
+  .output-title-left,
+  .output-actions {
+    width: 100%;
+  }
+
+  .filename-field,
+  .filename-field input {
+    width: 100%;
   }
 }

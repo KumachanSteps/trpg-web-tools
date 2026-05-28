@@ -43,6 +43,7 @@ const state = {
   outputText: "",
   searchTerm: "",
   replaceTerm: "",
+  fileName: "scenario_parsed_text.txt",
   activeMatchIndex: 0,
   matches: [],
   options: {
@@ -65,6 +66,7 @@ const elements = {
   pdfInput: document.getElementById("pdfInput"),
   dropZone: document.getElementById("dropZone"),
   fileStatus: document.getElementById("fileStatus"),
+  filenameInput: document.getElementById("filenameInput"),
   presetList: document.getElementById("presetList"),
   optionList: document.getElementById("optionList"),
   copyBtn: document.getElementById("copyBtn"),
@@ -111,18 +113,22 @@ function showToast(message) {
   document.body.appendChild(toast);
   window.setTimeout(() => toast.remove(), 2600);
 }
+function isHeaderPanelOpen() {
+  return elements.usagePanel.classList.contains("is-open") || elements.shortcutPanel.classList.contains("is-open");
+}
+
 function setHeaderPanel(panelName) {
-  const showUsage = panelName === "usage" && elements.usagePanel.hidden;
-  const showShortcut = panelName === "shortcut" && elements.shortcutPanel.hidden;
-  elements.usagePanel.hidden = true;
-  elements.shortcutPanel.hidden = true;
-  if (showUsage) elements.usagePanel.hidden = false;
-  if (showShortcut) elements.shortcutPanel.hidden = false;
+  const usageOpen = elements.usagePanel.classList.contains("is-open");
+  const shortcutOpen = elements.shortcutPanel.classList.contains("is-open");
+  elements.usagePanel.classList.remove("is-open");
+  elements.shortcutPanel.classList.remove("is-open");
+  if (panelName === "usage" && !usageOpen) elements.usagePanel.classList.add("is-open");
+  if (panelName === "shortcut" && !shortcutOpen) elements.shortcutPanel.classList.add("is-open");
 }
 
 function closeHeaderPanels() {
-  elements.usagePanel.hidden = true;
-  elements.shortcutPanel.hidden = true;
+  elements.usagePanel.classList.remove("is-open");
+  elements.shortcutPanel.classList.remove("is-open");
 }
 
 function applyTheme(theme) {
@@ -494,12 +500,28 @@ async function copyOutput() {
   }
 }
 
+function sanitizeTxtFileName(value) {
+  const fallback = "scenario_parsed_text.txt";
+  const cleaned = (value || fallback).trim().replace(/[\/:*?"<>|]/g, "_");
+  if (!cleaned) return fallback;
+  return cleaned.toLowerCase().endsWith(".txt") ? cleaned : `${cleaned}.txt`;
+}
+
+function setOutputFileName(fileName) {
+  state.fileName = sanitizeTxtFileName(fileName);
+  if (elements.filenameInput) elements.filenameInput.value = state.fileName;
+}
+
+function deriveTxtFileNameFromPdf(fileName) {
+  return sanitizeTxtFileName((fileName || "scenario_parsed_text").replace(/\.pdf$/i, "") + ".txt");
+}
+
 function downloadText() {
   const blob = new Blob([state.outputText], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "scenario_parsed_text.txt";
+  anchor.download = sanitizeTxtFileName(state.fileName);
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
@@ -509,10 +531,11 @@ function downloadText() {
 function sendToSnippetTool() {
   const payload = {
     source: "scenario_pdf_parser",
-    version: "0.4",
+    version: "0.4.1",
     text: state.outputText,
     preset: state.preset,
     options: state.options,
+    fileName: sanitizeTxtFileName(state.fileName),
     exportedAt: new Date().toISOString(),
   };
 
@@ -681,6 +704,7 @@ async function handlePdfFile(file) {
   elements.fileStatus.textContent = `${i18n("file.loading")}${file.name}`;
   try {
     state.rawText = await extractTextFromPdf(file);
+    setOutputFileName(deriveTxtFileNameFromPdf(file.name));
     elements.fileStatus.textContent = `${i18n("file.loaded")}${file.name}`;
     applyFormat();
     showToast(i18n("toast.pdfSuccess"));
@@ -689,6 +713,24 @@ async function handlePdfFile(file) {
     elements.fileStatus.textContent = `${i18n("file.failed")}${file.name}`;
     showToast(i18n("toast.pdfFail"));
   }
+}
+
+function resetToolWithConfirm() {
+  if (!window.confirm(i18n("confirm.resetAll"))) return;
+  state.rawText = "";
+  state.formattedText = "";
+  state.outputText = "";
+  state.searchTerm = "";
+  state.replaceTerm = "";
+  state.activeMatchIndex = 0;
+  state.matches = [];
+  elements.searchInput.value = "";
+  elements.replaceInput.value = "";
+  elements.pdfInput.value = "";
+  elements.fileStatus.textContent = i18n("pdf.noFileStatus");
+  setOutputFileName("scenario_parsed_text.txt");
+  renderHighlightedOutput();
+  updateStats();
 }
 
 function bindEvents() {
@@ -707,6 +749,10 @@ function bindEvents() {
   elements.copyBtn.addEventListener("click", copyOutput);
   elements.downloadBtn.addEventListener("click", downloadText);
   elements.sendSnippetBtn.addEventListener("click", sendToSnippetTool);
+  elements.filenameInput.addEventListener("input", (event) => {
+    state.fileName = event.target.value;
+  });
+  elements.filenameInput.addEventListener("blur", () => setOutputFileName(state.fileName));
 
   elements.searchInput.addEventListener("input", (event) => {
     state.searchTerm = event.target.value;
@@ -764,24 +810,44 @@ function bindEvents() {
 
   document.addEventListener("keydown", (event) => {
     const modifier = event.ctrlKey || event.metaKey;
+    const key = event.key.toLowerCase();
+
     if (event.key === "Escape") {
-      closeHeaderPanels();
+      event.preventDefault();
+      if (isHeaderPanelOpen()) {
+        closeHeaderPanels();
+      } else {
+        resetToolWithConfirm();
+      }
       return;
     }
+
     if (!modifier) return;
-    if (event.key === "Enter") {
+
+    if (key === "o" && !event.shiftKey) {
       event.preventDefault();
-      applyFormat();
-    } else if (event.key.toLowerCase() === "s") {
+      elements.pdfInput.click();
+    } else if (event.shiftKey && key === "f") {
       event.preventDefault();
-      downloadText();
-    } else if (event.shiftKey && event.key.toLowerCase() === "c") {
+      elements.searchInput.focus();
+      elements.searchInput.select();
+    } else if (event.shiftKey && key === "t") {
+      event.preventDefault();
+      toggleTheme();
+    } else if (event.shiftKey && key === "c") {
       event.preventDefault();
       copyOutput();
+    } else if (event.shiftKey && key === "s") {
+      event.preventDefault();
+      downloadText();
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      applyFormat();
     }
   });
 }
 
 bindEvents();
+setOutputFileName(state.fileName);
 applyTheme(localStorage.getItem("scenarioPdfParser.theme") || "light");
 applyFormat();

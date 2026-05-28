@@ -1,5 +1,5 @@
 /* =========================================================
-   いあキャラMEMOジェネレータ v1.88
+   いあキャラMEMOジェネレータ v1.89
    ========================================================= */
 
 :root {
@@ -29,6 +29,7 @@
   --icon-header-memo: url("../assets/img/header_memo_icon.png");
   --panel-icon-green: #34d399;
   --panel-icon-green-light: #10b981;
+  --panel-icon-blue-light: #0284c7;
 }
 
 * { box-sizing: border-box; }
@@ -409,21 +410,17 @@ body.theme-light .header-info-panel,
   color: #475569;
 }
 
+/* =========================================================
+   Layout
+   ========================================================= */
+
 .layout-grid {
   width: min(100%, 1440px);
   margin: 20px auto 0;
   display: grid;
-  grid-template-columns: 390px minmax(0, 1fr);
+  grid-template-columns: minmax(320px, 390px) minmax(0, 1fr) minmax(320px, 420px);
   gap: 20px;
   align-items: start;
-}
-
-.main-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
-  gap: 20px;
-  align-items: start;
-  min-width: 0;
 }
 
 .left-column,
@@ -435,10 +432,38 @@ body.theme-light .header-info-panel,
   min-width: 0;
 }
 
-.layout-grid > .left-column { grid-column: 1; }
-.layout-grid > .main-grid { grid-column: 2; }
-.main-grid > .middle-column { grid-column: 1; }
-.main-grid > .right-column { grid-column: 2; }
+.layout-grid > .left-column {
+  grid-column: 1;
+}
+
+.layout-grid > .middle-column {
+  grid-column: 2;
+}
+
+.layout-grid > .right-column {
+  grid-column: 3;
+}
+
+.layout-grid > .main-grid {
+  grid-column: 2 / 4;
+  min-width: 0;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 20px;
+  align-items: start;
+  min-width: 0;
+}
+
+.main-grid > .middle-column {
+  grid-column: 1;
+}
+
+.main-grid > .right-column {
+  grid-column: 2;
+}
 
 .panel {
   background: var(--panel);
@@ -570,9 +595,9 @@ body.theme-light .palette-panel .panel-icon,
 .page-shell.theme-light .panel-options .panel-icon,
 .page-shell.theme-light .memo-panel .panel-icon,
 .page-shell.theme-light .palette-panel .panel-icon {
-  border-color: rgba(16, 185, 129, 0.22);
+  border-color: rgba(14, 165, 233, 0.24);
   background:
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.10), transparent 68%),
+    radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.12), transparent 68%),
     rgba(255, 255, 255, 0.90);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.88),
@@ -591,8 +616,8 @@ body.theme-light .palette-panel .panel-icon::before,
 .page-shell.theme-light .panel-options .panel-icon::before,
 .page-shell.theme-light .memo-panel .panel-icon::before,
 .page-shell.theme-light .palette-panel .panel-icon::before {
-  background: var(--panel-icon-green-light);
-  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.28));
+  background: var(--panel-icon-blue-light);
+  filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.28));
 }
 
 .field-label {
@@ -1033,7 +1058,7 @@ body.theme-light .sheet-link-badge,
   font-size: 11px;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 980px) {
   .layout-grid,
   .main-grid {
     grid-template-columns: 1fr;
@@ -1041,6 +1066,8 @@ body.theme-light .sheet-link-badge,
 
   .layout-grid > .left-column,
   .layout-grid > .main-grid,
+  .layout-grid > .middle-column,
+  .layout-grid > .right-column,
   .main-grid > .middle-column,
   .main-grid > .right-column {
     grid-column: auto;
