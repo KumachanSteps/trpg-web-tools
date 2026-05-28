@@ -2,12 +2,51 @@
   "use strict";
 
   const NL = "\n";
+  let txtApplyTimer = null;
 
   const state = {
     parsedKoma: null,
     parsedTxt: createEmptyTxtParsed(),
     memoDirty: false,
     currentEdition: "",
+  };
+
+  const ids = {
+    jsonInput: ["jsonInput", "komaJsonInput"],
+    pasteJsonButton: ["pasteJsonButton", "pasteKomaJsonButton"],
+    jsonErrorBox: ["jsonErrorBox", "jsonErrorMessage"],
+    txtInput: ["txtInput", "iacharaTxtInput"],
+    txtFileInput: ["txtFileInput", "iacharaTxtFileInput"],
+    openTxtFileButton: ["openTxtFileButton", "openIacharaTxtFileButton"],
+    resetTxtButton: ["resetTxtButton", "resetIacharaTxtButton"],
+    txtLoadMessage: ["txtLoadMessage", "iacharaTxtMessage"],
+    includeWeapons: ["includeWeapons"],
+    includeItems: ["includeItems"],
+    includeKnowledge: ["includeKnowledge"],
+    includeTxtMemo: ["includeTxtMemo"],
+    formatPalette: ["formatPalette"],
+    profileSupplementInput: ["profileSupplementInput"],
+    regenerateMemoButton: ["regenerateMemoButton"],
+    copyMemoButton: ["copyMemoButton"],
+    memoEditor: ["memoEditor"],
+    palettePreview: ["palettePreview"],
+    paletteEditionLabel: ["paletteEditionLabel", "editionText"],
+    copyPaletteButton: ["copyPaletteButton"],
+    generatedJson: ["generatedJson"],
+    copyGeneratedJsonButton: ["copyGeneratedJsonButton"],
+    clearAllButton: ["clearAllButton"],
+    statusMessage: ["statusMessage"],
+    summaryName: ["summaryName"],
+    editionBadge: ["editionBadge"],
+    sheetLinkBadge: ["sheetLinkBadge"],
+    statusChips: ["statusChips"],
+    paramsGrid: ["paramsGrid"],
+    characterIconFrame: ["characterIconFrame", "summaryIcon"],
+    themeToggleButton: ["themeToggleButton"],
+    helpToggleButton: ["helpToggleButton", "helpButton"],
+    shortcutToggleButton: ["shortcutToggleButton", "shortcutButton"],
+    helpPanel: ["helpPanel"],
+    shortcutPanel: ["shortcutPanel"],
   };
 
   document.addEventListener("DOMContentLoaded", init);
@@ -21,16 +60,16 @@
     setupButtons();
     setupShortcuts();
     parseKomaInput();
-    parseTxtInput();
+    parseTxtInput(false);
     applyProfileFromTxt();
     rebuildAll();
   }
 
   function setupHeaderPanels() {
-    const helpButton = $("#helpToggleButton");
-    const shortcutButton = $("#shortcutToggleButton");
-    const helpPanel = $("#helpPanel");
-    const shortcutPanel = $("#shortcutPanel");
+    const helpButton = getEl("helpToggleButton");
+    const shortcutButton = getEl("shortcutToggleButton");
+    const helpPanel = getEl("helpPanel");
+    const shortcutPanel = getEl("shortcutPanel");
 
     if (helpButton && helpPanel) {
       helpButton.addEventListener("click", () => {
@@ -52,24 +91,20 @@
   }
 
   function closeHeaderPanels() {
-    const helpPanel = $("#helpPanel");
-    const shortcutPanel = $("#shortcutPanel");
-
+    const helpPanel = getEl("helpPanel");
+    const shortcutPanel = getEl("shortcutPanel");
     if (helpPanel) helpPanel.classList.add("hidden");
     if (shortcutPanel) shortcutPanel.classList.add("hidden");
   }
 
   function setupThemeToggle() {
-    const button = $("#themeToggleButton");
-
-    if (!button) return;
-
+    const button = getEl("themeToggleButton");
     const savedTheme = localStorage.getItem("charamemo-theme") || "night";
     applyTheme(savedTheme);
 
-    button.addEventListener("click", () => {
-      toggleTheme();
-    });
+    if (button) {
+      button.addEventListener("click", toggleTheme);
+    }
   }
 
   function toggleTheme() {
@@ -79,8 +114,8 @@
   }
 
   function applyTheme(theme) {
-    const pageShell = $(".page-shell");
-    const button = $("#themeToggleButton");
+    const pageShell = document.querySelector(".page-shell");
+    const button = getEl("themeToggleButton");
 
     document.body.classList.toggle("theme-light", theme === "light");
     document.body.classList.toggle("theme-night", theme !== "light");
@@ -96,10 +131,10 @@
   }
 
   function setupInputs() {
-    const jsonInput = $("#jsonInput");
-    const txtInput = $("#txtInput");
-    const profileSupplementInput = $("#profileSupplementInput");
-    const memoEditor = $("#memoEditor");
+    const jsonInput = getEl("jsonInput");
+    const txtInput = getEl("txtInput");
+    const profileSupplementInput = getEl("profileSupplementInput");
+    const memoEditor = getEl("memoEditor");
 
     if (jsonInput) {
       jsonInput.addEventListener("input", () => {
@@ -111,10 +146,7 @@
 
     if (txtInput) {
       txtInput.addEventListener("input", () => {
-        parseTxtInput();
-        state.memoDirty = false;
-        applyProfileFromTxt();
-        rebuildAll();
+        scheduleTxtAutoApply();
       });
     }
 
@@ -132,10 +164,19 @@
     }
   }
 
+  function scheduleTxtAutoApply() {
+    window.clearTimeout(txtApplyTimer);
+    txtApplyTimer = window.setTimeout(() => {
+      parseTxtInput(true);
+      state.memoDirty = false;
+      applyProfileFromTxt();
+      rebuildAll();
+    }, 200);
+  }
+
   function setupOptionSwitches() {
     getOptionInputs().forEach((input) => {
       updateSwitchRowState(input);
-
       input.addEventListener("change", () => {
         updateSwitchRowState(input);
         state.memoDirty = false;
@@ -151,48 +192,34 @@
 
   function getOptionInputs() {
     return [
-      $("#includeWeapons"),
-      $("#includeItems"),
-      $("#includeKnowledge"),
-      $("#includeTxtMemo"),
-      $("#formatPalette"),
+      getEl("includeWeapons"),
+      getEl("includeItems"),
+      getEl("includeKnowledge"),
+      getEl("includeTxtMemo"),
+      getEl("formatPalette"),
     ].filter(Boolean);
   }
 
   function setupButtons() {
-    const pasteJsonButton = $("#pasteJsonButton");
-    const openTxtFileButton = $("#openTxtFileButton");
-    const resetTxtButton = $("#resetTxtButton");
-    const txtFileInput = $("#txtFileInput");
-    const regenerateMemoButton = $("#regenerateMemoButton");
-    const copyMemoButton = $("#copyMemoButton");
-    const copyPaletteButton = $("#copyPaletteButton");
-    const copyGeneratedJsonButton = $("#copyGeneratedJsonButton");
-    const clearAllButton = $("#clearAllButton");
+    const pasteJsonButton = getEl("pasteJsonButton");
+    const openTxtFileButton = getEl("openTxtFileButton");
+    const resetTxtButton = getEl("resetTxtButton");
+    const txtFileInput = getEl("txtFileInput");
+    const regenerateMemoButton = getEl("regenerateMemoButton");
+    const copyMemoButton = getEl("copyMemoButton");
+    const copyPaletteButton = getEl("copyPaletteButton");
+    const copyGeneratedJsonButton = getEl("copyGeneratedJsonButton");
+    const clearAllButton = getEl("clearAllButton");
 
-    if (pasteJsonButton) {
-      pasteJsonButton.addEventListener("click", pasteJsonFromClipboard);
-    }
-
-    if (openTxtFileButton && txtFileInput) {
-      openTxtFileButton.addEventListener("click", () => {
-        txtFileInput.click();
-      });
-    }
-
-    if (txtFileInput) {
-      txtFileInput.addEventListener("change", readTxtFile);
-    }
-
-    if (resetTxtButton) {
-      resetTxtButton.addEventListener("click", resetTxtInput);
-    }
+    if (pasteJsonButton) pasteJsonButton.addEventListener("click", pasteJsonFromClipboard);
+    if (openTxtFileButton && txtFileInput) openTxtFileButton.addEventListener("click", () => txtFileInput.click());
+    if (txtFileInput) txtFileInput.addEventListener("change", readTxtFile);
+    if (resetTxtButton) resetTxtButton.addEventListener("click", resetTxtInput);
 
     if (regenerateMemoButton) {
       regenerateMemoButton.addEventListener("click", () => {
-        const memoEditor = $("#memoEditor");
+        const memoEditor = getEl("memoEditor");
         if (!memoEditor) return;
-
         memoEditor.value = buildMemo();
         state.memoDirty = false;
         rebuildGeneratedJsonOnly();
@@ -202,30 +229,26 @@
 
     if (copyMemoButton) {
       copyMemoButton.addEventListener("click", () => {
-        const memoEditor = $("#memoEditor");
+        const memoEditor = getEl("memoEditor");
         copyText(memoEditor ? memoEditor.value : "", "メモ");
       });
     }
 
     if (copyPaletteButton) {
       copyPaletteButton.addEventListener("click", () => {
-        const palettePreview = $("#palettePreview");
+        const palettePreview = getEl("palettePreview");
         copyText(palettePreview ? palettePreview.value : "", "チャットパレット");
       });
     }
 
     if (copyGeneratedJsonButton) {
       copyGeneratedJsonButton.addEventListener("click", () => {
-        const generatedJson = $("#generatedJson");
+        const generatedJson = getEl("generatedJson");
         copyText(generatedJson ? generatedJson.value : "", "生成済みJSON駒データ");
       });
     }
 
-    if (clearAllButton) {
-      clearAllButton.addEventListener("click", () => {
-        confirmClearAll();
-      });
-    }
+    if (clearAllButton) clearAllButton.addEventListener("click", confirmClearAll);
   }
 
   function setupShortcuts() {
@@ -234,13 +257,9 @@
       const mod = event.ctrlKey || event.metaKey;
 
       if (event.key === "Escape") {
+        event.preventDefault();
         closeHeaderPanels();
-
-        if (hasAnyInput()) {
-          const ok = window.confirm("入力データを削除・リセットしますか？");
-          if (ok) clearAll();
-        }
-
+        if (hasAnyInput() && window.confirm("入力データを削除・リセットしますか？")) clearAll();
         return;
       }
 
@@ -248,7 +267,7 @@
 
       if (key === "o" && !event.shiftKey) {
         event.preventDefault();
-        const txtFileInput = $("#txtFileInput");
+        const txtFileInput = getEl("txtFileInput");
         if (txtFileInput) txtFileInput.click();
         return;
       }
@@ -267,15 +286,14 @@
 
       if (key === "c" && event.shiftKey) {
         event.preventDefault();
-        const generatedJson = $("#generatedJson");
+        const generatedJson = getEl("generatedJson");
         copyText(generatedJson ? generatedJson.value : "", "生成済みJSON駒データ");
       }
     });
   }
 
   async function pasteJsonFromClipboard() {
-    const jsonInput = $("#jsonInput");
-
+    const jsonInput = getEl("jsonInput");
     if (!jsonInput) return;
 
     try {
@@ -291,15 +309,14 @@
   }
 
   async function readTxtFile(event) {
-    const txtInput = $("#txtInput");
+    const txtInput = getEl("txtInput");
     const file = event.target.files && event.target.files[0];
-
     if (!file || !txtInput) return;
 
     try {
       const text = await file.text();
       txtInput.value = text;
-      parseTxtInput();
+      parseTxtInput(true);
       state.memoDirty = false;
       applyProfileFromTxt();
       rebuildAll();
@@ -314,10 +331,8 @@
   }
 
   function resetTxtInput() {
-    const txtInput = $("#txtInput");
-
+    const txtInput = getEl("txtInput");
     if (txtInput) txtInput.value = "";
-
     state.parsedTxt = createEmptyTxtParsed();
     state.memoDirty = false;
     applyProfileFromTxt();
@@ -327,17 +342,16 @@
   }
 
   function confirmClearAll() {
-    const ok = window.confirm("入力データを削除・リセットしますか？");
-    if (ok) clearAll();
+    if (window.confirm("入力データを削除・リセットしますか？")) clearAll();
   }
 
   function clearAll() {
-    const jsonInput = $("#jsonInput");
-    const txtInput = $("#txtInput");
-    const profileSupplementInput = $("#profileSupplementInput");
-    const memoEditor = $("#memoEditor");
-    const palettePreview = $("#palettePreview");
-    const generatedJson = $("#generatedJson");
+    const jsonInput = getEl("jsonInput");
+    const txtInput = getEl("txtInput");
+    const profileSupplementInput = getEl("profileSupplementInput");
+    const memoEditor = getEl("memoEditor");
+    const palettePreview = getEl("palettePreview");
+    const generatedJson = getEl("generatedJson");
 
     if (jsonInput) jsonInput.value = "";
     if (txtInput) txtInput.value = "";
@@ -358,10 +372,9 @@
   }
 
   function hasAnyInput() {
-    const jsonInput = $("#jsonInput");
-    const txtInput = $("#txtInput");
-    const memoEditor = $("#memoEditor");
-
+    const jsonInput = getEl("jsonInput");
+    const txtInput = getEl("txtInput");
+    const memoEditor = getEl("memoEditor");
     return Boolean(
       (jsonInput && jsonInput.value.trim()) ||
       (txtInput && txtInput.value.trim()) ||
@@ -370,9 +383,8 @@
   }
 
   function parseKomaInput() {
-    const jsonInput = $("#jsonInput");
+    const jsonInput = getEl("jsonInput");
     const raw = jsonInput ? jsonInput.value.trim() : "";
-
     state.parsedKoma = null;
     hideJsonError();
 
@@ -380,11 +392,9 @@
 
     try {
       const parsed = JSON.parse(raw);
-
       if (!parsed || parsed.kind !== "character" || !parsed.data || typeof parsed.data !== "object") {
         throw new Error("kind:'character' と data を持つCCFOLIA駒JSONではありません。");
       }
-
       state.parsedKoma = parsed;
     } catch (error) {
       state.parsedKoma = null;
@@ -392,44 +402,32 @@
     }
   }
 
-  function parseTxtInput() {
-    const txtInput = $("#txtInput");
+  function parseTxtInput(showMessage) {
+    const txtInput = getEl("txtInput");
     const raw = txtInput ? txtInput.value : "";
-
     state.parsedTxt = createEmptyTxtParsed();
 
     if (!raw.trim()) {
-      showTxtLoadMessage("", false);
+      if (showMessage) showTxtLoadMessage("", false);
       return;
     }
 
     state.parsedTxt = parseIacharaTextSafe(raw);
 
-    if (state.parsedTxt.found) {
-      showTxtLoadMessage("いあきゃらTXTを反映しました。", false);
-    } else {
-      showTxtLoadMessage("TXTを読み込みましたが、対応する見出しを検出できませんでした。", true);
+    if (showMessage) {
+      if (state.parsedTxt.found) showTxtLoadMessage("いあきゃらTXTを反映しました。", false);
+      else showTxtLoadMessage("TXTを読み込みましたが、対応する見出しを検出できませんでした。", true);
     }
   }
 
   function parseIacharaTextSafe(text) {
     if (window.IacharaTextParser && typeof window.IacharaTextParser.parseIacharaText === "function") {
-      const parsed = window.IacharaTextParser.parseIacharaText(text);
-      return normalizeParsedTxt(parsed, text);
+      return normalizeParsedTxt(window.IacharaTextParser.parseIacharaText(text), text);
     }
 
     if (window.IacharaTextParser && typeof window.IacharaTextParser.parseIacharaBasicInfo === "function") {
       const info = window.IacharaTextParser.parseIacharaBasicInfo(text);
-      return normalizeParsedTxt({
-        profile: {
-          name: info.name || "",
-          occupation: info.occupation || "",
-          age: info.age || "",
-          gender: info.gender || "",
-          height: info.height || "",
-          weight: info.weight || "",
-        },
-      }, text);
+      return normalizeParsedTxt({ profile: info }, text);
     }
 
     if (typeof window.parseIacharaText === "function") {
@@ -493,12 +491,7 @@
     const commands = buildCommandsFromTxt(abilities, skills, edition);
 
     return {
-      found: Boolean(
-        basic ||
-        Object.values(sections).some(Boolean) ||
-        Object.keys(abilities).length ||
-        skills.length
-      ),
+      found: Boolean(basic || Object.values(sections).some(Boolean) || Object.keys(abilities).length || skills.length),
       profile,
       sections,
       abilities,
@@ -508,13 +501,7 @@
   }
 
   function extractKnowledgeSourceSection(src) {
-    return (
-      extractSection(src, "新たに得た知識・経験") ||
-      extractSection(src, "魔導書") ||
-      extractSection(src, "呪文") ||
-      extractSection(src, "アーティファクト") ||
-      ""
-    );
+    return extractSection(src, "新たに得た知識・経験") || extractSection(src, "魔導書") || extractSection(src, "呪文") || extractSection(src, "アーティファクト") || "";
   }
 
   function rebuildAll() {
@@ -522,7 +509,7 @@
     renderPalette();
 
     if (!state.memoDirty) {
-      const memoEditor = $("#memoEditor");
+      const memoEditor = getEl("memoEditor");
       if (memoEditor) memoEditor.value = buildMemo();
     }
 
@@ -530,24 +517,22 @@
   }
 
   function rebuildGeneratedJsonOnly() {
-    const generatedJson = $("#generatedJson");
-    if (!generatedJson) return;
-
-    generatedJson.value = buildGeneratedJson();
+    const generatedJson = getEl("generatedJson");
+    if (generatedJson) generatedJson.value = buildGeneratedJson();
   }
 
   function renderSummary() {
     const data = getKomaData();
     const parsedTxt = state.parsedTxt;
-    const summaryName = $("#summaryName");
-    const editionBadge = $("#editionBadge");
-    const sheetLinkBadge = $("#sheetLinkBadge");
-    const statusChips = $("#statusChips");
-    const paramsGrid = $("#paramsGrid");
-    const characterIconFrame = $("#characterIconFrame");
-
     const name = data.name || parsedTxt.profile.name || "未解析";
     const edition = detectCurrentEdition();
+
+    const summaryName = getEl("summaryName");
+    const editionBadge = getEl("editionBadge");
+    const sheetLinkBadge = getEl("sheetLinkBadge");
+    const statusChips = getEl("statusChips");
+    const paramsGrid = getEl("paramsGrid");
+    const characterIconFrame = getEl("characterIconFrame");
 
     if (summaryName) summaryName.textContent = name;
 
@@ -607,7 +592,7 @@
 
   function getPaletteSource() {
     const data = getKomaData();
-    const jsonInput = $("#jsonInput");
+    const jsonInput = getEl("jsonInput");
     const rawJsonInput = jsonInput ? jsonInput.value : "";
 
     if (data.commands) return normalizeText(data.commands);
@@ -621,66 +606,39 @@
   }
 
   function renderPalette() {
-    const palettePreview = $("#palettePreview");
-    const paletteEditionLabel = $("#paletteEditionLabel");
+    const palettePreview = getEl("palettePreview");
+    const paletteEditionLabel = getEl("paletteEditionLabel");
     const rawCommands = getPaletteSource();
     const edition = detectCurrentEdition();
 
     state.currentEdition = edition;
 
     if (palettePreview) {
-      if (!rawCommands.trim()) {
-        palettePreview.value = "";
-      } else if ($("#formatPalette") && $("#formatPalette").checked) {
-        palettePreview.value = formatPalette(rawCommands, edition);
-      } else {
-        palettePreview.value = normalizeText(rawCommands);
-      }
+      if (!rawCommands.trim()) palettePreview.value = "";
+      else if (checked("formatPalette")) palettePreview.value = formatPalette(rawCommands, edition);
+      else palettePreview.value = normalizeText(rawCommands);
     }
 
-    if (paletteEditionLabel) {
-      paletteEditionLabel.textContent = `自動判定: ${edition ? editionLabel(edition) : "未判定"}`;
-    }
+    if (paletteEditionLabel) paletteEditionLabel.textContent = `自動判定: ${edition ? editionLabel(edition) : "未判定"}`;
   }
 
   function buildMemo() {
     const data = getKomaData();
     const parsedTxt = state.parsedTxt;
-    const profileSupplementInput = $("#profileSupplementInput");
+    const profileSupplementInput = getEl("profileSupplementInput");
     const profile = profileSupplementInput ? profileSupplementInput.value : defaultProfileText();
     const name = data.name || parsedTxt.profile.name || "";
-
-    const includeWeapons = checked("#includeWeapons");
-    const includeItems = checked("#includeItems");
-    const includeKnowledge = checked("#includeKnowledge");
-    const includeTxtMemo = checked("#includeTxtMemo");
-
     const parts = [];
 
-    if (name || profile.trim()) {
-      parts.push(`名前: ${name || "-"}${NL}${profile}`.trim());
-    }
-
-    if (includeWeapons && parsedTxt.sections.weapons) {
-      parts.push(formatWeaponsSection(parsedTxt.sections.weapons));
-    }
-
-    if (includeItems && parsedTxt.sections.items) {
-      parts.push(formatItemsSection(parsedTxt.sections.items));
-    }
-
-    if (includeKnowledge && parsedTxt.sections.knowledge) {
+    if (name || profile.trim()) parts.push(`名前: ${name || "-"}${NL}${profile}`.trim());
+    if (checked("includeWeapons") && parsedTxt.sections.weapons) parts.push(formatWeaponsSection(parsedTxt.sections.weapons));
+    if (checked("includeItems") && parsedTxt.sections.items) parts.push(formatItemsSection(parsedTxt.sections.items));
+    if (checked("includeKnowledge") && parsedTxt.sections.knowledge) {
       const knowledgeText = formatKnowledgeSection(parsedTxt.sections.knowledge);
       if (knowledgeText) parts.push(knowledgeText);
     }
-
-    if (includeTxtMemo && parsedTxt.sections.memo) {
-      parts.push(`【メモ】${NL}${parsedTxt.sections.memo.trim()}`);
-    }
-
-    if (data.memo) {
-      parts.push(`【既存メモ】${NL}${data.memo}`);
-    }
+    if (checked("includeTxtMemo") && parsedTxt.sections.memo) parts.push(`【メモ】${NL}${parsedTxt.sections.memo.trim()}`);
+    if (data.memo) parts.push(`【既存メモ】${NL}${data.memo}`);
 
     return parts.filter(Boolean).join(NL + NL);
   }
@@ -688,29 +646,23 @@
   function buildGeneratedJson() {
     const parsed = state.parsedKoma;
     const data = Object.assign({}, getKomaData());
-    const memoEditor = $("#memoEditor");
-    const palettePreview = $("#palettePreview");
+    const memoEditor = getEl("memoEditor");
+    const palettePreview = getEl("palettePreview");
 
     data.name = data.name || state.parsedTxt.profile.name || "いあきゃらTXTキャラクター";
     data.memo = memoEditor ? memoEditor.value : "";
     data.commands = palettePreview ? palettePreview.value : "";
-
     if (!Array.isArray(data.status)) data.status = buildStatusFromTxt(state.parsedTxt);
     if (!Array.isArray(data.params)) data.params = buildParamsFromTxt(state.parsedTxt);
     if (typeof data.initiative === "undefined") data.initiative = Number(state.parsedTxt.abilities.DEX) || 0;
 
-    const output = parsed && parsed.kind === "character"
-      ? Object.assign({}, parsed, { data })
-      : { kind: "character", data };
-
+    const output = parsed && parsed.kind === "character" ? Object.assign({}, parsed, { data }) : { kind: "character", data };
     return JSON.stringify(output);
   }
 
   function applyProfileFromTxt() {
-    const profileSupplementInput = $("#profileSupplementInput");
-    if (!profileSupplementInput) return;
-
-    profileSupplementInput.value = buildProfileText(state.parsedTxt.profile);
+    const profileSupplementInput = getEl("profileSupplementInput");
+    if (profileSupplementInput) profileSupplementInput.value = buildProfileText(state.parsedTxt.profile);
   }
 
   function buildProfileText(profile) {
@@ -723,31 +675,14 @@
   }
 
   function defaultProfileText() {
-    return [
-      "職業: -",
-      "年齢: - / 性別: -",
-      "身長: - / 体重: -",
-      "カラーコード: #008080",
-    ].join(NL);
+    return ["職業: -", "年齢: - / 性別: -", "身長: - / 体重: -", "カラーコード: #008080"].join(NL);
   }
 
   function createEmptyTxtParsed() {
     return {
       found: false,
-      profile: {
-        name: "",
-        occupation: "",
-        age: "",
-        gender: "",
-        height: "",
-        weight: "",
-      },
-      sections: {
-        weapons: "",
-        items: "",
-        knowledge: "",
-        memo: "",
-      },
+      profile: { name: "", occupation: "", age: "", gender: "", height: "", weight: "" },
+      sections: { weapons: "", items: "", knowledge: "", memo: "" },
       abilities: {},
       skills: [],
       commands: "",
@@ -760,94 +695,41 @@
 
   function getStatusCards(data, parsedTxt) {
     if (Array.isArray(data.status) && data.status.length) {
-      return data.status.slice(0, 4).map((item) => ({
-        label: item.label || item.name || "-",
-        value: item.value || item.max || "-",
-      }));
+      return data.status.slice(0, 4).map((item) => ({ label: item.label || item.name || "-", value: item.value || item.max || "-" }));
     }
-
-    return ["HP", "MP", "SAN", "幸運"]
-      .filter((key) => parsedTxt.abilities[key])
-      .map((key) => ({
-        label: key,
-        value: parsedTxt.abilities[key],
-      }));
+    return ["HP", "MP", "SAN", "幸運"].filter((key) => parsedTxt.abilities[key]).map((key) => ({ label: key, value: parsedTxt.abilities[key] }));
   }
 
   function getParamCards(data, parsedTxt) {
     if (Array.isArray(data.params) && data.params.length) {
-      return data.params.map((item) => ({
-        label: item.label || item.name || "-",
-        value: item.value || "-",
-      }));
+      return data.params.map((item) => ({ label: item.label || item.name || "-", value: item.value || "-" }));
     }
-
-    return ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"]
-      .filter((key) => parsedTxt.abilities[key])
-      .map((key) => ({
-        label: key,
-        value: parsedTxt.abilities[key],
-      }));
+    return ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"].filter((key) => parsedTxt.abilities[key]).map((key) => ({ label: key, value: parsedTxt.abilities[key] }));
   }
 
   function buildStatusFromTxt(parsedTxt) {
-    return ["HP", "MP", "SAN"]
-      .filter((key) => parsedTxt.abilities[key])
-      .map((key) => ({
-        label: key,
-        value: parsedTxt.abilities[key],
-        max: parsedTxt.abilities[key],
-      }));
+    return ["HP", "MP", "SAN"].filter((key) => parsedTxt.abilities[key]).map((key) => ({ label: key, value: parsedTxt.abilities[key], max: parsedTxt.abilities[key] }));
   }
 
   function buildParamsFromTxt(parsedTxt) {
-    return ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"]
-      .filter((key) => parsedTxt.abilities[key])
-      .map((key) => ({
-        label: key,
-        value: parsedTxt.abilities[key],
-      }));
+    return ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"].filter((key) => parsedTxt.abilities[key]).map((key) => ({ label: key, value: parsedTxt.abilities[key] }));
   }
 
   function detectCurrentEdition() {
     const paletteSource = getPaletteSource();
-
-    if (window.ChatPaletteParser && typeof window.ChatPaletteParser.detectEdition === "function") {
-      return window.ChatPaletteParser.detectEdition(paletteSource);
-    }
-
-    if (window.CocPaletteParser && typeof window.CocPaletteParser.detectEdition === "function") {
-      return window.CocPaletteParser.detectEdition(paletteSource);
-    }
-
-    if (typeof window.detectCocEdition === "function") {
-      return window.detectCocEdition(paletteSource);
-    }
-
+    if (window.ChatPaletteParser && typeof window.ChatPaletteParser.detectEdition === "function") return window.ChatPaletteParser.detectEdition(paletteSource);
+    if (window.CocPaletteParser && typeof window.CocPaletteParser.detectEdition === "function") return window.CocPaletteParser.detectEdition(paletteSource);
+    if (typeof window.detectCocEdition === "function") return window.detectCocEdition(paletteSource);
     return fallbackDetectEdition(paletteSource);
   }
 
   function formatPalette(rawCommands, edition) {
     const source = normalizeText(rawCommands || "");
-
     if (!source.trim()) return "";
-
-    if (window.ChatPaletteParser && typeof window.ChatPaletteParser.buildOutput === "function") {
-      return window.ChatPaletteParser.buildOutput(source, edition);
-    }
-
-    if (window.CocPaletteParser && typeof window.CocPaletteParser.format === "function") {
-      return window.CocPaletteParser.format(source, edition);
-    }
-
-    if (typeof window.formatChatPalette === "function") {
-      return window.formatChatPalette(source, edition);
-    }
-
-    if (typeof window.formatPalette === "function") {
-      return window.formatPalette(source, edition);
-    }
-
+    if (window.ChatPaletteParser && typeof window.ChatPaletteParser.buildOutput === "function") return window.ChatPaletteParser.buildOutput(source, edition);
+    if (window.CocPaletteParser && typeof window.CocPaletteParser.format === "function") return window.CocPaletteParser.format(source, edition);
+    if (typeof window.formatChatPalette === "function") return window.formatChatPalette(source, edition);
+    if (typeof window.formatPalette === "function") return window.formatPalette(source, edition);
     return fallbackFormatPalette(source, edition);
   }
 
@@ -855,15 +737,8 @@
     const src = normalizeText(text);
     let score7 = src.includes("CC<=") ? 1 : 0;
     let score6 = src.includes("CCB<=") ? 1 : 0;
-
-    ["近接戦闘", "射撃", "手さばき", "隠密", "鑑定", "自然", "サバイバル", "威圧", "魅惑"].forEach((word) => {
-      if (src.includes(word)) score7 += 2;
-    });
-
-    ["こぶし", "キック", "組み付き", "頭突き", "マーシャルアーツ", "隠す", "隠れる", "忍び歩き", "値切り"].forEach((word) => {
-      if (src.includes(word)) score6 += 2;
-    });
-
+    ["近接戦闘", "射撃", "手さばき", "隠密", "鑑定", "自然", "サバイバル", "威圧", "魅惑"].forEach((word) => { if (src.includes(word)) score7 += 2; });
+    ["こぶし", "キック", "組み付き", "頭突き", "マーシャルアーツ", "隠す", "隠れる", "忍び歩き", "値切り"].forEach((word) => { if (src.includes(word)) score6 += 2; });
     return score7 > score6 ? "7e" : "6e";
   }
 
@@ -875,22 +750,15 @@
 
   function fallbackFormatPalette(rawCommands, edition) {
     const command = edition === "7e" ? "CC" : "CCB";
-    return normalizeText(rawCommands)
-      .split(NL)
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => normalizePaletteLine(line, command))
-      .join(NL);
+    return normalizeText(rawCommands).split(NL).map((line) => line.trim()).filter(Boolean).map((line) => normalizePaletteLine(line, command)).join(NL);
   }
 
   function normalizePaletteLine(line, command) {
     const trimmed = String(line || "").trim();
-
     if (trimmed.startsWith("sCCB<=")) return command + trimmed.slice(4);
     if (trimmed.startsWith("sCC<=")) return command + trimmed.slice(3);
     if (trimmed.startsWith("CCB<=")) return command + trimmed.slice(3);
     if (trimmed.startsWith("CC<=")) return command + trimmed.slice(2);
-
     return trimmed;
   }
 
@@ -898,12 +766,9 @@
     const src = normalizeText(text);
     const heading = `【${sectionName}】`;
     const start = src.indexOf(heading);
-
     if (start < 0) return "";
-
     const rest = src.slice(start + heading.length);
     const next = rest.match(/\n【[^】]+】/);
-
     return (next ? rest.slice(0, next.index) : rest).trim();
   }
 
@@ -912,64 +777,43 @@
       const value = extractLabelFromLine(line, label);
       if (value !== null) return value;
     }
-
     return "";
   }
 
   function extractLabelFromLine(line, label) {
     const src = String(line || "");
     const index = src.indexOf(label);
-
     if (index < 0) return null;
-
     const afterLabel = src.slice(index + label.length);
     const colonIndexes = [afterLabel.indexOf(":"), afterLabel.indexOf("：")].filter((value) => value >= 0);
-
     if (!colonIndexes.length) return null;
-
     const colonIndex = Math.min.apply(null, colonIndexes);
     const afterColon = afterLabel.slice(colonIndex + 1);
     const slashIndex = afterColon.indexOf("/");
     const rawValue = slashIndex >= 0 ? afterColon.slice(0, slashIndex) : afterColon;
-
     return rawValue.trim();
   }
 
   function parseAbilities(text) {
     const result = {};
     const labels = ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU", "HP", "MP", "SAN", "幸運", "アイデア", "知識"];
-
     normalizeText(text).split(NL).forEach((line) => {
       labels.forEach((label) => {
         const match = line.match(new RegExp(`(^|\\s)${escapeRegExp(label)}\\s*[:：]?\\s*(\\d+)`));
         if (match) result[label] = match[2];
       });
     });
-
     return result;
   }
 
   function parseSkills(text) {
     const skills = [];
-
     normalizeText(text).split(NL).forEach((line) => {
       const clean = line.trim();
-
-      if (!clean) return;
-      if (clean.includes("技能名")) return;
-      if (clean.includes("初期値")) return;
-      if (clean.includes("合計")) return;
-
+      if (!clean || clean.includes("技能名") || clean.includes("初期値") || clean.includes("合計")) return;
       const match = clean.match(/^(.+?)\s+(\d{1,3})(?:\s|$)/);
-
-      if (match) {
-        skills.push({
-          name: match[1].trim(),
-          value: match[2],
-        });
-      }
+      if (match) skills.push({ name: match[1].trim(), value: match[2] });
     });
-
     return skills;
   }
 
@@ -980,108 +824,52 @@
   function buildCommandsFromTxt(abilities, skills, edition) {
     const command = edition === "7e" ? "CC" : "CCB";
     const lines = [];
-
     if (abilities.SAN) lines.push(`1d100<=${abilities.SAN} 【正気度ロール】`);
     if (abilities.アイデア) lines.push(`${command}<=${abilities.アイデア} 【アイデア】`);
     if (abilities.幸運) lines.push(`${command}<=${abilities.幸運} 【幸運】`);
     if (abilities.知識) lines.push(`${command}<=${abilities.知識} 【知識】`);
-
-    skills.forEach((skill) => {
-      lines.push(`${command}<=${skill.value} 【${skill.name}】`);
-    });
-
+    skills.forEach((skill) => lines.push(`${command}<=${skill.value} 【${skill.name}】`));
     return lines.join(NL);
   }
 
   function formatWeaponsSection(rawSectionText) {
     const raw = normalizeText(rawSectionText).trim();
-
     if (!raw) return "【戦闘・武器・防具】";
 
-    const lines = raw
-      .split(NL)
-      .map((line) => line.trimEnd())
-      .filter((line) => line.trim());
-
+    const lines = raw.split(NL).map((line) => line.trimEnd()).filter((line) => line.trim());
     const dataLines = lines.filter((line) => {
       const text = line.trim();
-      if (!text) return false;
-      if (text.startsWith("名前")) return false;
-      if (text.includes("成功率") && text.includes("ダメージ")) return false;
-      return true;
+      return text && !text.startsWith("名前") && !(text.includes("成功率") && text.includes("ダメージ"));
     });
 
-    const rows = dataLines
-      .map(parseWeaponTableRow)
-      .filter(Boolean)
-      .map((row) => ({
-        name: normalizeWeaponField(row.name),
-        success: normalizeWeaponField(row.success),
-        damage: normalizeWeaponField(row.damage),
-        range: normalizeWeaponField(row.range),
-        attack: normalizeAttackCount(row.attack),
-        ammo: normalizeAmmoCount(row.ammo),
-        durability: normalizeWeaponField(row.durability),
-        malfunction: normalizeWeaponField(row.malfunction),
-      }));
+    const rows = dataLines.map(parseWeaponTableRow).filter(Boolean).map((row) => ({
+      name: normalizeWeaponField(row.name),
+      success: normalizeWeaponField(row.success),
+      damage: normalizeWeaponField(row.damage),
+      range: normalizeWeaponField(row.range),
+      attack: normalizeAttackCount(row.attack),
+      ammo: normalizeAmmoCount(row.ammo),
+      durability: normalizeWeaponField(row.durability),
+      malfunction: normalizeWeaponField(row.malfunction),
+    }));
 
-    if (!rows.length) {
-      return `【戦闘・武器・防具】${NL}${raw}`;
-    }
+    if (!rows.length) return `【戦闘・武器・防具】${NL}${raw}`;
 
     const output = ["【戦闘・武器・防具】"];
-
     rows.forEach((row) => {
       output.push(`武器：${row.name}`);
       output.push(`成功率${row.success}｜ダメージ${row.damage}｜射程${row.range}｜`);
-
-      const thirdLine = [
-        `回数${row.attack}`,
-        row.ammo !== "-" ? `装弾数${row.ammo}` : "",
-        row.durability !== "-" ? `耐久力${row.durability}` : "",
-        row.malfunction !== "-" ? `故障${row.malfunction}` : "",
-      ].filter(Boolean).join("｜");
-
+      const thirdLine = [`回数${row.attack}`, row.ammo !== "-" ? `装弾数${row.ammo}` : "", row.durability !== "-" ? `耐久力${row.durability}` : "", row.malfunction !== "-" ? `故障${row.malfunction}` : ""].filter(Boolean).join("｜");
       output.push(thirdLine ? `${thirdLine}｜` : "");
       output.push("");
     });
-
     return output.join(NL).trim();
   }
 
   function parseWeaponTableRow(line) {
-    const columns = String(line || "")
-      .trim()
-      .split(/\s{2,}|\t+/)
-      .map((value) => value.trim())
-      .filter(Boolean);
-
-    if (columns.length >= 8) {
-      return {
-        name: columns[0],
-        success: columns[1],
-        damage: columns[2],
-        range: columns[3],
-        attack: columns[4],
-        ammo: columns[5],
-        durability: columns[6],
-        malfunction: columns[7],
-      };
-    }
-
-    if (columns.length >= 7) {
-      return {
-        name: columns[0],
-        success: "-",
-        damage: columns[1],
-        range: columns[2],
-        attack: columns[3],
-        ammo: columns[4],
-        durability: columns[5],
-        malfunction: columns[6],
-      };
-    }
-
+    const columns = String(line || "").trim().split(/\s{2,}|\t+/).map((value) => value.trim()).filter(Boolean);
+    if (columns.length >= 8) return { name: columns[0], success: columns[1], damage: columns[2], range: columns[3], attack: columns[4], ammo: columns[5], durability: columns[6], malfunction: columns[7] };
+    if (columns.length >= 7) return { name: columns[0], success: "-", damage: columns[1], range: columns[2], attack: columns[3], ammo: columns[4], durability: columns[5], malfunction: columns[6] };
     return null;
   }
 
@@ -1092,116 +880,52 @@
 
   function normalizeAttackCount(value) {
     const text = normalizeWeaponField(value);
-    if (text === "-") return "-";
-    if (text.includes("回")) return text;
-    if (text.includes("連射")) return text;
+    if (text === "-" || text.includes("回") || text.includes("連射")) return text;
     return `${text}回`;
   }
 
   function normalizeAmmoCount(value) {
     const text = normalizeWeaponField(value);
-    if (text === "-") return "-";
-    if (text.includes("発")) return text;
+    if (text === "-" || text.includes("発")) return text;
     return `${text}発`;
   }
 
   function formatItemsSection(rawSectionText) {
     const raw = normalizeText(rawSectionText).trim();
-
     if (!raw) return "【所持品】";
 
-    const lines = raw
-      .split(NL)
-      .map((line) => line.trimEnd())
-      .filter((line) => line.trim());
-
+    const lines = raw.split(NL).map((line) => line.trimEnd()).filter((line) => line.trim());
     const dataLines = lines.filter((line) => {
       const text = line.trim();
-      if (!text) return false;
-      if (text.startsWith("名称")) return false;
-      if (text.includes("単価") && text.includes("個数")) return false;
-      return true;
+      return text && !text.startsWith("名称") && !(text.includes("単価") && text.includes("個数"));
     });
 
-    const items = dataLines
-      .map(parseItemTableRow)
-      .filter((item) => item.name);
+    const items = dataLines.map(parseItemTableRow).filter((item) => item.name);
+    if (!items.length) return `【所持品】${NL}${raw}`;
 
-    if (!items.length) {
-      return `【所持品】${NL}${raw}`;
-    }
-
-    return [
-      "【所持品】",
-      ...items.map((item) => {
-        return item.note
-          ? `${item.name}：${item.note}`
-          : item.name;
-      }),
-    ].join(NL);
+    return ["【所持品】", ...items.map((item) => item.note ? `${item.name}：${item.note}` : item.name)].join(NL);
   }
 
   function parseItemTableRow(line) {
     const text = String(line || "").trim();
-
-    if (!text) {
-      return {
-        name: "",
-        note: "",
-      };
-    }
-
-    const columns = text
-      .split(/\s{2,}|\t+/)
-      .map((value) => value.trim())
-      .filter(Boolean);
-
-    if (columns.length >= 2) {
-      return {
-        name: columns[0],
-        note: columns[columns.length - 1],
-      };
-    }
-
-    return {
-      name: text,
-      note: "",
-    };
+    if (!text) return { name: "", note: "" };
+    const columns = text.split(/\s{2,}|\t+/).map((value) => value.trim()).filter(Boolean);
+    if (columns.length >= 2) return { name: columns[0], note: columns[columns.length - 1] };
+    return { name: text, note: "" };
   }
 
   function formatKnowledgeSection(rawSectionText) {
     const raw = normalizeText(rawSectionText).trim();
-
     if (!raw) return "";
-
     const allowedHeads = ["魔導書", "呪文", "アーティファクト"];
-    const lines = raw
-      .split(NL)
-      .map((line) => line.trim())
-      .filter(Boolean);
-
-    const picked = lines.filter((line) => {
-      return allowedHeads.some((head) => {
-        return (
-          line.startsWith(head) ||
-          line.startsWith(`【${head}】`) ||
-          line.includes(`【${head}】`) ||
-          line.includes(`${head}:`) ||
-          line.includes(`${head}：`)
-        );
-      });
-    });
-
+    const lines = raw.split(NL).map((line) => line.trim()).filter(Boolean);
+    const picked = lines.filter((line) => allowedHeads.some((head) => line.startsWith(head) || line.startsWith(`【${head}】`) || line.includes(`【${head}】`) || line.includes(`${head}:`) || line.includes(`${head}：`)));
     if (!picked.length) return "";
-
     return `【新たに得た知識・経験】${NL}${picked.join(NL)}`;
   }
 
   function normalizeText(text) {
-    return String(text || "")
-      .replace(/\r\n/g, NL)
-      .replace(/\r/g, NL)
-      .replace(/\\n/g, NL);
+    return String(text || "").replace(/\r\n/g, NL).replace(/\r/g, NL).replace(/\\n/g, NL);
   }
 
   function escapeRegExp(text) {
@@ -1209,11 +933,7 @@
   }
 
   function escapeHtml(text) {
-    return String(text || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+    return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
   function displayValue(value) {
@@ -1226,44 +946,38 @@
     return value || String(fallback || "").trim();
   }
 
-  function checked(selector) {
-    const el = $(selector);
+  function checked(name) {
+    const el = getEl(name);
     return el ? Boolean(el.checked) : false;
   }
 
   function showJsonError(message) {
-    const box = $("#jsonErrorBox");
+    const box = getEl("jsonErrorBox");
     if (!box) return;
-
     box.textContent = `JSON解析エラー: ${message}`;
     box.classList.remove("hidden");
   }
 
   function hideJsonError() {
-    const box = $("#jsonErrorBox");
+    const box = getEl("jsonErrorBox");
     if (!box) return;
-
     box.textContent = "";
     box.classList.add("hidden");
   }
 
   function showTxtLoadMessage(message, isError) {
-    const el = $("#txtLoadMessage");
+    const el = getEl("txtLoadMessage");
     if (!el) return;
-
     el.textContent = message || "";
     el.classList.toggle("is-error", Boolean(isError));
     el.classList.toggle("is-success", Boolean(message) && !isError);
   }
 
   function showStatusMessage(message, isError) {
-    const el = $("#statusMessage");
+    const el = getEl("statusMessage");
     if (!el) return;
-
     el.textContent = isError ? `⚠ ${message}` : message;
-    window.setTimeout(() => {
-      el.textContent = "";
-    }, 2500);
+    window.setTimeout(() => { el.textContent = ""; }, 2500);
   }
 
   async function copyText(text, label) {
@@ -1284,8 +998,7 @@
   }
 
   function ensureToastContainer() {
-    if ($(".toast-container")) return;
-
+    if (document.querySelector(".toast-container")) return;
     const container = document.createElement("div");
     container.className = "toast-container";
     document.body.appendChild(container);
@@ -1293,28 +1006,26 @@
 
   function showToast(message, isError) {
     ensureToastContainer();
-
-    const container = $(".toast-container");
+    const container = document.querySelector(".toast-container");
     if (!container) return;
-
     const toast = document.createElement("div");
     toast.className = `toast${isError ? " is-error" : ""}`;
     toast.textContent = isError ? `⚠ ${message}` : message;
-
     container.appendChild(toast);
-
     window.setTimeout(() => {
       toast.style.opacity = "0";
       toast.style.transform = "translateX(18px)";
       toast.style.transition = "opacity .18s ease, transform .18s ease";
     }, 2200);
-
-    window.setTimeout(() => {
-      toast.remove();
-    }, 2600);
+    window.setTimeout(() => toast.remove(), 2600);
   }
 
-  function $(selector) {
-    return document.querySelector(selector);
+  function getEl(name) {
+    const list = ids[name] || [name];
+    for (const id of list) {
+      const el = document.getElementById(id);
+      if (el) return el;
+    }
+    return null;
   }
 })();
