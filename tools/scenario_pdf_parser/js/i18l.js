@@ -1,13 +1,17 @@
 window.SCENARIO_PDF_PARSER_I18L = {
   ja: {
-    "chip.portal": "TRPG Web Tools",
-    "chip.builder": "Scenario Info Card Builder",
+    "chip.portal": "←TRPG WEBツール観測所",
+    "chip.builder": "シナリオ情報カードツールと連携",
     "chip.parser": "PDF整形",
-    "tooltip.portal": "TRPG WEB Tools ポータルサイトに戻る",
+    "tooltip.portal": "TRPG WEBツール観測所に戻る",
     "app.title": "シナリオPDF整形機",
     "app.description": "TRPGシナリオPDFの段組み・不要改行・見出し崩れを整え、コピーしやすいTXTへ変換します。",
     "button.format": "整形実行",
     "button.copyOutput": "出力をコピー",
+    "button.usage": "使い方",
+    "button.shortcuts": "ショートカット",
+    "button.nightMode": "ナイトモード",
+    "button.lightMode": "ライトモード",
     "button.sendSnippet": "Snippet Toolへ送る",
     "section.pdfInput": "PDF入力",
     "section.presets": "整形プリセット",
@@ -61,17 +65,25 @@ window.SCENARIO_PDF_PARSER_I18L = {
     "output.empty": "整形結果がここに表示されます。",
     "file.loading": "読み込み中：",
     "file.loaded": "読み込み完了：",
-    "file.failed": "読み込み失敗："
+    "file.failed": "読み込み失敗：",
+    "usage.title": "使い方",
+    "usage.body": "PDFを読み込むと本文を抽出し、プリセットと整形オプションで不要改行・見出し・資料情報を整理します。検索・置換で微調整したあと、コピー、.txt保存、またはシナリオ情報カードツールへ送ることができます。",
+    "shortcuts.title": "ショートカット",
+    "shortcuts.body": "Ctrl/⌘+Enter：整形実行 ／ Ctrl/⌘+S：TXT保存 ／ Ctrl/⌘+Shift+C：出力コピー ／ Esc：ヘッダーパネルを閉じる"
   },
   en: {
-    "chip.portal": "TRPG Web Tools",
-    "chip.builder": "Scenario Info Card Builder",
+    "chip.portal": "←TRPG WEB Tools Portal",
+    "chip.builder": "Scenario Info Card Tool Bridge",
     "chip.parser": "PDF Formatter",
     "tooltip.portal": "Back to TRPG WEB Tools portal",
     "app.title": "Scenario PDF Formatter",
     "app.description": "Clean TRPG scenario PDF columns, broken line breaks, and merged headings into copy-ready TXT.",
     "button.format": "Format",
     "button.copyOutput": "Copy Output",
+    "button.usage": "Guide",
+    "button.shortcuts": "Shortcuts",
+    "button.nightMode": "Night Mode",
+    "button.lightMode": "Light Mode",
     "button.sendSnippet": "Send to Snippet Tool",
     "section.pdfInput": "PDF Input",
     "section.presets": "Format Presets",
@@ -125,6 +137,10 @@ window.SCENARIO_PDF_PARSER_I18L = {
     "output.empty": "Formatted output will appear here.",
     "file.loading": "Loading: ",
     "file.loaded": "Loaded: ",
-    "file.failed": "Failed: "
+    "file.failed": "Failed: ",
+    "usage.title": "Guide",
+    "usage.body": "Open a PDF to extract text, then use presets and formatting options to clean broken line breaks, headings, and handout markers. After search/replace edits, copy, save as .txt, or send the text to the Scenario Info Card Tool.",
+    "shortcuts.title": "Shortcuts",
+    "shortcuts.body": "Ctrl/⌘+Enter: Format / Ctrl/⌘+S: Save TXT / Ctrl/⌘+Shift+C: Copy output / Esc: Close header panels"
   }
 };

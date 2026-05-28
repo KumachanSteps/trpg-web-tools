@@ -3,29 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>シナリオPDF整形機 Ver.0.3.1</title>
+  <title>シナリオPDF整形機 Ver.0.4</title>
   <link rel="stylesheet" href="./css/pdf-parser-style.css" />
 </head>
-<body>
+<body class="theme-light">
   <div class="app-shell">
     <header class="site-header">
-      <div class="header-top">
+      <div class="header-top compact-header-row">
         <div class="header-left">
           <a class="portal-link" href="../index.html">
-            TRPG Web Tools
-            <span class="portal-tooltip" data-i18n="tooltip.portal">TRPG WEB Tools ポータルサイトに戻る</span>
+            <span data-i18n="chip.portal">←TRPG WEBツール観測所</span>
+            <span class="portal-tooltip" data-i18n="tooltip.portal">TRPG WEBツール観測所に戻る</span>
           </a>
           <span class="tag-pill tag-cyan" data-i18n="chip.parser">PDF整形</span>
-          <span class="tag-pill tag-violet" data-i18n="chip.builder">Scenario Info Card Builder</span>
-          <span class="tag-pill tag-amber">Ver.0.3.1</span>
+          <span class="tag-pill tag-violet" data-i18n="chip.builder">シナリオ情報カードツールと連携</span>
+          <span class="tag-pill tag-amber">Ver.0.4</span>
         </div>
         <div class="header-actions">
-          <button id="languageToggleBtn" class="header-button" type="button">JP / EN</button>
-          <button id="formatBtn" class="header-button header-button-primary" type="button" data-i18n="button.format">整形実行</button>
-          <button id="copyTopBtn" class="header-button" type="button" data-i18n="button.copyOutput">出力をコピー</button>
+          <button id="languageToggleBtn" class="header-button" type="button">EN/JP</button>
+          <button id="usageToggleBtn" class="header-button" type="button" data-i18n="button.usage">使い方</button>
+          <button id="shortcutToggleBtn" class="header-button" type="button" data-i18n="button.shortcuts">ショートカット</button>
+          <button id="themeToggleBtn" class="header-button" type="button" data-i18n="button.nightMode">ナイトモード</button>
         </div>
       </div>
-      <div class="title-row">
+      <div id="usagePanel" class="header-info-panel" hidden>
+        <strong data-i18n="usage.title">使い方</strong>
+        <p data-i18n="usage.body">PDFを読み込むと本文を抽出し、プリセットと整形オプションで不要改行・見出し・資料情報を整理します。検索・置換で微調整したあと、コピー、.txt保存、またはシナリオ情報カードツールへ送ることができます。</p>
+      </div>
+      <div id="shortcutPanel" class="header-info-panel" hidden>
+        <strong data-i18n="shortcuts.title">ショートカット</strong>
+        <p data-i18n="shortcuts.body">Ctrl/⌘+Enter：整形実行 ／ Ctrl/⌘+S：TXT保存 ／ Ctrl/⌘+Shift+C：出力コピー ／ Esc：ヘッダーパネルを閉じる</p>
+      </div>
+      <div class="title-row compact-title-row">
         <div class="tool-icon" aria-hidden="true">
           <span class="tool-icon-main">PDF</span>
           <span class="tool-icon-star">✦</span>

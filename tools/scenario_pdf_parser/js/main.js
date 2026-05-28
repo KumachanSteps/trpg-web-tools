@@ -67,8 +67,6 @@ const elements = {
   fileStatus: document.getElementById("fileStatus"),
   presetList: document.getElementById("presetList"),
   optionList: document.getElementById("optionList"),
-  formatBtn: document.getElementById("formatBtn"),
-  copyTopBtn: document.getElementById("copyTopBtn"),
   copyBtn: document.getElementById("copyBtn"),
   downloadBtn: document.getElementById("downloadBtn"),
   sendSnippetBtn: document.getElementById("sendSnippetBtn"),
@@ -86,6 +84,11 @@ const elements = {
   blockCount: document.getElementById("blockCount"),
   presetName: document.getElementById("presetName"),
   languageToggleBtn: document.getElementById("languageToggleBtn"),
+  usageToggleBtn: document.getElementById("usageToggleBtn"),
+  shortcutToggleBtn: document.getElementById("shortcutToggleBtn"),
+  themeToggleBtn: document.getElementById("themeToggleBtn"),
+  usagePanel: document.getElementById("usagePanel"),
+  shortcutPanel: document.getElementById("shortcutPanel"),
 };
 
 function escapeRegExp(value) {
@@ -108,6 +111,33 @@ function showToast(message) {
   document.body.appendChild(toast);
   window.setTimeout(() => toast.remove(), 2600);
 }
+function setHeaderPanel(panelName) {
+  const showUsage = panelName === "usage" && elements.usagePanel.hidden;
+  const showShortcut = panelName === "shortcut" && elements.shortcutPanel.hidden;
+  elements.usagePanel.hidden = true;
+  elements.shortcutPanel.hidden = true;
+  if (showUsage) elements.usagePanel.hidden = false;
+  if (showShortcut) elements.shortcutPanel.hidden = false;
+}
+
+function closeHeaderPanels() {
+  elements.usagePanel.hidden = true;
+  elements.shortcutPanel.hidden = true;
+}
+
+function applyTheme(theme) {
+  const nextTheme = theme === "night" ? "night" : "light";
+  document.body.classList.toggle("theme-night", nextTheme === "night");
+  document.body.classList.toggle("theme-light", nextTheme === "light");
+  localStorage.setItem("scenarioPdfParser.theme", nextTheme);
+  elements.themeToggleBtn.textContent = nextTheme === "night" ? i18n("button.lightMode") : i18n("button.nightMode");
+}
+
+function toggleTheme() {
+  const current = document.body.classList.contains("theme-night") ? "night" : "light";
+  applyTheme(current === "night" ? "light" : "night");
+}
+
 
 function normalizeJapaneseText(text) {
   return (text || "")
@@ -479,7 +509,7 @@ function downloadText() {
 function sendToSnippetTool() {
   const payload = {
     source: "scenario_pdf_parser",
-    version: "0.3",
+    version: "0.4",
     text: state.outputText,
     preset: state.preset,
     options: state.options,
@@ -668,10 +698,12 @@ function bindEvents() {
 
   window.addEventListener("scenario-pdf-parser-language-change", () => {
     renderAll();
+    applyTheme(localStorage.getItem("scenarioPdfParser.theme") || (document.body.classList.contains("theme-night") ? "night" : "light"));
   });
 
-  elements.formatBtn.addEventListener("click", applyFormat);
-  elements.copyTopBtn.addEventListener("click", copyOutput);
+  elements.usageToggleBtn.addEventListener("click", () => setHeaderPanel("usage"));
+  elements.shortcutToggleBtn.addEventListener("click", () => setHeaderPanel("shortcut"));
+  elements.themeToggleBtn.addEventListener("click", toggleTheme);
   elements.copyBtn.addEventListener("click", copyOutput);
   elements.downloadBtn.addEventListener("click", downloadText);
   elements.sendSnippetBtn.addEventListener("click", sendToSnippetTool);
@@ -729,7 +761,27 @@ function bindEvents() {
     const file = event.dataTransfer.files?.[0];
     handlePdfFile(file);
   });
+
+  document.addEventListener("keydown", (event) => {
+    const modifier = event.ctrlKey || event.metaKey;
+    if (event.key === "Escape") {
+      closeHeaderPanels();
+      return;
+    }
+    if (!modifier) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      applyFormat();
+    } else if (event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      downloadText();
+    } else if (event.shiftKey && event.key.toLowerCase() === "c") {
+      event.preventDefault();
+      copyOutput();
+    }
+  });
 }
 
 bindEvents();
+applyTheme(localStorage.getItem("scenarioPdfParser.theme") || "light");
 applyFormat();
