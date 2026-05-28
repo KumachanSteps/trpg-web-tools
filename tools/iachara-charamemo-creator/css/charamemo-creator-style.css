@@ -1,5 +1,5 @@
 /* =========================================================
-   いあキャラMEMOジェネレータ v1.92
+   いあキャラMEMOジェネレータ v1.93
    ========================================================= */
 
 :root {
@@ -22,7 +22,8 @@
   --radius-card: 24px;
   --radius-pill: 999px;
   --shadow: rgba(0, 0, 0, 0.26);
-  --cocofolia-memo-width: 46ch;
+  --cocofolia-memo-width: 60ch;
+  --column-fixed-width: 390px;
   --summary-eye-icon: url("../assets/img/eye_panel_icon.png");
   --icon-gear: url("../assets/img/gear_icon.png");
   --icon-memo: url("../assets/img/memo_icon.png");
@@ -416,10 +417,11 @@ body.theme-light .header-info-panel,
    ========================================================= */
 
 .layout-grid {
-  width: min(100%, 1440px);
+  width: min(100%, 1240px);
   margin: 20px auto 0;
   display: grid;
-  grid-template-columns: minmax(320px, 390px) minmax(0, 1fr) minmax(320px, 420px);
+  grid-template-columns: var(--column-fixed-width) var(--column-fixed-width) var(--column-fixed-width);
+  justify-content: center;
   gap: 20px;
   align-items: start;
 }
@@ -430,6 +432,8 @@ body.theme-light .header-info-panel,
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: var(--column-fixed-width);
+  max-width: var(--column-fixed-width);
   min-width: 0;
 }
 
@@ -452,7 +456,8 @@ body.theme-light .header-info-panel,
 
 .main-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  grid-template-columns: var(--column-fixed-width) var(--column-fixed-width);
+  justify-content: center;
   gap: 20px;
   align-items: start;
   min-width: 0;
@@ -1030,11 +1035,12 @@ body.theme-light .sheet-link-badge,
 
 .memo-editor {
   width: min(100%, var(--cocofolia-memo-width));
-  max-width: var(--cocofolia-memo-width);
+  max-width: 100%;
   white-space: pre-wrap;
   overflow-wrap: break-word;
   overflow-x: hidden;
 }
+
 
 .memo-panel::after {
   content: "ココフォリアのキャラメモ表示幅に近い横幅でプレビューしています。";
@@ -1170,9 +1176,38 @@ body.theme-light .toast.is-error,
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1240px) {
+  .layout-grid {
+    width: min(100%, 820px);
+    grid-template-columns: var(--column-fixed-width) var(--column-fixed-width);
+    justify-content: center;
+  }
+
+  .layout-grid > .left-column {
+    grid-column: 1;
+  }
+
+  .layout-grid > .middle-column {
+    grid-column: 2;
+  }
+
+  .layout-grid > .right-column {
+    grid-column: 1 / 3;
+    width: min(100%, 820px);
+    max-width: none;
+    display: grid;
+    grid-template-columns: var(--column-fixed-width) var(--column-fixed-width);
+    justify-content: center;
+    align-items: start;
+  }
+}
+
+@media (max-width: 860px) {
   .layout-grid,
-  .main-grid {
+  .main-grid,
+  .layout-grid > .right-column {
+    width: min(100%, var(--column-fixed-width));
+    max-width: var(--column-fixed-width);
     grid-template-columns: 1fr;
   }
 
