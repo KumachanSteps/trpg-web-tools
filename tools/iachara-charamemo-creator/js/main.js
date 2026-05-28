@@ -8,18 +8,18 @@
     parsedKoma: null,
     parsedTxt: createEmptyTxtParsed(),
     memoDirty: false,
-    currentEdition: "",
+    currentEdition: ""
   };
 
   const ids = {
-    jsonInput: ["jsonInput", "komaJsonInput"],
-    pasteJsonButton: ["pasteJsonButton", "pasteKomaJsonButton"],
-    jsonErrorBox: ["jsonErrorBox", "jsonErrorMessage"],
-    txtInput: ["txtInput", "iacharaTxtInput"],
-    txtFileInput: ["txtFileInput", "iacharaTxtFileInput"],
-    openTxtFileButton: ["openTxtFileButton", "openIacharaTxtFileButton"],
-    resetTxtButton: ["resetTxtButton", "resetIacharaTxtButton"],
-    txtLoadMessage: ["txtLoadMessage", "iacharaTxtMessage"],
+    jsonInput: ["komaJsonInput", "jsonInput"],
+    pasteJsonButton: ["pasteKomaJsonButton", "pasteJsonButton"],
+    jsonErrorBox: ["jsonErrorMessage", "jsonErrorBox"],
+    txtInput: ["iacharaTxtInput", "txtInput"],
+    txtFileInput: ["iacharaTxtFileInput", "txtFileInput"],
+    openTxtFileButton: ["openIacharaTxtFileButton", "openTxtFileButton"],
+    resetTxtButton: ["resetIacharaTxtButton", "resetTxtButton"],
+    txtLoadMessage: ["iacharaTxtMessage", "txtLoadMessage"],
     includeWeapons: ["includeWeapons"],
     includeItems: ["includeItems"],
     includeKnowledge: ["includeKnowledge"],
@@ -30,7 +30,7 @@
     copyMemoButton: ["copyMemoButton"],
     memoEditor: ["memoEditor"],
     palettePreview: ["palettePreview"],
-    paletteEditionLabel: ["paletteEditionLabel", "editionText"],
+    paletteEditionLabel: ["editionText", "paletteEditionLabel"],
     copyPaletteButton: ["copyPaletteButton"],
     generatedJson: ["generatedJson"],
     copyGeneratedJsonButton: ["copyGeneratedJsonButton"],
@@ -41,12 +41,12 @@
     sheetLinkBadge: ["sheetLinkBadge"],
     statusChips: ["statusChips"],
     paramsGrid: ["paramsGrid"],
-    characterIconFrame: ["characterIconFrame", "summaryIcon"],
+    characterIconFrame: ["summaryIcon", "characterIconFrame"],
     themeToggleButton: ["themeToggleButton"],
-    helpToggleButton: ["helpToggleButton", "helpButton"],
-    shortcutToggleButton: ["shortcutToggleButton", "shortcutButton"],
+    helpToggleButton: ["helpButton", "helpToggleButton"],
+    shortcutToggleButton: ["shortcutButton", "shortcutToggleButton"],
     helpPanel: ["helpPanel"],
-    shortcutPanel: ["shortcutPanel"],
+    shortcutPanel: ["shortcutPanel"]
   };
 
   document.addEventListener("DOMContentLoaded", init);
@@ -73,21 +73,17 @@
 
     if (helpButton && helpPanel) {
       helpButton.addEventListener("click", () => {
-        togglePanel(helpPanel);
+        helpPanel.classList.toggle("hidden");
         if (shortcutPanel) shortcutPanel.classList.add("hidden");
       });
     }
 
     if (shortcutButton && shortcutPanel) {
       shortcutButton.addEventListener("click", () => {
-        togglePanel(shortcutPanel);
+        shortcutPanel.classList.toggle("hidden");
         if (helpPanel) helpPanel.classList.add("hidden");
       });
     }
-  }
-
-  function togglePanel(panel) {
-    panel.classList.toggle("hidden");
   }
 
   function closeHeaderPanels() {
@@ -101,10 +97,7 @@
     const button = getEl("themeToggleButton");
     const savedTheme = localStorage.getItem("charamemo-theme") || "night";
     applyTheme(savedTheme);
-
-    if (button) {
-      button.addEventListener("click", toggleTheme);
-    }
+    if (button) button.addEventListener("click", toggleTheme);
   }
 
   function toggleTheme() {
@@ -125,9 +118,7 @@
       pageShell.classList.toggle("theme-night", theme !== "light");
     }
 
-    if (button) {
-      button.textContent = theme === "light" ? "☀ ライトモード" : "🌙 ナイトモード";
-    }
+    if (button) button.textContent = theme === "light" ? "☀ ライトモード" : "🌙 ナイトモード";
   }
 
   function setupInputs() {
@@ -146,14 +137,18 @@
 
     if (txtInput) {
       txtInput.addEventListener("input", () => {
-        scheduleTxtAutoApply();
+        window.clearTimeout(txtApplyTimer);
+        txtApplyTimer = window.setTimeout(() => {
+          parseTxtInput(true);
+          state.memoDirty = false;
+          applyProfileFromTxt();
+          rebuildAll();
+        }, 200);
       });
     }
 
     if (profileSupplementInput) {
-      profileSupplementInput.addEventListener("input", () => {
-        rebuildGeneratedJsonOnly();
-      });
+      profileSupplementInput.addEventListener("input", () => rebuildGeneratedJsonOnly());
     }
 
     if (memoEditor) {
@@ -162,16 +157,6 @@
         rebuildGeneratedJsonOnly();
       });
     }
-  }
-
-  function scheduleTxtAutoApply() {
-    window.clearTimeout(txtApplyTimer);
-    txtApplyTimer = window.setTimeout(() => {
-      parseTxtInput(true);
-      state.memoDirty = false;
-      applyProfileFromTxt();
-      rebuildAll();
-    }, 200);
   }
 
   function setupOptionSwitches() {
@@ -196,7 +181,7 @@
       getEl("includeItems"),
       getEl("includeKnowledge"),
       getEl("includeTxtMemo"),
-      getEl("formatPalette"),
+      getEl("formatPalette")
     ].filter(Boolean);
   }
 
@@ -227,27 +212,9 @@
       });
     }
 
-    if (copyMemoButton) {
-      copyMemoButton.addEventListener("click", () => {
-        const memoEditor = getEl("memoEditor");
-        copyText(memoEditor ? memoEditor.value : "", "メモ");
-      });
-    }
-
-    if (copyPaletteButton) {
-      copyPaletteButton.addEventListener("click", () => {
-        const palettePreview = getEl("palettePreview");
-        copyText(palettePreview ? palettePreview.value : "", "チャットパレット");
-      });
-    }
-
-    if (copyGeneratedJsonButton) {
-      copyGeneratedJsonButton.addEventListener("click", () => {
-        const generatedJson = getEl("generatedJson");
-        copyText(generatedJson ? generatedJson.value : "", "生成済みJSON駒データ");
-      });
-    }
-
+    if (copyMemoButton) copyMemoButton.addEventListener("click", () => copyText(valueOf("memoEditor"), "メモ"));
+    if (copyPaletteButton) copyPaletteButton.addEventListener("click", () => copyText(valueOf("palettePreview"), "チャットパレット"));
+    if (copyGeneratedJsonButton) copyGeneratedJsonButton.addEventListener("click", () => copyText(valueOf("generatedJson"), "生成済みJSON駒データ"));
     if (clearAllButton) clearAllButton.addEventListener("click", confirmClearAll);
   }
 
@@ -286,8 +253,7 @@
 
       if (key === "c" && event.shiftKey) {
         event.preventDefault();
-        const generatedJson = getEl("generatedJson");
-        copyText(generatedJson ? generatedJson.value : "", "生成済みJSON駒データ");
+        copyText(valueOf("generatedJson"), "生成済みJSON駒データ");
       }
     });
   }
@@ -346,19 +312,12 @@
   }
 
   function clearAll() {
-    const jsonInput = getEl("jsonInput");
-    const txtInput = getEl("txtInput");
-    const profileSupplementInput = getEl("profileSupplementInput");
-    const memoEditor = getEl("memoEditor");
-    const palettePreview = getEl("palettePreview");
-    const generatedJson = getEl("generatedJson");
-
-    if (jsonInput) jsonInput.value = "";
-    if (txtInput) txtInput.value = "";
-    if (profileSupplementInput) profileSupplementInput.value = defaultProfileText();
-    if (memoEditor) memoEditor.value = "";
-    if (palettePreview) palettePreview.value = "";
-    if (generatedJson) generatedJson.value = "";
+    setValue("jsonInput", "");
+    setValue("txtInput", "");
+    setValue("profileSupplementInput", defaultProfileText());
+    setValue("memoEditor", "");
+    setValue("palettePreview", "");
+    setValue("generatedJson", "");
 
     state.parsedKoma = null;
     state.parsedTxt = createEmptyTxtParsed();
@@ -372,22 +331,13 @@
   }
 
   function hasAnyInput() {
-    const jsonInput = getEl("jsonInput");
-    const txtInput = getEl("txtInput");
-    const memoEditor = getEl("memoEditor");
-    return Boolean(
-      (jsonInput && jsonInput.value.trim()) ||
-      (txtInput && txtInput.value.trim()) ||
-      (memoEditor && memoEditor.value.trim())
-    );
+    return Boolean(valueOf("jsonInput").trim() || valueOf("txtInput").trim() || valueOf("memoEditor").trim());
   }
 
   function parseKomaInput() {
-    const jsonInput = getEl("jsonInput");
-    const raw = jsonInput ? jsonInput.value.trim() : "";
+    const raw = valueOf("jsonInput").trim();
     state.parsedKoma = null;
     hideJsonError();
-
     if (!raw) return;
 
     try {
@@ -403,8 +353,7 @@
   }
 
   function parseTxtInput(showMessage) {
-    const txtInput = getEl("txtInput");
-    const raw = txtInput ? txtInput.value : "";
+    const raw = valueOf("txtInput");
     state.parsedTxt = createEmptyTxtParsed();
 
     if (!raw.trim()) {
@@ -424,23 +373,16 @@
     if (window.IacharaTextParser && typeof window.IacharaTextParser.parseIacharaText === "function") {
       return normalizeParsedTxt(window.IacharaTextParser.parseIacharaText(text), text);
     }
-
     if (window.IacharaTextParser && typeof window.IacharaTextParser.parseIacharaBasicInfo === "function") {
-      const info = window.IacharaTextParser.parseIacharaBasicInfo(text);
-      return normalizeParsedTxt({ profile: info }, text);
+      return normalizeParsedTxt({ profile: window.IacharaTextParser.parseIacharaBasicInfo(text) }, text);
     }
-
-    if (typeof window.parseIacharaText === "function") {
-      return normalizeParsedTxt(window.parseIacharaText(text), text);
-    }
-
+    if (typeof window.parseIacharaText === "function") return normalizeParsedTxt(window.parseIacharaText(text), text);
     return fallbackParseIacharaText(text);
   }
 
   function normalizeParsedTxt(parsed, rawText) {
     const fallback = fallbackParseIacharaText(rawText);
     const src = parsed || {};
-
     return {
       found: Boolean(src.found || fallback.found),
       profile: {
@@ -449,17 +391,17 @@
         age: pick(src.profile && src.profile.age, fallback.profile.age),
         gender: pick(src.profile && src.profile.gender, fallback.profile.gender),
         height: pick(src.profile && src.profile.height, fallback.profile.height),
-        weight: pick(src.profile && src.profile.weight, fallback.profile.weight),
+        weight: pick(src.profile && src.profile.weight, fallback.profile.weight)
       },
       sections: {
         weapons: pick(src.sections && src.sections.weapons, fallback.sections.weapons),
         items: pick(src.sections && src.sections.items, fallback.sections.items),
         knowledge: pick(src.sections && src.sections.knowledge, fallback.sections.knowledge),
-        memo: pick(src.sections && src.sections.memo, fallback.sections.memo),
+        memo: pick(src.sections && src.sections.memo, fallback.sections.memo)
       },
       abilities: Object.assign({}, fallback.abilities, src.abilities || {}),
       skills: Array.isArray(src.skills) && src.skills.length ? src.skills : fallback.skills,
-      commands: pick(src.commands, fallback.commands),
+      commands: pick(src.commands, fallback.commands)
     };
   }
 
@@ -468,35 +410,31 @@
     const basic = extractSection(src, "基本情報");
     const abilitySection = extractSection(src, "能力値") || src;
     const skillSection = extractSection(src, "技能値") || src;
-
     const profile = {
       name: extractLabel(basic, "名前"),
       occupation: extractLabel(basic, "職業"),
       age: extractLabel(basic, "年齢"),
       gender: extractLabel(basic, "性別"),
       height: extractLabel(basic, "身長"),
-      weight: extractLabel(basic, "体重"),
+      weight: extractLabel(basic, "体重")
     };
-
     const sections = {
       weapons: extractSection(src, "戦闘・武器・防具"),
       items: extractSection(src, "所持品"),
       knowledge: extractKnowledgeSourceSection(src),
-      memo: extractSection(src, "メモ"),
+      memo: extractSection(src, "メモ")
     };
-
     const abilities = parseAbilities(abilitySection);
     const skills = parseSkills(skillSection);
     const edition = detectEditionFromText(src);
     const commands = buildCommandsFromTxt(abilities, skills, edition);
-
     return {
       found: Boolean(basic || Object.values(sections).some(Boolean) || Object.keys(abilities).length || skills.length),
       profile,
       sections,
       abilities,
       skills,
-      commands,
+      commands
     };
   }
 
@@ -507,18 +445,12 @@
   function rebuildAll() {
     renderSummary();
     renderPalette();
-
-    if (!state.memoDirty) {
-      const memoEditor = getEl("memoEditor");
-      if (memoEditor) memoEditor.value = buildMemo();
-    }
-
+    if (!state.memoDirty) setValue("memoEditor", buildMemo());
     rebuildGeneratedJsonOnly();
   }
 
   function rebuildGeneratedJsonOnly() {
-    const generatedJson = getEl("generatedJson");
-    if (generatedJson) generatedJson.value = buildGeneratedJson();
+    setValue("generatedJson", buildGeneratedJson());
   }
 
   function renderSummary() {
@@ -526,7 +458,6 @@
     const parsedTxt = state.parsedTxt;
     const name = data.name || parsedTxt.profile.name || "未解析";
     const edition = detectCurrentEdition();
-
     const summaryName = getEl("summaryName");
     const editionBadge = getEl("editionBadge");
     const sheetLinkBadge = getEl("sheetLinkBadge");
@@ -590,79 +521,61 @@
     }
   }
 
+  function renderPalette() {
+    const rawCommands = getPaletteSource();
+    const edition = detectCurrentEdition();
+    const palette = rawCommands.trim()
+      ? (checked("formatPalette") ? formatPalette(rawCommands, edition) : normalizeText(rawCommands))
+      : "";
+    setValue("palettePreview", palette);
+    const label = getEl("paletteEditionLabel");
+    if (label) label.textContent = `自動判定: ${edition ? editionLabel(edition) : "未判定"}`;
+    state.currentEdition = edition;
+  }
+
   function getPaletteSource() {
     const data = getKomaData();
-    const jsonInput = getEl("jsonInput");
-    const rawJsonInput = jsonInput ? jsonInput.value : "";
-
+    const rawJsonInput = valueOf("jsonInput");
     if (data.commands) return normalizeText(data.commands);
-
     if (window.ChatPaletteParser && typeof window.ChatPaletteParser.extractPaletteText === "function") {
       const extracted = window.ChatPaletteParser.extractPaletteText(rawJsonInput);
       if (extracted && extracted.text) return normalizeText(extracted.text);
     }
-
     return normalizeText(state.parsedTxt.commands || "");
-  }
-
-  function renderPalette() {
-    const palettePreview = getEl("palettePreview");
-    const paletteEditionLabel = getEl("paletteEditionLabel");
-    const rawCommands = getPaletteSource();
-    const edition = detectCurrentEdition();
-
-    state.currentEdition = edition;
-
-    if (palettePreview) {
-      if (!rawCommands.trim()) palettePreview.value = "";
-      else if (checked("formatPalette")) palettePreview.value = formatPalette(rawCommands, edition);
-      else palettePreview.value = normalizeText(rawCommands);
-    }
-
-    if (paletteEditionLabel) paletteEditionLabel.textContent = `自動判定: ${edition ? editionLabel(edition) : "未判定"}`;
   }
 
   function buildMemo() {
     const data = getKomaData();
-    const parsedTxt = state.parsedTxt;
-    const profileSupplementInput = getEl("profileSupplementInput");
-    const profile = profileSupplementInput ? profileSupplementInput.value : defaultProfileText();
-    const name = data.name || parsedTxt.profile.name || "";
+    const profile = valueOf("profileSupplementInput") || defaultProfileText();
+    const name = data.name || state.parsedTxt.profile.name || "";
     const parts = [];
-
     if (name || profile.trim()) parts.push(`名前: ${name || "-"}${NL}${profile}`.trim());
-    if (checked("includeWeapons") && parsedTxt.sections.weapons) parts.push(formatWeaponsSection(parsedTxt.sections.weapons));
-    if (checked("includeItems") && parsedTxt.sections.items) parts.push(formatItemsSection(parsedTxt.sections.items));
-    if (checked("includeKnowledge") && parsedTxt.sections.knowledge) {
-      const knowledgeText = formatKnowledgeSection(parsedTxt.sections.knowledge);
-      if (knowledgeText) parts.push(knowledgeText);
+    if (checked("includeWeapons") && state.parsedTxt.sections.weapons) parts.push(formatWeaponsSection(state.parsedTxt.sections.weapons));
+    if (checked("includeItems") && state.parsedTxt.sections.items) parts.push(formatItemsSection(state.parsedTxt.sections.items));
+    if (checked("includeKnowledge") && state.parsedTxt.sections.knowledge) {
+      const knowledge = formatKnowledgeSection(state.parsedTxt.sections.knowledge);
+      if (knowledge) parts.push(knowledge);
     }
-    if (checked("includeTxtMemo") && parsedTxt.sections.memo) parts.push(`【メモ】${NL}${parsedTxt.sections.memo.trim()}`);
+    if (checked("includeTxtMemo") && state.parsedTxt.sections.memo) parts.push(`【メモ】${NL}${state.parsedTxt.sections.memo.trim()}`);
     if (data.memo) parts.push(`【既存メモ】${NL}${data.memo}`);
-
     return parts.filter(Boolean).join(NL + NL);
   }
 
   function buildGeneratedJson() {
     const parsed = state.parsedKoma;
     const data = Object.assign({}, getKomaData());
-    const memoEditor = getEl("memoEditor");
-    const palettePreview = getEl("palettePreview");
-
     data.name = data.name || state.parsedTxt.profile.name || "いあきゃらTXTキャラクター";
-    data.memo = memoEditor ? memoEditor.value : "";
-    data.commands = palettePreview ? palettePreview.value : "";
+    data.memo = valueOf("memoEditor");
+    data.commands = valueOf("palettePreview");
     if (!Array.isArray(data.status)) data.status = buildStatusFromTxt(state.parsedTxt);
     if (!Array.isArray(data.params)) data.params = buildParamsFromTxt(state.parsedTxt);
     if (typeof data.initiative === "undefined") data.initiative = Number(state.parsedTxt.abilities.DEX) || 0;
-
     const output = parsed && parsed.kind === "character" ? Object.assign({}, parsed, { data }) : { kind: "character", data };
     return JSON.stringify(output);
   }
 
   function applyProfileFromTxt() {
-    const profileSupplementInput = getEl("profileSupplementInput");
-    if (profileSupplementInput) profileSupplementInput.value = buildProfileText(state.parsedTxt.profile);
+    setValue("profileSupplementInput", buildProfileText(state.parsedTxt.profile));
   }
 
   function buildProfileText(profile) {
@@ -670,7 +583,7 @@
       `職業: ${displayValue(profile.occupation)}`,
       `年齢: ${displayValue(profile.age)} / 性別: ${displayValue(profile.gender)}`,
       `身長: ${displayValue(profile.height)} / 体重: ${displayValue(profile.weight)}`,
-      "カラーコード: #008080",
+      "カラーコード: #008080"
     ].join(NL);
   }
 
@@ -685,7 +598,7 @@
       sections: { weapons: "", items: "", knowledge: "", memo: "" },
       abilities: {},
       skills: [],
-      commands: "",
+      commands: ""
     };
   }
 
@@ -790,8 +703,7 @@
     const colonIndex = Math.min.apply(null, colonIndexes);
     const afterColon = afterLabel.slice(colonIndex + 1);
     const slashIndex = afterColon.indexOf("/");
-    const rawValue = slashIndex >= 0 ? afterColon.slice(0, slashIndex) : afterColon;
-    return rawValue.trim();
+    return (slashIndex >= 0 ? afterColon.slice(0, slashIndex) : afterColon).trim();
   }
 
   function parseAbilities(text) {
@@ -835,13 +747,11 @@
   function formatWeaponsSection(rawSectionText) {
     const raw = normalizeText(rawSectionText).trim();
     if (!raw) return "【戦闘・武器・防具】";
-
     const lines = raw.split(NL).map((line) => line.trimEnd()).filter((line) => line.trim());
     const dataLines = lines.filter((line) => {
       const text = line.trim();
       return text && !text.startsWith("名前") && !(text.includes("成功率") && text.includes("ダメージ"));
     });
-
     const rows = dataLines.map(parseWeaponTableRow).filter(Boolean).map((row) => ({
       name: normalizeWeaponField(row.name),
       success: normalizeWeaponField(row.success),
@@ -850,16 +760,19 @@
       attack: normalizeAttackCount(row.attack),
       ammo: normalizeAmmoCount(row.ammo),
       durability: normalizeWeaponField(row.durability),
-      malfunction: normalizeWeaponField(row.malfunction),
+      malfunction: normalizeWeaponField(row.malfunction)
     }));
-
     if (!rows.length) return `【戦闘・武器・防具】${NL}${raw}`;
-
     const output = ["【戦闘・武器・防具】"];
     rows.forEach((row) => {
       output.push(`武器：${row.name}`);
       output.push(`成功率${row.success}｜ダメージ${row.damage}｜射程${row.range}｜`);
-      const thirdLine = [`回数${row.attack}`, row.ammo !== "-" ? `装弾数${row.ammo}` : "", row.durability !== "-" ? `耐久力${row.durability}` : "", row.malfunction !== "-" ? `故障${row.malfunction}` : ""].filter(Boolean).join("｜");
+      const thirdLine = [
+        `回数${row.attack}`,
+        row.ammo !== "-" ? `装弾数${row.ammo}` : "",
+        row.durability !== "-" ? `耐久力${row.durability}` : "",
+        row.malfunction !== "-" ? `故障${row.malfunction}` : ""
+      ].filter(Boolean).join("｜");
       output.push(thirdLine ? `${thirdLine}｜` : "");
       output.push("");
     });
@@ -893,16 +806,13 @@
   function formatItemsSection(rawSectionText) {
     const raw = normalizeText(rawSectionText).trim();
     if (!raw) return "【所持品】";
-
     const lines = raw.split(NL).map((line) => line.trimEnd()).filter((line) => line.trim());
     const dataLines = lines.filter((line) => {
       const text = line.trim();
       return text && !text.startsWith("名称") && !(text.includes("単価") && text.includes("個数"));
     });
-
     const items = dataLines.map(parseItemTableRow).filter((item) => item.name);
     if (!items.length) return `【所持品】${NL}${raw}`;
-
     return ["【所持品】", ...items.map((item) => item.note ? `${item.name}：${item.note}` : item.name)].join(NL);
   }
 
@@ -917,11 +827,8 @@
   function formatKnowledgeSection(rawSectionText) {
     const raw = normalizeText(rawSectionText).trim();
     if (!raw) return "";
-    const allowedHeads = ["魔導書", "呪文", "アーティファクト"];
-    const lines = raw.split(NL).map((line) => line.trim()).filter(Boolean);
-    const picked = lines.filter((line) => allowedHeads.some((head) => line.startsWith(head) || line.startsWith(`【${head}】`) || line.includes(`【${head}】`) || line.includes(`${head}:`) || line.includes(`${head}：`)));
-    if (!picked.length) return "";
-    return `【新たに得た知識・経験】${NL}${picked.join(NL)}`;
+    if (/(魔導書|呪文|アーティファクト)/.test(raw)) return `【新たに得た知識・経験】${NL}${raw}`;
+    return "";
   }
 
   function normalizeText(text) {
@@ -986,7 +893,6 @@
       showStatusMessage("コピーする内容がありません。", true);
       return;
     }
-
     try {
       await navigator.clipboard.writeText(text);
       showToast(`${label}をコピーしました。`, false);
@@ -1018,6 +924,16 @@
       toast.style.transition = "opacity .18s ease, transform .18s ease";
     }, 2200);
     window.setTimeout(() => toast.remove(), 2600);
+  }
+
+  function valueOf(name) {
+    const el = getEl(name);
+    return el && typeof el.value === "string" ? el.value : "";
+  }
+
+  function setValue(name, value) {
+    const el = getEl(name);
+    if (el && typeof el.value === "string") el.value = value;
   }
 
   function getEl(name) {
