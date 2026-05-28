@@ -205,14 +205,88 @@
     return src + " ".repeat(missing);
   }
 
+
+  function isTargetKnowledgeHeading(line) {
+    return /^(【\s*)?(魔導書|呪文|アーティファクト)(\s*】)?\s*[:：]?/.test(String(line || "").trim());
+  }
+
+  function includesTargetKnowledgeWord(line) {
+    return /(魔導書|呪文|アーティファクト)/.test(String(line || ""));
+  }
+
+  function extractTargetKnowledgeBlocks(sectionText) {
+    const lines = normalizeText(sectionText).split(NL);
+    const blocks = [];
+    let current = [];
+    let collecting = false;
+
+    function flush() {
+      const block = current.join(NL).trim();
+      if (block) blocks.push(block);
+      current = [];
+      collecting = false;
+    }
+
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        if (collecting) flush();
+        continue;
+      }
+
+      if (isTargetKnowledgeHeading(trimmed)) {
+        if (collecting) flush();
+        current.push(line);
+        collecting = true;
+        continue;
+      }
+
+      if (/^【[^】]+】/.test(trimmed) && collecting) {
+        flush();
+      }
+
+      if (collecting) {
+        current.push(line);
+        continue;
+      }
+
+      if (includesTargetKnowledgeWord(trimmed)) {
+        current.push(line);
+        flush();
+      }
+    }
+
+    if (collecting) flush();
+    return blocks;
+  }
+
+  function getTargetKnowledgeText(text) {
+    const src = normalizeText(text);
+    const parts = [];
+
+    ["魔導書", "呪文", "アーティファクト"].forEach((name) => {
+      const direct = extractSection(src, name);
+      if (direct) parts.push(`【${name}】${NL}${direct}`);
+    });
+
+    const knowledgeSection = extractSection(src, "新たに得た知識・経験");
+    extractTargetKnowledgeBlocks(knowledgeSection).forEach((block) => {
+      if (!parts.includes(block)) parts.push(block);
+    });
+
+    return parts.join(NL + NL).trim();
+  }
+
   function buildMemoFromIacharaText(text, options) {
     const src = normalizeText(text);
     const info = parseIacharaBasicInfo(src);
     const config = Object.assign({
       includeWeapons: true,
       includeItems: true,
-      includeKnowledge: true,
-      includeTxtMemo: true
+      includeKnowledge: false,
+      includeTxtMemo: false
     }, options || {});
 
     const parts = [];
@@ -230,8 +304,7 @@
     const items = extractSection(src, "所持品");
     if (config.includeItems && items) parts.push(`【所持品】${NL}${items}`);
 
-    const scenario = extractSection(src, "通過したシナリオ名");
-    const knowledge = scenario || extractSection(src, "新たに得た知識・経験");
+    const knowledge = getTargetKnowledgeText(src);
     if (config.includeKnowledge && knowledge) parts.push(`【新たに得た知識・経験】${NL}${knowledge}`);
 
     const memo = extractSection(src, "メモ");
@@ -243,12 +316,12 @@
   function parseIacharaText(text) {
     const src = normalizeText(text);
     return {
-      found: Boolean(extractSection(src, "基本情報") || extractSection(src, "戦闘・武器・防具") || extractSection(src, "所持品") || extractSection(src, "メモ")),
+      found: Boolean(extractSection(src, "基本情報") || extractSection(src, "戦闘・武器・防具") || extractSection(src, "所持品") || extractSection(src, "メモ") || getTargetKnowledgeText(src)),
       profile: parseIacharaBasicInfo(src),
       sections: {
         weapons: extractSection(src, "戦闘・武器・防具"),
         items: extractSection(src, "所持品"),
-        knowledge: extractSection(src, "通過したシナリオ名") || extractSection(src, "新たに得た知識・経験"),
+        knowledge: getTargetKnowledgeText(src),
         memo: extractSection(src, "メモ")
       },
       profileText: buildProfileSupplementFromIacharaText(src),
@@ -263,6 +336,7 @@
     parseIacharaBasicInfo,
     buildProfileSupplementFromIacharaText,
     formatCombatWeaponsSection,
+    getTargetKnowledgeText,
     buildMemoFromIacharaText,
     parseIacharaText
   };
