@@ -205,6 +205,50 @@
     return src + " ".repeat(missing);
   }
 
+  function formatItemsSection(sectionText) {
+    const lines = normalizeText(sectionText)
+      .split(NL)
+      .map((line) => line.trimEnd())
+      .filter((line) => line.trim());
+
+    const rows = lines
+      .map(parseItemRow)
+      .filter(Boolean);
+
+    if (!rows.length) return normalizeText(sectionText).trim();
+
+    return rows.map((row) => {
+      if (row.note === "-") return `・${row.name}`;
+      return `・${row.name}：${row.note}`;
+    }).join(NL);
+  }
+
+  function parseItemRow(line) {
+    const trimmed = String(line || "").trim();
+
+    if (!trimmed) return null;
+    if (trimmed.startsWith("名称") || trimmed.includes("効果、備考") || trimmed.includes("効果・備考")) return null;
+    if (/^(現在の所持金|所持金|借金)\s*[:：]/.test(trimmed)) return null;
+
+    const columns = trimmed
+      .split(/\t+|\s{2,}/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (!columns.length) return null;
+
+    const name = displayValue(columns[0]);
+    let note = "-";
+
+    if (columns.length >= 5) {
+      note = displayValue(columns.slice(4).join(" "));
+    } else if (columns.length >= 2) {
+      note = displayValue(columns.slice(1).join(" "));
+    }
+
+    return { name, note };
+  }
+
 
   function isTargetKnowledgeHeading(line) {
     return /^(【\s*)?(魔導書|呪文|アーティファクト)(\s*】)?\s*[:：]?/.test(String(line || "").trim());
@@ -302,7 +346,7 @@
     if (config.includeWeapons && weapons) parts.push(`【戦闘・武器・防具】${NL}${formatCombatWeaponsSection(weapons)}`);
 
     const items = extractSection(src, "所持品");
-    if (config.includeItems && items) parts.push(`【所持品】${NL}${items}`);
+    if (config.includeItems && items) parts.push(`【所持品】${NL}${formatItemsSection(items)}`);
 
     const knowledge = getTargetKnowledgeText(src);
     if (config.includeKnowledge && knowledge) parts.push(`【新たに得た知識・経験】${NL}${knowledge}`);
@@ -336,6 +380,7 @@
     parseIacharaBasicInfo,
     buildProfileSupplementFromIacharaText,
     formatCombatWeaponsSection,
+    formatItemsSection,
     getTargetKnowledgeText,
     buildMemoFromIacharaText,
     parseIacharaText

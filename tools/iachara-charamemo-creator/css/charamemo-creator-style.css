@@ -1,5 +1,5 @@
 /* =========================================================
-   いあキャラMEMOジェネレータ v1.94
+   いあキャラMEMOジェネレータ v1.95
    ========================================================= */
 
 :root {
@@ -92,14 +92,15 @@ body.theme-light .page-shell,
 }
 
 .page-inner {
-  width: min(100%, 1440px);
+  width: min(100%, 1240px);
   margin: 0 auto;
 }
 
 .site-header {
   position: relative;
   z-index: 100;
-  max-width: 1440px;
+  width: min(100%, 1240px);
+  max-width: 1240px;
   margin: 0 auto;
   padding: 20px 24px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -672,21 +673,37 @@ textarea::placeholder { color: #64748b; }
 
 .json-input,
 .txt-input {
-  height: 44px;
-  min-height: 44px;
-  max-height: 120px;
   padding: 12px 14px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 11px;
   line-height: 1.45;
   resize: vertical;
-  white-space: nowrap;
   overflow-x: auto;
+}
+
+.json-input {
+  height: 44px;
+  min-height: 44px;
+  max-height: 120px;
+  white-space: nowrap;
   overflow-y: hidden;
+}
+
+.txt-input {
+  height: 84px;
+  min-height: 44px;
+  max-height: 260px;
+  white-space: pre;
+  overflow-y: auto;
 }
 
 .compact-one-line {
   height: 44px;
+  min-height: 44px;
+}
+
+.txt-input.compact-one-line {
+  height: 84px;
   min-height: 44px;
 }
 
