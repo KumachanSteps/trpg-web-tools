@@ -47,7 +47,6 @@ function renderCards() {
     const cardEl = document.createElement("div");
 
     cardEl.className = "card";
-    cardEl.draggable = true;
     cardEl.dataset.cardId = card.id;
     cardEl.style.setProperty("--card-color", typeInfo.color);
 
@@ -60,6 +59,7 @@ function renderCards() {
             data-action="dragHandle"
             data-id="${escapeAttribute(card.id)}"
             title="ドラッグして順番を入れ替え"
+            draggable="true"
             type="button"
           >☰</button>
         </div>

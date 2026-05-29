@@ -13,7 +13,7 @@ const INFO_TYPES = {
   ho4: { label: "HO4", marker: "❖", color: "#7c3aed" }
 };
 
-const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_3";
+const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_4";
 const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 let cards = [];
@@ -37,6 +37,7 @@ const searchBox = document.getElementById("searchBox");
 const searchCount = document.getElementById("searchCount");
 const projectNameInput = document.getElementById("projectNameInput");
 const saveProjectBtn = document.getElementById("saveProjectBtn");
+const savedProjectSelect = document.getElementById("savedProjectSelect");
 const loadProjectBtn = document.getElementById("loadProjectBtn");
 const exportProjectBtn = document.getElementById("exportProjectBtn");
 const importProjectBtn = document.getElementById("importProjectBtn");
@@ -47,6 +48,7 @@ const bridgeNote = document.getElementById("bridgeNote");
 
 themeToggle.addEventListener("click", toggleTheme);
 saveProjectBtn.addEventListener("click", saveNamedProject);
+savedProjectSelect.addEventListener("change", handleSavedProjectSelect);
 loadProjectBtn.addEventListener("click", loadNamedProject);
 exportProjectBtn.addEventListener("click", exportProjectJson);
 importProjectBtn.addEventListener("click", () => importProjectInput.click());
@@ -91,8 +93,17 @@ typeFilterRow.addEventListener("click", event => {
 
 
 cardsList.addEventListener("dragstart", event => {
-  const cardEl = event.target.closest(".card");
-  if (!cardEl) return;
+  const handle = event.target.closest(".card-drag-handle");
+  if (!handle) {
+    event.preventDefault();
+    return;
+  }
+
+  const cardEl = handle.closest(".card");
+  if (!cardEl) {
+    event.preventDefault();
+    return;
+  }
 
   draggingCardId = cardEl.dataset.cardId;
   cardEl.classList.add("dragging");
@@ -218,15 +229,58 @@ cardsList.addEventListener("click", event => {
 
 
 
+
+function setProjectNameFromSourceFile(fileName) {
+  if (getCurrentProjectName()) return;
+
+  const baseName = String(fileName || "")
+    .replace(/\.[^/.]+$/, "")
+    .trim();
+
+  if (baseName) {
+    projectNameInput.value = baseName;
+  }
+}
+
+function refreshSavedProjectSelect() {
+  if (!savedProjectSelect) return;
+
+  const prefix = "scenarioSnippetBuilder.project.";
+  const names = [];
+
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) {
+      names.push(key.slice(prefix.length));
+    }
+  }
+
+  names.sort((a, b) => a.localeCompare(b, "ja"));
+  savedProjectSelect.innerHTML = '<option value="">保存一覧</option>' + names
+    .map(name => `<option value="${escapeAttribute(name)}">${escapeHtml(name)}</option>`)
+    .join("");
+}
+
+function handleSavedProjectSelect() {
+  const selectedName = savedProjectSelect.value;
+  if (!selectedName) return;
+
+  projectNameInput.value = selectedName;
+  loadNamedProject();
+}
+
+
 function getProjectKey(name) { return `scenarioSnippetBuilder.project.${name.trim()}`; }
 function getCurrentProjectName() { return (projectNameInput.value || "").trim(); }
 function buildProjectPayload() {
-  return { version: "2.3", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
+  return { version: "2.4", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
 }
 function saveNamedProject() {
   const name = getCurrentProjectName();
   if (!name) { setStatus("プロジェクト名 / シナリオ名を入力してください。"); projectNameInput.focus(); return; }
-  try { localStorage.setItem(getProjectKey(name), JSON.stringify(buildProjectPayload())); setStatus(`プロジェクトを保存しました: ${name}`); }
+  try { localStorage.setItem(getProjectKey(name), JSON.stringify(buildProjectPayload())); refreshSavedProjectSelect();
+    savedProjectSelect.value = name;
+    setStatus(`プロジェクトを保存しました: ${name}`); }
   catch (error) { console.error(error); setStatus("プロジェクト保存に失敗しました。"); }
 }
 function loadNamedProject() {
@@ -306,6 +360,7 @@ async function openTxtFile(event) {
 
   try {
     const text = await file.text();
+    setProjectNameFromSourceFile(file.name);
     importSourceText(text, {
       source: "txt",
       sourceName: file.name,
@@ -644,5 +699,6 @@ applyTheme(localStorage.getItem(`${STORAGE_KEY}_theme`) || "light");
 initTypeControls();
 loadState();
 detectBridgeImport();
+refreshSavedProjectSelect();
 renderTypeFilters();
 renderCards();
