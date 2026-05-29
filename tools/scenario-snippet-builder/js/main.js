@@ -13,7 +13,7 @@ const INFO_TYPES = {
   ho4: { label: "HO4", marker: "❖", color: "#7c3aed" }
 };
 
-const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_2";
+const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_3";
 const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 let cards = [];
@@ -35,11 +35,23 @@ const selectionCardType = document.getElementById("selectionCardType");
 const typeFilterRow = document.getElementById("typeFilterRow");
 const searchBox = document.getElementById("searchBox");
 const searchCount = document.getElementById("searchCount");
+const projectNameInput = document.getElementById("projectNameInput");
+const saveProjectBtn = document.getElementById("saveProjectBtn");
+const loadProjectBtn = document.getElementById("loadProjectBtn");
+const exportProjectBtn = document.getElementById("exportProjectBtn");
+const importProjectBtn = document.getElementById("importProjectBtn");
+const importProjectInput = document.getElementById("importProjectInput");
 const prevSearchBtn = document.getElementById("prevSearchBtn");
 const nextSearchBtn = document.getElementById("nextSearchBtn");
 const bridgeNote = document.getElementById("bridgeNote");
 
 themeToggle.addEventListener("click", toggleTheme);
+saveProjectBtn.addEventListener("click", saveNamedProject);
+loadProjectBtn.addEventListener("click", loadNamedProject);
+exportProjectBtn.addEventListener("click", exportProjectJson);
+importProjectBtn.addEventListener("click", () => importProjectInput.click());
+importProjectInput.addEventListener("change", importProjectJson);
+projectNameInput.addEventListener("input", saveState);
 openTxtBtn.addEventListener("click", () => txtFileInput.click());
 clearTextBtn.addEventListener("click", clearTextOnly);
 txtFileInput.addEventListener("change", openTxtFile);
@@ -204,6 +216,52 @@ cardsList.addEventListener("click", event => {
   }
 });
 
+
+
+function getProjectKey(name) { return `scenarioSnippetBuilder.project.${name.trim()}`; }
+function getCurrentProjectName() { return (projectNameInput.value || "").trim(); }
+function buildProjectPayload() {
+  return { version: "2.3", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
+}
+function saveNamedProject() {
+  const name = getCurrentProjectName();
+  if (!name) { setStatus("プロジェクト名 / シナリオ名を入力してください。"); projectNameInput.focus(); return; }
+  try { localStorage.setItem(getProjectKey(name), JSON.stringify(buildProjectPayload())); setStatus(`プロジェクトを保存しました: ${name}`); }
+  catch (error) { console.error(error); setStatus("プロジェクト保存に失敗しました。"); }
+}
+function loadNamedProject() {
+  const name = getCurrentProjectName();
+  if (!name) { setStatus("読み込むプロジェクト名 / シナリオ名を入力してください。"); projectNameInput.focus(); return; }
+  const raw = localStorage.getItem(getProjectKey(name));
+  if (!raw) { setStatus(`保存済みプロジェクトが見つかりません: ${name}`); return; }
+  try { applyProjectPayload(JSON.parse(raw)); setStatus(`プロジェクトを読み込みました: ${name}`); }
+  catch (error) { console.error(error); setStatus("プロジェクト読込に失敗しました。"); }
+}
+function exportProjectJson() {
+  const payload = buildProjectPayload();
+  const safeName = (payload.projectName || "scenario-snippet-project").replace(/[\\/:*?"<>|]/g, "_");
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url; link.download = `${safeName}.json`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+  setStatus("プロジェクトJSONを書き出しました。");
+}
+async function importProjectJson(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try { applyProjectPayload(JSON.parse(await file.text())); setStatus(`プロジェクトJSONを読み込みました: ${file.name}`); }
+  catch (error) { console.error(error); setStatus("プロジェクトJSONの読み込みに失敗しました。"); }
+  finally { importProjectInput.value = ""; }
+}
+function applyProjectPayload(payload) {
+  projectNameInput.value = payload.projectName || projectNameInput.value || "";
+  parsedText.value = payload.parsedText || "";
+  cards = sanitizeCards(payload.cards);
+  activeFilter = payload.activeFilter === "all" || INFO_TYPES[payload.activeFilter] ? payload.activeFilter : "all";
+  if (payload.newCardType && INFO_TYPES[payload.newCardType]) newCardType.value = payload.newCardType;
+  if (payload.selectionCardType && INFO_TYPES[payload.selectionCardType]) selectionCardType.value = payload.selectionCardType;
+  updateSearchMatches(); renderTypeFilters(); renderCards(); saveState();
+}
 
 function reorderCardByDrop(sourceId, targetId) {
   const sourceIndex = cards.findIndex(card => card.id === sourceId);
@@ -507,6 +565,7 @@ function clearTextOnly() {
 
 function saveState() {
   const state = {
+    projectName: projectNameInput.value,
     parsedText: parsedText.value,
     cards,
     activeFilter,
@@ -528,6 +587,7 @@ function loadState() {
 
   try {
     const state = JSON.parse(raw);
+    projectNameInput.value = state.projectName || "";
     parsedText.value = state.parsedText || "";
     cards = sanitizeCards(state.cards);
     activeFilter = state.activeFilter === "all" || INFO_TYPES[state.activeFilter] ? state.activeFilter : "all";

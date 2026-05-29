@@ -53,7 +53,16 @@ function renderCards() {
 
     cardEl.innerHTML = `
       <div class="card-header">
-        <div class="card-type-label">${typeInfo.marker} ${getCardHeaderLabel(card.type)}</div>
+        <div class="card-type-wrap">
+          <div class="card-type-label">${typeInfo.marker} ${getCardHeaderLabel(card.type)}</div>
+          <button
+            class="card-drag-handle"
+            data-action="dragHandle"
+            data-id="${escapeAttribute(card.id)}"
+            title="ドラッグして順番を入れ替え"
+            type="button"
+          >☰</button>
+        </div>
         <div class="card-copy-group">
           <button class="card-copy-btn" data-action="copy" data-id="${escapeAttribute(card.id)}" type="button">コピー</button>
           <button
@@ -74,13 +83,6 @@ function renderCards() {
       </div>
 
       <div class="card-utility-row">
-        <button
-          class="card-drag-handle"
-          data-action="dragHandle"
-          data-id="${escapeAttribute(card.id)}"
-          title="ドラッグして順番を入れ替え"
-          type="button"
-        >☰</button>
         <div class="type-icon-row">
           ${Object.entries(INFO_TYPES).map(([key, info]) => `
             <button

@@ -856,3 +856,22 @@ textarea::-webkit-scrollbar-thumb {
   border-color: var(--card-color, var(--accent));
   color: var(--card-color, var(--accent));
 }
+
+.card-type-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.card-type-wrap .card-type-label { flex: 0 1 auto; }
+.card-utility-row { align-items: flex-start; }
+.card-utility-row .type-icon-row { justify-content: flex-start; flex: 1 1 auto; }
+.project-controls {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto auto auto auto;
+  gap: 5px;
+  margin-bottom: 7px;
+  align-items: center;
+}
+.project-controls input { min-width: 0; height: 28px; font-size: 12px; padding: 4px 8px; border-radius: 8px; }
+.project-controls button { min-height: 28px; padding: 4px 8px; border-radius: 7px; font-size: 11px; font-weight: 700; line-height: 1.2; }
