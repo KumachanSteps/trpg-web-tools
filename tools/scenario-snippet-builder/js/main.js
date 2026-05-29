@@ -13,7 +13,7 @@ const INFO_TYPES = {
   ho4: { label: "HO4", marker: "❖", color: "#7c3aed" }
 };
 
-const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_5";
+const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_6";
 const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 let cards = [];
@@ -277,7 +277,7 @@ function handleSavedProjectSelect() {
 function getProjectKey(name) { return `scenarioSnippetBuilder.project.${name.trim()}`; }
 function getCurrentProjectName() { return (projectNameInput.value || "").trim(); }
 function buildProjectPayload() {
-  return { version: "2.5", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
+  return { version: "2.6", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
 }
 function saveNamedProject() {
   const name = getCurrentProjectName();
@@ -327,12 +327,15 @@ function reorderCardByDrop(sourceId, targetId) {
 
   if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return;
 
+  const scrollBefore = cardsList.scrollTop;
   const [movedCard] = cards.splice(sourceIndex, 1);
   const adjustedTargetIndex = cards.findIndex(card => card.id === targetId);
 
   cards.splice(adjustedTargetIndex, 0, movedCard);
   renderCards();
+  cardsList.scrollTop = scrollBefore;
   saveState();
+  focusCard(sourceId, { focusTitle: false, block: "nearest" });
   setStatus("カードの順番を変更しました。");
 }
 
@@ -349,8 +352,34 @@ function clearCardDragOverState() {
 }
 
 
+
+function focusCard(cardId, options = {}) {
+  window.requestAnimationFrame(() => {
+    const cardEl = cardsList.querySelector(`[data-card-id="${CSS.escape(cardId)}"]`);
+    if (!cardEl) return;
+
+    cardEl.scrollIntoView({
+      behavior: "smooth",
+      block: options.block || "center"
+    });
+
+    cardEl.classList.add("card-focus-flash");
+    window.setTimeout(() => {
+      cardEl.classList.remove("card-focus-flash");
+    }, 900);
+
+    if (options.focusTitle) {
+      const titleInput = cardEl.querySelector('[data-action="title"]');
+      if (titleInput) {
+        titleInput.focus({ preventScroll: true });
+        titleInput.select();
+      }
+    }
+  });
+}
+
 function scrollCardsByPage(direction) {
-  const distance = Math.max(180, Math.floor(cardsList.clientHeight * 0.82));
+  const distance = Math.max(280, Math.floor(cardsList.clientHeight * 1.25));
   cardsList.scrollBy({
     top: distance * direction,
     behavior: "smooth"
@@ -438,16 +467,19 @@ function initTypeControls() {
 }
 
 function addCard(initial = {}) {
-  cards.push({
+  const newCard = {
     id: createId(),
     type: INFO_TYPES[initial.type] ? initial.type : "scene",
     title: initial.title || "",
     body: initial.body || "",
     extra: initial.extra || ""
-  });
+  };
+
+  cards.push(newCard);
 
   renderCards();
   saveState();
+  focusCard(newCard.id, { focusTitle: true });
   setStatus("新しいカードを作成しました。");
 }
 

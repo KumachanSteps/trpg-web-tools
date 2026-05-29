@@ -1162,3 +1162,14 @@ textarea::-webkit-scrollbar-thumb {
   background: rgba(107, 33, 168, 0.68);
   color: #f3e8ff;
 }
+
+
+.card.card-focus-flash {
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.26), var(--shadow-card);
+  border-color: rgba(79, 70, 229, 0.62);
+}
+
+[data-theme="dark"] .card.card-focus-flash {
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.34), var(--shadow-card);
+  border-color: rgba(129, 140, 248, 0.72);
+}
