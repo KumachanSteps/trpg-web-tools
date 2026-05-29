@@ -13,7 +13,7 @@ const INFO_TYPES = {
   ho4: { label: "HO4", marker: "❖", color: "#7c3aed" }
 };
 
-const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_4";
+const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_5";
 const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 let cards = [];
@@ -29,6 +29,8 @@ const clearTextBtn = document.getElementById("clearTextBtn");
 const txtFileInput = document.getElementById("txtFileInput");
 const parsedText = document.getElementById("parsedText");
 const cardsList = document.getElementById("cardsList");
+const cardsScrollUpBtn = document.getElementById("cardsScrollUpBtn");
+const cardsScrollDownBtn = document.getElementById("cardsScrollDownBtn");
 const statusEl = document.getElementById("status");
 const newCardType = document.getElementById("newCardType");
 const selectionCardType = document.getElementById("selectionCardType");
@@ -62,6 +64,8 @@ document.getElementById("createFromSelectionBtn").addEventListener("click", crea
 document.getElementById("searchBtn").addEventListener("click", () => searchParsedText("first"));
 prevSearchBtn.addEventListener("click", () => moveSearchResult(-1));
 nextSearchBtn.addEventListener("click", () => moveSearchResult(1));
+cardsScrollUpBtn.addEventListener("click", () => scrollCardsByPage(-1));
+cardsScrollDownBtn.addEventListener("click", () => scrollCardsByPage(1));
 
 searchBox.addEventListener("input", updateSearchMatches);
 searchBox.addEventListener("keydown", event => {
@@ -273,7 +277,7 @@ function handleSavedProjectSelect() {
 function getProjectKey(name) { return `scenarioSnippetBuilder.project.${name.trim()}`; }
 function getCurrentProjectName() { return (projectNameInput.value || "").trim(); }
 function buildProjectPayload() {
-  return { version: "2.4", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
+  return { version: "2.5", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
 }
 function saveNamedProject() {
   const name = getCurrentProjectName();
@@ -341,6 +345,15 @@ function clearCardDragState() {
 function clearCardDragOverState() {
   cardsList.querySelectorAll(".card.drag-over").forEach(card => {
     card.classList.remove("drag-over");
+  });
+}
+
+
+function scrollCardsByPage(direction) {
+  const distance = Math.max(180, Math.floor(cardsList.clientHeight * 0.82));
+  cardsList.scrollBy({
+    top: distance * direction,
+    behavior: "smooth"
   });
 }
 

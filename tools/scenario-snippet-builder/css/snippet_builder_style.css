@@ -964,3 +964,201 @@ textarea::-webkit-scrollbar-thumb {
   border-color: var(--card-color, var(--accent));
   color: var(--card-color, var(--accent));
 }
+
+
+.right-panel {
+  position: relative;
+}
+
+.cards-list {
+  padding-right: 8px;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(79, 70, 229, 0.78) rgba(226, 232, 240, 0.88);
+}
+
+.cards-list::-webkit-scrollbar {
+  width: 14px;
+}
+
+.cards-list::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.88);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.cards-list::-webkit-scrollbar-thumb {
+  background: rgba(79, 70, 229, 0.78);
+  border-radius: 999px;
+  border: 3px solid rgba(226, 232, 240, 0.88);
+  background-clip: padding-box;
+}
+
+.cards-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(67, 56, 202, 0.92);
+}
+
+.cards-scroll-controls {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 5;
+  opacity: 0.54;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.cards-scroll-controls:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.cards-scroll-controls button {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  padding: 0;
+  border: 1px solid rgba(79, 70, 229, 0.35);
+  background: rgba(255, 255, 255, 0.86);
+  color: #4f46e5;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(8px);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.cards-scroll-controls button:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 14px 30px rgba(79, 70, 229, 0.28);
+}
+
+.project-save-btn {
+  border-color: rgba(22, 163, 74, 0.35);
+  background: rgba(220, 252, 231, 0.82);
+  color: #166534;
+}
+
+.project-save-btn:hover {
+  border-color: rgba(22, 163, 74, 0.72);
+  background: rgba(187, 247, 208, 0.9);
+  color: #14532d;
+}
+
+.project-load-btn {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(219, 234, 254, 0.82);
+  color: #1d4ed8;
+}
+
+.project-load-btn:hover {
+  border-color: rgba(37, 99, 235, 0.72);
+  background: rgba(191, 219, 254, 0.9);
+  color: #1e40af;
+}
+
+.project-export-btn {
+  border-color: rgba(202, 138, 4, 0.35);
+  background: rgba(254, 243, 199, 0.82);
+  color: #92400e;
+}
+
+.project-export-btn:hover {
+  border-color: rgba(202, 138, 4, 0.72);
+  background: rgba(253, 230, 138, 0.9);
+  color: #78350f;
+}
+
+.project-import-btn {
+  border-color: rgba(147, 51, 234, 0.35);
+  background: rgba(243, 232, 255, 0.82);
+  color: #7e22ce;
+}
+
+.project-import-btn:hover {
+  border-color: rgba(147, 51, 234, 0.72);
+  background: rgba(233, 213, 255, 0.9);
+  color: #6b21a8;
+}
+
+[data-theme="dark"] .cards-list {
+  scrollbar-color: rgba(129, 140, 248, 0.9) rgba(30, 41, 59, 0.9);
+}
+
+[data-theme="dark"] .cards-list::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.9);
+}
+
+[data-theme="dark"] .cards-list::-webkit-scrollbar-thumb {
+  background: rgba(129, 140, 248, 0.9);
+  border-color: rgba(30, 41, 59, 0.9);
+}
+
+[data-theme="dark"] .cards-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(165, 180, 252, 0.95);
+}
+
+[data-theme="dark"] .cards-scroll-controls button {
+  background: rgba(30, 41, 59, 0.88);
+  border-color: rgba(129, 140, 248, 0.5);
+  color: #c7d2fe;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .cards-scroll-controls button:hover {
+  background: #6366f1;
+  border-color: #a5b4fc;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .project-save-btn {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(20, 83, 45, 0.55);
+  color: #bbf7d0;
+}
+
+[data-theme="dark"] .project-save-btn:hover {
+  border-color: rgba(74, 222, 128, 0.75);
+  background: rgba(22, 101, 52, 0.72);
+  color: #dcfce7;
+}
+
+[data-theme="dark"] .project-load-btn {
+  border-color: rgba(96, 165, 250, 0.38);
+  background: rgba(30, 64, 175, 0.50);
+  color: #bfdbfe;
+}
+
+[data-theme="dark"] .project-load-btn:hover {
+  border-color: rgba(147, 197, 253, 0.75);
+  background: rgba(29, 78, 216, 0.68);
+  color: #dbeafe;
+}
+
+[data-theme="dark"] .project-export-btn {
+  border-color: rgba(251, 191, 36, 0.38);
+  background: rgba(120, 53, 15, 0.48);
+  color: #fde68a;
+}
+
+[data-theme="dark"] .project-export-btn:hover {
+  border-color: rgba(252, 211, 77, 0.75);
+  background: rgba(146, 64, 14, 0.68);
+  color: #fef3c7;
+}
+
+[data-theme="dark"] .project-import-btn {
+  border-color: rgba(192, 132, 252, 0.38);
+  background: rgba(88, 28, 135, 0.48);
+  color: #e9d5ff;
+}
+
+[data-theme="dark"] .project-import-btn:hover {
+  border-color: rgba(216, 180, 254, 0.75);
+  background: rgba(107, 33, 168, 0.68);
+  color: #f3e8ff;
+}

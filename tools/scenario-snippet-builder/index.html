@@ -2,7 +2,7 @@
 <html lang="ja" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <title>シナリオ情報カード作成ツール v2.4</title>
+  <title>シナリオ情報カード作成ツール v2.5</title>
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/snippet_builder_style.css">
 
@@ -20,7 +20,7 @@
   <div class="app" id="appRoot">
     <header class="app-header">
       <div class="header-title-group">
-        <div class="app-title">シナリオ情報カード作成ツール v2.4</div>
+        <div class="app-title">シナリオ情報カード作成ツール v2.5</div>
         <div class="app-subtitle">PDF Parser / TXTファイルから本文を読み込み、必要情報をカード化してココフォリア用スニペットとしてコピーできます。</div>
       </div>
 
@@ -75,16 +75,21 @@
         <div class="project-controls" id="projectControls">
           <input id="projectNameInput" type="text" placeholder="プロジェクト名 / シナリオ名">
           <select id="savedProjectSelect" title="保存済みプロジェクト一覧"><option value="">保存一覧</option></select>
-          <button id="saveProjectBtn" type="button">保存</button>
-          <button id="loadProjectBtn" type="button">読込</button>
-          <button id="exportProjectBtn" type="button">JSON出力</button>
+          <button id="saveProjectBtn" class="project-save-btn" type="button">保存</button>
+          <button id="loadProjectBtn" class="project-load-btn" type="button">読込</button>
+          <button id="exportProjectBtn" class="project-export-btn" type="button">JSON出力</button>
           <input id="importProjectInput" type="file" accept=".json,application/json" hidden>
-          <button id="importProjectBtn" type="button">JSON読込</button>
+          <button id="importProjectBtn" class="project-import-btn" type="button">JSON読込</button>
         </div>
 
         <div id="typeFilterRow" class="type-filter-row"></div>
         <div id="status" class="status"></div>
         <div id="cardsList" class="cards-list"></div>
+
+        <div class="cards-scroll-controls" id="cardsScrollControls" aria-label="情報カードスクロール操作">
+          <button id="cardsScrollUpBtn" type="button" title="上へスクロール">⬆︎</button>
+          <button id="cardsScrollDownBtn" type="button" title="下へスクロール">⬇︎</button>
+        </div>
       </section>
     </main>
 
