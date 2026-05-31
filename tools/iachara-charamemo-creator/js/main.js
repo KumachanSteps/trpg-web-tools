@@ -8,7 +8,8 @@
     parsedKoma: null,
     parsedTxt: createEmptyTxtParsed(),
     memoDirty: false,
-    currentEdition: ""
+    currentEdition: "",
+    paletteDirty: false
   };
 
   const ids = {
@@ -131,6 +132,7 @@
       jsonInput.addEventListener("input", () => {
         parseKomaInput();
         state.memoDirty = false;
+        state.paletteDirty = false;
         rebuildAll();
       });
     }
@@ -141,6 +143,7 @@
         txtApplyTimer = window.setTimeout(() => {
           parseTxtInput(true);
           state.memoDirty = false;
+          state.paletteDirty = false;
           applyProfileFromTxt();
           rebuildAll();
         }, 200);
@@ -157,6 +160,14 @@
         rebuildGeneratedJsonOnly();
       });
     }
+
+    const palettePreview = getEl("palettePreview");
+    if (palettePreview) {
+      palettePreview.addEventListener("input", () => {
+        state.paletteDirty = true;
+        rebuildGeneratedJsonOnly();
+      });
+    }
   }
 
   function setupOptionSwitches() {
@@ -165,6 +176,7 @@
       input.addEventListener("change", () => {
         updateSwitchRowState(input);
         state.memoDirty = false;
+        state.paletteDirty = false;
         rebuildAll();
       });
     });
@@ -267,6 +279,7 @@
       jsonInput.value = text;
       parseKomaInput();
       state.memoDirty = false;
+      state.paletteDirty = false;
       rebuildAll();
       showToast("クリップボードから駒JSONを入力しました。", false);
     } catch (error) {
@@ -284,6 +297,7 @@
       txtInput.value = text;
       parseTxtInput(true);
       state.memoDirty = false;
+      state.paletteDirty = false;
       applyProfileFromTxt();
       rebuildAll();
       showTxtLoadMessage("テキストファイルを読み込みました。", false);
@@ -301,6 +315,7 @@
     if (txtInput) txtInput.value = "";
     state.parsedTxt = createEmptyTxtParsed();
     state.memoDirty = false;
+    state.paletteDirty = false;
     applyProfileFromTxt();
     rebuildAll();
     showTxtLoadMessage("いあきゃらTXTをリセットしました。", false);
@@ -322,6 +337,7 @@
     state.parsedKoma = null;
     state.parsedTxt = createEmptyTxtParsed();
     state.memoDirty = false;
+    state.paletteDirty = false;
 
     hideJsonError();
     showTxtLoadMessage("", false);
@@ -527,7 +543,11 @@
     const palette = rawCommands.trim()
       ? (checked("formatPalette") ? formatPalette(rawCommands, edition) : normalizeText(rawCommands))
       : "";
-    setValue("palettePreview", palette);
+
+    if (!state.paletteDirty) {
+      setValue("palettePreview", palette);
+    }
+
     const label = getEl("paletteEditionLabel");
     if (label) label.textContent = `自動判定: ${edition ? editionLabel(edition) : "未判定"}`;
     state.currentEdition = edition;
@@ -766,17 +786,34 @@
     const output = ["【戦闘・武器・防具】"];
     rows.forEach((row) => {
       output.push(`武器：${row.name}`);
-      output.push(`成功率${row.success}｜ダメージ${row.damage}｜射程${row.range}｜`);
-      const thirdLine = [
-        `回数${row.attack}`,
-        row.ammo !== "-" ? `装弾数${row.ammo}` : "",
-        row.durability !== "-" ? `耐久力${row.durability}` : "",
-        row.malfunction !== "-" ? `故障${row.malfunction}` : ""
-      ].filter(Boolean).join("｜");
-      output.push(thirdLine ? `${thirdLine}｜` : "");
+      output.push(formatWeaponSecondLine(row));
+      output.push(formatWeaponThirdLine(row));
       output.push("");
     });
     return output.join(NL).trim();
+  }
+
+  function formatWeaponSecondLine(row) {
+    const rangeLabel = row.range === "タッチ" ? `射程 ${row.range}` : `射程${row.range}`;
+    return `成功率${row.success}｜ダメージ${row.damage}｜${rangeLabel}｜`;
+  }
+
+  function formatWeaponThirdLine(row) {
+    const hasAmmo = row.ammo !== "-";
+    const hasMalfunction = row.malfunction !== "-";
+    const parts = [];
+
+    if (hasAmmo || hasMalfunction) {
+      parts.push(`回数${normalizeAttackForLabel(row.attack)}`);
+    } else {
+      parts.push(normalizeAttackAsCount(row.attack));
+    }
+
+    if (hasAmmo) parts.push(`装弾数${row.ammo}`);
+    if (row.durability !== "-") parts.push(`耐久力${row.durability}`);
+    if (hasMalfunction) parts.push(`故障${row.malfunction}`);
+
+    return `${parts.filter(Boolean).join("｜")}｜`;
   }
 
   function parseWeaponTableRow(line) {
@@ -792,15 +829,23 @@
   }
 
   function normalizeAttackCount(value) {
-    const text = normalizeWeaponField(value);
-    if (text === "-" || text.includes("回") || text.includes("連射")) return text;
-    return `${text}回`;
+    return normalizeWeaponField(value);
   }
 
   function normalizeAmmoCount(value) {
     const text = normalizeWeaponField(value);
-    if (text === "-" || text.includes("発")) return text;
-    return `${text}発`;
+    return text.endsWith("発") ? text.slice(0, -1).trim() || text : text;
+  }
+
+  function normalizeAttackForLabel(value) {
+    const text = normalizeWeaponField(value);
+    return text.endsWith("回") ? text.slice(0, -1).trim() || text : text;
+  }
+
+  function normalizeAttackAsCount(value) {
+    const text = normalizeWeaponField(value);
+    if (text === "-" || text.includes("回") || text.includes("連射")) return text;
+    return `${text}回`;
   }
 
   function formatItemsSection(rawSectionText) {

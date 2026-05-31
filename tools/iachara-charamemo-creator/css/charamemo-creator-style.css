@@ -1,5 +1,5 @@
 /* =========================================================
-   いあキャラMEMOジェネレータ v1.96
+   いあキャラMEMOジェネレータ v1.97
    ========================================================= */
 
 :root {
@@ -1262,7 +1262,7 @@ body.theme-light .toast.is-error,
 
 
 /* =========================================================
-   v1.96 Final Layout / Header Width Alignment Override
+   v1.97 Final Layout / Header Width Alignment Override
    ========================================================= */
 :root {
   --column-fixed-width: 390px;
