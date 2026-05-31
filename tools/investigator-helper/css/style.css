@@ -1766,3 +1766,28 @@ body.theme-dark .theme-color-card-actions button {
     grid-template-columns: 1fr;
   }
 }
+
+.theme-color-chip.theme-color-chip-clear {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #be123c;
+  font-weight: 900;
+}
+
+.theme-color-chip.theme-color-chip-clear:hover {
+  background: #ffe4e6;
+  border-color: #fb7185;
+  color: #9f1239;
+}
+
+body.theme-dark .theme-color-chip.theme-color-chip-clear {
+  border-color: rgba(251, 113, 133, 0.45);
+  background: rgba(127, 29, 29, 0.38);
+  color: #fecdd3;
+}
+
+body.theme-dark .theme-color-chip.theme-color-chip-clear:hover {
+  background: rgba(159, 18, 57, 0.55);
+  border-color: rgba(251, 113, 133, 0.72);
+  color: #fff1f2;
+}

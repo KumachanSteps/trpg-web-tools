@@ -577,7 +577,7 @@ function downloadText() {
 function sendToSnippetTool() {
   const payload = {
     source: "scenario_pdf_parser",
-    version: "0.4.4",
+    version: "0.4.5",
     text: state.outputText,
     preset: state.preset,
     options: state.options,
@@ -640,16 +640,23 @@ function splitRowIntoSegments(row, pageWidth) {
   const segments = [];
   let currentSegment = [];
   let lastRight = null;
-  const columnGap = Math.max(72, (pageWidth || 0) * 0.11);
+  const width = pageWidth || 0;
+  const mid = width / 2;
+  const columnGap = Math.max(54, width * 0.075);
 
   for (const item of lineItems) {
     const current = item.text.trim();
     if (!current) continue;
     const gap = lastRight === null ? 0 : item.x - lastRight;
-    if (currentSegment.length && gap > columnGap) {
+    const previousSegmentLeft = currentSegment.length ? Math.min(...currentSegment.map((entry) => entry.x)) : item.x;
+    const crossesIntoRightColumn = width && currentSegment.length && previousSegmentLeft < mid * 0.92 && item.x > mid * 0.92;
+    const hasColumnGap = currentSegment.length && gap > columnGap;
+
+    if (hasColumnGap || crossesIntoRightColumn) {
       segments.push(currentSegment);
       currentSegment = [];
     }
+
     currentSegment.push(item);
     lastRight = item.x + item.width;
   }
@@ -748,56 +755,123 @@ function rowsToText(rows, preserveGaps = false) {
 function isFullWidthRow(row, pageWidth) {
   const width = row.maxX - row.minX;
   const mid = pageWidth / 2;
+  const text = row.text.trim();
+  const centered = Math.abs(row.centerX - mid) < pageWidth * 0.16;
+
+  if (/^(【[^】]+】|\d{2}[.．][^\n]+|■[^\n]{1,40}|次のページから)/.test(text)) return true;
+  if (/^※/.test(text) && row.minX < pageWidth * 0.18) return true;
   if (width > pageWidth * 0.48) return true;
-  if (row.minX < pageWidth * 0.18 && row.maxX > pageWidth * 0.82) return true;
-  if (row.minX < mid && row.maxX > mid && width > pageWidth * 0.30) return true;
+  if (row.minX < pageWidth * 0.18 && row.maxX > pageWidth * 0.72) return true;
+  if (centered && width > pageWidth * 0.24 && !/^●/.test(text)) return true;
   return false;
+}
+
+function lineGapValue(previous, current) {
+  if (!previous || !current) return 0;
+  return Math.abs((previous.y || 0) - (current.y || 0));
+}
+
+function rowsToTextBlock(rows, preserveGaps = false) {
+  const ordered = [...rows].sort((a, b) => b.y - a.y || a.minX - b.minX);
+  if (!ordered.length) return "";
+  const averageHeight = ordered.reduce((sum, row) => sum + (row.rowHeight || row.height || 10), 0) / ordered.length;
+  const gapThreshold = Math.max(18, averageHeight * 1.75);
+  const lines = [];
+
+  for (let index = 0; index < ordered.length; index += 1) {
+    const row = ordered[index];
+    const previous = ordered[index - 1];
+    if (preserveGaps && previous && lineGapValue(previous, row) > gapThreshold && lines[lines.length - 1] !== "") {
+      lines.push("");
+    }
+    lines.push(row.text);
+  }
+
+  return lines.join("\n");
+}
+
+function groupRowsByVerticalContinuity(rows) {
+  const ordered = [...rows].sort((a, b) => b.y - a.y || a.minX - b.minX);
+  if (!ordered.length) return [];
+  const averageHeight = ordered.reduce((sum, row) => sum + (row.rowHeight || row.height || 10), 0) / ordered.length;
+  const splitGap = Math.max(32, averageHeight * 2.7);
+  const groups = [];
+  let currentGroup = [];
+
+  for (const row of ordered) {
+    const previous = currentGroup[currentGroup.length - 1];
+    if (previous && lineGapValue(previous, row) > splitGap) {
+      groups.push(currentGroup);
+      currentGroup = [];
+    }
+    currentGroup.push(row);
+  }
+
+  if (currentGroup.length) groups.push(currentGroup);
+  return groups;
+}
+
+function columnRowsToText(rows, pageWidth, options = {}) {
+  if (!rows.length) return "";
+  const mid = pageWidth / 2;
+  const left = [];
+  const right = [];
+
+  for (const row of rows) {
+    if (row.centerX < mid) left.push(row);
+    else right.push(row);
+  }
+
+  const hasTwoColumns = left.length >= 2 && right.length >= 2;
+  if (!hasTwoColumns) return rowsToTextBlock(rows, options.preservePdfParagraphBreaks);
+
+  const chunks = [];
+  const leftText = rowsToTextBlock(left, options.preservePdfParagraphBreaks).trim();
+  const rightText = rowsToTextBlock(right, options.preservePdfParagraphBreaks).trim();
+  if (leftText) chunks.push(leftText);
+  if (rightText) chunks.push(rightText);
+  return chunks.join("\n\n");
 }
 
 function orderRowsForReading(rows, pageWidth, options = {}) {
   if (!pageWidth || rows.length < 8) return rowsToText(rows, options.preservePdfParagraphBreaks);
 
+  const sortedRows = [...rows].sort((a, b) => b.y - a.y || a.minX - b.minX);
   const mid = pageWidth / 2;
-  const left = [];
-  const right = [];
-  const full = [];
+  const leftCount = sortedRows.filter((row) => !isFullWidthRow(row, pageWidth) && row.centerX < mid).length;
+  const rightCount = sortedRows.filter((row) => !isFullWidthRow(row, pageWidth) && row.centerX >= mid).length;
+  const hasTwoColumns = leftCount >= 3 && rightCount >= 3;
+  if (!hasTwoColumns) return rowsToText(rows, options.preservePdfParagraphBreaks);
 
-  for (const row of rows) {
+  const chunks = [];
+  let columnBuffer = [];
+
+  const pushText = (text) => {
+    const chunk = text.trim();
+    if (!chunk) return;
+    chunks.push(chunk);
+  };
+
+  const flushColumnBuffer = () => {
+    if (!columnBuffer.length) return;
+    const groups = groupRowsByVerticalContinuity(columnBuffer);
+    for (const group of groups) {
+      pushText(columnRowsToText(group, pageWidth, options));
+    }
+    columnBuffer = [];
+  };
+
+  for (const row of sortedRows) {
     if (isFullWidthRow(row, pageWidth)) {
-      full.push(row);
-    } else if (row.centerX < mid) {
-      left.push(row);
+      flushColumnBuffer();
+      pushText(rowsToTextBlock([row], options.preservePdfParagraphBreaks));
     } else {
-      right.push(row);
+      columnBuffer.push(row);
     }
   }
 
-  const hasTwoColumns = left.length >= 3 && right.length >= 3;
-  if (!hasTwoColumns) return rowsToText(rows, options.preservePdfParagraphBreaks);
-
-  const leftTop = Math.max(...left.map((row) => row.y));
-  const rightTop = Math.max(...right.map((row) => row.y));
-  const leftBottom = Math.min(...left.map((row) => row.y));
-  const rightBottom = Math.min(...right.map((row) => row.y));
-  const columnTop = Math.max(leftTop, rightTop);
-  const columnBottom = Math.min(leftBottom, rightBottom);
-  const topFull = full.filter((row) => row.y > columnTop + 8);
-  const middleFull = full.filter((row) => row.y <= columnTop + 8 && row.y >= columnBottom - 8);
-  const bottomFull = full.filter((row) => row.y < columnBottom - 8);
-  const chunks = [];
-
-  const pushChunk = (chunkRows) => {
-    const chunk = rowsToText(chunkRows, options.preservePdfParagraphBreaks).trim();
-    if (chunk) chunks.push(chunk);
-  };
-
-  pushChunk(topFull);
-  pushChunk(left);
-  pushChunk(right);
-  pushChunk(middleFull);
-  pushChunk(bottomFull);
-
-  return chunks.join("\n\n");
+  flushColumnBuffer();
+  return chunks.join("\n");
 }
 
 

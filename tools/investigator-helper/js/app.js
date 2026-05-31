@@ -467,7 +467,15 @@ ${notes}`;
 
 
   function getThemeColorLabel(item) {
-    return item?.displayName || item?.name || "";
+    if (!item) return "";
+    const englishName = String(item.englishName || "").trim();
+    const displayName = String(item.displayName || item.name || "").trim();
+
+    if (englishName && displayName && englishName.toLowerCase() !== displayName.toLowerCase()) {
+      return `${englishName} / ${displayName}`;
+    }
+
+    return displayName || englishName || "";
   }
 
   function getThemeColorSearchText(item) {
@@ -994,10 +1002,12 @@ ${notes}`;
 
   function renderThemeColorChips() {
     if (!el.themeColorChipArea) return;
-    el.themeColorChipArea.innerHTML = THEME_COLOR_TAG_CHIPS.map((tag) => {
+    const tagButtons = THEME_COLOR_TAG_CHIPS.map((tag) => {
       const active = state.selectedThemeColorTags.has(tag) ? " is-active" : "";
       return `<button class="theme-color-chip${active}" type="button" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`;
     }).join("");
+
+    el.themeColorChipArea.innerHTML = `${tagButtons}<button class="theme-color-chip theme-color-chip-clear" type="button" data-action="clear-theme-tags">選択解除</button>`;
   }
 
   function renderThemePaletteResult() {
@@ -1046,7 +1056,7 @@ ${notes}`;
         <div class="theme-color-five-grid">
           ${section.items.map((item) => {
             const tags = [item.group, ...(item.tags || []).filter((tag) => tag !== item.group)].slice(0, 4).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
-            const subName = item.englishName && item.englishName !== item.displayName ? `<small>${escapeHtml(item.englishName)}</small>` : "";
+            const subName = item.reading ? `<small>${escapeHtml(item.reading)}</small>` : "";
             return `
               <article class="theme-color-card compact" data-id="${escapeHtml(item.id)}">
                 <button class="color-preview" type="button" style="background:${escapeHtml(item.hex || "#ffffff")}" data-action="copy-theme" data-id="${escapeHtml(item.id)}" title="${escapeHtml(formatThemeColor(item))}"></button>
@@ -1320,7 +1330,15 @@ ${notes}`;
     el.themeColorChipArea?.addEventListener("click", (event) => {
       const button = event.target.closest(".theme-color-chip");
       if (!button) return;
+
+      if (button.dataset.action === "clear-theme-tags") {
+        state.selectedThemeColorTags.clear();
+        render();
+        return;
+      }
+
       const tag = button.dataset.tag;
+      if (!tag) return;
       if (state.selectedThemeColorTags.has(tag)) state.selectedThemeColorTags.delete(tag);
       else state.selectedThemeColorTags.add(tag);
       render();
