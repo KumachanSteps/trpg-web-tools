@@ -25,6 +25,7 @@
   const EXPERIENCE_PACKAGES = Array.isArray(window.EXPERIENCE_PACKAGES) ? window.EXPERIENCE_PACKAGES : [];
   const WEAPONS = Array.isArray(window.WEAPONS) ? window.WEAPONS : [];
   const BELONGINGS = Array.isArray(window.BELONGINGS) ? window.BELONGINGS : [];
+  const THEME_COLORS = Array.isArray(window.THEME_COLORS) ? window.THEME_COLORS : [];
 
   const SOURCES = [
     "すべて",
@@ -93,6 +94,12 @@
     "職業道具", "身だしなみ", "オカルト", "電子機器", "交通", "非常用品", "小物", "高級品",
   ];
 
+  const THEME_COLOR_TAG_CHIPS = [
+    "暖色", "寒色", "赤", "青", "緑", "黄", "紫", "ピンク",
+    "黒", "白", "グレー", "茶", "金", "銀", "パステル", "ビビッド",
+    "ダーク", "くすみ", "和風", "レトロ", "ファンタジー", "ホラー", "高級感", "かわいい", "クール", "神秘的",
+  ];
+
   const state = {
     tab: "occupation",
     ruleType: "all",
@@ -104,10 +111,14 @@
     selectedFeatureId: FEATURES[0]?.id || "",
     selectedWeaponId: WEAPONS[0]?.id || "",
     selectedBelongingId: BELONGINGS[0]?.id || "",
+    selectedThemeColorId: THEME_COLORS[0]?.id || "",
     weaponQuery: "",
     weaponCategory: "すべて",
     belongingQuery: "",
     selectedBelongingTags: new Set(),
+    themeColorQuery: "",
+    selectedThemeColorTags: new Set(),
+    themePalette: [],
     featureCount: 3,
     rolledFeatures: FEATURES.slice(0, 3),
     skillExpanded: false,
@@ -143,6 +154,14 @@
     belongingKeywordInput: document.getElementById("belongingKeywordInput"),
     belongingChipArea: document.getElementById("belongingChipArea"),
     clearBelongingTagsButton: document.getElementById("clearBelongingTagsButton"),
+    themeColorKeywordInput: document.getElementById("themeColorKeywordInput"),
+    themeColorChipArea: document.getElementById("themeColorChipArea"),
+    clearThemeColorTagsButton: document.getElementById("clearThemeColorTagsButton"),
+    themeColorGrid: document.getElementById("themeColorGrid"),
+    themePaletteResult: document.getElementById("themePaletteResult"),
+    themeRandomOneButton: document.getElementById("themeRandomOneButton"),
+    themeRandomPaletteButton: document.getElementById("themeRandomPaletteButton"),
+    themeCopyPaletteButton: document.getElementById("themeCopyPaletteButton"),
     outputText: document.getElementById("outputText"),
     copyOutputButton: document.getElementById("copyOutputButton"),
     clearOutputButton: document.getElementById("clearOutputButton"),
@@ -444,6 +463,60 @@ ${notes}`;
     return [`持ち物：${item.name}`, item.description || ""].filter(Boolean).join("\n");
   }
 
+
+  function getThemeColorLabel(item) {
+    return item?.displayName || item?.name || "";
+  }
+
+  function getThemeColorSearchText(item) {
+    return [
+      item.name,
+      item.displayName,
+      item.hex,
+      item.rgb,
+      item.category,
+      item.description,
+      ...(item.tags || []),
+      ...(item.keywords || []),
+    ].join(" ").toLowerCase();
+  }
+
+  function themeColorMatchesSelectedTags(item) {
+    if (!state.selectedThemeColorTags.size) return true;
+    const tags = new Set(item.tags || []);
+    return [...state.selectedThemeColorTags].every((tag) => tags.has(tag));
+  }
+
+  function getFilteredThemeColors() {
+    const query = state.themeColorQuery.trim().toLowerCase();
+    return THEME_COLORS
+      .filter(themeColorMatchesSelectedTags)
+      .filter((item) => !query || getThemeColorSearchText(item).includes(query));
+  }
+
+  function formatThemeColor(item) {
+    if (!item) return "";
+    return `テーマカラー：${getThemeColorLabel(item)}（${item.hex || ""}）`;
+  }
+
+  function formatThemePalette(items) {
+    if (!items?.length) return "";
+    const labels = ["メイン", "サブ", "アクセント"];
+    return ["テーマカラー案：", ...items.map((item, index) => `${labels[index] || `色${index + 1}`}：${getThemeColorLabel(item)}（${item.hex || ""}）`)].join("\n");
+  }
+
+  function pickRandomThemeColors(count = 1) {
+    const filtered = getFilteredThemeColors();
+    const source = filtered.length ? filtered : THEME_COLORS;
+    const pool = [...source];
+    const picked = [];
+    while (pool.length && picked.length < count) {
+      const index = Math.floor(Math.random() * pool.length);
+      picked.push(pool.splice(index, 1)[0]);
+    }
+    return picked;
+  }
+
   function appendOutput(text) {
     if (!text) return;
     const current = el.outputText.value.trim();
@@ -609,6 +682,8 @@ ${notes}`;
     document.getElementById("packageTab").classList.toggle("is-hidden", state.tab !== "package");
     document.getElementById("weaponTab").classList.toggle("is-hidden", state.tab !== "weapon");
     document.getElementById("belongingTab").classList.toggle("is-hidden", state.tab !== "belonging");
+    document.getElementById("themeColorTab").classList.toggle("is-hidden", state.tab !== "themeColor");
+    document.querySelector(".main-grid")?.classList.toggle("is-theme-color-mode", state.tab === "themeColor");
 
     el.occupationDetail.classList.toggle("is-hidden", state.tab !== "occupation");
     el.featureDetail.classList.toggle("is-hidden", state.tab !== "feature");
@@ -910,6 +985,69 @@ ${notes}`;
     document.getElementById("addBelongingButton")?.addEventListener("click", () => appendOutput(formatBelonging(item)));
   }
 
+  function renderThemeColorChips() {
+    if (!el.themeColorChipArea) return;
+    el.themeColorChipArea.innerHTML = THEME_COLOR_TAG_CHIPS.map((tag) => {
+      const active = state.selectedThemeColorTags.has(tag) ? " is-active" : "";
+      return `<button class="theme-color-chip${active}" type="button" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`;
+    }).join("");
+  }
+
+  function renderThemePaletteResult() {
+    if (!el.themePaletteResult) return;
+    if (!state.themePalette.length) {
+      el.themePaletteResult.innerHTML = "";
+      return;
+    }
+
+    const labels = ["メイン", "サブ", "アクセント"];
+    el.themePaletteResult.innerHTML = `
+      <div class="palette-card">
+        <div class="palette-title">ランダム配色案</div>
+        <div class="palette-swatches">
+          ${state.themePalette.map((item, index) => `
+            <button class="palette-swatch" type="button" data-id="${escapeHtml(item.id)}" title="${escapeHtml(formatThemeColor(item))}">
+              <span style="background:${escapeHtml(item.hex || "#ffffff")}"></span>
+              <strong>${escapeHtml(getThemeColorLabel(item))}</strong>
+              <code>${escapeHtml(item.hex || "")}</code>
+              <small>${escapeHtml(labels[index] || `色${index + 1}`)}</small>
+            </button>
+          `).join("")}
+        </div>
+      </div>`;
+  }
+
+  function renderThemeColorGrid() {
+    if (!el.themeColorGrid) return;
+    const items = getFilteredThemeColors();
+
+    if (!items.length) {
+      el.themeColorGrid.innerHTML = `<div class="theme-empty-card">条件に一致するテーマカラーがありません。</div>`;
+      return;
+    }
+
+    el.themeColorGrid.innerHTML = items.map((item) => {
+      const tags = (item.tags || []).slice(0, 6).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
+      return `
+        <article class="theme-color-card" data-id="${escapeHtml(item.id)}">
+          <button class="color-preview" type="button" style="background:${escapeHtml(item.hex || "#ffffff")}" data-action="copy-theme" data-id="${escapeHtml(item.id)}" title="${escapeHtml(formatThemeColor(item))}"></button>
+          <div class="color-body">
+            <div class="color-title-row">
+              <h3>${escapeHtml(getThemeColorLabel(item))}</h3>
+              <code>${escapeHtml(item.hex || "")}</code>
+            </div>
+            <p>${escapeHtml(item.description || "")}</p>
+            <div class="tag-list">${tags}</div>
+            <div class="theme-color-card-actions">
+              <button type="button" data-action="copy-code" data-id="${escapeHtml(item.id)}">コードコピー</button>
+              <button type="button" data-action="copy-theme" data-id="${escapeHtml(item.id)}">テーマ色コピー</button>
+              <button type="button" data-action="add-theme" data-id="${escapeHtml(item.id)}">メモに追加</button>
+            </div>
+          </div>
+        </article>`;
+    }).join("");
+  }
+
   function renderWeaponCategories() {
     if (!el.weaponCategorySelect) return;
 
@@ -999,6 +1137,9 @@ ${notes}`;
     renderBelongingChips();
     renderBelongingList();
     renderBelongingDetail();
+    renderThemeColorChips();
+    renderThemePaletteResult();
+    renderThemeColorGrid();
     renderWeaponList();
     renderWeaponDetail();
   }
@@ -1142,6 +1283,63 @@ ${notes}`;
       if (!card) return;
       state.selectedBelongingId = card.dataset.id;
       render();
+    });
+
+
+    el.themeColorKeywordInput?.addEventListener("input", () => {
+      state.themeColorQuery = el.themeColorKeywordInput.value;
+      render();
+    });
+
+    el.clearThemeColorTagsButton?.addEventListener("click", () => {
+      state.selectedThemeColorTags.clear();
+      render();
+    });
+
+    el.themeColorChipArea?.addEventListener("click", (event) => {
+      const button = event.target.closest(".theme-color-chip");
+      if (!button) return;
+      const tag = button.dataset.tag;
+      if (state.selectedThemeColorTags.has(tag)) state.selectedThemeColorTags.delete(tag);
+      else state.selectedThemeColorTags.add(tag);
+      render();
+    });
+
+    el.themeRandomOneButton?.addEventListener("click", () => {
+      const [item] = pickRandomThemeColors(1);
+      if (!item) return;
+      state.selectedThemeColorId = item.id;
+      state.themePalette = [item];
+      render();
+      copyText(formatThemeColor(item), "ランダムテーマカラーをコピーしました");
+    });
+
+    el.themeRandomPaletteButton?.addEventListener("click", () => {
+      state.themePalette = pickRandomThemeColors(3);
+      render();
+    });
+
+    el.themeCopyPaletteButton?.addEventListener("click", () => {
+      if (!state.themePalette.length) state.themePalette = pickRandomThemeColors(3);
+      render();
+      copyText(formatThemePalette(state.themePalette), "テーマカラーパレットをコピーしました");
+    });
+
+    el.themePaletteResult?.addEventListener("click", (event) => {
+      const button = event.target.closest(".palette-swatch[data-id]");
+      if (!button) return;
+      const item = THEME_COLORS.find((color) => color.id === button.dataset.id);
+      copyText(formatThemeColor(item), "テーマカラーをコピーしました");
+    });
+
+    el.themeColorGrid?.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action][data-id]");
+      if (!button) return;
+      const item = THEME_COLORS.find((color) => color.id === button.dataset.id);
+      if (!item) return;
+      if (button.dataset.action === "copy-code") copyText(item.hex || "", "カラーコードをコピーしました");
+      if (button.dataset.action === "copy-theme") copyText(formatThemeColor(item), "テーマカラーをコピーしました");
+      if (button.dataset.action === "add-theme") appendOutput(formatThemeColor(item));
     });
 
     el.copyOutputButton.addEventListener("click", () => {

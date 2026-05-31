@@ -3,9 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- 共通アイコン -->
-  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
-  <title>探索者ヘルパーv2.9</title>
+  <title>探索者ヘルパーv2.30</title>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
@@ -26,8 +24,8 @@
             <span class="header-pill header-pill-violet">CoC 6版 / 7版 / パルプ</span>
             <span class="header-pill">開発用データJS管理</span>
           </div>
-          <h1 class="site-title">探索者ヘルパーv2.9</h1>
-          <p class="site-description">職業サンプル、特徴表、経験パッケージ、武器、持ち物を検索・閲覧し、キャラシ貼り付け用に整形できるクローズド環境向け支援ツール。</p>
+          <h1 class="site-title">探索者ヘルパーv2.30</h1>
+          <p class="site-description">職業サンプル、特徴表、経験パッケージ、武器、持ち物、テーマカラーを検索・閲覧し、キャラシ貼り付け用に整形できるクローズド環境向け支援ツール。</p>
         </div>
         <div class="header-actions">
           <button id="usageToggle" class="btn btn-soft" type="button">使い方</button>
@@ -52,6 +50,7 @@
         <button class="tab-button" type="button" data-tab="package">経験パッケージ</button>
         <button class="tab-button" type="button" data-tab="weapon">武器</button>
         <button class="tab-button" type="button" data-tab="belonging">持ち物</button>
+        <button class="tab-button" type="button" data-tab="themeColor">テーマカラー</button>
       </div>
       <div class="rule-buttons">
         <span class="rule-label">対象ルール</span>
@@ -174,6 +173,39 @@
           </div>
         </section>
 
+        <section id="themeColorTab" class="tool-tab is-hidden theme-color-tab">
+          <div class="panel theme-color-panel">
+            <div class="theme-color-header">
+              <div>
+                <h2>テーマカラー</h2>
+                <p>立ち絵依頼、ココフォリア駒色、キャラシ装飾に使える色見本帳です。</p>
+              </div>
+              <div class="theme-color-actions">
+                <button id="themeRandomOneButton" class="btn btn-soft" type="button">🎲 ランダム1色</button>
+                <button id="themeRandomPaletteButton" class="btn btn-soft" type="button">🎨 ランダム3色</button>
+                <button id="themeCopyPaletteButton" class="btn btn-primary" type="button">📋 パレットコピー</button>
+              </div>
+            </div>
+
+            <div class="theme-color-search-panel">
+              <label>
+                <span>色検索</span>
+                <input id="themeColorKeywordInput" type="search" placeholder="色名・カラーコード・印象タグで検索（例：赤、寒色、#8B0000、かわいい）" />
+              </label>
+              <div class="theme-color-chip-panel">
+                <div class="skill-panel-head">
+                  <span class="chip-title">色タグ検索</span>
+                  <button id="clearThemeColorTagsButton" class="text-button" type="button">選択解除</button>
+                </div>
+                <div id="themeColorChipArea" class="theme-color-chip-area"></div>
+              </div>
+            </div>
+
+            <div id="themePaletteResult" class="theme-color-random-result"></div>
+            <div id="themeColorGrid" class="theme-color-grid"></div>
+          </div>
+        </section>
+
         <button id="leftColumnScrollTop" class="left-scroll-top-button" type="button" title="検索バーまで戻る">
           <span class="scroll-top-icon" aria-hidden="true">↑</span>
           <span class="scroll-top-label">検索バーまで</span>
@@ -208,6 +240,7 @@
   <script src="./js/data-experience-packages.js"></script>
   <script src="./js/data-weapons.js"></script>
   <script src="./js/data-belongings.js"></script>
+  <script src="./js/data-theme-colors.js"></script>
   <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
   <script src="./js/app.js"></script>
 </body>

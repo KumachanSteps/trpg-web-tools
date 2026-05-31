@@ -1344,3 +1344,321 @@ body.theme-dark .belonging-card.is-selected { border-color: rgba(251, 146, 60, 0
 body.theme-dark .belonging-content, body.theme-dark .belonging-detail-box { background: rgba(251, 146, 60, 0.13); border-color: rgba(251, 146, 60, 0.26); }
 .belonging-note-short, .belonging-note-line { color: #9a3412; }
 body.theme-dark .belonging-note-short, body.theme-dark .belonging-note-line { color: #fed7aa; }
+
+.main-grid.is-theme-color-mode {
+  grid-template-columns: 1fr;
+}
+
+.main-grid.is-theme-color-mode .right-column {
+  display: none;
+}
+
+.main-grid.is-theme-color-mode .left-column {
+  padding-right: 0;
+}
+
+.theme-color-panel {
+  padding: 18px;
+}
+
+.theme-color-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.theme-color-header h2 {
+  margin: 0 0 5px;
+  font-size: 20px;
+}
+
+.theme-color-header p {
+  margin: 0;
+  color: var(--sub);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.theme-color-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.theme-color-search-panel {
+  display: grid;
+  gap: 12px;
+  background: rgba(239, 246, 255, 0.72);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+body.theme-dark .theme-color-search-panel {
+  background: rgba(30, 41, 59, 0.52);
+  border-color: rgba(125, 211, 252, 0.18);
+}
+
+.theme-color-search-panel input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--text);
+  background: var(--input-bg);
+}
+
+.theme-color-chip-panel {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(255,255,255,0.5);
+}
+
+body.theme-dark .theme-color-chip-panel {
+  background: rgba(15,23,42,0.38);
+}
+
+.theme-color-chip-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  max-height: 82px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.theme-color-chip {
+  border: 1px solid #cfe0f6;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.theme-color-chip.is-active {
+  color: #ffffff;
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+body.theme-dark .theme-color-chip {
+  background: rgba(59,130,246,0.11);
+  border-color: rgba(125,211,252,0.25);
+  color: #bfdbfe;
+}
+
+body.theme-dark .theme-color-chip.is-active {
+  background: #60a5fa;
+  border-color: #60a5fa;
+  color: #0f172a;
+}
+
+.theme-color-random-result {
+  margin-bottom: 16px;
+}
+
+.palette-card {
+  background: #fffdf7;
+  border: 1px solid #eadfca;
+  border-radius: 16px;
+  padding: 12px;
+}
+
+body.theme-dark .palette-card {
+  background: rgba(250, 204, 21, 0.08);
+  border-color: rgba(250, 204, 21, 0.18);
+}
+
+.palette-title {
+  font-weight: 900;
+  margin-bottom: 10px;
+  color: #4a3b24;
+}
+
+body.theme-dark .palette-title {
+  color: #fde68a;
+}
+
+.palette-swatches {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.palette-swatch {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  grid-template-rows: auto auto auto;
+  column-gap: 9px;
+  align-items: center;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid #eadfca;
+  border-radius: 13px;
+  padding: 9px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+body.theme-dark .palette-swatch {
+  background: rgba(255,255,255,0.055);
+  border-color: rgba(250, 204, 21, 0.2);
+}
+
+.palette-swatch span {
+  grid-row: 1 / 4;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+}
+
+.palette-swatch strong {
+  font-size: 13px;
+}
+
+.palette-swatch code {
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.palette-swatch small {
+  font-size: 11px;
+  color: #8a6d2f;
+}
+
+body.theme-dark .palette-swatch small {
+  color: #fde68a;
+}
+
+.theme-color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.theme-color-card {
+  overflow: hidden;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 14px 32px rgba(33, 42, 68, 0.08);
+}
+
+body.theme-dark .theme-color-card {
+  background: rgba(255,255,255,0.05);
+}
+
+.color-preview {
+  display: block;
+  width: 100%;
+  height: 88px;
+  border: 0;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  cursor: pointer;
+}
+
+.color-body {
+  padding: 12px;
+}
+
+.color-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.color-title-row h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.color-title-row code {
+  color: var(--sub);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.color-body p {
+  min-height: 3.2em;
+  margin: 0 0 10px;
+  color: var(--sub);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.tag-list span {
+  background: #eef3fa;
+  color: #40526d;
+  border-radius: 999px;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+body.theme-dark .tag-list span {
+  background: rgba(125, 211, 252, 0.1);
+  color: #bae6fd;
+}
+
+.theme-color-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.theme-color-card-actions button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.82);
+  color: var(--text);
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+body.theme-dark .theme-color-card-actions button {
+  background: rgba(255,255,255,0.06);
+}
+
+.theme-empty-card {
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  color: var(--sub);
+  background: rgba(255,255,255,0.56);
+}
+
+@media (max-width: 760px) {
+  .theme-color-header {
+    flex-direction: column;
+  }
+
+  .theme-color-actions {
+    justify-content: flex-start;
+  }
+
+  .palette-swatches {
+    grid-template-columns: 1fr;
+  }
+}
