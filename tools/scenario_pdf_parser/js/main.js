@@ -24,6 +24,7 @@ const optionData = [
   { key: "markHandouts", labelKey: "option.markHandouts" },
   { key: "fixMergedHeadings", labelKey: "option.fixMergedHeadings" },
   { key: "keepScenarioMetaLines", labelKey: "option.keepScenarioMetaLines" },
+  { key: "preservePdfParagraphBreaks", labelKey: "option.preservePdfParagraphBreaks" },
   { key: "removeDuplicateLines", labelKey: "option.removeDuplicateLines" },
   { key: "replaceRoleTokens", labelKey: "option.replaceRoleTokens" },
 ];
@@ -57,6 +58,7 @@ const state = {
     markHandouts: true,
     fixMergedHeadings: true,
     keepScenarioMetaLines: true,
+    preservePdfParagraphBreaks: true,
     removeDuplicateLines: true,
     replaceRoleTokens: false,
   },
@@ -218,6 +220,7 @@ function isStructuralStart(line) {
   if (/^［[^］]+］$/.test(current)) return true;
   if (/^\[(能力値|技能|武器)\]/.test(current)) return true;
   if (/^［(探索箇所|図書館情報|追加探索箇所)］/.test(current)) return true;
+  if (/^([●○・･]\s*)?(公開HO|公HO|HO\d+|KP情報|シナリオ背景|登場アイテム|NPC|エネミー一覧|シナリオの流れ)$/.test(current)) return true;
   return false;
 }
 
@@ -236,7 +239,7 @@ function isOpenDialogue(line) {
 }
 
 function isScenarioMetaLine(line) {
-  return /^([●○・･]\s*)?(人数|プレイ人数|時間|ロスト率|必須技能|推奨|推奨技能|想定時間|舞台|備考|職業ポイント|職業技能|特記|必須条件|能力値|技能|武器|装甲|探索箇所|追加探索箇所)[:：]/.test(line.trim());
+  return /^([●○・･]\s*)?(人数|プレイ人数|時間|ロスト率|必須技能|推奨|推奨技能|想定時間|舞台|備考|公開HO|公HO|職業ポイント|職業技能|特記|必須条件|能力値|技能|武器|装甲|探索箇所|追加探索箇所)([:：]|$)/.test(line.trim());
 }
 
 function isDanglingContinuation(line) {
@@ -531,7 +534,7 @@ function downloadText() {
 function sendToSnippetTool() {
   const payload = {
     source: "scenario_pdf_parser",
-    version: "0.4.1",
+    version: "0.4.3",
     text: state.outputText,
     preset: state.preset,
     options: state.options,
@@ -589,56 +592,128 @@ function makeTextItem(item) {
   };
 }
 
-function buildRowsFromItems(items) {
+function splitRowIntoSegments(row, pageWidth) {
+  const lineItems = row.items.sort((a, b) => a.x - b.x);
+  const segments = [];
+  let currentSegment = [];
+  let lastRight = null;
+  const columnGap = Math.max(72, (pageWidth || 0) * 0.11);
+
+  for (const item of lineItems) {
+    const current = item.text.trim();
+    if (!current) continue;
+    const gap = lastRight === null ? 0 : item.x - lastRight;
+    if (currentSegment.length && gap > columnGap) {
+      segments.push(currentSegment);
+      currentSegment = [];
+    }
+    currentSegment.push(item);
+    lastRight = item.x + item.width;
+  }
+
+  if (currentSegment.length) segments.push(currentSegment);
+  return segments;
+}
+
+function buildSegmentText(segment) {
+  let text = "";
+  let lastRight = null;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let totalHeight = 0;
+
+  for (const item of segment) {
+    const current = item.text.trim();
+    if (!current) continue;
+    minX = Math.min(minX, item.x);
+    maxX = Math.max(maxX, item.x + item.width);
+    totalHeight += item.height || 10;
+
+    if (!text) {
+      text = current;
+    } else {
+      const gap = lastRight === null ? 0 : item.x - lastRight;
+      const needsSpace = gap > Math.max(4, (item.height || 10) * 0.45) && !/^[、。，．！？!?：:；;）」』）\]］]/.test(current);
+      text += needsSpace ? ` ${current}` : current;
+    }
+    lastRight = item.x + item.width;
+  }
+
+  return {
+    text: normalizeJapaneseText(text).trim(),
+    minX,
+    maxX,
+    centerX: (minX + maxX) / 2,
+    height: segment.length ? totalHeight / segment.length : 10,
+  };
+}
+
+function buildRowsFromItems(items, pageWidth) {
   const sorted = items
     .map(makeTextItem)
     .filter((item) => item.text && item.text.trim())
     .sort((a, b) => b.y - a.y || a.x - b.x);
-  const rows = [];
+  const rawRows = [];
 
   for (const item of sorted) {
     const tolerance = Math.max(2.5, item.height * 0.45);
-    let row = rows.find((candidate) => Math.abs(candidate.y - item.y) <= tolerance);
+    let row = rawRows.find((candidate) => Math.abs(candidate.y - item.y) <= tolerance);
     if (!row) {
-      row = { y: item.y, items: [] };
-      rows.push(row);
+      row = { y: item.y, items: [], height: item.height || 10 };
+      rawRows.push(row);
     }
     row.items.push(item);
     row.y = (row.y * (row.items.length - 1) + item.y) / row.items.length;
+    row.height = Math.max(row.height, item.height || 10);
   }
 
-  return rows
-    .map((row) => {
-      const lineItems = row.items.sort((a, b) => a.x - b.x);
-      let text = "";
-      let lastRight = null;
-      let minX = Infinity;
-      let maxX = -Infinity;
+  const rows = [];
+  for (const row of rawRows) {
+    const segments = splitRowIntoSegments(row, pageWidth);
+    for (const segment of segments) {
+      const built = buildSegmentText(segment);
+      if (!built.text) continue;
+      rows.push({ ...built, y: row.y, rowHeight: row.height });
+    }
+  }
 
-      for (const item of lineItems) {
-        const current = item.text.trim();
-        if (!current) continue;
-        minX = Math.min(minX, item.x);
-        maxX = Math.max(maxX, item.x + item.width);
-
-        if (!text) {
-          text = current;
-        } else {
-          const gap = lastRight === null ? 0 : item.x - lastRight;
-          const needsSpace = gap > Math.max(4, item.height * 0.45) && !/^[、。，．！？!?：:；;）」』）\]］]/.test(current);
-          text += needsSpace ? ` ${current}` : current;
-        }
-        lastRight = item.x + item.width;
-      }
-
-      return { text: normalizeJapaneseText(text).trim(), y: row.y, minX, maxX, centerX: (minX + maxX) / 2 };
-    })
-    .filter((row) => row.text)
-    .sort((a, b) => b.y - a.y || a.minX - b.minX);
+  return rows.sort((a, b) => b.y - a.y || a.minX - b.minX);
 }
 
-function orderRowsForReading(rows, pageWidth) {
-  if (!pageWidth || rows.length < 12) return rows.map((row) => row.text).join("\n");
+function rowsToText(rows, preserveGaps = true) {
+  const ordered = [...rows].sort((a, b) => b.y - a.y || a.minX - b.minX);
+  if (!ordered.length) return "";
+  const averageHeight = ordered.reduce((sum, row) => sum + (row.rowHeight || row.height || 10), 0) / ordered.length;
+  const gapThreshold = Math.max(18, averageHeight * 1.75);
+  const lines = [];
+
+  for (let index = 0; index < ordered.length; index += 1) {
+    const row = ordered[index];
+    const previous = ordered[index - 1];
+    if (preserveGaps && previous) {
+      const verticalGap = Math.abs(previous.y - row.y);
+      if (verticalGap > gapThreshold && lines[lines.length - 1] !== "") {
+        lines.push("");
+      }
+    }
+    lines.push(row.text);
+  }
+
+  return lines.join("\n");
+}
+
+function isFullWidthRow(row, pageWidth) {
+  const width = row.maxX - row.minX;
+  const mid = pageWidth / 2;
+  if (width > pageWidth * 0.48) return true;
+  if (row.minX < pageWidth * 0.18 && row.maxX > pageWidth * 0.82) return true;
+  if (row.minX < mid && row.maxX > mid && width > pageWidth * 0.30) return true;
+  if (row.minX > pageWidth * 0.22 && row.maxX < pageWidth * 0.78 && width > pageWidth * 0.20) return true;
+  return false;
+}
+
+function orderRowsForReading(rows, pageWidth, options = {}) {
+  if (!pageWidth || rows.length < 8) return rowsToText(rows, options.preservePdfParagraphBreaks);
 
   const mid = pageWidth / 2;
   const left = [];
@@ -646,8 +721,7 @@ function orderRowsForReading(rows, pageWidth) {
   const full = [];
 
   for (const row of rows) {
-    const width = row.maxX - row.minX;
-    if (width > pageWidth * 0.55 || (row.minX < mid * 0.75 && row.maxX > mid * 1.25)) {
+    if (isFullWidthRow(row, pageWidth)) {
       full.push(row);
     } else if (row.centerX < mid) {
       left.push(row);
@@ -656,21 +730,28 @@ function orderRowsForReading(rows, pageWidth) {
     }
   }
 
-  const hasTwoColumns = left.length >= 5 && right.length >= 5;
-  if (!hasTwoColumns) return rows.map((row) => row.text).join("\n");
+  const hasTwoColumns = left.length >= 3 && right.length >= 3;
+  if (!hasTwoColumns) return rowsToText(rows, options.preservePdfParagraphBreaks);
 
   const columnTop = Math.max(left[0]?.y || 0, right[0]?.y || 0);
   const columnBottom = Math.min(left[left.length - 1]?.y || 0, right[right.length - 1]?.y || 0);
   const topFull = full.filter((row) => row.y > columnTop + 8);
   const middleFull = full.filter((row) => row.y <= columnTop + 8 && row.y >= columnBottom - 8);
   const bottomFull = full.filter((row) => row.y < columnBottom - 8);
-  const ordered = [...topFull, ...left, ...right, ...middleFull, ...bottomFull].sort((a, b) => {
-    const groupA = topFull.includes(a) ? 0 : left.includes(a) ? 1 : right.includes(a) ? 2 : middleFull.includes(a) ? 3 : 4;
-    const groupB = topFull.includes(b) ? 0 : left.includes(b) ? 1 : right.includes(b) ? 2 : middleFull.includes(b) ? 3 : 4;
-    return groupA - groupB || b.y - a.y || a.minX - b.minX;
-  });
+  const chunks = [];
 
-  return ordered.map((row) => row.text).join("\n");
+  const pushChunk = (chunkRows) => {
+    const chunk = rowsToText(chunkRows, options.preservePdfParagraphBreaks).trim();
+    if (chunk) chunks.push(chunk);
+  };
+
+  pushChunk(topFull);
+  pushChunk(left);
+  pushChunk(right);
+  pushChunk(middleFull);
+  pushChunk(bottomFull);
+
+  return chunks.join("\n\n");
 }
 
 async function extractTextFromPdf(file) {
@@ -687,8 +768,8 @@ async function extractTextFromPdf(file) {
     const page = await pdf.getPage(pageNumber);
     const viewport = page.getViewport({ scale: 1 });
     const content = await page.getTextContent({ normalizeWhitespace: false, disableCombineTextItems: false });
-    const rows = buildRowsFromItems(content.items || []);
-    const pageText = orderRowsForReading(rows, viewport.width);
+    const rows = buildRowsFromItems(content.items || [], viewport.width);
+    const pageText = orderRowsForReading(rows, viewport.width, state.options);
     if (pageText.trim()) pages.push(pageText);
   }
 
