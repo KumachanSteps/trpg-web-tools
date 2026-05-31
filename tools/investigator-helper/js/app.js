@@ -94,8 +94,10 @@
     "職業道具", "身だしなみ", "オカルト", "電子機器", "交通", "非常用品", "小物", "高級品",
   ];
 
+  const THEME_COLOR_GROUP_ORDER = ["原色", "和色", "洋色"];
+
   const THEME_COLOR_TAG_CHIPS = [
-    "暖色", "寒色", "赤", "青", "緑", "黄", "紫", "ピンク",
+    "原色", "和色", "洋色", "暖色", "寒色", "赤", "青", "緑", "黄", "紫", "ピンク",
     "黒", "白", "グレー", "茶", "金", "銀", "パステル", "ビビッド",
     "ダーク", "くすみ", "和風", "レトロ", "ファンタジー", "ホラー", "高級感", "かわいい", "クール", "神秘的",
   ];
@@ -472,9 +474,13 @@ ${notes}`;
     return [
       item.name,
       item.displayName,
+      item.englishName,
+      item.reading,
       item.hex,
       item.rgb,
+      item.group,
       item.category,
+      item.source,
       item.description,
       ...(item.tags || []),
       ...(item.keywords || []),
@@ -483,7 +489,7 @@ ${notes}`;
 
   function themeColorMatchesSelectedTags(item) {
     if (!state.selectedThemeColorTags.size) return true;
-    const tags = new Set(item.tags || []);
+    const tags = new Set([item.group, item.category, ...(item.tags || [])].filter(Boolean));
     return [...state.selectedThemeColorTags].every((tag) => tags.has(tag));
   }
 
@@ -491,7 +497,8 @@ ${notes}`;
     const query = state.themeColorQuery.trim().toLowerCase();
     return THEME_COLORS
       .filter(themeColorMatchesSelectedTags)
-      .filter((item) => !query || getThemeColorSearchText(item).includes(query));
+      .filter((item) => !query || getThemeColorSearchText(item).includes(query))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
   }
 
   function formatThemeColor(item) {
@@ -1026,26 +1033,40 @@ ${notes}`;
       return;
     }
 
-    el.themeColorGrid.innerHTML = items.map((item) => {
-      const tags = (item.tags || []).slice(0, 6).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
-      return `
-        <article class="theme-color-card" data-id="${escapeHtml(item.id)}">
-          <button class="color-preview" type="button" style="background:${escapeHtml(item.hex || "#ffffff")}" data-action="copy-theme" data-id="${escapeHtml(item.id)}" title="${escapeHtml(formatThemeColor(item))}"></button>
-          <div class="color-body">
-            <div class="color-title-row">
-              <h3>${escapeHtml(getThemeColorLabel(item))}</h3>
-              <code>${escapeHtml(item.hex || "")}</code>
-            </div>
-            <p>${escapeHtml(item.description || "")}</p>
-            <div class="tag-list">${tags}</div>
-            <div class="theme-color-card-actions">
-              <button type="button" data-action="copy-code" data-id="${escapeHtml(item.id)}">コードコピー</button>
-              <button type="button" data-action="copy-theme" data-id="${escapeHtml(item.id)}">テーマ色コピー</button>
-              <button type="button" data-action="add-theme" data-id="${escapeHtml(item.id)}">メモに追加</button>
-            </div>
-          </div>
-        </article>`;
-    }).join("");
+    const grouped = THEME_COLOR_GROUP_ORDER
+      .map((group) => ({ group, items: items.filter((item) => (item.group || "原色") === group) }))
+      .filter((section) => section.items.length);
+
+    el.themeColorGrid.innerHTML = grouped.map((section) => `
+      <section class="theme-color-group-section">
+        <div class="theme-color-group-head">
+          <h3>${escapeHtml(section.group)}</h3>
+          <span>${section.items.length} colors</span>
+        </div>
+        <div class="theme-color-five-grid">
+          ${section.items.map((item) => {
+            const tags = [item.group, ...(item.tags || []).filter((tag) => tag !== item.group)].slice(0, 4).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
+            const subName = item.englishName && item.englishName !== item.displayName ? `<small>${escapeHtml(item.englishName)}</small>` : "";
+            return `
+              <article class="theme-color-card compact" data-id="${escapeHtml(item.id)}">
+                <button class="color-preview" type="button" style="background:${escapeHtml(item.hex || "#ffffff")}" data-action="copy-theme" data-id="${escapeHtml(item.id)}" title="${escapeHtml(formatThemeColor(item))}"></button>
+                <div class="color-body">
+                  <div class="color-title-row">
+                    <h3>${escapeHtml(getThemeColorLabel(item))}</h3>
+                    <code>${escapeHtml(item.hex || "")}</code>
+                  </div>
+                  ${subName}
+                  <div class="tag-list">${tags}</div>
+                  <div class="theme-color-card-actions">
+                    <button type="button" data-action="copy-code" data-id="${escapeHtml(item.id)}">コード</button>
+                    <button type="button" data-action="copy-theme" data-id="${escapeHtml(item.id)}">テーマ</button>
+                    <button type="button" data-action="add-theme" data-id="${escapeHtml(item.id)}">追加</button>
+                  </div>
+                </div>
+              </article>`;
+          }).join("")}
+        </div>
+      </section>`).join("");
   }
 
   function renderWeaponCategories() {
