@@ -66,19 +66,12 @@ function renderCards() {
         <div class="card-copy-group">
           <button class="card-copy-btn" data-action="copy" data-id="${escapeAttribute(card.id)}" type="button">コピー</button>
           <button
-            class="card-mini-btn"
-            data-action="ccfoliaChat"
+            class="card-mini-btn card-ccfolia-btn"
+            data-action="ccfoliaCard"
             data-id="${escapeAttribute(card.id)}"
-            title="CCFOLIAチャットへコピー"
+            title="CCFOLIA入力用データをコピー"
             type="button"
-          >チャット用</button>
-          <button
-            class="card-mini-btn"
-            data-action="ccfoliaText"
-            data-id="${escapeAttribute(card.id)}"
-            title="CCFOLIAテキストへコピー"
-            type="button"
-          >テキスト用</button>
+          >CCFOLIAへ送る</button>
         </div>
       </div>
 
@@ -180,24 +173,33 @@ function buildCardOutput(card) {
   return `${typeInfo.marker}${title}\n\n${body}`;
 }
 
-function buildCcfPayload(card, mode) {
-  const title = getCcfTitle(card);
-  const text = getCcfText(card);
-
-  if (mode === "chat") {
-    return {
-      source: "scenario-snippet-builder",
-      mode: "chat",
-      sender: title,
-      message: text
-    };
-  }
-
+function buildCcfCardPayload(card) {
   return {
     source: "scenario-snippet-builder",
-    mode: "text",
-    title,
-    text
+    mode: "ccfoliaCard",
+    title: getCcfTitle(card),
+    text: getCcfText(card),
+    cardType: card.type,
+    typeLabel: getCardHeaderLabel(card.type),
+    marker: (INFO_TYPES[card.type] || INFO_TYPES.memo).marker
+  };
+}
+
+function buildCcfDeckPayload() {
+  return {
+    source: "scenario-snippet-builder",
+    mode: "ccfoliaDeck",
+    version: "2.7",
+    projectName: getCurrentProjectName ? getCurrentProjectName() : "",
+    exportedAt: new Date().toISOString(),
+    cards: cards.map(card => ({
+      id: card.id,
+      title: getCcfTitle(card),
+      text: getCcfText(card),
+      cardType: card.type,
+      typeLabel: getCardHeaderLabel(card.type),
+      marker: (INFO_TYPES[card.type] || INFO_TYPES.memo).marker
+    }))
   };
 }
 

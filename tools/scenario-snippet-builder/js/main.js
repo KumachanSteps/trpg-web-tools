@@ -13,7 +13,7 @@ const INFO_TYPES = {
   ho4: { label: "HO4", marker: "❖", color: "#7c3aed" }
 };
 
-const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_6";
+const STORAGE_KEY = "trpgScenarioSnippetBuilder_v2_7";
 const BRIDGE_KEY = "scenarioSnippetBuilder.importText";
 
 let cards = [];
@@ -41,6 +41,7 @@ const projectNameInput = document.getElementById("projectNameInput");
 const saveProjectBtn = document.getElementById("saveProjectBtn");
 const savedProjectSelect = document.getElementById("savedProjectSelect");
 const loadProjectBtn = document.getElementById("loadProjectBtn");
+const copyCcfDeckBtn = document.getElementById("copyCcfDeckBtn");
 const exportProjectBtn = document.getElementById("exportProjectBtn");
 const importProjectBtn = document.getElementById("importProjectBtn");
 const importProjectInput = document.getElementById("importProjectInput");
@@ -52,6 +53,7 @@ themeToggle.addEventListener("click", toggleTheme);
 saveProjectBtn.addEventListener("click", saveNamedProject);
 savedProjectSelect.addEventListener("change", handleSavedProjectSelect);
 loadProjectBtn.addEventListener("click", loadNamedProject);
+copyCcfDeckBtn.addEventListener("click", copyCcfDeckPayload);
 exportProjectBtn.addEventListener("click", exportProjectJson);
 importProjectBtn.addEventListener("click", () => importProjectInput.click());
 importProjectInput.addEventListener("change", importProjectJson);
@@ -198,13 +200,8 @@ cardsList.addEventListener("click", event => {
     return;
   }
 
-  if (action === "ccfoliaChat") {
-    copyCcfPayload(id, "chat");
-    return;
-  }
-
-  if (action === "ccfoliaText") {
-    copyCcfPayload(id, "text");
+  if (action === "ccfoliaCard") {
+    copyCcfCardPayload(id);
     return;
   }
 
@@ -277,7 +274,7 @@ function handleSavedProjectSelect() {
 function getProjectKey(name) { return `scenarioSnippetBuilder.project.${name.trim()}`; }
 function getCurrentProjectName() { return (projectNameInput.value || "").trim(); }
 function buildProjectPayload() {
-  return { version: "2.6", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
+  return { version: "2.7", projectName: getCurrentProjectName(), savedAt: new Date().toISOString(), parsedText: parsedText.value, cards, activeFilter, newCardType: newCardType.value, selectionCardType: selectionCardType.value };
 }
 function saveNamedProject() {
   const name = getCurrentProjectName();
@@ -525,11 +522,11 @@ async function copyCard(id) {
   setStatus("カード内容をコピーしました。");
 }
 
-async function copyCcfPayload(id, mode) {
+async function copyCcfCardPayload(id) {
   const card = cards.find(c => c.id === id);
   if (!card) return;
 
-  const payload = buildCcfPayload(card, mode);
+  const payload = buildCcfCardPayload(card);
   const output = JSON.stringify(payload, null, 2);
 
   try {
@@ -538,7 +535,25 @@ async function copyCcfPayload(id, mode) {
     fallbackCopy(output);
   }
 
-  setStatus(mode === "chat" ? "CCFOLIAチャット用データをコピーしました。" : "CCFOLIAテキスト用データをコピーしました。");
+  setStatus("CCFOLIA入力用データをコピーしました。");
+}
+
+async function copyCcfDeckPayload() {
+  if (!cards.length) {
+    setStatus("コピーできる情報カードがありません。");
+    return;
+  }
+
+  const payload = buildCcfDeckPayload();
+  const output = JSON.stringify(payload, null, 2);
+
+  try {
+    await navigator.clipboard.writeText(output);
+  } catch {
+    fallbackCopy(output);
+  }
+
+  setStatus("CCFOLIAカードセットをコピーしました。");
 }
 
 function fallbackCopy(text) {

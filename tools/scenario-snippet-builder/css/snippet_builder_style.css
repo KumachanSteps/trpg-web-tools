@@ -930,7 +930,7 @@ textarea::-webkit-scrollbar-thumb {
 
 .project-controls {
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(86px, 0.8fr) auto auto auto auto;
+  grid-template-columns: minmax(120px, 1fr) minmax(86px, 0.8fr) auto auto auto auto auto;
   gap: 5px;
   margin-bottom: 7px;
   align-items: center;
@@ -1172,4 +1172,33 @@ textarea::-webkit-scrollbar-thumb {
 [data-theme="dark"] .card.card-focus-flash {
   box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.34), var(--shadow-card);
   border-color: rgba(129, 140, 248, 0.72);
+}
+
+
+.card-ccfolia-btn,
+.project-ccfolia-deck-btn {
+  border-color: rgba(14, 165, 233, 0.36);
+  background: rgba(224, 242, 254, 0.84);
+  color: #0369a1;
+}
+
+.card-ccfolia-btn:hover,
+.project-ccfolia-deck-btn:hover {
+  border-color: rgba(14, 165, 233, 0.72);
+  background: rgba(186, 230, 253, 0.92);
+  color: #075985;
+}
+
+[data-theme="dark"] .card-ccfolia-btn,
+[data-theme="dark"] .project-ccfolia-deck-btn {
+  border-color: rgba(56, 189, 248, 0.38);
+  background: rgba(12, 74, 110, 0.52);
+  color: #bae6fd;
+}
+
+[data-theme="dark"] .card-ccfolia-btn:hover,
+[data-theme="dark"] .project-ccfolia-deck-btn:hover {
+  border-color: rgba(125, 211, 252, 0.75);
+  background: rgba(3, 105, 161, 0.70);
+  color: #e0f2fe;
 }
