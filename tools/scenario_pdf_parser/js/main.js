@@ -58,7 +58,7 @@ const state = {
     markHandouts: true,
     fixMergedHeadings: true,
     keepScenarioMetaLines: true,
-    preservePdfParagraphBreaks: true,
+    preservePdfParagraphBreaks: false,
     removeDuplicateLines: true,
     replaceRoleTokens: false,
   },
@@ -151,14 +151,16 @@ function normalizeJapaneseText(text) {
   return (text || "")
     .normalize("NFKC")
     .replace(/‧/g, "・")
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
     .replace(/\r\n?/g, "\n")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
     .replace(/[ \t]+/g, " ")
     .replace(/\n[ \t]+/g, "\n")
-    .replace(/[ \t]+\n/g, "\n");
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/([●○・･]?\s*(?:人数|プレイ人数|時間|ロスト率|必須技能|推奨|推奨技能|想定時間|舞台|備考|公開HO|公HO|職業ポイント|職業技能|特記|必須条件|能力値|技能|武器|装甲|探索箇所|追加探索箇所)):/g, "$1：")
+    .replace(/!/g, "！")
+    .replace(/\?/g, "？");
 }
+
 
 function removeHeaderFooterCandidates(text) {
   const lines = text.split("\n");
@@ -250,14 +252,34 @@ function isDanglingContinuation(line) {
   return false;
 }
 
-function shouldKeepBlankBefore(line) {
+function isCompactMetaBullet(line) {
+  return /^([●○・･]\s*)?(人数|プレイ人数|時間|ロスト率|必須技能|推奨|推奨技能|想定時間|舞台|備考)([:：]|$)/.test(line.trim());
+}
+
+function isSectionBlockHeading(line) {
   const current = line.trim();
   if (!current) return false;
   if (isMajorHeading(current)) return true;
-  if (/^[▼●○★]/.test(current)) return true;
-  if (/^▶/.test(current)) return false;
+  if (isCompactMetaBullet(current)) return false;
+  if (/^●\s*(公開HO|公HO|禁止事項|プレイ・改変について|ネタバレについて|探索者の作成方法|フロア移動処理)/.test(current)) return true;
+  if (/^[●○]\s*[「『].{1,40}/.test(current)) return true;
+  if (/^[●○]\s*[^\n]{1,36}(について|とミッション|と命令|一覧|解説|情報|テスト|処理|イベント|探索|戦闘|ルール)$/.test(current)) return true;
+  if (/^[▼★]\s*[^\n]{1,44}/.test(current)) return true;
   return false;
 }
+
+function isHardContinuation(line) {
+  const current = line.trim();
+  return /^(固定|の?ため|する|ている|である|ない|となる|だろう|だった|ました|ください|お願い|よう|こと|もの|場合|以上|以下|など|そして|また|ただし|しかし|そのため|これら|上記)/.test(current);
+}
+
+function shouldKeepBlankBefore(line) {
+  const current = line.trim();
+  if (!current) return false;
+  if (/^▶/.test(current)) return false;
+  return isSectionBlockHeading(current);
+}
+
 
 function concatLines(previous, current) {
   const prev = previous.trimEnd();
@@ -318,15 +340,17 @@ function joinJapaneseBrokenLines(text, options) {
         shouldJoin = false;
       } else if (previousShortSection && !isDanglingContinuation(current)) {
         shouldJoin = false;
-      } else if (previousMeta && isDanglingContinuation(current)) {
+      } else if (previousMeta && isDanglingContinuation(current) && (!previousEndsHard || /[:：]$/.test(previousTrimmed))) {
         shouldJoin = true;
+      } else if (previousMeta && previousEndsHard) {
+        shouldJoin = false;
       } else if (previousStructural && !previousMeta && !isDanglingContinuation(current)) {
         shouldJoin = false;
       } else if (currentMeta) {
         shouldJoin = false;
       } else if (!previousEndsHard) {
         shouldJoin = true;
-      } else if (isDanglingContinuation(current)) {
+      } else if (isHardContinuation(current)) {
         shouldJoin = true;
       } else if (!options.keepDialogueBreaks && !currentStructural) {
         shouldJoin = true;
@@ -347,13 +371,25 @@ function joinJapaneseBrokenLines(text, options) {
 }
 
 function splitSections(text) {
-  return text
-    .replace(/\n*(【\d{2}[^】]*】)/g, "\n\n$1")
-    .replace(/\n*(■[^\n]{1,40})/g, "\n\n$1")
-    .replace(/\n*(●[^\n]{1,40})/g, "\n\n$1")
-    .replace(/\n*(▼[^\n]{1,40})/g, "\n\n$1")
-    .replace(/\n{3,}/g, "\n\n");
+  const lines = text.split("\n");
+  const result = [];
+
+  for (const line of lines) {
+    const current = line.trim();
+    if (!current) {
+      if (result[result.length - 1] !== "") result.push("");
+      continue;
+    }
+
+    if (isSectionBlockHeading(current) && result.length && result[result.length - 1] !== "") {
+      result.push("");
+    }
+    result.push(current);
+  }
+
+  return result.join("\n").replace(/\n{3,}/g, "\n\n");
 }
+
 
 function formatText(input, preset, options) {
   let text = normalizeJapaneseText(input || "");
@@ -400,7 +436,7 @@ function formatText(input, preset, options) {
   if (preset === "scenario") {
     text = text
       .replace(/^第(.+)$/gm, "# 第$1")
-      .replace(/^■\s*(.+)$/gm, "■ $1")
+      .replace(/^■\s*(.+)$/gm, "■$1")
       .replace(/【描写】/g, "◆ シーン描写");
   }
 
@@ -408,7 +444,14 @@ function formatText(input, preset, options) {
     text = text.replace(/\n{3,}/g, "\n\n");
   }
 
-  return text.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  text = text
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/(^|\n)■\s+/g, "$1■")
+    .replace(/(^|\n)(●\s*(?:舞台|プレイ人数|必須技能|推奨技能|推奨|想定時間|備考))[:：]?/g, (match, lead, label) => `${lead}${label.replace(/\s+/g, "")}：`)
+    .replace(/(^|\n)(●\s*(?:公開HO|公HO))[:：]?/g, (match, lead, label) => `${lead}${label.replace(/\s+/g, "")}`);
+
+  return text.trim();
 }
 
 function getMatches(text, term) {
@@ -534,7 +577,7 @@ function downloadText() {
 function sendToSnippetTool() {
   const payload = {
     source: "scenario_pdf_parser",
-    version: "0.4.3",
+    version: "0.4.4",
     text: state.outputText,
     preset: state.preset,
     options: state.options,
@@ -680,7 +723,7 @@ function buildRowsFromItems(items, pageWidth) {
   return rows.sort((a, b) => b.y - a.y || a.minX - b.minX);
 }
 
-function rowsToText(rows, preserveGaps = true) {
+function rowsToText(rows, preserveGaps = false) {
   const ordered = [...rows].sort((a, b) => b.y - a.y || a.minX - b.minX);
   if (!ordered.length) return "";
   const averageHeight = ordered.reduce((sum, row) => sum + (row.rowHeight || row.height || 10), 0) / ordered.length;
@@ -708,7 +751,6 @@ function isFullWidthRow(row, pageWidth) {
   if (width > pageWidth * 0.48) return true;
   if (row.minX < pageWidth * 0.18 && row.maxX > pageWidth * 0.82) return true;
   if (row.minX < mid && row.maxX > mid && width > pageWidth * 0.30) return true;
-  if (row.minX > pageWidth * 0.22 && row.maxX < pageWidth * 0.78 && width > pageWidth * 0.20) return true;
   return false;
 }
 
@@ -733,8 +775,12 @@ function orderRowsForReading(rows, pageWidth, options = {}) {
   const hasTwoColumns = left.length >= 3 && right.length >= 3;
   if (!hasTwoColumns) return rowsToText(rows, options.preservePdfParagraphBreaks);
 
-  const columnTop = Math.max(left[0]?.y || 0, right[0]?.y || 0);
-  const columnBottom = Math.min(left[left.length - 1]?.y || 0, right[right.length - 1]?.y || 0);
+  const leftTop = Math.max(...left.map((row) => row.y));
+  const rightTop = Math.max(...right.map((row) => row.y));
+  const leftBottom = Math.min(...left.map((row) => row.y));
+  const rightBottom = Math.min(...right.map((row) => row.y));
+  const columnTop = Math.max(leftTop, rightTop);
+  const columnBottom = Math.min(leftBottom, rightBottom);
   const topFull = full.filter((row) => row.y > columnTop + 8);
   const middleFull = full.filter((row) => row.y <= columnTop + 8 && row.y >= columnBottom - 8);
   const bottomFull = full.filter((row) => row.y < columnBottom - 8);
@@ -753,6 +799,7 @@ function orderRowsForReading(rows, pageWidth, options = {}) {
 
   return chunks.join("\n\n");
 }
+
 
 async function extractTextFromPdf(file) {
   if (!window.pdfjsLib) {
