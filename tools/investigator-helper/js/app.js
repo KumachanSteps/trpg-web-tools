@@ -102,6 +102,37 @@
     "ダーク", "くすみ", "和風", "レトロ", "ファンタジー", "ホラー", "高級感", "かわいい", "クール", "神秘的",
   ];
 
+
+  const CSS_COLOR_JA_NAMES = {
+    aliceblue: "アリスブルー", antiquewhite: "アンティークホワイト", aqua: "アクア", aquamarine: "アクアマリン", azure: "アジュール",
+    beige: "ベージュ", bisque: "ビスク", black: "ブラック", blanchedalmond: "ブランチドアーモンド", blue: "ブルー", blueviolet: "ブルーバイオレット",
+    brown: "ブラウン", burlywood: "バーリーウッド", cadetblue: "カデットブルー", chartreuse: "シャルトルーズ", chocolate: "チョコレート", coral: "コーラル",
+    cornflowerblue: "コーンフラワーブルー", cornsilk: "コーンシルク", crimson: "クリムゾン", cyan: "シアン", darkblue: "ダークブルー", darkcyan: "ダークシアン",
+    darkgoldenrod: "ダークゴールデンロッド", darkgray: "ダークグレー", darkgreen: "ダークグリーン", darkgrey: "ダークグレー", darkkhaki: "ダークカーキ",
+    darkmagenta: "ダークマゼンタ", darkolivegreen: "ダークオリーブグリーン", darkorange: "ダークオレンジ", darkorchid: "ダークオーキッド", darkred: "ダークレッド",
+    darksalmon: "ダークサーモン", darkseagreen: "ダークシーグリーン", darkslateblue: "ダークスレートブルー", darkslategray: "ダークスレートグレー",
+    darkslategrey: "ダークスレートグレー", darkturquoise: "ダークターコイズ", darkviolet: "ダークバイオレット", deeppink: "ディープピンク", deepskyblue: "ディープスカイブルー",
+    dimgray: "ディムグレー", dimgrey: "ディムグレー", dodgerblue: "ドジャーブルー", firebrick: "ファイアブリック", floralwhite: "フローラルホワイト",
+    forestgreen: "フォレストグリーン", fuchsia: "フューシャ", gainsboro: "ゲインズボロ", ghostwhite: "ゴーストホワイト", gold: "ゴールド", goldenrod: "ゴールデンロッド",
+    gray: "グレー", green: "グリーン", greenyellow: "グリーンイエロー", grey: "グレー", honeydew: "ハニーデュー", hotpink: "ホットピンク",
+    indianred: "インディアンレッド", indigo: "インディゴ", ivory: "アイボリー", khaki: "カーキ", lavender: "ラベンダー", lavenderblush: "ラベンダーブラッシュ",
+    lawngreen: "ローングリーン", lemonchiffon: "レモンシフォン", lightblue: "ライトブルー", lightcoral: "ライトコーラル", lightcyan: "ライトシアン",
+    lightgoldenrodyellow: "ライトゴールデンロッドイエロー", lightgray: "ライトグレー", lightgreen: "ライトグリーン", lightgrey: "ライトグレー", lightpink: "ライトピンク",
+    lightsalmon: "ライトサーモン", lightseagreen: "ライトシーグリーン", lightskyblue: "ライトスカイブルー", lightslategray: "ライトスレートグレー",
+    lightslategrey: "ライトスレートグレー", lightsteelblue: "ライトスチールブルー", lightyellow: "ライトイエロー", lime: "ライム", limegreen: "ライムグリーン",
+    linen: "リネン", magenta: "マゼンタ", maroon: "マルーン", mediumaquamarine: "ミディアムアクアマリン", mediumblue: "ミディアムブルー",
+    mediumorchid: "ミディアムオーキッド", mediumpurple: "ミディアムパープル", mediumseagreen: "ミディアムシーグリーン", mediumslateblue: "ミディアムスレートブルー",
+    mediumspringgreen: "ミディアムスプリンググリーン", mediumturquoise: "ミディアムターコイズ", mediumvioletred: "ミディアムバイオレットレッド", midnightblue: "ミッドナイトブルー",
+    mintcream: "ミントクリーム", mistyrose: "ミスティローズ", moccasin: "モカシン", navajowhite: "ナバホホワイト", navy: "ネイビー", oldlace: "オールドレース",
+    olive: "オリーブ", olivedrab: "オリーブドラブ", orange: "オレンジ", orangered: "オレンジレッド", orchid: "オーキッド", palegoldenrod: "ペールゴールデンロッド",
+    palegreen: "ペールグリーン", paleturquoise: "ペールターコイズ", palevioletred: "ペールバイオレットレッド", papayawhip: "パパイヤホイップ", peachpuff: "ピーチパフ",
+    peru: "ペルー", pink: "ピンク", plum: "プラム", powderblue: "パウダーブルー", purple: "パープル", red: "レッド", rosybrown: "ロージーブラウン",
+    royalblue: "ロイヤルブルー", saddlebrown: "サドルブラウン", salmon: "サーモン", sandybrown: "サンディブラウン", seagreen: "シーグリーン", seashell: "シーシェル",
+    sienna: "シエナ", silver: "シルバー", skyblue: "スカイブルー", slateblue: "スレートブルー", slategray: "スレートグレー", slategrey: "スレートグレー",
+    snow: "スノー", springgreen: "スプリンググリーン", steelblue: "スチールブルー", tan: "タン", teal: "ティール", thistle: "シスル", tomato: "トマト",
+    turquoise: "ターコイズ", violet: "バイオレット", wheat: "ウィート", white: "ホワイト", whitesmoke: "ホワイトスモーク", yellow: "イエロー", yellowgreen: "イエローグリーン"
+  };
+
   const state = {
     tab: "occupation",
     ruleType: "all",
@@ -466,22 +497,37 @@ ${notes}`;
   }
 
 
-  function getThemeColorLabel(item) {
+  function getThemeColorJapaneseName(item) {
     if (!item) return "";
-    const englishName = String(item.englishName || "").trim();
+    const group = String(item.group || "").trim();
     const displayName = String(item.displayName || item.name || "").trim();
+    const englishName = String(item.englishName || item.name || "").trim();
 
-    if (englishName && displayName && englishName.toLowerCase() !== displayName.toLowerCase()) {
-      return `${englishName} / ${displayName}`;
+    if (group === "原色") {
+      const key = englishName.toLowerCase().replace(/\s+/g, "");
+      return CSS_COLOR_JA_NAMES[key] || displayName || englishName;
     }
 
-    return displayName || englishName || "";
+    return displayName || "";
+  }
+
+  function getThemeColorLabel(item) {
+    if (!item) return "";
+    const englishName = String(item.englishName || item.name || "").trim();
+    const japaneseName = getThemeColorJapaneseName(item);
+
+    if (englishName && japaneseName && englishName.toLowerCase() !== japaneseName.toLowerCase()) {
+      return `${englishName} / ${japaneseName}`;
+    }
+
+    return japaneseName || englishName || "";
   }
 
   function getThemeColorSearchText(item) {
     return [
       item.name,
       item.displayName,
+      getThemeColorJapaneseName(item),
       item.englishName,
       item.reading,
       item.hex,
@@ -1068,9 +1114,9 @@ ${notes}`;
                   ${subName}
                   <div class="tag-list">${tags}</div>
                   <div class="theme-color-card-actions">
-                    <button type="button" data-action="copy-code" data-id="${escapeHtml(item.id)}">コード</button>
-                    <button type="button" data-action="copy-theme" data-id="${escapeHtml(item.id)}">テーマ</button>
-                    <button type="button" data-action="add-theme" data-id="${escapeHtml(item.id)}">追加</button>
+                    <button type="button" data-action="copy-code" data-id="${escapeHtml(item.id)}" title="カラーコードだけをコピーします（例：#8B0000）" aria-label="カラーコードだけをコピーします">コード</button>
+                    <button type="button" data-action="copy-theme" data-id="${escapeHtml(item.id)}" title="テーマカラー表記をコピーします（例：テーマカラー：深紅（#8B0000））" aria-label="テーマカラー表記をコピーします">テーマ</button>
+                    <button type="button" data-action="add-theme" data-id="${escapeHtml(item.id)}" title="キャラシ貼り付け用メモにテーマカラーを追加します" aria-label="キャラシ貼り付け用メモにテーマカラーを追加します">追加</button>
                   </div>
                 </div>
               </article>`;
