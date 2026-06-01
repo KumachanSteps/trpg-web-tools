@@ -1221,11 +1221,54 @@ ${notes}`;
     renderWeaponDetail();
   }
 
+  function setActiveTab(tab) {
+    if (!tab || state.tab === tab) return;
+    state.tab = tab;
+    render();
+  }
+
+  function moveTab(direction) {
+    const tabs = Array.from(document.querySelectorAll(".tab-button"))
+      .map((button) => button.dataset.tab)
+      .filter(Boolean);
+    if (!tabs.length) return;
+
+    const currentIndex = Math.max(0, tabs.indexOf(state.tab));
+    const nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
+    setActiveTab(tabs[nextIndex]);
+  }
+
+  function toggleThemeMode() {
+    state.theme = state.theme === "light" ? "dark" : "light";
+    document.body.classList.toggle("theme-dark", state.theme === "dark");
+    document.body.classList.toggle("theme-light", state.theme === "light");
+    el.themeToggle.textContent = state.theme === "dark" ? "ライトモード" : "ナイトモード";
+    showToast(state.theme === "dark" ? "ナイトモードに変更しました" : "ライトモードに変更しました");
+  }
+
+  function toggleShortcutPanel() {
+    el.shortcutPanel.classList.toggle("is-hidden");
+    el.usagePanel.classList.add("is-hidden");
+  }
+
+  function focusCurrentSearchInput() {
+    const searchInputByTab = {
+      occupation: el.keywordInput,
+      weapon: el.weaponKeywordInput,
+      belonging: el.belongingKeywordInput,
+      themeColor: el.themeColorKeywordInput,
+    };
+    const target = searchInputByTab[state.tab] || el.keywordInput;
+    if (!target) return;
+    target.focus();
+    if (typeof target.select === "function") target.select();
+    showToast("検索バーに移動しました");
+  }
+
   function bindEvents() {
     document.querySelectorAll(".tab-button").forEach((button) => {
       button.addEventListener("click", () => {
-        state.tab = button.dataset.tab;
-        render();
+        setActiveTab(button.dataset.tab);
       });
     });
 
@@ -1442,30 +1485,57 @@ ${notes}`;
       });
     });
 
-    el.themeToggle.addEventListener("click", () => {
-      state.theme = state.theme === "light" ? "dark" : "light";
-      document.body.classList.toggle("theme-dark", state.theme === "dark");
-      document.body.classList.toggle("theme-light", state.theme === "light");
-      el.themeToggle.textContent = state.theme === "dark" ? "ライトモード" : "ナイトモード";
-    });
+    el.themeToggle.addEventListener("click", toggleThemeMode);
 
     el.usageToggle.addEventListener("click", () => {
       el.usagePanel.classList.toggle("is-hidden");
       el.shortcutPanel.classList.add("is-hidden");
     });
 
-    el.shortcutToggle.addEventListener("click", () => {
-      el.shortcutPanel.classList.toggle("is-hidden");
-      el.usagePanel.classList.add("is-hidden");
-    });
+    el.shortcutToggle.addEventListener("click", toggleShortcutPanel);
 
     document.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+      const isShiftShortcut = isCtrlOrCmd && event.shiftKey;
+
       if (event.key === "Escape") {
         el.usagePanel.classList.add("is-hidden");
         el.shortcutPanel.classList.add("is-hidden");
       }
 
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      if (isShiftShortcut && key === "s") {
+        event.preventDefault();
+        toggleShortcutPanel();
+      }
+
+      if (isShiftShortcut && key === "c") {
+        event.preventDefault();
+        copyText(el.outputText.value, "メモをコピーしました");
+      }
+
+      if (isShiftShortcut && key === "t") {
+        event.preventDefault();
+        toggleThemeMode();
+      }
+
+      if (isShiftShortcut && event.key === "ArrowLeft") {
+        event.preventDefault();
+        moveTab(-1);
+      }
+
+      if (isShiftShortcut && event.key === "ArrowRight") {
+        event.preventDefault();
+        moveTab(1);
+      }
+
+      if (isShiftShortcut && key === "f") {
+        event.preventDefault();
+        focusCurrentSearchInput();
+      }
+
+      if (isCtrlOrCmd && event.key === "Enter") {
+        event.preventDefault();
         copyText(el.outputText.value, "メモをコピーしました");
       }
     });

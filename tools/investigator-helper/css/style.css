@@ -61,12 +61,16 @@ button:hover { transform: translateY(-1px); }
 body.theme-dark .portal-link, body.theme-dark .header-pill, body.theme-dark .data-badge, body.theme-dark .chip-title { background: rgba(255,255,255,0.1); }
 .site-title { margin: 14px 0 0; font-size: 24px; line-height: 1.2; color: var(--text); }
 .site-description { margin: 8px 0 0; max-width: 780px; color: var(--sub); font-size: 14px; line-height: 1.65; }
-.header-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.header-actions { display: flex; flex: 0 0 auto; flex-wrap: nowrap; gap: 8px; justify-content: flex-end; align-items: center; white-space: nowrap; }
 .header-actions .btn { padding: 6px 10px; font-size: 12px; font-weight: 800; line-height: 1.2; }
 .header-panel { margin-top: 14px; border-radius: 20px; border: 1px solid var(--line); padding: 14px; background: rgba(255,255,255,0.48); }
 body.theme-dark .header-panel { background: rgba(2,6,23,0.35); }
 .header-panel h2 { margin: 0 0 6px; font-size: 15px; }
 .header-panel p { margin: 0; color: var(--sub); font-size: 13px; line-height: 1.6; }
+.shortcut-list { display: grid; gap: 8px; color: var(--sub); font-size: 13px; line-height: 1.55; }
+.shortcut-list div { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.shortcut-list kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 1.7em; padding: 3px 7px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,0.72); color: var(--text); font-size: 11px; font-weight: 850; box-shadow: 0 2px 0 rgba(15,23,42,0.08); }
+body.theme-dark .shortcut-list kbd { background: rgba(255,255,255,0.1); box-shadow: 0 2px 0 rgba(0,0,0,0.28); }
 
 .btn, .tab-button, .rule-button, .count-button {
   border-radius: 999px;
@@ -153,7 +157,7 @@ textarea { width: 100%; min-height: 360px; margin-top: 14px; border-radius: 18px
   .main-grid { grid-template-columns: 1fr; }
   .search-grid { grid-template-columns: 1fr; }
   .header-main { flex-direction: column; }
-  .header-actions { justify-content: flex-start; }
+  .header-actions { justify-content: flex-start; flex-wrap: wrap; white-space: normal; }
 }
 
 .package-note-list {
@@ -1791,3 +1795,5 @@ body.theme-dark .theme-color-chip.theme-color-chip-clear:hover {
   border-color: rgba(251, 113, 133, 0.72);
   color: #fff1f2;
 }
+
+.shortcut-list span { margin-left: 4px; }
