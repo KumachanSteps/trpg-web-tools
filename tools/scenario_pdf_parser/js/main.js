@@ -391,12 +391,79 @@ function splitSections(text) {
 }
 
 
+
+function splitMergedStructuralTokens(text) {
+  return text
+    .replace(/([^\n])(●(?:舞台|プレイ人数|必須技能|推奨技能|推奨|想定時間|備考|公開HO|公HO|禁止事項|プレイ・改変について|ネタバレについて|探索者の作成方法|「|『))/g, "$1\n$2")
+    .replace(/([^\n])(■(?:概要|共通注意事項|シナリオ利用について|シナリオ背景|登場アイテム|NPC|エネミー一覧|シナリオ内での戦闘処理|シナリオの流れ|導入|グループテスト|ミニテスト|会議室探索|最上階イベント))/g, "$1\n$2")
+    .replace(/([^\n])(▼(?:ここで|事前情報|棚|窓の外|スタッフ|警備員|研究員|CIC|最終戦闘))/g, "$1\n$2")
+    .replace(/([^\n])(▶(?:更に|「|マルクス|持ち込み|PL|KP|全員|戻る|〈))/g, "$1\n$2")
+    .replace(/([^\n])(★(?:HO|拳銃))/g, "$1\n$2")
+    .replace(/(。)(上記に相当する行為を固く禁じます。)/g, "$1\n$2")
+    .replace(/(。)(ただし卓報告のスクリーンショット)/g, "$1\n$2")
+    .replace(/(。)(これらが含まれるものは)/g, "$1\n$2")
+    .replace(/(。)(次のページからKP情報記載。)/g, "$1\n$2")
+    .replace(/(）)(あなた|彼|それ|現在|今回|主に|イタリア|「Jeans」|マルクス氏|この計画)/g, "$1\n$2");
+}
+
+function normalizeScenarioHeadings(text) {
+  return text
+    .replace(/^([0-9]{2})[.．]([^\n]+)$/gm, "【$1.$2】")
+    .replace(/^■\s+/gm, "■")
+    .replace(/^●\s+/gm, "●")
+    .replace(/^○\s+/gm, "○")
+    .replace(/^▼\s+/gm, "▼")
+    .replace(/^▶\s+/gm, "▶")
+    .replace(/^([・･])\s+/gm, "・")
+    .replace(/^HO(\d*)([^\n]*テーラー)$/gm, "HO$1$2")
+    .replace(/^●公開HO\s+(HO\d*)/gm, "●公開HO\n$1")
+    .replace(/^(●(?:舞台|プレイ人数|必須技能|推奨技能|推奨|想定時間|備考))[:：]?/gm, "$1：");
+}
+
+function reduceExcessBlankLines(text) {
+  const lines = text.split("\n");
+  const result = [];
+  for (const line of lines) {
+    const current = line.trim();
+    const previous = result[result.length - 1] || "";
+    if (!current) {
+      if (previous && result[result.length - 2] !== "") result.push("");
+      continue;
+    }
+    const previousIsCompactMeta = isCompactMetaBullet(previous);
+    const currentIsCompactMeta = isCompactMetaBullet(current) || /^●(?:公開HO|公HO)$/.test(current);
+    if (previous === "" && previousIsCompactMeta && currentIsCompactMeta) result.pop();
+    result.push(current);
+  }
+  return result.join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+function repairCommonJapanesePdfBreaks(text) {
+  return text
+    .replace(/([ァ-ヶ一-龠])\n([ぁ-んァ-ヶ一-龠]{1,3})(機関|構成|地位|星|ント|れた|する|ンを|者|グループ|ランド|ツ|的|り|て|で|に|を|は|が|の)/g, "$1$2$3")
+    .replace(/([A-Za-z0-9])\n([A-Za-z0-9])/g, "$1 $2")
+    .replace(/([、，])\n/g, "$1")
+    .replace(/([（(［\[][^\n]{0,80})\n([^\n]{1,80}[）)］\]])/g, "$1$2")
+    .replace(/(職業技能：[^\n]+)\n（任意）/g, "$1（任意）")
+    .replace(/目\n星/g, "目星")
+    .replace(/社\n会/g, "社会")
+    .replace(/ア\nクセサリー/g, "アクセサリー")
+    .replace(/ポイ\nント/g, "ポイント")
+    .replace(/スパ\nイ/g, "スパイ")
+    .replace(/マ\nルクス/g, "マルクス")
+    .replace(/グ\nループ/g, "グループ")
+    .replace(/ビスポー\nク/g, "ビスポーク")
+    .replace(/セッショ\nン/g, "セッション");
+}
+
 function formatText(input, preset, options) {
   let text = normalizeJapaneseText(input || "");
 
   if (options.removePageNumbers || options.removeHeaders) {
     text = removeHeaderFooterCandidates(text);
   }
+
+  text = splitMergedStructuralTokens(text);
 
   if (options.fixMergedHeadings) {
     text = fixMergedHeadings(text);
@@ -408,6 +475,8 @@ function formatText(input, preset, options) {
 
   if (options.joinBrokenLines) {
     text = joinJapaneseBrokenLines(text, options);
+    text = repairCommonJapanesePdfBreaks(text);
+    text = splitMergedStructuralTokens(text);
   }
 
   if (options.replaceRoleTokens) {
@@ -577,7 +646,7 @@ function downloadText() {
 function sendToSnippetTool() {
   const payload = {
     source: "scenario_pdf_parser",
-    version: "0.4.5",
+    version: "0.4.6",
     text: state.outputText,
     preset: state.preset,
     options: state.options,
@@ -756,16 +825,20 @@ function isFullWidthRow(row, pageWidth) {
   const width = row.maxX - row.minX;
   const mid = pageWidth / 2;
   const text = row.text.trim();
-  const centered = Math.abs(row.centerX - mid) < pageWidth * 0.16;
+  const leftEdge = pageWidth * 0.16;
+  const rightEdge = pageWidth * 0.76;
+  const centered = Math.abs(row.centerX - mid) < pageWidth * 0.18;
+  const spansMainTextArea = row.minX < leftEdge && row.maxX > rightEdge;
+  const veryWide = width > pageWidth * 0.62;
+  const centeredWide = centered && width > pageWidth * 0.24 && !/^[●○・･▶→↓▼]/.test(text);
 
-  if (/^(【[^】]+】|\d{2}[.．][^\n]+|■[^\n]{1,40}|次のページから)/.test(text)) return true;
-  if (/^※/.test(text) && row.minX < pageWidth * 0.18) return true;
-  if (width > pageWidth * 0.48) return true;
-  if (row.minX < pageWidth * 0.18 && row.maxX > pageWidth * 0.72) return true;
-  if (centered && width > pageWidth * 0.24 && !/^●/.test(text)) return true;
+  if (/^(【[^】]+】|\d{2}[.．][^\n]+|次のページから)/.test(text)) return true;
+  if (/^■[^\n]{1,48}$/.test(text) && (row.minX < leftEdge || centered)) return true;
+  if (/^※/.test(text) && row.minX < leftEdge) return true;
+  if (spansMainTextArea || veryWide) return true;
+  if (centeredWide) return true;
   return false;
 }
-
 function lineGapValue(previous, current) {
   if (!previous || !current) return 0;
   return Math.abs((previous.y || 0) - (current.y || 0));
@@ -854,10 +927,7 @@ function orderRowsForReading(rows, pageWidth, options = {}) {
 
   const flushColumnBuffer = () => {
     if (!columnBuffer.length) return;
-    const groups = groupRowsByVerticalContinuity(columnBuffer);
-    for (const group of groups) {
-      pushText(columnRowsToText(group, pageWidth, options));
-    }
+    pushText(columnRowsToText(columnBuffer, pageWidth, options));
     columnBuffer = [];
   };
 
