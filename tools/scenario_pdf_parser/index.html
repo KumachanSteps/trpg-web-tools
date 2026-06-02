@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>シナリオPDF整形機 Ver.0.4.6</title>
+  <title>シナリオPDF整形機 Ver.0.4.7</title>
   <link rel="stylesheet" href="./css/pdf-parser-style.css" />
 </head>
 <body class="theme-light">
@@ -17,7 +17,7 @@
           </a>
           <span class="tag-pill tag-cyan" data-i18n="chip.parser">PDF整形</span>
           <span class="tag-pill tag-violet" data-i18n="chip.builder">シナリオ情報カードツールと連携</span>
-          <span class="tag-pill tag-amber">Ver.0.4.6</span>
+          <span class="tag-pill tag-amber">Ver.0.4.7</span>
         </div>
         <div class="header-actions">
           <button id="languageToggleBtn" class="header-button" type="button">EN/JP</button>
@@ -57,6 +57,11 @@
             <span id="fileStatus" data-i18n="pdf.sampleStatus">現在のサンプル：著作権フリー生成サンプル</span>
             <small data-i18n="pdf.dropSub">pdf.jsを使用してブラウザ上でテキスト抽出します。</small>
           </label>
+        </section>
+
+        <section class="panel">
+          <h2 data-i18n="section.extractMode">抽出モード</h2>
+          <div id="extractModeList" class="extract-mode-list"></div>
         </section>
 
         <section class="panel">
@@ -129,6 +134,14 @@
             </div>
           </div>
           <pre id="outputBox" class="output-box" tabindex="-1"></pre>
+        </section>
+
+        <section class="panel debug-panel">
+          <div class="panel-title-row">
+            <h2 data-i18n="section.debug">抽出行デバッグ</h2>
+            <span class="debug-note" data-i18n="debug.note">読み順・座標・カラム判定を確認できます。</span>
+          </div>
+          <pre id="debugBox" class="debug-box"></pre>
         </section>
 
         <section class="stats-grid">

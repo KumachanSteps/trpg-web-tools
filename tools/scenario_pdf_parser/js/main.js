@@ -1,6 +1,7 @@
 const SNIPPET_TOOL_URL = "../scenario-info-snippet-tool/index.html";
 const BRIDGE_TEXT_KEY = "scenarioInfoSnippet.importText";
 const BRIDGE_PAYLOAD_KEY = "scenarioInfoSnippet.importPayload";
+const TOOL_VERSION = "0.4.7";
 
 function i18n(key) {
   return window.SCENARIO_PDF_PARSER_LANGUAGE?.t(key) || key;
@@ -29,12 +30,22 @@ const optionData = [
   { key: "replaceRoleTokens", labelKey: "option.replaceRoleTokens" },
 ];
 
+const extractionModeData = [
+  { id: "raw", labelKey: "extract.raw.label", descKey: "extract.raw.desc" },
+  { id: "single", labelKey: "extract.single.label", descKey: "extract.single.desc" },
+  { id: "twoColumn", labelKey: "extract.twoColumn.label", descKey: "extract.twoColumn.desc" },
+];
+
 function getPresets() {
   return presetData.map((item) => ({ ...item, label: i18n(item.labelKey), desc: i18n(item.descKey) }));
 }
 
 function getCleanupOptions() {
   return optionData.map((item) => ({ ...item, label: i18n(item.labelKey) }));
+}
+
+function getExtractionModes() {
+  return extractionModeData.map((item) => ({ ...item, label: i18n(item.labelKey), desc: i18n(item.descKey) }));
 }
 
 const state = {
@@ -45,6 +56,10 @@ const state = {
   searchTerm: "",
   replaceTerm: "",
   fileName: "scenario_parsed_text.txt",
+  extractMode: "raw",
+  extractedTexts: {},
+  extractionDebugs: {},
+  debugText: "",
   activeMatchIndex: 0,
   matches: [],
   options: {
@@ -68,6 +83,8 @@ const elements = {
   pdfInput: document.getElementById("pdfInput"),
   dropZone: document.getElementById("dropZone"),
   fileStatus: document.getElementById("fileStatus"),
+  extractModeList: document.getElementById("extractModeList"),
+  debugBox: document.getElementById("debugBox"),
   filenameInput: document.getElementById("filenameInput"),
   presetList: document.getElementById("presetList"),
   optionList: document.getElementById("optionList"),
@@ -574,9 +591,11 @@ function updateStats() {
 }
 
 function renderAll() {
+  renderExtractionModeList();
   renderPresetList();
   renderOptionList();
   renderHighlightedOutput();
+  renderDebugOutput();
   updateStats();
 }
 
@@ -585,6 +604,33 @@ function applyFormat() {
   state.outputText = state.formattedText;
   state.activeMatchIndex = 0;
   renderAll();
+}
+
+function renderExtractionModeList() {
+  if (!elements.extractModeList) return;
+  elements.extractModeList.innerHTML = getExtractionModes().map((mode) => `
+    <button class="extract-mode-button ${mode.id === state.extractMode ? "active" : ""}" data-extract-mode="${mode.id}">
+      <strong>${mode.label}</strong>
+      <span>${mode.desc}</span>
+    </button>
+  `).join("");
+}
+
+function renderDebugOutput() {
+  if (!elements.debugBox) return;
+  elements.debugBox.textContent = state.debugText || i18n("debug.empty");
+}
+
+function applyExtractMode(mode) {
+  if (!mode || mode === state.extractMode) return;
+  state.extractMode = mode;
+  if (state.extractedTexts && Object.prototype.hasOwnProperty.call(state.extractedTexts, mode)) {
+    state.rawText = state.extractedTexts[mode] || "";
+    state.debugText = state.extractionDebugs?.[mode] || "";
+    applyFormat();
+  } else {
+    renderExtractionModeList();
+  }
 }
 
 function renderPresetList() {
@@ -646,7 +692,7 @@ function downloadText() {
 function sendToSnippetTool() {
   const payload = {
     source: "scenario_pdf_parser",
-    version: "0.4.6",
+    version: TOOL_VERSION,
     text: state.outputText,
     preset: state.preset,
     options: state.options,
@@ -691,6 +737,105 @@ function goMatch(direction) {
   if (!state.matches.length) return;
   state.activeMatchIndex = (state.activeMatchIndex + direction + state.matches.length) % state.matches.length;
   renderHighlightedOutput();
+}
+
+
+function appendPdfItemText(previous, current) {
+  const prev = previous || "";
+  const next = normalizeJapaneseText(current || "").trim();
+  if (!next) return prev;
+  if (!prev) return next;
+  if (/^[、。，．！？!?：:；;）」』）\]］]/.test(next)) return prev + next;
+  if (/[「『（(［\[]$/.test(prev)) return prev + next;
+  if (/[A-Za-z0-9]$/.test(prev) && /^[A-Za-z0-9]/.test(next)) return `${prev} ${next}`;
+  return prev + next;
+}
+
+function buildTextByPdfOrder(items) {
+  const lines = [];
+  let currentLine = "";
+
+  for (const rawItem of items || []) {
+    const text = normalizeJapaneseText(rawItem.str || "").trim();
+    if (!text) {
+      if (rawItem.hasEOL && currentLine.trim()) {
+        lines.push(currentLine.trim());
+        currentLine = "";
+      }
+      continue;
+    }
+
+    currentLine = appendPdfItemText(currentLine, text);
+    if (rawItem.hasEOL) {
+      if (currentLine.trim()) lines.push(currentLine.trim());
+      currentLine = "";
+    }
+  }
+
+  if (currentLine.trim()) lines.push(currentLine.trim());
+  return lines.join("\n");
+}
+
+function classifyDebugLine(text) {
+  const current = (text || "").trim();
+  if (!current) return "blank";
+  if (isMajorHeading(current)) return "heading-major";
+  if (isSectionBlockHeading(current)) return "heading-section";
+  if (isScenarioMetaLine(current)) return "meta";
+  if (/^[・･]/.test(current)) return "list";
+  if (/^[※（(]/.test(current)) return "note";
+  if (isDialogueStart(current)) return "dialogue";
+  return "body";
+}
+
+function getRowColumn(row, pageWidth) {
+  if (!pageWidth || isFullWidthRow(row, pageWidth)) return "full";
+  return row.centerX < pageWidth / 2 ? "left" : "right";
+}
+
+function buildRowsDebugText(rows, pageNumber, pageWidth, mode) {
+  const ordered = [...rows].sort((a, b) => b.y - a.y || a.minX - b.minX);
+  const header = `--- page=${pageNumber} mode=${mode} rows=${ordered.length} ---`;
+  const body = ordered.map((row, index) => {
+    const column = getRowColumn(row, pageWidth);
+    const type = classifyDebugLine(row.text);
+    return `${String(index + 1).padStart(3, "0")} y=${row.y.toFixed(1)} x=${row.minX.toFixed(1)}-${row.maxX.toFixed(1)} col=${column} type=${type} ${row.text}`;
+  }).join("\n");
+  return body ? `${header}\n${body}` : header;
+}
+
+function buildRawDebugText(items, pageNumber) {
+  const lines = [];
+  let currentLine = "";
+  let currentStartX = null;
+  let currentY = null;
+  let lineNumber = 1;
+
+  for (const rawItem of items || []) {
+    const item = makeTextItem(rawItem);
+    const text = normalizeJapaneseText(item.text || "").trim();
+    if (text) {
+      if (currentStartX === null) currentStartX = item.x;
+      if (currentY === null) currentY = item.y;
+      currentLine = appendPdfItemText(currentLine, text);
+    }
+
+    if (rawItem.hasEOL) {
+      if (currentLine.trim()) {
+        lines.push(`${String(lineNumber).padStart(3, "0")} y=${(currentY || 0).toFixed(1)} x=${(currentStartX || 0).toFixed(1)} type=${classifyDebugLine(currentLine)} ${currentLine.trim()}`);
+        lineNumber += 1;
+      }
+      currentLine = "";
+      currentStartX = null;
+      currentY = null;
+    }
+  }
+
+  if (currentLine.trim()) {
+    lines.push(`${String(lineNumber).padStart(3, "0")} y=${(currentY || 0).toFixed(1)} x=${(currentStartX || 0).toFixed(1)} type=${classifyDebugLine(currentLine)} ${currentLine.trim()}`);
+  }
+
+  return `--- page=${pageNumber} mode=raw lines=${lines.length} ---\n${lines.join("\n")}`;
 }
 
 function makeTextItem(item) {
@@ -953,18 +1098,42 @@ async function extractTextFromPdf(file) {
   const arrayBuffer = await file.arrayBuffer();
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  const pages = [];
+  const modePages = { raw: [], single: [], twoColumn: [] };
+  const modeDebugs = { raw: [], single: [], twoColumn: [] };
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
     const viewport = page.getViewport({ scale: 1 });
     const content = await page.getTextContent({ normalizeWhitespace: false, disableCombineTextItems: false });
-    const rows = buildRowsFromItems(content.items || [], viewport.width);
-    const pageText = orderRowsForReading(rows, viewport.width, state.options);
-    if (pageText.trim()) pages.push(pageText);
+    const items = content.items || [];
+    const rows = buildRowsFromItems(items, viewport.width);
+
+    const rawPageText = buildTextByPdfOrder(items);
+    const singlePageText = rowsToText(rows, state.options.preservePdfParagraphBreaks);
+    const twoColumnPageText = orderRowsForReading(rows, viewport.width, { ...state.options, forceTwoColumn: true });
+
+    if (rawPageText.trim()) modePages.raw.push(rawPageText);
+    if (singlePageText.trim()) modePages.single.push(singlePageText);
+    if (twoColumnPageText.trim()) modePages.twoColumn.push(twoColumnPageText);
+
+    modeDebugs.raw.push(buildRawDebugText(items, pageNumber));
+    modeDebugs.single.push(buildRowsDebugText(rows, pageNumber, viewport.width, "single"));
+    modeDebugs.twoColumn.push(buildRowsDebugText(rows, pageNumber, viewport.width, "twoColumn"));
   }
 
-  return pages.join("\n\n");
+  const extractedTexts = {
+    raw: modePages.raw.join("\n\n"),
+    single: modePages.single.join("\n\n"),
+    twoColumn: modePages.twoColumn.join("\n\n"),
+  };
+
+  const extractionDebugs = {
+    raw: modeDebugs.raw.join("\n\n"),
+    single: modeDebugs.single.join("\n\n"),
+    twoColumn: modeDebugs.twoColumn.join("\n\n"),
+  };
+
+  return { extractedTexts, extractionDebugs };
 }
 
 async function handlePdfFile(file) {
@@ -975,7 +1144,11 @@ async function handlePdfFile(file) {
 
   elements.fileStatus.textContent = `${i18n("file.loading")}${file.name}`;
   try {
-    state.rawText = await extractTextFromPdf(file);
+    const result = await extractTextFromPdf(file);
+    state.extractedTexts = result.extractedTexts;
+    state.extractionDebugs = result.extractionDebugs;
+    state.rawText = state.extractedTexts[state.extractMode] || state.extractedTexts.raw || "";
+    state.debugText = state.extractionDebugs[state.extractMode] || state.extractionDebugs.raw || "";
     setOutputFileName(deriveTxtFileNameFromPdf(file.name));
     elements.fileStatus.textContent = `${i18n("file.loaded")}${file.name}`;
     applyFormat();
@@ -992,6 +1165,9 @@ function resetToolWithConfirm() {
   state.rawText = "";
   state.formattedText = "";
   state.outputText = "";
+  state.extractedTexts = {};
+  state.extractionDebugs = {};
+  state.debugText = "";
   state.searchTerm = "";
   state.replaceTerm = "";
   state.activeMatchIndex = 0;
@@ -1047,6 +1223,12 @@ function bindEvents() {
     if (!button) return;
     state.preset = button.dataset.preset;
     applyFormat();
+  });
+
+  elements.extractModeList?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-extract-mode]");
+    if (!button) return;
+    applyExtractMode(button.dataset.extractMode);
   });
 
   elements.optionList.addEventListener("change", (event) => {
