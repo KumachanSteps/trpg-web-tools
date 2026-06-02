@@ -1114,9 +1114,9 @@ ${notes}`;
                   ${subName}
                   <div class="tag-list">${tags}</div>
                   <div class="theme-color-card-actions">
-                    <button type="button" data-action="copy-code" data-id="${escapeHtml(item.id)}" title="カラーコードだけをコピーします（例：#8B0000）" aria-label="カラーコードだけをコピーします">コード</button>
-                    <button type="button" data-action="copy-theme" data-id="${escapeHtml(item.id)}" title="テーマカラー表記をコピーします（例：テーマカラー：深紅（#8B0000））" aria-label="テーマカラー表記をコピーします">テーマ</button>
-                    <button type="button" data-action="add-theme" data-id="${escapeHtml(item.id)}" title="キャラシ貼り付け用メモにテーマカラーを追加します" aria-label="キャラシ貼り付け用メモにテーマカラーを追加します">追加</button>
+                    <button type="button" data-action="copy-code" data-id="${escapeHtml(item.id)}" title="カラーコードのみコピー" data-tooltip="カラーコードのみコピー" aria-label="カラーコードのみコピー">コード</button>
+                    <button type="button" data-action="copy-theme" data-id="${escapeHtml(item.id)}" title="色名とカラーコードをコピー" data-tooltip="色名とカラーコードをコピー" aria-label="色名とカラーコードをコピー">テーマ</button>
+                    <button type="button" data-action="add-theme" data-id="${escapeHtml(item.id)}" title="出力テキストボックスにコピー" data-tooltip="出力テキストボックスにコピー" aria-label="出力テキストボックスにコピー">追加</button>
                   </div>
                 </div>
               </article>`;

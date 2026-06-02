@@ -1856,3 +1856,105 @@ body.theme-dark .tab-button:not(.is-active):hover {
     flex-wrap: wrap;
   }
 }
+
+
+/* v2.36 header containment and theme-color action tooltips */
+.site-header {
+  overflow: visible;
+}
+.header-main {
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  column-gap: 16px;
+}
+.header-actions {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: center;
+  overflow: visible;
+}
+.header-actions .btn {
+  flex: 0 1 auto;
+  white-space: nowrap;
+  max-width: 100%;
+}
+@media (max-width: 1280px) {
+  .header-actions .btn {
+    padding: 6px 8px;
+    font-size: 11.5px;
+  }
+}
+@media (max-width: 1180px) {
+  .header-main {
+    grid-template-columns: 1fr;
+  }
+  .header-actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+@media (max-width: 640px) {
+  .header-actions {
+    justify-content: flex-start;
+  }
+  .header-actions .btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+.theme-color-card-actions button {
+  position: relative;
+}
+.theme-color-card-actions button[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  z-index: 30;
+  width: max-content;
+  max-width: 220px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.94);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
+}
+.theme-color-card-actions button[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 3px);
+  transform: translateX(-50%) translateY(4px);
+  z-index: 31;
+  border: 5px solid transparent;
+  border-top-color: rgba(15, 23, 42, 0.94);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+}
+.theme-color-card-actions button[data-tooltip]:hover::after,
+.theme-color-card-actions button[data-tooltip]:focus-visible::after,
+.theme-color-card-actions button[data-tooltip]:hover::before,
+.theme-color-card-actions button[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+body.theme-dark .theme-color-card-actions button[data-tooltip]::after {
+  background: rgba(226, 232, 240, 0.96);
+  color: #020617;
+}
+body.theme-dark .theme-color-card-actions button[data-tooltip]::before {
+  border-top-color: rgba(226, 232, 240, 0.96);
+}
