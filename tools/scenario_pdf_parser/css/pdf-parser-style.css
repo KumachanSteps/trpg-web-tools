@@ -537,9 +537,11 @@ h2 {
 }
 
 .output-box {
+  width: 100%;
   min-height: 680px;
   max-height: 680px;
   overflow: auto;
+  resize: vertical;
   white-space: pre-wrap;
   word-break: break-word;
   border: 1px solid #1f2937;
@@ -1135,4 +1137,13 @@ body.theme-light .debug-box {
   border-color: rgba(15, 23, 42, 0.14);
   background: rgba(255, 255, 255, 0.92);
   color: var(--text);
+}
+
+
+.output-box::selection {
+  background: rgba(52, 211, 153, 0.45);
+}
+
+body.theme-light .output-box::selection {
+  background: rgba(16, 185, 129, 0.28);
 }

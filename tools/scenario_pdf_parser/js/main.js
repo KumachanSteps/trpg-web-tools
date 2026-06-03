@@ -1,7 +1,7 @@
 const SNIPPET_TOOL_URL = "../scenario-info-snippet-tool/index.html";
 const BRIDGE_TEXT_KEY = "scenarioInfoSnippet.importText";
 const BRIDGE_PAYLOAD_KEY = "scenarioInfoSnippet.importPayload";
-const TOOL_VERSION = "0.5.1";
+const TOOL_VERSION = "0.5.2";
 const PY_CONVERTER_ENDPOINT = window.SCENARIO_PDF_PARSER_API_ENDPOINT || "/api/parse-pdf";
 
 function i18n(key) {
@@ -549,38 +549,25 @@ function getMatches(text, term) {
 }
 
 function renderHighlightedOutput() {
-  const text = state.outputText || i18n("output.empty");
   const term = state.searchTerm;
   state.matches = getMatches(state.outputText, term);
 
+  if (elements.outputBox.value !== state.outputText) {
+    elements.outputBox.value = state.outputText;
+  }
+
   if (!term || !state.matches.length) {
-    elements.outputBox.textContent = text;
     elements.matchCounter.textContent = term ? `0/0` : `0/0`;
     return;
   }
 
-  const regex = new RegExp(escapeRegExp(term), "gi");
-  let lastIndex = 0;
-  let matchIndex = 0;
-  let html = "";
+  const activeIndex = Math.min(state.activeMatchIndex, state.matches.length - 1);
+  const match = state.matches[activeIndex];
+  elements.matchCounter.textContent = `${activeIndex + 1}/${state.matches.length}`;
 
-  for (const match of state.outputText.matchAll(regex)) {
-    const index = match.index || 0;
-    html += escapeHtml(state.outputText.slice(lastIndex, index));
-    const activeClass = matchIndex === state.activeMatchIndex ? " class=\"active-match\"" : "";
-    html += `<mark${activeClass}>${escapeHtml(match[0])}</mark>`;
-    lastIndex = index + match[0].length;
-    matchIndex += 1;
-  }
-
-  html += escapeHtml(state.outputText.slice(lastIndex));
-  elements.outputBox.innerHTML = html;
-  elements.matchCounter.textContent = `${Math.min(state.activeMatchIndex + 1, state.matches.length)}/${state.matches.length}`;
-
-  const active = elements.outputBox.querySelector("mark.active-match");
-  if (active) {
+  if (document.activeElement === elements.searchInput || document.activeElement === elements.outputBox) {
     elements.outputBox.focus();
-    active.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+    elements.outputBox.setSelectionRange(match.index, match.index + match.text.length);
   }
 }
 
@@ -738,6 +725,7 @@ function resetReplace() {
 function goMatch(direction) {
   if (!state.matches.length) return;
   state.activeMatchIndex = (state.activeMatchIndex + direction + state.matches.length) % state.matches.length;
+  elements.outputBox.focus();
   renderHighlightedOutput();
 }
 
@@ -1263,6 +1251,14 @@ function bindEvents() {
 
   elements.replaceInput.addEventListener("input", (event) => {
     state.replaceTerm = event.target.value;
+  });
+
+  elements.outputBox.addEventListener("input", (event) => {
+    state.outputText = event.target.value;
+    state.activeMatchIndex = 0;
+    state.matches = getMatches(state.outputText, state.searchTerm);
+    elements.matchCounter.textContent = state.searchTerm && state.matches.length ? `1/${state.matches.length}` : "0/0";
+    updateStats();
   });
 
   elements.prevBtn.addEventListener("click", () => goMatch(-1));

@@ -20,7 +20,7 @@ else:
 
 APP_DIR = Path(__file__).resolve().parents[1]
 
-app = FastAPI(title="Scenario PDF Parser API", version="0.5")
+app = FastAPI(title="Scenario PDF Parser API", version="0.5.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,11 +31,65 @@ app.add_middleware(
 )
 
 
+ABILITY_KEYS = "STR|DEX|POW|CON|APP|EDU|SIZ|INT|SAN|HP|MP|DB"
+
+
+def fix_split_numbers(text: str) -> str:
+    ability = ABILITY_KEYS
+    text = re.sub(rf"\b({ability}):([0-9])\n([0-9])(?=\s+(?:{ability}):|\s*$)", r"\1:\2\3", text)
+    text = re.sub(rf"\b({ability}):([0-9])\n([0-9])", r"\1:\2\3", text)
+    text = re.sub(r"(\bNo\.[0-9])\n([0-9]\b)", r"\1\2", text)
+    text = re.sub(r"(\bP[0-9])\n([0-9]{1,2}\b)", r"\1\2", text)
+    text = re.sub(r"(\b[0-9]+d[0-9])\n([0-9]\b)", r"\1\2", text, flags=re.IGNORECASE)
+    text = re.sub(r"(\b[0-9]+D[0-9])\n([0-9]\b)", r"\1\2", text)
+    return text
+
+
+def normalize_chapter_and_remove_page_headers(text: str) -> str:
+    lines = [line.strip() for line in text.split("\n")]
+    result: list[str] = []
+    seen_chapters: set[str] = set()
+
+    for line in lines:
+        if not line:
+            result.append("")
+            continue
+
+        if re.fullmatch(r"\d{1,3}", line):
+            continue
+
+        if re.match(r"^HO\d+\s+秘匿HO／HO\d+", line):
+            continue
+
+        secret_match = re.match(r"^0?1[\.．]秘匿HO[／/]\s*HO\d+.*$", line)
+        if secret_match:
+            chapter = "01.秘匿HO"
+            if chapter not in seen_chapters:
+                result.append("【01.秘匿HO】")
+                seen_chapters.add(chapter)
+            continue
+
+        chapter_match = re.match(r"^([0-9]{2})[\.．](諸注意|KP情報|本編前半パート|本編探索パート|本編クライマックス|エンディング).*", line)
+        if chapter_match:
+            chapter = f"{chapter_match.group(1)}.{chapter_match.group(2)}"
+            if chapter not in seen_chapters:
+                result.append(f"【{chapter}】")
+                seen_chapters.add(chapter)
+            continue
+
+        result.append(line)
+
+    text = "\n".join(result)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def normalize_japanese_text(text: str) -> str:
     text = text.replace("\ufeff", "").replace("\x00", "")
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     text = text.replace("‧", "・").replace("∕", "／")
     text = text.replace("⻩", "黄").replace("⻘", "青")
+    text = fix_split_numbers(text)
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n[ \t]+", "\n", text)
     text = re.sub(r"([■●▼▶★○])\s+", r"\1", text)
@@ -46,10 +100,11 @@ def normalize_japanese_text(text: str) -> str:
     text = re.sub(r"(スパ)\n(イ)", r"\1\2", text)
     text = re.sub(r"(ビスポー)\n(ク)", r"\1\2", text)
     text = re.sub(r"(マルク)\n(ス)", r"\1\2", text)
+    text = fix_split_numbers(text)
+    text = normalize_chapter_and_remove_page_headers(text)
     text = re.sub(r"([■●▼▶★○])", r"\n\1", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
-
 
 def markdown_to_plain_text(markdown: str) -> str:
     text = markdown.replace("\r\n", "\n").replace("\r", "\n")
@@ -105,6 +160,10 @@ async def parse_pdf(
             "text": text,
             "markdown": parsed["markdown"],
             "chars": len(text),
+            "postprocess": {
+                "removed_page_headers": True,
+                "fixed_split_numbers": True
+            },
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

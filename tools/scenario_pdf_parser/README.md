@@ -1,4 +1,4 @@
-# シナリオPDF整形機 v0.5.1
+# シナリオPDF整形機 v0.5.2
 
 v0.5 では、標準のPDF抽出を PyMuPDF4LLM API 方式に変更しています。
 
@@ -42,3 +42,10 @@ scenario_pdf_parser/
 │  └─ requirements.txt
 └─ run_local_server.py
 ```
+
+
+## v0.5.2 notes
+
+- 整形済み出力欄は編集可能な textarea になりました。
+- PyMuPDF4LLM API側で、ページヘッダー候補（例：HO3 秘匿HO／HO3米国テーラー）を除去します。
+- 能力値などの数字が改行で割れるケース（例：DEX:1\n7）を補正します。
