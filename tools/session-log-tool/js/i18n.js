@@ -14,7 +14,7 @@ window.SESSION_LOG_I18N = {
     statPlayedWith: "同卓者",
     searchPlaceholder: "シナリオ名、PC、GM/KP、PL、メモを検索...",
     allSystems: "すべてのシステム",
-    allRoles: "すべての役割",
+    allRoles: "すべてのロール",
     newestFirst: "新しい順",
     oldestFirst: "古い順",
     byScenario: "シナリオ別",

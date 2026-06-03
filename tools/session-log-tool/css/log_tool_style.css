@@ -108,7 +108,7 @@ a{color:inherit;text-decoration:none}
 
 .export-section{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:18px}.export-card,.notice-card{border-radius:28px;padding:20px}.export-card h2,.notice-card h2{margin:0;font-size:19px}.export-card p,.notice-card p{margin:8px 0 0;color:var(--text-muted);font-size:13px;line-height:1.6}.export-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.export-buttons button{padding:14px;border-radius:18px;border:1px solid var(--border-soft);background:white;text-align:left}.export-buttons strong,.export-buttons small{display:block}.export-buttons small{margin-top:3px;color:#64748b}.export-card textarea{width:100%;min-height:130px;margin-top:14px;border:1px solid var(--border-soft);border-radius:18px;background:white;padding:12px;resize:vertical}.notice-card{background:#fffbeb;border-color:#fde68a}.notice-card h2{color:#92400e}.notice-card p{color:#92400e}
 
-.session-dialog,.shortcut-modal{border:1px solid var(--border-soft);border-radius:26px;box-shadow:0 24px 80px rgba(15,23,42,.25);padding:0;width:min(820px,calc(100% - 32px));background:white;color:var(--text-main)}.session-dialog::backdrop,.shortcut-modal::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(6px)}.dialog-header,.shortcut-modal-header{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px;border-bottom:1px solid var(--border-soft)}.dialog-header h2,.shortcut-modal-header h2{margin:0}.dialog-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 20px}.dialog-grid label,.full-field{display:grid;gap:6px;font-size:13px;font-weight:800;color:#475569}.dialog-grid input,.dialog-grid textarea,.full-field textarea{border:1px solid var(--border-soft);border-radius:14px;padding:10px;background:#f8fafc}.full-field{padding:0 20px 18px}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border-soft)}.danger-button{background:#fff1f2;color:#e11d48;border-radius:999px;padding:11px 18px;font-weight:900}.shortcut-modal{width:min(720px,calc(100% - 32px))}.shortcut-modal-header p{margin:0 0 4px;color:#0ea5e9;font-size:11px;font-weight:950;letter-spacing:.15em}.shortcut-list{display:grid;gap:10px;padding:18px 20px}.shortcut-list div{display:grid;grid-template-columns:230px 1fr;gap:14px;padding:10px 12px;border-radius:16px;background:#f8fafc;border:1px solid var(--border-soft)}kbd{display:inline-flex;align-items:center;justify-content:center;min-width:1.6em;padding:2px 6px;border:1px solid var(--border-soft);border-bottom-width:2px;border-radius:6px;background:white;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:900}
+.session-dialog,.shortcut-modal{border:1px solid var(--border-soft);border-radius:26px;box-shadow:0 24px 80px rgba(15,23,42,.25);padding:0;width:min(820px,calc(100% - 32px));background:white;color:var(--text-main)}.session-dialog::backdrop,.shortcut-modal::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(6px)}.dialog-header,.shortcut-modal-header{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px;border-bottom:1px solid var(--border-soft)}.dialog-header h2,.shortcut-modal-header h2{margin:0}.dialog-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 20px}.dialog-grid label,.full-field{display:grid;gap:6px;font-size:13px;font-weight:800;color:#475569}.dialog-grid input,.dialog-grid select,.dialog-grid textarea,.full-field textarea{border:1px solid var(--border-soft);border-radius:14px;padding:10px;background:#f8fafc}.full-field{padding:0 20px 18px}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border-soft)}.danger-button{background:#fff1f2;color:#e11d48;border-radius:999px;padding:11px 18px;font-weight:900}.shortcut-modal{width:min(720px,calc(100% - 32px))}.shortcut-modal-header p{margin:0 0 4px;color:#0ea5e9;font-size:11px;font-weight:950;letter-spacing:.15em}.shortcut-list{display:grid;gap:10px;padding:18px 20px}.shortcut-list div{display:grid;grid-template-columns:230px 1fr;gap:14px;padding:10px 12px;border-radius:16px;background:#f8fafc;border:1px solid var(--border-soft)}kbd{display:inline-flex;align-items:center;justify-content:center;min-width:1.6em;padding:2px 6px;border:1px solid var(--border-soft);border-bottom-width:2px;border-radius:6px;background:white;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:900}
 
 @media(max-width:1100px){.header-layout,.filter-panel,.export-section{grid-template-columns:1fr}.header-actions{align-items:flex-start}.header-action-row{justify-content:flex-start}.stats-grid{grid-template-columns:repeat(2,1fr)}.table-header{flex-direction:column}.table-actions{justify-content:flex-start}.export-buttons{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:720px){.app-shell{width:min(100% - 24px,1480px);margin-top:12px}.stats-grid,.export-buttons,.dialog-grid{grid-template-columns:1fr}.site-title{font-size:26px}.title-row{align-items:flex-start}.field-panel{position:fixed;left:16px;right:16px;top:120px;width:auto}.table-scroll{max-height:520px}}
@@ -165,4 +165,73 @@ a{color:inherit;text-decoration:none}
   color:var(--text-muted);
   font-size:12px;
   line-height:1.6;
+}
+
+
+/* =========================================================
+   Selectable field chips / role-system colors
+   ========================================================= */
+.system-pill,
+.role-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  padding:4px 10px;
+  border:1px solid transparent;
+  line-height:1.2;
+}
+
+.system-coc6{
+  background:#dbeafe;
+  color:#1d4ed8;
+  border-color:#93c5fd;
+}
+
+.system-coc7{
+  background:#ffedd5;
+  color:#c2410c;
+  border-color:#fdba74;
+}
+
+.system-emoklore{
+  background:#dcfce7;
+  color:#15803d;
+  border-color:#86efac;
+}
+
+.system-madamisu{
+  background:#ede9fe;
+  color:#6d28d9;
+  border-color:#c4b5fd;
+}
+
+.system-other{
+  background:#f1f5f9;
+  color:#475569;
+  border-color:#cbd5e1;
+}
+
+.role-pl{
+  background:#ecfeff;
+  color:#0e7490;
+  border-color:#67e8f9;
+}
+
+.role-gm{
+  background:#fff1f2;
+  color:#be123c;
+  border-color:#fda4af;
+}
+
+.role-other{
+  background:#f8fafc;
+  color:#64748b;
+  border-color:#cbd5e1;
+}
+
+.portal-link-wrap{
+  display:inline-flex;
 }

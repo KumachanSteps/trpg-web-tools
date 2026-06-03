@@ -3,18 +3,20 @@
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
+  const SYSTEM_OPTIONS = ["CoC 7版", "CoC 6版", "エモクロア", "マダミス"];
+  const ROLE_OPTIONS = ["PL", "KP", "GM", "DL"];
 
   const defaultRows = [
     { id: cryptoId(), date: "2026-05-13", scenario: "サンプルシナリオA", system: "CoC 6版", role: "PL", gm: "GMサンプル01", players: "PL-A、PL-B", pc: "PC-A", status: "新規", time: "4h", note: "初回セッション。導入と探索中心。", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
     { id: cryptoId(), date: "2026-04-20", scenario: "サンプルシナリオB", system: "CoC 7版", role: "KP", gm: "自分", players: "PL-C、PL-D、PL-E", pc: "PC-B / PC-C / PC-D", status: "新規", time: "5h", note: "日程調整済み。次回は中盤から再開。", longNote: "" },
-    { id: cryptoId(), date: "2026-03-15", scenario: "サンプルシナリオC", system: "エモクロアTRPG", role: "DL", gm: "自分", players: "PL-F、PL-G", pc: "共鳴者A / 共鳴者B", status: "継続", time: "3.5h", note: "継続キャラクターで参加。感想メモあり。", longNote: "" },
-    { id: cryptoId(), date: "2026-02-28", scenario: "サンプルキャンペーン 第2話", system: "マルチシステム", role: "PL", gm: "GMサンプル02", players: "PL-H、PL-I、PL-J", pc: "PC-E", status: "継続", time: "6h", note: "キャンペーン進行中。公開用メモは別途作成予定。", longNote: "" }
+    { id: cryptoId(), date: "2026-03-15", scenario: "サンプルシナリオC", system: "エモクロア", role: "DL", gm: "自分", players: "PL-F、PL-G", pc: "共鳴者A / 共鳴者B", status: "継続", time: "3.5h", note: "継続キャラクターで参加。感想メモあり。", longNote: "" },
+    { id: cryptoId(), date: "2026-02-28", scenario: "サンプルキャンペーン 第2話", system: "マダミス", role: "PL", gm: "GMサンプル02", players: "PL-H、PL-I、PL-J", pc: "PC-E", status: "継続", time: "6h", note: "キャンペーン進行中。公開用メモは別途作成予定。", longNote: "" }
   ];
   const defaultColumns = [
     { key: "date", label: "日付", type: "date" },
     { key: "scenario", label: "シナリオ" },
     { key: "system", label: "システム" },
-    { key: "role", label: "役割" },
+    { key: "role", label: "ロール" },
     { key: "gm", label: "GM" },
     { key: "players", label: "PL" },
     { key: "pc", label: "PC" },
@@ -93,6 +95,18 @@
 
   function normalizeState(){
     if(!Array.isArray(state.columns)) state.columns = clone(defaultColumns);
+
+    state.columns = state.columns.map(col=>{
+      if(col.key === "role") return { ...col, label: "ロール" };
+      return col;
+    });
+
+    state.rows.forEach(row=>{
+      if(row.system === "エモクロアTRPG") row.system = "エモクロア";
+      if(row.system === "マルチシステム") row.system = "マダミス";
+      if(row.role && normalizeRoleGroup(row.role) === "GM" && !ROLE_OPTIONS.includes(row.role)) row.role = "GM";
+    });
+
     if(!state.migrations?.hashtagOptional){
       state.columns = state.columns.filter(col=>col.key !== "hashtag");
       state.migrations = { ...(state.migrations || {}), hashtagOptional: true };
@@ -109,12 +123,15 @@
   function renderFilters(){
     const systemValue = els.systemFilter.value;
     const roleValue = els.roleFilter.value;
-    const systems = unique(state.rows.map(row=>row.system).filter(Boolean));
-    const roles = unique(state.rows.map(row=>row.role).filter(Boolean));
+    const systems = unique([...SYSTEM_OPTIONS, ...state.rows.map(row=>row.system).filter(Boolean)]);
     els.systemFilter.innerHTML = `<option value="">${t("allSystems")}</option>` + systems.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
-    els.roleFilter.innerHTML = `<option value="">${t("allRoles")}</option>` + roles.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
-    els.systemFilter.value = systemValue;
-    els.roleFilter.value = roleValue;
+    els.roleFilter.innerHTML = `
+      <option value="">${t("allRoles")}</option>
+      <option value="PL">PL</option>
+      <option value="GM">GM / KP / DL</option>
+    `;
+    els.systemFilter.value = systems.includes(systemValue) ? systemValue : "";
+    els.roleFilter.value = ["", "PL", "GM"].includes(roleValue) ? roleValue : "";
   }
 
   function renderStats(){
@@ -190,7 +207,8 @@
 
   function cellContent(row,col){
     if(col.key === "scenario") return html(`<span class="cell-scenario">${escapeHtml(row.scenario || "")}</span>`);
-    if(col.key === "system") return html(`<span class="system-pill">${escapeHtml(row.system || "")}</span>`);
+    if(col.key === "system") return html(`<span class="system-pill ${systemClass(row.system)}">${escapeHtml(row.system || "")}</span>`);
+    if(col.key === "role") return html(`<span class="role-pill ${roleClass(row.role)}">${escapeHtml(row.role || "")}</span>`);
     if(col.key === "hashtag") return html(`<span class="hashtag-cell">${escapeHtml(row.hashtag || "")}</span>`);
     if(col.key === "fav") return html(`<span>${row.fav ? "★" : "☆"}</span>`);
     if(col.key === "report"){
@@ -243,7 +261,7 @@
     const role = els.roleFilter.value;
     let rows = [...state.rows].filter(row=>{
       if(system && row.system !== system) return false;
-      if(role && row.role !== role) return false;
+      if(role && normalizeRoleGroup(row.role) !== role) return false;
       if(!q) return true;
       return Object.values(row).join(" ").toLowerCase().includes(q);
     });
@@ -265,7 +283,7 @@
     els.sessionFormFields.innerHTML = "";
     state.columns.filter(c=>c.key !== "report").forEach(col=>{
       const label = document.createElement("label");
-      label.innerHTML = `<span>${escapeHtml(col.label)}</span><input name="${escapeHtml(col.key)}" value="${escapeAttr(row[col.key] || "")}" />`;
+      label.innerHTML = `<span>${escapeHtml(col.label)}</span>${fieldInputMarkup(col, row)}`;
       els.sessionFormFields.appendChild(label);
     });
     els.longNoteInput.value = row.longNote || "";
@@ -466,6 +484,41 @@
       });
     });
     return people.size;
+  }
+
+
+  function fieldInputMarkup(col, row){
+    const value = row[col.key] || "";
+    if(col.key === "date"){
+      return `<input type="date" name="${escapeAttr(col.key)}" value="${escapeAttr(value)}" />`;
+    }
+    if(col.key === "system"){
+      return `<select name="${escapeAttr(col.key)}">${SYSTEM_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
+    }
+    if(col.key === "role"){
+      return `<select name="${escapeAttr(col.key)}">${ROLE_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
+    }
+    return `<input name="${escapeAttr(col.key)}" value="${escapeAttr(value)}" />`;
+  }
+
+  function normalizeRoleGroup(role){
+    const value = String(role || "").trim().toUpperCase();
+    if(["GM", "KP", "DL"].includes(value)) return "GM";
+    if(value === "PL") return "PL";
+    return value;
+  }
+
+  function roleClass(role){
+    return normalizeRoleGroup(role) === "GM" ? "role-gm" : normalizeRoleGroup(role) === "PL" ? "role-pl" : "role-other";
+  }
+
+  function systemClass(system){
+    const value = String(system || "").trim();
+    if(value === "CoC 6版") return "system-coc6";
+    if(value === "CoC 7版") return "system-coc7";
+    if(value === "エモクロア") return "system-emoklore";
+    if(value === "マダミス") return "system-madamisu";
+    return "system-other";
   }
 
   function sumHours(rows){ return rows.reduce((sum,row)=>sum + (parseFloat(String(row.time||"").match(/[\d.]+/)?.[0] || "0") || 0),0); }

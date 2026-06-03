@@ -12,7 +12,7 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>シナリオPDF整形機 Ver.0.6</title>
+  <title>シナリオPDF整形機 Ver.0.6.5.5</title>
   <!-- 共通アイコン -->
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="./css/pdf-parser-style.css" />
@@ -28,7 +28,7 @@
           </a>
           <span class="tag-pill tag-cyan" data-i18n="chip.parser">PDF整形</span>
           <span class="tag-pill tag-violet" data-i18n="chip.builder">シナリオ情報カードツールと連携</span>
-          <span class="tag-pill tag-amber">Ver.0.6</span>
+          <span class="tag-pill tag-amber">Ver.0.6.5</span>
         </div>
         <div class="header-actions">
           <button id="languageToggleBtn" class="header-button" type="button">EN/JP</button>
@@ -68,6 +68,24 @@
             <span id="fileStatus" data-i18n="pdf.sampleStatus">現在のサンプル：著作権フリー生成サンプル</span>
             <small data-i18n="pdf.dropSub">標準ではPyMuPDF4LLM APIで高精度抽出し、失敗時はブラウザ抽出にフォールバックします。</small>
           </label>
+        </section>
+
+        <section class="panel api-config-panel">
+          <h2 data-i18n="section.apiConfig">高精度API設定</h2>
+          <label class="option-row api-enabled-row">
+            <span data-i18n="api.useExternal">外部APIを使用する</span>
+            <input id="apiEnabledToggle" type="checkbox" checked />
+          </label>
+          <label class="input-label" for="apiEndpointInput" data-i18n="api.endpointLabel">API URL</label>
+          <div class="api-endpoint-row">
+            <input id="apiEndpointInput" type="url" placeholder="https://your-api.example.com/api/parse-pdf" />
+            <button id="apiTestBtn" class="small-button" type="button" data-i18n="button.testApi">接続テスト</button>
+          </div>
+          <div id="apiStatus" class="api-status" data-i18n="api.statusNotTested">未接続</div>
+          <div class="api-privacy-note">
+            <strong data-i18n="api.noticeTitle">高精度API利用時の注意</strong>
+            <p data-i18n="api.noticeBody">このモードではPDFをAPIへ一時送信して解析します。API側では保存せず、処理後に一時ファイルを削除する設計です。著作物・秘匿情報を含むPDFの扱いにはご注意ください。</p>
+          </div>
         </section>
 
         <section class="panel">

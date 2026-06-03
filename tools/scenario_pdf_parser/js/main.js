@@ -1,8 +1,10 @@
 const SNIPPET_TOOL_URL = "../scenario-info-snippet-tool/index.html";
 const BRIDGE_TEXT_KEY = "scenarioInfoSnippet.importText";
 const BRIDGE_PAYLOAD_KEY = "scenarioInfoSnippet.importPayload";
-const TOOL_VERSION = "0.6";
-const PY_CONVERTER_ENDPOINT = window.SCENARIO_PDF_PARSER_API_ENDPOINT || "/api/parse-pdf";
+const TOOL_VERSION = "0.6.5";
+const DEFAULT_API_ENDPOINT = window.SCENARIO_PDF_PARSER_API_ENDPOINT || "/api/parse-pdf";
+const API_ENDPOINT_STORAGE_KEY = "scenarioPdfParser.apiEndpoint";
+const API_ENABLED_STORAGE_KEY = "scenarioPdfParser.apiEnabled";
 
 function i18n(key) {
   return window.SCENARIO_PDF_PARSER_LANGUAGE?.t(key) || key;
@@ -59,6 +61,8 @@ const state = {
   replaceTerm: "",
   fileName: "scenario_parsed_text.txt",
   extractMode: "pymupdf",
+  apiEndpoint: localStorage.getItem(API_ENDPOINT_STORAGE_KEY) || DEFAULT_API_ENDPOINT,
+  apiEnabled: localStorage.getItem(API_ENABLED_STORAGE_KEY) !== "false",
   extractedTexts: {},
   extractionDebugs: {},
   debugText: "",
@@ -85,6 +89,10 @@ const elements = {
   pdfInput: document.getElementById("pdfInput"),
   dropZone: document.getElementById("dropZone"),
   fileStatus: document.getElementById("fileStatus"),
+  apiEnabledToggle: document.getElementById("apiEnabledToggle"),
+  apiEndpointInput: document.getElementById("apiEndpointInput"),
+  apiTestBtn: document.getElementById("apiTestBtn"),
+  apiStatus: document.getElementById("apiStatus"),
   extractModeList: document.getElementById("extractModeList"),
   debugBox: document.getElementById("debugBox"),
   filenameInput: document.getElementById("filenameInput"),
@@ -1081,33 +1089,73 @@ function orderRowsForReading(rows, pageWidth, options = {}) {
 
 
 
+function getApiEndpoint() {
+  return (state.apiEndpoint || DEFAULT_API_ENDPOINT).trim();
+}
+
+function isExternalHighAccuracyMode() {
+  return state.apiEnabled && state.extractMode === "pymupdf";
+}
+
 async function extractTextWithPyMuPdfApi(file) {
+  const endpoint = getApiEndpoint();
+  if (!endpoint) throw new Error("API endpoint is empty.");
+
   const formData = new FormData();
   formData.append("file", file, file.name);
   formData.append("preset", state.preset);
   formData.append("version", TOOL_VERSION);
 
-  const response = await fetch(PY_CONVERTER_ENDPOINT, {
+  const response = await fetch(endpoint, {
     method: "POST",
     body: formData,
   });
 
   if (!response.ok) {
     const message = await response.text().catch(() => "");
-    throw new Error(message || `PyMuPDF4LLM API error: ${response.status}`);
+    throw new Error(message || `Layout API error: ${response.status}`);
   }
 
   const payload = await response.json();
   const text = payload.text || payload.markdown || "";
   const debugText = [
-    `engine=${payload.engine || "pymupdf4llm"}`,
+    `endpoint=${endpoint}`,
+    `engine=${payload.engine || "layout-analysis"}`,
     `pages=${payload.pages ?? "-"}`,
     `file=${payload.filename || file.name}`,
     `chars=${text.length}`,
     payload.warning ? `warning=${payload.warning}` : "",
+    payload.debug ? "\n--- API DEBUG ---\n" + payload.debug : "",
   ].filter(Boolean).join("\n");
 
   return { text, debugText, payload };
+}
+
+async function testApiConnection() {
+  const endpoint = getApiEndpoint();
+  if (!endpoint) {
+    setApiStatus("error", i18n("api.statusEmpty"));
+    return;
+  }
+
+  setApiStatus("testing", i18n("api.statusTesting"));
+
+  try {
+    const healthUrl = endpoint.replace(/\/api\/parse-pdf\/?$/, "/api/health");
+    const response = await fetch(healthUrl, { method: "GET" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json().catch(() => ({}));
+    setApiStatus("ok", `${i18n("api.statusOk")} ${payload.engine ? `(${payload.engine})` : ""}`);
+  } catch (error) {
+    console.warn(error);
+    setApiStatus("error", i18n("api.statusError"));
+  }
+}
+
+function setApiStatus(status, message) {
+  if (!elements.apiStatus) return;
+  elements.apiStatus.dataset.status = status;
+  elements.apiStatus.textContent = message;
 }
 
 async function extractTextFromPdf(file) {
@@ -1166,10 +1214,14 @@ async function handlePdfFile(file) {
 
   try {
     let apiResult = null;
-    try {
-      apiResult = await extractTextWithPyMuPdfApi(file);
-    } catch (apiError) {
-      console.warn("PyMuPDF4LLM API unavailable. Falling back to browser extraction.", apiError);
+
+    if (isExternalHighAccuracyMode()) {
+      try {
+        apiResult = await extractTextWithPyMuPdfApi(file);
+      } catch (apiError) {
+        console.warn("High accuracy API unavailable. Falling back to browser extraction.", apiError);
+        setApiStatus("error", i18n("api.statusError"));
+      }
     }
 
     const browserResult = await extractTextFromPdf(file);
@@ -1200,7 +1252,6 @@ async function handlePdfFile(file) {
     showToast(i18n("toast.pdfFail"));
   }
 }
-
 function resetToolWithConfirm() {
   if (!window.confirm(i18n("confirm.resetAll"))) return;
   state.rawText = "";
@@ -1235,6 +1286,31 @@ function bindEvents() {
   elements.usageToggleBtn.addEventListener("click", () => setHeaderPanel("usage"));
   elements.shortcutToggleBtn.addEventListener("click", () => setHeaderPanel("shortcut"));
   elements.themeToggleBtn.addEventListener("click", toggleTheme);
+
+  if (elements.apiEndpointInput) {
+    elements.apiEndpointInput.value = state.apiEndpoint;
+    elements.apiEndpointInput.addEventListener("input", (event) => {
+      state.apiEndpoint = event.target.value.trim();
+      localStorage.setItem(API_ENDPOINT_STORAGE_KEY, state.apiEndpoint);
+      setApiStatus("idle", i18n("api.statusNotTested"));
+    });
+  }
+
+  if (elements.apiEnabledToggle) {
+    elements.apiEnabledToggle.checked = state.apiEnabled;
+    elements.apiEnabledToggle.addEventListener("change", (event) => {
+      state.apiEnabled = event.target.checked;
+      localStorage.setItem(API_ENABLED_STORAGE_KEY, String(state.apiEnabled));
+      setApiStatus("idle", state.apiEnabled ? i18n("api.statusNotTested") : i18n("api.statusDisabled"));
+    });
+  }
+
+  if (elements.apiTestBtn) {
+    elements.apiTestBtn.addEventListener("click", testApiConnection);
+  }
+
+  setApiStatus("idle", state.apiEnabled ? i18n("api.statusNotTested") : i18n("api.statusDisabled"));
+
   elements.copyBtn.addEventListener("click", copyOutput);
   elements.downloadBtn.addEventListener("click", downloadText);
   elements.sendSnippetBtn.addEventListener("click", sendToSnippetTool);

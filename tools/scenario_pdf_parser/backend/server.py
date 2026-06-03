@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 
 APP_DIR = Path(__file__).resolve().parents[1]
 
-app = FastAPI(title="Scenario PDF Parser API", version="0.6")
+app = FastAPI(title="Scenario PDF Parser API", version="0.6.5")
 
 app.add_middleware(
     CORSMiddleware,
@@ -571,11 +571,22 @@ def parse_pdf_with_layout(pdf_path: Path) -> dict[str, Any]:
     }
 
 
+
+@app.get("/api/health")
+async def health():
+    return {
+        "ok": True,
+        "engine": "layout-analysis-pymupdf-pdfplumber-opencv",
+        "version": "0.6.5",
+        "storage": "temporary-files-deleted-after-processing",
+    }
+
+
 @app.post("/api/parse-pdf")
 async def parse_pdf(
     file: UploadFile = File(...),
     preset: str = Form("scenario"),
-    version: str = Form("0.6"),
+    version: str = Form("0.6.5"),
 ):
     if file.content_type not in {"application/pdf", "application/octet-stream"} and not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Please upload a PDF file.")
@@ -602,6 +613,11 @@ async def parse_pdf(
             "markdown": "",
             "debug": parsed["debug"],
             "chars": len(text),
+            "privacy": {
+                "stored": False,
+                "temporary_file_deleted": True,
+                "public_file_url_created": False,
+            },
             "postprocess": {
                 "removed_page_headers": True,
                 "fixed_split_numbers": True,

@@ -1156,3 +1156,117 @@ body.theme-light .output-box::selection {
   color: var(--muted);
   font-size: 12px;
 }
+
+
+.api-config-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.input-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.api-endpoint-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.api-endpoint-row input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel-soft);
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+}
+
+.api-endpoint-row input:focus {
+  border-color: rgba(6, 182, 212, 0.62);
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.14);
+}
+
+.small-button {
+  border: 1px solid rgba(6, 182, 212, 0.34);
+  border-radius: 14px;
+  background: rgba(6, 182, 212, 0.14);
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.small-button:hover {
+  transform: translateY(-1px);
+  background: rgba(6, 182, 212, 0.2);
+}
+
+.api-status {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  padding: 9px 11px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.api-status[data-status="ok"] {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+body.theme-night .api-status[data-status="ok"] {
+  color: #a7f3d0;
+}
+
+.api-status[data-status="error"] {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+}
+
+body.theme-night .api-status[data-status="error"] {
+  color: #fecaca;
+}
+
+.api-status[data-status="testing"] {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+}
+
+body.theme-night .api-status[data-status="testing"] {
+  color: #fde68a;
+}
+
+.api-privacy-note {
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  border-radius: 16px;
+  background: rgba(245, 158, 11, 0.08);
+  padding: 11px 12px;
+}
+
+.api-privacy-note strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.api-privacy-note p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .api-endpoint-row {
+    grid-template-columns: 1fr;
+  }
+}

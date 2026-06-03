@@ -1,4 +1,4 @@
-# シナリオPDF整形機 v0.6
+# シナリオPDF整形機 v0.6.5
 
 v0.6 では、高精度モードを **Layout解析エンジン** に更新しています。
 
@@ -65,3 +65,16 @@ scenario_pdf_parser/
 
 GitHub Pages上ではPython APIが動かないため、高精度Layout解析は使えません。
 ローカルサーバーまたは外部APIサーバーとして起動してください。
+
+
+## v0.6.5 notes
+
+- GitHub Pages UI + 外部Python API運用を想定した版です。
+- UIに「高精度API設定」を追加しました。
+- API URLをユーザー側で入力・保存できます。
+- API接続テストを追加しました。
+- 外部API利用時の注意文を追加しました。
+- APIが使えない場合はブラウザ抽出へフォールバックします。
+- `/api/health` を追加しました。
+- APIレスポンスに privacy 情報を追加しました。
+- Dockerfile と DEPLOY.md を追加しました。

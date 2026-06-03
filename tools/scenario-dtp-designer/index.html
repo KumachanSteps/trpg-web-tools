@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>シナリオDTPデザイナー v1.0</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <a class="portal-link" href="../../index.html">← TRPG WEBツール観測所</a>
+    <div class="title-wrap">
+      <h1>シナリオDTPデザイナー <span>v1.0 static prototype</span></h1>
+      <p>テキストを読み込み、2カラム本文＋右KPメモ欄のDTPページへ配置する試作版です。</p>
+    </div>
+    <nav class="header-actions">
+      <button id="helpBtn" class="ghost-btn" type="button">？ 使い方</button>
+      <button id="saveBtn" class="ghost-btn" type="button">💾 保存</button>
+      <label class="ghost-btn file-label">📄 JSON読込<input id="jsonInput" type="file" accept="application/json" hidden /></label>
+      <button id="pdfBtn" class="ghost-btn danger" type="button">PDF出力</button>
+      <button id="pngBtn" class="ghost-btn" type="button">PNG出力</button>
+    </nav>
+  </header>
+
+  <section id="helpPanel" class="help-panel" hidden>
+    <button id="helpCloseBtn" class="help-close" type="button">×</button>
+    <strong>使い方：</strong>
+    左の「テキスト取込」にシナリオ本文を貼り付ける → <b>自動ブロック化</b>で構造を生成 →
+    中央のページでレイアウトを調整 → 右の設定で見た目を調整 → 出力（PDF/PNG）できます。<br>
+    ショートカット：<b>Ctrl/Cmd+S</b> 保存、<b>Ctrl/Cmd+O</b> JSON読込、<b>Ctrl/Cmd+Shift+P</b> PDF出力、<b>Ctrl/Cmd+Shift+I</b> 画像追加、<b>Esc</b> 選択解除/パネル閉じ。
+  </section>
+
+  <main class="app-shell">
+    <aside class="left-panel">
+      <section class="panel-card">
+        <div class="panel-title"><h2>ページ一覧</h2><button id="addPageBtn" class="mini-btn" type="button">＋</button></div>
+        <div id="pageList" class="page-list"></div>
+      </section>
+
+      <section class="panel-card">
+        <div class="panel-title"><h2>テキスト取込</h2></div>
+        <textarea id="sourceText" class="source-text" spellcheck="false"># シナリオ本文 / 第1話
+
+## 01　血の香り
+探索者たちは、山間の集落へ続く濡れた道を進んでいる。
+木々の間に立ちこめる霧は薄く、足音を吸い込むように静まり返っていた。
+
+▼聞き耳に成功した場合
+遠くから、すすり泣くような声が聞こえる。
+
+▼ KP 情報
+導入シーン。不安感を高める描写を意識する。
+霧・匂い・静寂を強調するとよい。
+
+## 02　蠢く異形
+集落の外れ、社の裏手で探索者たちは常軌を逸した光景を目にする。
+それは人の形を保ちながら、明らかに何かが混ざった存在だった。
+
+[KP]
+ここで戦闘へ移行してもよい。
+敵は「異形の村人」などを想定する。</textarea>
+        <div class="button-grid">
+          <button id="parseBtn" class="primary-btn" type="button">自動ブロック化</button>
+          <button id="clearBtn" class="ghost-btn" type="button">クリア</button>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <div class="panel-title"><h2>ブロック追加</h2></div>
+        <div class="block-buttons">
+          <button type="button" data-add="sceneTitle">章/シーン見出し</button>
+          <button type="button" data-add="body">本文</button>
+          <button type="button" data-add="keeper">KP情報</button>
+          <button type="button" data-add="dialogue">セリフ</button>
+          <button type="button" data-add="check">判定情報</button>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <div class="panel-title"><h2>素材</h2></div>
+        <label class="upload-box">画像を追加<input id="imageInput" type="file" accept="image/*" hidden /></label>
+        <div id="assetList" class="asset-list"></div>
+      </section>
+    </aside>
+
+    <section class="center-workspace">
+      <div class="toolbar">
+        <button id="fitBtn" class="ghost-btn" type="button">表示リセット</button>
+        <button id="templateBtn" class="ghost-btn" type="button">テンプレート適用</button>
+        <span class="toolbar-note">A4横 / 本文85% / KPメモ15% / 2カラム</span>
+      </div>
+      <div class="ruler-row">
+        <div class="ruler-corner"></div>
+        <div class="ruler horizontal"><span>0</span><span>50</span><span>100</span><span>150</span><span>200</span><span>250</span><span>297mm</span></div>
+      </div>
+      <div class="canvas-wrap">
+        <div class="ruler vertical"><span>0</span><span>50</span><span>100</span><span>150</span><span>200</span><span>210mm</span></div>
+        <div id="workspace" class="workspace">
+          <div id="pageCanvas" class="page-canvas">
+            <div class="page-bg"></div>
+            <div class="page-header-banner"><div><strong>イザナミの棺</strong><span>— 黄泉を彷徨う者たちへ —</span></div></div>
+            <div class="main-area">
+              <div class="doc-title">シナリオ本文 / 第1話</div>
+              <div id="blockLayer" class="block-layer"></div>
+            </div>
+            <aside class="memo-area">
+              <h3>KPメモ</h3>
+              <div id="memoLayer" class="memo-layer"></div>
+            </aside>
+            <div class="page-number">1</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="right-panel">
+      <section class="panel-card inspector">
+        <h2>選択中のブロック</h2>
+        <label>種類
+          <select id="typeSelect">
+            <option value="sceneTitle">章/シーン見出し</option>
+            <option value="body">本文</option>
+            <option value="keeper">KP情報</option>
+            <option value="dialogue">セリフ</option>
+            <option value="check">判定情報</option>
+            <option value="image">画像</option>
+          </select>
+        </label>
+        <label>テキスト<textarea id="textEdit" rows="5"></textarea></label>
+        <div class="two-col">
+          <label>フォント
+            <select id="fontSelect">
+              <option value="'Yu Mincho', 'Hiragino Mincho ProN', serif">游明朝</option>
+              <option value="'Yu Gothic', 'Hiragino Sans', sans-serif">游ゴシック</option>
+              <option value="serif">Serif</option>
+              <option value="sans-serif">Sans</option>
+            </select>
+          </label>
+          <label>サイズ<input id="sizeInput" type="number" min="8" max="80" /></label>
+        </div>
+        <div class="two-col">
+          <label>行間<input id="lineInput" type="number" min="1" max="3" step="0.1" /></label>
+          <label>余白<input id="padInput" type="number" min="0" max="40" /></label>
+        </div>
+        <div class="two-col">
+          <label>背景色<input id="bgInput" type="color" /></label>
+          <label>文字色<input id="colorInput" type="color" /></label>
+        </div>
+        <div class="button-grid">
+          <button id="applyBtn" class="primary-btn" type="button">反映</button>
+          <button id="deleteBtn" class="delete-btn" type="button">削除</button>
+        </div>
+      </section>
+      <section class="panel-card"><h2>出力メモ</h2><p class="small-note">このページはA4横・2カラムの想定でレイアウトしています。PDF出力時はブラウザ印刷を使用します。PNG出力はhtml2canvas CDNを使用します。</p></section>
+    </aside>
+  </main>
+
+  <footer class="status-bar">
+    <span>✎ 編集モード</span>
+    <span>ズーム <button id="zoomOut" type="button">−</button> <b id="zoomText">83%</b> <button id="zoomIn" type="button">＋</button></span>
+    <span>ページサイズ A4横（297 × 210 mm）</span>
+    <span>ページ <b id="pageIndicator">1 / 1</b></span>
+    <span>ガイド 表示</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="./js/main.js"></script>
+  <script src="./js/shortcut.js"></script>
+</body>
+</html>
