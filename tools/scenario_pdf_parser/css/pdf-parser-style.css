@@ -1147,3 +1147,12 @@ body.theme-light .debug-box {
 body.theme-light .output-box::selection {
   background: rgba(16, 185, 129, 0.28);
 }
+
+.debug-box {
+  tab-size: 2;
+}
+
+.debug-layout-note {
+  color: var(--muted);
+  font-size: 12px;
+}

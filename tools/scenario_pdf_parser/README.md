@@ -1,14 +1,24 @@
-# シナリオPDF整形機 v0.5.3
+# シナリオPDF整形機 v0.6
 
-v0.5 では、標準のPDF抽出を PyMuPDF4LLM API 方式に変更しています。
+v0.6 では、高精度モードを **Layout解析エンジン** に更新しています。
 
 ## 起動方法
 
 ```bash
 cd scenario_pdf_parser
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r backend/requirements.txt
+python run_local_server.py
+```
+
+Windows:
+
+```bash
+cd scenario_pdf_parser
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r backend\requirements.txt
 python run_local_server.py
 ```
 
@@ -18,12 +28,20 @@ python run_local_server.py
 http://127.0.0.1:8787/
 ```
 
-このURLから開くと、PDFを選択した際に `/api/parse-pdf` へPDFを送信し、PyMuPDF4LLMで高精度TXT化します。
+## v0.6 の主な変更
 
-## GitHub Pagesで使う場合
-
-GitHub PagesだけではPython APIを動かせないため、PyMuPDF4LLMモードは使えません。
-その場合は自動的にブラウザ内 pdf.js 抽出へフォールバックします。
+- `pdfplumber` を追加
+- `opencv-python-headless` を追加
+- `numpy` / `Pillow` を追加
+- PyMuPDFでページ画像化
+- OpenCVで水平線・垂直線を検出
+- pdfplumberでPDF内の線オブジェクトも補助的に取得
+- ページをY方向の band に分割
+- bandごとに `full` / `twoColumn` を判定
+- `twoColumn` bandは左カラム全体 → 右カラム全体の順で出力
+- ページヘッダー・ページ番号除去を継続
+- 能力値などの数字分断補正を継続
+- 抽出行デバッグに band 情報、水平線、垂直線、カラム判定を表示
 
 ## 構成
 
@@ -43,17 +61,7 @@ scenario_pdf_parser/
 └─ run_local_server.py
 ```
 
+## 注意
 
-## v0.5.2 notes
-
-- 整形済み出力欄は編集可能な textarea になりました。
-- PyMuPDF4LLM API側で、ページヘッダー候補（例：HO3 秘匿HO／HO3米国テーラー）を除去します。
-- 能力値などの数字が改行で割れるケース（例：DEX:1\n7）を補正します。
-
-
-## v0.5.3 notes
-
-- 高精度モードを PyMuPDF4LLM Markdown 変換ではなく、PyMuPDF の座標解析ベースに変更しました。
-- PDF上の x/y 座標、行幅、ページ上部ヘッダー、ページ下部ページ番号を見て読順を再構成します。
-- ページ内で2カラムが検出された場合は、左カラム全体 → 右カラム全体の順に出力します。
-- 能力値や `No.2`、`P103`、`1d6` などの数字分断補正は引き続き行います。
+GitHub Pages上ではPython APIが動かないため、高精度Layout解析は使えません。
+ローカルサーバーまたは外部APIサーバーとして起動してください。

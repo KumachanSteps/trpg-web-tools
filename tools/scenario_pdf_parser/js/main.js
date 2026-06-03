@@ -1,7 +1,7 @@
 const SNIPPET_TOOL_URL = "../scenario-info-snippet-tool/index.html";
 const BRIDGE_TEXT_KEY = "scenarioInfoSnippet.importText";
 const BRIDGE_PAYLOAD_KEY = "scenarioInfoSnippet.importPayload";
-const TOOL_VERSION = "0.5.3";
+const TOOL_VERSION = "0.6";
 const PY_CONVERTER_ENDPOINT = window.SCENARIO_PDF_PARSER_API_ENDPOINT || "/api/parse-pdf";
 
 function i18n(key) {
