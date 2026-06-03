@@ -253,7 +253,6 @@ window.TRPG_PORTAL_I18N = {
         en: "Generate, edit, and preview session report posts for X/Twitter by entering KP, PL, and PC information.",
       },
     },
-
     {
       id: "coc-growth-checker",
       icon: "🌱",
@@ -297,6 +296,21 @@ window.TRPG_PORTAL_I18N = {
       description: {
         ja: "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
         en: "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord.",
+      },
+    },
+    {
+      id: "scenario-pdf-parser",
+      icon: "📄",
+      status: "production",
+      category: "scenarioPrep",
+      href: "./tools/scenario-pdf-parser/",
+      name: {
+        ja: "シナリオPDFパーサー",
+        en: "Scenario PDF Parser",
+      },
+      description: {
+        ja: "シナリオPDFをTXT形式に変換し、コピペしやすいテキストとして整理するためのツールです。",
+        en: "A tool for parsing scenario PDFs into TXT format for easier copying and pasting.",
       },
     },
     {
@@ -345,6 +359,21 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
+      id: "kantan-icon-maker",
+      icon: "🖼️",
+      status: "production",
+      category: "characterUtility",
+      href: "./tools/kantan-icon-maker/",
+      name: {
+        ja: "かんたんアイコンメーカー",
+        en: "Kantan Icon Maker",
+      },
+      description: {
+        ja: "キャラクター立ち絵PNGから、TRPG用の1:1アイコンをかんたんに作成するツールです。",
+        en: "A simple tool for creating 1:1 TRPG icons from character standing PNG images.",
+      },
+    },
+    {
       id: "gm-charashi-viewer",
       icon: "👥",
       status: "production",
@@ -359,7 +388,6 @@ window.TRPG_PORTAL_I18N = {
         en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
       },
     },
-
     {
       id: "trpg-haishin-observatory",
       icon: "🔭",
