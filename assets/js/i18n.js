@@ -254,6 +254,36 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
+      id: "trpg-hashtag-searcher",
+      icon: "#️⃣",
+      status: "available",
+      category: "infoGathering",
+      href: "./tools/trpg-hashtag-searcher/",
+      name: {
+        ja: "使えるハッシュタグ検索",
+        en: "Usable Hashtag Finder",
+      },
+      description: {
+        ja: "TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。",
+        en: "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
+      },
+    },
+    {
+      id: "chat-palette-formatter",
+      icon: "💬",
+      status: "available",
+      category: "characterUtility",
+      href: "./tools/chat-palette-formatter/",
+      name: {
+        ja: "チャットパレット整形ツール",
+        en: "Chat Palette Formatter",
+      },
+      description: {
+        ja: "CoC 6版・7版のチャットパレットを判定し、読みやすい形式へ整形するツールです。",
+        en: "A tool for formatting CoC 6e/7e chat palettes into a cleaner and more readable structure.",
+      },
+    },
+    {
       id: "coc-growth-checker",
       icon: "🌱",
       status: "production",
@@ -269,18 +299,33 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "session-log-tool",
-      icon: "🗒️",
-      status: "production",
-      category: "reportWriting",
-      href: "./tools/session-log-tool/",
+      id: "gm-charashi-viewer",
+      icon: "👥",
+      status: "available",
+      category: "gmSupport",
+      href: "./tools/gm-charashi-viewer/",
       name: {
-        ja: "卓ログトラッカー",
-        en: "Session Log Tracker",
+        ja: "GM用キャラシビューワー",
+        en: "GM Character Sheet Viewer",
       },
       description: {
-        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
-        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists.",
+        ja: "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
+        en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
+      },
+    },
+    {
+      id: "charamemo-generator",
+      icon: "📋",
+      status: "available",
+      category: "characterUtility",
+      href: "./tools/iachara-charamemo-creator/",
+      name: {
+        ja: "いあキャラMEMOジェネレータ",
+        en: "Charamemo Generator",
+      },
+      description: {
+        ja: "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツールです。",
+        en: "A tool for generating character memo and token-ready data from Iachara character information.",
       },
     },
     {
@@ -314,48 +359,18 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "trpg-hashtag-searcher",
-      icon: "#️⃣",
+      id: "session-log-tool",
+      icon: "🗒️",
       status: "production",
-      category: "infoGathering",
-      href: "./tools/trpg-hashtag-searcher/",
+      category: "reportWriting",
+      href: "./tools/session-log-tool/",
       name: {
-        ja: "使えるハッシュタグ検索",
-        en: "Usable Hashtag Finder",
+        ja: "卓ログトラッカー",
+        en: "Session Log Tracker",
       },
       description: {
-        ja: "TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。",
-        en: "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
-      },
-    },
-    {
-      id: "chat-palette-formatter",
-      icon: "💬",
-      status: "production",
-      category: "characterUtility",
-      href: "./tools/chat-palette-formatter/",
-      name: {
-        ja: "チャットパレット整形ツール",
-        en: "Chat Palette Formatter",
-      },
-      description: {
-        ja: "CoC 6版・7版のチャットパレットを判定し、読みやすい形式へ整形するツールです。",
-        en: "A tool for formatting CoC 6e/7e chat palettes into a cleaner and more readable structure.",
-      },
-    },
-    {
-      id: "charamemo-generator",
-      icon: "📋",
-      status: "production",
-      category: "characterUtility",
-      href: "./tools/iachara-charamemo-creator/",
-      name: {
-        ja: "いあキャラMEMOジェネレータ",
-        en: "Charamemo Generator",
-      },
-      description: {
-        ja: "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツールです。",
-        en: "A tool for generating character memo and token-ready data from Iachara character information.",
+        ja: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
+        en: "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists.",
       },
     },
     {
@@ -374,18 +389,18 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "gm-charashi-viewer",
-      icon: "👥",
+      id: "character-library-tool",
+      icon: "🧑‍🚀",
       status: "production",
-      category: "gmSupport",
-      href: "./tools/gm-charashi-viewer/",
+      category: "characterUtility",
+      href: "./tools/character-library-tool/",
       name: {
-        ja: "GM用キャラシビューワー",
-        en: "GM Character Sheet Viewer",
+        ja: "キャラクターLibrary",
+        en: "Character Library",
       },
       description: {
-        ja: "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
-        en: "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
+        ja: "TRPGキャラクターを一覧化し、立ち絵・プロフィール・技能・メモなどを整理して管理するためのキャラクターアーカイブツールです。",
+        en: "A character archive tool for organizing TRPG characters with portraits, profiles, skills, notes, and related information.",
       },
     },
     {
