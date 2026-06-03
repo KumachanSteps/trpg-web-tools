@@ -404,6 +404,21 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
+      id: "scenario-dtp-designer",
+      icon: "📐",
+      status: "production",
+      category: "scenarioPrep",
+      href: "./tools/scenario-dtp-designer/",
+      name: {
+        ja: "シナリオDTPデザイナー",
+        en: "Scenario DTP Designer",
+      },
+      description: {
+        ja: "シナリオ本文を見やすいレイアウトに整え、PDF化や配布用テキストの下準備を支援するDTP補助ツールです。",
+        en: "A DTP support tool for arranging scenario text into a readable layout and preparing it for PDF or distribution-ready formatting.",
+      },
+    },
+    {
       id: "trpg-haishin-observatory",
       icon: "🔭",
       status: "idea",
