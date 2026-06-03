@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>シナリオPDF整形機 Ver.0.4.7</title>
+  <title>シナリオPDF整形機 Ver.0.5</title>
   <link rel="stylesheet" href="./css/pdf-parser-style.css" />
 </head>
 <body class="theme-light">
@@ -17,7 +17,7 @@
           </a>
           <span class="tag-pill tag-cyan" data-i18n="chip.parser">PDF整形</span>
           <span class="tag-pill tag-violet" data-i18n="chip.builder">シナリオ情報カードツールと連携</span>
-          <span class="tag-pill tag-amber">Ver.0.4.7</span>
+          <span class="tag-pill tag-amber">Ver.0.5</span>
         </div>
         <div class="header-actions">
           <button id="languageToggleBtn" class="header-button" type="button">EN/JP</button>
@@ -55,7 +55,7 @@
             <input id="pdfInput" type="file" accept="application/pdf" />
             <strong data-i18n="pdf.dropMain">PDFをドラッグ＆ドロップ、またはクリックして選択</strong>
             <span id="fileStatus" data-i18n="pdf.sampleStatus">現在のサンプル：著作権フリー生成サンプル</span>
-            <small data-i18n="pdf.dropSub">pdf.jsを使用してブラウザ上でテキスト抽出します。</small>
+            <small data-i18n="pdf.dropSub">標準ではPyMuPDF4LLM APIで高精度抽出し、失敗時はブラウザ抽出にフォールバックします。</small>
           </label>
         </section>
 

@@ -1,7 +1,8 @@
 const SNIPPET_TOOL_URL = "../scenario-info-snippet-tool/index.html";
 const BRIDGE_TEXT_KEY = "scenarioInfoSnippet.importText";
 const BRIDGE_PAYLOAD_KEY = "scenarioInfoSnippet.importPayload";
-const TOOL_VERSION = "0.4.7";
+const TOOL_VERSION = "0.5";
+const PY_CONVERTER_ENDPOINT = window.SCENARIO_PDF_PARSER_API_ENDPOINT || "/api/parse-pdf";
 
 function i18n(key) {
   return window.SCENARIO_PDF_PARSER_LANGUAGE?.t(key) || key;
@@ -31,6 +32,7 @@ const optionData = [
 ];
 
 const extractionModeData = [
+  { id: "pymupdf", labelKey: "extract.pymupdf.label", descKey: "extract.pymupdf.desc" },
   { id: "raw", labelKey: "extract.raw.label", descKey: "extract.raw.desc" },
   { id: "single", labelKey: "extract.single.label", descKey: "extract.single.desc" },
   { id: "twoColumn", labelKey: "extract.twoColumn.label", descKey: "extract.twoColumn.desc" },
@@ -56,7 +58,7 @@ const state = {
   searchTerm: "",
   replaceTerm: "",
   fileName: "scenario_parsed_text.txt",
-  extractMode: "raw",
+  extractMode: "pymupdf",
   extractedTexts: {},
   extractionDebugs: {},
   debugText: "",
@@ -1090,6 +1092,36 @@ function orderRowsForReading(rows, pageWidth, options = {}) {
 }
 
 
+
+async function extractTextWithPyMuPdfApi(file) {
+  const formData = new FormData();
+  formData.append("file", file, file.name);
+  formData.append("preset", state.preset);
+  formData.append("version", TOOL_VERSION);
+
+  const response = await fetch(PY_CONVERTER_ENDPOINT, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => "");
+    throw new Error(message || `PyMuPDF4LLM API error: ${response.status}`);
+  }
+
+  const payload = await response.json();
+  const text = payload.text || payload.markdown || "";
+  const debugText = [
+    `engine=${payload.engine || "pymupdf4llm"}`,
+    `pages=${payload.pages ?? "-"}`,
+    `file=${payload.filename || file.name}`,
+    `chars=${text.length}`,
+    payload.warning ? `warning=${payload.warning}` : "",
+  ].filter(Boolean).join("\n");
+
+  return { text, debugText, payload };
+}
+
 async function extractTextFromPdf(file) {
   if (!window.pdfjsLib) {
     throw new Error("pdf.jsが読み込まれていません。");
@@ -1143,16 +1175,37 @@ async function handlePdfFile(file) {
   }
 
   elements.fileStatus.textContent = `${i18n("file.loading")}${file.name}`;
+
   try {
-    const result = await extractTextFromPdf(file);
-    state.extractedTexts = result.extractedTexts;
-    state.extractionDebugs = result.extractionDebugs;
-    state.rawText = state.extractedTexts[state.extractMode] || state.extractedTexts.raw || "";
-    state.debugText = state.extractionDebugs[state.extractMode] || state.extractionDebugs.raw || "";
+    let apiResult = null;
+    try {
+      apiResult = await extractTextWithPyMuPdfApi(file);
+    } catch (apiError) {
+      console.warn("PyMuPDF4LLM API unavailable. Falling back to browser extraction.", apiError);
+    }
+
+    const browserResult = await extractTextFromPdf(file);
+
+    state.extractedTexts = {
+      pymupdf: apiResult?.text || "",
+      ...browserResult.extractedTexts,
+    };
+    state.extractionDebugs = {
+      pymupdf: apiResult?.debugText || i18n("debug.apiUnavailable"),
+      ...browserResult.extractionDebugs,
+    };
+
+    if (!apiResult && state.extractMode === "pymupdf") {
+      state.extractMode = "raw";
+      showToast(i18n("toast.apiFallback"));
+    }
+
+    state.rawText = state.extractedTexts[state.extractMode] || state.extractedTexts.pymupdf || state.extractedTexts.raw || "";
+    state.debugText = state.extractionDebugs[state.extractMode] || state.extractionDebugs.pymupdf || state.extractionDebugs.raw || "";
     setOutputFileName(deriveTxtFileNameFromPdf(file.name));
     elements.fileStatus.textContent = `${i18n("file.loaded")}${file.name}`;
     applyFormat();
-    showToast(i18n("toast.pdfSuccess"));
+    showToast(apiResult ? i18n("toast.pdfSuccessHighQuality") : i18n("toast.pdfSuccess"));
   } catch (error) {
     console.error(error);
     elements.fileStatus.textContent = `${i18n("file.failed")}${file.name}`;
