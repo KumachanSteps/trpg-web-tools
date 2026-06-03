@@ -6,15 +6,15 @@
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-NJD5JZML31');
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
   </script>
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
 
-  <title>CoC 6版/7版 成長チェッカー｜TRPG WEBツール観測所</title>
+  <title>CoC 6版 / 7版 成長チェッカーv2</title>
   <link rel="stylesheet" href="./css/growth_checker_style.css">
 </head>
 
@@ -68,11 +68,11 @@
               <span class="tool-icon-growth-check" aria-hidden="true">✓</span>
             </div>
 
-            <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカー</h1>
+            <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカーv2</h1>
           </div>
 
           <p class="site-description" data-i18n="app.description">
-            セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。
+            セッションログHTML / テキストから技能ロールを抽出し、選択した出力ルールに沿って探索者ごとの成長チェック候補を一覧化します。
           </p>
 
           <p class="shortcut-tip" data-i18n-html="app.tip">
@@ -100,9 +100,8 @@
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Enter</kbd></div><div class="shortcut-desc" data-i18n="shortcut.analyze">成長候補を抽出</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>L</kbd></div><div class="shortcut-desc" data-i18n="shortcut.focusInput">入力欄にフォーカス</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleInput">入力パネル開閉</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd></div><div class="shortcut-desc" data-i18n="shortcut.summaryTab">サマリーへ移動</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd></div><div class="shortcut-desc" data-i18n="shortcut.candidatesTab">成長候補へ移動</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>3</kbd></div><div class="shortcut-desc" data-i18n="shortcut.rollsTab">抽出ロールへ移動</div></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd></div><div class="shortcut-desc" data-i18n="shortcut.summaryTab">成長候補サマリーへ移動</div></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd></div><div class="shortcut-desc" data-i18n="shortcut.rollsTab">抽出ロールへ移動</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>C</kbd></div><div class="shortcut-desc" data-i18n="shortcut.characterSettings">表示キャラ設定の開閉</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>T</kbd></div><div class="shortcut-desc" data-i18n="shortcut.theme">ナイトモード切替</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>V</kbd></div><div class="shortcut-desc" data-i18n="shortcut.screenshot">スクショ表示 / 通常表示</div></div>
@@ -138,19 +137,22 @@
           <textarea id="rawInput" placeholder="HTMLまたはテキストログを貼り付け" data-i18n-placeholder="input.placeholder"></textarea>
         </label>
 
-        <h3 data-i18n="input.ruleTitle">成長チェックルール</h3>
+        <h3 data-i18n="input.ruleTitle">成長チェック出力ルール</h3>
         <label>
           <span data-i18n="input.ruleMode">抽出方式</span>
           <select id="ruleMode">
-            <option value="rulebook" data-i18n="rule.rulebook">基本ルルブ準拠：成功技能を1技能につき1回</option>
-            <option value="critFumble" data-i18n="rule.critFumble">クリティカル / ファンブル：該当ロールをすべて抽出</option>
+            <option value="rulebook" data-i18n="rule.rulebook">基本ルルブ準拠：成功した技能を1技能につき1回</option>
+            <option value="critFumble" data-i18n="rule.critFumble">クリティカル / ファンブル / 初期値：該当ロールをすべて抽出</option>
             <option value="both" data-i18n="rule.both">合算：クリファン全件 + 成功技能1回</option>
             <option value="bothPrime" data-i18n="rule.bothPrime">合算’：クリティカル全件 + 成功技能1回</option>
           </select>
-          <p class="growth-rule-help" data-i18n="input.ruleHelp">まずは外側準備版として、ダイスログから技能名・成功/失敗/クリファンを読み取り、候補表に整理します。</p>
+          <p class="growth-rule-help" data-i18n="input.ruleHelp">ログ本文の成功・失敗・クリティカル・ファンブル表記と目標値をもとに、成長チェック候補を抽出します。</p>
         </label>
 
-        <label><span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span><input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" /></label>
+        <label>
+          <span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span>
+          <input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" />
+        </label>
 
         <button id="analyzeBtn" data-i18n="button.analyze">成長候補を抽出</button>
         <button id="clearBtn" class="secondary" data-i18n="button.clear">クリア</button>
@@ -161,11 +163,10 @@
       </div>
     </section>
 
-    <section>
+    <section class="output-panel">
       <div class="tabs">
         <div class="tabs-left">
-          <button class="tab-button active" data-tab="summary" data-i18n="tab.summary">サマリー</button>
-          <button class="tab-button" data-tab="candidates" data-i18n="tab.candidates">成長候補</button>
+          <button class="tab-button active" data-tab="summary" data-i18n="tab.summary">成長候補サマリー</button>
           <button class="tab-button" data-tab="rolls" data-i18n="tab.rolls">抽出ロール</button>
         </div>
 
@@ -175,42 +176,22 @@
         </div>
       </div>
 
-      <div id="summary" class="tab-panel active">
+      <div id="summary" class="tab-panel active growth-summary-panel">
         <div class="character-control-bar">
           <button id="characterControlToggleBtn" class="character-control-toggle" type="button" data-i18n="button.showCharacterControls">表示キャラ設定を開く▼</button>
         </div>
         <div id="characterControls" class="character-controls"></div>
 
-        <div class="grid-results">
-          <div class="card"><div class="label" data-i18n="card.totalRolls">検出ロール数</div><div id="totalRolls" class="value">0</div><div class="sub" data-i18n="card.totalRollsSub">d100として抽出された件数</div></div>
-          <div class="card"><div class="label" data-i18n="card.candidateCount">成長候補</div><div id="candidateCount" class="value">0</div><div class="sub" data-i18n="card.candidateCountSub">現在表示中の候補数</div></div>
-          <div class="card"><div class="label" data-i18n="card.characterCount">キャラクター</div><div id="characterCount" class="value">0</div><div class="sub" data-i18n="card.characterCountSub">検出キャラクター数</div></div>
-          <div class="card"><div class="label" data-i18n="card.ruleMode">抽出方式</div><div id="ruleModeLabel" class="value">-</div><div class="sub" data-i18n="card.ruleModeSub">選択中の成長チェックルール</div></div>
+        <div class="growth-output-wrap">
+          <div class="growth-output-head">
+            <h2 class="growth-output-title" data-i18n="summary.outputTitle">成長候補サマリー</h2>
+            <div class="growth-output-actions">
+              <button id="copySummaryBtn" class="growth-copy-button" type="button" data-i18n="button.copy">コピー</button>
+              <button id="deleteSummaryBtn" class="growth-delete-button" type="button" data-i18n="button.delete">削除</button>
+            </div>
+          </div>
+          <textarea id="growthSummaryOutput" class="growth-output-box" spellcheck="false" data-i18n-placeholder="summary.outputPlaceholder" placeholder="ログを入力して「成長候補を抽出」を押してください。"></textarea>
         </div>
-
-        <div id="candidateSummary" class="candidate-summary-grid"></div>
-
-        <div class="card summary-memo-card">
-          <h3 data-i18n="summary.memoTitle">メモ</h3>
-          <p id="summaryMemo" class="note" data-i18n="summary.selectLog">ログを入力して「成長候補を抽出」を押してください。</p>
-        </div>
-      </div>
-
-      <div id="candidates" class="tab-panel">
-        <h2 data-i18n="candidates.title">成長チェック候補一覧</h2>
-        <table>
-          <thead>
-            <tr>
-              <th data-i18n="candidates.index">#</th>
-              <th data-i18n="candidates.character">キャラクター</th>
-              <th data-i18n="candidates.skill">技能</th>
-              <th data-i18n="candidates.reason">候補理由</th>
-              <th data-i18n="candidates.roll">出目</th>
-              <th data-i18n="candidates.sourceLine">元ログ行</th>
-            </tr>
-          </thead>
-          <tbody id="candidateTableBody"></tbody>
-        </table>
       </div>
 
       <div id="rolls" class="tab-panel">
@@ -231,6 +212,18 @@
       </div>
     </section>
   </main>
+
+  <section class="tool-footer-note">
+    <h2>利用上の注意</h2>
+    <p>
+      本ツールは、開発者 @KumachanSteps による個人制作の非公式TRPG支援ツールです。
+      各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
+    </p>
+    <p>
+      不具合報告や要望は、Xの @KumachanSteps 宛のDMにてお送りください。
+      ただし、すべての報告や要望に返信・対応できるとは限りません。
+    </p>
+  </section>
 
   <script src="./js/i18n.js"></script>
   <script src="./js/language.js"></script>
