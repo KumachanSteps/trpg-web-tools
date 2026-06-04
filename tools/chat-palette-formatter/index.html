@@ -1,38 +1,41 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CoC 6版 / 7版：チャットパレット整形ツール</title>
-  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="css/palette_formatter_style.css" />
-
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag("js", new Date());
-    gtag("config", "G-NJD5JZML31");
+    gtag('js', new Date());
+    gtag('config', 'G-NJD5JZML31');
   </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 共通アイコン -->
+  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
+
+  <title>CoCチャパレ整形ツールv2｜TRPG Webツール観測所</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./css/palette-style.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="site-header">
       <div class="header-inner">
         <div class="header-top-tags">
-          <a
-            class="portal-link"
-            href="https://kumachansteps.github.io/coc-tools/trpg-web-tools/index.html"
-            aria-label="TRPG Webツール観測所へ戻る"
-          >← TRPG Webツール観測所</a>
+          <span class="portal-link-wrap">
+          <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG Webツール観測所に戻る">← TRPG Webツール観測所</a>
+          </span>
           <span class="header-pill header-pill-cyan">いあきゃら駒JSON入力</span>
           <span class="header-pill header-pill-violet">CoC 6版/7版</span>
           <span class="header-pill header-pill-amber">出力後に編集可能</span>
         </div>
 
         <div class="header-title-area">
-          <h1 class="site-title">CoC 6版 / 7版 チャットパレット整形ツール</h1>
+          <h1 class="site-title">CoCチャパレ整形ツールv2</h1>
           <p class="site-description">
             <span>チャットパレット本文、またはJSON形式のキャラクター駒データを貼り付けて、CoC 6版 / 7版向けに見やすく整形します。</span>
             <span>入力欄にデータを貼り付け、「分類して出力」ボタンで整形結果を表示します。</span>
@@ -88,7 +91,7 @@
     </main>
 
     <footer class="app-footer">
-      <span>TRPG Webツール観測所 / CoC 6版・7版 チャットパレット整形ツール</span>
+      <span>TRPG Webツール観測所 / CoCチャパレ整形ツールv2</span>
     </footer>
   </div>
 
