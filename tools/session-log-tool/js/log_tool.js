@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.3";
+  const APP_VERSION = "v1.4";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
@@ -9,32 +9,33 @@
   const COLUMN_DEFAULT_WIDTHS = {
     fav: 72,
     date: 136,
-    scenario: 240,
+    scenario: 310,
     system: 124,
     role: 96,
-    gm: 132,
-    players: 132,
-    pc: 132,
+    gm: 124,
+    players: 170,
+    pc: 170,
     status: 120,
     time: 84,
-    note: 240,
+    note: 250,
     report: 112
   };
   const COLUMN_MIN_WIDTHS = {
     fav: 56,
     date: 112,
-    scenario: 160,
+    scenario: 180,
     system: 108,
     role: 78,
     gm: 96,
-    players: 96,
-    pc: 96,
+    players: 110,
+    pc: 110,
     status: 108,
     time: 72,
-    note: 150,
+    note: 160,
     report: 96
   };
-  const TABLE_TEXT_LIMITS = { scenario: 20, players: 10, pc: 10, note: 20 };
+  const TABLE_TEXT_LIMITS = { scenario: 30, players: 15, pc: 15, note: 20 };
+  const TABLE_TEXT_LIMIT_MAX = { scenario: 80, players: 60, pc: 60, note: 80 };
 
   const defaultRows = [
     { id: cryptoId(), date: "2026-05-13", dates: ["2026-05-13"], scenario: "サンプルシナリオA", system: "CoC 6版", role: "PL", gm: "GMサンプル01", players: "PL-A、PL-B", pc: "PC-A", status: "新規", time: "4h", note: "初回セッション。導入と探索中心。", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
@@ -135,6 +136,17 @@
       normalized.width = clampColumnWidth(normalized.key, Number(normalized.width) || COLUMN_DEFAULT_WIDTHS[normalized.key] || 140);
       return normalized;
     });
+
+    if(!state.migrations?.v14ColumnWidths){
+      state.columns = state.columns.map(col=>{
+        if(["scenario","players","pc","note"].includes(col.key)){
+          return { ...col, width: COLUMN_DEFAULT_WIDTHS[col.key] };
+        }
+        return col;
+      });
+      state.migrations = { ...(state.migrations || {}), v14ColumnWidths: true };
+      saveState();
+    }
 
     state.rows.forEach(row=>{
       normalizeRowDates(row);
@@ -276,10 +288,10 @@
 
   function cellContent(row,col){
     if(col.key === "date") return html(`<span class="date-cell truncate-cell" title="${escapeAttr(getDateTitle(row))}">${escapeHtml(getDateDisplay(row))}</span>`);
-    if(col.key === "scenario") return textCell(row.scenario, "cell-scenario", TABLE_TEXT_LIMITS.scenario);
-    if(col.key === "players") return textCell(row.players, "", TABLE_TEXT_LIMITS.players);
-    if(col.key === "pc") return textCell(row.pc, "", TABLE_TEXT_LIMITS.pc);
-    if(col.key === "note") return textCell(row.note, "", TABLE_TEXT_LIMITS.note);
+    if(col.key === "scenario") return textCell(row.scenario, "cell-scenario", getDynamicTextLimit(col));
+    if(col.key === "players") return textCell(row.players, "", getDynamicTextLimit(col));
+    if(col.key === "pc") return textCell(row.pc, "", getDynamicTextLimit(col));
+    if(col.key === "note") return textCell(row.note, "", getDynamicTextLimit(col));
     if(col.key === "system") return html(`<span class="system-pill ${systemClass(row.system)}">${escapeHtml(row.system || "")}</span>`);
     if(col.key === "role") return html(`<span class="role-pill ${roleClass(row.role)}">${escapeHtml(row.role || "")}</span>`);
     if(col.key === "hashtag") return textCell(row.hashtag, "hashtag-cell", 18);
@@ -850,6 +862,16 @@
     const min = COLUMN_MIN_WIDTHS[key] || 72;
     const max = key === "scenario" || key === "note" ? 520 : 360;
     return Math.max(min, Math.min(max, Math.round(width)));
+  }
+
+  function getDynamicTextLimit(col){
+    const key = col?.key;
+    const base = TABLE_TEXT_LIMITS[key] || 0;
+    if(!base) return 0;
+    const defaultWidth = COLUMN_DEFAULT_WIDTHS[key] || 140;
+    const width = Number(col.width) || defaultWidth;
+    const limit = Math.floor(base * Math.max(1, width / defaultWidth));
+    return Math.min(TABLE_TEXT_LIMIT_MAX[key] || limit, Math.max(base, limit));
   }
 
   function textCell(value,className="",limit=0){
