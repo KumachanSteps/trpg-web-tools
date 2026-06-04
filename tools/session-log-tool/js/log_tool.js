@@ -6,6 +6,35 @@
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
   const SYSTEM_OPTIONS = ["CoC 7版", "CoC 6版", "エモクロア", "マダミス"];
   const ROLE_OPTIONS = ["PL", "KP", "GM", "DL"];
+  const COLUMN_DEFAULT_WIDTHS = {
+    fav: 72,
+    date: 136,
+    scenario: 240,
+    system: 124,
+    role: 96,
+    gm: 132,
+    players: 132,
+    pc: 132,
+    status: 120,
+    time: 84,
+    note: 240,
+    report: 112
+  };
+  const COLUMN_MIN_WIDTHS = {
+    fav: 56,
+    date: 112,
+    scenario: 160,
+    system: 108,
+    role: 78,
+    gm: 96,
+    players: 96,
+    pc: 96,
+    status: 108,
+    time: 72,
+    note: 150,
+    report: 96
+  };
+  const TABLE_TEXT_LIMITS = { scenario: 20, players: 10, pc: 10, note: 20 };
 
   const defaultRows = [
     { id: cryptoId(), date: "2026-05-13", dates: ["2026-05-13"], scenario: "サンプルシナリオA", system: "CoC 6版", role: "PL", gm: "GMサンプル01", players: "PL-A、PL-B", pc: "PC-A", status: "新規", time: "4h", note: "初回セッション。導入と探索中心。", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
@@ -43,6 +72,8 @@
   let activeId = state.rows[0]?.id || null;
   let draggingKey = null;
   let dragOverKey = null;
+  let dragInsertSide = "before";
+  let resizingColumn = null;
   let editingId = null;
 
   const els = {};
@@ -100,8 +131,9 @@
     if(!Array.isArray(state.columns)) state.columns = clone(defaultColumns);
 
     state.columns = state.columns.map(col=>{
-      if(col.key === "role") return { ...col, label: "ロール" };
-      return col;
+      const normalized = col.key === "role" ? { ...col, label: "ロール" } : { ...col };
+      normalized.width = clampColumnWidth(normalized.key, Number(normalized.width) || COLUMN_DEFAULT_WIDTHS[normalized.key] || 140);
+      return normalized;
     });
 
     state.rows.forEach(row=>{
@@ -177,7 +209,7 @@
       button.innerHTML = `<span><strong>${escapeHtml(col.label)}</strong><small>${escapeHtml(col.desc)}</small></span><span class="add-chip">${already ? "追加済" : "追加"}</span>`;
       button.addEventListener("click",()=>{
         if(already) return;
-        state.columns.splice(Math.max(state.columns.length-1,0),0,{ key: col.key, label: col.label });
+        state.columns.splice(Math.max(state.columns.length-1,0),0,{ key: col.key, label: col.label, width: COLUMN_DEFAULT_WIDTHS[col.key] || 140 });
         saveAndRender();
       });
       els.optionalFieldsList.appendChild(button);
@@ -196,6 +228,7 @@
       state.columns.forEach(col=>{
         const td = document.createElement("td");
         td.className = getCellClass(col.key);
+        applyColumnWidth(td, col);
         td.appendChild(cellContent(row,col));
         tr.appendChild(td);
       });
@@ -213,17 +246,28 @@
     state.columns.forEach(col=>{
       const th = document.createElement("th");
       th.dataset.key = col.key;
-      th.draggable = !col.locked;
-      th.className = col.locked ? "" : "draggable-header";
-      th.title = col.locked ? "この列は固定です" : "ドラッグで項目を並び替え";
-      th.innerHTML = `${col.locked ? "" : '<span class="drag-handle" draggable="true">⋮⋮</span>'}<span>${escapeHtml(col.label)}</span>${col.locked ? '<span class="fixed-label">固定</span>' : ""}`;
+      th.draggable = false;
+      th.className = `${col.locked ? "" : "draggable-header"} column-${cssSafeKey(col.key)}`.trim();
+      th.title = col.locked ? "この列は固定です" : "⋮⋮ をドラッグして項目を並び替え / 右端をドラッグして幅を変更";
+      applyColumnWidth(th, col);
+      th.innerHTML = `
+        <span class="header-content">
+          ${col.locked ? "" : '<span class="drag-handle" draggable="true" title="ドラッグで項目を並び替え">⋮⋮</span>'}
+          <span class="header-label">${escapeHtml(col.label)}</span>
+          ${col.locked ? '<span class="fixed-label">固定</span>' : ""}
+        </span>
+        ${col.locked ? "" : '<span class="col-resizer" title="ドラッグで列幅を変更"></span>'}
+      `;
 
-      const dragHandle = th.querySelector(".drag-handle") || th;
-      dragHandle.addEventListener("dragstart",event=>handleDragStart(event,col.key,th));
+      const dragHandle = th.querySelector(".drag-handle");
+      dragHandle?.addEventListener("dragstart",event=>handleDragStart(event,col.key,th));
+      dragHandle?.addEventListener("dragend",handleDragEnd);
       th.addEventListener("dragover",event=>handleDragOver(event,col.key,th));
       th.addEventListener("dragleave",event=>handleDragLeave(event,th));
       th.addEventListener("drop",event=>handleDrop(event,col.key,th));
-      th.addEventListener("dragend",handleDragEnd);
+
+      const resizer = th.querySelector(".col-resizer");
+      resizer?.addEventListener("mousedown",event=>startColumnResize(event, col.key, th));
       tr.appendChild(th);
     });
     els.tableHead.innerHTML = "";
@@ -231,11 +275,14 @@
   }
 
   function cellContent(row,col){
-    if(col.key === "date") return html(`<span class="date-cell" title="${escapeAttr(getDateTitle(row))}">${escapeHtml(getDateDisplay(row))}</span>`);
-    if(col.key === "scenario") return html(`<span class="cell-scenario">${escapeHtml(row.scenario || "")}</span>`);
+    if(col.key === "date") return html(`<span class="date-cell truncate-cell" title="${escapeAttr(getDateTitle(row))}">${escapeHtml(getDateDisplay(row))}</span>`);
+    if(col.key === "scenario") return textCell(row.scenario, "cell-scenario", TABLE_TEXT_LIMITS.scenario);
+    if(col.key === "players") return textCell(row.players, "", TABLE_TEXT_LIMITS.players);
+    if(col.key === "pc") return textCell(row.pc, "", TABLE_TEXT_LIMITS.pc);
+    if(col.key === "note") return textCell(row.note, "", TABLE_TEXT_LIMITS.note);
     if(col.key === "system") return html(`<span class="system-pill ${systemClass(row.system)}">${escapeHtml(row.system || "")}</span>`);
     if(col.key === "role") return html(`<span class="role-pill ${roleClass(row.role)}">${escapeHtml(row.role || "")}</span>`);
-    if(col.key === "hashtag") return html(`<span class="hashtag-cell">${escapeHtml(row.hashtag || "")}</span>`);
+    if(col.key === "hashtag") return textCell(row.hashtag, "hashtag-cell", 18);
     if(col.key === "fav") return html(`<span>${row.fav ? "★" : "☆"}</span>`);
     if(col.key === "report"){
       const btn = document.createElement("button");
@@ -410,49 +457,58 @@
     const label = prompt("追加する項目名を入力してください");
     if(!label) return;
     const key = `custom_${Date.now()}`;
-    state.columns.splice(Math.max(state.columns.length-1,0),0,{key,label});
+    state.columns.splice(Math.max(state.columns.length-1,0),0,{key,label,width:COLUMN_DEFAULT_WIDTHS[key] || 140});
     saveAndRender();
   }
 
   function handleDragStart(event,key,headerEl){
     const col = state.columns.find(c=>c.key===key);
-    if(col?.locked){ event.preventDefault(); return; }
+    if(col?.locked || resizingColumn){ event.preventDefault(); return; }
     draggingKey = key;
     dragOverKey = null;
+    dragInsertSide = "before";
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain",key);
     headerEl?.classList.add("dragging");
   }
 
   function handleDragOver(event,key,headerEl){
-    if(!draggingKey || draggingKey === key) return;
+    if(!draggingKey || draggingKey === key || resizingColumn) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
-    if(dragOverKey !== key){
-      document.querySelectorAll("#tableHead th.drag-over").forEach(el=>el.classList.remove("drag-over"));
+    const rect = headerEl.getBoundingClientRect();
+    const side = event.clientX < rect.left + rect.width / 2 ? "before" : "after";
+    if(dragOverKey !== key || dragInsertSide !== side){
+      document.querySelectorAll("#tableHead th.drag-over-before, #tableHead th.drag-over-after").forEach(el=>el.classList.remove("drag-over-before","drag-over-after"));
       dragOverKey = key;
-      headerEl?.classList.add("drag-over");
+      dragInsertSide = side;
+      headerEl?.classList.add(side === "before" ? "drag-over-before" : "drag-over-after");
     }
   }
 
   function handleDragLeave(event,headerEl){
     const related = event.relatedTarget;
     if(related && headerEl?.contains(related)) return;
-    headerEl?.classList.remove("drag-over");
+    headerEl?.classList.remove("drag-over-before","drag-over-after");
   }
 
   function handleDrop(event,targetKey,headerEl){
     event.preventDefault();
     const sourceKey = event.dataTransfer.getData("text/plain") || draggingKey;
-    headerEl?.classList.remove("drag-over");
+    const rect = headerEl?.getBoundingClientRect();
+    const side = rect && event.clientX >= rect.left + rect.width / 2 ? "after" : "before";
+    headerEl?.classList.remove("drag-over-before","drag-over-after");
     if(sourceKey && targetKey && sourceKey !== targetKey){
       const sourceIndex = state.columns.findIndex(c=>c.key===sourceKey);
       const targetIndex = state.columns.findIndex(c=>c.key===targetKey);
-      const targetColumn = state.columns[targetIndex];
-      if(sourceIndex >= 0 && targetIndex >= 0 && !targetColumn?.locked){
+      const sourceColumn = state.columns[sourceIndex];
+      if(sourceIndex >= 0 && targetIndex >= 0 && !sourceColumn?.locked){
         const [moved] = state.columns.splice(sourceIndex,1);
-        const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
-        state.columns.splice(adjustedTargetIndex,0,moved);
+        let insertIndex = state.columns.findIndex(c=>c.key===targetKey);
+        if(side === "after") insertIndex += 1;
+        const lockedIndex = state.columns.findIndex(c=>c.locked);
+        if(lockedIndex >= 0) insertIndex = Math.min(insertIndex, lockedIndex);
+        state.columns.splice(Math.max(insertIndex,0),0,moved);
         saveState();
       }
     }
@@ -463,7 +519,41 @@
   function handleDragEnd(){
     draggingKey = null;
     dragOverKey = null;
-    document.querySelectorAll("#tableHead th.dragging, #tableHead th.drag-over").forEach(el=>el.classList.remove("dragging","drag-over"));
+    dragInsertSide = "before";
+    document.querySelectorAll("#tableHead th.dragging, #tableHead th.drag-over-before, #tableHead th.drag-over-after").forEach(el=>el.classList.remove("dragging","drag-over-before","drag-over-after"));
+  }
+
+  function startColumnResize(event,key,headerEl){
+    event.preventDefault();
+    event.stopPropagation();
+    const column = state.columns.find(c=>c.key === key);
+    if(!column || column.locked) return;
+    resizingColumn = {
+      key,
+      startX: event.clientX,
+      startWidth: Number(column.width) || headerEl.getBoundingClientRect().width
+    };
+    document.body.classList.add("is-resizing-column");
+    document.addEventListener("mousemove",handleColumnResizeMove);
+    document.addEventListener("mouseup",stopColumnResize,{ once:true });
+  }
+
+  function handleColumnResizeMove(event){
+    if(!resizingColumn) return;
+    const column = state.columns.find(c=>c.key === resizingColumn.key);
+    if(!column) return;
+    const delta = event.clientX - resizingColumn.startX;
+    column.width = clampColumnWidth(column.key, resizingColumn.startWidth + delta);
+    renderTable();
+  }
+
+  function stopColumnResize(){
+    if(resizingColumn){
+      resizingColumn = null;
+      document.body.classList.remove("is-resizing-column");
+      document.removeEventListener("mousemove",handleColumnResizeMove);
+      saveState();
+    }
   }
 
   function openDrawer(){ els.kansouDrawer.classList.add("open"); els.drawerOverlay.hidden = false; els.kansouDrawer.setAttribute("aria-hidden","false"); els.kansouTab.classList.add("hide"); renderDrawer(); }
@@ -558,7 +648,7 @@
       if(column.key === "hashtag") return;
       if(!merged.some(existing=>existing.key === column.key)){
         const reportIndex = merged.findIndex(existing=>existing.key === "report");
-        const insertColumn = { ...column };
+        const insertColumn = { ...column, width: clampColumnWidth(column.key, Number(column.width) || COLUMN_DEFAULT_WIDTHS[column.key] || 140) };
         if(reportIndex >= 0) merged.splice(reportIndex,0,insertColumn);
         else merged.push(insertColumn);
       }
@@ -747,7 +837,36 @@
   }
 
   function sumHours(rows){ return rows.reduce((sum,row)=>sum + (parseFloat(String(row.time||"").match(/[\d.]+/)?.[0] || "0") || 0),0); }
-  function getCellClass(key){ return key === "note" ? "note-cell" : ""; }
+  function getCellClass(key){ return `cell-${cssSafeKey(key)} ${["scenario","players","pc","note","hashtag","date"].includes(key) ? "truncate-td" : ""}`.trim(); }
+
+  function applyColumnWidth(element,col){
+    const width = clampColumnWidth(col.key, Number(col.width) || COLUMN_DEFAULT_WIDTHS[col.key] || 140);
+    element.style.width = `${width}px`;
+    element.style.minWidth = `${width}px`;
+    element.style.maxWidth = `${width}px`;
+  }
+
+  function clampColumnWidth(key,width){
+    const min = COLUMN_MIN_WIDTHS[key] || 72;
+    const max = key === "scenario" || key === "note" ? 520 : 360;
+    return Math.max(min, Math.min(max, Math.round(width)));
+  }
+
+  function textCell(value,className="",limit=0){
+    const raw = String(value || "");
+    const span = document.createElement("span");
+    span.className = `${className} truncate-cell`.trim();
+    span.title = raw;
+    span.textContent = limit ? truncateText(raw, limit) : raw;
+    return span;
+  }
+
+  function truncateText(value,limit){
+    const text = String(value || "");
+    return [...text].length > limit ? `${[...text].slice(0, limit).join("")}…` : text;
+  }
+
+  function cssSafeKey(key){ return String(key || "").replace(/[^a-zA-Z0-9_-]/g,"-"); }
   function html(markup){ const span = document.createElement("span"); span.innerHTML = markup; return span; }
   function escapeHtml(value){ return String(value).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
   function escapeAttr(value){ return escapeHtml(value).replace(/'/g,"&#039;"); }

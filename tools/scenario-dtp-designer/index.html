@@ -25,14 +25,14 @@
   <header class="app-header">
     <a class="portal-link" href="../../index.html">← TRPG WEBツール観測所</a>
     <div class="title-wrap">
-      <h1>シナリオDTPデザイナー <span>v1.1</span></h1>
+      <h1>シナリオDTPデザイナー <span>v1.2</span></h1>
       <p>A4縦・本文2カラム・右KPメモ欄で、シナリオ本文をDTP風に整える静的HTML版です。</p>
     </div>
     <nav class="header-actions" aria-label="主要操作">
       <button id="helpBtn" class="ghost-btn" type="button">？ 使い方</button>
       <button id="shortcutBtn" class="ghost-btn" type="button">⌘ ショートカット</button>
-      <button id="saveBtn" class="ghost-btn" type="button">💾 保存</button>
-      <label class="ghost-btn file-label">📄 JSON読込<input id="jsonInput" type="file" accept="application/json" hidden /></label>
+      <button id="saveBtn" class="ghost-btn" type="button">保存</button>
+      <label class="ghost-btn file-label">JSON読込<input id="jsonInput" type="file" accept="application/json" hidden /></label>
       <button id="pdfBtn" class="ghost-btn danger" type="button">PDF出力</button>
       <button id="pngBtn" class="ghost-btn" type="button">PNG出力</button>
     </nav>
@@ -42,7 +42,7 @@
     <button id="helpCloseBtn" class="panel-close" type="button">×</button>
     <strong>使い方：</strong>
     左カラム①でTXTを開く/ドラッグ＆ドロップする → テキストを確認・編集 → <b>プレビューに読み込む</b> →
-    中央のA4縦プレビューで配置調整 → 右の設定で見た目を調整 → PDF/PNG/JSONで保存できます。<br>
+    中央のA4縦プレビューで配置調整 → 右の設定で見た目を調整 → PDF/PNG/JSONで保存できます。
     プレビューは空白部分をドラッグして移動、<b>Cmd/Ctrl + スクロール</b>で拡大縮小できます。
   </section>
 
@@ -61,44 +61,42 @@
     </div>
   </section>
 
-  <main class="app-shell">
-    <aside class="source-panel">
+  <main id="appShell" class="app-shell">
+    <aside id="sourcePanel" class="source-panel">
       <section class="panel-card source-card">
         <div class="panel-title"><h2>TXT取込・編集</h2></div>
         <label id="txtDropZone" class="txt-drop-zone">
           <input id="txtInput" type="file" accept=".txt,text/plain" hidden />
           <strong>TXTファイルを開く / ドラッグ＆ドロップ</strong>
-          <span>読み込んだ本文は下の欄で編集できます。</span>
+          <span>読み込み後、このエリアは自動で閉じます。</span>
         </label>
         <textarea id="sourceText" class="source-text" spellcheck="false"># シナリオ本文 / 第1話
 
 ## 01　血の香り
-探索者たちは、山間の集落へ続く濡れた道を進んでいる。
-木々の間に立ちこめる霧は薄く、足音を吸い込むように静まり返っていた。
+探索者たちは、山間の集落へ続く濡れた道を進んでいる。木々の間に立ちこめる霧は薄く、足音を吸い込むように静まり返っていた。
 
 ▼聞き耳に成功した場合
 遠くから、すすり泣くような声が聞こえる。
 
 ▼ KP 情報
-導入シーン。不安感を高める描写を意識する。
-霧・匂い・静寂を強調するとよい。
+導入シーン。不安感を高める描写を意識する。霧・匂い・静寂を強調するとよい。
 
 ## 02　蠢く異形
-集落の外れ、社の裏手で探索者たちは常軌を逸した光景を目にする。
-それは人の形を保ちながら、明らかに何かが混ざった存在だった。
+集落の外れ、社の裏手で探索者たちは常軌を逸した光景を目にする。それは人の形を保ちながら、明らかに何かが混ざった存在だった。
 
 [KP]
-ここで戦闘へ移行してもよい。
-敵は「異形の村人」などを想定する。</textarea>
-        <div class="button-grid">
+ここで戦闘へ移行してもよい。敵は「異形の村人」などを想定する。</textarea>
+        <div class="source-actions">
           <button id="parseBtn" class="primary-btn" type="button">プレビューに読み込む</button>
           <button id="clearTextBtn" class="ghost-btn" type="button">クリア</button>
         </div>
       </section>
     </aside>
 
-    <aside class="structure-panel">
-      <section class="panel-card">
+    <div id="splitterSource" class="column-splitter" title="ドラッグで幅変更 / ダブルクリックでリセット"></div>
+
+    <aside id="structurePanel" class="structure-panel">
+      <section class="panel-card page-card">
         <div class="panel-title"><h2>ページ一覧</h2><button id="addPageBtn" class="mini-btn" type="button">＋</button></div>
         <div id="pageList" class="page-list"></div>
       </section>
@@ -106,6 +104,7 @@
       <section class="panel-card">
         <div class="panel-title"><h2>ブロック追加</h2></div>
         <div class="block-buttons">
+          <button type="button" data-add="header"><span>▰</span>ヘッダー</button>
           <button type="button" data-add="sceneTitle"><span>▮</span>章/シーン見出し</button>
           <button type="button" data-add="body"><span>☰</span>本文</button>
           <button type="button" data-add="keeper"><span>KP</span>KP情報</button>
@@ -122,6 +121,8 @@
       </section>
     </aside>
 
+    <div id="splitterStructure" class="column-splitter" title="ドラッグで幅変更 / ダブルクリックでリセット"></div>
+
     <section class="center-workspace">
       <div class="toolbar">
         <button id="fitBtn" class="ghost-btn" type="button">表示リセット</button>
@@ -130,7 +131,7 @@
       </div>
       <div class="ruler-row">
         <div class="ruler-corner"></div>
-        <div class="ruler horizontal"><span>0</span><span>50</span><span>100</span><span>150</span><span>200</span><span>210mm</span></div>
+        <div class="ruler horizontal"><span>0</span><span>50</span><span>100</span><span>150</span><span>210mm</span></div>
       </div>
       <div id="canvasWrap" class="canvas-wrap">
         <div class="ruler vertical"><span>0</span><span>50</span><span>100</span><span>150</span><span>200</span><span>250</span><span>297mm</span></div>
@@ -145,6 +146,7 @@
         <h2>選択中のブロック</h2>
         <label>種類
           <select id="typeSelect">
+            <option value="header">ヘッダー</option>
             <option value="sceneTitle">章/シーン見出し</option>
             <option value="body">本文</option>
             <option value="keeper">KP情報</option>
@@ -184,7 +186,7 @@
 
   <footer class="status-bar">
     <span>✎ 編集モード</span>
-    <span>ズーム <button id="zoomOut" type="button">−</button> <b id="zoomText">75%</b> <button id="zoomIn" type="button">＋</button></span>
+    <span>ズーム <button id="zoomOut" type="button">−</button> <b id="zoomText">66%</b> <button id="zoomIn" type="button">＋</button></span>
     <span>ページサイズ A4縦（210 × 297 mm）</span>
     <span>ページ <b id="pageIndicator">1 / 1</b></span>
     <span>ガイド 表示</span>
