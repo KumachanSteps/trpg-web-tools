@@ -2580,20 +2580,167 @@ body.screenshot-mode .candidate-summary-grid{
 }
 
 /* =========================================================
-   CoC Growth Checker v2 overrides
-   成長候補サマリー主表示
+   CoC Growth Checker v2 UI updates
    ========================================================= */
 
-.output-panel{
+html{
+  min-height:100%;
+}
+
+body{
+  height:auto;
+  min-height:100vh;
+  overflow:auto;
+}
+
+main{
+  flex:1 0 auto;
+  min-height:calc(100vh - 190px);
+}
+
+main>section:nth-child(2){
   display:flex;
   flex-direction:column;
 }
 
-.output-panel .tab-panel.active.growth-summary-panel{
+.tab-panel.active.growth-summary-panel{
   flex:1 1 auto;
   min-height:0;
   display:flex;
   flex-direction:column;
+}
+
+.rule-mode-group{
+  display:grid;
+  gap:7px;
+  margin:8px 0 12px;
+}
+
+.rule-option{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  margin:0;
+  padding:8px 10px;
+  border:1px solid var(--border-soft);
+  border-radius:16px;
+  background:var(--bg-panel-soft);
+  color:var(--text-soft);
+  font-size:12.5px;
+  line-height:1.45;
+  cursor:pointer;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.rule-option:hover{
+  transform:translateY(-1px);
+  border-color:var(--border-cyan);
+  background:var(--cyan-bg);
+  box-shadow:0 10px 22px rgba(14,165,233,.08);
+}
+
+.rule-option input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.rule-dot{
+  position:relative;
+  flex:0 0 auto;
+  width:14px;
+  height:14px;
+  margin-top:2px;
+  border:1.5px solid rgba(100,116,139,.48);
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+}
+
+.rule-dot::after{
+  content:"";
+  position:absolute;
+  inset:3px;
+  border-radius:999px;
+  background:#16a34a;
+  transform:scale(0);
+  transition:transform 160ms ease;
+}
+
+.rule-option input:checked + .rule-dot{
+  border-color:#16a34a;
+  background:rgba(22,163,74,.10);
+}
+
+.rule-option input:checked + .rule-dot::after{
+  transform:scale(1);
+}
+
+.rule-option:has(input:checked){
+  border-color:rgba(22,163,74,.34);
+  background:rgba(22,163,74,.08);
+  color:var(--text-main);
+}
+
+.extra-rule-line{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:10px 0 8px;
+  padding:8px 10px;
+  border:1px solid var(--border-soft);
+  border-radius:16px;
+  background:rgba(255,255,255,.46);
+  color:var(--text-soft);
+  font-size:12.5px;
+  cursor:pointer;
+}
+
+body.dark .extra-rule-line{
+  background:rgba(255,255,255,.05);
+}
+
+.extra-rule-line input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.extra-rule-box{
+  position:relative;
+  flex:0 0 auto;
+  width:14px;
+  height:14px;
+  border:1.5px solid rgba(100,116,139,.48);
+  border-radius:4px;
+  background:rgba(255,255,255,.72);
+}
+
+.extra-rule-box::after{
+  content:"";
+  position:absolute;
+  left:3px;
+  top:1px;
+  width:5px;
+  height:8px;
+  border:solid #16a34a;
+  border-width:0 2px 2px 0;
+  transform:rotate(45deg) scale(0);
+  transition:transform 160ms ease;
+}
+
+.extra-rule-line input:checked + .extra-rule-box{
+  border-color:#16a34a;
+  background:rgba(22,163,74,.10);
+}
+
+.extra-rule-line input:checked + .extra-rule-box::after{
+  transform:rotate(45deg) scale(1);
 }
 
 .growth-output-wrap{
@@ -2637,10 +2784,13 @@ body.screenshot-mode .candidate-summary-grid{
   margin:0;
   padding:8px 14px;
   border-radius:999px;
-  background:#7dd3fc;
-  color:#082f49;
   font-size:12px;
   line-height:1;
+}
+
+.growth-copy-button{
+  background:#7dd3fc;
+  color:#082f49;
   box-shadow:0 10px 24px rgba(14,165,233,.16);
 }
 
@@ -2649,11 +2799,6 @@ body.screenshot-mode .candidate-summary-grid{
   background:rgba(225,29,72,.10);
   color:#be123c;
   box-shadow:none;
-}
-
-.growth-delete-button:hover{
-  background:rgba(225,29,72,.16);
-  color:#9f1239;
 }
 
 .growth-output-box{
@@ -2677,49 +2822,48 @@ body.screenshot-mode .candidate-summary-grid{
 body.dark .growth-output-box{
   background:rgba(2,6,23,.72);
   color:#f8fafc;
-  border-color:rgba(103,232,249,.25);
-}
-
-.character-controls{
-  margin-bottom:10px;
 }
 
 .tool-footer-note{
+  flex:0 0 auto;
   width:min(100% - 48px,1480px);
-  margin:0 auto 18px;
-  padding:16px 20px;
+  margin:0 auto 24px;
+  padding:18px 22px;
   border:1px solid var(--border-soft);
   border-radius:24px;
   background:var(--bg-panel);
   box-shadow:var(--shadow-panel);
   color:var(--text-soft);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
 }
 
 .tool-footer-note h2{
-  margin:0 0 8px;
+  margin:0 0 10px;
   font-size:16px;
 }
 
 .tool-footer-note p{
-  margin:6px 0 0;
+  margin:8px 0 0;
   color:var(--text-muted);
   font-size:12px;
-  line-height:1.65;
+  line-height:1.7;
 }
 
-body.screenshot-mode .tabs,
-body.screenshot-mode .character-control-bar,
-body.screenshot-mode #characterControls,
 body.screenshot-mode .tool-footer-note{
-  display:none!important;
-}
-
-body.screenshot-mode .growth-output-wrap{
-  margin:0;
-  padding-bottom:0;
+  display:none;
 }
 
 body.screenshot-mode .growth-output-box{
-  min-height:0;
-  height:auto;
+  min-height:620px;
+}
+
+@media(max-width:980px){
+  main{
+    min-height:auto;
+  }
+
+  .tool-footer-note{
+    width:min(100% - 32px,1480px);
+  }
 }

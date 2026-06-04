@@ -1,4 +1,4 @@
-/* Scenario DTP Designer v1.0 static prototype - shortcut.js */
+/* Scenario DTP Designer v1.1 - shortcut.js */
 (function () {
   'use strict';
 
@@ -19,9 +19,15 @@
 
     if (ev.key === 'Escape') {
       withApp((app) => {
-        app.closeHelp();
+        app.closePanels();
         app.clearSelection();
       });
+      return;
+    }
+
+    if ((ev.key === 'Delete' || ev.key === 'Backspace') && !isTypingTarget(ev.target)) {
+      ev.preventDefault();
+      withApp((app) => app.deleteSelected());
       return;
     }
 
@@ -36,6 +42,24 @@
     if (key === 'o') {
       ev.preventDefault();
       withApp((app) => app.triggerJsonLoad());
+      return;
+    }
+
+    if (key === 'z' && ev.shiftKey) {
+      ev.preventDefault();
+      withApp((app) => app.redo());
+      return;
+    }
+
+    if (key === 'z') {
+      ev.preventDefault();
+      withApp((app) => app.undo());
+      return;
+    }
+
+    if (key === 'y' && ev.ctrlKey) {
+      ev.preventDefault();
+      withApp((app) => app.redo());
       return;
     }
 
@@ -54,9 +78,6 @@
     if (ev.shiftKey && key === 'i') {
       ev.preventDefault();
       withApp((app) => app.triggerImage());
-      return;
     }
-
-    if (isTypingTarget(ev.target)) return;
   });
 }());

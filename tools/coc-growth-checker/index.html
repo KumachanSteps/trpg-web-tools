@@ -14,7 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
 
-  <title>CoC 6版 / 7版 成長チェッカーv2</title>
+  <title>CoC 6e / 7e Growth Checker</title>
   <link rel="stylesheet" href="./css/growth_checker_style.css">
 </head>
 
@@ -68,11 +68,11 @@
               <span class="tool-icon-growth-check" aria-hidden="true">✓</span>
             </div>
 
-            <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカーv2</h1>
+            <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカー</h1>
           </div>
 
           <p class="site-description" data-i18n="app.description">
-            セッションログHTML / テキストから技能ロールを抽出し、選択した出力ルールに沿って探索者ごとの成長チェック候補を一覧化します。
+            セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。
           </p>
 
           <p class="shortcut-tip" data-i18n-html="app.tip">
@@ -100,8 +100,9 @@
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Enter</kbd></div><div class="shortcut-desc" data-i18n="shortcut.analyze">成長候補を抽出</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>L</kbd></div><div class="shortcut-desc" data-i18n="shortcut.focusInput">入力欄にフォーカス</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleInput">入力パネル開閉</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd></div><div class="shortcut-desc" data-i18n="shortcut.summaryTab">成長候補サマリーへ移動</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd></div><div class="shortcut-desc" data-i18n="shortcut.rollsTab">抽出ロールへ移動</div></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd></div><div class="shortcut-desc" data-i18n="shortcut.summaryTab">サマリーへ移動</div></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd></div><div class="shortcut-desc" data-i18n="shortcut.candidatesTab">成長候補へ移動</div></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>3</kbd></div><div class="shortcut-desc" data-i18n="shortcut.rollsTab">抽出ロールへ移動</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>C</kbd></div><div class="shortcut-desc" data-i18n="shortcut.characterSettings">表示キャラ設定の開閉</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>T</kbd></div><div class="shortcut-desc" data-i18n="shortcut.theme">ナイトモード切替</div></div>
           <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>V</kbd></div><div class="shortcut-desc" data-i18n="shortcut.screenshot">スクショ表示 / 通常表示</div></div>
@@ -138,21 +139,36 @@
         </label>
 
         <h3 data-i18n="input.ruleTitle">成長チェック出力ルール</h3>
-        <label>
-          <span data-i18n="input.ruleMode">抽出方式</span>
-          <select id="ruleMode">
-            <option value="rulebook" data-i18n="rule.rulebook">基本ルルブ準拠：成功した技能を1技能につき1回</option>
-            <option value="critFumble" data-i18n="rule.critFumble">クリティカル / ファンブル / 初期値：該当ロールをすべて抽出</option>
-            <option value="both" data-i18n="rule.both">合算：クリファン全件 + 成功技能1回</option>
-            <option value="bothPrime" data-i18n="rule.bothPrime">合算’：クリティカル全件 + 成功技能1回</option>
-          </select>
-          <p class="growth-rule-help" data-i18n="input.ruleHelp">ログ本文の成功・失敗・クリティカル・ファンブル表記と目標値をもとに、成長チェック候補を抽出します。</p>
+        <div id="ruleModeGroup" class="rule-mode-group" role="radiogroup" aria-label="成長チェック出力ルール">
+          <label class="rule-option">
+            <input type="radio" name="ruleMode" value="rulebook" checked />
+            <span class="rule-dot" aria-hidden="true"></span>
+            <span data-i18n="rule.rulebook">基本ルルブ準拠（全成功技能を1回づつ表示）</span>
+          </label>
+          <label class="rule-option">
+            <input type="radio" name="ruleMode" value="critFumble" />
+            <span class="rule-dot" aria-hidden="true"></span>
+            <span data-i18n="rule.critFumble">クリティカル / ファンブル / 初期値（該当ロールを全て表示）</span>
+          </label>
+          <label class="rule-option">
+            <input type="radio" name="ruleMode" value="both" />
+            <span class="rule-dot" aria-hidden="true"></span>
+            <span data-i18n="rule.both">合算① クリファン全件 + 成功技能1回づつ</span>
+          </label>
+          <label class="rule-option">
+            <input type="radio" name="ruleMode" value="bothPrime" />
+            <span class="rule-dot" aria-hidden="true"></span>
+            <span data-i18n="rule.bothPrime">合算② クリティカル全件 + 成功技能1回づつ</span>
+          </label>
+        </div>
+
+        <label class="extra-rule-line">
+          <input id="includeParamRolls" type="checkbox" />
+          <span class="extra-rule-box" aria-hidden="true"></span>
+          <span data-i18n="input.includeParamRolls">アイデア、知識、能力値ロールを加える</span>
         </label>
 
-        <label>
-          <span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span>
-          <input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" />
-        </label>
+        <label><span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span><input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" /></label>
 
         <button id="analyzeBtn" data-i18n="button.analyze">成長候補を抽出</button>
         <button id="clearBtn" class="secondary" data-i18n="button.clear">クリア</button>
@@ -163,10 +179,11 @@
       </div>
     </section>
 
-    <section class="output-panel">
+    <section>
       <div class="tabs">
         <div class="tabs-left">
-          <button class="tab-button active" data-tab="summary" data-i18n="tab.summary">成長候補サマリー</button>
+          <button class="tab-button active" data-tab="summary" data-i18n="tab.summary">サマリー</button>
+          <button class="tab-button" data-tab="candidates" data-i18n="tab.candidates">成長候補</button>
           <button class="tab-button" data-tab="rolls" data-i18n="tab.rolls">抽出ロール</button>
         </div>
 
@@ -184,14 +201,31 @@
 
         <div class="growth-output-wrap">
           <div class="growth-output-head">
-            <h2 class="growth-output-title" data-i18n="summary.outputTitle">成長候補サマリー</h2>
+            <h2 class="growth-output-title" data-i18n="summary.growthOutputTitle">成長候補サマリー</h2>
             <div class="growth-output-actions">
               <button id="copySummaryBtn" class="growth-copy-button" type="button" data-i18n="button.copy">コピー</button>
               <button id="deleteSummaryBtn" class="growth-delete-button" type="button" data-i18n="button.delete">削除</button>
             </div>
           </div>
-          <textarea id="growthSummaryOutput" class="growth-output-box" spellcheck="false" data-i18n-placeholder="summary.outputPlaceholder" placeholder="ログを入力して「成長候補を抽出」を押してください。"></textarea>
+          <textarea id="growthSummaryOutput" class="growth-output-box" spellcheck="false" readonly>ログを入力して「成長候補を抽出」を押してください。</textarea>
         </div>
+      </div>
+
+      <div id="candidates" class="tab-panel">
+        <h2 data-i18n="candidates.title">成長チェック候補一覧</h2>
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="candidates.index">#</th>
+              <th data-i18n="candidates.character">キャラクター</th>
+              <th data-i18n="candidates.skill">技能</th>
+              <th data-i18n="candidates.reason">候補理由</th>
+              <th data-i18n="candidates.roll">出目</th>
+              <th data-i18n="candidates.sourceLine">元ログ行</th>
+            </tr>
+          </thead>
+          <tbody id="candidateTableBody"></tbody>
+        </table>
       </div>
 
       <div id="rolls" class="tab-panel">

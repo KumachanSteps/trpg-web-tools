@@ -62,6 +62,12 @@ function handleGlobalKeydown(event) {
 
   if (isCommand && !event.shiftKey && key === '2') {
     event.preventDefault();
+    activateTabByName('candidates');
+    return;
+  }
+
+  if (isCommand && !event.shiftKey && key === '3') {
+    event.preventDefault();
     activateTabByName('rolls');
     return;
   }

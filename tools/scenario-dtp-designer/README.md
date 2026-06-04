@@ -1,39 +1,41 @@
-# シナリオDTPデザイナー v1.0 static prototype
+# シナリオDTPデザイナー v1.1
 
-TRPGシナリオ本文を、A4横・本文2カラム・右KPメモ欄のDTP風レイアウトへ配置する静的HTML版の試作です。
+TRPGシナリオ本文をA4縦・本文2カラム・右KPメモ欄のDTP風レイアウトへ配置する静的HTML版です。
+
+## v1.1更新点
+
+- `index.html` に Google tag / 共通favicon / 指定titleを追加
+- CSSパスを `./css/dtp-designer-style.css` に変更
+- A4縦表示へ変更
+- 本文エリアを2カラム想定に変更
+- 右KPメモ欄をページ右端に配置し、右マージン0に調整
+- プレビューをドラッグでパン移動可能に
+- 通常スクロールで複数ページ移動可能に
+- Cmd/Ctrl + スクロールで拡大縮小可能に
+- Cmd/Ctrl+Z、Cmd/Ctrl+Shift+Z、Ctrl+Y のUndo/Redo対応
+- Delete/Backspaceで選択ブロック削除
+- ヘッダーにショートカットボタンを追加
+- ショートカットパネルをヘッダー下にスライド表示
+- 左側カラムを2分割
+  - 左カラム①：TXTファイルを開く/ドラッグ＆ドロップ、本文編集、プレビュー読込、クリア
+  - 左カラム②：ページ一覧、ブロック追加、素材サムネイル
+- ページ名を編集可能に
+- ブロック追加ボタンにシンプルアイコンを追加
+- 画像素材のサムネイル表示
 
 ## フォルダ構成
 
 ```text
-scenario-dtp-designer/
+scenario-dtp-designer-v1.1/
 ├── index.html
-├── style.css
+├── css/
+│   └── dtp-designer-style.css
 ├── js/
 │   ├── main.js
 │   └── shortcut.js
 ├── assets/
 │   └── img/
 └── README.md
-```
-
-## 使い方
-
-1. `index.html` をブラウザで開く
-2. 左パネルのテキスト欄にシナリオ本文を貼り付け
-3. 「自動ブロック化」を押す
-4. 中央キャンバス上のブロックをクリック・ドラッグして調整
-5. 右パネルでフォントサイズなどを編集
-6. JSON保存、PDF出力、PNG出力を行う
-
-## ショートカット
-
-```text
-Ctrl / Cmd + S          JSON保存
-Ctrl / Cmd + O          JSON読込
-Ctrl / Cmd + Shift + P  PDF出力
-Ctrl / Cmd + Shift + E  PNG出力
-Ctrl / Cmd + Shift + I  画像追加
-Esc                     選択解除 / 使い方パネルを閉じる
 ```
 
 ## GitHub Pages配置例
@@ -43,18 +45,11 @@ trpg-web-tools/
 └── tools/
     └── scenario-dtp-designer/
         ├── index.html
-        ├── style.css
+        ├── css/
+        │   └── dtp-designer-style.css
         ├── js/
         │   ├── main.js
         │   └── shortcut.js
-        ├── assets/
-        │   └── img/
-        └── README.md
+        └── assets/
+            └── img/
 ```
-
-## 備考
-
-- PNG出力は `html2canvas` CDN を利用しています。
-- PDF出力はブラウザ印刷機能を利用します。
-- 保存データはJSONとしてダウンロードできます。
-- ブラウザ内のlocalStorageにも自動保存されます。
