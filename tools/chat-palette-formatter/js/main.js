@@ -29,28 +29,42 @@ function setEditionMode(mode) {
   editionMode = mode;
   updateEditionToggleActive(mode);
 
+  const input = document.getElementById("input");
+  const hasInput = input && input.value.trim();
+
   if (mode === "auto") {
     handleInputChange();
     return;
   }
 
-  setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
+  if (hasInput) {
+    handleInputChange();
+  } else {
+    setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
+  }
 }
 
 function handleInputChange() {
-  if (editionMode !== "auto") return;
-
   const input = document.getElementById("input");
+  const output = document.getElementById("output");
   const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
 
   if (!extracted.text) {
     detectedEdition = "";
+    output.value = "";
+    if (editionMode === "auto") updateEditionToggleActive("auto");
     setStatus(t("initialStatus"));
     return;
   }
 
-  detectedEdition = window.ChatPaletteParser.detectEdition(extracted.text);
-  setStatus(t("detectPrefix") + editionLabel(detectedEdition) + t("detectSuffix"));
+  const edition = getSelectedEdition(extracted.text);
+
+  if (editionMode === "auto") {
+    updateEditionToggleActive(edition);
+    setStatus(t("detectPrefix") + editionLabel(edition) + t("detectSuffix"));
+  }
+
+  output.value = window.ChatPaletteParser.buildOutput(extracted.text, edition);
 }
 
 function getSelectedEdition(text) {

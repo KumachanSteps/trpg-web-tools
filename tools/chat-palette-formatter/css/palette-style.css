@@ -422,24 +422,43 @@ textarea:focus {
 }
 
 /* =========================================================
-   Footer
+   Footer Note
    ========================================================= */
 
-.app-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  padding: 8px 14px;
+.tool-footer-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 14px;
+  align-items: start;
+  padding: 10px 14px;
   border: 1px solid rgba(15, 23, 42, .10);
   border-radius: 18px;
   background: rgba(255, 255, 255, .76);
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11.5px;
+  line-height: 1.55;
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+}
+
+.tool-footer-note h2 {
+  margin: 0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+
+.tool-footer-note-body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tool-footer-note p {
+  margin: 0;
 }
 
 /* =========================================================
@@ -447,6 +466,10 @@ textarea:focus {
    ========================================================= */
 
 @media (max-width: 760px) {
+  .tool-footer-note {
+    grid-template-columns: 1fr;
+  }
+
   .app-shell {
     padding: 12px;
     gap: 10px;
