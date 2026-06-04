@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>かんたんアイコンメーカーv0.1</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
+</head>
+<body class="theme-light">
+  <div class="page-shell">
+    <div class="page-inner">
+      <header class="site-header">
+        <div class="header-top">
+          <div class="header-left">
+            <a class="portal-link" href="../../index.html" aria-label="TRPG WEBツール観測所へ戻る">
+              ← TRPG WEBツール観測所
+              <span class="portal-tooltip">ポータルサイトに戻る</span>
+            </a>
+            <span class="mode-pill">✦ アイコン生成</span>
+          </div>
+          <div class="header-actions">
+            <button class="header-button" type="button" id="langToggle">EN/JP</button>
+            <button class="header-button" type="button" data-panel-trigger="helpPanel">使い方</button>
+            <button class="header-button" type="button" data-panel-trigger="shortcutPanel">ショートカット</button>
+            <button class="header-button" type="button" id="themeToggle">ナイトモード</button>
+          </div>
+        </div>
+
+        <div class="title-row">
+          <div class="tool-icon" aria-hidden="true">
+            <span class="tool-icon-main">▣</span>
+            <span class="tool-icon-star">✦</span>
+            <span class="tool-icon-copy">1:1</span>
+          </div>
+          <div>
+            <h1 class="site-title">かんたんアイコンメーカーv0.1</h1>
+            <p class="site-description">
+              PNG立ち絵を読み込み、フレーム・背景・名前・HOラベルを整えて、TRPG用の1:1キャラクターアイコンを作成します。
+            </p>
+          </div>
+        </div>
+
+        <section class="header-info-panel hidden" id="helpPanel">
+          <strong>使い方：</strong> PNG画像を読み込み、プレビュー上で画像・名前・HOラベルを直接ドラッグして位置調整します。名前とHOは選択後、右下ハンドルでサイズ変更できます。ドラッグ中は赤い点線ガイドが表示されます。
+        </section>
+        <section class="header-info-panel hidden" id="shortcutPanel">
+          <strong>ショートカット：</strong> Delete / Backspace：選択解除、Esc：パネルを閉じる、矢印キー：選択中パーツを1px移動、Shift+矢印：10px移動。
+        </section>
+      </header>
+
+      <main class="layout-grid">
+        <section class="left-column">
+          <section class="panel upload-panel">
+            <div class="panel-title">
+              <span class="panel-icon">⬆</span>
+              <h2>画像アップロード</h2>
+            </div>
+
+            <div class="dropzone" id="dropzone">
+              <input class="file-input-hidden" id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" />
+              <div class="dropzone-large" id="dropzoneLarge">
+                <div class="dropzone-icon">▧</div>
+                <p class="dropzone-title">PNGをドラッグ＆ドロップ</p>
+                <p class="dropzone-note">またはクリックしてファイルを選択</p>
+                <button class="button-primary" type="button" id="chooseImageButton">PNGを選択</button>
+              </div>
+              <div class="dropzone-compact hidden" id="dropzoneCompact">
+                <div class="upload-ok">✓</div>
+                <div class="upload-text">
+                  <strong>画像を読み込み済み</strong>
+                  <span id="loadedFileName">アップロード欄を最小化中</span>
+                </div>
+                <button class="button-muted small" type="button" id="replaceImageButton">差し替え</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <span class="panel-icon">🎨</span>
+              <h2>フレーム / 背景</h2>
+            </div>
+
+            <div class="frame-mode-row">
+              <span class="field-label no-margin">フレーム種類</span>
+              <div class="segmented-control" role="group" aria-label="フレーム種類">
+                <button class="segment is-active" type="button" data-frame-mode="solid">単色</button>
+                <button class="segment" type="button" data-frame-mode="gradation">グラデーション</button>
+              </div>
+            </div>
+
+            <label class="field-label">プリセット</label>
+            <div class="preset-grid" id="presetGrid"></div>
+
+            <div class="field-grid two-columns compact-fields">
+              <label>
+                <span class="field-label">背景タイプ</span>
+                <select id="backgroundType">
+                  <option value="solid">単色</option>
+                  <option value="gradation">グラデーション</option>
+                  <option value="transparent">透明</option>
+                  <option value="dot">ドット</option>
+                  <option value="stripe">斜線</option>
+                  <option value="check">チェック</option>
+                </select>
+              </label>
+              <label>
+                <span class="field-label">枠の太さ</span>
+                <input type="range" id="frameWidth" min="6" max="42" value="18" />
+              </label>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <span class="panel-icon">T</span>
+              <h2>名前テキスト</h2>
+            </div>
+            <label>
+              <span class="field-label">キャラクター名</span>
+              <input id="nameText" type="text" value="花菱 火花" />
+            </label>
+            <div class="field-grid two-columns">
+              <label>
+                <span class="field-label">フォント</span>
+                <select id="nameFont">
+                  <option value="serif">明朝系</option>
+                  <option value="sans">ゴシック系</option>
+                  <option value="rounded">丸ゴシック系</option>
+                  <option value="mono">モダン英字</option>
+                </select>
+              </label>
+              <label>
+                <span class="field-label">配置</span>
+                <select id="nameWritingMode">
+                  <option value="vertical">右上・縦書き</option>
+                  <option value="horizontal">下部・横書き</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <span class="panel-icon">HO</span>
+              <h2>HOラベル</h2>
+            </div>
+            <div class="field-grid two-columns">
+              <label>
+                <span class="field-label">HO / ラベル</span>
+                <input id="hoText" type="text" value="HO1" />
+              </label>
+              <label>
+                <span class="field-label">スタイル</span>
+                <select id="hoStyle">
+                  <option value="dark">黒ラベル</option>
+                  <option value="glass">ガラス風</option>
+                  <option value="ribbon">リボン風</option>
+                </select>
+              </label>
+            </div>
+            <p class="input-help">HO1の数字部分は自由入力可能です。例：PC1 / 調香師 / 米国テーラー</p>
+          </section>
+        </section>
+
+        <section class="main-grid">
+          <section class="middle-column">
+            <section class="panel preview-panel">
+              <div class="preview-header">
+                <div>
+                  <div class="panel-title preview-title-inline">
+                    <span class="panel-icon">▣</span>
+                    <h2>アイコンプレビュー</h2>
+                  </div>
+                  <p class="preview-note">画像・名前・HOを直接ドラッグ編集できます。ドラッグ中は赤い点線ガイドが表示されます。</p>
+                </div>
+                <div class="preview-actions">
+                  <button class="tool-button button-primary" type="button" id="downloadButton">PNG保存</button>
+                  <button class="tool-button button-muted" type="button" id="copyButton">コピー</button>
+                  <button class="tool-button button-muted" type="button" id="resetButton">リセット</button>
+                  <button class="icon-tool-button" type="button" id="zoomInButton" title="画像を拡大">🔍＋</button>
+                  <button class="icon-tool-button" type="button" id="zoomOutButton" title="画像を縮小">🔍−</button>
+                </div>
+              </div>
+
+              <div class="preview-stage">
+                <div class="icon-editor-shell">
+                  <div class="icon-editor" id="iconEditor" aria-label="アイコン編集エリア">
+                    <div class="frame-layer" id="frameLayer"></div>
+                    <div class="inner-icon" id="innerIcon">
+                      <div class="background-layer" id="backgroundLayer"></div>
+                      <div class="safe-margin" aria-hidden="true"></div>
+
+                      <div class="character-object editable-object" id="characterObject" data-object="character" tabindex="0" aria-label="キャラクター画像">
+                        <div class="placeholder-character" id="placeholderCharacter">
+                          <div class="placeholder-head"></div>
+                          <div class="placeholder-body"></div>
+                        </div>
+                        <img id="characterImage" alt="読み込んだキャラクター画像" class="hidden" draggable="false" />
+                      </div>
+
+                      <div class="name-box editable-object selected" id="nameBox" data-object="name" tabindex="0" aria-label="名前テキストボックス">
+                        <span id="nameBoxText">花菱 火花</span>
+                        <span class="resize-handle" data-resize="name" aria-hidden="true"></span>
+                      </div>
+
+                      <div class="ho-badge editable-object" id="hoBadge" data-object="ho" tabindex="0" aria-label="HOラベル">
+                        <span id="hoBadgeText">HO1</span>
+                        <span class="resize-handle" data-resize="ho" aria-hidden="true"></span>
+                      </div>
+
+                      <div class="guide-layer hidden" id="guideLayer" aria-hidden="true">
+                        <div class="guide-line guide-v center"></div>
+                        <div class="guide-line guide-h center"></div>
+                        <div class="guide-line guide-v object-left"></div>
+                        <div class="guide-line guide-v object-right"></div>
+                        <div class="guide-line guide-h object-top"></div>
+                        <div class="guide-line guide-h object-bottom"></div>
+                        <div class="guide-label label-x" id="guideLabelX"></div>
+                        <div class="guide-label label-y" id="guideLabelY"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="settings-summary">
+                <div class="summary-header">
+                  <h3>現在の設定</h3>
+                  <span>プレビュー反映中</span>
+                </div>
+                <div class="settings-grid" id="settingsGrid"></div>
+                <div class="note-box">
+                  ※画像処理とPNG出力はブラウザ内で完結します。アップロードした画像はサーバーへ送信されません。
+                </div>
+              </aside>
+            </section>
+          </section>
+        </section>
+      </main>
+
+      <p class="footer-note">TRPG WEBツール観測所 / かんたんアイコンメーカーv0.1</p>
+    </div>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+</html>
