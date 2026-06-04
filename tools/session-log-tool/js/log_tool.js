@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.1";
+  const APP_VERSION = "v1.3";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
@@ -8,10 +8,10 @@
   const ROLE_OPTIONS = ["PL", "KP", "GM", "DL"];
 
   const defaultRows = [
-    { id: cryptoId(), date: "2026-05-13", scenario: "サンプルシナリオA", system: "CoC 6版", role: "PL", gm: "GMサンプル01", players: "PL-A、PL-B", pc: "PC-A", status: "新規", time: "4h", note: "初回セッション。導入と探索中心。", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
-    { id: cryptoId(), date: "2026-04-20", scenario: "サンプルシナリオB", system: "CoC 7版", role: "KP", gm: "自分", players: "PL-C、PL-D、PL-E", pc: "PC-B / PC-C / PC-D", status: "新規", time: "5h", note: "日程調整済み。次回は中盤から再開。", longNote: "" },
-    { id: cryptoId(), date: "2026-03-15", scenario: "サンプルシナリオC", system: "エモクロア", role: "DL", gm: "自分", players: "PL-F、PL-G", pc: "共鳴者A / 共鳴者B", status: "継続", time: "3.5h", note: "継続キャラクターで参加。感想メモあり。", longNote: "" },
-    { id: cryptoId(), date: "2026-02-28", scenario: "サンプルキャンペーン 第2話", system: "マダミス", role: "PL", gm: "GMサンプル02", players: "PL-H、PL-I、PL-J", pc: "PC-E", status: "継続", time: "6h", note: "キャンペーン進行中。公開用メモは別途作成予定。", longNote: "" }
+    { id: cryptoId(), date: "2026-05-13", dates: ["2026-05-13"], scenario: "サンプルシナリオA", system: "CoC 6版", role: "PL", gm: "GMサンプル01", players: "PL-A、PL-B", pc: "PC-A", status: "新規", time: "4h", note: "初回セッション。導入と探索中心。", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
+    { id: cryptoId(), date: "2026-04-20", dates: ["2026-04-20"], scenario: "サンプルシナリオB", system: "CoC 7版", role: "KP", gm: "自分", players: "PL-C、PL-D、PL-E", pc: "PC-B / PC-C / PC-D", status: "新規", time: "5h", note: "日程調整済み。次回は中盤から再開。", longNote: "" },
+    { id: cryptoId(), date: "2026-03-15", dates: ["2026-03-15"], scenario: "サンプルシナリオC", system: "エモクロア", role: "DL", gm: "自分", players: "PL-F、PL-G", pc: "共鳴者A / 共鳴者B", status: "継続", time: "3.5h", note: "継続キャラクターで参加。感想メモあり。", longNote: "" },
+    { id: cryptoId(), date: "2026-02-28", dates: ["2026-02-28"], scenario: "サンプルキャンペーン 第2話", system: "マダミス", role: "PL", gm: "GMサンプル02", players: "PL-H、PL-I、PL-J", pc: "PC-E", status: "継続", time: "6h", note: "キャンペーン進行中。公開用メモは別途作成予定。", longNote: "" }
   ];
   const defaultColumns = [
     { key: "date", label: "日付", type: "date" },
@@ -82,6 +82,7 @@
     els.addSessionTopBtn?.addEventListener("click",()=>openSessionDialog());
     els.floatingAddBtn?.addEventListener("click",()=>openSessionDialog());
     els.sessionForm.addEventListener("submit", handleSessionSave);
+    els.sessionForm.addEventListener("click", handleDateFieldClick);
     document.getElementById("closeSessionDialogBtn")?.addEventListener("click",()=>els.sessionDialog.close());
     els.deleteSessionBtn.addEventListener("click", deleteEditingSession);
   }
@@ -104,6 +105,7 @@
     });
 
     state.rows.forEach(row=>{
+      normalizeRowDates(row);
       if(row.system === "エモクロアTRPG") row.system = "エモクロア";
       if(row.system === "マルチシステム") row.system = "マダミス";
       if(row.role && normalizeRoleGroup(row.role) === "GM" && !ROLE_OPTIONS.includes(row.role)) row.role = "GM";
@@ -137,8 +139,8 @@
   }
 
   function renderStats(){
-    animateStat("statSessions", state.rows.length);
-    animateStat("statScenarios", unique(state.rows.map(r=>r.scenario).filter(Boolean)).length);
+    animateStat("statSessions", countSessionDates(state.rows));
+    animateStat("statScenarios", countUniqueScenarios(state.rows));
     animateStat("statPlayedTime", sumHours(state.rows), "h");
     animateStat("statPlayedWith", countCoPlayers(state.rows));
   }
@@ -229,6 +231,7 @@
   }
 
   function cellContent(row,col){
+    if(col.key === "date") return html(`<span class="date-cell" title="${escapeAttr(getDateTitle(row))}">${escapeHtml(getDateDisplay(row))}</span>`);
     if(col.key === "scenario") return html(`<span class="cell-scenario">${escapeHtml(row.scenario || "")}</span>`);
     if(col.key === "system") return html(`<span class="system-pill ${systemClass(row.system)}">${escapeHtml(row.system || "")}</span>`);
     if(col.key === "role") return html(`<span class="role-pill ${roleClass(row.role)}">${escapeHtml(row.role || "")}</span>`);
@@ -256,12 +259,13 @@
         <p class="drawer-label">選択中の卓</p>
         <h3>${escapeHtml(row.scenario || "")}</h3>
         <div class="drawer-meta">
-          <div>日 ${escapeHtml(row.date || "")}</div>
+          <div>日 ${escapeHtml(getDateDisplay(row))}</div>
           <div>時 ${escapeHtml(row.time || "")}</div>
           <div>札 ${escapeHtml(row.system || "")}</div>
           <div>役 ${escapeHtml(row.role || "")}</div>
         </div>
       </div>
+      <div class="drawer-card"><p class="drawer-label">日程</p><strong>${escapeHtml(getDateTitle(row) || "未設定")}</strong></div>
       <div class="drawer-card"><p class="drawer-label">GM / KP / DL</p><strong>${escapeHtml(row.gm || "")}</strong></div>
       <div class="drawer-card"><p class="drawer-label">PL / PC</p><strong>${escapeHtml(row.players || "")}</strong><p>${escapeHtml(row.pc || "")}</p></div>
       <div class="drawer-card"><p class="drawer-label">短いメモ</p><p>${escapeHtml(row.note || "")}</p><p class="drawer-muted">ハッシュタグは「＋ 項目追加」から任意項目として追加できます。</p></div>
@@ -290,17 +294,19 @@
     });
     rows.sort((a,b)=>{
       const sort = els.sortSelect.value;
-      if(sort === "oldest") return String(a.date).localeCompare(String(b.date));
+      if(sort === "oldest") return getPrimaryDate(a).localeCompare(getPrimaryDate(b));
       if(sort === "scenario") return String(a.scenario).localeCompare(String(b.scenario),"ja");
       if(sort === "gm") return String(a.gm).localeCompare(String(b.gm),"ja");
-      return String(b.date).localeCompare(String(a.date));
+      return getPrimaryDate(b).localeCompare(getPrimaryDate(a));
     });
     return rows;
   }
 
   function openSessionDialog(id){
     editingId = id || null;
-    const row = id ? state.rows.find(r=>r.id===id) : { id: cryptoId(), date: new Date().toISOString().slice(0,10), scenario:"", system:"CoC 6版", role:"PL", gm:"", players:"", pc:"", status:"新規", time:"", note:"", hashtag:"", longNote:"" };
+    const today = new Date().toISOString().slice(0,10);
+    const row = id ? state.rows.find(r=>r.id===id) : { id: cryptoId(), date: today, dates: [today], scenario:"", system:"CoC 6版", role:"PL", gm:"", players:"", pc:"", status:"新規", time:"", note:"", hashtag:"", longNote:"" };
+    normalizeRowDates(row);
     els.sessionDialogTitle.textContent = id ? "卓情報を編集" : "卓を追加";
     els.deleteSessionBtn.hidden = !id;
     els.sessionFormFields.innerHTML = "";
@@ -333,11 +339,45 @@
     els.sessionDialog.showModal();
   }
 
+  function handleDateFieldClick(event){
+    const addBtn = event.target.closest("[data-add-date]");
+    if(addBtn){
+      const container = addBtn.closest("[data-multi-date-field]");
+      const row = document.createElement("div");
+      row.className = "date-input-row";
+      row.innerHTML = `<input type="date" name="dates" value="" /><button type="button" class="date-remove-button" data-remove-date>削除</button>`;
+      container.insertBefore(row, addBtn);
+      updateDateRemoveButtons(container);
+      row.querySelector("input")?.focus();
+      return;
+    }
+    const removeBtn = event.target.closest("[data-remove-date]");
+    if(removeBtn){
+      const container = removeBtn.closest("[data-multi-date-field]");
+      const rows = [...container.querySelectorAll(".date-input-row")];
+      if(rows.length > 1){
+        removeBtn.closest(".date-input-row")?.remove();
+        updateDateRemoveButtons(container);
+      }
+    }
+  }
+
+  function updateDateRemoveButtons(container){
+    const rows = [...container.querySelectorAll(".date-input-row")];
+    rows.forEach(row=>{
+      const button = row.querySelector("[data-remove-date]");
+      if(button) button.disabled = rows.length <= 1;
+    });
+  }
+
   function handleSessionSave(event){
     event.preventDefault();
     const form = new FormData(els.sessionForm);
     const row = editingId ? state.rows.find(r=>r.id===editingId) : { id: cryptoId() };
-    state.columns.filter(c=>c.key !== "report").forEach(col=>{ row[col.key] = form.get(col.key) || ""; });
+    state.columns.filter(c=>c.key !== "report" && c.key !== "date").forEach(col=>{ row[col.key] = form.get(col.key) || ""; });
+    const dates = form.getAll("dates").map(v=>String(v || "").trim()).filter(Boolean).sort();
+    row.dates = unique(dates);
+    row.date = row.dates[0] || "";
     row.longNote = els.longNoteInput.value;
     if(!editingId) state.rows.push(row);
     activeId = row.id;
@@ -430,7 +470,7 @@
   function closeDrawer(){ els.kansouDrawer.classList.remove("open"); els.drawerOverlay.hidden = true; els.kansouDrawer.setAttribute("aria-hidden","true"); els.kansouTab.classList.remove("hide"); }
 
   function openReportGenerator(row){
-    const params = new URLSearchParams({ scenario: row.scenario || "", system: row.system || "", gm: row.gm || "", pl: row.players || "", pc: row.pc || "", date: row.date || "", hashtag: row.hashtag || "", note: row.note || "" });
+    const params = new URLSearchParams({ scenario: row.scenario || "", system: row.system || "", gm: row.gm || "", pl: row.players || "", pc: row.pc || "", date: getDateTitle(row) || row.date || "", hashtag: row.hashtag || "", note: row.note || "" });
     window.open(`${REPORT_GENERATOR_URL}?${params.toString()}`,"_blank");
   }
 
@@ -446,23 +486,90 @@
   function handleJsonImport(event){
     const file = event.target.files?.[0];
     if(!file) return;
+
+    const mode = chooseImportMode();
+    if(!mode){
+      event.target.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = ()=>{
       try{
         const imported = JSON.parse(String(reader.result));
-        state = { rows: imported.rows || [], columns: imported.columns || clone(defaultColumns) };
+        const importedRows = Array.isArray(imported.rows) ? imported.rows.map(row=>normalizeImportedRow(row)) : [];
+        const importedColumns = Array.isArray(imported.columns) ? imported.columns : clone(defaultColumns);
+
+        if(mode === "overwrite"){
+          state = {
+            rows: importedRows,
+            columns: importedColumns.length ? importedColumns : clone(defaultColumns),
+            migrations: { ...(imported.migrations || {}), hashtagOptional: true }
+          };
+        }else{
+          state.rows = [...state.rows, ...importedRows.map(row=>({ ...row, id: cryptoId() }))];
+          state.columns = mergeColumns(state.columns, importedColumns);
+          state.migrations = { ...(state.migrations || {}), hashtagOptional: true };
+        }
+
         activeId = state.rows[0]?.id || null;
         saveAndRender();
-      }catch(error){ alert("JSONの読み込みに失敗しました。"); }
+        alert(mode === "overwrite" ? "JSONを上書きインポートしました。" : "JSONを追加インポートしました。");
+      }catch(error){
+        console.error(error);
+        alert("JSONの読み込みに失敗しました。");
+      }
     };
     reader.readAsText(file);
     event.target.value = "";
   }
 
+  function chooseImportMode(){
+    const message = [
+      "JSON入力方法を選択してください。",
+      "",
+      "1: 上書きインポート（現在のデータを置き換え）",
+      "2: 追加インポート（現在のデータに追加）"
+    ].join("\n");
+    const answer = prompt(message, "1");
+    if(answer === null) return null;
+    const value = String(answer).trim();
+    if(value === "1" || value === "上書き" || value.toLowerCase() === "overwrite") return "overwrite";
+    if(value === "2" || value === "追加" || value.toLowerCase() === "append") return "append";
+    alert("1 または 2 を入力してください。");
+    return chooseImportMode();
+  }
+
+  function normalizeImportedRow(row){
+    const next = { ...row };
+    if(!next.id) next.id = cryptoId();
+    normalizeRowDates(next);
+    if(!next.status) next.status = "新規";
+    if(next.system === "エモクロアTRPG") next.system = "エモクロア";
+    if(next.system === "マルチシステム") next.system = "マダミス";
+    if(next.role && normalizeRoleGroup(next.role) === "GM" && !ROLE_OPTIONS.includes(next.role)) next.role = "GM";
+    return next;
+  }
+
+  function mergeColumns(currentColumns, importedColumns){
+    const merged = Array.isArray(currentColumns) && currentColumns.length ? [...currentColumns] : clone(defaultColumns);
+    importedColumns.forEach(column=>{
+      if(!column || !column.key) return;
+      if(column.key === "hashtag") return;
+      if(!merged.some(existing=>existing.key === column.key)){
+        const reportIndex = merged.findIndex(existing=>existing.key === "report");
+        const insertColumn = { ...column };
+        if(reportIndex >= 0) merged.splice(reportIndex,0,insertColumn);
+        else merged.push(insertColumn);
+      }
+    });
+    return merged;
+  }
+
   function exportText(mode){
     const rows = getFilteredRows();
     let output = "";
-    if(mode === "date") output = rows.map((r,i)=>`${i+1}. ${r.scenario} / ${r.system} / ${r.role} / ${r.date}`).join("\n");
+    if(mode === "date") output = rows.map((r,i)=>`${i+1}. ${r.scenario} / ${r.system} / ${r.role} / ${getDateDisplay(r)}`).join("\n");
     if(mode === "system") output = groupedText(rows,"system");
     if(mode === "gm") output = groupedText(rows,"gm");
     if(mode === "players") output = groupedText(rows,"players");
@@ -533,7 +640,7 @@
   function fieldInputMarkup(col, row){
     const value = row[col.key] || "";
     if(col.key === "date"){
-      return `<input type="date" name="${escapeAttr(col.key)}" value="${escapeAttr(value)}" />`;
+      return dateInputsMarkup(row);
     }
     if(col.key === "system"){
       return `<select name="${escapeAttr(col.key)}">${SYSTEM_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
@@ -562,6 +669,81 @@
     if(value === "エモクロア") return "system-emoklore";
     if(value === "マダミス") return "system-madamisu";
     return "system-other";
+  }
+
+
+  function normalizeRowDates(row){
+    let dates = Array.isArray(row.dates) ? row.dates : [];
+    if(!dates.length && row.date) dates = parseDateList(row.date);
+    dates = unique(dates.map(v=>String(v || "").trim()).filter(isIsoDate)).sort();
+    row.dates = dates;
+    row.date = dates[0] || (isIsoDate(row.date) ? row.date : "");
+  }
+
+  function parseDateList(value){
+    return String(value || "")
+      .split(/[、,，/／・;；\n\r]+/)
+      .map(v=>v.trim().replace(/\//g,"-"))
+      .filter(Boolean);
+  }
+
+  function isIsoDate(value){
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+  }
+
+  function getPrimaryDate(row){
+    normalizeRowDates(row);
+    return row.dates?.[0] || row.date || "";
+  }
+
+  function getDateDisplay(row){
+    normalizeRowDates(row);
+    const dates = row.dates || [];
+    if(!dates.length) return "";
+    return dates.length === 1 ? dates[0] : `${dates[0]} 他${dates.length - 1}日`;
+  }
+
+  function getDateTitle(row){
+    normalizeRowDates(row);
+    return (row.dates || []).join(" / ");
+  }
+
+  function countUniqueScenarios(rows){
+    return unique(rows.map(row=>scenarioCountKey(row)).filter(Boolean)).length;
+  }
+
+  function scenarioCountKey(row){
+    const explicit = String(row.scenarioCountKey || "").trim();
+    if(explicit) return explicit;
+    return normalizeScenarioForCount(row.scenario);
+  }
+
+  function normalizeScenarioForCount(value){
+    return String(value || "")
+      .replace(/[＿_]/g," ")
+      .replace(/第\s*[0-9０-９一二三四五六七八九十百]+\s*陣/g,"")
+      .replace(/[0-9０-９一二三四五六七八九十百]+\s*日目/g,"")
+      .replace(/前編|後編|上巻|下巻|作成会|キャラシ作成会/g,"")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+  function countSessionDates(rows){
+    return rows.reduce((sum,row)=>{
+      normalizeRowDates(row);
+      return sum + Math.max((row.dates || []).length, row.date ? 1 : 0);
+    },0);
+  }
+
+  function dateInputsMarkup(row){
+    normalizeRowDates(row);
+    const dates = row.dates?.length ? row.dates : [new Date().toISOString().slice(0,10)];
+    const inputs = dates.map((date,index)=>`
+      <div class="date-input-row">
+        <input type="date" name="dates" value="${escapeAttr(date)}" />
+        <button type="button" class="date-remove-button" data-remove-date ${dates.length <= 1 ? "disabled" : ""}>削除</button>
+      </div>`).join("");
+    return `<div class="multi-date-field" data-multi-date-field>${inputs}<button type="button" class="date-add-button" data-add-date>＋日付を追加</button></div>`;
   }
 
   function sumHours(rows){ return rows.reduce((sum,row)=>sum + (parseFloat(String(row.time||"").match(/[\d.]+/)?.[0] || "0") || 0),0); }
