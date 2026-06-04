@@ -1,5 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
+  const APP_VERSION = "v1.1";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
@@ -56,7 +57,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","fieldPanel","closeFieldPanelBtn","optionalFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","textExportOutput","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","fieldPanel","closeFieldPanelBtn","optionalFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","textExportOutput","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -78,7 +79,8 @@
     els.kansouTab.addEventListener("click", openDrawer);
     els.closeDrawerBtn.addEventListener("click", closeDrawer);
     els.drawerOverlay.addEventListener("click", closeDrawer);
-    els.addSessionTopBtn.addEventListener("click",()=>openSessionDialog());
+    els.addSessionTopBtn?.addEventListener("click",()=>openSessionDialog());
+    els.floatingAddBtn?.addEventListener("click",()=>openSessionDialog());
     els.sessionForm.addEventListener("submit", handleSessionSave);
     document.getElementById("closeSessionDialogBtn")?.addEventListener("click",()=>els.sessionDialog.close());
     els.deleteSessionBtn.addEventListener("click", deleteEditingSession);
@@ -135,10 +137,31 @@
   }
 
   function renderStats(){
-    document.getElementById("statSessions").textContent = String(state.rows.length);
-    document.getElementById("statScenarios").textContent = String(unique(state.rows.map(r=>r.scenario).filter(Boolean)).length);
-    document.getElementById("statPlayedTime").textContent = `${sumHours(state.rows)}h`;
-    document.getElementById("statPlayedWith").textContent = String(countCoPlayers(state.rows));
+    animateStat("statSessions", state.rows.length);
+    animateStat("statScenarios", unique(state.rows.map(r=>r.scenario).filter(Boolean)).length);
+    animateStat("statPlayedTime", sumHours(state.rows), "h");
+    animateStat("statPlayedWith", countCoPlayers(state.rows));
+  }
+
+  function animateStat(id, target, suffix=""){
+    const el = document.getElementById(id);
+    if(!el) return;
+    const numericTarget = Number(target) || 0;
+    const last = Number(el.dataset.lastTarget);
+    if(last === numericTarget && el.textContent) return;
+    el.dataset.lastTarget = String(numericTarget);
+    const duration = 700;
+    const start = 0;
+    const startedAt = performance.now();
+    const hasDecimal = !Number.isInteger(numericTarget);
+    function tick(now){
+      const progress = Math.min((now - startedAt) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = start + (numericTarget - start) * eased;
+      el.textContent = `${hasDecimal ? value.toFixed(1).replace(/\.0$/, "") : Math.round(value)}${suffix}`;
+      if(progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
   }
 
   function renderOptionalFields(){
@@ -281,10 +304,30 @@
     els.sessionDialogTitle.textContent = id ? "卓情報を編集" : "卓を追加";
     els.deleteSessionBtn.hidden = !id;
     els.sessionFormFields.innerHTML = "";
-    state.columns.filter(c=>c.key !== "report").forEach(col=>{
-      const label = document.createElement("label");
-      label.innerHTML = `<span>${escapeHtml(col.label)}</span>${fieldInputMarkup(col, row)}`;
-      els.sessionFormFields.appendChild(label);
+
+    const columns = state.columns.filter(c=>c.key !== "report");
+    const groups = [
+      { title: "基本情報", keys: ["date", "scenario", "system", "role", "status", "time"] },
+      { title: "参加者", keys: ["gm", "players", "pc"] },
+      { title: "メモ・任意項目", keys: ["note"] }
+    ];
+    const used = new Set(groups.flatMap(group=>group.keys));
+    const extraColumns = columns.filter(col=>!used.has(col.key));
+    if(extraColumns.length) groups.push({ title: "追加項目", columns: extraColumns });
+
+    groups.forEach(group=>{
+      const fieldset = document.createElement("fieldset");
+      fieldset.className = "dialog-fieldset";
+      fieldset.innerHTML = `<legend>${escapeHtml(group.title)}</legend><div class="dialog-fieldset-grid"></div>`;
+      const grid = fieldset.querySelector(".dialog-fieldset-grid");
+      const groupColumns = group.columns || group.keys.map(key=>columns.find(col=>col.key===key)).filter(Boolean);
+      groupColumns.forEach(col=>{
+        const label = document.createElement("label");
+        label.className = ["note", "pc"].includes(col.key) ? "wide-field" : "";
+        label.innerHTML = `<span>${escapeHtml(col.label)}</span>${fieldInputMarkup(col, row)}`;
+        grid.appendChild(label);
+      });
+      els.sessionFormFields.appendChild(fieldset);
     });
     els.longNoteInput.value = row.longNote || "";
     els.sessionDialog.showModal();

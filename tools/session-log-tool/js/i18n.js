@@ -6,7 +6,7 @@ window.SESSION_LOG_I18N = {
     jsonOutput: "JSON出力",
     textOutput: "テキスト出力",
     shortcut: "ショートカット",
-    toolTitle: "卓ログトラッカー",
+    toolTitle: "卓ログトラッカー v1.1",
     siteDescription: "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
     statSessions: "卓数",
     statScenarios: "シナリオ数",
@@ -54,7 +54,7 @@ window.SESSION_LOG_I18N = {
     shortcutExport: "JSON出力",
     shortcutNew: "卓を追加",
     shortcutSearch: "検索欄へ移動",
-    shortcutEsc: "モーダル / Drawerを閉じる"
+    shortcutEsc: "ドロワー / ショートカットパネルを閉じる"
   },
   en: {
     portalLink: "← TRPG Web Tools Observatory",
@@ -63,7 +63,7 @@ window.SESSION_LOG_I18N = {
     jsonOutput: "Export JSON",
     textOutput: "Export Text",
     shortcut: "Shortcuts",
-    toolTitle: "Session Log Tracker",
+    toolTitle: "Session Log Tracker v1.1",
     siteDescription: "Track played sessions, connect notes and impressions to session reports, and organize your play history in a flexible table.",
     statSessions: "Sessions",
     statScenarios: "Scenarios",
@@ -111,6 +111,6 @@ window.SESSION_LOG_I18N = {
     shortcutExport: "Export JSON",
     shortcutNew: "Add Session",
     shortcutSearch: "Focus search",
-    shortcutEsc: "Close modal / drawer"
+    shortcutEsc: "Close drawer / shortcuts panel"
   }
 };

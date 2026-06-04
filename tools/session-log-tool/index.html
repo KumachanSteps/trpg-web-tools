@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓ログトラッカー | TRPG WEBツール観測所</title>
+  <title>卓ログトラッカー v1.1 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
@@ -37,7 +37,7 @@
                 <span class="tool-icon-stat-bar tool-icon-stat-bar-3"></span>
               </span>
             </div>
-            <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー</h1>
+            <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー v1.1</h1>
           </div>
 
           <p class="site-description" data-i18n="siteDescription">
@@ -59,6 +59,26 @@
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
+
+    <section id="shortcutPanel" class="shortcut-panel" hidden>
+      <div class="shortcut-panel-inner">
+        <div class="shortcut-panel-head">
+          <div>
+            <p>SHORTCUTS</p>
+            <h2 data-i18n="shortcutTitle">ショートカット</h2>
+          </div>
+          <button id="closeShortcutBtn" type="button" class="icon-button">×</button>
+        </div>
+        <div class="shortcut-panel-list">
+          <div><span><kbd>Esc</kbd></span><span>ドロワー / ショートカットパネルを閉じる</span></div>
+          <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></span><span>ショートカットパネルを開く</span></div>
+          <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd></span><span>新しいセッションログを追加</span></div>
+          <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></span><span>検索欄へ移動</span></div>
+          <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>J</kbd></span><span>JSON入力</span></div>
+          <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>E</kbd></span><span>JSON出力</span></div>
+        </div>
+      </div>
+    </section>
 
     <section class="stats-grid" aria-label="summary stats">
       <article class="stat-card"><div><p data-i18n="statSessions">卓数</p><strong id="statSessions">0</strong></div><span>日</span></article>
@@ -84,7 +104,7 @@
         <option value="scenario" data-i18n="byScenario">シナリオ別</option>
         <option value="gm" data-i18n="byGm">GM/KP別</option>
       </select>
-      <button id="addSessionTopBtn" class="accent-button" type="button"><span>＋</span><span data-i18n="addSession">卓を追加</span></button>
+
     </section>
 
     <main class="main-panel">
@@ -111,8 +131,6 @@
             </div>
             <button id="resetFieldsBtn" class="mini-button" type="button" data-i18n="resetFields">項目リセット</button>
             <button class="mini-button selected" type="button" data-i18n="tableView">テーブル表示</button>
-            <button class="mini-button muted" type="button" data-i18n="cardView">カード表示</button>
-            <button class="mini-button muted" type="button" data-i18n="compactView">コンパクト</button>
           </div>
         </div>
 
@@ -170,6 +188,8 @@
       </p>
     </section>
 
+    <button id="floatingAddBtn" class="floating-add-button" type="button" title="卓を追加" aria-label="卓を追加">＋</button>
+
   </div>
 
   <dialog id="sessionDialog" class="session-dialog">
@@ -188,23 +208,6 @@
         <button id="saveSessionBtn" class="accent-button" type="submit" data-i18n="save">保存</button>
       </div>
     </form>
-  </dialog>
-
-  <dialog id="shortcutModal" class="shortcut-modal">
-    <div class="shortcut-modal-header">
-      <div>
-        <p>SHORTCUTS</p>
-        <h2 data-i18n="shortcutTitle">ショートカット</h2>
-      </div>
-      <button id="closeShortcutBtn" type="button" class="icon-button">×</button>
-    </div>
-    <div class="shortcut-list">
-      <div><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>J</kbd><span data-i18n="shortcutImport">JSON入力</span></div>
-      <div><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>E</kbd><span data-i18n="shortcutExport">JSON出力</span></div>
-      <div><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>N</kbd><span data-i18n="shortcutNew">卓を追加</span></div>
-      <div><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd><span data-i18n="shortcutSearch">検索欄へ移動</span></div>
-      <div><kbd>Esc</kbd><span data-i18n="shortcutEsc">モーダル / Drawerを閉じる</span></div>
-    </div>
   </dialog>
 
   <script src="js/i18n.js"></script>

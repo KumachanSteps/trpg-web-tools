@@ -2,28 +2,58 @@
   function isMac(){ return navigator.platform.toUpperCase().includes("MAC"); }
   function isMod(event){ return isMac() ? event.metaKey : event.ctrlKey; }
 
-  function openShortcutModal(){
-    document.getElementById("shortcutModal")?.showModal();
-  }
-  function closeShortcutModal(){
-    const modal = document.getElementById("shortcutModal");
-    if(modal?.open) modal.close();
+  function openShortcutPanel(){
+    const panel = document.getElementById("shortcutPanel");
+    if(!panel) return;
+    panel.hidden = false;
+    requestAnimationFrame(()=>panel.classList.add("open"));
   }
 
-  window.SessionLogShortcuts = { openShortcutModal, closeShortcutModal };
+  function closeShortcutPanel(){
+    const panel = document.getElementById("shortcutPanel");
+    if(!panel || panel.hidden) return;
+    panel.classList.remove("open");
+    window.setTimeout(()=>{ if(!panel.classList.contains("open")) panel.hidden = true; }, 220);
+  }
+
+  function toggleShortcutPanel(){
+    const panel = document.getElementById("shortcutPanel");
+    if(!panel) return;
+    if(panel.hidden || !panel.classList.contains("open")) openShortcutPanel();
+    else closeShortcutPanel();
+  }
+
+  window.SessionLogShortcuts = { openShortcutPanel, closeShortcutPanel, toggleShortcutPanel };
 
   document.addEventListener("DOMContentLoaded",()=>{
-    document.getElementById("shortcutHelpBtn")?.addEventListener("click", openShortcutModal);
-    document.getElementById("closeShortcutBtn")?.addEventListener("click", closeShortcutModal);
+    document.getElementById("shortcutHelpBtn")?.addEventListener("click", toggleShortcutPanel);
+    document.getElementById("closeShortcutBtn")?.addEventListener("click", closeShortcutPanel);
 
     document.addEventListener("keydown",(event)=>{
       const key = event.key.toLowerCase();
       if(event.key === "Escape"){
-        closeShortcutModal();
+        closeShortcutPanel();
         window.SessionLogApp?.closeDrawer?.();
         return;
       }
+
       if(!isMod(event)) return;
+
+      if(event.shiftKey && key === "s"){
+        event.preventDefault();
+        openShortcutPanel();
+        return;
+      }
+      if(event.shiftKey && key === "n"){
+        event.preventDefault();
+        window.SessionLogApp?.openSessionDialog?.();
+        return;
+      }
+      if(event.shiftKey && key === "f"){
+        event.preventDefault();
+        document.getElementById("searchInput")?.focus();
+        return;
+      }
 
       if(key === "j"){
         event.preventDefault();
@@ -32,14 +62,6 @@
       if(key === "e"){
         event.preventDefault();
         window.SessionLogApp?.exportJson?.();
-      }
-      if(key === "n"){
-        event.preventDefault();
-        window.SessionLogApp?.openSessionDialog?.();
-      }
-      if(key === "k"){
-        event.preventDefault();
-        document.getElementById("searchInput")?.focus();
       }
     });
   });
