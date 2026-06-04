@@ -9,6 +9,7 @@ window.CHAT_PALETTE_I18N = {
     copied: "整形済みチャットパレットをコピーしました。",
     copyEmpty: "コピーする内容がありません。",
     copyManual: "ブラウザの制限により自動コピーできませんでした。出力欄を選択済みにしたので、手動でコピーしてください。",
+    clipboardReadError: "ブラウザの制限によりクリップボードを読み取れませんでした。手動で貼り付けてください。",
     cleared: "入力欄と出力欄をクリアしました。",
     edition6: "CoC 6版",
     edition7: "CoC 7版"

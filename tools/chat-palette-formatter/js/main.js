@@ -1,5 +1,7 @@
 let editionMode = "auto";
 let detectedEdition = "";
+let autoFormatTimer = null;
+let toastTimer = null;
 
 function t(key) {
   return window.ChatPaletteLanguage?.t(key) || key;
@@ -19,6 +21,30 @@ function setStatus(message, type) {
   status.style.borderColor = type === "error" ? "rgba(190, 70, 70, 0.35)" : "rgba(180, 197, 216, 0.58)";
 }
 
+function ensureToastElement() {
+  let toast = document.getElementById("toastMessage");
+  if (toast) return toast;
+
+  toast = document.createElement("div");
+  toast.id = "toastMessage";
+  toast.className = "toast-message";
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  document.body.appendChild(toast);
+  return toast;
+}
+
+function showToast(message) {
+  const toast = ensureToastElement();
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1800);
+}
+
 function updateEditionToggleActive(mode) {
   document.querySelectorAll(".edition-toggle button").forEach(button => {
     button.classList.toggle("active", button.dataset.edition === mode);
@@ -30,41 +56,24 @@ function setEditionMode(mode) {
   updateEditionToggleActive(mode);
 
   const input = document.getElementById("input");
-  const hasInput = input && input.value.trim();
+  if (input && input.value.trim()) {
+    autoFormatPalette({ showError: false });
+    return;
+  }
 
   if (mode === "auto") {
     handleInputChange();
     return;
   }
 
-  if (hasInput) {
-    handleInputChange();
-  } else {
-    setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
-  }
+  setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
 }
 
 function handleInputChange() {
-  const input = document.getElementById("input");
-  const output = document.getElementById("output");
-  const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
-
-  if (!extracted.text) {
-    detectedEdition = "";
-    output.value = "";
-    if (editionMode === "auto") updateEditionToggleActive("auto");
-    setStatus(t("initialStatus"));
-    return;
-  }
-
-  const edition = getSelectedEdition(extracted.text);
-
-  if (editionMode === "auto") {
-    updateEditionToggleActive(edition);
-    setStatus(t("detectPrefix") + editionLabel(edition) + t("detectSuffix"));
-  }
-
-  output.value = window.ChatPaletteParser.buildOutput(extracted.text, edition);
+  window.clearTimeout(autoFormatTimer);
+  autoFormatTimer = window.setTimeout(() => {
+    autoFormatPalette({ showError: false });
+  }, 80);
 }
 
 function getSelectedEdition(text) {
@@ -74,14 +83,19 @@ function getSelectedEdition(text) {
   return detectedEdition;
 }
 
-function formatPalette() {
+function autoFormatPalette(options = {}) {
+  const { showError = false } = options;
   const input = document.getElementById("input");
   const output = document.getElementById("output");
+  if (!input || !output) return;
+
   const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
 
   if (!extracted.text) {
     output.value = "";
-    setStatus(t("extractError"), "error");
+    detectedEdition = "";
+    updateEditionToggleActive(editionMode === "auto" ? "auto" : editionMode);
+    setStatus(showError ? t("extractError") : t("initialStatus"), showError ? "error" : undefined);
     return;
   }
 
@@ -92,14 +106,44 @@ function formatPalette() {
   }
 
   output.value = window.ChatPaletteParser.buildOutput(extracted.text, edition);
+  setStatus(t("detectPrefix") + editionLabel(edition) + t("detectSuffix"));
+}
+
+function formatPalette() {
+  autoFormatPalette({ showError: true });
 }
 
 function clearAll() {
-  document.getElementById("input").value = "";
-  document.getElementById("output").value = "";
+  const input = document.getElementById("input");
+  const output = document.getElementById("output");
+  if (input) input.value = "";
+  if (output) output.value = "";
   detectedEdition = "";
-  setEditionMode("auto");
+  editionMode = "auto";
+  updateEditionToggleActive("auto");
   setStatus(t("cleared"));
+}
+
+async function pasteClipboardToInput() {
+  const input = document.getElementById("input");
+  if (!input) return;
+
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
+      setStatus("ブラウザの制限によりクリップボードを読み取れませんでした。手動で貼り付けてください。", "error");
+      input.focus();
+      return;
+    }
+
+    const text = await navigator.clipboard.readText();
+    input.value = text;
+    input.focus();
+    handleInputChange();
+  } catch (error) {
+    console.warn("Clipboard paste failed.", error);
+    setStatus("ブラウザの制限によりクリップボードを読み取れませんでした。手動で貼り付けてください。", "error");
+    input.focus();
+  }
 }
 
 async function copyOutput() {
@@ -113,7 +157,7 @@ async function copyOutput() {
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
       await navigator.clipboard.writeText(output.value);
-      setStatus(t("copied"));
+      showToast("チャットパレットがコピーされました");
       return;
     }
   } catch (error) {
@@ -131,7 +175,7 @@ function fallbackCopy(output) {
     const success = document.execCommand("copy");
 
     if (success) {
-      setStatus(t("copied"));
+      showToast("チャットパレットがコピーされました");
     } else {
       setStatus(t("copyManual"), "error");
     }
@@ -141,11 +185,39 @@ function fallbackCopy(output) {
   }
 }
 
+function isShortcutModifierPressed(event) {
+  return event.metaKey || event.ctrlKey;
+}
+
+function handleGlobalShortcuts(event) {
+  const key = event.key.toLowerCase();
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    clearAll();
+    return;
+  }
+
+  if (!isShortcutModifierPressed(event) || !event.shiftKey) return;
+
+  if (key === "v") {
+    event.preventDefault();
+    pasteClipboardToInput();
+    return;
+  }
+
+  if (key === "c") {
+    event.preventDefault();
+    copyOutput();
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("input").addEventListener("input", handleInputChange);
   document.getElementById("formatButton").addEventListener("click", formatPalette);
   document.getElementById("copyButton").addEventListener("click", copyOutput);
   document.getElementById("clearButton").addEventListener("click", clearAll);
+  document.addEventListener("keydown", handleGlobalShortcuts);
 
   document.querySelectorAll(".edition-toggle button").forEach(button => {
     button.addEventListener("click", () => {
