@@ -7,8 +7,8 @@ const state = {
   visibleCharacters: new Set(),
   showCharacterControls: false,
   currentTab: "summary",
-  sessionName: "ログ本文",
-  inputTimer: null,
+  sessionName: "未設定",
+  autoTimer: null,
 };
 
 function $(id) {
@@ -42,6 +42,14 @@ function clampNumber(value, min, max, fallback) {
 
 const includedTabs = ["main", "メイン", "ho"];
 const excludedTabs = ["雑談", "other", "info", "おはらい", "お祓い", "運試し"];
+const mythSkillNames = new Set(["クトゥルフ神話", "クトゥルフ神話技能"]);
+const parameterSkillNames = new Set([
+  "アイデア", "知識", "幸運",
+  "STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU",
+  "STR×5", "CON×5", "POW×5", "DEX×5", "APP×5", "SIZ×5", "INT×5", "EDU×5",
+  "STR*5", "CON*5", "POW*5", "DEX*5", "APP*5", "SIZ*5", "INT*5", "EDU*5",
+  "IDEA", "KNOW", "KNOWLEDGE", "LUCK"
+]);
 
 function prepareText(raw) {
   const source = String(raw || "");
@@ -53,16 +61,20 @@ function prepareText(raw) {
 }
 
 function extractHtmlLogLines(doc) {
-  return Array.from(doc.body.querySelectorAll("p")).map(extractHtmlLogLine).filter(Boolean);
+  const rows = Array.from(doc.body.querySelectorAll("p, li, tr, div.MuiListItemText-root, div[class*='message']"))
+    .map(extractHtmlLogLine)
+    .filter(Boolean);
+  return rows.length ? rows : [];
 }
 
-function extractHtmlLogLine(paragraph) {
-  const spans = Array.from(paragraph.querySelectorAll("span"))
+function extractHtmlLogLine(node) {
+  const spans = Array.from(node.querySelectorAll("span"))
     .map(span => cleanLine(decodeHtml(span.textContent || "")))
     .filter(Boolean);
-  return spans.length >= 3 && isTabLabel(spans[0])
-    ? `${spans[0]} ${spans[1]}：${spans.slice(2).join(" ")}`
-    : cleanLine(decodeHtml(paragraph.textContent || ""));
+  if (spans.length >= 3 && isTabLabel(spans[0])) {
+    return `${spans[0]} ${spans[1]}：${spans.slice(2).join(" ")}`;
+  }
+  return cleanLine(decodeHtml(node.textContent || ""));
 }
 
 function filterLines(lines) {
@@ -83,7 +95,11 @@ function isIncludedTab(tab) {
   const normalized = normalizeTabName(tab);
   if (!normalized) return true;
   if (excludedTabs.some(word => normalized.includes(normalizeTabName(word)))) return false;
-  return true;
+  if (normalized === "ho" || normalized.startsWith("ho")) return true;
+  return includedTabs.some(word => {
+    const item = normalizeTabName(word);
+    return normalized === item || normalized.startsWith(item) || normalized.includes(item);
+  });
 }
 
 function extractRollData(lines) {
@@ -105,9 +121,11 @@ function extractRollData(lines) {
         target,
         skill,
         character,
-        line,
+        line: normalizeForDisplay(line),
         lineNo: index + 1,
         classification: classifyRoll(value, target, line),
+        isMyth: isMythSkill(skill),
+        isParameter: isParameterSkill(skill, line),
       });
     });
   });
@@ -128,15 +146,30 @@ function extractCharacterName(line) {
 function extractSkillName(line) {
   const text = String(line || "");
   const bracketPatterns = [
-    /【([^】]+)】/,
-    /《([^》]+)》/,
-    /\[([^\]]+)\]/,
+    /【([^】]+)】/g,
+    /《([^》]+)》/g,
   ];
   for (const pattern of bracketPatterns) {
-    const match = text.match(pattern);
-    if (match && match[1] && !isTabLabel(match[0])) return cleanLine(match[1]);
+    const matches = [...text.matchAll(pattern)].map(match => cleanSkillName(match[1])).filter(Boolean);
+    if (matches.length) return matches[matches.length - 1];
   }
+
+  if (/アイデア/i.test(text)) return "アイデア";
+  if (/知識|KNOWLEDGE|KNOW/i.test(text)) return "知識";
+  if (/幸運|LUCK/i.test(text)) return "幸運";
+
+  const abilityMatch = text.match(/\b(STR|CON|POW|DEX|APP|SIZ|INT|EDU)\b(?:\s*[×xX*]\s*\d+)?/i);
+  if (abilityMatch) return abilityMatch[0].toUpperCase().replace(/\s+/g, "").replace(/X/g, "×");
+
   return tr("skill.unknown", "技能名不明");
+}
+
+function cleanSkillName(skill) {
+  return String(skill || "")
+    .replace(/[:：].*$/, "")
+    .replace(/\s+/g, " ")
+    .replace(/^[\[\]【】\s]+|[\[\]【】\s]+$/g, "")
+    .trim();
 }
 
 function extractTargetNumber(line) {
@@ -150,15 +183,13 @@ function extractTargetNumber(line) {
 }
 
 function classifyRoll(value, target, line) {
-  const text = String(line || "");
-  const lower = text.toLowerCase();
-
-  if (text.includes("決定的成功") || text.includes("クリティカル") || lower.includes("critical") || lower.includes("crit")) return "critical";
-  if (text.includes("致命的失敗") || text.includes("ファンブル") || lower.includes("fumble")) return "fumble";
-  if (text.includes("初期値") || lower.includes("initial")) return "initial";
+  const text = String(line || "").toLowerCase();
+  if (/決定的成功|クリティカル|critical|c決定的/.test(text)) return "critical";
+  if (/致命的失敗|ファンブル|fumble/.test(text)) return "fumble";
+  if (/スペシャル|special/.test(text)) return "critical";
+  if (/成功|success/.test(text)) return "success";
+  if (/失敗|failure|failed|fail/.test(text)) return "fail";
   if (target !== null) return value <= target ? "success" : "fail";
-  if (text.includes("成功") || lower.includes("success")) return "success";
-  if (text.includes("失敗") || lower.includes("failure") || lower.includes("failed") || lower.includes("fail")) return "fail";
   return "normal";
 }
 
@@ -229,9 +260,11 @@ function isValidRollResultTail(tail) {
   const lower = text.toLowerCase();
   return !text
     || ["＞", ">", "→", "#"].some(marker => text.startsWith(marker))
-    || ["成功", "失敗", "決定的成功", "致命的失敗", "クリティカル", "ファンブル"].some(word => text.startsWith(word))
+    || ["成功", "失敗", "決定的成功", "致命的失敗", "クリティカル", "ファンブル", "スペシャル"].some(word => text.startsWith(word))
     || lower.startsWith("success")
-    || lower.startsWith("fail");
+    || lower.startsWith("fail")
+    || lower.startsWith("critical")
+    || lower.startsWith("fumble");
 }
 
 function extractNumbersAfterWords(text, words) {
@@ -267,7 +300,7 @@ function looksLikeHtml(value) {
 function looksLikeD100Roll(line) {
   if (isRuleExplanationLine(line)) return false;
   if (findDiceCommandIndex(line) >= 0 && hasRollResultMarker(line)) return true;
-  return hasAnyText(line, ["出目", "決定的成功", "致命的失敗", "ファンブル", "クリティカル"]);
+  return hasAnyText(line, ["出目", "決定的成功", "致命的失敗", "ファンブル", "クリティカル", "スペシャル", "成功", "失敗"]);
 }
 
 function hasAnyText(line, words) {
@@ -348,8 +381,41 @@ function isUsableCharacterName(name) {
   return source.replaceAll("(", "").replaceAll(")", "").replaceAll("（", "").replaceAll("）", "").trim() !== "";
 }
 
-function analyze() {
+function normalizeForDisplay(line) {
+  return String(line || "").replace(/[＞]/g, ">").replace(/\s*>\s*/g, " > ").replace(/\s+/g, " ").trim();
+}
+
+function isMythSkill(skill) {
+  const normalized = String(skill || "").replace(/\s+/g, "").trim();
+  return mythSkillNames.has(normalized) || normalized === "クトゥルフ神話技能";
+}
+
+function isParameterSkill(skill, line = "") {
+  const jp = String(skill || "").trim();
+  const normalized = jp.toUpperCase().replace(/\s+/g, "").replace(/X/g, "×");
+  if (parameterSkillNames.has(jp) || parameterSkillNames.has(normalized)) return true;
+  if (/^(STR|CON|POW|DEX|APP|SIZ|INT|EDU)(?:[×*]\d+)?$/.test(normalized)) return true;
+  if (/^(アイデア|知識|幸運)$/.test(jp)) return true;
+  return /アイデア|知識|幸運|\b(STR|CON|POW|DEX|APP|SIZ|INT|EDU)\b/i.test(`${skill} ${line}`);
+}
+
+function getSelectedRuleMode() {
+  return document.querySelector('input[name="ruleMode"]:checked')?.value || "rulebook";
+}
+
+function includeParameterRolls() {
+  return Boolean($("includeParameterRolls")?.checked);
+}
+
+function analyze(options = {}) {
   const raw = $("rawInput")?.value || "";
+  if (!raw.trim()) {
+    state.allRolls = [];
+    state.visibleCharacters = new Set();
+    renderAll();
+    return;
+  }
+
   const prepared = prepareText(raw);
   const lines = filterLines(prepared.split(/\r?\n/).map(cleanLine).filter(Boolean));
   const rolls = extractRollData(lines);
@@ -369,6 +435,11 @@ function analyze() {
   renderAll();
 }
 
+function scheduleAnalyze() {
+  window.clearTimeout(state.autoTimer);
+  state.autoTimer = window.setTimeout(() => analyze({ auto: true }), 260);
+}
+
 function countByCharacter(rolls) {
   return rolls.reduce((acc, roll) => {
     acc[roll.character] = (acc[roll.character] || 0) + 1;
@@ -380,84 +451,61 @@ function getVisibleRolls() {
   return state.allRolls.filter(roll => state.visibleCharacters.has(roll.character));
 }
 
-function getSelectedRuleMode() {
-  const checked = document.querySelector('input[name="ruleMode"]:checked');
-  return checked ? checked.value : "rulebook";
-}
-
-function isMythosSkill(skill) {
-  const normalized = String(skill || "")
-    .toLowerCase()
-    .replace(/\s+/g, "")
-    .replace(/[・･_\-]/g, "");
-  return normalized.includes("クトゥルフ神話")
-    || normalized.includes("cthulhumythos")
-    || normalized.includes("mythos");
-}
-
-function isParameterRoll(roll) {
-  const skill = String(roll.skill || "").trim();
-  const upper = skill.toUpperCase().replace(/\s+/g, "");
-  return /^(アイデア|知識)$/.test(skill)
-    || /^(STR|CON|POW|DEX|APP|SIZ|INT|EDU)(?:[×X*]\d+)?$/.test(upper);
+function shouldIncludeParameterCandidate(roll, mode) {
+  if (!includeParameterRolls() || !roll.isParameter) return false;
+  if (roll.classification === "critical") return true;
+  if (["critFumble", "both"].includes(mode) && roll.classification === "fumble") return true;
+  return false;
 }
 
 function buildGrowthCandidates(rolls) {
   const mode = getSelectedRuleMode();
-  const includeParamRolls = Boolean($("includeParamRolls")?.checked);
   const candidates = [];
   const successSeen = new Set();
 
   rolls.forEach(roll => {
-    if (isMythosSkill(roll.skill)) return;
-
-    const isParam = isParameterRoll(roll);
-    if (isParam && !includeParamRolls) return;
+    if (roll.isMyth) return;
 
     const base = { ...roll };
     const successKey = `${roll.character}///${roll.skill}`;
 
-    const addSuccessOnce = () => {
-      if (isParam) return;
+    if (roll.isParameter) {
+      if (shouldIncludeParameterCandidate(roll, mode)) {
+        candidates.push({ ...base, reason: roll.classification === "fumble" ? "fumble" : "critical" });
+      }
+      return;
+    }
+
+    if (mode === "rulebook") {
       if (["success", "critical"].includes(roll.classification) && !successSeen.has(successKey)) {
         successSeen.add(successKey);
         candidates.push({ ...base, reason: "success" });
       }
-    };
-
-    const addCritical = () => {
-      if (roll.classification === "critical") candidates.push({ ...base, reason: "critical" });
-    };
-    const addFumble = () => {
-      if (roll.classification === "fumble") candidates.push({ ...base, reason: "fumble" });
-    };
-    const addInitial = () => {
-      if (!isParam && roll.classification === "initial") candidates.push({ ...base, reason: "initial" });
-    };
-
-    if (mode === "rulebook") {
-      if (isParam) addCritical();
-      else addSuccessOnce();
       return;
     }
 
     if (mode === "critFumble") {
-      addCritical();
-      addFumble();
-      addInitial();
+      if (roll.classification === "critical") candidates.push({ ...base, reason: "critical" });
+      if (roll.classification === "fumble") candidates.push({ ...base, reason: "fumble" });
       return;
     }
 
     if (mode === "both") {
-      addCritical();
-      addFumble();
-      if (!isParam) addSuccessOnce();
+      if (roll.classification === "critical") candidates.push({ ...base, reason: "critical" });
+      if (roll.classification === "fumble") candidates.push({ ...base, reason: "fumble" });
+      if (["success", "critical"].includes(roll.classification) && !successSeen.has(successKey)) {
+        successSeen.add(successKey);
+        candidates.push({ ...base, reason: "success" });
+      }
       return;
     }
 
     if (mode === "bothPrime") {
-      addCritical();
-      if (!isParam) addSuccessOnce();
+      if (roll.classification === "critical") candidates.push({ ...base, reason: "critical" });
+      if (["success", "critical"].includes(roll.classification) && !successSeen.has(successKey)) {
+        successSeen.add(successKey);
+        candidates.push({ ...base, reason: "success" });
+      }
     }
   });
 
@@ -475,99 +523,43 @@ function renderAll() {
 function renderSummary() {
   const visibleRolls = getVisibleRolls();
   const candidates = buildGrowthCandidates(visibleRolls);
-  const counts = countByCharacter(state.allRolls);
-  const autoHideMax = clampNumber($("autoHideMaxRolls")?.value, 0, 999, 15);
-  const mode = getSelectedRuleMode();
+  const output = $("growthSummaryOutput");
+  if (!output) return;
 
-  if ($("totalRolls")) $("totalRolls").textContent = String(state.allRolls.length);
-  if ($("candidateCount")) $("candidateCount").textContent = String(candidates.length);
-  if ($("characterCount")) $("characterCount").textContent = String(Object.keys(counts).length);
-  if ($("ruleModeLabel")) $("ruleModeLabel").textContent = t(`ruleLabel.${mode}`, "-");
-
-  if ($("growthOutput")) $("growthOutput").value = buildGrowthSummaryText(candidates, mode);
-
-  const hidden = state.allRolls.length - visibleRolls.length;
-  if ($("summaryMemo")) {
-    $("summaryMemo").textContent = state.allRolls.length
-      ? t("summary.memo", "", {
-          all: state.allRolls.length,
-          visible: visibleRolls.length,
-          candidates: candidates.length,
-          characters: Object.keys(counts).length,
-          hidden,
-          threshold: autoHideMax,
-        })
-      : t("summary.selectLog", "ログを入力、またはファイルを読み込むと自動で成長候補を抽出します。");
-  }
-
-  renderCandidateCards(candidates);
+  output.value = formatGrowthSummaryText(candidates);
 }
 
-function buildGrowthSummaryText(candidates, mode) {
-  const sessionName = state.sessionName || t("summary.sessionFromText", "ログ本文");
-  const ruleLabel = t(`ruleLabel.${mode}`, "基本ルルブ準拠");
-  const lines = [`[セッション名：${sessionName}][選択ルール：${ruleLabel}]`];
+function formatGrowthSummaryText(candidates) {
+  if (!state.allRolls.length) return t("summary.selectLog", "ログを入力すると、成長候補サマリーがここに表示されます。");
+  if (!candidates.length) return t("summary.noCandidates", "表示対象の成長候補はありません。");
 
-  if (!candidates.length) {
-    lines.push("", t("summary.noCandidates", "表示対象の成長候補はありません。"));
-    return lines.join(LF);
-  }
-
+  const mode = getSelectedRuleMode();
+  const header = `[セッション名：${state.sessionName || "未設定"}][選択ルール：${t(`ruleLabel.${mode}`, mode)}]`;
   const grouped = candidates.reduce((acc, item) => {
     if (!acc[item.character]) acc[item.character] = [];
     acc[item.character].push(item);
     return acc;
   }, {});
 
-  Object.entries(grouped).forEach(([character, items]) => {
-    const skills = [];
-    const seen = new Set();
-    items.forEach(item => {
-      if (!seen.has(item.skill)) {
-        seen.add(item.skill);
-        skills.push(item.skill);
-      }
-    });
-
-    lines.push("", `【${character}】【成長判定候補：${skills.join("、")}】`);
-    items.forEach(item => lines.push(item.line));
+  const sections = Object.entries(grouped).map(([character, items]) => {
+    const uniqueSkills = [...new Set(items.map(item => item.skill).filter(Boolean))];
+    const lines = items.map(item => normalizeForDisplay(item.line));
+    return `【${character}】【成長判定候補：${uniqueSkills.join("、")}】\n${lines.join("\n")}`;
   });
 
-  return lines.join(LF);
-}
-
-function renderCandidateCards(candidates) {
-  const container = $("candidateSummary");
-  if (!container) return;
-  const grouped = candidates.reduce((acc, item) => {
-    if (!acc[item.character]) acc[item.character] = [];
-    acc[item.character].push(item);
-    return acc;
-  }, {});
-
-  if (!candidates.length) {
-    container.innerHTML = `<div class="card"><p class="note">${escapeHtml(t("summary.noCandidates", "表示対象の成長候補はありません。"))}</p></div>`;
-    return;
-  }
-
-  container.innerHTML = Object.entries(grouped).map(([character, items]) => {
-    const chips = items.slice(0, 18).map(item => {
-      return `<span class="candidate-chip reason-${item.reason}">${escapeHtml(item.skill)} <small>${escapeHtml(t(`reason.${item.reason}`, item.reason))}</small></span>`;
-    }).join("");
-    const more = items.length > 18 ? `<span class="candidate-chip">+${items.length - 18}</span>` : "";
-    return `<div class="card candidate-card"><h3>${escapeHtml(character)} <span class="note">${items.length}</span></h3><div class="candidate-list">${chips}${more}</div></div>`;
-  }).join("");
+  return [header, "", ...sections].join("\n");
 }
 
 function renderCandidatesTable() {
   const candidates = buildGrowthCandidates(getVisibleRolls());
   const tbody = $("candidateTableBody");
+  if (!tbody) return;
   tbody.innerHTML = candidates.map((item, index) => `
     <tr>
       <td>${index + 1}</td>
       <td>${escapeHtml(item.character)}</td>
       <td>${escapeHtml(item.skill)}</td>
-      <td><span class="pill ${item.reason === "fumble" ? "fumble" : (item.reason === "initial" ? "normal" : "success")}">${escapeHtml(t(`reason.${item.reason}`, item.reason))}</span></td>
+      <td><span class="pill ${item.reason === "fumble" ? "fumble" : "success"}">${escapeHtml(t(`reason.${item.reason}`, item.reason))}</span></td>
       <td>${item.value}</td>
       <td>${escapeHtml(item.line)}</td>
     </tr>
@@ -576,6 +568,7 @@ function renderCandidatesTable() {
 
 function renderRollTable() {
   const tbody = $("rollTableBody");
+  if (!tbody) return;
   const rolls = getVisibleRolls();
   tbody.innerHTML = rolls.map((roll, index) => `
     <tr>
@@ -592,6 +585,7 @@ function renderRollTable() {
 function renderCharacterControls() {
   const controls = $("characterControls");
   const button = $("characterControlToggleBtn");
+  if (!controls || !button) return;
   const counts = countByCharacter(state.allRolls);
   controls.classList.toggle("visible", state.showCharacterControls);
   button.textContent = state.showCharacterControls
@@ -647,13 +641,19 @@ function updateThemeButton() {
 }
 
 function openShortcutModal() {
-  $("shortcutModal")?.classList.add("open");
-  $("shortcutModal")?.setAttribute("aria-hidden", "false");
+  const panel = $("shortcutModal");
+  panel?.classList.add("open");
+  panel?.setAttribute("aria-hidden", "false");
 }
 
 function closeShortcutModal() {
-  $("shortcutModal")?.classList.remove("open");
-  $("shortcutModal")?.setAttribute("aria-hidden", "true");
+  const panel = $("shortcutModal");
+  panel?.classList.remove("open");
+  panel?.setAttribute("aria-hidden", "true");
+}
+
+function toggleShortcutModal() {
+  isShortcutModalOpen() ? closeShortcutModal() : openShortcutModal();
 }
 
 function isShortcutModalOpen() {
@@ -663,10 +663,27 @@ function isShortcutModalOpen() {
 function clearAll() {
   if ($("rawInput")) $("rawInput").value = "";
   if ($("fileInput")) $("fileInput").value = "";
-  state.sessionName = t("summary.sessionFromText", "ログ本文");
   state.allRolls = [];
   state.visibleCharacters = new Set();
+  state.sessionName = "未設定";
   renderAll();
+}
+
+async function copyGrowthSummary() {
+  const output = $("growthSummaryOutput");
+  if (!output) return;
+  output.focus();
+  output.select();
+  try {
+    await navigator.clipboard.writeText(output.value);
+  } catch (_error) {
+    document.execCommand("copy");
+  }
+}
+
+function deleteGrowthSummary() {
+  const output = $("growthSummaryOutput");
+  if (output) output.value = "";
 }
 
 function initializeGrowthChecker() {
@@ -684,9 +701,8 @@ function initializeGrowthChecker() {
   $("languageToggleBtn").textContent = getCurrentLanguage() === "ja" ? "EN" : "JP";
 
   $("themeToggleBtn")?.addEventListener("click", toggleTheme);
-  $("shortcutHelpBtn")?.addEventListener("click", openShortcutModal);
+  $("shortcutHelpBtn")?.addEventListener("click", toggleShortcutModal);
   $("shortcutModalCloseBtn")?.addEventListener("click", closeShortcutModal);
-  $("shortcutModalBackdrop")?.addEventListener("click", closeShortcutModal);
   $("screenshotExitBtn")?.addEventListener("click", () => document.body.classList.remove("screenshot-mode"));
   $("summaryShotBtn")?.addEventListener("click", () => document.body.classList.add("screenshot-mode"));
   $("inputToggleBtn")?.addEventListener("click", toggleInputPanel);
@@ -698,38 +714,24 @@ function initializeGrowthChecker() {
   $("clearBtn")?.addEventListener("click", () => {
     if (window.confirm(t("confirm.clear", "入力内容と抽出結果をクリアします。よろしいですか？"))) clearAll();
   });
-  document.querySelectorAll('input[name="ruleMode"]').forEach(input => input.addEventListener("change", () => {
-    state.allRolls.length ? renderAll() : analyze();
-  }));
-  $("includeParamRolls")?.addEventListener("change", () => state.allRolls.length ? renderAll() : analyze());
+  $("copySummaryBtn")?.addEventListener("click", copyGrowthSummary);
+  $("deleteSummaryBtn")?.addEventListener("click", deleteGrowthSummary);
+
+  document.querySelectorAll('input[name="ruleMode"]').forEach(input => input.addEventListener("change", renderAll));
+  $("includeParameterRolls")?.addEventListener("change", renderAll);
   $("autoHideMaxRolls")?.addEventListener("change", analyze);
+
+  $("rawInput")?.addEventListener("input", () => {
+    state.sessionName = "貼り付けログ";
+    scheduleAnalyze();
+  });
 
   $("fileInput")?.addEventListener("change", async event => {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     state.sessionName = file.name;
     $("rawInput").value = await file.text();
-    analyze();
-  });
-
-  $("rawInput")?.addEventListener("input", () => {
-    state.sessionName = t("summary.sessionFromText", "ログ本文");
-    window.clearTimeout(state.inputTimer);
-    state.inputTimer = window.setTimeout(() => analyze(), 450);
-  });
-
-  $("copySummaryBtn")?.addEventListener("click", async () => {
-    const value = $("growthOutput")?.value || "";
-    if (!value) return;
-    try { await navigator.clipboard.writeText(value); }
-    catch (_) {
-      $("growthOutput")?.select();
-      document.execCommand("copy");
-    }
-  });
-
-  $("deleteSummaryBtn")?.addEventListener("click", () => {
-    if ($("growthOutput")) $("growthOutput").value = "";
+    analyze({ auto: true });
   });
 
   document.querySelectorAll(".tab-button").forEach(button => button.addEventListener("click", () => switchTab(button)));

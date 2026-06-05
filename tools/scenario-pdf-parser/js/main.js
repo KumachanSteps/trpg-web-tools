@@ -1,7 +1,7 @@
 const SNIPPET_TOOL_URL = "../scenario-info-snippet-tool/index.html";
 const BRIDGE_TEXT_KEY = "scenarioInfoSnippet.importText";
 const BRIDGE_PAYLOAD_KEY = "scenarioInfoSnippet.importPayload";
-const TOOL_VERSION = "0.6.5";
+const TOOL_VERSION = "0.6.6";
 const DEFAULT_API_ENDPOINT = window.SCENARIO_PDF_PARSER_API_ENDPOINT || "/api/parse-pdf";
 const API_ENDPOINT_STORAGE_KEY = "scenarioPdfParser.apiEndpoint";
 const API_ENABLED_STORAGE_KEY = "scenarioPdfParser.apiEnabled";

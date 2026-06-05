@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 
 APP_DIR = Path(__file__).resolve().parents[1]
 
-app = FastAPI(title="Scenario PDF Parser API", version="0.6.5")
+app = FastAPI(title="Scenario PDF Parser API", version="0.6.6")
 
 app.add_middleware(
     CORSMiddleware,
@@ -155,10 +155,41 @@ def extract_page_lines(page: fitz.Page, page_number: int) -> list[LayoutLine]:
             )
 
     lines.sort(key=lambda line: (line.y0, line.x0))
-    return merge_same_y_lines(lines)
+    return merge_same_y_lines(lines, float(page.rect.width))
 
 
-def merge_same_y_lines(lines: list[LayoutLine], tolerance: float = 2.2) -> list[LayoutLine]:
+def should_keep_same_y_items_separate(group: list[LayoutLine], page_width: float) -> bool:
+    if len(group) < 2:
+        return False
+
+    group = sorted(group, key=lambda item: item.x0)
+    gaps = [group[i + 1].x0 - group[i].x1 for i in range(len(group) - 1)]
+    if not gaps:
+        return False
+
+    max_gap = max(gaps)
+    split_index = gaps.index(max_gap)
+    left_item = group[split_index]
+    right_item = group[split_index + 1]
+    midpoint = page_width / 2
+
+    crosses_mid_gap = left_item.x1 < midpoint < right_item.x0
+    looks_like_column_gap = max_gap >= max(24, page_width * 0.032)
+    both_are_text_blocks = left_item.width > 16 and right_item.width > 16
+
+    left_text = left_item.text.strip()
+    right_text = right_item.text.strip()
+    structural_pair = bool(
+        re.match(r"^[●○■・※]", left_text) or
+        re.match(r"^[●○■・※]", right_text) or
+        left_item.kind in {"heading", "list", "stat"} or
+        right_item.kind in {"heading", "list", "stat"}
+    )
+
+    return both_are_text_blocks and looks_like_column_gap and (crosses_mid_gap or structural_pair)
+
+
+def merge_same_y_lines(lines: list[LayoutLine], page_width: float, tolerance: float = 2.2) -> list[LayoutLine]:
     if not lines:
         return []
 
@@ -176,8 +207,7 @@ def merge_same_y_lines(lines: list[LayoutLine], tolerance: float = 2.2) -> list[
             merged.append(group[0])
             continue
 
-        gaps = [group[i + 1].x0 - group[i].x1 for i in range(len(group) - 1)]
-        if gaps and max(gaps) > 78:
+        if should_keep_same_y_items_separate(group, page_width):
             merged.extend(group)
             continue
 
@@ -198,7 +228,6 @@ def merge_same_y_lines(lines: list[LayoutLine], tolerance: float = 2.2) -> list[
         merged.append(LayoutLine(group[0].page, x0, y0, x1, y1, text, kind=classify_kind(text)))
 
     return sorted(merged, key=lambda line: (line.y0, line.x0))
-
 
 def pixmap_to_cv_image(page: fitz.Page, scale: float = 2.0) -> tuple[np.ndarray, float]:
     pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
@@ -305,17 +334,19 @@ def detect_band_breaks(lines: list[LayoutLine], horizontal_lines: list[float], p
     breaks: list[float] = []
     sorted_lines = sorted(lines, key=lambda item: item.y0)
 
-    for y in horizontal_lines:
-        if page_height * 0.05 < y < page_height * 0.95:
-            breaks.append(y)
-
     for prev, cur in zip(sorted_lines, sorted_lines[1:]):
         gap = cur.y0 - prev.y1
-        if gap > 18:
+
+        if gap > 30:
+            breaks.append((prev.y1 + cur.y0) / 2)
+            continue
+
+        prev_is_major_heading = bool(re.match(r"^(【|[0-9]{2}[.．]|■)", prev.text))
+        cur_is_major_heading = bool(re.match(r"^(【|[0-9]{2}[.．]|■)", cur.text))
+        if gap > 16 and (prev_is_major_heading or cur_is_major_heading):
             breaks.append((prev.y1 + cur.y0) / 2)
 
     return dedupe_positions([b for b in breaks if 0 < b < page_height], tolerance=5.0)
-
 
 def split_lines_into_bands(lines: list[LayoutLine], page_number: int, page_width: float, page_height: float, separators: dict[str, list[float]]) -> list[LayoutBand]:
     if not lines:
@@ -338,25 +369,32 @@ def split_lines_into_bands(lines: list[LayoutLine], page_number: int, page_width
 
 
 def detect_band_mode(lines: list[LayoutLine], page_width: float, separators: dict[str, list[float]]) -> str:
-    if len(lines) < 4:
+    if len(lines) < 3:
         return "full"
 
-    verticals = [x for x in separators.get("vertical", []) if page_width * 0.35 < x < page_width * 0.65]
+    verticals = [x for x in separators.get("vertical", []) if page_width * 0.32 < x < page_width * 0.68]
     text_gaps = infer_text_gaps(lines, page_width)
-    candidate_split = verticals[:1] or text_gaps[:1]
+    split_candidates = verticals[:1] or text_gaps[:1] or [page_width / 2]
+    split_x = split_candidates[0]
 
-    if not candidate_split:
-        return "full"
+    left = [line for line in lines if line.center_x < split_x and line.width < page_width * 0.78]
+    right = [line for line in lines if line.center_x >= split_x and line.width < page_width * 0.78]
 
-    split_x = candidate_split[0]
-    left = [line for line in lines if line.center_x < split_x and line.width < page_width * 0.72]
-    right = [line for line in lines if line.center_x >= split_x and line.width < page_width * 0.72]
+    same_y_pairs = 0
+    sorted_lines = sorted(lines, key=lambda item: (item.y0, item.x0))
+    for i, line in enumerate(sorted_lines):
+        for other in sorted_lines[i + 1:]:
+            if abs(other.y0 - line.y0) > 3:
+                break
+            if line.center_x < split_x < other.center_x:
+                same_y_pairs += 1
 
     if len(left) >= 2 and len(right) >= 2:
         return "twoColumn"
+    if same_y_pairs >= 2:
+        return "twoColumn"
 
     return "full"
-
 
 def merge_small_bands(bands: list[LayoutBand], page_width: float, separators: dict[str, list[float]]) -> list[LayoutBand]:
     if not bands:
@@ -382,21 +420,36 @@ def order_band_lines(band: LayoutBand, page_width: float, separators: dict[str, 
             line.col = "full"
         return sorted(lines, key=lambda item: (item.y0, item.x0))
 
-    split_candidates = [x for x in separators.get("vertical", []) if page_width * 0.35 < x < page_width * 0.65]
+    split_candidates = [x for x in separators.get("vertical", []) if page_width * 0.32 < x < page_width * 0.68]
     if not split_candidates:
         split_candidates = infer_text_gaps(lines, page_width)
     split_x = split_candidates[0] if split_candidates else page_width / 2
 
+    leading_full: list[LayoutLine] = []
     left: list[LayoutLine] = []
     right: list[LayoutLine] = []
-    full: list[LayoutLine] = []
+    trailing_full: list[LayoutLine] = []
+
+    min_y = min(line.y0 for line in lines)
+    max_y = max(line.y1 for line in lines)
 
     for line in lines:
-        full_by_text = bool(re.match(r"^([0-9]{2}[.．]|【|■)", line.text))
-        full_by_width = line.width >= page_width * 0.62 or (line.x0 < split_x < line.x1 and line.width >= page_width * 0.40)
-        if full_by_text or full_by_width:
+        text = line.text.strip()
+        is_major_full = bool(re.match(r"^(【|[0-9]{2}[.．]|■)", text))
+        full_by_width = line.width >= page_width * 0.72
+
+        if is_major_full or full_by_width:
             line.col = "full"
-            full.append(line)
+            if line.y0 <= min_y + 24:
+                leading_full.append(line)
+            elif line.y0 >= max_y - 24:
+                trailing_full.append(line)
+            elif line.center_x < split_x:
+                line.col = "left"
+                left.append(line)
+            else:
+                line.col = "right"
+                right.append(line)
         elif line.center_x < split_x:
             line.col = "left"
             left.append(line)
@@ -404,11 +457,12 @@ def order_band_lines(band: LayoutBand, page_width: float, separators: dict[str, 
             line.col = "right"
             right.append(line)
 
-    ordered = sorted(full, key=lambda item: (item.y0, item.x0))
-    ordered += sorted(left, key=lambda item: (item.y0, item.x0))
-    ordered += sorted(right, key=lambda item: (item.y0, item.x0))
+    ordered: list[LayoutLine] = []
+    ordered.extend(sorted(leading_full, key=lambda item: (item.y0, item.x0)))
+    ordered.extend(sorted(left, key=lambda item: (item.y0, item.x0)))
+    ordered.extend(sorted(right, key=lambda item: (item.y0, item.x0)))
+    ordered.extend(sorted(trailing_full, key=lambda item: (item.y0, item.x0)))
     return ordered
-
 
 def fix_split_numbers(text: str) -> str:
     ability = ABILITY_KEYS
@@ -577,7 +631,7 @@ async def health():
     return {
         "ok": True,
         "engine": "layout-analysis-pymupdf-pdfplumber-opencv",
-        "version": "0.6.5",
+        "version": "0.6.6",
         "storage": "temporary-files-deleted-after-processing",
     }
 
@@ -586,7 +640,7 @@ async def health():
 async def parse_pdf(
     file: UploadFile = File(...),
     preset: str = Form("scenario"),
-    version: str = Form("0.6.5"),
+    version: str = Form("0.6.6"),
 ):
     if file.content_type not in {"application/pdf", "application/octet-stream"} and not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Please upload a PDF file.")
@@ -625,6 +679,8 @@ async def parse_pdf(
                 "column_ordering": True,
                 "ruling_line_detection": True,
                 "band_layout": True,
+                "same_y_column_split": True,
+                "column_underline_ignored_as_band_break": True,
             },
         }
     except Exception as exc:

@@ -11,7 +11,7 @@ const I18N = {
     "theme.switchToDark": "ナイトモードに切替",
     "common.unknown": "不明",
 
-    "app.title": "CoC 6版 / 7版 成長チェッカー",
+    "app.title": "CoC 6版 / 7版 成長チェッカーv2｜TRPG WEBツール観測所",
     "app.description": "セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。",
     "app.tip": "Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で抽出 ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> でスクショ表示 ｜ <kbd>?</kbd> でショートカット一覧",
 
@@ -20,7 +20,6 @@ const I18N = {
     "input.pasteLabel": "またはログ本文を貼り付け",
     "input.placeholder": "HTMLまたはテキストログを貼り付け",
     "input.ruleTitle": "成長チェック出力ルール",
-    "input.includeParamRolls": "アイデア、知識、能力値ロールを加える",
     "input.autoHideMaxRolls": "自動非表示にする総ロール数",
     "input.note": "対応例：CCB<=80 【目星】、CC<=60 【図書館】、RESB(10-16)、1d100<=55 など。キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。",
 
@@ -28,10 +27,11 @@ const I18N = {
     "rule.critFumble": "クリティカル / ファンブル / 初期値（該当ロールを全て表示）",
     "rule.both": "合算① クリファン全件 + 成功技能1回づつ",
     "rule.bothPrime": "合算② クリティカル全件 + 成功技能1回づつ",
+    "rule.includeParameterRolls": "アイデア、知識、能力値ロールを加える",
     "ruleLabel.rulebook": "基本ルルブ準拠",
     "ruleLabel.critFumble": "クリティカル / ファンブル / 初期値",
-    "ruleLabel.both": "合算①",
-    "ruleLabel.bothPrime": "合算②",
+    "ruleLabel.both": "合算① クリファン全件 + 成功技能1回づつ",
+    "ruleLabel.bothPrime": "合算② クリティカル全件 + 成功技能1回づつ",
 
     "button.analyze": "成長候補を抽出",
     "button.clear": "クリア",
@@ -41,7 +41,7 @@ const I18N = {
     "button.hideCharacterControls": "表示キャラ設定を隠す▲",
     "button.openInputPanel": "入力パネルを開く",
     "button.collapseInputPanel": "入力パネルを畳む",
-    "button.shortcuts": "⌨ Shortcuts",
+    "button.shortcuts": "⌨ ショートカット",
     "button.screenshot": "📷 スクショ表示",
     "button.exitScreenshot": "通常表示に戻す",
     "button.diceAnalyst": "ダイス解析ツール →",
@@ -50,18 +50,9 @@ const I18N = {
     "tab.candidates": "成長候補",
     "tab.rolls": "抽出ロール",
 
-    "card.totalRolls": "検出ロール数",
-    "card.candidateCount": "成長候補",
-    "card.characterCount": "キャラクター",
-    "card.ruleMode": "選択ルール",
-
-    "summary.outputTitle": "成長候補サマリー",
-    "summary.outputPlaceholder": "ログを読み込むと、ここに成長チェック候補が表示されます。",
-    "summary.sessionFromText": "ログ本文",
-    "summary.memoTitle": "メモ",
-    "summary.selectLog": "ログを入力、またはファイルを読み込むと自動で成長候補を抽出します。",
-    "summary.memo": "検出した{all}件のd100ロールのうち、表示対象{visible}件から成長候補{candidates}件を抽出しました。検出キャラクター数は{characters}、非表示ロール数は{hidden}件です。総ロール数{threshold}件以下のキャラクターは初期状態で非表示です。",
-    "summary.noCandidates": "表示対象の成長候補はありません。表示キャラ設定、出力ルール、または入力ログを確認してください。",
+    "summary.growthOutputTitle": "成長候補サマリー",
+    "summary.selectLog": "ログを入力すると、成長候補サマリーがここに表示されます。",
+    "summary.noCandidates": "表示対象の成長候補はありません。表示キャラ設定または出力ルールを確認してください。",
 
     "candidates.title": "成長チェック候補一覧",
     "candidates.index": "#",
@@ -81,13 +72,11 @@ const I18N = {
 
     "classification.critical": "Critical",
     "classification.fumble": "Fumble",
-    "classification.initial": "Initial",
     "classification.success": "Success",
     "classification.fail": "Fail",
     "classification.normal": "Normal",
     "reason.critical": "クリティカル",
     "reason.fumble": "ファンブル",
-    "reason.initial": "初期値",
     "reason.success": "成功",
     "skill.unknown": "技能名不明",
 
@@ -105,7 +94,7 @@ const I18N = {
     "shortcut.screenshot": "スクショ表示 / 通常表示",
     "shortcut.clear": "確認後クリア",
     "shortcut.openHelp": "このショートカット一覧を開く",
-    "shortcut.esc": "モーダル / スクショ表示を閉じる。通常時は確認後クリア",
+    "shortcut.esc": "ドロワー / スクショ表示を閉じる。通常時は確認後クリア",
     "shortcut.note": "※ 一部ブラウザでは既定ショートカットが優先される場合があります。",
     "confirm.clear": "入力内容と抽出結果をクリアします。よろしいですか？"
   },
@@ -115,30 +104,35 @@ const I18N = {
     "tag.logInput": "Session Log Input",
     "tag.coc67": "CoC 6e / 7e",
     "tag.growthCandidates": "Growth Candidates",
+
     "language.switchToEnglish": "Switch to English",
     "language.switchToJapanese": "Switch to Japanese",
     "theme.switchToLight": "Switch to Light Mode",
     "theme.switchToDark": "Switch to Night Mode",
     "common.unknown": "Unknown",
-    "app.title": "CoC 6e / 7e Growth Checker",
+
+    "app.title": "CoC 6e / 7e Growth Checker v2 | TRPG Web Tools Portal",
     "app.description": "Extract d100 rolls from session log HTML or text and organize growth-check candidates by character based on your selected house rule.",
     "app.tip": "Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> to extract ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> for screenshot view ｜ <kbd>?</kbd> for shortcut list",
+
     "input.title": "Input",
     "input.fileLabel": "Session Log HTML File",
     "input.pasteLabel": "Or paste log text",
     "input.placeholder": "Paste HTML or text log here",
     "input.ruleTitle": "Growth Check Output Rule",
-    "input.includeParamRolls": "Include Idea, Knowledge, and ability rolls",
     "input.autoHideMaxRolls": "Auto-hide characters with rolls up to",
     "input.note": "Supported examples: CCB<=80 【Spot Hidden】, CC<=60 【Library Use】, RESB(10-16), 1d100<=55, etc. Character names are automatically detected from formats such as “Name: CC” and “[main] Name: CCB”.",
+
     "rule.rulebook": "Rulebook: show each successful skill once",
     "rule.critFumble": "Critical / Fumble / Initial: show every matching roll",
     "rule.both": "Combined 1: all crit/fumble rolls + one success per skill",
     "rule.bothPrime": "Combined 2: all critical rolls + one success per skill",
+    "rule.includeParameterRolls": "Include Idea, Knowledge, and ability rolls",
     "ruleLabel.rulebook": "Rulebook",
     "ruleLabel.critFumble": "Critical / Fumble / Initial",
     "ruleLabel.both": "Combined 1",
     "ruleLabel.bothPrime": "Combined 2",
+
     "button.analyze": "Extract Growth Candidates",
     "button.clear": "Clear",
     "button.copy": "Copy",
@@ -151,20 +145,15 @@ const I18N = {
     "button.screenshot": "📷 Screenshot View",
     "button.exitScreenshot": "Exit Screenshot View",
     "button.diceAnalyst": "Dice Stat Analyst →",
+
     "tab.summary": "Summary",
     "tab.candidates": "Growth Candidates",
     "tab.rolls": "Extracted Rolls",
-    "card.totalRolls": "Detected Rolls",
-    "card.candidateCount": "Candidates",
-    "card.characterCount": "Characters",
-    "card.ruleMode": "Selected Rule",
-    "summary.outputTitle": "Growth Candidate Summary",
-    "summary.outputPlaceholder": "Load a log to show growth-check candidates here.",
-    "summary.sessionFromText": "Pasted Log",
-    "summary.memoTitle": "Memo",
-    "summary.selectLog": "Paste a log or load a file to extract growth candidates automatically.",
-    "summary.memo": "Detected {all} d100 rolls and extracted {candidates} growth candidates from {visible} visible rolls. Detected characters: {characters}. Hidden rolls: {hidden}. Characters with {threshold} rolls or fewer are hidden by default.",
-    "summary.noCandidates": "No visible growth candidates. Check character visibility, output rule, or input log.",
+
+    "summary.growthOutputTitle": "Growth Candidate Summary",
+    "summary.selectLog": "Paste a log to display the growth candidate summary here.",
+    "summary.noCandidates": "No visible growth candidates. Check character visibility or the output rule.",
+
     "candidates.title": "Growth Check Candidates",
     "candidates.index": "#",
     "candidates.character": "Character",
@@ -172,6 +161,7 @@ const I18N = {
     "candidates.reason": "Reason",
     "candidates.roll": "Roll",
     "candidates.sourceLine": "Source Log Line",
+
     "rolls.title": "Extracted Rolls",
     "rolls.index": "#",
     "rolls.character": "Character",
@@ -179,17 +169,17 @@ const I18N = {
     "rolls.value": "Roll",
     "rolls.classification": "Classification",
     "rolls.sourceLine": "Source Log Line",
+
     "classification.critical": "Critical",
     "classification.fumble": "Fumble",
-    "classification.initial": "Initial",
     "classification.success": "Success",
     "classification.fail": "Fail",
     "classification.normal": "Normal",
     "reason.critical": "Critical",
     "reason.fumble": "Fumble",
-    "reason.initial": "Initial",
     "reason.success": "Success",
     "skill.unknown": "Unknown Skill",
+
     "shortcut.eyebrow": "Keyboard Guide",
     "shortcut.title": "Shortcut List",
     "shortcut.file": "Choose File",
@@ -204,8 +194,8 @@ const I18N = {
     "shortcut.screenshot": "Screenshot view / normal view",
     "shortcut.clear": "Clear after confirmation",
     "shortcut.openHelp": "Open this shortcut list",
-    "shortcut.esc": "Close modal / screenshot view. In normal view, clear after confirmation",
+    "shortcut.esc": "Close drawer / screenshot view. In normal view, clear after confirmation",
     "shortcut.note": "Some browsers may prioritize their built-in shortcuts.",
-    "confirm.clear": "This will clear the input and extracted results. Continue?"
+    "confirm.clear": "This will clear the input and extraction results. Continue?"
   }
 };
