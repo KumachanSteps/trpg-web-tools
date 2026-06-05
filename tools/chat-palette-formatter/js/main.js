@@ -1,5 +1,7 @@
 let editionMode = "auto";
 let detectedEdition = "";
+let toastTimer = null;
+let autoFormatTimer = null;
 
 function t(key) {
   return window.ChatPaletteLanguage?.t(key) || key;
@@ -20,12 +22,14 @@ function setStatus(message, type) {
 }
 
 function showToast(message) {
-  const toast = document.getElementById("toastMessage");
+  const toast = document.getElementById("toast");
   if (!toast) return;
+
   toast.textContent = message;
   toast.classList.add("show");
-  window.clearTimeout(showToast.timer);
-  showToast.timer = window.setTimeout(() => {
+
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
     toast.classList.remove("show");
   }, 1800);
 }
@@ -46,35 +50,38 @@ function setEditionMode(mode) {
   }
 
   setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
-  const input = document.getElementById("input");
-  if (input && input.value.trim()) {
-    handleInputChange();
-  }
+  autoFormatInputNow();
 }
 
 function handleInputChange() {
   const input = document.getElementById("input");
-  const output = document.getElementById("output");
   const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
 
   if (!extracted.text) {
     detectedEdition = "";
-    if (output) output.value = "";
-    if (editionMode === "auto") updateEditionToggleActive("auto");
+    document.getElementById("output").value = "";
     setStatus(t("initialStatus"));
     return;
   }
 
-  const edition = getSelectedEdition(extracted.text);
   if (editionMode === "auto") {
-    updateEditionToggleActive(edition);
+    detectedEdition = window.ChatPaletteParser.detectEdition(extracted.text);
+    updateEditionToggleActive(detectedEdition);
+    setStatus(t("detectPrefix") + editionLabel(detectedEdition) + t("detectSuffix"));
   }
 
-  if (output) {
-    output.value = window.ChatPaletteParser.buildOutput(extracted.text, edition);
-  }
+  scheduleAutoFormat();
+}
 
-  setStatus(t("detectPrefix") + editionLabel(edition) + t("detectSuffix"));
+function scheduleAutoFormat() {
+  if (autoFormatTimer) clearTimeout(autoFormatTimer);
+  autoFormatTimer = setTimeout(autoFormatInputNow, 120);
+}
+
+function autoFormatInputNow() {
+  const input = document.getElementById("input");
+  if (!input || !input.value.trim()) return;
+  formatPalette({ silent: true });
 }
 
 function getSelectedEdition(text) {
@@ -84,14 +91,14 @@ function getSelectedEdition(text) {
   return detectedEdition;
 }
 
-function formatPalette() {
+function formatPalette(options = {}) {
   const input = document.getElementById("input");
   const output = document.getElementById("output");
   const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
 
   if (!extracted.text) {
     output.value = "";
-    setStatus(t("extractError"), "error");
+    if (!options.silent) setStatus(t("extractError"), "error");
     return;
   }
 
@@ -123,7 +130,6 @@ async function copyOutput() {
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
       await navigator.clipboard.writeText(output.value);
-      setStatus(t("copied"));
       showToast("チャットパレットがコピーされました");
       return;
     }
@@ -142,7 +148,6 @@ function fallbackCopy(output) {
     const success = document.execCommand("copy");
 
     if (success) {
-      setStatus(t("copied"));
       showToast("チャットパレットがコピーされました");
     } else {
       setStatus(t("copyManual"), "error");
@@ -162,16 +167,19 @@ async function pasteClipboardToInput() {
       input.value = await navigator.clipboard.readText();
       input.focus();
       handleInputChange();
+      return;
     }
   } catch (error) {
     console.warn("Clipboard paste failed.", error);
-    input.focus();
-    setStatus("ブラウザの制限により自動ペーストできませんでした。手動で貼り付けてください。", "error");
   }
+
+  input.focus();
+  setStatus("ブラウザの制限により自動ペーストできませんでした。入力欄で通常の貼り付け操作を行ってください。", "error");
 }
 
-function handleGlobalShortcuts(event) {
-  const hasCmdOrCtrl = event.metaKey || event.ctrlKey;
+function handleShortcut(event) {
+  const key = event.key.toLowerCase();
+  const commandOrCtrl = event.metaKey || event.ctrlKey;
 
   if (event.key === "Escape") {
     event.preventDefault();
@@ -179,13 +187,13 @@ function handleGlobalShortcuts(event) {
     return;
   }
 
-  if (hasCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === "v") {
+  if (commandOrCtrl && event.shiftKey && key === "v") {
     event.preventDefault();
     pasteClipboardToInput();
     return;
   }
 
-  if (hasCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === "c") {
+  if (commandOrCtrl && event.shiftKey && key === "c") {
     event.preventDefault();
     copyOutput();
   }
@@ -193,17 +201,16 @@ function handleGlobalShortcuts(event) {
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("input").addEventListener("input", handleInputChange);
-  document.getElementById("formatButton").addEventListener("click", formatPalette);
+  document.getElementById("formatButton").addEventListener("click", () => formatPalette());
   document.getElementById("copyButton").addEventListener("click", copyOutput);
   document.getElementById("clearButton").addEventListener("click", clearAll);
+  document.addEventListener("keydown", handleShortcut);
 
   document.querySelectorAll(".edition-toggle button").forEach(button => {
     button.addEventListener("click", () => {
       setEditionMode(button.dataset.edition);
     });
   });
-
-  document.addEventListener("keydown", handleGlobalShortcuts);
 
   setStatus(t("initialStatus"));
 });

@@ -38,8 +38,8 @@
           <h1 class="site-title">CoCチャパレ整形ツールv2.1</h1>
           <p class="site-description">
             <span>チャットパレット本文、またはJSON形式のキャラクター駒データを貼り付けて、CoC 6版 / 7版向けに見やすく整形します。</span>
-            <span class="description-line-2">
-              <span class="description-text">入力欄にデータを貼り付け、「分類して出力」ボタンで整形結果を表示します。</span>
+            <span class="description-line">
+              <span>入力欄にデータを貼り付け、「分類して出力」ボタンで整形結果を表示します。</span>
               <span class="header-version">v2.1 2026/06/04</span>
             </span>
           </p>
@@ -50,8 +50,6 @@
     <div class="status-note" id="statusMessage">
       元のチャットパレット、またはキャラクター駒JSONを貼り付けてください。形式とCoC 6版 / 7版は自動判定します。
     </div>
-
-    <div class="toast" id="toastMessage" role="status" aria-live="polite"></div>
 
     <main class="main">
       <section class="container input-panel">
@@ -108,9 +106,11 @@
     </p>
   </section>
 
-  <script src="js/i18n.js"></script>
-  <script src="js/parser.js"></script>
-  <script src="js/language.js"></script>
-  <script src="js/main.js"></script>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="./js/i18n.js"></script>
+  <script src="./js/parser.js"></script>
+  <script src="./js/language.js"></script>
+  <script src="./js/main.js"></script>
 </body>
 </html>

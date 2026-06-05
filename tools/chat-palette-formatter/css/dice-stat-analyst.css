@@ -77,7 +77,7 @@ button:hover {
   margin: 0 auto;
   padding: 18px 22px 14px;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 14px;
 }
 
@@ -95,29 +95,6 @@ button:hover {
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-}
-
-.description-line-2 {
-  display: flex !important;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.description-text {
-  min-width: 0;
-}
-
-.header-version {
-  flex: 0 0 auto;
-  margin-left: auto;
-  color: rgba(31, 41, 55, .36);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .03em;
-  white-space: nowrap;
-  user-select: none;
-  pointer-events: none;
 }
 
 .header-inner {
@@ -448,65 +425,60 @@ textarea:focus {
   background: #edf1f6;
 }
 
-/* =========================================================
-   Toast
-   ========================================================= */
-
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 22px;
-  z-index: 1000;
-  min-width: 240px;
-  max-width: min(92vw, 420px);
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: rgba(31, 41, 55, .94);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 800;
-  text-align: center;
-  box-shadow: 0 18px 34px rgba(15, 23, 42, .22);
-  opacity: 0;
-  transform: translate(-50%, 10px);
-  pointer-events: none;
-  transition: opacity .18s ease, transform .18s ease;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
 
 /* =========================================================
-   Footer
+   Tool Footer Note
    ========================================================= */
 
 .tool-footer-note {
-  width: min(calc(100% - 44px), 1236px);
-  margin: 18px auto 28px;
-  padding: 12px 16px;
+  width: 100%;
+  padding: 16px 18px;
   border: 1px solid rgba(15, 23, 42, .10);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .72);
-  color: var(--muted);
-  font-size: 11.5px;
-  line-height: 1.55;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, .78);
+  color: var(--text);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
 
 .tool-footer-note h2 {
-  margin: 0 0 4px;
-  color: #475569;
-  font-size: 12.5px;
-  line-height: 1.35;
+  margin: 0 0 8px;
+  font-size: 15px;
   font-weight: 900;
+  color: var(--text);
 }
 
 .tool-footer-note p {
-  margin: 4px 0 0;
+  margin: 0;
+  color: #475569;
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+
+.tool-footer-note p + p {
+  margin-top: 8px;
+}
+
+/* =========================================================
+   Footer
+   ========================================================= */
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 8px 14px;
+  border: 1px solid rgba(15, 23, 42, .10);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .76);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 /* =========================================================
@@ -522,16 +494,6 @@ textarea:focus {
   .site-header {
     padding: 14px 14px 13px;
     border-radius: 22px;
-  }
-
-  .description-line-2 {
-    flex-wrap: wrap;
-    gap: 2px 10px;
-  }
-
-  .header-version {
-    margin-left: 0;
-    font-size: 10.5px;
   }
 
   .header-top-tags {
@@ -585,12 +547,5 @@ textarea:focus {
   #copyButton,
   .btn-clear {
     width: 100%;
-  }
-
-  .tool-footer-note {
-    width: calc(100% - 24px);
-    margin: 12px auto 20px;
-    padding: 10px 12px;
-    font-size: 11px;
   }
 }
