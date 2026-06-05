@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓ログトラッカー v1.4 | TRPG WEBツール観測所</title>
+  <title>卓ログトラッカー v1.5 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
@@ -37,7 +37,7 @@
                 <span class="tool-icon-stat-bar tool-icon-stat-bar-3"></span>
               </span>
             </div>
-            <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー v1.4</h1>
+            <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー v1.5</h1>
           </div>
 
           <p class="site-description" data-i18n="siteDescription">
@@ -191,6 +191,41 @@
     <button id="floatingAddBtn" class="floating-add-button" type="button" title="卓を追加" aria-label="卓を追加">＋</button>
 
   </div>
+
+
+  <dialog id="importModeDialog" class="import-mode-dialog">
+    <form id="importModeForm" method="dialog">
+      <div class="import-mode-header">
+        <div>
+          <p>JSON IMPORT</p>
+          <h2>JSON入力方法を選択</h2>
+        </div>
+        <button id="cancelImportModeBtn" type="button" class="icon-button" aria-label="閉じる">×</button>
+      </div>
+      <div class="import-mode-body">
+        <label class="import-radio-card">
+          <input type="radio" name="importMode" value="overwrite" checked />
+          <span class="radio-mark" aria-hidden="true"></span>
+          <span>
+            <strong>上書き保存</strong>
+            <small>現在の卓ログを削除し、読み込んだJSONで置き換えます。</small>
+          </span>
+        </label>
+        <label class="import-radio-card">
+          <input type="radio" name="importMode" value="append" />
+          <span class="radio-mark" aria-hidden="true"></span>
+          <span>
+            <strong>追加保存</strong>
+            <small>現在の卓ログに、読み込んだJSONの内容を追加します。</small>
+          </span>
+        </label>
+      </div>
+      <div class="import-mode-actions">
+        <button id="cancelImportModeActionBtn" class="mini-button" type="button">キャンセル</button>
+        <button id="confirmImportModeBtn" class="accent-button" type="submit">JSONを読み込む</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="sessionDialog" class="session-dialog">
     <form id="sessionForm" method="dialog">

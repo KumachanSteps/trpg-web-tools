@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.4";
+  const APP_VERSION = "v1.5";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
@@ -585,11 +585,11 @@
     URL.revokeObjectURL(a.href);
   }
 
-  function handleJsonImport(event){
+  async function handleJsonImport(event){
     const file = event.target.files?.[0];
     if(!file) return;
 
-    const mode = chooseImportMode();
+    const mode = await chooseImportMode();
     if(!mode){
       event.target.value = "";
       return;
@@ -627,19 +627,52 @@
   }
 
   function chooseImportMode(){
-    const message = [
-      "JSON入力方法を選択してください。",
-      "",
-      "1: 上書きインポート（現在のデータを置き換え）",
-      "2: 追加インポート（現在のデータに追加）"
-    ].join("\n");
-    const answer = prompt(message, "1");
-    if(answer === null) return null;
-    const value = String(answer).trim();
-    if(value === "1" || value === "上書き" || value.toLowerCase() === "overwrite") return "overwrite";
-    if(value === "2" || value === "追加" || value.toLowerCase() === "append") return "append";
-    alert("1 または 2 を入力してください。");
-    return chooseImportMode();
+    const dialog = document.getElementById("importModeDialog");
+    const form = document.getElementById("importModeForm");
+    const cancelButtons = [
+      document.getElementById("cancelImportModeBtn"),
+      document.getElementById("cancelImportModeActionBtn")
+    ];
+
+    if(!dialog || !form || typeof dialog.showModal !== "function"){
+      return Promise.resolve(confirm("現在のデータを上書きしますか？\nOK: 上書き保存 / キャンセル: 追加保存") ? "overwrite" : "append");
+    }
+
+    return new Promise(resolve=>{
+      let settled = false;
+      function cleanup(){
+        form.removeEventListener("submit", onSubmit);
+        dialog.removeEventListener("cancel", onCancel);
+        dialog.removeEventListener("close", onClose);
+        cancelButtons.forEach(button=>button?.removeEventListener("click", onCancelClick));
+      }
+      function finish(value){
+        if(settled) return;
+        settled = true;
+        cleanup();
+        if(dialog.open) dialog.close();
+        resolve(value);
+      }
+      function onSubmit(event){
+        event.preventDefault();
+        const data = new FormData(form);
+        finish(data.get("importMode") === "append" ? "append" : "overwrite");
+      }
+      function onCancel(event){
+        event.preventDefault();
+        finish(null);
+      }
+      function onCancelClick(){ finish(null); }
+      function onClose(){
+        if(!settled) finish(null);
+      }
+
+      form.addEventListener("submit", onSubmit);
+      dialog.addEventListener("cancel", onCancel);
+      dialog.addEventListener("close", onClose);
+      cancelButtons.forEach(button=>button?.addEventListener("click", onCancelClick));
+      dialog.showModal();
+    });
   }
 
   function normalizeImportedRow(row){
@@ -795,14 +828,16 @@
 
   function getPrimaryDate(row){
     normalizeRowDates(row);
-    return row.dates?.[0] || row.date || "";
+    const dates = row.dates || [];
+    return dates.length ? dates[dates.length - 1] : (row.date || "");
   }
 
   function getDateDisplay(row){
     normalizeRowDates(row);
     const dates = row.dates || [];
     if(!dates.length) return "";
-    return dates.length === 1 ? dates[0] : `${dates[0]} 他${dates.length - 1}日`;
+    const latest = dates[dates.length - 1];
+    return dates.length === 1 ? latest : `${latest} 他${dates.length - 1}日`;
   }
 
   function getDateTitle(row){
