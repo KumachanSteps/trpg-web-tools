@@ -15,9 +15,5 @@ window.ChatPaletteLanguage = (() => {
     return currentLanguage;
   }
 
-  return {
-    t,
-    setLanguage,
-    getLanguage
-  };
+  return { t, setLanguage, getLanguage };
 })();

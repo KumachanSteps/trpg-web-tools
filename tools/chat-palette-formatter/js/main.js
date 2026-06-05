@@ -1,7 +1,6 @@
 let editionMode = "auto";
 let detectedEdition = "";
 let toastTimer = null;
-let autoFormatTimer = null;
 
 function t(key) {
   return window.ChatPaletteLanguage?.t(key) || key;
@@ -14,7 +13,6 @@ function editionLabel(edition) {
 function setStatus(message, type) {
   const status = document.getElementById("statusMessage");
   if (!status) return;
-
   status.textContent = message;
   status.style.color = type === "error" ? "#9f3a3a" : "#526b86";
   status.style.background = type === "error" ? "rgba(255, 245, 245, 0.78)" : "rgba(255,255,255,0.68)";
@@ -24,14 +22,10 @@ function setStatus(message, type) {
 function showToast(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
-
   toast.textContent = message;
   toast.classList.add("show");
-
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 1800);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
 }
 
 function updateEditionToggleActive(mode) {
@@ -43,59 +37,64 @@ function updateEditionToggleActive(mode) {
 function setEditionMode(mode) {
   editionMode = mode;
   updateEditionToggleActive(mode);
-
   if (mode === "auto") {
-    handleInputChange();
+    handleInputChange({ autoFormat: true });
+    return;
+  }
+  setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
+  autoFormatCurrentInput();
+}
+
+function getInputText() {
+  const input = document.getElementById("input");
+  return input ? input.value : "";
+}
+
+function setInputText(value) {
+  const input = document.getElementById("input");
+  if (input) input.value = value;
+}
+
+function handleInputChange(options = {}) {
+  const shouldAutoFormat = options.autoFormat !== false;
+  if (editionMode !== "auto" && shouldAutoFormat) {
+    autoFormatCurrentInput();
     return;
   }
 
-  setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
-  autoFormatInputNow();
-}
-
-function handleInputChange() {
-  const input = document.getElementById("input");
-  const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
-
+  const extracted = window.ChatPaletteParser.extractPaletteText(getInputText());
   if (!extracted.text) {
     detectedEdition = "";
-    document.getElementById("output").value = "";
+    const output = document.getElementById("output");
+    if (output && shouldAutoFormat) output.value = "";
     setStatus(t("initialStatus"));
     return;
   }
 
-  if (editionMode === "auto") {
-    detectedEdition = window.ChatPaletteParser.detectEdition(extracted.text);
-    updateEditionToggleActive(detectedEdition);
-    setStatus(t("detectPrefix") + editionLabel(detectedEdition) + t("detectSuffix"));
+  detectedEdition = window.ChatPaletteParser.detectEdition(extracted.text);
+  setStatus(t("detectPrefix") + editionLabel(detectedEdition) + t("detectSuffix"));
+
+  if (shouldAutoFormat) {
+    formatPalette({ silent: true });
   }
-
-  scheduleAutoFormat();
-}
-
-function scheduleAutoFormat() {
-  if (autoFormatTimer) clearTimeout(autoFormatTimer);
-  autoFormatTimer = setTimeout(autoFormatInputNow, 120);
-}
-
-function autoFormatInputNow() {
-  const input = document.getElementById("input");
-  if (!input || !input.value.trim()) return;
-  formatPalette({ silent: true });
 }
 
 function getSelectedEdition(text) {
   if (editionMode === "6e" || editionMode === "7e") return editionMode;
-
   detectedEdition = window.ChatPaletteParser.detectEdition(text);
   return detectedEdition;
+}
+
+function autoFormatCurrentInput() {
+  formatPalette({ silent: true });
 }
 
 function formatPalette(options = {}) {
   const input = document.getElementById("input");
   const output = document.getElementById("output");
-  const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
+  if (!input || !output) return;
 
+  const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
   if (!extracted.text) {
     output.value = "";
     if (!options.silent) setStatus(t("extractError"), "error");
@@ -103,26 +102,38 @@ function formatPalette(options = {}) {
   }
 
   const edition = getSelectedEdition(extracted.text);
-
-  if (editionMode === "auto") {
-    updateEditionToggleActive(edition);
-  }
-
+  if (editionMode === "auto") updateEditionToggleActive(edition);
   output.value = window.ChatPaletteParser.buildOutput(extracted.text, edition);
 }
 
 function clearAll() {
-  document.getElementById("input").value = "";
-  document.getElementById("output").value = "";
+  const input = document.getElementById("input");
+  const output = document.getElementById("output");
+  if (input) input.value = "";
+  if (output) output.value = "";
   detectedEdition = "";
-  setEditionMode("auto");
+  editionMode = "auto";
+  updateEditionToggleActive("auto");
   setStatus(t("cleared"));
+}
+
+async function pasteFromClipboard() {
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") throw new Error("Clipboard readText is unavailable.");
+    const text = await navigator.clipboard.readText();
+    setInputText(text);
+    handleInputChange({ autoFormat: true });
+  } catch (error) {
+    console.warn("Clipboard paste failed.", error);
+    setStatus(t("pasteFailed"), "error");
+    const input = document.getElementById("input");
+    if (input) input.focus();
+  }
 }
 
 async function copyOutput() {
   const output = document.getElementById("output");
-
-  if (!output.value) {
+  if (!output || !output.value) {
     setStatus(t("copyEmpty"), "error");
     return;
   }
@@ -130,7 +141,8 @@ async function copyOutput() {
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
       await navigator.clipboard.writeText(output.value);
-      showToast("チャットパレットがコピーされました");
+      setStatus(t("copied"));
+      showToast(t("copyToast"));
       return;
     }
   } catch (error) {
@@ -143,12 +155,11 @@ async function copyOutput() {
 function fallbackCopy(output) {
   output.focus();
   output.select();
-
   try {
     const success = document.execCommand("copy");
-
     if (success) {
-      showToast("チャットパレットがコピーされました");
+      setStatus(t("copied"));
+      showToast(t("copyToast"));
     } else {
       setStatus(t("copyManual"), "error");
     }
@@ -158,28 +169,9 @@ function fallbackCopy(output) {
   }
 }
 
-async function pasteClipboardToInput() {
-  const input = document.getElementById("input");
-  if (!input) return;
-
-  try {
-    if (navigator.clipboard && typeof navigator.clipboard.readText === "function") {
-      input.value = await navigator.clipboard.readText();
-      input.focus();
-      handleInputChange();
-      return;
-    }
-  } catch (error) {
-    console.warn("Clipboard paste failed.", error);
-  }
-
-  input.focus();
-  setStatus("ブラウザの制限により自動ペーストできませんでした。入力欄で通常の貼り付け操作を行ってください。", "error");
-}
-
 function handleShortcut(event) {
   const key = event.key.toLowerCase();
-  const commandOrCtrl = event.metaKey || event.ctrlKey;
+  const mod = event.ctrlKey || event.metaKey;
 
   if (event.key === "Escape") {
     event.preventDefault();
@@ -187,30 +179,34 @@ function handleShortcut(event) {
     return;
   }
 
-  if (commandOrCtrl && event.shiftKey && key === "v") {
+  if (mod && event.shiftKey && key === "v") {
     event.preventDefault();
-    pasteClipboardToInput();
+    pasteFromClipboard();
     return;
   }
 
-  if (commandOrCtrl && event.shiftKey && key === "c") {
+  if (mod && event.shiftKey && key === "c") {
     event.preventDefault();
     copyOutput();
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("input").addEventListener("input", handleInputChange);
-  document.getElementById("formatButton").addEventListener("click", () => formatPalette());
-  document.getElementById("copyButton").addEventListener("click", copyOutput);
-  document.getElementById("clearButton").addEventListener("click", clearAll);
-  document.addEventListener("keydown", handleShortcut);
+  const input = document.getElementById("input");
+  const formatButton = document.getElementById("formatButton");
+  const copyButton = document.getElementById("copyButton");
+  const clearButton = document.getElementById("clearButton");
+
+  input?.addEventListener("input", () => handleInputChange({ autoFormat: true }));
+  input?.addEventListener("paste", () => setTimeout(() => handleInputChange({ autoFormat: true }), 0));
+  formatButton?.addEventListener("click", () => formatPalette({ silent: false }));
+  copyButton?.addEventListener("click", copyOutput);
+  clearButton?.addEventListener("click", clearAll);
 
   document.querySelectorAll(".edition-toggle button").forEach(button => {
-    button.addEventListener("click", () => {
-      setEditionMode(button.dataset.edition);
-    });
+    button.addEventListener("click", () => setEditionMode(button.dataset.edition));
   });
 
+  document.addEventListener("keydown", handleShortcut);
   setStatus(t("initialStatus"));
 });
