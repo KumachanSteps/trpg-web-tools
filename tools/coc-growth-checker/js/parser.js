@@ -12,7 +12,6 @@ const state = {
 const EXCLUDED_TABS = ["雑談", "other", "info", "お祓い", "おはらい", "運試し"];
 const MYTH_SKILL_PATTERN = /クトゥルフ\s*神話(?:技能)?|cthulhu\s*mythos/i;
 const LUCK_SKILL_PATTERN = /^(?:幸運|〈幸運〉|《幸運》|LUCK)$/i;
-const SAN_SKILL_PATTERN = /^(?:正気度(?:ロール|チェック)?|SAN(?:C|チェック)?|SAN値(?:チェック)?|SANC)$/i;
 const PARAM_SKILL_PATTERN = /^(?:アイデア|知識|STR|CON|POW|DEX|APP|SIZ|INT|EDU)(?:[×xX*]\d+)?$/i;
 const DICE_COMMAND_PATTERN = /(?:S?CCB\d*|S?CC\d*|S?CBR\d*|S?RESB|RESB|CBR\d*|1D100|D100|S1D100|SD100|D%|D％)/i;
 
@@ -142,7 +141,6 @@ function parseRolls(raw){
         line: normalizeOutputLine(line),
         lineNo: index + 1,
         isMyth: MYTH_SKILL_PATTERN.test(skill),
-        isSan: SAN_SKILL_PATTERN.test(skill),
         isLuck: LUCK_SKILL_PATTERN.test(skill),
         isParam: isParamSkill(skill),
       });
@@ -244,7 +242,7 @@ function isParamSkill(skill){
 }
 
 function isEligibleForGrowth(roll, mode, successSeen, includeParamRolls){
-  if (!roll || roll.isMyth || roll.isSan) return null;
+  if (!roll || roll.isMyth) return null;
 
   if (roll.isLuck) {
     return roll.classification === "critical" && roll.value === 1
