@@ -1,5 +1,5 @@
 /* =========================================================
-   シナリオDTPデザイナー v1.5
+   シナリオDTPデザイナー v1.6
    Static HTML prototype / A4 portrait DTP editor
    ========================================================= */
 :root {
@@ -444,7 +444,7 @@ kbd { background: #eef2f7; border: 1px solid #cfd8e6; border-radius: 4px; paddin
 
 
 /* =========================================================
-   v1.5 corrective update
+   v1.6 corrective update
    - source panel flush layout
    - tighter page gaps
    - first-page sample header flow offset
@@ -515,3 +515,9 @@ kbd { background: #eef2f7; border: 1px solid #cfd8e6; border-radius: 4px; paddin
   display: inline-block;
   margin-top: 2px;
 }
+
+/* v1.6: editable flow preview */
+.flow-text[contenteditable="true"] { cursor: text; }
+.flow-text[contenteditable="true"]:focus { outline: 1px solid rgba(37,99,235,.45); outline-offset: 4px; background: rgba(255,255,255,.22); }
+.blockize-btn { border-color: #bfd4ff !important; background: #f4f8ff !important; color: #17315f !important; }
+.memo-card { font-size: 8px; }

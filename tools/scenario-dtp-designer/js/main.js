@@ -1,8 +1,8 @@
-/* Scenario DTP Designer v1.5 - main.js */
+/* Scenario DTP Designer v1.6 - main.js */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'scenarioDtpDesignerStaticV15';
+  const STORAGE_KEY = 'scenarioDtpDesignerStaticV16';
   const DEFAULT_SOURCE_W = 310;
   const DEFAULT_STRUCTURE_W = 305;
   const GRID = 8;
@@ -92,7 +92,7 @@
     const base = { fontFamily: "'Yu Gothic', 'Hiragino Sans', sans-serif", fontSize: 12, lineHeight: 1.7, padding: 8, color: '#111827', background: '#ffffff' };
     if (type === 'sceneTitle') { base.fontFamily = "'Yu Mincho', 'Hiragino Mincho ProN', serif"; base.fontSize = 22; }
     if (type === 'header') { base.fontFamily = "'Yu Mincho', 'Hiragino Mincho ProN', serif"; base.fontSize = 38; base.color = '#ffffff'; base.background = '#101820'; }
-    if (type === 'keeper') { base.background = '#ffffff'; base.fontSize = 10; }
+    if (type === 'keeper') { base.background = '#ffffff'; base.fontSize = 8; base.lineHeight = 1.55; }
     return base;
   }
   function createBlock(type, text, x, y, w, h, src = null) {
@@ -101,7 +101,7 @@
 
   function bindEvents() {
     els.parseBtn.addEventListener('click', () => { pushHistory(); loadFlowPreview(els.sourceText.value); render(); });
-    els.clearTextBtn.addEventListener('click', () => { els.sourceText.value = ''; state.sourceLoaded = false; render(); els.sourceText.focus(); });
+    els.clearTextBtn.addEventListener('click', () => { els.sourceText.value = ''; state.sourceLoaded = false; if (els.txtDropZone) els.txtDropZone.classList.remove('is-hidden'); render(); els.sourceText.focus(); });
 
     els.txtDropZone.addEventListener('click', () => els.txtInput.click());
     els.txtInput.addEventListener('change', async (ev) => { const file = ev.target.files && ev.target.files[0]; if (file) await loadTxtFile(file); ev.target.value = ''; });
@@ -110,7 +110,10 @@
     els.txtDropZone.addEventListener('drop', async (ev) => { ev.preventDefault(); const file = [...ev.dataTransfer.files].find((f) => f.type.startsWith('text/') || f.name.endsWith('.txt')); if (file) await loadTxtFile(file); });
 
     els.addPageBtn.addEventListener('click', () => { pushHistory(); state.pages.push(createPage(`ページ${state.pages.length + 1}`)); state.currentPageIndex = state.pages.length - 1; state.selectedId = null; render(); scrollToCurrentPage(); });
-    if (els.blockizeBtn) els.blockizeBtn.addEventListener('click', () => { pushHistory(); blockizeCurrentPage(); render(); });
+    if (els.blockizeBtn) {
+      els.blockizeBtn.addEventListener('mousedown', (ev) => ev.preventDefault());
+      els.blockizeBtn.addEventListener('click', () => { pushHistory(); blockizeCurrentPage(); render(); });
+    }
     document.querySelectorAll('[data-add]').forEach((btn) => btn.addEventListener('click', () => addManualBlock(btn.dataset.add)));
     els.imageInput.addEventListener('change', async (ev) => {
       const file = ev.target.files && ev.target.files[0];
@@ -160,8 +163,7 @@
 
   function addManualBlock(type) {
     pushHistory();
-    currentPage().flowText = '';
-    const textMap = { header: 'イザナミの棺\n— 黄泉を彷徨う者たちへ —', sceneTitle: '03　新しいシーン', body: '本文を入力してください。', keeper: 'KP向けの補足を入力してください。', dialogue: 'セリフ：NPC\n「ここに台詞を入力」', check: '▼判定情報\n成功：情報を得る。\n失敗：別の展開へ。', image: '' };
+    const textMap = { header: '雨待ち停留所\nCall of Cthulhu『雨待ち停留所』', sceneTitle: '03　新しいシーン', body: '本文を入力してください。', keeper: 'KP向けの補足を入力してください。', dialogue: 'セリフ：NPC\n「ここに台詞を入力」', check: '▼判定情報\n成功：情報を得る。\n失敗：別の展開へ。', image: '' };
     const specs = { header: [0, 0, LAYOUT.mainW, 86], keeper: [0, 80, LAYOUT.memoW, 70], image: [LAYOUT.rightColX, 300, LAYOUT.colW, 110] };
     const [x, y, w, h] = specs[type] || [0, 240, LAYOUT.colW, autoHeightFor(type, textMap[type], LAYOUT.colW)];
     const block = createBlock(type, textMap[type], x, y, w, h);
@@ -224,19 +226,66 @@
   }
 
   function blockizeCurrentPage() {
-    const p = currentPage();
-    const source = p.flowText || els.sourceText.value || '';
-    if (!source.trim()) return;
-    const originalPages = state.pages;
-    const oldIndex = state.currentPageIndex;
-    parseIntoPages(source);
-    // parseIntoPages is used here only for explicit edit-mode blockization.
-    state.pages.forEach((page, idx) => { page.title = idx === 0 ? `${p.title || '本文'} ブロック` : `ブロック ${idx + 1}`; page.flowText = ''; });
-    state.currentPageIndex = 0;
-    state.selectedId = state.pages[0]?.blocks[0]?.id || null;
+    const info = getSelectedFlowInfo();
+    const p = info ? state.pages[info.pageIndex] : currentPage();
+    const selected = info ? info.text : '';
+    const source = (selected || p.flowText || els.sourceText.value || '').trim();
+    if (!source) return;
+    const tokens = tokenize(source);
+    if (!tokens.length) return;
+
+    const existing = p.blocks.filter((b) => b.type !== 'keeper');
+    let startY = existing.length ? Math.min(LAYOUT.mainH - 60, Math.max(...existing.map((b) => b.y + b.h + 8))) : (p.blocks.some((b) => b.type === 'header') ? 104 : 0);
+    let col = 0;
+    if (startY > LAYOUT.mainH - 120) { col = 1; startY = p.blocks.some((b) => b.type === 'header') ? 104 : 0; }
+
+    if (selected && info && info.selection) {
+      info.selection.deleteFromDocument();
+      p.flowText = info.flowEl.innerText.replace(/\n{3,}/g, '\n\n').trim();
+      if (info.pageIndex === state.currentPageIndex) els.sourceText.value = p.flowText;
+    }
+
+    const created = [];
+    tokens.forEach((token) => {
+      if (token.type === 'keeper') {
+        const memoBlocks = p.blocks.filter((b) => b.type === 'keeper');
+        const memoY = Math.min(LAYOUT.memoH - 70, memoBlocks.length * 72);
+        const h = clamp(autoHeightFor('keeper', token.text, LAYOUT.memoW), 42, 140);
+        const b = createBlock('keeper', token.text, 0, memoY, LAYOUT.memoW, h);
+        p.blocks.push(b);
+        created.push(b);
+        return;
+      }
+      splitTextForFlow(token.type, token.text).forEach((chunk) => {
+        let h = autoHeightFor(token.type, chunk, LAYOUT.colW);
+        if (startY + h > LAYOUT.mainH) {
+          if (col === 0) { col = 1; startY = p.blocks.some((b) => b.type === 'header') ? 104 : 0; }
+          else { startY = LAYOUT.mainH - h; }
+        }
+        const b = createBlock(token.type, chunk, colX(col), startY, LAYOUT.colW, clamp(h, 32, LAYOUT.mainH - startY));
+        p.blocks.push(b);
+        created.push(b);
+        startY += b.h + 8;
+      });
+    });
+    state.selectedId = created[0]?.id || null;
+  }
+
+  function getSelectedFlowInfo() {
+    const sel = window.getSelection && window.getSelection();
+    if (!sel || sel.isCollapsed) return null;
+    const node = sel.anchorNode;
+    const pageEl = node && (node.nodeType === 1 ? node : node.parentElement)?.closest?.('.page-canvas');
+    const flowEl = node && (node.nodeType === 1 ? node : node.parentElement)?.closest?.('.flow-text');
+    if (!pageEl || !flowEl) return null;
+    const idx = Number(pageEl.dataset.pageIndex || 0);
+    state.currentPageIndex = idx;
+    const text = String(sel.toString() || '').trim();
+    return text ? { text, pageIndex: idx, flowEl, selection: sel } : null;
   }
 
   function formatFlowText(text) {
+
     return escapeHtml(text)
       .replace(/^#\s+(.+)$/gm, '<div class="flow-heading1">$1</div>')
       .replace(/^##\s+(.+)$/gm, '<div class="flow-heading2">$1</div>')
@@ -325,12 +374,12 @@
   function autoHeightFor(type, text, width) {
     if (type === 'header') return 86;
     if (type === 'image') return 110;
-    const font = type === 'sceneTitle' ? 22 : (type === 'keeper' ? 10 : 12);
+    const font = type === 'sceneTitle' ? 22 : (type === 'keeper' ? 8 : 12);
     const lineHeight = type === 'keeper' ? 1.55 : 1.7;
     const padding = type === 'keeper' ? 12 : 18;
     const charsPerLine = Math.max(8, Math.floor((width - padding) / (font * 0.92)));
     const lines = String(text || '').split('\n').reduce((sum, line) => sum + Math.max(1, Math.ceil(line.length / charsPerLine)), 0);
-    const minH = type === 'sceneTitle' ? 48 : type === 'keeper' ? 52 : 38;
+    const minH = type === 'sceneTitle' ? 48 : type === 'keeper' ? 38 : 38;
     return snap(Math.max(minH, Math.ceil(lines * font * lineHeight + padding + 8)));
   }
 
@@ -423,6 +472,15 @@
       canvas.innerHTML = `<div class="main-area"><div class="flow-text"></div><div class="block-layer"></div></div><aside class="memo-area"><h3>KPメモ</h3><div class="memo-layer"></div></aside><div class="page-number">${pageIndex + 1}</div>`;
       const flowText = canvas.querySelector('.flow-text');
       if (p.flowText) flowText.innerHTML = formatFlowText(p.flowText);
+      flowText.contentEditable = 'true';
+      flowText.spellcheck = false;
+      flowText.addEventListener('click', (ev) => { ev.stopPropagation(); state.currentPageIndex = pageIndex; state.selectedId = null; });
+      flowText.addEventListener('input', () => {
+        p.flowText = flowText.innerText.replace(/\n{3,}/g, '\n\n').trim();
+        if (pageIndex === state.currentPageIndex && document.activeElement !== els.sourceText) els.sourceText.value = p.flowText;
+        persist();
+      });
+      flowText.addEventListener('blur', () => render());
       const blockLayer = canvas.querySelector('.block-layer');
       const memoLayer = canvas.querySelector('.memo-layer');
       p.blocks.forEach((block) => {
@@ -455,7 +513,17 @@
       el.addEventListener('blur', () => render());
     }
     el.addEventListener('mousedown', startBlockDrag);
-    el.addEventListener('click', (ev) => { ev.stopPropagation(); state.selectedId = block.id; state.currentPageIndex = getPageIndexFromElement(el); render(); });
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      state.selectedId = block.id;
+      state.currentPageIndex = getPageIndexFromElement(el);
+      render();
+      setTimeout(() => {
+        els.textEdit.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        els.textEdit.focus();
+        els.textEdit.select();
+      }, 0);
+    });
     return el;
   }
 
@@ -492,7 +560,14 @@
       if (state.selectedId === block.id) syncInspectorText(block.text);
       persist();
     });
-    el.addEventListener('mousedown', startMemoDrag); el.addEventListener('click', (ev) => { ev.stopPropagation(); state.selectedId = block.id; state.currentPageIndex = getPageIndexFromElement(el); render(); });
+    el.addEventListener('mousedown', startMemoDrag);
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      state.selectedId = block.id;
+      state.currentPageIndex = getPageIndexFromElement(el);
+      render();
+      setTimeout(() => { els.textEdit.scrollIntoView({ block: 'center', behavior: 'smooth' }); els.textEdit.focus(); els.textEdit.select(); }, 0);
+    });
     return el;
   }
 
@@ -601,7 +676,7 @@
   function closePanels() { closeHelp(); closeShortcut(); }
   function persist() { localStorage.setItem(STORAGE_KEY, snapshot()); }
   function restore() { try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) hydrate(raw); else buildDefaultSample(); } catch (e) { buildDefaultSample(); } render(false); setTimeout(fitPreviewToHeight, 40); }
-  function saveProject() { download('scenario-dtp-project-v1.5.json', JSON.stringify({ pages: state.pages, currentPageIndex: state.currentPageIndex, selectedId: state.selectedId, zoom: state.zoom, assets: state.assets, sourceLoaded: state.sourceLoaded }, null, 2)); }
+  function saveProject() { download('scenario-dtp-project-v1.6.json', JSON.stringify({ pages: state.pages, currentPageIndex: state.currentPageIndex, selectedId: state.selectedId, zoom: state.zoom, assets: state.assets, sourceLoaded: state.sourceLoaded }, null, 2)); }
   function download(filename, content, type = 'application/json') { const blob = new Blob([content], { type }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href); }
   async function exportPng() { if (!window.html2canvas) { alert('PNG出力ライブラリの読み込みに失敗しました。'); return; } const oldZoom = state.zoom; state.zoom = 1; render(); await new Promise((r) => setTimeout(r, 80)); const target = document.querySelector(`.page-canvas[data-page-index="${state.currentPageIndex}"]`); const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }); canvas.toBlob((blob) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `scenario-dtp-page-${state.currentPageIndex + 1}.png`; a.click(); URL.revokeObjectURL(a.href); state.zoom = oldZoom; render(); }); }
   function fileToDataUrl(file) { return new Promise((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(fr.result); fr.onerror = reject; fr.readAsDataURL(file); }); }

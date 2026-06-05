@@ -43,7 +43,8 @@ function clampNumber(value, min, max, fallback) {
 const includedTabs = ["main", "メイン", "ho"];
 const excludedTabs = ["雑談", "other", "info", "おはらい", "お祓い", "運試し"];
 const mythSkillPattern = /^(クトゥルフ神話|クトゥルフ神話技能|cthulhu mythos)$/i;
-const parameterSkillPattern = /^(アイデア|知識|STR|CON|POW|DEX|APP|SIZ|INT|EDU)(?:[×xX*]\d+)?$/i;
+const parameterSkillPattern = /^(アイデア|知識|幸運|STR|CON|POW|DEX|APP|SIZ|INT|EDU)(?:[×xX*]\d+)?$/i;
+const luckSkillPattern = /^(幸運|LUCK)$/i;
 
 function prepareText(raw) {
   const source = String(raw || "");
@@ -123,6 +124,7 @@ function extractRollData(lines) {
         classification,
         isMyth: isMythSkill(skill),
         isParameter: isParameterSkill(skill, line),
+        isLuck: isLuckSkill(skill),
         isInitial: isInitialRoll(skill, line),
       });
     });
@@ -163,13 +165,14 @@ function cleanSkillName(skill) {
   return String(skill || "")
     .replace(/[:：].*$/, "")
     .replace(/\s+/g, " ")
-    .replace(/^[\[\]【】\s]+|[\[\]【】\s]+$/g, "")
+    .replace(/^[\[\]【】〈〉《》\s]+|[\[\]【】〈〉《》\s]+$/g, "")
     .trim();
 }
 
 function inferParameterSkill(line) {
   if (/アイデア/i.test(line)) return "アイデア";
   if (/知識|KNOWLEDGE|KNOW/i.test(line)) return "知識";
+  if (/幸運|LUCK/i.test(line)) return "幸運";
   const abilityMatch = line.match(/\b(STR|CON|POW|DEX|APP|SIZ|INT|EDU)\b(?:\s*[×xX*]\s*\d+)?/i);
   if (abilityMatch) return abilityMatch[0].toUpperCase().replace(/\s+/g, "");
   return "";
@@ -397,12 +400,20 @@ function isMythSkill(skill) {
   return mythSkillPattern.test(String(skill || "").trim());
 }
 
+function isLuckSkill(skill) {
+  const normalized = String(skill || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[〈〉《》【】\[\]\s]/g, "");
+  return luckSkillPattern.test(normalized);
+}
+
 function isParameterSkill(skill, line = "") {
   const normalized = String(skill || "").trim().toUpperCase().replace(/\s+/g, "");
   const jp = String(skill || "").trim();
-  if (/^(アイデア|知識)$/.test(jp)) return true;
+  if (/^(アイデア|知識|幸運)$/.test(jp)) return true;
   if (parameterSkillPattern.test(normalized)) return true;
-  return /アイデア|知識|\b(STR|CON|POW|DEX|APP|SIZ|INT|EDU)\b/i.test(`${skill} ${line}`);
+  return /アイデア|知識|幸運|\b(STR|CON|POW|DEX|APP|SIZ|INT|EDU|LUCK)\b/i.test(`${skill} ${line}`);
 }
 
 function isInitialRoll(skill, line) {
@@ -463,6 +474,15 @@ function getVisibleRolls() {
 
 function shouldIncludeRollForGrowth(roll, mode, successSeen) {
   if (roll.isMyth) return null;
+
+  // 全選択ルール共通：〈幸運〉は「1クリティカル」の時だけ成長候補に出力する。
+  // 通常成功・ファンブル・2以上のクリティカル表記は出力対象外。
+  if (roll.isLuck) {
+    return roll.classification === "critical" && roll.value === 1
+      ? { ...roll, reason: "critical" }
+      : null;
+  }
+
   if (roll.isParameter && !includeParameterRolls()) return null;
   if (roll.isParameter && !["critical", "fumble"].includes(roll.classification) && !roll.isInitial) return null;
 
