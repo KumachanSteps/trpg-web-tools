@@ -1,5 +1,5 @@
 /* =========================================================
-   シナリオDTPデザイナー v1.4
+   シナリオDTPデザイナー v1.5
    Static HTML prototype / A4 portrait DTP editor
    ========================================================= */
 :root {
@@ -359,7 +359,7 @@ kbd { background: #eef2f7; border: 1px solid #cfd8e6; border-radius: 4px; paddin
 /* =========================================================
    v1.4 preview-flow / source-panel refinements
    ========================================================= */
-:root { --zoom: .74; }
+:root { --zoom: .78; }
 .source-panel {
   padding: 0;
   background: var(--panel);
@@ -441,3 +441,77 @@ kbd { background: #eef2f7; border: 1px solid #cfd8e6; border-radius: 4px; paddin
 .blockize-btn span { min-width: 20px; height: 20px; display: inline-grid; place-items: center; border-radius: 5px; background: #eef2ff; color: #17315f; font-size: 11px; }
 .dtp-block { z-index: 3; }
 .memo-card { z-index: 3; }
+
+
+/* =========================================================
+   v1.5 corrective update
+   - source panel flush layout
+   - tighter page gaps
+   - first-page sample header flow offset
+   ========================================================= */
+.source-card {
+  gap: 0 !important;
+  padding: 10px 10px 0 !important;
+}
+.source-card .panel-title {
+  padding: 0 2px 8px !important;
+}
+.txt-drop-zone {
+  margin-bottom: 8px;
+}
+.source-card.source-loaded .txt-drop-zone {
+  margin-bottom: 0;
+}
+.source-text {
+  border-radius: 8px 8px 0 0 !important;
+  border-bottom-color: var(--line);
+}
+.source-actions {
+  margin: 0 -10px 0 !important;
+  padding: 8px 10px 8px !important;
+  border-top: 0 !important;
+  box-shadow: 0 -1px 0 var(--line);
+}
+.source-actions button {
+  height: 30px !important;
+  min-height: 30px !important;
+}
+.workspace {
+  padding-top: 8px !important;
+  padding-bottom: 34px !important;
+}
+.pages-container {
+  gap: 8px !important;
+}
+.page-canvas.has-header .flow-text {
+  top: 102px;
+}
+.header-block {
+  background:
+    linear-gradient(90deg, rgba(4, 10, 18, .92), rgba(17, 29, 42, .78)),
+    radial-gradient(circle at 78% 30%, rgba(105, 20, 28, .85) 0 0, transparent 13%),
+    linear-gradient(135deg, #07111c, #263644 48%, #0a0d12) !important;
+}
+.flow-text {
+  column-fill: auto;
+}
+.flow-text .flow-section-title {
+  break-after: avoid;
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(142,27,36,.35);
+  padding-bottom: 3px;
+}
+.flow-text .flow-box-title {
+  break-after: avoid;
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.flow-text .flow-bullet {
+  display: inline-block;
+  margin-top: 2px;
+}

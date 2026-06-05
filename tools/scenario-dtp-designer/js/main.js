@@ -1,8 +1,8 @@
-/* Scenario DTP Designer v1.4 - main.js */
+/* Scenario DTP Designer v1.5 - main.js */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'scenarioDtpDesignerStaticV14';
+  const STORAGE_KEY = 'scenarioDtpDesignerStaticV15';
   const DEFAULT_SOURCE_W = 310;
   const DEFAULT_STRUCTURE_W = 305;
   const GRID = 8;
@@ -21,7 +21,7 @@
     pages: [],
     currentPageIndex: 0,
     selectedId: null,
-    zoom: 0.74,
+    zoom: 0.78,
     assets: [],
     sourceLoaded: false
   };
@@ -60,7 +60,7 @@
     state.pages = data.pages && data.pages.length ? data.pages : [createPage('シナリオ本文')];
     state.currentPageIndex = Math.min(data.currentPageIndex || 0, state.pages.length - 1);
     state.selectedId = data.selectedId || null;
-    state.zoom = data.zoom || 0.74;
+    state.zoom = data.zoom || 0.78;
     state.assets = data.assets || [];
     state.sourceLoaded = !!data.sourceLoaded;
   }
@@ -126,7 +126,7 @@
     els.applyBtn.addEventListener('click', () => { const found = findBlock(state.selectedId); if (!found) return; pushHistory(); applyInspector(found.block); normalizeBlockGeometry(found.block); render(); });
     els.deleteBtn.addEventListener('click', deleteSelected);
     els.templateBtn.addEventListener('click', () => { pushHistory(); applyTemplateToCurrentPage(); render(); });
-    els.fitBtn.addEventListener('click', () => setZoom(0.74));
+    els.fitBtn.addEventListener('click', () => fitPreviewToHeight());
     els.zoomOut.addEventListener('click', () => setZoom(state.zoom - 0.05));
     els.zoomIn.addEventListener('click', () => setZoom(state.zoom + 0.05));
     els.helpBtn.addEventListener('click', () => togglePanel('help'));
@@ -176,7 +176,7 @@
     const normalized = src.replace(/\r\n/g, '\n').trim();
     const chunks = splitFlowTextIntoPages(normalized);
     state.pages = chunks.map((chunk, idx) => {
-      const title = idx === 0 ? (inferTitle(normalized) || 'プレビュー本文') : `プレビュー ${idx + 1}`;
+      const title = idx === 0 ? (inferFlowTitle(normalized) || 'プレビュー本文') : `プレビュー ${idx + 1}`;
       const p = createPage(title);
       p.flowText = chunk;
       p.blocks = [];
@@ -185,6 +185,17 @@
     if (!state.pages.length) state.pages = [createPage('プレビュー本文')];
     state.currentPageIndex = 0;
     state.selectedId = null;
+    state.sourceLoaded = state.sourceLoaded || false;
+  }
+
+  function inferFlowTitle(src) {
+    const call = src.match(/Call of Cthulhu『([^』]+)』/);
+    if (call) return call[1].trim();
+    const bracket = src.match(/『([^』]+)』/);
+    if (bracket) return bracket[1].trim();
+    const h = src.match(/^#\s+(.+)$/m);
+    if (h) return h[1].trim();
+    return '';
   }
 
   function splitFlowTextIntoPages(text) {
@@ -229,7 +240,11 @@
     return escapeHtml(text)
       .replace(/^#\s+(.+)$/gm, '<div class="flow-heading1">$1</div>')
       .replace(/^##\s+(.+)$/gm, '<div class="flow-heading2">$1</div>')
-      .replace(/^(▼\s*KP\s*情報|\[KP\]|KP情報)(.*)$/gm, '<div class="flow-kp">$2')
+      .replace(/^■(.+)$/gm, '<span class="flow-section-title">■$1</span>')
+      .replace(/^【(.+)】$/gm, '<span class="flow-box-title">【$1】</span>')
+      .replace(/^(▼\s*KP\s*情報|\[KP\]|KP情報)(.*)$/gm, '<div class="flow-kp">$2</div>')
+      .replace(/^▼(.+)$/gm, '<span class="flow-box-title">▼$1</span>')
+      .replace(/^(●|○)(.+)$/gm, '<span class="flow-bullet">$1$2</span>')
       .replace(/\n\n/g, '<br><br>')
       .replace(/\n/g, '<br>');
   }
@@ -338,13 +353,30 @@
   function applyTemplateToCurrentPage() {
     currentPage().flowText = '';
     currentPage().blocks = [
-      createBlock('header', 'イザナミの棺\n— 黄泉を彷徨う者たちへ —', 0, 0, LAYOUT.mainW, 86),
-      createBlock('sceneTitle', '01　血の香り', 0, 104, LAYOUT.colW, 48),
-      createBlock('body', '探索者たちは、山間の集落へ続く濡れた道を進んでいる。木々の間に立ちこめる霧は薄く、足音を吸い込むように静まり返っていた。', 0, 160, LAYOUT.colW, 104),
-      createBlock('check', '▼聞き耳に成功した場合\n遠くから、すすり泣くような声が聞こえる。', LAYOUT.rightColX, 104, LAYOUT.colW, 88),
-      createBlock('keeper', '導入シーン。\n霧・匂い・静寂を意識する。', 0, 0, LAYOUT.memoW, 68)
+      createBlock('header', '雨待ち停留所\nCall of Cthulhu『雨待ち停留所』', 0, 0, LAYOUT.mainW, 86),
+      createBlock('sceneTitle', '01　雨音の駅舎', 0, 104, LAYOUT.colW, 48),
+      createBlock('body', '───例えば、それは雨音だった。古い駅舎の屋根を叩く、小さな拍手のような音だった。\n改札の向こう、誰もいないはずのホームに白い灯りが揺れていた。', 0, 160, LAYOUT.colW, 120),
+      createBlock('check', '●《目星》成功\n傘立ての底に、銀色の古い切符が落ちていることに気づく。\n○ 失敗\n雨水が床に広がっていることしか分からない。', LAYOUT.rightColX, 104, LAYOUT.colW, 120),
+      createBlock('keeper', 'サンプル用メモ。\n雨音、無人駅、古い切符を強調する。', 0, 0, LAYOUT.memoW, 74)
     ];
-    state.selectedId = currentPage().blocks[1].id;
+    state.selectedId = currentPage().blocks[0].id;
+  }
+
+  function buildDefaultSample() {
+    const sample = els.sourceText ? els.sourceText.value : '';
+    const chunks = splitFlowTextIntoPages(sample);
+    state.pages = chunks.map((chunk, idx) => {
+      const p = createPage(idx === 0 ? '雨待ち停留所' : `雨待ち停留所 ${idx + 1}`);
+      p.flowText = chunk;
+      p.blocks = [];
+      if (idx === 0) {
+        p.blocks.push(createBlock('header', '雨待ち停留所\nCall of Cthulhu『雨待ち停留所』', 0, 0, LAYOUT.mainW, 86));
+      }
+      return p;
+    });
+    if (!state.pages.length) state.pages = [createPage('雨待ち停留所')];
+    state.currentPageIndex = 0;
+    state.selectedId = state.pages[0].blocks[0]?.id || null;
   }
 
   function render(shouldPersist = true) {
@@ -387,7 +419,7 @@
   function renderPageCanvases() {
     els.pagesContainer.innerHTML = '';
     state.pages.forEach((p, pageIndex) => {
-      const canvas = document.createElement('section'); canvas.className = 'page-canvas'; canvas.dataset.pageIndex = String(pageIndex);
+      const canvas = document.createElement('section'); canvas.className = 'page-canvas'; if (p.blocks.some((b) => b.type === 'header')) canvas.classList.add('has-header'); canvas.dataset.pageIndex = String(pageIndex);
       canvas.innerHTML = `<div class="main-area"><div class="flow-text"></div><div class="block-layer"></div></div><aside class="memo-area"><h3>KPメモ</h3><div class="memo-layer"></div></aside><div class="page-number">${pageIndex + 1}</div>`;
       const flowText = canvas.querySelector('.flow-text');
       if (p.flowText) flowText.innerHTML = formatFlowText(p.flowText);
@@ -561,14 +593,15 @@
   function deleteSelected() { if (!state.selectedId) return; pushHistory(); state.pages.forEach((p) => { p.blocks = p.blocks.filter((b) => b.id !== state.selectedId); }); state.selectedId = null; render(); }
   function clearSelection() { state.selectedId = null; render(); }
   function setZoom(value) { state.zoom = clamp(value, 0.38, 1.25); render(); }
+  function fitPreviewToHeight() { const h = els.canvasWrap ? els.canvasWrap.clientHeight : 0; const next = h ? (h - 22) / 1123 : 0.78; setZoom(clamp(next, 0.48, 0.92)); }
   function scrollToCurrentPage() { const pageEl = document.querySelector(`.page-canvas[data-page-index="${state.currentPageIndex}"]`); if (pageEl) pageEl.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
   function togglePanel(which) { if (which === 'help') { els.helpPanel.hidden = !els.helpPanel.hidden; els.shortcutPanel.hidden = true; } else { els.shortcutPanel.hidden = !els.shortcutPanel.hidden; els.helpPanel.hidden = true; } }
   function closeHelp() { els.helpPanel.hidden = true; }
   function closeShortcut() { els.shortcutPanel.hidden = true; }
   function closePanels() { closeHelp(); closeShortcut(); }
   function persist() { localStorage.setItem(STORAGE_KEY, snapshot()); }
-  function restore() { try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) hydrate(raw); else { state.pages = [createPage('シナリオ本文')]; applyTemplateToCurrentPage(); } } catch (e) { state.pages = [createPage('シナリオ本文')]; applyTemplateToCurrentPage(); } render(false); }
-  function saveProject() { download('scenario-dtp-project-v1.4.json', JSON.stringify({ pages: state.pages, currentPageIndex: state.currentPageIndex, selectedId: state.selectedId, zoom: state.zoom, assets: state.assets, sourceLoaded: state.sourceLoaded }, null, 2)); }
+  function restore() { try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) hydrate(raw); else buildDefaultSample(); } catch (e) { buildDefaultSample(); } render(false); setTimeout(fitPreviewToHeight, 40); }
+  function saveProject() { download('scenario-dtp-project-v1.5.json', JSON.stringify({ pages: state.pages, currentPageIndex: state.currentPageIndex, selectedId: state.selectedId, zoom: state.zoom, assets: state.assets, sourceLoaded: state.sourceLoaded }, null, 2)); }
   function download(filename, content, type = 'application/json') { const blob = new Blob([content], { type }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href); }
   async function exportPng() { if (!window.html2canvas) { alert('PNG出力ライブラリの読み込みに失敗しました。'); return; } const oldZoom = state.zoom; state.zoom = 1; render(); await new Promise((r) => setTimeout(r, 80)); const target = document.querySelector(`.page-canvas[data-page-index="${state.currentPageIndex}"]`); const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }); canvas.toBlob((blob) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `scenario-dtp-page-${state.currentPageIndex + 1}.png`; a.click(); URL.revokeObjectURL(a.href); state.zoom = oldZoom; render(); }); }
   function fileToDataUrl(file) { return new Promise((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(fr.result); fr.onerror = reject; fr.readAsDataURL(file); }); }

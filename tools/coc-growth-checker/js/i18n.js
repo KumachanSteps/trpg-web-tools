@@ -11,7 +11,7 @@ const I18N = {
     "theme.switchToDark": "ナイトモードに切替",
     "common.unknown": "不明",
 
-    "app.title": "CoC 6版 / 7版 成長チェッカーv2｜TRPG WEBツール観測所",
+    "app.title": "CoC 6版 / 7版 成長チェッカーv2",
     "app.description": "セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。",
     "app.tip": "Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で抽出 ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> でスクショ表示 ｜ <kbd>?</kbd> でショートカット一覧",
 
@@ -20,6 +20,7 @@ const I18N = {
     "input.pasteLabel": "またはログ本文を貼り付け",
     "input.placeholder": "HTMLまたはテキストログを貼り付け",
     "input.ruleTitle": "成長チェック出力ルール",
+    "input.includeParamRolls": "アイデア、知識、能力値ロールを加える",
     "input.autoHideMaxRolls": "自動非表示にする総ロール数",
     "input.note": "対応例：CCB<=80 【目星】、CC<=60 【図書館】、RESB(10-16)、1d100<=55 など。キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。",
 
@@ -27,7 +28,6 @@ const I18N = {
     "rule.critFumble": "クリティカル / ファンブル / 初期値（該当ロールを全て表示）",
     "rule.both": "合算① クリファン全件 + 成功技能1回づつ",
     "rule.bothPrime": "合算② クリティカル全件 + 成功技能1回づつ",
-    "rule.includeParameterRolls": "アイデア、知識、能力値ロールを加える",
     "ruleLabel.rulebook": "基本ルルブ準拠",
     "ruleLabel.critFumble": "クリティカル / ファンブル / 初期値",
     "ruleLabel.both": "合算① クリファン全件 + 成功技能1回づつ",
@@ -35,8 +35,6 @@ const I18N = {
 
     "button.analyze": "成長候補を抽出",
     "button.clear": "クリア",
-    "button.copy": "コピー",
-    "button.delete": "削除",
     "button.showCharacterControls": "表示キャラ設定を開く▼",
     "button.hideCharacterControls": "表示キャラ設定を隠す▲",
     "button.openInputPanel": "入力パネルを開く",
@@ -45,14 +43,16 @@ const I18N = {
     "button.screenshot": "📷 スクショ表示",
     "button.exitScreenshot": "通常表示に戻す",
     "button.diceAnalyst": "ダイス解析ツール →",
+    "button.copy": "コピー",
+    "button.copied": "コピー済み",
+    "button.delete": "削除",
 
     "tab.summary": "サマリー",
     "tab.candidates": "成長候補",
     "tab.rolls": "抽出ロール",
 
-    "summary.growthOutputTitle": "成長候補サマリー",
-    "summary.selectLog": "ログを入力すると、成長候補サマリーがここに表示されます。",
-    "summary.noCandidates": "表示対象の成長候補はありません。表示キャラ設定または出力ルールを確認してください。",
+    "summary.outputTitle": "成長候補サマリー",
+    "summary.emptyOutput": "ログを読み込むと、ここに成長候補が表示されます。",
 
     "candidates.title": "成長チェック候補一覧",
     "candidates.index": "#",
@@ -74,10 +74,11 @@ const I18N = {
     "classification.fumble": "Fumble",
     "classification.success": "Success",
     "classification.fail": "Fail",
-    "classification.normal": "Normal",
+    "classification.unknown": "Unknown",
     "reason.critical": "クリティカル",
     "reason.fumble": "ファンブル",
     "reason.success": "成功",
+    "reason.initial": "初期値",
     "skill.unknown": "技能名不明",
 
     "shortcut.eyebrow": "Keyboard Guide",
@@ -111,8 +112,8 @@ const I18N = {
     "theme.switchToDark": "Switch to Night Mode",
     "common.unknown": "Unknown",
 
-    "app.title": "CoC 6e / 7e Growth Checker v2 | TRPG Web Tools Portal",
-    "app.description": "Extract d100 rolls from session log HTML or text and organize growth-check candidates by character based on your selected house rule.",
+    "app.title": "CoC 6e / 7e Growth Checker v2",
+    "app.description": "Extract d100 rolls from session log HTML or text and organize growth-check candidate skills by investigator according to the selected house rule.",
     "app.tip": "Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> to extract ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> for screenshot view ｜ <kbd>?</kbd> for shortcut list",
 
     "input.title": "Input",
@@ -120,14 +121,14 @@ const I18N = {
     "input.pasteLabel": "Or paste log text",
     "input.placeholder": "Paste HTML or text log here",
     "input.ruleTitle": "Growth Check Output Rule",
+    "input.includeParamRolls": "Include Idea, Knowledge, and ability rolls",
     "input.autoHideMaxRolls": "Auto-hide characters with rolls up to",
-    "input.note": "Supported examples: CCB<=80 【Spot Hidden】, CC<=60 【Library Use】, RESB(10-16), 1d100<=55, etc. Character names are automatically detected from formats such as “Name: CC” and “[main] Name: CCB”.",
+    "input.note": "Supported examples: CCB<=80 【Spot Hidden】, CC<=60 【Library Use】, RESB(10-16), 1d100<=55, etc. Character names are detected from formats such as “Name: CC” and “[main] Name: CCB”.",
 
     "rule.rulebook": "Rulebook: show each successful skill once",
     "rule.critFumble": "Critical / Fumble / Initial: show every matching roll",
     "rule.both": "Combined 1: all crit/fumble rolls + one success per skill",
     "rule.bothPrime": "Combined 2: all critical rolls + one success per skill",
-    "rule.includeParameterRolls": "Include Idea, Knowledge, and ability rolls",
     "ruleLabel.rulebook": "Rulebook",
     "ruleLabel.critFumble": "Critical / Fumble / Initial",
     "ruleLabel.both": "Combined 1",
@@ -135,8 +136,6 @@ const I18N = {
 
     "button.analyze": "Extract Growth Candidates",
     "button.clear": "Clear",
-    "button.copy": "Copy",
-    "button.delete": "Delete",
     "button.showCharacterControls": "Show Character Settings▼",
     "button.hideCharacterControls": "Hide Character Settings▲",
     "button.openInputPanel": "Open Input Panel",
@@ -145,14 +144,16 @@ const I18N = {
     "button.screenshot": "📷 Screenshot View",
     "button.exitScreenshot": "Exit Screenshot View",
     "button.diceAnalyst": "Dice Stat Analyst →",
+    "button.copy": "Copy",
+    "button.copied": "Copied",
+    "button.delete": "Delete",
 
     "tab.summary": "Summary",
     "tab.candidates": "Growth Candidates",
     "tab.rolls": "Extracted Rolls",
 
-    "summary.growthOutputTitle": "Growth Candidate Summary",
-    "summary.selectLog": "Paste a log to display the growth candidate summary here.",
-    "summary.noCandidates": "No visible growth candidates. Check character visibility or the output rule.",
+    "summary.outputTitle": "Growth Candidate Summary",
+    "summary.emptyOutput": "Load a log to display growth candidates here.",
 
     "candidates.title": "Growth Check Candidates",
     "candidates.index": "#",
@@ -174,10 +175,11 @@ const I18N = {
     "classification.fumble": "Fumble",
     "classification.success": "Success",
     "classification.fail": "Fail",
-    "classification.normal": "Normal",
+    "classification.unknown": "Unknown",
     "reason.critical": "Critical",
     "reason.fumble": "Fumble",
     "reason.success": "Success",
+    "reason.initial": "Initial",
     "skill.unknown": "Unknown Skill",
 
     "shortcut.eyebrow": "Keyboard Guide",

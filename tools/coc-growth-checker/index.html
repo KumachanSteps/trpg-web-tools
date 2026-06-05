@@ -6,8 +6,8 @@
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-NJD5JZML31');
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
   </script>
 
   <meta charset="UTF-8" />
@@ -27,7 +27,6 @@
             ← TRPG Web ツール観測所
             <span class="portal-tooltip">Return to TRPG Web Tools Portal</span>
           </a>
-
           <span class="header-pill header-pill-cyan" data-i18n="tag.logInput">セッションログインプット</span>
           <span class="header-pill header-pill-violet" data-i18n="tag.coc67">CoC 6版 / 7版</span>
           <span class="header-pill header-pill-amber" data-i18n="tag.growthCandidates">成長候補抽出</span>
@@ -38,7 +37,6 @@
             <button id="languageToggleBtn" class="language-toggle-button" type="button" aria-label="英語表示に切替">EN</button>
             <button id="shortcutHelpBtn" class="shortcut-help-button" type="button" aria-label="ショートカット一覧を開く" data-i18n="button.shortcuts">⌨ ショートカット</button>
           </div>
-
           <button id="themeToggleBtn" class="theme-switch" type="button" aria-label="ナイトモードに切替" aria-pressed="false" title="ナイトモードに切替">
             <span class="theme-switch-track">
               <span class="theme-switch-side theme-switch-side-sun">☀</span>
@@ -67,54 +65,43 @@
               <span class="tool-icon-star">✦</span>
               <span class="tool-icon-growth-check" aria-hidden="true">✓</span>
             </div>
-
             <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカーv2</h1>
           </div>
 
           <p class="site-description" data-i18n="app.description">
             セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。
           </p>
-
           <p class="shortcut-tip" data-i18n-html="app.tip">
             Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で抽出 ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> でスクショ表示 ｜ <kbd>?</kbd> でショートカット一覧
           </p>
         </div>
       </div>
+      <div class="tool-version-stamp">v2.0 2026/06/04</div>
     </div>
   </header>
 
-  <div id="shortcutModal" class="shortcut-modal" aria-hidden="true">
-    <div class="shortcut-modal-backdrop" id="shortcutModalBackdrop"></div>
-    <div class="shortcut-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcutModalTitle">
-      <div class="shortcut-modal-header">
+  <section id="shortcutDrawer" class="shortcut-drawer" aria-hidden="true">
+    <div class="shortcut-drawer-inner">
+      <div class="shortcut-drawer-header">
         <div>
           <p class="shortcut-modal-eyebrow" data-i18n="shortcut.eyebrow">Keyboard Guide</p>
-          <h2 id="shortcutModalTitle" data-i18n="shortcut.title">ショートカット一覧</h2>
+          <h2 data-i18n="shortcut.title">ショートカット一覧</h2>
         </div>
-        <button id="shortcutModalCloseBtn" class="shortcut-modal-close" type="button" aria-label="ショートカット一覧を閉じる">×</button>
+        <button id="shortcutDrawerCloseBtn" class="shortcut-modal-close" type="button" aria-label="ショートカット一覧を閉じる">×</button>
       </div>
-
-      <div class="shortcut-modal-body">
-        <div class="shortcut-list">
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>O</kbd></div><div class="shortcut-desc" data-i18n="shortcut.file">ファイル選択</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Enter</kbd></div><div class="shortcut-desc" data-i18n="shortcut.analyze">成長候補を抽出</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>L</kbd></div><div class="shortcut-desc" data-i18n="shortcut.focusInput">入力欄にフォーカス</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleInput">入力パネル開閉</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd></div><div class="shortcut-desc" data-i18n="shortcut.summaryTab">サマリーへ移動</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd></div><div class="shortcut-desc" data-i18n="shortcut.candidatesTab">成長候補へ移動</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>3</kbd></div><div class="shortcut-desc" data-i18n="shortcut.rollsTab">抽出ロールへ移動</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>C</kbd></div><div class="shortcut-desc" data-i18n="shortcut.characterSettings">表示キャラ設定の開閉</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>T</kbd></div><div class="shortcut-desc" data-i18n="shortcut.theme">ナイトモード切替</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>V</kbd></div><div class="shortcut-desc" data-i18n="shortcut.screenshot">スクショ表示 / 通常表示</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Backspace</kbd></div><div class="shortcut-desc" data-i18n="shortcut.clear">確認後クリア</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>?</kbd></div><div class="shortcut-desc" data-i18n="shortcut.openHelp">このショートカット一覧を開く</div></div>
-          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Esc</kbd></div><div class="shortcut-desc" data-i18n="shortcut.esc">モーダル / スクショ表示を閉じる。通常時は確認後クリア</div></div>
-        </div>
+      <div class="shortcut-list shortcut-drawer-list">
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>O</kbd></div><div class="shortcut-desc" data-i18n="shortcut.file">ファイル選択</div></div>
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Enter</kbd></div><div class="shortcut-desc" data-i18n="shortcut.analyze">成長候補を抽出</div></div>
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>L</kbd></div><div class="shortcut-desc" data-i18n="shortcut.focusInput">入力欄にフォーカス</div></div>
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleInput">入力パネル開閉</div></div>
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd></div><div class="shortcut-desc" data-i18n="shortcut.summaryTab">サマリーへ移動</div></div>
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd></div><div class="shortcut-desc" data-i18n="shortcut.candidatesTab">成長候補へ移動</div></div>
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>3</kbd></div><div class="shortcut-desc" data-i18n="shortcut.rollsTab">抽出ロールへ移動</div></div>
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>T</kbd></div><div class="shortcut-desc" data-i18n="shortcut.theme">ナイトモード切替</div></div>
+        <div class="shortcut-item"><div class="shortcut-keys"><kbd>Esc</kbd></div><div class="shortcut-desc" data-i18n="shortcut.esc">ドロワー / スクショ表示を閉じる</div></div>
       </div>
-
-      <p class="shortcut-modal-note" data-i18n="shortcut.note">※ 一部ブラウザでは既定ショートカットが優先される場合があります。</p>
     </div>
-  </div>
+  </section>
 
   <div id="screenshotActionBar" class="screenshot-action-bar">
     <button id="screenshotExitBtn" class="screenshot-exit-button" type="button" data-i18n="button.exitScreenshot">通常表示に戻す</button>
@@ -138,43 +125,18 @@
           <textarea id="rawInput" placeholder="HTMLまたはテキストログを貼り付け" data-i18n-placeholder="input.placeholder"></textarea>
         </label>
 
-        <h3 data-i18n="input.ruleTitle">成長チェック出力ルール</h3>
-        <div class="growth-rule-panel" role="radiogroup" aria-label="成長チェック出力ルール">
-          <label class="rule-radio-option">
-            <input type="radio" name="ruleMode" value="rulebook" checked />
-            <span class="rule-radio-dot" aria-hidden="true"></span>
-            <span class="rule-radio-text" data-i18n="rule.rulebook">基本ルルブ準拠（全成功技能を1回づつ表示）</span>
-          </label>
+        <section class="growth-rule-panel" aria-labelledby="growthRuleTitle">
+          <h3 id="growthRuleTitle" data-i18n="input.ruleTitle">成長チェック出力ルール</h3>
+          <div class="growth-rule-options" role="radiogroup" aria-labelledby="growthRuleTitle">
+            <label class="growth-rule-option"><input type="radio" name="ruleMode" value="rulebook" checked><span class="rule-dot"></span><span data-i18n="rule.rulebook">基本ルルブ準拠（全成功技能を1回づつ表示）</span></label>
+            <label class="growth-rule-option"><input type="radio" name="ruleMode" value="critFumble"><span class="rule-dot"></span><span data-i18n="rule.critFumble">クリティカル / ファンブル / 初期値（該当ロールを全て表示）</span></label>
+            <label class="growth-rule-option"><input type="radio" name="ruleMode" value="both"><span class="rule-dot"></span><span data-i18n="rule.both">合算① クリファン全件 + 成功技能1回づつ</span></label>
+            <label class="growth-rule-option"><input type="radio" name="ruleMode" value="bothPrime"><span class="rule-dot"></span><span data-i18n="rule.bothPrime">合算② クリティカル全件 + 成功技能1回づつ</span></label>
+          </div>
+          <label class="extra-rule-option"><input id="includeParamRolls" type="checkbox"><span class="extra-check-box"></span><span data-i18n="input.includeParamRolls">アイデア、知識、能力値ロールを加える</span></label>
+        </section>
 
-          <label class="rule-radio-option">
-            <input type="radio" name="ruleMode" value="critFumble" />
-            <span class="rule-radio-dot" aria-hidden="true"></span>
-            <span class="rule-radio-text" data-i18n="rule.critFumble">クリティカル / ファンブル / 初期値（該当ロールを全て表示）</span>
-          </label>
-
-          <label class="rule-radio-option">
-            <input type="radio" name="ruleMode" value="both" />
-            <span class="rule-radio-dot" aria-hidden="true"></span>
-            <span class="rule-radio-text" data-i18n="rule.both">合算① クリファン全件 + 成功技能1回づつ</span>
-          </label>
-
-          <label class="rule-radio-option">
-            <input type="radio" name="ruleMode" value="bothPrime" />
-            <span class="rule-radio-dot" aria-hidden="true"></span>
-            <span class="rule-radio-text" data-i18n="rule.bothPrime">合算② クリティカル全件 + 成功技能1回づつ</span>
-          </label>
-
-          <label class="extra-rule-option">
-            <input id="includeParameterRolls" type="checkbox" />
-            <span class="extra-rule-box" aria-hidden="true"></span>
-            <span data-i18n="rule.includeParameterRolls">アイデア、知識、能力値ロールを加える</span>
-          </label>
-        </div>
-
-        <label>
-          <span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span>
-          <input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" />
-        </label>
+        <label class="auto-hide-label"><span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span><input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" /></label>
 
         <button id="analyzeBtn" data-i18n="button.analyze">成長候補を抽出</button>
         <button id="clearBtn" class="secondary" data-i18n="button.clear">クリア</button>
@@ -185,14 +147,13 @@
       </div>
     </section>
 
-    <section>
+    <section id="outputPanel">
       <div class="tabs">
         <div class="tabs-left">
           <button class="tab-button active" data-tab="summary" data-i18n="tab.summary">サマリー</button>
           <button class="tab-button" data-tab="candidates" data-i18n="tab.candidates">成長候補</button>
           <button class="tab-button" data-tab="rolls" data-i18n="tab.rolls">抽出ロール</button>
         </div>
-
         <div class="tabs-right">
           <button id="summaryShotBtn" class="summary-shot-button" type="button" data-i18n="button.screenshot">📷 スクショ表示</button>
           <a class="dice-analyst-link-button" href="https://kumachansteps.github.io/trpg-web-tools/tools/dice-stat-analyst/" data-i18n="button.diceAnalyst">ダイス解析ツール →</a>
@@ -207,13 +168,13 @@
 
         <div class="growth-output-wrap">
           <div class="growth-output-head">
-            <h2 class="growth-output-title" data-i18n="summary.growthOutputTitle">成長候補サマリー</h2>
+            <h2 class="growth-output-title" data-i18n="summary.outputTitle">成長候補サマリー</h2>
             <div class="growth-output-actions">
               <button id="copySummaryBtn" class="growth-copy-button" type="button" data-i18n="button.copy">コピー</button>
               <button id="deleteSummaryBtn" class="growth-delete-button" type="button" data-i18n="button.delete">削除</button>
             </div>
           </div>
-          <textarea id="growthSummaryOutput" class="growth-output-box" spellcheck="false" readonly data-i18n-placeholder="summary.selectLog" placeholder="ログを入力すると、成長候補サマリーがここに表示されます。"></textarea>
+          <textarea id="growthOutput" class="growth-output-box" spellcheck="false" readonly>ログを読み込むと、ここに成長候補が表示されます。</textarea>
         </div>
       </div>
 
@@ -252,7 +213,6 @@
       </div>
     </section>
   </main>
-
 
   <section class="tool-footer-note">
     <h2>利用上の注意</h2>
