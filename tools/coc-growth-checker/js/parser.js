@@ -1,639 +1,368 @@
-const LF = "\n";
-const TAB = "\t";
 const THEME_STORAGE_KEY = "cocGrowthCheckerTheme";
+const LF = "\n";
 
 const state = {
   allRolls: [],
+  candidates: [],
   visibleCharacters: new Set(),
-  showCharacterControls: false,
+  hiddenCharacters: new Set(),
+  currentFileName: "ログ本文",
+  hasOutput: false,
   currentTab: "summary",
 };
 
-function $(id) {
-  return document.getElementById(id);
-}
+function $(id){ return document.getElementById(id); }
+function cleanLine(v){ return String(v || "").replace(/\s+/g, " ").trim(); }
+function escapeHtml(v){ return String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+function clampNumber(value, min, max, fallback){ const n = Number(value); return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback; }
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+const EXCLUDED_TABS = ["雑談", "other", "info", "お祓い", "おはらい", "運試し"];
+const MYTHOS_SKILLS = ["クトゥルフ神話", "クトゥルフ神話技能", "cthulhu mythos"];
+const PARAM_PAT = /^(アイデア|知識|STR|CON|POW|DEX|APP|SIZ|INT|EDU)(?:[×xX*]\d+)?$|^(IDEA|KNOW|KNOWLEDGE|STR|CON|POW|DEX|APP|SIZ|INT|EDU)$/i;
 
-function cleanLine(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
-}
-
-function decodeHtml(value) {
-  const textarea = document.createElement("textarea");
-  textarea.innerHTML = String(value || "");
-  return textarea.value;
-}
-
-function clampNumber(value, min, max, fallback) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.max(min, Math.min(max, number));
-}
-
-const includedTabs = ["main", "メイン", "ho"];
-const excludedTabs = ["雑談", "other", "info", "おはらい", "お祓い", "運試し"];
-
-function prepareText(raw) {
+function prepareText(raw){
   const source = String(raw || "");
-  if (!looksLikeHtml(source)) return source;
+  if (!/<(?:html|body|p|div|span|br|table|tr|td)\b/i.test(source)) return source;
   const doc = new DOMParser().parseFromString(source, "text/html");
-  if (!doc.body) return source;
-  const lines = extractHtmlLogLines(doc);
-  return lines.length ? lines.join(LF) : decodeHtml(doc.body.innerText || doc.body.textContent || source);
-}
-
-function extractHtmlLogLines(doc) {
-  return Array.from(doc.body.querySelectorAll("p")).map(extractHtmlLogLine).filter(Boolean);
-}
-
-function extractHtmlLogLine(paragraph) {
-  const spans = Array.from(paragraph.querySelectorAll("span"))
-    .map(span => cleanLine(decodeHtml(span.textContent || "")))
-    .filter(Boolean);
-  return spans.length >= 3 && isTabLabel(spans[0])
-    ? `${spans[0]} ${spans[1]}：${spans.slice(2).join(" ")}`
-    : cleanLine(decodeHtml(paragraph.textContent || ""));
-}
-
-function filterLines(lines) {
-  return lines.filter(line => {
-    if (isRuleExplanationLine(line)) return false;
-    if ($("dropTabs")?.checked && !shouldKeepTabLine(line)) return false;
-    if ($("onlyD100")?.checked && !looksLikeD100Roll(line)) return false;
-    return true;
+  const lines = [];
+  doc.body?.querySelectorAll("p, li, tr, div[class*='message'], div.MuiListItemText-root").forEach(node => {
+    const text = cleanLine(node.textContent || "");
+    if (text) lines.push(text);
   });
+  return lines.length ? lines.join(LF) : (doc.body?.innerText || doc.body?.textContent || source);
 }
 
-function shouldKeepTabLine(line) {
-  const tab = extractLeadingTab(line);
-  return !tab || isIncludedTab(tab);
+function normalizeLine(line){
+  return String(line || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[：]/g, ":")
+    .replace(/[＜]/g, "<")
+    .replace(/[＝]/g, "=")
+    .replace(/[＞]/g, ">")
+    .replace(/[（]/g, "(")
+    .replace(/[）]/g, ")")
+    .replace(/[［]/g, "[")
+    .replace(/[］]/g, "]")
+    .replace(/\s+/g, " ")
+    .trim();
 }
-
-function isIncludedTab(tab) {
-  const normalized = normalizeTabName(tab);
-  if (!normalized) return true;
-  if (excludedTabs.some(word => normalized.includes(normalizeTabName(word)))) return false;
-  if (normalized === "ho" || normalized.startsWith("ho")) return true;
-  return includedTabs.some(word => {
-    const item = normalizeTabName(word);
-    return normalized === item || normalized.startsWith(item) || normalized.includes(item);
-  });
+function getLeadingTab(line){ const m = String(line||"").trim().match(/^\[([^\]]+)\]/); return m ? m[1].trim() : ""; }
+function shouldDropLine(line){
+  const tab = getLeadingTab(line).toLowerCase().replace(/\s/g, "");
+  return EXCLUDED_TABS.some(x => tab.includes(String(x).toLowerCase().replace(/\s/g, "")));
 }
+function containsDice(line){ return /\b(?:S?CCB?\d*|S?CBR\d*|S?RESB|RESB|1D100|D100)\b/i.test(line); }
 
-function extractRollData(lines) {
+function parseRolls(rawInput){
+  const text = prepareText(rawInput);
+  const lines = text.split(/\r?\n/).map(normalizeLine).filter(Boolean);
   const rolls = [];
   let currentCharacter = "";
-
-  lines.forEach((line, index) => {
-    const name = extractCharacterName(line);
-    const usable = isUsableCharacterName(name);
-    if (usable) currentCharacter = name;
-
-    const values = extractRollsFromLine(line);
-    values.forEach(value => {
-      const character = usable ? name : (currentCharacter || tr("common.unknown", "不明"));
-      const skill = extractSkillName(line);
-      const target = extractTargetNumber(line);
+  lines.forEach((line, i) => {
+    if (shouldDropLine(line) || !containsDice(line)) return;
+    const character = extractCharacter(line) || currentCharacter || "不明";
+    if (character !== "不明") currentCharacter = character;
+    const skill = extractSkill(line);
+    const target = extractTarget(line);
+    const values = extractRollValues(line);
+    values.forEach((value, idx) => {
+      const result = classifyRoll(line, value, target);
+      if (result === "unknown") return;
       rolls.push({
-        value,
-        target,
-        skill,
+        id: `${i+1}-${idx}`,
+        lineNo: i + 1,
         character,
-        line,
-        lineNo: index + 1,
-        classification: classifyRoll(value, target, line),
+        skill,
+        target,
+        value,
+        result,
+        raw: line,
+        isMythos: isMythosSkill(skill),
+        isLuck: isLuckSkill(skill),
+        isParam: isParamSkill(skill),
+        isInitial: target !== null && value > target,
       });
     });
   });
-
   return rolls;
 }
 
-function extractCharacterName(line) {
-  const text = String(line || "").trim();
-  const diceIndex = findDiceCommandIndex(text);
-  if (diceIndex < 0) return tr("common.unknown", "不明");
-  let before = text.slice(0, diceIndex).trim();
-  if (!before) return tr("common.unknown", "不明");
-  before = trimTrailingSeparators(trimTrailingRollPrefix(removeLeadingTab(before)));
-  return cleanCharacterName(before);
+function findDiceIndex(line){
+  const m = line.match(/\b(?:S?CCB?\d*|S?CBR\d*|S?RESB|RESB|1D100|D100)\b/i);
+  return m ? m.index : -1;
 }
-
-function extractSkillName(line) {
-  const text = String(line || "");
-  const bracketPatterns = [
-    /【([^】]+)】/,
-    /《([^》]+)》/,
-    /\[([^\]]+)\]/,
-  ];
-  for (const pattern of bracketPatterns) {
-    const match = text.match(pattern);
-    if (match && match[1] && !isTabLabel(match[0])) return cleanLine(match[1]);
-  }
-  return tr("skill.unknown", "技能名不明");
+function removeLeadingTab(line){ return String(line||"").replace(/^\[[^\]]+\]\s*/, "").trim(); }
+function extractCharacter(line){
+  const body = removeLeadingTab(line);
+  const diceIndex = findDiceIndex(body);
+  if (diceIndex < 0) return "";
+  let before = body.slice(0, diceIndex).trim();
+  const colon = Math.max(before.lastIndexOf(":"), before.lastIndexOf("："));
+  if (colon >= 0) before = before.slice(0, colon);
+  before = before.replace(/[\[\]【】]/g, "").replace(/[\s\-–—・:：>＞]+$/g, "").trim();
+  if (!before || before.length > 80) return "";
+  if (/^(system|info|ルール|メモ)$/i.test(before)) return "";
+  return before;
 }
-
-function extractTargetNumber(line) {
-  const text = String(line || "");
-  const diceIndex = findDiceCommandIndex(text);
-  const targetSource = diceIndex >= 0 ? text.slice(diceIndex) : text;
-  const match = targetSource.match(/(?:<=|＜＝|≦)\s*(\d{1,3})/);
-  if (!match) return null;
-  const value = Number(match[1]);
-  return value >= 1 && value <= 100 ? value : null;
+function extractSkill(line){
+  const bracket = [...String(line).matchAll(/【([^】]+)】|《([^》]+)》/g)].map(m => m[1] || m[2]).filter(Boolean);
+  if (bracket.length) return cleanSkillName(bracket[bracket.length - 1]);
+  if (/SAN|SANC|正気度/i.test(line)) return "正気度ロール";
+  if (/アイデア|IDEA/i.test(line)) return "アイデア";
+  if (/知識|KNOWLEDGE|KNOW/i.test(line)) return "知識";
+  if (/幸運|LUCK/i.test(line)) return "幸運";
+  const ability = line.match(/\b(STR|CON|POW|DEX|APP|SIZ|INT|EDU)\b(?:\s*[×xX*]\s*\d+)?/i);
+  if (ability) return ability[0].toUpperCase().replace(/\s/g, "");
+  return "技能名不明";
 }
-
-function classifyRoll(value, target, line) {
-  const critMax = clampNumber($("critMax")?.value, 1, 100, 5);
-  const fumbleMin = clampNumber($("fumbleMin")?.value, 1, 100, 96);
-  const text = String(line || "").toLowerCase();
-
-  if (value <= critMax || text.includes("決定的成功") || text.includes("critical") || text.includes("クリティカル")) return "critical";
-  if (value >= fumbleMin || text.includes("致命的失敗") || text.includes("fumble") || text.includes("ファンブル")) return "fumble";
-  if (target !== null) return value <= target ? "success" : "fail";
-  if (text.includes("成功") || text.includes("success")) return "success";
-  if (text.includes("失敗") || text.includes("fail")) return "fail";
-  return "normal";
+function cleanSkillName(skill){ return cleanLine(skill).replace(/[:：].*$/, "").replace(/^〈(.+)〉$/, "$1").replace(/^《(.+)》$/, "$1"); }
+function extractTarget(line){
+  const m = String(line).match(/(?:<=|=<|≦)\s*(\d{1,3})/);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return n >= 1 && n <= 100 ? n : null;
 }
-
-function extractRollsFromLine(line) {
-  const text = String(line || "");
-  const diceIndex = findDiceCommandIndex(text);
-  if (diceIndex < 0) return [];
-  const afterCommand = text.slice(diceIndex);
-  const numbers = extractNumbersAfterResultMarkers(afterCommand);
-  if (numbers.length) return [numbers[0]];
-  return extractNumbersAfterWords(afterCommand, ["出目"]).slice(0, 1);
-}
-
-function findDiceCommandIndex(text) {
-  const source = String(text || "");
-  const upper = source.toUpperCase();
-  const indexes = [];
-  const commandPatterns = [
-    /SRESB/i, /RESB/i,
-    /SCCB\d*/i, /SCBR\d*/i, /SCC\d*/i,
-    /CCB\d*/i, /CBR\d*/i, /CC\d*/i,
-    /S1D100/i, /1D100/i, /SD100/i, /D100/i, /D％/i, /D%/i,
-  ];
-
-  commandPatterns.forEach(pattern => {
-    let match;
-    const regex = new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g");
-    while ((match = regex.exec(source)) !== null) {
-      const index = match.index;
-      const command = match[0];
-      const prev = index > 0 ? upper[index - 1] : "";
-      const next = upper[index + command.length] || "";
-      const validPrev = !prev || !isAsciiAlphaNumber(prev);
-      const validNext = !next || !isAsciiAlphaNumber(next);
-      if (validPrev && validNext) indexes.push(index);
+function extractRollValues(line){
+  const vals = [];
+  let m;
+  const patterns = [/>\s*(\d{1,3})\s*>/g, /[＞→]\s*(\d{1,3})/g, /(?:出目|ROLL)\D*(\d{1,3})/gi];
+  patterns.forEach(re => {
+    while ((m = re.exec(line)) !== null) {
+      const n = Number(m[1]);
+      if (n >= 1 && n <= 100) vals.push(n);
     }
   });
-  return indexes.length ? Math.min(...indexes) : -1;
-}
-
-function isAsciiAlphaNumber(character) {
-  return /[A-Z0-9_]/i.test(character || "");
-}
-
-function extractNumbersAfterResultMarkers(text) {
-  const values = [];
-  const markers = ["＞", ">", "→"];
-  for (let i = 0; i < text.length; i++) {
-    if (!markers.includes(text[i])) continue;
-    const number = readRollResultNumberFrom(text, i + 1);
-    if (number !== null && number >= 1 && number <= 100) values.push(number);
+  if (!vals.length) {
+    const fallback = line.match(/(?:1D100|D100)\s*(?:<=\s*\d+)?\D+(\d{1,3})/i);
+    if (fallback) {
+      const n = Number(fallback[1]);
+      if (n >= 1 && n <= 100) vals.push(n);
+    }
   }
-  return values;
+  return vals.slice(0, 1);
 }
-
-function readRollResultNumberFrom(text, start) {
-  let i = start;
-  while (i < text.length && isWhitespace(text[i])) i++;
-  if (i >= text.length || text[i] < "0" || text[i] > "9") return null;
-  let digits = "";
-  while (i < text.length && text[i] >= "0" && text[i] <= "9") digits += text[i++];
-  if (["d", "D", "Ｄ", "ｄ"].includes(text[i] || "")) return null;
-  return isValidRollResultTail(text.slice(i)) ? Number(digits) : null;
+function classifyRoll(line, value, target){
+  const text = String(line || "").toLowerCase();
+  if (/決定的成功|クリティカル|critical|\bcrit\b/.test(text)) return "critical";
+  if (/致命的失敗|ファンブル|fumble/.test(text)) return "fumble";
+  if (/スペシャル|special/.test(text)) return "special";
+  if (/成功|success/.test(text)) return "success";
+  if (/失敗|failure|failed|fail/.test(text)) return "failure";
+  if (target !== null) return value <= target ? "success" : "failure";
+  if (value <= 5) return "critical";
+  if (value >= 96) return "fumble";
+  return "unknown";
 }
-
-function isValidRollResultTail(tail) {
-  const text = String(tail || "").trim();
-  const lower = text.toLowerCase();
-  return !text
-    || ["＞", ">", "→", "#"].some(marker => text.startsWith(marker))
-    || ["成功", "失敗", "決定的成功", "致命的失敗", "クリティカル", "ファンブル"].some(word => text.startsWith(word))
-    || lower.startsWith("success")
-    || lower.startsWith("fail");
+function normalizedSkill(skill){ return String(skill||"").toLowerCase().replace(/[〈〉《》【】\s]/g, "").trim(); }
+function isMythosSkill(skill){ const n = normalizedSkill(skill); return MYTHOS_SKILLS.some(x => n === normalizedSkill(x)); }
+function isLuckSkill(skill){ return /^(幸運|luck)$/i.test(normalizedSkill(skill)); }
+function isParamSkill(skill){ const s = String(skill || "").replace(/[〈〉《》【】\s]/g, ""); return PARAM_PAT.test(s); }
+function isGrowthSkillRoll(roll){ return !roll.isMythos && !roll.isParam && !/正気度|SAN|SANC/i.test(roll.skill); }
+function canIncludeParamRoll(roll, ruleMode, includeParam){
+  if (!includeParam || !roll.isParam) return false;
+  if (isLuckSkill(roll.skill)) return roll.result === "critical" && roll.value === 1;
+  if (ruleMode === "rulebook") return false;
+  if (ruleMode === "bothPrime") return roll.result === "critical";
+  return roll.result === "critical" || roll.result === "fumble" || roll.isInitial;
 }
-
-function extractNumbersAfterWords(text, words) {
-  const lower = String(text || "").toLowerCase();
-  const values = [];
-  words.forEach(word => {
-    const index = lower.indexOf(String(word).toLowerCase());
-    if (index < 0) return;
-    const number = readNumberFrom(text, index + String(word).length);
-    if (number !== null && number >= 1 && number <= 100) values.push(number);
-  });
-  return values;
+function canIncludeLuckRoll(roll){ return roll.isLuck && roll.result === "critical" && roll.value === 1; }
+function getRuleMode(){ return document.querySelector('input[name="ruleMode"]:checked')?.value || "rulebook"; }
+function getRuleLabel(mode = getRuleMode()){
+  const map = {
+    rulebook: "基本ルルブ準拠",
+    critFumble: "クリティカル / ファンブル / 初期値",
+    both: "合算① クリファン全件 + 成功技能1回づつ",
+    bothPrime: "合算② クリティカル全件 + 成功技能1回づつ",
+  };
+  return map[mode] || map.rulebook;
 }
-
-function readNumberFrom(text, start) {
-  let i = start;
-  while (i < text.length && !/[0-9]/.test(text[i])) i++;
-  if (i >= text.length) return null;
-  let digits = "";
-  while (i < text.length && /[0-9]/.test(text[i])) digits += text[i++];
-  return digits ? Number(digits) : null;
+function candidateReason(roll){
+  if (roll.isInitial) return "初期値";
+  if (roll.result === "critical") return "クリティカル";
+  if (roll.result === "fumble") return "ファンブル";
+  if (roll.result === "special") return "スペシャル";
+  if (roll.result === "success") return "成功";
+  return roll.result;
 }
-
-function isWhitespace(character) {
-  return /\s/.test(character || "");
-}
-
-function looksLikeHtml(value) {
-  const source = String(value || "").toLowerCase();
-  return ["<html", "<body", "<p", "<span", "<div", "<br", "&lt;", "&gt;"].some(token => source.includes(token));
-}
-
-function looksLikeD100Roll(line) {
-  if (isRuleExplanationLine(line)) return false;
-  if (findDiceCommandIndex(line) >= 0 && hasRollResultMarker(line)) return true;
-  return hasAnyText(line, ["出目", "決定的成功", "致命的失敗", "ファンブル", "クリティカル"]);
-}
-
-function hasAnyText(line, words) {
-  return words.some(word => String(line || "").includes(word));
-}
-
-function hasRollResultMarker(line) {
-  const text = String(line || "");
-  const diceIndex = findDiceCommandIndex(text);
-  if (diceIndex < 0) return false;
-  return extractNumbersAfterResultMarkers(text.slice(diceIndex)).length > 0;
-}
-
-function isRuleExplanationLine(line) {
-  const text = String(line || "").trim();
-  const tab = normalizeTabName(extractLeadingTab(text));
-  const body = removeLeadingTab(text).trim();
-  const compact = normalizeTabName(body);
-  if (!text) return true;
-  if (tab === "info" || tab.includes("info")) return true;
-  if (tab.includes("ルール") || tab.includes("rule")) return true;
-  if (body.startsWith("ルール説明：") || body.startsWith("ルール説明:")) return true;
-  if (body.startsWith("【7版ルール】") || body.startsWith("[7版ルール]")) return true;
-  if (compact.startsWith("ルール説明") || compact.startsWith("7版ルール") || compact.startsWith("◆7版ルール")) return true;
-  return false;
-}
-
-function isTabLabel(value) {
-  const source = String(value || "").trim();
-  return source.startsWith("[") && source.endsWith("]");
-}
-
-function extractLeadingTab(line) {
-  const source = String(line || "").trim();
-  if (!source.startsWith("[")) return "";
-  const end = source.indexOf("]");
-  return end >= 0 ? source.slice(1, end) : "";
-}
-
-function normalizeTabName(tab) {
-  return String(tab || "").trim().toLowerCase().replaceAll(" ", "").replaceAll("　", "").replaceAll(TAB, "");
-}
-
-function removeLeadingTab(value) {
-  const source = String(value || "").trim();
-  if (!source.startsWith("[")) return source;
-  const end = source.indexOf("]");
-  return end >= 0 ? source.slice(end + 1).trim() : source;
-}
-
-function trimTrailingSeparators(value) {
-  let source = String(value || "").trim();
-  const separators = [":", "：", "-", "―", "＞", ">", "(", "（"];
-  while (source && separators.includes(source[source.length - 1])) source = source.slice(0, -1).trim();
-  return source;
-}
-
-function trimTrailingRollPrefix(value) {
-  let source = String(value || "").trim().replaceAll("×", "x").replaceAll("Ｘ", "x").replaceAll("ｘ", "x");
-  const lower = source.toLowerCase();
-  const index = lower.lastIndexOf("x");
-  if (index < 0) return source;
-  const tail = lower.slice(index + 1).trim();
-  if (!tail || tail.split("").some(character => character < "0" || character > "9")) return source;
-  return trimTrailingSeparators(source.slice(0, index).trim()) || source;
-}
-
-function cleanCharacterName(name) {
-  let source = String(name || "");
-  ["[", "]", "「", "」", "『", "』", "【", "】"].forEach(character => { source = source.replaceAll(character, ""); });
-  return source.trim() || tr("common.unknown", "不明");
-}
-
-function isUsableCharacterName(name) {
-  const source = String(name || "").trim();
-  if (!source || source === "不明" || source === "Unknown") return false;
-  if (["(", ")", "（", "）"].includes(source)) return false;
-  return source.replaceAll("(", "").replaceAll(")", "").replaceAll("（", "").replaceAll("）", "").trim() !== "";
-}
-
-function analyze() {
-  const raw = $("rawInput")?.value || "";
-  const prepared = prepareText(raw);
-  const lines = filterLines(prepared.split(/\r?\n/).map(cleanLine).filter(Boolean));
-  const rolls = extractRollData(lines);
-  state.allRolls = rolls;
-
-  const counts = countByCharacter(rolls);
-  const autoHideMax = clampNumber($("autoHideMaxRolls")?.value, 0, 999, 15);
-  state.visibleCharacters = new Set(
-    Object.entries(counts)
-      .filter(([, count]) => count > autoHideMax)
-      .map(([character]) => character)
-  );
-  if (state.visibleCharacters.size === 0) {
-    Object.keys(counts).forEach(character => state.visibleCharacters.add(character));
-  }
-
-  renderAll();
-}
-
-function countByCharacter(rolls) {
-  return rolls.reduce((acc, roll) => {
-    acc[roll.character] = (acc[roll.character] || 0) + 1;
-    return acc;
-  }, {});
-}
-
-function getVisibleRolls() {
-  return state.allRolls.filter(roll => state.visibleCharacters.has(roll.character));
-}
-
-function buildGrowthCandidates(rolls) {
-  const mode = $("ruleMode")?.value || "rulebook";
+function getCandidateRolls(rolls){
+  const mode = getRuleMode();
+  const includeParam = $("includeParamRolls")?.checked || false;
+  const byCharSkillSuccess = new Set();
   const candidates = [];
-  const successSeen = new Set();
 
   rolls.forEach(roll => {
-    const base = { ...roll };
-    const successKey = `${roll.character}///${roll.skill}`;
+    if (roll.isMythos) return;
+    if (roll.isLuck && !canIncludeLuckRoll(roll)) return;
+    const baseGrowth = isGrowthSkillRoll(roll) || canIncludeLuckRoll(roll);
+    const paramGrowth = canIncludeParamRoll(roll, mode, includeParam);
+    if (!baseGrowth && !paramGrowth) return;
 
     if (mode === "rulebook") {
-      if (["success", "critical"].includes(roll.classification) && !successSeen.has(successKey)) {
-        successSeen.add(successKey);
-        candidates.push({ ...base, reason: "success" });
-      }
+      if (!(roll.result === "success" || roll.result === "critical" || roll.result === "special" || canIncludeLuckRoll(roll))) return;
+      const key = `${roll.character}|||${roll.skill}`;
+      if (byCharSkillSuccess.has(key)) return;
+      byCharSkillSuccess.add(key);
+      candidates.push(roll);
       return;
     }
 
     if (mode === "critFumble") {
-      if (roll.classification === "critical") candidates.push({ ...base, reason: "critical" });
-      if (roll.classification === "fumble") candidates.push({ ...base, reason: "fumble" });
+      if (roll.result === "critical" || roll.result === "fumble" || roll.isInitial || canIncludeLuckRoll(roll)) candidates.push(roll);
       return;
     }
 
     if (mode === "both") {
-      if (roll.classification === "critical") candidates.push({ ...base, reason: "critical" });
-      if (roll.classification === "fumble") candidates.push({ ...base, reason: "fumble" });
-      if (["success", "critical"].includes(roll.classification) && !successSeen.has(successKey)) {
-        successSeen.add(successKey);
-        candidates.push({ ...base, reason: "success" });
+      if (roll.result === "critical" || roll.result === "fumble" || canIncludeLuckRoll(roll)) { candidates.push(roll); return; }
+      if (roll.result === "success" || roll.result === "special") {
+        const key = `${roll.character}|||${roll.skill}`;
+        if (!byCharSkillSuccess.has(key)) { byCharSkillSuccess.add(key); candidates.push(roll); }
       }
       return;
     }
 
     if (mode === "bothPrime") {
-      if (roll.classification === "critical") candidates.push({ ...base, reason: "critical" });
-      if (["success", "critical"].includes(roll.classification) && !successSeen.has(successKey)) {
-        successSeen.add(successKey);
-        candidates.push({ ...base, reason: "success" });
+      if (roll.result === "critical" || canIncludeLuckRoll(roll)) { candidates.push(roll); return; }
+      if (roll.result === "success" || roll.result === "special") {
+        const key = `${roll.character}|||${roll.skill}`;
+        if (!byCharSkillSuccess.has(key)) { byCharSkillSuccess.add(key); candidates.push(roll); }
       }
     }
   });
-
   return candidates;
 }
 
-function renderAll() {
-  applyTranslations();
-  renderCharacterControls();
-  renderSummary();
-  renderCandidatesTable();
-  renderRollTable();
-}
-
-function renderSummary() {
-  const visibleRolls = getVisibleRolls();
-  const candidates = buildGrowthCandidates(visibleRolls);
-  const counts = countByCharacter(state.allRolls);
-  const autoHideMax = clampNumber($("autoHideMaxRolls")?.value, 0, 999, 15);
-
-  $("totalRolls").textContent = String(state.allRolls.length);
-  $("candidateCount").textContent = String(candidates.length);
-  $("characterCount").textContent = String(Object.keys(counts).length);
-  $("ruleModeLabel").textContent = t(`ruleLabel.${$("ruleMode")?.value || "rulebook"}`, "-");
-
-  const hidden = state.allRolls.length - visibleRolls.length;
-  $("summaryMemo").textContent = state.allRolls.length
-    ? t("summary.memo", "", {
-        all: state.allRolls.length,
-        visible: visibleRolls.length,
-        candidates: candidates.length,
-        characters: Object.keys(counts).length,
-        hidden,
-        threshold: autoHideMax,
-        critMax: $("critMax")?.value || 5,
-        fumbleMin: $("fumbleMin")?.value || 96,
-      })
-    : t("summary.selectLog", "ログを入力して「成長候補を抽出」を押してください。");
-
-  renderCandidateCards(candidates);
-}
-
-function renderCandidateCards(candidates) {
-  const container = $("candidateSummary");
-  const grouped = candidates.reduce((acc, item) => {
-    if (!acc[item.character]) acc[item.character] = [];
-    acc[item.character].push(item);
-    return acc;
-  }, {});
-
-  if (!candidates.length) {
-    container.innerHTML = `<div class="card"><p class="note">${escapeHtml(t("summary.noCandidates", "表示対象の成長候補はありません。"))}</p></div>`;
+function analyze(){
+  const raw = $("rawInput")?.value || "";
+  if (!raw.trim()) {
+    state.allRolls = [];
+    state.candidates = [];
+    state.hasOutput = false;
+    renderAll();
     return;
   }
-
-  container.innerHTML = Object.entries(grouped).map(([character, items]) => {
-    const chips = items.slice(0, 18).map(item => {
-      return `<span class="candidate-chip reason-${item.reason}">${escapeHtml(item.skill)} <small>${escapeHtml(t(`reason.${item.reason}`, item.reason))}</small></span>`;
-    }).join("");
-    const more = items.length > 18 ? `<span class="candidate-chip">+${items.length - 18}</span>` : "";
-    return `<div class="card candidate-card"><h3>${escapeHtml(character)} <span class="note">${items.length}</span></h3><div class="candidate-list">${chips}${more}</div></div>`;
-  }).join("");
+  state.allRolls = parseRolls(raw);
+  const counts = new Map();
+  state.allRolls.forEach(r => counts.set(r.character, (counts.get(r.character) || 0) + 1));
+  const threshold = clampNumber($("autoHideMaxRolls")?.value, 0, 999, 15);
+  if (!state.visibleCharacters.size) {
+    state.visibleCharacters = new Set([...counts.entries()].filter(([, c]) => c > threshold).map(([name]) => name));
+    if (!state.visibleCharacters.size) state.visibleCharacters = new Set([...counts.keys()]);
+  }
+  const visibleRolls = state.allRolls.filter(r => state.visibleCharacters.has(r.character));
+  state.candidates = getCandidateRolls(visibleRolls);
+  state.hasOutput = true;
+  renderAll();
 }
-
-function renderCandidatesTable() {
-  const candidates = buildGrowthCandidates(getVisibleRolls());
-  const tbody = $("candidateTableBody");
-  tbody.innerHTML = candidates.map((item, index) => `
-    <tr>
-      <td>${index + 1}</td>
-      <td>${escapeHtml(item.character)}</td>
-      <td>${escapeHtml(item.skill)}</td>
-      <td><span class="pill ${item.reason === "fumble" ? "fumble" : "success"}">${escapeHtml(t(`reason.${item.reason}`, item.reason))}</span></td>
-      <td>${item.value}</td>
-      <td>${escapeHtml(item.line)}</td>
-    </tr>
-  `).join("");
-}
-
-function renderRollTable() {
-  const tbody = $("rollTableBody");
-  const rolls = getVisibleRolls();
-  tbody.innerHTML = rolls.map((roll, index) => `
-    <tr>
-      <td>${index + 1}</td>
-      <td>${escapeHtml(roll.character)}</td>
-      <td>${escapeHtml(roll.skill)}</td>
-      <td>${roll.value}</td>
-      <td><span class="pill ${roll.classification}">${escapeHtml(t(`classification.${roll.classification}`, roll.classification))}</span></td>
-      <td>${escapeHtml(roll.line)}</td>
-    </tr>
-  `).join("");
-}
-
-function renderCharacterControls() {
-  const controls = $("characterControls");
-  const button = $("characterControlToggleBtn");
-  const counts = countByCharacter(state.allRolls);
-  controls.classList.toggle("visible", state.showCharacterControls);
-  button.textContent = state.showCharacterControls
-    ? t("button.hideCharacterControls", "表示キャラ設定を隠す▲")
-    : t("button.showCharacterControls", "表示キャラ設定を開く▼");
-
-  controls.innerHTML = Object.entries(counts).map(([character, count]) => {
-    const checked = state.visibleCharacters.has(character) ? "checked" : "";
-    return `<label class="character-toggle"><input type="checkbox" data-character="${escapeHtml(character)}" ${checked}>${escapeHtml(character)} <span class="note">${count}</span></label>`;
-  }).join("");
-
-  controls.querySelectorAll("input[data-character]").forEach(input => {
+function renderAll(){ renderCharacterControls(); renderSummaryOutput(); renderRollTable(); renderGuidePanel(); }
+function renderCharacterControls(){
+  const box = $("characterControls");
+  if (!box) return;
+  const names = [...new Set(state.allRolls.map(r => r.character))];
+  if (!names.length) { box.innerHTML = ""; return; }
+  box.innerHTML = names.map(name => `<label class="character-toggle"><input type="checkbox" data-character="${escapeHtml(name)}" ${state.visibleCharacters.has(name) ? "checked" : ""}> ${escapeHtml(name)}</label>`).join("");
+  box.querySelectorAll("input[data-character]").forEach(input => {
     input.addEventListener("change", () => {
-      const character = input.getAttribute("data-character");
-      if (input.checked) state.visibleCharacters.add(character);
-      else state.visibleCharacters.delete(character);
-      renderSummary();
-      renderCandidatesTable();
-      renderRollTable();
+      const name = input.getAttribute("data-character");
+      if (input.checked) state.visibleCharacters.add(name); else state.visibleCharacters.delete(name);
+      state.candidates = getCandidateRolls(state.allRolls.filter(r => state.visibleCharacters.has(r.character)));
+      renderSummaryOutput(); renderRollTable(); renderGuidePanel();
     });
   });
 }
-
-function switchTab(button) {
-  const tabName = button.dataset.tab;
-  if (!tabName) return;
-  state.currentTab = tabName;
-  document.querySelectorAll(".tab-button").forEach(item => item.classList.toggle("active", item === button));
-  document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.toggle("active", panel.id === tabName));
+function buildSummaryText(){
+  const session = state.currentFileName || "ログ本文";
+  const rule = getRuleLabel();
+  if (!state.hasOutput) return "";
+  const lines = [`[セッション名：${session}][選択ルール：${rule}]`, ""];
+  const byChar = new Map();
+  state.candidates.forEach(r => {
+    if (!byChar.has(r.character)) byChar.set(r.character, []);
+    byChar.get(r.character).push(r);
+  });
+  if (!byChar.size) {
+    lines.push("成長判定候補はありませんでした。");
+    return lines.join(LF);
+  }
+  byChar.forEach((rolls, character) => {
+    const skills = [...new Set(rolls.map(r => r.skill))].join("、");
+    lines.push(`【${character}】【成長判定候補：${skills}】`);
+    rolls.forEach(r => lines.push(r.raw));
+    lines.push("");
+  });
+  return lines.join(LF).trimEnd();
 }
-
-function toggleInputPanel() {
-  const layout = $("appLayout");
-  layout.classList.toggle("input-collapsed");
-  const collapsed = layout.classList.contains("input-collapsed");
-  $("inputToggleBtn").textContent = collapsed ? "⇥" : "⇤";
-  $("inputToggleBtn").setAttribute("aria-label", collapsed ? t("button.openInputPanel", "入力パネルを開く") : t("button.collapseInputPanel", "入力パネルを畳む"));
+function renderSummaryOutput(){ const out = $("summaryOutput"); if (out) out.value = buildSummaryText(); }
+function renderGuidePanel(){
+  const guide = $("summaryGuide");
+  if (!guide) return;
+  const rule = getRuleLabel();
+  const first = state.hasOutput
+    ? `現在は「${rule}」の設定でログを解析、成長判定が可能な技能を出力しました。`
+    : `現在は「${rule}」の設定でログを解析、成長判定が可能な技能をリストします。`;
+  guide.textContent = `${first}\n\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。`;
 }
-
-function toggleTheme() {
-  const isDark = document.body.classList.toggle("dark");
-  localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
-  updateThemeButton();
+function renderRollTable(){
+  const tbody = $("rollTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = state.allRolls.map((r, i) => `<tr><td>${i+1}</td><td>${escapeHtml(r.character)}</td><td>${escapeHtml(r.skill)}</td><td>${r.value}</td><td><span class="pill ${escapeHtml(r.result)}">${escapeHtml(candidateReason(r))}</span></td><td>${escapeHtml(r.raw)}</td></tr>`).join("");
 }
-
-function updateThemeButton() {
-  const isDark = document.body.classList.contains("dark");
-  const button = $("themeToggleBtn");
-  if (!button) return;
-  button.setAttribute("aria-pressed", String(isDark));
-  button.setAttribute("aria-label", isDark ? t("theme.switchToLight", "ライトモードに切替") : t("theme.switchToDark", "ナイトモードに切替"));
-  button.setAttribute("title", isDark ? t("theme.switchToLight", "ライトモードに切替") : t("theme.switchToDark", "ナイトモードに切替"));
-}
-
-function openShortcutModal() {
-  $("shortcutModal")?.classList.add("open");
-  $("shortcutModal")?.setAttribute("aria-hidden", "false");
-}
-
-function closeShortcutModal() {
-  $("shortcutModal")?.classList.remove("open");
-  $("shortcutModal")?.setAttribute("aria-hidden", "true");
-}
-
-function isShortcutModalOpen() {
-  return $("shortcutModal")?.classList.contains("open");
-}
-
-function clearAll() {
+function clearAll(){
   if ($("rawInput")) $("rawInput").value = "";
   if ($("fileInput")) $("fileInput").value = "";
-  state.allRolls = [];
-  state.visibleCharacters = new Set();
+  state.allRolls = []; state.candidates = []; state.visibleCharacters = new Set(); state.currentFileName = "ログ本文"; state.hasOutput = false;
   renderAll();
 }
+function copyOutput(){ const out = $("summaryOutput"); if (out) navigator.clipboard?.writeText(out.value); }
+function deleteOutput(){ const out = $("summaryOutput"); if (out) out.value = ""; }
+function switchTab(name){
+  state.currentTab = name;
+  document.querySelectorAll(".tab-button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === name));
+}
+function toggleInputPanel(){ $("appLayout")?.classList.toggle("input-collapsed"); }
+function toggleTheme(){ const dark = !document.body.classList.contains("dark"); document.body.classList.toggle("dark", dark); localStorage.setItem(THEME_STORAGE_KEY, dark ? "dark" : "light"); }
+function enterScreenshotMode(){ document.body.classList.add("screenshot-mode"); window.scrollTo(0,0); }
+function exitScreenshotMode(){ document.body.classList.remove("screenshot-mode"); }
+function scheduleAutoAnalyze(){ clearTimeout(scheduleAutoAnalyze.timer); scheduleAutoAnalyze.timer = setTimeout(() => analyze(), 250); }
 
-function initializeGrowthChecker() {
+function init(){
   if (localStorage.getItem(THEME_STORAGE_KEY) === "dark") document.body.classList.add("dark");
-
-  applyTranslations();
-  updateThemeButton();
-
-  $("languageToggleBtn")?.addEventListener("click", () => setLanguage(getCurrentLanguage() === "ja" ? "en" : "ja"));
-  document.addEventListener("languagechange", () => {
-    $("languageToggleBtn").textContent = getCurrentLanguage() === "ja" ? "EN" : "JP";
-    updateThemeButton();
-    renderAll();
-  });
-  $("languageToggleBtn").textContent = getCurrentLanguage() === "ja" ? "EN" : "JP";
-
-  $("themeToggleBtn")?.addEventListener("click", toggleTheme);
-  $("shortcutHelpBtn")?.addEventListener("click", openShortcutModal);
-  $("shortcutModalCloseBtn")?.addEventListener("click", closeShortcutModal);
-  $("shortcutModalBackdrop")?.addEventListener("click", closeShortcutModal);
-  $("screenshotExitBtn")?.addEventListener("click", () => document.body.classList.remove("screenshot-mode"));
-  $("summaryShotBtn")?.addEventListener("click", () => document.body.classList.add("screenshot-mode"));
-  $("inputToggleBtn")?.addEventListener("click", toggleInputPanel);
-  $("characterControlToggleBtn")?.addEventListener("click", () => {
-    state.showCharacterControls = !state.showCharacterControls;
-    renderCharacterControls();
-  });
   $("analyzeBtn")?.addEventListener("click", analyze);
-  $("clearBtn")?.addEventListener("click", () => {
-    if (window.confirm(t("confirm.clear", "入力内容と抽出結果をクリアします。よろしいですか？"))) clearAll();
+  $("clearBtn")?.addEventListener("click", clearAll);
+  $("copyOutputBtn")?.addEventListener("click", copyOutput);
+  $("deleteOutputBtn")?.addEventListener("click", deleteOutput);
+  $("inputToggleBtn")?.addEventListener("click", toggleInputPanel);
+  $("themeToggleBtn")?.addEventListener("click", toggleTheme);
+  $("summaryShotBtn")?.addEventListener("click", enterScreenshotMode);
+  $("screenshotExitBtn")?.addEventListener("click", exitScreenshotMode);
+  $("characterControlToggleBtn")?.addEventListener("click", () => {
+    const controls = $("characterControls");
+    controls?.classList.toggle("visible");
+    const opened = controls?.classList.contains("visible");
+    $("characterControlToggleBtn").textContent = opened ? "表示キャラ設定を隠す▲" : "表示キャラ設定を開く▼";
   });
-  $("ruleMode")?.addEventListener("change", renderAll);
-
-  $("fileInput")?.addEventListener("change", async event => {
-    const file = event.target.files && event.target.files[0];
+  document.querySelectorAll(".tab-button").forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+  document.querySelectorAll('input[name="ruleMode"], #includeParamRolls, #autoHideMaxRolls').forEach(el => el.addEventListener("change", () => {
+    state.visibleCharacters = new Set();
+    if (($("rawInput")?.value || "").trim()) analyze(); else renderGuidePanel();
+  }));
+  $("rawInput")?.addEventListener("input", () => {
+    state.currentFileName = "ログ本文";
+    state.visibleCharacters = new Set();
+    scheduleAutoAnalyze();
+  });
+  $("fileInput")?.addEventListener("change", event => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    $("rawInput").value = await file.text();
+    state.currentFileName = file.name;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if ($("rawInput")) $("rawInput").value = String(reader.result || "");
+      state.visibleCharacters = new Set();
+      analyze();
+    };
+    reader.readAsText(file);
   });
-
-  document.querySelectorAll(".tab-button").forEach(button => button.addEventListener("click", () => switchTab(button)));
-
-  renderAll();
+  renderGuidePanel();
 }
-
-document.addEventListener("DOMContentLoaded", initializeGrowthChecker);
+document.addEventListener("DOMContentLoaded", init);
