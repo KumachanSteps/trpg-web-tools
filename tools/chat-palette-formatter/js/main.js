@@ -1,7 +1,5 @@
 let editionMode = "auto";
 let detectedEdition = "";
-let autoFormatTimer = null;
-let toastTimer = null;
 
 function t(key) {
   return window.ChatPaletteLanguage?.t(key) || key;
@@ -21,26 +19,13 @@ function setStatus(message, type) {
   status.style.borderColor = type === "error" ? "rgba(190, 70, 70, 0.35)" : "rgba(180, 197, 216, 0.58)";
 }
 
-function ensureToastElement() {
-  let toast = document.getElementById("toastMessage");
-  if (toast) return toast;
-
-  toast = document.createElement("div");
-  toast.id = "toastMessage";
-  toast.className = "toast-message";
-  toast.setAttribute("role", "status");
-  toast.setAttribute("aria-live", "polite");
-  document.body.appendChild(toast);
-  return toast;
-}
-
 function showToast(message) {
-  const toast = ensureToastElement();
+  const toast = document.getElementById("toastMessage");
+  if (!toast) return;
   toast.textContent = message;
   toast.classList.add("show");
-
-  window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => {
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => {
     toast.classList.remove("show");
   }, 1800);
 }
@@ -55,25 +40,41 @@ function setEditionMode(mode) {
   editionMode = mode;
   updateEditionToggleActive(mode);
 
-  const input = document.getElementById("input");
-  if (input && input.value.trim()) {
-    autoFormatPalette({ showError: false });
-    return;
-  }
-
   if (mode === "auto") {
     handleInputChange();
     return;
   }
 
   setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
+  const input = document.getElementById("input");
+  if (input && input.value.trim()) {
+    handleInputChange();
+  }
 }
 
 function handleInputChange() {
-  window.clearTimeout(autoFormatTimer);
-  autoFormatTimer = window.setTimeout(() => {
-    autoFormatPalette({ showError: false });
-  }, 80);
+  const input = document.getElementById("input");
+  const output = document.getElementById("output");
+  const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
+
+  if (!extracted.text) {
+    detectedEdition = "";
+    if (output) output.value = "";
+    if (editionMode === "auto") updateEditionToggleActive("auto");
+    setStatus(t("initialStatus"));
+    return;
+  }
+
+  const edition = getSelectedEdition(extracted.text);
+  if (editionMode === "auto") {
+    updateEditionToggleActive(edition);
+  }
+
+  if (output) {
+    output.value = window.ChatPaletteParser.buildOutput(extracted.text, edition);
+  }
+
+  setStatus(t("detectPrefix") + editionLabel(edition) + t("detectSuffix"));
 }
 
 function getSelectedEdition(text) {
@@ -83,19 +84,14 @@ function getSelectedEdition(text) {
   return detectedEdition;
 }
 
-function autoFormatPalette(options = {}) {
-  const { showError = false } = options;
+function formatPalette() {
   const input = document.getElementById("input");
   const output = document.getElementById("output");
-  if (!input || !output) return;
-
   const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
 
   if (!extracted.text) {
     output.value = "";
-    detectedEdition = "";
-    updateEditionToggleActive(editionMode === "auto" ? "auto" : editionMode);
-    setStatus(showError ? t("extractError") : t("initialStatus"), showError ? "error" : undefined);
+    setStatus(t("extractError"), "error");
     return;
   }
 
@@ -106,44 +102,14 @@ function autoFormatPalette(options = {}) {
   }
 
   output.value = window.ChatPaletteParser.buildOutput(extracted.text, edition);
-  setStatus(t("detectPrefix") + editionLabel(edition) + t("detectSuffix"));
-}
-
-function formatPalette() {
-  autoFormatPalette({ showError: true });
 }
 
 function clearAll() {
-  const input = document.getElementById("input");
-  const output = document.getElementById("output");
-  if (input) input.value = "";
-  if (output) output.value = "";
+  document.getElementById("input").value = "";
+  document.getElementById("output").value = "";
   detectedEdition = "";
-  editionMode = "auto";
-  updateEditionToggleActive("auto");
+  setEditionMode("auto");
   setStatus(t("cleared"));
-}
-
-async function pasteClipboardToInput() {
-  const input = document.getElementById("input");
-  if (!input) return;
-
-  try {
-    if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
-      setStatus("ブラウザの制限によりクリップボードを読み取れませんでした。手動で貼り付けてください。", "error");
-      input.focus();
-      return;
-    }
-
-    const text = await navigator.clipboard.readText();
-    input.value = text;
-    input.focus();
-    handleInputChange();
-  } catch (error) {
-    console.warn("Clipboard paste failed.", error);
-    setStatus("ブラウザの制限によりクリップボードを読み取れませんでした。手動で貼り付けてください。", "error");
-    input.focus();
-  }
 }
 
 async function copyOutput() {
@@ -157,6 +123,7 @@ async function copyOutput() {
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
       await navigator.clipboard.writeText(output.value);
+      setStatus(t("copied"));
       showToast("チャットパレットがコピーされました");
       return;
     }
@@ -175,6 +142,7 @@ function fallbackCopy(output) {
     const success = document.execCommand("copy");
 
     if (success) {
+      setStatus(t("copied"));
       showToast("チャットパレットがコピーされました");
     } else {
       setStatus(t("copyManual"), "error");
@@ -185,12 +153,25 @@ function fallbackCopy(output) {
   }
 }
 
-function isShortcutModifierPressed(event) {
-  return event.metaKey || event.ctrlKey;
+async function pasteClipboardToInput() {
+  const input = document.getElementById("input");
+  if (!input) return;
+
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.readText === "function") {
+      input.value = await navigator.clipboard.readText();
+      input.focus();
+      handleInputChange();
+    }
+  } catch (error) {
+    console.warn("Clipboard paste failed.", error);
+    input.focus();
+    setStatus("ブラウザの制限により自動ペーストできませんでした。手動で貼り付けてください。", "error");
+  }
 }
 
 function handleGlobalShortcuts(event) {
-  const key = event.key.toLowerCase();
+  const hasCmdOrCtrl = event.metaKey || event.ctrlKey;
 
   if (event.key === "Escape") {
     event.preventDefault();
@@ -198,15 +179,13 @@ function handleGlobalShortcuts(event) {
     return;
   }
 
-  if (!isShortcutModifierPressed(event) || !event.shiftKey) return;
-
-  if (key === "v") {
+  if (hasCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === "v") {
     event.preventDefault();
     pasteClipboardToInput();
     return;
   }
 
-  if (key === "c") {
+  if (hasCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === "c") {
     event.preventDefault();
     copyOutput();
   }
@@ -217,13 +196,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("formatButton").addEventListener("click", formatPalette);
   document.getElementById("copyButton").addEventListener("click", copyOutput);
   document.getElementById("clearButton").addEventListener("click", clearAll);
-  document.addEventListener("keydown", handleGlobalShortcuts);
 
   document.querySelectorAll(".edition-toggle button").forEach(button => {
     button.addEventListener("click", () => {
       setEditionMode(button.dataset.edition);
     });
   });
+
+  document.addEventListener("keydown", handleGlobalShortcuts);
 
   setStatus(t("initialStatus"));
 });

@@ -19,7 +19,7 @@
   <title>CoCチャパレ整形ツールv2｜TRPG Webツール観測所</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="./css/palette-style.css">
+  <link rel="stylesheet" href="./css/palette-style.css" />
 </head>
 <body>
   <div class="app-shell">
@@ -27,7 +27,7 @@
       <div class="header-inner">
         <div class="header-top-tags">
           <span class="portal-link-wrap">
-          <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG Webツール観測所に戻る">← TRPG Webツール観測所</a>
+            <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG Webツール観測所に戻る">← TRPG Webツール観測所</a>
           </span>
           <span class="header-pill header-pill-cyan">いあきゃら駒JSON入力</span>
           <span class="header-pill header-pill-violet">CoC 6版/7版</span>
@@ -42,11 +42,14 @@
           </p>
         </div>
       </div>
+      <div class="header-version">v2.0 2026/06/04</div>
     </header>
 
     <div class="status-note" id="statusMessage">
       元のチャットパレット、またはキャラクター駒JSONを貼り付けてください。形式とCoC 6版 / 7版は自動判定します。
     </div>
+
+    <div class="toast" id="toastMessage" role="status" aria-live="polite"></div>
 
     <main class="main">
       <section class="container input-panel">
@@ -89,21 +92,19 @@
         </div>
       </section>
     </main>
-
-    <footer class="app-footer">
-      <section class="tool-footer-note">
-        <h2>利用上の注意</h2>
-        <p>
-          本ツールは、開発者 @KumachanSteps による個人制作の非公式TRPG支援ツールです。
-          各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
-        </p>
-        <p>
-          不具合報告や要望は、Xの @KumachanSteps 宛のDMにてお送りください。
-          ただし、すべての報告や要望に返信・対応できるとは限りません。
-        </p>
-      </section>
-    </footer>
   </div>
+
+  <section class="tool-footer-note">
+    <h2>利用上の注意</h2>
+    <p>
+      本ツールは、開発者 @KumachanSteps による個人制作の非公式TRPG支援ツールです。
+      各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
+    </p>
+    <p>
+      不具合報告や要望は、Xの @KumachanSteps 宛のDMにてお送りください。
+      ただし、すべての報告や要望に返信・対応できるとは限りません。
+    </p>
+  </section>
 
   <script src="js/i18n.js"></script>
   <script src="js/parser.js"></script>
