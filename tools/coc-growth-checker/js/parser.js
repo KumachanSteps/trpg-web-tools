@@ -575,7 +575,19 @@ function renderAll() {
 function renderSummaryOutput() {
   const candidates = buildGrowthCandidates(getVisibleRolls());
   const output = $("growthOutput");
-  if (output) output.value = state.allRolls.length ? buildGrowthOutput(candidates) : t("summary.emptyOutput", "ログを読み込むと、ここに成長候補が表示されます。");
+  const guide = $("growthEmptyGuide");
+  const hasResults = state.allRolls.length > 0;
+
+  if (output) {
+    output.value = hasResults
+      ? buildGrowthOutput(candidates)
+      : t("summary.emptyOutput", "ログを読み込むと、ここに成長候補が表示されます。");
+    output.classList.toggle("has-results", hasResults);
+  }
+
+  if (guide) {
+    guide.classList.toggle("is-hidden", hasResults);
+  }
 }
 
 function renderCandidatesTable() {

@@ -2947,7 +2947,7 @@ main#appLayout > section{
 .growth-output-box{
   flex:1 1 auto;
   width:100%;
-  min-height:0;
+  min-height:clamp(360px, calc(100vh - 430px), 760px);
   resize:none;
   padding:16px;
   border:1px solid rgba(29,155,240,.25);
@@ -2959,6 +2959,38 @@ main#appLayout > section{
   line-height:1.7;
   white-space:pre;
   box-shadow:inset 0 1px 2px rgba(15,23,42,.08),0 12px 28px rgba(29,155,240,.08);
+}
+
+.growth-output-box.has-results{
+  min-height:clamp(520px, calc(100vh - 305px), 920px);
+}
+
+.growth-empty-guide{
+  flex:0 0 auto;
+  margin-top:8px;
+  padding:12px 14px;
+  border:1px solid var(--border-cyan);
+  border-radius:18px;
+  background:rgba(125,211,252,.12);
+  color:var(--text-soft);
+}
+
+.growth-empty-guide p{
+  margin:0;
+  font-size:12px;
+  line-height:1.65;
+}
+
+.growth-empty-guide p + p{
+  margin-top:3px;
+}
+
+.growth-empty-guide.is-hidden{
+  display:none;
+}
+
+body.dark .growth-empty-guide{
+  background:rgba(103,232,249,.10);
 }
 
 .tool-footer-note{
@@ -3031,6 +3063,14 @@ body.dark .growth-rule-option:has(input:checked){
   .extra-rule-option{
     padding:4px 7px;
     font-size:11.5px;
+  }
+
+  .growth-output-box{
+    min-height:clamp(330px, calc(100vh - 395px), 720px);
+  }
+
+  .growth-output-box.has-results{
+    min-height:clamp(460px, calc(100vh - 270px), 860px);
   }
 
   .input-help{

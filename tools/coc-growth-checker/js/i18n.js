@@ -53,6 +53,8 @@ const I18N = {
 
     "summary.outputTitle": "成長候補サマリー",
     "summary.emptyOutput": "ログを読み込むと、ここに成長候補が表示されます。",
+    "summary.emptyGuideLine1": "現在は「基本ルルブ準拠」の設定でログを解析、成長判定が可能な技能をリストします。",
+    "summary.emptyGuideLine2": "他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。",
 
     "candidates.title": "成長チェック候補一覧",
     "candidates.index": "#",
@@ -154,6 +156,8 @@ const I18N = {
 
     "summary.outputTitle": "Growth Candidate Summary",
     "summary.emptyOutput": "Load a log to display growth candidates here.",
+    "summary.emptyGuideLine1": "The current default setting analyzes logs using the rulebook mode and lists skills eligible for growth checks.",
+    "summary.emptyGuideLine2": "To use another output rule, select your preferred rule from the left panel.",
 
     "candidates.title": "Growth Check Candidates",
     "candidates.index": "#",
