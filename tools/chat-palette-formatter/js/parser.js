@@ -792,7 +792,7 @@ window.ChatPaletteParser = (() => {
       },
       {
         name: "6e adds mother tongue from EDU base value",
-        actual: buildOutput("EDU:17" + NL + "CCB<=50 【こぶし】", "6e").includes("CCB<=85 【母国語：(要編集)】"),
+        actual: buildOutput("EDU:17", "6e").includes("CCB<=85 【母国語：(要編集)】"),
         expected: true
       },
       {
@@ -808,7 +808,10 @@ window.ChatPaletteParser = (() => {
     ];
 
     for (const test of tests) {
-      console.assert(test.actual === test.expected, test.name, { actual: test.actual, expected: test.expected });
+      console.assert(test.actual === test.expected, test.name, {
+        actual: test.actual,
+        expected: test.expected
+      });
     }
   }
 
