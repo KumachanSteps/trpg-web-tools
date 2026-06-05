@@ -1,8 +1,8 @@
-/* Scenario DTP Designer v1.3 - main.js */
+/* Scenario DTP Designer v1.4 - main.js */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'scenarioDtpDesignerStaticV13';
+  const STORAGE_KEY = 'scenarioDtpDesignerStaticV14';
   const DEFAULT_SOURCE_W = 310;
   const DEFAULT_STRUCTURE_W = 305;
   const GRID = 8;
@@ -21,7 +21,7 @@
     pages: [],
     currentPageIndex: 0,
     selectedId: null,
-    zoom: 0.62,
+    zoom: 0.74,
     assets: [],
     sourceLoaded: false
   };
@@ -35,7 +35,7 @@
     'pngBtn', 'helpBtn', 'helpCloseBtn', 'helpPanel', 'shortcutBtn', 'shortcutCloseBtn',
     'shortcutPanel', 'imageInput', 'assetList', 'zoomOut', 'zoomIn', 'zoomText',
     'pageIndicator', 'typeSelect', 'textEdit', 'fontSelect', 'sizeInput', 'lineInput',
-    'padInput', 'bgInput', 'colorInput', 'applyBtn', 'deleteBtn', 'templateBtn', 'fitBtn'
+    'padInput', 'bgInput', 'colorInput', 'applyBtn', 'deleteBtn', 'templateBtn', 'fitBtn', 'blockizeBtn'
   ];
 
   document.addEventListener('DOMContentLoaded', init);
@@ -60,7 +60,7 @@
     state.pages = data.pages && data.pages.length ? data.pages : [createPage('シナリオ本文')];
     state.currentPageIndex = Math.min(data.currentPageIndex || 0, state.pages.length - 1);
     state.selectedId = data.selectedId || null;
-    state.zoom = data.zoom || 0.62;
+    state.zoom = data.zoom || 0.74;
     state.assets = data.assets || [];
     state.sourceLoaded = !!data.sourceLoaded;
   }
@@ -87,7 +87,7 @@
     render(false);
   }
 
-  function createPage(title = 'ページ') { return { id: crypto.randomUUID(), title, blocks: [] }; }
+  function createPage(title = 'ページ') { return { id: crypto.randomUUID(), title, blocks: [], flowText: '' }; }
   function defaultStyle(type) {
     const base = { fontFamily: "'Yu Gothic', 'Hiragino Sans', sans-serif", fontSize: 12, lineHeight: 1.7, padding: 8, color: '#111827', background: '#ffffff' };
     if (type === 'sceneTitle') { base.fontFamily = "'Yu Mincho', 'Hiragino Mincho ProN', serif"; base.fontSize = 22; }
@@ -100,7 +100,7 @@
   }
 
   function bindEvents() {
-    els.parseBtn.addEventListener('click', () => { pushHistory(); parseIntoPages(els.sourceText.value); render(); });
+    els.parseBtn.addEventListener('click', () => { pushHistory(); loadFlowPreview(els.sourceText.value); render(); });
     els.clearTextBtn.addEventListener('click', () => { els.sourceText.value = ''; state.sourceLoaded = false; render(); els.sourceText.focus(); });
 
     els.txtDropZone.addEventListener('click', () => els.txtInput.click());
@@ -110,6 +110,7 @@
     els.txtDropZone.addEventListener('drop', async (ev) => { ev.preventDefault(); const file = [...ev.dataTransfer.files].find((f) => f.type.startsWith('text/') || f.name.endsWith('.txt')); if (file) await loadTxtFile(file); });
 
     els.addPageBtn.addEventListener('click', () => { pushHistory(); state.pages.push(createPage(`ページ${state.pages.length + 1}`)); state.currentPageIndex = state.pages.length - 1; state.selectedId = null; render(); scrollToCurrentPage(); });
+    if (els.blockizeBtn) els.blockizeBtn.addEventListener('click', () => { pushHistory(); blockizeCurrentPage(); render(); });
     document.querySelectorAll('[data-add]').forEach((btn) => btn.addEventListener('click', () => addManualBlock(btn.dataset.add)));
     els.imageInput.addEventListener('change', async (ev) => {
       const file = ev.target.files && ev.target.files[0];
@@ -125,7 +126,7 @@
     els.applyBtn.addEventListener('click', () => { const found = findBlock(state.selectedId); if (!found) return; pushHistory(); applyInspector(found.block); normalizeBlockGeometry(found.block); render(); });
     els.deleteBtn.addEventListener('click', deleteSelected);
     els.templateBtn.addEventListener('click', () => { pushHistory(); applyTemplateToCurrentPage(); render(); });
-    els.fitBtn.addEventListener('click', () => setZoom(0.62));
+    els.fitBtn.addEventListener('click', () => setZoom(0.74));
     els.zoomOut.addEventListener('click', () => setZoom(state.zoom - 0.05));
     els.zoomIn.addEventListener('click', () => setZoom(state.zoom + 0.05));
     els.helpBtn.addEventListener('click', () => togglePanel('help'));
@@ -159,6 +160,7 @@
 
   function addManualBlock(type) {
     pushHistory();
+    currentPage().flowText = '';
     const textMap = { header: 'イザナミの棺\n— 黄泉を彷徨う者たちへ —', sceneTitle: '03　新しいシーン', body: '本文を入力してください。', keeper: 'KP向けの補足を入力してください。', dialogue: 'セリフ：NPC\n「ここに台詞を入力」', check: '▼判定情報\n成功：情報を得る。\n失敗：別の展開へ。', image: '' };
     const specs = { header: [0, 0, LAYOUT.mainW, 86], keeper: [0, 80, LAYOUT.memoW, 70], image: [LAYOUT.rightColX, 300, LAYOUT.colW, 110] };
     const [x, y, w, h] = specs[type] || [0, 240, LAYOUT.colW, autoHeightFor(type, textMap[type], LAYOUT.colW)];
@@ -168,13 +170,77 @@
     render();
   }
 
+
+
+  function loadFlowPreview(src) {
+    const normalized = src.replace(/\r\n/g, '\n').trim();
+    const chunks = splitFlowTextIntoPages(normalized);
+    state.pages = chunks.map((chunk, idx) => {
+      const title = idx === 0 ? (inferTitle(normalized) || 'プレビュー本文') : `プレビュー ${idx + 1}`;
+      const p = createPage(title);
+      p.flowText = chunk;
+      p.blocks = [];
+      return p;
+    });
+    if (!state.pages.length) state.pages = [createPage('プレビュー本文')];
+    state.currentPageIndex = 0;
+    state.selectedId = null;
+  }
+
+  function splitFlowTextIntoPages(text) {
+    if (!text) return [''];
+    const maxChars = 1650;
+    const paragraphs = text.split(/\n{2,}/);
+    const pages = [];
+    let buf = '';
+    for (const para of paragraphs) {
+      const candidate = buf ? `${buf}\n\n${para}` : para;
+      if (candidate.length > maxChars && buf) {
+        pages.push(buf.trim());
+        buf = para;
+      } else {
+        buf = candidate;
+      }
+      while (buf.length > maxChars * 1.35) {
+        let cut = Math.max(buf.lastIndexOf('。', maxChars), buf.lastIndexOf('\n', maxChars));
+        if (cut < 300) cut = maxChars;
+        pages.push(buf.slice(0, cut + 1).trim());
+        buf = buf.slice(cut + 1).trim();
+      }
+    }
+    if (buf.trim()) pages.push(buf.trim());
+    return pages;
+  }
+
+  function blockizeCurrentPage() {
+    const p = currentPage();
+    const source = p.flowText || els.sourceText.value || '';
+    if (!source.trim()) return;
+    const originalPages = state.pages;
+    const oldIndex = state.currentPageIndex;
+    parseIntoPages(source);
+    // parseIntoPages is used here only for explicit edit-mode blockization.
+    state.pages.forEach((page, idx) => { page.title = idx === 0 ? `${p.title || '本文'} ブロック` : `ブロック ${idx + 1}`; page.flowText = ''; });
+    state.currentPageIndex = 0;
+    state.selectedId = state.pages[0]?.blocks[0]?.id || null;
+  }
+
+  function formatFlowText(text) {
+    return escapeHtml(text)
+      .replace(/^#\s+(.+)$/gm, '<div class="flow-heading1">$1</div>')
+      .replace(/^##\s+(.+)$/gm, '<div class="flow-heading2">$1</div>')
+      .replace(/^(▼\s*KP\s*情報|\[KP\]|KP情報)(.*)$/gm, '<div class="flow-kp">$2')
+      .replace(/\n\n/g, '<br><br>')
+      .replace(/\n/g, '<br>');
+  }
+
   function parseIntoPages(src) {
     const tokens = tokenize(src);
     const pages = [createPage(inferTitle(src) || 'シナリオ本文')];
     let pageIndex = 0;
     let col = 0;
     let y = 0;
-    const topOffsetFirst = 104;
+    const topOffsetFirst = 0;
 
     function pageObj() { return pages[pageIndex]; }
     function newPage() { pages.push(createPage(`本文 ${pages.length + 1}`)); pageIndex++; col = 0; y = 0; }
@@ -194,8 +260,7 @@
       });
     }
 
-    // First-page only editable header. No automatic header on later pages.
-    pages[0].blocks.push(createBlock('header', 'イザナミの棺\n— 黄泉を彷徨う者たちへ —', 0, 0, LAYOUT.mainW, 86));
+    // No automatic header on preview/blockize. Add a header manually from ブロック追加 when needed.
 
     tokens.forEach((token) => {
       if (token.type === 'keeper') {
@@ -271,6 +336,7 @@
   }
 
   function applyTemplateToCurrentPage() {
+    currentPage().flowText = '';
     currentPage().blocks = [
       createBlock('header', 'イザナミの棺\n— 黄泉を彷徨う者たちへ —', 0, 0, LAYOUT.mainW, 86),
       createBlock('sceneTitle', '01　血の香り', 0, 104, LAYOUT.colW, 48),
@@ -322,7 +388,9 @@
     els.pagesContainer.innerHTML = '';
     state.pages.forEach((p, pageIndex) => {
       const canvas = document.createElement('section'); canvas.className = 'page-canvas'; canvas.dataset.pageIndex = String(pageIndex);
-      canvas.innerHTML = `<div class="main-area"><div class="block-layer"></div></div><aside class="memo-area"><h3>KPメモ</h3><div class="memo-layer"></div></aside><div class="page-number">${pageIndex + 1}</div>`;
+      canvas.innerHTML = `<div class="main-area"><div class="flow-text"></div><div class="block-layer"></div></div><aside class="memo-area"><h3>KPメモ</h3><div class="memo-layer"></div></aside><div class="page-number">${pageIndex + 1}</div>`;
+      const flowText = canvas.querySelector('.flow-text');
+      if (p.flowText) flowText.innerHTML = formatFlowText(p.flowText);
       const blockLayer = canvas.querySelector('.block-layer');
       const memoLayer = canvas.querySelector('.memo-layer');
       p.blocks.forEach((block) => {
@@ -500,7 +568,7 @@
   function closePanels() { closeHelp(); closeShortcut(); }
   function persist() { localStorage.setItem(STORAGE_KEY, snapshot()); }
   function restore() { try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) hydrate(raw); else { state.pages = [createPage('シナリオ本文')]; applyTemplateToCurrentPage(); } } catch (e) { state.pages = [createPage('シナリオ本文')]; applyTemplateToCurrentPage(); } render(false); }
-  function saveProject() { download('scenario-dtp-project-v1.3.json', JSON.stringify({ pages: state.pages, currentPageIndex: state.currentPageIndex, selectedId: state.selectedId, zoom: state.zoom, assets: state.assets, sourceLoaded: state.sourceLoaded }, null, 2)); }
+  function saveProject() { download('scenario-dtp-project-v1.4.json', JSON.stringify({ pages: state.pages, currentPageIndex: state.currentPageIndex, selectedId: state.selectedId, zoom: state.zoom, assets: state.assets, sourceLoaded: state.sourceLoaded }, null, 2)); }
   function download(filename, content, type = 'application/json') { const blob = new Blob([content], { type }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href); }
   async function exportPng() { if (!window.html2canvas) { alert('PNG出力ライブラリの読み込みに失敗しました。'); return; } const oldZoom = state.zoom; state.zoom = 1; render(); await new Promise((r) => setTimeout(r, 80)); const target = document.querySelector(`.page-canvas[data-page-index="${state.currentPageIndex}"]`); const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }); canvas.toBlob((blob) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `scenario-dtp-page-${state.currentPageIndex + 1}.png`; a.click(); URL.revokeObjectURL(a.href); state.zoom = oldZoom; render(); }); }
   function fileToDataUrl(file) { return new Promise((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(fr.result); fr.onerror = reject; fr.readAsDataURL(file); }); }

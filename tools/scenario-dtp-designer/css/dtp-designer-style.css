@@ -1,5 +1,5 @@
 /* =========================================================
-   シナリオDTPデザイナー v1.3
+   シナリオDTPデザイナー v1.4
    Static HTML prototype / A4 portrait DTP editor
    ========================================================= */
 :root {
@@ -271,7 +271,7 @@ kbd { background: #eef2f7; border: 1px solid #cfd8e6; border-radius: 4px; paddin
 
 
 /* =========================================================
-   v1.3 adjustments
+   v1.4 adjustments
    ========================================================= */
 .source-card {
   height: calc(100% - 20px);
@@ -354,3 +354,90 @@ kbd { background: #eef2f7; border: 1px solid #cfd8e6; border-radius: 4px; paddin
 @media (max-height: 820px) {
   #textEdit { min-height: 240px; max-height: 38vh; }
 }
+
+
+/* =========================================================
+   v1.4 preview-flow / source-panel refinements
+   ========================================================= */
+:root { --zoom: .74; }
+.source-panel {
+  padding: 0;
+  background: var(--panel);
+}
+.source-card {
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  border-top: 0;
+  border-left: 0;
+  border-bottom: 0;
+  box-shadow: none;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 6px;
+}
+.source-card.source-loaded { grid-template-rows: auto minmax(0, 1fr) auto; }
+.source-card .panel-title { padding: 0 2px; }
+.source-text {
+  min-height: 0;
+  height: 100%;
+  border-radius: 8px;
+  resize: none;
+  overflow: auto;
+}
+.source-actions {
+  margin: 0 -10px -10px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.source-actions button {
+  min-height: 30px;
+  height: 30px;
+  padding: 3px 8px;
+}
+.txt-drop-zone.is-hidden { display: none !important; }
+.workspace {
+  min-width: 780px;
+  min-height: 920px;
+  padding: 10px 28px 50px;
+}
+.pages-container { gap: 14px; }
+.ruler-row { grid-template-columns: 20px 1fr; }
+.canvas-wrap { grid-template-columns: 20px 1fr; }
+.ruler { font-size: 9px; }
+.ruler.horizontal { background: repeating-linear-gradient(90deg, transparent 0 12px, rgba(0,0,0,.08) 12px 13px); }
+.ruler.vertical { background: repeating-linear-gradient(0deg, #edf1f7 0 12px, #d6dee9 12px 13px); }
+.main-area::before {
+  left: calc((100% - 18px) / 2);
+  background: rgba(31, 41, 55, .16);
+  z-index: 0;
+}
+.flow-text {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  column-count: 2;
+  column-gap: 18px;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+  font-size: 11.5px;
+  line-height: 1.78;
+  white-space: pre-wrap;
+  overflow: hidden;
+  color: #111827;
+  padding: 0;
+}
+.flow-text h1,
+.flow-text h2,
+.flow-text h3 { break-after: avoid; margin: 0 0 8px; font-weight: 500; }
+.flow-text .flow-heading1 { font-size: 18px; border-bottom: 1px solid #8e1b24; padding-bottom: 5px; margin-bottom: 10px; column-span: all; }
+.flow-text .flow-heading2 { font-size: 15px; margin: 12px 0 6px; color: #111827; }
+.flow-text .flow-kp { border-top: 1px solid #cfd6e1; border-bottom: 1px solid #cfd6e1; padding: 5px 0; margin: 8px 0; }
+.flow-text .flow-kp::before { content: "KP情報"; display: inline-block; background: #111; color: #fff; padding: 2px 8px; margin-right: 8px; font-size: 10px; }
+.blockize-btn { text-align: left; display: flex; align-items: center; gap: 8px; }
+.blockize-btn span { min-width: 20px; height: 20px; display: inline-grid; place-items: center; border-radius: 5px; background: #eef2ff; color: #17315f; font-size: 11px; }
+.dtp-block { z-index: 3; }
+.memo-card { z-index: 3; }
