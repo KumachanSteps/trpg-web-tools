@@ -29,19 +29,39 @@ const INITIAL_7E = {
 const CATEGORY_6E = {
   dice: ["正気度ロール", "SAN", "アイデア", "幸運", "知識"],
   explore: ["目星", "聞き耳", "図書館"],
-  combat: ["回避", "こぶし", "キック", "組み付き", "頭突き", "投擲", "マーシャルアーツ", "日本刀", "日本刀：太刀", "日本刀：短刀", "メイス", "ノコギリナタ", "ナタ", "拳銃", "サブマシンガン", "ショットガン", "マシンガン", "ライフル"],
-  action: ["応急手当", "鍵開け", "隠す", "隠れる", "忍び歩き", "写真術", "精神分析", "追跡", "登攀", "運転", "機械修理", "重機械操作", "乗馬", "水泳", "製作", "操縦", "跳躍", "電気修理", "ナビゲート", "変装"],
+  combat: [
+    "回避", "こぶし", "キック", "組み付き", "頭突き", "投擲", "マーシャルアーツ",
+    "日本刀", "日本刀：太刀", "日本刀：短刀", "メイス", "ノコギリナタ", "ナタ",
+    "拳銃", "サブマシンガン", "ショットガン", "マシンガン", "ライフル"
+  ],
+  action: [
+    "応急手当", "鍵開け", "隠す", "隠れる", "忍び歩き", "写真術", "精神分析", "追跡", "登攀",
+    "運転", "機械修理", "重機械操作", "乗馬", "水泳", "製作", "操縦", "跳躍", "電気修理",
+    "ナビゲート", "変装"
+  ],
   social: ["言いくるめ", "信用", "説得", "値切り", "語"],
-  knowledge: ["医学", "オカルト", "化学", "芸術", "経理", "考古学", "コンピューター", "心理学", "人類学", "生物学", "地質学", "電子工学", "天文学", "博物学", "物理学", "法律", "薬学", "歴史", "クトゥルフ神話技能"]
+  knowledge: [
+    "医学", "オカルト", "化学", "芸術", "経理", "考古学", "コンピューター", "心理学",
+    "人類学", "生物学", "地質学", "電子工学", "天文学", "博物学", "物理学", "法律",
+    "薬学", "歴史", "クトゥルフ神話技能"
+  ]
 };
 
 const CATEGORY_7E = {
   dice: ["正気度ロール", "SAN", "アイデア", "幸運", "知識"],
   explore: ["目星", "聞き耳", "図書館"],
   combat: ["回避", "近接戦闘", "日本刀", "メイス", "ノコギリナタ", "ナタ", "投擲", "射撃", "砲"],
-  action: ["応急手当", "鍵開け", "手さばき", "隠密", "精神分析", "追跡", "登攀", "鑑定", "運転", "機械修理", "重機械操作", "乗馬", "水泳", "製作", "操縦", "跳躍", "電気修理", "ナビゲート", "変装", "ダイビング"],
+  action: [
+    "応急手当", "鍵開け", "手さばき", "隠密", "精神分析", "追跡", "登攀", "鑑定", "運転",
+    "機械修理", "重機械操作", "乗馬", "水泳", "製作", "操縦", "跳躍", "電気修理",
+    "ナビゲート", "変装", "ダイビング"
+  ],
   social: ["言いくるめ", "説得", "威圧", "魅惑", "信用", "語"],
-  knowledge: ["言語", "医学", "オカルト", "芸術", "経理", "考古学", "コンピューター", "科学", "心理学", "人類学", "電子工学", "自然", "法律", "歴史", "サバイバル", "伝承", "クトゥルフ神話技能"]
+  knowledge: [
+    "言語", "医学", "オカルト", "芸術", "経理", "考古学", "コンピューター", "科学",
+    "心理学", "人類学", "電子工学", "自然", "法律", "歴史", "サバイバル", "伝承",
+    "クトゥルフ神話技能"
+  ]
 };
 
 const SECTION_LABELS = {
@@ -82,7 +102,9 @@ const MELEE_ALIAS_7E = {
   "刀剣": "近接戦闘：刀剣",
   "剣": "近接戦闘：刀剣",
   "刀": "近接戦闘：刀剣",
-  "日本刀": "近接戦闘：刀剣", "日本刀：太刀": "近接戦闘：刀剣", "日本刀：短刀": "近接戦闘：刀剣",
+  "日本刀": "近接戦闘：刀剣",
+  "日本刀：太刀": "近接戦闘：刀剣",
+  "日本刀：短刀": "近接戦闘：刀剣",
   "木刀": "近接戦闘：刀剣",
   "竹刀": "近接戦闘：刀剣",
   "サーベル": "近接戦闘：刀剣",
@@ -114,6 +136,7 @@ window.ChatPaletteParser = (() => {
 
     function search(value) {
       if (!value || typeof value !== "object" || visited.has(value)) return "";
+
       visited.add(value);
 
       for (const key of keys) {
@@ -228,15 +251,9 @@ window.ChatPaletteParser = (() => {
       const base = parts[0].trim();
       const sub = parts.slice(1).join("：").trim();
 
-      if (base === "近接戦闘" && MELEE_ALIAS_7E[sub]) {
-        return MELEE_ALIAS_7E[sub];
-      }
-      if (MELEE_ALIAS_7E[skill]) {
-        return MELEE_ALIAS_7E[skill];
-      }
-      if (MELEE_ALIAS_7E[base]) {
-        return MELEE_ALIAS_7E[base];
-      }
+      if (base === "近接戦闘" && MELEE_ALIAS_7E[sub]) return MELEE_ALIAS_7E[sub];
+      if (MELEE_ALIAS_7E[skill]) return MELEE_ALIAS_7E[skill];
+      if (MELEE_ALIAS_7E[base]) return MELEE_ALIAS_7E[base];
     }
 
     return skill;
@@ -526,6 +543,73 @@ window.ChatPaletteParser = (() => {
     );
   }
 
+  function getAbilityBaseValueFromLine(line, statName) {
+    const upper = String(line || "").toUpperCase();
+    const directPattern = new RegExp("^" + statName + "[：:]\\s*([0-9]{1,3})");
+    const directMatch = upper.match(directPattern);
+
+    if (directMatch) {
+      return Number(directMatch[1]);
+    }
+
+    const skill = normalizeSkillName(getSkillFromLine(line));
+    const normalizedSkill = String(skill || "").replaceAll(" ", "").toUpperCase();
+
+    if (
+      normalizedSkill === statName ||
+      normalizedSkill === statName + "×5" ||
+      normalizedSkill === statName + "X5" ||
+      normalizedSkill === statName + "*5"
+    ) {
+      const value = getValueFromLine(line);
+
+      if (/^[0-9]{1,3}$/.test(value)) {
+        return Number(value);
+      }
+    }
+
+    return null;
+  }
+
+  function getEduRollValue(text, edition, capturedEduValue) {
+    let eduValue = Number.isFinite(capturedEduValue) ? capturedEduValue : null;
+
+    if (eduValue === null) {
+      const lines = String(text || "").split(NL).map(line => line.trim()).filter(Boolean);
+
+      for (const line of lines) {
+        const value = getAbilityBaseValueFromLine(line, "EDU");
+
+        if (Number.isFinite(value)) {
+          eduValue = value;
+          break;
+        }
+      }
+    }
+
+    if (Number.isFinite(eduValue)) {
+      return eduValue <= 30 ? String(eduValue * 5) : String(eduValue);
+    }
+
+    return edition === "6e" ? "{EDU}*5" : "{EDU}";
+  }
+
+  function hasMotherTongueLine(buckets, present) {
+    if ([...present.keys()].some(skill => normalizeSkillName(skill).startsWith("母国語"))) return true;
+
+    return buckets.social.some(line => {
+      const skill = normalizeSkillName(getSkillFromLine(line));
+      return skill.startsWith("母国語");
+    });
+  }
+
+  function injectMotherTongueLine(buckets, present, edition, text, capturedEduValue, seen) {
+    if (hasMotherTongueLine(buckets, present)) return;
+
+    const eduRollValue = getEduRollValue(text, edition, capturedEduValue);
+    addUnique(buckets.social, lineForSkill(edition, eduRollValue, "母国語：(要編集)"), seen);
+  }
+
   function buildInitialLines(present, edition) {
     const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
     const skip = new Set(["目星", "聞き耳", "図書館", "回避", "幸運", "正気度ロール", "SAN", "アイデア", "知識"]);
@@ -621,6 +705,7 @@ window.ChatPaletteParser = (() => {
 
     const present = new Map();
     const seen = new Set();
+    let capturedEduValue = null;
     const lines = text.split(NL).map(line => line.trim()).filter(Boolean);
 
     for (const line of lines) {
@@ -637,6 +722,12 @@ window.ChatPaletteParser = (() => {
       } else if (parsed.type === "damage") {
         addUnique(buckets.damage, parsed.line, seen);
       } else if (parsed.type === "status") {
+        const eduValue = getAbilityBaseValueFromLine(parsed.line, "EDU");
+
+        if (Number.isFinite(eduValue)) {
+          capturedEduValue = eduValue;
+        }
+
         addUnique(buckets.status, normalizeAbilityRoll(parsed.line, edition), seen);
       } else {
         addUnique(buckets.other, parsed.line, seen);
@@ -648,6 +739,7 @@ window.ChatPaletteParser = (() => {
     removePlainCombatWhenSpecializedExists6e(buckets, edition);
 
     injectCoreLines(buckets, present, edition, seen);
+    injectMotherTongueLine(buckets, present, edition, text, capturedEduValue, seen);
 
     cleanDiceRedundancy(buckets, edition);
     removePlainMeleeWhenSpecializedExists(buckets, edition);
@@ -697,6 +789,16 @@ window.ChatPaletteParser = (() => {
         name: "6e specialized fist drops plain fist",
         actual: buildOutput("CCB<=50 【こぶし】" + NL + "CCB<=50 【こぶし：パンチ】", "6e").includes("CCB<=50 【こぶし】"),
         expected: false
+      },
+      {
+        name: "6e adds mother tongue from EDU base value",
+        actual: buildOutput("EDU:17" + NL + "CCB<=50 【こぶし】", "6e").includes("CCB<=85 【母国語：(要編集)】"),
+        expected: true
+      },
+      {
+        name: "mother tongue is not duplicated when already present",
+        actual: (buildOutput("EDU:17" + NL + "CCB<=85 【母国語：日本語】", "6e").match(/母国語/g) || []).length,
+        expected: 1
       },
       {
         name: "7e SAN command normalizes from 1d100 to CC",
