@@ -11,6 +11,8 @@ const state = {
 
 const EXCLUDED_TABS = ["雑談", "other", "info", "お祓い", "おはらい", "運試し"];
 const MYTH_SKILL_PATTERN = /クトゥルフ\s*神話(?:技能)?|cthulhu\s*mythos/i;
+const SAN_SKILL_PATTERN = /^(?:正気度ロール|正気度|正気度チェック|SAN|SANC|SANチェック|SAN値チェック)$/i;
+const SAN_TEXT_PATTERN = /(?:正気度ロール|正気度チェック|正気度|SAN値チェック|SANチェック|\bSANC\b|\bSAN\b)/i;
 const LUCK_SKILL_PATTERN = /^(?:幸運|〈幸運〉|《幸運》|LUCK)$/i;
 const PARAM_SKILL_PATTERN = /^(?:アイデア|知識|STR|CON|POW|DEX|APP|SIZ|INT|EDU)(?:[×xX*]\d+)?$/i;
 const DICE_COMMAND_PATTERN = /(?:S?CCB\d*|S?CC\d*|S?CBR\d*|S?RESB|RESB|CBR\d*|1D100|D100|S1D100|SD100|D%|D％)/i;
@@ -66,8 +68,8 @@ function updateDynamicTexts(){
   if (!guide) return;
   const rule = getSelectedRuleLabel();
   guide.textContent = state.hasAnalyzed
-    ? t("message.after", "現在は「{rule}」の設定でログを解析、成長判定が可能な技能を出力しました。\n\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。", { rule })
-    : t("message.before", "現在は「{rule}」の設定でログを解析、成長判定が可能な技能をリストします。\n\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。", { rule });
+    ? t("message.after", "現在は「{rule}」の設定でログを解析、成長判定が可能な技能を出力しました。\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。", { rule })
+    : t("message.before", "現在は「{rule}」の設定でログを解析、成長判定が可能な技能をリストします。\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。", { rule });
 }
 
 function prepareText(raw){
@@ -141,6 +143,7 @@ function parseRolls(raw){
         line: normalizeOutputLine(line),
         lineNo: index + 1,
         isMyth: MYTH_SKILL_PATTERN.test(skill),
+        isSan: isSanSkill(skill, line),
         isLuck: LUCK_SKILL_PATTERN.test(skill),
         isParam: isParamSkill(skill),
       });
@@ -234,6 +237,19 @@ function classifyRoll(value, target, line){
   return "normal";
 }
 
+function isSanSkill(skill, line){
+  const normalizedSkill = String(skill || "")
+    .replace(/[【】〈〉《》\[\]]/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+
+  const normalizedLine = String(line || "")
+    .replace(/\s+/g, "")
+    .trim();
+
+  return SAN_SKILL_PATTERN.test(normalizedSkill) || SAN_TEXT_PATTERN.test(normalizedLine);
+}
+
 function isParamSkill(skill){
   const normalized = String(skill || "").toUpperCase().replace(/\s+/g, "").trim();
   if (/^(アイデア|知識)$/.test(skill)) return true;
@@ -242,7 +258,7 @@ function isParamSkill(skill){
 }
 
 function isEligibleForGrowth(roll, mode, successSeen, includeParamRolls){
-  if (!roll || roll.isMyth) return null;
+  if (!roll || roll.isMyth || roll.isSan) return null;
 
   if (roll.isLuck) {
     return roll.classification === "critical" && roll.value === 1
