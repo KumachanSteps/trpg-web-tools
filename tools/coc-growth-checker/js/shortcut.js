@@ -25,6 +25,14 @@ function toggleShortcutDrawer(){
 function enterScreenshotMode(){ document.body.classList.add("screenshot-mode"); }
 function exitScreenshotMode(){ document.body.classList.remove("screenshot-mode"); }
 
+function setRuleMode(mode){
+  const input = document.querySelector(`input[name="ruleMode"][value="${mode}"]`);
+  if (!input) return;
+  input.checked = true;
+  input.dispatchEvent(new Event("change", { bubbles:true }));
+  if (typeof renderSummaryText === "function") renderSummaryText();
+}
+
 function isTypingInEditableField(){
   const active = document.activeElement;
   if (!active) return false;
@@ -36,7 +44,6 @@ function handleGlobalKeydown(event){
   const key = String(event.key || "").toLowerCase();
   const isCommand = event.ctrlKey || event.metaKey;
   const isCommandShift = isCommand && event.shiftKey;
-  const isAltOnly = event.altKey && !event.ctrlKey && !event.metaKey;
 
   if (event.key === "Escape") {
     if (document.getElementById("shortcutDrawer")?.classList.contains("open")) {
@@ -51,45 +58,58 @@ function handleGlobalKeydown(event){
     }
   }
 
-  if (event.key === "?" && !isCommand && !event.altKey && !isTypingInEditableField()) {
-    event.preventDefault();
-    openShortcutDrawer();
-    return;
-  }
-
-  if ((isAltOnly || isCommandShift) && key === "o") {
+  if (isCommandShift && key === "o") {
     event.preventDefault();
     document.getElementById("fileInput")?.click();
     return;
   }
 
-  if (isCommand && event.key === "Enter") {
-    event.preventDefault();
-    analyze?.();
-    return;
-  }
-
-  if (isCommand && !event.shiftKey && key === "l") {
-    event.preventDefault();
-    document.getElementById("rawInput")?.focus();
-    return;
-  }
-
   if (isCommandShift && key === "i") {
     event.preventDefault();
-    toggleInputPanel?.();
+    if (typeof toggleInputPanel === "function") toggleInputPanel();
     return;
   }
 
-  if ((isAltOnly || isCommandShift) && key === "t") {
+  if (isCommandShift && key === "s") {
     event.preventDefault();
-    toggleTheme?.();
+    toggleShortcutDrawer();
     return;
   }
 
-  if ((isAltOnly || isCommandShift) && (key === "s" || key === "v")) {
+  if (isCommandShift && key === "t") {
+    event.preventDefault();
+    if (typeof toggleTheme === "function") toggleTheme();
+    return;
+  }
+
+  if (isCommandShift && key === "v") {
     event.preventDefault();
     document.body.classList.contains("screenshot-mode") ? exitScreenshotMode() : enterScreenshotMode();
+    return;
+  }
+
+  if (isCommandShift && key === "c") {
+    event.preventDefault();
+    if (typeof copySummary === "function") copySummary();
+    return;
+  }
+
+  if (isCommand && !event.shiftKey && event.key === "Backspace") {
+    event.preventDefault();
+    const confirmed = window.confirm(typeof t === "function" ? t("confirm.clear") : "入力内容と抽出結果をクリアします。よろしいですか？");
+    if (confirmed && typeof clearAll === "function") clearAll();
+    return;
+  }
+
+  if (isCommand && !event.shiftKey && ["1", "2", "3", "4"].includes(key) && !isTypingInEditableField()) {
+    event.preventDefault();
+    const modes = {
+      "1": "rulebook",
+      "2": "critFumble",
+      "3": "both",
+      "4": "bothPrime"
+    };
+    setRuleMode(modes[key]);
   }
 }
 

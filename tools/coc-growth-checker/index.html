@@ -13,7 +13,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
-  <title>CoC 6版 / 7版 成長チェッカーv2.1｜TRPG WEBツール観測所</title>
+  <title>CoC 6版 / 7版 成長チェッカーv2.5｜TRPG WEBツール観測所</title>
   <link rel="stylesheet" href="./css/growth_checker_style.css" />
 </head>
 
@@ -44,25 +44,6 @@
         </div>
       </div>
 
-      <div id="shortcutDrawer" class="shortcut-drawer" aria-hidden="true">
-        <div class="shortcut-drawer-inner">
-          <div class="shortcut-drawer-title">
-            <span data-i18n="shortcut.title">ショートカット一覧</span>
-            <button id="shortcutDrawerCloseBtn" class="shortcut-drawer-close" type="button" aria-label="ショートカットを閉じる">×</button>
-          </div>
-          <div class="shortcut-list">
-            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>O</kbd></div><div class="shortcut-desc" data-i18n="shortcut.file">ファイル選択</div></div>
-            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Enter</kbd></div><div class="shortcut-desc" data-i18n="shortcut.analyze">成長候補を抽出</div></div>
-            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>L</kbd></div><div class="shortcut-desc" data-i18n="shortcut.focusInput">入力欄にフォーカス</div></div>
-            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleInput">入力パネル開閉</div></div>
-            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>T</kbd></div><div class="shortcut-desc" data-i18n="shortcut.theme">ナイトモード切替</div></div>
-            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>V</kbd></div><div class="shortcut-desc" data-i18n="shortcut.screenshot">スクショ表示 / 通常表示</div></div>
-            <div class="shortcut-item"><div class="shortcut-keys"><kbd>?</kbd></div><div class="shortcut-desc" data-i18n="shortcut.openHelp">ショートカット一覧を開く</div></div>
-            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Esc</kbd></div><div class="shortcut-desc" data-i18n="shortcut.esc">ドロワー / スクショ表示を閉じる</div></div>
-          </div>
-        </div>
-      </div>
-
       <div class="header-main-row">
         <div class="header-title-area">
           <div class="title-row">
@@ -78,15 +59,38 @@
               <span class="tool-icon-star">✦</span>
               <span class="tool-icon-growth-check">✓</span>
             </div>
-            <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカーv2.1</h1>
+            <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカーv2.5</h1>
           </div>
           <p class="site-description" data-i18n="app.description">セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。</p>
           <p class="shortcut-tip" data-i18n-html="app.tip">Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で抽出 ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> でスクショ表示 ｜ <kbd>?</kbd> でショートカット一覧</p>
         </div>
-        <div class="version-stamp">v2.1 2026/06/04</div>
+        <div class="version-stamp">v2.5 2026/06/05</div>
       </div>
     </div>
   </header>
+
+  <div id="shortcutDrawer" class="shortcut-drawer" aria-hidden="true">
+        <div class="shortcut-drawer-inner">
+          <div class="shortcut-drawer-title">
+            <span data-i18n="shortcut.title">ショートカット一覧</span>
+            <button id="shortcutDrawerCloseBtn" class="shortcut-drawer-close" type="button" aria-label="ショートカットを閉じる">×</button>
+          </div>
+          <div class="shortcut-list">
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>O</kbd></div><div class="shortcut-desc" data-i18n="shortcut.file">ファイル選択</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleInput">入力パネルの開閉</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>S</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleShortcuts">ショートカットパネルの開閉</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>T</kbd></div><div class="shortcut-desc" data-i18n="shortcut.theme">ナイトモード切り替え</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>V</kbd></div><div class="shortcut-desc" data-i18n="shortcut.screenshot">スクショ表示切り替え</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>C</kbd></div><div class="shortcut-desc" data-i18n="shortcut.copy">出力結果のコピー</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Backspace</kbd></div><div class="shortcut-desc" data-i18n="shortcut.clear">確認後クリア</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd></div><div class="shortcut-desc" data-i18n="shortcut.rulebook">「基本ルルブ準拠」に設定</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd></div><div class="shortcut-desc" data-i18n="shortcut.critFumble">「クリファン+初期値」に設定</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>3</kbd></div><div class="shortcut-desc" data-i18n="shortcut.both">「クリファン+成功技能」に設定</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>4</kbd></div><div class="shortcut-desc" data-i18n="shortcut.bothPrime">「クリティカル+成功技能」に設定</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Esc</kbd></div><div class="shortcut-desc" data-i18n="shortcut.esc">ドロワー / スクショ表示を閉じる</div></div>
+          </div>
+        </div>
+      </div>
 
   <div id="screenshotActionBar" class="screenshot-action-bar">
     <button id="screenshotExitBtn" class="screenshot-exit-button" type="button" data-i18n="button.exitScreenshot">通常表示に戻す</button>
@@ -136,7 +140,12 @@
           <button id="clearBtn" class="secondary" data-i18n="button.clear">クリア</button>
         </div>
 
-        <p class="note input-help" data-i18n="input.note">対応例：CCB<=80 【目星】、CC<=60 【図書館】、RESB(10-16)、1d100<=55 など。キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。</p>
+        <p class="note input-help" data-i18n="input.note">対応例：CCB&lt;=80 【目星】、CC&lt;=60 【図書館】、CBRB(80,60)、1d100&lt;=55 など。
+          キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。
+          また、雑談やおはらいなどのタブでのロールは検出範囲から除外しております。
+
+          デフォルト設定では知識、アイデア、能力値ロールは検出しません。
+          幸運は1クリティカルの場合のみ、POW成長判定として検出します。</p>
       </div>
     </section>
 

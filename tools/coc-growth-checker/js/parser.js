@@ -262,7 +262,7 @@ function isEligibleForGrowth(roll, mode, successSeen, includeParamRolls){
 
   if (roll.isLuck) {
     return roll.classification === "critical" && roll.value === 1
-      ? { ...roll, reason:"critical" }
+      ? { ...roll, skill:"POW成長判定", reason:"critical" }
       : null;
   }
 
