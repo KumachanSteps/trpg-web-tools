@@ -75,3 +75,8 @@
   overflow:visible;
   padding-right:0;
 }
+
+/* Simple icon placeholder tuning */
+.pc-icon{
+  background:#eef2f7;
+}

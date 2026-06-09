@@ -91,7 +91,7 @@
   function renderCardContent(pc) {
     return `
       <header class="pc-card-header">
-        <img class="pc-icon" src="${escapeAttr(pc.iconUrl || "https://placehold.co/300x300/e5e7eb/6b7280?text=%E7%94%BB%E5%83%8F%E3%81%AA%E3%81%97")}" alt="${escapeAttr(pc.name)}" />
+        <img class="pc-icon" src="${escapeAttr(pc.iconUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' rx='42' fill='%23eef2f7'/%3E%3Crect x='48' y='48' width='204' height='204' rx='28' fill='none' stroke='%2394a3b8' stroke-width='12'/%3E%3Ctext x='150' y='181' text-anchor='middle' font-family='system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif' font-size='132' font-weight='800' fill='%236b7280'%3E%3F%3C/text%3E%3C/svg%3E")}" alt="${escapeAttr(pc.name)}" />
         <div class="pc-name-block"><h3 class="pc-name">${escapeHtml(pc.name)}</h3><div class="pc-meta-row">${editionBadge(pc)}${sheetLink(pc)}</div></div>
         <span class="drag-handle" title="ドラッグして並び替え">⋮⋮</span>
       </header>
