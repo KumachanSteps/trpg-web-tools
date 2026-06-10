@@ -1,5 +1,5 @@
 /* =========================================================
-   いあキャラMEMOジェネレータ v1.97
+   いあキャラMEMOジェネレータ v1.01
    ========================================================= */
 
 :root {
@@ -1262,7 +1262,7 @@ body.theme-light .toast.is-error,
 
 
 /* =========================================================
-   v1.97 Final Layout / Header Width Alignment Override
+   v1.01 Final Layout / Header Width Alignment Override
    ========================================================= */
 :root {
   --column-fixed-width: 390px;
@@ -1350,5 +1350,36 @@ body.theme-light .param-chip,
     width: var(--column-fixed-width) !important;
     min-width: var(--column-fixed-width) !important;
     max-width: var(--column-fixed-width) !important;
+  }
+}
+
+
+/* =========================================================
+   Header Version Stamp v1.01
+   ========================================================= */
+.site-header::after {
+  content: "v1.01 2026/06/10";
+  position: absolute;
+  right: 24px;
+  bottom: 14px;
+  color: rgba(226, 232, 240, 0.42);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  user-select: none;
+}
+
+body.theme-light .site-header::after,
+.theme-light .site-header::after,
+.page-shell.theme-light .site-header::after {
+  color: rgba(51, 65, 85, 0.34);
+}
+
+@media (max-width: 720px) {
+  .site-header::after {
+    right: 18px;
+    bottom: 10px;
+    font-size: 10px;
   }
 }
