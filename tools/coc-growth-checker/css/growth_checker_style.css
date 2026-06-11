@@ -370,16 +370,7 @@ body.dark .rule-option:hover{ background:rgba(255,255,255,.08); }
 .extra-rule-option input:checked + .extra-checkbox::after{ content:""; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid var(--success); border-width:0 2px 2px 0; transform:rotate(45deg); }
 .auto-hide-field input{ max-width:132px; }
 .note{ margin:0; color:var(--text-muted); font-size:12px; line-height:1.55; }
-.input-help{
-  flex:0 0 auto;
-  font-size:10.8px;
-  line-height:1.44;
-  max-height:none;
-  overflow:visible;
-  white-space:pre-line;
-  padding:2px 1px;
-}
-
+.input-help{ font-size:10.8px; line-height:1.44; max-height:112px; overflow:auto; white-space:pre-line; padding:2px 1px; }
 
 .output-panel{ display:flex; flex-direction:column; }
 .output-toolbar{ flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }

@@ -190,11 +190,14 @@ function extractSkillName(line){
 }
 
 function normalizeSkillName(skill){
-  return String(skill || "")
-    .replace(/[:：].*$/, "")
+  const normalized = String(skill || "")
     .replace(/[\[\]【】〈〉《》]/g, "")
+    .replace(/[：:]/g, "：")
+    .replace(/\s*：\s*/g, "：")
     .replace(/\s+/g, " ")
-    .trim() || "技能名不明";
+    .trim();
+
+  return normalized || "技能名不明";
 }
 
 function extractTargetNumber(line){
@@ -257,6 +260,65 @@ function isParamSkill(skill){
   return false;
 }
 
+function isInitialSuccess(roll){
+  return roll
+    && roll.classification === "success"
+    && Number.isFinite(Number(roll.target))
+    && Number(roll.target) <= 5;
+}
+
+function getGrowthSortRank(item){
+  const reason = String(item?.reason || "");
+
+  if (reason === "critical") return 0;
+  if (reason === "fumble") return 1;
+  if (reason === "initial") return 2;
+  return 3;
+}
+
+function sortGrowthCandidates(candidates){
+  return [...candidates].sort((a, b) => {
+    const characterCompare = String(a.character || "").localeCompare(String(b.character || ""), "ja");
+    if (characterCompare !== 0) return characterCompare;
+
+    const rankCompare = getGrowthSortRank(a) - getGrowthSortRank(b);
+    if (rankCompare !== 0) return rankCompare;
+
+    return (a.lineNo || 0) - (b.lineNo || 0);
+  });
+}
+
+function sortSkillsByPriority(items){
+  const firstBySkill = new Map();
+
+  items.forEach((item, index) => {
+    const skill = item.skill || "技能名不明";
+    const current = firstBySkill.get(skill);
+    const candidate = {
+      skill,
+      rank: getGrowthSortRank(item),
+      lineNo: item.lineNo || 0,
+      index
+    };
+
+    if (
+      !current
+      || candidate.rank < current.rank
+      || (candidate.rank === current.rank && candidate.lineNo < current.lineNo)
+    ) {
+      firstBySkill.set(skill, candidate);
+    }
+  });
+
+  return [...firstBySkill.values()]
+    .sort((a, b) => {
+      if (a.rank !== b.rank) return a.rank - b.rank;
+      if (a.lineNo !== b.lineNo) return a.lineNo - b.lineNo;
+      return a.index - b.index;
+    })
+    .map(item => item.skill);
+}
+
 function isEligibleForGrowth(roll, mode, successSeen, includeParamRolls){
   if (!roll || roll.isMyth || roll.isSan) return null;
 
@@ -291,12 +353,14 @@ function isEligibleForGrowth(roll, mode, successSeen, includeParamRolls){
   if (mode === "critFumble") {
     if (roll.classification === "critical") return { ...roll, reason:"critical" };
     if (roll.classification === "fumble") return { ...roll, reason:"fumble" };
+    if (isInitialSuccess(roll)) return { ...roll, reason:"initial" };
     return null;
   }
 
   if (mode === "both") {
     if (roll.classification === "critical") return { ...roll, reason:"critical" };
     if (roll.classification === "fumble") return { ...roll, reason:"fumble" };
+    if (isInitialSuccess(roll)) return { ...roll, reason:"initial" };
     if (roll.classification === "success" && !successSeen.has(successKey)) {
       successSeen.add(successKey);
       return { ...roll, reason:"success" };
@@ -306,6 +370,7 @@ function isEligibleForGrowth(roll, mode, successSeen, includeParamRolls){
 
   if (mode === "bothPrime") {
     if (roll.classification === "critical") return { ...roll, reason:"critical" };
+    if (isInitialSuccess(roll)) return { ...roll, reason:"initial" };
     if (roll.classification === "success" && !successSeen.has(successKey)) {
       successSeen.add(successKey);
       return { ...roll, reason:"success" };
@@ -323,7 +388,7 @@ function buildGrowthCandidates(rolls){
     const candidate = isEligibleForGrowth(roll, mode, successSeen, includeParamRolls);
     if (candidate) candidates.push(candidate);
   });
-  return candidates;
+  return sortGrowthCandidates(candidates);
 }
 
 function countByCharacter(rolls){
@@ -407,7 +472,7 @@ function renderSummaryText(){
 
   const lines = [`[セッション名：${session}][選択ルール：${rule}]`, ""];
   Object.entries(grouped).forEach(([character, items], groupIndex) => {
-    const skills = [...new Set(items.map(item => item.skill))];
+    const skills = sortSkillsByPriority(items);
     if (groupIndex > 0) lines.push("");
     lines.push(`【${character}】【成長判定候補：${skills.join("、")}】`);
     items.forEach(item => lines.push(item.line));
