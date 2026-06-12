@@ -5,39 +5,41 @@
     { label: '通常', value: '通常' },
     { label: '笑顔', value: '笑顔' },
     { label: '怒り', value: '怒り' },
-    { label: '泣き顔', value: '泣き顔' },
+    { label: '泣き', value: '泣き' },
     { label: '驚き', value: '驚き' },
-    { label: '困り顔', value: '困り顔' },
+    { label: '困惑', value: '困惑' },
     { label: '照れ', value: '照れ' },
     { label: '焦り', value: '焦り' },
-    { label: '微笑み', value: '微笑み' },
+    { label: '微笑', value: '微笑' },
     { label: '真剣', value: '真剣' },
-    { label: '悲しい', value: '悲しい' },
+    { label: '悲哀', value: '悲哀' },
     { label: '喜び', value: '喜び' },
     { label: '呆れ', value: '呆れ' },
-    { label: '眠い', value: '眠い' },
+    { label: '疑問', value: '疑問' },
+    { label: '媚び', value: '媚び' },
     { label: '不安', value: '不安' },
     { label: '目閉じ', value: '目閉じ' },
-    { label: '闇', value: '闇' },
-    { label: 'ダメージ', value: 'ダメージ' },
+    { label: 'ジト目', value: 'ジト目' },
+    { label: 'ウィンク', value: 'ウィンク' },
+    { label: '負傷', value: '負傷' },
     { label: '戦闘', value: '戦闘' },
-    { label: 'デフォルト', value: 'デフォルト' }
+    { label: '発狂', value: '発狂' },
+    { label: '絶望', value: '絶望' }
   ];
-
   const ROMAN_TO_JP = [
-    ['tsuujou', '通常'], ['normal', '通常'], ['default', 'デフォルト'],
+    ['tsuujou', '通常'], ['normal', '通常'], ['default', '通常'],
     ['egao', '笑顔'], ['smile', '笑顔'], ['ikari', '怒り'], ['angry', '怒り'],
-    ['nakigao', '泣き顔'], ['naki', '泣き顔'], ['cry', '泣き顔'],
-    ['bikkuri', '驚き'], ['surprise', '驚き'], ['komari', '困り顔'], ['tere', '照れ'],
-    ['ase', '焦り'], ['warai', '笑顔'], ['shinken', '真剣'], ['kanashii', '悲しい'],
-    ['yorokobi', '喜び'], ['akire', '呆れ'], ['nemui', '眠い'], ['fuan', '不安'],
-    ['hohoemi', '微笑み'], ['me_toji', '目閉じ'], ['yami', '闇'], ['damage', 'ダメージ'],
-    ['battle', '戦闘']
+    ['nakigao', '泣き'], ['naki', '泣き'], ['cry', '泣き'],
+    ['bikkuri', '驚き'], ['surprise', '驚き'], ['komari', '困惑'], ['komaku', '困惑'], ['tere', '照れ'],
+    ['ase', '焦り'], ['hohoemi', '微笑'], ['shinken', '真剣'], ['kanashimi', '悲哀'], ['hiai', '悲哀'],
+    ['yorokobi', '喜び'], ['akire', '呆れ'], ['gimon', '疑問'], ['question', '疑問'], ['kobi', '媚び'], ['fuan', '不安'], ['me_toji', '目閉じ'], ['metoji', '目閉じ'],
+    ['jitome', 'ジト目'], ['wink', 'ウィンク'], ['wink', 'ウィンク'], ['fusyou', '負傷'], ['fushou', '負傷'], ['damage', '負傷'],
+    ['sentou', '戦闘'], ['battle', '戦闘'], ['hakkyo', '発狂'], ['zekubou', '絶望'], ['zetsubou', '絶望']
   ];
-
   const state = {
     items: [],
     activeId: null,
+    draggingId: null,
   };
 
   const els = {
@@ -48,7 +50,6 @@
     fileCountPill: document.getElementById('fileCountPill'),
     suggestionChips: document.getElementById('suggestionChips'),
     suggestionList: document.getElementById('sabunSuggestions'),
-    autoFillBtn: document.getElementById('autoFillBtn'),
     thumbList: document.getElementById('thumbList'),
     largePreview: document.getElementById('largePreview'),
     previewImage: document.getElementById('previewImage'),
@@ -66,6 +67,8 @@
   };
 
   function init() {
+    els.numberToggle.checked = true;
+    els.thumbList.setAttribute('tabindex', '0');
     renderSuggestions();
     bindEvents();
     updateOutput();
@@ -93,7 +96,6 @@
     els.mainNameInput.addEventListener('input', refreshNames);
     els.numberToggle.addEventListener('change', refreshNames);
 
-    els.autoFillBtn.addEventListener('click', autoFillEmptyNames);
     els.exportZipBtn.addEventListener('click', exportZip);
     els.copyPaletteBtn.addEventListener('click', copyPalette);
     els.resetAllBtn.addEventListener('click', confirmAndClearAll);
@@ -110,7 +112,16 @@
       closeDrawers();
       return;
     }
-    if (!isMod) return;
+
+    if (!isEditable(event.target) && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+      if (state.items.length > 0) {
+        event.preventDefault();
+        selectItemByOffset(event.key === 'ArrowDown' ? 1 : -1);
+      }
+      return;
+    }
+
+    if (!isMod || !event.shiftKey) return;
 
     const key = event.key.toLowerCase();
     if (key === 'o') {
@@ -119,7 +130,7 @@
     } else if (key === 'e') {
       event.preventDefault();
       exportZip();
-    } else if (key === 'c' && !isEditable(event.target)) {
+    } else if (key === 'c') {
       event.preventDefault();
       copyPalette();
     } else if (key === 'n') {
@@ -192,7 +203,7 @@
         id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random()}_${index}`,
         file,
         objectUrl: URL.createObjectURL(file),
-        sabunName: inferSabunName(file.name, state.items.length + index),
+        sabunName: '',
       }));
 
     state.items.push(...newItems);
@@ -233,9 +244,9 @@
       const finalName = makeOutputFilename(item, index);
       const activeClass = item.id === state.activeId ? ' is-active' : '';
       return `
-        <div class="thumb-item${activeClass}" data-id="${item.id}">
-          <button type="button" class="thumb-button" aria-label="${escapeHtml(item.file.name)}をプレビュー">
-            <img src="${item.objectUrl}" alt="${escapeHtml(item.file.name)}" />
+        <div class="thumb-item${activeClass}" data-id="${item.id}" draggable="true" role="button" tabindex="-1" aria-label="${escapeHtml(item.file.name)}を選択">
+          <button type="button" class="thumb-button" tabindex="-1" aria-label="${escapeHtml(item.file.name)}をプレビュー">
+            <img src="${item.objectUrl}" alt="${escapeHtml(item.file.name)}" draggable="false" />
           </button>
           <div class="thumb-meta">
             <p class="source-name">${index + 1}. ${escapeHtml(item.file.name)}</p>
@@ -248,11 +259,60 @@
     }).join('');
 
     els.thumbList.querySelectorAll('.thumb-item').forEach((row) => {
-      row.querySelector('.thumb-button').addEventListener('click', () => {
+      row.addEventListener('click', (event) => {
+        if (event.target.closest('[data-name-input]')) return;
+        selectItemById(row.dataset.id);
+      });
+
+      row.addEventListener('dragstart', (event) => {
+        if (event.target.closest('[data-name-input]')) {
+          event.preventDefault();
+          return;
+        }
+        state.draggingId = row.dataset.id;
+        row.classList.add('is-dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', row.dataset.id);
+      });
+
+      row.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        if (state.draggingId && state.draggingId !== row.dataset.id) {
+          row.classList.add('is-drop-target');
+          event.dataTransfer.dropEffect = 'move';
+        }
+      });
+
+      row.addEventListener('dragleave', () => {
+        row.classList.remove('is-drop-target');
+      });
+
+      row.addEventListener('drop', (event) => {
+        event.preventDefault();
+        const draggedId = event.dataTransfer.getData('text/plain') || state.draggingId;
+        const targetId = row.dataset.id;
+        row.classList.remove('is-drop-target');
+        reorderItems(draggedId, targetId);
+      });
+
+      row.addEventListener('dragend', () => {
+        state.draggingId = null;
+        els.thumbList.querySelectorAll('.thumb-item').forEach((item) => {
+          item.classList.remove('is-dragging', 'is-drop-target');
+        });
+      });
+
+      row.querySelector('[data-name-input]').addEventListener('focus', () => {
         state.activeId = row.dataset.id;
-        renderThumbnails();
         updateLargePreview();
-        updateOutput();
+        renderActiveThumbnailState();
+      });
+
+      row.querySelector('[data-name-input]').addEventListener('click', (event) => {
+        event.stopPropagation();
+        state.activeId = row.dataset.id;
+        updateLargePreview();
+        renderActiveThumbnailState();
       });
 
       row.querySelector('[data-name-input]').addEventListener('input', (event) => {
@@ -264,6 +324,52 @@
         updatePreviewMeta();
       });
     });
+  }
+
+  function selectItemById(id, { keepFocus = true } = {}) {
+    if (!state.items.some((item) => item.id === id)) return;
+    state.activeId = id;
+    renderThumbnails();
+    updateLargePreview();
+    updateOutput();
+    scrollActiveThumbIntoView();
+    if (keepFocus) els.thumbList.focus({ preventScroll: true });
+  }
+
+  function selectItemByOffset(offset) {
+    const currentIndex = Math.max(0, state.items.findIndex((item) => item.id === state.activeId));
+    const nextIndex = Math.min(state.items.length - 1, Math.max(0, currentIndex + offset));
+    const nextItem = state.items[nextIndex];
+    if (!nextItem || nextItem.id === state.activeId) return;
+    selectItemById(nextItem.id);
+  }
+
+  function reorderItems(draggedId, targetId) {
+    if (!draggedId || !targetId || draggedId === targetId) return;
+    const fromIndex = state.items.findIndex((item) => item.id === draggedId);
+    const toIndex = state.items.findIndex((item) => item.id === targetId);
+    if (fromIndex < 0 || toIndex < 0) return;
+
+    const [movedItem] = state.items.splice(fromIndex, 1);
+    state.items.splice(toIndex, 0, movedItem);
+    state.activeId = draggedId;
+    state.draggingId = null;
+    renderThumbnails();
+    updateLargePreview();
+    updateOutput();
+    scrollActiveThumbIntoView();
+    setStatus('サムネイルの順番を変更しました。', 'ok');
+  }
+
+  function renderActiveThumbnailState() {
+    els.thumbList.querySelectorAll('.thumb-item').forEach((row) => {
+      row.classList.toggle('is-active', row.dataset.id === state.activeId);
+    });
+  }
+
+  function scrollActiveThumbIntoView() {
+    const activeRow = els.thumbList.querySelector('.thumb-item.is-active');
+    if (activeRow) activeRow.scrollIntoView({ block: 'nearest' });
   }
 
   function updateLargePreview() {
@@ -296,17 +402,6 @@
     els.paletteOutput.value = validNames.map((name) => `@${name}`).join('\n');
     els.exportZipBtn.disabled = state.items.length === 0;
     els.copyPaletteBtn.disabled = validNames.length === 0;
-    els.autoFillBtn.disabled = state.items.length === 0;
-  }
-
-  function autoFillEmptyNames() {
-    state.items.forEach((item, index) => {
-      if (!item.sabunName.trim()) item.sabunName = SUGGESTIONS[index]?.value || `差分${index + 1}`;
-    });
-    renderThumbnails();
-    updateOutput();
-    updatePreviewMeta();
-    setStatus('空欄の差分名へサジェストを入力しました。', 'ok');
   }
 
   async function exportZip() {
@@ -362,7 +457,7 @@
     state.items = [];
     state.activeId = null;
     els.mainNameInput.value = '';
-    els.numberToggle.checked = false;
+    els.numberToggle.checked = true;
     closeDrawers();
     renderThumbnails();
     updateLargePreview();
@@ -380,10 +475,10 @@
 
   function makeOutputFilename(item, fallbackIndex = 0) {
     const mainName = getMainName();
-    const sabunName = sanitizeName(item.sabunName) || `差分${fallbackIndex + 1}`;
+    const sabunName = sanitizeName(item.sabunName);
     const ext = getExtension(item.file.name) || 'png';
     const number = els.numberToggle.checked ? String(fallbackIndex + 1).padStart(2, '0') : '';
-    return `${mainName}${number}_${sabunName}.${ext}`;
+    return sabunName ? `${mainName}${number}_${sabunName}.${ext}` : `${mainName}${number}.${ext}`;
   }
 
   function makeUniqueFilename(filename, usedNames) {

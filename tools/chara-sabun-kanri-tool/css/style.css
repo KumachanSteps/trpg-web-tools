@@ -595,3 +595,253 @@ textarea {
   .shortcut-grid { grid-template-columns: 1fr; gap: 4px; }
   .shortcut-grid span:nth-child(even) { margin-bottom: 8px; }
 }
+
+/* v0.033 adjustments */
+.tool-grid {
+  min-height: calc(100vh - var(--header-h) - 2.15rem);
+}
+
+.panel {
+  min-height: 0;
+}
+
+.upload-panel,
+.output-panel,
+.thumb-panel,
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.thumb-panel {
+  min-height: 0;
+}
+
+.thumb-list {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
+.preview-suggestions {
+  margin-top: 0.72rem;
+  flex: 0 0 auto;
+}
+
+.preview-suggestions .suggestion-head {
+  margin-bottom: 0.48rem;
+}
+
+.preview-suggestions .suggestion-chips {
+  max-height: 92px;
+  overflow-y: auto;
+  padding-right: 0.18rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,207,125,0.7) rgba(255,255,255,0.08);
+}
+
+.preview-suggestions .suggestion-chips::-webkit-scrollbar { width: 8px; }
+.preview-suggestions .suggestion-chips::-webkit-scrollbar-track { background: rgba(255,255,255,0.08); border-radius: 20px; }
+.preview-suggestions .suggestion-chips::-webkit-scrollbar-thumb { background: rgba(255,207,125,0.7); border-radius: 20px; }
+
+@media (max-width: 1240px) {
+  .tool-grid { min-height: auto; }
+  .thumb-list { height: 420px; flex: 0 0 auto; }
+}
+
+@media (max-width: 920px) {
+  .thumb-list { height: 380px; flex: 0 0 auto; }
+}
+
+
+/* v0.034 fixed panel sizing and scroll refinements */
+.tool-grid {
+  height: calc(100vh - var(--header-h) - 2.15rem);
+  min-height: 620px;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 0.78fr);
+  align-items: stretch;
+}
+
+.panel {
+  min-height: 0;
+}
+
+.upload-panel,
+.output-panel,
+.thumb-panel,
+.preview-panel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.thumb-panel,
+.preview-panel {
+  height: 100%;
+}
+
+.thumb-panel .panel-heading,
+.preview-panel .panel-heading {
+  flex: 0 0 auto;
+}
+
+.thumb-list {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.large-preview {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
+.filename-preview {
+  flex: 0 0 auto;
+}
+
+.preview-suggestions {
+  flex: 0 1 186px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.72rem;
+  padding-bottom: 0.05rem;
+}
+
+.preview-suggestions .suggestion-head {
+  flex: 0 0 auto;
+}
+
+.preview-suggestions .suggestion-chips {
+  flex: 1 1 auto;
+  max-height: none;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: flex-start;
+  padding-right: 0.18rem;
+  padding-bottom: 0.2rem;
+}
+
+@media (max-width: 1240px) {
+  .tool-grid {
+    height: auto;
+    min-height: auto;
+  }
+  .thumb-panel,
+  .preview-panel {
+    height: auto;
+  }
+  .thumb-list {
+    height: 420px;
+    flex: 0 0 auto;
+  }
+  .large-preview {
+    height: 440px;
+    min-height: 340px;
+    flex: 0 0 auto;
+  }
+  .preview-suggestions {
+    flex: 0 0 auto;
+    max-height: 180px;
+  }
+  .preview-suggestions .suggestion-chips {
+    max-height: 132px;
+  }
+}
+
+@media (max-width: 920px) {
+  .thumb-list {
+    height: 380px;
+    flex: 0 0 auto;
+  }
+  .large-preview {
+    height: 420px;
+    min-height: 320px;
+  }
+}
+
+
+/* v0.1 thumbnail navigation and drag-sort refinements */
+.thumb-list:focus {
+  outline: none;
+}
+
+.thumb-list:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(255,207,125,0.26);
+  border-radius: 16px;
+}
+
+.thumb-item {
+  cursor: grab;
+}
+
+.thumb-item:active {
+  cursor: grabbing;
+}
+
+.thumb-item.is-dragging {
+  opacity: 0.55;
+  transform: scale(0.992);
+}
+
+.thumb-item.is-drop-target {
+  border-color: rgba(255, 140, 163, 0.76);
+  background: rgba(255, 140, 163, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 140, 163, 0.36);
+}
+
+.thumb-item.is-active {
+  box-shadow: 0 0 0 1px rgba(255,207,125,0.25), 0 10px 24px rgba(255,207,125,0.08);
+}
+
+.thumb-controls input:focus {
+  cursor: text;
+}
+
+
+/* v0.11 thumbnail card hit area and drag behavior refinements */
+.thumb-item {
+  cursor: pointer;
+  user-select: none;
+}
+
+.thumb-item[draggable="true"] {
+  -webkit-user-drag: element;
+}
+
+.thumb-item:active {
+  cursor: grabbing;
+}
+
+.thumb-button,
+.thumb-button img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.thumb-button {
+  pointer-events: none;
+}
+
+.thumb-controls input {
+  user-select: text;
+  cursor: text;
+}
+
+.thumb-controls input:focus {
+  cursor: text;
+}
+
+.upload-panel .status-line {
+  margin-top: auto;
+  padding-top: 10px;
+  flex: 0 0 auto;
+}

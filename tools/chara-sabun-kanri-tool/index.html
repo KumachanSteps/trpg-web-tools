@@ -13,7 +13,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>キャラ差分管理ツール｜TRPG WEBツール観測所</title>
+  <title>キャラ差分管理ツール | TRPG WEBツール観測所</title>
   <meta
     name="description"
     content="TRPG立ち絵・表情差分の画像確認、ファイル名整理、CCFOLIA向け@差分チャットパレット作成を支援するWebツールです。"
@@ -38,7 +38,7 @@
         <button type="button" class="header-btn" id="resetAllBtn">リセット</button>
       </nav>
 
-      <div class="version-stamp">v0.032 / 2026.06.11</div>
+      <div class="version-stamp">v0.11 / 2026.06.11</div>
 
       <section class="header-drawer" id="usagePanel" aria-hidden="true">
         <div class="drawer-inner">
@@ -57,10 +57,10 @@
         <div class="drawer-inner">
           <h2>ショートカット</h2>
           <div class="shortcut-grid">
-            <span>Ctrl / Cmd + O</span><span>画像ファイルを選択</span>
-            <span>Ctrl / Cmd + E</span><span>ZIP出力</span>
-            <span>Ctrl / Cmd + C</span><span>@差分チャパレをコピー</span>
-            <span>Ctrl / Cmd + N</span><span>番号追加 ON / OFF</span>
+            <span>Ctrl / Cmd + Shift + O</span><span>画像ファイルを選択</span>
+            <span>Ctrl / Cmd + Shift + E</span><span>ZIP出力</span>
+            <span>Ctrl / Cmd + Shift + C</span><span>@差分チャパレをコピー</span>
+            <span>Ctrl / Cmd + Shift + N</span><span>番号追加 ON / OFF</span>
             <span>Esc</span><span>使い方 / ショートカットを閉じる</span>
           </div>
         </div>
@@ -90,13 +90,7 @@
           <p class="input-help">出力名は <code>メインファイル名_差分名.png</code> になります。</p>
         </div>
 
-        <div class="suggestion-block">
-          <div class="suggestion-head">
-            <h3>差分名サジェスト</h3>
-            <button type="button" class="mini-button" id="autoFillBtn">空欄へ順番に入力</button>
-          </div>
-          <div class="suggestion-chips" id="suggestionChips"></div>
-        </div>
+        <p class="status-line" id="statusLine">画像を読み込んでください。</p>
       </section>
 
       <section class="panel thumb-panel">
@@ -106,7 +100,7 @@
             <div class="thumb-heading-line">
               <h2>サムネイル一覧</h2>
               <label class="number-toggle" for="numberToggle">
-                <input type="checkbox" id="numberToggle" />
+                <input type="checkbox" id="numberToggle" checked />
                 <span>番号追加</span>
               </label>
             </div>
@@ -131,6 +125,13 @@
           <img id="previewImage" alt="選択中の差分プレビュー" />
         </div>
         <div class="filename-preview" id="filenamePreview">出力ファイル名：-</div>
+
+        <div class="suggestion-block preview-suggestions">
+          <div class="suggestion-head">
+            <h3>差分名サジェスト</h3>
+          </div>
+          <div class="suggestion-chips" id="suggestionChips"></div>
+        </div>
       </section>
 
       <section class="panel output-panel">
@@ -148,7 +149,6 @@
 
         <label class="textarea-label" for="paletteOutput">生成されるチャットパレット</label>
         <textarea id="paletteOutput" spellcheck="false" placeholder="@通常&#10;@笑顔&#10;@怒り" readonly></textarea>
-        <p class="status-line" id="statusLine">画像を読み込んでください。</p>
       </section>
     </main>
 

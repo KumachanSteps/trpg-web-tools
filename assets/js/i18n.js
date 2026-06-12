@@ -286,7 +286,7 @@ window.TRPG_PORTAL_I18N = {
     {
       id: "coc-growth-checker",
       icon: "🌱",
-      status: "production",
+      status: "available",
       category: "logAnalysis",
       href: "./tools/coc-growth-checker/",
       name: {
