@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>キャラ差分管理ツール | TRPG WEBツール観測所</title>
+  <meta
+    name="description"
+    content="TRPG立ち絵・表情差分の画像確認、ファイル名整理、CCFOLIA向け@差分チャットパレット作成を支援するWebツールです。"
+  />
+
+  <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-main">
+        <h1>キャラ差分管理ツール</h1>
+      </div>
+      <p class="lead">立ち絵・表情差分をまとめて確認し、ファイル名を整えて、CCFOLIA向けの <strong>@差分</strong> チャットパレットを生成します。</p>
+
+      <nav class="header-actions" aria-label="ヘッダー操作">
+        <a class="header-btn" href="https://kumachansteps.github.io/trpg-web-tools/">←TRPG WEBツール観測所</a>
+        <a class="header-btn square" id="xPostBtn" href="https://twitter.com/intent/tweet?text=%E3%82%AD%E3%83%A3%E3%83%A9%E5%B7%AE%E5%88%86%E7%AE%A1%E7%90%86%E3%83%84%E3%83%BC%E3%83%AB%E3%82%92%E4%BD%BF%E7%94%A8%E4%B8%AD%20%23TRPG%20%23%E3%82%B3%E3%82%B3%E3%83%95%E3%82%A9%E3%83%AA%E3%82%A2&url=https%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2F" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿">×</a>
+        <button type="button" class="header-btn" id="usageToggleBtn" aria-expanded="false" aria-controls="usagePanel">使い方</button>
+        <button type="button" class="header-btn" id="shortcutToggleBtn" aria-expanded="false" aria-controls="shortcutPanel">ショートカット</button>
+        <button type="button" class="header-btn" id="resetAllBtn">リセット</button>
+      </nav>
+
+      <div class="version-stamp">v0.032 / 2026.06.11</div>
+
+      <section class="header-drawer" id="usagePanel" aria-hidden="true">
+        <div class="drawer-inner">
+          <h2>使い方</h2>
+          <ol>
+            <li>画像をドラッグ&ドロップ、またはクリックして複数画像を選択します。</li>
+            <li>メインファイル名を入力し、各サムネイル横の差分名を編集します。</li>
+            <li>必要に応じて「番号追加」をONにすると、<code>メインファイル名01_差分名.png</code> の形式になります。</li>
+            <li>「リネーム画像をZIPで出力」で画像一式を保存できます。</li>
+            <li>「@差分チャパレをコピー」で、CCFOLIAなどに貼り付ける差分切替用チャットパレットをコピーできます。</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="header-drawer" id="shortcutPanel" aria-hidden="true">
+        <div class="drawer-inner">
+          <h2>ショートカット</h2>
+          <div class="shortcut-grid">
+            <span>Ctrl / Cmd + O</span><span>画像ファイルを選択</span>
+            <span>Ctrl / Cmd + E</span><span>ZIP出力</span>
+            <span>Ctrl / Cmd + C</span><span>@差分チャパレをコピー</span>
+            <span>Ctrl / Cmd + N</span><span>番号追加 ON / OFF</span>
+            <span>Esc</span><span>使い方 / ショートカットを閉じる</span>
+          </div>
+        </div>
+      </section>
+    </header>
+
+    <main class="tool-grid">
+      <section class="panel upload-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">01 / Open</p>
+            <h2>画像アップロード</h2>
+          </div>
+          <span class="pill" id="fileCountPill">0 files</span>
+        </div>
+
+        <div class="drop-zone" id="dropZone" tabindex="0">
+          <div class="drop-icon">＋</div>
+          <p><strong>PNG / JPG / WEBP</strong> をドラッグ&ドロップ</p>
+          <p class="subtext">またはクリックして複数ファイルを選択</p>
+          <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple />
+        </div>
+
+        <div class="field-row">
+          <label for="mainNameInput">メインファイル名</label>
+          <input type="text" id="mainNameInput" placeholder="例：hanabishi_hibana" />
+          <p class="input-help">出力名は <code>メインファイル名_差分名.png</code> になります。</p>
+        </div>
+
+        <div class="suggestion-block">
+          <div class="suggestion-head">
+            <h3>差分名サジェスト</h3>
+            <button type="button" class="mini-button" id="autoFillBtn">空欄へ順番に入力</button>
+          </div>
+          <div class="suggestion-chips" id="suggestionChips"></div>
+        </div>
+      </section>
+
+      <section class="panel thumb-panel">
+        <div class="panel-heading compact">
+          <div>
+            <p class="section-kicker">02 / Name</p>
+            <div class="thumb-heading-line">
+              <h2>サムネイル一覧</h2>
+              <label class="number-toggle" for="numberToggle">
+                <input type="checkbox" id="numberToggle" />
+                <span>番号追加</span>
+              </label>
+            </div>
+          </div>
+          <span class="small-note">クリックで大きく表示</span>
+        </div>
+        <div class="thumb-list" id="thumbList">
+          <div class="empty-state">画像を追加すると、ここにサムネイルと差分名入力欄が表示されます。</div>
+        </div>
+      </section>
+
+      <section class="panel preview-panel">
+        <div class="panel-heading compact">
+          <div>
+            <p class="section-kicker">03 / Review</p>
+            <h2>大プレビュー</h2>
+          </div>
+          <span class="pill muted" id="activeNamePill">No image</span>
+        </div>
+        <div class="large-preview" id="largePreview">
+          <div class="preview-empty">Preview</div>
+          <img id="previewImage" alt="選択中の差分プレビュー" />
+        </div>
+        <div class="filename-preview" id="filenamePreview">出力ファイル名：-</div>
+      </section>
+
+      <section class="panel output-panel">
+        <div class="panel-heading compact">
+          <div>
+            <p class="section-kicker">04 / Export & Copy</p>
+            <h2>出力</h2>
+          </div>
+        </div>
+
+        <div class="output-actions">
+          <button type="button" class="primary-button" id="exportZipBtn">リネーム画像をZIPで出力</button>
+          <button type="button" class="secondary-button" id="copyPaletteBtn">@差分チャパレをコピー</button>
+        </div>
+
+        <label class="textarea-label" for="paletteOutput">生成されるチャットパレット</label>
+        <textarea id="paletteOutput" spellcheck="false" placeholder="@通常&#10;@笑顔&#10;@怒り" readonly></textarea>
+        <p class="status-line" id="statusLine">画像を読み込んでください。</p>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p><strong>利用上の注意</strong> 本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。 不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
+    </footer>
+  </div>
+
+  <datalist id="sabunSuggestions"></datalist>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

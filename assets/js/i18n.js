@@ -286,7 +286,7 @@ window.TRPG_PORTAL_I18N = {
     {
       id: "coc-growth-checker",
       icon: "🌱",
-      status: "available",
+      status: "production",
       category: "logAnalysis",
       href: "./tools/coc-growth-checker/",
       name: {
@@ -341,6 +341,21 @@ window.TRPG_PORTAL_I18N = {
       description: {
         ja: "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
         en: "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord.",
+      },
+    },
+    {
+      id: "scenario-dtp-designer",
+      icon: "📐",
+      status: "production",
+      category: "scenarioPrep",
+      href: "./tools/scenario-dtp-designer/",
+      name: {
+        ja: "シナリオDTPデザイナー",
+        en: "Scenario DTP Designer",
+      },
+      description: {
+        ja: "シナリオ本文を見やすいレイアウトに整え、PDF化や配布用テキストの下準備を支援するDTP補助ツールです。",
+        en: "A DTP support tool for arranging scenario text into a readable layout and preparing it for PDF or distribution-ready formatting.",
       },
     },
     {
@@ -404,18 +419,33 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "scenario-dtp-designer",
-      icon: "📐",
+      id: "character-sabun-manager",
+      icon: "🎭",
       status: "production",
-      category: "scenarioPrep",
-      href: "./tools/scenario-dtp-designer/",
+      category: "characterUtility",
+      href: "./tools/character-sabun-manager/",
       name: {
-        ja: "シナリオDTPデザイナー",
-        en: "Scenario DTP Designer",
+        ja: "キャラ差分管理ツール",
+        en: "Character Expression Manager",
       },
       description: {
-        ja: "シナリオ本文を見やすいレイアウトに整え、PDF化や配布用テキストの下準備を支援するDTP補助ツールです。",
-        en: "A DTP support tool for arranging scenario text into a readable layout and preparing it for PDF or distribution-ready formatting.",
+        ja: "キャラクター立ち絵の表情差分や画像差分を整理し、TRPGセッションや配信用に管理しやすくするツールです。",
+        en: "A tool for organizing character expression and portrait variations for TRPG sessions and streaming use.",
+      },
+    },
+    {
+      id: "npc-data-reader",
+      icon: "🧾",
+      status: "production",
+      category: "gmSupport",
+      href: "./tools/npc-data-reader/",
+      name: {
+        ja: "NPCデータリーダー",
+        en: "NPC Data Reader",
+      },
+      description: {
+        ja: "NPCデータやステータス情報を読み取り、セッション中に確認しやすい形式へ整理するGM/KP向け補助ツールです。",
+        en: "A GM/KP support tool for reading NPC data and organizing stats into an easier-to-reference format during sessions.",
       },
     },
     {
