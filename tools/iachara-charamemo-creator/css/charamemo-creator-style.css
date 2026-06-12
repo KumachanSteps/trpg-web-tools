@@ -1,5 +1,5 @@
 /* =========================================================
-   いあキャラMEMOジェネレータ v1.01
+   いあキャラMEMOジェネレータ v1.08
    ========================================================= */
 
 :root {
@@ -1262,7 +1262,7 @@ body.theme-light .toast.is-error,
 
 
 /* =========================================================
-   v1.01 Final Layout / Header Width Alignment Override
+   v1.02 Final Layout / Header Width Alignment Override
    ========================================================= */
 :root {
   --column-fixed-width: 390px;
@@ -1355,10 +1355,10 @@ body.theme-light .param-chip,
 
 
 /* =========================================================
-   Header Version Stamp v1.01
+   Header Version Stamp v1.05
    ========================================================= */
 .site-header::after {
-  content: "v1.01 2026/06/10";
+  content: "v1.098 2026/06/10";
   position: absolute;
   right: 24px;
   bottom: 14px;
@@ -1381,5 +1381,1030 @@ body.theme-light .site-header::after,
     right: 18px;
     bottom: 10px;
     font-size: 10px;
+  }
+}
+
+/* =========================================================
+   v1.03 Page Height / Footer
+   ========================================================= */
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.page-shell {
+  min-height: 100dvh;
+  padding-bottom: 18px;
+}
+
+.layout-grid {
+  margin-bottom: 0 !important;
+}
+
+.footer-note {
+  display: none !important;
+}
+
+.usage-footer {
+  width: min(100%, 1240px);
+  max-width: 1240px;
+  margin: 22px auto 0;
+  padding: 16px 20px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.20);
+  border-radius: 22px;
+  background: rgba(15, 23, 42, 0.48);
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 12px;
+  line-height: 1.75;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.usage-footer h2 {
+  margin: 0 0 8px;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.usage-footer p {
+  margin: 0;
+}
+
+.usage-footer p + p {
+  margin-top: 8px;
+}
+
+.usage-footer a {
+  color: #93c5fd;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.usage-footer a:hover {
+  text-decoration: underline;
+}
+
+body.theme-light .usage-footer,
+.theme-light .usage-footer,
+.page-shell.theme-light .usage-footer {
+  border-color: rgba(15, 23, 42, 0.10);
+  background: rgba(255, 255, 255, 0.62);
+  color: rgba(51, 65, 85, 0.82);
+  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.08);
+}
+
+body.theme-light .usage-footer h2,
+.theme-light .usage-footer h2,
+.page-shell.theme-light .usage-footer h2 {
+  color: rgba(15, 23, 42, 0.80);
+}
+
+body.theme-light .usage-footer a,
+.theme-light .usage-footer a,
+.page-shell.theme-light .usage-footer a {
+  color: #0284c7;
+}
+
+@media (max-width: 1259px) {
+  .usage-footer {
+    width: var(--column-fixed-width) !important;
+    max-width: var(--column-fixed-width) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .usage-footer {
+    width: var(--column-fixed-width) !important;
+    max-width: var(--column-fixed-width) !important;
+    padding: 14px 16px 16px;
+    font-size: 11px;
+  }
+}
+
+
+/* =========================================================
+   v1.04 Footer Width / Default Column Height Alignment
+   ========================================================= */
+.site-header,
+.layout-grid,
+.usage-footer {
+  width: var(--layout-fixed-width) !important;
+  max-width: var(--layout-fixed-width) !important;
+}
+
+.usage-footer {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.layout-grid {
+  align-items: stretch !important;
+}
+
+.left-column,
+.middle-column,
+.right-column {
+  height: 100% !important;
+  align-self: stretch !important;
+}
+
+.middle-column > .panel,
+.right-column > .panel {
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+.memo-panel .memo-editor,
+.palette-panel .palette-preview,
+.generated-panel .generated-json {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+@media (max-width: 1259px) {
+  .site-header,
+  .layout-grid,
+  .usage-footer {
+    width: var(--column-fixed-width) !important;
+    max-width: var(--column-fixed-width) !important;
+  }
+
+  .layout-grid {
+    align-items: start !important;
+  }
+
+  .left-column,
+  .middle-column,
+  .right-column {
+    height: auto !important;
+    align-self: auto !important;
+  }
+
+  .middle-column > .panel,
+  .right-column > .panel {
+    flex: 0 0 auto !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .site-header,
+  .layout-grid,
+  .usage-footer,
+  .left-column,
+  .middle-column,
+  .right-column {
+    width: var(--column-fixed-width) !important;
+    max-width: var(--column-fixed-width) !important;
+  }
+}
+
+/* =========================================================
+   v1.04 Scroll Boundary Fix
+   ページスクロールをフッター下辺で自然に停止させる
+   ========================================================= */
+html,
+body {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+}
+
+body {
+  overflow-y: auto !important;
+}
+
+.page-shell {
+  height: auto !important;
+  min-height: 0 !important;
+  padding-bottom: 24px !important;
+}
+
+.layout-grid {
+  margin-bottom: 0 !important;
+}
+
+.usage-footer {
+  margin-bottom: 0 !important;
+}
+
+.left-column,
+.middle-column,
+.right-column {
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: stretch !important;
+}
+
+@media (min-width: 1260px) {
+  .layout-grid {
+    align-items: stretch !important;
+  }
+
+  .left-column,
+  .middle-column,
+  .right-column {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .middle-column > .panel,
+  .right-column > .panel {
+    flex: 1 1 0 !important;
+  }
+}
+
+
+/* =========================================================
+   v1.05 Default Column Panel Height Balance
+   解析キャラクター概要を「1. 駒データ入力」と同等高に固定し、
+   余剰分をキャラメモ編集パネルへ配分する
+   ========================================================= */
+:root {
+  --top-panel-default-height: 184px;
+}
+
+@media (min-width: 1260px) {
+  .layout-grid {
+    align-items: stretch !important;
+  }
+
+  .left-column,
+  .middle-column,
+  .right-column {
+    align-self: stretch !important;
+    height: auto !important;
+  }
+
+  .middle-column {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .panel-input,
+  .summary-panel {
+    flex: 0 0 var(--top-panel-default-height) !important;
+    min-height: var(--top-panel-default-height) !important;
+    max-height: var(--top-panel-default-height) !important;
+    overflow: hidden !important;
+  }
+
+  .summary-panel {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .summary-card {
+    flex: 0 0 auto !important;
+  }
+
+  .summary-panel .params-grid {
+    margin-top: 10px !important;
+  }
+
+  .memo-panel {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .memo-panel .memo-editor {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+  }
+
+  .right-column > .panel {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+  }
+}
+
+/* =========================================================
+   v1.06 Loaded Data Layout / Panel Title Actions
+   ========================================================= */
+.panel-title-with-action {
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.panel-title-with-action h2 {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.panel-title-button {
+  flex: 0 0 auto !important;
+  padding: 7px 10px !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+}
+
+@media (min-width: 1260px) {
+  .page-shell.has-loaded-data .layout-grid {
+    align-items: start !important;
+  }
+
+  .page-shell.has-loaded-data .left-column,
+  .page-shell.has-loaded-data .middle-column,
+  .page-shell.has-loaded-data .right-column {
+    height: auto !important;
+    min-height: 0 !important;
+    align-self: start !important;
+  }
+
+  .page-shell.has-loaded-data .middle-column > .panel,
+  .page-shell.has-loaded-data .right-column > .panel {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+  }
+
+  .page-shell.has-loaded-data .summary-panel {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: var(--top-panel-default-height) !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .page-shell.has-loaded-data .summary-panel .params-grid {
+    overflow: visible !important;
+  }
+
+  .page-shell.has-loaded-data .memo-panel .memo-editor,
+  .page-shell.has-loaded-data .palette-panel .palette-preview,
+  .page-shell.has-loaded-data .generated-panel .generated-json {
+    flex: 0 0 auto !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .panel-title-with-action {
+    flex-wrap: wrap !important;
+  }
+
+  .panel-title-button {
+    width: 100% !important;
+  }
+}
+
+
+
+/* =========================================================
+   v1.08 Default / Loaded Panel Balance
+   - 入力パネルのボタン下余白を確保
+   - デフォルト時は概要パネルを入力パネルと同等高
+   - 読込後は概要パネルを自然高、キャラメモとチャットパレットを左カラム基準で拡張
+   ========================================================= */
+:root {
+  --top-panel-default-height: 214px;
+  --left-column-measured-height: 620px;
+  --left-input-txt-sum-height: 420px;
+}
+
+@media (min-width: 1260px) {
+  body:not(.has-loaded-data) .panel-input,
+  .page-shell:not(.has-loaded-data) .panel-input,
+  body:not(.has-loaded-data) .summary-panel,
+  .page-shell:not(.has-loaded-data) .summary-panel {
+    flex: 0 0 var(--top-panel-default-height) !important;
+    min-height: var(--top-panel-default-height) !important;
+    height: var(--top-panel-default-height) !important;
+    max-height: var(--top-panel-default-height) !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.has-loaded-data) .panel-input .input-actions,
+  .page-shell:not(.has-loaded-data) .panel-input .input-actions {
+    margin-bottom: 6px !important;
+  }
+
+  .page-shell.has-loaded-data .layout-grid {
+    align-items: start !important;
+  }
+
+  .page-shell.has-loaded-data .left-column,
+  .page-shell.has-loaded-data .middle-column,
+  .page-shell.has-loaded-data .right-column {
+    align-self: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .page-shell.has-loaded-data .summary-panel {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .page-shell.has-loaded-data .summary-panel .summary-card,
+  .page-shell.has-loaded-data .summary-panel .params-grid {
+    overflow: visible !important;
+  }
+
+  .page-shell.has-loaded-data .memo-panel {
+    flex: 0 0 auto !important;
+    height: calc(var(--left-column-measured-height) * 1.5) !important;
+    max-height: calc(var(--left-column-measured-height) * 1.5) !important;
+    min-height: 520px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .page-shell.has-loaded-data .memo-panel .memo-editor {
+    flex: 1 1 auto !important;
+    min-height: 280px !important;
+  }
+
+  .page-shell.has-loaded-data .palette-panel {
+    flex: 0 0 auto !important;
+    height: var(--left-input-txt-sum-height) !important;
+    min-height: 300px !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .page-shell.has-loaded-data .palette-panel .palette-preview {
+    flex: 1 1 auto !important;
+    min-height: 180px !important;
+  }
+
+  .page-shell.has-loaded-data .generated-panel {
+    flex: 0 0 auto !important;
+  }
+
+  .page-shell.has-loaded-data .generated-panel .generated-json {
+    flex: 0 0 auto !important;
+    min-height: 260px !important;
+  }
+}
+
+
+/* =========================================================
+   v1.08 Loaded Memo Panel Flexible Height
+   - 読込後の4番パネルは内容量に応じて伸縮
+   - 最小: 右カラム相当 / 最大: 左カラム高の1.25倍
+   ========================================================= */
+:root {
+  --right-column-measured-height: 520px;
+  --memo-panel-target-height: 520px;
+  --memo-panel-max-height: 775px;
+  --memo-editor-target-height: 220px;
+}
+
+@media (min-width: 1260px) {
+  .page-shell.has-loaded-data .memo-panel {
+    flex: 0 0 auto !important;
+    height: var(--memo-panel-target-height) !important;
+    min-height: var(--right-column-measured-height) !important;
+    max-height: var(--memo-panel-max-height) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .page-shell.has-loaded-data .memo-panel .memo-editor {
+    flex: 0 0 auto !important;
+    height: var(--memo-editor-target-height) !important;
+    min-height: 220px !important;
+    max-height: calc(var(--memo-panel-max-height) - 120px) !important;
+    overflow: auto !important;
+  }
+}
+
+
+/* =========================================================
+   v1.092 Header / Loaded Memo Panel Fix
+   ========================================================= */
+.site-header {
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
+}
+
+.site-title {
+  font-size: 25px !important;
+  line-height: 1.15 !important;
+}
+
+.site-description {
+  margin-top: 6px !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+}
+
+.header-actions {
+  align-items: center !important;
+}
+
+.header-x-button {
+  min-width: 36px !important;
+  padding-inline: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.header-x-button::before {
+  content: "" !important;
+}
+
+@media (min-width: 1260px) {
+  .page-shell.has-loaded-data .memo-panel {
+    height: var(--memo-panel-target-height) !important;
+    min-height: var(--right-column-measured-height) !important;
+    max-height: var(--memo-panel-max-height) !important;
+    overflow: hidden !important;
+  }
+
+  .page-shell.has-loaded-data .memo-panel .memo-editor {
+    height: var(--memo-editor-target-height) !important;
+    min-height: 220px !important;
+    max-height: calc(var(--memo-panel-max-height) - 132px) !important;
+    overflow: auto !important;
+  }
+}
+
+
+/* =========================================================
+   v1.092 Header / Memo Growth Refinement
+   ========================================================= */
+:root {
+  --memo-panel-min-height: 520px;
+}
+
+.site-header {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+.header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.header-button,
+.header-x-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.header-x-button {
+  width: 56px !important;
+  min-width: 56px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+}
+
+.site-title {
+  font-size: 23px !important;
+}
+
+@media (min-width: 1260px) {
+  .page-shell.has-loaded-data .memo-panel {
+    flex: 0 0 auto !important;
+    height: var(--memo-panel-target-height) !important;
+    min-height: var(--memo-panel-min-height) !important;
+    max-height: var(--memo-panel-max-height) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .page-shell.has-loaded-data .memo-panel .memo-editor {
+    flex: 0 0 auto !important;
+    height: var(--memo-editor-target-height) !important;
+    min-height: 220px !important;
+    max-height: calc(var(--memo-panel-max-height) - 132px) !important;
+    overflow: auto !important;
+  }
+}
+
+
+/* =========================================================
+   v1.092 Memo Minimum Preservation
+   - TXT読込時も、コマ読込時に揃えた右カラム相当の最小高を維持
+   ========================================================= */
+@media (min-width: 1260px) {
+  .page-shell.has-loaded-data .memo-panel {
+    height: var(--memo-panel-target-height) !important;
+    min-height: var(--memo-panel-min-height) !important;
+    max-height: var(--memo-panel-max-height) !important;
+  }
+
+  .page-shell.has-loaded-data .memo-panel .memo-editor {
+    height: var(--memo-editor-target-height) !important;
+    max-height: calc(var(--memo-panel-max-height) - 132px) !important;
+  }
+}
+
+
+/* =========================================================
+   v1.093 Header X Button / Help Panel / Memo Editor Minimum Fix
+   ========================================================= */
+.header-x-button {
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 4px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+.header-info-panel {
+  line-height: 1.75 !important;
+}
+
+@media (min-width: 1260px) {
+  .page-shell.has-loaded-data .memo-panel .memo-editor {
+    min-height: var(--memo-editor-min-height, 220px) !important;
+    height: var(--memo-editor-target-height) !important;
+    max-height: calc(var(--memo-panel-max-height) - 132px) !important;
+    overflow: auto !important;
+  }
+}
+
+
+/* =========================================================
+   v1.096 Header X Button Centering
+   - keep existing button size, center only the glyph position
+   ========================================================= */
+.header-actions .header-x-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+.header-actions .header-x-button::before,
+.header-actions .header-x-button::after {
+  content: none !important;
+}
+
+
+/* =========================================================
+   v1.097 Single Page Scrollbar Fix
+   - keep only the root document scroll
+   - prevent page-shell/body from becoming an additional vertical scroller
+   ========================================================= */
+html {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+body {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+.page-shell {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding-bottom: 24px !important;
+}
+.page-inner,
+.site-header,
+.layout-grid,
+.usage-footer {
+  overflow: visible !important;
+}
+.usage-footer {
+  margin-bottom: 0 !important;
+}
+
+
+/* =========================================================
+   v1.098 Single Sleek Page Scrollbar
+   - root/body never scroll
+   - page-shell is the only page scroller
+   - blue scrollbar appears only while scrolling
+   ========================================================= */
+html,
+body {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.page-shell {
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-gutter: stable !important;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+
+.page-shell.is-scrolling {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(29, 155, 240, 0.78) transparent;
+}
+
+.page-shell::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.page-shell.is-scrolling::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.page-shell::-webkit-scrollbar-track,
+.page-shell.is-scrolling::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-shell::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.page-shell.is-scrolling::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.92), rgba(37, 99, 235, 0.82));
+  border-radius: 999px;
+}
+
+.page-shell.is-scrolling::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(125, 211, 252, 0.96), rgba(29, 78, 216, 0.9));
+}
+
+/* =========================================================
+   v1.099 Footer-bound Page Scroll / Profile Input Fix
+   - page-shell remains the only page scroller
+   - remove extra scrollable space after the footer panel
+   - profile supplement textarea has no internal scrollbar
+   ========================================================= */
+.site-header::after {
+  content: "v1.099 2026/06/10" !important;
+}
+
+.profile-input,
+#profileSupplementInput {
+  height: 96px !important;
+  min-height: 96px !important;
+  max-height: 96px !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+  resize: none !important;
+}
+
+html,
+body {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+
+body {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.page-shell {
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding-bottom: 0 !important;
+  overscroll-behavior: contain !important;
+  scrollbar-gutter: stable !important;
+  scrollbar-width: none !important;
+  scrollbar-color: transparent transparent !important;
+}
+
+.page-inner {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.usage-footer {
+  margin-bottom: 0 !important;
+}
+
+.page-shell::after,
+.page-inner::after,
+body::after {
+  display: none !important;
+  content: none !important;
+}
+
+.page-shell.is-scrolling {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(29, 155, 240, 0.78) transparent !important;
+}
+
+.page-shell::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.page-shell.is-scrolling::-webkit-scrollbar {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.page-shell::-webkit-scrollbar-track,
+.page-shell.is-scrolling::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.page-shell::-webkit-scrollbar-thumb {
+  background: transparent !important;
+  border-radius: 999px !important;
+}
+
+.page-shell.is-scrolling::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.92), rgba(37, 99, 235, 0.82)) !important;
+  border-radius: 999px !important;
+}
+
+
+/* =========================================================
+   v1.10 Footer-bound Page Scroll Recheck
+   - page-shell remains the only viewport scroller
+   - remove visual/actual scroll space after the footer
+   - JS also clamps scrollTop to footer bottom as a safety net
+   ========================================================= */
+.site-header::after {
+  content: "v1.10 2026/06/10" !important;
+}
+
+html,
+body {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+
+body {
+  position: relative !important;
+}
+
+.page-shell {
+  position: relative !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 24px 24px 0 !important;
+  margin: 0 !important;
+  overscroll-behavior-y: none !important;
+  scroll-padding-bottom: 0 !important;
+}
+
+.page-shell > .usage-footer {
+  display: block !important;
+  margin-bottom: 0 !important;
+}
+
+.page-shell > .usage-footer:last-child {
+  margin-bottom: 0 !important;
+}
+
+.page-shell::before,
+.page-shell::after,
+.page-inner::before,
+.page-inner::after,
+body::before,
+body::after {
+  content: none !important;
+  display: none !important;
+}
+
+@media (max-width: 1259px) {
+  .page-shell {
+    padding: 16px 16px 0 !important;
+  }
+}
+
+
+/* =========================================================
+   v1.10 revised: natural page scroll without clamp
+   - remove forced page-shell scrolling and JS scroll clamping
+   - root document scroll naturally ends at footer bottom
+   ========================================================= */
+html {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-width: none !important;
+  scrollbar-color: transparent transparent !important;
+}
+
+html.is-scrolling {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(29, 155, 240, 0.78) transparent !important;
+}
+
+body {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  margin: 0 !important;
+}
+
+.page-shell {
+  position: relative !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 24px 24px 0 !important;
+  margin: 0 !important;
+  overscroll-behavior: auto !important;
+  scrollbar-width: none !important;
+}
+
+.page-inner,
+.layout-grid,
+.usage-footer {
+  overflow: visible !important;
+}
+
+.usage-footer {
+  margin-bottom: 0 !important;
+}
+
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+html.is-scrolling::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track,
+html.is-scrolling::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+html.is-scrolling::-webkit-scrollbar-thumb {
+  background: rgba(29, 155, 240, 0.72);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+@media (max-width: 1259px) {
+  .page-shell {
+    padding: 16px 16px 0 !important;
   }
 }

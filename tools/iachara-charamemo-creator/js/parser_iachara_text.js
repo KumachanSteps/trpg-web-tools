@@ -33,6 +33,36 @@
     return (next && next.index != null ? rest.slice(0, next.index) : rest).trim();
   }
 
+  function extractFirstSection(text, sectionNames) {
+    for (const name of sectionNames) {
+      const section = extractSection(text, name);
+      if (section) return section;
+    }
+    return "";
+  }
+  function extractMemoSection(text) {
+    const src = normalizeText(text);
+    const headingPattern = /(?:^|\n)[ \t　]*【メモ】[ \t]*(?:\n|$)/;
+    const match = headingPattern.exec(src);
+
+    if (!match || match.index == null) return "";
+
+    const bodyStart = match.index + match[0].length;
+    const rest = src.slice(bodyStart);
+    const nextIndex = findNextBracketHeadingIndex(rest);
+
+    return (nextIndex >= 0 ? rest.slice(0, nextIndex) : rest).trim();
+  }
+
+  function findNextBracketHeadingIndex(text) {
+    const src = normalizeText(text);
+    const match = /(?:^|\n)[ \t　]*【[^】\n]{1,80}】[ \t]*(?:\n|$)/.exec(src);
+
+    if (!match || match.index == null) return -1;
+    return match.index;
+  }
+
+
   function extractLabelValueFromSection(sectionText, label) {
     const lines = normalizeText(sectionText).split(NL).map((line) => line.trim()).filter(Boolean);
     for (const line of lines) {
@@ -80,20 +110,20 @@
     if (!raw) return "";
 
     const lines = raw.split(NL).map((line) => line.trimEnd()).filter((line) => line.trim());
+    const headerLine = lines.find((line) => isWeaponHeaderLine(line));
+    const columnSpec = headerLine ? getWeaponColumnSpec(headerLine) : null;
     const weaponRows = [];
     const otherLines = [];
 
     for (const line of lines) {
       if (isDecorativeLine(line) || isWeaponHeaderLine(line)) continue;
-      const row = parseWeaponRow(line);
+      const row = parseWeaponRow(line, columnSpec);
       if (row) weaponRows.push(row);
       else otherLines.push(line);
     }
 
     const parts = [];
-    if (weaponRows.length) {
-      parts.push(formatWeaponTable(weaponRows));
-    }
+    if (weaponRows.length) parts.push(formatWeaponTable(weaponRows));
     if (otherLines.length) parts.push(otherLines.join(NL));
     return parts.join(NL).trim();
   }
@@ -105,36 +135,79 @@
   function isWeaponHeaderLine(line) {
     const src = String(line || "");
     return (src.includes("名前") && src.includes("成功率")) ||
-      (src.includes("名称") && src.includes("ダメージ")) ||
-      (src.includes("射程") && src.includes("故障"));
+      (src.includes("ダメージ") && src.includes("射程") && (src.includes("故障") || src.includes("耐久")));
   }
 
-  function parseWeaponRow(line) {
-    const tokens = String(line || "").replace(/[｜|┊]/g, " ").split(/[\s　]+/).filter(Boolean);
-    if (tokens.length < 6) return null;
+  function getWeaponColumnSpec(headerLine) {
+    const labels = [
+      ["name", "名前"],
+      ["success", "成功率"],
+      ["damage", "ダメージ"],
+      ["range", "射程"],
+      ["attacks", "攻撃回数"],
+      ["ammo", "装弾数"],
+      ["durability", "耐久力"],
+      ["malfunction", "故障その他"]
+    ];
+    const found = labels
+      .map(([key, label]) => ({ key, index: String(headerLine).indexOf(label) }))
+      .filter((item) => item.index >= 0)
+      .sort((a, b) => a.index - b.index);
+    return found.length >= 3 ? found : null;
+  }
 
-    const damageIndex = tokens.findIndex((token) => isDamageToken(token));
-    if (damageIndex <= 0) return null;
+  function parseWeaponRow(line, columnSpec) {
+    const raw = String(line || "").trim();
+    if (!raw) return null;
 
-    const nameTokens = tokens.slice(0, damageIndex);
-    let success = "-";
+    const tokens = raw
+      .replace(/[｜|┊]/g, " ")
+      .split(/\t+|\s{2,}/)
+      .map((value) => value.trim())
+      .filter(Boolean);
 
-    if (nameTokens.length > 1 && /^\d{1,3}$/.test(nameTokens[nameTokens.length - 1])) {
-      success = nameTokens.pop();
-    }
+    if (tokens.length < 3) return null;
 
+    return mapWeaponTokens(tokens);
+  }
+
+  function mapWeaponTokens(tokens) {
     const row = {
-      name: nameTokens.join(" ") || "-",
-      success,
-      damage: tokens[damageIndex] || "-",
-      range: tokens[damageIndex + 1] || "-",
-      attacks: normalizeAttackCount(tokens[damageIndex + 2]),
-      ammo: normalizeAmmoCount(tokens[damageIndex + 3]),
-      durability: displayValue(tokens[damageIndex + 4]),
-      malfunction: displayValue(tokens[damageIndex + 5])
+      name: tokens[0] || "-",
+      success: tokens[1] || "-",
+      damage: tokens[2] || "-",
+      range: "-",
+      attacks: "-",
+      ammo: "-",
+      durability: "-",
+      malfunction: "-"
     };
 
-    return row.name === "-" ? null : row;
+    const rest = tokens.slice(3);
+
+    if (rest.length === 1) {
+      if (isPlainNumber(rest[0])) row.durability = displayValue(rest[0]);
+      else row.range = displayValue(rest[0]);
+      return row;
+    }
+
+    if (rest.length >= 1) row.range = displayValue(rest[0]);
+    if (rest.length >= 2) row.attacks = normalizeAttackCount(rest[1]);
+    if (rest.length >= 3) row.ammo = normalizeAmmoCount(rest[2]);
+
+    if (rest.length === 4 && row.ammo === "-" && String(rest[3] || "").trim().startsWith("-")) {
+      row.malfunction = displayValue(rest[3]);
+      return row;
+    }
+
+    if (rest.length >= 4) row.durability = displayValue(rest[3]);
+    if (rest.length >= 5) row.malfunction = displayValue(rest.slice(4).join(" "));
+
+    return row;
+  }
+
+  function isPlainNumber(value) {
+    return /^\d+$/.test(String(value || "").trim());
   }
 
   function isDamageToken(token) {
@@ -182,11 +255,21 @@
   }
 
   function formatWeaponBlock(row) {
-    return [
-      `武器：${row.name}`,
-      `成功率${row.success}｜ダメージ${row.damage}｜射程${row.range}｜`,
-      `回数${row.attacks}｜装弾数${row.ammo}｜耐久力${row.durability}｜故障${row.malfunction}`
-    ].join(NL);
+    const lines = [`武器：${row.name}`];
+    const secondLine = [
+      row.success !== "-" ? `成功率${row.success}` : "",
+      row.damage !== "-" ? `ダメージ${row.damage}` : "",
+      row.range !== "-" ? `射程${row.range}` : ""
+    ].filter(Boolean).join("｜");
+    const thirdLine = [
+      row.attacks !== "-" ? `回数${row.attacks}` : "",
+      row.ammo !== "-" ? `装弾数${row.ammo}` : "",
+      row.durability !== "-" ? `耐久力${row.durability}` : "",
+      row.malfunction !== "-" ? `故障${row.malfunction}` : ""
+    ].filter(Boolean).join("｜");
+    if (secondLine) lines.push(`${secondLine}｜`);
+    if (thirdLine) lines.push(`${thirdLine}｜`);
+    return lines.join(NL);
   }
 
   function getDisplayWidth(value) {
@@ -211,27 +294,56 @@
       .map((line) => line.trimEnd())
       .filter((line) => line.trim());
 
+    const headerLine = lines.find((line) => isItemHeaderLine(line));
+    const columnSpec = headerLine ? getItemColumnSpec(headerLine) : null;
+
     const rows = lines
-      .map(parseItemRow)
+      .filter((line) => !isItemHeaderLine(line))
+      .map((line) => parseItemRow(line, columnSpec))
       .filter(Boolean);
 
     if (!rows.length) return normalizeText(sectionText).trim();
 
     return rows.map((row) => {
-      if (row.note === "-") return `・${row.name}`;
-      return `・${row.name}：${row.note}`;
+      if (row.note === "-") return row.name;
+      return `${row.name}：${row.note}`;
     }).join(NL);
   }
 
-  function parseItemRow(line) {
-    const trimmed = String(line || "").trim();
+  function isItemHeaderLine(line) {
+    const src = String(line || "").trim();
+    return src.startsWith("名称") || (src.includes("名称") && (src.includes("効果、備考") || src.includes("効果・備考")));
+  }
+
+  function getItemColumnSpec(headerLine) {
+    const src = String(headerLine || "");
+    const noteLabels = ["効果、備考など", "効果・備考など", "効果、備考", "効果・備考", "備考"];
+    const nameIndex = src.indexOf("名称");
+    const priceIndex = src.indexOf("単価");
+    const noteIndex = noteLabels.map((label) => src.indexOf(label)).filter((index) => index >= 0).sort((a, b) => a - b)[0];
+    if (nameIndex < 0) return null;
+    return {
+      nameStart: nameIndex,
+      nameEnd: priceIndex > nameIndex ? priceIndex : noteIndex,
+      noteStart: noteIndex >= 0 ? noteIndex : -1
+    };
+  }
+
+  function parseItemRow(line, columnSpec) {
+    const raw = String(line || "").trimEnd();
+    const trimmed = raw.trim();
 
     if (!trimmed) return null;
-    if (trimmed.startsWith("名称") || trimmed.includes("効果、備考") || trimmed.includes("効果・備考")) return null;
     if (/^(現在の所持金|所持金|借金)\s*[:：]/.test(trimmed)) return null;
 
+    if (columnSpec && columnSpec.nameStart >= 0) {
+      const name = displayValue(raw.slice(columnSpec.nameStart, columnSpec.nameEnd && columnSpec.nameEnd > columnSpec.nameStart ? columnSpec.nameEnd : undefined).trim());
+      const note = columnSpec.noteStart >= 0 ? displayValue(raw.slice(columnSpec.noteStart).trim()) : "-";
+      if (name !== "-") return { name, note };
+    }
+
     const columns = trimmed
-      .split(/\t+|\s{2,}/)
+      .split(/	+|\s{2,}/)
       .map((value) => value.trim())
       .filter(Boolean);
 
@@ -342,16 +454,16 @@
       ].join(NL));
     }
 
-    const weapons = extractSection(src, "戦闘・武器・防具");
+    const weapons = extractFirstSection(src, ["武器", "戦闘・武器・防具"]);
     if (config.includeWeapons && weapons) parts.push(`【戦闘・武器・防具】${NL}${formatCombatWeaponsSection(weapons)}`);
 
-    const items = extractSection(src, "所持品");
+    const items = extractFirstSection(src, ["冒険の装備とその他の所持品", "所持品"]);
     if (config.includeItems && items) parts.push(`【所持品】${NL}${formatItemsSection(items)}`);
 
     const knowledge = getTargetKnowledgeText(src);
     if (config.includeKnowledge && knowledge) parts.push(`【新たに得た知識・経験】${NL}${knowledge}`);
 
-    const memo = extractSection(src, "メモ");
+    const memo = extractMemoSection(src);
     if (config.includeTxtMemo && memo) parts.push(`【メモ】${NL}${memo}`);
 
     return parts.filter(Boolean).join(NL + NL);
@@ -360,13 +472,13 @@
   function parseIacharaText(text) {
     const src = normalizeText(text);
     return {
-      found: Boolean(extractSection(src, "基本情報") || extractSection(src, "戦闘・武器・防具") || extractSection(src, "所持品") || extractSection(src, "メモ") || getTargetKnowledgeText(src)),
+      found: Boolean(extractSection(src, "基本情報") || extractFirstSection(src, ["武器", "戦闘・武器・防具"]) || extractFirstSection(src, ["冒険の装備とその他の所持品", "所持品"]) || extractMemoSection(src) || getTargetKnowledgeText(src)),
       profile: parseIacharaBasicInfo(src),
       sections: {
-        weapons: extractSection(src, "戦闘・武器・防具"),
-        items: extractSection(src, "所持品"),
+        weapons: extractFirstSection(src, ["武器", "戦闘・武器・防具"]),
+        items: extractFirstSection(src, ["冒険の装備とその他の所持品", "所持品"]),
         knowledge: getTargetKnowledgeText(src),
-        memo: extractSection(src, "メモ")
+        memo: extractMemoSection(src)
       },
       profileText: buildProfileSupplementFromIacharaText(src),
       memoText: buildMemoFromIacharaText(src),

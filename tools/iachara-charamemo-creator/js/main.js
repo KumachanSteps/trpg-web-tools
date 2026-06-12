@@ -10,6 +10,8 @@
     memoDirty: false,
     paletteDirty: false,
     currentEdition: "",
+    memoKomaBaseMinHeight: 0,
+    memoKomaBaseEditorHeight: 0,
   };
 
   const ids = {
@@ -51,6 +53,7 @@
     characterIconFrame: ["characterIconFrame", "summaryIcon"],
 
     themeToggleButton: ["themeToggleButton"],
+    shareXButton: ["shareXButton"],
     helpToggleButton: ["helpToggleButton", "helpButton"],
     shortcutToggleButton: ["shortcutToggleButton", "shortcutButton"],
     helpPanel: ["helpPanel"],
@@ -63,10 +66,13 @@
     ensureToastContainer();
     setupHeaderPanels();
     setupThemeToggle();
+    setupShareXButton();
+    setupSleekPageScrollbar();
     setupInputs();
     setupOptionSwitches();
     setupButtons();
     setupShortcuts();
+    setupLayoutMetrics();
     parseKomaInput();
     parseTxtInput(false);
     applyProfileFromTxt();
@@ -140,6 +146,40 @@
       button.textContent = theme === "light" ? "☀ ライトモード" : "🌙 ナイトモード";
     }
   }
+
+  function setupShareXButton() {
+    const button = getEl("shareXButton");
+    if (!button) return;
+
+    button.addEventListener("click", () => {
+      const text = "いあキャラMEMOジェネレータを使って、ココフォリア用のキャラメモ付きコマデータを作成しました。 #TRPG #CCFOLIA";
+      const url = "https://kumachansteps.github.io/trpg-web-tools/iachara-charamemo-creator/";
+      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+    });
+  }
+
+
+  function setupSleekPageScrollbar() {
+    const root = document.documentElement;
+    let scrollTimer = null;
+
+    const showScrollbar = () => {
+      root.classList.add("is-scrolling");
+      document.body.classList.add("is-scrolling");
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        root.classList.remove("is-scrolling");
+        document.body.classList.remove("is-scrolling");
+      }, 850);
+    };
+
+    window.addEventListener("scroll", showScrollbar, { passive: true });
+    window.addEventListener("wheel", showScrollbar, { passive: true });
+    window.addEventListener("touchmove", showScrollbar, { passive: true });
+    window.addEventListener("keydown", showScrollbar);
+  }
+
 
   function setupInputs() {
     const jsonInput = getEl("jsonInput");
@@ -389,8 +429,8 @@
     state.paletteDirty = false;
     applyProfileFromTxt();
     rebuildAll();
-    showTxtLoadMessage("いあきゃらTXTをリセットしました。", false);
-    showToast("いあきゃらTXTをリセットしました。", false);
+    showTxtLoadMessage("いあきゃらテキスト出力をリセットしました。", false);
+    showToast("いあきゃらテキスト出力をリセットしました。", false);
   }
 
   function confirmClearAll() {
@@ -418,6 +458,8 @@
     state.parsedTxt = createEmptyTxtParsed();
     state.memoDirty = false;
     state.paletteDirty = false;
+    state.memoKomaBaseMinHeight = 0;
+    state.memoKomaBaseEditorHeight = 0;
 
     hideJsonError();
     showTxtLoadMessage("", false);
@@ -453,7 +495,7 @@
       const parsed = JSON.parse(raw);
 
       if (!parsed || parsed.kind !== "character" || !parsed.data || typeof parsed.data !== "object") {
-        throw new Error("kind:'character' と data を持つCCFOLIA駒JSONではありません。");
+        throw new Error("kind:'character' と data を持つココフォリア駒出力データではありません。");
       }
 
       state.parsedKoma = parsed;
@@ -478,7 +520,7 @@
 
     if (showMessage) {
       if (state.parsedTxt.found) {
-        showTxtLoadMessage("いあきゃらTXTを反映しました。", false);
+        showTxtLoadMessage("いあきゃらテキスト出力を反映しました。", false);
       } else {
         showTxtLoadMessage("TXTを読み込みましたが、対応する見出しを検出できませんでした。", true);
       }
@@ -544,10 +586,10 @@
     };
 
     const sections = {
-      weapons: extractSection(src, "戦闘・武器・防具"),
-      items: extractSection(src, "所持品"),
+      weapons: extractFirstSection(src, ["戦闘・武器・防具", "武器"]),
+      items: extractFirstSection(src, ["所持品", "冒険の装備とその他の所持品"]),
       knowledge: extractKnowledgeSourceSection(src),
-      memo: extractSection(src, "メモ"),
+      memo: extractMemoSection(src),
     };
 
     const abilities = parseAbilities(abilitySection);
@@ -580,7 +622,183 @@
     );
   }
 
+
+  function setupLayoutMetrics() {
+    updateLayoutMetrics();
+    window.addEventListener("resize", scheduleLayoutMetricsUpdate);
+  }
+
+  function scheduleLayoutMetricsUpdate() {
+    window.requestAnimationFrame(updateLayoutMetrics);
+  }
+
+  function updateLayoutMetrics() {
+    const pageShell = document.querySelector(".page-shell");
+    if (!pageShell) return;
+
+    const leftColumn = getElBySelector(".left-column");
+    const rightColumn = getElBySelector(".right-column");
+    const summaryPanel = getElBySelector(".summary-panel");
+    const inputPanel = getElBySelector(".panel-input");
+    const txtPanel = getElBySelector(".panel-txt");
+    const memoPanel = getElBySelector(".memo-panel");
+    const memoEditor = getEl("memoEditor");
+
+    const hasLoadedData = pageShell.classList.contains("has-loaded-data") || document.body.classList.contains("has-loaded-data");
+    const hasTxtData = pageShell.classList.contains("has-txt-data") || document.body.classList.contains("has-txt-data");
+    const leftHeight = leftColumn ? Math.ceil(leftColumn.getBoundingClientRect().height) : 620;
+    const rightHeight = rightColumn ? Math.ceil(rightColumn.getBoundingClientRect().height) : 520;
+    const inputHeight = inputPanel ? Math.ceil(inputPanel.getBoundingClientRect().height) : 214;
+    const txtHeight = txtPanel ? Math.ceil(txtPanel.getBoundingClientRect().height) : 206;
+    const summaryHeight = summaryPanel ? Math.ceil(summaryPanel.getBoundingClientRect().height) : 214;
+    const middleColumnGap = measureColumnGap(getElBySelector(".middle-column"));
+
+    const safeLeftHeight = Math.max(leftHeight, 360);
+    const memoMaxHeight = Math.ceil(safeLeftHeight * 1.25);
+    const columnMatchedMemoMin = Math.max(320, Math.ceil(rightHeight - summaryHeight - middleColumnGap));
+
+    if (!hasLoadedData) {
+      state.memoKomaBaseMinHeight = 0;
+      state.memoKomaBaseEditorHeight = 0;
+    } else if (!hasTxtData) {
+      state.memoKomaBaseMinHeight = Math.min(columnMatchedMemoMin, memoMaxHeight);
+    }
+
+    const rememberedKomaMin = state.memoKomaBaseMinHeight || 0;
+    let memoMinHeight = Math.min(Math.max(columnMatchedMemoMin, rememberedKomaMin), memoMaxHeight);
+
+    let memoTargetHeight = memoMinHeight;
+    let memoEditorTargetHeight = 220;
+    let memoEditorMinHeight = 220;
+
+    if (hasLoadedData && memoPanel && memoEditor) {
+      const panelChrome = measurePanelChromeHeight(memoPanel, memoEditor);
+      const editorNaturalHeight = measureTextareaContentHeight(memoEditor);
+      const availableAtMin = Math.max(220, memoMinHeight - panelChrome - 12);
+      const memoNeededHeight = Math.ceil(editorNaturalHeight + panelChrome + 12);
+
+      if (!hasTxtData) {
+        state.memoKomaBaseEditorHeight = availableAtMin;
+      }
+
+      const rememberedEditorMin = state.memoKomaBaseEditorHeight || 0;
+      memoEditorMinHeight = Math.max(220, Math.min(rememberedEditorMin || availableAtMin, memoMaxHeight - panelChrome - 12));
+
+      if (hasTxtData) {
+        memoTargetHeight = Math.min(Math.max(memoNeededHeight, memoMinHeight), memoMaxHeight);
+        memoEditorTargetHeight = Math.max(memoEditorMinHeight, Math.min(editorNaturalHeight, memoTargetHeight - panelChrome - 12));
+        memoTargetHeight = Math.min(Math.max(memoEditorTargetHeight + panelChrome + 12, memoMinHeight), memoMaxHeight);
+      } else {
+        memoTargetHeight = memoMinHeight;
+        memoEditorTargetHeight = availableAtMin;
+        memoEditorMinHeight = availableAtMin;
+      }
+    }
+
+    pageShell.style.setProperty("--left-column-measured-height", `${safeLeftHeight}px`);
+    pageShell.style.setProperty("--right-column-measured-height", `${Math.max(rightHeight, 320)}px`);
+    pageShell.style.setProperty("--memo-panel-min-height", `${memoMinHeight}px`);
+    pageShell.style.setProperty("--left-input-panel-height", `${Math.max(inputHeight, 180)}px`);
+    pageShell.style.setProperty("--left-input-txt-sum-height", `${Math.max(inputHeight + txtHeight, 300)}px`);
+    pageShell.style.setProperty("--memo-panel-target-height", `${memoTargetHeight}px`);
+    pageShell.style.setProperty("--memo-panel-max-height", `${memoMaxHeight}px`);
+    pageShell.style.setProperty("--memo-editor-target-height", `${memoEditorTargetHeight}px`);
+    pageShell.style.setProperty("--memo-editor-min-height", `${memoEditorMinHeight}px`);
+  }
+
+  function measureColumnGap(column) {
+    if (!column) return 20;
+    const style = window.getComputedStyle(column);
+    const gap = parseFloat(style.rowGap || style.gap || "20");
+    return Number.isFinite(gap) ? gap : 20;
+  }
+
+  function measurePanelChromeHeight(panel, textarea) {
+    if (!panel || !textarea) return 140;
+
+    const panelStyle = window.getComputedStyle(panel);
+    const panelPadding =
+      parseFloat(panelStyle.paddingTop || "0") +
+      parseFloat(panelStyle.paddingBottom || "0");
+
+    let childrenHeight = panelPadding;
+
+    Array.from(panel.children).forEach((child) => {
+      if (child === textarea) return;
+      if (child.contains(textarea)) {
+        Array.from(child.children).forEach((grandChild) => {
+          if (grandChild === textarea || grandChild.contains(textarea)) return;
+          const style = window.getComputedStyle(grandChild);
+          childrenHeight += grandChild.getBoundingClientRect().height;
+          childrenHeight += parseFloat(style.marginTop || "0") + parseFloat(style.marginBottom || "0");
+        });
+        return;
+      }
+      const style = window.getComputedStyle(child);
+      childrenHeight += child.getBoundingClientRect().height;
+      childrenHeight += parseFloat(style.marginTop || "0") + parseFloat(style.marginBottom || "0");
+    });
+
+    return Math.max(120, Math.ceil(childrenHeight + 16));
+  }
+
+  function measureTextareaContentHeight(textarea) {
+    if (!textarea) return 220;
+
+    const computed = window.getComputedStyle(textarea);
+    const clone = document.createElement("textarea");
+    clone.value = textarea.value || textarea.placeholder || "";
+    clone.setAttribute("aria-hidden", "true");
+    clone.tabIndex = -1;
+    clone.style.position = "absolute";
+    clone.style.left = "-9999px";
+    clone.style.top = "0";
+    clone.style.visibility = "hidden";
+    clone.style.pointerEvents = "none";
+    clone.style.boxSizing = computed.boxSizing;
+    clone.style.width = `${textarea.getBoundingClientRect().width || textarea.clientWidth || 320}px`;
+    clone.style.minHeight = "0";
+    clone.style.height = "auto";
+    clone.style.padding = computed.padding;
+    clone.style.border = computed.border;
+    clone.style.font = computed.font;
+    clone.style.fontFamily = computed.fontFamily;
+    clone.style.fontSize = computed.fontSize;
+    clone.style.fontWeight = computed.fontWeight;
+    clone.style.lineHeight = computed.lineHeight;
+    clone.style.letterSpacing = computed.letterSpacing;
+    clone.style.whiteSpace = computed.whiteSpace;
+    clone.style.overflowWrap = computed.overflowWrap;
+    clone.style.wordBreak = computed.wordBreak;
+    clone.style.resize = "none";
+    clone.style.overflow = "hidden";
+
+    document.body.appendChild(clone);
+    const measured = Math.ceil(clone.scrollHeight);
+    clone.remove();
+
+    return Math.max(220, measured + 4);
+  }
+
+  function getElBySelector(selector) {
+    return document.querySelector(selector);
+  }
+
+  function updateLoadedDataState() {
+    const pageShell = document.querySelector(".page-shell");
+    const hasLoadedData = Boolean(state.parsedKoma || (state.parsedTxt && state.parsedTxt.found));
+    const hasTxtData = Boolean(state.parsedTxt && state.parsedTxt.found);
+
+    document.body.classList.toggle("has-loaded-data", hasLoadedData);
+    document.body.classList.toggle("has-txt-data", hasTxtData);
+    if (pageShell) {
+      pageShell.classList.toggle("has-loaded-data", hasLoadedData);
+      pageShell.classList.toggle("has-txt-data", hasTxtData);
+    }
+  }
+
   function rebuildAll() {
+    updateLoadedDataState();
     renderSummary();
     renderPalette();
 
@@ -590,6 +808,7 @@
     }
 
     rebuildGeneratedJsonOnly();
+    scheduleLayoutMetricsUpdate();
   }
 
   function rebuildGeneratedJsonOnly() {
@@ -745,8 +964,9 @@
       if (knowledgeText) parts.push(knowledgeText);
     }
 
-    if (checked("includeTxtMemo") && parsedTxt.sections.memo) {
-      parts.push(`【メモ】${NL}${parsedTxt.sections.memo.trim()}`);
+    if (checked("includeTxtMemo")) {
+      const txtMemo = getCurrentTxtMemoSection(parsedTxt);
+      if (txtMemo) parts.push(`【メモ】${NL}${txtMemo}`);
     }
 
     if (data.memo) {
@@ -756,13 +976,22 @@
     return parts.filter(Boolean).join(NL + NL);
   }
 
+  function getCurrentTxtMemoSection(parsedTxt) {
+    const fromState = parsedTxt && parsedTxt.sections ? parsedTxt.sections.memo : "";
+    if (String(fromState || "").trim()) return String(fromState).trim();
+
+    const txtInput = getEl("txtInput");
+    const rawTxt = txtInput ? txtInput.value : "";
+    return extractMemoSection(rawTxt).trim();
+  }
+
   function buildGeneratedJson() {
     const parsed = state.parsedKoma;
     const data = Object.assign({}, getKomaData());
     const memoEditor = getEl("memoEditor");
     const palettePreview = getEl("palettePreview");
 
-    data.name = data.name || state.parsedTxt.profile.name || "いあきゃらTXTキャラクター";
+    data.name = data.name || state.parsedTxt.profile.name || "いあきゃらテキスト出力キャラクター";
     data.memo = memoEditor ? memoEditor.value : "";
     data.commands = palettePreview ? palettePreview.value : "";
 
@@ -977,6 +1206,36 @@
     return (next ? rest.slice(0, next.index) : rest).trim();
   }
 
+  function extractMemoSection(text) {
+    const src = normalizeText(text);
+    const headingPattern = /(?:^|\n)[ \t　]*【メモ】[ \t]*(?:\n|$)/;
+    const match = headingPattern.exec(src);
+
+    if (!match || match.index == null) return "";
+
+    const bodyStart = match.index + match[0].length;
+    const rest = src.slice(bodyStart);
+    const nextIndex = findNextBracketHeadingIndex(rest);
+
+    return (nextIndex >= 0 ? rest.slice(0, nextIndex) : rest).trim();
+  }
+
+  function findNextBracketHeadingIndex(text) {
+    const src = normalizeText(text);
+    const match = /(?:^|\n)[ \t　]*【[^】\n]{1,80}】[ \t]*(?:\n|$)/.exec(src);
+
+    if (!match || match.index == null) return -1;
+    return match.index;
+  }
+
+  function extractFirstSection(text, sectionNames) {
+    for (const name of sectionNames) {
+      const section = extractSection(text, name);
+      if (section) return section;
+    }
+    return "";
+  }
+
   function extractLabel(section, label) {
     for (const line of normalizeText(section).split(NL)) {
       const value = extractLabelFromLine(line, label);
@@ -1069,13 +1328,16 @@
       .map((line) => line.trimEnd())
       .filter((line) => line.trim());
 
+    const headerLine = lines.find((line) => isWeaponHeaderLine(line));
+    const columnSpec = headerLine ? getWeaponColumnSpec(headerLine) : null;
+
     const dataLines = lines.filter((line) => {
       const text = line.trim();
-      return text && !text.startsWith("名前") && !(text.includes("成功率") && text.includes("ダメージ"));
+      return text && !isWeaponHeaderLine(text);
     });
 
     const rows = dataLines
-      .map(parseWeaponTableRow)
+      .map((line) => parseWeaponTableRow(line, columnSpec))
       .filter(Boolean)
       .map((row) => ({
         name: normalizeWeaponField(row.name),
@@ -1116,7 +1378,33 @@
     return output.join(NL).trim();
   }
 
-  function parseWeaponTableRow(line) {
+  function isWeaponHeaderLine(line) {
+    const text = String(line || "");
+    return (text.includes("名前") && text.includes("成功率")) ||
+      (text.includes("ダメージ") && text.includes("射程") && (text.includes("故障") || text.includes("耐久")));
+  }
+
+  function getWeaponColumnSpec(headerLine) {
+    const labels = [
+      ["name", "名前"],
+      ["success", "成功率"],
+      ["damage", "ダメージ"],
+      ["range", "射程"],
+      ["attack", "攻撃回数"],
+      ["ammo", "装弾数"],
+      ["durability", "耐久力"],
+      ["malfunction", "故障その他"],
+    ];
+
+    const found = labels
+      .map(([key, label]) => ({ key, index: String(headerLine).indexOf(label) }))
+      .filter((item) => item.index >= 0)
+      .sort((a, b) => a.index - b.index);
+
+    return found.length >= 3 ? found : null;
+  }
+
+  function parseWeaponTableRow(line, columnSpec) {
     const raw = String(line || "").trim();
     if (!raw) return null;
 
@@ -1127,16 +1415,46 @@
 
     if (!columns.length) return null;
 
-    return {
+    return mapWeaponColumns(columns);
+  }
+
+  function mapWeaponColumns(columns) {
+    const row = {
       name: columns[0] || "-",
       success: columns[1] || "-",
       damage: columns[2] || "-",
-      range: columns[3] || "-",
-      attack: columns[4] || "-",
-      ammo: columns[5] || "-",
-      durability: columns[6] || "-",
-      malfunction: columns[7] || "-",
+      range: "-",
+      attack: "-",
+      ammo: "-",
+      durability: "-",
+      malfunction: "-",
     };
+
+    const rest = columns.slice(3);
+
+    if (rest.length === 1) {
+      if (isPlainNumber(rest[0])) row.durability = rest[0];
+      else row.range = rest[0];
+      return row;
+    }
+
+    if (rest.length >= 1) row.range = rest[0] || "-";
+    if (rest.length >= 2) row.attack = rest[1] || "-";
+    if (rest.length >= 3) row.ammo = rest[2] || "-";
+
+    if (rest.length === 4 && row.ammo === "-" && String(rest[3] || "").trim().startsWith("-")) {
+      row.malfunction = rest[3];
+      return row;
+    }
+
+    if (rest.length >= 4) row.durability = rest[3] || "-";
+    if (rest.length >= 5) row.malfunction = rest.slice(4).join(" ") || "-";
+
+    return row;
+  }
+
+  function isPlainNumber(value) {
+    return /^\d+$/.test(String(value || "").trim());
   }
 
   function normalizeWeaponField(value) {
@@ -1168,12 +1486,17 @@
       .map((line) => line.trimEnd())
       .filter((line) => line.trim());
 
+    const headerLine = lines.find((line) => isItemHeaderLine(line));
+    const columnSpec = headerLine ? getItemColumnSpec(headerLine) : null;
+
     const dataLines = lines.filter((line) => {
       const text = line.trim();
-      return text && !text.startsWith("名称") && !(text.includes("単価") && text.includes("個数"));
+      return text && !isItemHeaderLine(text);
     });
 
-    const items = dataLines.map(parseItemTableRow).filter((item) => item.name);
+    const items = dataLines
+      .map((line) => parseItemTableRow(line, columnSpec))
+      .filter((item) => item.name);
 
     if (!items.length) return `【所持品】${NL}${raw}`;
 
@@ -1185,10 +1508,43 @@
     ].join(NL);
   }
 
-  function parseItemTableRow(line) {
-    const text = String(line || "").trim();
+  function isItemHeaderLine(line) {
+    const text = String(line || "");
+    return text.startsWith("名称") || (text.includes("名称") && (text.includes("効果、備考") || text.includes("効果・備考")));
+  }
+
+  function getItemColumnSpec(headerLine) {
+    const noteLabels = ["効果、備考など", "効果・備考など", "効果、備考", "効果・備考", "備考"];
+    const nameIndex = String(headerLine).indexOf("名称");
+    const noteIndex = noteLabels
+      .map((label) => String(headerLine).indexOf(label))
+      .filter((index) => index >= 0)
+      .sort((a, b) => a - b)[0];
+
+    const priceIndex = String(headerLine).indexOf("単価");
+    if (nameIndex < 0) return null;
+
+    return {
+      nameStart: nameIndex,
+      nameEnd: priceIndex > nameIndex ? priceIndex : noteIndex,
+      noteStart: noteIndex >= 0 ? noteIndex : -1,
+    };
+  }
+
+  function parseItemTableRow(line, columnSpec) {
+    const raw = String(line || "").trimEnd();
+    const text = raw.trim();
 
     if (!text) return { name: "", note: "" };
+
+    if (columnSpec && columnSpec.nameStart >= 0) {
+      const name = raw
+        .slice(columnSpec.nameStart, columnSpec.nameEnd && columnSpec.nameEnd > columnSpec.nameStart ? columnSpec.nameEnd : undefined)
+        .trim();
+      const note = columnSpec.noteStart >= 0 ? raw.slice(columnSpec.noteStart).trim() : "";
+
+      if (name) return { name, note };
+    }
 
     const columns = text
       .split(/\s{2,}|\t+/)
