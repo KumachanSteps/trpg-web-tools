@@ -202,7 +202,7 @@ body.dark .header-pill-violet{ color:#ede9fe; border-color:rgba(196,181,253,.30)
 body.dark .header-pill-amber{ color:#fef3c7; border-color:rgba(252,211,77,.30); background:rgba(252,211,77,.10); }
 
 .header-actions{ display:flex; align-items:center; justify-content:flex-end; gap:6px; flex:0 0 auto; }
-.language-toggle-button,.shortcut-help-button{
+.x-link-button,.language-toggle-button,.howto-help-button,.shortcut-help-button{
   width:auto;
   height:26px;
   min-height:26px;
@@ -218,8 +218,12 @@ body.dark .header-pill-amber{ color:#fef3c7; border-color:rgba(252,211,77,.30); 
   white-space:nowrap;
   transition:transform 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
-.language-toggle-button{ min-width:58px; background:var(--cyan); color:#020617; box-shadow:0 6px 16px rgba(14,165,233,.12); }
+.x-link-button{ min-width:42px; background:rgba(15,23,42,.08); color:var(--text-main); border:1px solid var(--border-soft); box-shadow:none; }
+.language-toggle-button{ min-width:70px; background:var(--cyan); color:#020617; box-shadow:0 6px 16px rgba(14,165,233,.12); }
+.howto-help-button{ min-width:72px; border:1px solid var(--border-cyan); background:var(--cyan-bg); color:var(--cyan-strong); }
 .shortcut-help-button{ min-width:108px; border:1px solid var(--border-cyan); background:var(--cyan-bg); color:var(--cyan-strong); }
+body.dark .x-link-button{ background:rgba(255,255,255,.08); color:#f8fafc; }
+body.dark .howto-help-button,
 body.dark .shortcut-help-button{ color:#cffafe; }
 button:hover{ transform:translateY(-1px); }
 
@@ -258,15 +262,18 @@ body.dark .theme-switch-thumb{ transform:translateX(48px); background:linear-gra
 .theme-switch-thumb-sun{ color:#fff7ed; font-size:15px; }
 .theme-switch-thumb-moon{ display:none; }
 
+.howto-drawer,
 .shortcut-drawer{
-  width:min(100% - 48px,1480px);
+  width:min(calc(100% - var(--app-side-gap)), var(--app-max));
   margin:6px auto 0;
   overflow:hidden;
   max-height:0;
   opacity:0;
   transition:max-height 220ms ease, opacity 180ms ease, margin-top 220ms ease;
 }
+.howto-drawer.open,
 .shortcut-drawer.open{ max-height:460px; opacity:1; margin-top:10px; }
+.howto-drawer-inner,
 .shortcut-drawer-inner{
   padding:12px 14px;
   border:1px solid var(--border-cyan);
@@ -276,9 +283,13 @@ body.dark .theme-switch-thumb{ transform:translateX(48px); background:linear-gra
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
 }
+.howto-drawer-title,
 .shortcut-drawer-title{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; color:var(--text-main); font-size:14px; font-weight:850; }
+.howto-drawer-close,
 .shortcut-drawer-close{ width:30px; height:30px; padding:0; border-radius:999px; background:var(--cyan-bg); color:var(--cyan-strong); font-size:20px; line-height:1; }
 .shortcut-list{ display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:6px; }
+.howto-list{ display:grid; gap:6px; }
+.howto-item{ padding:8px 10px; border:1px solid var(--border-soft); border-radius:14px; background:var(--bg-panel); color:var(--text-soft); font-size:12.5px; line-height:1.5; }
 .shortcut-item{ display:grid; grid-template-columns:180px minmax(0,1fr); gap:10px; align-items:center; padding:6px 9px; border:1px solid var(--border-soft); border-radius:14px; background:var(--bg-panel); }
 .shortcut-keys{ display:flex; flex-wrap:wrap; align-items:center; gap:4px; color:var(--text-muted); }
 .shortcut-desc{ color:var(--text-soft); font-size:12px; line-height:1.35; }
@@ -430,7 +441,7 @@ body.screenshot-mode .growth-output-box{ min-height:560px; }
   .site-header{ margin-top:12px; border-radius:22px; padding:15px; }
   .site-title{ font-size:23px; }
   .header-actions{ gap:8px; }
-  .language-toggle-button,.shortcut-help-button{ height:26px; min-height:26px; padding:0 11px; }
+  .x-link-button,.language-toggle-button,.howto-help-button,.shortcut-help-button{ height:26px; min-height:26px; padding:0 11px; }
   .theme-switch-track{ width:78px; height:30px; }
   body.dark .theme-switch-thumb{ transform:translateX(48px); }
   .output-toolbar{ align-items:flex-start; flex-direction:column; }
@@ -442,8 +453,14 @@ body.screenshot-mode .growth-output-box{ min-height:560px; }
 }
 
 @media(max-width:980px){
-  .shortcut-drawer{ width:min(100% - 32px,1480px); }
+  .howto-drawer,
+.howto-drawer,.shortcut-drawer{ width:min(100% - 32px,1480px); }
 }
 @media(max-width:720px){
-  .shortcut-drawer{ width:min(100% - 24px,1480px); }
+  .howto-drawer,
+.howto-drawer,.shortcut-drawer{ width:min(100% - 24px,1480px); }
 }
+
+.shortcut-tip{ display:none; }
+
+.x-link-button{ text-decoration:none; }

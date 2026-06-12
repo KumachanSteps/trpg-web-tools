@@ -32,8 +32,10 @@
         </div>
 
         <div class="header-actions">
-          <button id="languageToggleBtn" class="language-toggle-button" type="button" aria-label="英語表示に切替">EN</button>
-          <button id="shortcutHelpBtn" class="shortcut-help-button" type="button" aria-expanded="false" aria-controls="shortcutDrawer" data-i18n="button.shortcuts">⌨ ショートカット</button>
+          <a class="x-link-button" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer" aria-label="XでKumachanStepsを開く">X</a>
+          <button id="languageToggleBtn" class="language-toggle-button" type="button" aria-label="日本語 / 英語表示を切替">JP/EN</button>
+          <button id="howtoHelpBtn" class="howto-help-button" type="button" aria-expanded="false" aria-controls="howtoDrawer" data-i18n="button.howto">使い方</button>
+          <button id="shortcutHelpBtn" class="shortcut-help-button" type="button" aria-expanded="false" aria-controls="shortcutDrawer" data-i18n="button.shortcuts">ショートカット</button>
           <button id="themeToggleBtn" class="theme-switch" type="button" aria-label="ナイトモードに切替" aria-pressed="false" title="ナイトモードに切替">
             <span class="theme-switch-track">
               <span class="theme-switch-side theme-switch-side-sun">☀</span>
@@ -62,12 +64,25 @@
             <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカーv2</h1>
           </div>
           <p class="site-description" data-i18n="app.description">セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。</p>
-          <p class="shortcut-tip" data-i18n-html="app.tip">Tip: <kbd>Ctrl/Cmd</kbd> + <kbd>Enter</kbd> で抽出 ｜ <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> でスクショ表示 ｜ <kbd>?</kbd> でショートカット一覧</p>
         </div>
-        <div class="version-stamp">v2.5 2026/06/05</div>
+        <div class="version-stamp">v2.6 2026/06/05</div>
       </div>
     </div>
   </header>
+
+  <div id="howtoDrawer" class="howto-drawer" aria-hidden="true">
+    <div class="howto-drawer-inner">
+      <div class="howto-drawer-title">
+        <span data-i18n="howto.title">使い方</span>
+        <button id="howtoDrawerCloseBtn" class="howto-drawer-close" type="button" aria-label="使い方を閉じる">×</button>
+      </div>
+      <div class="howto-list">
+        <div class="howto-item" data-i18n="howto.step1">1. セッションログHTML / txtファイルを選択、またはログ本文を貼り付けます。</div>
+        <div class="howto-item" data-i18n="howto.step2">2. 必要に応じて、左パネルの成長チェック出力ルールを選択します。</div>
+        <div class="howto-item" data-i18n="howto.step3">3. 右パネルの成長候補サマリーを確認し、必要に応じて手動で編集・コピーしてください。</div>
+      </div>
+    </div>
+  </div>
 
   <div id="shortcutDrawer" class="shortcut-drawer" aria-hidden="true">
         <div class="shortcut-drawer-inner">
@@ -142,6 +157,7 @@
 
         <p class="note input-help" data-i18n="input.note">対応例：CCB&lt;=80 【目星】、CC&lt;=60 【図書館】、CBRB(80,60)、1d100&lt;=55 など。
 キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。
+また、雑談やおはらいなどのタブでのロールは検出範囲から除外しております。
 
 デフォルト設定では知識、アイデア、能力値ロールは検出しません。
 幸運は1クリティカルの場合のみ、POW成長判定として検出します。</p>

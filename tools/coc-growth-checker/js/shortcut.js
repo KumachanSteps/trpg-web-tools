@@ -1,3 +1,29 @@
+function openHowtoDrawer(){
+  const drawer = document.getElementById("howtoDrawer");
+  const button = document.getElementById("howtoHelpBtn");
+  if (!drawer) return;
+  closeShortcutDrawer?.();
+  closeHowtoDrawer?.();
+  drawer.classList.add("open");
+  drawer.setAttribute("aria-hidden", "false");
+  button?.setAttribute("aria-expanded", "true");
+}
+
+function closeHowtoDrawer(){
+  const drawer = document.getElementById("howtoDrawer");
+  const button = document.getElementById("howtoHelpBtn");
+  if (!drawer) return;
+  drawer.classList.remove("open");
+  drawer.setAttribute("aria-hidden", "true");
+  button?.setAttribute("aria-expanded", "false");
+}
+
+function toggleHowtoDrawer(){
+  const drawer = document.getElementById("howtoDrawer");
+  if (!drawer) return;
+  drawer.classList.contains("open") ? closeHowtoDrawer() : openHowtoDrawer();
+}
+
 function openShortcutDrawer(){
   const drawer = document.getElementById("shortcutDrawer");
   const button = document.getElementById("shortcutHelpBtn");
@@ -46,6 +72,11 @@ function handleGlobalKeydown(event){
   const isCommandShift = isCommand && event.shiftKey;
 
   if (event.key === "Escape") {
+    if (document.getElementById("howtoDrawer")?.classList.contains("open")) {
+      event.preventDefault();
+      closeHowtoDrawer();
+      return;
+    }
     if (document.getElementById("shortcutDrawer")?.classList.contains("open")) {
       event.preventDefault();
       closeShortcutDrawer();
@@ -114,6 +145,8 @@ function handleGlobalKeydown(event){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("howtoHelpBtn")?.addEventListener("click", toggleHowtoDrawer);
+  document.getElementById("howtoDrawerCloseBtn")?.addEventListener("click", closeHowtoDrawer);
   document.getElementById("shortcutHelpBtn")?.addEventListener("click", toggleShortcutDrawer);
   document.getElementById("shortcutDrawerCloseBtn")?.addEventListener("click", closeShortcutDrawer);
 });

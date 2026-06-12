@@ -562,7 +562,8 @@ function setupEvents(){
 }
 
 function init(){
-  if (localStorage.getItem(THEME_STORAGE_KEY) === "dark") document.body.classList.add("dark");
+  document.body.classList.remove("dark");
+  localStorage.setItem(THEME_STORAGE_KEY, "light");
   setupEvents();
   applyTranslations();
   renderAll();

@@ -37,7 +37,7 @@ function applyTranslations(){
   });
   const languageToggle = document.getElementById("languageToggleBtn");
   if (languageToggle) {
-    languageToggle.textContent = currentLanguage === "ja" ? "EN" : "JP";
+    languageToggle.textContent = "JP/EN";
     languageToggle.setAttribute("aria-label", currentLanguage === "ja" ? t("language.switchToEnglish") : t("language.switchToJapanese"));
   }
   updateDynamicTexts?.();
