@@ -221,3 +221,211 @@ body.light .app-footer-panel a{
 @media(max-width:1050px){
   .app-footer-panel{margin-top:var(--gap)}
 }
+
+/* v1.471 portal link, X new-tab share, full-app footer alignment */
+.header-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:36px;
+  text-decoration:none;
+  border:1px solid var(--line);
+  background:var(--panel2);
+  color:var(--text);
+  border-radius:999px;
+  padding:8px 13px;
+  font-weight:800;
+  transition:.15s ease;
+  white-space:nowrap;
+}
+.header-link:hover{
+  transform:translateY(-1px);
+  border-color:var(--accent);
+}
+.portal-link{font-size:13px}
+.x-share-btn{
+  min-width:38px;
+  font-weight:950;
+  letter-spacing:.02em;
+}
+body.light .header-link,
+body.light .x-share-btn{
+  background:#f7fbff;
+  color:#06111d;
+}
+.work-scroll{
+  padding-bottom:var(--gap);
+}
+.app-footer-panel{
+  width:var(--footer-panel-w, 100%);
+  margin:72px 0 0 calc(-1 * var(--footer-panel-offset, 0px));
+  padding:18px 20px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:linear-gradient(180deg,rgba(88,183,232,.10),rgba(255,255,255,.02)),var(--panel);
+  box-shadow:var(--shadow);
+  color:var(--text);
+}
+.app-footer-panel h2{
+  margin:0 0 10px;
+  font-size:15px;
+  font-weight:950;
+  letter-spacing:.04em;
+}
+.app-footer-panel p{
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:12.5px;
+  line-height:1.75;
+}
+.app-footer-panel p:last-child{margin-bottom:0}
+.app-footer-panel a{
+  color:var(--accent2);
+  font-weight:900;
+  text-decoration:none;
+  border-bottom:1px solid rgba(138,220,255,.45);
+}
+.app-footer-panel a:hover{
+  color:var(--accent);
+  border-bottom-color:var(--accent);
+}
+body.light .app-footer-panel a{
+  color:#126999;
+  border-bottom-color:rgba(18,105,153,.32);
+}
+@media(max-width:1050px){
+  .header-link{width:fit-content}
+  .app-footer-panel{
+    width:100%;
+    margin:var(--gap) 0 0;
+  }
+}
+
+
+/* v1.472 footer overlap fix: keep footer within work-scroll width, not under fixed left column */
+.app-footer-panel{
+  width:100%;
+  margin:72px 0 0 0;
+}
+
+.command-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin:0;font-size:12px;font-weight:400;color:var(--muted);background:rgba(88,183,232,.08);border:1px solid var(--line);border-radius:999px;padding:6px 11px;white-space:nowrap;cursor:pointer;transition:border-color .15s ease, background-color .15s ease, color .15s ease;line-height:1.2;box-shadow:none;align-self:center;}
+.command-toggle:hover{border-color:var(--accent);background:rgba(88,183,232,.12);}
+.command-toggle input{width:13px;height:13px;margin:0;accent-color:#8bd8ff;cursor:pointer;}
+.command-toggle.copy-like{min-height:31px;height:31px;}
+.command-toggle:has(input:checked){border-color:var(--accent);background:rgba(88,183,232,.16);color:var(--text);box-shadow:none;}
+.card-head .command-toggle,.card-head button.copy{align-self:center;}
+body.light .command-toggle{background:#edf9ff;color:#142033;border-color:#b9e4f7;box-shadow:none;font-weight:400;}
+body.light .command-toggle:hover{background:#e3f6ff;border-color:#74c9f2;box-shadow:none;}
+body.light .command-toggle:has(input:checked){background:#d7f1ff;border-color:#74c9f2;color:#142033;box-shadow:none;}
+body.light .command-toggle input{accent-color:#74c9f2;}
+
+/* v1.475: move footer notice into the left usage panel */
+.usage-notice-panel{
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid rgba(88,183,232,.22);
+  font-size:10.5px;
+  line-height:1.55;
+  color:var(--muted);
+}
+.usage-notice-title{
+  margin:0 0 5px;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.04em;
+  color:var(--text);
+}
+.usage-notice-panel p{
+  margin:0 0 6px;
+}
+.usage-notice-panel p:last-child{margin-bottom:0}
+.usage-notice-panel a{
+  color:var(--accent2);
+  font-weight:900;
+  text-decoration:none;
+  border-bottom:1px solid rgba(138,220,255,.36);
+}
+body.light .usage-notice-panel a{
+  color:#126999;
+  border-bottom-color:rgba(18,105,153,.30);
+}
+/* legacy footer is not used from v1.475 onward */
+.app-footer-panel{display:none!important;}
+
+
+/* v1.477: keep command add toggle close to copy button */
+#chatPaletteCard .card-head{
+  justify-content:flex-start;
+  column-gap:4px;
+}
+#chatPaletteCard .card-title{
+  margin-right:auto;
+}
+#chatPaletteCard .command-toggle{
+  margin-left:0;
+  margin-right:4px;
+}
+#chatPaletteCard #copyPaletteBtn{
+  margin-left:0;
+}
+
+
+/* v1.478: standardize all app scrollbars to match the left text-area scrollbar */
+:root{
+  --scrollbar-size:9px;
+  --scrollbar-track:rgba(36,70,110,.18);
+  --scrollbar-thumb-top:#8bd8ff;
+  --scrollbar-thumb-bottom:#2f91cd;
+  --scrollbar-border:rgba(10,20,35,.25);
+}
+body.light{
+  --scrollbar-track:rgba(174,205,232,.36);
+  --scrollbar-thumb-top:#9ddfff;
+  --scrollbar-thumb-bottom:#57bce9;
+  --scrollbar-border:#edf5ff;
+}
+.work-scroll,
+.usage-card .card-body,
+textarea,
+#rawInput,
+#paletteOutput,
+#jsonOutput{
+  scrollbar-width:thin;
+  scrollbar-color:var(--scrollbar-thumb-bottom) var(--scrollbar-track);
+}
+.work-scroll::-webkit-scrollbar,
+.usage-card .card-body::-webkit-scrollbar,
+textarea::-webkit-scrollbar,
+#rawInput::-webkit-scrollbar,
+#paletteOutput::-webkit-scrollbar,
+#jsonOutput::-webkit-scrollbar{
+  width:var(--scrollbar-size);
+  height:var(--scrollbar-size);
+}
+.work-scroll::-webkit-scrollbar-track,
+.usage-card .card-body::-webkit-scrollbar-track,
+textarea::-webkit-scrollbar-track,
+#rawInput::-webkit-scrollbar-track,
+#paletteOutput::-webkit-scrollbar-track,
+#jsonOutput::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+  border-radius:999px;
+}
+.work-scroll::-webkit-scrollbar-thumb,
+.usage-card .card-body::-webkit-scrollbar-thumb,
+textarea::-webkit-scrollbar-thumb,
+#rawInput::-webkit-scrollbar-thumb,
+#paletteOutput::-webkit-scrollbar-thumb,
+#jsonOutput::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,var(--scrollbar-thumb-top),var(--scrollbar-thumb-bottom));
+  border-radius:999px;
+  border:2px solid var(--scrollbar-border);
+}
+.work-scroll::-webkit-scrollbar-thumb:hover,
+.usage-card .card-body::-webkit-scrollbar-thumb:hover,
+textarea::-webkit-scrollbar-thumb:hover,
+#rawInput::-webkit-scrollbar-thumb:hover,
+#paletteOutput::-webkit-scrollbar-thumb:hover,
+#jsonOutput::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,var(--scrollbar-thumb-top),var(--accent));
+}

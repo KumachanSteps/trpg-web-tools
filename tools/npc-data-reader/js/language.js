@@ -1,5 +1,5 @@
 /* NPCデータリーダー language.js
-   v1.47: JP/EN UI switch. Translation data is defined in i18l.js. */
+   v1.472: JP/EN UI switch. Translation data is defined in i18l.js. */
 (function(){
   const STORAGE_KEY = 'npc-data-reader-lang';
   const $ = (s) => document.querySelector(s);
@@ -27,7 +27,7 @@
   }
 
   function applyStaticTranslations(){
-    document.title = `${t('appTitle')} v1.47`;
+    document.title = `${t('appTitle')} v1.478`;
     setText('h1', 'appTitle');
     setText('.sub', 'appSubtitle');
     setText('#usageJumpBtn', 'usage');
@@ -87,12 +87,12 @@
     setText('#chatPaletteCard .output-note', 'paletteNote');
     setText('#jsonCard .output-note', 'jsonNote');
 
-    const footer = $('#appFooterPanel');
-    if (footer) {
+    const usageNotice = $('#usageNoticePanel');
+    if (usageNotice) {
       const linkHtml = '<a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a>';
-      const h2 = footer.querySelector('h2');
-      const ps = footer.querySelectorAll('p');
-      if (h2) h2.textContent = t('footerTitle');
+      const title = usageNotice.querySelector('.usage-notice-title');
+      const ps = usageNotice.querySelectorAll('p');
+      if (title) title.textContent = t('footerTitle');
       if (ps[0]) ps[0].innerHTML = `${t('footerNotice1Prefix')} ${linkHtml} ${t('footerNotice1Suffix')}`;
       if (ps[1]) ps[1].innerHTML = `${t('footerNotice2Prefix')} ${linkHtml} ${t('footerNotice2Suffix')}`;
     }

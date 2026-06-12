@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NPCデータリーダー v1.47</title>
+  <title>NPCデータリーダー v1.478</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body class="light">
@@ -14,14 +14,15 @@
         <div class="sub">シナリオNPC情報 → チャットパレット / CCFOLIA用NPC駒JSON</div>
       </div>
       <div class="header-actions">
-        <button type="button" class="ghost x-share-btn" id="xShareBtn" title="Xで共有">X</button>
+        <a class="ghost header-link portal-link" id="portalLink" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG WEBツール観測所 に戻る" aria-label="TRPG WEBツール観測所 に戻る">←TRPG WEBツール観測所</a>
+        <button type="button" class="ghost x-share-btn" id="xShareBtn" title="Xで共有" aria-label="Xで共有">X</button>
         <button type="button" class="ghost" id="langBtn">JP / EN</button>
         <button type="button" class="ghost" id="usageJumpBtn" aria-expanded="false" aria-controls="usageSlidePanel">使い方</button>
         <button type="button" class="ghost" id="shortcutBtn" aria-expanded="false" aria-controls="shortcutPanel">ショートカット</button>
         <button type="button" class="ghost" id="themeBtn">Light / Night</button>
       </div>
     </div>
-    <div class="version-mark">v1.47 / 2026.06.10</div>
+    <div class="version-mark">v1.478 / 2026.06.10</div>
   </header>
 
   <aside class="shortcut-panel" id="shortcutPanel" aria-hidden="true">
@@ -105,6 +106,11 @@
               <li>JSONは直接編集不可。編集済みチャパレはJSONの commands に反映されます。</li>
               <li>CCFOLIA駒の memo は秘匿漏れ防止のため、初期値をNPC名のみにします。</li>
             </ol>
+            <div class="usage-notice-panel" id="usageNoticePanel">
+              <div class="usage-notice-title">利用上の注意</div>
+              <p>本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
+              <p>不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
+            </div>
           </div>
         </div>
       </section>
@@ -197,6 +203,7 @@
             <div class="card" id="chatPaletteCard">
               <div class="card-head">
                 <div class="card-title">3. チャットパレット</div>
+                <label class="command-toggle copy-like"><input type="checkbox" id="commandAddonCheck" /> <span>[コマンド追加]</span></label>
                 <button type="button" class="copy" id="copyPaletteBtn">コピー</button>
               </div>
               <div class="card-body">
@@ -217,11 +224,6 @@
             </div>
           </section>
         </div>
-        <footer class="app-footer-panel" id="appFooterPanel">
-          <h2>利用上の注意</h2>
-          <p>本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
-          <p>不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
-        </footer>
       </div>
     </div>
   </main>
