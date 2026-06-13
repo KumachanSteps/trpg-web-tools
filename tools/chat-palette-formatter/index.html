@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CoCチャパレ整形ツールv2.4｜TRPG Webツール観測所</title>
+  <title>CoCチャパレ整形ツールv2｜TRPG Webツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/palette-style.css" />
 
@@ -19,6 +19,19 @@
 <body>
   <div class="app-shell">
     <header class="site-header">
+      <a
+        class="header-x-logo"
+        href="https://twitter.com/intent/tweet?text=CoC%E3%83%81%E3%83%A3%E3%83%91%E3%83%AC%E6%95%B4%E5%BD%A2%E3%83%84%E3%83%BC%E3%83%ABv2%EF%BD%9CTRPG%20WEB%E3%83%84%E3%83%BC%E3%83%AB%E8%A6%B3%E6%B8%AC%E6%89%80%20%E3%82%92%E4%BD%BF%E7%94%A8%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%EF%BC%81%0Ahttps%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2Ftools%2Fchat-palette-formatter%2F%0A%23TRPG%20%23CoC%20%23%E3%82%AF%E3%83%88%E3%82%A5%E3%83%AB%E3%83%95%E7%A5%9E%E8%A9%B1TRPG"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Xで使用報告を投稿する"
+        title="Xで使用報告を投稿する"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M18.36 3.72h2.74l-6.02 6.88 7.08 9.36h-5.54l-4.34-5.68-4.96 5.68H4.58l6.44-7.36-6.8-8.88h5.68l3.92 5.18 4.54-5.18Zm-.96 14.6h1.52L9.08 5.28H7.44L17.4 18.32Z"/>
+        </svg>
+      </a>
+
       <div class="header-inner">
         <div class="header-top-tags">
           <a
@@ -26,19 +39,6 @@
             href="https://kumachansteps.github.io/trpg-web-tools/"
             aria-label="TRPG Webツール観測所へ戻る"
           >← TRPG Webツール観測所</a>
-          <a
-            class="header-x-link"
-            href="https://twitter.com/intent/tweet?text=CoC%E3%83%81%E3%83%A3%E3%83%91%E3%83%AC%E6%95%B4%E5%BD%A2%E3%83%84%E3%83%BC%E3%83%ABv2%EF%BD%9CTRPG%20WEB%E3%83%84%E3%83%BC%E3%83%AB%E8%A6%B3%E6%B8%AC%E6%89%80%20%E3%82%92%E4%BD%BF%E7%94%A8%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%EF%BC%81%0Ahttps%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2Ftools%2Fchat-palette-formatter%2F%0A%23TRPG%20%23CoC%20%23%E3%82%AF%E3%83%88%E3%82%A5%E3%83%AB%E3%83%95%E7%A5%9E%E8%A9%B1TRPG"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="XでCoCチャパレ整形ツールv2を使用した旨を投稿する"
-            title="Xで共有"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="x-logo-sign">
-              <path class="x-logo-outline" d="M18.36 3.72h2.74l-6.02 6.88 7.08 9.36h-5.54l-4.34-5.68-4.96 5.68H4.58l6.44-7.36-6.8-8.88h5.68l3.92 5.18 4.54-5.18Zm-.96 14.6h1.52L9.08 5.28H7.44L17.4 18.32Z"/>
-              <path class="x-logo-fill" d="M18.36 3.72h2.74l-6.02 6.88 7.08 9.36h-5.54l-4.34-5.68-4.96 5.68H4.58l6.44-7.36-6.8-8.88h5.68l3.92 5.18 4.54-5.18Zm-.96 14.6h1.52L9.08 5.28H7.44L17.4 18.32Z"/>
-            </svg>
-          </a>
           <span class="header-pill header-pill-cyan">いあきゃら駒JSON入力</span>
           <span class="header-pill header-pill-violet">CoC 6版/7版</span>
           <span class="header-pill header-pill-amber">出力後に編集可能</span>
@@ -47,7 +47,8 @@
         <div class="header-title-area">
           <h1 class="site-title">CoCチャパレ整形ツールv2</h1>
           <p class="site-description">
-            <span class="description-line-2"><span class="description-text">チャットパレット本文、またはJSON形式のキャラクター駒データを貼り付けて、CoC 6版 / 7版向けに見やすく整形します。</span><span class="header-version">v2.4 2026/06/12</span></span>
+            <span>チャットパレット本文、またはJSON形式のキャラクター駒データを貼り付けて、CoC 6版 / 7版向けに見やすく整形します。</span>
+            <span class="description-line-2"><span class="description-text">入力欄にデータを貼り付け、「分類して出力」ボタンで整形結果を表示します。</span><span class="header-version">v2.54 2026/06/13</span></span>
           </p>
         </div>
       </div>
@@ -106,17 +107,7 @@
     </main>
 
     <footer class="app-footer">
-      <section class="footer-notice" aria-labelledby="footerNoticeTitle">
-        <h2 id="footerNoticeTitle">利用上の注意</h2>
-        <p>
-          本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。
-          各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
-        </p>
-        <p>
-          不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。
-          ただし、すべての報告や要望に返信・対応できるとは限りません。
-        </p>
-      </section>
+      <span>TRPG Webツール観測所 / CoCチャパレ整形ツールv2</span>
     </footer>
   </div>
 
