@@ -117,3 +117,31 @@ v1.361 width alignment:
 - Unified header, main panel group, and footer widths using the same CSS variables.
 - Tightened the gap between the header panel and main app panels.
 - Updated version stamp to v1.361 2026/06/12.
+
+
+v1.362 slide-down help / shortcut panels:
+- Changed the 使い方 and ショートカット buttons to open slide-down panels directly under the header.
+- Added a clearer three-step How to Use panel based on the requested 3-block layout.
+- Added a slide-down Shortcuts panel with commonly used key commands.
+- Kept Escape support compatible by closing the slide panels first.
+- Simplified the dark-mode toggle thumb to show a simple moon symbol on the purple thumb.
+- Updated version stamp to v1.362 2026/06/12.
+
+
+v1.363 header-main gap fix:
+- Fixed the large default gap between the header panel and the main app panels.
+- The closed slide-down panels now have no padding, border, background, or height.
+- Tightened the default .dsa-page-shell gap to 8px.
+- Updated version stamp to v1.363 2026/06/12.
+
+
+v1.364 dark toggle emblem update:
+- Changed the dark-mode toggle thumb emblem from a moon/crescent to ✨.
+- Added overrides to suppress any previous CSS-drawn crescent pseudo-element.
+- Updated version stamp to v1.364 2026/06/12.
+
+
+v1.365 dark toggle emblem removal:
+- Removed all sun/moon/sparkle emblems from the theme toggle thumb.
+- The toggle now moves without showing any emblem inside the thumb.
+- Updated version stamp to v1.365 2026/06/12.

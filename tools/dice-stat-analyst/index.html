@@ -152,9 +152,80 @@
           </p>
         </div>
       </div>
-    <div class="header-version-stamp">v1.3611 2026/06/12</div>
+    <div class="header-version-stamp">v1.365 2026/06/12</div>
     </div>
   </header>
+
+  <div class="header-slide-panels" id="headerSlidePanels">
+    <section
+      id="howToSlidePanel"
+      class="header-slide-panel"
+      aria-hidden="true"
+      data-panel="howto"
+    >
+      <div class="header-slide-panel-inner">
+        <div class="header-slide-panel-head">
+          <h2 class="header-slide-panel-title" data-i18n="panel.howtoTitle">使い方</h2>
+          <button
+            id="howToPanelCloseBtn"
+            class="header-slide-panel-close"
+            type="button"
+            aria-label="使い方パネルを閉じる"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="header-slide-steps">
+          <div class="header-slide-step">
+            <span class="header-slide-step-index">1.</span>
+            <p data-i18n="panel.howtoStep1">セッションログHTML / txtファイルを選択、またはログ本文を貼り付けます。</p>
+          </div>
+          <div class="header-slide-step">
+            <span class="header-slide-step-index">2.</span>
+            <p data-i18n="panel.howtoStep2">必要に応じて、クリティカル上限 / ファンブル下限 / 自動非表示件数を確認し、「分析する」を押します。CCB中心なら6版、CC中心なら7版として自動調整されます。</p>
+          </div>
+          <div class="header-slide-step">
+            <span class="header-slide-step-index">3.</span>
+            <p data-i18n="panel.howtoStep3">右パネルでキャラクター別サマリー・分布チャート・抽出ロールを確認します。必要に応じてスクショ表示も使えます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section
+      id="shortcutSlidePanel"
+      class="header-slide-panel"
+      aria-hidden="true"
+      data-panel="shortcut"
+    >
+      <div class="header-slide-panel-inner">
+        <div class="header-slide-panel-head">
+          <h2 class="header-slide-panel-title" data-i18n="panel.shortcutTitle">ショートカット一覧</h2>
+          <button
+            id="shortcutPanelCloseBtn"
+            class="header-slide-panel-close"
+            type="button"
+            aria-label="ショートカット一覧を閉じる"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="header-shortcut-grid">
+          <div class="header-shortcut-item"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Enter</kbd><p data-i18n="panel.shortcutAnalyze">分析する</p></div>
+          <div class="header-shortcut-item"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>O</kbd><p data-i18n="panel.shortcutOpenFile">ファイル選択</p></div>
+          <div class="header-shortcut-item"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd><p data-i18n="panel.shortcutToggleInput">入力パネル開閉</p></div>
+          <div class="header-shortcut-item"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>V</kbd><p data-i18n="panel.shortcutScreenshot">スクショ表示 / 通常表示</p></div>
+          <div class="header-shortcut-item"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd><p data-i18n="panel.shortcutTab1">キャラクター別サマリー</p></div>
+          <div class="header-shortcut-item"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd><p data-i18n="panel.shortcutTab2">分布チャート</p></div>
+          <div class="header-shortcut-item"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>3</kbd><p data-i18n="panel.shortcutTab3">抽出ロール</p></div>
+          <div class="header-shortcut-item"><kbd>Esc</kbd><p data-i18n="panel.shortcutEsc">パネルを閉じる / スクショ解除 / クリア確認</p></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
 
   <!-- Shortcut Modal -->
   <div id="shortcutModal" class="shortcut-modal" aria-hidden="true">

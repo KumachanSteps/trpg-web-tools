@@ -41,29 +41,34 @@ function bindEvents() {
   }
 
   const howToBtn = $('howToBtn');
+  const howToPanelCloseBtn = $('howToPanelCloseBtn');
   if (howToBtn) {
-    howToBtn.addEventListener('click', () => {
-      const inputPanel = $('inputPanel');
-      if (inputPanel) {
-        inputPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
+    howToBtn.addEventListener('click', () => toggleHeaderSlidePanel('howto'));
+  }
+  if (howToPanelCloseBtn) {
+    howToPanelCloseBtn.addEventListener('click', closeHeaderSlidePanels);
   }
 
   const shortcutHelpBtn = $('shortcutHelpBtn');
+  const shortcutPanelCloseBtn = $('shortcutPanelCloseBtn');
   const shortcutModalCloseBtn = $('shortcutModalCloseBtn');
   const shortcutModalBackdrop = $('shortcutModalBackdrop');
 
   if (shortcutHelpBtn) {
-    shortcutHelpBtn.addEventListener('click', openShortcutModal);
+    shortcutHelpBtn.addEventListener('click', () => toggleHeaderSlidePanel('shortcut'));
   }
 
+  if (shortcutPanelCloseBtn) {
+    shortcutPanelCloseBtn.addEventListener('click', closeHeaderSlidePanels);
+  }
+
+  /* legacy modal close hooks remain harmless if old modal markup still exists */
   if (shortcutModalCloseBtn) {
-    shortcutModalCloseBtn.addEventListener('click', closeShortcutModal);
+    shortcutModalCloseBtn.addEventListener('click', closeHeaderSlidePanels);
   }
 
   if (shortcutModalBackdrop) {
-    shortcutModalBackdrop.addEventListener('click', closeShortcutModal);
+    shortcutModalBackdrop.addEventListener('click', closeHeaderSlidePanels);
   }
 
   document.querySelectorAll('.tab-button').forEach(button => {
@@ -113,11 +118,28 @@ const screenshotExitBtn = $('screenshotExitBtn');
     clearBtn.addEventListener('click', clearAll);
   }
 
+  document.addEventListener('click', handleDocumentPointerClosePanels);
+
   document.addEventListener('languagechange', () => {
     initializeLanguageUI();
     syncThemeSwitch();
     render();
   });
+}
+
+
+function handleDocumentPointerClosePanels(event) {
+  if (!isHeaderSlidePanelOpen()) return;
+
+  const shell = $('headerSlidePanels');
+  const header = document.querySelector('.site-header');
+  const button = event.target.closest('#howToBtn, #shortcutHelpBtn');
+
+  if (button) return;
+  if (shell && shell.contains(event.target)) return;
+  if (header && header.contains(event.target)) return;
+
+  closeHeaderSlidePanels();
 }
 
 async function handleFileInput(event) {
@@ -274,26 +296,89 @@ function updateLanguageToggleLabel() {
 }
 
 /* =========================================================
-   Shortcut Modal
+   Header Slide Panels
    ========================================================= */
 
-function openShortcutModal() {
-  const modal = $('shortcutModal');
-  if (!modal) return;
+function getHeaderSlidePanels() {
+  return {
+    howto: $('howToSlidePanel'),
+    shortcut: $('shortcutSlidePanel')
+  };
+}
 
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden', 'false');
+function updateHeaderPanelButtonState(activePanel) {
+  const howToBtn = $('howToBtn');
+  const shortcutHelpBtn = $('shortcutHelpBtn');
+
+  if (howToBtn) {
+    const isOpen = activePanel === 'howto';
+    howToBtn.classList.toggle('is-active', isOpen);
+    howToBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+
+  if (shortcutHelpBtn) {
+    const isOpen = activePanel === 'shortcut';
+    shortcutHelpBtn.classList.toggle('is-active', isOpen);
+    shortcutHelpBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+}
+
+function openHeaderSlidePanel(panelName) {
+  const panels = getHeaderSlidePanels();
+  let hasOpen = false;
+
+  Object.entries(panels).forEach(([name, panel]) => {
+    if (!panel) return;
+
+    const shouldOpen = name === panelName;
+    panel.classList.toggle('open', shouldOpen);
+    panel.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+    if (shouldOpen) hasOpen = true;
+  });
+
+  document.body.classList.toggle('header-panel-open', hasOpen);
+  updateHeaderPanelButtonState(hasOpen ? panelName : '');
+}
+
+function closeHeaderSlidePanels() {
+  const panels = getHeaderSlidePanels();
+
+  Object.values(panels).forEach(panel => {
+    if (!panel) return;
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+  });
+
+  document.body.classList.remove('header-panel-open');
+  updateHeaderPanelButtonState('');
+}
+
+function toggleHeaderSlidePanel(panelName) {
+  const panels = getHeaderSlidePanels();
+  const panel = panels[panelName];
+  if (!panel) return;
+
+  if (panel.classList.contains('open')) {
+    closeHeaderSlidePanels();
+    return;
+  }
+
+  openHeaderSlidePanel(panelName);
+}
+
+function openShortcutModal() {
+  openHeaderSlidePanel('shortcut');
 }
 
 function closeShortcutModal() {
-  const modal = $('shortcutModal');
-  if (!modal) return;
-
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden', 'true');
+  closeHeaderSlidePanels();
 }
 
 function isShortcutModalOpen() {
-  const modal = $('shortcutModal');
-  return !!modal && modal.classList.contains('open');
+  return isHeaderSlidePanelOpen();
+}
+
+function isHeaderSlidePanelOpen() {
+  const panels = getHeaderSlidePanels();
+  return Object.values(panels).some(panel => !!panel && panel.classList.contains('open'));
 }
