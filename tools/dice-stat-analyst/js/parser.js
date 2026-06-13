@@ -55,8 +55,11 @@ function filterLines(lines) {
     const dropTabs = $('dropTabs');
     const onlyD100 = $('onlyD100');
 
-    if (dropTabs && dropTabs.checked && !shouldKeepTabLine(line)) return false;
-    if (onlyD100 && onlyD100.checked && !looksLikeD100Roll(line)) return false;
+    const shouldDropTabs = !dropTabs || dropTabs.checked;
+    const shouldOnlyD100 = !onlyD100 || onlyD100.checked;
+
+    if (shouldDropTabs && !shouldKeepTabLine(line)) return false;
+    if (shouldOnlyD100 && !looksLikeD100Roll(line)) return false;
     return true;
   });
 }

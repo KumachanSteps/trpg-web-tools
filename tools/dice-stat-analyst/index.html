@@ -23,15 +23,21 @@
 </head>
 
 <body>
+  <div class="dsa-page-shell">
   <header class="site-header">
     <div class="header-inner">
 
       <!-- Header Top Row: Portal Link + Tags + Controls -->
       <div class="header-top-row">
         <div class="header-top-tags">
-          <span class="portal-link-wrap">
-          <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG Webツール観測所に戻る">← TRPG Webツール観測所</a>
-          </span>
+          <a
+            class="portal-link"
+            href="https://kumachansteps.github.io/trpg-web-tools/"
+            data-i18n="nav.backToTools"
+          >
+            ← TRPG Webツール観測所
+            <span class="portal-tooltip">TRPG Webツール観測所 に戻る</span>
+          </a>
 
           <span class="header-pill header-pill-cyan" data-i18n="tag.diceLogInput">
             ダイスログインプット
@@ -48,23 +54,44 @@
 
         <div class="header-actions">
           <div class="header-mini-actions">
+            <a
+              class="header-action-button header-x-button x-link-button"
+              href="https://x.com/KumachanSteps"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="XでKumachanStepsを開く"
+              data-i18n-title="button.x"
+            >
+              X
+            </a>
+
             <button
               id="languageToggleBtn"
-              class="language-toggle-button"
+              class="header-action-button language-toggle-button"
               type="button"
               aria-label="英語表示に切替"
             >
-              EN
+              JP/EN
+            </button>
+
+            <button
+              id="howToBtn"
+              class="header-action-button howto-button howto-help-button"
+              type="button"
+              aria-label="使い方を表示"
+              data-i18n="button.howTo"
+            >
+              使い方
             </button>
 
             <button
               id="shortcutHelpBtn"
-              class="shortcut-help-button"
+              class="header-action-button shortcut-help-button"
               type="button"
               aria-label="ショートカット一覧を開く"
               data-i18n="button.shortcuts"
             >
-              ショートカット一覧
+              ショートカット
             </button>
           </div>
 
@@ -125,6 +152,7 @@
           </p>
         </div>
       </div>
+    <div class="header-version-stamp">v1.3611 2026/06/12</div>
     </div>
   </header>
 
@@ -297,20 +325,8 @@
             <input id="fumbleMin" type="number" min="1" max="100" value="96" />
           </label>
         </div>
-
-        <h3 data-i18n="input.checklistTitle">ダイスログ解析チェックリスト</h3>
-
-        <label class="checkline">
-          <input id="dropTabs" type="checkbox" checked />
-          <span data-i18n="input.dropTabs">[雑談] / [other] / [info] 系の行を除外する</span>
-        </label>
-
-        <label class="checkline">
-          <input id="onlyD100" type="checkbox" checked />
-          <span data-i18n="input.onlyD100">d100系ロールのみ抽出する</span>
-        </label>
-
-        <label>
+        <h3 data-i18n="input.optionsTitle">解析オプション</h3>
+<label>
           <span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span>
           <input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" />
         </label>
@@ -321,7 +337,7 @@
         <p class="note input-help" data-i18n="inputHelp">
           対応例：CCB&lt;=80、CC&lt;=60、1d100&lt;=55、RESB(10-16)、D100 など。
           キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。
-          [雑談] / [other] / [info] 系は除外できます。少数ロールのキャラは初期状態で非表示になります。
+          [雑談] / [other] / [info] 系の行除外とd100系ロール抽出は自動適用されます。CCB中心なら6版、CC中心なら7版として判定範囲を自動調整します。少数ロールのキャラは初期状態で非表示になります。
         </p>
       </div>
     </section>
@@ -451,6 +467,7 @@
       </div>
     </section>
   </main>
+  </div>
   
   <section class="tool-footer-note">
   <h2>利用上の注意</h2>

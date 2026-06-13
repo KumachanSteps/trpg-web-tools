@@ -2849,3 +2849,1427 @@ body.screenshot-mode .screenshot-hidden-memo {
   display: none !important;
 }
 
+
+
+
+/* =========================================================
+   v1.31 Header Refresh
+   ヘッダー幅統一 / 右上ボタン小型化 / バージョン刻印
+   ========================================================= */
+
+header.site-header {
+  width: min(100% - 36px, 1480px);
+  padding: 14px 18px 13px;
+  border-radius: 24px;
+}
+
+.header-inner {
+  position: relative;
+}
+
+.header-top-row {
+  padding-right: 292px;
+}
+
+.header-main-row {
+  padding-right: 292px;
+}
+
+.header-main-row .header-title-area {
+  max-width: none;
+}
+
+.site-description {
+  max-width: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.header-top-row .header-actions {
+  top: 0;
+  right: 0;
+  gap: 6px;
+}
+
+.header-top-row .header-mini-actions {
+  gap: 5px;
+}
+
+.header-action-button,
+.language-toggle-button,
+.shortcut-help-button,
+.howto-button,
+.header-x-button {
+  width: auto;
+  min-width: auto;
+  height: 26px;
+  min-height: 26px;
+  margin: 0;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 850;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  text-decoration: none;
+  box-shadow: none;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.header-x-button {
+  min-width: 28px;
+  border: 1px solid var(--border-soft);
+  background: rgba(15,23,42,.86);
+  color: #fff;
+}
+
+.language-toggle-button {
+  min-width: 54px;
+  background: var(--cyan);
+  color: #020617;
+  box-shadow: none;
+}
+
+.howto-button,
+.shortcut-help-button {
+  min-width: 56px;
+  border: 1px solid var(--border-cyan);
+  background: var(--cyan-bg);
+  color: var(--cyan-strong);
+}
+
+.shortcut-help-button {
+  min-width: 82px;
+}
+
+.header-action-button:hover,
+.language-toggle-button:hover,
+.shortcut-help-button:hover,
+.howto-button:hover,
+.header-x-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(.98);
+}
+
+body.dark .header-x-button {
+  background: rgba(226,232,240,.94);
+  color: #020617;
+}
+
+body.dark .howto-button,
+body.dark .shortcut-help-button {
+  border-color: rgba(103,232,249,.28);
+  background: rgba(103,232,249,.10);
+  color: #67e8f9;
+}
+
+.theme-switch-track {
+  width: 92px;
+  height: 38px;
+  padding: 0 10px;
+}
+
+.theme-switch-side {
+  font-size: 18px;
+}
+
+.theme-switch-thumb {
+  left: 4px;
+  top: 4px;
+  width: 30px;
+  height: 30px;
+}
+
+.theme-switch-thumb-icon {
+  font-size: 20px;
+}
+
+body.dark .theme-switch-thumb {
+  transform: translateX(54px);
+}
+
+.header-version-stamp {
+  position: absolute;
+  right: 2px;
+  bottom: -4px;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: .02em;
+  opacity: .52;
+  user-select: none;
+  pointer-events: none;
+}
+
+@media (max-width: 1180px) {
+  .header-top-row,
+  .header-main-row {
+    padding-right: 0;
+  }
+
+  .header-top-row .header-actions {
+    position: static;
+    align-items: flex-start;
+    margin-top: 4px;
+  }
+
+  .site-description {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .header-version-stamp {
+    right: 4px;
+    bottom: -8px;
+  }
+}
+
+@media (max-width: 720px) {
+  header.site-header {
+    width: min(100% - 24px, 1480px);
+    padding: 14px;
+  }
+
+  .header-top-row .header-mini-actions {
+    gap: 5px;
+  }
+
+  .header-action-button,
+  .language-toggle-button,
+  .shortcut-help-button,
+  .howto-button,
+  .header-x-button {
+    height: 28px;
+    min-height: 28px;
+    padding: 0 9px;
+    font-size: 10.5px;
+  }
+
+  .shortcut-help-button {
+    min-width: 78px;
+  }
+
+  .theme-switch-track {
+    width: 88px;
+    height: 38px;
+  }
+
+  body.dark .theme-switch-thumb {
+    transform: translateX(50px);
+  }
+}
+
+
+/* =========================================================
+   v1.31 Button Size Fix
+   右上ボタンサイズ統一：[使い方]基準
+   ========================================================= */
+
+.header-top-row .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-top-row .header-mini-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.header-action-button,
+.header-x-button,
+.language-toggle-button,
+.howto-button,
+.shortcut-help-button {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+  height: 26px;
+  min-height: 26px;
+  max-height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 850;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.header-x-button {
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+}
+
+.language-toggle-button {
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+}
+
+.howto-button {
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+}
+
+.shortcut-help-button {
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+}
+
+.theme-switch {
+  flex: 0 0 auto;
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+  height: 26px;
+  min-height: 26px;
+  max-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-switch-track {
+  box-sizing: border-box;
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+  height: 26px;
+  min-height: 26px;
+  max-height: 26px;
+  padding: 0 8px;
+}
+
+.theme-switch-side {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.theme-switch-thumb {
+  left: 3px;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+}
+
+.theme-switch-thumb-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+body.dark .theme-switch-thumb {
+  transform: translateX(60px);
+}
+
+@media (max-width: 720px) {
+  .header-action-button,
+  .header-x-button,
+  .language-toggle-button,
+  .howto-button,
+  .shortcut-help-button,
+  .theme-switch,
+  .theme-switch-track {
+    width: 82px;
+    min-width: 82px;
+    max-width: 82px;
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
+  }
+
+  .theme-switch-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  body.dark .theme-switch-thumb {
+    transform: translateX(54px);
+  }
+}
+
+
+/* =========================================================
+   v1.32 Header Button Design Refresh
+   添付CSS（growth checker header）準拠：
+   [X] [JP/EN] [使い方] [ショートカット] [ライト/ナイト]
+   ========================================================= */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.header-top-row .header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.header-top-row .header-mini-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.x-link-button,
+.header-x-button,
+.language-toggle-button,
+.howto-help-button,
+.howto-button,
+.shortcut-help-button {
+  box-sizing: border-box;
+  width: auto;
+  max-width: none;
+  height: 26px;
+  min-height: 26px;
+  max-height: 26px;
+  margin: 0;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 850;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: none;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.x-link-button,
+.header-x-button {
+  min-width: 42px;
+  background: rgba(15, 23, 42, .08);
+  color: var(--text-main);
+  border: 1px solid var(--border-soft);
+  box-shadow: none;
+}
+
+.language-toggle-button {
+  min-width: 70px;
+  background: var(--cyan);
+  color: #020617;
+  border: 1px solid transparent;
+  box-shadow: 0 6px 16px rgba(14, 165, 233, .12);
+}
+
+.howto-help-button,
+.howto-button {
+  min-width: 72px;
+  border: 1px solid var(--border-cyan);
+  background: var(--cyan-bg);
+  color: var(--cyan-strong);
+}
+
+.shortcut-help-button {
+  min-width: 108px;
+  border: 1px solid var(--border-cyan);
+  background: var(--cyan-bg);
+  color: var(--cyan-strong);
+}
+
+.x-link-button:hover,
+.header-x-button:hover,
+.language-toggle-button:hover,
+.howto-help-button:hover,
+.howto-button:hover,
+.shortcut-help-button:hover,
+.theme-switch:hover {
+  transform: translateY(-1px);
+}
+
+body.dark .x-link-button,
+body.dark .header-x-button {
+  background: rgba(255, 255, 255, .08);
+  color: #f8fafc;
+  border-color: var(--border-soft);
+}
+
+body.dark .howto-help-button,
+body.dark .howto-button,
+body.dark .shortcut-help-button {
+  color: #cffafe;
+  border-color: var(--border-cyan);
+  background: var(--cyan-bg);
+}
+
+/* 添付CSS準拠の小型テーマスイッチ */
+.theme-switch {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-switch-track {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 78px;
+  min-width: 78px;
+  max-width: 78px;
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .68);
+  box-shadow:
+    inset 0 4px 10px rgba(15, 23, 42, .08),
+    0 8px 20px rgba(15, 23, 42, .08);
+}
+
+body.dark .theme-switch-track {
+  background: rgba(15, 23, 42, .72);
+}
+
+.theme-switch-side {
+  position: relative;
+  z-index: 0;
+  font-size: 13px;
+  line-height: 1;
+  user-select: none;
+}
+
+.theme-switch-side-sun {
+  color: #f59e0b;
+  opacity: .55;
+}
+
+.theme-switch-side-moon {
+  color: #64748b;
+  opacity: .75;
+}
+
+.theme-switch-thumb {
+  position: absolute;
+  z-index: 2;
+  left: 3px;
+  top: 3px;
+  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f8b84a 0%, #f59e0b 100%);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, .18),
+    inset 0 2px 3px rgba(255, 255, 255, .35);
+  transition:
+    transform 280ms ease,
+    background 280ms ease;
+}
+
+body.dark .theme-switch-thumb {
+  transform: translateX(48px);
+  background: linear-gradient(180deg, #6f8df8 0%, #4f6fe8 100%);
+}
+
+.theme-switch-thumb-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 15px;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+.theme-switch-thumb-sun {
+  color: #fff7ed;
+  font-size: 15px;
+}
+
+.theme-switch-thumb-moon {
+  display: none;
+}
+
+/* v1.32 stamp */
+.header-version-stamp {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1;
+  opacity: .58;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .header-actions {
+    gap: 8px;
+  }
+
+  .x-link-button,
+  .header-x-button,
+  .language-toggle-button,
+  .howto-help-button,
+  .howto-button,
+  .shortcut-help-button {
+    height: 26px;
+    min-height: 26px;
+    max-height: 26px;
+    padding: 0 11px;
+    font-size: 11.5px;
+  }
+
+  .theme-switch-track {
+    width: 78px;
+    min-width: 78px;
+    max-width: 78px;
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
+  }
+
+  body.dark .theme-switch-thumb {
+    transform: translateX(48px);
+  }
+}
+
+
+/* =========================================================
+   v1.33 Header Button Alignment Fix
+   ボタン高さ統一 / JP-EN・ショートカットを使い方基準に調整 /
+   ナイトモードトグル範囲修正
+   ========================================================= */
+
+.header-actions,
+.header-top-row .header-actions,
+.header-top-row .header-mini-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.x-link-button,
+.header-x-button,
+.language-toggle-button,
+.howto-help-button,
+.howto-button,
+.shortcut-help-button {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  height: 26px;
+  min-height: 26px;
+  max-height: 26px;
+  margin: 0;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 850;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.language-toggle-button,
+.howto-help-button,
+.howto-button,
+.shortcut-help-button {
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+}
+
+.x-link-button,
+.header-x-button {
+  width: 42px;
+  min-width: 42px;
+  max-width: 42px;
+}
+
+.shortcut-help-button {
+  font-size: 10.5px;
+  letter-spacing: -0.04em;
+  padding: 0 7px;
+}
+
+.theme-switch {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 78px;
+  min-width: 78px;
+  max-width: 78px;
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.theme-switch-track {
+  box-sizing: border-box;
+  position: relative;
+  width: 78px;
+  min-width: 78px;
+  max-width: 78px;
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+  padding: 0 9px;
+  overflow: hidden;
+}
+
+.theme-switch-thumb {
+  box-sizing: border-box;
+  left: 3px;
+  top: 3px;
+  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+}
+
+body.dark .theme-switch-thumb {
+  transform: translateX(48px);
+}
+
+.theme-switch-side {
+  font-size: 13px;
+  line-height: 1;
+}
+
+@media (max-width: 720px) {
+  .language-toggle-button,
+  .howto-help-button,
+  .howto-button,
+  .shortcut-help-button {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    height: 26px;
+    min-height: 26px;
+    max-height: 26px;
+  }
+
+  .x-link-button,
+  .header-x-button {
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+    height: 26px;
+    min-height: 26px;
+    max-height: 26px;
+  }
+
+  .theme-switch,
+  .theme-switch-track {
+    width: 78px;
+    min-width: 78px;
+    max-width: 78px;
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
+  }
+
+  .theme-switch-thumb {
+    width: 24px;
+    min-width: 24px;
+    max-width: 24px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+  }
+
+  body.dark .theme-switch-thumb {
+    transform: translateX(48px);
+  }
+}
+
+
+/* =========================================================
+   v1.34 Header Control Size Unification
+   [X] [JP/EN] [使い方] [ショートカット] [ライト/ナイト]
+   ボタン/スイッチの高さ・文字サイズ・縦位置を統一
+   ========================================================= */
+
+.header-actions,
+.header-top-row .header-actions,
+.header-top-row .header-mini-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end;
+  gap: 6px;
+  line-height: 1;
+}
+
+.x-link-button,
+.header-x-button,
+.language-toggle-button,
+.howto-help-button,
+.howto-button,
+.shortcut-help-button {
+  box-sizing: border-box !important;
+  flex: 0 0 auto;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  vertical-align: middle !important;
+  transform-origin: center;
+}
+
+.x-link-button,
+.header-x-button {
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+}
+
+.language-toggle-button,
+.howto-help-button,
+.howto-button {
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+}
+
+.shortcut-help-button {
+  width: 92px !important;
+  min-width: 92px !important;
+  max-width: 92px !important;
+  font-size: 11px !important;
+  letter-spacing: -0.04em;
+  padding: 0 7px !important;
+}
+
+.theme-switch {
+  box-sizing: border-box !important;
+  flex: 0 0 auto;
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  overflow: visible !important;
+}
+
+.theme-switch-track {
+  box-sizing: border-box !important;
+  position: relative !important;
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+
+.theme-switch-side {
+  position: relative;
+  z-index: 0;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  user-select: none;
+}
+
+.theme-switch-thumb {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  left: 3px !important;
+  top: 3px !important;
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  max-height: 22px !important;
+  border-radius: 50% !important;
+}
+
+/* 76px track / 22px thumb / left 3px / right 3px => 48px */
+body.dark .theme-switch-thumb {
+  transform: translateX(48px) !important;
+}
+
+.theme-switch-thumb-icon,
+.theme-switch-thumb-sun,
+.theme-switch-thumb-moon {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
+.x-link-button:hover,
+.header-x-button:hover,
+.language-toggle-button:hover,
+.howto-help-button:hover,
+.howto-button:hover,
+.shortcut-help-button:hover,
+.theme-switch:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  .x-link-button,
+  .header-x-button,
+  .language-toggle-button,
+  .howto-help-button,
+  .howto-button,
+  .shortcut-help-button,
+  .theme-switch {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    font-size: 11px !important;
+  }
+
+  .theme-switch-track {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+  }
+
+  .theme-switch-thumb {
+    width: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+  }
+
+  body.dark .theme-switch-thumb {
+    transform: translateX(48px) !important;
+  }
+}
+
+
+/* =========================================================
+   v1.35 Header Width / Control Centering / Moon Icon Fix
+   ヘッダー幅をメインアプリと統一、ボタン中央揃え、
+   トグル位置修正、ナイトモード時の月エンブレム表示
+   ========================================================= */
+
+:root {
+  --dsa-app-max: 1480px;
+  --dsa-app-side-gap: 36px;
+  --header-control-h: 28px;
+  --header-control-font: 11px;
+}
+
+/* ヘッダーとメインアプリの幅を同じ変数で統一 */
+header.site-header,
+main,
+main.input-collapsed,
+.tool-footer-note {
+  width: min(calc(100% - var(--dsa-app-side-gap)), var(--dsa-app-max)) !important;
+  max-width: var(--dsa-app-max) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+main,
+main.input-collapsed {
+  box-sizing: border-box;
+}
+
+/* 右上ボタン行の縦位置を中央に揃える */
+.header-actions,
+.header-top-row .header-actions,
+.header-top-row .header-mini-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  line-height: 1 !important;
+}
+
+/* テキストボタンの文字位置を厳密に中央へ */
+.x-link-button,
+.header-x-button,
+.language-toggle-button,
+.howto-help-button,
+.howto-button,
+.shortcut-help-button {
+  box-sizing: border-box !important;
+  height: var(--header-control-h) !important;
+  min-height: var(--header-control-h) !important;
+  max-height: var(--header-control-h) !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: var(--header-control-font) !important;
+  font-weight: 850 !important;
+  line-height: var(--header-control-h) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  vertical-align: middle !important;
+  transform-origin: center !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.x-link-button,
+.header-x-button {
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+}
+
+.language-toggle-button,
+.howto-help-button,
+.howto-button {
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+}
+
+.shortcut-help-button {
+  width: 92px !important;
+  min-width: 92px !important;
+  max-width: 92px !important;
+  padding: 0 7px !important;
+  letter-spacing: -0.04em;
+}
+
+/* button要素のブラウザ既定余白による文字ズレを抑制 */
+.language-toggle-button::before,
+.howto-help-button::before,
+.howto-button::before,
+.shortcut-help-button::before,
+.x-link-button::before,
+.header-x-button::before {
+  content: none !important;
+}
+
+/* スイッチ外枠を同じ高さへ。内部要素の下ズレを補正 */
+.theme-switch {
+  box-sizing: border-box !important;
+  flex: 0 0 auto !important;
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+  height: var(--header-control-h) !important;
+  min-height: var(--header-control-h) !important;
+  max-height: var(--header-control-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  overflow: visible !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.theme-switch-track {
+  box-sizing: border-box !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+  height: var(--header-control-h) !important;
+  min-height: var(--header-control-h) !important;
+  max-height: var(--header-control-h) !important;
+  margin: 0 !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  line-height: 1 !important;
+  overflow: hidden !important;
+}
+
+/* sun/moonの縦位置を中央に固定 */
+.theme-switch-side {
+  position: relative !important;
+  z-index: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  user-select: none !important;
+  transform: translateY(0) !important;
+}
+
+/* トグルつまみをtrack中央へ。28px track, 22px thumb => top 3px */
+.theme-switch-thumb {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  z-index: 2 !important;
+  left: 3px !important;
+  top: 50% !important;
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  max-height: 22px !important;
+  border-radius: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* ナイトモード時も縦中央を維持しつつ、track内で右端まで移動 */
+body.dark .theme-switch-thumb {
+  transform: translateX(48px) translateY(-50%) !important;
+}
+
+/* つまみ内アイコンを中央に固定 */
+.theme-switch-thumb-icon,
+.theme-switch-thumb-sun,
+.theme-switch-thumb-moon {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
+/* ライト時は太陽、ナイト時は月を表示 */
+.theme-switch-thumb-sun {
+  display: inline-flex !important;
+  color: #fff7ed;
+}
+
+.theme-switch-thumb-moon {
+  display: none !important;
+  color: #eef2ff;
+}
+
+body.dark .theme-switch-thumb-sun {
+  display: none !important;
+}
+
+body.dark .theme-switch-thumb-moon {
+  display: inline-flex !important;
+}
+
+/* HTML側に月文字が空でも表示されるよう補完 */
+.theme-switch-thumb-moon::before {
+  content: "☾";
+}
+
+/* hover時もレイアウトを崩さず、同じ移動量だけ使う */
+.x-link-button:hover,
+.header-x-button:hover,
+.language-toggle-button:hover,
+.howto-help-button:hover,
+.howto-button:hover,
+.shortcut-help-button:hover,
+.theme-switch:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 980px) {
+  :root {
+    --dsa-app-side-gap: 32px;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --dsa-app-side-gap: 24px;
+  }
+
+  .x-link-button,
+  .header-x-button,
+  .language-toggle-button,
+  .howto-help-button,
+  .howto-button,
+  .shortcut-help-button,
+  .theme-switch,
+  .theme-switch-track {
+    height: var(--header-control-h) !important;
+    min-height: var(--header-control-h) !important;
+    max-height: var(--header-control-h) !important;
+    font-size: var(--header-control-font) !important;
+  }
+
+  .theme-switch-thumb {
+    transform: translateY(-50%) !important;
+  }
+
+  body.dark .theme-switch-thumb {
+    transform: translateX(48px) translateY(-50%) !important;
+  }
+}
+
+
+/* =========================================================
+   v1.36 App Shell / Default Filters / Auto Threshold
+   ヘッダーとメインアプリを同一グループ化し、表示幅を完全一致
+   ========================================================= */
+
+:root {
+  --dsa-app-max: 1480px;
+  --dsa-app-side-gap: 36px;
+}
+
+.dsa-page-shell {
+  box-sizing: border-box;
+  width: min(calc(100% - var(--dsa-app-side-gap)), var(--dsa-app-max));
+  max-width: var(--dsa-app-max);
+  margin: 18px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dsa-page-shell > header.site-header,
+.dsa-page-shell > main,
+.dsa-page-shell > main.input-collapsed {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* shell側で余白を持つため、ヘッダー/メイン個別の上余白をリセット */
+.dsa-page-shell > header.site-header {
+  margin-top: 0 !important;
+}
+
+.dsa-page-shell > main,
+.dsa-page-shell > main.input-collapsed {
+  margin-top: 0 !important;
+}
+
+/* フッターは従来通りページ下部に独立配置。ただし横幅は同じ変数に合わせる */
+.tool-footer-note {
+  width: min(calc(100% - var(--dsa-app-side-gap)), var(--dsa-app-max)) !important;
+  max-width: var(--dsa-app-max) !important;
+}
+
+/* スクショビューではshellの幅制御を解除して従来の中央表示に戻す */
+body.screenshot-mode .dsa-page-shell {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+  display: block;
+}
+
+body.screenshot-mode .dsa-page-shell > main {
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+}
+
+@media (max-width: 980px) {
+  :root {
+    --dsa-app-side-gap: 32px;
+  }
+
+  .dsa-page-shell {
+    margin-top: 14px;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --dsa-app-side-gap: 24px;
+  }
+
+  .dsa-page-shell {
+    margin-top: 12px;
+    gap: 12px;
+  }
+}
+
+
+/* =========================================================
+   v1.361 Width Alignment / Header-Main Gap Tightening
+   ヘッダー・メインパネル・フッターの表示幅を揃える
+   ========================================================= */
+
+/* 
+  main に padding が残っていると、main自体の幅は揃っていても
+  入力パネル＋出力パネルの実表示端が内側へずれる。
+  そのため、共通shell側で幅を持ち、main側の外周paddingを0にする。
+*/
+:root {
+  --dsa-app-max: 1480px;
+  --dsa-app-side-gap: 48px;
+  --dsa-header-main-gap: 12px;
+}
+
+.dsa-page-shell {
+  box-sizing: border-box;
+  width: min(calc(100% - var(--dsa-app-side-gap)), var(--dsa-app-max)) !important;
+  max-width: var(--dsa-app-max) !important;
+  margin: 16px auto 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--dsa-header-main-gap) !important;
+}
+
+/* ヘッダーとメインは同じ親幅を100%で使用 */
+.dsa-page-shell > header.site-header,
+.dsa-page-shell > main,
+.dsa-page-shell > main.input-collapsed {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* メインアプリのパネル端をヘッダー端に合わせる */
+.dsa-page-shell > main,
+.dsa-page-shell > main.input-collapsed {
+  padding: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  gap: 18px !important;
+}
+
+/* ヘッダー個別の上余白を無効化 */
+.dsa-page-shell > header.site-header {
+  margin-top: 0 !important;
+}
+
+/* フッターも同じ基準幅に統一 */
+.tool-footer-note {
+  box-sizing: border-box !important;
+  width: min(calc(100% - var(--dsa-app-side-gap)), var(--dsa-app-max)) !important;
+  max-width: var(--dsa-app-max) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 入力パネル・出力パネルの高さはmain内で維持 */
+.dsa-page-shell > main > section {
+  min-height: 0;
+}
+
+/* スクショビューでは通常レイアウト用の幅制御を解除 */
+body.screenshot-mode .dsa-page-shell {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+  gap: 0 !important;
+  display: block !important;
+}
+
+body.screenshot-mode .dsa-page-shell > main,
+body.screenshot-mode .dsa-page-shell > main.input-collapsed {
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+@media (max-width: 980px) {
+  :root {
+    --dsa-app-side-gap: 32px;
+    --dsa-header-main-gap: 10px;
+  }
+
+  .dsa-page-shell {
+    margin-top: 14px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --dsa-app-side-gap: 24px;
+    --dsa-header-main-gap: 10px;
+  }
+
+  .dsa-page-shell {
+    margin-top: 12px !important;
+  }
+}
+

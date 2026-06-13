@@ -40,6 +40,16 @@ function bindEvents() {
     languageToggleBtn.addEventListener('click', toggleLanguage);
   }
 
+  const howToBtn = $('howToBtn');
+  if (howToBtn) {
+    howToBtn.addEventListener('click', () => {
+      const inputPanel = $('inputPanel');
+      if (inputPanel) {
+        inputPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+
   const shortcutHelpBtn = $('shortcutHelpBtn');
   const shortcutModalCloseBtn = $('shortcutModalCloseBtn');
   const shortcutModalBackdrop = $('shortcutModalBackdrop');
@@ -163,6 +173,43 @@ function syncThemeSwitch() {
   button.setAttribute('aria-label', title);
 }
 
+
+function autoSetThresholdByDominantLogSystem(lines) {
+  const counts = countCocCommandTypes(lines);
+  const critMax = $('critMax');
+  const fumbleMin = $('fumbleMin');
+
+  if (!critMax || !fumbleMin) return;
+  if (counts.ccb === 0 && counts.cc === 0) return;
+
+  if (counts.ccb > counts.cc) {
+    critMax.value = '5';
+    fumbleMin.value = '96';
+    return;
+  }
+
+  critMax.value = '1';
+  fumbleMin.value = '100';
+}
+
+function countCocCommandTypes(lines) {
+  const counts = { ccb: 0, cc: 0 };
+
+  (lines || []).forEach(line => {
+    const text = String(line || '').toUpperCase();
+
+    // CCB/SCCB are treated as CoC 6th style.
+    const ccbMatches = text.match(/(^|[^A-Z0-9])S?CCB\d*(?=[^A-Z0-9]|$|<=|<|＞|>)/g);
+    if (ccbMatches) counts.ccb += ccbMatches.length;
+
+    // CC/SCC, but not CCB/SCCB/CBR/SCBR, are treated as CoC 7th style.
+    const ccMatches = text.match(/(^|[^A-Z0-9])S?CC\d*(?=[^A-Z0-9]|$|<=|<|＞|>)/g);
+    if (ccMatches) counts.cc += ccMatches.length;
+  });
+
+  return counts;
+}
+
 function analyze() {
   state.inputPanelMode = 'auto';
 
@@ -173,6 +220,8 @@ function analyze() {
     .split(LF)
     .map(cleanLine)
     .filter(Boolean);
+
+  autoSetThresholdByDominantLogSystem(lines);
 
   const filtered = filterLines(lines);
   const rolls = extractRollData(filtered);
@@ -214,7 +263,7 @@ function updateLanguageToggleLabel() {
     current = getCurrentLanguage();
   }
 
-  button.textContent = current === 'ja' ? 'EN' : 'JP';
+  button.textContent = 'JP/EN';
 
   const label = current === 'ja'
     ? tr('language.switchToEnglish', '英語表示に切替')

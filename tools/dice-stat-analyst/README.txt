@@ -59,3 +59,61 @@ Screenshot view exit-only update:
 - Removed html2canvas CDN loading because image generation is no longer used.
 - Screenshot view now only shows the "通常表示に戻す" button.
 - Memo card remains hidden in screenshot view.
+
+
+v1.31 header refresh:
+- Header panel width aligned with main application panel width.
+- Header top-right controls changed to X / JP/EN / 使い方 / ショートカット / theme switch.
+- Header control buttons reduced in size.
+- Added subtle bottom-right version stamp: v1.31 2026/06/12.
+
+
+v1.31 header button size fix:
+- Unified the top-right header controls to the same visual size based on the 使い方 button.
+- Applied the same width/height to X, JP/EN, 使い方, ショートカット, and the theme switch.
+
+
+v1.32 header button design refresh:
+- Updated [X] [JP/EN] [使い方] [ショートカット] [ライト/ナイトモード] styling based on growth_checker_style.css.
+- Restored the reference-style varied min-widths and compact 26px button height.
+- Updated version stamp to v1.32 2026/06/12.
+
+
+v1.33 header button alignment fix:
+- Unified header button height for X / JP-EN / 使い方 / ショートカット / theme switch row.
+- Adjusted JP/EN and ショートカット to match the 使い方 button size.
+- Fixed dark-mode theme switch thumb so it stays inside the 78px switch track.
+- Updated version stamp to v1.33 2026/06/12.
+
+
+v1.34 header control size unification:
+- Unified the visual height and font size of X / JP-EN / 使い方 / ショートカット / theme switch.
+- Set all header controls to a 28px visual height and 11px font baseline.
+- Adjusted the theme switch to a 76px × 28px track with a 22px thumb.
+- Fixed dark-mode thumb translation to stay inside the switch track.
+- Updated version stamp to v1.34 2026/06/12.
+
+
+v1.35 header width / centering / moon icon fix:
+- Unified header panel width with the main application width using shared CSS variables.
+- Re-centered text inside X / JP-EN / 使い方 / ショートカット buttons.
+- Re-centered the theme switch thumb vertically.
+- Added moon emblem display inside the toggle thumb during dark mode.
+- Updated version stamp to v1.35 2026/06/12.
+
+
+v1.36 app shell / default filters / auto thresholds:
+- Wrapped the header panel and main app panel in a shared .dsa-page-shell so their displayed width is matched from the same parent group.
+- Removed the visible checklist items for excluding [雑談]/[other]/[info] lines and extracting only d100 rolls.
+- Those two filters now behave as default-on when the checkboxes are absent.
+- Added automatic critical/fumble threshold switching on analysis:
+  - CCB/SCCB-dominant logs: 6th edition thresholds, 5 / 96.
+  - CC/SCC-dominant logs: 7th edition thresholds, 1 / 100.
+- Updated version stamp to v1.36 2026/06/12.
+
+
+v1.361 width alignment:
+- Removed the visible outer padding from main inside .dsa-page-shell so the input/output panel edges align with the header panel edges.
+- Unified header, main panel group, and footer widths using the same CSS variables.
+- Tightened the gap between the header panel and main app panels.
+- Updated version stamp to v1.361 2026/06/12.
