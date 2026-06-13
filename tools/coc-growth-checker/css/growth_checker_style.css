@@ -1,5 +1,5 @@
 /* =========================================================
-   CoC Growth Checker v2.1
+   CoC Growth Checker v2.62
    ========================================================= */
 
 :root{
@@ -464,3 +464,561 @@ body.screenshot-mode .growth-output-box{ min-height:560px; }
 .shortcut-tip{ display:none; }
 
 .x-link-button{ text-decoration:none; }
+
+
+/* =========================================================
+   v2.62 Panel Size Alignment / Footer Typography
+   Dice Stat Analyst CSS参考：ヘッダー・メイン・フッターのサイズ感統一
+   ========================================================= */
+
+:root{
+  --app-max:1480px;
+  --app-side-gap:48px;
+  --header-main-gap:10px;
+}
+
+.site-header,
+.app-layout,
+.tool-footer-note,
+.howto-drawer,
+.shortcut-drawer{
+  width:min(calc(100% - var(--app-side-gap)), var(--app-max));
+  max-width:var(--app-max);
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.site-header{
+  margin-top:16px;
+  padding:14px 18px 13px;
+  border-radius:24px;
+}
+
+.header-inner{
+  position:relative;
+  gap:10px;
+}
+
+.header-main-row{
+  align-items:flex-end;
+}
+
+.version-stamp{
+  padding:0 2px 1px 0;
+  font-size:10px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:.02em;
+  opacity:.52;
+}
+
+.app-layout{
+  margin-top:var(--header-main-gap);
+  margin-bottom:18px;
+  gap:18px;
+}
+
+.app-panel{
+  border-radius:28px;
+  box-shadow:var(--shadow-panel);
+}
+
+/* フッターは添付CSSの小さめ表示へ寄せる */
+.tool-footer-note{
+  box-sizing:border-box;
+  margin-top:0;
+  margin-bottom:16px;
+  padding:10px 14px;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:14px;
+  background:rgba(255,255,255,.48);
+  box-shadow:none;
+  color:var(--text-muted);
+  text-align:left;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+
+body.dark .tool-footer-note{
+  background:rgba(15,23,42,.36);
+  border-color:rgba(148,163,184,.16);
+  color:var(--text-muted);
+}
+
+.tool-footer-note h2{
+  display:block;
+  margin:0 0 4px;
+  color:inherit;
+  font-size:10.5px;
+  font-weight:850;
+  line-height:1.4;
+  text-align:left;
+}
+
+.tool-footer-note p{
+  display:block;
+  margin:2px 0 0;
+  color:inherit;
+  font-size:10.5px;
+  line-height:1.4;
+  text-align:left;
+}
+
+.footer-x-link{
+  color:var(--cyan-strong);
+  font-weight:850;
+  text-decoration:none;
+  border-bottom:1px solid rgba(14,165,233,.32);
+}
+
+.footer-x-link:hover{
+  color:#0284c7;
+  border-bottom-color:rgba(14,165,233,.72);
+}
+
+body.dark .footer-x-link{
+  color:#67e8f9;
+  border-bottom-color:rgba(103,232,249,.34);
+}
+
+body.dark .footer-x-link:hover{
+  color:#cffafe;
+  border-bottom-color:rgba(207,250,254,.74);
+}
+
+@media(max-width:980px){
+  :root{
+    --app-side-gap:32px;
+    --header-main-gap:10px;
+  }
+
+  .site-header{
+    margin-top:14px;
+  }
+
+  .app-layout{
+    margin-top:10px;
+  }
+}
+
+@media(max-width:720px){
+  :root{
+    --app-side-gap:24px;
+    --header-main-gap:8px;
+  }
+
+  .site-header{
+    margin-top:12px;
+    padding:14px;
+    border-radius:22px;
+  }
+
+  .tool-footer-note{
+    padding:8px 10px;
+    margin-bottom:12px;
+  }
+
+  .tool-footer-note h2,
+  .tool-footer-note p{
+    font-size:10px;
+    line-height:1.35;
+  }
+}
+
+
+/* =========================================================
+   v2.64 Shortcut Drawer Smart Layout / Portal Label
+   添付イメージ準拠：2カラムカード、丸型クローズ、kbdピル表示
+   ========================================================= */
+
+.shortcut-drawer.open{
+  max-height:520px;
+  opacity:1;
+  margin-top:10px;
+}
+
+.shortcut-drawer-inner{
+  position:relative;
+  padding:22px 24px 18px;
+  border:1px solid rgba(56,189,248,.42);
+  border-radius:24px;
+  background:rgba(255,255,255,.72);
+  box-shadow:0 14px 34px rgba(14,165,233,.08);
+}
+
+body.dark .shortcut-drawer-inner{
+  background:rgba(15,23,42,.74);
+  border-color:rgba(103,232,249,.28);
+  box-shadow:0 18px 44px rgba(2,6,23,.30);
+}
+
+.shortcut-drawer-title{
+  min-height:30px;
+  margin:0 0 14px;
+  padding-right:44px;
+  color:var(--text-main);
+  font-size:16px;
+  font-weight:900;
+  line-height:1.2;
+}
+
+.shortcut-drawer-close{
+  position:absolute;
+  top:20px;
+  right:20px;
+  width:34px;
+  min-width:34px;
+  height:34px;
+  min-height:34px;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:999px;
+  background:rgba(125,211,252,.28);
+  color:#0284c7;
+  font-size:22px;
+  font-weight:900;
+  line-height:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:none;
+}
+
+body.dark .shortcut-drawer-close{
+  background:rgba(103,232,249,.16);
+  color:#67e8f9;
+}
+
+.shortcut-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px 12px;
+}
+
+.shortcut-item{
+  min-height:58px;
+  display:grid;
+  grid-template-columns:minmax(150px,auto) minmax(0,1fr);
+  gap:14px;
+  align-items:center;
+  padding:12px 16px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:16px;
+  background:rgba(248,250,252,.70);
+  color:var(--text-main);
+  box-shadow:none;
+}
+
+body.dark .shortcut-item{
+  background:rgba(15,23,42,.44);
+  border-color:rgba(103,232,249,.14);
+}
+
+.shortcut-keys{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  color:var(--text-muted);
+  font-weight:850;
+  line-height:1;
+}
+
+.shortcut-keys span{
+  color:var(--text-muted);
+  font-size:13px;
+  font-weight:900;
+  opacity:.85;
+}
+
+.shortcut-keys kbd,
+kbd{
+  min-width:30px;
+  padding:4px 10px;
+  border:1px solid rgba(14,165,233,.20);
+  border-bottom-width:1px;
+  border-radius:999px;
+  background:rgba(14,165,233,.08);
+  color:var(--text-main);
+  font-size:12px;
+  font-weight:900;
+  line-height:1.15;
+  letter-spacing:.02em;
+  box-shadow:none;
+}
+
+body.dark .shortcut-keys kbd,
+body.dark kbd{
+  border-color:rgba(103,232,249,.24);
+  background:rgba(103,232,249,.10);
+  color:#e0f2fe;
+}
+
+.shortcut-desc{
+  color:var(--text-main);
+  font-size:13px;
+  font-weight:650;
+  line-height:1.4;
+}
+
+@media(max-width:920px){
+  .shortcut-list{
+    grid-template-columns:1fr;
+  }
+
+  .shortcut-item{
+    grid-template-columns:minmax(130px,auto) minmax(0,1fr);
+  }
+}
+
+@media(max-width:640px){
+  .shortcut-drawer-inner{
+    padding:18px 16px 16px;
+    border-radius:20px;
+  }
+
+  .shortcut-drawer-close{
+    top:14px;
+    right:14px;
+  }
+
+  .shortcut-item{
+    grid-template-columns:1fr;
+    gap:8px;
+    padding:12px;
+  }
+}
+
+
+/* =========================================================
+   v2.65 Shortcut Drawer Compact Layout
+   ショートカットカードの高さ・幅・文字量をさらに圧縮
+   ========================================================= */
+
+.shortcut-drawer.open{
+  max-height:420px;
+  margin-top:8px;
+}
+
+.shortcut-drawer-inner{
+  padding:16px 20px 14px;
+  border-radius:22px;
+}
+
+.shortcut-drawer-title{
+  min-height:24px;
+  margin:0 0 10px;
+  padding-right:38px;
+  font-size:14px;
+  font-weight:800;
+  line-height:1.15;
+}
+
+.shortcut-drawer-close{
+  top:14px;
+  right:16px;
+  width:30px;
+  min-width:30px;
+  height:30px;
+  min-height:30px;
+  font-size:18px;
+  font-weight:800;
+}
+
+.shortcut-list{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px 9px;
+}
+
+.shortcut-item{
+  min-height:42px;
+  grid-template-columns:minmax(132px,auto) minmax(0,1fr);
+  gap:9px;
+  padding:7px 10px;
+  border-radius:14px;
+}
+
+.shortcut-keys{
+  gap:4px;
+  font-weight:600;
+}
+
+.shortcut-keys span{
+  font-size:11px;
+  font-weight:650;
+  opacity:.72;
+}
+
+.shortcut-keys kbd,
+kbd{
+  min-width:24px;
+  padding:2px 7px;
+  border-radius:999px;
+  font-size:10.5px;
+  font-weight:700;
+  line-height:1.15;
+  letter-spacing:0;
+}
+
+.shortcut-desc{
+  font-size:11.5px;
+  font-weight:500;
+  line-height:1.28;
+}
+
+@media(max-width:920px){
+  .shortcut-list{
+    grid-template-columns:1fr;
+  }
+
+  .shortcut-item{
+    grid-template-columns:minmax(118px,auto) minmax(0,1fr);
+  }
+}
+
+@media(max-width:640px){
+  .shortcut-drawer-inner{
+    padding:14px 14px 12px;
+    border-radius:18px;
+  }
+
+  .shortcut-drawer-title{
+    font-size:13px;
+    margin-bottom:8px;
+  }
+
+  .shortcut-drawer-close{
+    top:12px;
+    right:12px;
+    width:28px;
+    min-width:28px;
+    height:28px;
+    min-height:28px;
+  }
+
+  .shortcut-item{
+    min-height:0;
+    grid-template-columns:1fr;
+    gap:5px;
+    padding:7px 9px;
+  }
+
+  .shortcut-desc{
+    font-size:11px;
+  }
+}
+
+
+/* =========================================================
+   v2.67 Dark Toggle Moon Single Glyph Fix
+   ナイトモード時のトグルつまみ内 ☾ が二重表示されないように調整し、
+   ヘッダーとメインアプリ間の余白圧縮は維持
+   ========================================================= */
+
+:root{
+  --header-main-gap:7px;
+}
+
+.app-layout{
+  margin-top:var(--header-main-gap) !important;
+}
+
+.theme-switch-thumb{
+  overflow:hidden;
+}
+
+.theme-switch-thumb-icon{
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%,-50%) !important;
+  width:16px !important;
+  height:16px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  line-height:1 !important;
+  pointer-events:none !important;
+}
+
+.theme-switch-thumb-sun{
+  display:inline-flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  color:#fff7ed !important;
+  font-size:13px !important;
+}
+
+.theme-switch-thumb-moon{
+  display:none !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+}
+
+.theme-switch-thumb-moon::before{
+  content:"☾";
+}
+
+body.dark .theme-switch-thumb-sun{
+  display:none !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+}
+
+body.dark .theme-switch-thumb-moon{
+  display:inline-flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  color:#eef2ff !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+  text-shadow:0 1px 4px rgba(15,23,42,.20);
+}
+
+body.dark .theme-switch-thumb-moon::before{
+  content:"☾" !important;
+  display:block !important;
+}
+
+@media(max-width:980px){
+  :root{
+    --header-main-gap:7px;
+  }
+}
+
+@media(max-width:720px){
+  :root{
+    --header-main-gap:6px;
+  }
+}
+
+
+/* =========================================================
+   v2.67 Dark Toggle Moon Single Glyph Fix
+   HTML内の ☾ 文字だけを表示し、疑似要素の重複描画を停止
+   ========================================================= */
+
+.theme-switch-thumb-moon::before,
+.theme-switch-thumb-moon::after{
+  content:none !important;
+  display:none !important;
+}
+
+body.dark .theme-switch-thumb-moon::before,
+body.dark .theme-switch-thumb-moon::after{
+  content:none !important;
+  display:none !important;
+}
+
+body.dark .theme-switch-thumb-moon{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  color:#eef2ff !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  text-shadow:0 1px 4px rgba(15,23,42,.20);
+}

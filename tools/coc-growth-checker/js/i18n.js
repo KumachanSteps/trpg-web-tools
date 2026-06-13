@@ -1,6 +1,6 @@
 const I18N = {
   ja: {
-    "nav.backToTools": "← TRPG Web ツール観測所",
+    "nav.backToTools": "← TRPG Webツール観測所",
     "tag.logInput": "セッションログインプット",
     "tag.coc67": "CoC 6版 / 7版",
     "tag.growthCandidates": "成長候補抽出",

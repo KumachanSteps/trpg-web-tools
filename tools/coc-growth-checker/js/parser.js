@@ -1,4 +1,22 @@
 const THEME_STORAGE_KEY = "cocGrowthCheckerTheme";
+const SESSION_LOG_TRANSFER_KEY = "trpg-web-tools:session-log-transfer:v1";
+const DICE_ANALYST_IMPORT_KEY = "dice-stat-analyst:import-session-log:v1";
+const DICE_ANALYST_URL = "https://kumachansteps.github.io/trpg-web-tools/tools/dice-stat-analyst/";
+const SESSION_LOG_TRANSFER_KEYS = [
+  "trpg-web-tools:session-log-transfer",
+  "trpgWebTools.sessionLogTransfer",
+  "session-log-transfer",
+  "sessionLogTransfer",
+  "coc-growth-checker:session-log",
+  "cocGrowthChecker.sessionLog",
+  "cocGrowthChecker.sessionLogTransfer",
+  "dice-stat-analyst:session-log",
+  "diceStatAnalyst.sessionLogTransfer",
+  SESSION_LOG_TRANSFER_KEY,
+  DICE_ANALYST_IMPORT_KEY,
+  "dice-stat-analyst:import-session-log:v1",
+  "coc-growth-checker:import-session-log:v1"
+];
 
 const state = {
   allRolls: [],
@@ -527,6 +545,128 @@ function toggleTheme(){
   }
 }
 
+function buildShareUrl(){
+  const shareUrl = "https://kumachansteps.github.io/trpg-web-tools/tools/coc-growth-checker/";
+  const text = "CoC 6版 / 7版 成長チェッカーv2で、セッションログから成長チェック候補を整理しました。\n#TRPG #クトゥルフ神話TRPG";
+  const url = new URL("https://twitter.com/intent/tweet");
+  url.searchParams.set("text", text);
+  url.searchParams.set("url", shareUrl);
+  return url.toString();
+}
+
+function openXShare(event){
+  event?.preventDefault();
+  window.open(buildShareUrl(), "_blank", "noopener,noreferrer");
+}
+
+function buildTransferPayload(){
+  const raw = $("rawInput")?.value || "";
+  return {
+    type: "session-log",
+    source: "coc-growth-checker",
+    sourceName: "CoC 6版 / 7版 成長チェッカーv2",
+    target: "dice-stat-analyst",
+    sessionName: state.sessionName || (raw.trim() ? "貼り付けログ" : ""),
+    logText: raw,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function saveSessionPayloadToStorage(payload){
+  const serialized = JSON.stringify(payload);
+  SESSION_LOG_TRANSFER_KEYS.forEach(key => {
+    try { localStorage.setItem(key, serialized); } catch (error) { console.warn(`Could not write localStorage key: ${key}`, error); }
+    try { sessionStorage.setItem(key, serialized); } catch (error) { console.warn(`Could not write sessionStorage key: ${key}`, error); }
+  });
+}
+
+function saveSessionLogForDiceAnalyst(){
+  const payload = buildTransferPayload();
+  saveSessionPayloadToStorage(payload);
+  return payload;
+}
+
+function openDiceAnalystWithCurrentLog(event){
+  event?.preventDefault();
+  const payload = saveSessionLogForDiceAnalyst();
+  const link = event?.currentTarget;
+  const url = new URL(link?.getAttribute("href") || DICE_ANALYST_URL, window.location.href);
+  if (payload.logText.trim()) {
+    url.searchParams.set("import", "session-log");
+    url.searchParams.set("from", "coc-growth-checker");
+    url.searchParams.set("transfer", "localStorage");
+  }
+  window.open(url.toString(), link?.target || "_self", link?.target === "_blank" ? "noopener,noreferrer" : undefined);
+}
+
+function parseTransferValue(value){
+  if (!value) return null;
+  const raw = String(value);
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === "string") return { logText: parsed };
+    if (parsed && typeof parsed === "object") return parsed;
+  } catch (_) {
+    return { logText: raw };
+  }
+  return null;
+}
+
+function extractLogTextFromPayload(payload){
+  if (!payload || typeof payload !== "object") return "";
+  const candidates = [
+    payload.logText,
+    payload.rawInput,
+    payload.raw,
+    payload.text,
+    payload.sessionLog,
+    payload.session_log,
+    payload.log,
+    payload.content,
+    payload.data?.logText,
+    payload.data?.rawInput,
+    payload.data?.text,
+    payload.data?.log,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) return candidate;
+  }
+  return "";
+}
+
+function readStoredSessionLogTransfer(){
+  const stores = [];
+  try { stores.push(localStorage); } catch (_) {}
+  try { stores.push(sessionStorage); } catch (_) {}
+
+  for (const key of SESSION_LOG_TRANSFER_KEYS) {
+    for (const store of stores) {
+      const payload = parseTransferValue(store.getItem(key));
+      const logText = extractLogTextFromPayload(payload);
+      if (logText.trim()) return { key, payload, logText };
+    }
+  }
+  return null;
+}
+
+function shouldImportSessionLogFromUrl(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get("import") === "session-log" && (params.get("transfer") === "localStorage" || params.has("transfer"));
+}
+
+function importSessionLogFromStorageIfRequested(){
+  if (!shouldImportSessionLogFromUrl()) return false;
+  const transfer = readStoredSessionLogTransfer();
+  if (!transfer?.logText) return false;
+
+  const rawInput = $("rawInput");
+  if (!rawInput) return false;
+  rawInput.value = transfer.logText;
+  state.sessionName = transfer.payload?.sessionName || transfer.payload?.fileName || transfer.payload?.sourceName || "転送ログ";
+  analyze();
+  return true;
+}
+
 function setupFileInput(){
   const fileInput = $("fileInput");
   if (!fileInput) return;
@@ -558,6 +698,8 @@ function setupEvents(){
   $("screenshotExitBtn")?.addEventListener("click", () => document.body.classList.remove("screenshot-mode"));
   $("themeToggleBtn")?.addEventListener("click", toggleTheme);
   $("languageToggleBtn")?.addEventListener("click", () => setLanguage(getCurrentLanguage() === "ja" ? "en" : "ja"));
+  $("xShareBtn")?.addEventListener("click", openXShare);
+  $("diceAnalystLink")?.addEventListener("click", openDiceAnalystWithCurrentLog);
   setupFileInput();
 }
 
@@ -566,7 +708,8 @@ function init(){
   localStorage.setItem(THEME_STORAGE_KEY, "light");
   setupEvents();
   applyTranslations();
-  renderAll();
+  const imported = importSessionLogFromStorageIfRequested();
+  if (!imported) renderAll();
 }
 
 document.addEventListener("DOMContentLoaded", init);
