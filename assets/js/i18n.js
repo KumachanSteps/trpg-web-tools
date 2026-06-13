@@ -346,7 +346,7 @@ window.TRPG_PORTAL_I18N = {
     {
       id: "npc-data-reader",
       icon: "🧾",
-      status: "production",
+      status: "available",
       category: "gmSupport",
       href: "./tools/npc-data-reader/",
       name: {
@@ -361,7 +361,7 @@ window.TRPG_PORTAL_I18N = {
     {
       id: "chara-sabun-kanri-tool",
       icon: "🎭",
-      status: "production",
+      status: "available",
       category: "characterUtility",
       href: "./tools/chara-sabun-kanri-tool/",
       name: {
