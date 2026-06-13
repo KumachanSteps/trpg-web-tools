@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-NJD5JZML31");
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
+  <title>CoC 6版 / 7版 成長チェッカーv2｜TRPG WEBツール観測所</title>
+  <link rel="stylesheet" href="./css/growth_checker_style.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-top-row">
+        <div class="header-top-tags">
+          <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" data-i18n="nav.backToTools">
+            ← TRPG Webツール観測所
+            <span class="portal-tooltip">Return to TRPG Web Tools Portal</span>
+          </a>
+          <span class="header-pill header-pill-cyan" data-i18n="tag.logInput">セッションログインプット</span>
+          <span class="header-pill header-pill-violet" data-i18n="tag.coc67">CoC 6版 / 7版</span>
+          <span class="header-pill header-pill-amber" data-i18n="tag.growthCandidates">成長候補抽出</span>
+        </div>
+
+        <div class="header-actions">
+          <a id="xShareBtn" class="x-link-button" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" aria-label="このツールを使ったことをXに投稿">X</a>
+          <button id="languageToggleBtn" class="language-toggle-button" type="button" aria-label="日本語 / 英語表示を切替">JP/EN</button>
+          <button id="howtoHelpBtn" class="howto-help-button" type="button" aria-expanded="false" aria-controls="howtoDrawer" data-i18n="button.howto">使い方</button>
+          <button id="shortcutHelpBtn" class="shortcut-help-button" type="button" aria-expanded="false" aria-controls="shortcutDrawer" data-i18n="button.shortcuts">ショートカット</button>
+          <button id="themeToggleBtn" class="theme-switch" type="button" aria-label="ナイトモードに切替" aria-pressed="false" title="ナイトモードに切替">
+            <span class="theme-switch-track">
+              <span class="theme-switch-side theme-switch-side-sun">☀</span>
+              <span class="theme-switch-side theme-switch-side-moon">☾</span>
+              <span class="theme-switch-thumb"><span class="theme-switch-thumb-icon theme-switch-thumb-sun">☀</span><span class="theme-switch-thumb-icon theme-switch-thumb-moon">☾</span></span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-main-row">
+        <div class="header-title-area">
+          <div class="title-row">
+            <div class="tool-icon" aria-hidden="true">
+              <svg class="tool-icon-dice" viewBox="0 0 64 64" role="img">
+                <rect x="13" y="13" width="38" height="38" rx="10" ry="10" fill="currentColor"/>
+                <circle cx="24" cy="24" r="3.4" fill="#020617"/>
+                <circle cx="40" cy="24" r="3.4" fill="#020617"/>
+                <circle cx="32" cy="32" r="3.4" fill="#020617"/>
+                <circle cx="24" cy="40" r="3.4" fill="#020617"/>
+                <circle cx="40" cy="40" r="3.4" fill="#020617"/>
+              </svg>
+              <span class="tool-icon-star">✦</span>
+              <span class="tool-icon-growth-check">✓</span>
+            </div>
+            <h1 class="site-title" data-i18n="app.title">CoC 6版 / 7版 成長チェッカーv2</h1>
+          </div>
+          <p class="site-description" data-i18n="app.description">セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。</p>
+        </div>
+        <div class="version-stamp">v2.68 2026/06/13</div>
+      </div>
+    </div>
+  </header>
+
+  <div id="howtoDrawer" class="howto-drawer" aria-hidden="true">
+    <div class="howto-drawer-inner">
+      <div class="howto-drawer-title">
+        <span data-i18n="howto.title">使い方</span>
+        <button id="howtoDrawerCloseBtn" class="howto-drawer-close" type="button" aria-label="使い方を閉じる">×</button>
+      </div>
+      <div class="howto-list">
+        <div class="howto-item" data-i18n="howto.step1">1. セッションログHTML / txtファイルを選択、またはログ本文を貼り付けます。</div>
+        <div class="howto-item" data-i18n="howto.step2">2. 必要に応じて、左パネルの成長チェック出力ルールを選択します。</div>
+        <div class="howto-item" data-i18n="howto.step3">3. 右パネルの成長候補サマリーを確認し、必要に応じて手動で編集・コピーしてください。</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="shortcutDrawer" class="shortcut-drawer" aria-hidden="true">
+        <div class="shortcut-drawer-inner">
+          <div class="shortcut-drawer-title">
+            <span data-i18n="shortcut.title">ショートカット一覧</span>
+            <button id="shortcutDrawerCloseBtn" class="shortcut-drawer-close" type="button" aria-label="ショートカットを閉じる">×</button>
+          </div>
+          <div class="shortcut-list">
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>O</kbd></div><div class="shortcut-desc" data-i18n="shortcut.file">ファイル選択</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleInput">入力パネルの開閉</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>S</kbd></div><div class="shortcut-desc" data-i18n="shortcut.toggleShortcuts">ショートカットパネルの開閉</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>T</kbd></div><div class="shortcut-desc" data-i18n="shortcut.theme">ナイトモード切り替え</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>V</kbd></div><div class="shortcut-desc" data-i18n="shortcut.screenshot">スクショ表示切り替え</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>C</kbd></div><div class="shortcut-desc" data-i18n="shortcut.copy">出力結果のコピー</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Backspace</kbd></div><div class="shortcut-desc" data-i18n="shortcut.clear">確認後クリア</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>1</kbd></div><div class="shortcut-desc" data-i18n="shortcut.rulebook">「基本ルルブ準拠」に設定</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>2</kbd></div><div class="shortcut-desc" data-i18n="shortcut.critFumble">「クリファン+初期値」に設定</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>3</kbd></div><div class="shortcut-desc" data-i18n="shortcut.both">「クリファン+成功技能」に設定</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>4</kbd></div><div class="shortcut-desc" data-i18n="shortcut.bothPrime">「クリティカル+成功技能」に設定</div></div>
+            <div class="shortcut-item"><div class="shortcut-keys"><kbd>Esc</kbd></div><div class="shortcut-desc" data-i18n="shortcut.esc">ドロワー / スクショ表示を閉じる</div></div>
+          </div>
+        </div>
+      </div>
+
+  <div id="screenshotActionBar" class="screenshot-action-bar">
+    <button id="screenshotExitBtn" class="screenshot-exit-button" type="button" data-i18n="button.exitScreenshot">通常表示に戻す</button>
+  </div>
+
+  <main id="appLayout" class="app-layout">
+    <section id="inputPanel" class="app-panel input-panel">
+      <div class="input-panel-top">
+        <h2 data-i18n="input.title">入力</h2>
+        <button id="inputToggleBtn" class="input-toggle-button" type="button" aria-label="入力パネルを畳む">⇤</button>
+      </div>
+
+      <div class="input-content">
+        <label>
+          <span data-i18n="input.fileLabel">セッションログHTML / テキストファイル</span>
+          <input id="fileInput" type="file" accept=".html,.htm,.txt" />
+        </label>
+
+        <label>
+          <span data-i18n="input.pasteLabel">またはログ本文を貼り付け</span>
+          <textarea id="rawInput" placeholder="HTMLまたはテキストログを貼り付け" data-i18n-placeholder="input.placeholder"></textarea>
+        </label>
+
+        <section class="rule-panel" aria-labelledby="rulePanelTitle">
+          <h3 id="rulePanelTitle" data-i18n="input.ruleTitle">成長チェック出力ルール</h3>
+          <div class="rule-options" role="radiogroup" aria-labelledby="rulePanelTitle">
+            <label class="rule-option"><input type="radio" name="ruleMode" value="rulebook" checked /><span class="rule-dot"></span><span data-i18n="rule.rulebook">基本ルルブ準拠（全成功技能を1回づつ表示）</span></label>
+            <label class="rule-option"><input type="radio" name="ruleMode" value="critFumble" /><span class="rule-dot"></span><span data-i18n="rule.critFumble">クリティカル / ファンブル / 初期値（該当ロールを全て表示）</span></label>
+            <label class="rule-option"><input type="radio" name="ruleMode" value="both" /><span class="rule-dot"></span><span data-i18n="rule.both">合算① クリファン全件 + 成功技能1回づつ</span></label>
+            <label class="rule-option"><input type="radio" name="ruleMode" value="bothPrime" /><span class="rule-dot"></span><span data-i18n="rule.bothPrime">合算② クリティカル全件 + 成功技能1回づつ</span></label>
+          </div>
+
+          <label class="extra-rule-option">
+            <input id="includeParamRolls" type="checkbox" />
+            <span class="extra-checkbox" aria-hidden="true"></span>
+            <span data-i18n="input.includeParamRolls">アイデア、知識、能力値ロールを加える</span>
+          </label>
+        </section>
+
+        <label class="auto-hide-field">
+          <span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span>
+          <input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" />
+        </label>
+
+        <div class="input-actions">
+          <button id="analyzeBtn" data-i18n="button.analyze">成長候補を抽出</button>
+          <button id="clearBtn" class="secondary" data-i18n="button.clear">クリア</button>
+        </div>
+
+        <p class="note input-help" data-i18n="input.note">対応例：CCB&lt;=80 【目星】、CC&lt;=60 【図書館】、CBRB(80,60)、1d100&lt;=55 など。
+キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。
+また、雑談やおはらいなどのタブでのロールは検出範囲から除外しております。
+
+デフォルト設定では知識、アイデア、能力値ロールは検出しません。
+幸運は1クリティカルの場合のみ、POW成長判定として検出します。</p>
+      </div>
+    </section>
+
+    <section class="app-panel output-panel">
+      <div class="output-toolbar">
+        <div class="character-control-bar">
+          <button id="characterControlToggleBtn" class="character-control-toggle" type="button" data-i18n="button.showCharacterControls">表示キャラ設定を開く▼</button>
+        </div>
+        <div class="output-actions">
+          <button id="summaryShotBtn" class="summary-shot-button" type="button" data-i18n="button.screenshot">📷 スクショ表示</button>
+          <a id="diceAnalystLink" class="dice-analyst-link-button" href="https://kumachansteps.github.io/trpg-web-tools/tools/dice-stat-analyst/" data-i18n="button.diceAnalyst">ダイス解析ツール →</a>
+        </div>
+      </div>
+      <div id="characterControls" class="character-controls"></div>
+
+      <div class="growth-output-wrap">
+        <div class="growth-output-head">
+          <h2 class="growth-output-title" data-i18n="output.title">成長候補サマリー</h2>
+          <div class="growth-output-actions">
+            <button id="copySummaryBtn" class="growth-copy-button" type="button" data-i18n="button.copy">コピー</button>
+            <button id="deleteSummaryBtn" class="growth-delete-button" type="button" data-i18n="button.delete">削除</button>
+          </div>
+        </div>
+        <textarea id="growthSummaryOutput" class="growth-output-box" spellcheck="false"></textarea>
+        <section id="summaryGuidePanel" class="summary-guide-panel">
+          <p id="summaryGuideText">現在は「基本ルルブ準拠」の設定でログを解析、成長判定が可能な技能をリストします。
+
+他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <section class="tool-footer-note">
+    <h2>利用上の注意</h2>
+    <p>本ツールは、開発者 <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
+    <p>不具合報告や要望は、Xの <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
+  </section>
+
+  <script src="./js/i18n.js"></script>
+  <script src="./js/language.js"></script>
+  <script src="./js/parser.js"></script>
+  <script src="./js/shortcut.js"></script>
+</body>
+</html>
