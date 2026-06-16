@@ -20,25 +20,26 @@
   />
 
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="css/style.css?v=0.12" />
+  <link rel="stylesheet" href="css/style.css?v=0.13-xlogo" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <div class="header-main">
+      <div class="title-block">
+        <p class="eyebrow">TRPG WEBツール観測所</p>
         <h1>キャラ差分管理ツール</h1>
+        <p class="lead">立ち絵・表情差分をまとめて確認し、ファイル名を整えて、CCFOLIA向けの <strong>@差分</strong> チャットパレットを生成します。</p>
       </div>
-      <p class="lead">立ち絵・表情差分をまとめて確認し、ファイル名を整えて、CCFOLIA向けの <strong>@差分</strong> チャットパレットを生成します。</p>
 
       <nav class="header-actions" aria-label="ヘッダー操作">
-        <a class="header-btn" href="https://kumachansteps.github.io/trpg-web-tools/">←TRPG WEBツール観測所</a>
-        <a class="header-btn square" id="xPostBtn" href="https://twitter.com/intent/tweet?text=%E3%82%AD%E3%83%A3%E3%83%A9%E5%B7%AE%E5%88%86%E7%AE%A1%E7%90%86%E3%83%84%E3%83%BC%E3%83%AB%E3%82%92%E4%BD%BF%E7%94%A8%E4%B8%AD%20%23TRPG%20%23%E3%82%B3%E3%82%B3%E3%83%95%E3%82%A9%E3%83%AA%E3%82%A2&url=https%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2F" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿">×</a>
-        <button type="button" class="header-btn" id="usageToggleBtn" aria-expanded="false" aria-controls="usagePanel">使い方</button>
-        <button type="button" class="header-btn" id="shortcutToggleBtn" aria-expanded="false" aria-controls="shortcutPanel">ショートカット</button>
-        <button type="button" class="header-btn" id="resetAllBtn">リセット</button>
+        <a class="header-nav-link" href="https://kumachansteps.github.io/trpg-web-tools/">←TRPG WEBツール観測所</a>
+        <a class="x-share-link" id="xPostBtn" href="https://twitter.com/intent/tweet?text=%E3%82%AD%E3%83%A3%E3%83%A9%E5%B7%AE%E5%88%86%E7%AE%A1%E7%90%86%E3%83%84%E3%83%BC%E3%83%AB%E3%82%92%E4%BD%BF%E7%94%A8%E4%B8%AD%20%23TRPG%20%23%E3%82%B3%E3%82%B3%E3%83%95%E3%82%A9%E3%83%AA%E3%82%A2&url=https%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2F" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿"><span>𝕏</span></a>
+        <button type="button" class="ghost-button" id="usageToggleBtn" aria-expanded="false" aria-controls="usagePanel">使い方</button>
+        <button type="button" class="ghost-button" id="shortcutToggleBtn" aria-expanded="false" aria-controls="shortcutPanel">ショートカット</button>
+        <button type="button" class="ghost-button" id="resetAllBtn">リセット</button>
       </nav>
 
-      <div class="version-stamp">v0.12 / 2026.06.11</div>
+      <div class="version-engrave">v0.13 / 2026.06.11</div>
 
       <section class="header-drawer" id="usagePanel" aria-hidden="true">
         <div class="drawer-inner">
@@ -160,6 +161,6 @@
   <datalist id="sabunSuggestions"></datalist>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="js/main.js?v=0.12"></script>
+  <script src="js/main.js?v=0.13-xlogo"></script>
 </body>
 </html>

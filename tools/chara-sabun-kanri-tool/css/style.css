@@ -41,7 +41,7 @@ a { color: inherit; }
   padding: 0.7rem 0 36px;
 }
 
-/* Header Panel */
+/* Header layout */
 .app-header {
   position: relative;
   display: grid;
@@ -50,32 +50,43 @@ a { color: inherit; }
   column-gap: 1rem;
   row-gap: 0.32rem;
   align-items: start;
-
+  min-height: 0;
   height: var(--header-h);
   width: 100%;
   margin: 0;
   padding: 1rem 1.25rem 0.92rem;
-
   border: 1px solid var(--line);
   border-radius: 24px;
+  overflow: visible;
   background: linear-gradient(135deg, rgba(255,255,255,0.105), rgba(255,255,255,0.04));
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
   z-index: 10;
 }
 
-/* Left top: Tool title block */
-.header-main {
+.title-block {
   grid-column: 1;
-  grid-row: 1;
+  grid-row: 1 / span 2;
   min-width: 0;
   padding-right: 0.5rem;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: start;
+}
+
+.eyebrow {
+  margin: 0 0 0.18rem;
+  color: var(--accent);
+  font-size: 0.72rem;
+  line-height: 1.1;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  opacity: 0.86;
 }
 
 h1, h2, h3, p { margin-top: 0; }
 
-/* Tool title */
-h1 {
+.app-header h1 {
   margin: 0;
   font-size: clamp(1.35rem, 2.05vw, 2.05rem);
   line-height: 1.08;
@@ -85,27 +96,20 @@ h1 {
 h2 { margin-bottom: 0; font-size: 1.02rem; letter-spacing: -0.02em; }
 h3 { margin-bottom: 0.35rem; font-size: 0.88rem; }
 
-/* Left bottom: Tool description */
-.lead {
-  grid-column: 1;
-  grid-row: 2;
-  align-self: baseline;
+.app-header .lead {
   max-width: 780px;
-  margin: 0;
-
+  margin: 0.38rem 0 0;
   color: var(--muted);
   font-size: 0.88rem;
   line-height: 1.55;
   font-weight: 650;
 }
 
-.lead strong { color: #ffe2a8; font-weight: 850; }
+.app-header .lead strong { color: #ffe2a8; font-weight: 850; }
 
-/* Right top: Header buttons */
 .header-actions {
   grid-column: 2;
   grid-row: 1;
-
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -116,47 +120,65 @@ h3 { margin-bottom: 0.35rem; font-size: 0.88rem; }
   margin-top: -0.02rem;
 }
 
-/* Header button style */
-.header-btn,
-.header-button {
+.header-actions .ghost-button,
+.x-share-link,
+.header-nav-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   min-height: 2.12rem;
-  padding: 0.38rem 0.68rem;
-
   border: 1.5px solid rgba(255,255,255,0.16);
   border-radius: 999px;
   background: rgba(255,255,255,0.084);
   color: var(--text);
-
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
   font-size: 0.78rem;
   line-height: 1;
   font-weight: 800;
   text-decoration: none;
   white-space: nowrap;
-
   box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.header-btn.square,
-.header-button.square {
+.header-actions .ghost-button {
+  padding: 0.38rem 0.68rem;
+}
+
+.header-nav-link {
+  min-height: 2.12rem;
+  padding: 0.38rem 0.72rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+  font-size: 0.78rem;
+  line-height: 1;
+  font-weight: 850;
+}
+
+.x-share-link {
   width: 2.12rem;
   min-width: 2.12rem;
+  min-height: 2.12rem;
   padding-left: 0;
   padding-right: 0;
+}
+
+.x-share-link span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: none;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
   font-size: 1.05rem;
   line-height: 1;
   font-weight: 500;
+  letter-spacing: -0.04em;
 }
 
-.header-btn:hover,
-.header-btn.is-active,
-.header-button:hover,
-.header-button.is-active {
+.header-actions .ghost-button:hover,
+.x-share-link:hover,
+.header-nav-link:hover,
+.header-actions .ghost-button.is-active {
   transform: translateY(-1px);
   filter: brightness(1.03);
   border-color: rgba(255,207,125,0.58);
@@ -165,19 +187,17 @@ h3 { margin-bottom: 0.35rem; font-size: 0.88rem; }
   box-shadow: 0 8px 18px rgba(255,207,125,0.10);
 }
 
-/* Right bottom: Version text */
-.header-version,
-.version-stamp {
+.version-engrave {
   grid-column: 2;
   grid-row: 2;
+  position: static;
   align-self: baseline;
   justify-self: end;
-
   margin: 0;
   padding-top: 0.05rem;
-  transform: translateY(4px);
-
+  transform: translateY(8px);
   color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
   font-size: 0.72rem;
   line-height: 1.55;
   font-weight: 850;
@@ -582,13 +602,13 @@ textarea {
     min-height: auto;
     padding: 0.95rem 1rem 1.05rem;
   }
-  .header-main, .header-actions, .lead, .header-version, .version-stamp { grid-column: 1; }
-  .header-main { grid-row: 1; padding: 0; }
+  .title-block, .header-actions, .version-engrave { grid-column: 1; }
+  .title-block { grid-row: 1; padding: 0; }
   .header-actions { grid-row: 2; justify-content: flex-start; min-width: 0; }
-  .lead { grid-row: 3; }
-  .header-version, .version-stamp { grid-row: 4; justify-self: start; text-align: left; }
-  .header-btn, .header-button { font-size: 0.72rem; min-height: 2.05rem; padding: 0.36rem 0.62rem; }
-  .header-btn.square, .header-button.square { width: 2.05rem; min-width: 2.05rem; }
+  .header-actions .ghost-button { font-size: 0.72rem; }
+  .header-nav-link { font-size: 0.72rem; }
+  
+  .version-engrave { grid-row: 3; justify-self: start; text-align: left; transform: none; }
   .tool-grid { grid-template-columns: 1fr; grid-template-areas: "upload" "thumbs" "preview" "output"; }
   .large-preview { height: 420px; min-height: 340px; }
   .thumb-list { height: 380px; }
