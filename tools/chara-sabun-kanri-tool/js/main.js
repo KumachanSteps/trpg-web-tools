@@ -64,6 +64,7 @@
     shortcutToggleBtn: document.getElementById('shortcutToggleBtn'),
     usagePanel: document.getElementById('usagePanel'),
     shortcutPanel: document.getElementById('shortcutPanel'),
+    toastMessage: document.getElementById('toastMessage'),
   };
 
   function init() {
@@ -432,7 +433,8 @@
       setStatus('ZIPを生成しています。', 'warn');
       const blob = await zip.generateAsync({ type: 'blob' });
       downloadBlob(blob, `${mainName}_sabun.zip`);
-      setStatus('リネーム済み画像ZIPを出力しました。', 'ok');
+      setStatus('画像ZIPのダウンロードを開始しました。', 'ok');
+      showToast('画像ZIPのダウンロードが完了しました。');
     } catch (error) {
       console.error(error);
       setStatus('ZIP出力に失敗しました。', 'error');
@@ -527,6 +529,19 @@
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+  }
+
+  function showToast(message = 'ダウンロードが完了しました。') {
+    if (!els.toastMessage) return;
+    els.toastMessage.textContent = message;
+    els.toastMessage.setAttribute('aria-hidden', 'false');
+    els.toastMessage.classList.add('is-visible');
+
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => {
+      els.toastMessage.classList.remove('is-visible');
+      els.toastMessage.setAttribute('aria-hidden', 'true');
+    }, 2200);
   }
 
   function setStatus(message, type = '') {

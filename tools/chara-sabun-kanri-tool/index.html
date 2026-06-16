@@ -20,7 +20,7 @@
   />
 
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="css/style.css?v=0.15" />
+  <link rel="stylesheet" href="css/style.css?v=0.16" />
 </head>
 <body>
   <div class="app-shell">
@@ -39,7 +39,7 @@
         <button type="button" class="ghost-button" id="resetAllBtn">リセット</button>
       </nav>
 
-      <div class="version-engrave">v0.15 / 2026.06.11</div>
+      <div class="version-engrave">v0.16 / 2026.06.11</div>
 
       <section class="header-drawer" id="usagePanel" aria-hidden="true">
         <div class="drawer-inner">
@@ -48,7 +48,7 @@
             <li>画像をドラッグ&ドロップ、またはクリックして複数画像を選択します。</li>
             <li>メインファイル名を入力し、各サムネイル横の差分名を編集します。</li>
             <li>必要に応じて「番号追加」をONにすると、<code>メインファイル名01_差分名.png</code> の形式になります。</li>
-            <li>「リネーム画像をZIPで出力」で画像一式を保存できます。</li>
+            <li>「画像をZIPでダウンロード」で画像一式を保存できます。</li>
             <li>「@差分チャパレをコピー」で、CCFOLIAなどに貼り付ける差分切替用チャットパレットをコピーできます。</li>
           </ol>
         </div>
@@ -144,7 +144,7 @@
         </div>
 
         <div class="output-actions">
-          <button type="button" class="primary-button" id="exportZipBtn">リネーム画像をZIPで出力</button>
+          <button type="button" class="primary-button" id="exportZipBtn">画像をZIPでダウンロード</button>
           <button type="button" class="secondary-button" id="copyPaletteBtn">@差分チャパレをコピー</button>
         </div>
 
@@ -158,9 +158,11 @@
     </footer>
   </div>
 
+  <div class="toast-message" id="toastMessage" role="status" aria-live="polite" aria-hidden="true">ダウンロードが完了しました。</div>
+
   <datalist id="sabunSuggestions"></datalist>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="js/main.js?v=0.15"></script>
+  <script src="js/main.js?v=0.16"></script>
 </body>
 </html>
