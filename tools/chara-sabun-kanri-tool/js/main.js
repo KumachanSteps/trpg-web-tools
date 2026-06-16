@@ -109,7 +109,12 @@
   function handleShortcuts(event) {
     const isMod = event.ctrlKey || event.metaKey;
     if (event.key === 'Escape') {
-      closeDrawers();
+      event.preventDefault();
+      if (isAnyDrawerOpen()) {
+        closeDrawers();
+      } else {
+        els.resetAllBtn.click();
+      }
       return;
     }
 
@@ -172,6 +177,10 @@
       button.classList.remove('is-active');
       button.setAttribute('aria-expanded', 'false');
     });
+  }
+
+  function isAnyDrawerOpen() {
+    return [els.usagePanel, els.shortcutPanel].some((panel) => panel.classList.contains('is-open'));
   }
 
   function renderSuggestions() {

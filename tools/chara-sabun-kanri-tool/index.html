@@ -20,7 +20,7 @@
   />
 
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="css/style.css?v=0.13-xlogo" />
+  <link rel="stylesheet" href="css/style.css?v=0.15" />
 </head>
 <body>
   <div class="app-shell">
@@ -33,13 +33,13 @@
 
       <nav class="header-actions" aria-label="ヘッダー操作">
         <a class="header-nav-link" href="https://kumachansteps.github.io/trpg-web-tools/">←TRPG WEBツール観測所</a>
-        <a class="x-share-link" id="xPostBtn" href="https://twitter.com/intent/tweet?text=%E3%82%AD%E3%83%A3%E3%83%A9%E5%B7%AE%E5%88%86%E7%AE%A1%E7%90%86%E3%83%84%E3%83%BC%E3%83%AB%E3%82%92%E4%BD%BF%E7%94%A8%E4%B8%AD%20%23TRPG%20%23%E3%82%B3%E3%82%B3%E3%83%95%E3%82%A9%E3%83%AA%E3%82%A2&url=https%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2F" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿"><span>𝕏</span></a>
+        <a class="x-share-link" id="xPostBtn" href="https://twitter.com/intent/tweet?text=%E3%82%AD%E3%83%A3%E3%83%A9%E5%B7%AE%E5%88%86%E7%AE%A1%E7%90%86%E3%83%84%E3%83%BC%E3%83%AB%EF%BD%9CTRPG%20WEB%E3%83%84%E3%83%BC%E3%83%AB%E8%A6%B3%E6%B8%AC%E6%89%80%20%E3%81%A7%E5%B7%AE%E5%88%86%E3%82%92%E7%AE%A1%E7%90%86%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%EF%BC%81%0Ahttps%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2Ftools%2Fchara-sabun-kanri-tool%2F" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿"><span>𝕏</span></a>
         <button type="button" class="ghost-button" id="usageToggleBtn" aria-expanded="false" aria-controls="usagePanel">使い方</button>
         <button type="button" class="ghost-button" id="shortcutToggleBtn" aria-expanded="false" aria-controls="shortcutPanel">ショートカット</button>
         <button type="button" class="ghost-button" id="resetAllBtn">リセット</button>
       </nav>
 
-      <div class="version-engrave">v0.13 / 2026.06.11</div>
+      <div class="version-engrave">v0.15 / 2026.06.11</div>
 
       <section class="header-drawer" id="usagePanel" aria-hidden="true">
         <div class="drawer-inner">
@@ -62,7 +62,7 @@
             <span>Ctrl / Cmd + Shift + E</span><span>ZIP出力</span>
             <span>Ctrl / Cmd + Shift + C</span><span>@差分チャパレをコピー</span>
             <span>Ctrl / Cmd + Shift + N</span><span>番号追加 ON / OFF</span>
-            <span>Esc</span><span>使い方 / ショートカットを閉じる</span>
+            <span>Esc</span><span>使い方 / ショートカットを閉じる。未展開時はリセット（確認ダイアログを表示）</span>
           </div>
         </div>
       </section>
@@ -161,6 +161,6 @@
   <datalist id="sabunSuggestions"></datalist>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="js/main.js?v=0.13-xlogo"></script>
+  <script src="js/main.js?v=0.15"></script>
 </body>
 </html>
