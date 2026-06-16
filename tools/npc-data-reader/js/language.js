@@ -27,7 +27,7 @@
   }
 
   function applyStaticTranslations(){
-    document.title = `${t('appTitle')} v1.478`;
+    document.title = t('pageTitle');
     setText('h1', 'appTitle');
     setText('.sub', 'appSubtitle');
     setText('#usageJumpBtn', 'usage');

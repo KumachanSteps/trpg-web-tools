@@ -2,7 +2,7 @@
       --bg:#0f1726; --panel:#1b2434; --panel2:#121a28; --text:#eef6ff; --muted:#9fb0c8;
       --line:#2f405b; --accent:#58b7e8; --accent2:#a9daf4; --input:#070d16;
       --shadow:0 18px 50px rgba(0,0,0,.24); --radius:18px; --gap:16px;
-      --header-h:86px; --left-top-card-h:44vh; --left-input-h:220px; --right-json-card-h:420px;
+      --header-h:94px; --left-top-card-h:44vh; --left-input-h:220px; --right-json-card-h:420px;
     }
     body.light{
       --bg:#edf5ff; --panel:#ffffff; --panel2:#f7fbff; --text:#142033; --muted:#566b86;
@@ -12,17 +12,17 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:radial-gradient(circle at top left,rgba(88,183,232,.16),transparent 34%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
-    .app-header{height:var(--header-h);padding:16px 22px 12px;border-bottom:1px solid var(--line);background:rgba(15,23,38,.78);backdrop-filter:blur(14px);position:relative;z-index:5}
+    .app-header{height:var(--header-h);padding:14px 22px 8px;border-bottom:1px solid var(--line);background:rgba(15,23,38,.78);backdrop-filter:blur(14px);position:relative;z-index:5}
     body.light .app-header{background:rgba(237,245,255,.88)}
     .header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
-    h1{font-size:24px;margin:0 0 4px;letter-spacing:.02em}.sub{font-size:13px;color:var(--muted)}
+    h1{font-size:28px;margin:0 0 5px;letter-spacing:.02em;line-height:1.08}.sub{font-size:13px;color:var(--muted);line-height:1.35;max-width:720px}
     .header-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:8px 13px;font-weight:700;cursor:pointer;transition:.15s ease}
     button:hover{transform:translateY(-1px);border-color:var(--accent)}
     button.primary{background:linear-gradient(180deg,#7fd6ff,#5dbfe8);color:#06111d;border-color:#9cdfeb;box-shadow:0 8px 20px rgba(88,183,232,.22)}
     body:not(.light) button.primary{background:linear-gradient(180deg,#1c8eca,#12699e);color:#fff;border-color:#55b9e8}
     button.copy{padding:6px 11px;font-size:12px}.small-btn{margin-top:8px;padding:7px 11px;font-size:12px;border-radius:12px}
-    .version-mark{position:absolute;right:24px;bottom:4px;color:var(--muted);opacity:.55;font-size:12px;letter-spacing:.06em}
+    .version-mark{position:absolute;right:24px;bottom:12px;color:var(--muted);opacity:.55;font-size:12px;letter-spacing:.06em}
     main{height:calc(100vh - var(--header-h));padding:16px;overflow:hidden}
     .grid{display:grid;grid-template-columns:minmax(280px,31%) minmax(0,1fr);gap:var(--gap);height:100%}
     .col{min-width:0}.left-col{height:100%;display:flex;flex-direction:column;gap:var(--gap);overflow:hidden}
@@ -429,3 +429,8 @@ textarea::-webkit-scrollbar-thumb:hover,
 #jsonOutput::-webkit-scrollbar-thumb:hover{
   background:linear-gradient(180deg,var(--scrollbar-thumb-top),var(--accent));
 }
+
+/* v1.487: portal hierarchy text above tool title */
+.header-title-block{min-width:0;}
+.site-kicker{font-size:13px;font-weight:800;letter-spacing:.18em;color:var(--accent);line-height:1;margin-bottom:2px;text-transform:uppercase;}
+body.light .site-kicker{color:#2f6fda;}

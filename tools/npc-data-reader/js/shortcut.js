@@ -136,7 +136,7 @@
       const lang = window.NPCDataReaderLanguage?.current || 'ja';
       const text = lang === 'en'
         ? 'I used NPC Data Reader, a TRPG support tool that turns scenario NPC data into chat palettes and CCFOLIA NPC character JSON.'
-        : 'NPCデータリーダーを使って、シナリオNPC情報からチャットパレットとCCFOLIA用NPC駒JSONを作成しました。';
+        : 'NPCデータリーダーを使って、シナリオNPC情報からチャットパレットとCCFOLIA用NPC駒データを作成しました。';
       const url = 'https://kumachansteps.github.io/trpg-web-tools/npc-data-reader/';
       const intent = 'https://x.com/intent/post?text=' + encodeURIComponent(text + '\n' + url);
       window.open(intent, '_blank', 'noopener,noreferrer');
