@@ -2586,3 +2586,174 @@ body.is-dark .transition-thumb-card {
     min-height: 74px;
   }
 }
+
+
+/* v0.64 selected-card visibility and laptop-friendly scroll handling */
+.effect-card,
+.image-edit-card {
+  position: relative;
+}
+
+#motionPanel .effect-card:not(.is-active),
+#imageEditPanel .image-edit-card:not(.is-active) {
+  opacity: 0.74;
+  filter: saturate(0.76);
+}
+
+#motionPanel .effect-card:not(.is-active):hover,
+#imageEditPanel .image-edit-card:not(.is-active):hover,
+#motionPanel .effect-card:not(.is-active):focus-visible,
+#imageEditPanel .image-edit-card:not(.is-active):focus-visible {
+  opacity: 0.92;
+  filter: saturate(0.95);
+}
+
+#motionPanel .effect-card.is-active,
+#imageEditPanel .image-edit-card.is-active {
+  opacity: 1;
+  filter: none;
+  border-color: rgba(58, 120, 216, 0.86);
+  background: rgba(58, 120, 216, 0.13);
+  box-shadow:
+    0 0 0 3px rgba(58, 120, 216, 0.15),
+    0 12px 26px rgba(58, 120, 216, 0.14);
+}
+
+body.is-dark #motionPanel .effect-card.is-active,
+body.is-dark #imageEditPanel .image-edit-card.is-active {
+  border-color: rgba(105, 168, 255, 0.78);
+  background: rgba(105, 168, 255, 0.14);
+  box-shadow:
+    0 0 0 3px rgba(105, 168, 255, 0.16),
+    0 12px 26px rgba(0, 0, 0, 0.24);
+}
+
+#motionPanel .effect-card.is-active::after,
+#imageEditPanel .image-edit-card.is-active::after {
+  content: "✓";
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--blue);
+  font-size: 0.74rem;
+  font-weight: 950;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(58, 120, 216, 0.28);
+  pointer-events: none;
+}
+
+#imageEditPanel .image-edit-card.is-active::after {
+  top: 6px;
+  right: 7px;
+  width: 20px;
+  height: 20px;
+  font-size: 0.68rem;
+}
+
+.preview-panel {
+  min-height: 0;
+}
+
+.preview-panel .panel-heading,
+.preview-panel .canvas-wrap,
+.transition-thumb-panel {
+  flex: 0 0 auto;
+}
+
+.preview-controls {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(58, 120, 216, 0.72) transparent;
+}
+
+.preview-controls::-webkit-scrollbar {
+  width: 7px;
+}
+
+.preview-controls::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preview-controls::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(106,214,255,0.88), rgba(58,120,216,0.74));
+}
+
+.preview-controls::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(106,214,255,1), rgba(58,120,216,0.92));
+}
+
+@media (min-width: 1181px) {
+  .app-shell {
+    min-height: 100vh;
+    padding-bottom: 22px;
+  }
+
+  .workspace {
+    min-height: min(760px, calc(100vh - 160px));
+  }
+
+  .preview-panel {
+    overflow: hidden;
+  }
+
+  .preview-controls {
+    max-height: max(248px, calc(100vh - 520px));
+  }
+}
+
+@media (min-width: 1181px) and (max-height: 820px) {
+  .workspace {
+    height: calc(100vh - 128px);
+    min-height: 640px;
+  }
+
+  .legal-footer {
+    margin-top: 10px;
+  }
+
+  .preview-panel {
+    gap: 10px;
+  }
+
+  .preview-controls {
+    max-height: 236px;
+  }
+
+  .preview-panel .canvas-wrap {
+    min-height: 260px;
+  }
+}
+
+@media (min-width: 1181px) and (max-height: 740px) {
+  .workspace {
+    min-height: 620px;
+  }
+
+  .preview-controls {
+    max-height: 224px;
+  }
+
+  .preview-panel .canvas-wrap {
+    min-height: 240px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .preview-panel {
+    overflow: hidden;
+  }
+
+  .preview-controls {
+    max-height: 360px;
+  }
+}

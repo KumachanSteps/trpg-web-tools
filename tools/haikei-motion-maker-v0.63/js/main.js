@@ -1324,15 +1324,21 @@ state.image = state.images[0] || null;
     const isTransitionVisible = transitionPanel && !transitionPanel.hidden;
     const visibleBlocks = [heading, canvasWrap, controls].filter(Boolean).length + (isTransitionVisible ? 1 : 0);
     const gapTotal = Math.max(0, visibleBlocks - 1) * gap;
-    const available = panel.clientHeight - panelPaddingTop - panelPaddingBottom - heading.offsetHeight - controls.offsetHeight - (isTransitionVisible ? transitionPanel.offsetHeight : 0) - gapTotal;
-
     const mobile = window.matchMedia('(max-width: 920px)').matches;
-    const minHeight = mobile ? 260 : 300;
-    const nextHeight = Math.max(minHeight, Math.floor(available));
+    const shortLaptop = window.matchMedia('(min-width: 1181px) and (max-height: 820px)').matches;
+    const minPreviewHeight = mobile ? 240 : (shortLaptop ? 240 : 300);
 
-    canvasWrap.style.height = `${nextHeight}px`;
-    canvasWrap.style.minHeight = `${nextHeight}px`;
-    panel.style.setProperty('--preview-controls-height', `${Math.ceil(controls.offsetHeight)}px`);
+    const fullControlsHeight = controls.scrollHeight || controls.offsetHeight;
+    const transitionHeight = isTransitionVisible ? transitionPanel.offsetHeight : 0;
+    const reserved = panelPaddingTop + panelPaddingBottom + heading.offsetHeight + transitionHeight + gapTotal;
+    const available = panel.clientHeight - reserved;
+    const controlsMaxHeight = Math.max(210, Math.min(fullControlsHeight, available - minPreviewHeight));
+    const nextHeight = Math.max(minPreviewHeight, available - controlsMaxHeight);
+
+    controls.style.maxHeight = `${Math.floor(controlsMaxHeight)}px`;
+    canvasWrap.style.height = `${Math.floor(nextHeight)}px`;
+    canvasWrap.style.minHeight = `${Math.floor(nextHeight)}px`;
+    panel.style.setProperty('--preview-controls-height', `${Math.ceil(controlsMaxHeight)}px`);
   }
 
   function requestPreviewPanelLayoutSync() {
