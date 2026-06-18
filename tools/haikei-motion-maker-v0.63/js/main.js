@@ -171,6 +171,11 @@
     switch (effect) {
       case 'panX':
         return 4;
+      case 'spinFallBlack':
+        return 2;
+      case 'rise':
+      case 'descend':
+        return 1.5;
       default:
         return 3;
     }
