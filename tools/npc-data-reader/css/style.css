@@ -42,7 +42,7 @@
     #paletteOutput{height:var(--left-input-h);min-height:72px}.readonly{opacity:.9}.short{height:74px}.mid{height:260px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.hint,.output-note{color:var(--muted);font-size:12px;line-height:1.55;margin:8px 0 0}.section-label{margin:18px 0 9px;font-weight:900;color:var(--accent2);letter-spacing:.03em}.table-wrap{border:1px solid var(--line);border-radius:14px;overflow:hidden}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid var(--line);padding:7px;background:rgba(255,255,255,.015);font-size:12px}th{text-align:left;color:var(--muted);font-weight:900}td input{padding:8px;border-radius:10px}.del{padding:7px 9px;border-radius:10px}.usage{padding-left:20px;margin:0;color:var(--text);font-size:13px;line-height:1.75}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(2,8,18,.9);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:9px 14px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
     @media(max-width:1050px){body{overflow:auto}main{height:auto;overflow:visible}.grid,.work-grid{display:block}.left-col{height:auto;display:block}.left-input-card{height:auto;max-height:none}.usage-card{margin-top:var(--gap)}.work-scroll{height:auto;overflow:visible;margin-top:var(--gap)}.right-col{margin-top:var(--gap)}#rawInput,#paletteOutput{height:240px}.json-card{height:auto}.json-card .card-body{height:auto;display:block;padding-bottom:14px}.json-card #jsonOutput{height:260px;min-height:260px}.mid{height:260px}.row,.row.three,.row.four{grid-template-columns:1fr 1fr}}
     @media(max-width:700px){.header-row{display:block}.header-actions{justify-content:flex-start;margin-top:8px}body{overflow:auto}.row,.row.three,.row.four{grid-template-columns:1fr}main{padding:10px}.app-header{height:auto}.version-mark{position:static;margin-top:6px}.grid{height:auto}}
-/* v1.45 shortcut slide panel */
+/* v1.507 shortcut slide panel */
 .shortcut-panel{
   position:fixed;
   left:0;
@@ -133,21 +133,21 @@ kbd{
 }
 
 
-/* v1.46 draggable row controls */
+/* v1.507 draggable row controls */
 .row-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:70px}
 .grab{width:31px;height:31px;padding:0;border-radius:10px;display:inline-grid;place-items:center;font-size:15px;line-height:1;cursor:grab;color:var(--text);background:rgba(88,183,232,.13);border-color:rgba(88,183,232,.45)}
 .grab:active{cursor:grabbing}
 tr.dragging{opacity:.55}
 tr.drop-target td{background:rgba(88,183,232,.16);box-shadow:inset 0 2px 0 var(--accent)}
 
-/* v1.461 light mode readability adjustment */
+/* v1.507 light mode readability adjustment */
 body.light .section-label{
   color:var(--muted);
 }
 
-/* v1.462 JSON panel spacing and height sync */
+/* v1.507 JSON panel spacing and height sync */
 
-/* v1.464 header usage slide panel */
+/* v1.507 header usage slide panel */
 .usage-slide-panel{z-index:4}
 .usage-slide-inner{width:min(980px, calc(100vw - 32px))}
 .usage-slide-content{display:grid;grid-template-columns:1.1fr .9fr .9fr;gap:12px;padding:14px 16px 16px}
@@ -158,7 +158,7 @@ body.light .section-label{
 .usage-slide-block code{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;background:rgba(88,183,232,.12);border:1px solid rgba(88,183,232,.22);border-radius:6px;padding:1px 4px}
 @media(max-width:1050px){.usage-slide-content{grid-template-columns:1fr}}
 
-/* v1.463 light mode copy buttons match parse button */
+/* v1.507 light mode copy buttons match parse button */
 body.light button.copy{
   background:linear-gradient(180deg,#7fd6ff,#5dbfe8);
   color:#06111d;
@@ -171,7 +171,7 @@ body.light button.copy:hover{
 }
 
 
-/* v1.47 X share button and footer panel */
+/* v1.507 X share button and footer panel */
 .x-share-btn{
   min-width:38px;
   font-weight:950;
@@ -222,7 +222,7 @@ body.light .app-footer-panel a{
   .app-footer-panel{margin-top:var(--gap)}
 }
 
-/* v1.471 portal link, X new-tab share, full-app footer alignment */
+/* v1.507 portal link, X new-tab share, full-app footer alignment */
 .header-link{
   display:inline-flex;
   align-items:center;
@@ -302,7 +302,7 @@ body.light .app-footer-panel a{
 }
 
 
-/* v1.472 footer overlap fix: keep footer within work-scroll width, not under fixed left column */
+/* v1.507 footer overlap fix: keep footer within work-scroll width, not under fixed left column */
 .app-footer-panel{
   width:100%;
   margin:72px 0 0 0;
@@ -319,7 +319,7 @@ body.light .command-toggle:hover{background:#e3f6ff;border-color:#74c9f2;box-sha
 body.light .command-toggle:has(input:checked){background:#d7f1ff;border-color:#74c9f2;color:#142033;box-shadow:none;}
 body.light .command-toggle input{accent-color:#74c9f2;}
 
-/* v1.475: move footer notice into the left usage panel */
+/* v1.507: move footer notice into the left usage panel */
 .usage-notice-panel{
   margin-top:12px;
   padding-top:10px;
@@ -349,11 +349,11 @@ body.light .usage-notice-panel a{
   color:#126999;
   border-bottom-color:rgba(18,105,153,.30);
 }
-/* legacy footer is not used from v1.475 onward */
+/* legacy footer is not used from v1.507 onward */
 .app-footer-panel{display:none!important;}
 
 
-/* v1.477: keep command add toggle close to copy button */
+/* v1.507: keep command add toggle close to copy button */
 #chatPaletteCard .card-head{
   justify-content:flex-start;
   column-gap:4px;
@@ -370,7 +370,7 @@ body.light .usage-notice-panel a{
 }
 
 
-/* v1.478: standardize all app scrollbars to match the left text-area scrollbar */
+/* v1.507: standardize all app scrollbars to match the left text-area scrollbar */
 :root{
   --scrollbar-size:9px;
   --scrollbar-track:rgba(36,70,110,.18);
@@ -430,7 +430,316 @@ textarea::-webkit-scrollbar-thumb:hover,
   background:linear-gradient(180deg,var(--scrollbar-thumb-top),var(--accent));
 }
 
-/* v1.487: portal hierarchy text above tool title */
+/* v1.507: portal hierarchy text above tool title */
 .header-title-block{min-width:0;}
 .site-kicker{font-size:13px;font-weight:800;letter-spacing:.18em;color:var(--accent);line-height:1;margin-bottom:2px;text-transform:uppercase;}
 body.light .site-kicker{color:#2f6fda;}
+
+textarea::placeholder,input::placeholder{color:rgba(155,185,215,.56);font-weight:500;}
+body.light textarea::placeholder,body.light input::placeholder{color:rgba(95,115,140,.48);font-weight:500;}
+
+
+/* v1.507 fixed editor grid layout */
+.middle-col .status-row{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+.middle-col .ability-row{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+.middle-col .status-row > div,
+.middle-col .ability-row > div{
+  min-width:0;
+}
+.middle-col .status-row input,
+.middle-col .ability-row input{
+  min-width:0;
+}
+@media(max-width:420px){
+  .middle-col .status-row{gap:6px !important;}
+  .middle-col .ability-row{gap:6px !important;}
+  .middle-col .status-row input,
+  .middle-col .ability-row input{padding:8px 7px;}
+  .middle-col .status-row label,
+  .middle-col .ability-row label{font-size:11px;}
+}
+
+
+/* v1.507: exact editor grids; independent from legacy .row rules */
+.editor .status-grid-exact,
+.middle-col .status-grid-exact,
+.status-grid-exact{
+  display:grid !important;
+  grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+  gap:10px !important;
+  margin-bottom:14px !important;
+}
+.editor .ability-grid-exact,
+.middle-col .ability-grid-exact,
+.ability-grid-exact{
+  display:grid !important;
+  grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
+  gap:10px !important;
+  margin-bottom:14px !important;
+}
+.status-grid-exact > div,
+.ability-grid-exact > div{min-width:0 !important;}
+.status-grid-exact input,
+.ability-grid-exact input{width:100% !important; min-width:0 !important; box-sizing:border-box !important;}
+.status-grid-exact label,
+.ability-grid-exact label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+@media(max-width:420px){
+  .status-grid-exact,
+  .ability-grid-exact{gap:6px !important;}
+  .status-grid-exact input,
+  .ability-grid-exact input{padding:8px 7px;}
+  .status-grid-exact label,
+  .ability-grid-exact label{font-size:11px;}
+}
+
+/* v1.507: final hard lock for NPC editor status/ability grids */
+#middleCol .status-grid-exact{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  grid-template-areas:
+    "hp mp san"
+    "db build move"
+    "armor ammo weapon" !important;
+  gap:10px !important;
+  margin-bottom:14px !important;
+}
+#middleCol .status-hp{grid-area:hp !important;}
+#middleCol .status-mp{grid-area:mp !important;}
+#middleCol .status-san{grid-area:san !important;}
+#middleCol .status-db{grid-area:db !important;}
+#middleCol .status-build{grid-area:build !important;}
+#middleCol .status-move{grid-area:move !important;}
+#middleCol .status-armor{grid-area:armor !important;}
+#middleCol .status-ammo{grid-area:ammo !important;}
+#middleCol .status-weapon-hp{grid-area:weapon !important;}
+#middleCol .ability-grid-exact{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  grid-template-areas:
+    "str con pow dex"
+    "app siz int edu" !important;
+  gap:10px !important;
+  margin-bottom:14px !important;
+}
+#middleCol .ability-str{grid-area:str !important;}
+#middleCol .ability-con{grid-area:con !important;}
+#middleCol .ability-pow{grid-area:pow !important;}
+#middleCol .ability-dex{grid-area:dex !important;}
+#middleCol .ability-app{grid-area:app !important;}
+#middleCol .ability-siz{grid-area:siz !important;}
+#middleCol .ability-int{grid-area:int !important;}
+#middleCol .ability-edu{grid-area:edu !important;}
+#middleCol .status-grid-exact>div,#middleCol .ability-grid-exact>div{min-width:0 !important;}
+#middleCol .status-grid-exact input,#middleCol .ability-grid-exact input{width:100% !important;min-width:0 !important;box-sizing:border-box !important;}
+
+
+/* v1.518 header brand/version alignment */
+.app-header{padding-top:11px;}
+.app-header .header-brand{min-width:0;display:flex;flex-direction:column;gap:1px;}
+.app-header .site-kicker{font-size:12px;font-weight:900;letter-spacing:.10em;color:var(--accent2);opacity:.92;line-height:1.1;margin:0 0 1px;}
+body.light .app-header .site-kicker{color:#2f6fda;}
+.app-header h1{margin:0 0 2px;}
+.app-header .brand-sub-row{display:flex;align-items:center;gap:14px;min-width:0;}
+.app-header .brand-sub-row .sub{min-width:0;}
+.app-header .brand-sub-row .version-mark{position:static !important;right:auto !important;bottom:auto !important;margin:0;flex:0 0 auto;color:var(--muted);opacity:.62;font-size:12px;letter-spacing:.06em;line-height:1.35;white-space:nowrap;}
+@media(max-width:700px){.app-header .brand-sub-row{display:block}.app-header .brand-sub-row .version-mark{margin-top:4px}}
+
+
+/* v1.518 header portal/X buttons and exact spacing */
+.app-header{padding-top:10px;}
+.app-header .header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.app-header .header-brand{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:0;}
+.app-header .site-kicker{margin:0 0 2px !important;line-height:1.05;}
+.app-header h1{margin:0 0 2px !important;line-height:1.05;}
+.app-header .brand-sub-row{display:flex;align-items:center;width:100%;gap:12px;min-width:0;}
+.app-header .brand-sub-row .sub{min-width:0;flex:0 1 auto;}
+.app-header .brand-sub-row .version-mark{position:static !important;margin-left:auto !important;margin-right:0 !important;right:auto !important;bottom:auto !important;flex:0 0 auto;white-space:nowrap;}
+.app-header .header-actions{flex:0 0 auto;align-items:flex-start;justify-content:flex-end;}
+.app-header .header-link,.app-header .x-share-btn{height:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;}
+.app-header .portal-link{font-size:13px;}
+.app-header .x-share-btn{font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:950;line-height:1;min-width:38px;padding-inline:0;}
+@media(max-width:900px){
+  .app-header .header-row{display:block;}
+  .app-header .header-actions{justify-content:flex-start;margin-top:8px;}
+  .app-header .brand-sub-row{display:flex;}
+}
+@media(max-width:700px){
+  .app-header .brand-sub-row{display:block;}
+  .app-header .brand-sub-row .version-mark{display:block;margin-top:4px !important;margin-left:0 !important;}
+}
+
+
+/* v1.518: header button sizing/alignment from reference style.css + right-end version */
+.app-header{
+  height:var(--header-h);
+  padding:10px 22px 8px !important;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+}
+.app-header .header-top-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  min-width:0;
+}
+.app-header .header-brand{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+.app-header .site-kicker{
+  margin:0 0 2px !important;
+  line-height:1.05 !important;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.10em;
+}
+.app-header h1{
+  margin:0 0 2px !important;
+  line-height:1.05 !important;
+}
+.app-header .header-actions{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  flex-wrap:nowrap;
+  min-width:0;
+  padding-top:0;
+}
+.app-header .header-actions button,
+.app-header .header-actions .header-link{
+  height:34px !important;
+  min-height:34px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:999px !important;
+  padding:0 11px !important;
+  font-size:12.5px !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+  text-decoration:none !important;
+  box-sizing:border-box !important;
+}
+.app-header .header-actions .portal-link{
+  font-size:12.5px !important;
+  padding-inline:12px !important;
+}
+.app-header .header-actions .x-share-btn{
+  width:34px !important;
+  min-width:34px !important;
+  padding:0 !important;
+  font-family:Arial, Helvetica, sans-serif !important;
+  font-size:15px !important;
+  font-weight:950 !important;
+  letter-spacing:0 !important;
+}
+.app-header .header-bottom-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  width:100%;
+  min-width:0;
+  margin-top:0;
+}
+.app-header .header-bottom-row .sub{
+  flex:1 1 auto;
+  min-width:0;
+  max-width:none;
+}
+.app-header .header-bottom-row .version-mark{
+  position:static !important;
+  right:auto !important;
+  bottom:auto !important;
+  flex:0 0 auto;
+  margin-left:auto !important;
+  margin-right:0 !important;
+  color:var(--muted);
+  opacity:.62;
+  font-size:12px;
+  letter-spacing:.06em;
+  line-height:1.35;
+  white-space:nowrap;
+  text-align:right;
+}
+@media(max-width:1050px){
+  .app-header{height:auto;min-height:var(--header-h)}
+  .app-header .header-actions{flex-wrap:wrap;justify-content:flex-end;max-width:58vw;}
+}
+@media(max-width:700px){
+  .app-header .header-top-row{display:block;}
+  .app-header .header-actions{justify-content:flex-start;max-width:none;margin-top:8px;}
+  .app-header .header-bottom-row{display:block;}
+  .app-header .header-bottom-row .version-mark{display:block;margin-top:4px !important;text-align:left;}
+}
+
+
+/* v1.518: final header vertical spacing + usage notice restoration */
+.app-header .header-brand{
+  padding-top:3px !important;
+}
+.app-header .site-kicker{
+  margin-top:0 !important;
+  margin-bottom:4px !important;
+  line-height:1.05 !important;
+}
+.app-header h1{
+  margin-top:0 !important;
+  margin-bottom:4px !important;
+  line-height:1.05 !important;
+}
+.app-header .header-bottom-row{
+  margin-top:4px !important;
+}
+.app-header .header-bottom-row .version-mark{
+  margin-left:auto !important;
+  margin-right:0 !important;
+  text-align:right !important;
+}
+.usage-card .usage-notice-panel{
+  margin-top:14px !important;
+  padding-top:10px !important;
+  border-top:1px solid rgba(88,183,232,.22) !important;
+  font-size:10.5px !important;
+  line-height:1.55 !important;
+  color:var(--muted) !important;
+}
+.usage-card .usage-notice-title{
+  margin:0 0 5px !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  letter-spacing:.04em !important;
+  color:var(--text) !important;
+}
+.usage-card .usage-notice-panel p{
+  margin:0 0 6px !important;
+}
+.usage-card .usage-notice-panel p:last-child{
+  margin-bottom:0 !important;
+}
+.usage-card .usage-notice-panel a{
+  color:var(--accent2) !important;
+  font-weight:900 !important;
+  text-decoration:none !important;
+  border-bottom:1px solid rgba(138,220,255,.36) !important;
+}
+body.light .usage-card .usage-notice-panel a{
+  color:#126999 !important;
+  border-bottom-color:rgba(18,105,153,.30) !important;
+}

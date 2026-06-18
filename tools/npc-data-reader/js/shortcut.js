@@ -1,5 +1,5 @@
 /* NPCデータリーダー shortcut.js
-   v1.467: shortcut drawer, usage drawer, keyboard shortcuts, and localized messages. */
+   v1.509: shortcut drawer, usage drawer, keyboard shortcuts, and localized messages. */
 (function(){
   const $ = (s) => document.querySelector(s);
 
@@ -59,6 +59,9 @@
       if (!rawInput) return;
       rawInput.value = text;
       rawInput.focus();
+      if (window.NPCDataReader && typeof window.NPCDataReader.parseRawInputNow === 'function') {
+        window.NPCDataReader.parseRawInputNow();
+      }
       toast(window.NPCDataReaderLanguage?.t('clipboardPasted') || 'クリップボードのNPC情報を貼り付けました');
     } catch (error) {
       toast(window.NPCDataReaderLanguage?.t('clipboardError') || 'クリップボードを読み取れませんでした');

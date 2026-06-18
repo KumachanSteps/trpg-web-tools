@@ -1,31 +1,20 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag("js", new Date());
-    gtag("config", "G-NJD5JZML31");
-  </script>
-
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NPCデータリーダー｜TRPG WEBツール観測所</title>
-  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=1.521" />
 </head>
 <body class="light">
   <header class="app-header">
-    <div class="header-row">
-      <div class="header-title-block">
+    <div class="header-top-row">
+      <div class="header-brand">
         <div class="site-kicker">TRPG WEBツール観測所</div>
         <h1>NPCデータリーダー</h1>
-        <div class="sub">シナリオNPC情報 → チャットパレット / CCFOLIA用NPC駒データ</div>
       </div>
       <div class="header-actions">
-        <a class="ghost header-link portal-link" id="portalLink" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG WEBツール観測所 に戻る" aria-label="TRPG WEBツール観測所 に戻る">←TRPG WEBツール観測所</a>
+        <a class="header-link portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG WEBツール観測所 に戻る">←TRPG WEBツール観測所</a>
         <button type="button" class="ghost x-share-btn" id="xShareBtn" title="Xで共有" aria-label="Xで共有">𝕏</button>
         <button type="button" class="ghost" id="langBtn">JP / EN</button>
         <button type="button" class="ghost" id="usageJumpBtn" aria-expanded="false" aria-controls="usageSlidePanel">使い方</button>
@@ -33,7 +22,10 @@
         <button type="button" class="ghost" id="themeBtn">Light / Night</button>
       </div>
     </div>
-    <div class="version-mark">v1.488 / 2026.06.16</div>
+    <div class="header-bottom-row">
+      <div class="sub">シナリオNPC情報 → チャットパレット / CCFOLIA用NPC駒データ</div>
+      <div class="version-mark">v1.521 / 2026.06.17</div>
+    </div>
   </header>
 
   <aside class="shortcut-panel" id="shortcutPanel" aria-hidden="true">
@@ -69,7 +61,7 @@
           <ol>
             <li>左欄に、シナリオ本文やPDFからコピーしたNPCデータを貼り付けます。</li>
             <li><strong>解析する</strong> を押すと、中央欄にNPC名・ステータス・戦闘・技能が整理されます。</li>
-            <li>中央欄の内容を編集すると、右欄のチャットパレットとNPC駒データへ自動反映されます。</li>
+            <li>中央欄の内容を編集すると、右欄のチャットパレットとNPC駒JSONへ自動反映されます。</li>
             <li>チャットパレット欄は直接編集できます。編集内容はJSONの <code>commands</code> に反映されます。</li>
             <li><strong>コピー</strong> または <strong>NPC駒データコピー</strong> で、CCFOLIA等へ貼り付けます。</li>
           </ol>
@@ -118,7 +110,7 @@
               <li>CCFOLIA駒の memo は秘匿漏れ防止のため、初期値をNPC名のみにします。</li>
             </ol>
             <div class="usage-notice-panel" id="usageNoticePanel">
-              <h3 class="usage-notice-title">利用上の注意</h3>
+              <div class="usage-notice-title">利用上の注意</div>
               <p>本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
               <p>不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
             </div>
@@ -167,17 +159,22 @@
                   <div><label for="build">ビルド</label><input id="build" data-status="build" /></div>
                   <div><label for="move">移動</label><input id="move" data-status="move" /></div>
                 </div>
+                <div class="row three">
+                  <div><label for="armorStatus">装甲</label><input id="armorStatus" data-status="armor" /></div>
+                  <div><label for="ammo">残弾</label><input id="ammo" data-status="ammo" /></div>
+                  <div><label for="weaponHp">武器耐久</label><input id="weaponHp" data-status="weaponHp" /></div>
+                </div>
 
                 <div class="section-label">能力値</div>
                 <div class="row four">
                   <div><label for="STR">STR</label><input id="STR" data-ability="STR" /></div>
                   <div><label for="CON">CON</label><input id="CON" data-ability="CON" /></div>
-                  <div><label for="SIZ">SIZ</label><input id="SIZ" data-ability="SIZ" /></div>
+                  <div><label for="POW">POW</label><input id="POW" data-ability="POW" /></div>
                   <div><label for="DEX">DEX</label><input id="DEX" data-ability="DEX" /></div>
                 </div>
                 <div class="row four">
                   <div><label for="APP">APP</label><input id="APP" data-ability="APP" /></div>
-                  <div><label for="POW">POW</label><input id="POW" data-ability="POW" /></div>
+                  <div><label for="SIZ">SIZ</label><input id="SIZ" data-ability="SIZ" /></div>
                   <div><label for="INT">INT</label><input id="INT" data-ability="INT" /></div>
                   <div><label for="EDU">EDU</label><input id="EDU" data-ability="EDU" /></div>
                 </div>
@@ -214,13 +211,7 @@
             <div class="card" id="chatPaletteCard">
               <div class="card-head">
                 <div class="card-title">3. チャットパレット</div>
-                <div class="palette-actions">
-                  <label class="command-toggle copy-like" title="汎用コマンドをチャットパレット先頭に追加">
-                    <input type="checkbox" id="commandAddonCheck" />
-                    <span>コマンド追加</span>
-                  </label>
-                  <button type="button" class="copy" id="copyPaletteBtn">コピー</button>
-                </div>
+                <button type="button" class="copy" id="copyPaletteBtn">コピー</button>
               </div>
               <div class="card-body">
                 <p class="output-note">この欄は直接編集可能。編集内容はJSONの commands に反映されます。</p>
@@ -246,9 +237,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="js/i18l.js"></script>
-  <script src="js/language.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/shortcut.js"></script>
+  <script src="js/i18l.js?v=1.521"></script>
+  <script src="js/language.js?v=1.521"></script>
+  <script src="js/parser.js?v=1.521"></script>
+  <script src="js/checked-scenario.js?v=1.521"></script>
+  <script src="js/main.js?v=1.521"></script>
+  <script src="js/shortcut.js?v=1.521"></script>
 </body>
 </html>

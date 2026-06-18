@@ -1,5 +1,5 @@
 /* NPCデータリーダー language.js
-   v1.472: JP/EN UI switch. Translation data is defined in i18l.js. */
+   v1.509: JP/EN UI switch. Translation data is defined in i18l.js. */
 (function(){
   const STORAGE_KEY = 'npc-data-reader-lang';
   const $ = (s) => document.querySelector(s);
@@ -72,7 +72,7 @@
     setText('.left-input-card .hint', 'leftHint');
     setAllText('.usage-card .usage li', ['usageList1', 'usageList2', 'usageList3', 'usageList4', 'usageList5', 'usageList6']);
 
-    setAllText('#middleCol label', ['npcName', 'npcTitle', 'system', 'resolved', 'hp', 'mp', 'san', 'db', 'build', 'move', 'STR', 'CON', 'SIZ', 'DEX', 'APP', 'POW', 'INT', 'EDU']);
+    setAllText('#middleCol label', ['npcName', 'npcTitle', 'system', 'resolved', 'hp', 'mp', 'san', 'db', 'build', 'move', 'armorStatus', 'ammo', 'weaponHp', 'STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU']);
     const options = $$('#systemMode option');
     ['autoMode', 'coc7', 'coc6', 'generic'].forEach((key, i) => { if (options[i]) options[i].textContent = t(key); });
     setAllText('#middleCol .section-label', ['status', 'abilities', 'combat', 'armor', 'skills', 'charMemo']);

@@ -1,5 +1,5 @@
 /* NPCデータリーダー i18l.js
-   v1.47: JP/EN translation dictionary. */
+   v1.508: JP/EN translation dictionary. */
 window.NPC_DATA_READER_I18L = {
   ja: {
     appTitle: 'NPCデータリーダー',
@@ -61,6 +61,9 @@ window.NPC_DATA_READER_I18L = {
     db: 'DB',
     build: 'ビルド',
     move: '移動',
+    armorStatus: '装甲',
+    ammo: '残弾',
+    weaponHp: '武器耐久',
     abilities: '能力値',
     combat: '戦闘',
     combatName: '技能 / 行動名',
@@ -157,6 +160,9 @@ window.NPC_DATA_READER_I18L = {
     db: 'DB',
     build: 'Build',
     move: 'Move',
+    armorStatus: 'Armor',
+    ammo: 'Ammo',
+    weaponHp: 'Weapon Durability',
     abilities: 'Characteristics',
     combat: 'Combat',
     combatName: 'Skill / Action',
