@@ -1,0 +1,1 @@
+(function(){window.CharaLibraLanguage={toggle(){const i=window.CharaLibraI18n;i.lang=i.lang==="ja"?"en":"ja";document.documentElement.lang=i.lang;},life(key){const i=window.CharaLibraI18n;return i.dict[i.lang].life[key]||key;}};})();

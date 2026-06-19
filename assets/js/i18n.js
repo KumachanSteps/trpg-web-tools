@@ -404,6 +404,21 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
+      id: "chara-libra-tool",
+      icon: "⚖️",
+      status: "available",
+      category: "characterUtility",
+      href: "./tools/chara-libra-tool/",
+      name: {
+        ja: "Chara Libra",
+        en: "Chara Libra",
+      },
+      description: {
+        ja: "CCFOLIA駒JSONといあきゃらTXTを取り込み、キャラクター情報・MEMO・チャットパレットを管理して再出力するキャラクター管理ハブです。",
+        en: "A character management hub for importing CCFOLIA token JSON and Iachara text, editing notes and chat palettes, and exporting updated token data.",
+      },
+    },
+    {
       id: "character-library-tool",
       icon: "🧑‍🚀",
       status: "production",

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chara Libra｜TRPG WEBツール観測所</title>
+  <link rel="stylesheet" href="css/chara-libra-style.css" />
+</head>
+<body class="light">
+  <header class="app-header">
+    <div class="header-top-row">
+      <div><div class="site-kicker">TRPG WEBツール観測所</div><h1 data-i18n="app.title">Chara Libra</h1></div>
+      <nav class="header-actions" aria-label="tool actions">
+        <a class="ghost link" href="../../">←TRPG WEBツール観測所</a>
+        <button id="xShareBtn" class="ghost" type="button">𝕏</button>
+        <button id="langBtn" class="ghost" type="button">JP / EN</button>
+        <button id="usageBtn" class="ghost" type="button" aria-controls="usagePanel">使い方</button>
+        <button id="shortcutBtn" class="ghost" type="button" aria-controls="shortcutPanel">ショートカット</button>
+        <button id="themeBtn" class="ghost" type="button">Light / Night</button>
+      </nav>
+    </div>
+    <div class="header-bottom-row"><p data-i18n="app.subtitle">キャラクター情報を保管・編集し、CCFOLIA駒データとして再出力します。</p><span class="version-mark">v1.0 / 2026.06.19</span></div>
+  </header>
+
+  <aside class="slide-panel" id="usagePanel" aria-hidden="true"><div class="slide-inner"><button class="panel-close" data-close-panel="usagePanel">×</button><h2>使い方</h2><ol><li>CCFOLIA駒JSONを貼り付けて登録します。</li><li>カードをクリックして詳細を開きます。</li><li>基本情報、MEMO、チャットパレットを編集して保存します。</li><li>CCFOLIA駒データコピーで更新済みJSONをコピーします。</li></ol><p class="warning">キャラクターデータはお使いのブラウザ内に保存されます。必要に応じてJSONバックアップを保存してください。</p></div></aside>
+  <aside class="slide-panel" id="shortcutPanel" aria-hidden="true"><div class="slide-inner"><button class="panel-close" data-close-panel="shortcutPanel">×</button><h2>ショートカット</h2><div class="shortcut-list"><p><kbd>Esc</kbd> パネルを閉じる / 一覧へ戻る</p><p><kbd>Ctrl/Cmd</kbd> + <kbd>S</kbd> 詳細を保存</p><p><kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> テーマ切替</p></div></div></aside>
+
+  <main>
+    <section id="libraryView" class="view">
+      <div class="grid library-layout">
+        <section class="card import-card">
+          <div class="card-head"><h2>Import / Add</h2><span class="pill">CCFOLIA v1.0</span></div>
+          <textarea id="ccfoliaInput" placeholder="CCFOLIA駒JSONを貼り付け"></textarea>
+          <textarea id="iacharaInput" placeholder="いあきゃらTXT（v1.0では保存のみ）"></textarea>
+          <div class="row"><select id="updateTarget"><option value="">新規登録 / 自動判定</option></select><button id="importBtn" class="primary" type="button">登録 / 更新</button></div>
+          <div class="actions"><button id="exportAllBtn" type="button">全キャラJSONエクスポート</button><label class="file-btn">全キャラJSONインポート<input id="importAllFile" type="file" accept="application/json" hidden></label></div>
+          <p class="hint">キャラクターデータはブラウザ内 localStorage に保存されます。ブラウザ変更・キャッシュ削除・端末変更時に消える可能性があります。</p>
+        </section>
+        <section class="card filter-card"><div class="card-head"><h2>Search / Filter</h2></div><div class="filters"><input id="keywordFilter" placeholder="キーワード"><input id="systemFilter" placeholder="システム"><select id="statusFilter"><option value="">状態すべて</option><option value="alive">生存</option><option value="lost">ロスト</option><option value="retired">引退</option><option value="inactive">保留</option><option value="npc">NPC</option></select><input id="tagFilter" placeholder="タグ"><select id="sortSelect"><option value="updatedDesc">更新日が新しい順</option><option value="updatedAsc">更新日が古い順</option><option value="nameAsc">名前順</option><option value="createdDesc">登録日が新しい順</option><option value="sanDesc">SAN高い順</option><option value="sanAsc">SAN低い順</option><option value="hpDesc">HP高い順</option><option value="skillDesc">技能数が多い順</option></select></div></section>
+      </div>
+      <section class="card"><div class="card-head"><h2>Character card grid</h2><span id="countBadge" class="pill">0</span></div><div id="cardGrid" class="card-grid"></div></section>
+    </section>
+
+    <section id="detailView" class="view hidden">
+      <button id="backBtn" type="button">← Back to Library</button>
+      <div class="detail-grid">
+        <section class="card character-head"><img id="detailIcon" alt="" class="icon-preview"><div class="form-grid"><input id="nameInput" placeholder="名前"><input id="readingInput" placeholder="読み"><input id="systemInput" placeholder="システム"><input id="editionInput" placeholder="版"><input id="occupationInput" placeholder="職業"><select id="lifeStatusInput"><option value="alive">生存</option><option value="lost">ロスト</option><option value="retired">引退</option><option value="inactive">保留</option><option value="npc">NPC</option></select><input id="tagsInput" placeholder="タグ（カンマ区切り）"><input id="tachieInput" placeholder="立ち絵URL"><input id="iconInput" placeholder="アイコンURL"><input id="externalInput" placeholder="externalUrl"></div></section>
+        <section class="card"><div class="card-head"><h2>Source Freshness</h2></div><div id="freshnessBox" class="stamp-list"></div></section>
+      </div>
+      <div class="detail-grid two"><section class="card"><div class="card-head"><h2>Stats</h2></div><div id="statsGrid" class="stats-grid"></div></section><section class="card"><div class="card-head"><h2>Skills</h2><input id="skillSearch" placeholder="技能検索"></div><div id="skillsList" class="skills-list"></div></section></div>
+      <div class="detail-grid two"><section class="card"><div class="card-head"><h2>Chara MEMO Editor</h2></div><div id="memoEditors" class="memo-editors"></div></section><section class="card"><div class="card-head"><h2>Chat Palette Editor</h2><button id="copyCommandsBtn" type="button">コピー</button></div><textarea id="commandsInput" class="tall"></textarea></section></div>
+      <section class="card"><div class="actions"><button id="saveDetailBtn" class="primary" type="button">保存</button><button id="copyCcfBtn" class="primary" type="button">CCFOLIA駒データコピー</button><button id="exportOneBtn" type="button">単体キャラJSONエクスポート</button><button id="deleteBtn" class="danger" type="button">単体キャラ削除</button></div><p id="manualCopyNotice" class="hint hidden">自動コピーできませんでした。下の駒データを手動でコピーしてください。</p><textarea id="manualCopyArea" class="hidden"></textarea></section>
+    </section>
+  </main>
+  <div id="toast" class="toast"></div>
+  <script src="js/i18l.js"></script><script src="js/parser.js"></script><script src="js/language.js"></script><script src="js/shortcut.js"></script><script src="js/app.js"></script>
+</body>
+</html>
