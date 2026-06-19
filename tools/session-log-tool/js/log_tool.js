@@ -1,7 +1,8 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.5";
+  const APP_VERSION = "v1.6";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
+  const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
   const SYSTEM_OPTIONS = ["CoC 7版", "CoC 6版", "エモクロア", "マダミス"];
@@ -300,7 +301,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "report-button";
-      btn.textContent = "卓報告 ↗";
+      btn.textContent = "卓報告ジェネレーターへ送る";
       btn.addEventListener("click",event=>{ event.stopPropagation(); openReportGenerator(row); });
       return btn;
     }
@@ -329,7 +330,7 @@
       <div class="drawer-card"><p class="drawer-label">PL / PC</p><strong>${escapeHtml(row.players || "")}</strong><p>${escapeHtml(row.pc || "")}</p></div>
       <div class="drawer-card"><p class="drawer-label">短いメモ</p><p>${escapeHtml(row.note || "")}</p><p class="drawer-muted">ハッシュタグは「＋ 項目追加」から任意項目として追加できます。</p></div>
       <div class="drawer-card"><p class="drawer-label">長文感想</p><textarea id="drawerLongNote">${escapeHtml(row.longNote || "")}</textarea></div>
-      <div class="drawer-card report-link-card"><strong>卓報告ジェネレーター連携</strong><p>この行のシナリオ / システム / GM / PL / PC情報を卓報告ジェネレーターに渡す想定です。ハッシュタグなどの任意項目も追加して渡せます。</p><button id="drawerReportBtn" type="button">卓報告ジェネレーターを開く ›</button></div>
+      <div class="drawer-card report-link-card"><strong>卓報告ジェネレーター連携</strong><p>この行のシナリオ / システム / GM / PL / PC情報を卓報告ジェネレーターに渡す想定です。ハッシュタグなどの任意項目も追加して渡せます。</p><button id="drawerReportBtn" type="button">卓報告ジェネレーターへ送る</button></div>
       <div class="drawer-actions"><button id="drawerDuplicateBtn" type="button">複製</button><button id="drawerDeleteBtn" class="danger-soft" type="button">⌫ 削除</button></div>
     `;
     document.getElementById("drawerLongNote")?.addEventListener("input",event=>{
@@ -572,8 +573,110 @@
   function closeDrawer(){ els.kansouDrawer.classList.remove("open"); els.drawerOverlay.hidden = true; els.kansouDrawer.setAttribute("aria-hidden","true"); els.kansouTab.classList.remove("hide"); }
 
   function openReportGenerator(row){
-    const params = new URLSearchParams({ scenario: row.scenario || "", system: row.system || "", gm: row.gm || "", pl: row.players || "", pc: row.pc || "", date: getDateTitle(row) || row.date || "", hashtag: row.hashtag || "", note: row.note || "" });
-    window.open(`${REPORT_GENERATOR_URL}?${params.toString()}`,"_blank");
+    if(!row) return;
+    const confirmed = confirm([
+      "卓報告ジェネレーターへ送る",
+      "",
+      "この卓ログをもとに、卓報告ジェネレーター用の入力データを作成します。",
+      "",
+      "送信される情報：",
+      "・シナリオ名",
+      "・セッション日",
+      "・システム",
+      "・GM / KP",
+      "・PL / PC",
+      "・メモ",
+      "・関連URL",
+      "",
+      "卓報告ジェネレーター側で内容を確認・編集してから投稿文を生成できます。"
+    ].join("\n"));
+    if(!confirmed) return;
+
+    if(hasPendingReportImport() && !confirm("未取り込みの卓報告データがすでにあります。\n新しいデータで上書きしますか？")) return;
+
+    const payload = createReportPendingImport(row);
+    try{
+      localStorage.setItem(REPORT_PENDING_IMPORT_KEY, JSON.stringify(payload));
+    }catch(error){
+      console.error(error);
+      alert("ブラウザの保存領域に書き込めませんでした。\n代わりにJSONをコピーして、卓報告ジェネレーター側で読み込んでください。\n\n" + JSON.stringify(payload, null, 2));
+      return;
+    }
+
+    alert("卓報告ジェネレーター用データを作成しました");
+    if(confirm("卓報告ジェネレーター用データを作成しました。\n卓報告ジェネレーターを開きますか？")){
+      window.open(REPORT_GENERATOR_URL, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  function hasPendingReportImport(){
+    try{ return Boolean(localStorage.getItem(REPORT_PENDING_IMPORT_KEY)); }
+    catch(_error){ return false; }
+  }
+
+  function createReportPendingImport(row){
+    return {
+      source: "session-log-tracker",
+      version: "1.0",
+      createdAt: new Date().toISOString(),
+      items: [createReportImportItem(row)]
+    };
+  }
+
+  function createReportImportItem(row){
+    normalizeRowDates(row);
+    const dates = Array.isArray(row.dates) ? row.dates : [];
+    return {
+      id: `report_import_${Date.now()}`,
+      sourceLogId: row.id || "",
+      scenario: row.scenario || row.title || "",
+      system: row.system || "",
+      dates,
+      latestDate: dates[dates.length - 1] || row.date || "",
+      sessionCount: Math.max(dates.length, 1),
+      gm: row.gm || row.keeper || "",
+      players: pairPlayers(row.players, row.pc).map(([pl, pc])=>({ pl, pc, characterUrl: "" })),
+      format: normalizeSessionFormat(row.format || row.sessionFormat || ""),
+      status: normalizeSessionStatus(row.status || ""),
+      memo: [row.note, row.longNote].map(v=>String(v || "").trim()).filter(Boolean).join("\n\n"),
+      links: createReportLinks(row),
+      hashtags: splitTags(row.hashtag || row.hashtags || row.tags || "")
+    };
+  }
+
+  function pairPlayers(playersValue, pcValue){
+    const pls = splitPeople(playersValue);
+    const pcs = splitPeople(pcValue);
+    const length = Math.max(pls.length, pcs.length, 1);
+    return Array.from({ length }, (_, index)=>[pls[index] || "", pcs[index] || ""]);
+  }
+
+  function splitTags(value){
+    if(Array.isArray(value)) return value.map(v=>String(v || "").replace(/^#/, "").trim()).filter(Boolean);
+    return String(value || "").split(/[\s、,，]+/).map(v=>v.replace(/^#/, "").trim()).filter(Boolean);
+  }
+
+  function createReportLinks(row){
+    return [
+      { label: "Session", url: row.sessionUrl || "" },
+      { label: "Scenario", url: row.scenarioUrl || "" },
+      { label: "Kansou", url: row.kansouUrl || "" }
+    ].filter(link=>link.url || ["Session", "Scenario"].includes(link.label));
+  }
+
+  function normalizeSessionFormat(value){
+    const text = String(value || "").toLowerCase();
+    if(text.includes("voice") || text.includes("ボイ") || text.includes("通話")) return "voice";
+    if(text.includes("text") || text.includes("テキ")) return "text";
+    if(text.includes("semi") || text.includes("半")) return "semi-text";
+    return "";
+  }
+
+  function normalizeSessionStatus(value){
+    const text = String(value || "");
+    if(/完|済|end|completed/i.test(text)) return "completed";
+    if(/継続|途中|予定|ongoing/i.test(text)) return "ongoing";
+    return text;
   }
 
   function exportJson(){
