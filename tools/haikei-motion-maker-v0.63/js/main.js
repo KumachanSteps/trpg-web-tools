@@ -1397,6 +1397,16 @@ state.image = state.images[0] || null;
     const transitionPanel = els.transitionThumbPanel;
     if (!panel || !canvasWrap || !controls || !heading) return;
 
+    const isStackedLayout = window.matchMedia('(max-width: 1180px)').matches;
+
+    if (isStackedLayout) {
+      canvasWrap.style.height = '';
+      canvasWrap.style.minHeight = '';
+      controls.style.maxHeight = '';
+      panel.style.removeProperty('--preview-controls-height');
+      return;
+    }
+
     const style = window.getComputedStyle(panel);
     const panelPaddingTop = parseFloat(style.paddingTop || '0');
     const panelPaddingBottom = parseFloat(style.paddingBottom || '0');
@@ -1404,25 +1414,39 @@ state.image = state.images[0] || null;
     const isTransitionVisible = transitionPanel && !transitionPanel.hidden;
     const visibleBlocks = [heading, canvasWrap, controls].filter(Boolean).length + (isTransitionVisible ? 1 : 0);
     const gapTotal = Math.max(0, visibleBlocks - 1) * gap;
-    const mobile = window.matchMedia('(max-width: 920px)').matches;
-    const shortLaptop = window.matchMedia('(min-width: 1181px) and (max-height: 820px)').matches;
-    const minPreviewHeight = mobile ? 240 : (shortLaptop ? 240 : 300);
+    const shortLaptop = window.matchMedia('(max-height: 820px)').matches;
+    const minPreviewHeight = shortLaptop ? 240 : 300;
 
     const fullControlsHeight = controls.scrollHeight || controls.offsetHeight;
     const transitionHeight = isTransitionVisible ? transitionPanel.offsetHeight : 0;
     const reserved = panelPaddingTop + panelPaddingBottom + heading.offsetHeight + transitionHeight + gapTotal;
     const available = panel.clientHeight - reserved;
+
+    if (!Number.isFinite(available) || available <= 0) return;
+
     const controlsMaxHeight = Math.max(210, Math.min(fullControlsHeight, available - minPreviewHeight));
     const nextHeight = Math.max(minPreviewHeight, available - controlsMaxHeight);
 
-    controls.style.maxHeight = `${Math.floor(controlsMaxHeight)}px`;
-    canvasWrap.style.height = `${Math.floor(nextHeight)}px`;
-    canvasWrap.style.minHeight = `${Math.floor(nextHeight)}px`;
+    const nextControlsHeight = `${Math.floor(controlsMaxHeight)}px`;
+    const nextCanvasHeight = `${Math.floor(nextHeight)}px`;
+
+    if (controls.style.maxHeight !== nextControlsHeight) {
+      controls.style.maxHeight = nextControlsHeight;
+    }
+    if (canvasWrap.style.height !== nextCanvasHeight) {
+      canvasWrap.style.height = nextCanvasHeight;
+      canvasWrap.style.minHeight = nextCanvasHeight;
+    }
     panel.style.setProperty('--preview-controls-height', `${Math.ceil(controlsMaxHeight)}px`);
   }
 
+  let previewLayoutSyncPending = false;
+
   function requestPreviewPanelLayoutSync() {
+    if (previewLayoutSyncPending) return;
+    previewLayoutSyncPending = true;
     window.requestAnimationFrame(() => {
+      previewLayoutSyncPending = false;
       syncPreviewCanvasSize();
       syncPreviewPanelLayout();
       drawFrame(state.stillFrameTime, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });

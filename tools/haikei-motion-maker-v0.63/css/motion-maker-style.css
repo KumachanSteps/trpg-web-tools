@@ -2927,3 +2927,40 @@ body.is-dark .mini-preview.nozoom::after {
 .app-header .eyebrow {
   margin-bottom: calc(0.18rem + 2px);
 }
+
+
+/* v0.72 prevent preview column growth in two-row / stacked layouts */
+@media (max-width: 1180px) {
+  .workspace {
+    align-items: start;
+  }
+
+  .preview-panel {
+    grid-column: 1 / -1;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .preview-panel .canvas-wrap {
+    height: auto !important;
+    min-height: 280px !important;
+    max-height: min(58vh, 520px);
+  }
+
+  .preview-controls {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 760px) {
+  .preview-panel .canvas-wrap {
+    min-height: 240px !important;
+    max-height: none;
+  }
+
+  .preview-controls {
+    max-height: none;
+  }
+}
