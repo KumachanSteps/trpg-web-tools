@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chara Libra｜TRPG WEBツール観測所</title>
+  <link rel="stylesheet" href="css/chara-libra-style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header glass-panel">
+      <div class="header-top-row">
+        <div class="header-brand">
+          <div class="site-kicker">TRPG WEBツール観測所</div>
+          <h1 data-i18n="app.title">Chara Libra</h1>
+        </div>
+        <nav class="header-actions" aria-label="tool actions">
+          <a class="ghost link" href="../../">←TRPG WEBツール観測所</a>
+          <button id="xShareBtn" class="ghost" type="button">𝕏</button>
+          <button id="langBtn" class="ghost" type="button">JP / EN</button>
+          <button id="usageBtn" class="ghost" type="button" aria-controls="usagePanel">使い方</button>
+          <button id="shortcutBtn" class="ghost" type="button" aria-controls="shortcutPanel">ショートカット</button>
+          <button id="themeBtn" class="ghost" type="button">Light / Night</button>
+        </nav>
+      </div>
+      <div class="header-bottom-row">
+        <p data-i18n="app.subtitle">キャラクター情報を保管・編集し、CCFOLIA駒データとして再出力します。</p>
+        <span class="version-mark">v1.0 / 2026.06.19</span>
+      </div>
+    </header>
+
+    <aside class="slide-panel" id="usagePanel" aria-hidden="true">
+      <div class="slide-inner glass-panel">
+        <button class="panel-close" data-close-panel="usagePanel" type="button">×</button>
+        <h2>使い方</h2>
+        <ol>
+          <li>左のControl DockにCCFOLIA駒JSONを貼り付けます。</li>
+          <li>「駒データを登録 / 更新」を押すと右側のCharacter Display Fieldに登録されます。</li>
+          <li>検索・フィルター・ソート、アイコンビュー / カードビュー切替でキャラクターを探せます。</li>
+          <li>キャラクターをクリックすると詳細編集ページへ移動します。</li>
+        </ol>
+        <p class="warning">キャラクターデータはお使いのブラウザ内に保存されます。必要に応じて詳細ページなどからJSONバックアップを保存してください。</p>
+      </div>
+    </aside>
+
+    <aside class="slide-panel" id="shortcutPanel" aria-hidden="true">
+      <div class="slide-inner glass-panel">
+        <button class="panel-close" data-close-panel="shortcutPanel" type="button">×</button>
+        <h2>ショートカット</h2>
+        <div class="shortcut-list">
+          <p><kbd>Esc</kbd> パネルを閉じる / 一覧へ戻る</p>
+          <p><kbd>Ctrl/Cmd</kbd> + <kbd>S</kbd> 詳細を保存</p>
+          <p><kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> テーマ切替</p>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <section id="libraryView" class="view library-view">
+        <section class="metric-row" aria-label="library metrics">
+          <article class="metric-card glass-panel"><span class="metric-symbol">✦</span><span class="metric-label">Total Characters</span><strong id="metricTotal">0</strong></article>
+          <article class="metric-card glass-panel"><span class="metric-symbol">◆</span><span class="metric-label">Alive / 生存</span><strong id="metricAlive">0</strong></article>
+          <article class="metric-card glass-panel"><span class="metric-symbol">◇</span><span class="metric-label">Lost / ロスト</span><strong id="metricLost">0</strong></article>
+          <article class="metric-card glass-panel"><span class="metric-symbol">☽</span><span class="metric-label">Recently Updated</span><strong id="metricRecent">0</strong></article>
+        </section>
+
+        <section class="library-main">
+          <aside class="control-dock glass-panel" aria-label="Control Dock">
+            <section class="dock-section">
+              <div class="section-heading">
+                <span class="eyebrow">Import</span>
+                <h2>CCFOLIA駒データ</h2>
+              </div>
+              <textarea id="ccfoliaInput" class="ccfolia-textarea" placeholder="ここにCCFOLIAのキャラクター駒データを貼り付け"></textarea>
+              <select id="updateTarget" aria-label="更新対象キャラクター">
+                <option value="">新規登録 / 自動判定</option>
+              </select>
+              <div class="dock-actions">
+                <button id="clipboardBtn" type="button">クリップボードから入力</button>
+                <button id="importBtn" class="primary" type="button">駒データを登録 / 更新</button>
+                <button id="clearInputBtn" type="button">クリア</button>
+              </div>
+            </section>
+
+            <section class="dock-section filter-dock">
+              <div class="section-heading">
+                <span class="eyebrow">Filters</span>
+                <h2>Filter Controls</h2>
+              </div>
+              <label>System / システム
+                <select id="systemFilter">
+                  <option value="">すべて</option>
+                  <option value="CoC6">CoC6</option>
+                  <option value="CoC7">CoC7</option>
+                  <option value="エモクロア">エモクロア</option>
+                  <option value="その他">その他</option>
+                </select>
+              </label>
+              <label>Status / 状態
+                <select id="statusFilter">
+                  <option value="">すべて</option>
+                  <option value="alive">生存</option>
+                  <option value="lost">ロスト</option>
+                  <option value="retired">引退</option>
+                  <option value="inactive">保留</option>
+                  <option value="npc">NPC</option>
+                </select>
+              </label>
+              <label>Tags / タグ<input id="tagFilter" placeholder="例：継続, 警察" /></label>
+              <label>Occupation / 職業<input id="occupationFilter" placeholder="例：刑事" /></label>
+              <button id="resetFiltersBtn" type="button">フィルターをリセット</button>
+            </section>
+          </aside>
+
+          <section class="character-display glass-panel" aria-label="Character Display Field">
+            <div class="top-control-bar">
+              <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="keywordFilter" type="search" placeholder="キャラ名・タグ・職業で検索" /></div>
+              <select id="sortSelect" aria-label="ソート順">
+                <option value="updatedDesc">更新日が新しい順</option>
+                <option value="updatedAsc">更新日が古い順</option>
+                <option value="nameAsc">名前順</option>
+                <option value="createdDesc">登録日が新しい順</option>
+                <option value="sanDesc">SAN高い順</option>
+                <option value="sanAsc">SAN低い順</option>
+                <option value="hpDesc">HP高い順</option>
+                <option value="skillDesc">技能数が多い順</option>
+              </select>
+              <div class="view-toggle" role="group" aria-label="表示切替">
+                <button id="iconViewBtn" class="view-toggle-btn active" type="button" data-view="icon">アイコン</button>
+                <button id="cardViewBtn" class="view-toggle-btn" type="button" data-view="card">カード</button>
+              </div>
+            </div>
+            <div class="field-head">
+              <div>
+                <span class="eyebrow">Character Archive</span>
+                <h2>Character Display Field</h2>
+              </div>
+              <span id="countBadge" class="pill">0</span>
+            </div>
+            <div id="cardGrid" class="character-grid icon-view"></div>
+          </section>
+        </section>
+      </section>
+
+      <section id="detailView" class="view hidden">
+        <button id="backBtn" type="button">← Back to Library</button>
+        <div class="detail-grid">
+          <section class="card character-head"><img id="detailIcon" alt="" class="icon-preview"><div class="form-grid"><input id="nameInput" placeholder="名前"><input id="readingInput" placeholder="読み"><input id="systemInput" placeholder="システム"><input id="editionInput" placeholder="版"><input id="occupationInput" placeholder="職業"><select id="lifeStatusInput"><option value="alive">生存</option><option value="lost">ロスト</option><option value="retired">引退</option><option value="inactive">保留</option><option value="npc">NPC</option></select><input id="tagsInput" placeholder="タグ（カンマ区切り）"><input id="tachieInput" placeholder="立ち絵URL"><input id="iconInput" placeholder="アイコンURL"><input id="externalInput" placeholder="externalUrl"></div></section>
+          <section class="card"><div class="card-head"><h2>Source Freshness</h2></div><div id="freshnessBox" class="stamp-list"></div></section>
+        </div>
+        <div class="detail-grid two"><section class="card"><div class="card-head"><h2>Stats</h2></div><div id="statsGrid" class="stats-grid"></div></section><section class="card"><div class="card-head"><h2>Skills</h2><input id="skillSearch" placeholder="技能検索"></div><div id="skillsList" class="skills-list"></div></section></div>
+        <div class="detail-grid two"><section class="card"><div class="card-head"><h2>Chara MEMO Editor</h2></div><div id="memoEditors" class="memo-editors"></div></section><section class="card"><div class="card-head"><h2>Chat Palette Editor</h2><button id="copyCommandsBtn" type="button">コピー</button></div><textarea id="commandsInput" class="tall"></textarea></section></div>
+        <section class="card"><div class="actions"><button id="saveDetailBtn" class="primary" type="button">保存</button><button id="copyCcfBtn" class="primary" type="button">CCFOLIA駒データコピー</button><button id="exportOneBtn" type="button">単体キャラJSONエクスポート</button><button id="deleteBtn" class="danger" type="button">単体キャラ削除</button></div><p id="manualCopyNotice" class="hint hidden">自動コピーできませんでした。下の駒データを手動でコピーしてください。</p><textarea id="manualCopyArea" class="hidden"></textarea></section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="js/i18l.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/shortcut.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
