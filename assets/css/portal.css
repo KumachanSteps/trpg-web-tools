@@ -813,11 +813,10 @@ body.theme-dawn .status-production {
   line-height: 1.25;
 }
 
-body.theme-dawn .tool-badge,
 body.theme-dawn .tool-card .tool-badge {
-  border-color: rgba(134, 239, 172, 0.9);
-  background: rgba(220, 252, 231, 0.24);
-  color: #dcfce7;
+  border-color: rgba(134, 239, 172, 0.86) !important;
+  background: rgba(220, 252, 231, 0.22) !important;
+  color: #dcfce7 !important;
   box-shadow: 0 0 14px rgba(74, 222, 128, 0.14);
 }
 
