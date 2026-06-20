@@ -3,34 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓準備カレンダー v0.1 | TRPG WEBツール観測所</title>
+  <title>卓準備カレンダー v0.11 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/session_check_calendar.css" />
 </head>
 <body>
   <div class="app-shell">
-    <header class="hero">
-      <div class="brand-mark" aria-hidden="true">▣</div>
-      <div class="hero-copy">
-        <p class="portal-link"><a href="../../">← TRPG WEBツール観測所</a></p>
-        <h1>卓準備カレンダー</h1>
-        <p>TRPGセッション予定と準備タスクをまとめて管理</p>
+    <header class="app-header">
+      <a class="brand-block" href="../../" aria-label="TRPG WEBツール観測所へ戻る">
+        <span class="brand-kicker">TRPG WEBツール観測所</span>
+        <strong>卓準備カレンダー</strong>
+        <span>TRPGセッション予定と準備タスクをまとめて管理</span>
+      </a>
+      <div class="header-side">
+        <nav class="header-actions" aria-label="ツール操作">
+          <button id="reportBridgeBtn" type="button">報告</button>
+          <button id="languageBtn" type="button">JP/EN</button>
+          <button id="helpBtn" type="button">使い方</button>
+          <button id="shortcutBtn" type="button">ショートカット</button>
+          <button id="themeBtn" type="button">Light/Night</button>
+        </nav>
+        <span class="version">v0.11 / 2026.06.19</span>
       </div>
-      <nav class="hero-actions" aria-label="ツール操作">
-        <button id="reportBridgeBtn" type="button">報告</button>
-        <button id="languageBtn" type="button">JP/EN</button>
-        <button id="helpBtn" type="button">使い方</button>
-        <button id="shortcutBtn" type="button">ショートカット</button>
-        <button id="themeBtn" type="button">Light/Night</button>
-        <span class="version">v0.1 / 2026.06.19</span>
-      </nav>
     </header>
 
     <main class="layout">
       <section class="calendar-area">
         <div class="toolbar">
           <button id="addSessionBtn" class="primary" type="button">＋ セッション追加</button>
+          <button id="addTaskBtn" class="ghost" type="button">☑ タスク追加</button>
           <label class="ghost file-label">☁ JSON読込<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
+          <label class="ghost file-label">▣ iCal読込<input id="icalInput" type="file" accept="text/calendar,.ics,.ical" hidden /></label>
+          <button id="googleImportBtn" class="ghost" type="button">Googleカレンダー読込</button>
           <button id="exportJsonBtn" class="ghost" type="button">⇩ JSON出力</button>
           <button id="exportIcalBtn" class="ghost" type="button">▣ iCal出力</button>
           <span class="toolbar-spacer"></span>
@@ -38,6 +42,19 @@
           <button id="prevMonthBtn" class="ghost" type="button">‹ 前月</button>
           <button id="nextMonthBtn" class="ghost" type="button">次月 ›</button>
         </div>
+
+        <section id="focusPanel" class="focus-panel" hidden>
+          <div>
+            <span class="eyebrow">FOCUS DATE</span>
+            <strong id="focusDateLabel">----</strong>
+            <small>選択した日付にイベントや準備タスクを追加できます。</small>
+          </div>
+          <div class="focus-actions">
+            <button id="focusAddSessionBtn" class="primary" type="button">この日にセッション追加</button>
+            <button id="focusAddTaskBtn" class="ghost" type="button">この日にタスク追加</button>
+            <button id="clearFocusBtn" class="ghost" type="button">解除</button>
+          </div>
+        </section>
 
         <section class="month-card" aria-label="月間カレンダー">
           <h2 id="monthTitle">----</h2>
@@ -53,7 +70,8 @@
         </section>
         <section class="panel task-panel">
           <h2>☑ 今週の準備タスク <span id="weekRange"></span></h2>
-          <div id="taskList" class="stack-list"></div>
+          <p class="panel-note">ドラッグで並び替え。左の大きなチェックで完了にできます。</p>
+          <div id="taskList" class="task-list" aria-label="今週の準備タスク"></div>
           <button id="showAllTasksBtn" class="wide-button" type="button">☰ すべてのタスクを表示</button>
         </section>
       </aside>
@@ -86,6 +104,31 @@
         <label class="full">メモ<textarea id="memoInput"></textarea></label>
       </div>
       <div class="modal-actions"><button class="danger" id="deleteSessionBtn" type="button">削除</button><span></span><button value="cancel" type="submit">キャンセル</button><button id="saveSessionBtn" class="primary" value="default" type="submit">保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="taskDialog" class="modal task-modal">
+    <form id="taskForm" method="dialog">
+      <div class="modal-head"><h2>準備タスク追加</h2><button value="cancel" type="submit">×</button></div>
+      <div class="form-grid">
+        <label class="full">タスク名<input id="taskTitleInput" required placeholder="NPC立ち絵準備" /></label>
+        <label>紐付ける卓<select id="taskSessionSelect" required></select></label>
+        <label>期限<input id="taskDueInput" type="date" /></label>
+        <label>ステータス<select id="taskStatusInput"><option value="未着手">未着手</option><option value="今日">今日</option><option value="3日以内">3日以内</option><option value="期限切れ">期限切れ</option><option value="完了">完了</option></select></label>
+        <label>完了<select id="taskDoneInput"><option value="false">未完了</option><option value="true">完了</option></select></label>
+      </div>
+      <div class="modal-actions"><span></span><span></span><button value="cancel" type="submit">キャンセル</button><button class="primary" value="default" type="submit">追加</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="importDialog" class="modal import-modal">
+    <form method="dialog">
+      <div class="modal-head"><h2 id="importDialogTitle">読み込むカレンダーを選択</h2><button value="cancel" type="submit">×</button></div>
+      <div class="import-body">
+        <p id="importDialogLead">取り込むカレンダーだけを選択してください。</p>
+        <div id="importSourceList" class="source-list"></div>
+      </div>
+      <div class="modal-actions"><span></span><span></span><button value="cancel" type="submit">キャンセル</button><button id="confirmImportBtn" class="primary" value="default" type="submit">選択分を読み込む</button></div>
     </form>
   </dialog>
 
