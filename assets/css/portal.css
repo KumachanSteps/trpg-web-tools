@@ -791,11 +791,10 @@ body.theme-dawn .status-production {
   line-height: 1.25;
 }
 
-body.theme-dawn .tool-card .tool-badge {
-  border-color: rgba(134, 239, 172, 0.86) !important;
-  background: rgba(220, 252, 231, 0.22) !important;
-  color: #dcfce7 !important;
-  box-shadow: 0 0 14px rgba(74, 222, 128, 0.14);
+body.theme-dawn .tool-badge {
+  border-color: rgba(37, 99, 235, 0.26);
+  background: rgba(37, 99, 235, 0.09);
+  color: #1d4ed8;
 }
 
 .tool-card.is-disabled .tool-badge {
@@ -805,9 +804,7 @@ body.theme-dawn .tool-card .tool-badge {
 }
 
 body.theme-dawn .tool-card.is-disabled .tool-badge {
-  border-color: rgba(187, 247, 208, 0.34);
-  background: rgba(220, 252, 231, 0.1);
-  color: #bbf7d0;
+  color: #64748b;
 }
 
 .tool-card.is-disabled .open-text {
