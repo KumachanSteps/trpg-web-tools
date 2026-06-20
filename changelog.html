@@ -20,7 +20,7 @@
   />
 
   <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="./assets/css/portal.css?v=20260611-02" />
+  <link rel="stylesheet" href="./assets/css/portal.css?v=20260620-03" />
 </head>
 
 <body class="theme-dawn">
@@ -80,17 +80,17 @@
       <aside class="status-summary" aria-label="Changelog summary">
         <div class="summary-grid">
           <div class="summary-item">
-            <p class="summary-number">6</p>
+            <p class="summary-number">10</p>
             <p class="summary-label">使用可能</p>
           </div>
 
           <div class="summary-item">
-            <p class="summary-number">10</p>
+            <p class="summary-number">6</p>
             <p class="summary-label">開発中</p>
           </div>
 
           <div class="summary-item">
-            <p class="summary-number">2</p>
+            <p class="summary-number">6</p>
             <p class="summary-label">アイデア</p>
           </div>
         </div>
@@ -99,26 +99,172 @@
 
     <section class="portal-info-section" aria-label="Changelog">
       <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/20</p>
+        <h2>ポータル分類バッジの視認性調整</h2>
+        <ul>
+          <li>Dawnモードでカテゴリフィルターとツールカードバッジを明るい緑系に変更しました。</li>
+          <li>ポータルカード上のバッジが背景に沈まないよう、枠線・背景・文字色のコントラストを調整しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/20</p>
+        <h2>ポータルカテゴリを新5分類へ再整理</h2>
+        <ul>
+          <li>ツール分類を「卓前 / 卓中 / 卓後 / GM支援 / PL支援」の5分類に統一しました。</li>
+          <li>検索横のフィルターと各ツールカードのバッジ表示を新分類へ切り替え、旧カテゴリは検索補助キーワードとして扱うようにしました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/19</p>
+        <h2>Chara Libra / キャラクターLibrary 整備</h2>
+        <ul>
+          <li>Chara Libraを追加し、CCFOLIA駒JSON・いあきゃらTXTを取り込むキャラクター管理ハブとして整理しました。</li>
+          <li>ライブラリ画面を再設計し、キャラクター情報・MEMO・チャットパレット管理の導線を改善しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
         <p class="release-date">2026/06/19</p>
         <h2>卓ログトラッカー × 卓報告ジェネレーター連携</h2>
         <ul>
           <li>卓ログトラッカーから卓報告ジェネレーターへセッション情報を送れる連携機能を追加しました。</li>
-          <li>卓報告ジェネレーターで卓ログトラッカーからの連携データを読み込めるように調整しました。</li>
+          <li>卓報告ジェネレーター側で連携データを読み込めるようにし、CCFOLIA連携バージョン表記もv1.1へ更新しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/19</p>
+        <h2>背景モーションメーカー v0.72</h2>
+        <ul>
+          <li>背景モーションメーカーをv0.72へ更新しました。</li>
+          <li>背景・シーン素材制作系ツール群の運用方針を引き続き整理しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/18</p>
+        <h2>NPCデータリーダー v1.521 / 背景モーションメーカー v0.71</h2>
+        <ul>
+          <li>NPCデータリーダーをv1.521へ更新し、NPCデータ解析まわりを改善しました。</li>
+          <li>背景モーションメーカーをv0.71へ更新しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/17</p>
+        <h2>GM用キャラシビューワー v1.31 / 背景モーションメーカー更新</h2>
+        <ul>
+          <li>GM用キャラシビューワーをv1.31へ更新し、表示領域やパネルバランスを調整しました。</li>
+          <li>背景モーションメーカーv0.70系をアップロードし、β版の調整を継続しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/16</p>
+        <h2>NPCデータリーダー v1.488 / 背景モーションメーカーβ版</h2>
+        <ul>
+          <li>NPCデータリーダーをv1.488へ更新しました。</li>
+          <li>背景モーションメーカーβ版とv0.63系を追加・調整しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/15</p>
+        <h2>キャラ差分管理ツール v0.13〜v0.16</h2>
+        <ul>
+          <li>キャラ差分管理ツールをv0.13、v0.15、v0.16へ段階的に更新しました。</li>
+          <li>画像差分管理、ダウンロード導線、トースト表示、Escキー挙動などの操作性を改善しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/13</p>
+        <h2>ダイス解析・成長チェッカー・チャパレ整形の集中更新</h2>
+        <ul>
+          <li>ダイス解析アナライザーをv1.36〜v1.373系へ更新し、判定ロジックやCC系ログ抽出を改善しました。</li>
+          <li>CoC成長チェッカーをv2.67〜v2.68へ更新し、ダイス解析アナライザーとのログ連携を整理しました。</li>
+          <li>CoCチャパレ整形ツールをv2.54〜v2.55へ更新し、フッターや整形ロジックを調整しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/12</p>
+        <h2>卓ログトラッカー・キャラ差分・アイコン系の更新</h2>
+        <ul>
+          <li>卓ログトラッカーv1.5系、CoC成長チェッカー、キャラ差分管理ツールv0.12を更新しました。</li>
+          <li>かんたんアイコンメーカー関連の導線と素材系ツールの接続方針を整理しました。</li>
         </ul>
       </article>
 
       <article class="portal-info-card release-item">
         <p class="release-date">2026/06/11</p>
-        <h2>ポータル掲載ツールを追加・整理</h2>
+        <h2>NPCデータリーダーとポータル掲載ツールの整理</h2>
         <ul>
-          <li>ツール一覧の表示順を、現在の運用方針に合わせて整理しました。</li>
-          <li>「ダイス表ツール」を開発中ツールとして追加しました。</li>
-          <li>「シナリオDTPデザイナー」をポータルに追加しました。</li>
-          <li>「NPCデータリーダー」をポータルに追加しました。</li>
-          <li>「キャラ差分管理ツール」をポータルに追加しました。</li>
-          <li>「キャラ差分管理ツール」のフォルダー名を <code>chara-sabun-kanri-tool</code> に変更しました。</li>
-          <li>「かんたんアイコンメーカー」「シナリオPDFパーサー」「キャラクターLibrary」など、開発中ツールのリンクを整理しました。</li>
-          <li>「使えるハッシュタグ検索」「チャットパレット整形ツール」「GM用キャラシビューワー」「いあキャラMEMOジェネレータ」を使用可能ステータスに変更しました。</li>
+          <li>NPCデータリーダーを追加・更新し、NPCデータ読み取りツールとして名称と導線を整理しました。</li>
+          <li>いあキャラMEMOジェネレータv1.10、成長チェッカーv2.5、キャラ差分管理ツールの掲載準備を進めました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/10</p>
+        <h2>NPCデータリーダーへの名称整理</h2>
+        <ul>
+          <li>NPCキャラクターデータメーカー構想を作成し、名称をNPCデータリーダーへ整理しました。</li>
+          <li>NPCチャットパレット生成は独立カードではなく、NPCデータリーダー内の機能として扱う方針にしました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/09</p>
+        <h2>GM用キャラシビューワー更新</h2>
+        <ul>
+          <li>GM用キャラシビューワーを更新し、複数キャラクターシートの確認・管理体験を改善しました。</li>
+          <li>BGM Organizer / シーンBGMプランナー構想を整理しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/08</p>
+        <h2>GM用キャラシビューワー v1.2</h2>
+        <ul>
+          <li>GM用キャラシビューワーをv1.2へ更新しました。</li>
+          <li>KP / GM向けのキャラクター確認導線を整備しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/07</p>
+        <h2>CoC成長チェッカー公開状態の更新</h2>
+        <ul>
+          <li>ポータル上でCoC成長チェッカーの公開ステータスを使用可能へ変更しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/06</p>
+        <h2>CoC成長チェッカー更新</h2>
+        <ul>
+          <li>CoC成長チェッカーを更新し、ログ解析と成長判定まわりの調整を継続しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/05</p>
+        <h2>CoC成長チェッカー v2系 / チャパレ整形 v2系</h2>
+        <ul>
+          <li>CoC成長チェッカーv2.1〜v2.5系を調整し、SANチェック・パーサー・フッター表示などを改善しました。</li>
+          <li>チャットパレット整形ツールv2系を整理し、母国語追記などの整形処理を更新しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/04</p>
+        <h2>主要ツールの初期大型更新</h2>
+        <ul>
+          <li>卓ログトラッカーv1.3〜v1.5、シナリオDTPデザイナーv1.4〜v1.5、CoC成長チェッカーv2.0〜v2.1を更新しました。</li>
+          <li>シナリオPDFパーサー、チャットパレット整形ツール、Chara Libra構想など主要ツール群の土台を整理しました。</li>
         </ul>
       </article>
 
@@ -133,28 +279,7 @@
         </ul>
       </article>
 
-      <article class="portal-info-card release-item">
-        <p class="release-date">2026/05/13</p>
-        <h2>ポータル基本ページを整備</h2>
-        <ul>
-          <li>TRPG WEBツール観測所のポータルページを整備しました。</li>
-          <li>更新履歴、Q&amp;A、プライバシー、利用規約ページを追加しました。</li>
-          <li>Google Analytics タグと favicon を各ページに追加しました。</li>
-          <li>Twitter/X 関連ボタンと、開発者 @KumachanSteps への導線を追加しました。</li>
-        </ul>
-      </article>
-
-      <article class="portal-info-card release-item">
-        <p class="release-date">2026/05/12</p>
-        <h2>初期ポータル構成を作成</h2>
-        <ul>
-          <li>TRPG支援ツールを一覧できるポータル構成を作成しました。</li>
-          <li>Dawn / Deep Space テーマ、言語切替、カテゴリ検索、ツールステータス表示を追加しました。</li>
-          <li>ツールカード形式で、使用可能・開発中・アイデア段階のツールを整理しました。</li>
-        </ul>
-      </article>
     </section>
-
     <section class="site-links-section" aria-label="Site links">
       <a href="./">ポータルへ戻る</a>
       <a href="./contact.html">Q&amp;A・不具合報告・要望</a>
@@ -168,6 +293,5 @@
     </footer>
   </main>
 
-  <script src="./assets/js/portal.js?v=20260611-02"></script>
 </body>
 </html>
