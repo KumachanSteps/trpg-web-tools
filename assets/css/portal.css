@@ -593,9 +593,10 @@ body.theme-dawn .portal-version {
 
 .category-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+  overflow: visible;
+  padding: 6px 2px 8px;
 }
 
 .category-button {
@@ -814,10 +815,10 @@ body.theme-dawn .status-production {
 }
 
 body.theme-dawn .tool-card .tool-badge {
-  border-color: rgba(187, 247, 208, 0.52);
-  background: rgba(220, 252, 231, 0.13);
-  color: #bbf7d0;
-  box-shadow: 0 0 10px rgba(74, 222, 128, 0.08);
+  border-color: rgba(134, 239, 172, 0.86) !important;
+  background: rgba(220, 252, 231, 0.22) !important;
+  color: #dcfce7 !important;
+  box-shadow: 0 0 14px rgba(74, 222, 128, 0.14);
 }
 
 .tool-card.is-disabled .tool-badge {
