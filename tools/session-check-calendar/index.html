@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>卓準備カレンダー v0.1 | TRPG WEBツール観測所</title>
+  <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="css/session_check_calendar.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="brand-mark" aria-hidden="true">▣</div>
+      <div class="hero-copy">
+        <p class="portal-link"><a href="../../">← TRPG WEBツール観測所</a></p>
+        <h1>卓準備カレンダー</h1>
+        <p>TRPGセッション予定と準備タスクをまとめて管理</p>
+      </div>
+      <nav class="hero-actions" aria-label="ツール操作">
+        <button id="reportBridgeBtn" type="button">報告</button>
+        <button id="languageBtn" type="button">JP/EN</button>
+        <button id="helpBtn" type="button">使い方</button>
+        <button id="shortcutBtn" type="button">ショートカット</button>
+        <button id="themeBtn" type="button">Light/Night</button>
+        <span class="version">v0.1 / 2026.06.19</span>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section class="calendar-area">
+        <div class="toolbar">
+          <button id="addSessionBtn" class="primary" type="button">＋ セッション追加</button>
+          <label class="ghost file-label">☁ JSON読込<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
+          <button id="exportJsonBtn" class="ghost" type="button">⇩ JSON出力</button>
+          <button id="exportIcalBtn" class="ghost" type="button">▣ iCal出力</button>
+          <span class="toolbar-spacer"></span>
+          <button id="todayBtn" class="ghost" type="button">今日</button>
+          <button id="prevMonthBtn" class="ghost" type="button">‹ 前月</button>
+          <button id="nextMonthBtn" class="ghost" type="button">次月 ›</button>
+        </div>
+
+        <section class="month-card" aria-label="月間カレンダー">
+          <h2 id="monthTitle">----</h2>
+          <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </section>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel today-panel">
+          <h2>▣ 今日の予定</h2>
+          <div id="todayList" class="stack-list"></div>
+        </section>
+        <section class="panel task-panel">
+          <h2>☑ 今週の準備タスク <span id="weekRange"></span></h2>
+          <div id="taskList" class="stack-list"></div>
+          <button id="showAllTasksBtn" class="wide-button" type="button">☰ すべてのタスクを表示</button>
+        </section>
+      </aside>
+
+      <aside id="detailPane" class="detail-pane" aria-live="polite">
+        <div class="detail-head">
+          <h2>▣ セッション詳細</h2>
+          <button id="closeDetailBtn" type="button" aria-label="詳細を閉じる">×</button>
+        </div>
+        <div id="detailContent" class="detail-content empty">カレンダーからセッションを選択してください。</div>
+      </aside>
+    </main>
+  </div>
+
+  <dialog id="sessionDialog" class="modal">
+    <form id="sessionForm" method="dialog">
+      <div class="modal-head"><h2 id="dialogTitle">セッション追加</h2><button value="cancel" type="submit">×</button></div>
+      <div class="form-grid">
+        <label>シナリオ名<input id="scenarioInput" required /></label>
+        <label>システム<input id="systemInput" placeholder="クトゥルフ神話TRPG" /></label>
+        <label>日時<input id="dateInput" type="datetime-local" required /></label>
+        <label>終了時刻<input id="endTimeInput" type="time" /></label>
+        <label>GM / KP<input id="gmInput" /></label>
+        <label>形式<input id="formatInput" placeholder="オンライン（ココフォリア＋Discord）" /></label>
+        <label>ステータス<select id="statusInput"><option value="scheduled">予定確定</option><option value="tentative">調整中</option><option value="completed">完了</option></select></label>
+        <label>タグ<input id="hashtagsInput" placeholder="TRPG, クトゥルフ神話TRPG" /></label>
+        <label class="full">参加者（1行につき PL / PC）<textarea id="playersInput" placeholder="Aさん / 探索者A&#10;Bさん / 探索者B"></textarea></label>
+        <label class="full">関連リンク（1行につき ラベル | URL）<textarea id="linksInput" placeholder="ココフォリア | https://..."></textarea></label>
+        <label class="full">準備タスク（1行につき タスク名 | 期限YYYY-MM-DD | ステータス）<textarea id="tasksInput" placeholder="NPC立ち絵準備 | 2026-07-02 | 今日"></textarea></label>
+        <label class="full">メモ<textarea id="memoInput"></textarea></label>
+      </div>
+      <div class="modal-actions"><button class="danger" id="deleteSessionBtn" type="button">削除</button><span></span><button value="cancel" type="submit">キャンセル</button><button id="saveSessionBtn" class="primary" value="default" type="submit">保存</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="js/session_check_calendar.js"></script>
+</body>
+</html>
