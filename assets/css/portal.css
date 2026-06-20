@@ -815,10 +815,10 @@ body.theme-dawn .status-production {
 }
 
 body.theme-dawn .tool-card .tool-badge {
-  border-color: rgba(134, 239, 172, 0.86) !important;
-  background: rgba(220, 252, 231, 0.22) !important;
-  color: #dcfce7 !important;
-  box-shadow: 0 0 14px rgba(74, 222, 128, 0.14);
+  border-color: rgba(187, 247, 208, 0.34);
+  background: rgba(220, 252, 231, 0.075);
+  color: rgba(220, 252, 231, 0.76);
+  box-shadow: none;
 }
 
 .tool-card.is-disabled .tool-badge {
