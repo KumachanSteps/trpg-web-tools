@@ -447,18 +447,19 @@ h1 {
 }
 
 .hero-title {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
-  flex-wrap: wrap;
-  column-gap: 14px;
-  row-gap: 6px;
+  flex-wrap: nowrap;
+  gap: 8px;
+  max-width: 100%;
 }
 
 .portal-version {
-  color: rgba(215, 222, 244, 0.58);
-  font-size: clamp(0.76rem, 1.1vw, 0.95rem);
+  flex: 0 0 auto;
+  color: rgba(215, 222, 244, 0.54);
+  font-size: clamp(0.58rem, 0.72vw, 0.68rem);
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.035em;
   text-shadow: none;
   white-space: nowrap;
 }
