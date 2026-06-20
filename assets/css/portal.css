@@ -748,16 +748,43 @@ body.theme-dawn .status-production {
   color: #cbd5e1;
 }
 
-.tool-category {
-  margin: 0 0 8px;
-  color: var(--accent);
-  font-size: 0.76rem;
-  font-weight: 950;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+.tool-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
 }
 
-.tool-card.is-disabled .tool-category,
+.tool-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border: 1px solid rgba(139, 211, 255, 0.34);
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.13);
+  color: #bae6fd;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+}
+
+body.theme-dawn .tool-badge {
+  border-color: rgba(37, 99, 235, 0.26);
+  background: rgba(37, 99, 235, 0.09);
+  color: #1d4ed8;
+}
+
+.tool-card.is-disabled .tool-badge {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(100, 116, 139, 0.13);
+  color: #cbd5e1;
+}
+
+body.theme-dawn .tool-card.is-disabled .tool-badge {
+  color: #64748b;
+}
+
 .tool-card.is-disabled .open-text {
   color: #94a3b8;
 }
