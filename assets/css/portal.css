@@ -446,6 +446,27 @@ h1 {
   white-space: nowrap;
 }
 
+.hero-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 14px;
+  row-gap: 6px;
+}
+
+.portal-version {
+  color: rgba(215, 222, 244, 0.58);
+  font-size: clamp(0.76rem, 1.1vw, 0.95rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+body.theme-dawn .portal-version {
+  color: rgba(220, 252, 231, 0.62);
+}
+
 .lead {
   max-width: 760px;
   margin: 18px 0 0;
@@ -571,9 +592,10 @@ h1 {
 
 .category-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+  overflow: visible;
+  padding: 6px 2px 8px;
 }
 
 .category-button {
@@ -781,10 +803,10 @@ body.theme-dawn .status-production {
   display: inline-flex;
   align-items: center;
   padding: 4px 9px;
-  border: 1px solid rgba(139, 211, 255, 0.34);
+  border: 1px solid rgba(134, 239, 172, 0.74);
   border-radius: 999px;
-  background: rgba(14, 165, 233, 0.13);
-  color: #bae6fd;
+  background: rgba(220, 252, 231, 0.18);
+  color: #dcfce7;
   font-size: 0.7rem;
   font-weight: 900;
   letter-spacing: 0.03em;
