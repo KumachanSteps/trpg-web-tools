@@ -973,6 +973,46 @@ body.theme-dawn .tool-card.is-disabled .tool-badge {
   margin: 0;
 }
 
+.release-item {
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.release-item > * {
+  position: relative;
+}
+
+.release-date {
+  margin: 0 0 14px;
+  color: var(--accent);
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.release-item h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.35rem, 2.6vw, 2rem);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.release-item ul {
+  margin: 20px 0 0;
+  padding-left: 1.25em;
+  color: var(--text);
+  font-size: clamp(0.94rem, 1.5vw, 1.03rem);
+  line-height: 1.8;
+}
+
+.release-item li + li {
+  margin-top: 8px;
+}
+
+body.theme-dawn .release-date {
+  color: #bbf7d0;
+}
+
 .portal-info-card:hover {
   border-color: rgba(139, 211, 255, 0.42);
   box-shadow:
