@@ -20,10 +20,10 @@
   />
 
   <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="./assets/css/portal.css?v=20260611-02" />
+  <link rel="stylesheet" href="./assets/css/portal.css?v=20260620-08" />
 </head>
 
-<body class="theme-dawn">
+<body class="theme-dawn" data-default-theme="dawn">
   <div class="background-space" aria-hidden="true">
     <div class="stars"></div>
     <div id="twinkleStars" class="twinkle-stars"></div>
@@ -104,7 +104,10 @@
           </a>
         </div>
 
-        <h1 data-i18n="hero.title">TRPG WEBツール観測所</h1>
+        <h1 class="hero-title">
+          <span data-i18n="hero.title">TRPG WEBツール観測所</span>
+          <span class="portal-version">v1.01 2026.06.20</span>
+        </h1>
 
         <p class="lead" data-i18n="hero.lead">ここはTRPGをもっと楽しく手軽に！セッション準備・ログ解析・卓報告・シナリオ整理を支援するツールサイトです。星図のように並ぶツールの中から、ぜひ目的に合うものをお使いください✨</p>
       </div>
@@ -146,13 +149,11 @@
 
         <div id="categoryButtons" class="category-buttons" aria-label="Tool categories">
           <button class="category-button is-active" type="button" data-category="all" data-i18n="categories.all" aria-pressed="true">すべて</button>
-          <button class="category-button" type="button" data-category="logAnalysis" data-i18n="categories.logAnalysis" aria-pressed="false">ログ解析</button>
-          <button class="category-button" type="button" data-category="reportWriting" data-i18n="categories.reportWriting" aria-pressed="false">卓報告</button>
-          <button class="category-button" type="button" data-category="scenarioPrep" data-i18n="categories.scenarioPrep" aria-pressed="false">シナリオ準備</button>
-          <button class="category-button" type="button" data-category="characterUtility" data-i18n="categories.characterUtility" aria-pressed="false">キャラクター支援</button>
-          <button class="category-button" type="button" data-category="infoGathering" data-i18n="categories.infoGathering" aria-pressed="false">情報収集</button>
-          <button class="category-button" type="button" data-category="haishinTracking" data-i18n="categories.haishinTracking" aria-pressed="false">配信観測</button>
+          <button class="category-button" type="button" data-category="preSession" data-i18n="categories.preSession" aria-pressed="false">卓前</button>
+          <button class="category-button" type="button" data-category="duringSession" data-i18n="categories.duringSession" aria-pressed="false">卓中</button>
+          <button class="category-button" type="button" data-category="postSession" data-i18n="categories.postSession" aria-pressed="false">卓後</button>
           <button class="category-button" type="button" data-category="gmSupport" data-i18n="categories.gmSupport" aria-pressed="false">GM支援</button>
+          <button class="category-button" type="button" data-category="plSupport" data-i18n="categories.plSupport" aria-pressed="false">PL支援</button>
         </div>
       </div>
     </section>
@@ -248,8 +249,8 @@
     </footer>
   </main>
 
-  <script src="./assets/js/i18n.js?v=20260611-02"></script>
+  <script src="./assets/js/i18n.js?v=20260619-01"></script>
   <script src="./assets/js/language.js?v=20260611-02"></script>
-  <script src="./assets/js/portal.js?v=20260611-02"></script>
+  <script src="./assets/js/portal.js?v=20260619-01"></script>
 </body>
 </html>
