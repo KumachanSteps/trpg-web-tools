@@ -256,6 +256,23 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
+      id: "session-check-calendar",
+      icon: "🗓️",
+      status: "production",
+      category: "scenarioPrep",
+      badges: ["preSession", "duringSession", "gmSupport", "plSupport"],
+      legacyKeywords: ["卓準備", "カレンダー", "予定管理", "タスク管理"],
+      href: "./tools/session-check-calendar/",
+      name: {
+        ja: "卓準備カレンダー",
+        en: "Session Prep Calendar",
+      },
+      description: {
+        ja: "セッション予定、参加者、関連リンク、準備タスクを月間カレンダーと詳細パネルでまとめて管理します。卓ログトラッカーや卓報告ジェネレーターへの連携を見据えた開発版です。",
+        en: "Manage session schedules, participants, links, and prep tasks in a monthly calendar with a detail panel. This development preview is designed for future bridge workflows with the Session Log Tracker and Session Report Generator.",
+      },
+    },
+    {
       id: "chat-palette-formatter",
       icon: "💬",
       status: "available",
