@@ -111,13 +111,16 @@ function getFilteredTools() {
   const normalizedQuery = currentQuery.trim().toLowerCase();
 
   return tools.filter((tool) => {
+    const badges = Array.isArray(tool.badges) ? tool.badges : [];
+    const legacyKeywords = Array.isArray(tool.legacyKeywords) ? tool.legacyKeywords : [];
     const matchesCategory =
-      currentCategory === "all" || tool.category === currentCategory;
+      currentCategory === "all" || badges.includes(currentCategory);
 
     const searchableText = [
       getLocalizedValue(tool.name),
       getLocalizedValue(tool.description),
-      t(`categories.${tool.category}`),
+      ...badges.map((badge) => t(`categories.${badge}`)),
+      ...legacyKeywords,
       t(`status.${tool.status}`),
       tool.id,
       tool.category,
@@ -141,7 +144,7 @@ function createToolCard(tool, index) {
 
   const toolName = getLocalizedValue(tool.name);
   const toolDescription = getLocalizedValue(tool.description);
-  const toolCategory = t(`categories.${tool.category}`);
+  const badges = Array.isArray(tool.badges) ? tool.badges : [];
   const statusLabel = t(`status.${tool.status}`);
   const developmentPreviewText = t("toolAction.developmentPreview");
 
@@ -177,7 +180,11 @@ function createToolCard(tool, index) {
       </span>
     </div>
 
-    <p class="tool-category">${escapeHtml(toolCategory)}</p>
+    <div class="tool-badges" aria-label="${escapeHtml(t("categories.badgeLabel"))}">
+      ${badges
+        .map((badge) => `<span class="tool-badge">${escapeHtml(t(`categories.${badge}`))}</span>`)
+        .join("")}
+    </div>
     <h2>${escapeHtml(toolName)}</h2>
     <p class="tool-description">${escapeHtml(toolDescription)}</p>
 
