@@ -30,6 +30,7 @@ window.TRPG_PORTAL_I18N = {
       status: {
         available: "使用可能",
         production: "開発中",
+        preparing: "公開準備中",
         idea: "アイデア",
       },
       categories: {
@@ -148,6 +149,7 @@ window.TRPG_PORTAL_I18N = {
       status: {
         available: "Available",
         production: "In Development",
+        preparing: "Preparing",
         idea: "Idea",
       },
       categories: {
@@ -247,6 +249,10 @@ window.TRPG_PORTAL_I18N = {
     production: {
       className: "status-production",
       icon: "⚙",
+    },
+    preparing: {
+      className: "status-preparing",
+      icon: "…",
     },
     idea: {
       className: "status-idea",

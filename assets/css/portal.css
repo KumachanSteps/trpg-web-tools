@@ -787,6 +787,18 @@ body.theme-dawn .status-production {
   color: #ffedd5;
 }
 
+.status-preparing {
+  border-color: rgba(251, 191, 36, 0.42);
+  background: rgba(120, 53, 15, 0.34);
+  color: #fde68a;
+}
+
+body.theme-dawn .status-preparing {
+  border-color: rgba(251, 191, 36, 0.48);
+  background: rgba(120, 53, 15, 0.22);
+  color: #fef3c7;
+}
+
 .status-idea {
   border-color: rgba(148, 163, 184, 0.32);
   background: rgba(30, 41, 59, 0.52);

@@ -245,7 +245,7 @@ function createDeveloperEditor(tool) {
     return "";
   }
 
-  const statusOptions = ["available", "production", "idea"]
+  const statusOptions = ["available", "production", "preparing", "idea"]
     .map((status) => `<option value="${escapeHtml(status)}" ${tool.status === status ? "selected" : ""}>${escapeHtml(t(`status.${status}`))}</option>`)
     .join("");
   const stageOptions = ["concept", "mockup", "prototype", "testing"]
