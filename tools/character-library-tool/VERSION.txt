@@ -1,2 +1,2 @@
-DEPRECATED
-Successor: ../chara-libra-tool/ (キャラクタ星間図 / Chara Libra)
+キャラリブラ v1.0
+Next version: v1.1
