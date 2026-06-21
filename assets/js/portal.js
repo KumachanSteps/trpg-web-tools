@@ -1,5 +1,5 @@
 const portalI18n = window.TRPG_PORTAL_I18N;
-const tools = portalI18n.tools;
+let tools = Array.isArray(portalI18n.tools) ? portalI18n.tools : [];
 const statusMeta = portalI18n.statuses;
 
 let currentCategory = "all";
@@ -17,7 +17,12 @@ const modeText = document.getElementById("modeText");
 const twinkleStarsContainer = document.getElementById("twinkleStars");
 
 const themeStorageKey = "trpgPortalThemeV2";
+const devToolsStorageKey = "trpgPortalDevToolsDraftV1";
+const toolsDataUrl = "./assets/data/tools.json";
 const isDeveloperMode = document.body.dataset.portalMode === "developer";
+const devSaveButton = document.getElementById("devSaveButton");
+const devExportButton = document.getElementById("devExportButton");
+const devResetButton = document.getElementById("devResetButton");
 
 const twinkleStars = [
   { top: "8%", left: "12%", size: 3, delay: "0s", duration: "3.8s" },
@@ -75,6 +80,62 @@ function getLocalizedValue(value) {
   }
 
   return value || "";
+}
+
+async function loadToolsData() {
+  try {
+    const response = await fetch(toolsDataUrl, { cache: "no-store" });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load ${toolsDataUrl}: ${response.status}`);
+    }
+
+    tools = await response.json();
+  } catch (error) {
+    console.warn(error);
+    tools = Array.isArray(portalI18n.tools) ? portalI18n.tools : [];
+  }
+
+  if (isDeveloperMode) {
+    loadDeveloperDraft();
+  }
+}
+
+function loadDeveloperDraft() {
+  const savedDraft = localStorage.getItem(devToolsStorageKey);
+
+  if (!savedDraft) {
+    return;
+  }
+
+  try {
+    const draftTools = JSON.parse(savedDraft);
+
+    if (Array.isArray(draftTools)) {
+      tools = draftTools;
+    }
+  } catch (error) {
+    console.warn("Failed to load developer tools draft", error);
+  }
+}
+
+function saveDeveloperDraft() {
+  if (!isDeveloperMode) {
+    return;
+  }
+
+  localStorage.setItem(devToolsStorageKey, JSON.stringify(tools, null, 2));
+}
+
+function downloadDeveloperToolsJson() {
+  const json = JSON.stringify(tools, null, 2) + "\n";
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "tools.json";
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function createTwinkleStars() {
@@ -166,6 +227,54 @@ function getFilteredTools() {
   });
 }
 
+function updateToolById(toolId, updater) {
+  const toolIndex = tools.findIndex((tool) => tool.id === toolId);
+
+  if (toolIndex === -1) {
+    return;
+  }
+
+  tools[toolIndex] = updater({ ...tools[toolIndex] });
+  saveDeveloperDraft();
+  updateStatusCounts();
+  renderTools();
+}
+
+function createDeveloperEditor(tool) {
+  if (!isDeveloperMode) {
+    return "";
+  }
+
+  const statusOptions = ["available", "production", "idea"]
+    .map((status) => `<option value="${escapeHtml(status)}" ${tool.status === status ? "selected" : ""}>${escapeHtml(t(`status.${status}`))}</option>`)
+    .join("");
+  const stageOptions = ["concept", "mockup", "prototype", "testing"]
+    .map((stage) => `<option value="${escapeHtml(stage)}" ${tool.devStage === stage ? "selected" : ""}>${escapeHtml(getDevStageLabel(stage))}</option>`)
+    .join("");
+  const devNote = getLocalizedValue(tool.devNote);
+
+  return `
+    <div class="dev-editor" data-dev-editor="${escapeHtml(tool.id)}">
+      <label>
+        <span>Status</span>
+        <select data-dev-field="status">
+          ${statusOptions}
+        </select>
+      </label>
+      <label>
+        <span>${escapeHtml(t("dev.stageLabel"))}</span>
+        <select data-dev-field="devStage">
+          ${stageOptions}
+        </select>
+      </label>
+      <label class="dev-editor-note">
+        <span>${escapeHtml(t("dev.memoLabel"))}</span>
+        <textarea data-dev-field="devNote" rows="3">${escapeHtml(devNote)}</textarea>
+      </label>
+    </div>
+  `;
+}
+
 function createToolCard(tool, index) {
   const meta = statusMeta[tool.status] || statusMeta.idea;
   const effectiveHref = getToolHref(tool);
@@ -187,11 +296,17 @@ function createToolCard(tool, index) {
     `tool-card-status-${tool.status}`,
     isDisabled ? "is-disabled" : "",
     isDevelopment ? "is-development" : "",
+    isDeveloperMode ? "is-dev-editable" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   card.style.animationDelay = `${index * 0.045}s`;
+  card.dataset.toolId = tool.id;
+
+  if (isDeveloperMode) {
+    card.draggable = true;
+  }
 
   if (isDevelopment) {
     card.setAttribute("data-hover-message", developmentPreviewText);
@@ -230,6 +345,8 @@ function createToolCard(tool, index) {
         : ""
     }
 
+    ${createDeveloperEditor(tool)}
+
     <div class="open-text">
       ${isDisabled ? escapeHtml(t("toolAction.comingSoon")) : escapeHtml(t("toolAction.open"))}
     </div>
@@ -260,6 +377,75 @@ function renderTools() {
 
   filteredTools.forEach((tool, index) => {
     toolsGrid.appendChild(createToolCard(tool, index));
+  });
+
+  bindDeveloperEditors();
+}
+
+function bindDeveloperEditors() {
+  if (!isDeveloperMode) {
+    return;
+  }
+
+  toolsGrid.querySelectorAll(".tool-card").forEach((card) => {
+    card.addEventListener("dragstart", (event) => {
+      event.dataTransfer.setData("text/plain", card.dataset.toolId);
+      card.classList.add("is-dragging");
+    });
+
+    card.addEventListener("dragend", () => {
+      card.classList.remove("is-dragging");
+    });
+
+    card.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      card.classList.add("is-drag-over");
+    });
+
+    card.addEventListener("dragleave", () => {
+      card.classList.remove("is-drag-over");
+    });
+
+    card.addEventListener("drop", (event) => {
+      event.preventDefault();
+      card.classList.remove("is-drag-over");
+      const sourceId = event.dataTransfer.getData("text/plain");
+      const targetId = card.dataset.toolId;
+
+      if (!sourceId || !targetId || sourceId === targetId) {
+        return;
+      }
+
+      const sourceIndex = tools.findIndex((tool) => tool.id === sourceId);
+      const targetIndex = tools.findIndex((tool) => tool.id === targetId);
+
+      if (sourceIndex === -1 || targetIndex === -1) {
+        return;
+      }
+
+      const [movedTool] = tools.splice(sourceIndex, 1);
+      tools.splice(targetIndex, 0, movedTool);
+      saveDeveloperDraft();
+      renderTools();
+    });
+  });
+
+  toolsGrid.querySelectorAll("[data-dev-editor]").forEach((editor) => {
+    const toolId = editor.dataset.devEditor;
+
+    editor.querySelectorAll("[data-dev-field]").forEach((field) => {
+      field.addEventListener("change", () => {
+        updateToolById(toolId, (tool) => {
+          if (field.dataset.devField === "devNote") {
+            tool.devNote = { ...(tool.devNote || {}), [getLanguage()]: field.value };
+          } else {
+            tool[field.dataset.devField] = field.value;
+          }
+
+          return tool;
+        });
+      });
+    });
   });
 }
 
@@ -323,6 +509,28 @@ categoryButtons.addEventListener("click", (event) => {
   renderTools();
 });
 
+if (devSaveButton) {
+  devSaveButton.addEventListener("click", () => {
+    saveDeveloperDraft();
+  });
+}
+
+if (devExportButton) {
+  devExportButton.addEventListener("click", () => {
+    downloadDeveloperToolsJson();
+  });
+}
+
+if (devResetButton) {
+  devResetButton.addEventListener("click", () => {
+    localStorage.removeItem(devToolsStorageKey);
+    loadToolsData().then(() => {
+      updateStatusCounts();
+      renderTools();
+    });
+  });
+}
+
 modeToggle.addEventListener("click", () => {
   const currentMode = getCurrentMode();
   setMode(currentMode === "dawn" ? "deep-space" : "dawn");
@@ -338,10 +546,15 @@ if (window.TRPGLanguage && typeof window.TRPGLanguage.onChange === "function") {
   });
 }
 
-createTwinkleStars();
-updateDeveloperChrome();
-updateStatusCounts();
-updateCategoryButtons();
-initMode();
-renderTools();
+async function initPortal() {
+  createTwinkleStars();
+  await loadToolsData();
+  updateDeveloperChrome();
+  updateStatusCounts();
+  updateCategoryButtons();
+  initMode();
+  renderTools();
+}
+
+initPortal();
 

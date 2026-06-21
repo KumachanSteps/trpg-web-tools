@@ -1690,3 +1690,79 @@ footer {
   color: #fde68a;
   font-weight: 900;
 }
+
+.developer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.developer-action-button {
+  border: 1px solid rgba(251, 191, 36, 0.34);
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.12);
+  color: #fde68a;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 8px 12px;
+}
+
+.developer-action-button:hover {
+  border-color: rgba(251, 191, 36, 0.58);
+  background: rgba(251, 191, 36, 0.18);
+}
+
+.tool-card.is-dev-editable {
+  cursor: grab;
+}
+
+.tool-card.is-dev-editable:active {
+  cursor: grabbing;
+}
+
+.tool-card.is-dragging {
+  opacity: 0.5;
+}
+
+.tool-card.is-drag-over {
+  border-color: rgba(251, 191, 36, 0.68);
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.12), var(--shadow-soft);
+}
+
+.dev-editor {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.22);
+}
+
+.dev-editor label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.dev-editor select,
+.dev-editor textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(3, 7, 18, 0.46);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  padding: 8px 10px;
+}
+
+.dev-editor textarea {
+  min-height: 72px;
+  resize: vertical;
+}
