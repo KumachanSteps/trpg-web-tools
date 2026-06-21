@@ -593,9 +593,10 @@ body.theme-dawn .portal-version {
 
 .category-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+  overflow: visible;
+  padding: 6px 2px 8px;
 }
 
 .category-button {
