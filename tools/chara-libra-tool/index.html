@@ -1,58 +1,281 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chara Libra｜TRPG WEBツール観測所</title>
-  <link rel="stylesheet" href="css/chara-libra-style.css" />
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="light">
-  <header class="app-header">
-    <div class="header-top-row">
-      <div><div class="site-kicker">TRPG WEBツール観測所</div><h1 data-i18n="app.title">Chara Libra</h1></div>
-      <nav class="header-actions" aria-label="tool actions">
-        <a class="ghost link" href="../../">←TRPG WEBツール観測所</a>
-        <button id="xShareBtn" class="ghost" type="button">𝕏</button>
-        <button id="langBtn" class="ghost" type="button">JP / EN</button>
-        <button id="usageBtn" class="ghost" type="button" aria-controls="usagePanel">使い方</button>
-        <button id="shortcutBtn" class="ghost" type="button" aria-controls="shortcutPanel">ショートカット</button>
-        <button id="themeBtn" class="ghost" type="button">Light / Night</button>
+<body data-theme="night">
+  <div class="app-shell">
+    <header class="hero-panel glass-panel" aria-label="Chara Libra header">
+      <div class="hero-orbit" aria-hidden="true"></div>
+      <div class="hero-main">
+        <p class="eyebrow">TRPG WEBツール観測所</p>
+        <h1>Chara Libra</h1>
+        <p class="hero-copy">キャラクター情報を保管・編集し、CCFOLIA駒データとして再出力します。</p>
+      </div>
+      <nav class="hero-actions" aria-label="header actions">
+        <a class="tool-button ghost" href="../" id="portalLink">←TRPG WEBツール観測所</a>
+        <button class="tool-button ghost" type="button" id="shareXBtn">𝕏</button>
+        <button class="tool-button ghost" type="button" id="langBtn">JP/EN</button>
+        <button class="tool-button ghost" type="button" id="helpBtn">使い方</button>
+        <button class="tool-button ghost" type="button" id="shortcutBtn">ショートカット</button>
+        <button class="tool-button ghost" type="button" id="themeBtn">Light/Night</button>
       </nav>
-    </div>
-    <div class="header-bottom-row"><p data-i18n="app.subtitle">キャラクター情報を保管・編集し、CCFOLIA駒データとして再出力します。</p><span class="version-mark">v1.0 / 2026.06.19</span></div>
-  </header>
+      <div class="version-engrave">v1.61 / 2026.06.20</div>
+    </header>
 
-  <aside class="slide-panel" id="usagePanel" aria-hidden="true"><div class="slide-inner"><button class="panel-close" data-close-panel="usagePanel">×</button><h2>使い方</h2><ol><li>CCFOLIA駒JSONを貼り付けて登録します。</li><li>カードをクリックして詳細を開きます。</li><li>基本情報、MEMO、チャットパレットを編集して保存します。</li><li>CCFOLIA駒データコピーで更新済みJSONをコピーします。</li></ol><p class="warning">キャラクターデータはお使いのブラウザ内に保存されます。必要に応じてJSONバックアップを保存してください。</p></div></aside>
-  <aside class="slide-panel" id="shortcutPanel" aria-hidden="true"><div class="slide-inner"><button class="panel-close" data-close-panel="shortcutPanel">×</button><h2>ショートカット</h2><div class="shortcut-list"><p><kbd>Esc</kbd> パネルを閉じる / 一覧へ戻る</p><p><kbd>Ctrl/Cmd</kbd> + <kbd>S</kbd> 詳細を保存</p><p><kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> テーマ切替</p></div></div></aside>
+    <section class="slide-panel glass-panel" id="helpPanel" hidden>
+      <div class="slide-panel__head">
+        <h2>使い方</h2>
+        <button type="button" class="icon-button" data-close-panel="helpPanel">×</button>
+      </div>
+      <ol>
+        <li>左カラムにCCFOLIAのキャラクター駒データJSONを貼り付けます。</li>
+        <li>「駒データを登録 / 更新」を押すと、キャラクターがライブラリーに追加されます。</li>
+        <li>右側のフィールドで検索・ソート・表示切替ができます。</li>
+        <li>キャラカードをクリックすると、MEMO / チャパレ編集とCCFOLIA駒データコピーができます。</li>
+      </ol>
+      <p class="muted">データはブラウザ内に保存されます。必要に応じてJSONバックアップを保存してください。</p>
+    </section>
 
-  <main>
-    <section id="libraryView" class="view">
-      <div class="grid library-layout">
-        <section class="card import-card">
-          <div class="card-head"><h2>Import / Add</h2><span class="pill">CCFOLIA v1.1</span></div>
-          <textarea id="ccfoliaInput" placeholder="CCFOLIA駒JSONを貼り付け"></textarea>
-          <textarea id="iacharaInput" placeholder="いあきゃらTXT（v1.0では保存のみ）"></textarea>
-          <div class="row"><select id="updateTarget"><option value="">新規登録 / 自動判定</option></select><button id="importBtn" class="primary" type="button">登録 / 更新</button></div>
-          <div class="actions"><button id="exportAllBtn" type="button">全キャラJSONエクスポート</button><label class="file-btn">全キャラJSONインポート<input id="importAllFile" type="file" accept="application/json" hidden></label></div>
-          <p class="hint">キャラクターデータはブラウザ内 localStorage に保存されます。ブラウザ変更・キャッシュ削除・端末変更時に消える可能性があります。</p>
+    <section class="slide-panel glass-panel" id="shortcutPanel" hidden>
+      <div class="slide-panel__head">
+        <h2>ショートカット</h2>
+        <button type="button" class="icon-button" data-close-panel="shortcutPanel">×</button>
+      </div>
+      <dl class="shortcut-list">
+        <div><dt>Esc</dt><dd>パネル / 詳細画面を閉じる</dd></div>
+        <div><dt>Ctrl / Cmd + Shift + V</dt><dd>クリップボードから駒データ入力</dd></div>
+        <div><dt>Ctrl / Cmd + Shift + S</dt><dd>ライブラリーJSONを書き出し</dd></div>
+        <div><dt>Ctrl / Cmd + Shift + T</dt><dd>Light / Night 切替</dd></div>
+      </dl>
+    </section>
+
+    <section class="metric-row" aria-label="library metrics">
+      <article class="metric-card glass-panel">
+        <span class="metric-kicker">Total Characters</span>
+        <strong id="metricTotal">0</strong>
+        <span>総キャラ数</span>
+      </article>
+      <article class="metric-card glass-panel">
+        <span class="metric-kicker">Alive</span>
+        <strong id="metricAlive">0</strong>
+        <span>生存</span>
+      </article>
+      <article class="metric-card glass-panel">
+        <span class="metric-kicker">Lost</span>
+        <strong id="metricLost">0</strong>
+        <span>ロスト</span>
+      </article>
+      <article class="metric-card glass-panel">
+        <span class="metric-kicker">Recently Updated</span>
+        <strong id="metricRecent">0</strong>
+        <span>最近更新</span>
+      </article>
+    </section>
+
+    <main class="library-main">
+      <aside class="control-dock glass-panel" aria-label="control dock">
+        <section class="dock-section">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Import</p>
+              <h2>CCFOLIA駒データ</h2>
+            </div>
+            <span class="small-badge">JSON</span>
+          </div>
+          <label class="sr-only" for="jsonInput">CCFOLIA駒JSON入力</label>
+          <textarea id="jsonInput" class="json-input" spellcheck="false" placeholder="ここにCCFOLIAのキャラクター駒データを貼り付け"></textarea>
+          <div class="button-stack">
+            <button type="button" class="tool-button" id="pasteBtn">クリップボードから入力</button>
+            <button type="button" class="tool-button primary" id="registerBtn">駒データを登録 / 更新</button>
+            <button type="button" class="tool-button ghost" id="clearInputBtn">クリア</button>
+          </div>
+          <p class="small-note">いあきゃらTXT入力は後続バージョンで詳細ページ側に追加予定です。</p>
         </section>
-        <section class="card filter-card"><div class="card-head"><h2>Search / Filter</h2></div><div class="filters"><input id="keywordFilter" placeholder="キーワード"><input id="systemFilter" placeholder="システム"><select id="statusFilter"><option value="">状態すべて</option><option value="alive">生存</option><option value="lost">ロスト</option><option value="retired">引退</option><option value="inactive">保留</option><option value="npc">NPC</option></select><input id="tagFilter" placeholder="タグ"><select id="sortSelect"><option value="updatedDesc">更新日が新しい順</option><option value="updatedAsc">更新日が古い順</option><option value="nameAsc">名前順</option><option value="createdDesc">登録日が新しい順</option><option value="sanDesc">SAN高い順</option><option value="sanAsc">SAN低い順</option><option value="hpDesc">HP高い順</option><option value="skillDesc">技能数が多い順</option></select></div></section>
-      </div>
-      <section class="card"><div class="card-head"><h2>Character card grid</h2><span id="countBadge" class="pill">0</span></div><div id="cardGrid" class="card-grid"></div></section>
-    </section>
 
-    <section id="detailView" class="view hidden">
-      <button id="backBtn" type="button">← Back to Library</button>
-      <div class="detail-grid">
-        <section class="card character-head"><img id="detailIcon" alt="" class="icon-preview"><div class="form-grid"><input id="nameInput" placeholder="名前"><input id="readingInput" placeholder="読み"><input id="systemInput" placeholder="システム"><input id="editionInput" placeholder="版"><input id="occupationInput" placeholder="職業"><select id="lifeStatusInput"><option value="alive">生存</option><option value="lost">ロスト</option><option value="retired">引退</option><option value="inactive">保留</option><option value="npc">NPC</option></select><input id="tagsInput" placeholder="タグ（カンマ区切り）"><input id="tachieInput" placeholder="立ち絵URL"><input id="iconInput" placeholder="アイコンURL"><input id="externalInput" placeholder="externalUrl"></div></section>
-        <section class="card"><div class="card-head"><h2>Source Freshness</h2></div><div id="freshnessBox" class="stamp-list"></div></section>
+        <section class="dock-section divider-top">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Filter</p>
+              <h2>絞り込み</h2>
+            </div>
+            <button type="button" class="mini-button" id="resetFiltersBtn">リセット</button>
+          </div>
+
+          <label class="field-label" for="systemFilter">システム</label>
+          <select id="systemFilter" class="field-control">
+            <option value="">すべて</option>
+            <option value="CoC6">CoC6</option>
+            <option value="CoC7">CoC7</option>
+            <option value="エモクロア">エモクロア</option>
+            <option value="その他">その他</option>
+          </select>
+
+          <label class="field-label" for="statusFilter">状態</label>
+          <select id="statusFilter" class="field-control">
+            <option value="">すべて</option>
+            <option value="alive">生存</option>
+            <option value="lost">ロスト</option>
+            <option value="retired">引退</option>
+            <option value="inactive">保留</option>
+            <option value="npc">NPC</option>
+          </select>
+
+          <label class="field-label" for="tagFilter">タグ</label>
+          <input id="tagFilter" class="field-control" type="text" placeholder="例：刑事, 継続">
+
+          <label class="field-label" for="occupationFilter">職業</label>
+          <input id="occupationFilter" class="field-control" type="text" placeholder="例：刑事">
+        </section>
+
+        <section class="dock-section divider-top">
+          <div class="section-title-row">
+            <div>
+              <p class="eyebrow">Backup</p>
+              <h2>保存と読込</h2>
+            </div>
+          </div>
+          <div class="button-stack compact">
+            <button type="button" class="tool-button ghost" id="sampleBtn">サンプルを読み込む</button>
+            <button type="button" class="tool-button ghost" id="exportLibraryBtn">ライブラリーJSONを書き出し</button>
+            <label class="tool-button ghost file-button" for="importLibraryInput">ライブラリーJSONを読み込み</label>
+            <input id="importLibraryInput" type="file" accept="application/json,.json" hidden>
+          </div>
+        </section>
+      </aside>
+
+      <section class="character-field glass-field" id="characterField" tabindex="0" aria-label="character field">
+        <textarea id="fieldPasteCatcher" class="field-paste-catcher" tabindex="-1" aria-hidden="true" spellcheck="false"></textarea>
+        <div class="field-toolbar">
+          <div class="search-wrap">
+            <span aria-hidden="true">⌕</span>
+            <label class="sr-only" for="searchInput">キャラクター検索</label>
+            <input id="searchInput" type="search" placeholder="キャラ名・タグ・職業で検索">
+          </div>
+          <label class="sr-only" for="sortSelect">ソート順</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="updatedDesc">更新日が新しい順</option>
+            <option value="updatedAsc">更新日が古い順</option>
+            <option value="nameAsc">名前順</option>
+            <option value="createdDesc">登録日が新しい順</option>
+            <option value="sanDesc">SAN高い順</option>
+            <option value="sanAsc">SAN低い順</option>
+            <option value="hpDesc">HP高い順</option>
+            <option value="skillsDesc">技能数が多い順</option>
+          </select>
+          <div class="view-toggle" role="group" aria-label="view toggle">
+            <button type="button" class="toggle-button is-active" data-view="icon">アイコン</button>
+            <button type="button" class="toggle-button" data-view="card">カード</button>
+          </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+          <div class="empty-sigil">✦</div>
+          <h2>まだキャラクターが登録されていません</h2>
+          <p>左の入力欄にCCFOLIA駒データを貼り付けて、キャラクターアーカイブを作成しましょう。</p>
+        </div>
+
+        <p class="field-paste-hint">右カラムの空白をクリックしてから Ctrl/Cmd+V で、CCFOLIA駒JSONを直接読み込めます。</p>
+        <div class="character-grid icon-view" id="characterGrid" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="character-dialog" id="characterDialog">
+    <form method="dialog" class="dialog-card glass-panel">
+      <button type="button" class="icon-button dialog-close" id="closeDialogBtn" aria-label="閉じる">×</button>
+
+      <section class="detail-hero detail-hero-v2">
+        <div class="detail-icon-wrap" id="detailIconWrap">
+          <img id="detailIcon" class="detail-icon avatar trim-avatar" alt="">
+          <button type="button" class="detail-icon-edit" id="detailIconEditBtn" aria-label="アイコン画像を変更" title="アイコン画像を変更">✎</button>
+          <input id="detailIconInput" type="file" accept="image/*" hidden>
+        </div>
+        <div class="detail-title-block">
+          <p class="detail-system-line" id="detailSystem"></p>
+          <label class="sr-only" for="detailNameInput">キャラクター名</label>
+          <input id="detailNameInput" class="detail-name-input" type="text" autocomplete="off">
+          <div class="detail-status-row">
+            <label class="sr-only" for="detailLifeStatus">状態</label>
+            <select id="detailLifeStatus" class="status-select">
+              <option value="alive">生存</option>
+              <option value="lost">ロスト</option>
+              <option value="retired">引退</option>
+              <option value="inactive">保留</option>
+              <option value="npc">NPC</option>
+            </select>
+            <a id="detailExternalLink" class="sheet-link" href="#" target="_blank" rel="noopener">🔗  キャラシURL</a>
+            <label class="detail-chip-field header-chip occupation-chip"><span>職業</span><input id="detailOccupation" type="text" placeholder="未設定"></label>
+            <label class="detail-chip-field header-chip tags-chip"><span>タグ</span><input id="detailTags" type="text" placeholder="カンマ区切り"></label>
+          </div>
+          <div class="detail-profile-fields" aria-label="character profile fields">
+            <label class="detail-chip-field compact"><span>年齢</span><input id="detailAge" type="text" placeholder="-"></label>
+            <label class="detail-chip-field compact"><span>性別</span><input id="detailGender" type="text" placeholder="-"></label>
+            <label class="detail-chip-field compact"><span>身長</span><input id="detailHeight" type="text" placeholder="-"></label>
+            <label class="detail-chip-field compact"><span>体重</span><input id="detailWeight" type="text" placeholder="-"></label>
+            <label class="detail-chip-field color-field"><span>テーマカラー</span><span id="detailThemeSwatch" class="theme-swatch" aria-hidden="true"></span><input id="detailThemeColor" type="text" placeholder="#8aa8ff"></label>
+            <input id="detailExternalUrl" type="url" hidden>
+          </div>
+        </div>
+        <p class="timestamp-text" id="detailTimestamps"></p>
+      </section>
+
+      <div class="detail-main-grid">
+        <div class="detail-left-column">
+          <section class="detail-section">
+            <h3>ステータス一覧</h3>
+            <div class="stats-strip status-grid" id="detailStats"></div>
+          </section>
+          <section class="detail-section skills-section">
+            <h3>技能一覧</h3>
+            <div class="skill-list" id="detailSkills"></div>
+          </section>
+        </div>
+
+        <div class="detail-right-column">
+          <section class="detail-section memo-section">
+            <div class="section-title-row">
+              <h3>キャラメモ</h3>
+              <label class="tool-button ghost file-button detail-load-button" for="detailIacharaInput">いあきゃらテキスト読み込み</label>
+              <input id="detailIacharaInput" type="file" accept=".txt,text/plain" hidden>
+            </div>
+            <textarea id="detailMemo" class="editor-area" spellcheck="false"></textarea>
+          </section>
+
+          <section class="detail-section palette-section">
+            <div class="section-title-row">
+              <h3>チャットパレット</h3>
+              <div class="chat-option-row">
+                <label class="check-option"><input id="commandAddCheck" type="checkbox"> コマンド追加</label>
+                <label class="check-option"><input id="formatPaletteCheck" type="checkbox"> チャパレ整形</label>
+              </div>
+            </div>
+            <textarea id="detailCommands" class="editor-area" spellcheck="false"></textarea>
+          </section>
+        </div>
       </div>
-      <div class="detail-grid two"><section class="card"><div class="card-head"><h2>Stats</h2></div><div id="statsGrid" class="stats-grid"></div></section><section class="card"><div class="card-head"><h2>Skills</h2><input id="skillSearch" placeholder="技能検索"></div><div id="skillsList" class="skills-list"></div></section></div>
-      <div class="detail-grid two"><section class="card"><div class="card-head"><h2>Chara MEMO Editor</h2></div><div id="memoEditors" class="memo-editors"></div></section><section class="card"><div class="card-head"><h2>Chat Palette Editor</h2><button id="copyCommandsBtn" type="button">コピー</button></div><textarea id="commandsInput" class="tall"></textarea></section></div>
-      <section class="card"><div class="actions"><button id="saveDetailBtn" class="primary" type="button">保存</button><button id="copyCcfBtn" class="primary" type="button">CCFOLIA駒データコピー</button><button id="exportOneBtn" type="button">単体キャラJSONエクスポート</button><button id="deleteBtn" class="danger" type="button">単体キャラ削除</button></div><p id="manualCopyNotice" class="hint hidden">自動コピーできませんでした。下の駒データを手動でコピーしてください。</p><textarea id="manualCopyArea" class="hidden"></textarea></section>
-    </section>
-  </main>
-  <div id="toast" class="toast"></div>
-  <script src="js/i18l.js"></script><script src="js/parser.js"></script><script src="js/language.js"></script><script src="js/shortcut.js"></script><script src="js/app.js"></script>
+
+      <div class="dialog-actions">
+        <button type="button" class="tool-button danger" id="deleteCharacterBtn">削除</button>
+        <button type="button" class="tool-button ghost" id="saveDetailBtn">保存</button>
+        <button type="button" class="tool-button ghost" id="copyPaletteBtn">チャパレコピー</button>
+        <button type="button" class="tool-button primary" id="copyKomaBtn">CCFOLIA駒データコピー</button>
+      </div>
+      <textarea id="manualCopyArea" class="manual-copy" readonly hidden></textarea>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/parser-ccfolia.js"></script>
+  <script src="js/parser-chat-palette.js"></script>
+  <script src="js/export-ccfolia.js"></script>
+  <script src="js/filters.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>

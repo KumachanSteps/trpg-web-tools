@@ -1,0 +1,23 @@
+{
+  "name": "九々宮 紗羅",
+  "externalUrl": "https://example.com/chara/kugumiya-sara",
+  "iconUrl": "",
+  "memo": "職業：刑事\nプロフィール：捜査一課所属。明るい姉御肌。",
+  "status": [
+    { "label": "HP", "value": 12, "max": 12 },
+    { "label": "MP", "value": 11, "max": 11 },
+    { "label": "SAN", "value": 62, "max": 99 }
+  ],
+  "params": [
+    { "label": "STR", "value": 60 },
+    { "label": "CON", "value": 55 },
+    { "label": "POW", "value": 55 },
+    { "label": "DEX", "value": 70 },
+    { "label": "APP", "value": 65 },
+    { "label": "SIZ", "value": 60 },
+    { "label": "INT", "value": 75 },
+    { "label": "EDU", "value": 80 },
+    { "label": "MOV", "value": 8 }
+  ],
+  "commands": "CC<=70 【目星】\nCC<=65 【聞き耳】\nCC<=75 【図書館】\nCC<=60 【心理学】"
+}
