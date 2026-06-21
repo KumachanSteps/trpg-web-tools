@@ -2981,3 +2981,132 @@ body.is-dark .sample-call-button {
   background: linear-gradient(135deg, #7c3aed, #2563eb);
   color: #fff;
 }
+
+
+/* v0.81 output button tooltips */
+.has-tooltip {
+  position: relative;
+}
+
+.has-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 40;
+  width: min(280px, 78vw);
+  padding: 0.72rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.94);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  text-align: left;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.24);
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.has-tooltip::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 3px);
+  z-index: 41;
+  border: 7px solid transparent;
+  border-top-color: rgba(15, 23, 42, 0.94);
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.has-tooltip:hover::after,
+.has-tooltip:focus-visible::after,
+.has-tooltip:hover::before,
+.has-tooltip:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+body.is-dark .has-tooltip::after {
+  background: rgba(226, 236, 255, 0.96);
+  color: #172033;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+}
+
+body.is-dark .has-tooltip::before {
+  border-top-color: rgba(226, 236, 255, 0.96);
+}
+
+@media (max-width: 640px) {
+  .has-tooltip::after {
+    width: min(240px, 86vw);
+    font-size: 0.74rem;
+  }
+}
+
+
+/* v0.82 language toggle */
+.lang-toggle-button {
+  min-width: 54px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+
+/* v0.83 floating tooltip portal: avoids clipping inside scrollable preview controls */
+.has-tooltip::before,
+.has-tooltip::after {
+  content: none !important;
+  display: none !important;
+}
+
+.floating-tooltip {
+  position: fixed;
+  z-index: 9999;
+  width: min(300px, calc(100vw - 24px));
+  padding: 0.72rem 0.82rem;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  text-align: left;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.28);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.floating-tooltip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.is-dark .floating-tooltip {
+  background: rgba(226, 236, 255, 0.97);
+  color: #172033;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
+}
+
+/* v0.83 keep the English lead line on one row in desktop header */
+body[data-lang="en"] .title-block .lead {
+  white-space: nowrap;
+  font-size: clamp(0.78rem, 0.92vw, 0.98rem);
+  letter-spacing: -0.012em;
+}
+
+@media (max-width: 860px) {
+  body[data-lang="en"] .title-block .lead {
+    white-space: normal;
+    letter-spacing: normal;
+  }
+}

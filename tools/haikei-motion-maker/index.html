@@ -29,11 +29,12 @@
       <a class="x-share-link" id="xShareLink" href="https://twitter.com/intent/tweet?text=%E8%83%8C%E6%99%AF%E3%83%A2%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%A1%E3%83%BC%E3%82%AB%E3%83%BC%EF%BD%9CTRPG%20WEB%E3%83%84%E3%83%BC%E3%83%AB%E8%A6%B3%E6%B8%AC%E6%89%80%20%E3%81%A7%E5%8B%95%E3%81%8F%E8%83%8C%E6%99%AF%E7%B4%A0%E6%9D%90%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%20https%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2Ftools%2Fhaikei-motion-maker%2F" target="_blank" rel="noopener noreferrer" aria-label="X / Twitterで共有">
           <span aria-hidden="true">𝕏</span>
         </a>
+        <button class="ghost-button lang-toggle-button" type="button" id="langToggleBtn" aria-label="Language">EN</button>
         <button class="ghost-button" type="button" id="helpBtn">使い方</button>
         <button class="ghost-button" type="button" id="shortcutBtn">ショートカット</button>
         <button class="ghost-button" type="button" id="themeBtn"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb">☀️</span></span></button>
       </div>
-      <div class="version-engrave">v0.80 / 2026.06.19</div>
+      <div class="version-engrave">v0.83 / 2026.06.19</div>
     </header>
 
     <section class="drawer" id="helpDrawer" hidden>
@@ -191,9 +192,9 @@
 
           <div class="button-row">
             <button class="primary-button" type="button" id="playBtn">プレビュー再生</button>
-            <button class="accent-button" type="button" id="exportPngZipBtn">PNG連番ZIP</button>
-            <button class="accent-button secondary-accent" type="button" id="exportWebpBtn">WebP出力</button>
-            <button class="accent-button fps30-accent" type="button" id="exportWebp30Btn">30FPSで出力</button>
+            <button class="accent-button has-tooltip" type="button" id="exportPngZipBtn" data-tooltip="1コマずつのPNG画像をZIPにまとめて出力します。動画化や後編集をしたい時向けです。" aria-label="PNG連番ZIP。1コマずつのPNG画像をZIPにまとめて出力します。動画化や後編集をしたい時向けです。">PNG連番ZIP</button>
+            <button class="accent-button secondary-accent has-tooltip" type="button" id="exportWebpBtn" data-tooltip="ココフォリアなどで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。" aria-label="WebP出力。ココフォリアなどで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。">WebP出力</button>
+            <button class="accent-button fps30-accent has-tooltip" type="button" id="exportWebp30Btn" data-tooltip="WebPを30FPSで出力します。より滑らかですが、ファイルサイズは大きくなりやすいです。" aria-label="30FPSで出力。WebPを30FPSで出力します。より滑らかですが、ファイルサイズは大きくなりやすいです。">30FPSで出力</button>
           </div>
 
           <p class="export-note">※ 5MB以内でWebPファイルが出力されるように設定を調整してください。超過する場合は画質・画像サイズ・秒数を下げるか、30FPSでの出力ではなく、デフォルトの24FPSで出力してください。</p>

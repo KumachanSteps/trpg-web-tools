@@ -6,6 +6,7 @@
     toastHost: document.getElementById('toastHost'),
     helpBtn: document.getElementById('helpBtn'),
     shortcutBtn: document.getElementById('shortcutBtn'),
+    langToggleBtn: document.getElementById('langToggleBtn'),
     themeBtn: document.getElementById('themeBtn'),
     helpDrawer: document.getElementById('helpDrawer'),
     shortcutDrawer: document.getElementById('shortcutDrawer'),
@@ -202,6 +203,649 @@
     vintagePhoto: '古写真'
   };
 
+  const LANG_STORAGE_KEY = 'haikeiMotionMakerLang';
+
+  const i18n = {
+    ja: {
+      htmlLang: 'ja',
+      documentTitle: '背景モーションメーカー｜TRPG WEBツール観測所',
+      langButton: 'EN',
+      quality: { light: '軽量', standard: '標準', high: '高品質' },
+      qualityRecommendation: ' ※標準以上の設定の場合、WebP出力をおすすめします。',
+      exportNote: '※ 5MB以内でWebPファイルが出力されるように設定を調整してください。超過する場合は画質・画像サイズ・秒数を下げるか、30FPSでの出力ではなく、デフォルトの24FPSで出力してください。',
+      staticText: {
+        portalName: 'TRPG WEBツール観測所',
+        title: '背景モーションメーカー',
+        lead: 'アップロードした背景画像を揺らす・近づける・遠ざける。TRPG用の動く背景素材を作成します。',
+        portalLink: '←TRPG WEBツール観測所',
+        help: '使い方',
+        shortcuts: 'ショートカット',
+        helpTitle: '使い方',
+        shortcutTitle: 'ショートカット一覧',
+        uploadTitle: '画像アップロード',
+        dropStrong: '画像をドラッグ＆ドロップ',
+        dropSmall: 'またはクリックして PNG / JPG / WebP を開く（複数選択可）',
+        sampleButton: 'サンプル画像を呼び出す',
+        effectsTitle: 'エフェクト選択',
+        motionTab: 'モーション',
+        imageEditTab: '画像加工',
+        previewTitle: 'プレビュー・出力',
+        placeholder: '画像を読み込むとプレビューが表示されます',
+        transitionOrder: 'トランジション順',
+        transitionHint: 'サムネイルをドラッグして順番を変更できます',
+        fileName: 'ファイル名',
+        seconds: '秒数',
+        qualityLabel: '画質',
+        imageSize: '画像サイズ',
+        loop: 'ループする',
+        play: 'プレビュー再生',
+        stop: 'プレビュー停止',
+        pngZip: 'PNG連番ZIP',
+        webp: 'WebP出力',
+        webp30: '30FPSで出力',
+        download: 'ダウンロード',
+        clear: 'クリア',
+        footerTitle: '利用上の注意',
+        footer1: '本ツールは、開発者 @KumachanSteps による個人制作の非公式TRPG支援ツールです。 各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。',
+        footer2: '不具合報告や要望は、Xの @KumachanSteps 宛のDMにてお送りください。 ただし、すべての報告や要望に返信・対応できるとは限りません。'
+      },
+      helpSteps: [
+        '1. 画像ファイルを選択、またはアップロード枠にドラッグ＆ドロップします。トランジションでは複数画像をまとめて読み込めます。',
+        '2. エフェクトを選び、秒数・画質・画像サイズ・ループ設定を調整します。',
+        '3. プレビューで動きを確認し、PNG連番ZIP / WebP のいずれかで出力します。',
+        '4. 通常はWebP出力がおすすめです。より滑らかにしたい場合は30FPS出力を試してください。'
+      ],
+      shortcutLabels: [
+        '使い方/ショートカット展開中は閉じる。それ以外は画像をリセット',
+        '画像を開く',
+        'プレビュー再生/停止',
+        '30FPS WebP出力',
+        'PNG連番ZIP出力',
+        'WebP出力',
+        'ライトモード/ナイトモード切り替え'
+      ],
+      effectLabels: {
+        none: 'モーションなし',
+        quakeY: '縦揺れ',
+        quakeX: '横揺れ',
+        quakeXY: '全体揺れ',
+        quakeY2: '縦揺れ',
+        quakeX2: '横揺れ',
+        quakeXY2: '全体揺れ',
+        drunk: '千鳥足',
+        breathe: '呼吸',
+        panX: '左右パン',
+        wave: '水面揺れ',
+        transition: 'トランジション（Crossfade）',
+        transitionHardcut: 'トランジション②（Hardcut）',
+        transitionWipe: 'トランジション③（Wipe）',
+        spinFallBlack: '回転落下・黒',
+        suckInWhite: '吸い込み・白',
+        suckInBlack: '吸い込み・黒',
+        rise: '上昇',
+        descend: '下降',
+        zoomIn: 'ズームイン',
+        zoomInWhite: 'ズームイン＋白',
+        zoomInBlack: 'ズームイン＋黒',
+        zoomOut: 'ズームアウト',
+        zoomOutWhite: 'ズームアウト＋白',
+        zoomOutBlack: 'ズームアウト＋黒'
+      },
+      effectFileLabels: {
+        none: 'モーションなし',
+        quakeY: '縦揺れ',
+        quakeX: '横揺れ',
+        quakeXY: '全体揺れ',
+        quakeY2: '縦揺れ',
+        quakeX2: '横揺れ',
+        quakeXY2: '全体揺れ',
+        drunk: '千鳥足',
+        breathe: '呼吸',
+        panX: '左右パン',
+        wave: '水面揺れ',
+        transition: 'トランジションCrossfade',
+        transitionHardcut: 'トランジション②Hardcut',
+        transitionWipe: 'トランジション③Wipe',
+        spinFallBlack: '回転落下黒',
+        suckInWhite: '吸い込み白',
+        suckInBlack: '吸い込み黒',
+        rise: '上昇',
+        descend: '下降',
+        zoomIn: 'ズームイン',
+        zoomInWhite: 'ズームイン白',
+        zoomInBlack: 'ズームイン黒',
+        zoomOut: 'ズームアウト',
+        zoomOutWhite: 'ズームアウト白',
+        zoomOutBlack: 'ズームアウト黒'
+      },
+      effectSubLabels: {
+        quakeY2: 'No Zoom / Tate',
+        quakeX2: 'No Zoom / Yoko',
+        quakeXY2: 'No Zoom / All',
+        drunk: 'Chidoriashi',
+        breathe: 'Breathing',
+        panX: 'Slow Pan',
+        spinFallBlack: 'Spin Fall + Black',
+        suckInWhite: 'Suck In + White',
+        suckInBlack: 'Suck In + Black',
+        wave: 'Wave',
+        rise: 'Rise',
+        descend: 'Descend',
+        zoomIn: 'Zoom-in',
+        zoomInWhite: 'Zoom-in + White',
+        zoomInBlack: 'Zoom-in + Black',
+        zoomOut: 'Zoom-out',
+        zoomOutWhite: 'Zoom-out + White',
+        zoomOutBlack: 'Zoom-out + Black',
+        transition: 'Crossfade',
+        transitionHardcut: 'Hardcut',
+        transitionWipe: 'Wipe'
+      },
+      filterLabels: {
+        none: 'なし',
+        grayscale: 'グレースケール',
+        sepia: 'セピア',
+        posterize: 'ポスタライズ',
+        contrastBoost: 'コントラスト強調',
+        softFocus: 'ソフトフォーカス',
+        sharpen: 'シャープ',
+        lineExtract: '線画抽出',
+        whiteLineExtract: '白線抽出',
+        sumiInk: '墨絵',
+        pixelate: 'ドット化',
+        noiseBoost: 'ノイズ強調',
+        crt: 'CRT',
+        vignette: 'ビネット',
+        chromaticAberration: '色収差',
+        morning: '朝',
+        midday: '昼',
+        evening: '夕方',
+        night: '夜',
+        deepNight: '深夜',
+        moonlight: '月明かり',
+        horror: 'ホラー',
+        fog: '霧',
+        cyber: 'サイバー',
+        underwater: '水中',
+        dream: '夢',
+        vintagePhoto: '古写真'
+      },
+      filterDescriptions: {
+        none: '元画像の色味を維持',
+        grayscale: '白黒写真風に変換',
+        sepia: '古写真のような暖色の色味',
+        posterize: '色数を抑えてイラスト調に',
+        contrastBoost: '陰影と輪郭を少し強める',
+        softFocus: 'やわらかな光で幻想的に',
+        sharpen: '輪郭感を少し強く見せる',
+        lineExtract: '輪郭だけを黒線で抽出',
+        whiteLineExtract: '暗背景に白い輪郭を表示',
+        sumiInk: '濃淡と線を活かした和風調',
+        pixelate: '低解像度のピクセル調へ',
+        noiseBoost: 'ざらつきを強めた映像風',
+        crt: '走査線と色ずれの旧モニター風',
+        vignette: '周辺減光で視線を中央へ',
+        chromaticAberration: 'RGBのずれを強めに演出',
+        morning: '淡い暖色と柔らかな朝の光',
+        midday: '自然で明るい日中の光',
+        evening: '暖色の夕景と少し長い影',
+        night: '青みを残した夜の雰囲気',
+        deepNight: 'さらに暗い深夜の空気感',
+        moonlight: '冷たい月光の差す夜',
+        horror: '不穏な彩度と暗部の圧迫感',
+        fog: 'コントラストを落とした霞む景色',
+        cyber: 'ネオン風の青紫カラー',
+        underwater: '水の中のような青緑の空気感',
+        dream: '淡い光とぼかしで幻想的に',
+        vintagePhoto: '退色と粒子感のある古写真調'
+      },
+      filterSections: ['基本加工', '時間帯', '雰囲気加工'],
+      imageEditNote: '※画像加工はCanvasベースの演出処理です。AIによる空の差し替えや本格的な昼夜変換ではなく、TRPG背景向けに雰囲気を変える加工として利用できます。',
+      tooltip: {
+        pngZip: '1コマずつのPNG画像をZIPにまとめて出力します。動画化や後編集をしたい時向けです。',
+        webp: 'ココフォリアなどで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。',
+        webp30: 'WebPを30FPSで出力します。より滑らかですが、ファイルサイズは大きくなりやすいです。'
+      },
+      messages: {
+        sizeLimit: bytes => `推奨上限：${bytes}以内`,
+        sizeWarning: bytes => `警告：出力ファイルは ${bytes} です。5MBを超えるため、ココフォリア等にアップロードできない可能性があります。画質・画像サイズ・秒数を下げて再出力してください。`,
+        exportTooLarge: kind => `${kind}出力が完了しました。ファイルサイズが大きすぎます。\n設定を変更して、再度出力をお願いします。`,
+        exportReady: kind => `${kind}出力が完了しました。ダウンロード可能です。`,
+        selectImage: '画像ファイルを選択してください。',
+        imageLoadFailed: '画像を読み込めませんでした。別のファイルを試してください。',
+        imagesLoadedTransition: (count, extra) => `${count}枚の画像を読み込みました。トランジションで順番に切り替えられます。${extra}`,
+        imageLoaded: extra => `画像を読み込みました。エフェクトを選んでプレビューできます。${extra}`,
+        largeAutoSize: label => ` 元画像が3MB以上のため、画像サイズは ${label} を自動選択しました。`,
+        sampleLoaded: 'サンプル画像を読み込みました。',
+        sampleFailedStatus: 'サンプル画像を読み込めませんでした。assets/sample/sample_and_juliet.jpeg を確認してください。',
+        sampleFailedToast: 'サンプル画像を読み込めませんでした。',
+        emptyImageInfo: 'まだ画像が読み込まれていません。',
+        approxKb: kb => `約 ${kb.toLocaleString()} KB`,
+        multiImageInfo: (count, w, h, kb, names, more) => `<strong>${count}枚の画像を読み込み済み</strong><br>先頭画像: ${w} × ${h}px<br>合計 約 ${kb.toLocaleString()} KB<br><br>${names}${more}`,
+        moreImages: count => `<br>…ほか ${count} 枚`,
+        noMotionPreview: 'モーションなしの静止プレビューを表示しています。',
+        noMotionSelected: extra => `モーションなしにしました。静止画像としてプレビュー・出力できます。${extra}`,
+        imageReset: '画像をリセットしました。',
+        transitionOrderChanged: (count, verb, extra) => `トランジション順序を変更しました。${count}枚の画像を順番に${verb}します。${extra}`,
+        transitionHintImages: (count, verb) => ` ${count}枚の画像を順番に${verb}します。`,
+        transitionHintNeedImages: ' トランジション系は2枚以上の画像で使用できます。',
+        effectSelected: (effect, loop, hint, extra) => `${effect}を選択しました。出力設定は${loop ? 'ループ' : '非ループ'}です。${hint}${extra}`,
+        filterSelected: (filter, extra) => `画像加工：${filter}を選択しました。${extra}`,
+        needImage: '先に画像を読み込んでください。',
+        pngZipLibraryMissing: 'PNG連番ZIP出力ライブラリを読み込めませんでした。ネットワーク接続を確認してください。',
+        pngZipStart: (frames, limit) => `PNG連番ZIP生成中... 0 / ${frames} frames / ${limit}`,
+        pngZipProgress: (done, frames) => `PNG連番ZIP生成中... ${done} / ${frames} frames`,
+        pngZipComplete: (name, size, effect, seconds, quality, sizeLabel, warning) => `PNG連番ZIP出力完了：${name} / ${size} / ${effect} / ${seconds}秒 / ${quality} / ${sizeLabel}${warning ? ` / ${warning}` : ''}`,
+        pngZipError: 'PNG連番ZIP出力中にエラーが発生しました。5MB以内を目安に、画像サイズ・秒数・画質を下げて試してください。',
+        webpStart: fpsLabel => fpsLabel ? `${fpsLabel} WebP出力を開始しました。しばらくお待ちください。` : 'WebP出力を開始しました。しばらくお待ちください。',
+        webpProgressStart: (fpsLabel, frames, limit) => `${fpsLabel ? `${fpsLabel} ` : ''}WebP生成中... 0 / ${frames} frames / ${limit}`,
+        webpProgress: (fpsLabel, done, frames) => `${fpsLabel ? `${fpsLabel} ` : ''}WebP生成中... ${done} / ${frames} frames`,
+        webpComplete: (fpsLabel, name, size, effect, loop, seconds, fps, quality, sizeLabel, warning) => `${fpsLabel ? `${fpsLabel} ` : ''}WebP出力完了：${name} / ${size} / ${effect} / ${loop ? 'ループ' : '非ループ'} / ${seconds}秒 / ${fps}FPS / ${quality} / ${sizeLabel}${warning ? ` / ${warning}` : ''}`,
+        webpError: 'WebP出力中にエラーが発生しました。ブラウザがWebP書き出しに対応しているか確認し、5MB以内を目安に画像サイズ・画質・秒数を下げて試してください。',
+        downloadFirst: '出力ボタンでまず画像を書き出してください。',
+        downloadDone: 'ダウンロードが完了しました。',
+        lightMode: 'ライトモード',
+        darkMode: 'ナイトモード',
+        loop: 'ループ',
+        noLoop: '非ループ',
+        original: 'オリジナル'
+      },
+      transitionVerb: {
+        transition: 'クロスフェード',
+        transitionHardcut: 'ハードカット',
+        transitionWipe: 'ワイプ'
+      }
+    },
+    en: {
+      htmlLang: 'en',
+      documentTitle: 'Background Motion Maker | TRPG WEB Tools Observatory',
+      langButton: 'JP',
+      quality: { light: 'Light', standard: 'Standard', high: 'High Quality' },
+      qualityRecommendation: ' For standard or higher settings, WebP output is recommended.',
+      exportNote: 'Adjust the settings so the WebP file stays under 5 MB. If it exceeds the limit, lower the quality, image size, or duration, or use the default 24 FPS output instead of 30 FPS.',
+      staticText: {
+        portalName: 'TRPG WEB Tools Observatory',
+        title: 'Background Motion Maker',
+        lead: 'Add motion to uploaded background images: shake, zoom, pan, transition, and export animated TRPG background assets.',
+        portalLink: '←TRPG WEB Tools Observatory',
+        help: 'How to Use',
+        shortcuts: 'Shortcuts',
+        helpTitle: 'How to Use',
+        shortcutTitle: 'Shortcut List',
+        uploadTitle: 'Image Upload',
+        dropStrong: 'Drag & drop images',
+        dropSmall: 'or click to open PNG / JPG / WebP files. Multiple images are supported.',
+        sampleButton: 'Load sample image',
+        effectsTitle: 'Effect Selection',
+        motionTab: 'Motion',
+        imageEditTab: 'Image Edit',
+        previewTitle: 'Preview & Export',
+        placeholder: 'Load an image to show the preview',
+        transitionOrder: 'Transition Order',
+        transitionHint: 'Drag thumbnails to reorder them',
+        fileName: 'File Name',
+        seconds: 'Duration',
+        qualityLabel: 'Quality',
+        imageSize: 'Image Size',
+        loop: 'Loop',
+        play: 'Play Preview',
+        stop: 'Stop Preview',
+        pngZip: 'PNG Sequence ZIP',
+        webp: 'Export WebP',
+        webp30: 'Export at 30 FPS',
+        download: 'Download',
+        clear: 'Clear',
+        footerTitle: 'Notice',
+        footer1: 'This is an unofficial personal TRPG support tool created by @KumachanSteps. Please check the terms and rights notices for each TRPG system, scenario, and external service yourself.',
+        footer2: 'For bug reports or feature requests, please send a DM to @KumachanSteps on X. Replies and fixes are not guaranteed for every request.'
+      },
+      helpSteps: [
+        '1. Select image files or drag and drop them into the upload area. Transition effects can use multiple images.',
+        '2. Choose an effect, then adjust duration, quality, image size, and loop settings.',
+        '3. Check the motion in the preview, then export as PNG Sequence ZIP or WebP.',
+        '4. WebP is recommended for normal use. Try 30 FPS output when you want smoother motion.'
+      ],
+      shortcutLabels: [
+        'Close Help/Shortcuts when open. Otherwise reset the image.',
+        'Open image file',
+        'Play / stop preview',
+        'Export 30 FPS WebP',
+        'Export PNG Sequence ZIP',
+        'Export WebP',
+        'Toggle light / night mode'
+      ],
+      effectLabels: {
+        none: 'No Motion',
+        quakeY: 'Vertical Shake',
+        quakeX: 'Horizontal Shake',
+        quakeXY: 'Full Shake',
+        quakeY2: 'Vertical Shake',
+        quakeX2: 'Horizontal Shake',
+        quakeXY2: 'Full Shake',
+        drunk: 'Stagger',
+        breathe: 'Breathing',
+        panX: 'Horizontal Pan',
+        wave: 'Water Ripple',
+        transition: 'Transition (Crossfade)',
+        transitionHardcut: 'Transition 2 (Hardcut)',
+        transitionWipe: 'Transition 3 (Wipe)',
+        spinFallBlack: 'Spin Fall + Black',
+        suckInWhite: 'Suck In + White',
+        suckInBlack: 'Suck In + Black',
+        rise: 'Rise',
+        descend: 'Descend',
+        zoomIn: 'Zoom In',
+        zoomInWhite: 'Zoom In + White',
+        zoomInBlack: 'Zoom In + Black',
+        zoomOut: 'Zoom Out',
+        zoomOutWhite: 'Zoom Out + White',
+        zoomOutBlack: 'Zoom Out + Black'
+      },
+      effectFileLabels: {
+        none: 'NoMotion',
+        quakeY: 'VerticalShake',
+        quakeX: 'HorizontalShake',
+        quakeXY: 'FullShake',
+        quakeY2: 'VerticalShake',
+        quakeX2: 'HorizontalShake',
+        quakeXY2: 'FullShake',
+        drunk: 'Stagger',
+        breathe: 'Breathing',
+        panX: 'HorizontalPan',
+        wave: 'WaterRipple',
+        transition: 'TransitionCrossfade',
+        transitionHardcut: 'Transition2Hardcut',
+        transitionWipe: 'Transition3Wipe',
+        spinFallBlack: 'SpinFallBlack',
+        suckInWhite: 'SuckInWhite',
+        suckInBlack: 'SuckInBlack',
+        rise: 'Rise',
+        descend: 'Descend',
+        zoomIn: 'ZoomIn',
+        zoomInWhite: 'ZoomInWhite',
+        zoomInBlack: 'ZoomInBlack',
+        zoomOut: 'ZoomOut',
+        zoomOutWhite: 'ZoomOutWhite',
+        zoomOutBlack: 'ZoomOutBlack'
+      },
+      effectSubLabels: {
+        quakeY2: 'No Zoom / Vertical',
+        quakeX2: 'No Zoom / Horizontal',
+        quakeXY2: 'No Zoom / Full',
+        drunk: 'Unsteady camera motion',
+        breathe: 'Slow organic zoom',
+        panX: 'Slow side pan',
+        spinFallBlack: 'Spin fall + fade',
+        suckInWhite: 'Pull-in + white',
+        suckInBlack: 'Pull-in + black',
+        wave: 'Water-like distortion',
+        rise: 'Move upward',
+        descend: 'Move downward',
+        zoomIn: 'Zoom in',
+        zoomInWhite: 'Zoom in + white',
+        zoomInBlack: 'Zoom in + black',
+        zoomOut: 'Zoom out',
+        zoomOutWhite: 'Zoom out + white',
+        zoomOutBlack: 'Zoom out + black',
+        transition: 'Crossfade',
+        transitionHardcut: 'Hardcut',
+        transitionWipe: 'Wipe'
+      },
+      filterLabels: {
+        none: 'None',
+        grayscale: 'Grayscale',
+        sepia: 'Sepia',
+        posterize: 'Posterize',
+        contrastBoost: 'Contrast Boost',
+        softFocus: 'Soft Focus',
+        sharpen: 'Sharpen',
+        lineExtract: 'Line Extract',
+        whiteLineExtract: 'White Line',
+        sumiInk: 'Ink Wash',
+        pixelate: 'Pixelate',
+        noiseBoost: 'Noise Boost',
+        crt: 'CRT',
+        vignette: 'Vignette',
+        chromaticAberration: 'Chromatic Aberration',
+        morning: 'Morning',
+        midday: 'Midday',
+        evening: 'Evening',
+        night: 'Night',
+        deepNight: 'Late Night',
+        moonlight: 'Moonlight',
+        horror: 'Horror',
+        fog: 'Fog',
+        cyber: 'Cyber',
+        underwater: 'Underwater',
+        dream: 'Dream',
+        vintagePhoto: 'Vintage Photo'
+      },
+      filterDescriptions: {
+        none: 'Keep the original colors',
+        grayscale: 'Convert to a monochrome photo look',
+        sepia: 'Warm old-photo color tone',
+        posterize: 'Reduce colors for an illustrated look',
+        contrastBoost: 'Strengthen shadows and edges',
+        softFocus: 'Add soft, dreamy light',
+        sharpen: 'Make edges slightly clearer',
+        lineExtract: 'Extract dark outline lines',
+        whiteLineExtract: 'Show white outlines on a dark base',
+        sumiInk: 'Japanese ink-wash inspired tone',
+        pixelate: 'Low-resolution pixel look',
+        noiseBoost: 'Add rough video-like grain',
+        crt: 'Old monitor scanline effect',
+        vignette: 'Darken edges to focus the center',
+        chromaticAberration: 'Stronger RGB shift effect',
+        morning: 'Soft warm morning light',
+        midday: 'Natural bright daylight',
+        evening: 'Warm sunset and longer shadows',
+        night: 'Cool blue night atmosphere',
+        deepNight: 'Darker late-night mood',
+        moonlight: 'Cold moonlit night',
+        horror: 'Uneasy color and oppressive shadows',
+        fog: 'Lower contrast for a hazy view',
+        cyber: 'Neon blue-purple tone',
+        underwater: 'Blue-green underwater mood',
+        dream: 'Soft blur and pale light',
+        vintagePhoto: 'Faded color and photo grain'
+      },
+      filterSections: ['Basic Edits', 'Time of Day', 'Atmosphere'],
+      imageEditNote: 'Image edits are Canvas-based visual effects. They do not replace the sky or perform full day/night conversion with AI; use them as quick mood adjustments for TRPG backgrounds.',
+      tooltip: {
+        pngZip: 'Exports each frame as PNG images inside a ZIP. Best for video editing or further post-processing.',
+        webp: 'Exports a lightweight animated image that is easy to use in services such as CCFOLIA. Recommended for normal use.',
+        webp30: 'Exports WebP at 30 FPS. Motion is smoother, but the file size is more likely to increase.'
+      },
+      messages: {
+        sizeLimit: bytes => `Recommended limit: under ${bytes}`,
+        sizeWarning: bytes => `Warning: output file is ${bytes}. It may exceed the 5 MB upload limit for services such as CCFOLIA. Lower quality, image size, or duration and export again.`,
+        exportTooLarge: kind => `${kind} export finished, but the file is too large.\nPlease adjust the settings and export again.`,
+        exportReady: kind => `${kind} export finished. Ready to download.`,
+        selectImage: 'Please select an image file.',
+        imageLoadFailed: 'Could not load the image. Try another file.',
+        imagesLoadedTransition: (count, extra) => `${count} images loaded. Transition effects will switch through them in order.${extra}`,
+        imageLoaded: extra => `Image loaded. Choose an effect and preview the motion.${extra}`,
+        largeAutoSize: label => ` The source image is 3 MB or larger, so image size was automatically set to ${label}.`,
+        sampleLoaded: 'Sample image loaded.',
+        sampleFailedStatus: 'Could not load the sample image. Check assets/sample/sample_and_juliet.jpeg.',
+        sampleFailedToast: 'Could not load the sample image.',
+        emptyImageInfo: 'No image loaded yet.',
+        approxKb: kb => `about ${kb.toLocaleString()} KB`,
+        multiImageInfo: (count, w, h, kb, names, more) => `<strong>${count} images loaded</strong><br>First image: ${w} × ${h}px<br>Total about ${kb.toLocaleString()} KB<br><br>${names}${more}`,
+        moreImages: count => `<br>…and ${count} more`,
+        noMotionPreview: 'Showing a still preview with no motion.',
+        noMotionSelected: extra => `No motion selected. You can preview and export a still image.${extra}`,
+        imageReset: 'Image reset.',
+        transitionOrderChanged: (count, verb, extra) => `Transition order updated. ${count} images will ${verb} in order.${extra}`,
+        transitionHintImages: (count, verb) => ` ${count} images will ${verb} in order.`,
+        transitionHintNeedImages: ' Transition effects require at least two images.',
+        effectSelected: (effect, loop, hint, extra) => `${effect} selected. Output setting: ${loop ? 'loop' : 'no loop'}.${hint}${extra}`,
+        filterSelected: (filter, extra) => `Image edit: ${filter} selected.${extra}`,
+        needImage: 'Load an image first.',
+        pngZipLibraryMissing: 'Could not load the PNG Sequence ZIP library. Check your network connection.',
+        pngZipStart: (frames, limit) => `Generating PNG Sequence ZIP... 0 / ${frames} frames / ${limit}`,
+        pngZipProgress: (done, frames) => `Generating PNG Sequence ZIP... ${done} / ${frames} frames`,
+        pngZipComplete: (name, size, effect, seconds, quality, sizeLabel, warning) => `PNG Sequence ZIP complete: ${name} / ${size} / ${effect} / ${seconds}s / ${quality} / ${sizeLabel}${warning ? ` / ${warning}` : ''}`,
+        pngZipError: 'PNG Sequence ZIP export failed. Try lowering image size, duration, or quality to stay under 5 MB.',
+        webpStart: fpsLabel => fpsLabel ? `${fpsLabel} WebP export started. Please wait.` : 'WebP export started. Please wait.',
+        webpProgressStart: (fpsLabel, frames, limit) => `${fpsLabel ? `${fpsLabel} ` : ''}Generating WebP... 0 / ${frames} frames / ${limit}`,
+        webpProgress: (fpsLabel, done, frames) => `${fpsLabel ? `${fpsLabel} ` : ''}Generating WebP... ${done} / ${frames} frames`,
+        webpComplete: (fpsLabel, name, size, effect, loop, seconds, fps, quality, sizeLabel, warning) => `${fpsLabel ? `${fpsLabel} ` : ''}WebP complete: ${name} / ${size} / ${effect} / ${loop ? 'loop' : 'no loop'} / ${seconds}s / ${fps}FPS / ${quality} / ${sizeLabel}${warning ? ` / ${warning}` : ''}`,
+        webpError: 'WebP export failed. Check that your browser supports WebP export, then lower image size, quality, or duration and try again.',
+        downloadFirst: 'Export an image first, then download it.',
+        downloadDone: 'Download complete.',
+        lightMode: 'Light mode',
+        darkMode: 'Night mode',
+        loop: 'Loop',
+        noLoop: 'No Loop',
+        original: 'Original'
+      },
+      transitionVerb: {
+        transition: 'crossfade',
+        transitionHardcut: 'hard cut',
+        transitionWipe: 'wipe'
+      }
+    }
+  };
+
+  function getDefaultLanguage() {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY);
+    if (saved === 'ja' || saved === 'en') return saved;
+    const browserLang = (navigator.languages?.[0] || navigator.language || 'en').toLowerCase();
+    return browserLang.startsWith('ja') ? 'ja' : 'en';
+  }
+
+  function dict() {
+    return i18n[state.lang] || i18n.ja;
+  }
+
+  function setText(selector, text) {
+    const element = document.querySelector(selector);
+    if (element) element.textContent = text;
+  }
+
+  function applyLabelMaps() {
+    const d = dict();
+    Object.assign(effectLabels, d.effectLabels);
+    Object.assign(effectFileLabels, d.effectFileLabels);
+    Object.assign(imageFilterLabels, d.filterLabels);
+    qualitySettings.light.label = d.quality.light;
+    qualitySettings.standard.label = d.quality.standard;
+    qualitySettings.high.label = d.quality.high;
+  }
+
+  function applyLanguage(lang, options = {}) {
+    state.lang = lang === 'en' ? 'en' : 'ja';
+    const d = dict();
+    const s = d.staticText;
+
+    document.documentElement.lang = d.htmlLang;
+    document.body.dataset.lang = state.lang;
+    document.title = d.documentTitle;
+    applyLabelMaps();
+
+    setText('.eyebrow', s.portalName);
+    setText('.title-block h1', s.title);
+    setText('.title-block .lead', s.lead);
+    setText('.portal-link', s.portalLink);
+    if (els.langToggleBtn) {
+      els.langToggleBtn.textContent = d.langButton;
+      els.langToggleBtn.setAttribute('aria-label', state.lang === 'ja' ? 'Switch to English' : '日本語に切り替え');
+      els.langToggleBtn.setAttribute('title', state.lang === 'ja' ? 'English' : '日本語');
+    }
+    els.helpBtn.textContent = s.help;
+    els.shortcutBtn.textContent = s.shortcuts;
+    setText('#helpDrawer h2', s.helpTitle);
+    setText('#shortcutDrawer h2', s.shortcutTitle);
+    document.querySelectorAll('[data-close-drawer]').forEach(button => button.setAttribute('aria-label', state.lang === 'ja' ? '閉じる' : 'Close'));
+
+    document.querySelectorAll('#helpDrawer .guide-list p').forEach((p, index) => {
+      if (d.helpSteps[index]) p.textContent = d.helpSteps[index];
+    });
+    document.querySelectorAll('#shortcutDrawer .shortcut-grid span').forEach((span, index) => {
+      if (d.shortcutLabels[index]) span.textContent = d.shortcutLabels[index];
+    });
+
+    setText('.upload-panel .panel-heading h2', s.uploadTitle);
+    setText('#dropZone strong', s.dropStrong);
+    setText('#dropZone small', s.dropSmall);
+    if (els.loadSampleBtn) els.loadSampleBtn.textContent = s.sampleButton;
+    setText('.effects-panel .effects-heading-row h2', s.effectsTitle);
+    els.motionTab.textContent = s.motionTab;
+    els.imageEditTab.textContent = s.imageEditTab;
+    els.effectGrid.setAttribute('aria-label', state.lang === 'ja' ? 'エフェクト一覧' : 'Effect list');
+    document.querySelector('.effect-tabs')?.setAttribute('aria-label', state.lang === 'ja' ? 'エフェクト種別' : 'Effect type');
+
+    document.querySelectorAll('.effect-card').forEach(card => {
+      const key = card.dataset.effect;
+      const strong = card.querySelector('strong');
+      const small = card.querySelector('small');
+      if (strong && d.effectLabels[key]) strong.textContent = d.effectLabels[key];
+      if (small && d.effectSubLabels[key]) small.textContent = d.effectSubLabels[key];
+    });
+
+    document.querySelectorAll('#imageEditPanel .image-edit-section-title').forEach((title, index) => {
+      if (d.filterSections[index]) title.textContent = d.filterSections[index];
+    });
+    document.querySelectorAll('.image-edit-card').forEach(card => {
+      const key = card.dataset.filter;
+      const span = card.querySelector('span');
+      const small = card.querySelector('small');
+      if (span && d.filterLabels[key]) span.textContent = d.filterLabels[key];
+      if (small && d.filterDescriptions[key]) small.textContent = d.filterDescriptions[key];
+    });
+    setText('.image-edit-note', d.imageEditNote);
+
+    setText('.preview-panel .panel-heading h2', s.previewTitle);
+    if (els.canvasPlaceholder) els.canvasPlaceholder.textContent = s.placeholder;
+    setText('.transition-thumb-head strong', s.transitionOrder);
+    setText('.transition-thumb-head span', s.transitionHint);
+    els.transitionThumbList?.setAttribute('aria-label', state.lang === 'ja' ? 'トランジション順サムネイル' : 'Transition order thumbnails');
+
+    els.fileNameInput.closest('label')?.querySelector('span')?.replaceChildren(document.createTextNode(s.fileName));
+    els.secondsInput.closest('label')?.querySelector('span')?.replaceChildren(document.createTextNode(s.seconds));
+    els.qualityInput.closest('label')?.querySelector('span')?.replaceChildren(document.createTextNode(s.qualityLabel));
+    els.sizeInput.closest('label')?.querySelector('span')?.replaceChildren(document.createTextNode(s.imageSize));
+    els.loopInput.closest('label')?.querySelector('span')?.replaceChildren(document.createTextNode(s.loop));
+
+    [...els.qualityInput.options].forEach(option => {
+      if (d.quality[option.value]) option.textContent = d.quality[option.value];
+    });
+    refreshSizeInputLabels();
+
+    els.playBtn.textContent = state.playing ? s.stop : s.play;
+    els.exportPngZipBtn.textContent = s.pngZip;
+    els.exportWebpBtn.textContent = s.webp;
+    els.exportWebp30Btn.textContent = s.webp30;
+
+    els.exportPngZipBtn.dataset.tooltip = d.tooltip.pngZip;
+    els.exportWebpBtn.dataset.tooltip = d.tooltip.webp;
+    els.exportWebp30Btn.dataset.tooltip = d.tooltip.webp30;
+    els.exportPngZipBtn.setAttribute('aria-label', `${s.pngZip}. ${d.tooltip.pngZip}`);
+    els.exportWebpBtn.setAttribute('aria-label', `${s.webp}. ${d.tooltip.webp}`);
+    els.exportWebp30Btn.setAttribute('aria-label', `${s.webp30}. ${d.tooltip.webp30}`);
+
+    els.downloadLink.textContent = s.download;
+    els.clearOutputBtn.textContent = s.clear;
+    updateQualityRecommendation();
+
+    setText('.legal-footer h2', s.footerTitle);
+    const footerParagraphs = document.querySelectorAll('.legal-footer p');
+    if (footerParagraphs[0]) footerParagraphs[0].innerHTML = s.footer1.replace('@KumachanSteps', '<a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a>');
+    if (footerParagraphs[1]) footerParagraphs[1].innerHTML = s.footer2.replace('@KumachanSteps', '<a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a>');
+
+    syncThemeButton();
+    updateOutputFileName();
+    if (!state.imageFiles.length) updateImageInfo([]);
+    if (!options.silent) setStatus('');
+  }
+
+  function switchLanguage() {
+    const next = state.lang === 'ja' ? 'en' : 'ja';
+    localStorage.setItem(LANG_STORAGE_KEY, next);
+    applyLanguage(next);
+  }
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -240,13 +884,13 @@
 
   function getBlobSizeWarning(blob) {
     if (blob.size > MAX_OUTPUT_BYTES) {
-      return `警告：出力ファイルは ${formatFileSize(blob.size)} です。5MBを超えるため、ココフォリア等にアップロードできない可能性があります。画質・画像サイズ・秒数を下げて再出力してください。`;
+      return dict().messages.sizeWarning(formatFileSize(blob.size));
     }
     return '';
   }
 
   function getSizeLimitLabel() {
-    return `推奨上限：${formatFileSize(MAX_OUTPUT_BYTES)}以内`;
+    return dict().messages.sizeLimit(formatFileSize(MAX_OUTPUT_BYTES));
   }
 
 
@@ -277,7 +921,7 @@
     const catalog = getCurrentSizeCatalog();
     [...els.sizeInput.options].forEach(option => {
       if (option.value === 'original') {
-        option.textContent = 'オリジナル';
+        option.textContent = dict().messages.original;
         return;
       }
       const preset = catalog.find(item => item.value === option.value);
@@ -346,10 +990,10 @@
 
   function showExportSizeToast(kind, blob) {
     if (blob && blob.size > MAX_OUTPUT_BYTES) {
-      showToast(`${kind}出力が完了しました。ファイルサイズが大きすぎます。\n設定を変更して、再度出力をお願いします。`, 'warning', 7200);
+      showToast(dict().messages.exportTooLarge(kind), 'warning', 7200);
       return;
     }
-    showToast(`${kind}出力が完了しました。ダウンロード可能です。`, 'success', 4400);
+    showToast(dict().messages.exportReady(kind), 'success', 4400);
   }
 
   function getOriginalBaseName() {
@@ -359,8 +1003,8 @@
   function buildOutputBaseName() {
     const original = getOriginalBaseName();
     const effectName = sanitizeFileName(effectFileLabels[state.effect] || effectLabels[state.effect] || 'motion');
-    const filterName = sanitizeFileName(imageFilterLabels[state.imageFilter] || 'なし');
-    const loopName = els.loopInput.checked ? 'ループ' : '非ループ';
+    const filterName = sanitizeFileName(imageFilterLabels[state.imageFilter] || dict().filterLabels.none);
+    const loopName = els.loopInput.checked ? dict().messages.loop : dict().messages.noLoop;
     return sanitizeFileName(`${original}_${effectName}_${filterName}_${loopName}`);
   }
 
@@ -385,14 +1029,12 @@
 
   function getQualityRecommendationText() {
     const quality = els.qualityInput.value;
-    return quality === 'standard' || quality === 'high'
-      ? ' ※標準以上の設定の場合、WebP出力をおすすめします。'
-      : '';
+    return quality === 'standard' || quality === 'high' ? dict().qualityRecommendation : '';
   }
 
   function updateQualityRecommendation() {
     if (!els.exportNote) return;
-    els.exportNote.textContent = '※ 5MB以内でWebPファイルが出力されるように設定を調整してください。超過する場合は画質・画像サイズ・秒数を下げるか、30FPSでの出力ではなく、デフォルトの24FPSで出力してください。';
+    els.exportNote.textContent = dict().exportNote;
   }
 
   function isTransitionEffect(effect = state.effect) {
@@ -400,23 +1042,17 @@
   }
 
   function getTransitionVerb(effect = state.effect) {
-    switch (effect) {
-      case 'transitionHardcut':
-        return 'ハードカット';
-      case 'transitionWipe':
-        return 'ワイプ';
-      default:
-        return 'クロスフェード';
-    }
+    return dict().transitionVerb[effect] || dict().transitionVerb.transition;
   }
 
   function setEffectSelectionStatus() {
+    const messages = dict().messages;
     const transitionHint = isTransitionEffect(state.effect)
       ? (state.images.length >= 2
-          ? ` ${state.images.length}枚の画像を順番に${getTransitionVerb(state.effect)}します。`
-          : ' トランジション系は2枚以上の画像で使用できます。')
+          ? messages.transitionHintImages(state.images.length, getTransitionVerb(state.effect))
+          : messages.transitionHintNeedImages)
       : '';
-    setStatus(`${effectLabels[state.effect]}を選択しました。出力設定は${els.loopInput.checked ? 'ループ' : '非ループ'}です。${transitionHint}${getQualityRecommendationText()}`);
+    setStatus(messages.effectSelected(effectLabels[state.effect], els.loopInput.checked, transitionHint, getQualityRecommendationText()));
   }
 
 
@@ -441,7 +1077,7 @@
     state.playing = false;
     state.rafId = null;
     state.playStart = 0;
-    els.playBtn.textContent = 'プレビュー再生';
+    els.playBtn.textContent = dict().staticText.play;
   }
 
   function resetImage() {
@@ -463,12 +1099,12 @@
     els.fileInput.value = '';
     els.fileNameInput.value = 'haikei_motion';
     els.canvasPlaceholder.classList.remove('is-hidden');
-    els.imageInfo.innerHTML = '<p class="empty-note">まだ画像が読み込まれていません。</p>';
+    els.imageInfo.innerHTML = `<p class="empty-note">${dict().messages.emptyImageInfo}</p>`;
     updateTransitionThumbs();
     updateTransitionThumbs();
     syncPreviewCanvasSize();
     drawFrame(0, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
-    setStatus('画像をリセットしました。');
+    setStatus(dict().messages.imageReset);
     return true;
   }
 
@@ -563,7 +1199,7 @@
     updateTransitionThumbs();
     drawFrame(state.stillFrameTime, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
     hideDownload();
-    setStatus(`トランジション順序を変更しました。${state.images.length}枚の画像を順番に${getTransitionVerb(state.effect)}します。${getQualityRecommendationText()}`);
+    setStatus(dict().messages.transitionOrderChanged(state.images.length, getTransitionVerb(state.effect), getQualityRecommendationText()));
   }
 
   function loadImageFile(file) {
@@ -589,7 +1225,7 @@
   async function loadFiles(fileList) {
     const files = Array.from(fileList || []).filter(file => file && String(file.type || '').startsWith('image/'));
     if (!files.length) {
-      setStatus('画像ファイルを選択してください。');
+      setStatus(dict().messages.selectImage);
       return;
     }
 
@@ -614,13 +1250,14 @@ state.image = state.images[0] || null;
       updateTransitionThumbs();
       syncPreviewCanvasSize();
       drawFrame(0, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
+      const autoSizeText = recommendedSize ? dict().messages.largeAutoSize(recommendedSize.label) : '';
       setStatus(loaded.length >= 2
-        ? `${loaded.length}枚の画像を読み込みました。トランジションで順番に切り替えられます。${recommendedSize ? ` 元画像が3MB以上のため、画像サイズは ${recommendedSize.label} を自動選択しました。` : ''}`
-        : `画像を読み込みました。エフェクトを選んでプレビューできます。${recommendedSize ? ` 元画像が3MB以上のため、画像サイズは ${recommendedSize.label} を自動選択しました。` : ''}`);
+        ? dict().messages.imagesLoadedTransition(loaded.length, autoSizeText)
+        : dict().messages.imageLoaded(autoSizeText));
       hideDownload();
     } catch (error) {
       console.error(error);
-      setStatus('画像を読み込めませんでした。別のファイルを試してください。');
+      setStatus(dict().messages.imageLoadFailed);
     }
   }
 
@@ -671,19 +1308,20 @@ state.image = state.images[0] || null;
         drawFrame(0, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
         hideDownload();
       }
-      setStatus('サンプル画像を読み込みました。');
+      setStatus(dict().messages.sampleLoaded);
     } catch (error) {
       console.warn('Sample image could not be loaded:', error);
-      setStatus('サンプル画像を読み込めませんでした。assets/sample/sample_and_juliet.jpeg を確認してください。');
-      showToast('サンプル画像を読み込めませんでした。', 'warning', 4200);
+      setStatus(dict().messages.sampleFailedStatus);
+      showToast(dict().messages.sampleFailedToast, 'warning', 4200);
     }
   }
 
   function updateImageInfo(files) {
     const list = Array.from(files || []);
+    const messages = dict().messages;
     if (!list.length) {
-      els.imageInfo.innerHTML = '<p class="empty-note">まだ画像が読み込まれていません。</p>';
-    updateTransitionThumbs();
+      els.imageInfo.innerHTML = `<p class="empty-note">${messages.emptyImageInfo}</p>`;
+      updateTransitionThumbs();
       return;
     }
 
@@ -693,19 +1331,14 @@ state.image = state.images[0] || null;
       els.imageInfo.innerHTML = `
         <strong>${escapeHtml(file.name)}</strong><br>
         ${state.imageWidth} × ${state.imageHeight}px<br>
-        約 ${totalKb.toLocaleString()} KB
+        ${messages.approxKb(totalKb)}
       `;
       return;
     }
 
     const previewNames = list.slice(0, 3).map(file => escapeHtml(file.name)).join('<br>');
-    const moreLabel = list.length > 3 ? `<br>…ほか ${list.length - 3} 枚` : '';
-    els.imageInfo.innerHTML = `
-      <strong>${list.length}枚の画像を読み込み済み</strong><br>
-      先頭画像: ${state.imageWidth} × ${state.imageHeight}px<br>
-      合計 約 ${totalKb.toLocaleString()} KB<br><br>
-      ${previewNames}${moreLabel}
-    `;
+    const moreLabel = list.length > 3 ? messages.moreImages(list.length - 3) : '';
+    els.imageInfo.innerHTML = messages.multiImageInfo(list.length, state.imageWidth, state.imageHeight, totalKb, previewNames, moreLabel);
   }
 
   function escapeHtml(text) {
@@ -1630,7 +2263,7 @@ state.image = state.images[0] || null;
     syncCardTabIndex(els.imageEditGrid, '.image-edit-card', button);
     updateOutputFileName();
     drawFrame(state.stillFrameTime, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
-    setStatus(`画像加工：${imageFilterLabels[state.imageFilter] || 'なし'}を選択しました。${getQualityRecommendationText()}`);
+    setStatus(dict().messages.filterSelected(imageFilterLabels[state.imageFilter] || dict().filterLabels.none, getQualityRecommendationText()));
     hideDownload();
   }
 
@@ -1777,21 +2410,21 @@ state.image = state.images[0] || null;
 
   function togglePlay() {
     if (!state.image && !(state.images && state.images.length)) {
-      setStatus('先に画像を読み込んでください。');
+      setStatus(dict().messages.needImage);
       return;
     }
 
     if (state.effect === 'none') {
       stopPreview();
       drawFrame(0, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
-      setStatus('モーションなしの静止プレビューを表示しています。');
+      setStatus(dict().messages.noMotionPreview);
       return;
     }
 
     state.playing = !state.playing;
     if (state.playing) {
       state.playStart = 0;
-      els.playBtn.textContent = 'プレビュー停止';
+      els.playBtn.textContent = dict().staticText.stop;
       state.rafId = requestAnimationFrame(animate);
     } else {
       stopPreview();
@@ -1813,7 +2446,7 @@ state.image = state.images[0] || null;
       hideDownload();
       stopPreview();
       drawFrame(0, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
-      setStatus(`モーションなしにしました。静止画像としてプレビュー・出力できます。${getQualityRecommendationText()}`);
+      setStatus(dict().messages.noMotionSelected(getQualityRecommendationText()));
       return;
     }
 
@@ -1835,7 +2468,7 @@ state.image = state.images[0] || null;
       if (state.rafId) cancelAnimationFrame(state.rafId);
       state.playing = true;
       state.playStart = 0;
-      els.playBtn.textContent = 'プレビュー停止';
+      els.playBtn.textContent = dict().staticText.stop;
       state.rafId = requestAnimationFrame(animate);
     }
   }
@@ -1865,7 +2498,7 @@ state.image = state.images[0] || null;
     async function exportApng() {
       showToast('APNG出力を開始しました。しばらくお待ちください。', 'info', 3200);
       if (!state.image && !(state.images && state.images.length)) {
-        setStatus('先に画像を読み込んでください。');
+        setStatus(dict().messages.needImage);
         return;
       }
       if (typeof UPNG === 'undefined') {
@@ -2107,11 +2740,11 @@ state.image = state.images[0] || null;
 
   async function exportPngZip() {
     if (!state.image && !(state.images && state.images.length)) {
-      setStatus('先に画像を読み込んでください。');
+      setStatus(dict().messages.needImage);
       return;
     }
     if (typeof JSZip === 'undefined') {
-      setStatus('PNG連番ZIP出力ライブラリを読み込めませんでした。ネットワーク接続を確認してください。');
+      setStatus(dict().messages.pngZipLibraryMissing);
       return;
     }
 
@@ -2127,7 +2760,7 @@ state.image = state.images[0] || null;
     const folder = zip.folder(safeName);
 
     setExportButtonsDisabled(true);
-    setStatus(`PNG連番ZIP生成中... 0 / ${frames} frames / ${getSizeLimitLabel()}`);
+    setStatus(dict().messages.pngZipStart(frames, getSizeLimitLabel()));
 
     const offscreen = document.createElement('canvas');
     offscreen.width = width;
@@ -2143,7 +2776,7 @@ state.image = state.images[0] || null;
         const fileName = `frame_${String(i + 1).padStart(padLength, '0')}.png`;
         folder.file(fileName, blob);
         if (i % 3 === 0 || i === frames - 1) {
-          setStatus(`PNG連番ZIP生成中... ${i + 1} / ${frames} frames`);
+          setStatus(dict().messages.pngZipProgress(i + 1, frames));
           await new Promise(resolve => setTimeout(resolve, 0));
         }
       }
@@ -2159,10 +2792,10 @@ state.image = state.images[0] || null;
       els.downloadLink.textContent = 'ダウンロード';
       els.downloadLink.classList.remove('is-disabled');
       els.downloadLink.setAttribute('aria-disabled', 'false');
-      setStatus(`PNG連番ZIP出力完了：${outputName} / ${outputSize} / ${effectLabels[state.effect]} / ${seconds}秒 / ${setting.label} / ${sizeLabel}${sizeWarning ? ` / ${sizeWarning}` : ''}`);
+      setStatus(dict().messages.pngZipComplete(outputName, outputSize, effectLabels[state.effect], seconds, setting.label, sizeLabel, sizeWarning));
     } catch (error) {
       console.error(error);
-      setStatus('PNG連番ZIP出力中にエラーが発生しました。5MB以内を目安に、画像サイズ・秒数・画質を下げて試してください。');
+      setStatus(dict().messages.pngZipError);
     } finally {
       setExportButtonsDisabled(false);
     }
@@ -2171,9 +2804,9 @@ state.image = state.images[0] || null;
   async function exportWebp(options = {}) {
     const fpsOverride = options.fpsOverride || null;
     const fpsLabel = options.fpsLabel || null;
-    showToast(fpsOverride ? `${fpsLabel} WebP出力を開始しました。しばらくお待ちください。` : 'WebP出力を開始しました。しばらくお待ちください。', 'info', 3200);
+    showToast(dict().messages.webpStart(fpsLabel), 'info', 3200);
     if (!state.image && !(state.images && state.images.length)) {
-      setStatus('先に画像を読み込んでください。');
+      setStatus(dict().messages.needImage);
       return;
     }
 
@@ -2190,7 +2823,7 @@ state.image = state.images[0] || null;
     const webpQuality = setting.webpQuality ?? 0.82;
 
     setExportButtonsDisabled(true);
-    setStatus(`${fpsLabel ? `${fpsLabel} ` : ''}WebP生成中... 0 / ${frames} frames / ${getSizeLimitLabel()}`);
+    setStatus(dict().messages.webpProgressStart(fpsLabel, frames, getSizeLimitLabel()));
 
     const offscreen = document.createElement('canvas');
     offscreen.width = width;
@@ -2208,7 +2841,7 @@ state.image = state.images[0] || null;
         frameChunks.push(extractWebpImageChunks(bytes));
         delays.push(delay);
         if (i % 4 === 0 || i === frames - 1) {
-          setStatus(`${fpsLabel ? `${fpsLabel} ` : ''}WebP生成中... ${i + 1} / ${frames} frames`);
+          setStatus(dict().messages.webpProgress(fpsLabel, i + 1, frames));
           await new Promise(resolve => setTimeout(resolve, 0));
         }
       }
@@ -2225,10 +2858,10 @@ state.image = state.images[0] || null;
       els.downloadLink.classList.remove('is-disabled');
       els.downloadLink.setAttribute('aria-disabled', 'false');
       showExportSizeToast(fpsLabel ? `${fpsLabel} WebP` : 'WebP', blob);
-      setStatus(`${fpsLabel ? `${fpsLabel} ` : ''}WebP出力完了：${outputName} / ${outputSize} / ${effectLabels[state.effect]} / ${els.loopInput.checked ? 'ループ' : '非ループ'} / ${seconds}秒 / ${outputFps}FPS / ${setting.label} / ${sizeLabel}${sizeWarning ? ` / ${sizeWarning}` : ''}`);
+      setStatus(dict().messages.webpComplete(fpsLabel, outputName, outputSize, effectLabels[state.effect], els.loopInput.checked, seconds, outputFps, setting.label, sizeLabel, sizeWarning));
     } catch (error) {
       console.error(error);
-      setStatus('WebP出力中にエラーが発生しました。ブラウザがWebP書き出しに対応しているか確認し、5MB以内を目安に画像サイズ・画質・秒数を下げて試してください。');
+      setStatus(dict().messages.webpError);
     } finally {
       setExportButtonsDisabled(false);
     }
@@ -2237,18 +2870,67 @@ state.image = state.images[0] || null;
 
   els.loopInput.checked = getLoopDefault(state.effect);
   updateOutputFileName();
+
+  function hideFloatingTooltip() {
+    const tooltip = document.querySelector('.floating-tooltip');
+    if (tooltip) tooltip.remove();
+  }
+
+  function showFloatingTooltip(button) {
+    const text = button?.dataset.tooltip;
+    if (!text) return;
+
+    hideFloatingTooltip();
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'floating-tooltip';
+    tooltip.setAttribute('role', 'tooltip');
+    tooltip.textContent = text;
+    document.body.appendChild(tooltip);
+
+    const rect = button.getBoundingClientRect();
+    const tipRect = tooltip.getBoundingClientRect();
+    const margin = 12;
+    const preferredTop = rect.top - tipRect.height - 12;
+    const top = preferredTop >= margin
+      ? preferredTop
+      : Math.min(window.innerHeight - tipRect.height - margin, rect.bottom + 12);
+    const left = Math.min(
+      window.innerWidth - tipRect.width - margin,
+      Math.max(margin, rect.left + rect.width / 2 - tipRect.width / 2)
+    );
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${Math.max(margin, top)}px`;
+    window.requestAnimationFrame(() => tooltip.classList.add('is-visible'));
+  }
+
+  function bindFloatingTooltips() {
+    document.querySelectorAll('.has-tooltip').forEach(button => {
+      button.addEventListener('mouseenter', () => showFloatingTooltip(button));
+      button.addEventListener('focus', () => showFloatingTooltip(button));
+      button.addEventListener('mouseleave', hideFloatingTooltip);
+      button.addEventListener('blur', hideFloatingTooltip);
+    });
+    window.addEventListener('scroll', hideFloatingTooltip, true);
+    window.addEventListener('resize', hideFloatingTooltip);
+  }
+
+  applyLanguage(getDefaultLanguage(), { silent: true });
   updateQualityRecommendation();
   updateExportNoteVisibility();
 
   els.helpBtn.addEventListener('click', () => toggleDrawer(els.helpDrawer));
   els.shortcutBtn.addEventListener('click', () => toggleDrawer(els.shortcutDrawer));
+  els.langToggleBtn?.addEventListener('click', switchLanguage);
   els.drawerCloseButtons.forEach(button => button.addEventListener('click', closeDrawers));
+  bindFloatingTooltips();
   function syncThemeButton() {
     const isDark = els.body.classList.contains('is-dark');
     const thumb = els.themeBtn.querySelector('.theme-toggle-thumb');
     if (thumb) thumb.textContent = isDark ? '☾' : '☀️';
-    els.themeBtn.setAttribute('aria-label', isDark ? 'ナイトモード' : 'ライトモード');
-    els.themeBtn.setAttribute('title', isDark ? 'ナイトモード' : 'ライトモード');
+    els.themeBtn.setAttribute('aria-label', isDark ? dict().messages.darkMode : dict().messages.lightMode);
+    els.themeBtn.setAttribute('title', isDark ? dict().messages.darkMode : dict().messages.lightMode);
     els.themeBtn.setAttribute('aria-pressed', String(isDark));
   }
 
@@ -2323,7 +3005,7 @@ state.image = state.images[0] || null;
     event.preventDefault();
     const disabled = els.downloadLink.classList.contains('is-disabled') || !state.downloadUrl;
     if (disabled) {
-      showToast('出力ボタンでまず画像を書き出してください。', 'warning', 4200);
+      showToast(dict().messages.downloadFirst, 'warning', 4200);
       return;
     }
 
@@ -2333,7 +3015,7 @@ state.image = state.images[0] || null;
     document.body.appendChild(tempLink);
     tempLink.click();
     tempLink.remove();
-    showToast('ダウンロードが完了しました。', 'success', 3200);
+    showToast(dict().messages.downloadDone, 'success', 3200);
   });
 
   els.playBtn.addEventListener('click', togglePlay);
