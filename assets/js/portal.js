@@ -163,7 +163,7 @@ function updateDeveloperChrome() {
     return;
   }
 
-  document.title = `${t("dev.bannerTitle")} | ${t("meta.title")}`;
+  document.title = t("dev.pageTitle");
 }
 
 function updateStatusCounts() {
@@ -280,7 +280,7 @@ function createToolCard(tool, index) {
   const effectiveHref = getToolHref(tool);
   const isDisabled = !effectiveHref || (!isDeveloperMode && tool.status === "idea");
   const isDevelopment = tool.status === "production";
-  const tagName = isDisabled ? "article" : "a";
+  const tagName = isDeveloperMode || isDisabled ? "article" : "a";
 
   const toolName = getLocalizedValue(tool.name);
   const toolDescription = getLocalizedValue(tool.description);
@@ -312,8 +312,12 @@ function createToolCard(tool, index) {
     card.setAttribute("data-hover-message", developmentPreviewText);
   }
 
-  if (!isDisabled) {
+  if (!isDisabled && tagName === "a") {
     card.href = effectiveHref;
+    card.target = "_blank";
+    card.rel = "noopener noreferrer";
+    card.setAttribute("aria-label", `${t("toolAction.open")} ${toolName}`);
+  } else if (!isDisabled) {
     card.setAttribute("aria-label", `${t("toolAction.open")} ${toolName}`);
   } else {
     card.setAttribute("aria-label", `${toolName}, ${t("toolAction.comingSoon")}`);
@@ -347,9 +351,11 @@ function createToolCard(tool, index) {
 
     ${createDeveloperEditor(tool)}
 
-    <div class="open-text">
-      ${isDisabled ? escapeHtml(t("toolAction.comingSoon")) : escapeHtml(t("toolAction.open"))}
-    </div>
+    ${
+      !isDisabled && isDeveloperMode
+        ? `<a class="open-text" href="${escapeHtml(effectiveHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("toolAction.open"))}</a>`
+        : `<div class="open-text">${isDisabled ? escapeHtml(t("toolAction.comingSoon")) : escapeHtml(t("toolAction.open"))}</div>`
+    }
 
     ${
       isDevelopment
