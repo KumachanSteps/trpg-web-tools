@@ -1,12 +1,14 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.6";
+  const APP_VERSION = "v1.61";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
   const SYSTEM_OPTIONS = ["CoC 7版", "CoC 6版", "エモクロア", "マダミス"];
   const ROLE_OPTIONS = ["PL", "KP", "GM", "DL"];
+  const STATUS_OPTIONS = ["新規", "継続", "完結", "中止", "予定"];
+  const SURVIVAL_OPTIONS = ["", "生還", "ロスト", "全生還", "全ロスト", "継続", "不明"];
   const COLUMN_DEFAULT_WIDTHS = {
     fav: 72,
     date: 136,
@@ -59,15 +61,15 @@
   ];
 
   const optionalColumns = [
-    { key: "fav", label: "Fav", desc: "任意のお気に入りマーカー" },
+    { key: "fav", label: "お気に入り", desc: "任意のお気に入りマーカー" },
     { key: "ho", label: "HO", desc: "HO番号・PC番号" },
-    { key: "ending", label: "Ending", desc: "エンディング名・ルート" },
-    { key: "survival", label: "Lost / Survived", desc: "CoCの生還・ロスト結果" },
-    { key: "campaign", label: "Campaign", desc: "キャンペーン・シリーズ名" },
-    { key: "hashtag", label: "Hashtag", desc: "卓報告・検索用ハッシュタグ" },
-    { key: "sessionUrl", label: "Session URL", desc: "ログ、ふせったー、note、X投稿" },
-    { key: "scenarioUrl", label: "Scenario URL", desc: "Booth・公式ページ" },
-    { key: "kansouUrl", label: "Kansou URL", desc: "公開感想リンク" }
+    { key: "ending", label: "エンディング", desc: "エンディング名・ルート" },
+    { key: "survival", label: "生還 / ロスト", desc: "CoCの生還・ロスト結果" },
+    { key: "campaign", label: "キャンペーン", desc: "キャンペーン・シリーズ名" },
+    { key: "hashtag", label: "ハッシュタグ", desc: "卓報告・検索用ハッシュタグ" },
+    { key: "sessionUrl", label: "セッションURL", desc: "ログ、ふせったー、note、X投稿" },
+    { key: "scenarioUrl", label: "シナリオURL", desc: "Booth・公式ページ" },
+    { key: "kansouUrl", label: "感想URL", desc: "公開感想リンク" }
   ];
 
   let state = loadState();
@@ -90,7 +92,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","fieldPanel","closeFieldPanelBtn","optionalFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","textExportOutput","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","textExportOutput","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -100,10 +102,17 @@
     els.systemFilter.addEventListener("change", renderTable);
     els.roleFilter.addEventListener("change", renderTable);
     els.sortSelect.addEventListener("change", renderTable);
-    els.toggleFieldPanelBtn.addEventListener("click",()=>{ els.fieldPanel.hidden = !els.fieldPanel.hidden; });
+    els.toggleFieldPanelBtn.addEventListener("click",()=>toggleFieldPanel("add"));
+    els.toggleRemoveFieldPanelBtn.addEventListener("click",()=>toggleFieldPanel("remove"));
     els.closeFieldPanelBtn.addEventListener("click",()=>{ els.fieldPanel.hidden = true; });
+    els.closeRemoveFieldPanelBtn.addEventListener("click",()=>{ els.removeFieldPanel.hidden = true; });
+    document.querySelector(".table-scroll")?.addEventListener("scroll", updateReportStickyState);
+    document.getElementById("usageHelpBtn")?.addEventListener("click",()=>toggleHelpPanel("usagePanel"));
+    document.getElementById("closeUsageBtn")?.addEventListener("click",()=>toggleHelpPanel("usagePanel", false));
+    document.getElementById("themeToggleBtn")?.addEventListener("click",()=>document.body.classList.toggle("night-mode"));
+    document.addEventListener("keydown", event=>{ if(event.key === "Escape") closePopups(); });
     els.createCustomFieldBtn.addEventListener("click", createCustomField);
-    els.resetFieldsBtn.addEventListener("click",()=>{ state.columns = clone(defaultColumns); saveAndRender(); });
+    els.resetFieldsBtn.addEventListener("click",()=>{ state.columns = clone(defaultColumns); state.hiddenColumns = []; saveAndRender(); });
     els.importJsonBtn.addEventListener("click",()=>els.jsonFileInput.click());
     els.jsonFileInput.addEventListener("change", handleJsonImport);
     els.exportJsonBtn.addEventListener("click", exportJson);
@@ -116,6 +125,7 @@
     els.floatingAddBtn?.addEventListener("click",()=>openSessionDialog());
     els.sessionForm.addEventListener("submit", handleSessionSave);
     els.sessionForm.addEventListener("click", handleDateFieldClick);
+    els.sessionForm.addEventListener("change", handleSessionFormChange);
     document.getElementById("closeSessionDialogBtn")?.addEventListener("click",()=>els.sessionDialog.close());
     els.deleteSessionBtn.addEventListener("click", deleteEditingSession);
   }
@@ -124,6 +134,7 @@
     normalizeState();
     renderFilters();
     renderOptionalFields();
+    renderVisibleFields();
     renderStats();
     renderTable();
     renderDrawer();
@@ -131,9 +142,11 @@
 
   function normalizeState(){
     if(!Array.isArray(state.columns)) state.columns = clone(defaultColumns);
+    if(!Array.isArray(state.hiddenColumns)) state.hiddenColumns = [];
+    if(!Array.isArray(state.customColumns)) state.customColumns = [];
 
     state.columns = state.columns.map(col=>{
-      const normalized = col.key === "role" ? { ...col, label: "ロール" } : { ...col };
+      const normalized = { ...col, label: getColumnLabel(col) };
       normalized.width = clampColumnWidth(normalized.key, Number(normalized.width) || COLUMN_DEFAULT_WIDTHS[normalized.key] || 140);
       return normalized;
     });
@@ -213,7 +226,7 @@
 
   function renderOptionalFields(){
     els.optionalFieldsList.innerHTML = "";
-    optionalColumns.forEach(col=>{
+    getAllExtraColumns().forEach(col=>{
       const already = state.columns.some(c=>c.key===col.key);
       const button = document.createElement("button");
       button.type = "button";
@@ -222,16 +235,68 @@
       button.innerHTML = `<span><strong>${escapeHtml(col.label)}</strong><small>${escapeHtml(col.desc)}</small></span><span class="add-chip">${already ? "追加済" : "追加"}</span>`;
       button.addEventListener("click",()=>{
         if(already) return;
-        state.columns.splice(Math.max(state.columns.length-1,0),0,{ key: col.key, label: col.label, width: COLUMN_DEFAULT_WIDTHS[col.key] || 140 });
+        showColumn(col);
         saveAndRender();
       });
       els.optionalFieldsList.appendChild(button);
     });
   }
 
+  function renderVisibleFields(){
+    if(!els.visibleFieldsList) return;
+    els.visibleFieldsList.innerHTML = "";
+    state.columns.filter(col=>!col.locked).forEach(col=>{
+      const label = document.createElement("label");
+      label.className = "visible-field-check";
+      label.innerHTML = `<input type="checkbox" checked data-column-key="${escapeAttr(col.key)}" /><span>${escapeHtml(col.label)}</span>`;
+      label.querySelector("input").addEventListener("change", event=>{
+        if(!event.target.checked) hideColumn(col.key);
+      });
+      els.visibleFieldsList.appendChild(label);
+    });
+  }
+
+  function toggleFieldPanel(mode){
+    const add = mode === "add";
+    els.fieldPanel.hidden = !add ? true : !els.fieldPanel.hidden;
+    els.removeFieldPanel.hidden = add ? true : !els.removeFieldPanel.hidden;
+  }
+
+  function closePopups(){
+    if(els.fieldPanel) els.fieldPanel.hidden = true;
+    if(els.removeFieldPanel) els.removeFieldPanel.hidden = true;
+    toggleHelpPanel("usagePanel", false);
+    toggleHelpPanel("shortcutPanel", false);
+  }
+
+  function toggleHelpPanel(id, force){
+    const panel = document.getElementById(id);
+    if(!panel) return;
+    const willOpen = typeof force === "boolean" ? force : panel.hidden || !panel.classList.contains("open");
+    panel.hidden = !willOpen;
+    requestAnimationFrame(()=>panel.classList.toggle("open", willOpen));
+  }
+
+  function showColumn(col){
+    const reportIndex = state.columns.findIndex(c=>c.key === "report");
+    const next = { ...col, width: clampColumnWidth(col.key, Number(col.width) || COLUMN_DEFAULT_WIDTHS[col.key] || 140) };
+    if(reportIndex >= 0) state.columns.splice(reportIndex, 0, next);
+    else state.columns.push(next);
+    state.hiddenColumns = state.hiddenColumns.filter(c=>c.key !== col.key);
+  }
+
+  function hideColumn(key){
+    const index = state.columns.findIndex(col=>col.key === key && !col.locked);
+    if(index < 0) return;
+    const [removed] = state.columns.splice(index, 1);
+    if(!state.hiddenColumns.some(col=>col.key === key)) state.hiddenColumns.push(removed);
+    saveAndRender();
+  }
+
   function renderTable(){
     const rows = getFilteredRows();
     renderTableHead();
+    requestAnimationFrame(updateReportStickyState);
     els.tableBody.innerHTML = "";
     rows.forEach(row=>{
       const tr = document.createElement("tr");
@@ -301,7 +366,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "report-button";
-      btn.textContent = "卓報告ジェネレーターへ送る";
+      btn.innerHTML = `<span class="report-button-arrow" aria-hidden="true">➜</span><span class="report-button-full">卓報告ジェネレーターへ送る</span>`;
       btn.addEventListener("click",event=>{ event.stopPropagation(); openReportGenerator(row); });
       return btn;
     }
@@ -371,7 +436,7 @@
     els.deleteSessionBtn.hidden = !id;
     els.sessionFormFields.innerHTML = "";
 
-    const columns = state.columns.filter(c=>c.key !== "report");
+    const columns = getDialogColumns();
     const groups = [
       { title: "基本情報", keys: ["date", "scenario", "system", "role", "status", "time"] },
       { title: "参加者", keys: ["gm", "players", "pc"] },
@@ -422,6 +487,14 @@
     }
   }
 
+  function handleSessionFormChange(event){
+    if(event.target.matches("[data-system-select]")){
+      const input = event.target.parentElement.querySelector("[data-system-custom]");
+      if(input) input.hidden = event.target.value !== "__custom";
+      if(input && !input.hidden) input.focus();
+    }
+  }
+
   function updateDateRemoveButtons(container){
     const rows = [...container.querySelectorAll(".date-input-row")];
     rows.forEach(row=>{
@@ -434,7 +507,11 @@
     event.preventDefault();
     const form = new FormData(els.sessionForm);
     const row = editingId ? state.rows.find(r=>r.id===editingId) : { id: cryptoId() };
-    state.columns.filter(c=>c.key !== "report" && c.key !== "date").forEach(col=>{ row[col.key] = form.get(col.key) || ""; });
+    getDialogColumns().filter(c=>c.key !== "date").forEach(col=>{
+      if(col.key === "system") row.system = form.get("system") === "__custom" ? (form.get("systemCustom") || "") : (form.get("system") || "");
+      else if(col.key === "fav") row.fav = form.get("fav") ? "★" : "";
+      else row[col.key] = form.get(col.key) || "";
+    });
     const dates = form.getAll("dates").map(v=>String(v || "").trim()).filter(Boolean).sort();
     row.dates = unique(dates);
     row.date = row.dates[0] || "";
@@ -470,7 +547,9 @@
     const label = prompt("追加する項目名を入力してください");
     if(!label) return;
     const key = `custom_${Date.now()}`;
-    state.columns.splice(Math.max(state.columns.length-1,0),0,{key,label,width:COLUMN_DEFAULT_WIDTHS[key] || 140});
+    const column = {key,label,width:COLUMN_DEFAULT_WIDTHS[key] || 140, custom:true};
+    state.customColumns.push(column);
+    state.columns.splice(Math.max(state.columns.length-1,0),0,column);
     saveAndRender();
   }
 
@@ -808,7 +887,7 @@
     const rows = getFilteredRows();
     let output = "";
     if(mode === "date") output = rows.map((r,i)=>`${i+1}. ${r.scenario} / ${r.system} / ${r.role} / ${getDateDisplay(r)}`).join("\n");
-    if(mode === "system") output = groupedText(rows,"system");
+    if(mode === "system") output = groupedSystemPlayerCountText(rows);
     if(mode === "gm") output = groupedText(rows,"gm");
     if(mode === "players") output = groupedText(rows,"players");
     els.textExportOutput.value = output;
@@ -822,6 +901,59 @@
       groups[group].push(row);
     });
     return Object.entries(groups).map(([group,items])=>`【${group}】\n${items.map((r,i)=>`${i+1}. ${r.scenario}`).join("\n")}`).join("\n\n");
+  }
+
+  function groupedSystemPlayerCountText(rows){
+    const systems = groupRows(rows, "system");
+    return Object.entries(systems).map(([system, systemRows])=>{
+      const counts = {};
+      systemRows.forEach(row=>{
+        const count = Math.max(splitPeople(row.players).length, 1);
+        const key = `${count}PL`;
+        if(!counts[key]) counts[key] = [];
+        counts[key].push(row);
+      });
+      const body = Object.entries(counts).sort((a,b)=>parseInt(a[0]) - parseInt(b[0])).map(([count, items])=>`◼︎${count}-------\n${items.map((r,i)=>`${i+1}. ${r.scenario}`).join("\n")}`).join("\n");
+      return `【${system}】\n${body}`;
+    }).join("\n\n");
+  }
+
+  function groupRows(rows,key){
+    const groups = {};
+    rows.forEach(row=>{
+      const group = row[key] || "未設定";
+      if(!groups[group]) groups[group] = [];
+      groups[group].push(row);
+    });
+    return groups;
+  }
+
+  function getAllExtraColumns(){
+    const map = new Map();
+    [...optionalColumns, ...(state.customColumns || []), ...(state.hiddenColumns || []).filter(col=>col.custom)].forEach(col=>map.set(col.key, col));
+    return [...map.values()];
+  }
+
+  function getDialogColumns(){
+    const map = new Map();
+    defaultColumns.filter(col=>col.key !== "report").forEach(col=>map.set(col.key, col));
+    getAllExtraColumns().forEach(col=>map.set(col.key, col));
+    state.columns.filter(col=>!col.locked).forEach(col=>map.set(col.key, col));
+    return [...map.values()];
+  }
+
+  function getColumnLabel(col){
+    const defaultColumn = defaultColumns.find(item=>item.key === col.key);
+    const extraColumn = optionalColumns.find(item=>item.key === col.key);
+    return extraColumn?.label || defaultColumn?.label || col.label || col.key;
+  }
+
+  function isUrlColumn(key){ return /Url$/.test(String(key || "")); }
+
+  function updateReportStickyState(){
+    const scroll = document.querySelector(".table-scroll");
+    if(!scroll) return;
+    scroll.classList.toggle("is-scrolled-end", scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth - 8);
   }
 
   function saveAndRender(){ saveState(); renderAll(); }
@@ -877,15 +1009,17 @@
 
   function fieldInputMarkup(col, row){
     const value = row[col.key] || "";
-    if(col.key === "date"){
-      return dateInputsMarkup(row);
-    }
+    if(col.key === "date") return dateInputsMarkup(row);
     if(col.key === "system"){
-      return `<select name="${escapeAttr(col.key)}">${SYSTEM_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
+      const isKnown = SYSTEM_OPTIONS.includes(value);
+      const options = SYSTEM_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("");
+      return `<select name="system" data-system-select><option value="__custom" ${!isKnown && value ? "selected" : ""}>自由入力</option>${options}</select><input name="systemCustom" data-system-custom value="${escapeAttr(isKnown ? "" : value)}" placeholder="システム名を入力" ${isKnown || !value ? "hidden" : ""} />`;
     }
-    if(col.key === "role"){
-      return `<select name="${escapeAttr(col.key)}">${ROLE_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
-    }
+    if(col.key === "role") return `<select name="${escapeAttr(col.key)}">${ROLE_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
+    if(col.key === "status") return `<select name="status">${STATUS_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
+    if(col.key === "survival") return `<select name="survival">${SURVIVAL_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option || "未設定")}</option>`).join("")}</select>`;
+    if(col.key === "fav") return `<label class="fav-input"><input type="checkbox" name="fav" value="★" ${value ? "checked" : ""} /> <span>☆ / ★</span></label>`;
+    if(isUrlColumn(col.key)) return `<input type="url" name="${escapeAttr(col.key)}" value="${escapeAttr(value)}" placeholder="https://" />`;
     return `<input name="${escapeAttr(col.key)}" value="${escapeAttr(value)}" />`;
   }
 
