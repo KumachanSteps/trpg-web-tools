@@ -21,7 +21,7 @@
     status: 120,
     time: 84,
     note: 250,
-    report: 112
+    report: 184
   };
   const COLUMN_MIN_WIDTHS = {
     fav: 56,
@@ -35,7 +35,7 @@
     status: 108,
     time: 72,
     note: 160,
-    report: 96
+    report: 184
   };
   const TABLE_TEXT_LIMITS = { scenario: 30, players: 15, pc: 15, note: 20 };
   const TABLE_TEXT_LIMIT_MAX = { scenario: 80, players: 60, pc: 60, note: 80 };
@@ -906,16 +906,44 @@
   function groupedSystemPlayerCountText(rows){
     const systems = groupRows(rows, "system");
     return Object.entries(systems).map(([system, systemRows])=>{
+      const gmRows = uniqueScenarioRows(systemRows.filter(row=>normalizeRoleGroup(row.role) === "GM"));
+      const plRows = uniqueScenarioRows(systemRows.filter(row=>normalizeRoleGroup(row.role) !== "GM"));
+      const sections = [];
+
+      if(gmRows.length){
+        sections.push(`◼︎GMしたシナリオ\n${formatScenarioList(gmRows)}`);
+      }
+
       const counts = {};
-      systemRows.forEach(row=>{
+      plRows.forEach(row=>{
         const count = Math.max(splitPeople(row.players).length, 1);
         const key = `${count}PL`;
         if(!counts[key]) counts[key] = [];
         counts[key].push(row);
       });
-      const body = Object.entries(counts).sort((a,b)=>parseInt(a[0]) - parseInt(b[0])).map(([count, items])=>`◼︎${count}-------\n${items.map((r,i)=>`${i+1}. ${r.scenario}`).join("\n")}`).join("\n");
-      return `【${system}】\n${body}`;
+
+      Object.entries(counts)
+        .sort((a,b)=>parseInt(a[0], 10) - parseInt(b[0], 10))
+        .forEach(([count, items])=>{
+          sections.push(`◼︎${count}-------\n${formatScenarioList(items)}`);
+        });
+
+      return `【${system}】\n${sections.join("\n\n")}`;
     }).join("\n\n");
+  }
+
+  function uniqueScenarioRows(rows){
+    const seen = new Set();
+    return rows.filter(row=>{
+      const key = normalizeScenarioForCount(row.scenario);
+      if(!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function formatScenarioList(rows){
+    return rows.map((row,index)=>`${index + 1}. ${normalizeScenarioForCount(row.scenario) || row.scenario || "未設定"}`).join("\n");
   }
 
   function groupRows(rows,key){
