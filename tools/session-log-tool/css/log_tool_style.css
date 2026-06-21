@@ -824,3 +824,97 @@ body.is-resizing-column{
     box-shadow:inset 3px 0 0 rgba(56,189,248,.85), 0 0 18px rgba(56,189,248,.18);
   }
 }
+
+/* v1.61 header/table control refinements */
+.header-version{
+  margin:2px 4px 0 0;
+  align-self:flex-end;
+  color:var(--text-muted);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.table-import-actions .header-button{min-height:32px;padding:8px 12px;font-size:12px}
+.drag-tip-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 20px;
+  border-bottom:1px solid #c7d2fe;
+  background:#eef2ff;
+}
+.drag-tip-row .drag-tip{padding:0;border:0;background:transparent;flex:1;min-width:240px}
+.drag-tip-row .field-panel-wrap{display:flex;gap:6px;align-items:center}
+.field-panel{width:min(360px,calc(100vw - 32px));max-height:min(560px,calc(100vh - 160px));overflow:auto}
+.field-panel-head p{max-width:260px;white-space:normal;overflow-wrap:anywhere}
+.optional-fields-list{grid-template-columns:1fr 1fr;gap:6px}
+.optional-field-button{padding:8px;border-radius:13px;align-items:center}
+.optional-field-button strong{font-size:12px}.optional-field-button small{font-size:10.5px;line-height:1.25}.add-chip{font-size:10px;padding:3px 6px;white-space:nowrap}
+.visible-fields-list{display:grid;gap:6px;margin-top:12px}.visible-field-check{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #eef2f7;border-radius:13px;background:#f8fafc;font-size:12px;font-weight:850;color:#334155}.visible-field-check input{width:auto}
+.cell-report,.column-report{position:sticky!important;right:0;z-index:8;background:#fff;box-shadow:-10px 0 18px rgba(15,23,42,.08)}
+.column-report{z-index:12;background:#f8fafc}.selected-row .cell-report{background:#eef2ff}.report-button{display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:34px}.report-button-arrow{font-size:18px;line-height:1}.report-button-full{display:none}.table-scroll.is-scrolled-end .report-button{min-width:160px}.table-scroll.is-scrolled-end .report-button-arrow{display:none}.table-scroll.is-scrolled-end .report-button-full{display:inline}
+.dialog-fieldset-grid [data-system-custom]{margin-top:6px}.fav-input{display:flex!important;align-items:center;gap:8px;background:#f8fafc;border:1px solid var(--border-soft);border-radius:14px;padding:10px}.fav-input input{width:auto}
+body.night-mode{--bg-main:#0f172a;--bg-panel:rgba(15,23,42,.92);--bg-panel-soft:rgba(30,41,59,.88);--border-soft:rgba(148,163,184,.24);--text-main:#e2e8f0;--text-muted:#94a3b8;--text-soft:#cbd5e1;color:var(--text-main)}
+body.night-mode .table-panel,body.night-mode .field-panel,body.night-mode .session-dialog,body.night-mode .kansou-drawer,body.night-mode .export-card{background:#111827;color:var(--text-main)}
+body.night-mode input,body.night-mode select,body.night-mode textarea,body.night-mode .mini-button,body.night-mode .header-button.plain{background:#1f2937;color:#e2e8f0;border-color:rgba(148,163,184,.28)}
+body.night-mode th,body.night-mode .column-report{background:#1f2937}body.night-mode .cell-report{background:#111827}
+@media(max-width:720px){.drag-tip-row{align-items:flex-start;flex-direction:column}.optional-fields-list{grid-template-columns:1fr}.header-version{align-self:flex-start}}
+
+/* v1.61 follow-up: readable header copy and stable report affordance */
+.site-description,
+.table-header p{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.site-description{
+  max-width:min(980px, 100%);
+  margin-top:10px;
+}
+.header-version{
+  margin-top:18px;
+  opacity:.34;
+  color:var(--text-muted);
+  font-size:10.5px;
+  font-weight:750;
+}
+.table-scroll{
+  overflow-x:scroll;
+  overflow-y:auto;
+  padding-bottom:8px;
+  overscroll-behavior-x:contain;
+  overflow-anchor:none;
+  scrollbar-gutter:stable both-edges;
+  scrollbar-width:thin;
+  scrollbar-color:#c7d2fe #eef2ff;
+}
+.table-scroll::-webkit-scrollbar{height:12px;width:12px}
+.table-scroll::-webkit-scrollbar-track{background:#eef2ff;border-radius:999px}
+.table-scroll::-webkit-scrollbar-thumb{background:#c7d2fe;border-radius:999px;border:3px solid #eef2ff}
+.cell-report,.column-report{
+  text-align:center;
+  vertical-align:middle;
+}
+.report-button{
+  min-width:32px;
+  min-height:28px;
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:11px;
+  line-height:1;
+  box-shadow:0 6px 14px rgba(15,23,42,.14);
+}
+.report-button-arrow{font-size:14px}
+.table-scroll.is-scrolled-end .report-button{
+  width:100%;
+  min-width:0;
+  padding:6px 8px;
+}
+.table-scroll.is-scrolled-end .report-button-full{
+  display:inline-block;
+  width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
