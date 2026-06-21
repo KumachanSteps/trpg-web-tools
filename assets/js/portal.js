@@ -17,6 +17,7 @@ const modeText = document.getElementById("modeText");
 const twinkleStarsContainer = document.getElementById("twinkleStars");
 
 const themeStorageKey = "trpgPortalThemeV2";
+const isDeveloperMode = document.body.dataset.portalMode === "developer";
 
 const twinkleStars = [
   { top: "8%", left: "12%", size: 3, delay: "0s", duration: "3.8s" },
@@ -96,6 +97,14 @@ function createTwinkleStars() {
   twinkleStarsContainer.dataset.ready = "true";
 }
 
+function updateDeveloperChrome() {
+  if (!isDeveloperMode) {
+    return;
+  }
+
+  document.title = `${t("dev.bannerTitle")} | ${t("meta.title")}`;
+}
+
 function updateStatusCounts() {
   const counts = tools.reduce((acc, tool) => {
     acc[tool.status] = (acc[tool.status] || 0) + 1;
@@ -107,21 +116,45 @@ function updateStatusCounts() {
   ideaCount.textContent = counts.idea || 0;
 }
 
+function isDevTool(tool) {
+  return tool.status === "idea" || Boolean(tool.devHref) || Boolean(tool.devStage);
+}
+
+function getToolHref(tool) {
+  if (isDeveloperMode && tool.devHref) {
+    return tool.devHref;
+  }
+
+  return tool.href || "";
+}
+
+function getDevStageLabel(stage) {
+  return stage ? t(`dev.stages.${stage}`) : "";
+}
+
 function getFilteredTools() {
   const normalizedQuery = currentQuery.trim().toLowerCase();
 
   return tools.filter((tool) => {
+    const badges = Array.isArray(tool.badges) ? tool.badges : [];
+    const legacyKeywords = Array.isArray(tool.legacyKeywords) ? tool.legacyKeywords : [];
     const matchesCategory =
-      currentCategory === "all" || tool.category === currentCategory;
+      currentCategory === "all" ||
+      (currentCategory === "devOnly" && isDeveloperMode && isDevTool(tool)) ||
+      badges.includes(currentCategory);
 
     const searchableText = [
       getLocalizedValue(tool.name),
       getLocalizedValue(tool.description),
-      t(`categories.${tool.category}`),
+      getLocalizedValue(tool.devNote),
+      getDevStageLabel(tool.devStage),
+      ...badges.map((badge) => t(`categories.${badge}`)),
+      ...legacyKeywords,
       t(`status.${tool.status}`),
       tool.id,
       tool.category,
       tool.status,
+      tool.devStage,
     ]
       .join(" ")
       .toLowerCase();
@@ -135,15 +168,18 @@ function getFilteredTools() {
 
 function createToolCard(tool, index) {
   const meta = statusMeta[tool.status] || statusMeta.idea;
-  const isDisabled = tool.status === "idea" || !tool.href;
+  const effectiveHref = getToolHref(tool);
+  const isDisabled = !effectiveHref || (!isDeveloperMode && tool.status === "idea");
   const isDevelopment = tool.status === "production";
   const tagName = isDisabled ? "article" : "a";
 
   const toolName = getLocalizedValue(tool.name);
   const toolDescription = getLocalizedValue(tool.description);
-  const toolCategory = t(`categories.${tool.category}`);
+  const badges = Array.isArray(tool.badges) ? tool.badges : [];
   const statusLabel = t(`status.${tool.status}`);
   const developmentPreviewText = t("toolAction.developmentPreview");
+  const devStageLabel = isDeveloperMode ? getDevStageLabel(tool.devStage) : "";
+  const devNote = isDeveloperMode ? getLocalizedValue(tool.devNote) : "";
 
   const card = document.createElement(tagName);
   card.className = [
@@ -162,7 +198,7 @@ function createToolCard(tool, index) {
   }
 
   if (!isDisabled) {
-    card.href = tool.href;
+    card.href = effectiveHref;
     card.setAttribute("aria-label", `${t("toolAction.open")} ${toolName}`);
   } else {
     card.setAttribute("aria-label", `${toolName}, ${t("toolAction.comingSoon")}`);
@@ -177,9 +213,22 @@ function createToolCard(tool, index) {
       </span>
     </div>
 
-    <p class="tool-category">${escapeHtml(toolCategory)}</p>
+    <div class="tool-badges" aria-label="${escapeHtml(t("categories.badgeLabel"))}">
+      ${badges
+        .map((badge) => `<span class="tool-badge">${escapeHtml(t(`categories.${badge}`))}</span>`)
+        .join("")}
+    </div>
     <h2>${escapeHtml(toolName)}</h2>
     <p class="tool-description">${escapeHtml(toolDescription)}</p>
+
+    ${
+      isDeveloperMode && (devStageLabel || devNote)
+        ? `<div class="dev-tool-meta">
+            ${devStageLabel ? `<span class="dev-stage-pill">${escapeHtml(t("dev.stageLabel"))}: ${escapeHtml(devStageLabel)}</span>` : ""}
+            ${devNote ? `<p><strong>${escapeHtml(t("dev.memoLabel"))}:</strong> ${escapeHtml(devNote)}</p>` : ""}
+          </div>`
+        : ""
+    }
 
     <div class="open-text">
       ${isDisabled ? escapeHtml(t("toolAction.comingSoon")) : escapeHtml(t("toolAction.open"))}
@@ -281,6 +330,7 @@ modeToggle.addEventListener("click", () => {
 
 if (window.TRPGLanguage && typeof window.TRPGLanguage.onChange === "function") {
   window.TRPGLanguage.onChange(() => {
+    updateDeveloperChrome();
     updateStatusCounts();
     updateCategoryButtons();
     setMode(getCurrentMode());
@@ -289,6 +339,7 @@ if (window.TRPGLanguage && typeof window.TRPGLanguage.onChange === "function") {
 }
 
 createTwinkleStars();
+updateDeveloperChrome();
 updateStatusCounts();
 updateCategoryButtons();
 initMode();
