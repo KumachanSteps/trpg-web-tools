@@ -13,17 +13,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>TRPG WEBツール観測所</title>
+  <title>TRPG WEBツール観測所（開発ページ）</title>
   <meta
     name="description"
-    content="TRPGをもっと楽しく手軽に。セッション準備・ログ解析・卓報告・シナリオ整理を支援するWebツール観測所です。"
+    content="TRPG WEBツール観測所の開発者用プレビューポータルです。"
   />
+  <meta name="robots" content="noindex, nofollow" />
 
   <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="./assets/css/portal.css?v=20260621-03" />
 </head>
 
-<body class="theme-dawn" data-default-theme="dawn">
+<body class="theme-dawn" data-default-theme="dawn" data-portal-mode="developer">
   <div class="background-space" aria-hidden="true">
     <div class="stars"></div>
     <div id="twinkleStars" class="twinkle-stars"></div>
@@ -58,6 +59,7 @@
       </a>
 
       <div class="topbar-actions">
+        <a class="header-link-button" href="https://kumachansteps.github.io/trpg-web-tools/">TRPG WEBツール観測所（公開ページ）</a>
         <a class="header-link-button" href="./contact.html" data-i18n="nav.qa">Q&amp;A</a>
 
         <a
@@ -106,8 +108,18 @@
 
         <h1 class="hero-title">
           <span data-i18n="hero.title">TRPG WEBツール観測所</span>
-          <span class="portal-version">v1.01 2026.06.20</span>
+          <span class="portal-version">DEV v1.01 2026.06.20</span>
         </h1>
+
+        <div class="developer-banner" role="note">
+          <p class="developer-banner-title" data-i18n="dev.bannerTitle">Developer Preview</p>
+          <p data-i18n="dev.bannerText">未公開・構想段階のツールも起動できる開発者用ポータルです。仕様変更や削除の可能性があります。</p>
+          <div class="developer-actions" aria-label="Developer tools actions">
+            <button id="devSaveButton" class="developer-action-button" type="button" data-i18n="dev.saveDraft">下書きを保存</button>
+            <button id="devExportButton" class="developer-action-button" type="button" data-i18n="dev.exportJson">公開反映用JSONをエクスポート</button>
+            <button id="devResetButton" class="developer-action-button" type="button" data-i18n="dev.resetDraft">下書きをリセット</button>
+          </div>
+        </div>
 
         <p class="lead" data-i18n="hero.lead">ここはTRPGをもっと楽しく手軽に！セッション準備・ログ解析・卓報告・シナリオ整理を支援するツールサイトです。星図のように並ぶツールの中から、ぜひ目的に合うものをお使いください✨</p>
       </div>
@@ -154,6 +166,7 @@
           <button class="category-button" type="button" data-category="postSession" data-i18n="categories.postSession" aria-pressed="false">卓後</button>
           <button class="category-button" type="button" data-category="gmSupport" data-i18n="categories.gmSupport" aria-pressed="false">GM支援</button>
           <button class="category-button" type="button" data-category="plSupport" data-i18n="categories.plSupport" aria-pressed="false">PL支援</button>
+          <button class="category-button dev-only-filter" type="button" data-category="devOnly" data-i18n="dev.filter" aria-pressed="false">DEVのみ</button>
         </div>
       </div>
     </section>
