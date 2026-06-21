@@ -2,6 +2,7 @@
   'use strict';
 
   const $ = id => document.getElementById(id);
+  const REPORT_PENDING_IMPORT_KEY = 'trpgWebTools.sessionReportGenerator.pendingImport';
 
   let isResetting = false;
   let lastPreviewSelection = { start: 0, end: 0 };
@@ -334,6 +335,7 @@
       result: $('resultText').value.trim() || (useSample ? 'END A 両生還' : ''),
       date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder || getTodayString() : ''),
       hashtags: $('hashtagText').value.trim(),
+      memo: $('memoText')?.value.trim() || '',
       gms,
       players
     };
@@ -654,6 +656,108 @@
     ['click', 'keyup', 'select', 'mouseup'].forEach(eventName => preview.addEventListener(eventName, savePreviewSelection));
   }
 
+  function readPendingReportImport() {
+    const raw = localStorage.getItem(REPORT_PENDING_IMPORT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  }
+
+  function clearPendingReportImport() {
+    localStorage.removeItem(REPORT_PENDING_IMPORT_KEY);
+  }
+
+  function handlePendingReportImport() {
+    let payload = null;
+    try {
+      payload = readPendingReportImport();
+    } catch (error) {
+      console.error(error);
+      if (confirm('卓ログトラッカーからの連携データを読み込めませんでした。\n破損している可能性があります。削除しますか？')) {
+        clearPendingReportImport();
+      }
+      return;
+    }
+    if (!payload?.items?.length) return;
+
+    const action = prompt([
+      '卓ログトラッカーから卓報告データを読み込みますか？',
+      '',
+      'シナリオ名、日付、GM、PL、PC情報をフォームに反映します。',
+      '反映後も内容は自由に編集できます。',
+      '',
+      '「読み込む」「あとで」「破棄」のいずれかを入力してください。'
+    ].join('\n'), '読み込む');
+
+    if (action === null || action === 'あとで') return;
+    if (action === '破棄') {
+      clearPendingReportImport();
+      return;
+    }
+    if (action !== '読み込む') return;
+
+    applyReportImportItems(payload.items);
+    clearPendingReportImport();
+    alert('卓ログトラッカーから読み込みました');
+  }
+
+  function applyReportImportItems(items) {
+    const item = Array.isArray(items) ? items[0] : items;
+    if (!item) return;
+    applyImportedSystem(item.system);
+    $('scenarioTitle').value = item.scenario || '';
+    $('dateText').value = item.latestDate || (Array.isArray(item.dates) ? item.dates.join(' / ') : '');
+    $('hashtagText').value = formatImportedHashtags(item.hashtags);
+    if ($('memoText')) $('memoText').value = item.memo || '';
+
+    $('gmContainer').innerHTML = '';
+    addGM(item.gm || '', inferGmRole(item.system));
+
+    $('playerContainer').innerHTML = '';
+    const players = Array.isArray(item.players) && item.players.length ? item.players : [{ pl: '', pc: '' }];
+    players.forEach(player => addPlayer(player.pl || '', player.pc || ''));
+
+    dispatchFormRefresh();
+    renderPreview(null, true);
+  }
+
+  function applyImportedSystem(systemName) {
+    const name = String(systemName || '').trim();
+    const aliases = {
+      'CoC 6版': 'coc6',
+      'CoC6': 'coc6',
+      'CoC 7版': 'coc7',
+      'CoC7': 'coc7',
+      '新クトゥルフ神話TRPG': 'new_coc',
+      'エモクロア': 'emoklore_ja',
+      'エモクロアTRPG': 'emoklore_ja',
+      'マダミス': 'madamisu',
+      'マーダーミステリー': 'madamisu'
+    };
+    const matched = aliases[name] || Object.entries(SYSTEM_NAMES).find(([, label]) => label === name || label.toLowerCase() === name.toLowerCase())?.[0];
+    $('systemSelect').value = matched || 'custom';
+    $('customSystemText').value = matched ? '' : name;
+    updateCustomSystemInput();
+  }
+
+  function formatImportedHashtags(hashtags) {
+    if (Array.isArray(hashtags)) return hashtags.map(tag => String(tag || '').trim()).filter(Boolean).map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ');
+    return String(hashtags || '').trim();
+  }
+
+  function inferGmRole(systemName) {
+    const text = String(systemName || '');
+    if (text.includes('エモクロア')) return 'DL';
+    if (text.includes('クトゥルフ') || /coc/i.test(text)) return 'KP';
+    return 'GM';
+  }
+
+  function dispatchFormRefresh() {
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
   function init() {
     populateReportStyles();
     populateFontVariants();
@@ -666,6 +770,7 @@
     bindPreviewResizer();
     bindEvents();
     renderPreview();
+    handlePendingReportImport();
   }
 
   document.addEventListener('DOMContentLoaded', init);
