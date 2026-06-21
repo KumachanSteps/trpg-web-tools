@@ -1,0 +1,1 @@
+(function(){window.CharaLibraShortcuts={init(api){document.addEventListener("keydown",e=>{if(e.key==="Escape")api.escape();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();api.save();}if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==="t"){e.preventDefault();api.theme();}});}};})();

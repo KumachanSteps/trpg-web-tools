@@ -404,18 +404,18 @@ window.TRPG_PORTAL_I18N = {
       },
     },
     {
-      id: "character-library-tool",
-      icon: "🧑‍🚀",
-      status: "production",
+      id: "chara-libra-tool",
+      icon: "⚖️",
+      status: "available",
       category: "characterUtility",
-      href: "./tools/character-library-tool/",
+      href: "./tools/chara-libra-tool/",
       name: {
-        ja: "キャラクターLibrary",
-        en: "Character Library",
+        ja: "キャラクタ星間図",
+        en: "Character Star Map",
       },
       description: {
-        ja: "TRPGキャラクターを一覧化し、立ち絵・プロフィール・技能・メモなどを整理して管理するためのキャラクターアーカイブツールです。",
-        en: "A character archive tool for organizing TRPG characters with portraits, profiles, skills, notes, and related information.",
+        ja: "CCFOLIA駒JSONを取り込み、キャラクター情報・MEMO・チャットパレットを管理して再出力するキャラクター管理アーカイブです。",
+        en: "A character archive for importing CCFOLIA token JSON, managing notes and chat palettes, and exporting updated token data.",
       },
     },
     {
