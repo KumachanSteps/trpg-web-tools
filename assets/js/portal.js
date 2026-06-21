@@ -1,5 +1,5 @@
 const portalI18n = window.TRPG_PORTAL_I18N;
-const tools = portalI18n.tools;
+let tools = Array.isArray(portalI18n.tools) ? portalI18n.tools : [];
 const statusMeta = portalI18n.statuses;
 
 let currentCategory = "all";
@@ -17,6 +17,12 @@ const modeText = document.getElementById("modeText");
 const twinkleStarsContainer = document.getElementById("twinkleStars");
 
 const themeStorageKey = "trpgPortalThemeV2";
+const devToolsStorageKey = "trpgPortalDevToolsDraftV1";
+const toolsDataUrl = "./assets/data/tools.json";
+const isDeveloperMode = document.body.dataset.portalMode === "developer";
+const devSaveButton = document.getElementById("devSaveButton");
+const devExportButton = document.getElementById("devExportButton");
+const devResetButton = document.getElementById("devResetButton");
 
 const twinkleStars = [
   { top: "8%", left: "12%", size: 3, delay: "0s", duration: "3.8s" },
@@ -76,6 +82,62 @@ function getLocalizedValue(value) {
   return value || "";
 }
 
+async function loadToolsData() {
+  try {
+    const response = await fetch(toolsDataUrl, { cache: "no-store" });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load ${toolsDataUrl}: ${response.status}`);
+    }
+
+    tools = await response.json();
+  } catch (error) {
+    console.warn(error);
+    tools = Array.isArray(portalI18n.tools) ? portalI18n.tools : [];
+  }
+
+  if (isDeveloperMode) {
+    loadDeveloperDraft();
+  }
+}
+
+function loadDeveloperDraft() {
+  const savedDraft = localStorage.getItem(devToolsStorageKey);
+
+  if (!savedDraft) {
+    return;
+  }
+
+  try {
+    const draftTools = JSON.parse(savedDraft);
+
+    if (Array.isArray(draftTools)) {
+      tools = draftTools;
+    }
+  } catch (error) {
+    console.warn("Failed to load developer tools draft", error);
+  }
+}
+
+function saveDeveloperDraft() {
+  if (!isDeveloperMode) {
+    return;
+  }
+
+  localStorage.setItem(devToolsStorageKey, JSON.stringify(tools, null, 2));
+}
+
+function downloadDeveloperToolsJson() {
+  const json = JSON.stringify(tools, null, 2) + "\n";
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "tools.json";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function createTwinkleStars() {
   if (!twinkleStarsContainer || twinkleStarsContainer.dataset.ready === "true") {
     return;
@@ -96,6 +158,14 @@ function createTwinkleStars() {
   twinkleStarsContainer.dataset.ready = "true";
 }
 
+function updateDeveloperChrome() {
+  if (!isDeveloperMode) {
+    return;
+  }
+
+  document.title = `${t("dev.bannerTitle")} | ${t("meta.title")}`;
+}
+
 function updateStatusCounts() {
   const counts = tools.reduce((acc, tool) => {
     acc[tool.status] = (acc[tool.status] || 0) + 1;
@@ -107,21 +177,45 @@ function updateStatusCounts() {
   ideaCount.textContent = counts.idea || 0;
 }
 
+function isDevTool(tool) {
+  return tool.status === "idea" || Boolean(tool.devHref) || Boolean(tool.devStage);
+}
+
+function getToolHref(tool) {
+  if (isDeveloperMode && tool.devHref) {
+    return tool.devHref;
+  }
+
+  return tool.href || "";
+}
+
+function getDevStageLabel(stage) {
+  return stage ? t(`dev.stages.${stage}`) : "";
+}
+
 function getFilteredTools() {
   const normalizedQuery = currentQuery.trim().toLowerCase();
 
   return tools.filter((tool) => {
+    const badges = Array.isArray(tool.badges) ? tool.badges : [];
+    const legacyKeywords = Array.isArray(tool.legacyKeywords) ? tool.legacyKeywords : [];
     const matchesCategory =
-      currentCategory === "all" || tool.category === currentCategory;
+      currentCategory === "all" ||
+      (currentCategory === "devOnly" && isDeveloperMode && isDevTool(tool)) ||
+      badges.includes(currentCategory);
 
     const searchableText = [
       getLocalizedValue(tool.name),
       getLocalizedValue(tool.description),
-      t(`categories.${tool.category}`),
+      getLocalizedValue(tool.devNote),
+      getDevStageLabel(tool.devStage),
+      ...badges.map((badge) => t(`categories.${badge}`)),
+      ...legacyKeywords,
       t(`status.${tool.status}`),
       tool.id,
       tool.category,
       tool.status,
+      tool.devStage,
     ]
       .join(" ")
       .toLowerCase();
@@ -133,17 +227,68 @@ function getFilteredTools() {
   });
 }
 
+function updateToolById(toolId, updater) {
+  const toolIndex = tools.findIndex((tool) => tool.id === toolId);
+
+  if (toolIndex === -1) {
+    return;
+  }
+
+  tools[toolIndex] = updater({ ...tools[toolIndex] });
+  saveDeveloperDraft();
+  updateStatusCounts();
+  renderTools();
+}
+
+function createDeveloperEditor(tool) {
+  if (!isDeveloperMode) {
+    return "";
+  }
+
+  const statusOptions = ["available", "production", "idea"]
+    .map((status) => `<option value="${escapeHtml(status)}" ${tool.status === status ? "selected" : ""}>${escapeHtml(t(`status.${status}`))}</option>`)
+    .join("");
+  const stageOptions = ["concept", "mockup", "prototype", "testing"]
+    .map((stage) => `<option value="${escapeHtml(stage)}" ${tool.devStage === stage ? "selected" : ""}>${escapeHtml(getDevStageLabel(stage))}</option>`)
+    .join("");
+  const devNote = getLocalizedValue(tool.devNote);
+
+  return `
+    <div class="dev-editor" data-dev-editor="${escapeHtml(tool.id)}">
+      <label>
+        <span>Status</span>
+        <select data-dev-field="status">
+          ${statusOptions}
+        </select>
+      </label>
+      <label>
+        <span>${escapeHtml(t("dev.stageLabel"))}</span>
+        <select data-dev-field="devStage">
+          ${stageOptions}
+        </select>
+      </label>
+      <label class="dev-editor-note">
+        <span>${escapeHtml(t("dev.memoLabel"))}</span>
+        <textarea data-dev-field="devNote" rows="3">${escapeHtml(devNote)}</textarea>
+      </label>
+    </div>
+  `;
+}
+
 function createToolCard(tool, index) {
   const meta = statusMeta[tool.status] || statusMeta.idea;
-  const isDisabled = tool.status === "idea" || !tool.href;
+  const effectiveHref = getToolHref(tool);
+  const isDisabled = !effectiveHref || (!isDeveloperMode && tool.status === "idea");
   const isDevelopment = tool.status === "production";
   const tagName = isDisabled ? "article" : "a";
 
   const toolName = getLocalizedValue(tool.name);
   const toolDescription = getLocalizedValue(tool.description);
-  const toolCategory = t(`categories.${tool.category}`);
+  const badges = Array.isArray(tool.badges) ? tool.badges : [];
   const statusLabel = t(`status.${tool.status}`);
   const developmentPreviewText = t("toolAction.developmentPreview");
+  const devStageLabel = isDeveloperMode ? getDevStageLabel(tool.devStage) : "";
+  const devNote = isDeveloperMode ? getLocalizedValue(tool.devNote) : "";
 
   const card = document.createElement(tagName);
   card.className = [
@@ -151,18 +296,24 @@ function createToolCard(tool, index) {
     `tool-card-status-${tool.status}`,
     isDisabled ? "is-disabled" : "",
     isDevelopment ? "is-development" : "",
+    isDeveloperMode ? "is-dev-editable" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   card.style.animationDelay = `${index * 0.045}s`;
+  card.dataset.toolId = tool.id;
+
+  if (isDeveloperMode) {
+    card.draggable = true;
+  }
 
   if (isDevelopment) {
     card.setAttribute("data-hover-message", developmentPreviewText);
   }
 
   if (!isDisabled) {
-    card.href = tool.href;
+    card.href = effectiveHref;
     card.setAttribute("aria-label", `${t("toolAction.open")} ${toolName}`);
   } else {
     card.setAttribute("aria-label", `${toolName}, ${t("toolAction.comingSoon")}`);
@@ -177,9 +328,24 @@ function createToolCard(tool, index) {
       </span>
     </div>
 
-    <p class="tool-category">${escapeHtml(toolCategory)}</p>
+    <div class="tool-badges" aria-label="${escapeHtml(t("categories.badgeLabel"))}">
+      ${badges
+        .map((badge) => `<span class="tool-badge">${escapeHtml(t(`categories.${badge}`))}</span>`)
+        .join("")}
+    </div>
     <h2>${escapeHtml(toolName)}</h2>
     <p class="tool-description">${escapeHtml(toolDescription)}</p>
+
+    ${
+      isDeveloperMode && (devStageLabel || devNote)
+        ? `<div class="dev-tool-meta">
+            ${devStageLabel ? `<span class="dev-stage-pill">${escapeHtml(t("dev.stageLabel"))}: ${escapeHtml(devStageLabel)}</span>` : ""}
+            ${devNote ? `<p><strong>${escapeHtml(t("dev.memoLabel"))}:</strong> ${escapeHtml(devNote)}</p>` : ""}
+          </div>`
+        : ""
+    }
+
+    ${createDeveloperEditor(tool)}
 
     <div class="open-text">
       ${isDisabled ? escapeHtml(t("toolAction.comingSoon")) : escapeHtml(t("toolAction.open"))}
@@ -211,6 +377,75 @@ function renderTools() {
 
   filteredTools.forEach((tool, index) => {
     toolsGrid.appendChild(createToolCard(tool, index));
+  });
+
+  bindDeveloperEditors();
+}
+
+function bindDeveloperEditors() {
+  if (!isDeveloperMode) {
+    return;
+  }
+
+  toolsGrid.querySelectorAll(".tool-card").forEach((card) => {
+    card.addEventListener("dragstart", (event) => {
+      event.dataTransfer.setData("text/plain", card.dataset.toolId);
+      card.classList.add("is-dragging");
+    });
+
+    card.addEventListener("dragend", () => {
+      card.classList.remove("is-dragging");
+    });
+
+    card.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      card.classList.add("is-drag-over");
+    });
+
+    card.addEventListener("dragleave", () => {
+      card.classList.remove("is-drag-over");
+    });
+
+    card.addEventListener("drop", (event) => {
+      event.preventDefault();
+      card.classList.remove("is-drag-over");
+      const sourceId = event.dataTransfer.getData("text/plain");
+      const targetId = card.dataset.toolId;
+
+      if (!sourceId || !targetId || sourceId === targetId) {
+        return;
+      }
+
+      const sourceIndex = tools.findIndex((tool) => tool.id === sourceId);
+      const targetIndex = tools.findIndex((tool) => tool.id === targetId);
+
+      if (sourceIndex === -1 || targetIndex === -1) {
+        return;
+      }
+
+      const [movedTool] = tools.splice(sourceIndex, 1);
+      tools.splice(targetIndex, 0, movedTool);
+      saveDeveloperDraft();
+      renderTools();
+    });
+  });
+
+  toolsGrid.querySelectorAll("[data-dev-editor]").forEach((editor) => {
+    const toolId = editor.dataset.devEditor;
+
+    editor.querySelectorAll("[data-dev-field]").forEach((field) => {
+      field.addEventListener("change", () => {
+        updateToolById(toolId, (tool) => {
+          if (field.dataset.devField === "devNote") {
+            tool.devNote = { ...(tool.devNote || {}), [getLanguage()]: field.value };
+          } else {
+            tool[field.dataset.devField] = field.value;
+          }
+
+          return tool;
+        });
+      });
+    });
   });
 }
 
@@ -274,6 +509,28 @@ categoryButtons.addEventListener("click", (event) => {
   renderTools();
 });
 
+if (devSaveButton) {
+  devSaveButton.addEventListener("click", () => {
+    saveDeveloperDraft();
+  });
+}
+
+if (devExportButton) {
+  devExportButton.addEventListener("click", () => {
+    downloadDeveloperToolsJson();
+  });
+}
+
+if (devResetButton) {
+  devResetButton.addEventListener("click", () => {
+    localStorage.removeItem(devToolsStorageKey);
+    loadToolsData().then(() => {
+      updateStatusCounts();
+      renderTools();
+    });
+  });
+}
+
 modeToggle.addEventListener("click", () => {
   const currentMode = getCurrentMode();
   setMode(currentMode === "dawn" ? "deep-space" : "dawn");
@@ -281,6 +538,7 @@ modeToggle.addEventListener("click", () => {
 
 if (window.TRPGLanguage && typeof window.TRPGLanguage.onChange === "function") {
   window.TRPGLanguage.onChange(() => {
+    updateDeveloperChrome();
     updateStatusCounts();
     updateCategoryButtons();
     setMode(getCurrentMode());
@@ -288,9 +546,15 @@ if (window.TRPGLanguage && typeof window.TRPGLanguage.onChange === "function") {
   });
 }
 
-createTwinkleStars();
-updateStatusCounts();
-updateCategoryButtons();
-initMode();
-renderTools();
+async function initPortal() {
+  createTwinkleStars();
+  await loadToolsData();
+  updateDeveloperChrome();
+  updateStatusCounts();
+  updateCategoryButtons();
+  initMode();
+  renderTools();
+}
+
+initPortal();
 
