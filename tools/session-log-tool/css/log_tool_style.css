@@ -860,3 +860,55 @@ body.night-mode .table-panel,body.night-mode .field-panel,body.night-mode .sessi
 body.night-mode input,body.night-mode select,body.night-mode textarea,body.night-mode .mini-button,body.night-mode .header-button.plain{background:#1f2937;color:#e2e8f0;border-color:rgba(148,163,184,.28)}
 body.night-mode th,body.night-mode .column-report{background:#1f2937}body.night-mode .cell-report{background:#111827}
 @media(max-width:720px){.drag-tip-row{align-items:flex-start;flex-direction:column}.optional-fields-list{grid-template-columns:1fr}.header-version{align-self:flex-start}}
+
+/* v1.61 follow-up: readable header copy and stable report affordance */
+.site-description,
+.table-header p{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.site-description{
+  max-width:980px;
+}
+.header-version{
+  margin-top:14px;
+  opacity:.46;
+  color:var(--text-muted);
+  font-weight:800;
+}
+.table-scroll{
+  overflow-x:scroll;
+  overflow-y:auto;
+  padding-bottom:8px;
+  scrollbar-gutter:stable both-edges;
+}
+.table-scroll::-webkit-scrollbar{height:12px;width:12px}
+.table-scroll::-webkit-scrollbar-track{background:#eef2ff;border-radius:999px}
+.table-scroll::-webkit-scrollbar-thumb{background:#c7d2fe;border-radius:999px;border:3px solid #eef2ff}
+.cell-report,.column-report{
+  text-align:center;
+  vertical-align:middle;
+}
+.report-button{
+  min-width:32px;
+  min-height:28px;
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:11px;
+  line-height:1;
+  box-shadow:0 6px 14px rgba(15,23,42,.14);
+}
+.report-button-arrow{font-size:14px}
+.table-scroll.is-scrolled-end .report-button{
+  width:100%;
+  min-width:0;
+  padding:6px 8px;
+}
+.table-scroll.is-scrolled-end .report-button-full{
+  display:inline-block;
+  width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
