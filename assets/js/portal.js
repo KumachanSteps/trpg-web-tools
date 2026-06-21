@@ -101,6 +101,33 @@ async function loadToolsData() {
   }
 }
 
+function mergeDeveloperDraft(baseTools, draftTools) {
+  const baseById = new Map(baseTools.map((tool) => [tool.id, tool]));
+  const draftById = new Map(draftTools.map((tool) => [tool.id, tool]));
+  const mergedTools = [];
+  const usedIds = new Set();
+
+  baseTools.forEach((baseTool) => {
+    if (!draftById.has(baseTool.id)) {
+      mergedTools.push(baseTool);
+      usedIds.add(baseTool.id);
+    }
+  });
+
+  draftTools.forEach((draftTool) => {
+    const baseTool = baseById.get(draftTool.id);
+
+    if (!baseTool || usedIds.has(draftTool.id)) {
+      return;
+    }
+
+    mergedTools.push({ ...baseTool, ...draftTool });
+    usedIds.add(draftTool.id);
+  });
+
+  return mergedTools;
+}
+
 function loadDeveloperDraft() {
   const savedDraft = localStorage.getItem(devToolsStorageKey);
 
@@ -112,7 +139,8 @@ function loadDeveloperDraft() {
     const draftTools = JSON.parse(savedDraft);
 
     if (Array.isArray(draftTools)) {
-      tools = draftTools;
+      tools = mergeDeveloperDraft(tools, draftTools);
+      saveDeveloperDraft();
     }
   } catch (error) {
     console.warn("Failed to load developer tools draft", error);

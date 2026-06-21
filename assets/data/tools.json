@@ -30,30 +30,6 @@
       "en": "A tool for creating motion background assets for TRPG scenes and visual direction."
     }
   },
-   {
-    "id": "coc-growth-checker",
-    "icon": "🌱",
-    "status": "available",
-    "category": "logAnalysis",
-    "badges": [
-      "postSession",
-      "plSupport",
-      "gmSupport"
-    ],
-    "legacyKeywords": [
-      "ログ解析",
-      "成長"
-    ],
-    "href": "./tools/coc-growth-checker/",
-    "name": {
-      "ja": "CoC 6版/7版 成長チェッカー",
-      "en": "CoC 6e/7e Growth Checker"
-    },
-    "description": {
-      "ja": "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
-      "en": "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules."
-    }
-  },
   {
     "id": "dice-stat-analyst",
     "icon": "📊",
@@ -125,29 +101,6 @@
       "en": "A tool for formatting CoC 6e/7e chat palettes into a cleaner and more readable structure."
     }
   },
-    {
-    "id": "chara-sabun-kanri-tool",
-    "icon": "🎭",
-    "status": "available",
-    "category": "characterUtility",
-    "badges": [
-      "preSession",
-      "plSupport",
-      "gmSupport"
-    ],
-    "legacyKeywords": [
-      "キャラクター支援"
-    ],
-    "href": "./tools/chara-sabun-kanri-tool/",
-    "name": {
-      "ja": "キャラ差分管理ツール",
-      "en": "Character Expression Manager"
-    },
-    "description": {
-      "ja": "キャラクター立ち絵の表情差分や画像差分を整理し、TRPGセッションや配信用に管理しやすくするツールです。",
-      "en": "A tool for organizing character expression and portrait variations for TRPG sessions and streaming use."
-    }
-  },
   {
     "id": "charamemo-generator",
     "icon": "📋",
@@ -171,7 +124,30 @@
       "en": "A tool for generating character memo and token-ready data from Iachara character information."
     }
   },
- 
+  {
+    "id": "coc-growth-checker",
+    "icon": "🌱",
+    "status": "available",
+    "category": "logAnalysis",
+    "badges": [
+      "postSession",
+      "plSupport",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "ログ解析",
+      "成長"
+    ],
+    "href": "./tools/coc-growth-checker/",
+    "name": {
+      "ja": "CoC 6版/7版 成長チェッカー",
+      "en": "CoC 6e/7e Growth Checker"
+    },
+    "description": {
+      "ja": "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
+      "en": "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules."
+    }
+  },
   {
     "id": "gm-charashi-viewer",
     "icon": "👥",
@@ -268,7 +244,29 @@
       "en": "A GM/KP support tool for reading NPC data and organizing stats into an easier-to-reference format during sessions."
     }
   },
-
+  {
+    "id": "chara-sabun-kanri-tool",
+    "icon": "🎭",
+    "status": "available",
+    "category": "characterUtility",
+    "badges": [
+      "preSession",
+      "plSupport",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "キャラクター支援"
+    ],
+    "href": "./tools/chara-sabun-kanri-tool/",
+    "name": {
+      "ja": "キャラ差分管理ツール",
+      "en": "Character Expression Manager"
+    },
+    "description": {
+      "ja": "キャラクター立ち絵の表情差分や画像差分を整理し、TRPGセッションや配信用に管理しやすくするツールです。",
+      "en": "A tool for organizing character expression and portrait variations for TRPG sessions and streaming use."
+    }
+  },
   {
     "id": "kantan-icon-maker",
     "icon": "🖼️",
