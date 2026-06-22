@@ -62,10 +62,18 @@
     return base === null ? ch : String.fromCodePoint(base + ch.charCodeAt(0) - start);
   }
 
+  function normalizeStyleSource(text) {
+    const small = {
+      'ᴀ':'A','ʙ':'B','ᴄ':'C','ᴅ':'D','ᴇ':'E','ꜰ':'F','ɢ':'G','ʜ':'H','ɪ':'I','ᴊ':'J','ᴋ':'K','ʟ':'L','ᴍ':'M','ɴ':'N','ᴏ':'O','ᴘ':'P','ꞯ':'Q','ʀ':'R','ꜱ':'S','ᴛ':'T','ᴜ':'U','ᴠ':'V','ᴡ':'W','ʏ':'Y','ᴢ':'Z'
+    };
+    return Array.from(String(text || '')).map(ch => small[ch] || ch).join('');
+  }
+
   function styleText(text, variant) {
     const map = FONT_MAPS[variant];
-    if (!map || variant === 'plain') return String(text || '');
-    return Array.from(String(text || '').normalize('NFKD')).map(ch => {
+    const source = normalizeStyleSource(text);
+    if (!map || variant === 'plain') return source;
+    return Array.from(source.normalize('NFKD')).map(ch => {
       if (map.chars) return map.chars[ch] || ch;
       if (/[A-Z]/.test(ch)) return cp(ch, 65, map.upper);
       if (/[a-z]/.test(ch)) return map.lowerExceptions?.[ch] || cp(ch, 97, map.lower);
@@ -348,11 +356,23 @@
     };
   }
 
+  function insertAuthorLine(output, data) {
+    const author = data.author || '';
+    const scenario = data.scenario || '';
+    if (!author || !scenario || output.includes(author)) return output;
+    const lines = String(output || '').split('\n');
+    const index = lines.findIndex(line => line.includes(scenario));
+    if (index < 0) return output;
+    lines.splice(index + 1, 0, author);
+    return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
   function renderPreview(text = null, push = false) {
     const preview = $('tweetPreview');
     if (!preview) return;
     if (push) pushHistory();
-    const output = text !== null ? text : window.ReportTemplate.renderParts(collectData(true));
+    const data = collectData(true);
+    const output = text !== null ? text : insertAuthorLine(window.ReportTemplate.renderParts(data), data);
     preview.value = output;
     isPreviewDirty = false;
     savePreviewSelection();
