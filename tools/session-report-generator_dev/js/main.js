@@ -10,6 +10,7 @@
   let redoStack = [];
   let isApplyingHistory = false;
   let manualPreviewHeight = null;
+  let isPreviewDirty = false;
 
   const FONT_VARIANTS = [
     { id: 'sansBoldItalic', label: '𝘼 ボールド + イタリック（サンセリフ）', tooltip: 'ボールド + イタリック（サンセリフ）', chipClass: 'f-sans-bi' },
@@ -185,6 +186,12 @@
     return text + suffix;
   }
 
+  function addAuthorSuffix(name) {
+    const text = String(name || '').trim();
+    if (!text) return '';
+    return /(?:様|さん|氏|先生)$/.test(text) ? text : `${text} 様`;
+  }
+
   function sampleName(index, type) {
     const letters = ['A','B','C','D','E','F','G','H','I'];
     return type === 'pc' ? `探索者${letters[index] || index + 1}` : `PL名${letters[index] || index + 1}`;
@@ -331,7 +338,7 @@
       styleText,
       system: getSystemName(),
       scenario: $('scenarioTitle').value.trim() || (useSample ? 'シナリオ名' : ''),
-      author: $('authorText').value.trim() || (useSample ? '作者名' : ''),
+      author: addAuthorSuffix($('authorText').value.trim()) || (useSample ? '作者名 様' : ''),
       result: $('resultText').value.trim() || (useSample ? 'END A 両生還' : ''),
       date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder || getTodayString() : ''),
       hashtags: $('hashtagText').value.trim(),
@@ -347,13 +354,20 @@
     if (push) pushHistory();
     const output = text !== null ? text : window.ReportTemplate.renderParts(collectData(true));
     preview.value = output;
+    isPreviewDirty = false;
     savePreviewSelection();
     updateCount();
     fitPreviewTextBox();
   }
 
   function previewSelectedStyle() {
-    if (!isResetting) renderPreview();
+    if (isResetting) return;
+    if (isPreviewDirty) {
+      updateCount();
+      fitPreviewTextBox();
+      return;
+    }
+    renderPreview();
   }
 
   function pushHistory() {
@@ -418,6 +432,7 @@
   function clearPreview() {
     pushHistory();
     $('tweetPreview').value = '';
+    isPreviewDirty = true;
     lastPreviewSelection = { start: 0, end: 0 };
     updateCount();
     $('tweetPreview').focus();
@@ -434,6 +449,17 @@
       document.execCommand('copy');
       alert('コピーしました。');
     }
+  }
+
+  function postToX() {
+    const preview = $('tweetPreview');
+    if (!preview) return;
+    const text = preview.value.trim();
+    if (!text) {
+      alert('投稿する卓報告文がありません。');
+      return;
+    }
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   }
 
   function tweetLength(text) {
@@ -525,6 +551,7 @@
     redoStack = [];
     manualPreviewHeight = null;
     $('tweetPreview').style.height = '';
+    isPreviewDirty = false;
     isResetting = false;
     updateFontToolbarActive();
     renderPreview('');
@@ -620,7 +647,7 @@
     });
 
     $('addPlayerButton').addEventListener('click', () => addPlayer());
-    $('generateButton').addEventListener('click', () => renderPreview(null, true));
+    $('generateButton').addEventListener('click', postToX);
     $('clearAllButton').addEventListener('click', resetAll);
     $('copyButton').addEventListener('click', copyTweet);
     $('undoButton').addEventListener('click', undoPreview);
@@ -650,6 +677,7 @@
     const preview = $('tweetPreview');
     preview.addEventListener('beforeinput', pushHistory);
     preview.addEventListener('input', () => {
+      isPreviewDirty = true;
       savePreviewSelection();
       updateCount();
     });
