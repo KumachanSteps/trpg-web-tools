@@ -346,7 +346,7 @@
       styleText,
       system: getSystemName(),
       scenario: $('scenarioTitle').value.trim() || (useSample ? 'シナリオ名' : ''),
-      author: addAuthorSuffix($('authorText').value.trim()) || (useSample ? '作者名 様' : ''),
+      author: addAuthorSuffix($('authorText').value.trim()),
       result: $('resultText').value.trim() || (useSample ? 'END A 両生還' : ''),
       date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder || getTodayString() : ''),
       hashtags: $('hashtagText').value.trim(),
@@ -382,11 +382,6 @@
 
   function previewSelectedStyle() {
     if (isResetting) return;
-    if (isPreviewDirty) {
-      updateCount();
-      fitPreviewTextBox();
-      return;
-    }
     renderPreview();
   }
 
