@@ -10,6 +10,8 @@
   let redoStack = [];
   let isApplyingHistory = false;
   let manualPreviewHeight = null;
+  let isPreviewDirty = false;
+  let lastGeneratedPreview = '';
 
   const FONT_VARIANTS = [
     { id: 'sansBoldItalic', label: '𝘼 ボールド + イタリック（サンセリフ）', tooltip: 'ボールド + イタリック（サンセリフ）', chipClass: 'f-sans-bi' },
@@ -61,10 +63,18 @@
     return base === null ? ch : String.fromCodePoint(base + ch.charCodeAt(0) - start);
   }
 
+  function normalizeStyleSource(text) {
+    const small = {
+      'ᴀ':'A','ʙ':'B','ᴄ':'C','ᴅ':'D','ᴇ':'E','ꜰ':'F','ɢ':'G','ʜ':'H','ɪ':'I','ᴊ':'J','ᴋ':'K','ʟ':'L','ᴍ':'M','ɴ':'N','ᴏ':'O','ᴘ':'P','ꞯ':'Q','ʀ':'R','ꜱ':'S','ᴛ':'T','ᴜ':'U','ᴠ':'V','ᴡ':'W','ʏ':'Y','ᴢ':'Z'
+    };
+    return Array.from(String(text || '')).map(ch => small[ch] || ch).join('');
+  }
+
   function styleText(text, variant) {
     const map = FONT_MAPS[variant];
-    if (!map || variant === 'plain') return String(text || '');
-    return Array.from(String(text || '').normalize('NFKD')).map(ch => {
+    const source = normalizeStyleSource(text);
+    if (!map || variant === 'plain') return source;
+    return Array.from(source.normalize('NFKD')).map(ch => {
       if (map.chars) return map.chars[ch] || ch;
       if (/[A-Z]/.test(ch)) return cp(ch, 65, map.upper);
       if (/[a-z]/.test(ch)) return map.lowerExceptions?.[ch] || cp(ch, 97, map.lower);
@@ -183,6 +193,12 @@
     const text = String(name || '').trim();
     if (!text || suffix === 'none' || text.endsWith(suffix)) return text;
     return text + suffix;
+  }
+
+  function addAuthorSuffix(name) {
+    const text = String(name || '').trim();
+    if (!text) return '';
+    return /(?:様|さん|氏|先生)$/.test(text) ? text : `${text} 様`;
   }
 
   function sampleName(index, type) {
@@ -331,7 +347,7 @@
       styleText,
       system: getSystemName(),
       scenario: $('scenarioTitle').value.trim() || (useSample ? 'シナリオ名' : ''),
-      author: $('authorText').value.trim() || (useSample ? '作者名' : ''),
+      author: addAuthorSuffix($('authorText').value.trim()),
       result: $('resultText').value.trim() || (useSample ? 'END A 両生還' : ''),
       date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder || getTodayString() : ''),
       hashtags: $('hashtagText').value.trim(),
@@ -341,19 +357,55 @@
     };
   }
 
+  function insertAuthorLine(output, data) {
+    const author = data.author || '';
+    const scenario = data.scenario || '';
+    if (!author || !scenario || output.includes(author)) return output;
+    const lines = String(output || '').split('\n');
+    const index = lines.findIndex(line => line.includes(scenario));
+    if (index < 0) return output;
+    lines.splice(index + 1, 0, author);
+    return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  function mergeManualPreviewEdits(base, edited, next) {
+    if (!base || edited === base) return next;
+    let start = 0;
+    const minStart = Math.min(base.length, edited.length);
+    while (start < minStart && base[start] === edited[start]) start += 1;
+
+    let baseEnd = base.length;
+    let editedEnd = edited.length;
+    while (baseEnd > start && editedEnd > start && base[baseEnd - 1] === edited[editedEnd - 1]) {
+      baseEnd -= 1;
+      editedEnd -= 1;
+    }
+
+    const manualSegment = edited.slice(start, editedEnd);
+    const nextEnd = Math.max(start, next.length - (base.length - baseEnd));
+    return `${next.slice(0, start)}${manualSegment}${next.slice(nextEnd)}`;
+  }
+
   function renderPreview(text = null, push = false) {
     const preview = $('tweetPreview');
     if (!preview) return;
     if (push) pushHistory();
-    const output = text !== null ? text : window.ReportTemplate.renderParts(collectData(true));
+    const data = collectData(true);
+    const generated = text !== null ? text : insertAuthorLine(window.ReportTemplate.renderParts(data), data);
+    const output = text === null && isPreviewDirty
+      ? mergeManualPreviewEdits(lastGeneratedPreview, preview.value, generated)
+      : generated;
     preview.value = output;
+    lastGeneratedPreview = generated;
+    isPreviewDirty = output !== generated;
     savePreviewSelection();
     updateCount();
     fitPreviewTextBox();
   }
 
   function previewSelectedStyle() {
-    if (!isResetting) renderPreview();
+    if (isResetting) return;
+    renderPreview();
   }
 
   function pushHistory() {
@@ -418,6 +470,7 @@
   function clearPreview() {
     pushHistory();
     $('tweetPreview').value = '';
+    isPreviewDirty = true;
     lastPreviewSelection = { start: 0, end: 0 };
     updateCount();
     $('tweetPreview').focus();
@@ -434,6 +487,17 @@
       document.execCommand('copy');
       alert('コピーしました。');
     }
+  }
+
+  function postToX() {
+    const preview = $('tweetPreview');
+    if (!preview) return;
+    const text = preview.value.trim();
+    if (!text) {
+      alert('投稿する卓報告文がありません。');
+      return;
+    }
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   }
 
   function tweetLength(text) {
@@ -525,6 +589,7 @@
     redoStack = [];
     manualPreviewHeight = null;
     $('tweetPreview').style.height = '';
+    isPreviewDirty = false;
     isResetting = false;
     updateFontToolbarActive();
     renderPreview('');
@@ -620,7 +685,7 @@
     });
 
     $('addPlayerButton').addEventListener('click', () => addPlayer());
-    $('generateButton').addEventListener('click', () => renderPreview(null, true));
+    $('generateButton').addEventListener('click', postToX);
     $('clearAllButton').addEventListener('click', resetAll);
     $('copyButton').addEventListener('click', copyTweet);
     $('undoButton').addEventListener('click', undoPreview);
@@ -650,6 +715,7 @@
     const preview = $('tweetPreview');
     preview.addEventListener('beforeinput', pushHistory);
     preview.addEventListener('input', () => {
+      isPreviewDirty = true;
       savePreviewSelection();
       updateCount();
     });
