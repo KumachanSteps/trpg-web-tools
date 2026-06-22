@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓ログトラッカー v1.6 | TRPG WEBツール観測所</title>
+  <title>卓ログトラッカー | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
@@ -37,28 +37,46 @@
                 <span class="tool-icon-stat-bar tool-icon-stat-bar-3"></span>
               </span>
             </div>
-            <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー v1.6</h1>
+            <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー</h1>
           </div>
 
-          <p class="site-description" data-i18n="siteDescription">
-            遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。
-          </p>
         </div>
 
         <div class="header-actions">
           <div class="header-action-row">
-            <button id="importJsonBtn" class="header-button primary" type="button" data-i18n="jsonInput">JSON入力</button>
-            <button id="exportJsonBtn" class="header-button secondary-cyan" type="button" data-i18n="jsonOutput">JSON出力</button>
-            <button id="exportTextBtn" class="header-button secondary-amber" type="button" data-i18n="textOutput">テキスト出力</button>
-          </div>
-          <div class="header-action-row">
+            <a class="header-button plain" href="https://kumachansteps.github.io/trpg-web-tools/">←TRPG WEBツール観測所</a>
+            <a class="header-button plain" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer" aria-label="X">𝕏</a>
             <button id="languageToggleBtn" class="header-button plain" type="button">JP/EN</button>
+            <button id="usageHelpBtn" class="header-button secondary-cyan" type="button">使い方</button>
             <button id="shortcutHelpBtn" class="header-button secondary-cyan" type="button" data-i18n="shortcut">ショートカット</button>
+            <button id="themeToggleBtn" class="header-button plain" type="button">Light/Night</button>
           </div>
+          <p class="header-version">v1.62 2026.06.21</p>
         </div>
+      </div>
+      <div class="header-meta-row">
+        <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
+        <p class="header-version">v1.62 2026.06.21</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
+
+    <section id="usagePanel" class="shortcut-panel" hidden>
+      <div class="shortcut-panel-inner">
+        <div class="shortcut-panel-head">
+          <div>
+            <p>HOW TO USE</p>
+            <h2>使い方</h2>
+          </div>
+          <button id="closeUsageBtn" type="button" class="icon-button">×</button>
+        </div>
+        <div class="shortcut-panel-list">
+          <div><span>1</span><span>卓ログテーブルで遊んだ卓の情報を追加・編集します。</span></div>
+          <div><span>2</span><span>＋ 項目追加 / − 項目削除で表示する列を調整できます。</span></div>
+          <div><span>3</span><span>右端の送信ボタンから卓報告ジェネレーターへ連携できます。</span></div>
+        </div>
+      </div>
+    </section>
 
     <section id="shortcutPanel" class="shortcut-panel" hidden>
       <div class="shortcut-panel-inner">
@@ -112,29 +130,44 @@
         <div class="table-header">
           <div>
             <h2 data-i18n="tableTitle">卓ログテーブル</h2>
-            <p data-i18n="tableDescription">編集可能な卓ログテーブルです。項目ヘッダーをドラッグすると列の並び順を変更できます。「＋ 項目追加」からFav、HO、エンディング、リンク、カスタム項目などを追加できます。</p>
+            <p data-i18n="tableDescription">「＋ 項目追加」からお気に入り、HO、エンディング、リンク、カスタム項目などを追加できます。</p>
           </div>
-          <div class="table-actions">
-            <div class="field-panel-wrap">
-              <button id="toggleFieldPanelBtn" class="mini-button active-soft" type="button" data-i18n="addFields">＋ 項目追加</button>
-              <div id="fieldPanel" class="field-panel" hidden>
-                <div class="field-panel-head">
-                  <div>
-                    <strong data-i18n="additionalFields">追加データ項目</strong>
-                    <p data-i18n="additionalFieldsDesc">テーブルに追加する任意項目を選択できます。これらの項目は卓報告ジェネレーターにも渡せます。</p>
-                  </div>
-                  <button id="closeFieldPanelBtn" type="button" class="icon-button">×</button>
-                </div>
-                <div id="optionalFieldsList" class="optional-fields-list"></div>
-                <button id="createCustomFieldBtn" type="button" class="custom-field-button" data-i18n="createCustomField">＋ カスタム項目を作成</button>
-              </div>
-            </div>
-            <button id="resetFieldsBtn" class="mini-button" type="button" data-i18n="resetFields">項目リセット</button>
-            <button class="mini-button selected" type="button" data-i18n="tableView">テーブル表示</button>
+          <div class="table-actions table-import-actions">
+            <button id="importJsonBtn" class="header-button primary" type="button" data-i18n="jsonInput">JSON入力</button>
+            <button id="exportJsonBtn" class="header-button secondary-cyan" type="button" data-i18n="jsonOutput">JSON出力</button>
+            <button id="exportTextBtn" class="header-button secondary-amber" type="button" data-i18n="textOutput">テキスト出力</button>
           </div>
         </div>
 
-        <div class="drag-tip" data-i18n="dragTip">ドラッグ操作：項目ヘッダーの ⋮⋮ を掴んで、表示したい位置にドロップできます。</div>
+        <div class="drag-tip-row">
+          <div class="drag-tip" data-i18n="dragTip">ドラッグ操作：項目ヘッダーの ⋮⋮ を掴んで、表示したい位置にドロップできます。</div>
+          <div class="field-panel-wrap">
+            <button id="toggleFieldPanelBtn" class="mini-button active-soft" type="button" data-i18n="addFields">＋ 項目追加</button>
+            <button id="toggleRemoveFieldPanelBtn" class="mini-button" type="button">− 項目削除</button>
+            <div id="fieldPanel" class="field-panel" hidden>
+              <div class="field-panel-head">
+                <div>
+                  <strong data-i18n="additionalFields">追加データ項目</strong>
+                  <p data-i18n="additionalFieldsDesc">テーブルに追加する任意項目を選択できます。これらの項目は卓報告ジェネレーターにも渡せます。</p>
+                </div>
+                <button id="closeFieldPanelBtn" type="button" class="icon-button">×</button>
+              </div>
+              <div id="optionalFieldsList" class="optional-fields-list"></div>
+              <button id="createCustomFieldBtn" type="button" class="custom-field-button" data-i18n="createCustomField">＋ カスタム項目を作成</button>
+            </div>
+            <div id="removeFieldPanel" class="field-panel" hidden>
+              <div class="field-panel-head">
+                <div>
+                  <strong>表示項目を削除</strong>
+                  <p>チェックを外すとテーブル列だけ非表示になります。入力データは保持されます。</p>
+                </div>
+                <button id="closeRemoveFieldPanelBtn" type="button" class="icon-button">×</button>
+              </div>
+              <div id="visibleFieldsList" class="visible-fields-list"></div>
+            </div>
+          </div>
+          <button id="resetFieldsBtn" class="mini-button" type="button" data-i18n="resetFields">項目リセット</button>
+        </div>
 
         <div class="table-scroll">
           <table id="sessionTable">

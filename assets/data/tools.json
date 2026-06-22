@@ -31,6 +31,30 @@
     }
   },
   {
+    "id": "coc-growth-checker",
+    "icon": "🌱",
+    "status": "available",
+    "category": "logAnalysis",
+    "badges": [
+      "postSession",
+      "plSupport",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "ログ解析",
+      "成長"
+    ],
+    "href": "./tools/coc-growth-checker/",
+    "name": {
+      "ja": "CoC 6版/7版 成長チェッカー",
+      "en": "CoC 6e/7e Growth Checker"
+    },
+    "description": {
+      "ja": "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
+      "en": "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules."
+    }
+  },
+  {
     "id": "dice-stat-analyst",
     "icon": "📊",
     "status": "available",
@@ -102,8 +126,8 @@
     }
   },
   {
-    "id": "charamemo-generator",
-    "icon": "📋",
+    "id": "chara-sabun-kanri-tool",
+    "icon": "🎭",
     "status": "available",
     "category": "characterUtility",
     "badges": [
@@ -114,38 +138,14 @@
     "legacyKeywords": [
       "キャラクター支援"
     ],
-    "href": "./tools/iachara-charamemo-creator/",
+    "href": "./tools/chara-sabun-kanri-tool/",
     "name": {
-      "ja": "いあキャラMEMOジェネレータ",
-      "en": "Charamemo Generator"
+      "ja": "キャラ差分管理ツール",
+      "en": "Character Expression Manager"
     },
     "description": {
-      "ja": "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツールです。",
-      "en": "A tool for generating character memo and token-ready data from Iachara character information."
-    }
-  },
-  {
-    "id": "coc-growth-checker",
-    "icon": "🌱",
-    "status": "available",
-    "category": "logAnalysis",
-    "badges": [
-      "postSession",
-      "plSupport",
-      "gmSupport"
-    ],
-    "legacyKeywords": [
-      "ログ解析",
-      "成長"
-    ],
-    "href": "./tools/coc-growth-checker/",
-    "name": {
-      "ja": "CoC 6版/7版 成長チェッカー",
-      "en": "CoC 6e/7e Growth Checker"
-    },
-    "description": {
-      "ja": "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
-      "en": "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules."
+      "ja": "キャラクター立ち絵の表情差分や画像差分を整理し、TRPGセッションや配信用に管理しやすくするツールです。",
+      "en": "A tool for organizing character expression and portrait variations for TRPG sessions and streaming use."
     }
   },
   {
@@ -198,29 +198,6 @@
     }
   },
   {
-    "id": "scenario-info-snippet-builder",
-    "icon": "✂️",
-    "status": "production",
-    "category": "scenarioPrep",
-    "badges": [
-      "preSession",
-      "duringSession",
-      "gmSupport"
-    ],
-    "legacyKeywords": [
-      "シナリオ準備"
-    ],
-    "href": "./tools/scenario-snippet-builder/",
-    "name": {
-      "ja": "シナリオ情報カードビルダー",
-      "en": "Scenario Info Snippet Builder"
-    },
-    "description": {
-      "ja": "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
-      "en": "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord."
-    }
-  },
-  {
     "id": "npc-data-reader",
     "icon": "🧾",
     "status": "available",
@@ -245,9 +222,33 @@
     }
   },
   {
-    "id": "chara-sabun-kanri-tool",
-    "icon": "🎭",
-    "status": "available",
+    "id": "scenario-info-snippet-builder",
+    "icon": "✂️",
+    "status": "production",
+    "category": "scenarioPrep",
+    "badges": [
+      "preSession",
+      "duringSession",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "シナリオ準備"
+    ],
+    "href": "./tools/scenario-snippet-builder/",
+    "name": {
+      "ja": "シナリオ情報カードビルダー",
+      "en": "Scenario Info Snippet Builder"
+    },
+    "description": {
+      "ja": "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
+      "en": "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord."
+    },
+    "devStage": "testing"
+  },
+  {
+    "id": "charamemo-generator",
+    "icon": "📋",
+    "status": "production",
     "category": "characterUtility",
     "badges": [
       "preSession",
@@ -257,15 +258,16 @@
     "legacyKeywords": [
       "キャラクター支援"
     ],
-    "href": "./tools/chara-sabun-kanri-tool/",
+    "href": "./tools/iachara-charamemo-creator/",
     "name": {
-      "ja": "キャラ差分管理ツール",
-      "en": "Character Expression Manager"
+      "ja": "いあキャラMEMOジェネレータ",
+      "en": "Charamemo Generator"
     },
     "description": {
-      "ja": "キャラクター立ち絵の表情差分や画像差分を整理し、TRPGセッションや配信用に管理しやすくするツールです。",
-      "en": "A tool for organizing character expression and portrait variations for TRPG sessions and streaming use."
-    }
+      "ja": "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツールです。",
+      "en": "A tool for generating character memo and token-ready data from Iachara character information."
+    },
+    "devStage": "testing"
   },
   {
     "id": "kantan-icon-maker",
@@ -288,7 +290,8 @@
     "description": {
       "ja": "キャラクター立ち絵PNGから、TRPG用の1:1アイコンをかんたんに作成するツールです。",
       "en": "A simple tool for creating 1:1 TRPG icons from character standing PNG images."
-    }
+    },
+    "devStage": "mockup"
   },
   {
     "id": "session-log-tool",
@@ -312,12 +315,39 @@
     "description": {
       "ja": "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
       "en": "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists."
-    }
+    },
+    "devStage": "testing"
+  },
+  {
+    "id": "dice-table-tool",
+    "icon": "🎲",
+    "status": "production",
+    "category": "scenarioPrep",
+    "badges": [
+      "preSession",
+      "duringSession",
+      "gmSupport",
+      "plSupport"
+    ],
+    "legacyKeywords": [
+      "シナリオ準備",
+      "ダイス表"
+    ],
+    "href": "./tools/dice-table-tool/",
+    "name": {
+      "ja": "ダイス表ツール",
+      "en": "Dice Table Tool"
+    },
+    "description": {
+      "ja": "食事・飲み物・NPC特徴・イベントなど、TRPGで使えるオリジナルダイス表を作成・管理するツールです。",
+      "en": "A tool for creating and managing original TRPG dice tables, such as food, drinks, NPC traits, and random events."
+    },
+    "devStage": "prototype"
   },
   {
     "id": "chara-libra-tool",
     "icon": "⚖️",
-    "status": "available",
+    "status": "production",
     "category": "characterUtility",
     "badges": [
       "preSession",
@@ -331,18 +361,19 @@
     ],
     "href": "./tools/chara-libra-tool/",
     "name": {
-      "ja": "キャラクターLibrary / Chara Libra",
-      "en": "Character Library / Chara Libra"
+      "ja": "キャラクタ星間図",
+      "en": "Chara Libra"
     },
     "description": {
-      "ja": "CCFOLIA駒JSONといあきゃらTXTを取り込み、キャラクター情報・MEMO・チャットパレットを管理して再出力するキャラクター管理ハブです。",
-      "en": "A character management hub for importing CCFOLIA token JSON and Iachara text, editing notes and chat palettes, and exporting updated token data."
-    }
+      "ja": "TRPGキャラクターを一覧化し、立ち絵・プロフィール・技能・メモなどを整理して管理するためのキャラクターアーカイブツールです。",
+      "en": "A character archive tool for organizing TRPG characters with portraits, profiles, skills, notes, and related information."
+    },
+    "devStage": "mockup"
   },
   {
     "id": "scenario-dtp-designer",
     "icon": "📐",
-    "status": "production",
+    "status": "idea",
     "category": "scenarioPrep",
     "badges": [
       "preSession",
@@ -359,12 +390,13 @@
     "description": {
       "ja": "シナリオ本文を見やすいレイアウトに整え、PDF化や配布用テキストの下準備を支援するDTP補助ツールです。",
       "en": "A DTP support tool for arranging scenario text into a readable layout and preparing it for PDF or distribution-ready formatting."
-    }
+    },
+    "devStage": "mockup"
   },
   {
     "id": "scenario-pdf-parser",
     "icon": "📄",
-    "status": "production",
+    "status": "idea",
     "category": "scenarioPrep",
     "badges": [
       "preSession",
@@ -381,7 +413,8 @@
     "description": {
       "ja": "シナリオPDFをTXT形式に変換し、コピペしやすいテキストとして整理するためのツールです。",
       "en": "A tool for parsing scenario PDFs into TXT format for easier copying and pasting."
-    }
+    },
+    "devStage": "mockup"
   },
   {
     "id": "trpg-haishin-observatory",
@@ -442,31 +475,6 @@
     "description": {
       "ja": "BOOTHやPixivなどで見つけたTRPGシナリオを、システム・人数・時間・秘匿有無・テーマなどで整理、検索するデータベース構想です。",
       "en": "A future database concept for organizing TRPG scenarios by system, player count, playtime, hidden handouts, themes, and favorites."
-    }
-  },
-  {
-    "id": "dice-table-tool",
-    "icon": "🎲",
-    "status": "production",
-    "category": "scenarioPrep",
-    "badges": [
-      "preSession",
-      "duringSession",
-      "gmSupport",
-      "plSupport"
-    ],
-    "legacyKeywords": [
-      "シナリオ準備",
-      "ダイス表"
-    ],
-    "href": "./tools/dice-table-tool/",
-    "name": {
-      "ja": "ダイス表ツール",
-      "en": "Dice Table Tool"
-    },
-    "description": {
-      "ja": "食事・飲み物・NPC特徴・イベントなど、TRPGで使えるオリジナルダイス表を作成・管理するツールです。",
-      "en": "A tool for creating and managing original TRPG dice tables, such as food, drinks, NPC traits, and random events."
     }
   },
   {
