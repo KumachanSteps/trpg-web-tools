@@ -21,7 +21,7 @@
     status: 120,
     time: 84,
     note: 250,
-    report: 184
+    report: 116
   };
   const COLUMN_MIN_WIDTHS = {
     fav: 56,
@@ -35,7 +35,7 @@
     status: 108,
     time: 72,
     note: 160,
-    report: 184
+    report: 116
   };
   const TABLE_TEXT_LIMITS = { scenario: 30, players: 15, pc: 15, note: 20 };
   const TABLE_TEXT_LIMIT_MAX = { scenario: 80, players: 60, pc: 60, note: 80 };
@@ -885,8 +885,9 @@
 
   function exportText(mode){
     const rows = getFilteredRows();
+    const outputRows = mode === "date" ? [...rows].sort((a,b)=>getPrimaryDate(a).localeCompare(getPrimaryDate(b))) : rows;
     let output = "";
-    if(mode === "date") output = rows.map((r,i)=>`${i+1}. ${r.scenario} / ${r.system} / ${r.role} / ${getDateDisplay(r)}`).join("\n");
+    if(mode === "date") output = outputRows.map((r,i)=>`${i+1}. ${r.scenario} / ${r.system} / ${r.role} / ${getDateDisplay(r)}`).join("\n");
     if(mode === "system") output = groupedSystemPlayerCountText(rows);
     if(mode === "gm") output = groupedText(rows,"gm");
     if(mode === "players") output = groupedText(rows,"players");
@@ -935,7 +936,7 @@
   function uniqueScenarioRows(rows){
     const seen = new Set();
     return rows.filter(row=>{
-      const key = normalizeScenarioForCount(row.scenario);
+      const key = normalizeScenarioForCount(row.scenario).toLocaleLowerCase("ja");
       if(!key || seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -981,7 +982,8 @@
   function updateReportStickyState(){
     const scroll = document.querySelector(".table-scroll");
     if(!scroll) return;
-    scroll.classList.toggle("is-scrolled-end", scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth - 8);
+    const atEnd = Math.ceil(scroll.scrollLeft + scroll.clientWidth) >= scroll.scrollWidth - 8;
+    scroll.classList.toggle("is-scrolled-end", atEnd);
   }
 
   function saveAndRender(){ saveState(); renderAll(); }
@@ -1122,6 +1124,7 @@
 
   function normalizeScenarioForCount(value){
     return String(value || "")
+      .normalize("NFKC")
       .replace(/[＿_]/g," ")
       .replace(/第\s*[0-9０-９一二三四五六七八九十百]+\s*陣/g,"")
       .replace(/[0-9０-９一二三四五六七八九十百]+\s*日目/g,"")
