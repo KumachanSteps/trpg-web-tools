@@ -11,6 +11,7 @@
   let isApplyingHistory = false;
   let manualPreviewHeight = null;
   let isPreviewDirty = false;
+  let lastGeneratedPreview = '';
 
   const FONT_VARIANTS = [
     { id: 'sansBoldItalic', label: '𝘼 ボールド + イタリック（サンセリフ）', tooltip: 'ボールド + イタリック（サンセリフ）', chipClass: 'f-sans-bi' },
@@ -367,14 +368,36 @@
     return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
   }
 
+  function mergeManualPreviewEdits(base, edited, next) {
+    if (!base || edited === base) return next;
+    let start = 0;
+    const minStart = Math.min(base.length, edited.length);
+    while (start < minStart && base[start] === edited[start]) start += 1;
+
+    let baseEnd = base.length;
+    let editedEnd = edited.length;
+    while (baseEnd > start && editedEnd > start && base[baseEnd - 1] === edited[editedEnd - 1]) {
+      baseEnd -= 1;
+      editedEnd -= 1;
+    }
+
+    const manualSegment = edited.slice(start, editedEnd);
+    const nextEnd = Math.max(start, next.length - (base.length - baseEnd));
+    return `${next.slice(0, start)}${manualSegment}${next.slice(nextEnd)}`;
+  }
+
   function renderPreview(text = null, push = false) {
     const preview = $('tweetPreview');
     if (!preview) return;
     if (push) pushHistory();
     const data = collectData(true);
-    const output = text !== null ? text : insertAuthorLine(window.ReportTemplate.renderParts(data), data);
+    const generated = text !== null ? text : insertAuthorLine(window.ReportTemplate.renderParts(data), data);
+    const output = text === null && isPreviewDirty
+      ? mergeManualPreviewEdits(lastGeneratedPreview, preview.value, generated)
+      : generated;
     preview.value = output;
-    isPreviewDirty = false;
+    lastGeneratedPreview = generated;
+    isPreviewDirty = output !== generated;
     savePreviewSelection();
     updateCount();
     fitPreviewTextBox();
