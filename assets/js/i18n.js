@@ -59,7 +59,7 @@ window.TRPG_PORTAL_I18N = {
       },
       dev: {
         filter: "DEVのみ",
-        pageTitle: "TRPG WEBツール観測所（開発ページ）",
+        pageTitle: "（開発ページ）TRPG WEBツール観測所",
         bannerTitle: "Developer Preview",
         bannerText: "未公開・構想段階のツールも起動できる開発者用ポータルです。仕様変更や削除の可能性があります。",
         stageLabel: "開発段階",
@@ -178,7 +178,7 @@ window.TRPG_PORTAL_I18N = {
       },
       dev: {
         filter: "DEV only",
-        pageTitle: "TRPG Web Tools Observatory (Developer Page)",
+        pageTitle: "(Developer Page) TRPG Web Tools Observatory",
         bannerTitle: "Developer Preview",
         bannerText: "Developer portal for opening unpublished or idea-stage tools. Specifications may change or be removed.",
         stageLabel: "Stage",
