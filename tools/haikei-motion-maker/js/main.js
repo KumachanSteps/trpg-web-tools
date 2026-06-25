@@ -59,7 +59,9 @@
     stillFrameTime: 0,
     draggedThumbIndex: null,
     isExporting: false,
-    cancelExportRequested: false
+    cancelExportRequested: false,
+    stillDownloadUrl: '',
+    stillDownloadName: ''
   };
 
   const DEV_SAMPLE_IMAGE_PATH = './assets/sample/sample_and_juliet.jpeg';
@@ -1105,8 +1107,11 @@
 
   function hideDownload() {
     if (state.downloadUrl) URL.revokeObjectURL(state.downloadUrl);
+    if (state.stillDownloadUrl) URL.revokeObjectURL(state.stillDownloadUrl);
     state.downloadUrl = '';
     state.downloadName = '';
+    state.stillDownloadUrl = '';
+    state.stillDownloadName = '';
     els.downloadLink.classList.add('is-disabled');
     els.downloadLink.setAttribute('aria-disabled', 'true');
   }
@@ -2999,11 +3004,18 @@ state.image = state.images[0] || null;
       const animatedBytes = buildAnimatedWebp(frameChunks, width, height, delays, els.loopInput.checked);
       const blob = new Blob([animatedBytes], { type: 'image/webp' });
       const url = URL.createObjectURL(blob);
+
+      drawFrame(0, offCtx, width, height);
+      const stillBlob = await canvasToPngBlob(offscreen);
+      const stillUrl = URL.createObjectURL(stillBlob);
+
       const sizeWarning = getBlobSizeWarning(blob);
       const outputName = `${safeName}.webp`;
       const outputSize = formatFileSize(blob.size);
       state.downloadUrl = url;
       state.downloadName = outputName;
+      state.stillDownloadUrl = stillUrl;
+      state.stillDownloadName = `${safeName}_frame01.png`;
       els.downloadLink.textContent = 'ダウンロード';
       els.downloadLink.classList.remove('is-disabled');
       els.downloadLink.setAttribute('aria-disabled', 'false');
@@ -3165,12 +3177,20 @@ state.image = state.images[0] || null;
       return;
     }
 
-    const tempLink = document.createElement('a');
-    tempLink.href = state.downloadUrl;
-    tempLink.download = state.downloadName || 'haikei_motion';
-    document.body.appendChild(tempLink);
-    tempLink.click();
-    tempLink.remove();
+    const downloadTargets = [];
+    if (state.stillDownloadUrl) {
+      downloadTargets.push({ url: state.stillDownloadUrl, name: state.stillDownloadName || 'haikei_motion_frame01.png' });
+    }
+    downloadTargets.push({ url: state.downloadUrl, name: state.downloadName || 'haikei_motion' });
+
+    downloadTargets.forEach(target => {
+      const tempLink = document.createElement('a');
+      tempLink.href = target.url;
+      tempLink.download = target.name;
+      document.body.appendChild(tempLink);
+      tempLink.click();
+      tempLink.remove();
+    });
     showToast(dict().messages.downloadDone, 'success', 3200);
   });
 
