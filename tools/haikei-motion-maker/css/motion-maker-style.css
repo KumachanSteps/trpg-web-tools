@@ -3110,3 +3110,23 @@ body[data-lang="en"] .title-block .lead {
     letter-spacing: normal;
   }
 }
+
+
+/* v0.87 60FPS WebP export button: purple to red accent */
+.fps60-accent {
+  background: linear-gradient(135deg, #8b5cf6, #c026d3 48%, #e11d48);
+  color: #fff;
+}
+
+
+/* v0.88 export cancel state */
+.output-actions .ghost-button.is-cancel {
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #b91c1c;
+  background: rgba(254, 226, 226, 0.9);
+}
+body.is-dark .output-actions .ghost-button.is-cancel {
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.22);
+}

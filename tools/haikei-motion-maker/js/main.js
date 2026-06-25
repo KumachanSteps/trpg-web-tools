@@ -31,9 +31,9 @@
     sizeInput: document.getElementById('sizeInput'),
     loopInput: document.getElementById('loopInput'),
     playBtn: document.getElementById('playBtn'),
-    exportPngZipBtn: document.getElementById('exportPngZipBtn'),
     exportWebpBtn: document.getElementById('exportWebpBtn'),
     exportWebp30Btn: document.getElementById('exportWebp30Btn'),
+    exportWebp60Btn: document.getElementById('exportWebp60Btn'),
     exportNote: document.querySelector('.export-note'),
     exportStatus: document.getElementById('exportStatus'),
     previewPanel: document.querySelector('.preview-panel'),
@@ -57,13 +57,15 @@
     rafId: null,
     playStart: 0,
     stillFrameTime: 0,
-    draggedThumbIndex: null
+    draggedThumbIndex: null,
+    isExporting: false,
+    cancelExportRequested: false
   };
 
   const DEV_SAMPLE_IMAGE_PATH = './assets/sample/sample_and_juliet.jpeg';
   const DEV_SAMPLE_IMAGE_NAME = 'sample_and_juliet.jpeg';
   const MAX_OUTPUT_BYTES = 5 * 1024 * 1024;
-  const LARGE_SOURCE_FILE_BYTES = 3 * 1024 * 1024;
+  const LARGE_SOURCE_FILE_BYTES = 4 * 1024 * 1024;
   const exportSizePresets = [
     { key: '16:9', value: '1280x720', baseLabel: '16：9' },
     { key: '8:5', value: '1280x800', baseLabel: '8：5' },
@@ -73,6 +75,20 @@
   ];
 
   const qualitySettings = {
+    minimum: {
+      fps: 24,
+      quality: 24,
+      apngColors: 32,
+      webpQuality: 0.62,
+      label: '最小',
+      sizeMap: {
+        '16:9': { width: 768, height: 432 },
+        '8:5': { width: 768, height: 480 },
+        '4:3': { width: 640, height: 480 },
+        '3:2': { width: 720, height: 480 },
+        '1:1': { width: 640, height: 640 }
+      }
+    },
     light: {
       fps: 24,
       quality: 18,
@@ -210,9 +226,9 @@
       htmlLang: 'ja',
       documentTitle: '背景モーションメーカー｜TRPG WEBツール観測所',
       langButton: 'EN',
-      quality: { light: '軽量', standard: '標準', high: '高品質' },
+      quality: { minimum: '最小', light: '軽量', standard: '標準', high: '高品質' },
       qualityRecommendation: ' ※標準以上の設定の場合、WebP出力をおすすめします。',
-      exportNote: '※ 5MB以内でWebPファイルが出力されるように設定を調整してください。超過する場合は画質・画像サイズ・秒数を下げるか、30FPSでの出力ではなく、デフォルトの24FPSで出力してください。',
+      exportNote: '※ 5MB以内でWebPファイルが出力されるように設定を調整してください。超過する場合は画質・画像サイズ・秒数を下げるか、30FPS / 60FPSでの出力ではなく、デフォルトの24FPSで出力してください。',
       staticText: {
         portalName: 'TRPG WEBツール観測所',
         title: '背景モーションメーカー',
@@ -240,11 +256,12 @@
         loop: 'ループする',
         play: 'プレビュー再生',
         stop: 'プレビュー停止',
-        pngZip: 'PNG連番ZIP',
-        webp: 'WebP出力',
+        webp: '24FPSで出力',
         webp30: '30FPSで出力',
+        webp60: '60FPSで出力',
         download: 'ダウンロード',
         clear: 'クリア',
+        cancelExport: '出力をキャンセル',
         footerTitle: '利用上の注意',
         footer1: '本ツールは、開発者 @KumachanSteps による個人制作の非公式TRPG支援ツールです。 各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。',
         footer2: '不具合報告や要望は、Xの @KumachanSteps 宛のDMにてお送りください。 ただし、すべての報告や要望に返信・対応できるとは限りません。'
@@ -252,16 +269,16 @@
       helpSteps: [
         '1. 画像ファイルを選択、またはアップロード枠にドラッグ＆ドロップします。トランジションでは複数画像をまとめて読み込めます。',
         '2. エフェクトを選び、秒数・画質・画像サイズ・ループ設定を調整します。',
-        '3. プレビューで動きを確認し、PNG連番ZIP / WebP のいずれかで出力します。',
-        '4. 通常はWebP出力がおすすめです。より滑らかにしたい場合は30FPS出力を試してください。'
+        '3. プレビューで動きを確認し、24FPS / 30FPS / 60FPS のWebPとして出力します。',
+        '4. 通常は24FPS出力がおすすめです。より滑らかにしたい場合は30FPSや60FPSを試してください。'
       ],
       shortcutLabels: [
         '使い方/ショートカット展開中は閉じる。それ以外は画像をリセット',
         '画像を開く',
         'プレビュー再生/停止',
         '30FPS WebP出力',
-        'PNG連番ZIP出力',
-        'WebP出力',
+        '60FPS WebP出力',
+        '24FPS WebP出力',
         'ライトモード/ナイトモード切り替え'
       ],
       effectLabels: {
@@ -402,9 +419,9 @@
       filterSections: ['基本加工', '時間帯', '雰囲気加工'],
       imageEditNote: '※画像加工はCanvasベースの演出処理です。AIによる空の差し替えや本格的な昼夜変換ではなく、TRPG背景向けに雰囲気を変える加工として利用できます。',
       tooltip: {
-        pngZip: '1コマずつのPNG画像をZIPにまとめて出力します。動画化や後編集をしたい時向けです。',
-        webp: 'ココフォリアなどで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。',
-        webp30: 'WebPを30FPSで出力します。より滑らかですが、ファイルサイズは大きくなりやすいです。'
+        webp: 'ココフォリアで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。',
+        webp30: 'WebPを30FPSで出力します。より滑らかですが、ファイルサイズは大きくなりやすいです。',
+        webp60: 'WebPを60FPSで出力します。最も滑らかですが、ファイルサイズはかなり大きくなりやすいです。'
       },
       messages: {
         sizeLimit: bytes => `推奨上限：${bytes}以内`,
@@ -415,7 +432,8 @@
         imageLoadFailed: '画像を読み込めませんでした。別のファイルを試してください。',
         imagesLoadedTransition: (count, extra) => `${count}枚の画像を読み込みました。トランジションで順番に切り替えられます。${extra}`,
         imageLoaded: extra => `画像を読み込みました。エフェクトを選んでプレビューできます。${extra}`,
-        largeAutoSize: label => ` 元画像が3MB以上のため、画像サイズは ${label} を自動選択しました。`,
+        largeAutoSize: label => ` 元画像が4MB以上のため、画像サイズは ${label} を自動選択しました。`,
+        autoLightQuality: ' 元画像が4MB以上のため、画質は軽量を自動選択しました。',
         sampleLoaded: 'サンプル画像を読み込みました。',
         sampleFailedStatus: 'サンプル画像を読み込めませんでした。assets/sample/sample_and_juliet.jpeg を確認してください。',
         sampleFailedToast: 'サンプル画像を読み込めませんでした。',
@@ -444,6 +462,9 @@
         webpError: 'WebP出力中にエラーが発生しました。ブラウザがWebP書き出しに対応しているか確認し、5MB以内を目安に画像サイズ・画質・秒数を下げて試してください。',
         downloadFirst: '出力ボタンでまず画像を書き出してください。',
         downloadDone: 'ダウンロードが完了しました。',
+        webpPlaybackNote: '※ WebPは再生環境によってプレビュー速度が実際より遅く表示される場合があります。ココフォリア等の実際に使用する環境で再生確認することをおすすめします。',
+        exportCancelling: '出力をキャンセルしています。しばらくお待ちください。',
+        exportCancelled: '出力をキャンセルしました。',
         lightMode: 'ライトモード',
         darkMode: 'ナイトモード',
         loop: 'ループ',
@@ -460,9 +481,9 @@
       htmlLang: 'en',
       documentTitle: 'Background Motion Maker | TRPG WEB Tools Observatory',
       langButton: 'JP',
-      quality: { light: 'Light', standard: 'Standard', high: 'High Quality' },
+      quality: { minimum: 'Minimum', light: 'Light', standard: 'Standard', high: 'High Quality' },
       qualityRecommendation: ' For standard or higher settings, WebP output is recommended.',
-      exportNote: 'Adjust the settings so the WebP file stays under 5 MB. If it exceeds the limit, lower the quality, image size, or duration, or use the default 24 FPS output instead of 30 FPS.',
+      exportNote: 'Adjust the settings so the WebP file stays under 5 MB. If it exceeds the limit, lower the quality, image size, or duration, or use the default 24 FPS output instead of 30 FPS or 60 FPS.',
       staticText: {
         portalName: 'TRPG WEB Tools Observatory',
         title: 'Background Motion Maker',
@@ -490,11 +511,12 @@
         loop: 'Loop',
         play: 'Play Preview',
         stop: 'Stop Preview',
-        pngZip: 'PNG Sequence ZIP',
-        webp: 'Export WebP',
+        webp: 'Export at 24 FPS',
         webp30: 'Export at 30 FPS',
+        webp60: 'Export at 60 FPS',
         download: 'Download',
         clear: 'Clear',
+        cancelExport: 'Cancel Export',
         footerTitle: 'Notice',
         footer1: 'This is an unofficial personal TRPG support tool created by @KumachanSteps. Please check the terms and rights notices for each TRPG system, scenario, and external service yourself.',
         footer2: 'For bug reports or feature requests, please send a DM to @KumachanSteps on X. Replies and fixes are not guaranteed for every request.'
@@ -502,16 +524,16 @@
       helpSteps: [
         '1. Select image files or drag and drop them into the upload area. Transition effects can use multiple images.',
         '2. Choose an effect, then adjust duration, quality, image size, and loop settings.',
-        '3. Check the motion in the preview, then export as PNG Sequence ZIP or WebP.',
-        '4. WebP is recommended for normal use. Try 30 FPS output when you want smoother motion.'
+        '3. Check the motion in the preview, then export as WebP at 24 FPS, 30 FPS, or 60 FPS.',
+        '4. 24 FPS is recommended for normal use. Try 30 FPS or 60 FPS when you want smoother motion.'
       ],
       shortcutLabels: [
         'Close Help/Shortcuts when open. Otherwise reset the image.',
         'Open image file',
         'Play / stop preview',
         'Export 30 FPS WebP',
-        'Export PNG Sequence ZIP',
-        'Export WebP',
+        'Export 60 FPS WebP',
+        'Export 24 FPS WebP',
         'Toggle light / night mode'
       ],
       effectLabels: {
@@ -652,9 +674,9 @@
       filterSections: ['Basic Edits', 'Time of Day', 'Atmosphere'],
       imageEditNote: 'Image edits are Canvas-based visual effects. They do not replace the sky or perform full day/night conversion with AI; use them as quick mood adjustments for TRPG backgrounds.',
       tooltip: {
-        pngZip: 'Exports each frame as PNG images inside a ZIP. Best for video editing or further post-processing.',
-        webp: 'Exports a lightweight animated image that is easy to use in services such as CCFOLIA. Recommended for normal use.',
-        webp30: 'Exports WebP at 30 FPS. Motion is smoother, but the file size is more likely to increase.'
+        webp: 'Exports a lightweight animated image that is easy to use in CCFOLIA. Recommended for normal use.',
+        webp30: 'Exports WebP at 30 FPS. Motion is smoother, but the file size is more likely to increase.',
+        webp60: 'Exports WebP at 60 FPS. Motion is the smoothest, but the file size is much more likely to increase.'
       },
       messages: {
         sizeLimit: bytes => `Recommended limit: under ${bytes}`,
@@ -665,7 +687,8 @@
         imageLoadFailed: 'Could not load the image. Try another file.',
         imagesLoadedTransition: (count, extra) => `${count} images loaded. Transition effects will switch through them in order.${extra}`,
         imageLoaded: extra => `Image loaded. Choose an effect and preview the motion.${extra}`,
-        largeAutoSize: label => ` The source image is 3 MB or larger, so image size was automatically set to ${label}.`,
+        largeAutoSize: label => ` The source image is 4 MB or larger, so image size was automatically set to ${label}.`,
+        autoLightQuality: ' The source image is 4 MB or larger, so quality was automatically set to Light.',
         sampleLoaded: 'Sample image loaded.',
         sampleFailedStatus: 'Could not load the sample image. Check assets/sample/sample_and_juliet.jpeg.',
         sampleFailedToast: 'Could not load the sample image.',
@@ -678,6 +701,7 @@
         imageReset: 'Image reset.',
         transitionOrderChanged: (count, verb, extra) => `Transition order updated. ${count} images will ${verb} in order.${extra}`,
         transitionHintImages: (count, verb) => ` ${count} images will ${verb} in order.`,
+        transitionHintSingleFilter: filter => ` The selected transition will change one image from the original to ${filter}.`,
         transitionHintNeedImages: ' Transition effects require at least two images.',
         effectSelected: (effect, loop, hint, extra) => `${effect} selected. Output setting: ${loop ? 'loop' : 'no loop'}.${hint}${extra}`,
         filterSelected: (filter, extra) => `Image edit: ${filter} selected.${extra}`,
@@ -694,6 +718,9 @@
         webpError: 'WebP export failed. Check that your browser supports WebP export, then lower image size, quality, or duration and try again.',
         downloadFirst: 'Export an image first, then download it.',
         downloadDone: 'Download complete.',
+        webpPlaybackNote: 'WebP preview speed may appear slower than the actual motion depending on the playback environment. We recommend checking playback in your actual destination environment, such as CCFOLIA.',
+        exportCancelling: 'Cancelling the export. Please wait.',
+        exportCancelled: 'Export cancelled.',
         lightMode: 'Light mode',
         darkMode: 'Night mode',
         loop: 'Loop',
@@ -729,6 +756,7 @@
     Object.assign(effectLabels, d.effectLabels);
     Object.assign(effectFileLabels, d.effectFileLabels);
     Object.assign(imageFilterLabels, d.filterLabels);
+    qualitySettings.minimum.label = d.quality.minimum;
     qualitySettings.light.label = d.quality.light;
     qualitySettings.standard.label = d.quality.standard;
     qualitySettings.high.label = d.quality.high;
@@ -814,19 +842,19 @@
     refreshSizeInputLabels();
 
     els.playBtn.textContent = state.playing ? s.stop : s.play;
-    els.exportPngZipBtn.textContent = s.pngZip;
     els.exportWebpBtn.textContent = s.webp;
     els.exportWebp30Btn.textContent = s.webp30;
+    if (els.exportWebp60Btn) els.exportWebp60Btn.textContent = s.webp60;
 
-    els.exportPngZipBtn.dataset.tooltip = d.tooltip.pngZip;
     els.exportWebpBtn.dataset.tooltip = d.tooltip.webp;
     els.exportWebp30Btn.dataset.tooltip = d.tooltip.webp30;
-    els.exportPngZipBtn.setAttribute('aria-label', `${s.pngZip}. ${d.tooltip.pngZip}`);
+    if (els.exportWebp60Btn) els.exportWebp60Btn.dataset.tooltip = d.tooltip.webp60;
     els.exportWebpBtn.setAttribute('aria-label', `${s.webp}. ${d.tooltip.webp}`);
     els.exportWebp30Btn.setAttribute('aria-label', `${s.webp30}. ${d.tooltip.webp30}`);
+    if (els.exportWebp60Btn) els.exportWebp60Btn.setAttribute('aria-label', `${s.webp60}. ${d.tooltip.webp60}`);
 
     els.downloadLink.textContent = s.download;
-    els.clearOutputBtn.textContent = s.clear;
+    els.clearOutputBtn.textContent = state.isExporting ? s.cancelExport : s.clear;
     updateQualityRecommendation();
 
     setText('.legal-footer h2', s.footerTitle);
@@ -893,6 +921,18 @@
     return dict().messages.sizeLimit(formatFileSize(MAX_OUTPUT_BYTES));
   }
 
+  function buildFrameDelaySequence(totalFrames, totalDurationMs) {
+    const frames = Math.max(1, Number(totalFrames) || 1);
+    const durationMs = Math.max(frames, Math.round(Number(totalDurationMs) || 0));
+    const baseDelay = Math.floor(durationMs / frames);
+    let remainder = durationMs - (baseDelay * frames);
+    const delays = new Array(frames).fill(baseDelay);
+    for (let i = 0; i < frames && remainder > 0; i += 1, remainder -= 1) {
+      delays[i] += 1;
+    }
+    return delays;
+  }
+
 
 
   function getCurrentQualitySetting() {
@@ -948,18 +988,23 @@
     return candidates[0] || getCurrentSizeCatalog()[0] || null;
   }
 
-  function applyRecommendedSizeForFiles(files) {
+  function applyRecommendedOutputSettingsForFiles(files) {
     const list = Array.from(files || []);
-    if (!list.length) return null;
+    if (!list.length) return { recommendedSize: null, autoLight: false, maxFileSize: 0 };
     const maxFileSize = list.reduce((max, file) => Math.max(max, file?.size || 0), 0);
+    const result = { recommendedSize: null, autoLight: false, maxFileSize };
     if (maxFileSize < LARGE_SOURCE_FILE_BYTES) {
       els.sizeInput.value = 'original';
-      return null;
+      return result;
     }
+    result.autoLight = true;
+    els.qualityInput.value = 'light';
     const preset = pickRecommendedSizePreset(state.imageWidth, state.imageHeight);
-    if (!preset) return null;
-    els.sizeInput.value = preset.value;
-    return preset;
+    if (preset) {
+      els.sizeInput.value = preset.value;
+      result.recommendedSize = preset;
+    }
+    return result;
   }
 
 
@@ -1050,7 +1095,9 @@
     const transitionHint = isTransitionEffect(state.effect)
       ? (state.images.length >= 2
           ? messages.transitionHintImages(state.images.length, getTransitionVerb(state.effect))
-          : messages.transitionHintNeedImages)
+          : (shouldUseSingleImageFilterTransition()
+              ? messages.transitionHintSingleFilter(imageFilterLabels[state.imageFilter])
+              : messages.transitionHintNeedImages))
       : '';
     setStatus(messages.effectSelected(effectLabels[state.effect], els.loopInput.checked, transitionHint, getQualityRecommendationText()));
   }
@@ -1158,6 +1205,11 @@
     return isTransitionEffect(state.effect) && state.images && state.images.length >= 2;
   }
 
+  function shouldUseSingleImageFilterTransition(effect = state.effect) {
+    const imageCount = state.images?.length || (state.image ? 1 : 0);
+    return isTransitionEffect(effect) && imageCount === 1 && state.imageFilter && state.imageFilter !== 'none';
+  }
+
   function updateTransitionThumbs() {
     if (!els.transitionThumbPanel || !els.transitionThumbList) return;
     const show = shouldShowTransitionThumbs();
@@ -1242,7 +1294,8 @@ state.image = state.images[0] || null;
       state.imageHeight = state.image?.naturalHeight || 0;
       state.stillFrameTime = 0;
 
-      const recommendedSize = applyRecommendedSizeForFiles(state.imageFiles);
+      const autoSettings = applyRecommendedOutputSettingsForFiles(state.imageFiles);
+      const recommendedSize = autoSettings.recommendedSize;
       updateOutputFileName();
       els.canvasPlaceholder.classList.add('is-hidden');
       updateImageInfo(state.imageFiles);
@@ -1250,10 +1303,10 @@ state.image = state.images[0] || null;
       updateTransitionThumbs();
       syncPreviewCanvasSize();
       drawFrame(0, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
-      const autoSizeText = recommendedSize ? dict().messages.largeAutoSize(recommendedSize.label) : '';
+      const autoMessages = `${recommendedSize ? dict().messages.largeAutoSize(recommendedSize.label) : ''}${autoSettings.autoLight ? dict().messages.autoLightQuality : ''}`;
       setStatus(loaded.length >= 2
-        ? dict().messages.imagesLoadedTransition(loaded.length, autoSizeText)
-        : dict().messages.imageLoaded(autoSizeText));
+        ? dict().messages.imagesLoadedTransition(loaded.length, autoMessages)
+        : dict().messages.imageLoaded(autoMessages));
       hideDownload();
     } catch (error) {
       console.error(error);
@@ -1299,7 +1352,7 @@ state.image = state.images[0] || null;
         state.imageWidth = loaded.img.naturalWidth || loaded.img.width || 0;
         state.imageHeight = loaded.img.naturalHeight || loaded.img.height || 0;
         state.stillFrameTime = 0;
-        applyRecommendedSizeForFiles(state.imageFiles);
+        applyRecommendedOutputSettingsForFiles(state.imageFiles);
         updateOutputFileName();
         els.canvasPlaceholder.classList.add('is-hidden');
         updateImageInfo(state.imageFiles);
@@ -1357,7 +1410,14 @@ state.image = state.images[0] || null;
       return { current: null, next: null, mix: 0, index: 0, nextIndex: 0 };
     }
     if (images.length === 1) {
-      return { current: images[0], next: images[0], mix: 0, index: 0, nextIndex: 0 };
+      return {
+        current: images[0],
+        next: images[0],
+        mix: shouldUseSingleImageFilterTransition() ? smootherStep(progress) : 0,
+        index: 0,
+        nextIndex: 0,
+        singleFilterTransition: shouldUseSingleImageFilterTransition()
+      };
     }
     const total = images.length;
     const raw = progress * total;
@@ -2263,7 +2323,10 @@ state.image = state.images[0] || null;
     syncCardTabIndex(els.imageEditGrid, '.image-edit-card', button);
     updateOutputFileName();
     drawFrame(state.stillFrameTime, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
-    setStatus(dict().messages.filterSelected(imageFilterLabels[state.imageFilter] || dict().filterLabels.none, getQualityRecommendationText()));
+    const singleTransitionHint = shouldUseSingleImageFilterTransition()
+      ? dict().messages.transitionHintSingleFilter(imageFilterLabels[state.imageFilter] || dict().filterLabels.none)
+      : '';
+    setStatus(dict().messages.filterSelected(imageFilterLabels[state.imageFilter] || dict().filterLabels.none, `${singleTransitionHint}${getQualityRecommendationText()}`));
     hideDownload();
   }
 
@@ -2275,6 +2338,30 @@ state.image = state.images[0] || null;
     targetCtx.save();
     targetCtx.globalAlpha = alpha;
     targetCtx.drawImage(image, -base.drawW / 2, -base.drawH / 2, base.drawW, base.drawH);
+    targetCtx.restore();
+  }
+
+  function drawFilteredCoverImage(targetCtx, image, drawWidth, drawHeight, scale = 1, alpha = 1) {
+    if (!image || !state.imageFilter || state.imageFilter === 'none') return;
+    const tempW = Math.max(1, Math.ceil(drawWidth));
+    const tempH = Math.max(1, Math.ceil(drawHeight));
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = tempW;
+    tempCanvas.height = tempH;
+    const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = 'high';
+    tempCtx.fillStyle = '#000000';
+    tempCtx.fillRect(0, 0, tempW, tempH);
+    tempCtx.save();
+    tempCtx.translate(tempW / 2, tempH / 2);
+    drawCoverImage(tempCtx, image, tempW, tempH, scale, 1);
+    tempCtx.restore();
+    applyImageFilterToCanvas(tempCtx, { x: 0, y: 0, width: tempW, height: tempH }, state.imageFilter);
+
+    targetCtx.save();
+    targetCtx.globalAlpha = alpha;
+    targetCtx.drawImage(tempCanvas, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
     targetCtx.restore();
   }
 
@@ -2303,6 +2390,7 @@ state.image = state.images[0] || null;
     }
 
     const motion = getMotion(state.effect, progress);
+    const singleFilterTransition = shouldUseSingleImageFilterTransition(state.effect);
     const bounds = getEffectBounds(state.effect);
     const requiredW = Math.max(1, frameRect.width + (bounds.maxX * 2) + (bounds.padding * 2));
     const requiredH = Math.max(1, frameRect.height + (bounds.maxY * 2) + (bounds.padding * 2));
@@ -2327,22 +2415,38 @@ state.image = state.images[0] || null;
     } else if (motion.mode === 'transition') {
       const currentScale = motion.scale * (motion.cropScale || 1) * (1 + (1 - motion.mix) * 0.012);
       const nextScale = motion.scale * (motion.cropScale || 1) * (1 + motion.mix * 0.012);
-      drawCoverImage(targetCtx, motion.currentImage || state.image || state.images[0], requiredW, requiredH, currentScale, 1 - motion.mix);
-      drawCoverImage(targetCtx, motion.nextImage || motion.currentImage || state.image || state.images[0], requiredW, requiredH, nextScale, motion.mix);
+      const currentImage = motion.currentImage || state.image || state.images[0];
+      const nextImage = motion.nextImage || currentImage;
+      drawCoverImage(targetCtx, currentImage, requiredW, requiredH, currentScale, 1 - motion.mix);
+      if (singleFilterTransition) {
+        drawFilteredCoverImage(targetCtx, currentImage, requiredW, requiredH, nextScale, motion.mix);
+      } else {
+        drawCoverImage(targetCtx, nextImage, requiredW, requiredH, nextScale, motion.mix);
+      }
     } else if (motion.mode === 'transitionHardcut') {
-      const cutImage = motion.mix < 0.5
-        ? (motion.currentImage || state.image || state.images[0])
-        : (motion.nextImage || motion.currentImage || state.image || state.images[0]);
-      drawCoverImage(targetCtx, cutImage, requiredW, requiredH, motion.scale * (motion.cropScale || 1), 1);
+      const currentImage = motion.currentImage || state.image || state.images[0];
+      const nextImage = motion.nextImage || currentImage;
+      if (singleFilterTransition && motion.mix >= 0.5) {
+        drawFilteredCoverImage(targetCtx, currentImage, requiredW, requiredH, motion.scale * (motion.cropScale || 1), 1);
+      } else {
+        const cutImage = motion.mix < 0.5 ? currentImage : nextImage;
+        drawCoverImage(targetCtx, cutImage, requiredW, requiredH, motion.scale * (motion.cropScale || 1), 1);
+      }
     } else if (motion.mode === 'transitionWipe') {
       const currentScale = motion.scale * (motion.cropScale || 1);
       const nextScale = motion.scale * (motion.cropScale || 1);
-      drawCoverImage(targetCtx, motion.currentImage || state.image || state.images[0], requiredW, requiredH, currentScale, 1);
+      const currentImage = motion.currentImage || state.image || state.images[0];
+      const nextImage = motion.nextImage || currentImage;
+      drawCoverImage(targetCtx, currentImage, requiredW, requiredH, currentScale, 1);
       targetCtx.save();
       targetCtx.beginPath();
       targetCtx.rect(-requiredW / 2, -requiredH / 2, requiredW * motion.mix, requiredH);
       targetCtx.clip();
-      drawCoverImage(targetCtx, motion.nextImage || motion.currentImage || state.image || state.images[0], requiredW, requiredH, nextScale, 1);
+      if (singleFilterTransition) {
+        drawFilteredCoverImage(targetCtx, currentImage, requiredW, requiredH, nextScale, 1);
+      } else {
+        drawCoverImage(targetCtx, nextImage, requiredW, requiredH, nextScale, 1);
+      }
       targetCtx.restore();
     } else {
       targetCtx.drawImage(
@@ -2355,7 +2459,9 @@ state.image = state.images[0] || null;
     }
     targetCtx.restore();
 
-    applyImageFilterToCanvas(targetCtx, frameRect, state.imageFilter);
+    if (!singleFilterTransition) {
+      applyImageFilterToCanvas(targetCtx, frameRect, state.imageFilter);
+    }
 
     if (motion.overlay && motion.overlayAlpha > 0) {
       targetCtx.save();
@@ -2516,12 +2622,11 @@ state.image = state.images[0] || null;
       const delay = Math.round(1000 / setting.fps);
       const safeName = buildOutputBaseName();
   
-      setExportButtonsDisabled(true);
+      setExportRunning(true);
       setStatus(`APNG生成中... 0 / ${frames} frames / ${getSizeLimitLabel()}`);
   
       const frameBuffers = [];
-      const delays = [];
-      const colors = setting.apngColors || 128;
+        const colors = setting.apngColors || 128;
   
       const offscreen = document.createElement('canvas');
       offscreen.width = width;
@@ -2529,11 +2634,11 @@ state.image = state.images[0] || null;
       const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
   
       for (let i = 0; i < frames; i++) {
+        checkExportCancelled();
         const progress = frames === 1 ? 1 : i / (frames - 1);
         drawFrame(progress, offCtx, width, height);
         const imageData = offCtx.getImageData(0, 0, width, height);
         frameBuffers.push(new Uint8Array(imageData.data).buffer);
-        delays.push(delay);
         if (i % 4 === 0 || i === frames - 1) {
           setStatus(`APNG生成中... ${i + 1} / ${frames} frames`);
           await new Promise(resolve => setTimeout(resolve, 0));
@@ -2557,19 +2662,51 @@ state.image = state.images[0] || null;
         showExportSizeToast('APNG', blob);
         setStatus(`APNG出力完了：${outputName} / ${outputSize} / ${effectLabels[state.effect]} / ${els.loopInput.checked ? 'ループ' : '非ループ'} / ${seconds}秒 / ${setting.label} / ${sizeLabel}${sizeWarning ? ` / ${sizeWarning}` : ''}`);
       } catch (error) {
-        console.error(error);
-        setStatus('APNG出力中にエラーが発生しました。5MB以内を目安に、画像サイズ・画質・秒数を下げるか、PNG連番ZIP / WebP出力を試してください。');
+        if (error && error.code === 'EXPORT_CANCELLED') {
+          setStatus(dict().messages.exportCancelled);
+          showToast(dict().messages.exportCancelled, 'warning', 2800);
+        } else {
+          console.error(error);
+          setStatus('APNG出力中にエラーが発生しました。5MB以内を目安に、画像サイズ・画質・秒数を下げるか、PNG連番ZIP / WebP出力を試してください。');
+        }
       } finally {
-        setExportButtonsDisabled(false);
+        setExportRunning(false);
       }
     }
   */
   function setExportButtonsDisabled(disabled) {
-    els.exportPngZipBtn.disabled = disabled;
     els.exportWebpBtn.disabled = disabled;
     if (els.exportWebp30Btn) els.exportWebp30Btn.disabled = disabled;
+    if (els.exportWebp60Btn) els.exportWebp60Btn.disabled = disabled;
     els.playBtn.disabled = disabled;
-    els.clearOutputBtn.disabled = disabled;
+  }
+
+  function updateClearButtonState() {
+    els.clearOutputBtn.disabled = false;
+    els.clearOutputBtn.textContent = state.isExporting ? dict().staticText.cancelExport : dict().staticText.clear;
+    els.clearOutputBtn.classList.toggle('is-cancel', state.isExporting);
+  }
+
+  function setExportRunning(running) {
+    state.isExporting = running;
+    if (!running) state.cancelExportRequested = false;
+    setExportButtonsDisabled(running);
+    updateClearButtonState();
+  }
+
+  function checkExportCancelled() {
+    if (state.cancelExportRequested) {
+      const error = new Error('EXPORT_CANCELLED');
+      error.code = 'EXPORT_CANCELLED';
+      throw error;
+    }
+  }
+
+  function cancelCurrentExport() {
+    if (!state.isExporting) return;
+    state.cancelExportRequested = true;
+    setStatus(dict().messages.exportCancelling);
+    showToast(dict().messages.exportCancelling, 'warning', 2600);
   }
 
   async function canvasToWebpBlob(canvas, quality) {
@@ -2759,7 +2896,7 @@ state.image = state.images[0] || null;
     const zip = new JSZip();
     const folder = zip.folder(safeName);
 
-    setExportButtonsDisabled(true);
+    setExportRunning(true);
     setStatus(dict().messages.pngZipStart(frames, getSizeLimitLabel()));
 
     const offscreen = document.createElement('canvas');
@@ -2770,17 +2907,21 @@ state.image = state.images[0] || null;
 
     try {
       for (let i = 0; i < frames; i++) {
+        checkExportCancelled();
         const progress = frames === 1 ? 1 : i / (frames - 1);
         drawFrame(progress, offCtx, width, height);
         const blob = await canvasToPngBlob(offscreen);
+        checkExportCancelled();
         const fileName = `frame_${String(i + 1).padStart(padLength, '0')}.png`;
         folder.file(fileName, blob);
         if (i % 3 === 0 || i === frames - 1) {
           setStatus(dict().messages.pngZipProgress(i + 1, frames));
           await new Promise(resolve => setTimeout(resolve, 0));
+          checkExportCancelled();
         }
       }
 
+      checkExportCancelled();
       setStatus('PNG連番ZIP圧縮中...');
       const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
       const url = URL.createObjectURL(blob);
@@ -2794,10 +2935,15 @@ state.image = state.images[0] || null;
       els.downloadLink.setAttribute('aria-disabled', 'false');
       setStatus(dict().messages.pngZipComplete(outputName, outputSize, effectLabels[state.effect], seconds, setting.label, sizeLabel, sizeWarning));
     } catch (error) {
-      console.error(error);
-      setStatus(dict().messages.pngZipError);
+      if (error && error.code === 'EXPORT_CANCELLED') {
+        setStatus(dict().messages.exportCancelled);
+        showToast(dict().messages.exportCancelled, 'warning', 2800);
+      } else {
+        console.error(error);
+        setStatus(dict().messages.pngZipError);
+      }
     } finally {
-      setExportButtonsDisabled(false);
+      setExportRunning(false);
     }
   }
 
@@ -2818,11 +2964,12 @@ state.image = state.images[0] || null;
     const outputFps = fpsOverride || setting.fps;
     const { width, height, label: sizeLabel } = getExportSize();
     const frames = Math.max(2, Math.round(seconds * outputFps));
-    const delay = Math.round(1000 / outputFps);
+    const totalDurationMs = Math.max(1, Math.round(seconds * 1000));
+    const delays = buildFrameDelaySequence(frames, totalDurationMs);
     const safeName = buildOutputBaseName();
     const webpQuality = setting.webpQuality ?? 0.82;
 
-    setExportButtonsDisabled(true);
+    setExportRunning(true);
     setStatus(dict().messages.webpProgressStart(fpsLabel, frames, getSizeLimitLabel()));
 
     const offscreen = document.createElement('canvas');
@@ -2830,22 +2977,25 @@ state.image = state.images[0] || null;
     offscreen.height = height;
     const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
     const frameChunks = [];
-    const delays = [];
 
     try {
       for (let i = 0; i < frames; i++) {
+        checkExportCancelled();
         const progress = frames === 1 ? 1 : i / (frames - 1);
         drawFrame(progress, offCtx, width, height);
         const blob = await canvasToWebpBlob(offscreen, webpQuality);
+        checkExportCancelled();
         const bytes = await blobToUint8Array(blob);
+        checkExportCancelled();
         frameChunks.push(extractWebpImageChunks(bytes));
-        delays.push(delay);
         if (i % 4 === 0 || i === frames - 1) {
           setStatus(dict().messages.webpProgress(fpsLabel, i + 1, frames));
           await new Promise(resolve => setTimeout(resolve, 0));
+          checkExportCancelled();
         }
       }
 
+      checkExportCancelled();
       const animatedBytes = buildAnimatedWebp(frameChunks, width, height, delays, els.loopInput.checked);
       const blob = new Blob([animatedBytes], { type: 'image/webp' });
       const url = URL.createObjectURL(blob);
@@ -2858,18 +3008,24 @@ state.image = state.images[0] || null;
       els.downloadLink.classList.remove('is-disabled');
       els.downloadLink.setAttribute('aria-disabled', 'false');
       showExportSizeToast(fpsLabel ? `${fpsLabel} WebP` : 'WebP', blob);
-      setStatus(dict().messages.webpComplete(fpsLabel, outputName, outputSize, effectLabels[state.effect], els.loopInput.checked, seconds, outputFps, setting.label, sizeLabel, sizeWarning));
+      setStatus(`${dict().messages.webpComplete(fpsLabel, outputName, outputSize, effectLabels[state.effect], els.loopInput.checked, seconds, outputFps, setting.label, sizeLabel, sizeWarning)} ${dict().messages.webpPlaybackNote}`);
     } catch (error) {
-      console.error(error);
-      setStatus(dict().messages.webpError);
+      if (error && error.code === 'EXPORT_CANCELLED') {
+        setStatus(dict().messages.exportCancelled);
+        showToast(dict().messages.exportCancelled, 'warning', 2800);
+      } else {
+        console.error(error);
+        setStatus(dict().messages.webpError);
+      }
     } finally {
-      setExportButtonsDisabled(false);
+      setExportRunning(false);
     }
   }
 
 
   els.loopInput.checked = getLoopDefault(state.effect);
   updateOutputFileName();
+  updateClearButtonState();
 
   function hideFloatingTooltip() {
     const tooltip = document.querySelector('.floating-tooltip');
@@ -3019,10 +3175,16 @@ state.image = state.images[0] || null;
   });
 
   els.playBtn.addEventListener('click', togglePlay);
-  els.exportPngZipBtn.addEventListener('click', exportPngZip);
-  els.exportWebpBtn.addEventListener('click', () => exportWebp());
+  els.exportWebpBtn.addEventListener('click', () => exportWebp({ fpsOverride: 24, fpsLabel: '24FPS' }));
   els.exportWebp30Btn?.addEventListener('click', () => exportWebp({ fpsOverride: 30, fpsLabel: '30FPS' }));
-  els.clearOutputBtn.addEventListener('click', resetImage);
+  els.exportWebp60Btn?.addEventListener('click', () => exportWebp({ fpsOverride: 60, fpsLabel: '60FPS' }));
+  els.clearOutputBtn.addEventListener('click', () => {
+    if (state.isExporting) {
+      cancelCurrentExport();
+      return;
+    }
+    resetImage();
+  });
 
   [els.secondsInput, els.qualityInput, els.sizeInput, els.loopInput].forEach(input => {
     input.addEventListener('input', event => {
@@ -3059,9 +3221,9 @@ state.image = state.images[0] || null;
       return true;
     },
     togglePlay: () => clickShortcutButton(els.playBtn),
-    exportPngZip: () => clickShortcutButton(els.exportPngZipBtn),
     exportWebp: () => clickShortcutButton(els.exportWebpBtn),
     exportWebp30: () => clickShortcutButton(els.exportWebp30Btn),
+    exportWebp60: () => clickShortcutButton(els.exportWebp60Btn),
     closeDrawers,
     clearOutputDisplay,
     resetImage,

@@ -34,7 +34,7 @@
         <button class="ghost-button" type="button" id="shortcutBtn">ショートカット</button>
         <button class="ghost-button" type="button" id="themeBtn"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb">☀️</span></span></button>
       </div>
-      <div class="version-engrave">v0.83 / 2026.06.21</div>
+      <div class="version-engrave">v0.88 / 2026.06.25</div>
     </header>
 
     <section class="drawer" id="helpDrawer" hidden>
@@ -43,8 +43,8 @@
       <div class="guide-list">
         <p>1. 画像ファイルを選択、またはアップロード枠にドラッグ＆ドロップします。トランジションでは複数画像をまとめて読み込めます。</p>
         <p>2. エフェクトを選び、秒数・画質・画像サイズ・ループ設定を調整します。</p>
-        <p>3. プレビューで動きを確認し、APNG / PNG連番ZIP / WebP のいずれかで出力します。</p>
-        <p>4. APNGがうまく出力できない場合は、PNG連番ZIPまたはWebP出力を使用してください。</p>
+        <p>3. プレビューで動きを確認し、24FPS / 30FPS / 60FPS のWebPとして出力します。</p>
+        <p>4. 通常は24FPS出力がおすすめです。より滑らかさが欲しい場合は30FPSや60FPSを試してください。</p>
       </div>
     </section>
 
@@ -56,8 +56,8 @@
         <div><kbd>Cmd/Ctrl/Alt</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>O</kbd></div><span>画像を開く</span>
         <div><kbd>Cmd/Ctrl/Alt</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>P</kbd></div><span>プレビュー再生/停止</span>
         <div><kbd>Cmd/Ctrl/Alt</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>F</kbd></div><span>30FPS WebP出力</span>
-        <div><kbd>Cmd/Ctrl/Alt</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>Z</kbd></div><span>PNG連番ZIP出力</span>
-        <div><kbd>Cmd/Ctrl/Alt</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>W</kbd></div><span>WebP出力</span>
+        <div><kbd>Cmd/Ctrl/Alt</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>A</kbd></div><span>60FPS WebP出力</span>
+        <div><kbd>Cmd/Ctrl/Alt</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>W</kbd></div><span>24FPS WebP出力</span>
         <div><kbd>Cmd/Ctrl/Alt</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>T</kbd></div><span>ライトモード/ナイトモード切り替え</span>
       </div>
     </section>
@@ -185,16 +185,16 @@
           <form class="settings" id="settingsForm">
             <label><span>ファイル名</span><input type="text" id="fileNameInput" value="haikei_motion" spellcheck="false" /></label>
             <label><span>秒数</span><input type="number" id="secondsInput" min="0.5" max="12" step="0.5" value="3" /></label>
-            <label><span>画質</span><select id="qualityInput"><option value="light">軽量</option><option value="standard" selected>標準</option><option value="high">高品質</option></select></label>
+            <label><span>画質</span><select id="qualityInput"><option value="minimum">最小</option><option value="light">軽量</option><option value="standard" selected>標準</option><option value="high">高品質</option></select></label>
             <label><span>画像サイズ</span><select id="sizeInput"><option value="original" selected>オリジナル</option><option value="1280x720">16：9（1280 × 720）</option><option value="1280x800">8：5（1280 × 800）</option><option value="1024x768">4：3（1024 × 768）</option><option value="1200x800">3：2（1200 × 800）</option><option value="1024x1024">1：1（1024 × 1024）</option></select></label>
             <label class="checkbox-row loop-pill"><input type="checkbox" id="loopInput" checked /><span>ループする</span></label>
           </form>
 
           <div class="button-row">
             <button class="primary-button" type="button" id="playBtn">プレビュー再生</button>
-            <button class="accent-button has-tooltip" type="button" id="exportPngZipBtn" data-tooltip="1コマずつのPNG画像をZIPにまとめて出力します。動画化や後編集をしたい時向けです。" aria-label="PNG連番ZIP。1コマずつのPNG画像をZIPにまとめて出力します。動画化や後編集をしたい時向けです。">PNG連番ZIP</button>
-            <button class="accent-button secondary-accent has-tooltip" type="button" id="exportWebpBtn" data-tooltip="ココフォリアなどで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。" aria-label="WebP出力。ココフォリアなどで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。">WebP出力</button>
+            <button class="accent-button secondary-accent has-tooltip" type="button" id="exportWebpBtn" data-tooltip="ココフォリアで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。" aria-label="24FPSで出力。ココフォリアで使いやすい軽量な動く画像として出力します。通常はこちらがおすすめです。">24FPSで出力</button>
             <button class="accent-button fps30-accent has-tooltip" type="button" id="exportWebp30Btn" data-tooltip="WebPを30FPSで出力します。より滑らかですが、ファイルサイズは大きくなりやすいです。" aria-label="30FPSで出力。WebPを30FPSで出力します。より滑らかですが、ファイルサイズは大きくなりやすいです。">30FPSで出力</button>
+            <button class="accent-button fps60-accent has-tooltip" type="button" id="exportWebp60Btn" data-tooltip="WebPを60FPSで出力します。最も滑らかですが、ファイルサイズはかなり大きくなりやすいです。" aria-label="60FPSで出力。WebPを60FPSで出力します。最も滑らかですが、ファイルサイズはかなり大きくなりやすいです。">60FPSで出力</button>
           </div>
 
           <p class="export-note">※ 5MB以内でWebPファイルが出力されるように設定を調整してください。超過する場合は画質・画像サイズ・秒数を下げるか、30FPSでの出力ではなく、デフォルトの24FPSで出力してください。</p>

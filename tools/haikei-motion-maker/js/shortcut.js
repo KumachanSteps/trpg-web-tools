@@ -4,8 +4,8 @@
   const CODE_ACTIONS = {
     KeyO: 'openFile',
     KeyP: 'togglePlay',
-    KeyA: 'exportWebp30',
-    KeyZ: 'exportPngZip',
+    KeyA: 'exportWebp60',
+    KeyF: 'exportWebp30',
     KeyW: 'exportWebp',
     KeyT: 'toggleTheme'
   };
