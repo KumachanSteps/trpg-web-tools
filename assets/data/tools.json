@@ -2,7 +2,7 @@
   {
     "id": "haikei-motion-maker",
     "icon": "🌌",
-    "status": "preparing",
+    "status": "available",
     "category": "scenarioPrep",
     "badges": [
       "preSession",
@@ -14,7 +14,7 @@
       "素材制作",
       "シナリオ準備"
     ],
-    "href": "",
+    "href": "./tools/haikei-motion-maker/",
     "devHref": "./tools/haikei-motion-maker/",
     "devStage": "testing",
     "devNote": {
