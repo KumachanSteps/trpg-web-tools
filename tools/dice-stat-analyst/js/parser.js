@@ -16,7 +16,7 @@ const diceCommands = [
 ];
 
 const includedTabs = ['main', 'メイン', 'ho'];
-const excludedTabs = ['雑談', 'other', 'info', 'おはらい', 'お祓い', '運試し'];
+const excludedTabs = ['雑談', 'other', 'info', 'ダイス', 'dice', 'おはらい', 'お祓い', '運試し'];
 
 function prepareText(raw) {
   const source = String(raw || '');
@@ -40,12 +40,20 @@ function extractHtmlLogLines(doc) {
 
 function extractHtmlLogLine(paragraph) {
   const spans = Array.from(paragraph.querySelectorAll('span'))
-    .map(span => cleanLine(decodeHtml(span.textContent || '')))
+    .map(span => normalizeInlineLogText(decodeHtml(span.textContent || '')))
     .filter(Boolean);
 
   return spans.length >= 3 && isTabLabel(spans[0])
-    ? `${spans[0]} ${spans[1]}：${spans.slice(2).join(' ')}`
-    : cleanLine(decodeHtml(paragraph.textContent || ''));
+    ? `${spans[0]} ${spans[1]}：${normalizeInlineLogText(spans.slice(2).join(' '))}`
+    : normalizeInlineLogText(decodeHtml(paragraph.textContent || ''));
+}
+
+function normalizeInlineLogText(value) {
+  return normalizeNewlines(value)
+    .split(LF)
+    .map(part => cleanLine(part))
+    .filter(Boolean)
+    .join(' ');
 }
 
 function filterLines(lines) {
@@ -76,27 +84,32 @@ function isIncludedTab(tab) {
   if (excludedTabs.some(word => normalized.includes(normalizeTabName(word)))) return false;
   if (normalized === 'ho' || normalized.startsWith('ho')) return true;
 
-  return includedTabs.some(word => {
+  if (includedTabs.some(word => {
     const item = normalizeTabName(word);
     return normalized === item || normalized.startsWith(item) || normalized.includes(item);
-  });
+  })) {
+    return true;
+  }
+
+  /*
+    CCFOLIAの秘匿タブは [鬼] [魔女] [天使] [狼] のような
+    任意名になりやすい。明示的な除外タブ以外は秘匿候補として保持する。
+  */
+  return true;
 }
 
 function extractRollData(lines) {
   const rolls = [];
-  let currentCharacter = '';
 
   lines.forEach((line, index) => {
     const name = extractCharacterName(line);
     const usable = isUsableCharacterName(name);
     const values = extractRollsFromLine(line);
 
-    if (usable) currentCharacter = name;
-
     values.forEach(value => {
       rolls.push({
         value,
-        character: usable ? name : (currentCharacter || '不明'),
+        character: usable ? name : '不明',
         line,
         lineNo: index + 1
       });
@@ -106,7 +119,39 @@ function extractRollData(lines) {
   return rolls;
 }
 
+function extractStructuredLineParts(line) {
+  const source = String(line || '').trim();
+  const tab = extractLeadingTab(source);
+
+  let rest = source;
+
+  if (tab) {
+    const end = source.indexOf(']');
+    rest = end >= 0 ? source.slice(end + 1).trim() : source;
+  }
+
+  const colonIndexes = ['：', ':']
+    .map(separator => rest.indexOf(separator))
+    .filter(index => index >= 0);
+
+  if (!colonIndexes.length) {
+    return { tab, speaker: '', body: rest };
+  }
+
+  const colonIndex = Math.min(...colonIndexes);
+  const speaker = rest.slice(0, colonIndex).trim();
+  const body = rest.slice(colonIndex + 1).trim();
+
+  return { tab, speaker, body };
+}
+
 function extractCharacterName(line) {
+  const parts = extractStructuredLineParts(line);
+
+  if (parts.speaker) {
+    return cleanCharacterName(parts.speaker);
+  }
+
   const text = String(line || '').trim();
   const diceIndex = findDiceCommandIndex(text);
   if (diceIndex < 0) return '不明';
@@ -120,14 +165,50 @@ function extractCharacterName(line) {
 
 function extractRollsFromLine(line) {
   const text = String(line || '');
-  const diceIndex = findDiceCommandIndex(text);
+  const parts = extractStructuredLineParts(text);
+  const body = parts.body || text;
+
+  if (isExcludedD100Command(body) || !hasOutcomeOrThresholdD100(body)) return [];
+
+  const diceIndex = findDiceCommandIndex(body);
+
   if (diceIndex < 0) return [];
 
-  const afterCommand = text.slice(diceIndex);
-  const numbers = extractNumbersAfterResultMarkers(afterCommand);
-  if (numbers.length) return [numbers[0]];
+  const afterCommand = body.slice(diceIndex);
 
-  return extractNumbersAfterWords(afterCommand, ['出目']).slice(0, 1);
+  const d100ListValues = extractD100ListValues(afterCommand);
+  if (d100ListValues.length) return d100ListValues;
+
+  const numbers = extractNumbersAfterResultMarkers(afterCommand);
+  if (numbers.length) return normalizeD100ResultNumbers(afterCommand, numbers);
+
+  return extractNumbersAfterWords(afterCommand, ['出目']);
+}
+
+function normalizeD100ResultNumbers(text, numbers) {
+  if (!Array.isArray(numbers) || numbers.length <= 1) return numbers || [];
+
+  const source = String(text || '');
+
+  /*
+    x2 CCB ... #1 / #2 のような複数判定は全結果を数える。
+    一方、CoC7のボーナス・ペナルティ出力など
+    CC<=70 ... > 66 > 66 > レギュラー成功
+    のように1判定内で複数の結果マーカーが出る場合は最終値のみを数える。
+  */
+  if (/#\s*\d+/i.test(source)) return numbers;
+  if (/^\s*[xｘ×]\s*\d+/i.test(source)) return numbers;
+
+  return [numbers[numbers.length - 1]];
+}
+
+function extractD100ListValues(text) {
+  /*
+    v1.375:
+    5D100 / 5B100 のような複数d100リストは
+    成功/失敗の判定ロールではないため集計しない。
+  */
+  return [];
 }
 
 function findDiceCommandIndex(text) {
@@ -251,15 +332,16 @@ function looksLikeHtml(value) {
 
 function looksLikeD100Roll(line) {
   if (isRuleExplanationLine(line)) return false;
-  if (findDiceCommandIndex(line) >= 0 && hasRollResultMarker(line)) return true;
 
-  return hasAnyText(line, [
-    '出目',
-    '決定的成功',
-    '致命的失敗',
-    'ファンブル',
-    'クリティカル'
-  ]);
+  const parts = typeof extractStructuredLineParts === 'function'
+    ? extractStructuredLineParts(line)
+    : { body: String(line || '') };
+  const body = parts.body || String(line || '');
+
+  if (isExcludedD100Command(body)) return false;
+  if (!hasOutcomeOrThresholdD100(body)) return false;
+
+  return findDiceCommandIndex(body) >= 0 && hasRollResultMarker(body);
 }
 
 function hasRollResultMarker(line) {
@@ -269,6 +351,46 @@ function hasRollResultMarker(line) {
   if (diceIndex < 0) return false;
 
   return extractNumbersAfterResultMarkers(text.slice(diceIndex)).length > 0;
+}
+
+function isExcludedD100Command(text) {
+  const source = String(text || '');
+
+  /*
+    5D100 / 5B100 のような複数d100リストは
+    成功/失敗判定ではないため、統計対象から除外する。
+  */
+  return /(^|[^A-Za-z0-9])(?:[2-9]\d*)\s*[DBＢｄｂ]100([^A-Za-z0-9]|$)/i.test(source);
+}
+
+function hasOutcomeOrThresholdD100(text) {
+  const source = String(text || '');
+  const lower = source.toLowerCase();
+
+  const hasOutcome = [
+    '成功',
+    '失敗',
+    '決定的',
+    '致命的',
+    'スペシャル',
+    'クリティカル',
+    'ファンブル'
+  ].some(word => source.includes(word))
+    || lower.includes('success')
+    || lower.includes('failure')
+    || lower.includes('fail')
+    || lower.includes('regular')
+    || lower.includes('hard')
+    || lower.includes('extreme');
+
+  const hasThreshold = /(?:S?CCB\d*|S?CC\d*|CBR\d*|SCBR\d*|S?1D100|1D100|D100|D％|D%)\s*(?:<=|=<|<|≤)/i.test(source)
+    || /\(\s*1D100\s*(?:<=|=<|<|≤)/i.test(source);
+
+  /*
+    1D100 (1D100) ＞ 56 のような単なる運試し/無目的ロールは除外し、
+    CCB<= / CC<= / 1D100<= のような判定ロールだけを残す。
+  */
+  return hasOutcome || hasThreshold;
 }
 
 function isRuleExplanationLine(line) {
