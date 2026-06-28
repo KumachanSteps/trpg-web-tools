@@ -653,10 +653,12 @@
 
   function openReportGenerator(row){
     if(!row) return;
+    const willOverwrite = hasPendingReportImport();
     const confirmed = confirm([
       "卓報告ジェネレーターへ送る",
       "",
       "この卓ログをもとに、卓報告ジェネレーター用の入力データを作成します。",
+      willOverwrite ? "未取り込みの卓報告データがあるため、この操作で上書きします。" : "",
       "",
       "送信される情報：",
       "・シナリオ名",
@@ -667,11 +669,9 @@
       "・メモ",
       "・関連URL",
       "",
-      "卓報告ジェネレーター側で内容を確認・編集してから投稿文を生成できます。"
-    ].join("\n"));
+      "保存後、卓報告ジェネレーターを開きます。ジェネレーター側で内容を確認・編集してから投稿文を生成できます。"
+    ].filter(Boolean).join("\n"));
     if(!confirmed) return;
-
-    if(hasPendingReportImport() && !confirm("未取り込みの卓報告データがすでにあります。\n新しいデータで上書きしますか？")) return;
 
     const payload = createReportPendingImport(row);
     try{
@@ -682,10 +682,7 @@
       return;
     }
 
-    alert("卓報告ジェネレーター用データを作成しました");
-    if(confirm("卓報告ジェネレーター用データを作成しました。\n卓報告ジェネレーターを開きますか？")){
-      window.open(REPORT_GENERATOR_URL, "_blank", "noopener,noreferrer");
-    }
+    window.open(REPORT_GENERATOR_URL, "_blank", "noopener,noreferrer");
   }
 
   function hasPendingReportImport(){
