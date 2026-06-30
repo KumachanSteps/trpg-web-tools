@@ -147,9 +147,9 @@
     breathe: '呼吸',
     panX: '左右パン',
     wave: '水面揺れ',
-    transition: 'トランジション（Crossfade）',
-    transitionHardcut: 'トランジション②（Hardcut）',
-    transitionWipe: 'トランジション③（Wipe）',
+    transition: 'トランジション（クロスフェード）',
+    transitionHardcut: 'トランジション②（ハードカット）',
+    transitionWipe: 'トランジション③（ワイプ）',
     spinFallBlack: '回転落下・黒',
     suckInWhite: '吸い込み・白',
     suckInBlack: '吸い込み・黒',
@@ -175,9 +175,9 @@
     breathe: '呼吸',
     panX: '左右パン',
     wave: '水面揺れ',
-    transition: 'トランジションCrossfade',
-    transitionHardcut: 'トランジション②Hardcut',
-    transitionWipe: 'トランジション③Wipe',
+    transition: 'トランジションクロスフェード',
+    transitionHardcut: 'トランジション②ハードカット',
+    transitionWipe: 'トランジション③ワイプ',
     spinFallBlack: '回転落下黒',
     suckInWhite: '吸い込み白',
     suckInBlack: '吸い込み黒',
@@ -295,9 +295,9 @@
         breathe: '呼吸',
         panX: '左右パン',
         wave: '水面揺れ',
-        transition: 'トランジション（Crossfade）',
-        transitionHardcut: 'トランジション②（Hardcut）',
-        transitionWipe: 'トランジション③（Wipe）',
+        transition: 'トランジション（クロスフェード）',
+        transitionHardcut: 'トランジション②（ハードカット）',
+        transitionWipe: 'トランジション③（ワイプ）',
         spinFallBlack: '回転落下・黒',
         suckInWhite: '吸い込み・白',
         suckInBlack: '吸い込み・黒',
@@ -322,9 +322,9 @@
         breathe: '呼吸',
         panX: '左右パン',
         wave: '水面揺れ',
-        transition: 'トランジションCrossfade',
-        transitionHardcut: 'トランジション②Hardcut',
-        transitionWipe: 'トランジション③Wipe',
+        transition: 'トランジションクロスフェード',
+        transitionHardcut: 'トランジション②ハードカット',
+        transitionWipe: 'トランジション③ワイプ',
         spinFallBlack: '回転落下黒',
         suckInWhite: '吸い込み白',
         suckInBlack: '吸い込み黒',
@@ -356,9 +356,9 @@
         zoomOut: 'Zoom-out',
         zoomOutWhite: 'Zoom-out + White',
         zoomOutBlack: 'Zoom-out + Black',
-        transition: 'Crossfade',
-        transitionHardcut: 'Hardcut',
-        transitionWipe: 'Wipe'
+        transition: 'クロスフェード',
+        transitionHardcut: 'ハードカット',
+        transitionWipe: 'ワイプ'
       },
       filterLabels: {
         none: 'なし',
@@ -611,9 +611,9 @@
         zoomOut: 'Zoom out',
         zoomOutWhite: 'Zoom out + white',
         zoomOutBlack: 'Zoom out + black',
-        transition: 'Crossfade',
-        transitionHardcut: 'Hardcut',
-        transitionWipe: 'Wipe'
+        transition: 'クロスフェード',
+        transitionHardcut: 'ハードカット',
+        transitionWipe: 'ワイプ'
       },
       filterLabels: {
         none: 'None',
@@ -2584,13 +2584,51 @@ state.image = state.images[0] || null;
     }
   }
 
+  function getClosestSizeMapEntryForSource(sizeMap, sourceW, sourceH) {
+    const entries = Object.values(sizeMap || {});
+    if (!entries.length || !sourceW || !sourceH) return null;
+    const sourceAspect = sourceW / sourceH;
+    return entries
+      .map(entry => ({
+        ...entry,
+        score: Math.abs((entry.width / entry.height) - sourceAspect)
+      }))
+      .sort((a, b) => a.score - b.score)[0] || null;
+  }
+
+  function scaleOriginalToQualityBounds(sourceW, sourceH, targetW, targetH) {
+    if (!sourceW || !sourceH || !targetW || !targetH) {
+      return { width: sourceW || 1280, height: sourceH || 720 };
+    }
+    const scale = Math.min(targetW / sourceW, targetH / sourceH, 1);
+    return {
+      width: Math.max(2, Math.round(sourceW * scale)),
+      height: Math.max(2, Math.round(sourceH * scale))
+    };
+  }
+
   function getExportSize() {
     const selected = els.sizeInput.value;
     const sourceW = state.imageWidth || 1280;
     const sourceH = state.imageHeight || 720;
+    const setting = qualitySettings[els.qualityInput.value] || qualitySettings.standard;
 
     if (selected === 'original') {
-      return { width: sourceW, height: sourceH, label: 'オリジナル' };
+      if (els.qualityInput.value === 'high') {
+        return { width: sourceW, height: sourceH, label: dict().messages.original };
+      }
+
+      const closestBounds = getClosestSizeMapEntryForSource(setting.sizeMap, sourceW, sourceH);
+      if (closestBounds) {
+        const scaled = scaleOriginalToQualityBounds(sourceW, sourceH, closestBounds.width, closestBounds.height);
+        return {
+          width: scaled.width,
+          height: scaled.height,
+          label: `${dict().messages.original}比率（${scaled.width} × ${scaled.height}）`
+        };
+      }
+
+      return { width: sourceW, height: sourceH, label: dict().messages.original };
     }
 
     const preset = getSizePresetByValue(selected);
@@ -2602,7 +2640,7 @@ state.image = state.images[0] || null;
       };
     }
 
-    return { width: sourceW, height: sourceH, label: 'オリジナル' };
+    return { width: sourceW, height: sourceH, label: dict().messages.original };
   }
 
   /* APNG output is temporarily disabled from v0.80.
