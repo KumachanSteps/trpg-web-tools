@@ -196,9 +196,11 @@
   }
 
   function addAuthorSuffix(name) {
-    const text = String(name || '').trim();
+    const text = String(name || '').trim().replace(/\s+(様|さん|氏|先生)$/, '$1');
     if (!text) return '';
-    return /(?:様|さん|氏|先生)$/.test(text) ? text : `${text} 様`;
+    if (text.startsWith('作：') || text.startsWith('作:')) return text.replace(/^作:/, '作：');
+    const creditedName = /(?:様|さん|氏|先生)$/.test(text) ? text : `${text}様`;
+    return `作：${creditedName}`;
   }
 
   function sampleName(index, type) {
