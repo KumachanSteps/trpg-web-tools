@@ -204,3 +204,23 @@ v1.373 session log transfer newline fix:
 - Added transfer-time normalization that converts escaped newline sequences back into real line breaks before saving/importing.
 - Normalization is applied on both outgoing transfer to Growth Checker and incoming transfer from Growth Checker.
 - Updated version stamp to v1.373 2026/06/12.
+
+
+v1.374 roll-count parser fix:
+- Fixed character attribution by reading the speaker part of CCFOLIA lines before the message body.
+- Removed the previous currentCharacter carry-over behavior that could misattribute rolls.
+- Fixed multi-result d100 extraction so x2/x3/x6 CCB and similar rolls count every d100 result, not only the first result in the line.
+- Added support for multi-d100 list outputs such as 5D100 ... [53,2,67,1,63] and 5B100 ... 78,71,58,98,11.
+- Updated tab filtering so custom secret tabs are included unless explicitly excluded; [other], [info], [雑談], [ダイス] remain excluded by default.
+- Updated version stamp to v1.374 2026/06/12.
+
+- Added a guard against double-counting single CoC7/BP outputs such as CC<=70 ... > 66 > 66; these now count as one roll unless the line has xN/#N multi-roll segments.
+
+
+v1.375 parser correction:
+- Fixed CCFOLIA HTML extraction so line breaks inside a single <p> message are normalized into one parser line.
+  This prevents x2/#1/#2 continuation lines from losing the original speaker and being assigned to 不明.
+- Excluded plain non-check d100 rolls such as 1D100 (1D100) ＞ 56.
+- Excluded multi-d100 list commands such as 5D100 / 5B100.
+- Kept multi-check rolls such as x2 CCB / x6 CCB counted by actual d100 result count.
+- Updated version stamp to v1.375 2026/06/27.
