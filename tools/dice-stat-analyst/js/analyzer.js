@@ -1,37 +1,45 @@
-function classify(value) {
-  const crit = clamp(Number($('critMax').value || 5), 1, 100);
-  const fumble = clamp(Number($('fumbleMin').value || 96), 1, 100);
-
-  if (value <= crit) return 'Critical';
-  if (value >= fumble) return 'Fumble';
-  return 'Normal';
-}
-
 function classifyRoll(roll) {
-  const base = classify(roll.value);
-  if (base === 'Critical' || base === 'Fumble') return base;
+  if (roll && roll.outcome) {
+    return shouldDowngradeCriticalFumble(roll)
+      ? downgradeCriticalFumble(roll)
+      : roll.outcome;
+  }
 
-  const line = String(roll.line || '');
-  const lower = line.toLowerCase();
+  const target = roll && Number.isInteger(roll.target)
+    ? roll.target
+    : extractTargetNumber(roll ? roll.line : '');
 
-  const fail = line.includes('失敗')
-    || lower.includes('failure')
-    || lower.includes('fail');
-
-  const success = line.includes('成功')
-    || line.includes('スペシャル')
-    || line.includes('イクストリーム')
-    || line.includes('ハード')
-    || line.includes('レギュラー')
-    || lower.includes('success');
-
-  if (fail) return 'Fail';
-  if (success) return 'Success';
-
-  const target = extractTargetNumber(line);
-  return target !== null
+  return target !== null && roll
     ? roll.value <= target ? 'Success' : 'Fail'
     : 'Normal';
+}
+
+function shouldDowngradeCriticalFumble(roll) {
+  if (!roll || (roll.outcome !== 'Critical' && roll.outcome !== 'Fumble')) return false;
+
+  if (roll.isSanityRoll && !isCheckedOption('includeSanityCritFumble')) return true;
+  if (roll.isPlainD100Roll && !isCheckedOption('includePlainD100CritFumble')) return true;
+
+  return false;
+}
+
+function isCheckedOption(id) {
+  const element = $(id);
+  return !!element && !!element.checked;
+}
+
+function downgradeCriticalFumble(roll) {
+  if (roll.outcome === 'Critical') {
+    const target = Number.isInteger(roll.target) ? roll.target : extractTargetNumber(roll.line || '');
+    return target !== null ? 'Success' : 'Normal';
+  }
+
+  if (roll.outcome === 'Fumble') {
+    const target = Number.isInteger(roll.target) ? roll.target : extractTargetNumber(roll.line || '');
+    return target !== null ? 'Fail' : 'Normal';
+  }
+
+  return roll.outcome || 'Normal';
 }
 
 function extractTargetNumber(line) {

@@ -131,6 +131,13 @@ const screenshotExitBtn = $('screenshotExitBtn');
     analyzeBtn.addEventListener('click', analyze);
   }
 
+  ['includeSanityCritFumble', 'includePlainD100CritFumble'].forEach(id => {
+    const option = $(id);
+    if (option) {
+      option.addEventListener('change', render);
+    }
+  });
+
   const clearBtn = $('clearBtn');
   if (clearBtn) {
     clearBtn.addEventListener('click', clearAll);
@@ -179,7 +186,7 @@ function buildSessionLogTransferPayload(source = 'dice-stat-analyst') {
     type: 'session-log',
     source,
     tool: 'dice-stat-analyst',
-    version: 'v1.373',
+    version: 'v1.381',
     text,
     createdAt: new Date().toISOString()
   };
@@ -437,24 +444,6 @@ function syncThemeSwitch() {
 }
 
 
-function autoSetThresholdByDominantLogSystem(lines) {
-  const counts = countCocCommandTypes(lines);
-  const critMax = $('critMax');
-  const fumbleMin = $('fumbleMin');
-
-  if (!critMax || !fumbleMin) return;
-  if (counts.ccb === 0 && counts.cc === 0) return;
-
-  if (counts.ccb > counts.cc) {
-    critMax.value = '5';
-    fumbleMin.value = '96';
-    return;
-  }
-
-  critMax.value = '1';
-  fumbleMin.value = '100';
-}
-
 function countCocCommandTypes(lines) {
   const counts = { ccb: 0, cc: 0 };
 
@@ -483,8 +472,6 @@ function analyze() {
     .split(LF)
     .map(cleanLine)
     .filter(Boolean);
-
-  autoSetThresholdByDominantLogSystem(lines);
 
   const filtered = filterLines(lines);
   const rolls = extractRollData(filtered);

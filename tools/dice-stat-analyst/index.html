@@ -152,7 +152,7 @@
           </p>
         </div>
       </div>
-    <div class="header-version-stamp">v1.375 2026/06/27</div>
+    <div class="header-version-stamp">v1.381 2026/07/06</div>
     </div>
   </header>
 
@@ -183,7 +183,7 @@
           </div>
           <div class="header-slide-step">
             <span class="header-slide-step-index">2.</span>
-            <p data-i18n="panel.howtoStep2">必要に応じて、クリティカル上限 / ファンブル下限 / 自動非表示件数を確認し、「分析する」を押します。CCB中心なら6版、CC中心なら7版として自動調整されます。</p>
+            <p data-i18n="panel.howtoStep2">必要に応じて、自動非表示件数を確認し、「分析する」を押します。クリティカル / ファンブルはログに出力された判定語から集計します。</p>
           </div>
           <div class="header-slide-step">
             <span class="header-slide-step-index">3.</span>
@@ -383,33 +383,42 @@
           ></textarea>
         </label>
 
-        <h3 data-i18n="input.thresholdTitle">判定範囲</h3>
-
-        <div class="row">
-          <label>
-            <span data-i18n="input.critMax">クリティカル上限</span>
-            <input id="critMax" type="number" min="1" max="100" value="5" />
-          </label>
-
-          <label>
-            <span data-i18n="input.fumbleMin">ファンブル下限</span>
-            <input id="fumbleMin" type="number" min="1" max="100" value="96" />
-          </label>
-        </div>
         <h3 data-i18n="input.optionsTitle">解析オプション</h3>
-<label>
-          <span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span>
-          <input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" />
-        </label>
+        <div class="input-options-panel">
+          <label class="auto-hide-control">
+            <span data-i18n="input.autoHideMaxRolls">自動非表示にする総ロール数</span>
+            <input id="autoHideMaxRolls" type="number" min="0" max="999" value="15" />
+          </label>
+
+          <div class="stat-options-card">
+            <div class="stat-options-card-title" data-i18n="input.statOptionsTitle">統計オプション</div>
+            <p class="stat-options-card-note" data-i18n="input.statOptionsNote">OFFの場合、対象ロールのクリファンは通常の成功/失敗/Normalとして扱います。</p>
+
+            <label class="checkline stat-checkline">
+              <input id="includeSanityCritFumble" type="checkbox" />
+              <span data-i18n="input.includeSanityCritFumble">《正気度ロール》をクリティカル/ファンブルの統計に加える</span>
+            </label>
+
+            <label class="checkline stat-checkline">
+              <input id="includePlainD100CritFumble" type="checkbox" />
+              <span data-i18n="input.includePlainD100CritFumble">1D100ロールをクリティカル/ファンブルの統計に加える</span>
+            </label>
+          </div>
+        </div>
 
         <button id="analyzeBtn" data-i18n="button.analyze">分析する</button>
         <button id="clearBtn" class="secondary" data-i18n="button.clear">クリア</button>
 
-        <p class="note input-help" data-i18n="inputHelp">
-          対応例：CCB&lt;=80、CC&lt;=60、1d100&lt;=55、RESB(10-16)、D100 など。
-          キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。
-          [雑談] / [other] / [info] 系の行除外とd100系ロール抽出は自動適用されます。CCB中心なら6版、CC中心なら7版として判定範囲を自動調整します。少数ロールのキャラは初期状態で非表示になります。
-        </p>
+        <div class="note input-help" data-i18n-html="inputHelp">
+          <strong>対応例</strong>
+          <span>CCB&lt;=80 / CC&lt;=60 / 1d100&lt;=55 / 1D100 / CBR(80,60) / CBRB(80,60)</span>
+          <ul>
+            <li>キャラクター名は「名前：CC」や「[main] 名前：CCB」形式から自動検出します。</li>
+            <li>[雑談] / [other] / [info] 系の行除外とd100系ロール抽出は自動適用されます。</li>
+            <li>5D100 / 5B100 のような複数d100リストは除外します。</li>
+            <li>少数ロールのキャラは初期状態で非表示になります。</li>
+          </ul>
+        </div>
       </div>
     </section>
 
