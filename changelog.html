@@ -20,7 +20,7 @@
   />
 
   <link rel="icon" href="./assets/img/kuma_icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="./assets/css/portal.css?v=20260621-05" />
+  <link rel="stylesheet" href="./assets/css/portal.css?v=20260622-01" />
 </head>
 
 <body class="theme-dawn">
@@ -99,11 +99,42 @@
 
     <section class="portal-info-section" aria-label="Changelog">
       <article class="portal-info-card release-item">
-        <p class="release-date">2026/06/21</p>
-        <h2>卓ログトラッカー v1.61 UI調整</h2>
+        <p class="release-date">2026/07/06</p>
+        <h2>ダイス解析アナライザー 更新</h2>
         <ul>
-          <li>ヘッダーにバージョンと更新日付を表示し、主要操作ボタンを再配置しました。</li>
-          <li>項目追加 / 項目削除、卓追加フォーム、卓報告ジェネレーター送信ボタン、システム別出力を調整しました。</li>
+          <li>【】のないロールも解析対象に追加し、<code>CCB&lt;=85 アイデア</code> のようなログを拾えるようにしました。</li>
+          <li>SAN値 / 正気度ロール、単独の <code>1D100</code> / <code>D100</code>、<code>CBR</code> / <code>CBRB</code> に対応しました。</li>
+          <li><code>CBR(87,80)</code> のような複合判定は判定値ごとに複数ロールとして集計し、<code>5D100</code> / <code>5B100</code> のような複数d100リストは従来どおり除外します。</li>
+          <li>クリティカル / ファンブル判定を数値範囲ではなくログ出力文言ベースへ変更し、6版は「決定的成功 / 致命的失敗」、7版は「クリティカル / ファンブル」を参照します。</li>
+          <li>左パネルに統計オプションを追加し、正気度ロール・1D100ロールをクリファン統計に含めるかを個別に切り替えられるようにしました。どちらもデフォルトOFFです。</li>
+          <li>正気度ロール・1D100ロールはロール数には含めつつ、オプションOFF時はクリファン率の分母・分子に含めない挙動へ調整しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/20</p>
+        <h2>ポータル分類バッジの視認性調整</h2>
+        <ul>
+          <li>Dawnモードでカテゴリフィルターとツールカードバッジを明るい緑系に変更しました。</li>
+          <li>ポータルカード上のバッジが背景に沈まないよう、枠線・背景・文字色のコントラストを調整しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/20</p>
+        <h2>ポータルカテゴリを新5分類へ再整理</h2>
+        <ul>
+          <li>ツール分類を「卓前 / 卓中 / 卓後 / GM支援 / PL支援」の5分類に統一しました。</li>
+          <li>検索横のフィルターと各ツールカードのバッジ表示を新分類へ切り替え、旧カテゴリは検索補助キーワードとして扱うようにしました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/19</p>
+        <h2>Chara Libra / キャラクターLibrary 整備</h2>
+        <ul>
+          <li>Chara Libraを追加し、CCFOLIA駒JSON・いあきゃらTXTを取り込むキャラクター管理ハブとして整理しました。</li>
+          <li>ライブラリ画面を再設計し、キャラクター情報・MEMO・チャットパレット管理の導線を改善しました。</li>
         </ul>
       </article>
 
@@ -112,7 +143,71 @@
         <h2>卓ログトラッカー × 卓報告ジェネレーター連携</h2>
         <ul>
           <li>卓ログトラッカーから卓報告ジェネレーターへセッション情報を送れる連携機能を追加しました。</li>
-          <li>卓報告ジェネレーターで卓ログトラッカーからの連携データを読み込めるように調整しました。</li>
+          <li>卓報告ジェネレーター側で連携データを読み込めるようにし、CCFOLIA連携バージョン表記もv1.1へ更新しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/19</p>
+        <h2>背景モーションメーカー v0.72</h2>
+        <ul>
+          <li>背景モーションメーカーをv0.72へ更新しました。</li>
+          <li>背景・シーン素材制作系ツール群の運用方針を引き続き整理しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/18</p>
+        <h2>NPCデータリーダー v1.521 / 背景モーションメーカー v0.71</h2>
+        <ul>
+          <li>NPCデータリーダーをv1.521へ更新し、NPCデータ解析まわりを改善しました。</li>
+          <li>背景モーションメーカーをv0.71へ更新しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/17</p>
+        <h2>GM用キャラシビューワー v1.31 / 背景モーションメーカー更新</h2>
+        <ul>
+          <li>GM用キャラシビューワーをv1.31へ更新し、表示領域やパネルバランスを調整しました。</li>
+          <li>背景モーションメーカーv0.70系をアップロードし、β版の調整を継続しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/16</p>
+        <h2>NPCデータリーダー v1.488 / 背景モーションメーカーβ版</h2>
+        <ul>
+          <li>NPCデータリーダーをv1.488へ更新しました。</li>
+          <li>背景モーションメーカーβ版とv0.63系を追加・調整しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/15</p>
+        <h2>キャラ差分管理ツール v0.13〜v0.16</h2>
+        <ul>
+          <li>キャラ差分管理ツールをv0.13、v0.15、v0.16へ段階的に更新しました。</li>
+          <li>画像差分管理、ダウンロード導線、トースト表示、Escキー挙動などの操作性を改善しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/13</p>
+        <h2>ダイス解析・成長チェッカー・チャパレ整形の集中更新</h2>
+        <ul>
+          <li>ダイス解析アナライザーをv1.36〜v1.373系へ更新し、判定ロジックやCC系ログ抽出を改善しました。</li>
+          <li>CoC成長チェッカーをv2.67〜v2.68へ更新し、ダイス解析アナライザーとのログ連携を整理しました。</li>
+          <li>CoCチャパレ整形ツールをv2.54〜v2.55へ更新し、フッターや整形ロジックを調整しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/06/12</p>
+        <h2>卓ログトラッカー・キャラ差分・アイコン系の更新</h2>
+        <ul>
+          <li>卓ログトラッカーv1.5系、CoC成長チェッカー、キャラ差分管理ツールv0.12を更新しました。</li>
+          <li>かんたんアイコンメーカー関連の導線と素材系ツールの接続方針を整理しました。</li>
         </ul>
       </article>
 
