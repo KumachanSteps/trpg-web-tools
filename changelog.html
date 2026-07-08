@@ -99,6 +99,19 @@
 
     <section class="portal-info-section" aria-label="Changelog">
       <article class="portal-info-card release-item">
+        <p class="release-date">2026/07/06</p>
+        <h2>ダイス解析アナライザー 更新</h2>
+        <ul>
+          <li>【】のないロールも解析対象に追加し、<code>CCB&lt;=85 アイデア</code> のようなログを拾えるようにしました。</li>
+          <li>SAN値 / 正気度ロール、単独の <code>1D100</code> / <code>D100</code>、<code>CBR</code> / <code>CBRB</code> に対応しました。</li>
+          <li><code>CBR(87,80)</code> のような複合判定は判定値ごとに複数ロールとして集計し、<code>5D100</code> / <code>5B100</code> のような複数d100リストは従来どおり除外します。</li>
+          <li>クリティカル / ファンブル判定を数値範囲ではなくログ出力文言ベースへ変更し、6版は「決定的成功 / 致命的失敗」、7版は「クリティカル / ファンブル」を参照します。</li>
+          <li>左パネルに統計オプションを追加し、正気度ロール・1D100ロールをクリファン統計に含めるかを個別に切り替えられるようにしました。どちらもデフォルトOFFです。</li>
+          <li>正気度ロール・1D100ロールはロール数には含めつつ、オプションOFF時はクリファン率の分母・分子に含めない挙動へ調整しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
         <p class="release-date">2026/06/20</p>
         <h2>ポータル分類バッジの視認性調整</h2>
         <ul>
