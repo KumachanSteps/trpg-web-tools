@@ -1,0 +1,1 @@
+window.REPORT_GEN_PARSER = window.REPORT_GEN_PARSER || {};

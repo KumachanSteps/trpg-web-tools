@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NPCデータリーダー｜TRPG WEBツール観測所</title>
-  <link rel="stylesheet" href="css/style.css?v=1.521" />
+  <link rel="stylesheet" href="css/style.css?v=1.532" />
 </head>
 <body class="light">
   <header class="app-header">
@@ -14,7 +14,7 @@
         <h1>NPCデータリーダー</h1>
       </div>
       <div class="header-actions">
-        <a class="header-link portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG WEBツール観測所 に戻る">←TRPG WEBツール観測所</a>
+        <a class="ghost header-link portal-link" id="portalLink" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG WEBツール観測所 に戻る" aria-label="TRPG WEBツール観測所 に戻る">←TRPG WEBツール観測所</a>
         <button type="button" class="ghost x-share-btn" id="xShareBtn" title="Xで共有" aria-label="Xで共有">𝕏</button>
         <button type="button" class="ghost" id="langBtn">JP / EN</button>
         <button type="button" class="ghost" id="usageJumpBtn" aria-expanded="false" aria-controls="usageSlidePanel">使い方</button>
@@ -24,7 +24,7 @@
     </div>
     <div class="header-bottom-row">
       <div class="sub">シナリオNPC情報 → チャットパレット / CCFOLIA用NPC駒データ</div>
-      <div class="version-mark">v1.521 / 2026.06.17</div>
+      <div class="version-mark">v1.532 / 2026.06.18</div>
     </div>
   </header>
 
@@ -75,6 +75,12 @@
           <h2>対応している表記</h2>
           <p><code>近接戦闘（格闘）60%（30/12）、ダメージ 1D3+DB</code> のような公式シナリオ風の表記に対応します。括弧内のハード/イクストリーム値は自動で除外します。</p>
         </div>
+
+        <div class="usage-slide-notice">
+          <div class="usage-notice-title">利用上の注意</div>
+          <p>本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
+          <p>不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
+        </div>
       </div>
     </div>
   </aside>
@@ -109,11 +115,6 @@
               <li>JSONは直接編集不可。編集済みチャパレはJSONの commands に反映されます。</li>
               <li>CCFOLIA駒の memo は秘匿漏れ防止のため、初期値をNPC名のみにします。</li>
             </ol>
-            <div class="usage-notice-panel" id="usageNoticePanel">
-              <div class="usage-notice-title">利用上の注意</div>
-              <p>本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
-              <p>不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
-            </div>
           </div>
         </div>
       </section>
@@ -237,11 +238,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="js/i18l.js?v=1.521"></script>
-  <script src="js/language.js?v=1.521"></script>
-  <script src="js/parser.js?v=1.521"></script>
-  <script src="js/checked-scenario.js?v=1.521"></script>
-  <script src="js/main.js?v=1.521"></script>
-  <script src="js/shortcut.js?v=1.521"></script>
+  <script src="js/i18l.js?v=1.532"></script>
+  <script src="js/language.js?v=1.532"></script>
+  <script src="js/parser.js?v=1.532"></script>
+  <script src="js/checked-scenario.js?v=1.532"></script>
+  <script src="js/main.js?v=1.532"></script>
+  <script src="js/shortcut.js?v=1.532"></script>
 </body>
 </html>

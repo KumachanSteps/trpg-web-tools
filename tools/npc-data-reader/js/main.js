@@ -47,6 +47,7 @@ function cleanNpcHeading(line){
   s=s.replace(/^\s*▼\s*エネミーデータ\s*[\/／]\s*/,'');
   s=s.replace(/^\s*▼\s*/,'');
   s=s.replace(/^\s*【\s*エネミー\s*[:：]\s*/,'').replace(/】\s*$/,'');
+  s=s.replace(/^\s*\[\s*敵情報\s*[:：]\s*/,'').replace(/\]\s*$/,'');
   s=s.replace(/^\s*[●◆◇■□★☆]+\s*/,'').replace(/^\s*・\s*/,'');
   s=s.replace(/\s*・\s*[◆◇■□★☆]*\s*$/,'').replace(/[◆◇■□★☆]+\s*$/,'').trim();
   return s || 'NPC';
@@ -57,12 +58,14 @@ function isNpcBlockHeading(line){
   if(/^[（(].*[）)]$/.test(s)) return false;
   if(/\(mnvr\)|（mnvr）|^ダメージ\b|^1\s*ラウンド/.test(s)) return false;
   if(/^(?:CCB|CC|1D100)\s*<=/i.test(s) || /^\d+d\d+/i.test(s)) return false;
-  if(/^(?:しかし|また|さらに|その|この|あの|彼|彼女|探索者|キーパー|近頃|親しい|シナリオ|ある神話研究家|対象|捕まえられた者)/.test(s)) return false;
+  if(/^(?:しかし|また|さらに|その|この|あの|彼|彼女|探索者|キーパー|近頃|親しい|シナリオ|ある神話研究家|対象|捕まえられた者|もしくは|または|あるいは|か)/.test(s)) return false;
+  if(/^(?:もしくは|または|あるいは|か)\s*\d+d\d+/i.test(s)) return false;
   if(/^§\s*\S+/.test(s)) return true;
   if(/^デフォルト名\s*[:：]\s*\S+/.test(s)) return true;
   if(/^▼\s*エネミーデータ\s*[\/／]\s*\S+/.test(s)) return true;
   if(/^▼\s*[^:：\n]{1,40}$/.test(s) && !looksLikeSection(s)) return true;
   if(/^【\s*エネミー\s*[:：]\s*.+?】$/.test(s)) return true;
+  if(/^\[\s*敵情報\s*[:：]\s*.+?\]$/.test(s)) return true;
   const commaHeading=s.match(/^([^:：\n%％。.!！？?]{1,30})[、,]([^%％\n。.!！？?]{1,60})$/);
   if(commaHeading){
     const head=commaHeading[1].trim();
@@ -121,6 +124,7 @@ function extractNameAndTitle(lines){
     if(enemyNameMatch){ name=enemyNameMatch[1].trim(); title=enemyNameMatch[2].trim(); }
     else title='エネミー';
   }
+  if(/^\[\s*敵情報\s*[:：]/.test(firstNorm)) title='敵情報';
   if(/[、,]/.test(first) && !/^【\s*エネミー\s*[:：]/.test(firstNorm)){ const parts=first.split(/[、,]/).map(x=>x.trim()).filter(Boolean); name=parts.shift()||first; title=title||parts.join('、'); }
   for(let i=1;i<Math.min(lines.length,8);i++){
     const line=normalize(lines[i]);
@@ -149,7 +153,7 @@ function abilitySourceFor(raw){
   if(idx6>=0){ const after=n.slice(idx6); const idxNext=after.search(/(?:^|\n)\s*7版/); const san=after.search(/(?:^|\n)\s*(?:SAN|正気度|耐久力|HP|マジックポイント|MP|ダメージボーナス|DB)\b/i); let end=[idxNext,san].filter(x=>x>0).sort((a,b)=>a-b)[0]; return end?after.slice(0,end):after; }
   return n;
 }
-function isCombatSkillName(name){return /近接|回避|こぶし|キック|拳銃|射撃|ショットガン|警棒|棍棒|クラヴマガ|ナイフ|戦闘|投擲|武器|格闘|マーシャルアーツ|組み付き|組みつき|触手|触肢|発火|瞬間移動|アサルトライフル|ライフル|リボルバー/.test(name||'')}
+function isCombatSkillName(name){return /近接|回避|こぶし|キック|拳銃|射撃|ショットガン|警棒|棍棒|クラヴマガ|ナイフ|戦闘|投擲|武器|格闘|マーシャルアーツ|組み付き|組みつき|触手|触肢|発火|瞬間移動|アサルトライフル|ライフル|リボルバー|群れ攻撃|噛みつき|鉤爪|鍵爪/.test(name||'')}
 function tailAfterStatLines(raw){
   const lines=raw.split(/\n+/); let last=-1;
   lines.forEach((line,i)=>{
@@ -179,7 +183,9 @@ function extractSpells(raw){
       bracketed.forEach(add);
       const rest=v.replace(/《[^》]+》/g,'').replace(/^[、,\s]+/,'').replace(/^ほかに/,'ほかに').trim();
       if(rest) rest.split(/[、,]+/).map(x=>x.trim()).filter(Boolean).forEach(add);
-    } else add(v);
+    } else {
+      v.split(/[、,]+/).map(x=>x.trim()).filter(Boolean).forEach(add);
+    }
   };
   const text=raw.replace(/\r\n?/g,'\n');
   const inlineRe=/(?:取得呪文|使用呪文|呪文)\s*[:：]\s*([^\n]+)/g;
@@ -271,7 +277,7 @@ function collectLooseSkills(text){
     return true;
   }).join('\n');
   const add=(name,value)=>{
-    name=normalize(name).replace(/^[・\-\s]+/,'').replace(/[〈〉《》【】<>]/g,'').replace(/[:：]\s*$/,'').trim();
+    name=normalize(name).replace(/^[・\-\s]+/,'').replace(/[〈〉《》【】<>\[\]]/g,'').replace(/[:：]\s*$/,'').trim();
     value=normalize(value).replace(/[^0-9]/g,'');
     if(/[0-9%％]/.test(name)) return;
     if(!name||!value||isNonSkillName(name)||/^(他|その他|技能|戦闘技能|所持技能|特技)$/.test(name)||/^他\s/.test(name))return;
@@ -319,16 +325,52 @@ function normalizeDiceExpr(expr){
   return s;
 }
 function cleanSkillName(name){
-  return normalize(name||'').replace(/^[・\-\s]+/,'').replace(/[〈〉《》【】<>]/g,'').replace(/[:：]\s*$/,'').trim();
+  return normalize(name||'').replace(/^[・\-\s]+/,'').replace(/[〈〉《》【】<>\[\]]/g,'').replace(/[:：]\s*$/,'').trim();
 }
 function addCombatRow(list,row){
   if(!row || (!row.name && !row.damage)) return;
   const key=[row.name||'',row.value||'',row.damage||''].join('|');
   if(!list.some(x=>[x.name||'',x.value||'',x.damage||''].join('|')===key)) list.push(row);
 }
+function normalizeDamageSourceName(name){
+  let s=cleanSkillName(name||'').replace(/\s+/g,'');
+  if(s==='鍵爪') s='鉤爪';
+  return s;
+}
+function extractNamedDamageMap(raw){
+  const map={};
+  const src=normalize(raw||'');
+  let m;
+  // 例: 拳銃ダメージ:1D10 / 群れ攻撃ダメージ:1D8 / 鍵爪ダメージ:1D4+DB
+  // ひらがなを含む攻撃名（群れ攻撃）を壊さない。
+  const re=/([^\n:：、,。]+?)\s*ダメージ\s*[:：]\s*([^\s\n、,。]+)/g;
+  while((m=re.exec(src))){
+    let name=cleanSkillName(m[1]||'');
+    name=name.replace(/^(?:技能|攻撃|武器|行動)\s*[:：]?\s*/,'').trim();
+    if(!name || /ボーナス|DB|ビルド|移動|装甲|耐久|HP|MP|SAN|STR|CON|SIZ|DEX|INT|APP|POW|EDU/i.test(name)) continue;
+    const key=normalizeDamageSourceName(name);
+    const dmg=normalize(m[2]||'').trim();
+    if(key && dmg) map[key]=dmg;
+  }
+  return map;
+}
+
+function namedDamageFor(sourceName, damageMap){
+  const key=normalizeDamageSourceName(sourceName);
+  return (damageMap||{})[key] || '';
+}
+function applyNamedDamages(rows, damageMap){
+  (rows||[]).forEach(r=>{
+    if(!r.damage){
+      const dmg=namedDamageFor(r.name, damageMap);
+      if(dmg) r.damage=dmg;
+    }
+  });
+}
 function parseCombatRows(text, options={}){
   const rows=[];
   const enemyMode=!!options.enemyMode;
+  const damageMap=options.damageMap||{};
   let inWeaponBlock=false;
   const lines=(text||'').replace(/\r\n?/g,'\n').split(/\n+/).map(x=>x.trim()).filter(Boolean);
   lines.forEach(line=>{
@@ -337,16 +379,49 @@ function parseCombatRows(text, options={}){
     if(/^\[\s*武器\s*\]$/.test(n)){inWeaponBlock=true; return;}
     if(/^\[.+\]$/.test(n) && !/^\[\s*武器\s*\]$/.test(n)) inWeaponBlock=false;
     if(!n || looksLikeSection(n) || isNonSkillName(n)) return;
-    if(/^【\s*エネミー\s*[:：]/.test(n) || /^▼\s*エネミーデータ\s*[\/／]/.test(n)) return;
+    if(/^【\s*エネミー\s*[:：]/.test(n) || /^\[\s*敵情報\s*[:：]/.test(n) || /^▼\s*エネミーデータ\s*[\/／]/.test(n)) return;
+    if(/^.+?\s*ダメージ\s*[:：]\s*[^\s]+/.test(n)) return;
+    const processNote=n.match(/^(.+?)\s*処理\s*[:：]\s*(.+)$/);
+    if(processNote){ addCombatRow(rows,{name:cleanSkillName(processNote[1])+'処理：'+processNote[2].trim(),value:'',damage:''}); return; }
     if(/^[（(].*※.*[）)]$/.test(n)){
       if(enemyMode) addCombatRow(rows,{name:n.replace(/^[（(]\s*※?\s*/,'').replace(/[）)]$/,'').trim(),value:'',damage:''});
       return;
     }
     if(/[（(]\s*\d{1,3}\s*%\s*[）)]/.test(n) && !/ダメージ/i.test(n)) return;
-    if(/^1\s*ラウンド/.test(n) || /\(mnvr\)|（mnvr）/i.test(n)){ addCombatRow(rows,{name:n,value:'',damage:''}); return; }
+    // 公式系データの「1ラウンドの攻撃回数： 2」のような単純な回数メモは
+    // チャットパレットの戦闘コマンドとしては出力しない。
+    // ただし「1ラウンドの攻撃回数 : 4(触手の乱打、つかむ)」のように
+    // 攻撃内容の補足を含む場合は従来通り戦闘補足として保持する。
+    if(/^1\s*ラウンド/.test(n)){
+      if(/攻撃回数|戦闘回数/.test(n) && /[:：]\s*\d+\s*$/.test(n)) return;
+      addCombatRow(rows,{name:n,value:'',damage:''}); return;
+    }
+    if(/\(mnvr\)|（mnvr）/i.test(n)){ addCombatRow(rows,{name:n,value:'',damage:''}); return; }
+    const squarePairs=[...n.matchAll(/\[\s*([^\]\d]+?)\s+(\d{1,3})\s*\]/g)];
+    if(squarePairs.length){
+      squarePairs.forEach(pair=>{
+        const pairName=cleanSkillName(pair[1]);
+        const pairValue=pair[2];
+        const pairDamage=namedDamageFor(pairName, damageMap);
+        if(!pairName || isNonSkillName(pairName)) return;
+        if(enemyMode || pairDamage || isCombatSkillName(pairName) || /群れ攻撃|噛みつき|鉤爪|鍵爪/.test(pairName)) addCombatRow(rows,{name:pairName,value:pairValue,damage:pairDamage});
+      });
+      return;
+    }
     const directCmd=n.match(/^(?:CCB|CC|1D100)\s*<=\s*([^\s]+)\s+(.+)$/i);
     if(directCmd){ addCombatRow(rows,{name:cleanSkillName(directCmd[2]), value:directCmd[1].trim(), damage:''}); return; }
     if(/^(?:CCB|CC|1D100)\s*<=/i.test(n)){ addCombatRow(rows,{name:n, value:'', damage:''}); return; }
+    const alternativeDamage=n.match(/^(?:もしくは|または|あるいは|か)\s*(\d+d\d+(?:[+\-]\d+d?\d*)?(?:\+?DB)?)(?:[（(]([^）)]+)[）)])?$/i);
+    if(alternativeDamage){
+      let dmg=alternativeDamage[1].trim();
+      const note=normalize(alternativeDamage[2]||'').trim();
+      // 代替ダメージ行は「肉切りナイフ使用時・ダメージ」のように
+      // 由来が分かるラベルへ変換して保持する。
+      if(note) dmg += '（' + note + '）';
+      if(rows.length){ rows[rows.length-1].damage = [rows[rows.length-1].damage, dmg].filter(Boolean).join('、'); }
+      else addCombatRow(rows,{name:'', value:'', damage:dmg});
+      return;
+    }
     const directDamage=n.match(/^(\d+d\d+(?:[+\-]\d+d?\d*)?(?:\+?DB)?)\s*[（(]([^）)]+)[）)]$/i);
     if(directDamage){ addCombatRow(rows,{name:'', value:'', damage:directDamage[1]+'（'+directDamage[2]+'）'}); return; }
     if(/^\d+d\d+/i.test(n)){ addCombatRow(rows,{name:n.replace(/d/ig,'D'), value:'', damage:''}); return; }
@@ -367,12 +442,34 @@ function parseCombatRows(text, options={}){
       repeatedPairs.forEach(pair=>{
         const pairName=cleanSkillName(pair[1]);
         const pairValue=pair[2];
-        const pairDamage=normalize(pair[3]||'').trim();
+        const pairDamage=normalize(pair[3]||'').trim() || namedDamageFor(pairName, damageMap);
         if(!pairName || isNonSkillName(pairName)) return;
-        if(isCombatSkillName(pairName) || pairDamage || /庇う|かばう|抵抗|鉱石化|触肢|発火|瞬間移動/.test(pairName)){
+        if(isCombatSkillName(pairName) || pairDamage || /庇う|かばう|抵抗|鉱石化|触肢|発火|瞬間移動|群れ攻撃|噛みつき|鉤爪|鍵爪/.test(pairName)){
           addCombatRow(rows,{name:pairName,value:pairValue,damage:pairDamage});
         }
       });
+      return;
+    }
+    // 射撃（32口径オートマチック拳銃）50%（25／10）、ダメージ 1D8 のように
+    // 技能名中に数字を含む括弧がある場合、値の 50% ではなく括弧内の 32 を拾わないようにする。
+    const greedySkill=n.match(/^[<〈《【]?\s*(.+?)(?=\s*\d{1,3}\s*[%％])\s*(\d{1,3})\s*[%％]\s*(?:[（(]([^）)]*)[）)])?\s*(?:[、,\s]*ダメージ(?:は)?\s*[:;：；]?\s*([^、,\s]+(?:\s*[、,]\s*[^、,\s]+)*))?\s*(.*)$/i);
+    if(greedySkill){
+      const name=cleanSkillName(greedySkill[1]);
+      const value=greedySkill[2];
+      const parenNote=normalize(greedySkill[3]||'').trim();
+      const damage=normalize(greedySkill[4]||'').trim();
+      let extra=normalize(greedySkill[5]||'').trim();
+      if(!name || isNonSkillName(name)) return;
+      let rowDamage=damage || namedDamageFor(name, damageMap);
+      const parenDamage=parenNote.match(/^ダメージ\s*[:：;；]?\s*(.+)$/i);
+      if(parenDamage && !rowDamage) rowDamage=parenDamage[1].trim();
+      const hasDamage=!!rowDamage;
+      const isCombat=enemyMode || hasDamage || isCombatSkillName(name) || /庇う|かばう|抵抗|鉱石化|触肢|発火|瞬間移動|群れ攻撃|噛みつき|鉤爪|鍵爪/.test(name);
+      if(isCombat){
+        addCombatRow(rows,{name,value,damage:rowDamage});
+        if(parenNote && !parenDamage && !/^\d+\s*[/／]\s*\d+$/.test(parenNote)) addCombatRow(rows,{name:parenNote.replace(/\s+/g,' '),value:'',damage:''});
+        if(extra) addCombatRow(rows,{name:extra.replace(/^[/／、,\s]+/,'').trim(),value:'',damage:''});
+      }
       return;
     }
     // <発火操作>80%/ダメージ:1d6 / 触肢 60%(1 ラウンドに 2 回) ダメージ:db / 射撃(拳銃):31% ダメージ;1d10
@@ -384,7 +481,7 @@ function parseCombatRows(text, options={}){
       const damage=normalize(m[4]||'').trim();
       let extra=normalize(m[5]||'').trim();
       if(!name || isNonSkillName(name)) return;
-      let rowDamage=damage;
+      let rowDamage=damage || namedDamageFor(name, damageMap);
       const parenDamage=parenNote.match(/^ダメージ\s*[:：;；]?\s*(.+)$/i);
       if(parenDamage && !rowDamage) rowDamage=parenDamage[1].trim();
       const hasDamage=!!rowDamage;
@@ -422,11 +519,12 @@ function parseText(text){
  if(!state.status.db){ const inferred=inferDbFromBuild(state.status.build); if(inferred) state.status.db=inferred; }
  state.resolved=(/7版|MOV|BLD|DB\s*[\/／]\s*ビルド|▼\s*エネミーデータ/i.test(raw)||/ビルド|移動/.test(raw)||Object.values(state.abilities).some(v=>Number(v)>30))?'coc7':(/CCB\s*<=/i.test(raw)?'coc6':'coc6');
  state.combat=[]; state.skills=[]; state.spells=extractSpells(raw); state.powers=extractPowers(raw); state.equipment=[]; state.armor=''; let skillPart='';
- const isEnemyData=/▼\s*エネミーデータ|【\s*エネミー\s*[:：]/.test(raw);
- const skillIdx=analysisNoEquip.search(/(?:・\s*技能|〈\s*技能\s*〉|\[\s*技能\s*\]|【\s*技能\s*】|主な\s*技能\s*[:：]|技能\s*[:：]|所持技能\s*[:：]|特技\s*[:：])/);
+ const isEnemyData=/▼\s*エネミーデータ|【\s*エネミー\s*[:：]|\[\s*敵情報\s*[:：]/.test(raw);
+ const damageMap=extractNamedDamageMap(raw);
+ const skillIdx=analysisNoEquip.search(/(?:・\s*技能|〈\s*技能\s*〉|\[\s*技能\s*\]|【\s*技能\s*】|主な\s*技能(?:[（(][^）)]*[）)])?\s*[:：]|技能(?:[（(][^）)]*[）)])?\s*[:：]|所持技能\s*[:：]|特技\s*[:：])/);
  const beforeSkill=skillIdx>=0?analysisNoEquip.slice(0,skillIdx):analysisNoEquip;
- if(skillIdx>=0) skillPart=analysisNoEquip.slice(skillIdx).replace(/^.*?(?:・\s*技能|〈\s*技能\s*〉|\[\s*技能\s*\]|【\s*技能\s*】|主な\s*技能\s*[:：]|技能\s*[:：]|所持技能\s*[:：]|特技\s*[:：])/s,'');
- const armorMatch=raw.match(/(?:装甲|防具|防御)\s*[:：]\s*([^\n]+)/); if(armorMatch){ const armorValue=armorMatch[1].trim(); const armorNormalized=(isNoDataText(armorValue)||/^0\b/.test(normalize(armorValue)))?'':armorValue; state.armor=armorNormalized; state.status.armor=armorNormalized; }
+ if(skillIdx>=0) skillPart=analysisNoEquip.slice(skillIdx).replace(/^.*?(?:・\s*技能|〈\s*技能\s*〉|\[\s*技能\s*\]|【\s*技能\s*】|主な\s*技能(?:[（(][^）)]*[）)])?\s*[:：]|技能(?:[（(][^）)]*[）)])?\s*[:：]|所持技能\s*[:：]|特技\s*[:：])/s,'');
+ const armorMatch=raw.match(/(?:^|\n)\s*(?:装甲|防具|防御)\s*[:：]\s*([^\n]+)/); if(armorMatch){ const armorValue=armorMatch[1].trim(); const armorNormalized=(isNoDataText(armorValue)||/^0\b/.test(normalize(armorValue)))?'':armorValue; state.armor=armorNormalized; state.status.armor=armorNormalized; }
  const noHpArmor=raw.match(/耐久値\s*なし[^\n]*(?:装甲|攻撃)[^\n]*/); if(noHpArmor && !state.armor){ state.armor=normalize(noHpArmor[0]).trim(); state.status.armor=state.armor; }
  state.status.ammo=parseNum(/(?:残弾|装弾数)\s*[:：]?\s*(\d+)/i,t);
  state.status.weaponHp=parseNum(/(?:武器耐久|武器耐久値)\s*[:：]?\s*(\d+)/i,t);
@@ -436,31 +534,65 @@ function parseText(text){
    state.armor=state.armor ? state.armor+'\n'+armorText : armorText;
    if(!state.status.armor) state.status.armor=equipment.statusArmor || armorText;
  }
- parseCombatRows(beforeSkill,{enemyMode:isEnemyData}).forEach(r=>addCombatRow(state.combat,r));
- parseCombatRows(skillPart,{enemyMode:isEnemyData}).forEach(r=>addCombatRow(state.combat,r));
+ parseCombatRows(beforeSkill,{enemyMode:isEnemyData,damageMap}).forEach(r=>addCombatRow(state.combat,r));
+ parseCombatRows(skillPart,{enemyMode:isEnemyData,damageMap}).forEach(r=>addCombatRow(state.combat,r));
+ applyNamedDamages(state.combat, damageMap);
  if(equipment && equipment.weapons && equipment.weapons.length){ state.equipment=equipment.weapons.slice(); }
  let rows=collectLooseSkills(skillPart);
- if(!rows.length && /\[\s*技能\s*\]|【\s*技能\s*】|〈\s*技能\s*〉/.test(raw)){ const after=raw.split(/\[\s*技能\s*\]|【\s*技能\s*】|〈\s*技能\s*〉/).slice(1).join('\n'); rows=collectLooseSkills(after); }
+ if(!rows.length && /\[\s*技能\s*\]|【\s*技能\s*】|〈\s*技能\s*〉|(?:主な\s*)?技能(?:[（(][^）)]*[）)])?\s*[:：]/.test(raw)){ const after=raw.split(/\[\s*技能\s*\]|【\s*技能\s*】|〈\s*技能\s*〉|(?:主な\s*)?技能(?:[（(][^）)]*[）)])?\s*[:：]/).slice(1).join('\n'); rows=collectLooseSkills(after); }
  if(!rows.length && skillIdx<0){ rows=collectLooseSkills(tailAfterStatLines(analysisNoEquip)); }
  const separated=splitCombatAndSkills(rows);
- separated.combat.forEach(r=>{ if(!state.combat.some(c=>c.name===r.name&&c.value===r.value)) state.combat.push({...r,damage:''}); });
+ separated.combat.forEach(r=>{
+   if(!state.combat.some(c=>c.name===r.name&&c.value===r.value)){
+     const dmg=namedDamageFor(r.name, damageMap);
+     state.combat.push({...r,damage:dmg||r.damage||''});
+   }
+ });
+ applyNamedDamages(state.combat, damageMap);
  state.skills=separated.skills.filter(r=>!state.combat.some(c=>c.name===r.name&&c.value===r.value));
  render();}
 function commandAddonLines(){return ['choice({PC1}, {PC2}, {PC3}, {PC4})','choice({HO1}, {HO2}, {HO3}, {HO4})',':HP-',':MP-'];}
 function commandPrefix(){return state.resolved==='coc6'?'CCB<=':state.resolved==='generic'?'1D100<=':'CC<='}
-function damageLine(d,sourceName){
-  let s=normalizeDiceExpr(d);
-  let label='ダメージ';
-  const note=s.match(/[（(]([^）)]+)[）)]/);
-  if(note){
-    const noteText=note[1].trim();
-    label=/ダメージ/.test(noteText)?noteText:'ダメージ（'+noteText+'）';
-    s=s.replace(/[（(][^）)]+[）)]/g,'').trim();
+function splitDamageParts(d){
+  const raw=normalize(d||'').trim();
+  if(!raw) return [];
+  const parts=[];
+  let buf='';
+  let depth=0;
+  for(const ch of raw){
+    if(ch==='（'||ch==='(') depth++;
+    if(ch==='）'||ch===')') depth=Math.max(0,depth-1);
+    if((ch==='、'||ch===',') && depth===0){
+      if(buf.trim()) parts.push(buf.trim());
+      buf='';
+    } else {
+      buf+=ch;
+    }
   }
-  else if(sourceName){label=cleanSkillName(sourceName)+'・ダメージ';}
-  return s?`${s} 【${label}】`:'';
+  if(buf.trim()) parts.push(buf.trim());
+  return parts;
 }
-function generatePalette(){const pre=commandPrefix(); let out=[]; if(state.commandAddon) out.push(...commandAddonLines(), ''); if(state.combat.some(r=>r.name||r.damage)){out.push('// ▼ 戦闘'); state.combat.forEach(r=>{if(r.value) out.push(`${pre}${r.value} 【${r.name}】`); else if(r.name) out.push(r.name); const dl=damageLine(r.damage,r.name); if(dl) out.push(dl);});}
+function damageLines(d,sourceName){
+  const parts=splitDamageParts(d);
+  if(!parts.length) return [];
+  const multi=parts.length>1;
+  return parts.map(part=>{
+    let s=normalizeDiceExpr(part);
+    let label='ダメージ';
+    const note=s.match(/[（(]([^）)]+)[）)]/);
+    if(note){
+      const noteText=note[1].trim();
+      label=/ダメージ/.test(noteText)?noteText:'ダメージ（'+noteText+'）';
+      s=s.replace(/[（(][^）)]+[）)]/g,'').trim();
+      return s?`${s} 【${label}】`:'';
+    }
+    if(multi) return s;
+    if(sourceName){label=cleanSkillName(sourceName)+'・ダメージ';}
+    return s?`${s} 【${label}】`:'';
+  }).filter(Boolean);
+}
+function damageLine(d,sourceName){return damageLines(d,sourceName)[0]||'';}
+function generatePalette(){const pre=commandPrefix(); let out=[]; if(state.commandAddon) out.push(...commandAddonLines(), ''); if(state.combat.some(r=>r.name||r.damage)){out.push('// ▼ 戦闘'); state.combat.forEach(r=>{if(r.value) out.push(`${pre}${r.value} 【${r.name}】`); else if(r.name) out.push(r.name); damageLines(r.damage,r.name).forEach(dl=>out.push(dl));});}
  if(state.armor.trim() && !isNoDataText(state.armor)) out.push('', '// ▼ 装甲', state.armor.trim()); if(state.equipment&&state.equipment.length){out.push('', '// ▼ 装備'); state.equipment.forEach(x=>out.push(x));} if(state.skills.length){out.push('', '// ▼ 技能'); state.skills.forEach(r=>{if(r.name&&r.value)out.push(`${pre}${r.value} 【${r.name}】`)});} if(state.spells&&state.spells.length){out.push('', '// ▼ 呪文'); state.spells.forEach(x=>out.push(x));} if(state.powers&&state.powers.length){out.push('', '// ▼ 能力'); state.powers.forEach(x=>out.push(x));} const abs=Object.entries(state.abilities).filter(([k,v])=>v!==''&&v!=null); if(abs.length){out.push('', '// ▼ 能力値'); abs.forEach(([k,v])=>{ if(state.resolved==='coc6') out.push(`CCB<=${v}*5 【${k} x5】`); else out.push(`${pre}${v} 【${k}】`); });} return out.join('\n').trim();}
 function jsonValue(v){const s=String(v??'').trim(); return /^[-+]?\d+(?:\.\d+)?$/.test(s)?Number(s):s;}
 function generateJson(){const commands=$('#paletteOutput').value; const params=[...Object.entries(state.abilities).filter(([k,v])=>String(v??'').trim()!=='').map(([label,value])=>({label,value:String(value)})),{label:'DB',value:String(state.status.db||'')}].filter(x=>String(x.value??'').trim()!==''); const status=[]; ['HP','MP','SAN'].forEach(label=>{const key=label.toLowerCase(); const value=String(state.status[key]??'').trim(); if(value!=='') status.push({label,value:jsonValue(value),max:jsonValue(value)});}); [['ビルド','build'],['移動','move'],['装甲','armor'],['残弾','ammo'],['武器耐久','weaponHp']].forEach(([label,key])=>{const value=String(state.status[key]??'').trim(); if(value!=='') status.push({label,value:jsonValue(value)});}); return JSON.stringify({kind:'character',data:{name:selectedKomaName(),initiative:Number(state.abilities.DEX||0),memo:state.memo||state.name,status,params,commands}},null,2)}
@@ -468,7 +600,30 @@ function rowActionButtons(type,i){return `<div class="row-actions"><button type=
 function renderRows(){const cb=$('#combatBody'); cb.innerHTML=''; state.combat.forEach((r,i)=>cb.insertAdjacentHTML('beforeend',`<tr data-row-type="combat" data-row-index="${i}"><td><input data-combat-name="${i}" value="${esc(r.name)}"></td><td><input data-combat-value="${i}" value="${esc(r.value)}"></td><td><input data-combat-damage="${i}" value="${esc(r.damage)}"></td><td>${rowActionButtons('combat',i)}</td></tr>`)); const sb=$('#skillBody'); sb.innerHTML=''; state.skills.forEach((r,i)=>sb.insertAdjacentHTML('beforeend',`<tr data-row-type="skill" data-row-index="${i}"><td><input data-skill-name="${i}" value="${esc(r.name)}"></td><td><input data-skill-value="${i}" value="${esc(r.value)}"></td><td>${rowActionButtons('skill',i)}</td></tr>`));}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 function render(){ $('#npcName').value=state.name; $('#npcTitle').value=state.title; $('#systemMode').value=state.system; $('#resolvedSystem').value=systemLabel(state.resolved); $('#systemBadge').textContent=I18N('autoDetected')+$('#resolvedSystem').value; const shortBadge=$('#nameModeShort'); const fullBadge=$('#nameModeFull'); if(shortBadge){shortBadge.textContent=state.name||'NPC'; shortBadge.classList.toggle('active',state.nameMode==='short'); shortBadge.setAttribute('aria-pressed',state.nameMode==='short'?'true':'false');} if(fullBadge){fullBadge.textContent=fullKomaName()||state.name||'NPC'; fullBadge.classList.toggle('active',state.nameMode!=='short'); fullBadge.setAttribute('aria-pressed',state.nameMode!=='short'?'true':'false');} Object.entries(state.status).forEach(([k,v])=>{const el=$(`[data-status="${k}"]`); if(el)el.value=v}); Object.entries(state.abilities).forEach(([k,v])=>{const el=$(`[data-ability="${k}"]`); if(el)el.value=v}); $('#armorText').value=state.armor; $('#memoText').value=state.memo; renderRows(); const addon=$('#commandAddonCheck'); if(addon) addon.checked=!!state.commandAddon; if(!state.manualPalette) $('#paletteOutput').value=generatePalette(); $('#jsonOutput').value=generateJson(); requestAnimationFrame(adjustLayout);}
-function updateFromFields(){state.name=$('#npcName').value;state.title=$('#npcTitle').value;state.system=$('#systemMode').value; state.resolved=state.system==='auto'?state.resolved:state.system; $$('[data-status]').forEach(e=>state.status[e.dataset.status]=e.value); $$('[data-ability]').forEach(e=>state.abilities[e.dataset.ability]=e.value); state.armor=$('#armorText').value; if(state.armor && !state.status.armor) state.status.armor=state.armor; state.memo=$('#memoText').value; state.combat.forEach((r,i)=>{r.name=($(`[data-combat-name="${i}"]`)||{}).value||'';r.value=($(`[data-combat-value="${i}"]`)||{}).value||'';r.damage=($(`[data-combat-damage="${i}"]`)||{}).value||''}); state.skills.forEach((r,i)=>{r.name=($(`[data-skill-name="${i}"]`)||{}).value||'';r.value=($(`[data-skill-value="${i}"]`)||{}).value||''}); state.manualPalette=false; render();}
+function syncDerivedOutputs(){
+  const shortBadge=$('#nameModeShort'); const fullBadge=$('#nameModeFull');
+  if(shortBadge){shortBadge.textContent=state.name||'NPC'; shortBadge.classList.toggle('active',state.nameMode==='short'); shortBadge.setAttribute('aria-pressed',state.nameMode==='short'?'true':'false');}
+  if(fullBadge){fullBadge.textContent=fullKomaName()||state.name||'NPC'; fullBadge.classList.toggle('active',state.nameMode!=='short'); fullBadge.setAttribute('aria-pressed',state.nameMode!=='short'?'true':'false');}
+  const badge=$('#systemBadge'); const resolved=$('#resolvedSystem');
+  if(resolved) resolved.value=systemLabel(state.resolved);
+  if(badge && resolved) badge.textContent=I18N('autoDetected')+resolved.value;
+  if(!state.manualPalette) $('#paletteOutput').value=generatePalette();
+  $('#jsonOutput').value=generateJson();
+}
+let derivedOutputTimer=null;
+function scheduleDerivedOutputs(delay=80){
+  clearTimeout(derivedOutputTimer);
+  derivedOutputTimer=setTimeout(()=>{
+    if(!state.manualPalette) $('#paletteOutput').value=generatePalette();
+    $('#jsonOutput').value=generateJson();
+  }, delay);
+}
+function updateRowEditFromFields(type){
+  syncRowInputs(type);
+  state.manualPalette=false;
+  scheduleDerivedOutputs();
+}
+function updateFromFields(options={}){state.name=$('#npcName').value;state.title=$('#npcTitle').value;state.system=$('#systemMode').value; state.resolved=state.system==='auto'?state.resolved:state.system; $$('[data-status]').forEach(e=>state.status[e.dataset.status]=e.value); $$('[data-ability]').forEach(e=>state.abilities[e.dataset.ability]=e.value); state.armor=$('#armorText').value; if(state.armor && !state.status.armor) state.status.armor=state.armor; state.memo=$('#memoText').value; state.combat.forEach((r,i)=>{r.name=($(`[data-combat-name="${i}"]`)||{}).value||'';r.value=($(`[data-combat-value="${i}"]`)||{}).value||'';r.damage=($(`[data-combat-damage="${i}"]`)||{}).value||''}); state.skills.forEach((r,i)=>{r.name=($(`[data-skill-name="${i}"]`)||{}).value||'';r.value=($(`[data-skill-value="${i}"]`)||{}).value||''}); state.manualPalette=false; if(options.render===false) syncDerivedOutputs(); else render();}
 function adjustLayout(){
   if(innerWidth<=1050)return;
   const mainH=$('#mainArea').clientHeight;
@@ -544,8 +699,19 @@ function scheduleRawAutoParse(delay=160){
 }
 function resetToDefault(){state=createInitialState(); $('#rawInput').value=''; lastAutoParsedRaw=''; state.manualPalette=false; render();}
 window.NPCDataReader={toast,resetToDefault,render,parseRawInputNow,scheduleRawAutoParse};
-document.addEventListener('input',e=>{ if(e.target.id==='rawInput'){scheduleRawAutoParse(420); return;} if(e.target.id==='paletteOutput'){state.manualPalette=true; $('#jsonOutput').value=generateJson(); return;} if(e.target.closest('#middleCol')) updateFromFields(); });
-document.addEventListener('change',e=>{ if(e.target.id==='commandAddonCheck'){state.commandAddon=e.target.checked; state.manualPalette=false; render();} });
+document.addEventListener('input',e=>{
+  if(e.target.id==='rawInput'){scheduleRawAutoParse(420); return;}
+  if(e.target.id==='paletteOutput'){state.manualPalette=true; $('#jsonOutput').value=generateJson(); return;}
+  if(e.target.matches('[data-combat-name],[data-combat-value],[data-combat-damage]')){updateRowEditFromFields('combat'); return;}
+  if(e.target.matches('[data-skill-name],[data-skill-value]')){updateRowEditFromFields('skill'); return;}
+  if(e.target.closest('#middleCol')) updateFromFields({render:false});
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='commandAddonCheck'){state.commandAddon=e.target.checked; state.manualPalette=false; render(); return;}
+  if(e.target.matches('[data-combat-name],[data-combat-value],[data-combat-damage]')){updateRowEditFromFields('combat'); return;}
+  if(e.target.matches('[data-skill-name],[data-skill-value]')){updateRowEditFromFields('skill'); return;}
+  if(e.target.closest('#middleCol')) updateFromFields({render:false});
+});
 document.addEventListener('click',e=>{ if(e.target.dataset.nameMode){state.nameMode=e.target.dataset.nameMode; render(); return;} if(e.target.id==='parseBtn'){const raw=$('#rawInput').value.trim(); if(raw){parseRawInputNow()} else toast('NPC情報を貼り付けてください');} if(e.target.id==='sampleBtn'){$('#rawInput').value=SAMPLE;parseRawInputNow()} if(e.target.id==='clearBtn'){$('#rawInput').value=''; lastAutoParsedRaw=''; state=createInitialState(); render();} if(e.target.id==='addCombatBtn'){state.combat.push({name:'',value:'',damage:''});render()} if(e.target.id==='addSkillBtn'){state.skills.push({name:'',value:''});render()} if(e.target.dataset.delCombat){state.combat.splice(Number(e.target.dataset.delCombat),1);render()} if(e.target.dataset.delSkill){state.skills.splice(Number(e.target.dataset.delSkill),1);render()} if(e.target.id==='copyPaletteBtn')navigator.clipboard.writeText($('#paletteOutput').value).then(()=>toast(I18N('copiedPalette'))); if(e.target.id==='copyJsonBtn')navigator.clipboard.writeText($('#jsonOutput').value).then(()=>toast(I18N('copiedJson'))); if(e.target.id==='themeBtn'){document.body.classList.toggle('light');adjustLayout()}});
 
 document.addEventListener('dragstart',e=>{

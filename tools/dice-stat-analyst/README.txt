@@ -204,3 +204,72 @@ v1.373 session log transfer newline fix:
 - Added transfer-time normalization that converts escaped newline sequences back into real line breaks before saving/importing.
 - Normalization is applied on both outgoing transfer to Growth Checker and incoming transfer from Growth Checker.
 - Updated version stamp to v1.373 2026/06/12.
+
+
+v1.374 roll-count parser fix:
+- Fixed character attribution by reading the speaker part of CCFOLIA lines before the message body.
+- Removed the previous currentCharacter carry-over behavior that could misattribute rolls.
+- Fixed multi-result d100 extraction so x2/x3/x6 CCB and similar rolls count every d100 result, not only the first result in the line.
+- Added support for multi-d100 list outputs such as 5D100 ... [53,2,67,1,63] and 5B100 ... 78,71,58,98,11.
+- Updated tab filtering so custom secret tabs are included unless explicitly excluded; [other], [info], [雑談], [ダイス] remain excluded by default.
+- Updated version stamp to v1.374 2026/06/12.
+
+- Added a guard against double-counting single CoC7/BP outputs such as CC<=70 ... > 66 > 66; these now count as one roll unless the line has xN/#N multi-roll segments.
+
+
+v1.375 parser correction:
+- Fixed CCFOLIA HTML extraction so line breaks inside a single <p> message are normalized into one parser line.
+  This prevents x2/#1/#2 continuation lines from losing the original speaker and being assigned to 不明.
+- Excluded plain non-check d100 rolls such as 1D100 (1D100) ＞ 56.
+- Excluded multi-d100 list commands such as 5D100 / 5B100.
+- Kept multi-check rolls such as x2 CCB / x6 CCB counted by actual d100 result count.
+- Updated version stamp to v1.375 2026/06/27.
+
+
+v1.376 dice counting rule update:
+- Counts d100 rolls without 【】 skill brackets, such as CCB<=85 アイデア.
+- Counts plain single 1D100 / D100 rolls as Normal rolls when they have an actual result marker.
+- Keeps excluding multi-d100 list commands such as 5D100 / 5B100.
+- Counts SAN値 / 正気度ロール entries like other d100 rolls.
+- Counts CBR / CBRB as multiple judgment rolls; CBR(87,80) with one d100 result now outputs two roll rows with separate targets and success/fail labels.
+- Critical/fumble classification no longer uses numeric thresholds. CoC 6e-style rolls count only 決定的成功 / 致命的失敗, and CoC 7e-style rolls count only クリティカル / ファンブル from the log result text.
+- Removed the critical/fumble threshold controls from the input panel.
+- Updated version stamp to v1.376 2026/07/06.
+
+
+v1.377 critical/fumble statistics options:
+- Added two left-panel statistics options:
+  - Include sanity rolls in critical/fumble statistics.
+  - Include 1D100 rolls in critical/fumble statistics.
+- Both options are off by default.
+- Sanity rolls such as SAN値 / 正気度ロール and plain 1D100-family rolls are still counted as rolls, but their Critical/Fumble labels are downgraded to Success/Fail/Normal for statistics unless the relevant option is enabled.
+- Toggling either option re-renders the current analysis without requiring a re-analyze.
+- Updated version stamp to v1.377 2026/07/06.
+
+
+v1.378 input option UI polish:
+- Grouped the left-panel analysis options into a dedicated subpanel.
+- Changed the auto-hide roll count control to a compact label + number input row.
+- Grouped the critical/fumble statistics checkboxes into a nested statistics card with a short explanatory note.
+- Added light/dark mode styling for the new option panel.
+- Updated version stamp to v1.378 2026/07/06.
+
+
+v1.379 statistics option color update:
+- Changed the light-mode background of the statistics options card to a light green tone.
+- Kept the dark-mode statistics options card styling unchanged.
+- Updated version stamp to v1.379 2026/07/06.
+
+
+v1.380 input help readability / statistics card color:
+- Reworked the input help text into a compact structured block with examples and short bullet notes.
+- Switched the help text rendering to HTML-aware translation so the structure remains readable in JP/EN.
+- Changed the light-mode statistics options card background from light green to a pale bright blue.
+- Updated version stamp to v1.380 2026/07/06.
+
+
+v1.381 input help height adjustment:
+- Changed the left input panel to a vertical flex layout so the help block can use the remaining panel height.
+- Removed the fixed max-height cap from the help block and replaced it with responsive minimum heights.
+- Kept the help block's internal scrolling for long content while allowing its visible area to extend closer to the panel bottom.
+- Updated version stamp to v1.381 2026/07/06.

@@ -106,15 +106,13 @@ function renderSummary() {
 
   $('summaryMemo').textContent = tr(
     'summary.memo',
-    '検出した{all}件のd100ロールのうち、表示対象{total}件を集計しました。検出キャラクター数は{characters}です。非表示ロール数は{hidden}件です。総ロール数{threshold}以下のキャラクターは初期状態で非表示です。クリティカル判定は{critMax}以下、ファンブル判定は{fumbleMin}以上です。',
+    '検出した{all}件のd100ロールのうち、表示対象{total}件を集計しました。検出キャラクター数は{characters}です。非表示ロール数は{hidden}件です。総ロール数{threshold}以下のキャラクターは初期状態で非表示です。クリティカル / ファンブルはログに出力された判定語のみで集計します。正気度ロールと1D100ロールのクリファンは、左パネルの統計オプションがONの時だけ含めます。',
     {
       all,
       total,
       characters,
       hidden,
-      threshold: $('autoHideMaxRolls').value,
-      critMax: $('critMax').value,
-      fumbleMin: $('fumbleMin').value
+      threshold: $('autoHideMaxRolls').value
     }
   );
 }

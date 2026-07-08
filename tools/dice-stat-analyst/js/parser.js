@@ -2,9 +2,11 @@ const diceCommands = [
   'SRESB',
   'RESB',
   'SCCB',
+  'SCBRB',
   'SCBR',
   'SCC',
   'CCB',
+  'CBRB',
   'CBR',
   'CC',
   'S1D100',
@@ -16,7 +18,7 @@ const diceCommands = [
 ];
 
 const includedTabs = ['main', 'メイン', 'ho'];
-const excludedTabs = ['雑談', 'other', 'info', 'おはらい', 'お祓い', '運試し'];
+const excludedTabs = ['雑談', 'other', 'info', 'ダイス', 'dice', 'おはらい', 'お祓い', '運試し'];
 
 function prepareText(raw) {
   const source = String(raw || '');
@@ -40,12 +42,20 @@ function extractHtmlLogLines(doc) {
 
 function extractHtmlLogLine(paragraph) {
   const spans = Array.from(paragraph.querySelectorAll('span'))
-    .map(span => cleanLine(decodeHtml(span.textContent || '')))
+    .map(span => normalizeInlineLogText(decodeHtml(span.textContent || '')))
     .filter(Boolean);
 
   return spans.length >= 3 && isTabLabel(spans[0])
-    ? `${spans[0]} ${spans[1]}：${spans.slice(2).join(' ')}`
-    : cleanLine(decodeHtml(paragraph.textContent || ''));
+    ? `${spans[0]} ${spans[1]}：${normalizeInlineLogText(spans.slice(2).join(' '))}`
+    : normalizeInlineLogText(decodeHtml(paragraph.textContent || ''));
+}
+
+function normalizeInlineLogText(value) {
+  return normalizeNewlines(value)
+    .split(LF)
+    .map(part => cleanLine(part))
+    .filter(Boolean)
+    .join(' ');
 }
 
 function filterLines(lines) {
@@ -76,29 +86,36 @@ function isIncludedTab(tab) {
   if (excludedTabs.some(word => normalized.includes(normalizeTabName(word)))) return false;
   if (normalized === 'ho' || normalized.startsWith('ho')) return true;
 
-  return includedTabs.some(word => {
+  if (includedTabs.some(word => {
     const item = normalizeTabName(word);
     return normalized === item || normalized.startsWith(item) || normalized.includes(item);
-  });
+  })) {
+    return true;
+  }
+
+  /*
+    CCFOLIAの秘匿タブは [鬼] [魔女] [天使] [狼] のような
+    任意名になりやすい。明示的な除外タブ以外は秘匿候補として保持する。
+  */
+  return true;
 }
 
 function extractRollData(lines) {
   const rolls = [];
-  let currentCharacter = '';
 
   lines.forEach((line, index) => {
     const name = extractCharacterName(line);
     const usable = isUsableCharacterName(name);
-    const values = extractRollsFromLine(line);
+    const extractedRolls = extractRollsFromLine(line);
 
-    if (usable) currentCharacter = name;
-
-    values.forEach(value => {
+    extractedRolls.forEach((roll, rollIndex) => {
       rolls.push({
-        value,
-        character: usable ? name : (currentCharacter || '不明'),
+        ...roll,
+        value: Number(roll.value),
+        character: usable ? name : '不明',
         line,
-        lineNo: index + 1
+        lineNo: index + 1,
+        rollIndex: rollIndex + 1
       });
     });
   });
@@ -106,7 +123,39 @@ function extractRollData(lines) {
   return rolls;
 }
 
+function extractStructuredLineParts(line) {
+  const source = String(line || '').trim();
+  const tab = extractLeadingTab(source);
+
+  let rest = source;
+
+  if (tab) {
+    const end = source.indexOf(']');
+    rest = end >= 0 ? source.slice(end + 1).trim() : source;
+  }
+
+  const colonIndexes = ['：', ':']
+    .map(separator => rest.indexOf(separator))
+    .filter(index => index >= 0);
+
+  if (!colonIndexes.length) {
+    return { tab, speaker: '', body: rest };
+  }
+
+  const colonIndex = Math.min(...colonIndexes);
+  const speaker = rest.slice(0, colonIndex).trim();
+  const body = rest.slice(colonIndex + 1).trim();
+
+  return { tab, speaker, body };
+}
+
 function extractCharacterName(line) {
+  const parts = extractStructuredLineParts(line);
+
+  if (parts.speaker) {
+    return cleanCharacterName(parts.speaker);
+  }
+
   const text = String(line || '').trim();
   const diceIndex = findDiceCommandIndex(text);
   if (diceIndex < 0) return '不明';
@@ -120,14 +169,235 @@ function extractCharacterName(line) {
 
 function extractRollsFromLine(line) {
   const text = String(line || '');
-  const diceIndex = findDiceCommandIndex(text);
+  const parts = extractStructuredLineParts(text);
+  const body = parts.body || text;
+
+  if (isExcludedD100Command(body)) return [];
+
+  const diceIndex = findDiceCommandIndex(body);
+
   if (diceIndex < 0) return [];
 
-  const afterCommand = text.slice(diceIndex);
-  const numbers = extractNumbersAfterResultMarkers(afterCommand);
-  if (numbers.length) return [numbers[0]];
+  const afterCommand = body.slice(diceIndex);
 
-  return extractNumbersAfterWords(afterCommand, ['出目']).slice(0, 1);
+  if (!hasRollResultMarker(afterCommand)) return [];
+  if (isCbrCommand(afterCommand)) return extractCbrRolls(afterCommand);
+
+  return extractStandardD100Rolls(afterCommand);
+}
+
+function extractStandardD100Rolls(text) {
+  const source = String(text || '');
+  const edition = detectRollEdition(source);
+  const target = extractTargetNumberFromText(source);
+  const segments = splitMultiRollSegments(source);
+
+  return segments
+    .map(segment => {
+      const numbers = extractNumbersAfterResultMarkers(segment);
+      const normalizedNumbers = normalizeD100ResultNumbers(segment, numbers);
+      const value = normalizedNumbers.length ? normalizedNumbers[0] : null;
+      const segmentTarget = extractTargetNumberFromText(segment);
+
+      if (value === null) return null;
+
+      return buildRollObject({
+        value,
+        target: segmentTarget !== null ? segmentTarget : target,
+        text: segment,
+        context: source,
+        edition,
+        command: extractDiceCommandName(source)
+      });
+    })
+    .filter(Boolean);
+}
+
+function splitMultiRollSegments(text) {
+  const source = String(text || '');
+  if (!/#\s*\d+/i.test(source)) return [source];
+
+  const matches = source.match(/#\s*\d+[\s\S]*?(?=#\s*\d+|$)/g);
+  return matches && matches.length ? matches : [source];
+}
+
+function isCbrCommand(text) {
+  return /^\s*S?CBRB?\s*\(/i.test(String(text || ''));
+}
+
+function extractCbrRolls(text) {
+  const source = String(text || '');
+  const command = extractDiceCommandName(source);
+  const edition = detectRollEdition(source);
+  const targets = extractCbrTargets(source);
+  const result = extractCbrSharedResult(source);
+
+  if (!result || !targets.length) return [];
+
+  return targets.map((target, index) => {
+    const resultText = result.labels[index] || result.labels[0] || source;
+
+    return buildRollObject({
+      value: result.value,
+      target,
+      text: resultText,
+      context: source,
+      edition,
+      command,
+      resultText
+    });
+  });
+}
+
+function extractCbrTargets(text) {
+  const source = String(text || '');
+  const commandMatch = source.match(/S?CBRB?\s*\(([^)]*)\)/i);
+  const targetSource = commandMatch
+    ? commandMatch[1]
+    : (source.match(/\(\s*1D100\s*(?:<=|=<|<|≤)\s*([^)]+)\)/i) || [])[1] || '';
+
+  return targetSource
+    .split(',')
+    .map(item => Number(String(item).replace(/[^0-9]/g, '')))
+    .filter(value => Number.isInteger(value) && value >= 1 && value <= 100);
+}
+
+function extractCbrSharedResult(text) {
+  const source = String(text || '');
+  const bracketMatch = source.match(/[＞>→]\s*(\d{1,3})\s*\[([^\]]+)\]/);
+
+  if (bracketMatch) {
+    const value = Number(bracketMatch[1]);
+    if (!Number.isInteger(value) || value < 1 || value > 100) return null;
+
+    return {
+      value,
+      labels: bracketMatch[2].split(',').map(item => item.trim()).filter(Boolean)
+    };
+  }
+
+  const numbers = extractNumbersAfterResultMarkers(source);
+  const normalizedNumbers = normalizeD100ResultNumbers(source, numbers);
+  const value = normalizedNumbers.length ? normalizedNumbers[0] : null;
+
+  return value === null ? null : { value, labels: [source] };
+}
+
+function buildRollObject({ value, target = null, text = '', context = '', edition = 'unknown', command = '', resultText = '' }) {
+  const outcome = detectOutcomeFromText(text, edition, target, value);
+
+  return {
+    value,
+    target,
+    outcome,
+    edition,
+    command,
+    isSanityRoll: isSanityRollText(`${context} ${text}`),
+    isPlainD100Roll: isPlainD100Command(command),
+    resultText: resultText || text
+  };
+}
+
+function isSanityRollText(text) {
+  const source = String(text || '');
+  return /SAN値|SANチェック|SAN\s*値|SAN\s*CHECK|正気度ロール|正気度チェック|正気度/i.test(source);
+}
+
+function isPlainD100Command(command) {
+  return /^(S?1D100|SD100|D100|D％|D%)$/i.test(String(command || ''));
+}
+
+function detectOutcomeFromText(text, edition = 'unknown', target = null, value = null) {
+  const source = String(text || '');
+  const lower = source.toLowerCase();
+
+  if (edition === '6e' || edition === 'unknown') {
+    if (source.includes('決定的成功')) return 'Critical';
+    if (source.includes('致命的失敗')) return 'Fumble';
+  }
+
+  if (edition === '7e' || edition === 'unknown') {
+    if (source.includes('クリティカル') || lower.includes('critical')) return 'Critical';
+    if (source.includes('ファンブル') || lower.includes('fumble')) return 'Fumble';
+  }
+
+  const fail = source.includes('失敗')
+    || lower.includes('failure')
+    || lower.includes('fail');
+
+  const success = source.includes('成功')
+    || source.includes('スペシャル')
+    || source.includes('イクストリーム')
+    || source.includes('ハード')
+    || source.includes('レギュラー')
+    || lower.includes('success')
+    || lower.includes('regular')
+    || lower.includes('hard')
+    || lower.includes('extreme');
+
+  if (fail) return 'Fail';
+  if (success) return 'Success';
+
+  if (target !== null && value !== null) {
+    return value <= target ? 'Success' : 'Fail';
+  }
+
+  return 'Normal';
+}
+
+function detectRollEdition(text) {
+  const command = extractDiceCommandName(text).toUpperCase();
+
+  if (/^S?CCB\d*$/.test(command) || /^S?CBRB?$/.test(command)) return '6e';
+  if (/^S?CC\d*$/.test(command)) return '7e';
+
+  return 'unknown';
+}
+
+function extractDiceCommandName(text) {
+  const source = String(text || '');
+  const match = source.match(/S?CBRB?|S?CCB\d*|S?CC\d*|S?1D100|SD100|D100|D％|D%|S?RESB/i);
+  return match ? match[0] : '';
+}
+
+function extractTargetNumberFromText(text) {
+  const source = String(text || '')
+    .replaceAll('＜=', '<=')
+    .replaceAll('≦', '<=')
+    .replaceAll('≤', '<=')
+    .replaceAll('＝', '=');
+
+  const match = source.match(/(?:<=|=<|<)\s*(\d{1,3})/);
+  if (!match) return null;
+
+  const value = Number(match[1]);
+  return Number.isInteger(value) && value >= 1 && value <= 100 ? value : null;
+}
+
+function normalizeD100ResultNumbers(text, numbers) {
+  if (!Array.isArray(numbers) || numbers.length <= 1) return numbers || [];
+
+  const source = String(text || '');
+
+  /*
+    x2 CCB ... #1 / #2 のような複数判定は全結果を数える。
+    一方、CoC7のボーナス・ペナルティ出力など
+    CC<=70 ... > 66 > 66 > レギュラー成功
+    のように1判定内で複数の結果マーカーが出る場合は最終値のみを数える。
+  */
+  if (/#\s*\d+/i.test(source)) return numbers;
+  if (/^\s*[xｘ×]\s*\d+/i.test(source)) return numbers;
+
+  return [numbers[numbers.length - 1]];
+}
+
+function extractD100ListValues(text) {
+  /*
+    v1.376:
+    5D100 / 5B100 のような複数d100リストは
+    成功/失敗の判定ロールではないため集計しない。
+  */
+  return [];
 }
 
 function findDiceCommandIndex(text) {
@@ -145,10 +415,12 @@ function findDiceCommandIndex(text) {
     /RESB/i,
 
     /SCCB\d*/i,
+    /SCBRB/i,
     /SCBR\d*/i,
     /SCC\d*/i,
 
     /CCB\d*/i,
+    /CBRB/i,
     /CBR\d*/i,
     /CC\d*/i,
 
@@ -220,7 +492,7 @@ function isValidRollResultTail(tail) {
   const lower = text.toLowerCase();
 
   return !text
-    || ['＞', '>', '→', '#'].some(marker => text.startsWith(marker))
+    || ['＞', '>', '→', '#', '['].some(marker => text.startsWith(marker))
     || ['成功', '失敗', '決定的成功', '致命的失敗', 'クリティカル', 'ファンブル'].some(word => text.startsWith(word))
     || lower.startsWith('success')
     || lower.startsWith('fail');
@@ -251,15 +523,15 @@ function looksLikeHtml(value) {
 
 function looksLikeD100Roll(line) {
   if (isRuleExplanationLine(line)) return false;
-  if (findDiceCommandIndex(line) >= 0 && hasRollResultMarker(line)) return true;
 
-  return hasAnyText(line, [
-    '出目',
-    '決定的成功',
-    '致命的失敗',
-    'ファンブル',
-    'クリティカル'
-  ]);
+  const parts = typeof extractStructuredLineParts === 'function'
+    ? extractStructuredLineParts(line)
+    : { body: String(line || '') };
+  const body = parts.body || String(line || '');
+
+  if (isExcludedD100Command(body)) return false;
+
+  return findDiceCommandIndex(body) >= 0 && hasRollResultMarker(body);
 }
 
 function hasRollResultMarker(line) {
@@ -269,6 +541,16 @@ function hasRollResultMarker(line) {
   if (diceIndex < 0) return false;
 
   return extractNumbersAfterResultMarkers(text.slice(diceIndex)).length > 0;
+}
+
+function isExcludedD100Command(text) {
+  const source = String(text || '');
+
+  /*
+    5D100 / 5B100 のような複数d100リストは
+    成功/失敗判定ではないため、統計対象から除外する。
+  */
+  return /(^|[^A-Za-z0-9])(?:[2-9]\d*)\s*[DBＢｄｂ]100([^A-Za-z0-9]|$)/i.test(source);
 }
 
 function isRuleExplanationLine(line) {
