@@ -1,6 +1,8 @@
 (() => {
   const STORAGE_KEY = "gm-character-sheet-viewer:v8";
   const formatPaletteToggle = document.getElementById("formatPaletteToggle");
+  const formatPaletteState = document.getElementById("formatPaletteState");
+  const shareUrlBtn = document.getElementById("shareUrlBtn");
   const deleteAllBtn = document.getElementById("deleteAllBtn");
   const viewerPanel = document.querySelector(".viewer-panel");
   const cardLane = document.getElementById("cardLane");
@@ -17,9 +19,17 @@
   let draggedIndex = null;
   let isViewerHover = false;
 
+  function updateFormatPaletteState() {
+    if (!formatPaletteState) return;
+    formatPaletteState.textContent = formatPaletteToggle.checked ? "チャパレ整形ON" : "チャパレ整形OFF";
+  }
+
   formatPaletteToggle.addEventListener("change", () => {
+    updateFormatPaletteState();
     if (formatPaletteToggle.checked) formatAllPalettes();
   });
+  updateFormatPaletteState();
+  if (shareUrlBtn) shareUrlBtn.addEventListener("click", copyShareUrl);
   deleteAllBtn.addEventListener("click", openDeleteModal);
   cancelDeleteBtn.addEventListener("click", closeDeleteModal);
   confirmDeleteBtn.addEventListener("click", deleteAllCards);
@@ -33,6 +43,75 @@
   viewerPanel.addEventListener("dragleave", () => { if (!isViewerHover) viewerPanel.classList.remove("is-paste-ready"); });
   viewerPanel.addEventListener("drop", event => { event.preventDefault(); viewerPanel.classList.remove("is-paste-ready"); if (draggedIndex !== null) return; const text = event.dataTransfer.getData("text/plain"); if (text) importCharacterData(text); });
   document.addEventListener("paste", event => { if (!isViewerHover) return; const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : ""; if (activeTag === "input" || activeTag === "textarea") return; const text = event.clipboardData ? event.clipboardData.getData("text/plain") : ""; if (!text.trim()) return; event.preventDefault(); importCharacterData(text); });
+
+
+  function loadCardsFromSharedUrl() {
+    const payload = readSharePayloadFromLocation();
+    if (!payload) return false;
+    const cards = decodeSharePayload(payload);
+    if (!cards.length) {
+      showToast(errorToast, "共有URLのデータを読み込めませんでした。");
+      return false;
+    }
+    pcs = cards.map(CharashiParser.rebuildPc);
+    saveCards();
+    renderCards();
+    showToast(infoToast, `${pcs.length}件のPCカードを共有URLから読み込みました。`);
+    return true;
+  }
+
+  function readSharePayloadFromLocation() {
+    const hash = window.location.hash || "";
+    if (!hash.startsWith("#cards=")) return "";
+    return hash.slice("#cards=".length).trim();
+  }
+
+  function decodeSharePayload(payload) {
+    try {
+      const jsonText = decodeURIComponent(escape(window.atob(fromBase64Url(payload))));
+      const parsed = JSON.parse(jsonText);
+      const cards = Array.isArray(parsed) ? parsed : Array.isArray(parsed.cards) ? parsed.cards : [];
+      return cards.map(card => CharashiParser.rebuildPc(card));
+    } catch (error) {
+      console.warn(error);
+      return [];
+    }
+  }
+
+  async function copyShareUrl() {
+    if (!pcs.length) {
+      showToast(infoToast, "共有するPCカードがありません。");
+      return;
+    }
+    const url = buildShareUrl();
+    const copied = await copyToClipboard(url);
+    if (copied) {
+      const warning = url.length > 18000 ? " URLが長いため、環境によっては開けない場合があります。" : "";
+      showToast(infoToast, `現在の表示内容を開ける共有URLをコピーしました。${warning}`);
+    }
+  }
+
+  function buildShareUrl() {
+    const shareCards = pcs.map(pc => CharashiParser.rebuildPc(pc));
+    const payload = {
+      v: 1,
+      createdAt: new Date().toISOString(),
+      cards: shareCards
+    };
+    const jsonText = JSON.stringify(payload);
+    const encoded = toBase64Url(window.btoa(unescape(encodeURIComponent(jsonText))));
+    const baseUrl = window.location.href.split("#")[0];
+    return `${baseUrl}#cards=${encoded}`;
+  }
+
+  function toBase64Url(base64) {
+    return String(base64).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+  }
+
+  function fromBase64Url(base64Url) {
+    const base64 = String(base64Url).replaceAll("-", "+").replaceAll("_", "/");
+    return base64.padEnd(base64.length + ((4 - base64.length % 4) % 4), "=");
+  }
 
   function importCharacterData(rawText) {
     hideToast(errorToast);
@@ -161,5 +240,5 @@
   function loadCards() { try { const saved = localStorage.getItem(STORAGE_KEY); const parsed = saved ? JSON.parse(saved) : []; return Array.isArray(parsed) ? parsed.map(CharashiParser.rebuildPc) : []; } catch (error) { console.warn(error); return []; } }
   function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;" }[char])); }
   function escapeAttr(value) { return escapeHtml(value); }
-  renderCards();
+  if (!loadCardsFromSharedUrl()) renderCards();
 })();

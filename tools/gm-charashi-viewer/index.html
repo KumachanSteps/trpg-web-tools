@@ -33,13 +33,15 @@
           </div>
         </div>
         <div class="header-side-actions">
-          <label class="format-switch" title="ONのとき、貼り付けたコマ出力データのチャットパレットを自動整形します">
-            <input type="checkbox" id="formatPaletteToggle" checked>
-            <span class="switch-track"><span class="switch-thumb"></span></span>
-            <span class="switch-text">チャパレ整形</span>
-          </label>
-          <button class="btn-danger header-delete-button" id="deleteAllBtn" type="button">全データ削除</button>
-          <div class="header-version">v1.31 2026.06.18</div>
+          <button class="btn-soft header-share-button" id="shareUrlBtn" type="button" title="現在表示しているPCカードをURLにしてコピーします">キャラデータ共有用URLコピー</button>
+          <div class="header-action-row">
+            <label class="format-button" id="formatPaletteControl" title="クリックでチャットパレット自動整形のON/OFFを切り替えます">
+              <input type="checkbox" id="formatPaletteToggle" checked>
+              <span class="format-button-text" id="formatPaletteState">チャパレ整形ON</span>
+            </label>
+            <button class="btn-danger header-delete-button" id="deleteAllBtn" type="button">全データ削除</button>
+          </div>
+          <div class="header-version">v1.39 2026.06.18</div>
         </div>
       </div>
     </header>

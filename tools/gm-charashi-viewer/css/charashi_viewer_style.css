@@ -174,3 +174,585 @@ body{
     height:620px;
   }
 }
+
+.header-share-button{
+  white-space:nowrap;
+  box-shadow:0 6px 16px rgba(89,103,216,.12);
+}
+.header-share-button:hover{
+  background:#e0e7ff;
+}
+
+/* =========================================================
+   v1.33 Compact header actions
+   ========================================================= */
+
+.header-inner{
+  align-items:center;
+}
+
+.header-side-actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:6px;
+  align-content:center;
+  justify-items:stretch;
+  min-width:260px;
+}
+
+.header-action-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  align-items:center;
+}
+
+.header-share-button{
+  width:100%;
+  min-height:34px;
+  justify-content:center;
+}
+
+.header-side-actions .format-switch,
+.header-side-actions .header-delete-button{
+  width:100%;
+  min-height:32px;
+  justify-content:center;
+}
+
+.header-side-actions .format-switch{
+  padding:6px 8px;
+}
+
+.header-side-actions .header-delete-button{
+  padding:7px 10px;
+}
+
+.header-version{
+  justify-self:end;
+  align-self:end;
+  margin-top:0;
+  padding:0 2px;
+  color:rgba(100,116,139,.46);
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  font-size:10px;
+  font-weight:700;
+  line-height:1.05;
+  letter-spacing:.02em;
+  pointer-events:none;
+}
+
+@media (max-width:760px){
+  .header-side-actions{
+    width:100%;
+    min-width:0;
+  }
+}
+
+/* =========================================================
+   v1.34 Header action positioning fix
+   ========================================================= */
+
+.site-header{
+  overflow:hidden;
+}
+
+.header-inner{
+  min-height:0;
+  align-items:center;
+}
+
+.header-side-actions{
+  align-self:center;
+  justify-self:end;
+  box-sizing:border-box;
+  width:min(290px,100%);
+  min-width:0;
+  max-width:290px;
+  padding:0;
+  margin:0;
+  gap:6px;
+}
+
+.header-action-row{
+  width:100%;
+  min-width:0;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:6px;
+}
+
+.header-share-button,
+.header-side-actions .format-switch,
+.header-side-actions .header-delete-button{
+  box-sizing:border-box;
+  min-width:0;
+  max-width:100%;
+}
+
+.header-side-actions .format-switch{
+  overflow:hidden;
+}
+
+.header-side-actions .switch-text{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.header-version{
+  position:static;
+  justify-self:end;
+  margin:0;
+}
+
+@media (max-width:900px){
+  .header-inner{
+    grid-template-columns:minmax(0,1fr) minmax(220px,280px);
+    gap:12px;
+  }
+
+  .header-side-actions{
+    width:100%;
+    max-width:280px;
+  }
+}
+
+@media (max-width:680px){
+  .header-inner{
+    grid-template-columns:1fr;
+  }
+
+  .header-side-actions{
+    justify-self:stretch;
+    width:100%;
+    max-width:none;
+  }
+}
+
+/* =========================================================
+   v1.35 Header label alignment
+   ========================================================= */
+
+.header-side-actions{
+  width:min(340px,100%);
+  max-width:340px;
+}
+
+.header-action-row{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+
+.header-share-button{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.header-side-actions .format-switch{
+  padding-left:10px;
+  padding-right:10px;
+}
+
+.header-side-actions .switch-text{
+  overflow:visible;
+  text-overflow:clip;
+  white-space:nowrap;
+}
+
+@media (max-width:900px){
+  .header-inner{
+    grid-template-columns:minmax(0,1fr) minmax(260px,340px);
+  }
+
+  .header-side-actions{
+    max-width:340px;
+  }
+}
+
+/* =========================================================
+   v1.36 Header action width matching + ON/OFF button
+   ========================================================= */
+
+.header-side-actions{
+  width:min(380px,100%);
+  max-width:380px;
+}
+
+.header-share-button{
+  width:100%;
+  min-height:36px;
+  white-space:nowrap;
+  overflow:visible;
+  text-overflow:clip;
+  justify-content:center;
+}
+
+.header-action-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:8px;
+  width:100%;
+}
+
+.header-action-row > *{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
+.format-button{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:34px;
+  padding:7px 12px;
+  border:1px solid #dce2ff;
+  border-radius:999px;
+  background:#eef2ff;
+  color:var(--text);
+  font-weight:900;
+  cursor:pointer;
+  user-select:none;
+  transition:transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.format-button:hover{
+  transform:translateY(-1px);
+  background:#e6eaff;
+  border-color:#cbd4ff;
+  box-shadow:0 6px 16px rgba(89,103,216,.12);
+}
+
+.format-button input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.format-button-state{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:34px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#cbd5e1;
+  color:#475569;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.2;
+}
+
+.format-button:has(input:checked){
+  background:#eef2ff;
+  border-color:#cdd5ff;
+}
+
+.format-button:has(input:checked) .format-button-state{
+  background:var(--accent);
+  color:#fff;
+}
+
+.header-delete-button{
+  min-height:34px;
+}
+
+@media (max-width:900px){
+  .header-inner{
+    grid-template-columns:minmax(0,1fr) minmax(300px,380px);
+  }
+
+  .header-side-actions{
+    max-width:380px;
+  }
+}
+
+@media (max-width:680px){
+  .header-inner{
+    grid-template-columns:1fr;
+  }
+
+  .header-side-actions{
+    width:100%;
+    max-width:none;
+  }
+}
+
+/* =========================================================
+   v1.37 Header button text cleanup
+   ========================================================= */
+
+.header-side-actions{
+  width:min(420px,100%);
+  max-width:420px;
+}
+
+.header-share-button{
+  width:100%;
+  min-height:38px;
+  padding-left:18px;
+  padding-right:18px;
+  white-space:nowrap;
+  overflow:visible;
+  text-overflow:clip;
+}
+
+.header-action-row{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:10px;
+}
+
+.format-button{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:36px;
+  padding:8px 12px;
+  border:1px solid #cfd7ff;
+  border-radius:999px;
+  background:#eef2ff;
+  color:#334155;
+  font-weight:900;
+  cursor:pointer;
+  user-select:none;
+  box-sizing:border-box;
+  transition:transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.format-button:hover{
+  transform:translateY(-1px);
+  background:#e6eaff;
+  border-color:#bcc8ff;
+  box-shadow:0 6px 16px rgba(89,103,216,.12);
+}
+
+.format-button input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.format-button-text{
+  display:block;
+  width:100%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:center;
+}
+
+.format-button:has(input:checked){
+  background:#eef2ff;
+  border-color:#bfc9ff;
+  color:#3f4fc4;
+}
+
+.format-button:not(:has(input:checked)){
+  background:#f8fafc;
+  border-color:#d8dee8;
+  color:#64748b;
+}
+
+.header-delete-button{
+  min-height:36px;
+}
+
+@media (max-width:900px){
+  .header-inner{
+    grid-template-columns:minmax(0,1fr) minmax(320px,420px);
+  }
+
+  .header-side-actions{
+    max-width:420px;
+  }
+}
+
+@media (max-width:680px){
+  .header-inner{
+    grid-template-columns:1fr;
+  }
+
+  .header-side-actions{
+    width:100%;
+    max-width:none;
+  }
+}
+
+/* =========================================================
+   v1.38 Clean header controls
+   ========================================================= */
+
+.header-side-actions{
+  align-self:center;
+  justify-self:end;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  width:min(440px,100%);
+  max-width:440px;
+  min-width:360px;
+  box-sizing:border-box;
+}
+
+.header-share-button{
+  width:100%;
+  min-height:40px;
+  padding:9px 18px;
+  box-sizing:border-box;
+  justify-content:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:15px;
+}
+
+.header-action-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:10px;
+  width:100%;
+  min-width:0;
+}
+
+.header-action-row > *{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
+.format-button{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:38px;
+  padding:8px 12px;
+  border:1px solid #cfd7ff;
+  border-radius:999px;
+  background:#eef2ff;
+  color:#3f4fc4;
+  font-size:13px;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+  user-select:none;
+  box-sizing:border-box;
+  transition:transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.format-button:hover{
+  transform:translateY(-1px);
+  background:#e6eaff;
+  border-color:#bcc8ff;
+  box-shadow:0 6px 16px rgba(89,103,216,.12);
+}
+
+.format-button input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.format-button-text{
+  display:block;
+  width:100%;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.format-button:not(:has(input:checked)){
+  background:#f8fafc;
+  border-color:#d8dee8;
+  color:#64748b;
+}
+
+.header-delete-button{
+  min-height:38px;
+  padding:8px 12px;
+  font-size:13px;
+}
+
+.header-version{
+  position:static;
+  justify-self:end;
+  margin:0 4px 0 0;
+}
+
+/* Disable the legacy visual switch if old CSS is still present. */
+.header-side-actions .switch-track,
+.header-side-actions .switch-thumb,
+.header-side-actions .switch-text{
+  display:none !important;
+}
+
+@media (max-width:960px){
+  .header-inner{
+    grid-template-columns:minmax(0,1fr) minmax(360px,440px);
+    gap:14px;
+  }
+}
+
+@media (max-width:760px){
+  .header-inner{
+    grid-template-columns:1fr;
+  }
+
+  .header-side-actions{
+    justify-self:stretch;
+    width:100%;
+    max-width:none;
+    min-width:0;
+  }
+
+  .header-share-button{
+    font-size:13px;
+  }
+}
+
+/* =========================================================
+   v1.39 Header bottom spacing adjustment
+   ========================================================= */
+
+.site-header{
+  padding-bottom:6px;
+}
+
+.header-inner{
+  padding-bottom:4px;
+}
+
+.header-title-area{
+  margin-bottom:0;
+}
+
+.site-description{
+  margin-bottom:0;
+}
+
+.header-side-actions{
+  margin-bottom:-2px;
+}
+
+@media (max-width:760px){
+  .site-header{
+    padding-bottom:8px;
+  }
+
+  .header-inner{
+    padding-bottom:6px;
+  }
+
+  .header-side-actions{
+    margin-bottom:0;
+  }
+}
