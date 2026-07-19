@@ -29,12 +29,18 @@
       <a class="x-share-link" id="xShareLink" href="https://twitter.com/intent/tweet?text=%E8%83%8C%E6%99%AF%E3%83%A2%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%A1%E3%83%BC%E3%82%AB%E3%83%BC%EF%BD%9CTRPG%20WEB%E3%83%84%E3%83%BC%E3%83%AB%E8%A6%B3%E6%B8%AC%E6%89%80%20%E3%81%A7%E5%8B%95%E3%81%8F%E8%83%8C%E6%99%AF%E7%B4%A0%E6%9D%90%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%20https%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2Ftools%2Fhaikei-motion-maker%2F" target="_blank" rel="noopener noreferrer" aria-label="X / Twitterで共有">
           <span aria-hidden="true">𝕏</span>
         </a>
-        <button class="ghost-button lang-toggle-button" type="button" id="langToggleBtn" aria-label="Language">EN</button>
+        <div class="language-switcher" id="languageSwitcher" role="group" aria-label="言語切替">
+          <button class="lang-choice-button is-active" type="button" data-lang-choice="ja" aria-pressed="true">JP</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="en" aria-pressed="false">EN</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="ko" aria-pressed="false">KR</button>
+        </div>
         <button class="ghost-button" type="button" id="helpBtn">使い方</button>
         <button class="ghost-button" type="button" id="shortcutBtn">ショートカット</button>
         <button class="ghost-button" type="button" id="themeBtn"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb">☀️</span></span></button>
       </div>
-      <div class="version-engrave">v0.94 / 2026.06.30</div>
+      <div class="version-engrave">v1.04 / 2026.07.19</div>
     </header>
 
     <section class="drawer" id="helpDrawer" hidden>
@@ -116,9 +122,12 @@
           <button class="effect-card" type="button" data-effect="zoomOut"><span class="mini-preview zoom-out"></span><strong>ズームアウト</strong><small>Zoom-out</small></button>
           <button class="effect-card" type="button" data-effect="zoomOutWhite"><span class="mini-preview zoom-out white-fade"></span><strong>ズームアウト＋白</strong><small>Zoom-out + White</small></button>
           <button class="effect-card" type="button" data-effect="zoomOutBlack"><span class="mini-preview zoom-out black-fade"></span><strong>ズームアウト＋黒</strong><small>Zoom-out + Black</small></button>
-          <button class="effect-card" type="button" data-effect="transition"><span class="mini-preview transition"></span><strong>トランジション</strong><small>クロスフェード</small></button>
-          <button class="effect-card" type="button" data-effect="transitionHardcut"><span class="mini-preview transition hardcut"></span><strong>トランジション②</strong><small>ハードカット</small></button>
-          <button class="effect-card" type="button" data-effect="transitionWipe"><span class="mini-preview transition wipe"></span><strong>トランジション③</strong><small>ワイプ</small></button>
+          <button class="effect-card" type="button" data-effect="fadeBlack"><span class="mini-preview fade-motion fade-black"></span><strong>フェード・黒</strong><small>To/from Black</small></button>
+          <button class="effect-card" type="button" data-effect="fadeWhite"><span class="mini-preview fade-motion fade-white"></span><strong>フェード・白</strong><small>To/from White</small></button>
+          <button class="effect-card" type="button" data-effect="fadeTransparent"><span class="mini-preview fade-motion fade-transparent"></span><strong>フェード・透明</strong><small>To/from Transparent</small></button>
+          <button class="effect-card" type="button" data-effect="transition"><span class="mini-preview transition"></span><strong>トランジション</strong><small>Crossfade</small></button>
+          <button class="effect-card" type="button" data-effect="transitionHardcut"><span class="mini-preview transition hardcut"></span><strong>トランジション②</strong><small>Hard Cut</small></button>
+          <button class="effect-card" type="button" data-effect="transitionWipe"><span class="mini-preview transition wipe"></span><strong>トランジション③</strong><small>Wipe</small></button>
           </div>
         </div>
 
@@ -218,6 +227,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="./js/analytics.js"></script>
   <script src="./js/main.js"></script>
   <script src="./js/shortcut.js"></script>
   <script src="./js/script.js"></script>

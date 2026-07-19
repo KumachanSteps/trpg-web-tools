@@ -6,7 +6,8 @@
     toastHost: document.getElementById('toastHost'),
     helpBtn: document.getElementById('helpBtn'),
     shortcutBtn: document.getElementById('shortcutBtn'),
-    langToggleBtn: document.getElementById('langToggleBtn'),
+    languageSwitcher: document.getElementById('languageSwitcher'),
+    langButtons: document.querySelectorAll('[data-lang-choice]'),
     themeBtn: document.getElementById('themeBtn'),
     helpDrawer: document.getElementById('helpDrawer'),
     shortcutDrawer: document.getElementById('shortcutDrawer'),
@@ -43,6 +44,7 @@
   };
 
   const ctx = els.previewCanvas.getContext('2d');
+  const analytics = window.ToolAnalytics || null;
   const state = {
     image: null,
     images: [],
@@ -58,10 +60,13 @@
     playStart: 0,
     stillFrameTime: 0,
     draggedThumbIndex: null,
+    fadeOrder: ['image', 'fill'],
     isExporting: false,
     cancelExportRequested: false,
     stillDownloadUrl: '',
-    stillDownloadName: ''
+    stillDownloadName: '',
+    sourceHasTransparency: false,
+    lastOutputAnalytics: null
   };
 
   const DEV_SAMPLE_IMAGE_PATH = './assets/sample/sample_and_juliet.jpeg';
@@ -149,7 +154,10 @@
     breathe: '呼吸',
     panX: '左右パン',
     wave: '水面揺れ',
-    transition: 'トランジション（クロスフェード）',
+    fadeBlack: 'フェード・黒',
+    fadeWhite: 'フェード・白',
+    fadeTransparent: 'フェード・透明',
+    transition: 'トランジション①（フェード）',
     transitionHardcut: 'トランジション②（ハードカット）',
     transitionWipe: 'トランジション③（ワイプ）',
     spinFallBlack: '回転落下・黒',
@@ -177,6 +185,9 @@
     breathe: '呼吸',
     panX: '左右パン',
     wave: '水面揺れ',
+    fadeBlack: 'フェード黒',
+    fadeWhite: 'フェード白',
+    fadeTransparent: 'フェード透明',
     transition: 'トランジションクロスフェード',
     transitionHardcut: 'トランジション②ハードカット',
     transitionWipe: 'トランジション③ワイプ',
@@ -253,6 +264,8 @@
         placeholder: '画像を読み込むとプレビューが表示されます',
         transitionOrder: 'トランジション順',
         transitionHint: 'サムネイルをドラッグして順番を変更できます',
+        fadeOrder: 'フェード順',
+        fadeHint: 'サムネイルをドラッグしてフェード方向を変更できます',
         fileName: 'ファイル名',
         seconds: '秒数',
         qualityLabel: '画質',
@@ -297,7 +310,10 @@
         breathe: '呼吸',
         panX: '左右パン',
         wave: '水面揺れ',
-        transition: 'トランジション（クロスフェード）',
+        fadeBlack: 'フェード・黒',
+    fadeWhite: 'フェード・白',
+    fadeTransparent: 'フェード・透明',
+    transition: 'トランジション①（フェード）',
         transitionHardcut: 'トランジション②（ハードカット）',
         transitionWipe: 'トランジション③（ワイプ）',
         spinFallBlack: '回転落下・黒',
@@ -324,7 +340,10 @@
         breathe: '呼吸',
         panX: '左右パン',
         wave: '水面揺れ',
-        transition: 'トランジションクロスフェード',
+        fadeBlack: 'フェード黒',
+    fadeWhite: 'フェード白',
+    fadeTransparent: 'フェード透明',
+    transition: 'トランジションクロスフェード',
         transitionHardcut: 'トランジション②ハードカット',
         transitionWipe: 'トランジション③ワイプ',
         spinFallBlack: '回転落下黒',
@@ -358,9 +377,12 @@
         zoomOut: 'Zoom-out',
         zoomOutWhite: 'Zoom-out + White',
         zoomOutBlack: 'Zoom-out + Black',
-        transition: 'クロスフェード',
-        transitionHardcut: 'ハードカット',
-        transitionWipe: 'ワイプ'
+        fadeBlack: 'To/from Black',
+        fadeWhite: 'To/from White',
+        fadeTransparent: 'To/from Transparent',
+        transition: 'Crossfade',
+        transitionHardcut: 'Hard Cut',
+        transitionWipe: 'Wipe'
       },
       filterLabels: {
         none: 'なし',
@@ -451,7 +473,7 @@
         noMotionSelected: extra => `モーションなしにしました。静止画像としてプレビュー・出力できます。${extra}`,
         imageReset: '画像をリセットしました。',
         transitionOrderChanged: (count, verb, extra) => `トランジション順序を変更しました。${count}枚の画像を順番に${verb}します。${extra}`,
-        transitionHintImages: (count, verb) => ` ${count}枚の画像を順番に${verb}します。`,
+        transitionHintImages: (count, verb) => ` ${count}枚の画像を順番に${verb}します。1ループは最後の画像までの一方向です。`,
         transitionHintNeedImages: ' トランジション系は2枚以上の画像で使用できます。',
         effectSelected: (effect, loop, hint, extra) => `${effect}を選択しました。出力設定は${loop ? 'ループ' : '非ループ'}です。${hint}${extra}`,
         filterSelected: (filter, extra) => `画像加工：${filter}を選択しました。${extra}`,
@@ -476,6 +498,12 @@
         loop: 'ループ',
         noLoop: '非ループ',
         original: 'オリジナル'
+      },
+      fadeFillLabels: {
+        image: '画像',
+        fadeBlack: '黒',
+        fadeWhite: '白',
+        fadeTransparent: '透明'
       },
       transitionVerb: {
         transition: 'クロスフェード',
@@ -510,6 +538,8 @@
         placeholder: 'Load an image to show the preview',
         transitionOrder: 'Transition Order',
         transitionHint: 'Drag thumbnails to reorder them',
+        fadeOrder: 'Fade Order',
+        fadeHint: 'Drag thumbnails to switch between fade-out and fade-in',
         fileName: 'File Name',
         seconds: 'Duration',
         qualityLabel: 'Quality',
@@ -554,7 +584,10 @@
         breathe: 'Breathing',
         panX: 'Horizontal Pan',
         wave: 'Water Ripple',
-        transition: 'Transition (Crossfade)',
+        fadeBlack: 'Fade Black',
+        fadeWhite: 'Fade White',
+        fadeTransparent: 'Fade Transparent',
+        transition: 'Transition 1 (Fade)',
         transitionHardcut: 'Transition 2 (Hardcut)',
         transitionWipe: 'Transition 3 (Wipe)',
         spinFallBlack: 'Spin Fall + Black',
@@ -581,6 +614,9 @@
         breathe: 'Breathing',
         panX: 'HorizontalPan',
         wave: 'WaterRipple',
+        fadeBlack: 'FadeBlack',
+        fadeWhite: 'FadeWhite',
+        fadeTransparent: 'FadeTransparent',
         transition: 'TransitionCrossfade',
         transitionHardcut: 'Transition2Hardcut',
         transitionWipe: 'Transition3Wipe',
@@ -615,9 +651,12 @@
         zoomOut: 'Zoom out',
         zoomOutWhite: 'Zoom out + white',
         zoomOutBlack: 'Zoom out + black',
-        transition: 'クロスフェード',
-        transitionHardcut: 'ハードカット',
-        transitionWipe: 'ワイプ'
+        fadeBlack: 'To/from black',
+        fadeWhite: 'To/from white',
+        fadeTransparent: 'To/from transparent',
+        transition: 'Crossfade',
+        transitionHardcut: 'Hard cut',
+        transitionWipe: 'Wipe'
       },
       filterLabels: {
         none: 'None',
@@ -708,7 +747,9 @@
         noMotionSelected: extra => `No motion selected. You can preview and export a still image.${extra}`,
         imageReset: 'Image reset.',
         transitionOrderChanged: (count, verb, extra) => `Transition order updated. ${count} images will ${verb} in order.${extra}`,
-        transitionHintImages: (count, verb) => ` ${count} images will ${verb} in order.`,
+        fadeOrderChanged: extra => `Fade order changed.${extra}`,
+        fadeOrderHint: ' Drag thumbnails to switch between fade-out and fade-in.',
+        transitionHintImages: (count, verb) => ` ${count} images will ${verb} in order. One loop runs one-way through the last image.`,
         transitionHintSingleFilter: filter => ` The selected transition will change one image from the original to ${filter}.`,
         transitionHintNeedImages: ' Transition effects require at least two images.',
         effectSelected: (effect, loop, hint, extra) => `${effect} selected. Output setting: ${loop ? 'loop' : 'no loop'}.${hint}${extra}`,
@@ -735,19 +776,303 @@
         noLoop: 'No Loop',
         original: 'Original'
       },
+      fadeFillLabels: {
+        image: 'Image',
+        fadeBlack: 'Black',
+        fadeWhite: 'White',
+        fadeTransparent: 'Transparent'
+      },
       transitionVerb: {
         transition: 'crossfade',
         transitionHardcut: 'hard cut',
         transitionWipe: 'wipe'
+      }
+    },
+    ko: {
+      htmlLang: 'ko',
+      documentTitle: '배경 모션 메이커｜TRPG WEB 도구 관측소',
+      quality: { minimum: '최소', light: '경량', standard: '표준', high: '고화질' },
+      qualityRecommendation: ' ※표준 이상의 설정에서는 WebP 출력을 권장합니다.',
+      exportNote: '※ WebP 파일이 5MB 이내가 되도록 설정을 조정해 주세요. 초과하는 경우 화질, 이미지 크기 또는 재생 시간을 낮추거나 30FPS / 60FPS 대신 기본 24FPS로 출력해 주세요.',
+      staticText: {
+        portalName: 'TRPG WEB 도구 관측소',
+        title: '배경 모션 메이커',
+        lead: '업로드한 배경 이미지에 흔들림, 줌, 팬, 전환 효과를 적용해 TRPG용 움직이는 배경 소재를 만듭니다.',
+        portalLink: '←TRPG WEB 도구 관측소',
+        help: '사용법',
+        shortcuts: '단축키',
+        helpTitle: '사용법',
+        shortcutTitle: '단축키 목록',
+        uploadTitle: '이미지 업로드',
+        dropStrong: '이미지를 드래그 앤 드롭',
+        dropSmall: '또는 클릭하여 PNG / JPG / WebP 파일 열기 (여러 장 선택 가능)',
+        sampleButton: '샘플 이미지 불러오기',
+        effectsTitle: '효과 선택',
+        motionTab: '모션',
+        imageEditTab: '이미지 편집',
+        previewTitle: '미리보기·출력',
+        placeholder: '이미지를 불러오면 미리보기가 표시됩니다',
+        transitionOrder: '전환 순서',
+        transitionHint: '썸네일을 드래그하여 순서를 변경할 수 있습니다',
+        fadeOrder: '페이드 순서',
+        fadeHint: '썸네일을 드래그하여 페이드 인/아웃 방향을 변경할 수 있습니다',
+        fileName: '파일명',
+        seconds: '재생 시간',
+        qualityLabel: '화질',
+        imageSize: '이미지 크기',
+        loop: '반복 재생',
+        play: '미리보기 재생',
+        stop: '미리보기 정지',
+        webp: '24FPS로 출력',
+        webp30: '30FPS로 출력',
+        webp60: '60FPS로 출력',
+        download: '다운로드',
+        clear: '초기화',
+        cancelExport: '출력 취소',
+        footerTitle: '이용 안내',
+        footer1: '이 도구는 개발자 @KumachanSteps가 개인 제작한 비공식 TRPG 지원 도구입니다. 각 TRPG 시스템, 시나리오 및 외부 서비스의 이용 약관과 권리 표기는 이용자가 직접 확인해 주세요.',
+        footer2: '오류 제보 및 기능 요청은 X의 @KumachanSteps 계정으로 DM을 보내 주세요. 모든 제보와 요청에 답변하거나 대응할 수 있는 것은 아닙니다.'
+      },
+      helpSteps: [
+        '1. 이미지 파일을 선택하거나 업로드 영역에 드래그 앤 드롭합니다. 전환 효과에서는 여러 이미지를 한 번에 불러올 수 있습니다.',
+        '2. 효과를 선택한 뒤 재생 시간, 화질, 이미지 크기 및 반복 설정을 조정합니다.',
+        '3. 미리보기에서 움직임을 확인하고 24FPS / 30FPS / 60FPS WebP로 출력합니다.',
+        '4. 일반적으로 24FPS 출력을 권장합니다. 더 부드러운 움직임이 필요하면 30FPS 또는 60FPS를 사용해 보세요.'
+      ],
+      shortcutLabels: [
+        '사용법/단축키 패널이 열려 있으면 닫고, 그렇지 않으면 이미지를 초기화',
+        '이미지 파일 열기',
+        '미리보기 재생/정지',
+        '30FPS WebP 출력',
+        '60FPS WebP 출력',
+        '24FPS WebP 출력',
+        '라이트 모드/나이트 모드 전환'
+      ],
+      effectLabels: {
+        none: '모션 없음',
+        quakeY: '세로 흔들림',
+        quakeX: '가로 흔들림',
+        quakeXY: '전체 흔들림',
+        quakeY2: '세로 흔들림',
+        quakeX2: '가로 흔들림',
+        quakeXY2: '전체 흔들림',
+        drunk: '비틀거림',
+        breathe: '호흡',
+        panX: '좌우 팬',
+        wave: '수면 흔들림',
+        fadeBlack: '검정 페이드',
+        fadeWhite: '흰색 페이드',
+        fadeTransparent: '투명 페이드',
+        transition: '전환(크로스페이드)',
+        transitionHardcut: '전환②(하드 컷)',
+        transitionWipe: '전환③(와이프)',
+        spinFallBlack: '회전 낙하·검정',
+        suckInWhite: '흡입·흰색',
+        suckInBlack: '흡입·검정',
+        rise: '상승',
+        descend: '하강',
+        zoomIn: '줌 인',
+        zoomInWhite: '줌 인＋흰색',
+        zoomInBlack: '줌 인＋검정',
+        zoomOut: '줌 아웃',
+        zoomOutWhite: '줌 아웃＋흰색',
+        zoomOutBlack: '줌 아웃＋검정'
+      },
+      effectFileLabels: {
+        none: '모션없음',
+        quakeY: '세로흔들림',
+        quakeX: '가로흔들림',
+        quakeXY: '전체흔들림',
+        quakeY2: '세로흔들림',
+        quakeX2: '가로흔들림',
+        quakeXY2: '전체흔들림',
+        drunk: '비틀거림',
+        breathe: '호흡',
+        panX: '좌우팬',
+        wave: '수면흔들림',
+        fadeBlack: '검정페이드',
+        fadeWhite: '흰색페이드',
+        fadeTransparent: '투명페이드',
+        transition: '전환크로스페이드',
+        transitionHardcut: '전환2하드컷',
+        transitionWipe: '전환3와이프',
+        spinFallBlack: '회전낙하검정',
+        suckInWhite: '흡입흰색',
+        suckInBlack: '흡입검정',
+        rise: '상승',
+        descend: '하강',
+        zoomIn: '줌인',
+        zoomInWhite: '줌인흰색',
+        zoomInBlack: '줌인검정',
+        zoomOut: '줌아웃',
+        zoomOutWhite: '줌아웃흰색',
+        zoomOutBlack: '줌아웃검정'
+      },
+      effectSubLabels: {
+        quakeY2: '확대 없음 / 세로',
+        quakeX2: '확대 없음 / 가로',
+        quakeXY2: '확대 없음 / 전체',
+        drunk: '불안정한 카메라 움직임',
+        breathe: '느린 호흡형 줌',
+        panX: '느린 좌우 이동',
+        spinFallBlack: '회전 낙하＋페이드',
+        suckInWhite: '흡입＋흰색',
+        suckInBlack: '흡입＋검정',
+        wave: '물결처럼 일렁임',
+        rise: '위로 이동',
+        descend: '아래로 이동',
+        zoomIn: '확대',
+        zoomInWhite: '확대＋흰색',
+        zoomInBlack: '확대＋검정',
+        zoomOut: '축소',
+        zoomOutWhite: '축소＋흰색',
+        zoomOutBlack: '축소＋검정',
+        fadeBlack: '검정으로/검정에서',
+        fadeWhite: '흰색으로/흰색에서',
+        fadeTransparent: '투명으로/투명에서',
+        transition: '크로스페이드',
+        transitionHardcut: '하드 컷',
+        transitionWipe: '와이프'
+      },
+      filterLabels: {
+        none: '없음',
+        grayscale: '그레이스케일',
+        sepia: '세피아',
+        posterize: '포스터라이즈',
+        contrastBoost: '대비 강조',
+        softFocus: '소프트 포커스',
+        sharpen: '선명하게',
+        lineExtract: '선화 추출',
+        whiteLineExtract: '흰선 추출',
+        sumiInk: '수묵화',
+        pixelate: '픽셀화',
+        noiseBoost: '노이즈 강화',
+        crt: 'CRT',
+        vignette: '비네트',
+        chromaticAberration: '색수차',
+        morning: '아침',
+        midday: '낮',
+        evening: '저녁',
+        night: '밤',
+        deepNight: '심야',
+        moonlight: '달빛',
+        horror: '호러',
+        fog: '안개',
+        cyber: '사이버',
+        underwater: '수중',
+        dream: '꿈',
+        vintagePhoto: '빈티지 사진'
+      },
+      filterDescriptions: {
+        none: '원본 이미지의 색감을 유지',
+        grayscale: '흑백 사진 느낌으로 변환',
+        sepia: '오래된 사진 같은 따뜻한 색감',
+        posterize: '색상 수를 줄여 일러스트 느낌으로',
+        contrastBoost: '그림자와 윤곽을 강조',
+        softFocus: '부드럽고 몽환적인 빛 추가',
+        sharpen: '윤곽을 조금 더 선명하게',
+        lineExtract: '어두운 윤곽선을 추출',
+        whiteLineExtract: '어두운 바탕에 흰 윤곽선 표시',
+        sumiInk: '일본식 수묵화 느낌의 색조',
+        pixelate: '저해상도 픽셀 스타일',
+        noiseBoost: '거친 영상풍 노이즈 추가',
+        crt: '구형 모니터 주사선 효과',
+        vignette: '가장자리를 어둡게 하여 중앙에 시선 집중',
+        chromaticAberration: '강한 RGB 색 어긋남 효과',
+        morning: '은은하고 따뜻한 아침 햇빛',
+        midday: '자연스럽고 밝은 낮의 빛',
+        evening: '따뜻한 노을과 길어진 그림자',
+        night: '푸른 기운이 남은 밤의 분위기',
+        deepNight: '더 어두운 심야의 분위기',
+        moonlight: '차가운 달빛이 비치는 밤',
+        horror: '불안한 색감과 압박감 있는 어둠',
+        fog: '대비를 낮춰 안개 낀 풍경으로',
+        cyber: '네온 블루·퍼플 색조',
+        underwater: '푸른빛이 도는 수중 분위기',
+        dream: '옅은 빛과 흐림으로 몽환적으로',
+        vintagePhoto: '바랜 색감과 입자가 있는 오래된 사진풍'
+      },
+      filterSections: ['기본 편집', '시간대', '분위기'],
+      imageEditNote: '이미지 편집은 Canvas 기반의 간단한 시각 효과입니다. 하늘을 교체하거나 AI로 완전한 낮/밤 변환을 수행하지는 않으며, TRPG 배경의 분위기를 빠르게 조정하는 용도로 사용해 주세요.',
+      tooltip: {
+        webp: 'CCFOLIA에서 사용하기 쉬운 가벼운 움직이는 이미지로 출력합니다. 일반적으로 이 설정을 권장합니다.',
+        webp30: 'WebP를 30FPS로 출력합니다. 움직임이 더 부드럽지만 파일 크기가 커질 수 있습니다.',
+        webp60: 'WebP를 60FPS로 출력합니다. 가장 부드럽지만 파일 크기가 크게 증가할 수 있습니다.'
+      },
+      messages: {
+        sizeLimit: bytes => `권장 제한: ${bytes} 미만`,
+        sizeWarning: bytes => `경고: 출력 파일은 ${bytes}입니다. CCFOLIA 등의 5MB 업로드 제한을 초과할 수 있습니다. 화질, 이미지 크기 또는 재생 시간을 낮춘 뒤 다시 출력해 주세요.`,
+        exportTooLarge: kind => `${kind} 출력이 완료되었지만 파일 크기가 너무 큽니다.\n설정을 변경한 뒤 다시 출력해 주세요.`,
+        exportReady: kind => `${kind} 출력이 완료되었습니다. 다운로드할 수 있습니다.`,
+        selectImage: '이미지 파일을 선택해 주세요.',
+        imageLoadFailed: '이미지를 불러올 수 없습니다. 다른 파일을 사용해 주세요.',
+        imagesLoadedTransition: (count, extra) => `${count}장의 이미지를 불러왔습니다. 전환 효과로 순서대로 변경할 수 있습니다.${extra}`,
+        imageLoaded: extra => `이미지를 불러왔습니다. 효과를 선택해 미리볼 수 있습니다.${extra}`,
+        autoLightQuality: ' 원본 이미지가 1MB 이상이므로 화질을 경량으로 자동 설정했습니다. 이미지 크기는 원본 비율입니다.',
+        autoLightPresetQuality: label => ` 원본 이미지가 3MB 이상이므로 화질을 경량, 이미지 크기를 ${label}(으)로 자동 설정했습니다.`,
+        autoMinimumQuality: label => ` 원본 이미지가 6MB 이상이므로 화질을 최소, 이미지 크기를 ${label}(으)로 자동 설정했습니다.`,
+        autoStandardQuality: ' 원본 이미지가 1MB 미만이므로 화질을 표준으로 자동 설정했습니다. 이미지 크기는 원본 비율입니다.',
+        sampleLoaded: '샘플 이미지를 불러왔습니다.',
+        sampleFailedStatus: '샘플 이미지를 불러올 수 없습니다. assets/sample/sample_and_juliet.jpeg를 확인해 주세요.',
+        sampleFailedToast: '샘플 이미지를 불러올 수 없습니다.',
+        emptyImageInfo: '아직 이미지를 불러오지 않았습니다.',
+        approxKb: kb => `약 ${kb.toLocaleString()} KB`,
+        multiImageInfo: (count, w, h, kb, names, more) => `<strong>${count}장의 이미지를 불러옴</strong><br>첫 이미지: ${w} × ${h}px<br>합계 약 ${kb.toLocaleString()} KB<br><br>${names}${more}`,
+        moreImages: count => `<br>…외 ${count}장`,
+        noMotionPreview: '모션 없이 정지 이미지를 미리보기 중입니다.',
+        noMotionSelected: extra => `모션이 선택되지 않았습니다. 정지 이미지로 미리보기 및 출력할 수 있습니다.${extra}`,
+        imageReset: '이미지를 초기화했습니다.',
+        transitionOrderChanged: (count, verb, extra) => `전환 순서를 변경했습니다. ${count}장의 이미지를 순서대로 ${verb}합니다.${extra}`,
+        fadeOrderChanged: extra => `페이드 순서를 변경했습니다.${extra}`,
+        fadeOrderHint: ' 썸네일을 드래그하면 페이드 인/아웃 방향을 변경할 수 있습니다.',
+        transitionHintImages: (count, verb) => ` ${count}장의 이미지를 순서대로 ${verb}합니다. 한 번의 루프는 마지막 이미지까지 한 방향으로 진행됩니다.`,
+        transitionHintSingleFilter: filter => ` 선택한 전환은 한 이미지를 원본에서 ${filter}(으)로 변경합니다.`,
+        transitionHintNeedImages: ' 전환 효과에는 이미지가 최소 2장 필요합니다.',
+        effectSelected: (effect, loop, hint, extra) => `${effect} 선택됨. 출력 설정: ${loop ? '반복' : '반복 없음'}.${hint}${extra}`,
+        filterSelected: (filter, extra) => `이미지 편집: ${filter} 선택됨.${extra}`,
+        needImage: '먼저 이미지를 불러와 주세요.',
+        pngZipLibraryMissing: 'PNG 연속 이미지 ZIP 라이브러리를 불러올 수 없습니다. 네트워크 연결을 확인해 주세요.',
+        pngZipStart: (frames, limit) => `PNG 연속 이미지 ZIP 생성 중... 0 / ${frames}프레임 / ${limit}`,
+        pngZipProgress: (done, frames) => `PNG 연속 이미지 ZIP 생성 중... ${done} / ${frames}프레임`,
+        pngZipComplete: (name, size, effect, seconds, quality, sizeLabel, warning) => `PNG 연속 이미지 ZIP 완료: ${name} / ${size} / ${effect} / ${seconds}초 / ${quality} / ${sizeLabel}${warning ? ` / ${warning}` : ''}`,
+        pngZipError: 'PNG 연속 이미지 ZIP 출력에 실패했습니다. 5MB 이내가 되도록 이미지 크기, 재생 시간 또는 화질을 낮춰 주세요.',
+        webpStart: fpsLabel => fpsLabel ? `${fpsLabel} WebP 출력을 시작했습니다. 잠시 기다려 주세요.` : 'WebP 출력을 시작했습니다. 잠시 기다려 주세요.',
+        webpProgressStart: (fpsLabel, frames, limit) => `${fpsLabel ? `${fpsLabel} ` : ''}WebP 생성 중... 0 / ${frames}프레임 / ${limit}`,
+        webpProgress: (fpsLabel, done, frames) => `${fpsLabel ? `${fpsLabel} ` : ''}WebP 생성 중... ${done} / ${frames}프레임`,
+        webpComplete: (fpsLabel, name, size, effect, loop, seconds, fps, quality, sizeLabel, warning) => `${fpsLabel ? `${fpsLabel} ` : ''}WebP 완료: ${name} / ${size} / ${effect} / ${loop ? '반복' : '반복 없음'} / ${seconds}초 / ${fps}FPS / ${quality} / ${sizeLabel}${warning ? ` / ${warning}` : ''}`,
+        webpError: 'WebP 출력에 실패했습니다. 브라우저의 WebP 출력 지원 여부를 확인하고 이미지 크기, 화질 또는 재생 시간을 낮춘 뒤 다시 시도해 주세요.',
+        downloadFirst: '먼저 이미지를 출력한 뒤 다운로드해 주세요.',
+        downloadDone: '다운로드가 완료되었습니다.',
+        webpPlaybackNote: '재생 환경에 따라 WebP 미리보기 속도가 실제보다 느리게 보일 수 있습니다. CCFOLIA 등 실제 사용 환경에서 재생을 확인하는 것을 권장합니다.',
+        exportCancelling: '출력을 취소하는 중입니다. 잠시 기다려 주세요.',
+        exportCancelled: '출력을 취소했습니다.',
+        lightMode: '라이트 모드',
+        darkMode: '나이트 모드',
+        loop: '반복',
+        noLoop: '반복 없음',
+        original: '원본'
+      },
+      fadeFillLabels: {
+        image: '이미지',
+        fadeBlack: '검정',
+        fadeWhite: '흰색',
+        fadeTransparent: '투명'
+      },
+      transitionVerb: {
+        transition: '크로스페이드',
+        transitionHardcut: '하드 컷',
+        transitionWipe: '와이프'
       }
     }
   };
 
   function getDefaultLanguage() {
     const saved = localStorage.getItem(LANG_STORAGE_KEY);
-    if (saved === 'ja' || saved === 'en') return saved;
+    if (saved === 'ja' || saved === 'en' || saved === 'ko') return saved;
     const browserLang = (navigator.languages?.[0] || navigator.language || 'en').toLowerCase();
-    return browserLang.startsWith('ja') ? 'ja' : 'en';
+    if (browserLang.startsWith('ja')) return 'ja';
+    if (browserLang.startsWith('ko')) return 'ko';
+    return 'en';
   }
 
   function dict() {
@@ -771,7 +1096,7 @@
   }
 
   function applyLanguage(lang, options = {}) {
-    state.lang = lang === 'en' ? 'en' : 'ja';
+    state.lang = ['ja', 'en', 'ko'].includes(lang) ? lang : 'ja';
     const d = dict();
     const s = d.staticText;
 
@@ -784,16 +1109,20 @@
     setText('.title-block h1', s.title);
     setText('.title-block .lead', s.lead);
     setText('.portal-link', s.portalLink);
-    if (els.langToggleBtn) {
-      els.langToggleBtn.textContent = d.langButton;
-      els.langToggleBtn.setAttribute('aria-label', state.lang === 'ja' ? 'Switch to English' : '日本語に切り替え');
-      els.langToggleBtn.setAttribute('title', state.lang === 'ja' ? 'English' : '日本語');
+    if (els.languageSwitcher) {
+      const switcherLabel = state.lang === 'ja' ? '言語切替' : state.lang === 'ko' ? '언어 전환' : 'Language';
+      els.languageSwitcher.setAttribute('aria-label', switcherLabel);
     }
+    els.langButtons.forEach(button => {
+      const active = button.dataset.langChoice === state.lang;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
     els.helpBtn.textContent = s.help;
     els.shortcutBtn.textContent = s.shortcuts;
     setText('#helpDrawer h2', s.helpTitle);
     setText('#shortcutDrawer h2', s.shortcutTitle);
-    document.querySelectorAll('[data-close-drawer]').forEach(button => button.setAttribute('aria-label', state.lang === 'ja' ? '閉じる' : 'Close'));
+    document.querySelectorAll('[data-close-drawer]').forEach(button => button.setAttribute('aria-label', state.lang === 'ja' ? '閉じる' : state.lang === 'ko' ? '닫기' : 'Close'));
 
     document.querySelectorAll('#helpDrawer .guide-list p').forEach((p, index) => {
       if (d.helpSteps[index]) p.textContent = d.helpSteps[index];
@@ -809,8 +1138,8 @@
     setText('.effects-panel .effects-heading-row h2', s.effectsTitle);
     els.motionTab.textContent = s.motionTab;
     els.imageEditTab.textContent = s.imageEditTab;
-    els.effectGrid.setAttribute('aria-label', state.lang === 'ja' ? 'エフェクト一覧' : 'Effect list');
-    document.querySelector('.effect-tabs')?.setAttribute('aria-label', state.lang === 'ja' ? 'エフェクト種別' : 'Effect type');
+    els.effectGrid.setAttribute('aria-label', state.lang === 'ja' ? 'エフェクト一覧' : state.lang === 'ko' ? '효과 목록' : 'Effect list');
+    document.querySelector('.effect-tabs')?.setAttribute('aria-label', state.lang === 'ja' ? 'エフェクト種別' : state.lang === 'ko' ? '효과 종류' : 'Effect type');
 
     document.querySelectorAll('.effect-card').forEach(card => {
       const key = card.dataset.effect;
@@ -834,9 +1163,7 @@
 
     setText('.preview-panel .panel-heading h2', s.previewTitle);
     if (els.canvasPlaceholder) els.canvasPlaceholder.textContent = s.placeholder;
-    setText('.transition-thumb-head strong', s.transitionOrder);
-    setText('.transition-thumb-head span', s.transitionHint);
-    els.transitionThumbList?.setAttribute('aria-label', state.lang === 'ja' ? 'トランジション順サムネイル' : 'Transition order thumbnails');
+    updateThumbPanelText();
 
     els.fileNameInput.closest('label')?.querySelector('span')?.replaceChildren(document.createTextNode(s.fileName));
     els.secondsInput.closest('label')?.querySelector('span')?.replaceChildren(document.createTextNode(s.seconds));
@@ -876,8 +1203,8 @@
     if (!options.silent) setStatus('');
   }
 
-  function switchLanguage() {
-    const next = state.lang === 'ja' ? 'en' : 'ja';
+  function switchLanguage(next) {
+    if (!['ja', 'en', 'ko'].includes(next)) return;
     localStorage.setItem(LANG_STORAGE_KEY, next);
     applyLanguage(next);
   }
@@ -900,6 +1227,9 @@
       case 'panX':
         return 4;
       case 'spinFallBlack':
+      case 'fadeBlack':
+      case 'fadeWhite':
+      case 'fadeTransparent':
         return 2;
       case 'rise':
       case 'descend':
@@ -910,7 +1240,7 @@
   }
 
   function getLoopDefault(effect) {
-    return !['zoomIn', 'zoomInWhite', 'zoomInBlack', 'zoomOut', 'zoomOutWhite', 'zoomOutBlack', 'spinFallBlack', 'suckInWhite', 'suckInBlack', 'rise', 'descend'].includes(effect);
+    return !['zoomIn', 'zoomInWhite', 'zoomInBlack', 'zoomOut', 'zoomOutWhite', 'zoomOutBlack', 'spinFallBlack', 'suckInWhite', 'suckInBlack', 'rise', 'descend', 'fadeBlack', 'fadeWhite', 'fadeTransparent'].includes(effect);
   }
 
   function formatFileSize(bytes) {
@@ -1115,20 +1445,95 @@
     return ['transition', 'transitionHardcut', 'transitionWipe'].includes(effect);
   }
 
+  function isFadeEffect(effect = state.effect) {
+    return ['fadeBlack', 'fadeWhite', 'fadeTransparent'].includes(effect);
+  }
+
+  function isTransparentFadeEffect(effect = state.effect) {
+    return effect === 'fadeTransparent';
+  }
+
+  function normalizeFadeOrder() {
+    if (!Array.isArray(state.fadeOrder) || state.fadeOrder.length !== 2 || !state.fadeOrder.includes('image') || !state.fadeOrder.includes('fill')) {
+      state.fadeOrder = ['image', 'fill'];
+    }
+    return state.fadeOrder;
+  }
+
+  function getFadeFillColor(effect = state.effect) {
+    if (effect === 'fadeWhite') return '#ffffff';
+    if (effect === 'fadeBlack') return '#000000';
+    return null;
+  }
+
+  function getFadeFillLabel(effect = state.effect) {
+    return dict().fadeFillLabels?.[effect] || effect;
+  }
+
+  function getFadeMotionAlphas(progress) {
+    const mix = smootherStep(progress);
+    const order = normalizeFadeOrder();
+    const imageFirst = order[0] === 'image';
+    return {
+      imageAlpha: imageFirst ? 1 - mix : mix,
+      fillAlpha: imageFirst ? mix : 1 - mix
+    };
+  }
+
+  function stabilizeTransparentFadeAlphas(imageAlpha, fillAlpha, progress) {
+    const fadeOut = normalizeFadeOrder()[0] === 'image';
+    const endSnapThreshold = 0.985;
+    let nextImageAlpha = imageAlpha;
+    let nextFillAlpha = fillAlpha;
+
+    if (fadeOut) {
+      if (progress >= endSnapThreshold) {
+        return { imageAlpha: 0, fillAlpha: 1 };
+      }
+      if (nextImageAlpha <= 0.06) nextImageAlpha = 0;
+      else if (nextImageAlpha >= 0.995) nextImageAlpha = 1;
+      if (nextFillAlpha <= 0.005) nextFillAlpha = 0;
+      else if (nextFillAlpha >= 0.94) nextFillAlpha = 1;
+    } else {
+      if (progress >= endSnapThreshold) {
+        return { imageAlpha: 1, fillAlpha: 0 };
+      }
+      if (nextImageAlpha <= 0.005) nextImageAlpha = 0;
+      else if (nextImageAlpha >= 0.94) nextImageAlpha = 1;
+      if (nextFillAlpha <= 0.06) nextFillAlpha = 0;
+      else if (nextFillAlpha >= 0.995) nextFillAlpha = 1;
+    }
+
+    return {
+      imageAlpha: Math.max(0, Math.min(1, nextImageAlpha)),
+      fillAlpha: Math.max(0, Math.min(1, nextFillAlpha))
+    };
+  }
+
+  function updateThumbPanelText() {
+    const s = dict().staticText;
+    const isFade = isFadeEffect(state.effect);
+    setText('.transition-thumb-head strong', isFade ? s.fadeOrder : s.transitionOrder);
+    setText('.transition-thumb-head span', isFade ? s.fadeHint : s.transitionHint);
+    els.transitionThumbList?.setAttribute('aria-label', isFade
+      ? (state.lang === 'ja' ? 'フェード順サムネイル' : state.lang === 'ko' ? '페이드 순서 썸네일' : 'Fade order thumbnails')
+      : (state.lang === 'ja' ? 'トランジション順サムネイル' : state.lang === 'ko' ? '전환 순서 썸네일' : 'Transition order thumbnails'));
+  }
+
   function getTransitionVerb(effect = state.effect) {
     return dict().transitionVerb[effect] || dict().transitionVerb.transition;
   }
 
   function setEffectSelectionStatus() {
     const messages = dict().messages;
-    const transitionHint = isTransitionEffect(state.effect)
+    const orderHint = isTransitionEffect(state.effect)
       ? (state.images.length >= 2
           ? messages.transitionHintImages(state.images.length, getTransitionVerb(state.effect))
           : (shouldUseSingleImageFilterTransition()
               ? messages.transitionHintSingleFilter(imageFilterLabels[state.imageFilter])
               : messages.transitionHintNeedImages))
-      : '';
-    setStatus(messages.effectSelected(effectLabels[state.effect], els.loopInput.checked, transitionHint, getQualityRecommendationText()));
+      : (isFadeEffect(state.effect) && state.image ? messages.fadeOrderHint : '');
+    setStatus(messages.effectSelected(effectLabels[state.effect], els.loopInput.checked, orderHint, getQualityRecommendationText()));
   }
 
 
@@ -1159,7 +1564,7 @@
     els.playBtn.textContent = dict().staticText.play;
   }
 
-  function resetImage() {
+  function resetImage(triggerType = 'button') {
     stopPreview();
     hideDownload();
     state.image = null;
@@ -1172,6 +1577,10 @@
     state.stillFrameTime = 0;
     state.imageFilter = 'none';
     state.draggedThumbIndex = null;
+    state.fadeOrder = ['image', 'fill'];
+    state.sourceHasTransparency = false;
+    state.lastOutputAnalytics = null;
+    analytics?.resetOutputTracking();
     if (els.imageEditGrid) {
       [...els.imageEditGrid.querySelectorAll('.image-edit-card')].forEach(card => card.classList.toggle('is-active', card.dataset.filter === 'none'));
     }
@@ -1184,6 +1593,7 @@
     syncPreviewCanvasSize();
     drawFrame(0, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
     setStatus(dict().messages.imageReset);
+    analytics?.sendReset({ reset_scope: 'all', trigger_type: triggerType });
     return true;
   }
 
@@ -1234,7 +1644,8 @@
   }
 
   function shouldShowTransitionThumbs() {
-    return isTransitionEffect(state.effect) && state.images && state.images.length >= 2;
+    return (isTransitionEffect(state.effect) && state.images && state.images.length >= 2)
+      || (isFadeEffect(state.effect) && Boolean(state.image));
   }
 
   function shouldUseSingleImageFilterTransition(effect = state.effect) {
@@ -1244,11 +1655,36 @@
 
   function updateTransitionThumbs() {
     if (!els.transitionThumbPanel || !els.transitionThumbList) return;
+    updateThumbPanelText();
     const show = shouldShowTransitionThumbs();
     els.transitionThumbPanel.hidden = !show;
     els.transitionThumbPanel.classList.toggle('is-visible', show);
     if (!show) {
       els.transitionThumbList.innerHTML = '';
+      requestPreviewPanelLayoutSync();
+      return;
+    }
+
+    if (isFadeEffect(state.effect)) {
+      const order = normalizeFadeOrder();
+      const file = state.imageFiles[0];
+      const imageName = escapeHtml(file?.name || state.imageName || 'image');
+      const imageSrc = makeThumbDataUrl(state.image, 150, 84);
+      const fillLabel = escapeHtml(getFadeFillLabel(state.effect));
+      els.transitionThumbList.innerHTML = order.map((kind, index) => {
+        const isImage = kind === 'image';
+        const title = isImage ? imageName : fillLabel;
+        const visual = isImage
+          ? `<img src="${imageSrc}" alt="${title}" draggable="false" />`
+          : `<span class="fade-thumb-fill ${state.effect === 'fadeBlack' ? 'fade-thumb-black' : state.effect === 'fadeWhite' ? 'fade-thumb-white' : 'fade-thumb-transparent'}" aria-hidden="true"></span>`;
+        return `
+          <button class="transition-thumb-card" type="button" draggable="true" data-index="${index}" title="${title}">
+            <span class="thumb-order">${index + 1}</span>
+            ${visual}
+            <span class="thumb-name">${title}</span>
+          </button>
+        `;
+      }).join('');
       requestPreviewPanelLayoutSync();
       return;
     }
@@ -1270,6 +1706,22 @@
 
   function reorderTransitionImages(fromIndex, toIndex) {
     if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+
+    if (isFadeEffect(state.effect)) {
+      const order = normalizeFadeOrder();
+      if (fromIndex >= order.length || toIndex >= order.length) return;
+      const [item] = order.splice(fromIndex, 1);
+      order.splice(toIndex, 0, item);
+      state.fadeOrder = order;
+      updateTransitionThumbs();
+      drawFrame(state.stillFrameTime, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
+      hideDownload();
+      setStatus(dict().messages.fadeOrderChanged(getQualityRecommendationText()));
+      analytics?.markInputChanged();
+      analytics?.sendFeature('frame_order', 'fade_order', 'reorder', state.fadeOrder[0] === 'image' ? 'image_to_fill' : 'fill_to_image');
+      return;
+    }
+
     if (fromIndex >= state.images.length || toIndex >= state.images.length) return;
 
     const [image] = state.images.splice(fromIndex, 1);
@@ -1284,6 +1736,8 @@
     drawFrame(state.stillFrameTime, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
     hideDownload();
     setStatus(dict().messages.transitionOrderChanged(state.images.length, getTransitionVerb(state.effect), getQualityRecommendationText()));
+    analytics?.markInputChanged();
+    analytics?.sendFeature('frame_order', 'transition_order', 'reorder', 'uploaded_sequence');
   }
 
   function loadImageFile(file) {
@@ -1306,10 +1760,118 @@
     });
   }
 
-  async function loadFiles(fileList) {
+  function detectImageTransparency(images) {
+    return images.some(image => {
+      try {
+        const sampleCanvas = document.createElement('canvas');
+        sampleCanvas.width = 48;
+        sampleCanvas.height = 48;
+        const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+        sampleCtx.clearRect(0, 0, 48, 48);
+        sampleCtx.drawImage(image, 0, 0, 48, 48);
+        const pixels = sampleCtx.getImageData(0, 0, 48, 48).data;
+        for (let i = 3; i < pixels.length; i += 4) {
+          if (pixels[i] < 250) return true;
+        }
+      } catch (_) {
+        return false;
+      }
+      return false;
+    });
+  }
+
+  function getByteBucket(bytes) {
+    if (bytes < 500 * 1024) return 'under_500kb';
+    if (bytes < 1 * 1024 * 1024) return '500kb_to_1mb';
+    if (bytes < 3 * 1024 * 1024) return '1mb_to_3mb';
+    if (bytes < 6 * 1024 * 1024) return '3mb_to_6mb';
+    if (bytes < 10 * 1024 * 1024) return '6mb_to_10mb';
+    return 'over_10mb';
+  }
+
+  function getOutputByteBucket(bytes) {
+    if (bytes < 1 * 1024 * 1024) return 'under_1mb';
+    if (bytes < 3 * 1024 * 1024) return '1mb_to_3mb';
+    if (bytes < 4 * 1024 * 1024) return '3mb_to_4mb';
+    if (bytes < 5 * 1024 * 1024) return '4mb_to_5mb';
+    if (bytes < 6 * 1024 * 1024) return '5mb_to_6mb';
+    if (bytes < 8 * 1024 * 1024) return '6mb_to_8mb';
+    if (bytes < 10 * 1024 * 1024) return '8mb_to_10mb';
+    return 'over_10mb';
+  }
+
+  function getMegapixelBucket(width, height) {
+    const megapixels = (Math.max(0, width) * Math.max(0, height)) / 1000000;
+    if (megapixels < 1) return 'under_1mp';
+    if (megapixels < 2) return '1mp_to_2mp';
+    if (megapixels < 4) return '2mp_to_4mp';
+    if (megapixels < 8) return '4mp_to_8mp';
+    if (megapixels < 16) return '8mp_to_16mp';
+    return 'over_16mp';
+  }
+
+  function getDurationBucket(seconds) {
+    if (seconds < 1) return 'under_1_sec';
+    if (seconds < 2) return '1_to_2_sec';
+    if (seconds < 3) return '2_to_3_sec';
+    if (seconds < 5) return '3_to_5_sec';
+    if (seconds < 8) return '5_to_8_sec';
+    return 'over_8_sec';
+  }
+
+  function getOutputSizeAnalyticsId() {
+    const value = String(els.sizeInput.value || 'original');
+    if (value === 'original') return 'original';
+    const preset = getSizePresetByValue(value);
+    return preset ? preset.key.replace(':', '_') : 'custom';
+  }
+
+  function getSourceFormatGroup(files) {
+    const formats = new Set(Array.from(files || []).map(file => {
+      const type = String(file?.type || '').toLowerCase();
+      if (type.includes('png')) return 'png';
+      if (type.includes('jpeg') || type.includes('jpg')) return 'jpeg';
+      if (type.includes('webp')) return 'webp';
+      return 'other';
+    }));
+    if (formats.size === 1) return [...formats][0];
+    return formats.size > 1 ? 'mixed' : 'unknown';
+  }
+
+  function toAnalyticsId(value) {
+    return String(value || 'none')
+      .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .toLowerCase() || 'none';
+  }
+
+  function getRatioBucket(outputBytes, sourceBytes) {
+    if (!sourceBytes) return 'unknown';
+    const ratio = outputBytes / sourceBytes;
+    if (ratio < 0.5) return 'under_0_5x';
+    if (ratio < 1) return '0_5x_to_1x';
+    if (ratio < 2) return '1x_to_2x';
+    if (ratio < 4) return '2x_to_4x';
+    return 'over_4x';
+  }
+
+  function getOverageRatioBucket(outputBytes) {
+    const ratio = outputBytes / MAX_OUTPUT_BYTES;
+    if (ratio < 1) return 'under_limit';
+    if (ratio < 1.1) return '100_to_110_percent';
+    if (ratio < 1.25) return '110_to_125_percent';
+    if (ratio < 1.5) return '125_to_150_percent';
+    if (ratio < 2) return '150_to_200_percent';
+    return 'over_200_percent';
+  }
+
+  async function loadFiles(fileList, importType = 'image_upload') {
     const files = Array.from(fileList || []).filter(file => file && String(file.type || '').startsWith('image/'));
     if (!files.length) {
       setStatus(dict().messages.selectImage);
+      analytics?.sendImport({ import_type: importType, file_type: 'image', item_count: 0, import_success: false });
+      analytics?.sendError({ error_code: 'no_valid_image', error_stage: 'image_import', feature_id: 'image_import', recoverable: true });
       return;
     }
 
@@ -1317,6 +1879,9 @@
       const loaded = await Promise.all(files.map(loadImageFile));
       state.images = loaded.map(entry => entry.img);
       state.imageFiles = loaded.map(entry => entry.file);
+      state.sourceHasTransparency = detectImageTransparency(state.images);
+      state.lastOutputAnalytics = null;
+      analytics?.resetOutputTracking();
 state.image = state.images[0] || null;
       state.imageName = loaded.length === 1 ? loaded[0].file.name : `${loaded[0].file.name.replace(/\.[^/.]+$/, '')}_and_${loaded.length - 1}_more`;
       state.sourceBaseName = loaded.length === 1
@@ -1325,6 +1890,7 @@ state.image = state.images[0] || null;
       state.imageWidth = state.image?.naturalWidth || 0;
       state.imageHeight = state.image?.naturalHeight || 0;
       state.stillFrameTime = 0;
+      state.fadeOrder = ['image', 'fill'];
 
       const autoSettings = applyRecommendedOutputSettingsForFiles(state.imageFiles);
       const recommendedSize = autoSettings.recommendedSize;
@@ -1348,9 +1914,15 @@ state.image = state.images[0] || null;
         ? dict().messages.imagesLoadedTransition(loaded.length, autoMessages)
         : dict().messages.imageLoaded(autoMessages));
       hideDownload();
+      analytics?.markInputStarted({ input_type: 'image', input_method: importType });
+      analytics?.markInputChanged();
+      analytics?.sendImport({ import_type: importType, file_type: 'image', item_count: loaded.length, import_success: true });
+      analytics?.sendFeature('auto_output_setting', 'auto_output_setting', 'apply', autoSettings.autoQuality || 'standard');
     } catch (error) {
       console.error(error);
       setStatus(dict().messages.imageLoadFailed);
+      analytics?.sendImport({ import_type: importType, file_type: 'image', item_count: files.length, import_success: false });
+      analytics?.sendError({ error_code: 'image_load_failed', error_stage: 'image_import', feature_id: 'image_import', recoverable: true });
     }
   }
 
@@ -1373,6 +1945,7 @@ state.image = state.images[0] || null;
   }
 
   async function loadSampleImageForDev() {
+    let importedByLoadFiles = false;
     try {
       let file;
       try {
@@ -1380,12 +1953,16 @@ state.image = state.images[0] || null;
         if (!response.ok) throw new Error(`Sample fetch failed: ${response.status}`);
         const blob = await response.blob();
         file = new File([blob], DEV_SAMPLE_IMAGE_NAME, { type: blob.type || 'image/jpeg' });
-        await loadFiles([file]);
+        await loadFiles([file], 'sample_image');
+        importedByLoadFiles = true;
       } catch (fetchError) {
         console.warn('Sample fetch failed; falling back to image element loading:', fetchError);
         const loaded = await loadImageFromUrl(DEV_SAMPLE_IMAGE_PATH, DEV_SAMPLE_IMAGE_NAME);
         state.images = [loaded.img];
         state.imageFiles = [loaded.file];
+        state.sourceHasTransparency = detectImageTransparency([loaded.img]);
+        state.lastOutputAnalytics = null;
+        analytics?.resetOutputTracking();
         state.image = loaded.img;
         state.imageName = DEV_SAMPLE_IMAGE_NAME;
         state.sourceBaseName = DEV_SAMPLE_IMAGE_NAME.replace(/\.[^/.]+$/, '');
@@ -1401,11 +1978,18 @@ state.image = state.images[0] || null;
         drawFrame(0, ctx, els.previewCanvas.width, els.previewCanvas.height, { preview: true });
         hideDownload();
       }
+      if (!importedByLoadFiles) {
+        analytics?.markInputStarted({ input_type: 'image', input_method: 'sample_image' });
+        analytics?.markInputChanged();
+        analytics?.sendImport({ import_type: 'sample_image', file_type: 'image', item_count: 1, import_success: true });
+      }
       setStatus(dict().messages.sampleLoaded);
     } catch (error) {
       console.warn('Sample image could not be loaded:', error);
       setStatus(dict().messages.sampleFailedStatus);
       showToast(dict().messages.sampleFailedToast, 'warning', 4200);
+      analytics?.sendImport({ import_type: 'sample_image', file_type: 'image', item_count: 0, import_success: false });
+      analytics?.sendError({ error_code: 'sample_load_failed', error_stage: 'sample_import', feature_id: 'sample_image', recoverable: true });
     }
   }
 
@@ -1459,11 +2043,29 @@ state.image = state.images[0] || null;
         singleFilterTransition: shouldUseSingleImageFilterTransition()
       };
     }
-    const total = images.length;
-    const raw = progress * total;
-    const index = Math.floor(raw) % total;
-    const local = raw - Math.floor(raw);
-    const nextIndex = (index + 1) % total;
+
+    // v0.97: one transition loop is one-way through the uploaded order.
+    // 2 images: A -> B, not A -> B -> A.
+    // 3 images: A -> B -> C, not A -> B -> C -> A.
+    const segmentCount = Math.max(1, images.length - 1);
+    const clampedProgress = Math.min(Math.max(progress, 0), 1);
+
+    if (clampedProgress >= 1) {
+      const lastIndex = images.length - 1;
+      return {
+        current: images[lastIndex - 1],
+        next: images[lastIndex],
+        mix: 1,
+        index: lastIndex - 1,
+        nextIndex: lastIndex
+      };
+    }
+
+    const raw = clampedProgress * segmentCount;
+    const index = Math.min(segmentCount - 1, Math.floor(raw));
+    const local = raw - index;
+    const nextIndex = Math.min(images.length - 1, index + 1);
+
     return {
       current: images[index],
       next: images[nextIndex],
@@ -1529,6 +2131,22 @@ state.image = state.images[0] || null;
         motion.mode = 'wave';
         motion.amount = progress;
         break;
+      case 'fadeBlack':
+      case 'fadeWhite':
+      case 'fadeTransparent': {
+        let fade = getFadeMotionAlphas(progress);
+        if (effect === 'fadeTransparent') {
+          fade = stabilizeTransparentFadeAlphas(fade.imageAlpha, fade.fillAlpha, progress);
+        }
+        motion.mode = 'fadeFill';
+        motion.imageAlpha = fade.imageAlpha;
+        motion.fillAlpha = fade.fillAlpha;
+        motion.fillColor = getFadeFillColor(effect);
+        motion.scale = 1;
+        motion.cropScale = 1;
+        motion.progress = progress;
+        break;
+      }
       case 'transition': {
         const pair = getTransitionPair(progress);
         motion.mode = 'transition';
@@ -2405,6 +3023,77 @@ state.image = state.images[0] || null;
     targetCtx.restore();
   }
 
+  function drawTransparencyChecker(targetCtx, rect, size = 16) {
+    targetCtx.save();
+    targetCtx.beginPath();
+    targetCtx.rect(rect.x, rect.y, rect.width, rect.height);
+    targetCtx.clip();
+    for (let y = rect.y; y < rect.y + rect.height; y += size) {
+      for (let x = rect.x; x < rect.x + rect.width; x += size) {
+        const alt = ((Math.floor((x - rect.x) / size) + Math.floor((y - rect.y) / size)) % 2) === 0;
+        targetCtx.fillStyle = alt ? 'rgba(255,255,255,0.36)' : 'rgba(148,163,184,0.28)';
+        targetCtx.fillRect(x, y, size, size);
+      }
+    }
+    targetCtx.restore();
+  }
+
+  function postprocessTransparentFadeFrame(targetCtx, rect, progress) {
+    const x = Math.max(0, Math.floor(rect.x));
+    const y = Math.max(0, Math.floor(rect.y));
+    const w = Math.max(1, Math.floor(rect.width));
+    const h = Math.max(1, Math.floor(rect.height));
+    const fadeOut = normalizeFadeOrder()[0] === 'image';
+
+    if (fadeOut && progress >= 0.992) {
+      targetCtx.clearRect(x, y, w, h);
+      return;
+    }
+
+    const imageData = targetCtx.getImageData(x, y, w, h);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const alpha = data[i + 3];
+      if (alpha === 0) {
+        data[i] = 0;
+        data[i + 1] = 0;
+        data[i + 2] = 0;
+        continue;
+      }
+
+      if (fadeOut) {
+        if (alpha <= 20) {
+          data[i] = 0;
+          data[i + 1] = 0;
+          data[i + 2] = 0;
+          data[i + 3] = 0;
+        } else if (alpha <= 144) {
+          const factor = Math.pow(alpha / 255, 1.35);
+          data[i] = Math.round(data[i] * factor);
+          data[i + 1] = Math.round(data[i + 1] * factor);
+          data[i + 2] = Math.round(data[i + 2] * factor);
+        } else if (alpha >= 250) {
+          data[i + 3] = 255;
+        }
+      } else {
+        if (alpha <= 8) {
+          data[i] = 0;
+          data[i + 1] = 0;
+          data[i + 2] = 0;
+          data[i + 3] = 0;
+        } else if (alpha <= 36) {
+          const factor = alpha / 255;
+          data[i] = Math.round(data[i] * factor);
+          data[i + 1] = Math.round(data[i + 1] * factor);
+          data[i + 2] = Math.round(data[i + 2] * factor);
+        } else if (alpha >= 245) {
+          data[i + 3] = 255;
+        }
+      }
+    }
+    targetCtx.putImageData(imageData, x, y);
+  }
+
   function drawFrame(progress, targetCtx, width, height, options = {}) {
     const previewMode = Boolean(options.preview);
     targetCtx.imageSmoothingEnabled = true;
@@ -2415,8 +3104,13 @@ state.image = state.images[0] || null;
       ? getPreviewExportRect(width, height)
       : { x: 0, y: 0, width, height };
 
-    targetCtx.fillStyle = '#000000';
-    targetCtx.fillRect(0, 0, width, height);
+    const transparentCanvasMode = isTransparentFadeEffect(state.effect);
+    if (!transparentCanvasMode) {
+      targetCtx.fillStyle = '#000000';
+      targetCtx.fillRect(0, 0, width, height);
+    } else if (previewMode) {
+      drawTransparencyChecker(targetCtx, frameRect);
+    }
 
     if (!state.image && !(state.images && state.images.length)) {
       if (previewMode) {
@@ -2452,6 +3146,18 @@ state.image = state.images[0] || null;
     targetCtx.rotate(motion.rotate);
     if (motion.mode === 'wave') {
       drawWaveImage(targetCtx, motion.amount, base);
+    } else if (motion.mode === 'fadeFill') {
+      const transparentFade = isTransparentFadeEffect(state.effect);
+      if (motion.fillColor && motion.fillAlpha > 0) {
+        targetCtx.save();
+        targetCtx.globalAlpha = motion.fillAlpha;
+        targetCtx.fillStyle = motion.fillColor;
+        targetCtx.fillRect(-requiredW / 2, -requiredH / 2, requiredW, requiredH);
+        targetCtx.restore();
+      }
+      if (motion.imageAlpha > 0 && (!transparentFade || motion.imageAlpha > 0.02)) {
+        drawCoverImage(targetCtx, state.image || state.images[0], requiredW, requiredH, motion.scale * (motion.cropScale || 1), motion.imageAlpha);
+      }
     } else if (motion.mode === 'transition') {
       const currentScale = motion.scale * (motion.cropScale || 1) * (1 + (1 - motion.mix) * 0.012);
       const nextScale = motion.scale * (motion.cropScale || 1) * (1 + motion.mix * 0.012);
@@ -2499,8 +3205,12 @@ state.image = state.images[0] || null;
     }
     targetCtx.restore();
 
-    if (!singleFilterTransition) {
+    if (!singleFilterTransition && !isTransparentFadeEffect(state.effect)) {
       applyImageFilterToCanvas(targetCtx, frameRect, state.imageFilter);
+    }
+
+    if (!previewMode && isTransparentFadeEffect(state.effect)) {
+      postprocessTransparentFadeFrame(targetCtx, frameRect, progress);
     }
 
     if (motion.overlay && motion.overlayAlpha > 0) {
@@ -2597,6 +3307,9 @@ state.image = state.images[0] || null;
     }
 
     state.effect = button.dataset.effect;
+    if (isFadeEffect(state.effect)) {
+      state.fadeOrder = ['image', 'fill'];
+    }
     [...els.effectGrid.querySelectorAll('.effect-card')].forEach(card => card.classList.remove('is-active'));
     button.classList.add('is-active');
     syncCardTabIndex(els.effectGrid, '.effect-card', button);
@@ -3031,8 +3744,12 @@ state.image = state.images[0] || null;
     showToast(dict().messages.webpStart(fpsLabel), 'info', 3200);
     if (!state.image && !(state.images && state.images.length)) {
       setStatus(dict().messages.needImage);
+      analytics?.sendError({ error_code: 'missing_image', error_stage: 'webp_generation', feature_id: 'webp_generation', recoverable: true });
       return;
     }
+
+    const processingStartedAt = performance.now();
+    analytics?.sendFeature('webp_generation', 'webp_generation', 'execute', String(fpsOverride || 24));
 
     if (state.playing) togglePlay();
     hideDownload();
@@ -3094,6 +3811,52 @@ state.image = state.images[0] || null;
       els.downloadLink.setAttribute('aria-disabled', 'false');
       showExportSizeToast(fpsLabel ? `${fpsLabel} WebP` : 'WebP', blob);
       setStatus(`${dict().messages.webpComplete(fpsLabel, outputName, outputSize, effectLabels[state.effect], els.loopInput.checked, seconds, outputFps, setting.label, sizeLabel, sizeWarning)} ${dict().messages.webpPlaybackNote}`);
+      const sourceTotalBytes = state.imageFiles.reduce((sum, file) => sum + Math.max(0, Number(file?.size) || 0), 0);
+      const sourceMaxBytes = state.imageFiles.reduce((max, file) => Math.max(max, Math.max(0, Number(file?.size) || 0)), 0);
+      const sourceMaxDimensions = state.images.reduce((current, image) => {
+        const widthValue = image?.naturalWidth || image?.width || 0;
+        const heightValue = image?.naturalHeight || image?.height || 0;
+        return widthValue * heightValue > current.width * current.height
+          ? { width: widthValue, height: heightValue }
+          : current;
+      }, { width: state.imageWidth || 0, height: state.imageHeight || 0 });
+      const outputAnalytics = {
+        process_type: 'animated_webp',
+        result_type: 'webp',
+        motion_id: toAnalyticsId(state.effect),
+        image_effect_id: toAnalyticsId(state.imageFilter),
+        image_effect_used: state.imageFilter !== 'none',
+        output_fps: outputFps,
+        quality_id: els.qualityInput.value,
+        output_size_id: getOutputSizeAnalyticsId(),
+        output_width: width,
+        output_height: height,
+        output_megapixel_bucket: getMegapixelBucket(width, height),
+        duration_seconds: seconds,
+        duration_bucket: getDurationBucket(seconds),
+        loop_enabled: els.loopInput.checked,
+        input_count: state.images?.length || (state.image ? 1 : 0),
+        output_count: 2,
+        processing_time_ms: Math.max(0, Math.round(performance.now() - processingStartedAt)),
+        source_total_bytes: sourceTotalBytes,
+        source_max_bytes: sourceMaxBytes,
+        source_total_size_bucket: getByteBucket(sourceTotalBytes),
+        source_max_size_bucket: getByteBucket(sourceMaxBytes),
+        source_megapixel_bucket: getMegapixelBucket(sourceMaxDimensions.width, sourceMaxDimensions.height),
+        source_format_group: getSourceFormatGroup(state.imageFiles),
+        source_has_transparency: Boolean(state.sourceHasTransparency),
+        output_bytes: blob.size,
+        output_size_bucket: getOutputByteBucket(blob.size),
+        output_to_source_ratio_bucket: getRatioBucket(blob.size, sourceTotalBytes),
+        exceeds_5mb: blob.size > MAX_OUTPUT_BYTES,
+        has_warning: Boolean(sizeWarning),
+        limit_bytes: MAX_OUTPUT_BYTES,
+        overage_bytes: Math.max(0, blob.size - MAX_OUTPUT_BYTES),
+        overage_ratio_bucket: getOverageRatioBucket(blob.size)
+      };
+      state.lastOutputAnalytics = outputAnalytics;
+      analytics?.recordOutputResult(outputAnalytics);
+      analytics?.sendSuccessOnce(`animated_webp_${outputFps}`, outputAnalytics);
     } catch (error) {
       if (error && error.code === 'EXPORT_CANCELLED') {
         setStatus(dict().messages.exportCancelled);
@@ -3101,6 +3864,7 @@ state.image = state.images[0] || null;
       } else {
         console.error(error);
         setStatus(dict().messages.webpError);
+        analytics?.sendError({ error_code: 'webp_generation_failed', error_stage: 'webp_generation', feature_id: 'webp_generation', recoverable: true });
       }
     } finally {
       setExportRunning(false);
@@ -3163,7 +3927,7 @@ state.image = state.images[0] || null;
 
   els.helpBtn.addEventListener('click', () => toggleDrawer(els.helpDrawer));
   els.shortcutBtn.addEventListener('click', () => toggleDrawer(els.shortcutDrawer));
-  els.langToggleBtn?.addEventListener('click', switchLanguage);
+  els.langButtons.forEach(button => button.addEventListener('click', () => switchLanguage(button.dataset.langChoice)));
   els.drawerCloseButtons.forEach(button => button.addEventListener('click', closeDrawers));
   bindFloatingTooltips();
   function syncThemeButton() {
@@ -3265,6 +4029,18 @@ state.image = state.images[0] || null;
       tempLink.remove();
     });
     showToast(dict().messages.downloadDone, 'success', 3200);
+    analytics?.sendExport({
+      export_type: 'webp_and_png',
+      content_type: 'animation_and_still',
+      item_count: downloadTargets.length,
+      export_success: true,
+      motion_id: state.lastOutputAnalytics?.motion_id || toAnalyticsId(state.effect),
+      image_effect_id: state.lastOutputAnalytics?.image_effect_id || toAnalyticsId(state.imageFilter),
+      image_effect_used: state.lastOutputAnalytics?.image_effect_used ?? (state.imageFilter !== 'none'),
+      output_fps: state.lastOutputAnalytics?.output_fps || 0,
+      output_size_bucket: state.lastOutputAnalytics?.output_size_bucket || 'unknown',
+      exceeds_5mb: state.lastOutputAnalytics?.exceeds_5mb || false
+    });
   });
 
   els.playBtn.addEventListener('click', togglePlay);
@@ -3276,7 +4052,7 @@ state.image = state.images[0] || null;
       cancelCurrentExport();
       return;
     }
-    resetImage();
+    resetImage('button');
   });
 
   [els.secondsInput, els.qualityInput, els.sizeInput, els.loopInput].forEach(input => {
@@ -3319,7 +4095,7 @@ state.image = state.images[0] || null;
     exportWebp60: () => clickShortcutButton(els.exportWebp60Btn),
     closeDrawers,
     clearOutputDisplay,
-    resetImage,
+    resetImage: () => resetImage('shortcut'),
     toggleTheme: () => clickShortcutButton(els.themeBtn),
     isDrawerOpen: () => Boolean((els.helpDrawer && !els.helpDrawer.hidden) || (els.shortcutDrawer && !els.shortcutDrawer.hidden))
   };
