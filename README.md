@@ -1,182 +1,72 @@
+# TRPG WEBツール観測所 共通報告ページ v1 Free
 
-# TRPG WEBツール観測所
+Firebase Spark / 無料運用向けの報告フォームです。v1では Firebase Storage を使いません。添付ファイルは直接アップロードせず、「スクリーンショット・ログ共有URL 任意」欄で受け取ります。
 
-TRPGセッション準備・ログ解析・卓報告作成・シナリオ情報整理を支援するためのWebツール集です。
+## 配置先
 
-This repository contains a collection of lightweight browser-based tools for TRPG session preparation, log analysis, report generation, scenario organization, and GM/KP support.
-
-## Site
-
-GitHub Pages:
+このZIPの中身を `trpg-web-tools/` 直下に配置してください。
 
 ```text
-https://kumachansteps.github.io/trpg-web-tools/
-````
+/trpg-web-tools/report/
+/trpg-web-tools/admin/reports/
+```
 
-## Repository Structure
+## 必要なFirebase機能
 
 ```text
-trpg-web-tools/
-├─ index.html
-├─ terms.html
-├─ privacy.html
-├─ changelog.html
-├─ contact.html
-├─ assets/
-│  ├─ css/
-│  │  └─ portal.css
-│  ├─ js/
-│  │  ├─ i18n.js
-│  │  ├─ language.js
-│  │  └─ portal.js
-│  └─ img/
-│     └─ kuma_icon.ico
-└─ tools/
-   ├─ dice-stat-analyst/
-   ├─ growth-checker/
-   ├─ session-report-generator/
-   ├─ scenario-snippet-builder/
-   ├─ trpg-hashtag-searcher/
-   └─ ...
+Firebase Authentication
+Firestore Database
 ```
 
-## Tools
+Storage は不要です。
 
-### 使用可能 / Available
+## firebase-config.js
 
-| Tool              | Description                                             |
-| ----------------- | ------------------------------------------------------- |
-| Dice Stat Analyst | セッションログHTML / テキストから、探索者ごとの成功率・クリティカル・ファンブル・出目分布を解析します。 |
+`shared/reporting/firebase-config.example.js` をコピーして、`shared/reporting/firebase-config.js` を作成してください。
 
-### 開発中 / In Development
+```js
+export const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-| Tool                          | Description                                             |
-| ----------------------------- | ------------------------------------------------------- |
-| CoC 6e/7e Growth Checker      | セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。        |
-| Session Report Generator      | KP・PL・PC情報を入力し、X/Twitter向けの卓報告文を生成・編集・プレビューします。         |
-| Scenario Info Snippet Builder | シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。      |
-| 使えるハッシュタグ検索                   | TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。 |
+export const allowedAdminEmails = [
+  "your-google-account@example.com"
+];
+```
 
-### アイデア / Ideas
+## Firestore Rules
 
-| Tool                    | Description                                                           |
-| ----------------------- | --------------------------------------------------------------------- |
-| チャットパレット整形ツール           | CoC 6版・7版のチャットパレットを判定し、読みやすい形式へ整形するツール構想です。                           |
-| キャラメモ抽出ツール              | いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツール構想です。                            |
-| TRPG配信観測所               | YouTubeのTRPG配信予定を整理し、シナリオ・チャンネル・GM/KP/PL・ハッシュタグから検索、Fav管理する観測ツール構想です。 |
-| TRPG Scenario Organizer | BOOTHやPixivなどで見つけたTRPGシナリオを、システム・人数・時間・秘匿有無・テーマなどで整理、検索するデータベース構想です。  |
-| GM Charashi Viewer      | KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューア構想です。                          |
+Firebase Console > Firestore Database > Rules に `firebase/firestore.rules` の内容を貼って Publish してください。
 
-## Features
+## Developer登録
 
-* Static HTML / CSS / JavaScript tools
-* GitHub Pages compatible
-* No server-side processing required
-* Japanese / English language support
-* Dawn Mode / Deep Space Mode theme support
-* Shared portal layout for all tools
-* Tool status management through `assets/js/i18n.js`
+1. `/admin/reports/` でGoogleログイン
+2. Firebase Console > Authentication > Users で自分の UID を確認
+3. Firestore に `admins` コレクションを作成
+4. `admins/{YOUR_UID}` ドキュメントを作成
 
-## Development Policy
-
-This repository is designed as a static web tool portal.
-
-Each tool should ideally be self-contained under:
+例:
 
 ```text
-tools/tool-name/
-├─ index.html
-├─ css/
-│  └─ style.css
-└─ js/
-   └─ main.js
+admins/{YOUR_UID}
+  email: "your-google-account@example.com"
+  role: "owner"
 ```
 
-Shared portal assets should be placed under:
+## 各ツールの報告ボタン
 
-```text
-assets/
-├─ css/
-├─ js/
-└─ img/
-```
+```js
+const params = new URLSearchParams({
+  toolId: "dice-stat-analyst",
+  toolName: "ダイス解析アナライザー",
+  version: "v1.38",
+  updated: "2026.06.13",
+  sourceUrl: location.href
+});
 
-## Adding a New Tool to the Portal
-
-Tool information is managed in:
-
-```text
-assets/js/i18n.js
-```
-
-Add a new object to the `tools` array:
-
-```javascript
-{
-  id: "example-tool",
-  icon: "🛠️",
-  status: "production",
-  category: "scenarioPrep",
-  href: "./tools/example-tool/",
-  name: {
-    ja: "サンプルツール",
-    en: "Example Tool",
-  },
-  description: {
-    ja: "ツールの日本語説明文です。",
-    en: "English description of the tool.",
-  },
-}
-```
-
-Available status values:
-
-```text
-available
-production
-idea
-```
-
-Available category values:
-
-```text
-logAnalysis
-reportWriting
-scenarioPrep
-characterUtility
-haishinTracking
-gmSupport
-```
-
-## GitHub Pages
-
-This project is intended to be published through GitHub Pages.
-
-Recommended Pages settings:
-
-```text
-Source: Deploy from a branch
-Branch: main
-Folder: /root
-```
-
-## Notes
-
-Some tools may still be in development or idea stage.
-The portal may show design previews or placeholder cards before the actual tool implementation is complete.
-
-## Disclaimer
-
-These tools are unofficial fan-made utilities for TRPG session support.
-
-They are not affiliated with any official TRPG publisher, platform, or character sheet service unless explicitly stated.
-Users are responsible for checking the rules, licenses, and terms of use of any TRPG system, platform, or external service they use together with these tools.
-
-## License
-
-License undecided.
-
-If you plan to reuse or modify this project, please check the repository owner’s latest license notice.
-
-```
+location.href = `/trpg-web-tools/report/?${params.toString()}`;
 ```
