@@ -4,8 +4,8 @@
   const CODE_ACTIONS = {
     KeyO: 'openFile',
     KeyP: 'togglePlay',
-    KeyA: 'exportWebp30',
-    KeyZ: 'exportPngZip',
+    KeyA: 'exportWebp60',
+    KeyF: 'exportWebp30',
     KeyW: 'exportWebp',
     KeyT: 'toggleTheme'
   };
@@ -39,7 +39,11 @@
     const api = getApi();
     const fn = api?.[actionName];
     if (typeof fn !== 'function') return false;
-    return fn() !== false;
+    const result = fn() !== false;
+    if (result) {
+      window.ToolAnalytics?.sendFeature('keyboard_shortcut', 'keyboard_shortcut', 'execute', actionName.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`));
+    }
+    return result;
   }
 
   document.addEventListener('keydown', event => {
@@ -54,8 +58,10 @@
           api.closeDrawers();
         }
         closeDrawersFallback();
+        window.ToolAnalytics?.sendFeature('keyboard_shortcut', 'keyboard_shortcut', 'execute', 'close_drawer');
       } else if (typeof api?.resetImage === 'function') {
         api.resetImage();
+        window.ToolAnalytics?.sendFeature('keyboard_shortcut', 'keyboard_shortcut', 'execute', 'reset');
       } else if (typeof api?.clearOutputDisplay === 'function') {
         api.clearOutputDisplay();
       }

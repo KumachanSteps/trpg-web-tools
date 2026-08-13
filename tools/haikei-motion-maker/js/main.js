@@ -2894,9 +2894,50 @@ state.image = state.images[0] || null;
 
   function updateExportNoteVisibility() {
     if (!els.exportNote) return;
-    const hideForTransition = isTransitionEffect(state.effect);
-    els.exportNote.hidden = hideForTransition;
-    els.exportNote.classList.toggle('is-hidden', hideForTransition);
+    const hideNote = isTransitionEffect(state.effect) || isFadeEffect(state.effect);
+    els.exportNote.hidden = hideNote;
+    els.exportNote.classList.toggle('is-hidden', hideNote);
+  }
+
+  function syncViewportWorkspaceLayout() {
+    const workspace = document.querySelector('.workspace');
+    const header = document.querySelector('.app-header');
+    const shell = document.querySelector('.app-shell');
+    if (!workspace || !header || !shell) return;
+
+    const isStackedLayout = window.matchMedia('(max-width: 1180px)').matches;
+    const root = document.documentElement;
+
+    if (isStackedLayout) {
+      root.classList.remove('viewport-fit-workspace', 'viewport-short-workspace');
+      root.style.removeProperty('--workspace-target-height');
+      root.style.removeProperty('--preview-canvas-target-height');
+      workspace.style.removeProperty('--workspace-target-height');
+      return;
+    }
+
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 900;
+    const shellStyle = window.getComputedStyle(shell);
+    const shellPadTop = parseFloat(shellStyle.paddingTop || '0');
+    const shellPadBottom = parseFloat(shellStyle.paddingBottom || '0');
+    const shellGap = parseFloat(shellStyle.rowGap || shellStyle.gap || '0');
+    const headerHeight = Math.ceil(header.getBoundingClientRect().height || 0);
+
+    const remainingHeight = Math.floor(viewportHeight - (shellPadTop + shellPadBottom + shellGap + headerHeight));
+    const enoughViewportHeight = remainingHeight >= 640;
+    const targetWorkspaceHeight = enoughViewportHeight
+      ? Math.max(640, remainingHeight)
+      : Math.max(560, viewportHeight);
+
+    const targetCanvasHeight = enoughViewportHeight
+      ? Math.max(250, Math.min(390, Math.round(targetWorkspaceHeight * 0.36)))
+      : Math.max(210, Math.min(320, Math.round(viewportHeight * 0.31)));
+
+    root.classList.toggle('viewport-fit-workspace', enoughViewportHeight);
+    root.classList.toggle('viewport-short-workspace', !enoughViewportHeight);
+    root.style.setProperty('--workspace-target-height', `${targetWorkspaceHeight}px`);
+    root.style.setProperty('--preview-canvas-target-height', `${targetCanvasHeight}px`);
+    workspace.style.setProperty('--workspace-target-height', `${targetWorkspaceHeight}px`);
   }
 
   function syncPreviewPanelLayout() {
@@ -2907,11 +2948,15 @@ state.image = state.images[0] || null;
     const transitionPanel = els.transitionThumbPanel;
     if (!panel || !canvasWrap || !controls || !heading) return;
 
-    const isStackedLayout = window.matchMedia('(max-width: 1180px)').matches;
+    syncViewportWorkspaceLayout();
 
-    if (isStackedLayout) {
+    const isStackedLayout = window.matchMedia('(max-width: 1180px)').matches;
+    const isShortViewportLayout = document.documentElement.classList.contains('viewport-short-workspace');
+
+    if (isStackedLayout || isShortViewportLayout) {
       canvasWrap.style.height = '';
       canvasWrap.style.minHeight = '';
+      canvasWrap.style.maxHeight = '';
       controls.style.maxHeight = '';
       panel.style.removeProperty('--preview-controls-height');
       return;
@@ -2973,6 +3018,36 @@ state.image = state.images[0] || null;
     if (els.imageEditPanel) { els.imageEditPanel.hidden = showMotion; els.imageEditPanel.classList.toggle('is-active', !showMotion); }
   }
 
+  async function prepareFilteredStillDownload() {
+    if (!state.image && !(state.images && state.images.length)) return;
+    if (state.effect && state.effect !== 'none') return;
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = els.previewCanvas.width;
+      canvas.height = els.previewCanvas.height;
+      const c = canvas.getContext('2d', { willReadFrequently: true });
+
+      drawFrame(state.stillFrameTime, c, canvas.width, canvas.height, { preview: false });
+
+      const blob = await canvasToPngBlob(canvas);
+      if (state.downloadUrl) URL.revokeObjectURL(state.downloadUrl);
+      state.downloadUrl = URL.createObjectURL(blob);
+      state.downloadName = `${buildOutputBaseName()}_still.png`;
+      state.stillDownloadUrl = '';
+      state.stillDownloadName = '';
+      els.downloadLink.classList.remove('is-disabled');
+      els.downloadLink.setAttribute('aria-disabled', 'false');
+    } catch (error) {
+      analytics?.sendError?.({
+        error_code: 'still_export_failed',
+        error_stage: 'image_filter_download',
+        feature_id: 'image_filter',
+        recoverable: true
+      });
+    }
+  }
+
   function selectImageFilter(button) {
     if (!button || button.disabled) return;
     state.imageFilter = button.dataset.filter || 'none';
@@ -2985,7 +3060,13 @@ state.image = state.images[0] || null;
       ? dict().messages.transitionHintSingleFilter(imageFilterLabels[state.imageFilter] || dict().filterLabels.none)
       : '';
     setStatus(dict().messages.filterSelected(imageFilterLabels[state.imageFilter] || dict().filterLabels.none, `${singleTransitionHint}${getQualityRecommendationText()}`));
-    hideDownload();
+
+    // Allow direct still-image download when only image editing is selected.
+    if (state.imageFilter !== 'none' && (!state.effect || state.effect === 'none')) {
+      prepareFilteredStillDownload();
+    } else {
+      hideDownload();
+    }
   }
 
   function drawCoverImage(targetCtx, image, drawWidth, drawHeight, scale = 1, alpha = 1) {
@@ -4067,7 +4148,21 @@ state.image = state.images[0] || null;
     });
   });
 
+  function updateWorkspaceStickyState() {
+    const workspace = document.querySelector('.workspace');
+    if (!workspace || window.matchMedia('(max-width: 1180px)').matches) {
+      workspace?.classList.remove('is-stuck');
+      return;
+    }
+    const top = workspace.getBoundingClientRect().top;
+    workspace.classList.toggle('is-stuck', top <= 9);
+  }
+
+  window.addEventListener('scroll', updateWorkspaceStickyState, { passive: true });
+
   window.addEventListener('resize', () => {
+    syncViewportWorkspaceLayout();
+    updateWorkspaceStickyState();
     requestPreviewPanelLayoutSync();
   });
 
@@ -4115,5 +4210,7 @@ state.image = state.images[0] || null;
   syncCardTabIndex(els.effectGrid, '.effect-card', els.effectGrid?.querySelector('.effect-card.is-active'));
   syncCardTabIndex(els.imageEditGrid, '.image-edit-card', els.imageEditGrid?.querySelector('.image-edit-card.is-active'));
   updateTransitionThumbs();
+  syncViewportWorkspaceLayout();
+  updateWorkspaceStickyState();
   requestPreviewPanelLayoutSync();
 })();

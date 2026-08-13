@@ -3364,3 +3364,212 @@ body[data-lang="ko"] .title-block .lead {
     min-height: 124px;
   }
 }
+
+
+/* v1.07 viewport-height scrolling fix
+   Keep desktop tools reachable when the browser window is short.
+   The page itself can scroll, and the preview/export panel gets its own
+   vertical scroll path instead of clipping controls below the fold. */
+html {
+  min-height: 100%;
+  height: auto;
+  overflow-y: auto;
+}
+
+body {
+  min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.app-shell {
+  height: auto;
+}
+
+@media (min-width: 1181px) and (max-height: 900px) {
+  .app-shell {
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .workspace {
+    /* Stop forcing the three-column workspace to fit inside the viewport. */
+    height: auto !important;
+    min-height: 700px !important;
+    align-items: stretch;
+  }
+
+  .preview-panel {
+    /* The right column must always be able to reach export/download controls. */
+    max-height: 700px;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(58, 120, 216, 0.72) transparent;
+  }
+
+  .preview-panel::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .preview-panel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .preview-panel::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(106,214,255,0.90), rgba(58,120,216,0.76));
+  }
+
+  .preview-controls {
+    /* Do not create a second clipped scroll area inside the preview panel. */
+    max-height: none !important;
+    overflow: visible !important;
+    flex: 0 0 auto;
+    padding-right: 0;
+  }
+
+  .preview-panel .canvas-wrap {
+    flex: 0 0 auto;
+    min-height: 250px !important;
+    height: 250px !important;
+    max-height: 250px !important;
+  }
+
+  .legal-footer {
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 1181px) and (max-height: 740px) {
+  .workspace {
+    min-height: 660px !important;
+  }
+
+  .preview-panel {
+    max-height: 660px;
+  }
+
+  .preview-panel .canvas-wrap {
+    min-height: 220px !important;
+    height: 220px !important;
+    max-height: 220px !important;
+  }
+}
+
+
+/* v1.08 adaptive desktop fit + low-height internal preview scroll */
+@media (min-width: 1181px) {
+  .app-shell {
+    min-height: 100dvh;
+    height: auto;
+  }
+
+  .workspace {
+    height: var(--workspace-target-height, calc(100dvh - 168px)) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    align-items: stretch;
+  }
+
+  .preview-panel {
+    min-height: 0;
+  }
+
+  .preview-panel .canvas-wrap {
+    height: var(--preview-canvas-target-height, 300px);
+    min-height: var(--preview-canvas-target-height, 300px);
+    max-height: var(--preview-canvas-target-height, 300px);
+    flex: 0 0 auto;
+  }
+
+  html.viewport-fit-workspace .preview-panel {
+    overflow: hidden;
+  }
+
+  html.viewport-fit-workspace .preview-controls {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  html.viewport-short-workspace .preview-panel {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(58, 120, 216, 0.72) transparent;
+  }
+
+  html.viewport-short-workspace .preview-panel::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  html.viewport-short-workspace .preview-panel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  html.viewport-short-workspace .preview-panel::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(106,214,255,0.90), rgba(58,120,216,0.76));
+  }
+
+  html.viewport-short-workspace .transition-thumb-panel,
+  html.viewport-short-workspace .preview-controls {
+    flex: 0 0 auto;
+  }
+
+  html.viewport-short-workspace .preview-controls {
+    overflow: visible !important;
+    max-height: none !important;
+    padding-right: 0;
+  }
+}
+
+
+/* v1.09 sticky workspace focus + large-viewport preview fill */
+@media (min-width: 1181px) {
+  .workspace {
+    position: sticky;
+    top: 8px;
+    z-index: 20;
+    transition: filter .18s ease, transform .18s ease;
+  }
+
+  /* A subtle visual lock-in when the app reaches the viewport edge. */
+  .workspace.is-stuck {
+    filter: drop-shadow(0 10px 18px rgba(25, 43, 76, 0.08));
+  }
+
+  body.is-dark .workspace.is-stuck {
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.20));
+  }
+
+  /* On roomy windows, let the JS layout calculation consume the spare
+     vertical space instead of forcing the v1.08 compact canvas height. */
+  html.viewport-fit-workspace .preview-panel .canvas-wrap {
+    flex: 1 1 auto;
+  }
+
+  html.viewport-fit-workspace .preview-controls {
+    flex: 0 0 auto;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-right: 0;
+  }
+
+  /* Short windows keep a compact canvas and scroll the entire right panel,
+     including fade/transition thumbnails and download controls. */
+  html.viewport-short-workspace .preview-panel .canvas-wrap {
+    height: var(--preview-canvas-target-height, 250px) !important;
+    min-height: var(--preview-canvas-target-height, 250px) !important;
+    max-height: var(--preview-canvas-target-height, 250px) !important;
+    flex: 0 0 auto;
+  }
+}
