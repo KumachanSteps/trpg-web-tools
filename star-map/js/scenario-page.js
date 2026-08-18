@@ -64,9 +64,23 @@ function stripCalendarSessionMarkers(value) {
     .trim();
 }
 
+function stripCalendarDayDetails(value) {
+  let text = String(value || "").trim();
+  let previous = "";
+  while (text && text !== previous) {
+    previous = text;
+    text = text
+      .replace(/\s*(?:yobibi|予備日)\s*$/iu, "")
+      .replace(/\s*[（(【\[]\s*(?:終日|終日卓|昼|昼卓|夜|夜卓)\s*[）)】\]]\s*$/u, "")
+      .replace(/\s*\d+\s*日目(?:\s*[-–—〜~]\s*\d+\s*日目)?\s*$/u, "")
+      .trim();
+  }
+  return text;
+}
+
 function stripCalendarRunSuffix(value) {
-  return String(value || "")
-    .replace(/\s+(?:第\s*\d+\s*(?:陣|回)|\d+\s*日目)\s*$/u, "")
+  return stripCalendarDayDetails(value)
+    .replace(/\s*第\s*\d+\s*(?:陣|回)\s*$/u, "")
     .trim();
 }
 
@@ -95,20 +109,22 @@ function normalizeOverrideEntry(entry) {
 
 function localDateValue(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
-  return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).getTime() : NaN;
+  return match ? Number(`${match[1]}${match[2]}${match[3]}`) : NaN;
 }
 
 function todayValue() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+  const value = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return Number(`${value.year}${value.month}${value.day}`);
 }
 
 function isCancelledEvent(event) {
   return /中止|キャンセル|cancel/i.test(String(event.status || ""));
-}
-
-function isCurrentEvent(event) {
-  return /現行|進行中|current|ongoing/i.test(String(event.status || ""));
 }
 
 function eventAlreadyInSessionLog(event, canonicalTitle) {
@@ -178,19 +194,32 @@ function buildScenarioArchive() {
     return item;
   }
 
+  function findKnownCalendarScenario(title) {
+    const key = normalizeScenarioTitle(title);
+    const exact = byTitle.get(key);
+    if (exact || key.length < 3) return exact || null;
+
+    const prefixMatches = new Set();
+    byTitle.forEach((item, knownKey) => {
+      if (knownKey.startsWith(key) || key.startsWith(knownKey)) prefixMatches.add(item);
+    });
+    return prefixMatches.size === 1 ? [...prefixMatches][0] : null;
+  }
+
   function resolveCalendarScenario(event) {
     const rawTitle = stripCalendarSessionMarkers(event.scenarioTitle || event.title);
-    const baseTitle = stripCalendarRunSuffix(rawTitle);
+    const runTitle = stripCalendarDayDetails(rawTitle);
+    const baseTitle = stripCalendarRunSuffix(runTitle);
     const known = (event.scenarioId && byId.get(String(event.scenarioId)))
-      || byTitle.get(normalizeScenarioTitle(rawTitle))
-      || byTitle.get(normalizeScenarioTitle(baseTitle));
-    if (known) return { item: known, rawTitle };
+      || findKnownCalendarScenario(rawTitle)
+      || findKnownCalendarScenario(runTitle)
+      || findKnownCalendarScenario(baseTitle);
     return {
-      item: getOrCreate({
-        id: String(event.scenarioId || ""),
-        title: canonicalScenario(baseTitle || rawTitle)
-      }),
-      rawTitle
+      item: known || null,
+      rawTitle,
+      runTitle: runTitle || rawTitle,
+      baseTitle: canonicalScenario(baseTitle || runTitle || rawTitle),
+      scenarioId: String(event.scenarioId || "")
     };
   }
 
@@ -209,20 +238,16 @@ function buildScenarioArchive() {
   const events = typeof window.getStarMapEvents === "function" ? window.getStarMapEvents() : [];
   const calendarRuns = new Map();
   events.filter(event => event?.date && event?.title && !isCancelledEvent(event)).forEach(event => {
-    const { item, rawTitle } = resolveCalendarScenario(event);
+    const resolved = resolveCalendarScenario(event);
     const role = String(event.role || "").toUpperCase();
     const runKey = [
-      normalizeScenarioTitle(rawTitle),
+      normalizeScenarioTitle(resolved.runTitle),
       role,
       String(event.googleCalendarId || event.calendarId || "")
     ].join("|");
 
-    if (!calendarRuns.has(runKey)) calendarRuns.set(runKey, { item, events: [] });
+    if (!calendarRuns.has(runKey)) calendarRuns.set(runKey, { ...resolved, events: [] });
     calendarRuns.get(runKey).events.push(event);
-
-    item.systems = [...new Set([...item.systems, ...([event.system].filter(Boolean))])];
-    item.roles = [...new Set([...item.roles, ...([role].filter(Boolean))])];
-    if (event.note && !item.note) item.note = event.note;
   });
 
   const nowValue = todayValue();
@@ -232,14 +257,30 @@ function buildScenarioArchive() {
       .sort((a, b) => String(a.date).localeCompare(String(b.date)));
     if (!validEvents.length) return;
 
-    const item = run.item;
     const firstValue = localDateValue(validEvents[0].date);
     const lastValue = localDateValue(validEvents[validEvents.length - 1].date);
-    const explicitlyCurrent = validEvents.some(isCurrentEvent);
+    const isCurrent = firstValue <= nowValue && lastValue >= nowValue;
+    const isPlanning = firstValue > nowValue;
 
-    if (explicitlyCurrent || (firstValue <= nowValue && lastValue >= nowValue)) {
+    // A fully past calendar label that does not match the registered archive
+    // must not create a standalone scenario card.
+    if (!run.item && !isCurrent && !isPlanning) return;
+
+    const item = run.item || getOrCreate({
+      id: run.scenarioId,
+      title: run.baseTitle
+    });
+
+    validEvents.forEach(event => {
+      const role = String(event.role || "").toUpperCase();
+      item.systems = [...new Set([...item.systems, ...([event.system].filter(Boolean))])];
+      item.roles = [...new Set([...item.roles, ...([role].filter(Boolean))])];
+      if (event.note && !item.note) item.note = event.note;
+    });
+
+    if (isCurrent) {
       item.categories = [...new Set([...item.categories, "current"])];
-    } else if (firstValue > nowValue) {
+    } else if (isPlanning) {
       item.categories = [...new Set([...item.categories, "planning"])];
     }
 
