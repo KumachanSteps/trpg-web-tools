@@ -229,9 +229,6 @@ function initCalendarPopup() {
     const planHtml = plans.map(row => {
       const type = SESSION_TYPES[normalizeSessionType(row.sessionType)];
       const time = formatEventTime(row);
-      const editHref = row.id
-        ? `plans.html?editor=1&editEvent=${encodeURIComponent(row.id)}#event-form`
-        : "plans.html?editor=1#event-form";
       return `
       <article class="calendar-popover-item is-plan">
         <p class="calendar-popover-type"><span class="popover-session-icon ${type.className}">${type.icon}</span> ${escapeHtml(type.label)}</p>
@@ -240,7 +237,7 @@ function initCalendarPopup() {
         ${row.system ? `<div class="calendar-popover-row"><span>SYSTEM</span><strong>${escapeHtml(row.system)}</strong></div>` : ""}
         ${row.role ? `<div class="calendar-popover-row"><span>ROLE</span><strong>${escapeHtml(row.role)}</strong></div>` : ""}
         ${row.status ? `<div class="calendar-popover-row"><span>STATUS</span><strong>${escapeHtml(row.status)}</strong></div>` : ""}
-        <a class="calendar-popover-edit editor-only" href="${escapeHtml(editHref)}">この予定を詳細編集 →</a>
+        ${row.id ? `<button type="button" class="calendar-popover-edit editor-only" data-open-event-drawer="${escapeHtml(row.id)}">この予定を詳細編集 →</button>` : ""}
       </article>`;
     }).join("");
 
@@ -287,6 +284,12 @@ function initCalendarPopup() {
 
   popup.addEventListener("click", event => {
     event.stopPropagation();
+    const editButton = event.target.closest("[data-open-event-drawer]");
+    if (editButton) {
+      window.openStarMapEventDrawer?.(editButton.dataset.openEventDrawer);
+      closePopup();
+      return;
+    }
     if (event.target.closest(".calendar-popover-close")) closePopup();
   });
   document.addEventListener("click", closePopup);
@@ -333,11 +336,8 @@ function renderUpcoming(year = calState.year, month = calState.month) {
   const cards = upcoming.map(e => {
     const [, eventMonth, eventDay] = String(e.date).split("-").map(Number);
     const roleClass = e.role === "GM" ? "role-gm" : "role-pl";
-    const editHref = e.id
-      ? `plans.html?editor=1&editEvent=${encodeURIComponent(e.id)}#event-form`
-      : "plans.html?editor=1#event-form";
     return `
-      <div class="upcoming-card panel">
+      <div class="upcoming-card panel"${e.id ? ` data-event-id="${escapePageHtml(e.id)}"` : ""}>
         <div class="upcoming-date">
           <span class="d">${eventDay}</span>
           <span class="m">${MONTH_NAMES[eventMonth - 1]}</span>
@@ -348,7 +348,7 @@ function renderUpcoming(year = calState.year, month = calState.month) {
           <div class="meta">
             <span class="tag ${roleClass}">${e.role}</span>
             <span>${escapePageHtml(e.system)}</span>
-            <a class="upcoming-edit-link editor-only" href="${escapePageHtml(editHref)}">詳細・編集 →</a>
+            ${e.id ? '<button type="button" class="upcoming-edit-link editor-only">カードを編集 →</button>' : ""}
           </div>
         </div>
         <div class="upcoming-status">${escapePageHtml(e.status)}</div>
@@ -365,6 +365,212 @@ function renderUpcoming(year = calState.year, month = calState.month) {
 }
 
 
+/* ---------- Editor：予定カードのスライド編集パネル ---------- */
+function initEventDrawer() {
+  if (document.getElementById("event-drawer-shell")) return;
+
+  const shell = document.createElement("div");
+  shell.id = "event-drawer-shell";
+  shell.className = "event-drawer-shell";
+  shell.setAttribute("aria-hidden", "true");
+  shell.innerHTML = `
+    <button type="button" class="event-drawer-backdrop" data-close-event-drawer aria-label="編集パネルを閉じる"></button>
+    <aside class="event-drawer" role="dialog" aria-modal="true" aria-labelledby="event-drawer-title">
+      <header class="event-drawer-head">
+        <div class="event-drawer-nav" aria-label="前後の予定へ移動">
+          <button type="button" data-event-drawer-prev aria-label="前の予定">↑ <span>前の予定</span></button>
+          <span data-event-drawer-position>— / —</span>
+          <button type="button" data-event-drawer-next aria-label="次の予定">↓ <span>次の予定</span></button>
+        </div>
+        <button type="button" class="event-drawer-close" data-close-event-drawer aria-label="閉じる">×</button>
+      </header>
+      <div class="event-drawer-body">
+        <p class="section-label">Schedule Editor</p>
+        <h2 id="event-drawer-title">予定を編集</h2>
+        <form class="event-drawer-form">
+          <input type="hidden" name="eventId">
+          <label>シナリオ名<input type="text" name="title" required></label>
+          <label>Scenario ID<input type="text" name="scenarioId"></label>
+          <div class="form-pair">
+            <label>日付<input type="date" name="date" required></label>
+            <label>時間帯
+              <select name="sessionType">
+                <option value="day">☀ 昼卓</option>
+                <option value="night">☾ 夜卓</option>
+                <option value="allDay">★ 終日卓</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-pair">
+            <label>開始時刻<input type="time" name="startTime"></label>
+            <label>終了時刻<input type="time" name="endTime"></label>
+          </div>
+          <div class="form-pair">
+            <label>システム<input type="text" name="system"></label>
+            <label>役割<input type="text" name="role" placeholder="PL / KP / GM" required></label>
+          </div>
+          <label>状態<input type="text" name="status" placeholder="確定 / 調整中 / 現行"></label>
+          <label>メモ<textarea name="note" rows="4"></textarea></label>
+          <p class="event-drawer-status" aria-live="polite"></p>
+          <div class="event-drawer-actions">
+            <button type="submit" class="manager-primary">変更を保存</button>
+            <button type="button" class="manager-danger" data-delete-drawer-event>この予定を削除</button>
+          </div>
+        </form>
+      </div>
+    </aside>`;
+  // bodyにはページ遷移用transformがあるため、画面固定を保てるhtml直下へ置く。
+  document.documentElement.appendChild(shell);
+
+  const form = shell.querySelector(".event-drawer-form");
+  const status = shell.querySelector(".event-drawer-status");
+  const position = shell.querySelector("[data-event-drawer-position]");
+  const previousButton = shell.querySelector("[data-event-drawer-prev]");
+  const nextButton = shell.querySelector("[data-event-drawer-next]");
+  let activeId = "";
+  let returnFocus = null;
+
+  function visibleEventIds() {
+    return [...document.querySelectorAll("#upcoming-list .upcoming-card[data-event-id]")]
+      .map(card => card.dataset.eventId)
+      .filter((id, index, rows) => id && rows.indexOf(id) === index);
+  }
+
+  function updateNavigation() {
+    const ids = visibleEventIds();
+    const index = ids.indexOf(activeId);
+    previousButton.disabled = index <= 0;
+    nextButton.disabled = index < 0 || index >= ids.length - 1;
+    position.textContent = index >= 0 ? `${index + 1} / ${ids.length}` : "表示月外";
+  }
+
+  function fillForm(item, message = "") {
+    activeId = item.id;
+    form.elements.namedItem("eventId").value = item.id || "";
+    form.elements.namedItem("title").value = item.title || "";
+    form.elements.namedItem("scenarioId").value = item.scenarioId || resolveScenarioId(item.title);
+    form.elements.namedItem("scenarioId").dataset.manual = "false";
+    form.elements.namedItem("date").value = item.date || "";
+    form.elements.namedItem("sessionType").value = normalizeSessionType(item.sessionType);
+    form.elements.namedItem("startTime").value = item.startTime || "";
+    form.elements.namedItem("endTime").value = item.endTime || "";
+    form.elements.namedItem("system").value = item.system || "";
+    form.elements.namedItem("role").value = item.role || "";
+    form.elements.namedItem("status").value = item.status || "予定";
+    form.elements.namedItem("note").value = item.note || "";
+    status.textContent = message;
+    updateNavigation();
+  }
+
+  function openDrawer(id, { preserveFocus = false } = {}) {
+    if (!document.body.classList.contains("is-editor-mode")) return;
+    const item = EVENTS.find(row => row.id === id);
+    if (!item) return;
+    if (!preserveFocus) returnFocus = document.activeElement;
+    fillForm(item);
+    shell.classList.add("is-open");
+    shell.setAttribute("aria-hidden", "false");
+    document.body.classList.add("is-event-drawer-open");
+    window.requestAnimationFrame(() => form.elements.namedItem("title").focus({ preventScroll: true }));
+  }
+
+  function closeDrawer() {
+    if (!shell.classList.contains("is-open")) return;
+    shell.classList.remove("is-open");
+    shell.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("is-event-drawer-open");
+    activeId = "";
+    if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+    returnFocus = null;
+  }
+
+  function move(direction) {
+    const ids = visibleEventIds();
+    const index = ids.indexOf(activeId);
+    const targetId = ids[index + direction];
+    if (targetId) openDrawer(targetId, { preserveFocus: true });
+  }
+
+  document.addEventListener("click", event => {
+    const card = event.target.closest("#upcoming-list .upcoming-card[data-event-id]");
+    if (card && document.body.classList.contains("is-editor-mode")) openDrawer(card.dataset.eventId);
+  });
+
+  previousButton.addEventListener("click", () => move(-1));
+  nextButton.addEventListener("click", () => move(1));
+  shell.querySelectorAll("[data-close-event-drawer]").forEach(button => button.addEventListener("click", closeDrawer));
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && shell.classList.contains("is-open")) closeDrawer();
+  });
+  window.addEventListener("star-map-editor-mode", event => {
+    if (!event.detail?.enabled) closeDrawer();
+  });
+
+  form.elements.namedItem("title").addEventListener("input", event => {
+    const idInput = form.elements.namedItem("scenarioId");
+    if (idInput.dataset.manual !== "true") idInput.value = resolveScenarioId(event.target.value);
+  });
+  form.elements.namedItem("scenarioId").addEventListener("input", event => { event.target.dataset.manual = "true"; });
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const existing = EVENTS.find(row => row.id === activeId);
+    if (!existing) return;
+    const title = String(data.get("title") || "").trim();
+    const date = String(data.get("date") || "").trim();
+    const role = String(data.get("role") || "").trim();
+    if (!title || !date || !role) {
+      status.textContent = "シナリオ名・日付・役割を入力してください。";
+      return;
+    }
+    const updated = {
+      ...existing,
+      scenarioId: String(data.get("scenarioId") || "").trim() || resolveScenarioId(title),
+      date,
+      title,
+      scenarioTitle: title,
+      system: String(data.get("system") || "").trim(),
+      role,
+      sessionType: normalizeSessionType(String(data.get("sessionType") || "day")),
+      startTime: String(data.get("startTime") || "").trim(),
+      endTime: String(data.get("endTime") || "").trim(),
+      status: String(data.get("status") || "予定").trim(),
+      note: String(data.get("note") || "").trim()
+    };
+    EVENTS[EVENTS.findIndex(row => row.id === activeId)] = updated;
+    saveEvents();
+    refreshEventViews();
+    fillForm(updated, "予定を更新しました。ページ位置はそのままです。");
+  });
+
+  shell.querySelector("[data-delete-drawer-event]").addEventListener("click", () => {
+    const item = EVENTS.find(row => row.id === activeId);
+    if (!item || !window.confirm(`「${item.title}」の予定を削除しますか？`)) return;
+    const ids = visibleEventIds();
+    const index = ids.indexOf(activeId);
+    const nextId = ids[index + 1] || ids[index - 1] || "";
+    EVENTS = EVENTS.filter(row => row.id !== activeId);
+    saveEvents();
+    refreshEventViews();
+    if (nextId && EVENTS.some(row => row.id === nextId)) {
+      openDrawer(nextId, { preserveFocus: true });
+      status.textContent = `「${item.title}」を削除しました。`;
+    } else {
+      closeDrawer();
+    }
+  });
+
+  window.openStarMapEventDrawer = openDrawer;
+  window.refreshStarMapEventDrawer = () => {
+    if (!shell.classList.contains("is-open")) return;
+    const item = EVENTS.find(row => row.id === activeId);
+    if (item) fillForm(item, status.textContent);
+    else closeDrawer();
+  };
+}
+
+
 /* ---------- 管理者用：予定の手動登録／Google Calendar ICS取込 ---------- */
 function saveEvents() {
   if (typeof window.updateStarMapEvents === "function") window.updateStarMapEvents(EVENTS);
@@ -375,6 +581,7 @@ function refreshEventViews() {
   renderUpcoming();
   renderHomeStats();
   renderEventManagerList();
+  window.refreshStarMapEventDrawer?.();
 }
 
 function normalizeIcsDate(value) {
@@ -1394,6 +1601,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initCalendarPopup();
   initMonthPicker();
   renderUpcoming();
+  initEventDrawer();
   renderHomeStats();
   renderRecordsPage();
   initEventManager();
