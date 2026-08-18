@@ -703,11 +703,26 @@ h1, h2, h3{
   font-size: .78rem;
 }
 .upcoming-edit-link{
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--star-gold-soft);
+  font: inherit;
   font-size: .7rem;
   text-decoration: none;
+  cursor: pointer;
 }
 .upcoming-edit-link:hover{ text-decoration: underline; }
+body.is-editor-mode .upcoming-card[data-event-id]{
+  cursor: pointer;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+body.is-editor-mode .upcoming-card[data-event-id]:hover{
+  border-color: rgba(255,214,122,.42);
+  box-shadow: 0 16px 38px rgba(0,0,0,.2), 0 0 0 1px rgba(255,214,122,.08);
+  transform: translateX(-2px);
+}
 .upcoming::-webkit-scrollbar{
   width: 7px;
 }
@@ -1210,10 +1225,16 @@ a:focus-visible, button:focus-visible{
 .calendar-popover-item.is-plan{ background:rgba(255,214,122,.07); }
 .calendar-popover-item h4{ margin:3px 0 10px; font-size:.96rem; line-height:1.45; }
 .calendar-popover-edit{
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: transparent;
   margin-top: 10px;
   color: var(--star-gold-soft);
+  font-family: inherit;
   font-size: .72rem;
   text-decoration: none;
+  cursor: pointer;
 }
 .calendar-popover-edit:hover{ text-decoration: underline; }
 .calendar-popover-type{ margin:0; }
@@ -1309,6 +1330,129 @@ a:focus-visible, button:focus-visible{
 .manager-event-row button{ padding:6px 10px; background:rgba(255,255,255,.06); color:var(--moon-silver); }
 @media(max-width:820px){ .schedule-manager-grid{ grid-template-columns:1fr; } }
 @media(max-width:520px){ .form-pair{ grid-template-columns:1fr; } }
+
+
+/* ============ 予定カード・スライド編集パネル ============ */
+body.is-event-drawer-open{ overflow:hidden; }
+.event-drawer-shell{
+  position:fixed;
+  inset:0;
+  z-index:260;
+  pointer-events:none;
+  visibility:hidden;
+  transition:visibility 0s linear .32s;
+}
+.event-drawer-shell.is-open{
+  pointer-events:auto;
+  visibility:visible;
+  transition-delay:0s;
+}
+.event-drawer-backdrop{
+  position:absolute;
+  inset:0;
+  width:100%;
+  border:0;
+  background:rgba(5,5,18,.64);
+  opacity:0;
+  cursor:default;
+  transition:opacity .28s ease;
+  backdrop-filter:blur(3px);
+}
+.event-drawer-shell.is-open .event-drawer-backdrop{ opacity:1; }
+.event-drawer{
+  position:absolute;
+  top:0;
+  right:0;
+  display:flex;
+  flex-direction:column;
+  width:min(540px, 100vw);
+  height:100dvh;
+  border-left:1px solid rgba(211,195,245,.24);
+  background:
+    radial-gradient(circle at 85% 12%, rgba(114,87,174,.22), transparent 34%),
+    linear-gradient(180deg, rgba(27,25,62,.99), rgba(12,12,31,.99));
+  box-shadow:-24px 0 70px rgba(0,0,0,.42);
+  color:var(--starlight);
+  transform:translateX(104%);
+  transition:transform .32s cubic-bezier(.22,.8,.28,1);
+}
+.event-drawer-shell.is-open .event-drawer{ transform:translateX(0); }
+.event-drawer-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  min-height:72px;
+  padding:14px 20px;
+  border-bottom:1px solid rgba(211,195,245,.14);
+  background:rgba(8,8,25,.48);
+}
+.event-drawer-nav{ display:flex; align-items:center; gap:8px; }
+.event-drawer-nav button,
+.event-drawer-close{
+  border:1px solid rgba(211,195,245,.2);
+  border-radius:999px;
+  background:rgba(255,255,255,.055);
+  color:var(--moon-silver);
+  font:inherit;
+  cursor:pointer;
+}
+.event-drawer-nav button{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:38px;
+  padding:7px 12px;
+  font-size:.72rem;
+}
+.event-drawer-nav button:hover:not(:disabled),
+.event-drawer-close:hover{ border-color:rgba(255,214,122,.5); color:var(--star-gold-soft); }
+.event-drawer-nav button:disabled{ opacity:.32; cursor:not-allowed; }
+.event-drawer-nav>span{ min-width:54px; color:var(--dawn-mauve); font-size:.7rem; text-align:center; }
+.event-drawer-close{ flex:0 0 auto; width:38px; height:38px; font-size:1.3rem; }
+.event-drawer-body{
+  flex:1;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:28px 28px 42px;
+}
+.event-drawer-body h2{ margin:6px 0 24px; font-family:var(--font-display); font-weight:400; }
+.event-drawer-form label{
+  display:grid;
+  gap:7px;
+  margin-bottom:14px;
+  color:var(--moon-silver);
+  font-size:.82rem;
+}
+.event-drawer-form input,
+.event-drawer-form select,
+.event-drawer-form textarea{
+  width:100%;
+  border:var(--border-glow);
+  border-radius:10px;
+  background:rgba(7,8,22,.78);
+  color:var(--starlight);
+  padding:10px 12px;
+  font:inherit;
+}
+.event-drawer-form textarea{ resize:vertical; }
+.event-drawer-status{ min-height:1.5em; margin:4px 0 12px; color:var(--star-gold-soft); font-size:.76rem; }
+.event-drawer-actions{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.event-drawer-actions .manager-danger{ margin-top:0; }
+@media(max-width:560px){
+  .event-drawer-head{ align-items:flex-start; padding:12px 14px; }
+  .event-drawer-nav{ flex-wrap:wrap; }
+  .event-drawer-nav button span{ display:none; }
+  .event-drawer-nav button{ width:40px; justify-content:center; }
+  .event-drawer-body{ padding:22px 18px 34px; }
+  .event-drawer-actions{ align-items:stretch; flex-direction:column; }
+  .event-drawer-actions button{ width:100%; }
+}
+@media(prefers-reduced-motion:reduce){
+  .event-drawer-shell,
+  .event-drawer,
+  .event-drawer-backdrop{ transition:none; }
+}
 
 
 /* ============ シナリオアーカイブ v0.6 ============ */
