@@ -784,6 +784,13 @@ h1, h2, h3{
   transition: transform .25s ease;
 }
 .chara-chip:hover{ transform: translateY(-4px); }
+.chara-preview-empty{
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 24px;
+  color: var(--moon-silver);
+  text-align: center;
+}
 .chara-avatar{
   width: 68px; height: 68px;
   border-radius: 50%;
