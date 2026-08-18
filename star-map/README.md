@@ -109,7 +109,7 @@ starMapData/public
 └─ version
 ```
 
-過去の643セッション履歴とシナリオ集計は、引き続き静的ファイルに保持します。
+過去の653セッション履歴とシナリオ集計は、引き続き静的ファイルに保持します。
 
 - `js/sessions-data.js`
 - `js/scenario-data.js`
