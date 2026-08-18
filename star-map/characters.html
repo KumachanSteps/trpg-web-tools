@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Characters ｜ くま。卓の星図</title>
+<link rel="stylesheet" href="css/style.css">
+<noscript><style>body{opacity:1 !important; transform:none !important;}</style></noscript>
+</head>
+<body>
+
+<div class="starfield" aria-hidden="true">
+  <div class="layer l1"></div>
+  <div class="layer l2"></div>
+  <div class="shooting-star"></div>
+</div>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="1.6" fill="#ffe6a6"/>
+        <circle cx="9" cy="14" r="1.3" fill="#f6f2ff"/>
+        <circle cx="31" cy="12" r="1.1" fill="#f6f2ff"/>
+        <circle cx="30" cy="28" r="1.4" fill="#f6f2ff"/>
+        <circle cx="11" cy="29" r="1.1" fill="#f6f2ff"/>
+        <path d="M20 20L9 14M20 20L31 12M20 20L30 28M20 20L11 29" stroke="#8a76c9" stroke-width="0.7"/>
+      </svg>
+      <span class="brand-text">
+        <span class="ja">くま。卓の星図</span>
+        <span class="en">TRPG Notes</span>
+      </span>
+    </a>
+    <button class="nav-toggle" aria-label="メニューを開く" aria-expanded="false">☰</button>
+    <nav class="main-nav">
+      <a href="index.html">TOP</a>
+      <a href="characters.html" class="is-active">CHARACTERS</a>
+      <a href="scenarios.html">SCENARIOS</a>
+      <a href="about.html">ABOUT</a>
+      <a href="https://kumachansteps.github.io/trpg-web-tools/" target="_blank" rel="noopener" class="nav-external">WEB TOOLS ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero wrap">
+    <p class="eyebrow">Characters</p>
+    <h1>探索者・キャラクター</h1>
+    <p>
+      これまで作成・使用した探索者やキャラクターをまとめています。
+    </p>
+  </section>
+
+  <section class="content-section wrap">
+    <div class="character-sync panel editor-only" id="chara-libra-sync-panel">
+      <div>
+        <p class="eyebrow">Browser Sync</p>
+        <h2>Chara Libraから自動読込</h2>
+        <p id="character-load-status" aria-live="polite">ブラウザ保存データを確認中…</p>
+      </div>
+      <button type="button" id="character-refresh" class="character-refresh">再読込</button>
+    </div>
+
+    <div class="filter-row" id="character-filters" aria-label="システムで絞り込み"></div>
+    <div class="character-grid" id="character-grid"></div>
+
+    <p class="character-sync-note editor-only">
+      ※ 自動読込は、Chara Libraとこのサイトを同じブラウザ・同じ
+      <code>https://kumachansteps.github.io</code> 上で利用している場合に機能します。
+      別ドメイン、別ブラウザ、シークレットウィンドウの保存データは参照できません。
+    </p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="thanks">Thank you for visiting!</p>
+    <div class="footer-links">
+      <a href="index.html">TOP</a>
+      <a href="characters.html">CHARACTERS</a>
+      <a href="scenarios.html">SCENARIOS</a>
+      <a href="about.html">ABOUT</a>
+      <a href="https://kumachansteps.github.io/trpg-web-tools/" target="_blank" rel="noopener">TRPG Webツール観測所 ↗</a>
+    </div>
+    <p class="copy">© 2026 くま。卓の星図 All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/published-data.js"></script>
+<script src="js/cloud-editor.js"></script>
+<script src="js/editor-data.js"></script>
+<script src="js/editor-mode.js"></script>
+<script src="js/main.js"></script>
+<script src="js/characters.js"></script>
+</body>
+</html>

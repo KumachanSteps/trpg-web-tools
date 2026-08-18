@@ -5,6 +5,11 @@ service cloud.firestore {
       return request.auth != null
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+    function isStarMapEditor() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == "tkoide2021@gmail.com";
+    }
     match /admins/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if false;
@@ -12,6 +17,10 @@ service cloud.firestore {
     match /reports/{reportId} {
       allow create: if true;
       allow read, update, delete: if isAdmin();
+    }
+    match /starMapData/public {
+      allow read: if true;
+      allow create, update, delete: if isStarMapEditor();
     }
   }
 }

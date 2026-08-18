@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-NJD5JZML31');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 共通アイコン -->
+  <link rel="icon" href="../assets/img/kuma_icon.ico" type="image/x-icon" />
+<title>くま。卓の星図 ｜ TRPG事情</title>
+<meta name="description" content="TRPG関連の公開情報：予定・記録・シナリオ・探索者情報をまとめたサイトです。">
+<link rel="stylesheet" href="css/style.css">
+<noscript><style>body{opacity:1 !important; transform:none !important;}</style></noscript>
+</head>
+<body>
+
+<div class="starfield" aria-hidden="true">
+  <div class="layer l1"></div>
+  <div class="layer l2"></div>
+  <div class="shooting-star"></div>
+  <div class="shooting-star s2"></div>
+  <div class="shooting-star s3"></div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="1.6" fill="#ffe6a6"/>
+        <circle cx="9" cy="14" r="1.3" fill="#f6f2ff"/>
+        <circle cx="31" cy="12" r="1.1" fill="#f6f2ff"/>
+        <circle cx="30" cy="28" r="1.4" fill="#f6f2ff"/>
+        <circle cx="11" cy="29" r="1.1" fill="#f6f2ff"/>
+        <path d="M20 20L9 14M20 20L31 12M20 20L30 28M20 20L11 29" stroke="#8a76c9" stroke-width="0.7"/>
+      </svg>
+      <span class="brand-text">
+        <span class="ja">くま。卓の星図</span>
+        <span class="en">TRPG Notes</span>
+      </span>
+    </a>
+
+    <button class="nav-toggle" aria-label="メニューを開く" aria-expanded="false">☰</button>
+
+    <nav class="main-nav">
+      <a href="index.html" class="is-active">TOP</a>
+      <a href="characters.html">CHARACTERS</a>
+      <a href="scenarios.html">SCENARIOS</a>
+      <a href="about.html">ABOUT</a>
+      <a href="https://kumachansteps.github.io/trpg-web-tools/" target="_blank" rel="noopener" class="nav-external">WEB TOOLS ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero wrap">
+    <p class="eyebrow">Under the same sky, another table opens</p>
+    <h1>くま。卓の星図</h1>
+    <p class="sub">卓上に星図を広げるように。<br>私のTRPGにまつわる予定・記録・キャラクターを、ここに残しています。</p>
+    <div class="divider"></div>
+  </section>
+
+  <!-- ============ これからの予定 ============ -->
+  <section class="content-section wrap" id="plans-preview">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Upcoming</p>
+        <h2>これからの予定</h2>
+      </div>
+      <a href="#plans-preview" class="section-link">カレンダーで確認</a>
+    </div>
+
+    <div class="plans-grid">
+      <div class="calendar panel">
+        <div class="calendar-head">
+          <div class="ym" id="cal-label"></div>
+          <div class="cal-nav">
+            <button id="cal-prev" aria-label="前の月">‹</button>
+            <button id="cal-next" aria-label="次の月">›</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend">
+          <span><i class="legend-day">☀</i>昼卓</span>
+          <span><i class="legend-night">☾</i>夜卓</span>
+          <span><i class="legend-all-day">★</i>終日卓</span>
+          <span><i class="legend-record">●</i>プレイ済み</span>
+        </div>
+      </div>
+
+      <div class="upcoming" id="upcoming-list">
+        <!-- JSで自動生成されます（js/main.js の EVENTS を編集） -->
+      </div>
+    </div>
+
+    <div class="calendar-quick-editor panel editor-only" id="calendar-quick-editor">
+      <div class="calendar-quick-editor-head">
+        <div>
+          <p class="eyebrow">Local Editor</p>
+          <h3>今後のセッションを追加</h3>
+          <p>ここで登録した予定はカレンダー・予定一覧・シナリオ分類に反映されます。</p>
+        </div>
+        <a href="plans.html?editor=1" class="manager-secondary quick-editor-link">詳細管理を開く →</a>
+      </div>
+
+      <form id="quick-event-form" class="quick-event-form">
+        <label>日付<input type="date" name="date" required></label>
+        <label>シナリオ名<input type="text" name="title" required placeholder="例：救世主"></label>
+        <label>Scenario ID
+          <input type="text" name="scenarioId" placeholder="シナリオ名から自動生成">
+        </label>
+        <label>システム<input type="text" name="system" placeholder="例：CoC 6版"></label>
+        <label>役割
+          <select name="role" required>
+            <option value="">選択</option><option>PL</option><option>KP</option><option>GM</option><option>DL</option><option>SKP</option>
+          </select>
+        </label>
+        <label>時間帯
+          <select name="sessionType">
+            <option value="day">☀ 昼卓</option>
+            <option value="night">☾ 夜卓</option>
+            <option value="allDay">★ 終日卓</option>
+          </select>
+        </label>
+        <label>開始<input type="time" name="startTime"></label>
+        <label>終了<input type="time" name="endTime"></label>
+        <label>状態
+          <select name="status">
+            <option value="予定">予定</option>
+            <option value="調整中">調整中</option>
+            <option value="確定">確定</option>
+            <option value="現行">現行</option>
+          </select>
+        </label>
+        <label class="quick-event-note">メモ<input type="text" name="note" placeholder="任意"></label>
+        <div class="quick-event-actions">
+          <button type="submit" class="manager-primary">予定を追加</button>
+          <p id="quick-event-status" class="manager-status" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ これまでの記録 ============ -->
+  <section class="content-section wrap" id="records">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Records</p>
+        <h2>これまでの記録</h2>
+      </div>
+      <a href="scenarios.html" class="section-link">シナリオを見る →</a>
+    </div>
+
+    <div class="counters">
+      <div class="counter-card panel">
+        <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.8 2.8M16.2 16.2 19 19M19 5l-2.8 2.8M7.8 16.2 5 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <div class="num" id="stat-active">0</div>
+        <div class="label">進行中・予定</div>
+      </div>
+      <div class="counter-card panel">
+        <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 2 14.7 9h7.3l-5.9 4.3 2.3 7.2L12 16.1 5.6 20.5l2.3-7.2L2 9h7.3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="num" id="stat-upcoming">0</div>
+        <div class="label">今後の予定</div>
+      </div>
+      <div class="counter-card panel">
+        <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 1 0 9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 3a9 9 0 0 1 8.4 5.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="1.5 3.4"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>
+        <div class="num" id="stat-sessions">0</div>
+        <div class="label">セッション数</div>
+      </div>
+      <div class="counter-card panel">
+        <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 3 3 8.5 12 14l9-5.5L12 3Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 11.5v5c0 1.4 2.7 3 6 3s6-1.6 6-3v-5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="num" id="stat-scenarios">0</div>
+        <div class="label">Played Scenario</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 最近のキャラクター ============ -->
+  <section class="content-section wrap" id="characters-preview">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Characters</p>
+        <h2>最近のキャラクター</h2>
+      </div>
+      <a href="characters.html" class="section-link">探索者一覧を見る →</a>
+    </div>
+
+    <div class="chara-row">
+      <a href="characters.html" class="chara-chip panel">
+        <div class="chara-avatar">環</div>
+        <div>
+          <div class="chara-name">水無月 環</div>
+          <div class="chara-sys">クトゥルフ神話TRPG</div>
+        </div>
+      </a>
+      <a href="characters.html" class="chara-chip panel">
+        <div class="chara-avatar">蒼</div>
+        <div>
+          <div class="chara-name">蒼井 レイ</div>
+          <div class="chara-sys">ダブルクロス3rd</div>
+        </div>
+      </a>
+      <a href="characters.html" class="chara-chip panel">
+        <div class="chara-avatar">燐</div>
+        <div>
+          <div class="chara-name">燐堂 ミカゲ</div>
+          <div class="chara-sys">オリジナルシステム</div>
+        </div>
+      </a>
+      <a href="characters.html" class="chara-chip panel">
+        <div class="chara-avatar">星</div>
+        <div>
+          <div class="chara-name">星野 ツキノ</div>
+          <div class="chara-sys">シノビガミ</div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ About Me プレビュー ============ -->
+  <section class="content-section wrap" id="about-preview">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">About Me</p>
+        <h2>この星図の管理人</h2>
+      </div>
+      <a href="about.html" class="section-link">プロフィールを見る →</a>
+    </div>
+
+    <a class="about-preview-card panel" href="about.html" aria-label="くま。のプロフィールを見る">
+      <div class="about-preview-emblem about-preview-emblem-ursa-minor" aria-hidden="true">
+        <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="48" cy="48" r="36" stroke="currentColor" stroke-opacity=".16"/>
+          <circle cx="48" cy="48" r="27" stroke="currentColor" stroke-opacity=".12" stroke-dasharray="1.5 6"/>
+          <path class="ursa-minor-line" d="M18 21L29 31L41 40L55 47L72 39L76 59L57 66L55 47"/>
+          <circle class="ursa-minor-star polaris" cx="18" cy="21" r="3.3"/>
+          <circle class="ursa-minor-star" cx="29" cy="31" r="2"/>
+          <circle class="ursa-minor-star" cx="41" cy="40" r="2.1"/>
+          <circle class="ursa-minor-star" cx="55" cy="47" r="2.2"/>
+          <circle class="ursa-minor-star" cx="72" cy="39" r="2.6"/>
+          <circle class="ursa-minor-star" cx="76" cy="59" r="2.4"/>
+          <circle class="ursa-minor-star" cx="57" cy="66" r="2"/>
+          <path class="polaris-flare" d="M18 11.5l1.7 5.2 5.1 1.7-5.1 1.7-1.7 5.2-1.7-5.2-5.1-1.7 5.1-1.7L18 11.5Z"/>
+          <text x="48" y="82" text-anchor="middle" class="ursa-minor-label">URSA MINOR</text>
+        </svg>
+      </div>
+
+      <div class="about-preview-copy">
+        <p class="about-preview-label">Handle name</p>
+        <h3>くま。</h3>
+        <p>
+          クトゥルフ神話TRPGを中心に、PL・KPの両方で遊んでいます。<br>
+          セッションの記録、探索者、回せるシナリオ、自作Webツールを、この星図にまとめています。
+        </p>
+        <div class="about-preview-tags" aria-label="主な活動">
+          <span class="tag">CoC</span>
+          <span class="tag">CoC 7版</span>
+          <span class="tag">エモクロア</span>
+          <span class="tag role-gm">PL / KP</span>
+        </div>
+      </div>
+
+      <span class="about-preview-cta">Read more <span aria-hidden="true">→</span></span>
+    </a>
+  </section>
+
+  <section class="content-section wrap" id="web-tools-link">
+    <a class="tools-banner panel" href="https://kumachansteps.github.io/trpg-web-tools/" target="_blank" rel="noopener">
+      <div>
+        <p class="eyebrow">TRPG Web Tools</p>
+        <h2>TRPG Webツール観測所</h2>
+        <p>セッション準備・キャラクター管理・ログ整理に使える自作Webツールを公開しています。</p>
+      </div>
+      <span class="tools-banner-arrow">サイトを見る ↗</span>
+    </a>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="thanks">Thank you for visiting!</p>
+    <div class="footer-links">
+      <a href="index.html">TOP</a>
+      <a href="characters.html">CHARACTERS</a>
+      <a href="scenarios.html">SCENARIOS</a>
+      <a href="about.html">ABOUT</a>
+      <a href="https://kumachansteps.github.io/trpg-web-tools/" target="_blank" rel="noopener">TRPG Webツール観測所 ↗</a>
+    </div>
+    <p class="copy">© 2026 くま。卓の星図 All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="js/sessions-data.js"></script>
+<script src="js/scenario-data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/published-data.js"></script>
+<script src="js/cloud-editor.js"></script>
+<script src="js/editor-data.js"></script>
+<script src="js/editor-mode.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
