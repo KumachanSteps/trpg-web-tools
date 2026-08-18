@@ -1,11 +1,11 @@
 /* ============================================================
    シナリオ一覧：履歴 + カレンダー予定 + 所持データ
 
-   Calendar transition:
-   - future date  -> planning
-   - today/current status -> current
-   - past PL      -> played
-   - past GM/KP/DL/SKP -> gmAble
+   Calendar transition (grouped by session title/run):
+   - first date is after today -> planning
+   - first date <= today <= last date -> current
+   - all dates are before today -> not planning/current
+   - past PL -> played / past GM roles -> gmAble
    ============================================================ */
 
 const SCENARIO_CATEGORIES = {
@@ -53,6 +53,23 @@ function normalizeScenarioTitle(value) {
   return canonicalScenario(value).normalize("NFKC").trim().toLocaleLowerCase("ja");
 }
 
+function stripCalendarSessionMarkers(value) {
+  const marker = "(?:☀️?|🌃|🌙|☾|🌞|🌜|⭐️?|★️?)";
+  const leading = new RegExp(`^(?:\\s*[【[(（]?\\s*${marker}\\s*[】\\])）]?\\s*)+`, "u");
+  const trailing = new RegExp(`(?:\\s*[【[(（]?\\s*${marker}\\s*[】\\])）]?\\s*)+$`, "u");
+  return String(value || "")
+    .replace(leading, "")
+    .replace(trailing, "")
+    .replace(/[\t　 ]{2,}/g, " ")
+    .trim();
+}
+
+function stripCalendarRunSuffix(value) {
+  return String(value || "")
+    .replace(/\s+(?:第\s*\d+\s*(?:陣|回)|\d+\s*日目)\s*$/u, "")
+    .trim();
+}
+
 function fallbackScenarioId(title) {
   const normalized = normalizeScenarioTitle(title);
   let hash = 2166136261;
@@ -91,7 +108,7 @@ function isCancelledEvent(event) {
 }
 
 function isCurrentEvent(event) {
-  return /現行|進行中|current|ongoing/i.test(String(event.status || "")) || localDateValue(event.date) === todayValue();
+  return /現行|進行中|current|ongoing/i.test(String(event.status || ""));
 }
 
 function eventAlreadyInSessionLog(event, canonicalTitle) {
@@ -130,6 +147,14 @@ function buildScenarioArchive() {
   const byTitle = new Map(archive.map(item => [normalizeScenarioTitle(item.title), item]));
   const byId = new Map(archive.map(item => [item.id, item]));
 
+  function registerKnownTitles(item) {
+    [item.title, item.scenarioCountKey, ...(item.scenarioNames || [])].filter(Boolean).forEach(title => {
+      const cleaned = stripCalendarSessionMarkers(title);
+      byTitle.set(normalizeScenarioTitle(cleaned), item);
+    });
+  }
+  archive.forEach(registerKnownTitles);
+
   function getOrCreate(entry) {
     const title = canonicalScenario(entry.title);
     const key = normalizeScenarioTitle(title);
@@ -148,8 +173,25 @@ function buildScenarioArchive() {
       archive.push(item);
       byTitle.set(key, item);
       byId.set(item.id, item);
+      registerKnownTitles(item);
     }
     return item;
+  }
+
+  function resolveCalendarScenario(event) {
+    const rawTitle = stripCalendarSessionMarkers(event.scenarioTitle || event.title);
+    const baseTitle = stripCalendarRunSuffix(rawTitle);
+    const known = (event.scenarioId && byId.get(String(event.scenarioId)))
+      || byTitle.get(normalizeScenarioTitle(rawTitle))
+      || byTitle.get(normalizeScenarioTitle(baseTitle));
+    if (known) return { item: known, rawTitle };
+    return {
+      item: getOrCreate({
+        id: String(event.scenarioId || ""),
+        title: canonicalScenario(baseTitle || rawTitle)
+      }),
+      rawTitle
+    };
   }
 
   const overrides = typeof SCENARIO_CATEGORY_OVERRIDES === "undefined" ? {} : SCENARIO_CATEGORY_OVERRIDES;
@@ -165,25 +207,46 @@ function buildScenarioArchive() {
   });
 
   const events = typeof window.getStarMapEvents === "function" ? window.getStarMapEvents() : [];
+  const calendarRuns = new Map();
   events.filter(event => event?.date && event?.title && !isCancelledEvent(event)).forEach(event => {
-    const entry = {
-      id: String(event.scenarioId || ""),
-      title: canonicalScenario(event.scenarioTitle || event.title)
-    };
-    const item = getOrCreate(entry);
+    const { item, rawTitle } = resolveCalendarScenario(event);
     const role = String(event.role || "").toUpperCase();
-    const dateValue = localDateValue(event.date);
-    const nowValue = todayValue();
+    const runKey = [
+      normalizeScenarioTitle(rawTitle),
+      role,
+      String(event.googleCalendarId || event.calendarId || "")
+    ].join("|");
+
+    if (!calendarRuns.has(runKey)) calendarRuns.set(runKey, { item, events: [] });
+    calendarRuns.get(runKey).events.push(event);
 
     item.systems = [...new Set([...item.systems, ...([event.system].filter(Boolean))])];
     item.roles = [...new Set([...item.roles, ...([role].filter(Boolean))])];
     if (event.note && !item.note) item.note = event.note;
+  });
 
-    if (isCurrentEvent(event)) {
+  const nowValue = todayValue();
+  calendarRuns.forEach(run => {
+    const validEvents = run.events
+      .filter(event => Number.isFinite(localDateValue(event.date)))
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    if (!validEvents.length) return;
+
+    const item = run.item;
+    const firstValue = localDateValue(validEvents[0].date);
+    const lastValue = localDateValue(validEvents[validEvents.length - 1].date);
+    const explicitlyCurrent = validEvents.some(isCurrentEvent);
+
+    if (explicitlyCurrent || (firstValue <= nowValue && lastValue >= nowValue)) {
       item.categories = [...new Set([...item.categories, "current"])];
-    } else if (dateValue > nowValue) {
+    } else if (firstValue > nowValue) {
       item.categories = [...new Set([...item.categories, "planning"])];
-    } else if (dateValue < nowValue) {
+    }
+
+    if (lastValue >= nowValue) return;
+
+    validEvents.forEach(event => {
+      const role = String(event.role || "").toUpperCase();
       if (role === "PL") item.categories = [...new Set([...item.categories, "played"])];
       if (GM_ROLES.has(role)) item.categories = [...new Set([...item.categories, "gmAble"])];
 
@@ -194,7 +257,7 @@ function buildScenarioArchive() {
         if (GM_ROLES.has(role)) item.gmCount += 1;
         updateDateRange(item, event.date);
       }
-    }
+    });
   });
 
   const ownedRows = typeof window.getOwnedScenarios === "function" ? window.getOwnedScenarios() : [];
