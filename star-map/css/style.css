@@ -682,6 +682,32 @@ h1, h2, h3{
   margin: 0;
   padding: 18px 4px;
 }
+.upcoming-month-summary{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid rgba(211,195,245,.16);
+  border-radius: 10px;
+  background: rgba(13,13,32,.94);
+  backdrop-filter: blur(10px);
+  color: var(--moon-silver);
+  font-size: .72rem;
+}
+.upcoming-month-summary strong{
+  color: var(--star-gold-soft);
+  font-size: .78rem;
+}
+.upcoming-edit-link{
+  color: var(--star-gold-soft);
+  font-size: .7rem;
+  text-decoration: none;
+}
+.upcoming-edit-link:hover{ text-decoration: underline; }
 .upcoming::-webkit-scrollbar{
   width: 7px;
 }
@@ -1183,6 +1209,13 @@ a:focus-visible, button:focus-visible{
 }
 .calendar-popover-item.is-plan{ background:rgba(255,214,122,.07); }
 .calendar-popover-item h4{ margin:3px 0 10px; font-size:.96rem; line-height:1.45; }
+.calendar-popover-edit{
+  margin-top: 10px;
+  color: var(--star-gold-soft);
+  font-size: .72rem;
+  text-decoration: none;
+}
+.calendar-popover-edit:hover{ text-decoration: underline; }
 .calendar-popover-type{ margin:0; }
 .calendar-popover-row{ display:grid; grid-template-columns:68px minmax(0,1fr); gap:8px; padding:4px 0; font-size:.75rem; line-height:1.45; }
 .calendar-popover-row span{ color:var(--dawn-mauve); font-family:var(--font-accent); font-size:.64rem; letter-spacing:.08em; }
@@ -1255,6 +1288,10 @@ a:focus-visible, button:focus-visible{
 .schedule-manager-grid{ display:grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap:24px; align-items:start; }
 .event-form,.event-import{ padding:24px; }
 .event-form h3,.event-import h3{ margin:0 0 18px; }
+.event-form.is-editing-event{
+  border-color: rgba(255,214,122,.48);
+  box-shadow: 0 0 0 1px rgba(255,214,122,.12), 0 18px 50px rgba(0,0,0,.2);
+}
 .event-form label{ display:grid; gap:7px; margin-bottom:14px; color:var(--moon-silver); font-size:.82rem; }
 .event-form input,.event-form select,.event-form textarea{ width:100%; border:var(--border-glow); border-radius:10px; background:rgba(7,8,22,.72); color:var(--starlight); padding:10px 12px; font:inherit; }
 .form-pair{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }

@@ -229,6 +229,9 @@ function initCalendarPopup() {
     const planHtml = plans.map(row => {
       const type = SESSION_TYPES[normalizeSessionType(row.sessionType)];
       const time = formatEventTime(row);
+      const editHref = row.id
+        ? `plans.html?editor=1&editEvent=${encodeURIComponent(row.id)}#event-form`
+        : "plans.html?editor=1#event-form";
       return `
       <article class="calendar-popover-item is-plan">
         <p class="calendar-popover-type"><span class="popover-session-icon ${type.className}">${type.icon}</span> ${escapeHtml(type.label)}</p>
@@ -237,6 +240,7 @@ function initCalendarPopup() {
         ${row.system ? `<div class="calendar-popover-row"><span>SYSTEM</span><strong>${escapeHtml(row.system)}</strong></div>` : ""}
         ${row.role ? `<div class="calendar-popover-row"><span>ROLE</span><strong>${escapeHtml(row.role)}</strong></div>` : ""}
         ${row.status ? `<div class="calendar-popover-row"><span>STATUS</span><strong>${escapeHtml(row.status)}</strong></div>` : ""}
+        <a class="calendar-popover-edit editor-only" href="${escapeHtml(editHref)}">この予定を詳細編集 →</a>
       </article>`;
     }).join("");
 
@@ -309,13 +313,18 @@ function renderUpcoming(year = calState.year, month = calState.month) {
   list.setAttribute("aria-label", `${targetYear}年${targetMonth + 1}月の予定一覧`);
 
   if (upcoming.length === 0) {
-    list.innerHTML = `<p class="upcoming-empty">${targetYear}年${targetMonth + 1}月の予定はありません。</p>`;
+    list.innerHTML = `
+      <div class="upcoming-month-summary"><strong>${targetYear}年${targetMonth + 1}月</strong><span>0件</span></div>
+      <p class="upcoming-empty">この月の予定はありません。</p>`;
     return;
   }
 
-  list.innerHTML = upcoming.map(e => {
+  const cards = upcoming.map(e => {
     const [, eventMonth, eventDay] = String(e.date).split("-").map(Number);
     const roleClass = e.role === "GM" ? "role-gm" : "role-pl";
+    const editHref = e.id
+      ? `plans.html?editor=1&editEvent=${encodeURIComponent(e.id)}#event-form`
+      : "plans.html?editor=1#event-form";
     return `
       <div class="upcoming-card panel">
         <div class="upcoming-date">
@@ -328,11 +337,19 @@ function renderUpcoming(year = calState.year, month = calState.month) {
           <div class="meta">
             <span class="tag ${roleClass}">${e.role}</span>
             <span>${escapePageHtml(e.system)}</span>
+            <a class="upcoming-edit-link editor-only" href="${escapePageHtml(editHref)}">詳細・編集 →</a>
           </div>
         </div>
         <div class="upcoming-status">${escapePageHtml(e.status)}</div>
       </div>`;
   }).join("");
+
+  list.innerHTML = `
+    <div class="upcoming-month-summary">
+      <strong>${targetYear}年${targetMonth + 1}月</strong>
+      <span>${upcoming.length}件${upcoming.length > 4 ? "・スクロールで全件表示" : ""}</span>
+    </div>
+    ${cards}`;
 }
 
 
@@ -884,6 +901,7 @@ function initEventManager() {
 
   function resetEditorForm(message = "") {
     form.reset();
+    form.classList.remove("is-editing-event");
     if (eventIdInput) eventIdInput.value = "";
     if (scenarioIdInput) {
       scenarioIdInput.value = "";
@@ -892,6 +910,27 @@ function initEventManager() {
     if (submitButton) submitButton.textContent = "予定を保存";
     if (cancelEditButton) cancelEditButton.hidden = true;
     if (message) setStatus(message);
+  }
+
+  function beginEditingEvent(item, shouldScroll = true) {
+    if (!item) return;
+    form.elements.namedItem("eventId").value = item.id || "";
+    form.elements.namedItem("date").value = item.date || "";
+    form.elements.namedItem("title").value = item.title || "";
+    form.elements.namedItem("scenarioId").value = item.scenarioId || resolveScenarioId(item.title);
+    form.elements.namedItem("scenarioId").dataset.manual = "false";
+    form.elements.namedItem("system").value = item.system || "";
+    form.elements.namedItem("role").value = item.role || "";
+    form.elements.namedItem("sessionType").value = normalizeSessionType(item.sessionType);
+    form.elements.namedItem("startTime").value = item.startTime || "";
+    form.elements.namedItem("endTime").value = item.endTime || "";
+    form.elements.namedItem("status").value = item.status || "予定";
+    form.elements.namedItem("note").value = item.note || "";
+    if (submitButton) submitButton.textContent = "変更を保存";
+    if (cancelEditButton) cancelEditButton.hidden = false;
+    form.classList.add("is-editing-event");
+    setStatus(`「${item.title}」を編集中です。名前・時間帯などを変更して保存してください。`);
+    if (shouldScroll) form.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   scenarioTitleInput?.addEventListener("input", () => syncScenarioId(false));
@@ -903,7 +942,9 @@ function initEventManager() {
     const title = String(data.get("title") || "").trim();
     const scenarioId = String(data.get("scenarioId") || "").trim() || resolveScenarioId(title);
     const existingId = String(data.get("eventId") || "").trim();
+    const existingItem = existingId ? EVENTS.find(row => row.id === existingId) : null;
     const item = {
+      ...(existingItem || {}),
       id: existingId || `event-${Date.now()}`,
       scenarioId,
       date: String(data.get("date") || ""),
@@ -916,7 +957,7 @@ function initEventManager() {
       endTime: String(data.get("endTime") || "").trim(),
       status: String(data.get("status") || "予定").trim(),
       note: String(data.get("note") || "").trim(),
-      source: existingId ? (EVENTS.find(row => row.id === existingId)?.source || "manual") : "manual"
+      source: existingItem?.source || "manual"
     };
     if (!item.date || !item.title || !item.role) return;
     const index = EVENTS.findIndex(row => row.id === item.id);
@@ -948,22 +989,7 @@ function initEventManager() {
     const editButton = event.target.closest("[data-edit-event]");
     if (editButton) {
       const item = EVENTS.find(row => row.id === editButton.dataset.editEvent);
-      if (!item) return;
-      form.elements.namedItem("eventId").value = item.id || "";
-      form.elements.namedItem("date").value = item.date || "";
-      form.elements.namedItem("title").value = item.title || "";
-      form.elements.namedItem("scenarioId").value = item.scenarioId || resolveScenarioId(item.title);
-      form.elements.namedItem("scenarioId").dataset.manual = "false";
-      form.elements.namedItem("system").value = item.system || "";
-      form.elements.namedItem("role").value = item.role || "";
-      form.elements.namedItem("sessionType").value = normalizeSessionType(item.sessionType);
-      form.elements.namedItem("startTime").value = item.startTime || "";
-      form.elements.namedItem("endTime").value = item.endTime || "";
-      form.elements.namedItem("status").value = item.status || "予定";
-      form.elements.namedItem("note").value = item.note || "";
-      if (submitButton) submitButton.textContent = "変更を保存";
-      if (cancelEditButton) cancelEditButton.hidden = false;
-      form.scrollIntoView({ behavior: "smooth", block: "start" });
+      beginEditingEvent(item);
       return;
     }
 
@@ -1027,6 +1053,22 @@ function initEventManager() {
   });
 
   renderEventManagerList();
+
+  const requestedEventId = new URLSearchParams(window.location.search).get("editEvent");
+  let requestedEventOpened = false;
+  const openRequestedEvent = () => {
+    if (!requestedEventId || requestedEventOpened) return;
+    const requestedEvent = EVENTS.find(item => item.id === requestedEventId);
+    if (!requestedEvent) {
+      setStatus("指定された予定をCloudから読み込んでいます…");
+      return;
+    }
+    requestedEventOpened = true;
+    beginEditingEvent(requestedEvent, false);
+    window.setTimeout(() => form.scrollIntoView({ behavior: "smooth", block: "start" }), 450);
+  };
+  openRequestedEvent();
+  window.addEventListener("star-map-data-changed", openRequestedEvent);
 }
 
 /* ---------- モバイルナビ開閉 ---------- */
