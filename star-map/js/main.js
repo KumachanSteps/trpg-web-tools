@@ -147,6 +147,9 @@ function renderCalendar(year, month /* 0-indexed */) {
   }
 
   grid.innerHTML = html;
+
+  // カレンダーの表示月と右側の予定一覧を常に同期する。
+  renderUpcoming(year, month);
 }
 
 
@@ -290,33 +293,34 @@ function initCalendarPopup() {
 
 
 /* ---------- これからの予定リスト描画 ---------- */
-function renderUpcoming() {
+function renderUpcoming(year = calState.year, month = calState.month) {
   const list = document.getElementById("upcoming-list");
   if (!list) return;
 
-  const today = new Date(); today.setHours(0,0,0,0);
+  const now = new Date();
+  const targetYear = Number.isInteger(year) ? year : now.getFullYear();
+  const targetMonth = Number.isInteger(month) ? month : now.getMonth();
+  const monthPrefix = `${targetYear}-${String(targetMonth + 1).padStart(2, "0")}-`;
 
-  const limitAttr = list.dataset.limit;
-  const limit = limitAttr === undefined ? 4 : parseInt(limitAttr, 10);
+  const upcoming = EVENTS
+    .filter(event => String(event.date || "").startsWith(monthPrefix))
+    .sort((a, b) => `${a.date} ${a.startTime || ""}`.localeCompare(`${b.date} ${b.startTime || ""}`, "ja"));
 
-  let upcoming = EVENTS
-    .filter(e => new Date(e.date) >= today)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-  if (limit > 0) upcoming = upcoming.slice(0, limit);
+  list.setAttribute("aria-label", `${targetYear}年${targetMonth + 1}月の予定一覧`);
 
   if (upcoming.length === 0) {
-    list.innerHTML = `<p style="color:var(--moon-silver); font-size:0.9rem;">現在、予定されているセッションはありません。</p>`;
+    list.innerHTML = `<p class="upcoming-empty">${targetYear}年${targetMonth + 1}月の予定はありません。</p>`;
     return;
   }
 
   list.innerHTML = upcoming.map(e => {
-    const dt = new Date(e.date);
+    const [, eventMonth, eventDay] = String(e.date).split("-").map(Number);
     const roleClass = e.role === "GM" ? "role-gm" : "role-pl";
     return `
       <div class="upcoming-card panel">
         <div class="upcoming-date">
-          <span class="d">${dt.getDate()}</span>
-          <span class="m">${MONTH_NAMES[dt.getMonth()]}</span>
+          <span class="d">${eventDay}</span>
+          <span class="m">${MONTH_NAMES[eventMonth - 1]}</span>
           ${sessionIndicator(e)}
         </div>
         <div class="upcoming-info">
