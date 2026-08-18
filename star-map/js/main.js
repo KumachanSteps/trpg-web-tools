@@ -297,6 +297,16 @@ function initCalendarPopup() {
 
 
 /* ---------- これからの予定リスト描画 ---------- */
+function syncUpcomingListHeight() {
+  const list = document.getElementById("upcoming-list");
+  const calendar = list?.closest(".plans-grid")?.querySelector(".calendar");
+  if (!list || !calendar) return;
+  window.requestAnimationFrame(() => {
+    const calendarHeight = Math.ceil(calendar.getBoundingClientRect().height);
+    if (calendarHeight > 0) list.style.height = `${calendarHeight}px`;
+  });
+}
+
 function renderUpcoming(year = calState.year, month = calState.month) {
   const list = document.getElementById("upcoming-list");
   if (!list) return;
@@ -316,6 +326,7 @@ function renderUpcoming(year = calState.year, month = calState.month) {
     list.innerHTML = `
       <div class="upcoming-month-summary"><strong>${targetYear}年${targetMonth + 1}月</strong><span>0件</span></div>
       <p class="upcoming-empty">この月の予定はありません。</p>`;
+    syncUpcomingListHeight();
     return;
   }
 
@@ -350,6 +361,7 @@ function renderUpcoming(year = calState.year, month = calState.month) {
       <span>${upcoming.length}件${upcoming.length > 4 ? "・スクロールで全件表示" : ""}</span>
     </div>
     ${cards}`;
+  syncUpcomingListHeight();
 }
 
 
@@ -884,6 +896,7 @@ function initEventManager() {
   const scenarioIdInput = form?.elements?.namedItem("scenarioId");
   const eventIdInput = form?.elements?.namedItem("eventId");
   const cancelEditButton = document.getElementById("cancel-event-edit");
+  const deleteEditingButton = document.getElementById("delete-editing-event");
   const submitButton = document.getElementById("event-submit-button");
   if (!form) return;
 
@@ -909,6 +922,7 @@ function initEventManager() {
     }
     if (submitButton) submitButton.textContent = "予定を保存";
     if (cancelEditButton) cancelEditButton.hidden = true;
+    if (deleteEditingButton) deleteEditingButton.hidden = true;
     if (message) setStatus(message);
   }
 
@@ -928,9 +942,18 @@ function initEventManager() {
     form.elements.namedItem("note").value = item.note || "";
     if (submitButton) submitButton.textContent = "変更を保存";
     if (cancelEditButton) cancelEditButton.hidden = false;
+    if (deleteEditingButton) deleteEditingButton.hidden = false;
     form.classList.add("is-editing-event");
     setStatus(`「${item.title}」を編集中です。名前・時間帯などを変更して保存してください。`);
     if (shouldScroll) form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function deleteEvent(item) {
+    if (!item || !window.confirm(`「${item.title}」の予定を削除しますか？`)) return;
+    EVENTS = EVENTS.filter(row => row.id !== item.id);
+    saveEvents();
+    resetEditorForm(`「${item.title}」を削除しました。`);
+    refreshEventViews();
   }
 
   scenarioTitleInput?.addEventListener("input", () => syncScenarioId(false));
@@ -996,14 +1019,14 @@ function initEventManager() {
     const deleteButton = event.target.closest("[data-delete-event]");
     if (!deleteButton) return;
     const item = EVENTS.find(row => row.id === deleteButton.dataset.deleteEvent);
-    if (!item || !window.confirm(`「${item.title}」の予定を削除しますか？`)) return;
-    EVENTS = EVENTS.filter(row => row.id !== item.id);
-    saveEvents();
-    resetEditorForm("予定を削除しました。");
-    refreshEventViews();
+    deleteEvent(item);
   });
 
   cancelEditButton?.addEventListener("click", () => resetEditorForm("編集をキャンセルしました。"));
+  deleteEditingButton?.addEventListener("click", () => {
+    const editingId = String(eventIdInput?.value || "");
+    deleteEvent(EVENTS.find(row => row.id === editingId));
+  });
 
   clearBtn?.addEventListener("click", () => {
     if (!window.confirm("ブラウザに保存した予定をすべて削除しますか？")) return;
@@ -1069,6 +1092,18 @@ function initEventManager() {
   };
   openRequestedEvent();
   window.addEventListener("star-map-data-changed", openRequestedEvent);
+}
+
+function initUpcomingHeightSync() {
+  const calendar = document.getElementById("cal-grid")?.closest(".calendar");
+  if (!calendar || !document.getElementById("upcoming-list")) return;
+  syncUpcomingListHeight();
+  if (typeof ResizeObserver === "function") {
+    const observer = new ResizeObserver(syncUpcomingListHeight);
+    observer.observe(calendar);
+  } else {
+    window.addEventListener("resize", syncUpcomingListHeight);
+  }
 }
 
 /* ---------- モバイルナビ開閉 ---------- */
@@ -1354,6 +1389,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNavToggle();
   const now = new Date();
   renderCalendar(now.getFullYear(), now.getMonth());
+  initUpcomingHeightSync();
   initCalendarNav();
   initCalendarPopup();
   initMonthPicker();
