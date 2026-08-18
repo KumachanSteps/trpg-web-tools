@@ -124,7 +124,7 @@
 
       <div class="panel event-import cloud-calendar-manager">
         <h3>Googleカレンダーから取り込む</h3>
-        <p>EditorとしてGoogleログイン後、Calendar APIへ読み取り専用で接続します。取り込み前後にシナリオ名・役割・状態をサイト内で修正でき、元のGoogle予定もリンクから開けます。</p>
+        <p><code>tkoide2021@gmail.com</code>でEditorログイン後、指定期間の「TRPG」「とこちゃん」を読み取り専用で同期します。日時は必ず日本時間（Asia/Tokyo）へ変換して表示します。</p>
 
         <div class="cloud-connection-summary" id="cloud-connection-summary">
           <span class="cloud-status-dot"></span>
@@ -133,7 +133,6 @@
 
         <div class="calendar-connect-actions">
           <button type="button" id="connect-google-calendar" class="manager-primary">Google Calendarへ接続</button>
-          <button type="button" id="reload-google-calendars" class="manager-secondary" disabled>カレンダー一覧を再読込</button>
         </div>
 
         <div class="calendar-import-range form-pair">
@@ -143,23 +142,23 @@
 
         <div class="calendar-selection-block">
           <div class="calendar-selection-head">
-            <h4>取り込むカレンダー</h4>
-            <span id="selected-calendar-count">0 SELECTED</span>
+            <h4>固定同期カレンダー</h4>
+            <span id="selected-calendar-count">2 FIXED</span>
           </div>
           <div id="google-calendar-list" class="google-calendar-list">
-            <p class="manager-empty">Google Calendarへ接続すると、選択可能なカレンダーが表示されます。</p>
+            <p class="manager-empty">固定同期カレンダーを読み込んでいます。</p>
           </div>
-          <button type="button" id="preview-google-events" class="manager-primary" disabled>選択した予定をプレビュー</button>
+          <button type="button" id="preview-google-events" class="manager-primary" disabled>指定範囲を読み込み・サイトへ反映</button>
         </div>
 
         <div id="google-event-preview-section" class="google-event-preview-section" hidden>
           <div class="calendar-selection-head">
-            <h4>インポートプレビュー</h4>
+            <h4>同期結果・編集</h4>
             <span id="google-preview-count">0 EVENTS</span>
           </div>
-          <p>シナリオ名・ID・役割・システムを確認してから取り込みます。既に取り込んだGoogle予定は更新対象として表示されます。</p>
+          <p>予定はすでにサイトへ反映されています。必要に応じてシナリオ名・ID・役割・システムを修正し、再保存できます。</p>
           <div id="google-event-preview" class="google-event-preview"></div>
-          <button type="button" id="import-google-events" class="manager-primary">選択した予定を取り込む</button>
+          <button type="button" id="import-google-events" class="manager-primary">編集内容を再保存</button>
         </div>
 
         <p id="event-manager-status" class="manager-status" aria-live="polite"></p>

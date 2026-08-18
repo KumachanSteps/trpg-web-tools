@@ -46,7 +46,7 @@ GoogleログインとCalendar APIを試すには、`GOOGLE_EDITOR_SETUP.md`に�
 https://kumachansteps.github.io/trpg-web-tools/star-map/
 ```
 
-Firebaseは既存の `trpg-web-tool` Web Appと編集者メールを設定済みです。Calendar連携を有効にするには、`js/firebase-config.js` の `googleOAuthClientId` に Google Cloud Console で発行した Web OAuth Client ID を設定します。
+Firebaseは既存の `trpg-web-tool` Web Appと編集者メールを設定済みです。Calendar連携もFirebaseのGoogle Providerを再利用するため、別のOAuth Client IDは不要です。Google Cloud側ではCalendar APIを有効化してください。
 
 ## Characters公開データ
 
@@ -73,17 +73,18 @@ Charactersページは次の順でデータを読みます。
 
 本番用の `allowLocalEditorFallback` は `false` に設定済みです。Cloudのないローカル検証で編集UIが必要な場合だけ、一時的に `true` へ変更してください。
 
-## Google Calendarの選択インポート
+## Google Calendar固定同期パイプライン
 
 `PLANs`ページのEditor Modeに次の機能を追加しています。
 
-1. Google Calendarへ読み取り専用で接続
-2. アカウント内のカレンダー一覧を表示
-3. 取り込みたいカレンダーだけチェック
-4. 取得期間を指定
-5. 予定をプレビュー
-6. 各予定のシナリオ名、Scenario ID、役割、システム、状態、時間帯を修正
-7. 選択した予定だけ追加・更新
+1. `tkoide2021@gmail.com`でEditorログイン
+2. Google Calendarへ読み取り専用で接続
+3. 取得期間を指定
+4. 「指定範囲を読み込み・サイトへ反映」を押す
+5. 固定された「TRPG」「とこちゃん」のイベントを取得
+6. APIレスポンスとブラウザ変換の双方で日本時間（`Asia/Tokyo`）を使用
+7. GoogleイベントIDを基準に追加・更新し、指定期間内で削除された予定もサイトから除去
+8. 必要なイベントだけシナリオ名、Scenario ID、役割、システム、状態、時間帯を修正して再保存
 
 インポート済みイベントには次のGoogle識別情報を保持します。
 
@@ -93,6 +94,7 @@ Charactersページは次の順でデータを読みます。
 - `googleOriginalStartTime`
 - `googleSourceKey`
 - `googleUpdatedAt`
+- `googleTimeZone`（常に `Asia/Tokyo`）
 
 同じGoogleイベントを再取得した場合は、日付・タイトルだけで重複判定せず、Google側のIDを使って既存予定を更新します。
 
