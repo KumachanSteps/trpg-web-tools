@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCENARIOs ｜ くま。卓の星図</title>
+<link rel="stylesheet" href="css/style.css">
+<noscript><style>body{opacity:1 !important; transform:none !important;}</style></noscript>
+</head>
+<body>
+
+<div class="starfield" aria-hidden="true">
+  <div class="layer l1"></div>
+  <div class="layer l2"></div>
+  <div class="shooting-star"></div>
+</div>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="1.6" fill="#ffe6a6"/>
+        <circle cx="9" cy="14" r="1.3" fill="#f6f2ff"/>
+        <circle cx="31" cy="12" r="1.1" fill="#f6f2ff"/>
+        <circle cx="30" cy="28" r="1.4" fill="#f6f2ff"/>
+        <circle cx="11" cy="29" r="1.1" fill="#f6f2ff"/>
+        <path d="M20 20L9 14M20 20L31 12M20 20L30 28M20 20L11 29" stroke="#8a76c9" stroke-width="0.7"/>
+      </svg>
+      <span class="brand-text">
+        <span class="ja">くま。卓の星図</span>
+        <span class="en">TRPG Notes</span>
+      </span>
+    </a>
+    <button class="nav-toggle" aria-label="メニューを開く" aria-expanded="false">☰</button>
+    <nav class="main-nav">
+      <a href="index.html">TOP</a>
+      <a href="characters.html">CHARACTERS</a>
+      <a href="scenarios.html" class="is-active">SCENARIOS</a>
+      <a href="about.html">ABOUT</a>
+      <a href="https://kumachansteps.github.io/trpg-web-tools/" target="_blank" rel="noopener" class="nav-external">WEB TOOLS ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero wrap">
+    <p class="eyebrow">Scenario Archive</p>
+    <h1>シナリオ</h1>
+    <p>プレイ予定・現行・プレイ済・GM可能・所持の5分類でシナリオを整理。卓ログのPL記録は「プレイ済」、GM／KP／DL記録は「GM可能」へ自動反映しています。</p>
+  </section>
+
+  <section class="content-section wrap scenario-section">
+    <div class="scenario-toolbar">
+      <label class="scenario-search-wrap">
+        <span class="sr-only">シナリオを検索</span>
+        <input id="scenario-search" type="search" placeholder="シナリオ名・システムで検索" autocomplete="off">
+      </label>
+      <p id="scenario-result-count" class="scenario-result-count" aria-live="polite"></p>
+    </div>
+
+    <div id="scenario-filters" class="filter-row scenario-filter-row" aria-label="シナリオ分類"></div>
+
+    <div id="scenario-archive" class="scenario-grid"></div>
+    <div id="scenario-empty" class="panel scenario-empty" hidden>
+      <p class="eyebrow">No Scenario Found</p>
+      <p>条件に一致するシナリオがありません。</p>
+    </div>
+
+    <aside class="scenario-data-note">
+      <p><b>履歴からの自動分類：</b>PL参加 → プレイ済 ／ GM・KP・DL担当 → GM可能</p>
+      <p><b>カレンダー連携：</b>未来 → プレイ予定 ／ 当日・現行 → 現行 ／ 終了後は役割に応じてプレイ済またはGM可能</p>
+    </aside>
+
+    <section class="scenario-editor editor-only">
+      <div class="section-head">
+        <p class="eyebrow">Scenario Editor</p>
+        <h2>所持シナリオを管理</h2>
+        <p>既存シナリオへ「所持」を追加する場合も、新しい所持シナリオを登録する場合もここから操作できます。</p>
+      </div>
+      <div class="schedule-manager-grid">
+        <form id="owned-scenario-form" class="panel event-form">
+          <h3>所持シナリオを追加・編集</h3>
+          <input type="hidden" name="ownedId">
+          <label>シナリオ名<input type="text" name="title" required placeholder="例：善きサマリア人の為のドグマティック・アルトルイズム"></label>
+          <label>Scenario ID
+            <input type="text" name="scenarioId" placeholder="シナリオ名から自動生成">
+            <small>既存シナリオ名と一致すれば、そのIDを自動利用します。</small>
+          </label>
+          <label>システム<input type="text" name="system" placeholder="例：CoC 6版"></label>
+          <label>メモ<textarea name="note" rows="4" placeholder="所持形態、回したいメモなど"></textarea></label>
+          <div class="manager-form-actions">
+            <button type="submit" id="owned-submit-button" class="manager-primary">所持シナリオを保存</button>
+            <button type="button" id="cancel-owned-edit" class="manager-secondary" hidden>編集をキャンセル</button>
+          </div>
+        </form>
+        <div class="panel event-import">
+          <h3>手動登録済みの所持シナリオ</h3>
+          <p id="owned-scenario-status" class="manager-status" aria-live="polite"></p>
+          <div id="owned-scenario-manager-list" class="event-manager-list"></div>
+          <p class="editor-help">カレンダー予定は日付に応じて自動分類されます。未来は「プレイ予定」、当日または「現行」状態は「現行」、過去日はPLなら「プレイ済」、KP／GM／DL／SKPなら「GM可能」へ移動します。</p>
+        </div>
+      </div>
+    </section>
+
+  </section>
+
+  <dialog id="scenario-edit-dialog" class="scenario-edit-dialog">
+    <form id="scenario-card-edit-form" method="dialog" class="scenario-edit-form">
+      <div class="scenario-edit-head">
+        <div>
+          <p class="eyebrow">Scenario Card Editor</p>
+          <h2>シナリオ情報を編集</h2>
+        </div>
+        <button type="button" class="scenario-dialog-close" data-close-scenario-dialog aria-label="閉じる">×</button>
+      </div>
+      <input type="hidden" name="overrideKey">
+      <label>シナリオ名
+        <input type="text" name="title" required>
+      </label>
+      <label>Scenario ID
+        <input type="text" name="scenarioId" required>
+      </label>
+      <label>システム
+        <input type="text" name="systems" placeholder="複数の場合はカンマ区切り">
+      </label>
+      <label>表示メモ
+        <textarea name="note" rows="4" placeholder="シナリオカードに表示するメモ"></textarea>
+      </label>
+      <p class="editor-help">PL・GM回数や分類は卓ログとカレンダーから自動算出されるため、この画面では変更しません。</p>
+      <div class="manager-form-actions">
+        <button type="submit" class="manager-primary">変更を保存</button>
+        <button type="button" class="manager-secondary" data-close-scenario-dialog>キャンセル</button>
+      </div>
+    </form>
+  </dialog>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="thanks">Thank you for visiting!</p>
+    <div class="footer-links">
+      <a href="index.html">TOP</a>
+      <a href="characters.html">CHARACTERS</a>
+      <a href="scenarios.html">SCENARIOS</a>
+      <a href="about.html">ABOUT</a>
+      <a href="https://kumachansteps.github.io/trpg-web-tools/" target="_blank" rel="noopener">TRPG Webツール観測所 ↗</a>
+    </div>
+    <p class="copy">© 2026 くま。卓の星図 All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/published-data.js"></script>
+<script src="js/cloud-editor.js"></script>
+<script src="js/editor-data.js"></script>
+<script src="js/sessions-data.js"></script>
+<script src="js/scenario-data.js"></script>
+<script src="js/editor-mode.js"></script>
+<script src="js/scenario-page.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
