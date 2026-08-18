@@ -14,7 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- 共通アイコン -->
-  <link rel="icon" href="../assets/img/kuma_icon.ico" type="image/x-icon" />
+<link rel="icon" href="../assets/img/kuma_icon.ico" type="image/png">
 <title>くま。卓の星図 ｜ TRPG事情</title>
 <meta name="description" content="TRPG関連の公開情報：予定・記録・シナリオ・探索者情報をまとめたサイトです。">
 <link rel="stylesheet" href="css/style.css">
@@ -195,35 +195,8 @@
       <a href="characters.html" class="section-link">探索者一覧を見る →</a>
     </div>
 
-    <div class="chara-row">
-      <a href="characters.html" class="chara-chip panel">
-        <div class="chara-avatar">環</div>
-        <div>
-          <div class="chara-name">水無月 環</div>
-          <div class="chara-sys">クトゥルフ神話TRPG</div>
-        </div>
-      </a>
-      <a href="characters.html" class="chara-chip panel">
-        <div class="chara-avatar">蒼</div>
-        <div>
-          <div class="chara-name">蒼井 レイ</div>
-          <div class="chara-sys">ダブルクロス3rd</div>
-        </div>
-      </a>
-      <a href="characters.html" class="chara-chip panel">
-        <div class="chara-avatar">燐</div>
-        <div>
-          <div class="chara-name">燐堂 ミカゲ</div>
-          <div class="chara-sys">オリジナルシステム</div>
-        </div>
-      </a>
-      <a href="characters.html" class="chara-chip panel">
-        <div class="chara-avatar">星</div>
-        <div>
-          <div class="chara-name">星野 ツキノ</div>
-          <div class="chara-sys">シノビガミ</div>
-        </div>
-      </a>
+    <div class="chara-row" id="character-preview-list" aria-live="polite">
+      <p class="chara-preview-empty panel">最新キャラクターを読み込んでいます…</p>
     </div>
   </section>
 
@@ -309,6 +282,7 @@
 <script src="js/cloud-editor.js"></script>
 <script src="js/editor-data.js"></script>
 <script src="js/editor-mode.js"></script>
+<script src="js/characters.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

@@ -11,10 +11,11 @@
    ============================================================ */
 (() => {
   const grid = document.getElementById('character-grid');
+  const previewGrid = document.getElementById('character-preview-list');
   const statusEl = document.getElementById('character-load-status');
   const filterRow = document.getElementById('character-filters');
   const refreshBtn = document.getElementById('character-refresh');
-  if (!grid || !statusEl || !filterRow) return;
+  if (!grid && !previewGrid) return;
 
   const state = {
     characters: [],
@@ -405,6 +406,7 @@
   }
 
   function renderFilters() {
+    if (!filterRow) return;
     const categories = [...new Set(state.characters.map(c => categoryFor(c.system)))];
     filterRow.innerHTML = ['all', ...categories].map(value => {
       const label = value === 'all' ? 'すべて' : value;
@@ -416,6 +418,7 @@
   }
 
   function renderCards() {
+    if (!grid) return;
     const list = state.filter === 'all' ? state.characters : state.characters.filter(c => categoryFor(c.system) === state.filter);
     if (!list.length) {
       grid.innerHTML = `<div class="character-empty panel"><span>✦</span><h2>表示できるキャラクターがありません</h2><p>Chara Libraにキャラクターを登録し、このページを再読み込みしてください。</p></div>`;
@@ -448,8 +451,31 @@
     }).join('');
   }
 
+  function renderPreview() {
+    if (!previewGrid) return;
+    const latest = state.characters.slice(0, 4);
+    if (!latest.length) {
+      previewGrid.innerHTML = '<p class="chara-preview-empty panel">Charactersページに表示できるキャラクターがありません。</p>';
+      return;
+    }
+    previewGrid.innerHTML = latest.map(char => {
+      const avatar = char.image
+        ? `<img src="${escapeHtml(char.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+        : escapeHtml(initials(char.name));
+      const edition = char.edition && char.edition !== char.system ? ` / ${char.edition}` : '';
+      return `
+        <a href="characters.html" class="chara-chip panel">
+          <div class="chara-avatar">${avatar}</div>
+          <div>
+            <div class="chara-name">${escapeHtml(char.name)}</div>
+            <div class="chara-sys">${escapeHtml(char.system + edition)}</div>
+          </div>
+        </a>`;
+    }).join('');
+  }
+
   async function loadCharacters() {
-    statusEl.textContent = 'Chara Libraのブラウザ保存データを確認中…';
+    if (statusEl) statusEl.textContent = 'Chara Libraのブラウザ保存データを確認中…';
     refreshBtn?.setAttribute('disabled', '');
     try {
       const [published, idb] = await Promise.all([readPublishedCharacters(), readIndexedDB()]);
@@ -461,14 +487,15 @@
       state.filter = 'all';
       renderFilters();
       renderCards();
+      renderPreview();
 
-      if (state.characters.length) {
+      if (statusEl && state.characters.length) {
         const details = [];
         if (state.stats.duplicates) details.push(`重複候補${state.stats.duplicates}件を統合`);
         if (state.stats.retired) details.push(`引退${state.stats.retired}人を除外`);
         const source = state.localCount ? 'Chara Libra' : '公開JSON';
         statusEl.textContent = `${source}から${state.characters.length}人を更新日の新しい順で読み込みました。${details.length ? `（${details.join('・')}）` : ''}`;
-      } else {
+      } else if (statusEl) {
         statusEl.textContent = 'Chara Libraの保存データを検出できませんでした。同じブラウザ・同じkumachansteps.github.io上でChara Libraを利用しているか確認してください。';
       }
     } catch (error) {
@@ -476,7 +503,8 @@
       state.characters = [];
       renderFilters();
       renderCards();
-      statusEl.textContent = 'ブラウザ保存データの読み込みに失敗しました。';
+      renderPreview();
+      if (statusEl) statusEl.textContent = 'ブラウザ保存データの読み込みに失敗しました。';
     } finally {
       refreshBtn?.removeAttribute('disabled');
     }
