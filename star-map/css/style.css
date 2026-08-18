@@ -670,7 +670,7 @@ h1, h2, h3{
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 510px;
+  height: 510px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
@@ -1630,6 +1630,7 @@ body.is-editor-mode .scenario-editor{
   gap:9px;
   align-items:center;
 }
+.manager-form-actions .manager-danger{ margin:0; }
 .manager-primary,.manager-secondary,.manager-danger,.manager-event-row button{
   border-radius:999px;
   cursor:pointer;
