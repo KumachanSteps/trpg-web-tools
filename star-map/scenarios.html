@@ -69,7 +69,7 @@
 
     <aside class="scenario-data-note">
       <p><b>履歴からの自動分類：</b>PL参加 → プレイ済 ／ GM・KP・DL担当 → GM可能</p>
-      <p><b>カレンダー連携：</b>未来 → プレイ予定 ／ 当日・現行 → 現行 ／ 終了後は役割に応じてプレイ済またはGM可能</p>
+      <p><b>カレンダー連携：</b>初日が未来 → プレイ予定 ／ 初日から最終日の期間内 → 現行 ／ 全日程終了後は予定・現行から除外</p>
     </aside>
 
     <section class="scenario-editor editor-only">
@@ -98,7 +98,7 @@
           <h3>手動登録済みの所持シナリオ</h3>
           <p id="owned-scenario-status" class="manager-status" aria-live="polite"></p>
           <div id="owned-scenario-manager-list" class="event-manager-list"></div>
-          <p class="editor-help">カレンダー予定は日付に応じて自動分類されます。未来は「プレイ予定」、当日または「現行」状態は「現行」、過去日はPLなら「プレイ済」、KP／GM／DL／SKPなら「GM可能」へ移動します。</p>
+          <p class="editor-help">カレンダー予定は同じ卓の日程をまとめて判定します。初日が未来なら「プレイ予定」、初日から最終日までの期間中は「現行」、全日程が過去なら予定・現行から除外します。</p>
         </div>
       </div>
     </section>
@@ -157,7 +157,7 @@
 <script src="js/sessions-data.js"></script>
 <script src="js/scenario-data.js"></script>
 <script src="js/editor-mode.js"></script>
-<script src="js/scenario-page.js"></script>
+<script src="js/scenario-page.js?v=20260818-2"></script>
 <script src="js/main.js?v=20260818-4"></script>
 </body>
 </html>
