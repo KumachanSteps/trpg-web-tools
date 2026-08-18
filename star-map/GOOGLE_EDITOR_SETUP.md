@@ -41,12 +41,9 @@ Google Cloud Consoleで、Firebaseと同じGoogle Cloudプロジェクトを開�
 
 1. Google Calendar APIを有効化
 2. OAuth consent screenを設定
-3. OAuth Client IDを作成
-4. Application typeはWeb application
-5. Authorized JavaScript originsへ追加
-   - `https://kumachansteps.github.io`
-   - localhostテスト時：`http://localhost:8000`
-6. Client IDを`googleOAuthClientId`へ貼り付け
+3. OAuth consent screenがテスト中の場合は `tkoide2021@gmail.com` をテストユーザーへ追加
+
+Calendar権限はFirebase AuthenticationのGoogle Providerへ追加して取得します。別のWeb OAuth Client IDをコードへ設定する必要はありません。同期対象は`js/firebase-config.js`の`googleCalendars`に固定します。
 
 要求する権限は読み取り専用です。
 

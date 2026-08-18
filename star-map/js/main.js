@@ -419,7 +419,6 @@ function renderEventManagerList() {
 
 
 /* ---------- Google Calendar API：カレンダー選択 + Import Preview ---------- */
-const CALENDAR_SELECTION_KEY = "kuma-star-map-selected-calendars-v1";
 let GOOGLE_IMPORT_PREVIEW = [];
 
 function simpleStableHash(value) {
@@ -444,11 +443,36 @@ function defaultCalendarRange() {
   return { start: isoDateOnly(start), end: isoDateOnly(end) };
 }
 
-function calendarTimeBoundary(value, endOfDay = false) {
+function calendarTimeBoundary(value, endExclusive = false) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
   if (!match) return "";
-  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0);
-  return date.toISOString();
+  const utcDate = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  if (endExclusive) utcDate.setUTCDate(utcDate.getUTCDate() + 1);
+  return `${utcDate.getUTCFullYear()}-${String(utcDate.getUTCMonth() + 1).padStart(2, "0")}-${String(utcDate.getUTCDate()).padStart(2, "0")}T00:00:00+09:00`;
+}
+
+const JAPAN_TIME_ZONE = "Asia/Tokyo";
+
+function japanDateTimeParts(value) {
+  if (!value) return { date: "", time: "" };
+  const instant = new Date(value);
+  if (Number.isNaN(instant.getTime())) return { date: "", time: "" };
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: JAPAN_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(instant).reduce((result, part) => {
+    if (part.type !== "literal") result[part.type] = part.value;
+    return result;
+  }, {});
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    time: `${parts.hour}:${parts.minute}`
+  };
 }
 
 function guessRole(text) {
@@ -474,17 +498,20 @@ function guessSystem(text) {
 function googleEventToPreview(raw, calendar) {
   if (!raw || raw.status === "cancelled" || !raw.summary || !raw.start) return null;
   const allDay = Boolean(raw.start.date);
-  const date = raw.start.date || String(raw.start.dateTime || "").slice(0, 10);
+  const japanStart = allDay ? { date: raw.start.date, time: "" } : japanDateTimeParts(raw.start.dateTime);
+  const japanEnd = allDay ? { date: raw.end?.date || "", time: "" } : japanDateTimeParts(raw.end?.dateTime);
+  const date = japanStart.date;
   if (!date) return null;
-  const startTime = allDay ? "" : String(raw.start.dateTime || "").slice(11, 16);
-  const endTime = allDay ? "" : String(raw.end?.dateTime || "").slice(11, 16);
+  const startTime = japanStart.time;
+  const endTime = japanEnd.time;
   const startHour = startTime ? Number(startTime.slice(0, 2)) : null;
   const sessionType = allDay ? "allDay" : (startHour >= 18 || startHour < 6 ? "night" : "day");
   const combined = [raw.summary, raw.description, raw.location, calendar.summary].filter(Boolean).join(" ");
   const sourceKey = `${calendar.id}|${raw.id}|${raw.originalStartTime?.dateTime || raw.originalStartTime?.date || raw.start.dateTime || raw.start.date}`;
   const existing = EVENTS.find(item => item.googleSourceKey === sourceKey)
     || EVENTS.find(item => item.googleCalendarId === calendar.id && item.googleEventId === raw.id && item.date === date);
-  const title = canonicalScenarioTitle({ title: raw.summary });
+  const sourceTitle = canonicalScenarioTitle({ title: raw.summary });
+  const title = existing?.title || sourceTitle;
   return {
     selected: true,
     mode: existing ? "update" : "new",
@@ -503,26 +530,15 @@ function googleEventToPreview(raw, calendar) {
     source: "google-calendar",
     googleCalendarId: calendar.id,
     googleCalendarName: calendar.summary,
+    googleSummary: raw.summary,
     googleEventId: raw.id,
     googleRecurringEventId: raw.recurringEventId || "",
     googleOriginalStartTime: raw.originalStartTime?.dateTime || raw.originalStartTime?.date || "",
     googleUpdatedAt: raw.updated || "",
+    googleTimeZone: JAPAN_TIME_ZONE,
     googleHtmlLink: raw.htmlLink || "",
     googleSourceKey: sourceKey
   };
-}
-
-function readSelectedCalendarIds() {
-  try {
-    const rows = JSON.parse(localStorage.getItem(CALENDAR_SELECTION_KEY) || "[]");
-    return new Set(Array.isArray(rows) ? rows : []);
-  } catch (_error) {
-    return new Set();
-  }
-}
-
-function writeSelectedCalendarIds(ids) {
-  localStorage.setItem(CALENDAR_SELECTION_KEY, JSON.stringify([...ids]));
 }
 
 function initGoogleCalendarImporter(setManagerStatus) {
@@ -545,8 +561,8 @@ function initGoogleCalendarImporter(setManagerStatus) {
   if (fromInput && !fromInput.value) fromInput.value = range.start;
   if (toInput && !toInput.value) toInput.value = range.end;
 
-  let calendars = [];
-  let selected = readSelectedCalendarIds();
+  let calendars = cloud.getConfiguredCalendars?.() || [];
+  let selected = new Set(calendars.map(item => item.id));
 
   function setStatus(message) {
     if (typeof setManagerStatus === "function") setManagerStatus(message);
@@ -554,7 +570,7 @@ function initGoogleCalendarImporter(setManagerStatus) {
 
   function updateSummary(state = cloud.getState()) {
     const title = !state.configured
-      ? "Cloud設定前：Calendar Client IDを設定してください"
+      ? "Cloud設定を確認してください"
       : !state.signedIn
         ? "Google Editorへサインインしてください"
         : !state.authorized
@@ -571,11 +587,11 @@ function initGoogleCalendarImporter(setManagerStatus) {
     }
     connectButton.disabled = state.configured && !state.authorized;
     connectButton.textContent = state.calendarConnected ? "Calendar権限を再接続" : "Google Calendarへ接続";
+    if (previewButton) previewButton.disabled = !state.calendarConnected || calendars.length === 0;
   }
 
   function renderCalendars() {
-    const availableIds = new Set(calendars.map(item => item.id));
-    selected = new Set([...selected].filter(id => availableIds.has(id)));
+    selected = new Set(calendars.map(item => item.id));
     if (!calendars.length) {
       calendarList.innerHTML = '<p class="manager-empty">選択可能なカレンダーがありません。</p>';
       previewButton.disabled = true;
@@ -583,33 +599,22 @@ function initGoogleCalendarImporter(setManagerStatus) {
       return;
     }
     calendarList.innerHTML = calendars.map((item, index) => {
-      const checked = selected.has(item.id) || (!selected.size && (item.primary || item.selected));
-      if (checked) selected.add(item.id);
       return `
         <label class="google-calendar-row">
-          <input type="checkbox" data-calendar-index="${index}" ${checked ? "checked" : ""}>
+          <input type="checkbox" data-calendar-index="${index}" checked disabled>
           <i style="--calendar-color:${escapePageHtml(item.backgroundColor || "#8a76c9")}"></i>
-          <span><strong>${escapePageHtml(item.summary)}</strong><small>${escapePageHtml(item.primary ? "PRIMARY CALENDAR" : item.accessRole)}</small></span>
+          <span><strong>${escapePageHtml(item.summary)}</strong><small>固定パイプライン · 日本時間</small></span>
         </label>`;
     }).join("");
-    writeSelectedCalendarIds(selected);
-    if (selectedCount) selectedCount.textContent = `${selected.size} SELECTED`;
-    previewButton.disabled = selected.size === 0;
+    if (selectedCount) selectedCount.textContent = `${selected.size} FIXED`;
+    previewButton.disabled = !cloud.getState().calendarConnected;
   }
 
   async function loadCalendars() {
-    setStatus("カレンダー一覧を読み込んでいます…");
-    calendarList.innerHTML = '<p class="manager-empty">Loading calendars…</p>';
-    try {
-      calendars = await cloud.listCalendars();
-      renderCalendars();
-      reloadButton.disabled = false;
-      setStatus(`${calendars.length}件のカレンダーを読み込みました。`);
-    } catch (error) {
-      console.error(error);
-      calendarList.innerHTML = `<p class="manager-empty">${escapePageHtml(error.message || String(error))}</p>`;
-      setStatus("カレンダー一覧を読み込めませんでした。");
-    }
+    calendars = cloud.getConfiguredCalendars?.() || [];
+    renderCalendars();
+    if (reloadButton) reloadButton.disabled = !cloud.getState().calendarConnected;
+    setStatus(`${calendars.length}件の固定カレンダーを使用します。`);
   }
 
   function renderPreview() {
@@ -662,17 +667,15 @@ function initGoogleCalendarImporter(setManagerStatus) {
     }
   });
 
-  reloadButton.addEventListener("click", loadCalendars);
+  reloadButton?.addEventListener("click", loadCalendars);
 
   calendarList.addEventListener("change", event => {
     const checkbox = event.target.closest("[data-calendar-index]");
     if (!checkbox) return;
     const item = calendars[Number(checkbox.dataset.calendarIndex)];
     if (!item) return;
-    if (checkbox.checked) selected.add(item.id); else selected.delete(item.id);
-    writeSelectedCalendarIds(selected);
-    selectedCount.textContent = `${selected.size} SELECTED`;
-    previewButton.disabled = selected.size === 0;
+    selected.add(item.id);
+    checkbox.checked = true;
   });
 
   previewButton.addEventListener("click", async () => {
@@ -684,21 +687,47 @@ function initGoogleCalendarImporter(setManagerStatus) {
       setStatus("取り込み期間を指定してください。");
       return;
     }
+    if (fromInput.value > toInput.value) {
+      setStatus("取り込み終了日は開始日以降を指定してください。");
+      return;
+    }
     previewButton.disabled = true;
     setStatus(`${chosen.length}件のカレンダーから予定を取得しています…`);
     try {
       const groups = await Promise.all(chosen.map(async calendar => {
-        const rows = await cloud.listCalendarEvents(calendar.id, { timeMin, timeMax });
+        const rows = await cloud.listCalendarEvents(calendar.id, { timeMin, timeMax, timeZone: JAPAN_TIME_ZONE });
         return rows.map(row => googleEventToPreview(row, calendar)).filter(Boolean);
       }));
       GOOGLE_IMPORT_PREVIEW = groups.flat().sort((a, b) => `${a.date}${a.startTime}`.localeCompare(`${b.date}${b.startTime}`));
+      const fetchedKeys = new Set(GOOGLE_IMPORT_PREVIEW.map(item => item.googleSourceKey));
+      const calendarIds = new Set(chosen.map(item => item.id));
+      const previousLength = EVENTS.length;
+      EVENTS = EVENTS.filter(item => !(
+        calendarIds.has(item.googleCalendarId)
+        && item.date >= fromInput.value
+        && item.date <= toInput.value
+        && !fetchedKeys.has(item.googleSourceKey)
+      ));
+      const removed = previousLength - EVENTS.length;
+      let added = 0;
+      let updated = 0;
+      GOOGLE_IMPORT_PREVIEW.forEach(item => {
+        const cleanItem = { ...item };
+        delete cleanItem.selected;
+        delete cleanItem.mode;
+        const index = EVENTS.findIndex(row => row.googleSourceKey === cleanItem.googleSourceKey || row.id === cleanItem.id);
+        if (index >= 0) { EVENTS[index] = { ...EVENTS[index], ...cleanItem }; updated += 1; }
+        else { EVENTS.push(cleanItem); added += 1; }
+      });
+      saveEvents();
+      refreshEventViews();
       renderPreview();
-      setStatus(`${GOOGLE_IMPORT_PREVIEW.length}件の予定をプレビューしています。`);
+      setStatus(`日本時間で同期しました：${added}件追加、${updated}件更新、${removed}件削除。`);
     } catch (error) {
       console.error(error);
       setStatus(error.message || String(error));
     } finally {
-      previewButton.disabled = false;
+      previewButton.disabled = !cloud.getState().calendarConnected;
     }
   });
 
@@ -722,9 +751,9 @@ function initGoogleCalendarImporter(setManagerStatus) {
 
   importButton.addEventListener("click", () => {
     const selectedRows = GOOGLE_IMPORT_PREVIEW.filter(item => item.selected);
-    const invalid = selectedRows.filter(item => !item.date || !item.title || !item.scenarioId || !item.role);
+    const invalid = selectedRows.filter(item => !item.date || !item.title || !item.scenarioId);
     if (invalid.length) {
-      setStatus(`${invalid.length}件にシナリオ名・ID・日付・役割の未入力があります。`);
+      setStatus(`${invalid.length}件にシナリオ名・ID・日付の未入力があります。`);
       return;
     }
     let added = 0;
@@ -741,12 +770,13 @@ function initGoogleCalendarImporter(setManagerStatus) {
     });
     saveEvents();
     refreshEventViews();
-    setStatus(`${added}件を追加、${updated}件を更新しました。`);
+    setStatus(`${added}件を追加、${updated}件を再保存しました。`);
     GOOGLE_IMPORT_PREVIEW = [];
     previewSection.hidden = true;
   });
 
   cloud.subscribe(updateSummary);
+  renderCalendars();
   updateSummary();
 }
 

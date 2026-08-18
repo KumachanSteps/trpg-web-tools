@@ -17,7 +17,6 @@
   let db = null;
   let cloudUnsubscribe = null;
   let calendarToken = "";
-  let tokenClient = null;
   let calendarTokenExpiresAt = 0;
 
   const state = {
@@ -58,7 +57,20 @@
   }
 
   function isCalendarConfigured() {
-    return !placeholder(CONFIG.googleOAuthClientId);
+    return isConfigured() && configuredCalendars().length !== 0;
+  }
+
+  function configuredCalendars() {
+    return (Array.isArray(CONFIG.googleCalendars) ? CONFIG.googleCalendars : [])
+      .filter(item => item?.id)
+      .map(item => ({
+        id: String(item.id),
+        summary: String(item.summary || item.id),
+        description: String(item.description || ""),
+        backgroundColor: String(item.backgroundColor || "#8a76c9"),
+        accessRole: "reader",
+        fixed: true
+      }));
   }
 
   function normalizedList(value) {
@@ -249,51 +261,30 @@
     return clean;
   }
 
-  function loadGoogleIdentityScript() {
-    if (window.google?.accounts?.oauth2) return Promise.resolve();
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[data-star-map-gis="1"]');
-      if (existing) {
-        existing.addEventListener("load", resolve, { once: true });
-        existing.addEventListener("error", reject, { once: true });
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      script.dataset.starMapGis = "1";
-      script.addEventListener("load", resolve, { once: true });
-      script.addEventListener("error", () => reject(new Error("Google Identity Servicesを読み込めませんでした。")), { once: true });
-      document.head.appendChild(script);
-    });
-  }
-
   async function connectCalendar(options = {}) {
-    if (!isCalendarConfigured()) throw new Error("Google OAuth Client IDが設定されていません。");
-    if (state.configured && !state.authorized) throw new Error("EditorとしてGoogleログインしてください。");
-    await loadGoogleIdentityScript();
+    if (!isCalendarConfigured()) throw new Error("Google Calendar連携設定が完了していません。");
+    if (!state.authorized || !auth?.currentUser) throw new Error("EditorとしてGoogleログインしてください。");
 
-    return new Promise((resolve, reject) => {
-      tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: CONFIG.googleOAuthClientId,
-        scope: CALENDAR_SCOPE,
-        include_granted_scopes: true,
-        prompt: options.prompt ?? "consent",
-        callback: response => {
-          if (response.error) {
-            reject(new Error(response.error_description || response.error));
-            return;
-          }
-          calendarToken = response.access_token;
-          calendarTokenExpiresAt = Date.now() + Math.max(60, Number(response.expires_in || 3600) - 60) * 1000;
-          emit({ calendarConnected: true, error: "" });
-          resolve(response);
-        },
-        error_callback: error => reject(new Error(error.message || error.type || "Calendar authorization failed"))
-      });
-      tokenClient.requestAccessToken({ prompt: options.prompt ?? "consent" });
+    const ownerEmail = String(CONFIG.googleCalendarOwnerEmail || "").trim().toLowerCase();
+    const signedInEmail = String(auth.currentUser.email || "").trim().toLowerCase();
+    if (ownerEmail && signedInEmail !== ownerEmail) {
+      throw new Error(`${CONFIG.googleCalendarOwnerEmail} でEditorログインしてください。`);
+    }
+
+    const provider = new firebaseApi.GoogleAuthProvider();
+    provider.addScope(CALENDAR_SCOPE);
+    provider.setCustomParameters({
+      prompt: options.prompt ?? "consent",
+      login_hint: CONFIG.googleCalendarOwnerEmail || auth.currentUser.email || ""
     });
+    const result = await firebaseApi.reauthenticateWithPopup(auth.currentUser, provider);
+    const credential = firebaseApi.GoogleAuthProvider.credentialFromResult(result);
+    if (!credential?.accessToken) throw new Error("Google Calendar用アクセストークンを取得できませんでした。");
+
+    calendarToken = credential.accessToken;
+    calendarTokenExpiresAt = Date.now() + 50 * 60 * 1000;
+    emit({ calendarConnected: true, authError: "", error: "" });
+    return { access_token: calendarToken };
   }
 
   async function ensureCalendarToken() {
@@ -357,6 +348,7 @@
         orderBy: "startTime",
         showDeleted: false,
         maxResults: 2500,
+        timeZone: options.timeZone || "Asia/Tokyo",
         pageToken
       });
       rows.push(...(data.items || []));
@@ -370,6 +362,7 @@
     getConfig: () => clone(CONFIG),
     isConfigured,
     isCalendarConfigured,
+    getConfiguredCalendars: () => clone(configuredCalendars()),
     subscribe(listener) {
       listeners.add(listener);
       listener(clone(state));

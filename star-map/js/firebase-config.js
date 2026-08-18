@@ -19,9 +19,21 @@ window.STAR_MAP_CLOUD_CONFIG = {
     appId: "1:1020894429473:web:974bd5771f567dedd43e60"
   },
 
-  // OAuth 2.0 Client ID for a Web application.
-  // Add the deployed GitHub Pages origin to Authorized JavaScript origins.
-  googleOAuthClientId: "YOUR_GOOGLE_OAUTH_WEB_CLIENT_ID.apps.googleusercontent.com",
+  // Calendar access reuses the Firebase Google provider. No separate OAuth
+  // client ID is required; Google Calendar API must be enabled in this project.
+  googleCalendarOwnerEmail: "tkoide2021@gmail.com",
+  googleCalendars: [
+    {
+      id: "2ali5nrrtnovq612f5tcfc56ok@group.calendar.google.com",
+      summary: "TRPG",
+      backgroundColor: "#8a76c9"
+    },
+    {
+      id: "eac44475de1afea6aaec1b7ce343341f7cf2161dbaf2fb33c47a56a6f15e425f@group.calendar.google.com",
+      summary: "とこちゃん",
+      backgroundColor: "#d99ab5"
+    }
+  ],
 
   // Use one or both lists. UID is preferred for long-term authorization.
   authorizedEditorUids: [],
