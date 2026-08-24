@@ -4,5 +4,6 @@ window.STAR_MAP_PUBLISHED_DATA = {
   updatedAt: "",
   events: [],
   ownedScenarios: [],
-  scenarioOverrides: []
+  scenarioOverrides: [],
+  characterOverrides: []
 };

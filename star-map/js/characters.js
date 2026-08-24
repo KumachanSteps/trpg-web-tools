@@ -18,6 +18,7 @@
   if (!grid && !previewGrid) return;
 
   const state = {
+    sourceCharacters: [],
     characters: [],
     filter: 'all',
     stats: { candidates: 0, duplicates: 0, retired: 0 },
@@ -69,6 +70,14 @@
   function getNested(obj, paths) {
     const value = getNestedRaw(obj, paths);
     return text(value);
+  }
+
+  function splitNameAndReading(value) {
+    const source = text(value);
+    const match = source.match(/^(.*?)[\s　]*[（(]([ぁ-ゖァ-ヺー・･\s　]+)[）)]\s*$/u);
+    return match
+      ? { name: match[1].trim(), reading: match[2].trim() }
+      : { name: source, reading: '' };
   }
 
   function charScore(raw) {
@@ -154,7 +163,14 @@
     const data = raw.data && typeof raw.data === 'object' ? raw.data : raw;
     const meta = raw.meta && typeof raw.meta === 'object' ? raw.meta : {};
 
-    const name = first(data.name, data.characterName, data.character_name, raw.name, `Character ${index + 1}`);
+    const sourceName = first(data.name, data.characterName, data.character_name, raw.name, `Character ${index + 1}`);
+    const separatedName = splitNameAndReading(sourceName);
+    const name = separatedName.name;
+    const reading = first(
+      data.furigana, data.yomigana, data.kana, data.nameKana, data.nameReading, data.ruby,
+      getNested(data, ['profile.furigana','profile.yomigana','profile.kana','name.ruby']),
+      separatedName.reading
+    );
     const system = first(
       getNested(data, ['system','gameSystem','rules','systemName','profile.system']),
       getNested(raw, ['system','gameSystem','rules'])
@@ -196,6 +212,7 @@
       id,
       explicitId,
       name,
+      reading,
       system: system || 'その他',
       edition,
       status,
@@ -269,6 +286,7 @@
       id: choose('explicitId') || choose('id'),
       explicitId: choose('explicitId'),
       name: choose('name'),
+      reading: choose('reading'),
       system: choose('system') || 'その他',
       // ステータスは最新候補を優先し、引退済みの古い表示復活を防ぐ。
       status: newest.status || choose('status'),
@@ -393,6 +411,62 @@
     return cleaned.slice(0, 1) || '✦';
   }
 
+  function characterOverrideKey(char) {
+    if (char.explicitId) return `id:${normalizeIdentity(char.explicitId)}`;
+    return `name:${normalizeIdentity(char.name)}|system:${normalizeIdentity(char.system)}`;
+  }
+
+  function applyCharacterOverrides(chars) {
+    const rows = typeof window.getCharacterOverrides === 'function' ? window.getCharacterOverrides() : [];
+    return chars.map(char => {
+      const key = characterOverrideKey(char);
+      const sourceName = normalizeIdentity(char.name);
+      const override = rows.find(row => String(row.key || '') === key)
+        || rows.find(row => row.sourceName && normalizeIdentity(row.sourceName) === sourceName);
+      return {
+        ...char,
+        _overrideKey: key,
+        isHidden: Boolean(override?.hidden),
+        isDeleted: Boolean(override?.deleted)
+      };
+    });
+  }
+
+  function charactersForPage() {
+    const editorActive = document.body.classList.contains('is-editor-mode');
+    return state.characters.filter(char => !char.isDeleted && (editorActive || !char.isHidden));
+  }
+
+  function characterActionIcon(name) {
+    const icons = {
+      eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.8"/></svg>',
+      eyeOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.8 10.8 0 0 1 12 6c6 0 9.5 6 9.5 6a15.2 15.2 0 0 1-3 3.5M6.3 6.4C3.9 8 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3.2-.5"/><path d="M9.9 9.9A3 3 0 0 0 14.1 14"/></svg>',
+      trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>'
+    };
+    return icons[name] || '';
+  }
+
+  function saveCharacterOverride(char, patch) {
+    const rows = typeof window.getCharacterOverrides === 'function' ? window.getCharacterOverrides() : [];
+    const key = char._overrideKey || characterOverrideKey(char);
+    const index = rows.findIndex(row => String(row.key || '') === key);
+    const next = {
+      ...(index >= 0 ? rows[index] : {}),
+      key,
+      sourceName: char.name,
+      sourceSystem: char.system,
+      ...patch,
+      updatedAt: new Date().toISOString()
+    };
+    if (index >= 0) rows[index] = next;
+    else rows.push(next);
+    window.updateCharacterOverrides?.(rows);
+    state.characters = applyCharacterOverrides(state.sourceCharacters);
+    renderFilters();
+    renderCards();
+    renderPreview();
+  }
+
   function statusLabel(value) {
     const labels = { alive: '生存', lost: 'ロスト', inactive: '保留', npc: 'NPC' };
     const key = text(value).toLowerCase();
@@ -407,7 +481,7 @@
 
   function renderFilters() {
     if (!filterRow) return;
-    const categories = [...new Set(state.characters.map(c => categoryFor(c.system)))];
+    const categories = [...new Set(charactersForPage().map(c => categoryFor(c.system)))];
     filterRow.innerHTML = ['all', ...categories].map(value => {
       const label = value === 'all' ? 'すべて' : value;
       return `<button type="button" class="filter-pill${state.filter === value ? ' is-active' : ''}" data-filter="${escapeHtml(value)}">${escapeHtml(label)}</button>`;
@@ -419,33 +493,38 @@
 
   function renderCards() {
     if (!grid) return;
-    const list = state.filter === 'all' ? state.characters : state.characters.filter(c => categoryFor(c.system) === state.filter);
+    const available = charactersForPage();
+    const list = state.filter === 'all' ? available : available.filter(c => categoryFor(c.system) === state.filter);
     if (!list.length) {
       grid.innerHTML = `<div class="character-empty panel"><span>✦</span><h2>表示できるキャラクターがありません</h2><p>Chara Libraにキャラクターを登録し、このページを再読み込みしてください。</p></div>`;
       return;
     }
     grid.innerHTML = list.map(char => {
-      const avatar = char.image
+      const portrait = char.image
         ? `<img src="${escapeHtml(char.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
         : escapeHtml(initials(char.name));
       const edition = char.edition && char.edition !== char.system ? ` / ${char.edition}` : '';
       const meta = [statusLabel(char.status), char.occupation || '職業未設定'].map(v => `<span>${escapeHtml(v)}</span>`).join('');
       const stats = ['HP', 'MP', 'SAN'].map(key => `${key} ${statValue(char, key) || '—'}`).join(' / ');
       const tags = char.tags.slice(0, 3).map(tag => `<span class="character-tag">${escapeHtml(tag)}</span>`).join('');
+      const visibilityLabel = char.isHidden ? '公開表示に戻す' : '公開ページで非表示にする';
       const content = `
-        <article class="character-card panel">
-          <div class="character-card-head">
-            <div class="chara-avatar">${avatar}</div>
+        <article class="character-card panel${char.isHidden ? ' is-character-hidden' : ''}" data-character-key="${escapeHtml(char._overrideKey)}">
+          <div class="character-card-portrait${char.image ? '' : ' is-fallback'}">${portrait}</div>
+          <div class="character-card-body">
+            <div class="character-card-editor-actions" aria-label="キャラクター編集操作">
+              <button type="button" class="character-card-action visibility-action${char.isHidden ? ' is-off' : ''}" data-toggle-character-visibility title="${visibilityLabel}" aria-label="${visibilityLabel}">${characterActionIcon(char.isHidden ? 'eyeOff' : 'eye')}</button>
+              <button type="button" class="character-card-action is-delete" data-delete-character title="削除" aria-label="キャラクターを一覧から削除">${characterActionIcon('trash')}</button>
+            </div>
             <div class="character-card-title">
-              <h2>${escapeHtml(char.name)}</h2>
+              <p class="character-reading">${char.reading ? escapeHtml(char.reading) : '&nbsp;'}</p>
+              <h2 title="${escapeHtml(char.name)}">${escapeHtml(char.name)}</h2>
               <p>${escapeHtml(char.system + edition)}</p>
             </div>
+            <div class="character-meta">${char.isHidden ? '<span class="character-hidden-badge">非公開</span>' : ''}${meta}</div>
+            <p class="character-stats">${escapeHtml(stats)}</p>
+            <div class="character-tags">${tags || '<span class="character-tag is-empty">タグなし</span>'}</div>
           </div>
-          <div class="character-meta">${meta}</div>
-          <p class="character-stats">${escapeHtml(stats)}</p>
-          <p class="character-memo">${char.memo ? escapeHtml(char.memo) : '公開メモはありません。'}</p>
-          <div class="character-tags">${tags || '<span class="character-tag is-empty">タグなし</span>'}</div>
-          <div class="character-card-footer">${char.sheetUrl ? `<a class="character-link" href="${escapeHtml(char.sheetUrl)}" target="_blank" rel="noopener">キャラクターシート ↗</a>` : '<span class="character-link is-disabled">シート未登録</span>'}</div>
         </article>`;
       return content;
     }).join('');
@@ -453,7 +532,7 @@
 
   function renderPreview() {
     if (!previewGrid) return;
-    const latest = state.characters.slice(0, 4);
+    const latest = state.characters.filter(char => !char.isHidden && !char.isDeleted).slice(0, 4);
     if (!latest.length) {
       previewGrid.innerHTML = '<p class="chara-preview-empty panel">Charactersページに表示できるキャラクターがありません。</p>';
       return;
@@ -483,7 +562,8 @@
       state.localCount = local.length + idb.length;
       state.publishedCount = published.length;
       const normalized = [...published, ...local, ...idb].map(normalize).filter(isLikelyCharacter);
-      state.characters = dedupe(normalized);
+      state.sourceCharacters = dedupe(normalized);
+      state.characters = applyCharacterOverrides(state.sourceCharacters);
       state.filter = 'all';
       renderFilters();
       renderCards();
@@ -511,6 +591,33 @@
   }
 
   refreshBtn?.addEventListener('click', loadCharacters);
+  grid?.addEventListener('click', event => {
+    if (!document.body.classList.contains('is-editor-mode')) return;
+    const card = event.target.closest('.character-card[data-character-key]');
+    if (!card) return;
+    const char = state.characters.find(item => item._overrideKey === card.dataset.characterKey);
+    if (!char) return;
+
+    if (event.target.closest('[data-toggle-character-visibility]')) {
+      saveCharacterOverride(char, { hidden: !char.isHidden, deleted: false });
+      return;
+    }
+
+    if (event.target.closest('[data-delete-character]')) {
+      if (!window.confirm(`「${char.name}」をサイトのキャラクター一覧から削除しますか？\n\nChara Libraの元データは削除されません。`)) return;
+      saveCharacterOverride(char, { hidden: true, deleted: true });
+    }
+  });
+  window.addEventListener('star-map-data-changed', () => {
+    state.characters = applyCharacterOverrides(state.sourceCharacters);
+    renderFilters();
+    renderCards();
+    renderPreview();
+  });
+  window.addEventListener('star-map-editor-mode', () => {
+    renderFilters();
+    renderCards();
+  });
   window.addEventListener('storage', loadCharacters);
   loadCharacters();
 })();

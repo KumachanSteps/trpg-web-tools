@@ -137,7 +137,8 @@
       updatedAt: String(source.updatedAt || ""),
       events: Array.isArray(source.events) ? source.events.filter(Boolean) : [],
       ownedScenarios: Array.isArray(source.ownedScenarios) ? source.ownedScenarios.filter(Boolean) : [],
-      scenarioOverrides: Array.isArray(source.scenarioOverrides) ? source.scenarioOverrides.filter(Boolean) : []
+      scenarioOverrides: Array.isArray(source.scenarioOverrides) ? source.scenarioOverrides.filter(Boolean) : [],
+      characterOverrides: Array.isArray(source.characterOverrides) ? source.characterOverrides.filter(Boolean) : []
     };
   }
 

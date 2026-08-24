@@ -15,7 +15,8 @@ window.STAR_MAP_PUBLISHED_DATA = window.STAR_MAP_PUBLISHED_DATA || {
   updatedAt: "",
   events: [],
   ownedScenarios: [],
-  scenarioOverrides: []
+  scenarioOverrides: [],
+  characterOverrides: []
 };
 
 (() => {
@@ -33,7 +34,8 @@ window.STAR_MAP_PUBLISHED_DATA = window.STAR_MAP_PUBLISHED_DATA || {
       updatedAt: String(source.updatedAt || ""),
       events: Array.isArray(source.events) ? source.events.filter(Boolean) : [],
       ownedScenarios: Array.isArray(source.ownedScenarios) ? source.ownedScenarios.filter(Boolean) : [],
-      scenarioOverrides: Array.isArray(source.scenarioOverrides) ? source.scenarioOverrides.filter(Boolean) : []
+      scenarioOverrides: Array.isArray(source.scenarioOverrides) ? source.scenarioOverrides.filter(Boolean) : [],
+      characterOverrides: Array.isArray(source.characterOverrides) ? source.characterOverrides.filter(Boolean) : []
     };
   }
 
@@ -148,6 +150,7 @@ window.STAR_MAP_PUBLISHED_DATA = window.STAR_MAP_PUBLISHED_DATA || {
   window.getStarMapEvents = () => clone(activeData().events);
   window.getOwnedScenarios = () => clone(activeData().ownedScenarios);
   window.getScenarioOverrides = () => clone(activeData().scenarioOverrides);
+  window.getCharacterOverrides = () => clone(activeData().characterOverrides);
   window.hasStarMapDraft = () => Boolean(readDraft());
 
   window.updateStarMapEvents = events => {
@@ -165,6 +168,12 @@ window.STAR_MAP_PUBLISHED_DATA = window.STAR_MAP_PUBLISHED_DATA || {
   window.updateScenarioOverrides = overrides => {
     const draft = ensureDraft();
     draft.scenarioOverrides = Array.isArray(overrides) ? overrides : [];
+    return writeDraft(draft);
+  };
+
+  window.updateCharacterOverrides = overrides => {
+    const draft = ensureDraft();
+    draft.characterOverrides = Array.isArray(overrides) ? overrides : [];
     return writeDraft(draft);
   };
 
