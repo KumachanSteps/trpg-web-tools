@@ -42,10 +42,10 @@
 
   function statusText() {
     if (cloudState.initializing) return "CONNECTING";
-    if (!cloudState.configured) return document.body.classList.contains("is-editor-mode") ? "LOCAL ON" : "LOCAL EDITOR";
+    if (!cloudState.configured) return document.body.classList.contains("is-editor-mode") ? "EDITOR ON" : "EDITOR OFF";
     if (!cloudState.signedIn) return cloudState.authInProgress ? "SIGNING IN" : "SIGN IN";
     if (!cloudState.authorized) return "NO ACCESS";
-    return document.body.classList.contains("is-editor-mode") ? "EDITOR ON" : "EDITOR";
+    return document.body.classList.contains("is-editor-mode") ? "EDITOR ON" : "EDITOR OFF";
   }
 
   function buildUi() {
@@ -185,7 +185,9 @@
     const panel = document.querySelector(".editor-account-panel");
     if (!trigger || !panel) return;
     const active = document.body.classList.contains("is-editor-mode");
+    const authenticated = cloudState.configured && cloudState.signedIn && cloudState.authorized;
     trigger.classList.toggle("is-active", active);
+    trigger.classList.toggle("is-authenticated", authenticated);
     trigger.classList.toggle("is-denied", cloudState.configured && cloudState.signedIn && !cloudState.authorized);
     trigger.setAttribute("aria-pressed", active ? "true" : "false");
     trigger.innerHTML = `<span>✦</span><b>${statusText()}</b>`;
