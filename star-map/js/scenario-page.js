@@ -127,6 +127,12 @@ function isCancelledEvent(event) {
   return /中止|キャンセル|cancel/i.test(String(event.status || ""));
 }
 
+function sessionPlayerCount(row) {
+  const raw = Array.isArray(row?.players) ? row.players : String(row?.players || "").split(/[、,，\n]+/u);
+  const players = raw.map(value => String(value).trim()).filter(value => value && value !== "-" && value !== "なし");
+  return players.length;
+}
+
 function eventAlreadyInSessionLog(event, canonicalTitle) {
   if (typeof SESSION_LOG === "undefined") return false;
   const role = String(event.role || "").toUpperCase();
@@ -155,6 +161,7 @@ function buildScenarioArchive() {
     categories: [...new Set(item.categories || [])],
     systems: [...new Set(item.systems || [])],
     roles: [...new Set(item.roles || [])],
+    playerCounts: [...new Set(item.playerCounts || [])],
     note: item.note || "",
     _overrideKey: String(item.id || fallbackScenarioId(item.scenarioCountKey || item.title)),
     isHidden: false,
@@ -180,7 +187,7 @@ function buildScenarioArchive() {
         id: entry.id || fallbackScenarioId(title),
         title,
         scenarioCountKey: title,
-        systems: [], categories: [], roles: [],
+        systems: [], categories: [], roles: [], playerCounts: [],
         playCount: 0, gmCount: 0, sessionCount: 0, dateCount: 0,
         firstDate: "", lastDate: "", scenarioNames: [title], note: "",
         _overrideKey: entry.id || fallbackScenarioId(title),
@@ -311,6 +318,18 @@ function buildScenarioArchive() {
     if (entry.note) item.note = entry.note;
   });
 
+  // 卓ログの実参加者数を、リスト表示の「PL数」として利用する。
+  if (typeof SESSION_LOG !== "undefined") {
+    SESSION_LOG.forEach(row => {
+      const title = canonicalScenario(row.scenarioCountKey || row.scenario || "");
+      if (!title) return;
+      const item = byTitle.get(normalizeScenarioTitle(title));
+      const playerCount = sessionPlayerCount(row);
+      if (!item || !playerCount) return;
+      item.playerCounts = [...new Set([...(item.playerCounts || []), playerCount])].sort((a, b) => a - b);
+    });
+  }
+
   const scenarioOverrides = typeof window.getScenarioOverrides === "function" ? window.getScenarioOverrides() : [];
   scenarioOverrides.forEach(raw => {
     if (!raw || typeof raw !== "object") return;
@@ -388,6 +407,50 @@ function scenarioCard(item) {
       ${history.length ? `<div class="scenario-history">${history.join("")}</div>` : ""}
       ${item.note ? `<p class="scenario-note">${scenarioEscape(item.note)}</p>` : ""}
     </article>`;
+}
+
+function scenarioListView(items) {
+  const groups = new Map();
+
+  items.forEach(item => {
+    const systems = (item.systems || []).length ? item.systems : ["SYSTEM未設定"];
+    const playerCounts = (item.playerCounts || []).length ? item.playerCounts : [null];
+    systems.forEach(system => {
+      playerCounts.forEach(playerCount => {
+        const key = `${system}\u0000${playerCount ?? "unknown"}`;
+        if (!groups.has(key)) groups.set(key, { system, playerCount, items: [] });
+        groups.get(key).items.push(item);
+      });
+    });
+  });
+
+  return [...groups.values()]
+    .sort((a, b) => {
+      const systemOrder = a.system.localeCompare(b.system, "ja", { numeric: true });
+      if (systemOrder) return systemOrder;
+      if (a.playerCount === null) return 1;
+      if (b.playerCount === null) return -1;
+      return a.playerCount - b.playerCount;
+    })
+    .map(group => {
+      const rows = group.items
+        .slice()
+        .sort((a, b) => a.title.localeCompare(b.title, "ja", { numeric: true }))
+        .map(item => `
+          <li${item.isHidden ? ' class="is-scenario-hidden"' : ""}>
+            <span>${scenarioEscape(item.title)}</span>
+            ${item.isHidden ? '<small>非公開</small>' : ""}
+          </li>`).join("");
+      const playerLabel = group.playerCount === null ? "PL数未設定" : `PL ${group.playerCount}人`;
+      return `
+        <section class="scenario-list-group">
+          <header>
+            <div><strong>${scenarioEscape(group.system)}</strong><span>${scenarioEscape(playerLabel)}</span></div>
+            <small>${group.items.length} SCENARIOS</small>
+          </header>
+          <ul>${rows}</ul>
+        </section>`;
+    }).join("");
 }
 
 function initOwnedScenarioManager(refreshArchive) {
@@ -589,6 +652,7 @@ function initScenarioArchive() {
   const root = document.getElementById("scenario-archive");
   const filterWrap = document.getElementById("scenario-filters");
   const search = document.getElementById("scenario-search");
+  const viewSwitch = document.getElementById("scenario-view-switch");
   const resultCount = document.getElementById("scenario-result-count");
   const empty = document.getElementById("scenario-empty");
   if (!root || !filterWrap) return;
@@ -596,6 +660,10 @@ function initScenarioArchive() {
   let archive = [];
   let activeCategory = "all";
   let query = "";
+  let viewMode = "card";
+  try {
+    if (localStorage.getItem("kuma-scenario-view") === "list") viewMode = "list";
+  } catch (_) {}
 
   function visibleArchive() {
     const editorActive = isScenarioEditorActive();
@@ -633,7 +701,13 @@ function initScenarioArchive() {
       return a.title.localeCompare(b.title, "ja");
     });
 
-    root.innerHTML = filtered.map(scenarioCard).join("");
+    root.className = viewMode === "list" ? "scenario-list-view" : "scenario-grid";
+    root.innerHTML = viewMode === "list" ? scenarioListView(filtered) : filtered.map(scenarioCard).join("");
+    viewSwitch?.querySelectorAll("[data-scenario-view]").forEach(button => {
+      const active = button.dataset.scenarioView === viewMode;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
     if (resultCount) resultCount.textContent = `${filtered.length} / ${available.length} SCENARIOS`;
     if (empty) empty.hidden = filtered.length > 0;
   }
@@ -647,6 +721,14 @@ function initScenarioArchive() {
 
   search?.addEventListener("input", () => {
     query = search.value;
+    render();
+  });
+
+  viewSwitch?.addEventListener("click", event => {
+    const button = event.target.closest("[data-scenario-view]");
+    if (!button || button.dataset.scenarioView === viewMode) return;
+    viewMode = button.dataset.scenarioView === "list" ? "list" : "card";
+    try { localStorage.setItem("kuma-scenario-view", viewMode); } catch (_) {}
     render();
   });
 

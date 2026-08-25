@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SCENARIOs ｜ くま。卓の星図</title>
 <link rel="icon" href="../assets/img/kuma_icon.ico" type="image/png">
-<link rel="stylesheet" href="css/style.css?v=20260824-8">
+<link rel="stylesheet" href="css/style.css?v=20260824-9">
 <noscript><style>body{opacity:1 !important; transform:none !important;}</style></noscript>
 </head>
 <body>
@@ -56,6 +56,16 @@
         <span class="sr-only">シナリオを検索</span>
         <input id="scenario-search" type="search" placeholder="シナリオ名・システムで検索" autocomplete="off">
       </label>
+      <div id="scenario-view-switch" class="scenario-view-switch" role="group" aria-label="表示形式">
+        <button type="button" class="is-active" data-scenario-view="card" aria-pressed="true">
+          <span aria-hidden="true" class="scenario-view-icon is-grid"><i></i><i></i><i></i><i></i></span>
+          カード
+        </button>
+        <button type="button" data-scenario-view="list" aria-pressed="false">
+          <span aria-hidden="true" class="scenario-view-icon is-list"><i></i><i></i><i></i></span>
+          リスト
+        </button>
+      </div>
       <p id="scenario-result-count" class="scenario-result-count" aria-live="polite"></p>
     </div>
 
@@ -156,8 +166,8 @@
 <script src="js/editor-data.js?v=20260824-1"></script>
 <script src="js/sessions-data.js"></script>
 <script src="js/scenario-data.js"></script>
-<script src="js/editor-mode.js"></script>
-<script src="js/scenario-page.js?v=20260818-3"></script>
+<script src="js/editor-mode.js?v=20260824-2"></script>
+<script src="js/scenario-page.js?v=20260824-1"></script>
 <script src="js/main.js?v=20260818-6"></script>
 </body>
 </html>
