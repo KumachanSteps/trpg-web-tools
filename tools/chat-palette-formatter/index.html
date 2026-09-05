@@ -58,6 +58,18 @@
       元のチャットパレット、またはキャラクター駒JSONを貼り付けてください。形式とCoC 6版 / 7版は自動判定します。
     </div>
 
+    <section class="analysis-preview" id="analysisPreview" hidden aria-label="解析結果プレビュー">
+      <div class="analysis-line analysis-head">
+        <span class="analysis-tag" id="apService">—</span>
+        <span class="analysis-tag analysis-tag-edition" id="apEdition">—</span>
+        <span class="analysis-name" id="apName"></span>
+      </div>
+      <div class="analysis-abilities" id="apAbilities"></div>
+      <div class="analysis-line analysis-derived" id="apDerived"></div>
+      <div class="analysis-line analysis-counts" id="apCounts"></div>
+      <p class="analysis-warn" id="apWarn" hidden></p>
+    </section>
+
     <main class="main">
       <section class="container input-panel">
         <h2>入力欄</h2>
@@ -122,6 +134,7 @@
   <script src="js/i18n.js"></script>
   <script src="js/parser.js"></script>
   <script src="js/sources.js"></script>
+  <script src="js/schema.js"></script>
   <script src="js/language.js"></script>
   <script src="js/main.js"></script>
 </body>

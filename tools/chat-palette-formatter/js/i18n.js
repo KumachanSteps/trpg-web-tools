@@ -11,6 +11,7 @@ window.CHAT_PALETTE_I18N = {
     copyManual: "ブラウザの制限により自動コピーできませんでした。出力欄を選択済みにしたので、手動でコピーしてください。",
     cleared: "入力欄と出力欄をクリアしました。",
     edition6: "CoC 6版",
-    edition7: "CoC 7版"
+    edition7: "CoC 7版",
+    apEditionUnknown: "版 未判定"
   }
 };

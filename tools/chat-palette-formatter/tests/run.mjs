@@ -22,6 +22,7 @@ globalThis.window = globalThis.window || {};
 
 const ChatPaletteParser = require("../js/parser.js");
 const ChatPaletteSources = require("../js/sources.js");
+const ChatPaletteSchema = require("../js/schema.js");
 
 // フィクスチャ名 → 期待するサービス判定
 const EXPECTED_SERVICE = {
@@ -31,6 +32,16 @@ const EXPECTED_SERVICE = {
   "charaeno-7e": "charaeno",
   "character-storage-sheet": "character-storage",
   "character-storage-commands": "character-storage"
+};
+
+// フィクスチャ名 → 共通スキーマ（buildCharacter）の期待値
+const EXPECTED_SCHEMA = {
+  "charash-6e": { edition: "6e", editionSource: "url", STR: 10, EDU: 17, SAN: 96, DB: "+1D4", minSkills: 40 },
+  "iachara-6e-learned": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: null, minSkills: 12 },
+  "iachara-6e-allskills": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: null, minSkills: 40 },
+  "charaeno-7e": { edition: "7e", editionSource: "url", STR: 75, EDU: 66, SAN: 56, DB: "+1D4", minSkills: 20 },
+  "character-storage-sheet": { edition: "6e", abilitiesZero: true, minSkills: 8 },
+  "character-storage-commands": { edition: "6e", abilitiesZero: true, minSkills: 8 }
 };
 
 if (!existsSync(SNAPSHOTS)) mkdirSync(SNAPSHOTS, { recursive: true });
@@ -70,6 +81,43 @@ for (const file of fixtures) {
   } else if (!expected) {
     console.error(`✗ ${name}: EXPECTED_SERVICE に期待値がありません`);
     failed++;
+  }
+
+  // --- 共通スキーマ（buildCharacter）チェック ---
+  const wantSchema = EXPECTED_SCHEMA[name];
+
+  if (wantSchema) {
+    const character = ChatPaletteSchema.buildCharacter(raw);
+    const problems = [];
+
+    if (wantSchema.edition && character.meta.edition !== wantSchema.edition) {
+      problems.push(`edition ${character.meta.edition}≠${wantSchema.edition}`);
+    }
+    if (wantSchema.editionSource && character.meta.editionSource !== wantSchema.editionSource) {
+      problems.push(`editionSource ${character.meta.editionSource}≠${wantSchema.editionSource}`);
+    }
+    for (const key of ["STR", "EDU"]) {
+      if (key in wantSchema && character.abilities[key] !== wantSchema[key]) {
+        problems.push(`${key} ${character.abilities[key]}≠${wantSchema[key]}`);
+      }
+    }
+    if ("SAN" in wantSchema && (character.derived.SAN?.value ?? null) !== wantSchema.SAN) {
+      problems.push(`SAN ${character.derived.SAN?.value ?? null}≠${wantSchema.SAN}`);
+    }
+    if ("DB" in wantSchema && character.derived.DB !== wantSchema.DB) {
+      problems.push(`DB ${JSON.stringify(character.derived.DB)}≠${JSON.stringify(wantSchema.DB)}`);
+    }
+    if (wantSchema.abilitiesZero && character.counts.abilities !== 0) {
+      problems.push(`abilities ${character.counts.abilities}≠0`);
+    }
+    if (wantSchema.minSkills && character.counts.skills < wantSchema.minSkills) {
+      problems.push(`skills ${character.counts.skills} < ${wantSchema.minSkills}`);
+    }
+
+    if (problems.length) {
+      console.error(`✗ ${name}: schema — ${problems.join(", ")}`);
+      failed++;
+    }
   }
 
   // --- スナップショットチェック ---

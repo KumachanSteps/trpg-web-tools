@@ -50,7 +50,15 @@ Parser本体（4）や出力オプション（5）は後続PRで追加します�
 ## 2. 共通 Character Data Schema
 
 サービス依存データを一度この形へ正規化し、以降のチャパレ生成は入力元に依存させません。
-（PR1ではフィールド定義のみ。生成側の利用は後続PR）
+
+> **実装状況（PR3）**: `js/schema.js` の `ChatPaletteSchema.buildCharacter(rawInput)` が
+> こま形式JSON（いあきゃら / キャラッシュ / Charaeno）から
+> `abilities`（STR..EDU）・`derived`（HP/MP/SAN{value,max}・DB・MOV・build）・
+> `meta`（service / edition / editionSource / name / ruby / occupation / warnings）を返す。
+> `skills` / `weapons` は `ChatPaletteParser.analyzePalette()` の結果を載せる（数のみ利用）。
+> **チャパレ生成（`buildOutput`）はまだこのスキーマを使っていない**（統合は後続PR）。
+> 画面の「解析結果プレビュー」がこの戻り値を表示する。
+> 保管庫のテキストシートからの能力値抽出は未実装（専用パーサPRで対応）。
 
 ```jsonc
 {
