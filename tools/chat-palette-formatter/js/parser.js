@@ -516,6 +516,61 @@ window.ChatPaletteParser = (() => {
     seen.add(key);
   }
 
+  // 整形はせず、パレット本文を構造化して返す（解析結果プレビュー / 共通スキーマ用）。
+  // buildOutput とは独立。出力そのものには影響しない。
+  function analyzePalette(rawText, edition) {
+    const text = canonicalizePaletteText(rawText);
+    const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
+    const skills = [];
+    const damageLines = [];
+    const abilityRolls = [];
+    const other = [];
+    const seenSkill = new Set();
+
+    for (const rawLine of text.split(NL)) {
+      const line = rawLine.trim();
+
+      if (!line) continue;
+
+      const parsed = parseLine(line);
+
+      if (parsed.type === "skill") {
+        const name = normalizeSkillNameForEdition(parsed.skill, edition);
+
+        if (!name) {
+          other.push(line);
+          continue;
+        }
+
+        if (seenSkill.has(name)) continue;
+
+        seenSkill.add(name);
+
+        const token = parsed.value || "";
+        const numeric = /^[0-9]+$/.test(token) ? Number(token) : null;
+        const init = Object.prototype.hasOwnProperty.call(initial, name) ? initial[name] : null;
+
+        skills.push({
+          name,
+          raw: parsed.skillFull,
+          category: categorize(name, name, edition),
+          value: numeric,
+          valueToken: token || null,
+          initial: init,
+          isInitial: numeric !== null && init !== null && numeric === init
+        });
+      } else if (parsed.type === "damage") {
+        damageLines.push(line);
+      } else if (parsed.type === "status") {
+        abilityRolls.push(line);
+      } else {
+        other.push(line);
+      }
+    }
+
+    return { skills, damageLines, abilityRolls, other };
+  }
+
   function sortSection(lines, order) {
     return lines.sort((a, b) => {
       const aSkill = normalizeSkillName(getSkillFromLine(a));
@@ -888,6 +943,7 @@ window.ChatPaletteParser = (() => {
     extractPaletteText,
     detectEdition,
     buildOutput,
+    analyzePalette,
     canonicalizePaletteText,
     canonicalizeSkillLine,
     normalizeSkillName,
