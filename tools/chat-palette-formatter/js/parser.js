@@ -421,8 +421,9 @@ window.ChatPaletteParser = (() => {
   function normalizeCommand(line, edition) {
     const trimmed = line.trim();
 
-    if (edition === "7e" && trimmed.toLowerCase().startsWith("1d100<=")) {
-      return "CC" + trimmed.slice(5);
+    // 正気度ロール等の 1d100<= 形式も版のコマンド（6版=CCB / 7版=CC）へ寄せる
+    if (trimmed.toLowerCase().startsWith("1d100<=")) {
+      return commandForEdition(edition) + trimmed.slice(5);
     }
 
     for (const command of ["sCCB", "sCC", "CCB", "CC"]) {
@@ -533,11 +534,7 @@ window.ChatPaletteParser = (() => {
     const hasLuckRoll = buckets.dice.some(line => line.includes("【幸運】"));
 
     if (!hasSanRoll) {
-      addUnique(
-        buckets.dice,
-        edition === "6e" ? "1d100<={SAN} 【正気度ロール】" : command + "<={SAN} 【正気度ロール】",
-        seen
-      );
+      addUnique(buckets.dice, command + "<={SAN} 【正気度ロール】", seen);
     }
 
     if (edition === "7e" && !hasLuckRoll) {
@@ -602,17 +599,18 @@ window.ChatPaletteParser = (() => {
   }
 
   function cleanDiceRedundancy(buckets, edition) {
-    if (edition !== "6e") return;
-
-    const hasD100San = buckets.dice.some(line =>
-      line.toLowerCase().startsWith("1d100<={san}") && line.includes("【正気度ロール】")
+    // 正気度ロール / SAN の 1d100<= 形式は版コマンド形へ寄せたものが残るので素の 1d100 行を落とす
+    const hasEditionSan = buckets.dice.some(line =>
+      /^s?(CCB|CC)<=/.test(line) && /【(正気度ロール|SAN)】/.test(line)
     );
 
-    if (hasD100San) {
+    if (hasEditionSan) {
       buckets.dice = buckets.dice.filter(line =>
-        !(line.startsWith("CCB<={SAN}") && line.includes("【正気度ロール】"))
+        !(line.toLowerCase().startsWith("1d100<=") && /【(正気度ロール|SAN)】/.test(line))
       );
     }
+
+    if (edition !== "6e") return;
 
     buckets.dice = buckets.dice.filter(line =>
       !(line.startsWith("CCB<={幸運}") && line.includes("【幸運】"))
@@ -815,6 +813,22 @@ window.ChatPaletteParser = (() => {
         name: "7e SAN command normalizes from 1d100 to CC",
         actual: normalizeCommand("1d100<={SAN} 【正気度ロール】", "7e"),
         expected: "CC<={SAN} 【正気度ロール】"
+      },
+      {
+        name: "6e SAN command normalizes from 1d100 to CCB",
+        actual: normalizeCommand("1d100<={SAN} 【正気度ロール】", "6e"),
+        expected: "CCB<={SAN} 【正気度ロール】"
+      },
+      {
+        name: "6e 正気度ロール output uses CCB, not 1d100",
+        actual: /◼️ダイス\nCCB<=\{SAN\} 【正気度ロール】/.test(buildOutput("CCB<=50 【目星】", "6e")),
+        expected: true
+      },
+      {
+        name: "6e existing 1d100 正気度ロール line is rewritten to CCB (no dup)",
+        actual: buildOutput("1d100<={SAN} 【正気度ロール】" + NL + "CCB<={SAN} 【正気度ロール】", "6e")
+          .split("【正気度ロール】").length - 1,
+        expected: 1
       },
       {
         name: "charash angle brackets canonicalize to 【】",
