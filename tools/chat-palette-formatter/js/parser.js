@@ -167,16 +167,21 @@ window.ChatPaletteParser = (() => {
       const json = JSON.parse(trimmed);
 
       return {
-        text: normalizeText(findByKeys(json, ["commands", "chatPalette", "chat_palette", "palette", "memo", "command"], true)),
+        text: canonicalizePaletteText(normalizeText(findByKeys(json, ["commands", "chatPalette", "chat_palette", "palette", "memo", "command"], true))),
         source: "json"
       };
     } catch (error) {
       return {
-        text: normalizeText(trimmed),
+        text: canonicalizePaletteText(normalizeText(trimmed)),
         source: "text"
       };
     }
   }
+
+  const SKILL_ALIAS = {
+    "組みつき": "組み付き",
+    "組みつ": "組み付き"
+  };
 
   function normalizeSkillName(skillName) {
     let skill = String(skillName || "").trim();
@@ -189,13 +194,21 @@ window.ChatPaletteParser = (() => {
       .replaceAll("：", ":")
       .replaceAll("（", "(")
       .replaceAll("）", ")")
+      .replaceAll("／", "/")
+      .replaceAll("/", ":")
       .replaceAll("【", "")
       .replaceAll("】", "")
+      .replaceAll("〈", "")
+      .replaceAll("〉", "")
+      .replaceAll("《", "")
+      .replaceAll("》", "")
       .trim();
 
     while (skill.endsWith(")") && countChar(skill, "(") < countChar(skill, ")")) {
       skill = skill.slice(0, -1).trim();
     }
+
+    if (SKILL_ALIAS[skill]) skill = SKILL_ALIAS[skill];
 
     if (skill === "クトゥルフ神話") return "クトゥルフ神話技能";
     if (skill === "クトゥルフ神話技能") return skill;
@@ -261,6 +274,70 @@ window.ChatPaletteParser = (() => {
     return String(text).split("").filter(ch => ch === target).length;
   }
 
+  const ROLL_MARKERS = ["<=", "＜=", "<＝", "≦"];
+  const SKILL_BRACKET_PAIRS = [["〈", "〉"], ["《", "》"], ["［", "］"], ["[", "]"]];
+  const THRESHOLD_TOKEN = /^([0-9]+|\{[^}]+\}(?:\s*[*x×xX]\s*[0-9]+)?)/;
+
+  function hasRollMarker(text) {
+    return ROLL_MARKERS.some(marker => String(text).includes(marker));
+  }
+
+  // 〈技能〉《技能》[技能]、または囲みなしの技能名を、既存ロジックが前提とする
+  // 「コマンド<=閾値 【技能名】」形へ揃える。
+  // すでに【】を含む行と、ロール記号の無い行（ダメージ行・地の文・:HP- 等）は触らない。
+  function canonicalizeSkillLine(line) {
+    const raw = String(line);
+    const trimmed = raw.trim();
+
+    if (!trimmed || !hasRollMarker(trimmed)) return raw;
+    if (trimmed.includes("【") && trimmed.includes("】")) return raw;
+
+    for (const [open, close] of SKILL_BRACKET_PAIRS) {
+      const start = trimmed.indexOf(open);
+      const end = start < 0 ? -1 : trimmed.lastIndexOf(close);
+
+      if (start >= 0 && end > start) {
+        const inner = trimmed.slice(start + 1, end).trim();
+        return inner ? trimmed.slice(0, start) + "【" + inner + "】" + trimmed.slice(end + 1) : raw;
+      }
+    }
+
+    let marker = "";
+    let pos = -1;
+
+    for (const candidate of ROLL_MARKERS) {
+      const at = trimmed.indexOf(candidate);
+
+      if (at >= 0) {
+        marker = candidate;
+        pos = at;
+        break;
+      }
+    }
+
+    if (pos < 0) return raw;
+
+    const head = trimmed.slice(0, pos + marker.length);
+    const rest = trimmed.slice(pos + marker.length).replace(/^\s+/, "");
+    const thresholdMatch = rest.match(THRESHOLD_TOKEN);
+
+    if (!thresholdMatch) return raw;
+
+    const threshold = thresholdMatch[0].replace(/\s+/g, "");
+    let name = rest.slice(thresholdMatch[0].length).trim();
+
+    // 末尾の (( 注記 )) を除去（キャラエノ形式）
+    name = name.replace(/[（(]{2}[^（()]*[）)]{2}\s*$/g, "").trim();
+
+    if (!name) return raw;
+
+    return head + threshold + " 【" + name + "】";
+  }
+
+  function canonicalizePaletteText(text) {
+    return String(text || "").split(NL).map(canonicalizeSkillLine).join(NL);
+  }
+
   function getSkillFromLine(line) {
     const start = line.indexOf("【");
     const end = line.indexOf("】", start + 1);
@@ -307,7 +384,8 @@ window.ChatPaletteParser = (() => {
     return value;
   }
 
-  function detectEdition(text) {
+  function detectEdition(rawText) {
+    const text = canonicalizePaletteText(rawText);
     const names = text
       .split(NL)
       .map(getSkillFromLine)
@@ -636,7 +714,7 @@ window.ChatPaletteParser = (() => {
 
     const present = new Map();
     const seen = new Set();
-    const lines = text.split(NL).map(line => line.trim()).filter(Boolean);
+    const lines = canonicalizePaletteText(text).split(NL).map(line => line.trim()).filter(Boolean);
 
     for (const line of lines) {
       const parsed = parseLine(line);
@@ -737,6 +815,51 @@ window.ChatPaletteParser = (() => {
         name: "7e SAN command normalizes from 1d100 to CC",
         actual: normalizeCommand("1d100<={SAN} 【正気度ロール】", "7e"),
         expected: "CC<={SAN} 【正気度ロール】"
+      },
+      {
+        name: "charash angle brackets canonicalize to 【】",
+        actual: canonicalizeSkillLine("CCB<=75 〈アイデア〉"),
+        expected: "CCB<=75 【アイデア】"
+      },
+      {
+        name: "charaeno bracketless skill canonicalizes",
+        actual: canonicalizeSkillLine("CC<=73 近接戦闘（格闘）"),
+        expected: "CC<=73 【近接戦闘（格闘）】"
+      },
+      {
+        name: "charaeno double-paren annotation stripped",
+        actual: canonicalizeSkillLine("CC<=35 運転（（軽トラ））"),
+        expected: "CC<=35 【運転】"
+      },
+      {
+        name: "square-bracket ability roll canonicalizes",
+        actual: canonicalizeSkillLine("CCB<={STR}*5 [STR×5]"),
+        expected: "CCB<={STR}*5 【STR×5】"
+      },
+      {
+        name: "damage line without roll marker is left untouched",
+        actual: canonicalizeSkillLine("1D6{DB} キック"),
+        expected: "1D6{DB} キック"
+      },
+      {
+        name: "already-【】 line is left untouched",
+        actual: canonicalizeSkillLine("CCB<=67 【目星】"),
+        expected: "CCB<=67 【目星】"
+      },
+      {
+        name: "bracketless roll with no threshold is left untouched",
+        actual: canonicalizeSkillLine("CCB<= SAN値"),
+        expected: "CCB<= SAN値"
+      },
+      {
+        name: "charash slash skill categorized as combat (6e)",
+        actual: /🟥戦闘技能[\s\S]*【こぶし：パンチ】/.test(buildOutput("CCB<=50 〈こぶし／パンチ〉", "6e")),
+        expected: true
+      },
+      {
+        name: "charaeno bracketless explore skill gets real value (7e)",
+        actual: /🟦探索技能[\s\S]*CC<=50 【目星】/.test(buildOutput("CC<=50 目星", "7e")),
+        expected: true
       }
     ];
 
@@ -751,6 +874,8 @@ window.ChatPaletteParser = (() => {
     extractPaletteText,
     detectEdition,
     buildOutput,
+    canonicalizePaletteText,
+    canonicalizeSkillLine,
     normalizeSkillName,
     normalizeSkillNameForEdition,
     normalizeCommand
