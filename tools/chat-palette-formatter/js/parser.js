@@ -756,3 +756,8 @@ window.ChatPaletteParser = (() => {
     normalizeCommand
   };
 })();
+
+// Node（tests/run.mjs）から読めるようにするだけ。ブラウザ挙動には影響しない。
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = window.ChatPaletteParser;
+}
