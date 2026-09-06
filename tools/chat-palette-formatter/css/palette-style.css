@@ -600,7 +600,8 @@ textarea:focus {
 .output-panel h2.output-title-row,
 .output-panel h2.output-panel-title {
   justify-content: flex-start;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 6px 10px;
 }
 
 .output-panel h2.output-title-row::after,

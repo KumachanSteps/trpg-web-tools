@@ -30,6 +30,7 @@ const EXPECTED_SERVICE = {
   "iachara-6e-learned": "iachara",
   "iachara-6e-allskills": "iachara",
   "charaeno-7e": "charaeno",
+  "charaeno-7e-allskills": "charaeno",
   "character-storage-sheet": "character-storage",
   "character-storage-commands": "character-storage"
 };
@@ -40,6 +41,7 @@ const EXPECTED_SCHEMA = {
   "iachara-6e-learned": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: null, minSkills: 12 },
   "iachara-6e-allskills": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: null, minSkills: 40 },
   "charaeno-7e": { edition: "7e", editionSource: "url", STR: 75, EDU: 66, SAN: 56, DB: "+1D4", minSkills: 20 },
+  "charaeno-7e-allskills": { edition: "7e", editionSource: "url", STR: 75, EDU: 66, SAN: 56, DB: "+1D4", minSkills: 40 },
   "character-storage-sheet": { edition: "6e", abilitiesZero: true, minSkills: 8 },
   "character-storage-commands": { edition: "6e", abilitiesZero: true, minSkills: 8 }
 };
@@ -116,6 +118,23 @@ for (const file of fixtures) {
 
     if (problems.length) {
       console.error(`✗ ${name}: schema — ${problems.join(", ")}`);
+      failed++;
+    }
+  }
+
+  // --- 初期値トグルチェック（全技能出力のフィクスチャのみ）---
+  if (name === "charash-6e" || name === "iachara-6e-allskills") {
+    const ed = ChatPaletteParser.detectEdition(extracted.text);
+    const beforeInitial = out => out.split("========初期値========")[0];
+    const off = beforeInitial(ChatPaletteParser.buildOutput(extracted.text, ed));
+    const on = beforeInitial(ChatPaletteParser.buildOutput(extracted.text, ed, { initialToCategory: true }));
+
+    if (!(on.length > off.length)) {
+      console.error(`✗ ${name}: initialToCategory=true でカテゴリ側が増えていない (off=${off.length} on=${on.length})`);
+      failed++;
+    }
+    if (off.includes("【キック】")) {
+      console.error(`✗ ${name}: 既定出力のカテゴリ側に初期値技能（キック）が残っている`);
       failed++;
     }
   }

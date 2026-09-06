@@ -73,6 +73,12 @@ function shouldAddCommands() {
   return Boolean(document.getElementById("commandAddToggle")?.checked);
 }
 
+function buildOutputOptions() {
+  return {
+    initialToCategory: Boolean(document.getElementById("initialToCategoryToggle")?.checked)
+  };
+}
+
 function buildCommandAddPrefix(edition) {
   const commands = [":HP-", ":SAN-"];
 
@@ -107,7 +113,10 @@ function formatPalette() {
     updateEditionToggleActive(edition);
   }
 
-  output.value = applyCommandAdd(window.ChatPaletteParser.buildOutput(extracted.text, edition), edition);
+  output.value = applyCommandAdd(
+    window.ChatPaletteParser.buildOutput(extracted.text, edition, buildOutputOptions()),
+    edition
+  );
 }
 
 function clearAll() {
@@ -334,10 +343,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("copyButton").addEventListener("click", copyOutput);
   document.getElementById("clearButton").addEventListener("click", clearAll);
 
-  document.getElementById("commandAddToggle")?.addEventListener("change", () => {
-    if (document.getElementById("input")?.value.trim()) {
-      formatPalette();
-    }
+  ["commandAddToggle", "initialToCategoryToggle"].forEach(id => {
+    document.getElementById(id)?.addEventListener("change", () => {
+      if (document.getElementById("input")?.value.trim()) {
+        formatPalette();
+      }
+    });
   });
 
   document.querySelectorAll(".edition-toggle button").forEach(button => {
