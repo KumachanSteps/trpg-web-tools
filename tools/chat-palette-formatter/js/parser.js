@@ -183,6 +183,9 @@ window.ChatPaletteParser = (() => {
     "組みつ": "組み付き"
   };
 
+  // スラッシュを含むが「基礎/専門」ではなくそれ自体で1つの技能名（7版の複合技能）
+  const COMPOUND_SKILL_NAMES = ["芸術/製作"];
+
   function normalizeSkillName(skillName) {
     let skill = String(skillName || "").trim();
 
@@ -195,7 +198,6 @@ window.ChatPaletteParser = (() => {
       .replaceAll("（", "(")
       .replaceAll("）", ")")
       .replaceAll("／", "/")
-      .replaceAll("/", ":")
       .replaceAll("【", "")
       .replaceAll("】", "")
       .replaceAll("〈", "")
@@ -203,6 +205,15 @@ window.ChatPaletteParser = (() => {
       .replaceAll("《", "")
       .replaceAll("》", "")
       .trim();
+
+    // スラッシュ: 分野指定（: や ()）が無く、既知の複合技能でもなければ
+    // 「基礎/専門」の区切りとして : に寄せる（例: こぶし/パンチ → こぶし:パンチ）。
+    // 分野がある場合（例: 芸術/製作：リーゼント、射撃(ライフル/ショットガン)）は複合名の一部として / のまま残す。
+    if (skill.includes("/") && !skill.includes(":") && !skill.includes("(")) {
+      if (!COMPOUND_SKILL_NAMES.some(name => skill === name)) {
+        skill = skill.replaceAll("/", ":");
+      }
+    }
 
     while (skill.endsWith(")") && countChar(skill, "(") < countChar(skill, ")")) {
       skill = skill.slice(0, -1).trim();
@@ -282,6 +293,21 @@ window.ChatPaletteParser = (() => {
     return ROLL_MARKERS.some(marker => String(text).includes(marker));
   }
 
+  // キャラエノの分野表記を整える:
+  //   技能（（軽トラ）） → 技能：軽トラ   （副エントリの (( )) 注記を分野として保持）
+  //   技能（）           → 技能           （空の分野は落とす）
+  function normalizeSkillFieldNotation(name) {
+    let out = String(name || "").trim();
+
+    out = out.replace(/[（(]{2}\s*([^（()）)]*?)\s*[）)]{2}/g, (whole, inner) =>
+      inner ? "：" + inner : ""
+    );
+
+    out = out.replace(/[（(]\s*[）)]/g, "");
+
+    return out.trim();
+  }
+
   // 〈技能〉《技能》[技能]、または囲みなしの技能名を、既存ロジックが前提とする
   // 「コマンド<=閾値 【技能名】」形へ揃える。
   // すでに【】を含む行と、ロール記号の無い行（ダメージ行・地の文・:HP- 等）は触らない。
@@ -297,7 +323,7 @@ window.ChatPaletteParser = (() => {
       const end = start < 0 ? -1 : trimmed.lastIndexOf(close);
 
       if (start >= 0 && end > start) {
-        const inner = trimmed.slice(start + 1, end).trim();
+        const inner = normalizeSkillFieldNotation(trimmed.slice(start + 1, end).trim());
         return inner ? trimmed.slice(0, start) + "【" + inner + "】" + trimmed.slice(end + 1) : raw;
       }
     }
@@ -324,10 +350,7 @@ window.ChatPaletteParser = (() => {
     if (!thresholdMatch) return raw;
 
     const threshold = thresholdMatch[0].replace(/\s+/g, "");
-    let name = rest.slice(thresholdMatch[0].length).trim();
-
-    // 末尾の (( 注記 )) を除去（キャラエノ形式）
-    name = name.replace(/[（(]{2}[^（()]*[）)]{2}\s*$/g, "").trim();
+    let name = normalizeSkillFieldNotation(rest.slice(thresholdMatch[0].length).trim());
 
     if (!name) return raw;
 
@@ -499,6 +522,8 @@ window.ChatPaletteParser = (() => {
     const target = skill + " " + skillFull;
 
     if (target.includes("語")) return "social";
+    // 「芸術」「芸術/製作」系は（製作 トークンに引かれず）知識技能へ
+    if (target.includes("芸術")) return "knowledge";
 
     for (const category of ["dice", "explore", "combat", "action", "social", "knowledge"]) {
       if (table[category].some(word => target.includes(word))) return category;
@@ -653,6 +678,34 @@ window.ChatPaletteParser = (() => {
     });
   }
 
+  // 値0のノイズ行を落とす:
+  //  - クトゥルフ神話技能 が 0（未取得）
+  //  - 「基礎：〇〇」の専門技能がある基礎技能の、素の0行（例: 射撃（）0 / 射撃：拳銃 20）
+  function dropZeroValueNoise(buckets) {
+    const specializedBases = new Set();
+
+    for (const key of Object.keys(buckets)) {
+      for (const line of buckets[key]) {
+        const skill = normalizeSkillName(getSkillFromLine(line));
+        if (skill.includes("：")) specializedBases.add(skill.split("：")[0].trim());
+      }
+    }
+
+    for (const key of Object.keys(buckets)) {
+      buckets[key] = buckets[key].filter(line => {
+        const skill = normalizeSkillName(getSkillFromLine(line));
+
+        if (!skill) return true;
+        if (getValueFromLine(line) !== "0") return true;
+
+        if (skill === "クトゥルフ神話技能") return false;
+        if (!skill.includes("：") && specializedBases.has(skill)) return false;
+
+        return true;
+      });
+    }
+  }
+
   function cleanDiceRedundancy(buckets, edition) {
     // 正気度ロール / SAN の 1d100<= 形式は版コマンド形へ寄せたものが残るので素の 1d100 行を落とす
     const hasEditionSan = buckets.dice.some(line =>
@@ -672,12 +725,12 @@ window.ChatPaletteParser = (() => {
     );
   }
 
-  // present に「base：〇〇」の専門技能があるか（例: こぶし に対する こぶし：パンチ）
+  // present に「base：〇〇」の専門技能／複合技能があるか
+  // （例: こぶし に対する こぶし：パンチ、芸術 に対する 芸術/製作：リーゼント）
   function hasPresentSpecialization(present, baseSkill) {
-    const prefix = baseSkill + "：";
-
     for (const key of present.keys()) {
-      if (key.startsWith(prefix)) return true;
+      if (key === baseSkill) continue;
+      if (key.startsWith(baseSkill + "：") || key.startsWith(baseSkill + "/")) return true;
     }
 
     return false;
@@ -872,6 +925,7 @@ window.ChatPaletteParser = (() => {
     cleanDiceRedundancy(buckets, edition);
     removePlainMeleeWhenSpecializedExists(buckets, edition);
     removePlainCombatWhenSpecializedExists6e(buckets, edition);
+    dropZeroValueNoise(buckets);
 
     // 既定: 値が初期値と一致する技能は初期値セクションへ集約。
     // 「初期値もカテゴリ分け」ON のときはカテゴリに残す。
@@ -1013,9 +1067,40 @@ window.ChatPaletteParser = (() => {
         expected: "CC<=73 【近接戦闘（格闘）】"
       },
       {
-        name: "charaeno double-paren annotation stripped",
+        name: "charaeno double-paren annotation becomes a field",
         actual: canonicalizeSkillLine("CC<=35 運転（（軽トラ））"),
-        expected: "CC<=35 【運転】"
+        expected: "CC<=35 【運転：軽トラ】"
+      },
+      {
+        name: "charaeno compound skill + double-paren field",
+        actual: normalizeSkillName(canonicalizeSkillLine("CC<=44 芸術／製作（（リーゼント））").split("【")[1].split("】")[0]),
+        expected: "芸術/製作：リーゼント"
+      },
+      {
+        name: "charaeno slash inside a field stays a slash (no double colon)",
+        actual: normalizeSkillName(canonicalizeSkillLine("CC<=25 射撃（ライフル／ショットガン）").split("【")[1].split("】")[0]),
+        expected: "射撃：ライフル/ショットガン"
+      },
+      {
+        name: "charaeno empty parens are dropped",
+        actual: canonicalizeSkillLine("CC<=1 科学（）"),
+        expected: "CC<=1 【科学】"
+      },
+      {
+        name: "クトゥルフ神話技能 at 0 is dropped from output",
+        actual: buildOutput("CC<=0 クトゥルフ神話" + NL + "CC<=44 医学", "7e").includes("クトゥルフ神話"),
+        expected: false
+      },
+      {
+        name: "クトゥルフ神話技能 above 0 is kept",
+        actual: buildOutput("CCB<=21 クトゥルフ神話" + NL + "CCB<=44 医学", "6e").includes("【クトゥルフ神話技能】"),
+        expected: true
+      },
+      {
+        name: "bare 射撃 at 0 dropped when a 射撃：… specialization exists (7e)",
+        actual: buildOutput("CC<=0 射撃（）" + NL + "CC<=20 射撃（拳銃）", "7e").split("========初期値========")[0]
+          .includes("【射撃】"),
+        expected: false
       },
       {
         name: "square-bracket ability roll canonicalizes",
