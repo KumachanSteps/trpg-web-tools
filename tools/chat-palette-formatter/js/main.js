@@ -40,6 +40,9 @@ function setEditionMode(mode) {
 function handleInputChange() {
   const input = document.getElementById("input");
   const output = document.getElementById("output");
+
+  renderAnalysis(input.value);
+
   const extracted = window.ChatPaletteParser.extractPaletteText(input.value);
 
   if (!extracted.text) {
@@ -68,6 +71,12 @@ function getSelectedEdition(text) {
 
 function shouldAddCommands() {
   return Boolean(document.getElementById("commandAddToggle")?.checked);
+}
+
+function buildOutputOptions() {
+  return {
+    initialToCategory: Boolean(document.getElementById("initialToCategoryToggle")?.checked)
+  };
 }
 
 function buildCommandAddPrefix(edition) {
@@ -104,15 +113,183 @@ function formatPalette() {
     updateEditionToggleActive(edition);
   }
 
-  output.value = applyCommandAdd(window.ChatPaletteParser.buildOutput(extracted.text, edition), edition);
+  output.value = applyCommandAdd(
+    window.ChatPaletteParser.buildOutput(extracted.text, edition, buildOutputOptions()),
+    edition
+  );
+}
+
+// コピー対象を決める。駒データが揃っていれば駒JSON、そうでなければ整形チャパレ本文。
+function buildCopyPayload() {
+  const input = document.getElementById("input").value;
+  const output = document.getElementById("output").value;
+
+  try {
+    if (window.ChatPaletteSchema && window.ChatPaletteSchema.shouldExportKoma(input)) {
+      const koma = window.ChatPaletteSchema.toKomaJson(input, buildOutputOptions(), output);
+      return { text: JSON.stringify(koma, null, 2), kind: "koma" };
+    }
+  } catch (error) {
+    console.warn("koma export failed", error);
+  }
+
+  return { text: output, kind: "palette" };
 }
 
 function clearAll() {
   document.getElementById("input").value = "";
   document.getElementById("output").value = "";
   detectedEdition = "";
+  renderAnalysis("");
   setEditionMode("auto");
   setStatus(t("cleared"));
+}
+
+const ANALYSIS_SERVICE_LABELS = {
+  iachara: "いあきゃら",
+  charash: "キャラッシュ",
+  charaeno: "Charaeno",
+  "character-storage": "キャラクター保管庫",
+  "generic-palette": "チャットパレット",
+  unknown: "判定不可"
+};
+
+const ANALYSIS_EDITION_SOURCE = {
+  url: "（URLから）",
+  palette: "（技能から）",
+  manual: "（手動）",
+  unknown: ""
+};
+
+function analysisText(value) {
+  return document.createTextNode(value);
+}
+
+function analysisStrong(value) {
+  const el = document.createElement("b");
+  el.textContent = value;
+  return el;
+}
+
+function renderAnalysis(rawInput) {
+  const box = document.getElementById("analysisPreview");
+
+  if (!box || !window.ChatPaletteSchema) return;
+
+  if (!String(rawInput || "").trim()) {
+    box.hidden = true;
+    scheduleMainFit();
+    return;
+  }
+
+  let character;
+
+  try {
+    character = window.ChatPaletteSchema.buildCharacter(rawInput);
+  } catch (error) {
+    console.warn("buildCharacter failed", error);
+    box.hidden = true;
+    scheduleMainFit();
+    return;
+  }
+
+  const meta = character.meta;
+
+  box.hidden = false;
+
+  document.getElementById("apService").textContent = ANALYSIS_SERVICE_LABELS[meta.service] || meta.service;
+
+  const editionEl = document.getElementById("apEdition");
+
+  editionEl.textContent = (meta.edition === "6e" || meta.edition === "7e")
+    ? editionLabel(meta.edition) + (ANALYSIS_EDITION_SOURCE[meta.editionSource] || "")
+    : t("apEditionUnknown");
+
+  const nameEl = document.getElementById("apName");
+  nameEl.textContent = "";
+
+  if (meta.name) {
+    nameEl.append(analysisText(meta.name));
+
+    if (meta.ruby) {
+      const ruby = document.createElement("span");
+      ruby.className = "analysis-ruby";
+      ruby.textContent = meta.ruby;
+      nameEl.append(ruby);
+    }
+  }
+
+  if (meta.occupation) {
+    const occ = document.createElement("span");
+    occ.className = "analysis-occupation";
+    occ.textContent = (meta.name ? "／" : "") + meta.occupation;
+    nameEl.append(occ);
+  }
+
+  const abilitiesEl = document.getElementById("apAbilities");
+  abilitiesEl.textContent = "";
+
+  if (character.counts.abilities > 0) {
+    abilitiesEl.hidden = false;
+
+    for (const key of window.ChatPaletteSchema.ABILITY_KEYS) {
+      const value = character.abilities[key];
+      const cell = document.createElement("span");
+
+      if (value === null) cell.dataset.missing = "1";
+
+      const amount = document.createElement("b");
+      amount.textContent = value === null ? "—" : String(value);
+
+      const label = document.createElement("i");
+      label.textContent = key;
+
+      cell.append(amount, label);
+      abilitiesEl.append(cell);
+    }
+  } else {
+    abilitiesEl.hidden = true;
+  }
+
+  const derivedEl = document.getElementById("apDerived");
+  const derived = character.derived;
+  const derivedParts = [];
+
+  for (const [label, entry] of [["HP", derived.HP], ["MP", derived.MP], ["SAN", derived.SAN]]) {
+    if (entry && (entry.value !== null || entry.max !== null)) {
+      const shown = entry.value === null ? "?" : entry.value;
+      derivedParts.push(entry.max !== null ? `${label} ${shown}/${entry.max}` : `${label} ${shown}`);
+    }
+  }
+
+  if (derived.DB) derivedParts.push("DB " + derived.DB);
+  if (derived.MOV !== null) derivedParts.push("MOV " + derived.MOV);
+  if (derived.build !== null) derivedParts.push("ビルド " + derived.build);
+
+  derivedEl.textContent = derivedParts.join("　");
+  derivedEl.hidden = derivedParts.length === 0;
+
+  const countsEl = document.getElementById("apCounts");
+  const counts = character.counts;
+  countsEl.textContent = "";
+  countsEl.append(
+    analysisText("技能 "),
+    analysisStrong(String(counts.skills)),
+    analysisText(` 件（初期値 ${counts.skillsInitial}）　武器・ダメージ行 `),
+    analysisStrong(String(counts.weapons)),
+    analysisText(" 件")
+  );
+
+  const warnEl = document.getElementById("apWarn");
+
+  if (meta.warnings.length) {
+    warnEl.textContent = meta.warnings.map(warning => "・" + warning.detail).join("\n");
+    warnEl.hidden = false;
+  } else {
+    warnEl.hidden = true;
+  }
+
+  scheduleMainFit();
 }
 
 async function copyOutput() {
@@ -123,17 +300,20 @@ async function copyOutput() {
     return;
   }
 
+  const payload = buildCopyPayload();
+  const okMessage = payload.kind === "koma" ? t("copiedKoma") : t("copied");
+
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-      await navigator.clipboard.writeText(output.value);
-      setStatus(t("copied"));
+      await navigator.clipboard.writeText(payload.text);
+      setStatus(okMessage);
       return;
     }
   } catch (error) {
     console.warn("Clipboard API copy failed. Falling back to document.execCommand.", error);
   }
 
-  fallbackCopy(output);
+  fallbackCopy(output, payload.text, okMessage);
 }
 
 
@@ -159,7 +339,12 @@ function scheduleMainFit() {
   window.requestAnimationFrame(fitMainToViewport);
 }
 
-function fallbackCopy(output) {
+function fallbackCopy(output, text, okMessage) {
+  const original = output.value;
+  const target = text != null ? text : original;
+
+  if (target !== original) output.value = target;
+
   output.focus();
   output.select();
 
@@ -167,8 +352,10 @@ function fallbackCopy(output) {
     const success = document.execCommand("copy");
 
     if (success) {
-      setStatus(t("copied"));
+      setStatus(okMessage || t("copied"));
+      if (output.value !== original) output.value = original;
     } else {
+      // コピーできなかった場合は対象テキストを出力欄に残して手動コピーさせる
       setStatus(t("copyManual"), "error");
     }
   } catch (error) {
@@ -183,10 +370,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("copyButton").addEventListener("click", copyOutput);
   document.getElementById("clearButton").addEventListener("click", clearAll);
 
-  document.getElementById("commandAddToggle")?.addEventListener("change", () => {
-    if (document.getElementById("input")?.value.trim()) {
-      formatPalette();
-    }
+  ["commandAddToggle", "initialToCategoryToggle"].forEach(id => {
+    document.getElementById(id)?.addEventListener("change", () => {
+      if (document.getElementById("input")?.value.trim()) {
+        formatPalette();
+      }
+    });
   });
 
   document.querySelectorAll(".edition-toggle button").forEach(button => {
@@ -201,8 +390,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (typeof ResizeObserver === "function") {
     const layoutObserver = new ResizeObserver(scheduleMainFit);
-    document.querySelectorAll(".site-header, .status-note").forEach(el => layoutObserver.observe(el));
+    document.querySelectorAll(".site-header, .status-note, .analysis-preview").forEach(el => layoutObserver.observe(el));
   }
 
+  renderAnalysis(document.getElementById("input").value);
   setStatus(t("initialStatus"));
 });

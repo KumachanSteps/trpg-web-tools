@@ -7,10 +7,12 @@ window.CHAT_PALETTE_I18N = {
     manualModeSuffix: "に切り替えました。自動判定よりもこの指定を優先します。",
     extractError: "チャットパレットを抽出できませんでした。入力内容を確認してください。",
     copied: "整形済みチャットパレットをコピーしました。",
+    copiedKoma: "駒データが揃っていたので、駒JSONをコピーしました。",
     copyEmpty: "コピーする内容がありません。",
     copyManual: "ブラウザの制限により自動コピーできませんでした。出力欄を選択済みにしたので、手動でコピーしてください。",
     cleared: "入力欄と出力欄をクリアしました。",
     edition6: "CoC 6版",
-    edition7: "CoC 7版"
+    edition7: "CoC 7版",
+    apEditionUnknown: "版 未判定"
   }
 };
