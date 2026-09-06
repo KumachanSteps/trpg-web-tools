@@ -472,6 +472,19 @@ textarea:focus {
   background: #dcf4eb;
 }
 
+#komaJsonButton {
+  min-width: 120px;
+  min-height: 44px;
+  color: var(--accent-dark);
+  background: #eef2ff;
+  border: 1px solid #d3daff;
+  box-shadow: 0 6px 14px rgba(89, 103, 216, .10);
+}
+
+#komaJsonButton:hover {
+  background: #e3e9ff;
+}
+
 .btn-clear {
   min-width: 130px;
   min-height: 44px;
@@ -578,6 +591,7 @@ textarea:focus {
 
   #formatButton,
   #copyButton,
+  #komaJsonButton,
   .btn-clear {
     width: 100%;
   }

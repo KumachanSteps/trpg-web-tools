@@ -58,7 +58,15 @@ Parser本体（4）や出力オプション（5）は後続PRで追加します�
 > `skills` / `weapons` は `ChatPaletteParser.analyzePalette()` の結果を載せる（数のみ利用）。
 > **チャパレ生成（`buildOutput`）はまだこのスキーマを使っていない**（統合は後続PR）。
 > 画面の「解析結果プレビュー」がこの戻り値を表示する。
-> 保管庫のテキストシートからの能力値抽出は未実装（専用パーサPRで対応）。
+>
+> **追加（保管庫シート + 駒JSON出力）**:
+> `parseStorageSheet(text)` がキャラクター保管庫のテキストシートから
+> 能力値テーブル（`=合計=` / `作成時` 行）・`■能力値■` の HP/MP/SAN（`24/78` は value/max）・
+> 名前・職業・年齢・性別・身長・体重 を取り出し、`buildCharacter` がこれを取り込む
+> （`meta.profile` に年齢等）。DB が無ければ `damageBonus(STR, SIZ, edition)` で算出。
+> `toKomaJson(rawInput, options)` が共通スキーマ＋整形チャパレを CCFOLIA こま形式
+> `{kind:"character", data:{name, initiative(=DEX), status[], params[], commands, memo}}` に組み立てる
+> （UI「駒JSON生成」ボタン）。
 
 ```jsonc
 {

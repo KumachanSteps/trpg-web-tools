@@ -12,6 +12,8 @@ window.CHAT_PALETTE_I18N = {
     cleared: "入力欄と出力欄をクリアしました。",
     edition6: "CoC 6版",
     edition7: "CoC 7版",
-    apEditionUnknown: "版 未判定"
+    apEditionUnknown: "版 未判定",
+    komaGenerated: "駒JSONを生成しました。整形チャパレに戻すには「分類して出力」を押してください。",
+    komaFailed: "駒JSONを生成できませんでした。入力内容を確認してください。"
   }
 };

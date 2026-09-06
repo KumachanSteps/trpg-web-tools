@@ -38,11 +38,11 @@ const EXPECTED_SERVICE = {
 // フィクスチャ名 → 共通スキーマ（buildCharacter）の期待値
 const EXPECTED_SCHEMA = {
   "charash-6e": { edition: "6e", editionSource: "url", STR: 10, EDU: 17, SAN: 96, DB: "+1D4", minSkills: 40 },
-  "iachara-6e-learned": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: null, minSkills: 12 },
-  "iachara-6e-allskills": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: null, minSkills: 40 },
+  "iachara-6e-learned": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: "+1D4", minSkills: 12 },
+  "iachara-6e-allskills": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: "+1D4", minSkills: 40 },
   "charaeno-7e": { edition: "7e", editionSource: "url", STR: 75, EDU: 66, SAN: 56, DB: "+1D4", minSkills: 20 },
   "charaeno-7e-allskills": { edition: "7e", editionSource: "url", STR: 75, EDU: 66, SAN: 56, DB: "+1D4", minSkills: 40 },
-  "character-storage-sheet": { edition: "6e", abilitiesZero: true, minSkills: 8 },
+  "character-storage-sheet": { edition: "6e", STR: 12, EDU: 19, SAN: 24, DB: "0", minSkills: 8 },
   "character-storage-commands": { edition: "6e", abilitiesZero: true, minSkills: 8 }
 };
 
@@ -118,6 +118,29 @@ for (const file of fixtures) {
 
     if (problems.length) {
       console.error(`✗ ${name}: schema — ${problems.join(", ")}`);
+      failed++;
+    }
+  }
+
+  // --- 駒JSON生成チェック（保管庫シート）---
+  if (name === "character-storage-sheet") {
+    const koma = ChatPaletteSchema.toKomaJson(raw);
+    const problems = [];
+
+    if (koma.kind !== "character") problems.push("kind≠character");
+    if (koma.data.name !== "ロケット") problems.push(`name=${JSON.stringify(koma.data.name)}`);
+    if (koma.data.initiative !== 13) problems.push(`initiative=${koma.data.initiative}`);
+
+    const p = Object.fromEntries(koma.data.params.map(e => [e.label, e.value]));
+    if (p.STR !== "12" || p.EDU !== "19" || p.DB !== "0") problems.push(`params ${JSON.stringify(p)}`);
+
+    const san = koma.data.status.find(e => e.label === "SAN");
+    if (!san || san.value !== 24 || san.max !== 78) problems.push(`SAN ${JSON.stringify(san)}`);
+
+    if (!koma.data.commands.includes("【目星】")) problems.push("commands 欠落");
+
+    if (problems.length) {
+      console.error(`✗ ${name}: 駒JSON — ${problems.join(", ")}`);
       failed++;
     }
   }

@@ -119,6 +119,31 @@ function formatPalette() {
   );
 }
 
+function generateKomaJson() {
+  const input = document.getElementById("input");
+  const output = document.getElementById("output");
+
+  if (!input.value.trim() || !window.ChatPaletteSchema) {
+    setStatus(t("komaFailed"), "error");
+    return;
+  }
+
+  try {
+    const koma = window.ChatPaletteSchema.toKomaJson(input.value, buildOutputOptions());
+
+    if (!koma.data.commands && koma.data.params.length === 0) {
+      setStatus(t("komaFailed"), "error");
+      return;
+    }
+
+    output.value = JSON.stringify(koma, null, 2);
+    setStatus(t("komaGenerated"));
+  } catch (error) {
+    console.warn("toKomaJson failed", error);
+    setStatus(t("komaFailed"), "error");
+  }
+}
+
 function clearAll() {
   document.getElementById("input").value = "";
   document.getElementById("output").value = "";
@@ -341,6 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("input").addEventListener("input", handleInputChange);
   document.getElementById("formatButton").addEventListener("click", formatPalette);
   document.getElementById("copyButton").addEventListener("click", copyOutput);
+  document.getElementById("komaJsonButton")?.addEventListener("click", generateKomaJson);
   document.getElementById("clearButton").addEventListener("click", clearAll);
 
   ["commandAddToggle", "initialToCategoryToggle"].forEach(id => {
