@@ -66,8 +66,8 @@
       <aside class="left-column">
         <section class="panel panel-input">
           <div class="panel-title"><span class="panel-icon">▣</span><h2>1. 駒データ入力</h2></div>
-          <label class="field-label" for="komaJsonInput">ココフォリア駒出力データ</label>
-          <textarea id="komaJsonInput" class="json-input compact-one-line" rows="1" placeholder="キャラ出力▶︎ココフォリア駒出力 からコピー&ペースト"></textarea>
+          <label class="field-label" for="komaJsonInput">ココフォリア駒出力データ / キャラクター保管庫テキスト</label>
+          <textarea id="komaJsonInput" class="json-input compact-one-line" rows="1" placeholder="いあきゃら・キャラッシュ・Charaeno の「ココフォリア駒出力」、またはキャラクター保管庫のテキストを貼り付け"></textarea>
           <div class="input-actions">
             <button id="pasteKomaJsonButton" class="btn btn-blue" type="button">クリップボードから入力</button>
           </div>
@@ -165,7 +165,9 @@
 
   <script src="./js/i18l.js"></script>
   <script src="./js/language.js"></script>
-  <script src="./js/parser.js"></script>
+  <script src="../../shared/coc-palette/parser.js"></script>
+  <script src="../../shared/coc-palette/sources.js"></script>
+  <script src="../../shared/coc-palette/schema.js"></script>
   <script src="./js/parser_iachara_text.js"></script>
   <script src="./js/main.js"></script>
 </body>

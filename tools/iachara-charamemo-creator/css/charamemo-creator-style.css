@@ -1358,7 +1358,7 @@ body.theme-light .param-chip,
    Header Version Stamp v1.05
    ========================================================= */
 .site-header::after {
-  content: "v1.098 2026/06/10";
+  content: "v1.10 2026/09/06";
   position: absolute;
   right: 24px;
   bottom: 14px;
@@ -2168,7 +2168,7 @@ body {
    - profile supplement textarea has no internal scrollbar
    ========================================================= */
 .site-header::after {
-  content: "v1.099 2026/06/10" !important;
+  content: "v1.10 2026/09/06" !important;
 }
 
 .profile-input,
@@ -2263,7 +2263,7 @@ body::after {
    - JS also clamps scrollTop to footer bottom as a safety net
    ========================================================= */
 .site-header::after {
-  content: "v1.10 2026/06/10" !important;
+  content: "v1.10 2026/09/06" !important;
 }
 
 html,
