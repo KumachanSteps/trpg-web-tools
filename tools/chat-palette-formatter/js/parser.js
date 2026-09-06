@@ -545,7 +545,6 @@ window.ChatPaletteParser = (() => {
   // buildOutput とは独立。出力そのものには影響しない。
   function analyzePalette(rawText, edition) {
     const text = canonicalizePaletteText(rawText);
-    const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
     const skills = [];
     const damageLines = [];
     const abilityRolls = [];
@@ -573,7 +572,7 @@ window.ChatPaletteParser = (() => {
 
         const token = parsed.value || "";
         const numeric = /^[0-9]+$/.test(token) ? Number(token) : null;
-        const init = Object.prototype.hasOwnProperty.call(initial, name) ? initial[name] : null;
+        const candidates = initialValueCandidates(name, edition);
 
         skills.push({
           name,
@@ -581,8 +580,8 @@ window.ChatPaletteParser = (() => {
           category: categorize(name, name, edition),
           value: numeric,
           valueToken: token || null,
-          initial: init,
-          isInitial: numeric !== null && init !== null && numeric === init
+          initial: candidates.length ? candidates[0] : null,
+          isInitial: numeric !== null && candidates.includes(numeric)
         });
       } else if (parsed.type === "damage") {
         damageLines.push(line);
@@ -736,6 +735,27 @@ window.ChatPaletteParser = (() => {
     return false;
   }
 
+  // present に「base：X/Y」のようにまとめられた技能があり、この skill（base：X 等）を包含しているか
+  // （Charaeno の 射撃：ライフル/ショットガン は 射撃：ライフル と 射撃：ショットガン を兼ねる）
+  function isCoveredByMergedSkill(present, skill) {
+    const colon = skill.indexOf("：");
+
+    if (colon < 0) return false;
+
+    const base = skill.slice(0, colon);
+    const field = skill.slice(colon + 1).trim();
+
+    for (const key of present.keys()) {
+      if (key === skill || !key.startsWith(base + "：")) continue;
+
+      const keyFields = key.slice(colon + 1).split(/[\/／・]/).map(part => part.trim());
+
+      if (keyFields.length > 1 && keyFields.includes(field)) return true;
+    }
+
+    return false;
+  }
+
   function buildInitialLines(present, edition) {
     const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
     const skip = new Set(["目星", "聞き耳", "図書館", "回避", "幸運", "正気度ロール", "SAN", "アイデア", "知識"]);
@@ -746,7 +766,8 @@ window.ChatPaletteParser = (() => {
       .filter(([skill]) =>
         !skip.has(skill) &&
         !present.has(skill) &&
-        !hasPresentSpecialization(present, skill)
+        !hasPresentSpecialization(present, skill) &&
+        !isCoveredByMergedSkill(present, skill)
       )
       .map(([skill, value]) => lineForSkill(edition, value, skill));
   }
@@ -754,8 +775,33 @@ window.ChatPaletteParser = (() => {
   // 初期値セクションに残す（＝値が初期値でもカテゴリから抜かない）技能
   const KEEP_IN_CATEGORY_AT_INITIAL = new Set(["目星", "聞き耳", "図書館", "回避", "近接戦闘"]);
 
-  function lineValueEqualsInitial(line, edition) {
+  // その技能の初期値候補を返す。
+  // Charaeno のように分野がまとめられている「射撃：ライフル/ショットガン」は
+  // 「射撃：ライフル」「射撃：ショットガン」の初期値をそれぞれ候補にする（名称は入力尊重）。
+  function initialValueCandidates(skill, edition) {
     const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
+
+    if (Object.prototype.hasOwnProperty.call(initial, skill)) return [initial[skill]];
+
+    const colon = skill.indexOf("：");
+
+    if (colon >= 0) {
+      const base = skill.slice(0, colon);
+      const fields = skill.slice(colon + 1).split(/[\/／・]/).map(part => part.trim()).filter(Boolean);
+      const values = [];
+
+      for (const field of fields) {
+        const key = base + "：" + field;
+        if (Object.prototype.hasOwnProperty.call(initial, key)) values.push(initial[key]);
+      }
+
+      if (values.length) return values;
+    }
+
+    return [];
+  }
+
+  function lineValueEqualsInitial(line, edition) {
     const skill = normalizeSkillNameForEdition(getSkillFromLine(line), edition);
 
     if (!skill || KEEP_IN_CATEGORY_AT_INITIAL.has(skill)) return false;
@@ -763,9 +809,8 @@ window.ChatPaletteParser = (() => {
     const token = getValueFromLine(line);
 
     if (!/^[0-9]+$/.test(token)) return false;
-    if (!Object.prototype.hasOwnProperty.call(initial, skill)) return false;
 
-    return Number(token) === initial[skill];
+    return initialValueCandidates(skill, edition).includes(Number(token));
   }
 
   // 値が初期値と一致する技能をカテゴリから抜き、初期値セクション用の行として返す
@@ -801,12 +846,20 @@ window.ChatPaletteParser = (() => {
       lines.push(line);
     }
 
-    return lines.sort((a, b) => {
-      const ai = order.indexOf(normalizeSkillNameForEdition(getSkillFromLine(a), edition));
-      const bi = order.indexOf(normalizeSkillNameForEdition(getSkillFromLine(b), edition));
+    const orderIndex = line => {
+      const skill = normalizeSkillNameForEdition(getSkillFromLine(line), edition);
+      let i = order.indexOf(skill);
 
-      return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
-    });
+      if (i < 0 && skill.includes("：")) {
+        const base = skill.slice(0, skill.indexOf("："));
+        const first = skill.slice(skill.indexOf("：") + 1).split(/[\/／・]/)[0].trim();
+        i = order.indexOf(base + "：" + first);
+      }
+
+      return i < 0 ? 999 : i;
+    };
+
+    return lines.sort((a, b) => orderIndex(a) - orderIndex(b));
   }
 
   function buildStatusLines(edition) {
@@ -1101,6 +1154,18 @@ window.ChatPaletteParser = (() => {
         actual: buildOutput("CC<=0 射撃（）" + NL + "CC<=20 射撃（拳銃）", "7e").split("========初期値========")[0]
           .includes("【射撃】"),
         expected: false
+      },
+      {
+        name: "7e merged 射撃：ライフル/ショットガン at 25 goes to 初期値 (name kept)",
+        actual: (buildOutput("CC<=25 射撃（ライフル／ショットガン）" + NL + "CC<=50 目星", "7e")
+          .split("========初期値========")[1] || "").includes("CC<=25 【射撃：ライフル/ショットガン】"),
+        expected: true
+      },
+      {
+        name: "7e merged 射撃：ライフル/ショットガン above initial stays in 戦闘技能",
+        actual: buildOutput("CC<=40 射撃（ライフル／ショットガン）" + NL + "CC<=50 目星", "7e")
+          .split("========初期値========")[0].includes("CC<=40 【射撃：ライフル/ショットガン】"),
+        expected: true
       },
       {
         name: "square-bracket ability roll canonicalizes",
