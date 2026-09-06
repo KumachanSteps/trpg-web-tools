@@ -120,6 +120,23 @@ for (const file of fixtures) {
     }
   }
 
+  // --- 初期値トグルチェック（全技能出力のフィクスチャのみ）---
+  if (name === "charash-6e" || name === "iachara-6e-allskills") {
+    const ed = ChatPaletteParser.detectEdition(extracted.text);
+    const beforeInitial = out => out.split("========初期値========")[0];
+    const off = beforeInitial(ChatPaletteParser.buildOutput(extracted.text, ed));
+    const on = beforeInitial(ChatPaletteParser.buildOutput(extracted.text, ed, { initialToCategory: true }));
+
+    if (!(on.length > off.length)) {
+      console.error(`✗ ${name}: initialToCategory=true でカテゴリ側が増えていない (off=${off.length} on=${on.length})`);
+      failed++;
+    }
+    if (off.includes("【キック】")) {
+      console.error(`✗ ${name}: 既定出力のカテゴリ側に初期値技能（キック）が残っている`);
+      failed++;
+    }
+  }
+
   // --- スナップショットチェック ---
   if (UPDATE || !existsSync(snapPath)) {
     writeFileSync(snapPath, snapshot);

@@ -683,6 +683,64 @@ window.ChatPaletteParser = (() => {
       .map(([skill, value]) => lineForSkill(edition, value, skill));
   }
 
+  // 初期値セクションに残す（＝値が初期値でもカテゴリから抜かない）技能
+  const KEEP_IN_CATEGORY_AT_INITIAL = new Set(["目星", "聞き耳", "図書館", "回避", "近接戦闘"]);
+
+  function lineValueEqualsInitial(line, edition) {
+    const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
+    const skill = normalizeSkillNameForEdition(getSkillFromLine(line), edition);
+
+    if (!skill || KEEP_IN_CATEGORY_AT_INITIAL.has(skill)) return false;
+
+    const token = getValueFromLine(line);
+
+    if (!/^[0-9]+$/.test(token)) return false;
+    if (!Object.prototype.hasOwnProperty.call(initial, skill)) return false;
+
+    return Number(token) === initial[skill];
+  }
+
+  // 値が初期値と一致する技能をカテゴリから抜き、初期値セクション用の行として返す
+  function extractInitialValueSkills(buckets, edition) {
+    const moved = [];
+
+    for (const key of ["explore", "combat", "action", "social", "knowledge"]) {
+      buckets[key] = buckets[key].filter(line => {
+        if (lineValueEqualsInitial(line, edition)) {
+          moved.push(line);
+          return false;
+        }
+
+        return true;
+      });
+    }
+
+    return moved;
+  }
+
+  function buildInitialSection(present, edition, movedLines) {
+    const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
+    const order = Object.keys(initial);
+    const seen = new Set();
+    const lines = [];
+
+    for (const line of buildInitialLines(present, edition).concat(movedLines || [])) {
+      const key = line.trim();
+
+      if (!key || seen.has(key)) continue;
+
+      seen.add(key);
+      lines.push(line);
+    }
+
+    return lines.sort((a, b) => {
+      const ai = order.indexOf(normalizeSkillNameForEdition(getSkillFromLine(a), edition));
+      const bi = order.indexOf(normalizeSkillNameForEdition(getSkillFromLine(b), edition));
+
+      return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
+    });
+  }
+
   function buildStatusLines(edition) {
     const stats = ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"];
 
@@ -752,7 +810,8 @@ window.ChatPaletteParser = (() => {
     output.push(label, ...lines);
   }
 
-  function buildOutput(text, edition) {
+  function buildOutput(text, edition, options) {
+    const settings = options || {};
     const buckets = {
       dice: [],
       explore: [],
@@ -799,6 +858,10 @@ window.ChatPaletteParser = (() => {
     removePlainMeleeWhenSpecializedExists(buckets, edition);
     removePlainCombatWhenSpecializedExists6e(buckets, edition);
 
+    // 既定: 値が初期値と一致する技能は初期値セクションへ集約。
+    // 「初期値もカテゴリ分け」ON のときはカテゴリに残す。
+    const movedInitial = settings.initialToCategory ? [] : extractInitialValueSkills(buckets, edition);
+
     const orderTable = edition === "6e" ? CATEGORY_6E : CATEGORY_7E;
 
     for (const key of ["dice", "explore", "combat", "action", "social", "knowledge"]) {
@@ -815,7 +878,7 @@ window.ChatPaletteParser = (() => {
     pushSection(output, SECTION_LABELS.knowledge, buckets.knowledge);
     pushSection(output, SECTION_LABELS.damage, buckets.damage);
     pushSection(output, SECTION_LABELS.other, buckets.other);
-    pushSection(output, SECTION_LABELS.initial, buildInitialLines(present, edition));
+    pushSection(output, SECTION_LABELS.initial, buildInitialSection(present, edition, movedInitial));
     pushSection(output, SECTION_LABELS.status, mergeStatusLines(buckets.status, buildStatusLines(edition)));
     pushSection(output, SECTION_LABELS.params, buildParamLines(present, edition));
 
@@ -884,6 +947,34 @@ window.ChatPaletteParser = (() => {
         actual: buildOutput("1d100<={SAN} 【正気度ロール】" + NL + "CCB<={SAN} 【正気度ロール】", "6e")
           .split("【正気度ロール】").length - 1,
         expected: 1
+      },
+      {
+        name: "6e skill at initial value goes to 初期値 section by default",
+        actual: (buildOutput("CCB<=1 【薬学】" + NL + "CCB<=40 【医学】", "6e").split("========初期値========")[1] || "")
+          .includes("CCB<=1 【薬学】"),
+        expected: true
+      },
+      {
+        name: "6e skill at initial value is removed from its category by default",
+        actual: buildOutput("CCB<=1 【薬学】" + NL + "CCB<=40 【医学】", "6e").split("========初期値========")[0]
+          .includes("【薬学】"),
+        expected: false
+      },
+      {
+        name: "initialToCategory keeps an at-initial skill in its category",
+        actual: buildOutput("CCB<=1 【薬学】" + NL + "CCB<=40 【医学】", "6e", { initialToCategory: true })
+          .split("========初期値========")[0].includes("CCB<=1 【薬学】"),
+        expected: true
+      },
+      {
+        name: "目星 at initial value still stays in 探索技能 by default",
+        actual: buildOutput("CCB<=25 【目星】", "6e").split("========初期値========")[0].includes("CCB<=25 【目星】"),
+        expected: true
+      },
+      {
+        name: "above-initial skill stays in its category by default",
+        actual: buildOutput("CCB<=44 【医学】", "6e").split("========初期値========")[0].includes("CCB<=44 【医学】"),
+        expected: true
       },
       {
         name: "charash angle brackets canonicalize to 【】",
