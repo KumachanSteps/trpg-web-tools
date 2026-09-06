@@ -159,6 +159,28 @@ window.ChatPaletteParser = (() => {
     return search(obj);
   }
 
+  // キャラクター保管庫のテキストシートか（技能表・地の文を多く含む形式）
+  function looksLikeStorageSheet(text) {
+    return /■\s*(能力値|技能|簡易用|戦闘|所持品)\s*■/.test(text) ||
+      /-{3,}\s*.+系技能\s*-{3,}/.test(text);
+  }
+
+  // 保管庫シートから、チャットパレットに関係する行だけを残す
+  function keepPaletteLines(text) {
+    return String(text || "").split(NL).filter(line => {
+      const t = line.trim();
+
+      if (!t) return false;
+      if (/^s?(CCB?|CC|CBR?B|1d100|1D100)\s*<=/i.test(t)) return true;   // ロールコマンド
+      if (/^s?(CCB?|CC|1d100|1D100)\b.*【.+】/i.test(t)) return true;     // 整形済みロール行
+      if (/^:(?:HP|MP|SAN|POW|STR|CON|DEX|APP|SIZ|INT|EDU|幸運)[+\-]/i.test(t)) return true; // コマンド追加
+      if (/^(RESB|CBRB|CBPB)\b/i.test(t)) return true;
+      if (/^\d*[dD]\d.*(?:ダメージ|\{?DB\}?)/i.test(t)) return true;      // ダメージ行
+
+      return false;
+    }).join(NL);
+  }
+
   function extractPaletteText(rawInput) {
     const trimmed = rawInput.trim();
 
@@ -172,8 +194,12 @@ window.ChatPaletteParser = (() => {
         source: "json"
       };
     } catch (error) {
+      let text = normalizeText(trimmed);
+
+      if (looksLikeStorageSheet(text)) text = keepPaletteLines(text);
+
       return {
-        text: canonicalizePaletteText(normalizeText(trimmed)),
+        text: canonicalizePaletteText(text),
         source: "text"
       };
     }
@@ -490,6 +516,11 @@ window.ChatPaletteParser = (() => {
         skill: cleanSkill,
         value: getValueFromLine(line)
       };
+    }
+
+    // ロールコマンドはあるが技能名が無い行（CCB<= / 1d100<= SAN値 等）はダメージ扱いにしない
+    if (hasCommand) {
+      return { type: "other", line };
     }
 
     if (["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU", "HP", "MP", "SAN"].some(stat => upper.startsWith(stat + ":") || upper.startsWith(stat + "："))) {

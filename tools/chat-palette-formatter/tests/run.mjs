@@ -122,6 +122,16 @@ for (const file of fixtures) {
     }
   }
 
+  // --- 駒JSON自動判定 ---
+  if (name === "character-storage-sheet" && !ChatPaletteSchema.shouldExportKoma(raw)) {
+    console.error(`✗ ${name}: shouldExportKoma が false（保管庫シートは駒JSON対象のはず）`);
+    failed++;
+  }
+  if ((name === "iachara-6e-learned" || name === "charash-6e") && ChatPaletteSchema.shouldExportKoma(raw)) {
+    console.error(`✗ ${name}: shouldExportKoma が true（既に駒JSONなのでチャパレを返すべき）`);
+    failed++;
+  }
+
   // --- 駒JSON生成チェック（保管庫シート）---
   if (name === "character-storage-sheet") {
     const koma = ChatPaletteSchema.toKomaJson(raw);

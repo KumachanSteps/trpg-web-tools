@@ -119,29 +119,21 @@ function formatPalette() {
   );
 }
 
-function generateKomaJson() {
-  const input = document.getElementById("input");
-  const output = document.getElementById("output");
-
-  if (!input.value.trim() || !window.ChatPaletteSchema) {
-    setStatus(t("komaFailed"), "error");
-    return;
-  }
+// コピー対象を決める。駒データが揃っていれば駒JSON、そうでなければ整形チャパレ本文。
+function buildCopyPayload() {
+  const input = document.getElementById("input").value;
+  const output = document.getElementById("output").value;
 
   try {
-    const koma = window.ChatPaletteSchema.toKomaJson(input.value, buildOutputOptions());
-
-    if (!koma.data.commands && koma.data.params.length === 0) {
-      setStatus(t("komaFailed"), "error");
-      return;
+    if (window.ChatPaletteSchema && window.ChatPaletteSchema.shouldExportKoma(input)) {
+      const koma = window.ChatPaletteSchema.toKomaJson(input, buildOutputOptions(), output);
+      return { text: JSON.stringify(koma, null, 2), kind: "koma" };
     }
-
-    output.value = JSON.stringify(koma, null, 2);
-    setStatus(t("komaGenerated"));
   } catch (error) {
-    console.warn("toKomaJson failed", error);
-    setStatus(t("komaFailed"), "error");
+    console.warn("koma export failed", error);
   }
+
+  return { text: output, kind: "palette" };
 }
 
 function clearAll() {
@@ -308,17 +300,20 @@ async function copyOutput() {
     return;
   }
 
+  const payload = buildCopyPayload();
+  const okMessage = payload.kind === "koma" ? t("copiedKoma") : t("copied");
+
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-      await navigator.clipboard.writeText(output.value);
-      setStatus(t("copied"));
+      await navigator.clipboard.writeText(payload.text);
+      setStatus(okMessage);
       return;
     }
   } catch (error) {
     console.warn("Clipboard API copy failed. Falling back to document.execCommand.", error);
   }
 
-  fallbackCopy(output);
+  fallbackCopy(output, payload.text, okMessage);
 }
 
 
@@ -344,7 +339,12 @@ function scheduleMainFit() {
   window.requestAnimationFrame(fitMainToViewport);
 }
 
-function fallbackCopy(output) {
+function fallbackCopy(output, text, okMessage) {
+  const original = output.value;
+  const target = text != null ? text : original;
+
+  if (target !== original) output.value = target;
+
   output.focus();
   output.select();
 
@@ -352,8 +352,10 @@ function fallbackCopy(output) {
     const success = document.execCommand("copy");
 
     if (success) {
-      setStatus(t("copied"));
+      setStatus(okMessage || t("copied"));
+      if (output.value !== original) output.value = original;
     } else {
+      // コピーできなかった場合は対象テキストを出力欄に残して手動コピーさせる
       setStatus(t("copyManual"), "error");
     }
   } catch (error) {
@@ -366,7 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("input").addEventListener("input", handleInputChange);
   document.getElementById("formatButton").addEventListener("click", formatPalette);
   document.getElementById("copyButton").addEventListener("click", copyOutput);
-  document.getElementById("komaJsonButton")?.addEventListener("click", generateKomaJson);
   document.getElementById("clearButton").addEventListener("click", clearAll);
 
   ["commandAddToggle", "initialToCategoryToggle"].forEach(id => {

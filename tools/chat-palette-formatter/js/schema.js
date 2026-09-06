@@ -348,14 +348,27 @@
     };
   }
 
+  // 入力から駒JSONを作るべきか（＝すでに駒JSONではなく、能力値がそろっている）
+  function shouldExportKoma(rawInput) {
+    if (komaData(tryParseJson(rawInput))) return false;
+
+    const character = buildCharacter(rawInput);
+
+    return character.counts.abilities >= 6 &&
+      Boolean(character.derived.HP || character.derived.SAN || character.derived.MP);
+  }
+
   // 共通スキーマ → CCFOLIA こま形式 JSON
-  function toKomaJson(rawInput, options) {
+  // paletteOverride を渡すと commands にそのまま使う（編集済み出力欄の内容など）
+  function toKomaJson(rawInput, options, paletteOverride) {
     const P = parser();
     const character = buildCharacter(rawInput);
     const edition = character.meta.edition === "7e" ? "7e" : "6e";
 
     const extracted = P ? P.extractPaletteText(rawInput) : { text: "" };
-    const commands = extracted.text && P ? P.buildOutput(extracted.text, edition, options || {}) : "";
+    const commands = typeof paletteOverride === "string" && paletteOverride.trim()
+      ? paletteOverride
+      : (extracted.text && P ? P.buildOutput(extracted.text, edition, options || {}) : "");
 
     const status = [];
     for (const label of ["HP", "MP", "SAN"]) {
@@ -402,6 +415,7 @@
     ABILITY_KEYS,
     buildCharacter,
     toKomaJson,
+    shouldExportKoma,
     parseStorageSheet,
     damageBonus,
     splitName,
