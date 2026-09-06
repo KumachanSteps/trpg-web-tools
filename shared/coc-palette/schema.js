@@ -365,10 +365,15 @@
     const character = buildCharacter(rawInput);
     const edition = character.meta.edition === "7e" ? "7e" : "6e";
 
+    const buildOpts = Object.assign({}, options || {});
+    if (buildOpts.injectMotherTongue && !Number.isFinite(buildOpts.eduValue) && character.abilities.EDU != null) {
+      buildOpts.eduValue = character.abilities.EDU;
+    }
+
     const extracted = P ? P.extractPaletteText(rawInput) : { text: "" };
     const commands = typeof paletteOverride === "string" && paletteOverride.trim()
       ? paletteOverride
-      : (extracted.text && P ? P.buildOutput(extracted.text, edition, options || {}) : "");
+      : (extracted.text && P ? P.buildOutput(extracted.text, edition, buildOpts) : "");
 
     const status = [];
     for (const label of ["HP", "MP", "SAN"]) {

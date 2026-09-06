@@ -115,9 +115,23 @@
 
   function importCharacterData(rawText) {
     hideToast(errorToast);
+    const text = String(rawText || "").trim();
+
+    let list;
     try {
-      const parsed = JSON.parse(rawText.trim());
-      const list = Array.isArray(parsed) ? parsed : [parsed];
+      const parsed = JSON.parse(text);
+      list = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (error) {
+      // JSONでない: キャラクター保管所などのテキストシートを駒JSONへ変換して読み込む
+      const koma = tryBuildKomaFromText(text);
+      if (!koma) {
+        showToast(errorToast, "いあきゃら/キャラッシュ/Charaeno のコマ出力データ、またはキャラクター保管所のテキストとして読み込めませんでした。");
+        return;
+      }
+      list = [koma];
+    }
+
+    try {
       pcs.push(...list.map(item => {
         const pc = CharashiParser.normalizeCharacterData(item);
         return formatPaletteToggle.checked ? CharashiParser.formatPcPalette(pc) : pc;
@@ -125,7 +139,18 @@
       saveCards();
       renderCards();
     } catch (error) {
-      showToast(errorToast, error.message || "いあきゃらのコマ出力データとして読み込めませんでした。");
+      showToast(errorToast, error.message || "データの読み込みに失敗しました。");
+    }
+  }
+
+  function tryBuildKomaFromText(text) {
+    if (!window.ChatPaletteSchema || typeof window.ChatPaletteSchema.shouldExportKoma !== "function") return null;
+    if (!window.ChatPaletteSchema.shouldExportKoma(text)) return null;
+    try {
+      return window.ChatPaletteSchema.toKomaJson(text, { injectMotherTongue: true });
+    } catch (error) {
+      console.warn(error);
+      return null;
     }
   }
 
