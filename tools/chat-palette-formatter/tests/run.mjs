@@ -20,9 +20,9 @@ const UPDATE = process.argv.includes("--update");
 // parser.js / sources.js はブラウザ前提（bare `window`）なので最小限のシムを張る。
 globalThis.window = globalThis.window || {};
 
-const ChatPaletteParser = require("../js/parser.js");
-const ChatPaletteSources = require("../js/sources.js");
-const ChatPaletteSchema = require("../js/schema.js");
+const ChatPaletteParser = require("../../../shared/coc-palette/parser.js");
+const ChatPaletteSources = require("../../../shared/coc-palette/sources.js");
+const ChatPaletteSchema = require("../../../shared/coc-palette/schema.js");
 
 // フィクスチャ名 → 期待するサービス判定
 const EXPECTED_SERVICE = {

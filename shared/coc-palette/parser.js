@@ -977,6 +977,49 @@ window.ChatPaletteParser = (() => {
     );
   }
 
+  // --- 母国語（EDUベース）の補完。buildOutput の { injectMotherTongue: true } でのみ有効 ---
+
+  function getAbilityBaseValueFromLine(line, statName) {
+    const upper = String(line || "").toUpperCase();
+    const directMatch = upper.match(new RegExp("^" + statName + "[：:]\\s*([0-9]{1,3})"));
+
+    if (directMatch) return Number(directMatch[1]);
+
+    const normalizedSkill = String(normalizeSkillName(getSkillFromLine(line)) || "").replaceAll(" ", "").toUpperCase();
+
+    if ([statName, statName + "×5", statName + "X5", statName + "*5"].includes(normalizedSkill)) {
+      const value = getValueFromLine(line);
+      if (/^[0-9]{1,3}$/.test(value)) return Number(value);
+    }
+
+    return null;
+  }
+
+  function getEduRollValue(text, edition, capturedEduValue) {
+    let eduValue = Number.isFinite(capturedEduValue) ? capturedEduValue : null;
+
+    if (eduValue === null) {
+      for (const line of String(text || "").split(NL).map(l => l.trim()).filter(Boolean)) {
+        const value = getAbilityBaseValueFromLine(line, "EDU");
+        if (Number.isFinite(value)) { eduValue = value; break; }
+      }
+    }
+
+    if (Number.isFinite(eduValue)) return eduValue <= 30 ? String(eduValue * 5) : String(eduValue);
+
+    return edition === "6e" ? "{EDU}*5" : "{EDU}";
+  }
+
+  function hasMotherTongueLine(buckets, present) {
+    if ([...present.keys()].some(skill => normalizeSkillName(skill).startsWith("母国語"))) return true;
+    return buckets.social.some(line => normalizeSkillName(getSkillFromLine(line)).startsWith("母国語"));
+  }
+
+  function injectMotherTongueLine(buckets, present, edition, text, capturedEduValue, seen) {
+    if (hasMotherTongueLine(buckets, present)) return;
+    addUnique(buckets.social, lineForSkill(edition, getEduRollValue(text, edition, capturedEduValue), "母国語：(要編集)"), seen);
+  }
+
   function pushSection(output, label, lines) {
     if (!lines || lines.length === 0) return;
 
@@ -1001,6 +1044,7 @@ window.ChatPaletteParser = (() => {
 
     const present = new Map();
     const seen = new Set();
+    let capturedEduValue = null;
     const lines = canonicalizePaletteText(text).split(NL).map(line => line.trim()).filter(Boolean);
 
     for (const line of lines) {
@@ -1017,6 +1061,8 @@ window.ChatPaletteParser = (() => {
       } else if (parsed.type === "damage") {
         addUnique(buckets.damage, parsed.line, seen);
       } else if (parsed.type === "status") {
+        const eduValue = getAbilityBaseValueFromLine(parsed.line, "EDU");
+        if (Number.isFinite(eduValue)) capturedEduValue = eduValue;
         addUnique(buckets.status, normalizeAbilityRoll(parsed.line, edition), seen);
       } else {
         addUnique(buckets.other, parsed.line, seen);
@@ -1028,6 +1074,11 @@ window.ChatPaletteParser = (() => {
     removePlainCombatWhenSpecializedExists6e(buckets, edition);
 
     injectCoreLines(buckets, present, edition, seen);
+
+    if (settings.injectMotherTongue) {
+      const eduHint = Number.isFinite(settings.eduValue) ? settings.eduValue : capturedEduValue;
+      injectMotherTongueLine(buckets, present, edition, text, eduHint, seen);
+    }
 
     cleanDiceRedundancy(buckets, edition);
     removePlainMeleeWhenSpecializedExists(buckets, edition);
@@ -1107,6 +1158,21 @@ window.ChatPaletteParser = (() => {
         name: "7e SAN command normalizes from 1d100 to CC",
         actual: normalizeCommand("1d100<={SAN} 【正気度ロール】", "7e"),
         expected: "CC<={SAN} 【正気度ロール】"
+      },
+      {
+        name: "injectMotherTongue off by default (no 母国語 line added)",
+        actual: buildOutput("EDU:17", "6e").includes("母国語"),
+        expected: false
+      },
+      {
+        name: "injectMotherTongue: true adds 母国語 from EDU base value (6e)",
+        actual: buildOutput("EDU:17", "6e", { injectMotherTongue: true }).includes("CCB<=85 【母国語：(要編集)】"),
+        expected: true
+      },
+      {
+        name: "injectMotherTongue does not duplicate an existing 母国語 line",
+        actual: (buildOutput("EDU:17" + NL + "CCB<=95 【母国語：日本語】", "6e", { injectMotherTongue: true }).match(/母国語/g) || []).length,
+        expected: 1
       },
       {
         name: "6e SAN command normalizes from 1d100 to CCB",

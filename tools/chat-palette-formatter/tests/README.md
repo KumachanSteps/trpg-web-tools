@@ -1,6 +1,7 @@
 # tests
 
-チャパレ整形ツールの回帰テスト。ビルド不要、Node 18+ の標準モジュールのみ。
+パーシング／チャパレ整形ロジック（`shared/coc-palette/`）の回帰テスト。
+ビルド不要、Node 18+ の標準モジュールのみ。
 
 ```bash
 cd tools/chat-palette-formatter
@@ -8,12 +9,15 @@ node tests/run.mjs            # 検証
 node tests/run.mjs --update   # スナップショットを現在の出力で更新
 ```
 
+対象コードは `shared/coc-palette/{parser,sources,schema}.js`（チャパレ整形ツールと
+GM用キャラシビューアーが共用）。`run.mjs` は相対 `require` でそれを読み込む。
+
 ## 何を見ているか
 
 - `sources.js` の `detectService()` が各フィクスチャで期待どおりのサービスを返すか
   （期待値は `run.mjs` の `EXPECTED_SERVICE`）
 - `parser.js` の `buildOutput()` の出力が `snapshots/*.snap.txt` と一致するか
-  （＝リファクタで既存の整形結果が変わっていないことの確認）
+- `schema.js` の `buildCharacter()` / `toKomaJson()` / `shouldExportKoma()`
 
 ## ディレクトリ
 
