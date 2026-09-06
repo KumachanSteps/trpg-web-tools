@@ -672,6 +672,17 @@ window.ChatPaletteParser = (() => {
     );
   }
 
+  // present に「base：〇〇」の専門技能があるか（例: こぶし に対する こぶし：パンチ）
+  function hasPresentSpecialization(present, baseSkill) {
+    const prefix = baseSkill + "：";
+
+    for (const key of present.keys()) {
+      if (key.startsWith(prefix)) return true;
+    }
+
+    return false;
+  }
+
   function buildInitialLines(present, edition) {
     const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
     const skip = new Set(["目星", "聞き耳", "図書館", "回避", "幸運", "正気度ロール", "SAN", "アイデア", "知識"]);
@@ -679,7 +690,11 @@ window.ChatPaletteParser = (() => {
     if (edition === "7e") skip.add("近接戦闘");
 
     return Object.entries(initial)
-      .filter(([skill]) => !skip.has(skill) && !present.has(skill))
+      .filter(([skill]) =>
+        !skip.has(skill) &&
+        !present.has(skill) &&
+        !hasPresentSpecialization(present, skill)
+      )
       .map(([skill, value]) => lineForSkill(edition, value, skill));
   }
 
@@ -974,6 +989,17 @@ window.ChatPaletteParser = (() => {
       {
         name: "above-initial skill stays in its category by default",
         actual: buildOutput("CCB<=44 【医学】", "6e").split("========初期値========")[0].includes("CCB<=44 【医学】"),
+        expected: true
+      },
+      {
+        name: "6e specialization suppresses the plain base skill in 初期値 section",
+        actual: buildOutput("CCB<=50 【こぶし：パンチ】" + NL + "CCB<=40 【医学】", "6e").includes("【こぶし】"),
+        expected: false
+      },
+      {
+        name: "6e specialized こぶし：パンチ itself is kept (in 戦闘技能)",
+        actual: buildOutput("CCB<=50 【こぶし：パンチ】" + NL + "CCB<=40 【医学】", "6e")
+          .split("========初期値========")[0].includes("CCB<=50 【こぶし：パンチ】"),
         expected: true
       },
       {
