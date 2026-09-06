@@ -23,7 +23,8 @@ const INITIAL_7E = {
   "操縦": 1, "跳躍": 20, "電気修理": 10, "ナビゲート": 10, "変装": 5, "ダイビング": 1,
   "言いくるめ": 5, "説得": 10, "威圧": 15, "魅惑": 15,
   "医学": 1, "オカルト": 5, "芸術": 5, "経理": 5, "考古学": 1, "コンピューター": 5, "科学": 1,
-  "心理学": 10, "人類学": 1, "電子工学": 1, "自然": 10, "法律": 5, "歴史": 5, "サバイバル": 10, "伝承": 1
+  "心理学": 10, "人類学": 1, "電子工学": 1, "自然": 10, "法律": 5, "歴史": 5, "サバイバル": 10, "伝承": 1,
+  "ほかの言語": 1, "他の言語": 1
 };
 
 const CATEGORY_6E = {
@@ -758,7 +759,11 @@ window.ChatPaletteParser = (() => {
 
   function buildInitialLines(present, edition) {
     const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
-    const skip = new Set(["目星", "聞き耳", "図書館", "回避", "幸運", "正気度ロール", "SAN", "アイデア", "知識"]);
+    // 初期値表には持つが「入力に無ければ自動追加しない」技能（入力にあれば初期値判定に使う）
+    const skip = new Set([
+      "目星", "聞き耳", "図書館", "回避", "幸運", "正気度ロール", "SAN", "アイデア", "知識",
+      "ほかの言語", "他の言語"
+    ]);
 
     if (edition === "7e") skip.add("近接戦闘");
 
@@ -914,13 +919,31 @@ window.ChatPaletteParser = (() => {
     return merged;
   }
 
+  // present から値を引く。素の技能が無い/0 なら「技能：〇〇」の専門技能の値を使う
+  // （例: 近接戦闘（）0 でも 近接戦闘：格闘 73 を参照）
+  function resolvePresentValue(present, skill) {
+    const direct = present.get(skill);
+
+    if (direct !== undefined && String(direct) !== "0") return direct;
+
+    const prefix = skill + "：";
+
+    for (const [key, value] of present.entries()) {
+      if (key.startsWith(prefix) && String(value) !== "0") return value;
+    }
+
+    return direct;
+  }
+
   function buildParamLines(present, edition) {
     const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
     const skills = edition === "6e"
       ? ["アイデア", "幸運", "知識", "目星", "聞き耳", "図書館", "回避", "こぶし"]
       : ["アイデア", "知識", "目星", "聞き耳", "図書館", "回避", "近接戦闘"];
 
-    return skills.map(skill => "//" + skill + " = " + (present.get(skill) || initial[skill] || 0));
+    return skills.map(skill =>
+      "//" + skill + " = " + (resolvePresentValue(present, skill) || initial[skill] || 0)
+    );
   }
 
   function pushSection(output, label, lines) {
@@ -1166,6 +1189,22 @@ window.ChatPaletteParser = (() => {
         actual: buildOutput("CC<=40 射撃（ライフル／ショットガン）" + NL + "CC<=50 目星", "7e")
           .split("========初期値========")[0].includes("CC<=40 【射撃：ライフル/ショットガン】"),
         expected: true
+      },
+      {
+        name: "7e パラメータ化 近接戦闘 reads from 近接戦闘：格闘",
+        actual: buildOutput("CC<=73 近接戦闘（格闘）" + NL + "CC<=0 近接戦闘（）", "7e").includes("//近接戦闘 = 73"),
+        expected: true
+      },
+      {
+        name: "7e ほかの言語 at 1 goes to 初期値 section",
+        actual: (buildOutput("CC<=1 ほかの言語（）" + NL + "CC<=50 目星", "7e").split("========初期値========")[1] || "")
+          .includes("【ほかの言語】"),
+        expected: true
+      },
+      {
+        name: "7e ほかの言語 is not auto-added when absent",
+        actual: buildOutput("CC<=50 目星", "7e").includes("【ほかの言語】"),
+        expected: false
       },
       {
         name: "square-bracket ability roll canonicalizes",
