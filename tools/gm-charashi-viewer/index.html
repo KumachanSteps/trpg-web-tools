@@ -24,12 +24,12 @@
           <div class="header-top-tags">
             <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG Webツール観測所 に戻る">← TRPG Webツール観測所</a>
             <span class="header-pill header-pill-cyan">CoC / エモクロア</span>
-            <span class="header-pill header-pill-violet">いあきゃらコマ出力</span>
-            <span class="header-pill header-pill-amber">チャパレ</span>
+            <span class="header-pill header-pill-violet">コマ出力 / 保管所テキスト</span>
+            <span class="header-pill header-pill-amber">チャパレ整形</span>
           </div>
           <div class="header-title-area">
             <h1 class="site-title">GM用キャラシビューアー</h1>
-            <p class="site-description">いあきゃらのコマ出力データを貼り付けると、GM用のPCカードをすぐ表示します。</p>
+            <p class="site-description">いあきゃら・キャラッシュ・Charaeno のコマ出力データ、またはキャラクター保管所のテキストを貼り付けると、GM用のPCカードをすぐ表示します。</p>
           </div>
         </div>
         <div class="header-side-actions">
@@ -41,7 +41,7 @@
             </label>
             <button class="btn-danger header-delete-button" id="deleteAllBtn" type="button">全データ削除</button>
           </div>
-          <div class="header-version">v1.39 2026.06.18</div>
+          <div class="header-version">v1.40 2026.09.06</div>
         </div>
       </div>
     </header>
@@ -49,8 +49,8 @@
     <main class="viewer-panel">
       <div class="paste-layer">
         <div>
-          <span class="paste-layer-title">いあきゃら コマ出力データを貼り付け</span>
-          <p class="paste-layer-note">このエリア上で Ctrl / Cmd + V すると、いあきゃらのコマ出力データを読み込んでカードを生成します。カードはこのレイヤーの上に表示されます。</p>
+          <span class="paste-layer-title">キャラ駒データ / 保管所テキストを貼り付け</span>
+          <p class="paste-layer-note">このエリア上で Ctrl / Cmd + V すると、いあきゃら・キャラッシュ・Charaeno のコマ出力データ、またはキャラクター保管所のテキストを読み込んでカードを生成します。カードはこのレイヤーの上に表示されます。</p>
         </div>
       </div>
       <div class="toast error" id="errorToast"></div>
@@ -95,7 +95,10 @@
 
   <script src="./js/i18l.js"></script>
   <script src="./js/language.js"></script>
-  <script src="./js/perser.js"></script>
+  <script src="../../shared/coc-palette/parser.js"></script>
+  <script src="../../shared/coc-palette/sources.js"></script>
+  <script src="../../shared/coc-palette/schema.js"></script>
+  <script src="./js/charashi-cards.js"></script>
   <script src="./js/main.js"></script>
 </body>
 </html>

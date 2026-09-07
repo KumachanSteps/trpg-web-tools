@@ -99,6 +99,32 @@
 
     <section class="portal-info-section" aria-label="Changelog">
       <article class="portal-info-card release-item">
+        <p class="release-date">2026/09/06</p>
+        <h2>いあキャラMEMOジェネレータ v1.10</h2>
+        <ul>
+          <li>チャットパレット整形と版判定を共通モジュール（<code>shared/coc-palette/</code>）へ統一しました。</li>
+          <li>いあきゃら以外のコマ出力データ（キャラッシュ・Charaeno）も駒JSON入力欄で読み込み・整形できるようにしました。</li>
+          <li>キャラクター保管庫のテキストを駒JSON入力欄に貼り付けると、駒データへ変換して扱えるようにしました。</li>
+          <li>母国語（EDU基準）の補完に対応しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
+        <p class="release-date">2026/09/06</p>
+        <h2>CoCチャパレ整形ツール v2.56 大型更新 / GM用キャラシビューアー v1.40</h2>
+        <ul>
+          <li>CoCチャパレ整形ツールを v2.56 へ更新。いあきゃら・キャラッシュ・Charaeno・キャラクター保管庫のデータに対応し、入力元を自動判定するようにしました。</li>
+          <li>技能名の囲み記号（〈〉《》[]）や囲みなし表記、分野表記（射撃（拳銃）、運転（（軽トラ））など）を認識できるようにしました。</li>
+          <li>正気度ロールを6版=CCB／7版=CCの版コマンドで出力するように統一しました。</li>
+          <li>整形前に入力元・版・能力値・技能数を確認できる「解析結果プレビュー」を追加しました。</li>
+          <li>値が初期値と一致する技能は初期値セクションへまとめるようにし、「初期値もカテゴリ分け」チェックボックスで切り替えられるようにしました。</li>
+          <li>キャラクター保管庫のテキスト出力から能力値・HP／MP／SAN・プロフィールを取り出し、駒データが揃っていればコピー時に自動で駒JSONを生成するようにしました。</li>
+          <li>整形・解析ロジックを共通モジュール（<code>shared/coc-palette/</code>）へ分離しました。</li>
+          <li>GM用キャラシビューアーを v1.40 へ更新。キャラッシュ・Charaeno のコマ出力データや、キャラクター保管庫のテキストからもPCカードを生成できるようにし、チャパレ整形を上記の共通モジュールへ統一しました。</li>
+        </ul>
+      </article>
+
+      <article class="portal-info-card release-item">
         <p class="release-date">2026/07/19</p>
         <h2>背景モーションメーカー v1.04 更新</h2>
         <ul>

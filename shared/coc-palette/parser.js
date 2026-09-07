@@ -23,7 +23,8 @@ const INITIAL_7E = {
   "操縦": 1, "跳躍": 20, "電気修理": 10, "ナビゲート": 10, "変装": 5, "ダイビング": 1,
   "言いくるめ": 5, "説得": 10, "威圧": 15, "魅惑": 15,
   "医学": 1, "オカルト": 5, "芸術": 5, "経理": 5, "考古学": 1, "コンピューター": 5, "科学": 1,
-  "心理学": 10, "人類学": 1, "電子工学": 1, "自然": 10, "法律": 5, "歴史": 5, "サバイバル": 10, "伝承": 1
+  "心理学": 10, "人類学": 1, "電子工学": 1, "自然": 10, "法律": 5, "歴史": 5, "サバイバル": 10, "伝承": 1,
+  "ほかの言語": 1, "他の言語": 1
 };
 
 const CATEGORY_6E = {
@@ -158,6 +159,28 @@ window.ChatPaletteParser = (() => {
     return search(obj);
   }
 
+  // キャラクター保管庫のテキストシートか（技能表・地の文を多く含む形式）
+  function looksLikeStorageSheet(text) {
+    return /■\s*(能力値|技能|簡易用|戦闘|所持品)\s*■/.test(text) ||
+      /-{3,}\s*.+系技能\s*-{3,}/.test(text);
+  }
+
+  // 保管庫シートから、チャットパレットに関係する行だけを残す
+  function keepPaletteLines(text) {
+    return String(text || "").split(NL).filter(line => {
+      const t = line.trim();
+
+      if (!t) return false;
+      if (/^s?(CCB?|CC|CBR?B|1d100|1D100)\s*<=/i.test(t)) return true;   // ロールコマンド
+      if (/^s?(CCB?|CC|1d100|1D100)\b.*【.+】/i.test(t)) return true;     // 整形済みロール行
+      if (/^:(?:HP|MP|SAN|POW|STR|CON|DEX|APP|SIZ|INT|EDU|幸運)[+\-]/i.test(t)) return true; // コマンド追加
+      if (/^(RESB|CBRB|CBPB)\b/i.test(t)) return true;
+      if (/^\d*[dD]\d.*(?:ダメージ|\{?DB\}?)/i.test(t)) return true;      // ダメージ行
+
+      return false;
+    }).join(NL);
+  }
+
   function extractPaletteText(rawInput) {
     const trimmed = rawInput.trim();
 
@@ -167,16 +190,28 @@ window.ChatPaletteParser = (() => {
       const json = JSON.parse(trimmed);
 
       return {
-        text: normalizeText(findByKeys(json, ["commands", "chatPalette", "chat_palette", "palette", "memo", "command"], true)),
+        text: canonicalizePaletteText(normalizeText(findByKeys(json, ["commands", "chatPalette", "chat_palette", "palette", "memo", "command"], true))),
         source: "json"
       };
     } catch (error) {
+      let text = normalizeText(trimmed);
+
+      if (looksLikeStorageSheet(text)) text = keepPaletteLines(text);
+
       return {
-        text: normalizeText(trimmed),
+        text: canonicalizePaletteText(text),
         source: "text"
       };
     }
   }
+
+  const SKILL_ALIAS = {
+    "組みつき": "組み付き",
+    "組みつ": "組み付き"
+  };
+
+  // スラッシュを含むが「基礎/専門」ではなくそれ自体で1つの技能名（7版の複合技能）
+  const COMPOUND_SKILL_NAMES = ["芸術/製作"];
 
   function normalizeSkillName(skillName) {
     let skill = String(skillName || "").trim();
@@ -189,13 +224,29 @@ window.ChatPaletteParser = (() => {
       .replaceAll("：", ":")
       .replaceAll("（", "(")
       .replaceAll("）", ")")
+      .replaceAll("／", "/")
       .replaceAll("【", "")
       .replaceAll("】", "")
+      .replaceAll("〈", "")
+      .replaceAll("〉", "")
+      .replaceAll("《", "")
+      .replaceAll("》", "")
       .trim();
+
+    // スラッシュ: 分野指定（: や ()）が無く、既知の複合技能でもなければ
+    // 「基礎/専門」の区切りとして : に寄せる（例: こぶし/パンチ → こぶし:パンチ）。
+    // 分野がある場合（例: 芸術/製作：リーゼント、射撃(ライフル/ショットガン)）は複合名の一部として / のまま残す。
+    if (skill.includes("/") && !skill.includes(":") && !skill.includes("(")) {
+      if (!COMPOUND_SKILL_NAMES.some(name => skill === name)) {
+        skill = skill.replaceAll("/", ":");
+      }
+    }
 
     while (skill.endsWith(")") && countChar(skill, "(") < countChar(skill, ")")) {
       skill = skill.slice(0, -1).trim();
     }
+
+    if (SKILL_ALIAS[skill]) skill = SKILL_ALIAS[skill];
 
     if (skill === "クトゥルフ神話") return "クトゥルフ神話技能";
     if (skill === "クトゥルフ神話技能") return skill;
@@ -261,6 +312,82 @@ window.ChatPaletteParser = (() => {
     return String(text).split("").filter(ch => ch === target).length;
   }
 
+  const ROLL_MARKERS = ["<=", "＜=", "<＝", "≦"];
+  const SKILL_BRACKET_PAIRS = [["〈", "〉"], ["《", "》"], ["［", "］"], ["[", "]"]];
+  const THRESHOLD_TOKEN = /^([0-9]+|\{[^}]+\}(?:\s*[*x×xX]\s*[0-9]+)?)/;
+
+  function hasRollMarker(text) {
+    return ROLL_MARKERS.some(marker => String(text).includes(marker));
+  }
+
+  // キャラエノの分野表記を整える:
+  //   技能（（軽トラ）） → 技能：軽トラ   （副エントリの (( )) 注記を分野として保持）
+  //   技能（）           → 技能           （空の分野は落とす）
+  function normalizeSkillFieldNotation(name) {
+    let out = String(name || "").trim();
+
+    out = out.replace(/[（(]{2}\s*([^（()）)]*?)\s*[）)]{2}/g, (whole, inner) =>
+      inner ? "：" + inner : ""
+    );
+
+    out = out.replace(/[（(]\s*[）)]/g, "");
+
+    return out.trim();
+  }
+
+  // 〈技能〉《技能》[技能]、または囲みなしの技能名を、既存ロジックが前提とする
+  // 「コマンド<=閾値 【技能名】」形へ揃える。
+  // すでに【】を含む行と、ロール記号の無い行（ダメージ行・地の文・:HP- 等）は触らない。
+  function canonicalizeSkillLine(line) {
+    const raw = String(line);
+    const trimmed = raw.trim();
+
+    if (!trimmed || !hasRollMarker(trimmed)) return raw;
+    if (trimmed.includes("【") && trimmed.includes("】")) return raw;
+
+    for (const [open, close] of SKILL_BRACKET_PAIRS) {
+      const start = trimmed.indexOf(open);
+      const end = start < 0 ? -1 : trimmed.lastIndexOf(close);
+
+      if (start >= 0 && end > start) {
+        const inner = normalizeSkillFieldNotation(trimmed.slice(start + 1, end).trim());
+        return inner ? trimmed.slice(0, start) + "【" + inner + "】" + trimmed.slice(end + 1) : raw;
+      }
+    }
+
+    let marker = "";
+    let pos = -1;
+
+    for (const candidate of ROLL_MARKERS) {
+      const at = trimmed.indexOf(candidate);
+
+      if (at >= 0) {
+        marker = candidate;
+        pos = at;
+        break;
+      }
+    }
+
+    if (pos < 0) return raw;
+
+    const head = trimmed.slice(0, pos + marker.length);
+    const rest = trimmed.slice(pos + marker.length).replace(/^\s+/, "");
+    const thresholdMatch = rest.match(THRESHOLD_TOKEN);
+
+    if (!thresholdMatch) return raw;
+
+    const threshold = thresholdMatch[0].replace(/\s+/g, "");
+    let name = normalizeSkillFieldNotation(rest.slice(thresholdMatch[0].length).trim());
+
+    if (!name) return raw;
+
+    return head + threshold + " 【" + name + "】";
+  }
+
+  function canonicalizePaletteText(text) {
+    return String(text || "").split(NL).map(canonicalizeSkillLine).join(NL);
+  }
+
   function getSkillFromLine(line) {
     const start = line.indexOf("【");
     const end = line.indexOf("】", start + 1);
@@ -307,7 +434,8 @@ window.ChatPaletteParser = (() => {
     return value;
   }
 
-  function detectEdition(text) {
+  function detectEdition(rawText) {
+    const text = canonicalizePaletteText(rawText);
     const names = text
       .split(NL)
       .map(getSkillFromLine)
@@ -343,8 +471,9 @@ window.ChatPaletteParser = (() => {
   function normalizeCommand(line, edition) {
     const trimmed = line.trim();
 
-    if (edition === "7e" && trimmed.toLowerCase().startsWith("1d100<=")) {
-      return "CC" + trimmed.slice(5);
+    // 正気度ロール等の 1d100<= 形式も版のコマンド（6版=CCB / 7版=CC）へ寄せる
+    if (trimmed.toLowerCase().startsWith("1d100<=")) {
+      return commandForEdition(edition) + trimmed.slice(5);
     }
 
     for (const command of ["sCCB", "sCC", "CCB", "CC"]) {
@@ -389,6 +518,11 @@ window.ChatPaletteParser = (() => {
       };
     }
 
+    // ロールコマンドはあるが技能名が無い行（CCB<= / 1d100<= SAN値 等）はダメージ扱いにしない
+    if (hasCommand) {
+      return { type: "other", line };
+    }
+
     if (["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU", "HP", "MP", "SAN"].some(stat => upper.startsWith(stat + ":") || upper.startsWith(stat + "："))) {
       return { type: "status", line };
     }
@@ -420,6 +554,8 @@ window.ChatPaletteParser = (() => {
     const target = skill + " " + skillFull;
 
     if (target.includes("語")) return "social";
+    // 「芸術」「芸術/製作」系は（製作 トークンに引かれず）知識技能へ
+    if (target.includes("芸術")) return "knowledge";
 
     for (const category of ["dice", "explore", "combat", "action", "social", "knowledge"]) {
       if (table[category].some(word => target.includes(word))) return category;
@@ -435,6 +571,60 @@ window.ChatPaletteParser = (() => {
 
     list.push(key);
     seen.add(key);
+  }
+
+  // 整形はせず、パレット本文を構造化して返す（解析結果プレビュー / 共通スキーマ用）。
+  // buildOutput とは独立。出力そのものには影響しない。
+  function analyzePalette(rawText, edition) {
+    const text = canonicalizePaletteText(rawText);
+    const skills = [];
+    const damageLines = [];
+    const abilityRolls = [];
+    const other = [];
+    const seenSkill = new Set();
+
+    for (const rawLine of text.split(NL)) {
+      const line = rawLine.trim();
+
+      if (!line) continue;
+
+      const parsed = parseLine(line);
+
+      if (parsed.type === "skill") {
+        const name = normalizeSkillNameForEdition(parsed.skill, edition);
+
+        if (!name) {
+          other.push(line);
+          continue;
+        }
+
+        if (seenSkill.has(name)) continue;
+
+        seenSkill.add(name);
+
+        const token = parsed.value || "";
+        const numeric = /^[0-9]+$/.test(token) ? Number(token) : null;
+        const candidates = initialValueCandidates(name, edition);
+
+        skills.push({
+          name,
+          raw: parsed.skillFull,
+          category: categorize(name, name, edition),
+          value: numeric,
+          valueToken: token || null,
+          initial: candidates.length ? candidates[0] : null,
+          isInitial: numeric !== null && candidates.includes(numeric)
+        });
+      } else if (parsed.type === "damage") {
+        damageLines.push(line);
+      } else if (parsed.type === "status") {
+        abilityRolls.push(line);
+      } else {
+        other.push(line);
+      }
+    }
+
+    return { skills, damageLines, abilityRolls, other };
   }
 
   function sortSection(lines, order) {
@@ -455,11 +645,7 @@ window.ChatPaletteParser = (() => {
     const hasLuckRoll = buckets.dice.some(line => line.includes("【幸運】"));
 
     if (!hasSanRoll) {
-      addUnique(
-        buckets.dice,
-        edition === "6e" ? "1d100<={SAN} 【正気度ロール】" : command + "<={SAN} 【正気度ロール】",
-        seen
-      );
+      addUnique(buckets.dice, command + "<={SAN} 【正気度ロール】", seen);
     }
 
     if (edition === "7e" && !hasLuckRoll) {
@@ -523,33 +709,193 @@ window.ChatPaletteParser = (() => {
     });
   }
 
-  function cleanDiceRedundancy(buckets, edition) {
-    if (edition !== "6e") return;
+  // 値0のノイズ行を落とす:
+  //  - クトゥルフ神話技能 が 0（未取得）
+  //  - 「基礎：〇〇」の専門技能がある基礎技能の、素の0行（例: 射撃（）0 / 射撃：拳銃 20）
+  function dropZeroValueNoise(buckets) {
+    const specializedBases = new Set();
 
-    const hasD100San = buckets.dice.some(line =>
-      line.toLowerCase().startsWith("1d100<={san}") && line.includes("【正気度ロール】")
+    for (const key of Object.keys(buckets)) {
+      for (const line of buckets[key]) {
+        const skill = normalizeSkillName(getSkillFromLine(line));
+        if (skill.includes("：")) specializedBases.add(skill.split("：")[0].trim());
+      }
+    }
+
+    for (const key of Object.keys(buckets)) {
+      buckets[key] = buckets[key].filter(line => {
+        const skill = normalizeSkillName(getSkillFromLine(line));
+
+        if (!skill) return true;
+        if (getValueFromLine(line) !== "0") return true;
+
+        if (skill === "クトゥルフ神話技能") return false;
+        if (!skill.includes("：") && specializedBases.has(skill)) return false;
+
+        return true;
+      });
+    }
+  }
+
+  function cleanDiceRedundancy(buckets, edition) {
+    // 正気度ロール / SAN の 1d100<= 形式は版コマンド形へ寄せたものが残るので素の 1d100 行を落とす
+    const hasEditionSan = buckets.dice.some(line =>
+      /^s?(CCB|CC)<=/.test(line) && /【(正気度ロール|SAN)】/.test(line)
     );
 
-    if (hasD100San) {
+    if (hasEditionSan) {
       buckets.dice = buckets.dice.filter(line =>
-        !(line.startsWith("CCB<={SAN}") && line.includes("【正気度ロール】"))
+        !(line.toLowerCase().startsWith("1d100<=") && /【(正気度ロール|SAN)】/.test(line))
       );
     }
+
+    if (edition !== "6e") return;
 
     buckets.dice = buckets.dice.filter(line =>
       !(line.startsWith("CCB<={幸運}") && line.includes("【幸運】"))
     );
   }
 
+  // present に「base：〇〇」の専門技能／複合技能があるか
+  // （例: こぶし に対する こぶし：パンチ、芸術 に対する 芸術/製作：リーゼント）
+  function hasPresentSpecialization(present, baseSkill) {
+    for (const key of present.keys()) {
+      if (key === baseSkill) continue;
+      if (key.startsWith(baseSkill + "：") || key.startsWith(baseSkill + "/")) return true;
+    }
+
+    return false;
+  }
+
+  // present に「base：X/Y」のようにまとめられた技能があり、この skill（base：X 等）を包含しているか
+  // （Charaeno の 射撃：ライフル/ショットガン は 射撃：ライフル と 射撃：ショットガン を兼ねる）
+  function isCoveredByMergedSkill(present, skill) {
+    const colon = skill.indexOf("：");
+
+    if (colon < 0) return false;
+
+    const base = skill.slice(0, colon);
+    const field = skill.slice(colon + 1).trim();
+
+    for (const key of present.keys()) {
+      if (key === skill || !key.startsWith(base + "：")) continue;
+
+      const keyFields = key.slice(colon + 1).split(/[\/／・]/).map(part => part.trim());
+
+      if (keyFields.length > 1 && keyFields.includes(field)) return true;
+    }
+
+    return false;
+  }
+
   function buildInitialLines(present, edition) {
     const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
-    const skip = new Set(["目星", "聞き耳", "図書館", "回避", "幸運", "正気度ロール", "SAN", "アイデア", "知識"]);
+    // 初期値表には持つが「入力に無ければ自動追加しない」技能（入力にあれば初期値判定に使う）
+    const skip = new Set([
+      "目星", "聞き耳", "図書館", "回避", "幸運", "正気度ロール", "SAN", "アイデア", "知識",
+      "ほかの言語", "他の言語"
+    ]);
 
     if (edition === "7e") skip.add("近接戦闘");
 
     return Object.entries(initial)
-      .filter(([skill]) => !skip.has(skill) && !present.has(skill))
+      .filter(([skill]) =>
+        !skip.has(skill) &&
+        !present.has(skill) &&
+        !hasPresentSpecialization(present, skill) &&
+        !isCoveredByMergedSkill(present, skill)
+      )
       .map(([skill, value]) => lineForSkill(edition, value, skill));
+  }
+
+  // 初期値セクションに残す（＝値が初期値でもカテゴリから抜かない）技能
+  const KEEP_IN_CATEGORY_AT_INITIAL = new Set(["目星", "聞き耳", "図書館", "回避", "近接戦闘"]);
+
+  // その技能の初期値候補を返す。
+  // Charaeno のように分野がまとめられている「射撃：ライフル/ショットガン」は
+  // 「射撃：ライフル」「射撃：ショットガン」の初期値をそれぞれ候補にする（名称は入力尊重）。
+  function initialValueCandidates(skill, edition) {
+    const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
+
+    if (Object.prototype.hasOwnProperty.call(initial, skill)) return [initial[skill]];
+
+    const colon = skill.indexOf("：");
+
+    if (colon >= 0) {
+      const base = skill.slice(0, colon);
+      const fields = skill.slice(colon + 1).split(/[\/／・]/).map(part => part.trim()).filter(Boolean);
+      const values = [];
+
+      for (const field of fields) {
+        const key = base + "：" + field;
+        if (Object.prototype.hasOwnProperty.call(initial, key)) values.push(initial[key]);
+      }
+
+      if (values.length) return values;
+    }
+
+    return [];
+  }
+
+  function lineValueEqualsInitial(line, edition) {
+    const skill = normalizeSkillNameForEdition(getSkillFromLine(line), edition);
+
+    if (!skill || KEEP_IN_CATEGORY_AT_INITIAL.has(skill)) return false;
+
+    const token = getValueFromLine(line);
+
+    if (!/^[0-9]+$/.test(token)) return false;
+
+    return initialValueCandidates(skill, edition).includes(Number(token));
+  }
+
+  // 値が初期値と一致する技能をカテゴリから抜き、初期値セクション用の行として返す
+  function extractInitialValueSkills(buckets, edition) {
+    const moved = [];
+
+    for (const key of ["explore", "combat", "action", "social", "knowledge"]) {
+      buckets[key] = buckets[key].filter(line => {
+        if (lineValueEqualsInitial(line, edition)) {
+          moved.push(line);
+          return false;
+        }
+
+        return true;
+      });
+    }
+
+    return moved;
+  }
+
+  function buildInitialSection(present, edition, movedLines) {
+    const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
+    const order = Object.keys(initial);
+    const seen = new Set();
+    const lines = [];
+
+    for (const line of buildInitialLines(present, edition).concat(movedLines || [])) {
+      const key = line.trim();
+
+      if (!key || seen.has(key)) continue;
+
+      seen.add(key);
+      lines.push(line);
+    }
+
+    const orderIndex = line => {
+      const skill = normalizeSkillNameForEdition(getSkillFromLine(line), edition);
+      let i = order.indexOf(skill);
+
+      if (i < 0 && skill.includes("：")) {
+        const base = skill.slice(0, skill.indexOf("："));
+        const first = skill.slice(skill.indexOf("：") + 1).split(/[\/／・]/)[0].trim();
+        i = order.indexOf(base + "：" + first);
+      }
+
+      return i < 0 ? 999 : i;
+    };
+
+    return lines.sort((a, b) => orderIndex(a) - orderIndex(b));
   }
 
   function buildStatusLines(edition) {
@@ -604,13 +950,74 @@ window.ChatPaletteParser = (() => {
     return merged;
   }
 
+  // present から値を引く。素の技能が無い/0 なら「技能：〇〇」の専門技能の値を使う
+  // （例: 近接戦闘（）0 でも 近接戦闘：格闘 73 を参照）
+  function resolvePresentValue(present, skill) {
+    const direct = present.get(skill);
+
+    if (direct !== undefined && String(direct) !== "0") return direct;
+
+    const prefix = skill + "：";
+
+    for (const [key, value] of present.entries()) {
+      if (key.startsWith(prefix) && String(value) !== "0") return value;
+    }
+
+    return direct;
+  }
+
   function buildParamLines(present, edition) {
     const initial = edition === "6e" ? INITIAL_6E : INITIAL_7E;
     const skills = edition === "6e"
       ? ["アイデア", "幸運", "知識", "目星", "聞き耳", "図書館", "回避", "こぶし"]
       : ["アイデア", "知識", "目星", "聞き耳", "図書館", "回避", "近接戦闘"];
 
-    return skills.map(skill => "//" + skill + " = " + (present.get(skill) || initial[skill] || 0));
+    return skills.map(skill =>
+      "//" + skill + " = " + (resolvePresentValue(present, skill) || initial[skill] || 0)
+    );
+  }
+
+  // --- 母国語（EDUベース）の補完。buildOutput の { injectMotherTongue: true } でのみ有効 ---
+
+  function getAbilityBaseValueFromLine(line, statName) {
+    const upper = String(line || "").toUpperCase();
+    const directMatch = upper.match(new RegExp("^" + statName + "[：:]\\s*([0-9]{1,3})"));
+
+    if (directMatch) return Number(directMatch[1]);
+
+    const normalizedSkill = String(normalizeSkillName(getSkillFromLine(line)) || "").replaceAll(" ", "").toUpperCase();
+
+    if ([statName, statName + "×5", statName + "X5", statName + "*5"].includes(normalizedSkill)) {
+      const value = getValueFromLine(line);
+      if (/^[0-9]{1,3}$/.test(value)) return Number(value);
+    }
+
+    return null;
+  }
+
+  function getEduRollValue(text, edition, capturedEduValue) {
+    let eduValue = Number.isFinite(capturedEduValue) ? capturedEduValue : null;
+
+    if (eduValue === null) {
+      for (const line of String(text || "").split(NL).map(l => l.trim()).filter(Boolean)) {
+        const value = getAbilityBaseValueFromLine(line, "EDU");
+        if (Number.isFinite(value)) { eduValue = value; break; }
+      }
+    }
+
+    if (Number.isFinite(eduValue)) return eduValue <= 30 ? String(eduValue * 5) : String(eduValue);
+
+    return edition === "6e" ? "{EDU}*5" : "{EDU}";
+  }
+
+  function hasMotherTongueLine(buckets, present) {
+    if ([...present.keys()].some(skill => normalizeSkillName(skill).startsWith("母国語"))) return true;
+    return buckets.social.some(line => normalizeSkillName(getSkillFromLine(line)).startsWith("母国語"));
+  }
+
+  function injectMotherTongueLine(buckets, present, edition, text, capturedEduValue, seen) {
+    if (hasMotherTongueLine(buckets, present)) return;
+    addUnique(buckets.social, lineForSkill(edition, getEduRollValue(text, edition, capturedEduValue), "母国語：(要編集)"), seen);
   }
 
   function pushSection(output, label, lines) {
@@ -621,7 +1028,8 @@ window.ChatPaletteParser = (() => {
     output.push(label, ...lines);
   }
 
-  function buildOutput(text, edition) {
+  function buildOutput(text, edition, options) {
+    const settings = options || {};
     const buckets = {
       dice: [],
       explore: [],
@@ -636,7 +1044,8 @@ window.ChatPaletteParser = (() => {
 
     const present = new Map();
     const seen = new Set();
-    const lines = text.split(NL).map(line => line.trim()).filter(Boolean);
+    let capturedEduValue = null;
+    const lines = canonicalizePaletteText(text).split(NL).map(line => line.trim()).filter(Boolean);
 
     for (const line of lines) {
       const parsed = parseLine(line);
@@ -652,6 +1061,8 @@ window.ChatPaletteParser = (() => {
       } else if (parsed.type === "damage") {
         addUnique(buckets.damage, parsed.line, seen);
       } else if (parsed.type === "status") {
+        const eduValue = getAbilityBaseValueFromLine(parsed.line, "EDU");
+        if (Number.isFinite(eduValue)) capturedEduValue = eduValue;
         addUnique(buckets.status, normalizeAbilityRoll(parsed.line, edition), seen);
       } else {
         addUnique(buckets.other, parsed.line, seen);
@@ -664,9 +1075,19 @@ window.ChatPaletteParser = (() => {
 
     injectCoreLines(buckets, present, edition, seen);
 
+    if (settings.injectMotherTongue) {
+      const eduHint = Number.isFinite(settings.eduValue) ? settings.eduValue : capturedEduValue;
+      injectMotherTongueLine(buckets, present, edition, text, eduHint, seen);
+    }
+
     cleanDiceRedundancy(buckets, edition);
     removePlainMeleeWhenSpecializedExists(buckets, edition);
     removePlainCombatWhenSpecializedExists6e(buckets, edition);
+    dropZeroValueNoise(buckets);
+
+    // 既定: 値が初期値と一致する技能は初期値セクションへ集約。
+    // 「初期値もカテゴリ分け」ON のときはカテゴリに残す。
+    const movedInitial = settings.initialToCategory ? [] : extractInitialValueSkills(buckets, edition);
 
     const orderTable = edition === "6e" ? CATEGORY_6E : CATEGORY_7E;
 
@@ -684,7 +1105,7 @@ window.ChatPaletteParser = (() => {
     pushSection(output, SECTION_LABELS.knowledge, buckets.knowledge);
     pushSection(output, SECTION_LABELS.damage, buckets.damage);
     pushSection(output, SECTION_LABELS.other, buckets.other);
-    pushSection(output, SECTION_LABELS.initial, buildInitialLines(present, edition));
+    pushSection(output, SECTION_LABELS.initial, buildInitialSection(present, edition, movedInitial));
     pushSection(output, SECTION_LABELS.status, mergeStatusLines(buckets.status, buildStatusLines(edition)));
     pushSection(output, SECTION_LABELS.params, buildParamLines(present, edition));
 
@@ -737,6 +1158,180 @@ window.ChatPaletteParser = (() => {
         name: "7e SAN command normalizes from 1d100 to CC",
         actual: normalizeCommand("1d100<={SAN} 【正気度ロール】", "7e"),
         expected: "CC<={SAN} 【正気度ロール】"
+      },
+      {
+        name: "injectMotherTongue off by default (no 母国語 line added)",
+        actual: buildOutput("EDU:17", "6e").includes("母国語"),
+        expected: false
+      },
+      {
+        name: "injectMotherTongue: true adds 母国語 from EDU base value (6e)",
+        actual: buildOutput("EDU:17", "6e", { injectMotherTongue: true }).includes("CCB<=85 【母国語：(要編集)】"),
+        expected: true
+      },
+      {
+        name: "injectMotherTongue does not duplicate an existing 母国語 line",
+        actual: (buildOutput("EDU:17" + NL + "CCB<=95 【母国語：日本語】", "6e", { injectMotherTongue: true }).match(/母国語/g) || []).length,
+        expected: 1
+      },
+      {
+        name: "6e SAN command normalizes from 1d100 to CCB",
+        actual: normalizeCommand("1d100<={SAN} 【正気度ロール】", "6e"),
+        expected: "CCB<={SAN} 【正気度ロール】"
+      },
+      {
+        name: "6e 正気度ロール output uses CCB, not 1d100",
+        actual: /◼️ダイス\nCCB<=\{SAN\} 【正気度ロール】/.test(buildOutput("CCB<=50 【目星】", "6e")),
+        expected: true
+      },
+      {
+        name: "6e existing 1d100 正気度ロール line is rewritten to CCB (no dup)",
+        actual: buildOutput("1d100<={SAN} 【正気度ロール】" + NL + "CCB<={SAN} 【正気度ロール】", "6e")
+          .split("【正気度ロール】").length - 1,
+        expected: 1
+      },
+      {
+        name: "6e skill at initial value goes to 初期値 section by default",
+        actual: (buildOutput("CCB<=1 【薬学】" + NL + "CCB<=40 【医学】", "6e").split("========初期値========")[1] || "")
+          .includes("CCB<=1 【薬学】"),
+        expected: true
+      },
+      {
+        name: "6e skill at initial value is removed from its category by default",
+        actual: buildOutput("CCB<=1 【薬学】" + NL + "CCB<=40 【医学】", "6e").split("========初期値========")[0]
+          .includes("【薬学】"),
+        expected: false
+      },
+      {
+        name: "initialToCategory keeps an at-initial skill in its category",
+        actual: buildOutput("CCB<=1 【薬学】" + NL + "CCB<=40 【医学】", "6e", { initialToCategory: true })
+          .split("========初期値========")[0].includes("CCB<=1 【薬学】"),
+        expected: true
+      },
+      {
+        name: "目星 at initial value still stays in 探索技能 by default",
+        actual: buildOutput("CCB<=25 【目星】", "6e").split("========初期値========")[0].includes("CCB<=25 【目星】"),
+        expected: true
+      },
+      {
+        name: "above-initial skill stays in its category by default",
+        actual: buildOutput("CCB<=44 【医学】", "6e").split("========初期値========")[0].includes("CCB<=44 【医学】"),
+        expected: true
+      },
+      {
+        name: "6e specialization suppresses the plain base skill in 初期値 section",
+        actual: buildOutput("CCB<=50 【こぶし：パンチ】" + NL + "CCB<=40 【医学】", "6e").includes("【こぶし】"),
+        expected: false
+      },
+      {
+        name: "6e specialized こぶし：パンチ itself is kept (in 戦闘技能)",
+        actual: buildOutput("CCB<=50 【こぶし：パンチ】" + NL + "CCB<=40 【医学】", "6e")
+          .split("========初期値========")[0].includes("CCB<=50 【こぶし：パンチ】"),
+        expected: true
+      },
+      {
+        name: "charash angle brackets canonicalize to 【】",
+        actual: canonicalizeSkillLine("CCB<=75 〈アイデア〉"),
+        expected: "CCB<=75 【アイデア】"
+      },
+      {
+        name: "charaeno bracketless skill canonicalizes",
+        actual: canonicalizeSkillLine("CC<=73 近接戦闘（格闘）"),
+        expected: "CC<=73 【近接戦闘（格闘）】"
+      },
+      {
+        name: "charaeno double-paren annotation becomes a field",
+        actual: canonicalizeSkillLine("CC<=35 運転（（軽トラ））"),
+        expected: "CC<=35 【運転：軽トラ】"
+      },
+      {
+        name: "charaeno compound skill + double-paren field",
+        actual: normalizeSkillName(canonicalizeSkillLine("CC<=44 芸術／製作（（リーゼント））").split("【")[1].split("】")[0]),
+        expected: "芸術/製作：リーゼント"
+      },
+      {
+        name: "charaeno slash inside a field stays a slash (no double colon)",
+        actual: normalizeSkillName(canonicalizeSkillLine("CC<=25 射撃（ライフル／ショットガン）").split("【")[1].split("】")[0]),
+        expected: "射撃：ライフル/ショットガン"
+      },
+      {
+        name: "charaeno empty parens are dropped",
+        actual: canonicalizeSkillLine("CC<=1 科学（）"),
+        expected: "CC<=1 【科学】"
+      },
+      {
+        name: "クトゥルフ神話技能 at 0 is dropped from output",
+        actual: buildOutput("CC<=0 クトゥルフ神話" + NL + "CC<=44 医学", "7e").includes("クトゥルフ神話"),
+        expected: false
+      },
+      {
+        name: "クトゥルフ神話技能 above 0 is kept",
+        actual: buildOutput("CCB<=21 クトゥルフ神話" + NL + "CCB<=44 医学", "6e").includes("【クトゥルフ神話技能】"),
+        expected: true
+      },
+      {
+        name: "bare 射撃 at 0 dropped when a 射撃：… specialization exists (7e)",
+        actual: buildOutput("CC<=0 射撃（）" + NL + "CC<=20 射撃（拳銃）", "7e").split("========初期値========")[0]
+          .includes("【射撃】"),
+        expected: false
+      },
+      {
+        name: "7e merged 射撃：ライフル/ショットガン at 25 goes to 初期値 (name kept)",
+        actual: (buildOutput("CC<=25 射撃（ライフル／ショットガン）" + NL + "CC<=50 目星", "7e")
+          .split("========初期値========")[1] || "").includes("CC<=25 【射撃：ライフル/ショットガン】"),
+        expected: true
+      },
+      {
+        name: "7e merged 射撃：ライフル/ショットガン above initial stays in 戦闘技能",
+        actual: buildOutput("CC<=40 射撃（ライフル／ショットガン）" + NL + "CC<=50 目星", "7e")
+          .split("========初期値========")[0].includes("CC<=40 【射撃：ライフル/ショットガン】"),
+        expected: true
+      },
+      {
+        name: "7e パラメータ化 近接戦闘 reads from 近接戦闘：格闘",
+        actual: buildOutput("CC<=73 近接戦闘（格闘）" + NL + "CC<=0 近接戦闘（）", "7e").includes("//近接戦闘 = 73"),
+        expected: true
+      },
+      {
+        name: "7e ほかの言語 at 1 goes to 初期値 section",
+        actual: (buildOutput("CC<=1 ほかの言語（）" + NL + "CC<=50 目星", "7e").split("========初期値========")[1] || "")
+          .includes("【ほかの言語】"),
+        expected: true
+      },
+      {
+        name: "7e ほかの言語 is not auto-added when absent",
+        actual: buildOutput("CC<=50 目星", "7e").includes("【ほかの言語】"),
+        expected: false
+      },
+      {
+        name: "square-bracket ability roll canonicalizes",
+        actual: canonicalizeSkillLine("CCB<={STR}*5 [STR×5]"),
+        expected: "CCB<={STR}*5 【STR×5】"
+      },
+      {
+        name: "damage line without roll marker is left untouched",
+        actual: canonicalizeSkillLine("1D6{DB} キック"),
+        expected: "1D6{DB} キック"
+      },
+      {
+        name: "already-【】 line is left untouched",
+        actual: canonicalizeSkillLine("CCB<=67 【目星】"),
+        expected: "CCB<=67 【目星】"
+      },
+      {
+        name: "bracketless roll with no threshold is left untouched",
+        actual: canonicalizeSkillLine("CCB<= SAN値"),
+        expected: "CCB<= SAN値"
+      },
+      {
+        name: "charash slash skill categorized as combat (6e)",
+        actual: /🟥戦闘技能[\s\S]*【こぶし：パンチ】/.test(buildOutput("CCB<=50 〈こぶし／パンチ〉", "6e")),
+        expected: true
+      },
+      {
+        name: "charaeno bracketless explore skill gets real value (7e)",
+        actual: /🟦探索技能[\s\S]*CC<=50 【目星】/.test(buildOutput("CC<=50 目星", "7e")),
+        expected: true
       }
     ];
 
@@ -751,8 +1346,16 @@ window.ChatPaletteParser = (() => {
     extractPaletteText,
     detectEdition,
     buildOutput,
+    analyzePalette,
+    canonicalizePaletteText,
+    canonicalizeSkillLine,
     normalizeSkillName,
     normalizeSkillNameForEdition,
     normalizeCommand
   };
 })();
+
+// Node（tests/run.mjs）から読めるようにするだけ。ブラウザ挙動には影響しない。
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = window.ChatPaletteParser;
+}

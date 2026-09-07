@@ -500,8 +500,32 @@
 
       state.parsedKoma = parsed;
     } catch (error) {
+      // JSONでない: キャラクター保管所などのテキストシートを駒JSON化して受け入れる
+      const koma = tryBuildKomaFromText(raw);
+
+      if (koma) {
+        state.parsedKoma = koma;
+        return;
+      }
+
       state.parsedKoma = null;
       showJsonError(error && error.message ? error.message : "JSONを解析できませんでした。");
+    }
+  }
+
+  function tryBuildKomaFromText(text) {
+    const schema = window.ChatPaletteSchema;
+    if (!schema || typeof schema.shouldExportKoma !== "function" || !schema.shouldExportKoma(text)) return null;
+
+    try {
+      // commands には未整形のコマンド行を入れる（renderPalette 側で整形するため）
+      const rawPalette = window.ChatPaletteParser
+        ? (window.ChatPaletteParser.extractPaletteText(text).text || "")
+        : "";
+      return schema.toKomaJson(text, { injectMotherTongue: true }, rawPalette);
+    } catch (error) {
+      console.warn(error);
+      return null;
     }
   }
 
@@ -1108,6 +1132,19 @@
   }
 
   function detectCurrentEdition() {
+    const jsonInput = getEl("jsonInput");
+    const rawJson = jsonInput ? jsonInput.value.trim() : "";
+
+    // 駒JSON入力があるときは externalUrl（/7th/ や coc6 等）も見て版判定する
+    if (rawJson && window.ChatPaletteSchema && typeof window.ChatPaletteSchema.buildCharacter === "function") {
+      try {
+        const ed = window.ChatPaletteSchema.buildCharacter(rawJson).meta.edition;
+        if (ed === "6e" || ed === "7e") return ed;
+      } catch (error) {
+        /* パレット由来の判定へフォールバック */
+      }
+    }
+
     const paletteSource = getPaletteSource();
 
     if (window.ChatPaletteParser && typeof window.ChatPaletteParser.detectEdition === "function") {
@@ -1125,13 +1162,31 @@
     return fallbackDetectEdition(paletteSource);
   }
 
+  function currentEduValue() {
+    const data = getKomaData();
+
+    if (Array.isArray(data.params)) {
+      const entry = data.params.find((item) => (item.label || item.name) === "EDU");
+      if (entry) {
+        const n = Number(String(entry.value).split("/")[0].replace(/[^0-9]/g, ""));
+        if (n) return n;
+      }
+    }
+
+    const fromTxt = Number(String(state.parsedTxt.abilities.EDU || "").replace(/[^0-9]/g, ""));
+    return fromTxt || undefined;
+  }
+
   function formatPalette(rawCommands, edition) {
     const source = normalizeText(rawCommands || "");
 
     if (!source.trim()) return "";
 
     if (window.ChatPaletteParser && typeof window.ChatPaletteParser.buildOutput === "function") {
-      return window.ChatPaletteParser.buildOutput(source, edition);
+      return window.ChatPaletteParser.buildOutput(source, edition, {
+        injectMotherTongue: true,
+        eduValue: currentEduValue(),
+      });
     }
 
     if (window.CocPaletteParser && typeof window.CocPaletteParser.format === "function") {

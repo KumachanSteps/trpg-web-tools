@@ -1,0 +1,208 @@
+/*
+ * CoCチャパレ整形ツールv2 — 回帰テストハーネス
+ *
+ *   node tests/run.mjs            … 検証（サービス判定 + buildOutput スナップショット）
+ *   node tests/run.mjs --update   … スナップショットを現在の出力で更新
+ *
+ * 依存ゼロ（Node 18+ の標準モジュールのみ）。
+ */
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join, basename } from "node:path";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const HERE = dirname(fileURLToPath(import.meta.url));
+const FIXTURES = join(HERE, "fixtures");
+const SNAPSHOTS = join(HERE, "snapshots");
+const UPDATE = process.argv.includes("--update");
+
+// parser.js / sources.js はブラウザ前提（bare `window`）なので最小限のシムを張る。
+globalThis.window = globalThis.window || {};
+
+const ChatPaletteParser = require("../../../shared/coc-palette/parser.js");
+const ChatPaletteSources = require("../../../shared/coc-palette/sources.js");
+const ChatPaletteSchema = require("../../../shared/coc-palette/schema.js");
+
+// フィクスチャ名 → 期待するサービス判定
+const EXPECTED_SERVICE = {
+  "charash-6e": "charash",
+  "iachara-6e-learned": "iachara",
+  "iachara-6e-allskills": "iachara",
+  "charaeno-7e": "charaeno",
+  "charaeno-7e-allskills": "charaeno",
+  "character-storage-sheet": "character-storage",
+  "character-storage-commands": "character-storage"
+};
+
+// フィクスチャ名 → 共通スキーマ（buildCharacter）の期待値
+const EXPECTED_SCHEMA = {
+  "charash-6e": { edition: "6e", editionSource: "url", STR: 10, EDU: 17, SAN: 96, DB: "+1D4", minSkills: 40 },
+  "iachara-6e-learned": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: "+1D4", minSkills: 12 },
+  "iachara-6e-allskills": { edition: "6e", editionSource: "palette", STR: 10, EDU: 17, SAN: 96, DB: "+1D4", minSkills: 40 },
+  "charaeno-7e": { edition: "7e", editionSource: "url", STR: 75, EDU: 66, SAN: 56, DB: "+1D4", minSkills: 20 },
+  "charaeno-7e-allskills": { edition: "7e", editionSource: "url", STR: 75, EDU: 66, SAN: 56, DB: "+1D4", minSkills: 40 },
+  "character-storage-sheet": { edition: "6e", STR: 12, EDU: 19, SAN: 24, DB: "0", minSkills: 8 },
+  "character-storage-commands": { edition: "6e", abilitiesZero: true, minSkills: 8 }
+};
+
+if (!existsSync(SNAPSHOTS)) mkdirSync(SNAPSHOTS, { recursive: true });
+
+const fixtures = readdirSync(FIXTURES)
+  .filter(file => /\.(json|txt)$/.test(file))
+  .sort();
+
+let failed = 0;
+let updated = 0;
+
+for (const file of fixtures) {
+  const name = basename(file).replace(/\.(json|txt)$/, "");
+  const raw = readFileSync(join(FIXTURES, file), "utf8");
+
+  const detectedService = ChatPaletteSources.detectService(raw);
+  const extracted = ChatPaletteParser.extractPaletteText(raw);
+  const edition = extracted.text ? ChatPaletteParser.detectEdition(extracted.text) : "unknown";
+  const output = extracted.text ? ChatPaletteParser.buildOutput(extracted.text, edition) : "";
+
+  const snapshot = [
+    `service: ${detectedService}`,
+    `edition: ${edition}`,
+    "----------------------------------------",
+    output,
+    ""
+  ].join("\n");
+
+  const snapPath = join(SNAPSHOTS, `${name}.snap.txt`);
+
+  // --- サービス判定チェック ---
+  const expected = EXPECTED_SERVICE[name];
+
+  if (expected && detectedService !== expected) {
+    console.error(`✗ ${name}: service判定 expected=${expected} actual=${detectedService}`);
+    failed++;
+  } else if (!expected) {
+    console.error(`✗ ${name}: EXPECTED_SERVICE に期待値がありません`);
+    failed++;
+  }
+
+  // --- 共通スキーマ（buildCharacter）チェック ---
+  const wantSchema = EXPECTED_SCHEMA[name];
+
+  if (wantSchema) {
+    const character = ChatPaletteSchema.buildCharacter(raw);
+    const problems = [];
+
+    if (wantSchema.edition && character.meta.edition !== wantSchema.edition) {
+      problems.push(`edition ${character.meta.edition}≠${wantSchema.edition}`);
+    }
+    if (wantSchema.editionSource && character.meta.editionSource !== wantSchema.editionSource) {
+      problems.push(`editionSource ${character.meta.editionSource}≠${wantSchema.editionSource}`);
+    }
+    for (const key of ["STR", "EDU"]) {
+      if (key in wantSchema && character.abilities[key] !== wantSchema[key]) {
+        problems.push(`${key} ${character.abilities[key]}≠${wantSchema[key]}`);
+      }
+    }
+    if ("SAN" in wantSchema && (character.derived.SAN?.value ?? null) !== wantSchema.SAN) {
+      problems.push(`SAN ${character.derived.SAN?.value ?? null}≠${wantSchema.SAN}`);
+    }
+    if ("DB" in wantSchema && character.derived.DB !== wantSchema.DB) {
+      problems.push(`DB ${JSON.stringify(character.derived.DB)}≠${JSON.stringify(wantSchema.DB)}`);
+    }
+    if (wantSchema.abilitiesZero && character.counts.abilities !== 0) {
+      problems.push(`abilities ${character.counts.abilities}≠0`);
+    }
+    if (wantSchema.minSkills && character.counts.skills < wantSchema.minSkills) {
+      problems.push(`skills ${character.counts.skills} < ${wantSchema.minSkills}`);
+    }
+
+    if (problems.length) {
+      console.error(`✗ ${name}: schema — ${problems.join(", ")}`);
+      failed++;
+    }
+  }
+
+  // --- 駒JSON自動判定 ---
+  if (name === "character-storage-sheet" && !ChatPaletteSchema.shouldExportKoma(raw)) {
+    console.error(`✗ ${name}: shouldExportKoma が false（保管庫シートは駒JSON対象のはず）`);
+    failed++;
+  }
+  if ((name === "iachara-6e-learned" || name === "charash-6e") && ChatPaletteSchema.shouldExportKoma(raw)) {
+    console.error(`✗ ${name}: shouldExportKoma が true（既に駒JSONなのでチャパレを返すべき）`);
+    failed++;
+  }
+
+  // --- 駒JSON生成チェック（保管庫シート）---
+  if (name === "character-storage-sheet") {
+    const koma = ChatPaletteSchema.toKomaJson(raw);
+    const problems = [];
+
+    if (koma.kind !== "character") problems.push("kind≠character");
+    if (koma.data.name !== "ロケット") problems.push(`name=${JSON.stringify(koma.data.name)}`);
+    if (koma.data.initiative !== 13) problems.push(`initiative=${koma.data.initiative}`);
+
+    const p = Object.fromEntries(koma.data.params.map(e => [e.label, e.value]));
+    if (p.STR !== "12" || p.EDU !== "19" || p.DB !== "0") problems.push(`params ${JSON.stringify(p)}`);
+
+    const san = koma.data.status.find(e => e.label === "SAN");
+    if (!san || san.value !== 24 || san.max !== 78) problems.push(`SAN ${JSON.stringify(san)}`);
+
+    if (!koma.data.commands.includes("【目星】")) problems.push("commands 欠落");
+
+    if (problems.length) {
+      console.error(`✗ ${name}: 駒JSON — ${problems.join(", ")}`);
+      failed++;
+    }
+  }
+
+  // --- 初期値トグルチェック（全技能出力のフィクスチャのみ）---
+  if (name === "charash-6e" || name === "iachara-6e-allskills") {
+    const ed = ChatPaletteParser.detectEdition(extracted.text);
+    const beforeInitial = out => out.split("========初期値========")[0];
+    const off = beforeInitial(ChatPaletteParser.buildOutput(extracted.text, ed));
+    const on = beforeInitial(ChatPaletteParser.buildOutput(extracted.text, ed, { initialToCategory: true }));
+
+    if (!(on.length > off.length)) {
+      console.error(`✗ ${name}: initialToCategory=true でカテゴリ側が増えていない (off=${off.length} on=${on.length})`);
+      failed++;
+    }
+    if (off.includes("【キック】")) {
+      console.error(`✗ ${name}: 既定出力のカテゴリ側に初期値技能（キック）が残っている`);
+      failed++;
+    }
+  }
+
+  // --- スナップショットチェック ---
+  if (UPDATE || !existsSync(snapPath)) {
+    writeFileSync(snapPath, snapshot);
+    updated++;
+    console.log(`${UPDATE ? "↻" : "+"} ${name}: snapshot ${UPDATE ? "updated" : "created"}`);
+    continue;
+  }
+
+  const previous = readFileSync(snapPath, "utf8");
+
+  if (previous === snapshot) {
+    console.log(`✓ ${name} (service=${detectedService}, edition=${edition})`);
+    continue;
+  }
+
+  failed++;
+  const prevLines = previous.split("\n");
+  const nextLines = snapshot.split("\n");
+  const at = prevLines.findIndex((line, i) => line !== nextLines[i]);
+
+  console.error(`✗ ${name}: snapshot 不一致 (line ${at + 1})`);
+  console.error(`    - ${JSON.stringify(prevLines[at])}`);
+  console.error(`    + ${JSON.stringify(nextLines[at])}`);
+}
+
+// parser.js 内蔵の self-test（console.assert）が黙って落ちていないか
+console.log("");
+if (failed === 0) {
+  console.log(`PASS — ${fixtures.length} fixtures${updated ? `, ${updated} snapshot(s) written` : ""}`);
+  process.exit(0);
+} else {
+  console.error(`FAIL — ${failed} check(s) failed`);
+  process.exit(1);
+}
