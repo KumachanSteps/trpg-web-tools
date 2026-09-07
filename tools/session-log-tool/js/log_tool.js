@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.61";
+  const APP_VERSION = "v1.64";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -10,6 +10,7 @@
   const STATUS_OPTIONS = ["新規", "継続", "完結", "中止", "予定"];
   const SURVIVAL_OPTIONS = ["", "生還", "ロスト", "全生還", "全ロスト", "継続", "不明"];
   const COLUMN_DEFAULT_WIDTHS = {
+    reported: 78,
     fav: 72,
     date: 136,
     scenario: 310,
@@ -24,6 +25,7 @@
     report: 116
   };
   const COLUMN_MIN_WIDTHS = {
+    reported: 66,
     fav: 56,
     date: 112,
     scenario: 180,
@@ -47,6 +49,7 @@
     { id: cryptoId(), date: "2026-02-28", dates: ["2026-02-28"], scenario: "サンプルキャンペーン 第2話", system: "マダミス", role: "PL", gm: "GMサンプル02", players: "PL-H、PL-I、PL-J", pc: "PC-E", status: "継続", time: "6h", note: "キャンペーン進行中。公開用メモは別途作成予定。", longNote: "" }
   ];
   const defaultColumns = [
+    { key: "reported", label: "卓報告", locked: true, hideFixedLabel: true },
     { key: "date", label: "日付", type: "date" },
     { key: "scenario", label: "シナリオ" },
     { key: "system", label: "システム" },
@@ -79,6 +82,9 @@
   let dragInsertSide = "before";
   let resizingColumn = null;
   let editingId = null;
+  const EXPORT_MODES = ["all", "system", "role", "sessions"];
+  let exportMode = "all";
+  let exportQuery = "";
 
   const els = {};
 
@@ -92,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","textExportOutput","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -116,8 +122,20 @@
     els.importJsonBtn.addEventListener("click",()=>els.jsonFileInput.click());
     els.jsonFileInput.addEventListener("change", handleJsonImport);
     els.exportJsonBtn.addEventListener("click", exportJson);
-    els.exportTextBtn.addEventListener("click",()=>exportText("date"));
-    document.querySelectorAll("[data-export-mode]").forEach(btn=>btn.addEventListener("click",()=>exportText(btn.dataset.exportMode)));
+    els.exportModeButtons = [...document.querySelectorAll("[data-export-mode]")];
+    els.exportModeButtons.forEach(btn=>btn.addEventListener("click",()=>setExportMode(btn.dataset.exportMode)));
+    els.exportTextBtn.addEventListener("click",()=>{
+      renderExport();
+      els.textExportOutput?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    els.exportSearchInput?.addEventListener("input",()=>{ exportQuery = els.exportSearchInput.value; renderExport(); });
+    els.exportSearchClearBtn?.addEventListener("click",()=>{
+      exportQuery = "";
+      if(els.exportSearchInput) els.exportSearchInput.value = "";
+      renderExport();
+      els.exportSearchInput?.focus();
+    });
+    els.exportCopyBtn?.addEventListener("click", copyExportOutput);
     els.kansouTab.addEventListener("click", openDrawer);
     els.closeDrawerBtn.addEventListener("click", closeDrawer);
     els.drawerOverlay.addEventListener("click", closeDrawer);
@@ -138,6 +156,7 @@
     renderStats();
     renderTable();
     renderDrawer();
+    renderExport();
   }
 
   function normalizeState(){
@@ -172,6 +191,14 @@
     if(!state.migrations?.hashtagOptional){
       state.columns = state.columns.filter(col=>col.key !== "hashtag");
       state.migrations = { ...(state.migrations || {}), hashtagOptional: true };
+      saveState();
+    }
+    if(!state.migrations?.reportedColumn){
+      if(!state.columns.some(col=>col.key === "reported")){
+        state.columns.unshift({ key: "reported", label: "卓報告", locked: true, hideFixedLabel: true, width: COLUMN_DEFAULT_WIDTHS.reported });
+      }
+      state.rows.forEach(row=>{ if(typeof row.reported === "undefined") row.reported = false; });
+      state.migrations = { ...(state.migrations || {}), reportedColumn: true };
       saveState();
     }
     if(!state.rows.length){
@@ -332,7 +359,7 @@
         <span class="header-content">
           ${col.locked ? "" : '<span class="drag-handle" draggable="true" title="ドラッグで項目を並び替え">⋮⋮</span>'}
           <span class="header-label">${escapeHtml(col.label)}</span>
-          ${col.locked ? '<span class="fixed-label">固定</span>' : ""}
+          ${col.locked && !col.hideFixedLabel ? '<span class="fixed-label">固定</span>' : ""}
         </span>
         ${col.locked ? "" : '<span class="col-resizer" title="ドラッグで列幅を変更"></span>'}
       `;
@@ -362,6 +389,23 @@
     if(col.key === "role") return html(`<span class="role-pill ${roleClass(row.role)}">${escapeHtml(row.role || "")}</span>`);
     if(col.key === "hashtag") return textCell(row.hashtag, "hashtag-cell", 18);
     if(col.key === "fav") return html(`<span>${row.fav ? "★" : "☆"}</span>`);
+    if(col.key === "reported"){
+      const label = document.createElement("label");
+      label.className = "reported-check";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(row.reported);
+      checkbox.title = row.reported ? "卓報告済み" : "卓報告 未";
+      checkbox.setAttribute("aria-label", "卓報告済み");
+      checkbox.addEventListener("click", event=>event.stopPropagation());
+      checkbox.addEventListener("change", event=>{
+        row.reported = event.target.checked;
+        checkbox.title = row.reported ? "卓報告済み" : "卓報告 未";
+        saveState();
+      });
+      label.appendChild(checkbox);
+      return label;
+    }
     if(col.key === "report"){
       const btn = document.createElement("button");
       btn.type = "button";
@@ -530,7 +574,7 @@
   function duplicateRow(id){
     const row = state.rows.find(r=>r.id===id);
     if(!row) return;
-    const copy = { ...row, id: cryptoId(), scenario: `${row.scenario || ""} Copy` };
+    const copy = { ...row, id: cryptoId(), scenario: `${row.scenario || ""} Copy`, reported: false };
     state.rows.push(copy);
     activeId = copy.id;
     saveAndRender();
@@ -598,8 +642,10 @@
         const [moved] = state.columns.splice(sourceIndex,1);
         let insertIndex = state.columns.findIndex(c=>c.key===targetKey);
         if(side === "after") insertIndex += 1;
-        const lockedIndex = state.columns.findIndex(c=>c.locked);
-        if(lockedIndex >= 0) insertIndex = Math.min(insertIndex, lockedIndex);
+        const firstUnlockedIndex = state.columns.findIndex(c=>!c.locked);
+        if(firstUnlockedIndex > 0) insertIndex = Math.max(insertIndex, firstUnlockedIndex);
+        const trailingLockedIndex = state.columns.findIndex(c=>c.locked && c.key !== "reported");
+        if(trailingLockedIndex >= 0) insertIndex = Math.min(insertIndex, trailingLockedIndex);
         state.columns.splice(Math.max(insertIndex,0),0,moved);
         saveState();
       }
@@ -705,6 +751,7 @@
     return {
       id: `report_import_${Date.now()}`,
       sourceLogId: row.id || "",
+      reported: Boolean(row.reported),
       scenario: row.scenario || row.title || "",
       system: row.system || "",
       dates,
@@ -880,78 +927,181 @@
     return merged;
   }
 
-  function exportText(mode){
-    const rows = getFilteredRows();
-    const outputRows = mode === "date" ? [...rows].sort((a,b)=>getPrimaryDate(a).localeCompare(getPrimaryDate(b))) : rows;
+  const SYSTEM_SORT_PRIORITY = ["CoC 6版", "CoC 7版", "エモクロア", "マダミス"];
+
+  function setExportMode(mode){
+    if(!EXPORT_MODES.includes(mode)) return;
+    exportMode = mode;
+    (els.exportModeButtons || []).forEach(btn=>btn.classList.toggle("is-active", btn.dataset.exportMode === mode));
+    renderExport();
+  }
+
+  function renderExport(){
+    if(!els.textExportOutput) return;
+    const rows = getExportRows();
     let output = "";
-    if(mode === "date") output = outputRows.map((r,i)=>`${i+1}. ${r.scenario} / ${r.system} / ${r.role} / ${getDateDisplay(r)}`).join("\n");
-    if(mode === "system") output = groupedSystemPlayerCountText(rows);
-    if(mode === "gm") output = groupedText(rows,"gm");
-    if(mode === "players") output = groupedText(rows,"players");
+    if(exportMode === "system") output = buildSystemText(rows);
+    else if(exportMode === "role") output = buildRoleText(rows);
+    else if(exportMode === "sessions") output = buildSessionsText(rows);
+    else output = buildAllScenarioText(rows);
     els.textExportOutput.value = output;
+    updateExportHint(rows);
   }
 
-  function groupedText(rows,key){
-    const groups = {};
-    rows.forEach(row=>{
-      const group = row[key] || "未設定";
-      if(!groups[group]) groups[group] = [];
-      groups[group].push(row);
+  function getExportRows(){
+    const q = String(exportQuery || "").trim().toLocaleLowerCase("ja");
+    const rows = state.rows.filter(row=>{
+      if(!q) return true;
+      return [row.scenario, row.gm, row.players, row.pc, row.note, row.campaign]
+        .some(value=>String(value || "").toLocaleLowerCase("ja").includes(q));
     });
-    return Object.entries(groups).map(([group,items])=>`【${group}】\n${items.map((r,i)=>`${i+1}. ${r.scenario}`).join("\n")}`).join("\n\n");
+    return rows.sort((a,b)=>exportPrimaryDate(a).localeCompare(exportPrimaryDate(b)));
   }
 
-  function groupedSystemPlayerCountText(rows){
-    const systems = groupRows(rows, "system");
-    return Object.entries(systems).map(([system, systemRows])=>{
-      const gmRows = uniqueScenarioRows(systemRows.filter(row=>normalizeRoleGroup(row.role) === "GM"));
-      const plRows = uniqueScenarioRows(systemRows.filter(row=>normalizeRoleGroup(row.role) !== "GM"));
-      const sections = [];
+  function exportPrimaryDate(row){
+    return getPrimaryDate(row) || "9999-99-99";
+  }
 
-      if(gmRows.length){
-        sections.push(`◼︎GMしたシナリオ\n${formatScenarioList(gmRows)}`);
+  function updateExportHint(rows){
+    if(!els.exportSearchHint) return;
+    const q = String(exportQuery || "").trim();
+    if(!q){ els.exportSearchHint.textContent = ""; return; }
+    if(!rows.length){ els.exportSearchHint.textContent = `「${q}」に一致するセッションはありません。`; return; }
+    els.exportSearchHint.textContent = `「${q}」に一致：${rows.length} セッション / ${uniqueScenarioList(rows).length} シナリオ`;
+  }
+
+  function displayScenarioName(row){
+    return normalizeScenarioForCount(row.scenario) || String(row.scenario || "").trim() || "未設定";
+  }
+
+  function plCountLabel(row){
+    return `${Math.max(splitPeople(row.players).length, 1)}PL`;
+  }
+
+  function roleGroupLabel(row){
+    const group = normalizeRoleGroup(row.role);
+    if(group === "GM") return "KP / GM";
+    if(group === "PL") return "PL";
+    return "その他";
+  }
+
+  // Collapse rows to unique scenarios (keyed by scenarioCountKey), keeping the
+  // earliest-date row as representative and counting how many times it was played.
+  function uniqueScenarioList(rows){
+    const map = new Map();
+    rows.forEach(row=>{
+      const key = scenarioCountKey(row).toLocaleLowerCase("ja");
+      if(!key) return;
+      const date = exportPrimaryDate(row);
+      const existing = map.get(key);
+      if(!existing){
+        map.set(key, { row, count: 1, firstDate: date });
+      }else{
+        existing.count += 1;
+        if(date < existing.firstDate){ existing.firstDate = date; existing.row = row; }
       }
-
-      const counts = {};
-      plRows.forEach(row=>{
-        const count = Math.max(splitPeople(row.players).length, 1);
-        const key = `${count}PL`;
-        if(!counts[key]) counts[key] = [];
-        counts[key].push(row);
-      });
-
-      Object.entries(counts)
-        .sort((a,b)=>parseInt(a[0], 10) - parseInt(b[0], 10))
-        .forEach(([count, items])=>{
-          sections.push(`◼︎${count}-------\n${formatScenarioList(items)}`);
-        });
-
-      return `【${system}】\n${sections.join("\n\n")}`;
-    }).join("\n\n");
-  }
-
-  function uniqueScenarioRows(rows){
-    const seen = new Set();
-    return rows.filter(row=>{
-      const key = normalizeScenarioForCount(row.scenario).toLocaleLowerCase("ja");
-      if(!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
     });
+    return [...map.values()].sort((a,b)=>a.firstDate.localeCompare(b.firstDate));
   }
 
-  function formatScenarioList(rows){
-    return rows.map((row,index)=>`${index + 1}. ${normalizeScenarioForCount(row.scenario) || row.scenario || "未設定"}`).join("\n");
-  }
-
-  function groupRows(rows,key){
-    const groups = {};
-    rows.forEach(row=>{
-      const group = row[key] || "未設定";
-      if(!groups[group]) groups[group] = [];
-      groups[group].push(row);
+  function groupBy(items, keyFn){
+    const groups = new Map();
+    items.forEach(item=>{
+      const key = keyFn(item) || "未設定";
+      if(!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
     });
     return groups;
+  }
+
+  function sortedSystemGroups(groups){
+    return [...groups.entries()].sort((a,b)=>{
+      const ia = SYSTEM_SORT_PRIORITY.indexOf(a[0]);
+      const ib = SYSTEM_SORT_PRIORITY.indexOf(b[0]);
+      if(ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      return String(a[0]).localeCompare(String(b[0]), "ja");
+    });
+  }
+
+  function plCountSections(entries){
+    const byCount = groupBy(entries, entry=>plCountLabel(entry.row));
+    return [...byCount.entries()]
+      .sort((a,b)=>parseInt(a[0], 10) - parseInt(b[0], 10))
+      .map(([count, items])=>{
+        const lines = items.map((entry, index)=>`　　${index + 1}. ${displayScenarioName(entry.row)}`).join("\n");
+        return `　${count}\n${lines}`;
+      }).join("\n");
+  }
+
+  function buildAllScenarioText(rows){
+    const list = uniqueScenarioList(rows);
+    if(!list.length) return "";
+    const header = `【全シナリオ】計 ${list.length} 本（${rows.length} 卓）`;
+    const lines = list.map((entry, index)=>{
+      const times = entry.count > 1 ? `（×${entry.count}）` : "";
+      return `${index + 1}. ${displayScenarioName(entry.row)}${times}　${entry.firstDate}`;
+    });
+    return `${header}\n\n${lines.join("\n")}`;
+  }
+
+  function buildSystemText(rows){
+    const list = uniqueScenarioList(rows);
+    if(!list.length) return "";
+    const bySystem = groupBy(list, entry=>entry.row.system || "システム未設定");
+    return sortedSystemGroups(bySystem)
+      .map(([system, entries])=>`【${system}】計 ${entries.length} 本\n${plCountSections(entries)}`)
+      .join("\n\n");
+  }
+
+  function buildRoleText(rows){
+    const byRole = groupBy(rows, roleGroupLabel);
+    const order = ["PL", "KP / GM", "その他"];
+    return order
+      .filter(roleKey=>byRole.get(roleKey)?.length)
+      .map(roleKey=>{
+        const list = uniqueScenarioList(byRole.get(roleKey));
+        const bySystem = groupBy(list, entry=>entry.row.system || "システム未設定");
+        const body = sortedSystemGroups(bySystem)
+          .map(([system, entries])=>`【${system}】\n${plCountSections(entries)}`)
+          .join("\n\n");
+        return `■ ${roleKey} で通過（${list.length} 本）\n${body}`;
+      }).join("\n\n\n");
+  }
+
+  function buildSessionsText(rows){
+    if(!rows.length) return "";
+    const header = `【セッション一覧】${rows.length} 卓`;
+    const blocks = rows.map((row, index)=>{
+      const date = getDateDisplay(row) || "日付未設定";
+      const role = normalizeRoleGroup(row.role) === "GM" ? "KP/GM" : (row.role || "-");
+      const head = `${index + 1}. ${date}　${row.system || "-"}　${role}　${String(row.scenario || "").trim() || "未設定"}`;
+      const people = [];
+      if(row.gm) people.push(`KP/GM: ${row.gm}`);
+      if(row.players) people.push(`PL: ${row.players}`);
+      if(row.pc) people.push(`PC: ${row.pc}`);
+      return people.length ? `${head}\n　${people.join(" ／ ")}` : head;
+    });
+    return `${header}\n\n${blocks.join("\n")}`;
+  }
+
+  async function copyExportOutput(){
+    const text = els.textExportOutput?.value || "";
+    if(!text) return;
+    try{
+      await navigator.clipboard.writeText(text);
+    }catch(_error){
+      els.textExportOutput.select();
+      document.execCommand("copy");
+    }
+    flashButtonLabel(els.exportCopyBtn, "コピーしました");
+  }
+
+  function flashButtonLabel(button, message){
+    if(!button) return;
+    if(!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent;
+    button.textContent = message;
+    clearTimeout(button._flashTimer);
+    button._flashTimer = setTimeout(()=>{ button.textContent = button.dataset.originalLabel; }, 1400);
   }
 
   function getAllExtraColumns(){
@@ -962,7 +1112,7 @@
 
   function getDialogColumns(){
     const map = new Map();
-    defaultColumns.filter(col=>col.key !== "report").forEach(col=>map.set(col.key, col));
+    defaultColumns.filter(col=>col.key !== "report" && col.key !== "reported").forEach(col=>map.set(col.key, col));
     getAllExtraColumns().forEach(col=>map.set(col.key, col));
     state.columns.filter(col=>!col.locked).forEach(col=>map.set(col.key, col));
     return [...map.values()];
@@ -1011,8 +1161,11 @@
   }
 
   function splitPeople(value){
+    // 「、」「,」を主な区切りとして扱う。中黒「・」「･」は
+    // 「ジョン・スミス」のような英名・カナ名の一部に使われることがあるため、
+    // PL / PC / GM の人数を誤って分割しないよう区切り文字から除外する。
     return String(value || "")
-      .split(/[、,，\/／&＆＋+・;；\n\r]+|\s+と\s+|\s+and\s+/i)
+      .split(/[、,，\/／&＆＋+;；\n\r]+|\s+と\s+|\s+and\s+/i)
       .map(v=>v.trim())
       .filter(Boolean);
   }

@@ -51,12 +51,11 @@
             <button id="shortcutHelpBtn" class="header-button secondary-cyan" type="button" data-i18n="shortcut">ショートカット</button>
             <button id="themeToggleBtn" class="header-button plain" type="button">Light/Night</button>
           </div>
-          <p class="header-version">v1.62 2026.06.21</p>
         </div>
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.62 2026.06.22</p>
+        <p class="header-version">v1.64 2026.09.07</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -193,19 +192,50 @@
 
     <section class="export-section">
       <div class="export-card">
-        <h2 data-i18n="exportTitle">プレイ済みシナリオ一覧出力</h2>
-        <p data-i18n="exportDesc">プレイ済みシナリオ一覧を、日付順・システム別・GM別・PL別などでテキスト出力できます。</p>
-        <div class="export-buttons">
-          <button type="button" data-export-mode="date"><strong data-i18n="exportByDate">日付順</strong><small data-i18n="numberedList">番号付き一覧</small></button>
-          <button type="button" data-export-mode="system"><strong data-i18n="exportBySystem">システム別</strong><small>CoC / エモクロア</small></button>
-          <button type="button" data-export-mode="gm"><strong data-i18n="exportByGm">GM/KP別</strong><small>KP・DL別</small></button>
-          <button type="button" data-export-mode="players"><strong data-i18n="exportByPl">PL別</strong><small data-i18n="byPlayersSmall">同卓者別</small></button>
+        <div class="export-head">
+          <h2 data-i18n="exportTitle">プレイ済みシナリオ一覧出力</h2>
+          <p data-i18n="exportDesc">段階的に絞り込んでテキスト化できます。出力タイプを選び、必要なら名前で対象セッションを絞り込みます。</p>
         </div>
-        <textarea id="textExportOutput" data-i18n-placeholder="textExportPlaceholder" placeholder="ここにテキスト出力が表示されます。"></textarea>
-      </div>
-      <div class="notice-card">
-        <h2 data-i18n="localSaveTitle">ブラウザ保存について</h2>
-        <p data-i18n="localSaveDesc">このツールのデータは、お使いのブラウザ内に保存されます。別端末・別ブラウザには自動同期されません。大切な記録は、定期的にJSON出力でバックアップしてください。</p>
+
+        <div class="export-controls">
+          <div class="export-field">
+            <span class="export-field-label" data-i18n="exportModeLabel">出力タイプ</span>
+            <div class="export-mode-group" role="group" aria-label="出力タイプ">
+              <button type="button" class="export-mode-btn is-active" data-export-mode="all">
+                <strong data-i18n="exportModeAll">全シナリオ</strong>
+                <small data-i18n="exportModeAllSub">日付順・シナリオ単位で網羅</small>
+              </button>
+              <button type="button" class="export-mode-btn" data-export-mode="system">
+                <strong data-i18n="exportModeSystem">システム別</strong>
+                <small data-i18n="exportModeSystemSub">システム → PL人数</small>
+              </button>
+              <button type="button" class="export-mode-btn" data-export-mode="role">
+                <strong data-i18n="exportModeRole">PL / KP 別</strong>
+                <small data-i18n="exportModeRoleSub">通過役割 → システム → PL人数</small>
+              </button>
+              <button type="button" class="export-mode-btn" data-export-mode="sessions">
+                <strong data-i18n="exportModeSessions">セッション詳細</strong>
+                <small data-i18n="exportModeSessionsSub">1卓ごとに日付・PL・PC</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="export-field">
+            <label class="export-field-label" for="exportSearchInput" data-i18n="exportSearchLabel">名前で絞り込み（任意）</label>
+            <div class="export-search-row">
+              <span aria-hidden="true">⌕</span>
+              <input id="exportSearchInput" type="search" data-i18n-placeholder="exportSearchPlaceholder" placeholder="プレイヤー名 / KP名 / シナリオ名..." />
+              <button id="exportSearchClearBtn" type="button" class="mini-button" data-i18n="exportSearchClear">クリア</button>
+            </div>
+            <p class="export-hint" id="exportSearchHint" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="export-output-head">
+          <span class="export-field-label" data-i18n="exportOutputLabel">出力結果</span>
+          <button id="exportCopyBtn" type="button" class="mini-button" data-i18n="exportCopy">コピー</button>
+        </div>
+        <textarea id="textExportOutput" data-i18n-placeholder="textExportPlaceholder" placeholder="ここにテキスト出力が表示されます。" readonly></textarea>
       </div>
     </section>
 
