@@ -406,6 +406,18 @@
     return text(system) || 'その他';
   }
 
+  function cardSystemLabel(system, edition) {
+    const systemText = text(system);
+    const editionText = text(edition);
+    const source = `${systemText} ${editionText}`.normalize('NFKC').toLocaleLowerCase('ja');
+    if (/エモクロア|emoc/.test(source)) return 'エモクロア';
+    if (/coc|クトゥルフ|cthulhu/.test(source)) {
+      if (/第\s*7\s*版|第七版|(?:^|\D)7(?:th|版)?(?:\D|$)/.test(source)) return 'CoC7';
+      if (/第\s*6\s*版|第六版|(?:^|\D)6(?:th|版)?(?:\D|$)/.test(source)) return 'CoC6';
+    }
+    return editionText && editionText !== systemText ? `${systemText} / ${editionText}` : (systemText || 'その他');
+  }
+
   function initials(name) {
     const cleaned = text(name).replace(/[\s・._-]+/g, '');
     return cleaned.slice(0, 1) || '✦';
@@ -513,8 +525,7 @@
       const portrait = char.image
         ? `<img src="${escapeHtml(char.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
         : escapeHtml(initials(char.name));
-      const edition = char.edition && char.edition !== char.system ? ` / ${char.edition}` : '';
-      const systemLabel = char.system + edition;
+      const systemLabel = cardSystemLabel(char.system, char.edition);
       const lost = isLostCharacter(char);
       const updated = formatUpdatedDate(char);
       const tags = char.tags.slice(0, 3).map(tag => `<span class="character-tag">${escapeHtml(tag)}</span>`).join('');
