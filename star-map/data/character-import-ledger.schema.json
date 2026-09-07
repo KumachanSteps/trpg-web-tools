@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kumachansteps.github.io/trpg-web-tools/star-map/data/character-import-ledger.schema.json",
+  "title": "Character import ledger",
+  "type": "object",
+  "required": ["version", "generatedAt", "policy", "sources"],
+  "properties": {
+    "version": { "const": 1 },
+    "generatedAt": { "type": "string" },
+    "policy": {
+      "type": "object",
+      "required": ["publication", "detailPagesOpened", "charashSystemScope"],
+      "properties": {
+        "publication": { "const": "private-local-only" },
+        "detailPagesOpened": { "const": false },
+        "charashSystemScope": {
+          "type": "array",
+          "const": ["エモクロア"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": ["id", "label", "listUrl", "systems", "count", "entries"],
+      "properties": {
+        "id": { "enum": ["iachara", "charash"] },
+        "label": { "type": "string" },
+        "listUrl": { "type": "string", "format": "uri" },
+        "systems": {
+          "type": "array",
+          "items": { "enum": ["CoC6", "CoC7", "エモクロア"] },
+          "uniqueItems": true
+        },
+        "count": { "type": "integer", "minimum": 0 },
+        "entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/entry" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "source", "sourceId", "system", "name", "reading", "occupation",
+        "updatedLabel", "tags", "isLost", "imageUrl", "detailUrl",
+        "editUrl", "importStatus"
+      ],
+      "properties": {
+        "source": { "enum": ["iachara", "charash"] },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "system": { "enum": ["CoC6", "CoC7", "エモクロア"] },
+        "name": { "type": "string" },
+        "reading": { "type": "string" },
+        "occupation": { "type": "string" },
+        "updatedLabel": { "type": "string" },
+        "createdUpdatedLabel": { "type": "string" },
+        "currentSan": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "isLost": { "type": "boolean" },
+        "imageUrl": { "type": "string" },
+        "detailUrl": { "type": "string", "format": "uri" },
+        "editUrl": { "type": "string", "format": "uri" },
+        "importStatus": { "enum": ["pending", "selected", "imported", "skipped"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}
