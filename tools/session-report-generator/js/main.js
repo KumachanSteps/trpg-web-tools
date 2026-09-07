@@ -734,6 +734,30 @@
     localStorage.removeItem(REPORT_PENDING_IMPORT_KEY);
   }
 
+  function showToast(message, duration = 3200) {
+    let stack = document.getElementById('toastStack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.id = 'toastStack';
+      stack.className = 'toast-stack';
+      document.body.appendChild(stack);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.setAttribute('role', 'status');
+    toast.textContent = message;
+    stack.appendChild(toast);
+    setTimeout(() => toast.classList.add('is-visible'), 10);
+    const dismiss = () => {
+      if (toast.dataset.dismissed) return;
+      toast.dataset.dismissed = '1';
+      toast.classList.remove('is-visible');
+      setTimeout(() => toast.remove(), 240);
+    };
+    setTimeout(dismiss, duration);
+    toast.addEventListener('click', dismiss);
+  }
+
   function handlePendingReportImport() {
     let payload = null;
     try {
@@ -765,7 +789,7 @@
 
     applyReportImportItems(payload.items);
     clearPendingReportImport();
-    alert('卓ログトラッカーから読み込みました');
+    showToast('卓ログトラッカーから読み込みました');
   }
 
   function applyReportImportItems(items) {
