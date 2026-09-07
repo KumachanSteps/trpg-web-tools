@@ -467,16 +467,26 @@
     renderPreview();
   }
 
-  function statusLabel(value) {
-    const labels = { alive: '生存', lost: 'ロスト', inactive: '保留', npc: 'NPC' };
-    const key = text(value).toLowerCase();
-    return labels[key] || text(value) || '未設定';
+  function isLostCharacter(char) {
+    const statusBlob = [char.status, ...(char.tags || [])]
+      .map(value => text(value).normalize('NFKC').toLocaleLowerCase('ja'))
+      .join(' ');
+    return /ロスト|lost|dead|死亡/.test(statusBlob);
   }
 
-  function statValue(char, key) {
-    const raw = char.stats?.[key];
-    if (raw && typeof raw === 'object') return first(raw.value, raw.current, raw.max);
-    return text(raw);
+  function formatUpdatedDate(char) {
+    if (!char.updatedAtMs) return { label: '不明', datetime: '' };
+    const date = new Date(char.updatedAtMs);
+    if (Number.isNaN(date.getTime())) return { label: '不明', datetime: '' };
+    return {
+      label: new Intl.DateTimeFormat('ja-JP', {
+        timeZone: 'Asia/Tokyo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date),
+      datetime: date.toISOString()
+    };
   }
 
   function renderFilters() {
@@ -504,13 +514,19 @@
         ? `<img src="${escapeHtml(char.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
         : escapeHtml(initials(char.name));
       const edition = char.edition && char.edition !== char.system ? ` / ${char.edition}` : '';
-      const meta = [statusLabel(char.status), char.occupation || '職業未設定'].map(v => `<span>${escapeHtml(v)}</span>`).join('');
-      const stats = ['HP', 'MP', 'SAN'].map(key => `${key} ${statValue(char, key) || '—'}`).join(' / ');
+      const systemLabel = char.system + edition;
+      const lost = isLostCharacter(char);
+      const updated = formatUpdatedDate(char);
       const tags = char.tags.slice(0, 3).map(tag => `<span class="character-tag">${escapeHtml(tag)}</span>`).join('');
+      const remainingTags = Math.max(0, char.tags.length - 3);
       const visibilityLabel = char.isHidden ? '公開表示に戻す' : '公開ページで非表示にする';
       const content = `
         <article class="character-card panel${char.isHidden ? ' is-character-hidden' : ''}" data-character-key="${escapeHtml(char._overrideKey)}">
-          <div class="character-card-portrait${char.image ? '' : ' is-fallback'}">${portrait}</div>
+          <div class="character-card-portrait${char.image ? '' : ' is-fallback'}">
+            ${portrait}
+            <span class="character-system-badge${lost ? ' has-lost' : ''}" title="${escapeHtml(systemLabel)}">${escapeHtml(systemLabel)}</span>
+            ${lost ? '<span class="character-lost-badge">LOST</span>' : ''}
+          </div>
           <div class="character-card-body">
             <div class="character-card-editor-actions" aria-label="キャラクター編集操作">
               <button type="button" class="character-card-action visibility-action${char.isHidden ? ' is-off' : ''}" data-toggle-character-visibility title="${visibilityLabel}" aria-label="${visibilityLabel}">${characterActionIcon(char.isHidden ? 'eyeOff' : 'eye')}</button>
@@ -519,11 +535,12 @@
             <div class="character-card-title">
               <p class="character-reading">${char.reading ? escapeHtml(char.reading) : '&nbsp;'}</p>
               <h2 title="${escapeHtml(char.name)}">${escapeHtml(char.name)}</h2>
-              <p>${escapeHtml(char.system + edition)}</p>
             </div>
-            <div class="character-meta">${char.isHidden ? '<span class="character-hidden-badge">非公開</span>' : ''}${meta}</div>
-            <p class="character-stats">${escapeHtml(stats)}</p>
-            <div class="character-tags">${tags || '<span class="character-tag is-empty">タグなし</span>'}</div>
+            <dl class="character-card-details">
+              <div><dt>職業</dt><dd title="${escapeHtml(char.occupation || '未設定')}">${escapeHtml(char.occupation || '未設定')}</dd></div>
+              <div><dt>更新</dt><dd>${updated.datetime ? `<time datetime="${escapeHtml(updated.datetime)}">${escapeHtml(updated.label)}</time>` : escapeHtml(updated.label)}</dd></div>
+            </dl>
+            <div class="character-tags">${char.isHidden ? '<span class="character-hidden-badge">非公開</span>' : ''}${tags || '<span class="character-tag is-empty">タグなし</span>'}${remainingTags ? `<span class="character-tag character-tag-more">+${remainingTags}</span>` : ''}</div>
           </div>
         </article>`;
       return content;
