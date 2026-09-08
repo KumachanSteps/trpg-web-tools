@@ -84,8 +84,11 @@
   function primaryParticipantMode(data) {
     const first = data.players && data.players[0];
     const slot = first ? String(first.slot || '') : '';
+    // 先頭PLの「枠」で PL/PC・PC/PL が明示されていればそれを優先。
+    // それ以外は「名前入力順」メニュー (nameOrder) に従う。
     if (slot === 'PL/PC') return 'PL/PC';
     if (slot === 'PC/PL') return 'PC/PL';
+    if (data.nameOrder === 'plpc') return 'PL/PC';
     return 'PC/PL';
   }
 

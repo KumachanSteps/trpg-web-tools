@@ -354,6 +354,7 @@
       date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder || getTodayString() : ''),
       hashtags: $('hashtagText').value.trim(),
       memo: $('memoText')?.value.trim() || '',
+      nameOrder: $('nameInputOrder')?.value || 'pcpl',
       gms,
       players
     };
