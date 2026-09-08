@@ -772,6 +772,14 @@
       event.preventDefault();
       (isRedo ? redoPreview : undoPreview)();
     });
+
+    // Ctrl/⌘+Shift+P = 𝕏 に投稿
+    document.addEventListener('keydown', event => {
+      if (!(event.metaKey || event.ctrlKey) || !event.shiftKey || event.altKey) return;
+      if (event.key.toLowerCase() !== 'p') return;
+      event.preventDefault();
+      postToX();
+    });
   }
 
   function readPendingReportImport() {

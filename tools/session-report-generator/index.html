@@ -40,7 +40,7 @@
           </span>
           <span>卓報告ジェネレータ</span>
         </h1>
-        <p class="header-version">v1.66 2026.09.07</p>
+        <p class="header-version">v1.67 2026.09.08</p>
         <p class="site-description">
           <span>SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
           <span>シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
@@ -61,9 +61,12 @@
           <dl>
             <div><dt>Cmd + Option + ↑</dt><dd>卓報告サンプルリストを1つ前へ切り替えます。</dd></div>
             <div><dt>Cmd + Option + ↓</dt><dd>卓報告サンプルリストを1つ次へ切り替えます。</dd></div>
+            <div><dt>Cmd / Ctrl + Z</dt><dd>プレビューの編集を1つ元に戻します。</dd></div>
+            <div><dt>Cmd / Ctrl + Shift + Z</dt><dd>元に戻した編集をやり直します。</dd></div>
+            <div><dt>Cmd / Ctrl + Shift + P</dt><dd>プレビュー本文を 𝕏 に投稿します。</dd></div>
             <div><dt>Esc</dt><dd>使い方 / ショートカットのパネルを閉じます。</dd></div>
           </dl>
-          <p>Windowsでは Ctrl + Alt + ↑ / ↓ でも同じ操作ができます。</p>
+          <p>Windowsでは Ctrl + Alt + ↑ / ↓（サンプル切替）、Ctrl + Z / Ctrl + Shift + Z / Ctrl + Shift + P も使えます。</p>
         </section>
       </div>
     </div>
@@ -240,7 +243,7 @@
   </section>
 
   <div class="bottom-actions" aria-label="生成操作">
-    <button id="generateButton" type="button" class="primary bottom-action-button">𝕏 に投稿</button>
+    <button id="generateButton" type="button" class="primary bottom-action-button" title="𝕏 に投稿（Ctrl / ⌘ + Shift + P）">𝕏 に投稿</button>
     <button id="clearAllButton" type="button" class="subtle bottom-action-button">入力をクリア</button>
   </div>
 
