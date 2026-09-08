@@ -761,6 +761,17 @@
       updateCount();
     });
     ['click', 'keyup', 'select', 'mouseup'].forEach(eventName => preview.addEventListener(eventName, savePreviewSelection));
+
+    // プレビュー画面内で Ctrl/⌘+Z = 元に戻す / Ctrl/⌘+Shift+Z（または Ctrl+Y）= やり直す
+    document.querySelector('.preview-panel')?.addEventListener('keydown', event => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
+      const key = event.key.toLowerCase();
+      const isRedo = (key === 'z' && event.shiftKey) || (key === 'y' && !event.shiftKey);
+      const isUndo = key === 'z' && !event.shiftKey;
+      if (!isUndo && !isRedo) return;
+      event.preventDefault();
+      (isRedo ? redoPreview : undoPreview)();
+    });
   }
 
   function readPendingReportImport() {
