@@ -40,7 +40,7 @@
           </span>
           <span>卓報告ジェネレータ</span>
         </h1>
-        <p class="header-version">v1.67 2026.09.08</p>
+        <p class="header-version">v1.68 2026.09.08</p>
         <p class="site-description">
           <span>SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
           <span>シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
@@ -59,14 +59,18 @@
         <section id="shortcutPanel" class="header-help-panel" hidden>
           <h2>ショートカット</h2>
           <dl>
-            <div><dt>Cmd + Option + ↑</dt><dd>卓報告サンプルリストを1つ前へ切り替えます。</dd></div>
-            <div><dt>Cmd + Option + ↓</dt><dd>卓報告サンプルリストを1つ次へ切り替えます。</dd></div>
+            <div><dt>Cmd / Ctrl + Shift + C</dt><dd>プレビュー本文をコピーします（Cmd / Ctrl + Enter も可）。</dd></div>
+            <div><dt>Cmd / Ctrl + Shift + P</dt><dd>プレビュー本文を 𝕏 に投稿します。</dd></div>
             <div><dt>Cmd / Ctrl + Z</dt><dd>プレビューの編集を1つ元に戻します。</dd></div>
             <div><dt>Cmd / Ctrl + Shift + Z</dt><dd>元に戻した編集をやり直します。</dd></div>
-            <div><dt>Cmd / Ctrl + Shift + P</dt><dd>プレビュー本文を 𝕏 に投稿します。</dd></div>
+            <div><dt>Cmd / Ctrl + E</dt><dd>プレビュー編集欄へフォーカスします。</dd></div>
+            <div><dt>Cmd + Option + ↑ / ↓</dt><dd>卓報告サンプルリストを前後に切り替えます。</dd></div>
+            <div><dt>Cmd + Option + ← / →</dt><dd>文字スタイル（フォント）を前後に切り替えます。</dd></div>
+            <div><dt>Cmd + Option + R</dt><dd>手動編集を破棄し、入力内容からプレビューを作り直します。</dd></div>
+            <div><dt>?</dt><dd>このショートカットパネルを開閉します。</dd></div>
             <div><dt>Esc</dt><dd>使い方 / ショートカットのパネルを閉じます。</dd></div>
           </dl>
-          <p>Windowsでは Ctrl + Alt + ↑ / ↓（サンプル切替）、Ctrl + Z / Ctrl + Shift + Z / Ctrl + Shift + P も使えます。</p>
+          <p>Windows では Cmd を Ctrl、Option を Alt に読み替えてください。</p>
         </section>
       </div>
     </div>
@@ -219,7 +223,7 @@
         </div>
 
         <div class="btns preview-actions">
-          <button id="copyButton" type="button" class="primary">コピー</button>
+          <button id="copyButton" type="button" class="primary" title="コピー（Ctrl / ⌘ + Shift + C、または Ctrl / ⌘ + Enter）">コピー</button>
           <button id="undoButton" type="button" title="元に戻す（Ctrl / ⌘ + Z）">元に戻す</button>
           <button id="redoButton" type="button" title="やり直す（Ctrl / ⌘ + Shift + Z）">やり直す</button>
           <button id="clearPreviewButton" type="button" class="danger">消去</button>

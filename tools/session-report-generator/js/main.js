@@ -679,6 +679,29 @@
     select.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  function cycleFontVariant(direction) {
+    const select = $('fontVariant');
+    if (!select || !select.options.length) return;
+
+    const count = select.options.length;
+    const current = select.selectedIndex < 0 ? 0 : select.selectedIndex;
+    select.selectedIndex = (current + direction + count) % count;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function regeneratePreview() {
+    pushHistory();
+    isPreviewDirty = false;
+    renderPreview();
+    $('tweetPreview')?.focus();
+  }
+
+  function isTypingTarget(el) {
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+  }
+
   function bindHeaderHelpEvents() {
     const usageButton = $('usageToggleButton');
     const shortcutButton = $('shortcutToggleButton');
@@ -697,6 +720,13 @@
         return;
       }
 
+      // ?（テキスト欄以外で）: ショートカットパネルの開閉
+      if (event.key === '?' && !event.metaKey && !event.ctrlKey && !event.altKey && !isTypingTarget(event.target)) {
+        event.preventDefault();
+        toggleHeaderPanel('shortcutPanel', 'shortcutToggleButton');
+        return;
+      }
+
       const isMacShortcut = event.metaKey && event.altKey;
       const isWinShortcut = event.ctrlKey && event.altKey;
       if (!(isMacShortcut || isWinShortcut)) return;
@@ -709,6 +739,22 @@
       if (event.key === 'ArrowDown') {
         event.preventDefault();
         cycleReportStyle(1);
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        cycleFontVariant(-1);
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        cycleFontVariant(1);
+      }
+
+      // Cmd/Ctrl + Opt/Alt + R: 手動編集を破棄して入力内容からプレビューを再生成
+      if (event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        regeneratePreview();
       }
     });
   }
@@ -773,12 +819,33 @@
       (isRedo ? redoPreview : undoPreview)();
     });
 
-    // Ctrl/⌘+Shift+P = 𝕏 に投稿
+    // ページ全体のコマンド系ショートカット
     document.addEventListener('keydown', event => {
-      if (!(event.metaKey || event.ctrlKey) || !event.shiftKey || event.altKey) return;
-      if (event.key.toLowerCase() !== 'p') return;
-      event.preventDefault();
-      postToX();
+      const mod = event.metaKey || event.ctrlKey;
+      if (!mod || event.altKey) return;
+      const key = event.key.toLowerCase();
+
+      // Ctrl/⌘+Shift+P = 𝕏 に投稿
+      if (event.shiftKey && key === 'p') {
+        event.preventDefault();
+        postToX();
+        return;
+      }
+      // Ctrl/⌘+Shift+C / Ctrl/⌘+Enter = プレビュー本文をコピー
+      if ((event.shiftKey && key === 'c') || (!event.shiftKey && event.key === 'Enter')) {
+        event.preventDefault();
+        copyTweet();
+        return;
+      }
+      // Ctrl/⌘+E = プレビュー編集欄へフォーカス
+      if (!event.shiftKey && key === 'e') {
+        event.preventDefault();
+        const preview = $('tweetPreview');
+        if (preview) {
+          preview.focus();
+          preview.setSelectionRange(preview.value.length, preview.value.length);
+        }
+      }
     });
   }
 
