@@ -104,6 +104,37 @@
     select.value = 'sansBoldItalic';
   }
 
+  let chipTooltipEl = null;
+
+  function ensureChipTooltip() {
+    if (chipTooltipEl && chipTooltipEl.isConnected) return chipTooltipEl;
+    chipTooltipEl = document.createElement('div');
+    chipTooltipEl.className = 'font-chip-tooltip';
+    chipTooltipEl.setAttribute('role', 'tooltip');
+    document.body.appendChild(chipTooltipEl);
+    return chipTooltipEl;
+  }
+
+  function showChipTooltip(chip) {
+    const text = chip?.dataset.tooltip || '';
+    if (!text) return;
+    const tip = ensureChipTooltip();
+    tip.textContent = text;
+    tip.classList.add('is-visible');
+    const cr = chip.getBoundingClientRect();
+    const tr = tip.getBoundingClientRect();
+    let left = cr.left + cr.width / 2 - tr.width / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tr.width - 8));
+    let top = cr.top - tr.height - 8;
+    if (top < 4) top = cr.bottom + 8;
+    tip.style.left = `${Math.round(left)}px`;
+    tip.style.top = `${Math.round(top)}px`;
+  }
+
+  function hideChipTooltip() {
+    if (chipTooltipEl) chipTooltipEl.classList.remove('is-visible');
+  }
+
   function renderFontToolbar() {
     const toolbar = $('fontToolbar');
     if (!toolbar) return;
@@ -114,7 +145,7 @@
       button.className = `font-chip ${item.chipClass}`;
       button.dataset.variant = item.id;
       button.dataset.tooltip = item.tooltip;
-      button.title = item.tooltip;
+      button.setAttribute('aria-label', item.tooltip);
       button.textContent = 'A';
       button.addEventListener('click', () => {
         pushHistory();
@@ -122,8 +153,15 @@
         updateFontToolbarActive();
         previewSelectedStyle();
       });
+      button.addEventListener('mouseenter', () => showChipTooltip(button));
+      button.addEventListener('mouseleave', hideChipTooltip);
+      button.addEventListener('focus', () => showChipTooltip(button));
+      button.addEventListener('blur', hideChipTooltip);
       toolbar.appendChild(button);
     });
+    toolbar.addEventListener('scroll', hideChipTooltip, { passive: true });
+    window.addEventListener('scroll', hideChipTooltip, { passive: true, capture: true });
+    window.addEventListener('resize', hideChipTooltip);
     updateFontToolbarActive();
   }
 
