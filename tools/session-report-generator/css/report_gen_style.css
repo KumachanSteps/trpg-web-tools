@@ -130,12 +130,19 @@ body{min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Se
 .site-title-icon .icon-bird{left:0;top:7px;width:29px;height:26px;z-index:1;transform:rotate(-10deg)}
 .site-title-icon .icon-star{right:2px;top:-3px;font-size:17px;z-index:3}
 .site-title-icon .icon-style-a{right:5px;bottom:3px;font-size:13px;z-index:2;color:#0f1419;background:transparent;border-radius:0;padding:0}
-.main,.app-shell,.panel.preview-panel,.twitter-card,.font-toolbar{overflow:visible}
+.main,.app-shell,.panel.preview-panel,.twitter-card{overflow:visible}
 .input-panel{overflow:auto}
 .font-chip{z-index:20}
 .font-chip::after{z-index:2147483647;width:max-content;max-width:min(360px,calc(100vw - 32px));white-space:nowrap;text-align:center;line-height:1.35}
 .font-chip:first-child::after{left:0;transform:translateX(0) translateY(4px)}
 .font-chip:first-child:hover::after{transform:translateX(0) translateY(0)}
+
+/* フォント選択チップ: フレーム内に収め、はみ出す分は横スクロール */
+.font-toolbar{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#cfd9de transparent;overscroll-behavior-x:contain}
+.font-toolbar::-webkit-scrollbar{height:6px}
+.font-toolbar::-webkit-scrollbar-thumb{background:#cfd9de;border-radius:999px}
+.font-toolbar::-webkit-scrollbar-track{background:transparent}
+.font-chip{flex:0 0 auto}
 
 /* 自動で消えるトースト（卓ログトラッカーからの読み込み通知など） */
 .toast-stack{position:fixed;left:0;right:0;bottom:84px;z-index:2147483647;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
