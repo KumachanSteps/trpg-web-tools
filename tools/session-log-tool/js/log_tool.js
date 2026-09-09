@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.71";
+  const APP_VERSION = "v1.72";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -131,17 +131,13 @@
     els.reportPasteInput?.addEventListener("input", scheduleReportParse);
     els.pickCcfoliaBtn?.addEventListener("click",()=>els.ccfoliaFileInput.click());
     els.ccfoliaFileInput?.addEventListener("change", handleCcfoliaFiles);
-    ["ccScenario", "ccDate", "ccSystem"].forEach(id=>els[id]?.addEventListener("input",()=>{
-      importCcfolia.scenario = els.ccScenario.value;
-      importCcfolia.date = els.ccDate.value;
-      importCcfolia.system = els.ccSystem.value;
-      renderCcfoliaPreview();
-    }));
+    ["ccScenario", "ccDate", "ccSystem", "ccRole", "ccGm", "ccPl"].forEach(id=>els[id]?.addEventListener("input", renderCcfoliaPreview));
     els.ccSpeakers?.addEventListener("change", event=>{
       const select = event.target.closest("select[data-speaker]");
       if(!select) return;
       const sp = importCcfolia.speakers[Number(select.dataset.speaker)];
       if(sp) sp.role = select.value;
+      syncCcfoliaFieldsFromSpeakers();
       renderCcfoliaPreview();
     });
     els.ccToSheetBtn?.addEventListener("click", convertCcfoliaToSheet);
@@ -933,7 +929,7 @@
     if(els.ccToSheetBtn) els.ccToSheetBtn.disabled = true;
     if(els.ccfoliaFileName) els.ccfoliaFileName.textContent = "";
     if(els.ccfoliaFileInput) els.ccfoliaFileInput.value = "";
-    ["ccScenario", "ccDate", "ccSystem"].forEach(id=>{ if(els[id]) els[id].value = ""; });
+    ["ccScenario", "ccDate", "ccSystem", "ccRole", "ccGm", "ccPl"].forEach(id=>{ if(els[id]) els[id].value = ""; });
     if(els.jsonFileName) els.jsonFileName.textContent = "";
     if(els.jsonFileInput) els.jsonFileInput.value = "";
     if(els.runImportBtn) els.runImportBtn.disabled = true;
@@ -1525,6 +1521,7 @@
     let latestMtime = 0;
     let bodyText = "";
     const speakers = new Map();
+    const diceDates = new Set();
     const isoTsRe = /^\s*[\[［]?\s*(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]\d{1,2}:\d{2}/;
     const anyTsRe = /(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]\d{1,2}:\d{2}/;
 
@@ -1554,9 +1551,13 @@
       const useTimestamps = tsCount >= 10 && tsCount >= rows.length * 0.4;
       rows.forEach(({ name: spName, text: body, full })=>{
         bodyText += full + "\n";
-        if(useTimestamps && !timestampDate){
+        let lineDate = "";
+        if(useTimestamps){
           const m = full.match(anyTsRe);
-          if(m) timestampDate = `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+          if(m){
+            lineDate = `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+            if(!timestampDate) timestampDate = lineDate;
+          }
         }
         let nm = cleanSpeakerName(spName);
         let msg = body;
@@ -1575,7 +1576,10 @@
         if(!speakers.has(nm)) speakers.set(nm, { name: nm, msgCount: 0, diceCount: 0 });
         const s = speakers.get(nm);
         s.msgCount++;
-        if(DICE_RE.test(msg)) s.diceCount++;
+        if(DICE_RE.test(msg)){
+          s.diceCount++;
+          if(lineDate) diceDates.add(lineDate);
+        }
       });
     }
 
@@ -1584,7 +1588,9 @@
 
     importCcfolia.scenario = scenario;
     importCcfolia.system = system;
-    importCcfolia.date = timestampDate || (latestMtime ? new Date(latestMtime).toISOString().slice(0, 10) : "");
+    importCcfolia.date = diceDates.size
+      ? [...diceDates].sort().join(", ")
+      : (timestampDate || (latestMtime ? new Date(latestMtime).toISOString().slice(0, 10) : ""));
     importCcfolia.speakers = [...speakers.values()]
       .filter(s=>s.fromJson || s.msgCount >= 2 || s.diceCount >= 1)
       .sort((a, b)=> (b.diceCount - a.diceCount) || (b.msgCount - a.msgCount) || (b.fromJson ? 1 : 0) - (a.fromJson ? 1 : 0));
@@ -1595,11 +1601,12 @@
     els.ccSystem.value = importCcfolia.system;
     els.ccfoliaForm.hidden = false;
     renderSpeakerList();
+    syncCcfoliaFieldsFromSpeakers();
     renderCcfoliaPreview();
 
     els.ccfoliaParseMsg.hidden = false;
     els.ccfoliaParseMsg.textContent = importCcfolia.speakers.length
-      ? `発言者 ${importCcfolia.speakers.length} 名を検出。ダイス回数の多い順に PC を割り当てました。シナリオ名・日付・割り当てを確認してください。`
+      ? `発言者 ${importCcfolia.speakers.length} 名を検出。PC の割り当てを確認し、ロール / GM / PL / 日付は下の欄で自由に編集できます。`
       : "キャラ名・発言者を検出できませんでした。部屋データ（.json）かチャットログ（.html）か確認してください。";
     els.ccfoliaFileInput.value = "";
   }
@@ -1633,22 +1640,42 @@
     }).join("");
   }
 
+  const CC_ROLE_LABEL_RE = /^(kp|dl|gm|kpc|skp|master|マスター|キーパー)$/i;
+
+  function derivedCcGm(){
+    return importCcfolia.speakers.filter(s=>s.role === "kp").map(s=>s.name).filter(n=>!CC_ROLE_LABEL_RE.test(n));
+  }
+  function derivedCcPl(){
+    return importCcfolia.speakers.filter(s=>s.role === "pl").map(s=>s.name);
+  }
+  function derivedCcRole(){
+    const selfNames = getSelfNames();
+    const kpNames = importCcfolia.speakers.filter(s=>s.role === "kp").map(s=>normalizePersonName(s.name));
+    if(kpNames.some(n=>selfNames.has(n)) || (kpNames.length && !importCcfolia.speakers.some(s=>s.role === "pc" && selfNames.has(normalizePersonName(s.name))))) return "KP";
+    if(importCcfolia.speakers.some(s=>(s.role === "pc" || s.role === "pl") && selfNames.has(normalizePersonName(s.name)))) return "PL";
+    return kpNames.length ? "PL" : "";
+  }
+
+  function syncCcfoliaFieldsFromSpeakers(){
+    if(els.ccGm) els.ccGm.value = [...new Set(derivedCcGm())].join("、");
+    if(els.ccPl) els.ccPl.value = [...new Set(derivedCcPl())].join("、");
+    if(els.ccRole) els.ccRole.value = derivedCcRole();
+  }
+
   function ccfoliaRow(){
-    const notLabel = n=>!/^(kp|dl|gm|kpc|skp|master|マスター|キーパー)$/i.test(n);
     const pcs = importCcfolia.speakers.filter(s=>s.role === "pc").map(s=>s.name);
-    const pls = importCcfolia.speakers.filter(s=>s.role === "pl").map(s=>s.name);
-    const kps = importCcfolia.speakers.filter(s=>s.role === "kp").map(s=>s.name).filter(notLabel);
     const scenario = (els.ccScenario?.value || importCcfolia.scenario || "").trim();
-    if(!scenario && !pcs.length && !kps.length) return null;
-    const row = {
+    const gm = (els.ccGm?.value || "").trim();
+    if(!scenario && !pcs.length && !gm) return null;
+    return {
       scenario,
       date: (els.ccDate?.value || importCcfolia.date || "").trim(),
       system: (els.ccSystem?.value || importCcfolia.system || "").trim(),
-      pc: pcs.join(" / "),
-      players: pls.join("、"),
-      gm: kps.join("、")
+      role: (els.ccRole?.value || "").trim(),
+      gm,
+      players: (els.ccPl?.value || "").trim(),
+      pc: pcs.join(" / ")
     };
-    return row;
   }
 
   function renderCcfoliaPreview(){
@@ -1672,7 +1699,7 @@
     ];
     const header = cols.map(c=>c[1]).join("\t");
     const values = cols.map(([key])=>{
-      if(key === "date") return (applied.dates && applied.dates[0]) || applied.date || "";
+      if(key === "date") return (applied.dates && applied.dates.length ? applied.dates.join(", ") : (applied.date || ""));
       return applied[key] || "";
     }).join("\t");
     if(els.sheetPasteInput) els.sheetPasteInput.value = `${header}\n${values}`;

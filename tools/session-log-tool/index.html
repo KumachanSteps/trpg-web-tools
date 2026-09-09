@@ -55,7 +55,7 @@
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.71 2026.09.09</p>
+        <p class="header-version">v1.72 2026.09.09</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -303,11 +303,14 @@
         <p id="ccfoliaFileName" class="import-filename"></p>
         <div id="ccfoliaForm" hidden>
           <div class="ccfolia-fields">
-            <label><span>シナリオ名</span><input id="ccScenario" type="text" placeholder="部屋名から推定" /></label>
-            <label><span>日付</span><input id="ccDate" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" /></label>
+            <label><span>シナリオ名</span><input id="ccScenario" type="text" placeholder="部屋名 / ファイル名から推定" /></label>
+            <label><span>日付</span><input id="ccDate" type="text" placeholder="YYYY-MM-DD（複数は「, 」区切り）" /></label>
             <label><span>システム</span><input id="ccSystem" type="text" placeholder="CoC 6版 など" /></label>
+            <label><span>ロール</span><input id="ccRole" type="text" placeholder="KP / PL / DL / GM" /></label>
+            <label><span>GM / KP</span><input id="ccGm" type="text" placeholder="GM名（複数は「、」区切り）" /></label>
+            <label><span>PL（同卓者）</span><input id="ccPl" type="text" placeholder="PL名（複数は「、」区切り）" /></label>
           </div>
-          <p class="import-sub">発言者の割り当て（ダイス回数の多い順）</p>
+          <p class="import-sub">発言者の割り当て（ダイス回数の多い順・PC のみ下の項目に反映）</p>
           <div id="ccSpeakers" class="cc-speakers"></div>
           <button id="ccToSheetBtn" type="button" class="accent-button" disabled>スプレッドシート形式に変換</button>
         </div>
