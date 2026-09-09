@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.64";
+  const APP_VERSION = "v1.65";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","sheetPreviewArea","sheetPreviewCount","sheetPreviewTable","sheetParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -119,9 +119,28 @@
     document.addEventListener("keydown", event=>{ if(event.key === "Escape") closePopups(); });
     els.createCustomFieldBtn.addEventListener("click", createCustomField);
     els.resetFieldsBtn.addEventListener("click",()=>{ state.columns = clone(defaultColumns); state.hiddenColumns = []; saveAndRender(); });
-    els.importJsonBtn.addEventListener("click",()=>els.jsonFileInput.click());
-    els.jsonFileInput.addEventListener("change", handleJsonImport);
-    els.exportJsonBtn.addEventListener("click", exportJson);
+    els.importJsonBtn.addEventListener("click", openImportDialog);
+    els.jsonFileInput.addEventListener("change", handleJsonFilePicked);
+    els.closeImportDialogBtn?.addEventListener("click",()=>els.importDialog.close());
+    els.cancelImportBtn?.addEventListener("click",()=>els.importDialog.close());
+    els.runImportBtn?.addEventListener("click", runImport);
+    els.pickJsonBtn?.addEventListener("click",()=>els.jsonFileInput.click());
+    els.downloadTemplateBtn?.addEventListener("click", downloadImportTemplate);
+    els.selfNameInput?.addEventListener("change",()=>{ setSelfNames(els.selfNameInput.value); refreshSheetPreview(); });
+    els.sheetPasteInput?.addEventListener("input", scheduleSheetParse);
+    els.sheetMapGrid?.addEventListener("change", event=>{
+      const select = event.target.closest("select[data-src-index]");
+      if(!select) return;
+      importSheet.mapping[Number(select.dataset.srcIndex)] = select.value;
+      refreshSheetPreview();
+    });
+    els.dupSkipInput?.addEventListener("change", refreshSheetPreview);
+    document.querySelectorAll('input[name="importTarget"]').forEach(radio=>radio.addEventListener("change",()=>{
+      if(els.dupSkipWrap) els.dupSkipWrap.classList.toggle("is-disabled", getImportTarget() === "overwrite");
+      refreshSheetPreview();
+    }));
+    els.importDialog?.querySelectorAll(".import-tab").forEach(tab=>tab.addEventListener("click",()=>switchImportTab(tab.dataset.importTab)));
+    els.importDialog?.addEventListener("close", resetImportState);
     els.exportModeButtons = [...document.querySelectorAll("[data-export-mode]")];
     els.exportModeButtons.forEach(btn=>btn.addEventListener("click",()=>setExportMode(btn.dataset.exportMode)));
     els.exportTextBtn.addEventListener("click",()=>{
@@ -811,94 +830,406 @@
     URL.revokeObjectURL(a.href);
   }
 
-  async function handleJsonImport(event){
-    const file = event.target.files?.[0];
-    if(!file) return;
+  // ===== インポート（スプレッドシート / JSON）=====
 
-    const mode = await chooseImportMode();
-    if(!mode){
-      event.target.value = "";
+  const SHEET_TARGET_FIELDS = [
+    ["date", "日付"],
+    ["scenario", "シナリオ名"],
+    ["system", "システム"],
+    ["role", "ロール (PL/KP/GM/DL)"],
+    ["gm", "GM / KP / DL"],
+    ["players", "PL（同卓者）"],
+    ["pc", "PC（探索者）"],
+    ["status", "状態（新規/継続/完結…）"],
+    ["time", "プレイ時間"],
+    ["note", "メモ・短い感想"],
+    ["longNote", "長文感想"],
+    ["campaign", "キャンペーン"],
+    ["hashtag", "ハッシュタグ"],
+    ["ending", "エンディング"],
+    ["survival", "生還 / ロスト"],
+    ["sessionUrl", "セッションURL"],
+    ["scenarioUrl", "シナリオURL"],
+    ["kansouUrl", "感想URL"],
+    ["scenarioCountKey", "シナリオ集計キー"]
+  ];
+  const SHEET_HEADER_ALIASES = {
+    date: ["日付", "日時", "開催日", "プレイ日", "セッション日", "date"],
+    scenario: ["シナリオ", "シナリオ名", "題名", "タイトル", "作品名", "scenario", "title"],
+    system: ["システム", "システム名", "ゲームシステム", "ルール", "system"],
+    role: ["ロール", "役割", "立場", "role", "plkp"],
+    gm: ["gm", "kp", "dl", "キーパー", "ゲームマスター", "マスター", "gmkp", "進行役"],
+    players: ["pl", "プレイヤー", "同卓者", "参加者", "メンバー", "players"],
+    pc: ["pc", "探索者", "キャラ", "キャラクター", "探索者名", "pc名"],
+    status: ["状態", "ステータス", "進捗", "新規継続", "status"],
+    time: ["時間", "所要時間", "プレイ時間", "time", "hours"],
+    note: ["メモ", "備考", "ノート", "コメント", "note", "memo"],
+    longNote: ["長文感想", "詳細メモ", "感想", "longnote"],
+    campaign: ["キャンペーン", "シリーズ", "campaign"],
+    hashtag: ["ハッシュタグ", "タグ", "hashtag", "tag", "tags"],
+    ending: ["エンディング", "結末", "ルート", "ending", "end"],
+    survival: ["生還", "生死", "ロスト", "survival"],
+    sessionurl: ["セッションurl", "ログurl", "ログ", "セッションリンク", "sessionurl"],
+    scenariourl: ["シナリオurl", "配布ページ", "boothurl", "scenariourl"],
+    kansoururl: ["感想url", "感想リンク", "kansoururl"],
+    scenariocountkey: ["シナリオキー", "集計キー", "scenariocountkey"]
+  };
+
+  const importSheet = { columns: [], rows: [], hasHeader: false, mapping: [] };
+  let jsonImportPayload = null;
+  let sheetParseTimer = null;
+
+  function openImportDialog(){
+    resetImportState();
+    if(els.selfNameInput) els.selfNameInput.value = localStorage.getItem(SELF_NAMES_KEY) || "";
+    switchImportTab("sheet");
+    if(typeof els.importDialog.showModal === "function") els.importDialog.showModal();
+    else els.importDialog.setAttribute("open", "");
+  }
+
+  function resetImportState(){
+    importSheet.columns = [];
+    importSheet.rows = [];
+    importSheet.hasHeader = false;
+    importSheet.mapping = [];
+    jsonImportPayload = null;
+    if(els.sheetPasteInput) els.sheetPasteInput.value = "";
+    if(els.sheetMapArea) els.sheetMapArea.hidden = true;
+    if(els.sheetPreviewArea) els.sheetPreviewArea.hidden = true;
+    if(els.sheetParseMsg){ els.sheetParseMsg.hidden = true; els.sheetParseMsg.textContent = ""; }
+    if(els.jsonFileName) els.jsonFileName.textContent = "";
+    if(els.jsonFileInput) els.jsonFileInput.value = "";
+    if(els.runImportBtn) els.runImportBtn.disabled = true;
+  }
+
+  function switchImportTab(tab){
+    els.importDialog?.querySelectorAll(".import-tab").forEach(btn=>{
+      btn.classList.toggle("is-active", btn.dataset.importTab === tab);
+    });
+    els.importDialog?.querySelectorAll(".import-tabpanel").forEach(panel=>{
+      panel.hidden = panel.dataset.importPanel !== tab;
+    });
+    updateRunImportEnabled();
+  }
+
+  function activeImportTab(){
+    return els.importDialog?.querySelector(".import-tab.is-active")?.dataset.importTab || "sheet";
+  }
+
+  function getImportTarget(){
+    return document.querySelector('input[name="importTarget"]:checked')?.value || "append";
+  }
+
+  function updateRunImportEnabled(){
+    if(!els.runImportBtn) return;
+    const tab = activeImportTab();
+    const ready = tab === "json" ? Boolean(jsonImportPayload) : sheetDataRows().length > 0 && importSheet.mapping.some(Boolean);
+    els.runImportBtn.disabled = !ready;
+  }
+
+  function scheduleSheetParse(){
+    clearTimeout(sheetParseTimer);
+    sheetParseTimer = setTimeout(parseSheetInput, 180);
+  }
+
+  function parseDelimitedText(text){
+    const normalized = String(text || "").replace(/\r\n?/g, "\n").replace(/\n+$/,"");
+    if(!normalized.trim()) return [];
+    const firstLine = normalized.split("\n")[0];
+    if(firstLine.includes("\t")){
+      return normalized.split("\n").map(line=>line.split("\t"));
+    }
+    return parseCsvRows(normalized);
+  }
+
+  function parseCsvRows(text){
+    const rows = [];
+    let row = [];
+    let field = "";
+    let inQuotes = false;
+    for(let i = 0; i < text.length; i++){
+      const ch = text[i];
+      if(inQuotes){
+        if(ch === '"'){
+          if(text[i + 1] === '"'){ field += '"'; i++; }
+          else inQuotes = false;
+        }else field += ch;
+      }else if(ch === '"'){ inQuotes = true; }
+      else if(ch === ','){ row.push(field); field = ""; }
+      else if(ch === '\n'){ row.push(field); rows.push(row); row = []; field = ""; }
+      else field += ch;
+    }
+    row.push(field);
+    rows.push(row);
+    return rows;
+  }
+
+  function normalizeHeaderCell(value){
+    return String(value || "").normalize("NFKC").toLowerCase().replace(/[\s　_・／/]+/g, "").replace(/[()（）]/g, "");
+  }
+
+  function guessFieldForHeader(headerCell){
+    const key = normalizeHeaderCell(headerCell);
+    if(!key) return "";
+    const canonical = field => ({ sessionurl: "sessionUrl", scenariourl: "scenarioUrl", kansoururl: "kansouUrl", scenariocountkey: "scenarioCountKey" }[field] || field);
+    const entries = Object.entries(SHEET_HEADER_ALIASES);
+    for(const [field, aliases] of entries){
+      if(aliases.includes(key)) return canonical(field);
+    }
+    for(const [field, aliases] of entries){
+      if(aliases.some(alias=>alias.length >= 2 && key.includes(alias))) return canonical(field);
+    }
+    return "";
+  }
+
+  function parseSheetInput(){
+    const grid = parseDelimitedText(els.sheetPasteInput.value)
+      .map(cells=>cells.map(cell=>String(cell).trim()))
+      .filter(cells=>cells.some(Boolean));
+    if(!grid.length){
+      importSheet.columns = [];
+      importSheet.rows = [];
+      importSheet.mapping = [];
+      els.sheetMapArea.hidden = true;
+      els.sheetPreviewArea.hidden = true;
+      els.sheetParseMsg.hidden = true;
+      updateRunImportEnabled();
       return;
     }
+    const width = Math.max(...grid.map(r=>r.length));
+    grid.forEach(r=>{ while(r.length < width) r.push(""); });
 
+    const firstRowGuesses = grid[0].map(guessFieldForHeader);
+    const hasHeader = firstRowGuesses.filter(Boolean).length >= Math.min(2, width);
+
+    importSheet.hasHeader = hasHeader;
+    importSheet.rows = grid;
+    importSheet.columns = hasHeader
+      ? grid[0].map((cell, i)=>cell || `列${i + 1}`)
+      : grid[0].map((_, i)=>`列${i + 1}`);
+    importSheet.mapping = hasHeader
+      ? firstRowGuesses.slice()
+      : new Array(width).fill("");
+
+    renderSheetMapping();
+    refreshSheetPreview();
+
+    els.sheetParseMsg.hidden = false;
+    els.sheetParseMsg.textContent = hasHeader
+      ? `見出し行を認識しました（${sheetDataRows().length} 行のデータ）。`
+      : `見出しが見つかりませんでした。すべての行をデータとして扱います（${sheetDataRows().length} 行）。下で列を割り当ててください。`;
+  }
+
+  function sheetDataRows(){
+    if(!importSheet.rows.length) return [];
+    return importSheet.rows.slice(importSheet.hasHeader ? 1 : 0);
+  }
+
+  function renderSheetMapping(){
+    els.sheetMapArea.hidden = false;
+    els.sheetMapGrid.innerHTML = "";
+    importSheet.columns.forEach((name, index)=>{
+      const wrap = document.createElement("label");
+      wrap.className = "sheet-map-row";
+      const options = [`<option value="">取り込まない</option>`]
+        .concat(SHEET_TARGET_FIELDS.map(([key, label])=>`<option value="${escapeAttr(key)}" ${importSheet.mapping[index] === key ? "selected" : ""}>${escapeHtml(label)}</option>`))
+        .join("");
+      wrap.innerHTML = `<span class="sheet-map-src">${escapeHtml(name)}</span><select data-src-index="${index}">${options}</select>`;
+      els.sheetMapGrid.appendChild(wrap);
+    });
+  }
+
+  function buildRowFromCells(cells){
+    const row = {};
+    importSheet.mapping.forEach((key, i)=>{
+      if(!key) return;
+      const value = (cells[i] || "").trim();
+      if(!value) return;
+      row[key] = row[key] ? `${row[key]} / ${value}` : value;
+    });
+    return row;
+  }
+
+  function toIsoDatePart(part){
+    const m = String(part || "").trim().normalize("NFKC").match(/(\d{4})\s*[\/.\-年]\s*(\d{1,2})\s*[\/.\-月]\s*(\d{1,2})/);
+    if(!m) return "";
+    return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+  }
+
+  function splitImportDates(value){
+    return String(value || "").split(/[、,，;；\s]+/).map(toIsoDatePart).filter(Boolean);
+  }
+
+  const IMPORT_SYSTEM_MAP = {
+    "エモクロアtrpg": "エモクロア", "エモクロア": "エモクロア",
+    "マーダーミステリー": "マダミス", "マダミス": "マダミス", "マルチシステム": "マダミス",
+    "新クトゥルフ神話trpg": "CoC 7版", "新クトゥルフ": "CoC 7版",
+    "クトゥルフ神話trpg": "CoC 6版",
+    "coc6": "CoC 6版", "coc 6": "CoC 6版", "coc6版": "CoC 6版", "coc 6版": "CoC 6版",
+    "coc7": "CoC 7版", "coc 7": "CoC 7版", "coc7版": "CoC 7版", "coc 7版": "CoC 7版"
+  };
+  const IMPORT_ROLE_MAP = {
+    "キーパー": "KP", "kp": "KP", "ゲームマスター": "GM", "マスター": "GM", "gm": "GM",
+    "ディーラー": "DL", "dl": "DL", "プレイヤー": "PL", "pl": "PL"
+  };
+
+  function coerceImportValues(row){
+    if(row.date && (!Array.isArray(row.dates) || !row.dates.length)){
+      const iso = splitImportDates(row.date);
+      if(iso.length){ row.dates = iso.slice().sort(); row.date = row.dates[0]; }
+    }
+    if(row.system){
+      const key = row.system.normalize("NFKC").trim().toLowerCase();
+      if(IMPORT_SYSTEM_MAP[key]) row.system = IMPORT_SYSTEM_MAP[key];
+    }
+    if(row.role){
+      const raw = row.role.normalize("NFKC").trim();
+      row.role = IMPORT_ROLE_MAP[raw] || IMPORT_ROLE_MAP[raw.toLowerCase()] || (ROLE_OPTIONS.includes(raw.toUpperCase()) ? raw.toUpperCase() : row.role);
+    }
+    return row;
+  }
+
+  function applySelfRole(row){
+    if(row.role || !row.gm) return row;
+    const selfNames = getSelfNames();
+    const gmNames = splitPeople(row.gm);
+    if(gmNames.length && gmNames.every(name=>selfNames.has(normalizePersonName(name)))) row.role = "KP";
+    else row.role = "PL";
+    return row;
+  }
+
+  function sessionDupKey(row){
+    normalizeRowDates(row);
+    const date = (row.dates && row.dates[0]) || row.date || "";
+    const scenario = normalizeScenarioForCount(row.scenario || "").normalize("NFKC").toLocaleLowerCase("ja").replace(/\s+/g, "");
+    return date && scenario ? `${date}|${scenario}` : "";
+  }
+
+  function refreshSheetPreview(){
+    if(!importSheet.rows.length){
+      els.sheetPreviewArea.hidden = true;
+      updateRunImportEnabled();
+      return;
+    }
+    const target = getImportTarget();
+    const existingKeys = new Set(state.rows.map(sessionDupKey).filter(Boolean));
+    const built = sheetDataRows()
+      .map(cells=>normalizeImportedRow(applySelfRole(coerceImportValues(buildRowFromCells(cells)))))
+      .filter(row=>row.scenario || row.date || row.pc || row.gm);
+    const dupCount = built.filter(row=>{ const k = sessionDupKey(row); return k && existingKeys.has(k); }).length;
+
+    els.sheetPreviewArea.hidden = false;
+    const skipDup = target !== "overwrite" && els.dupSkipInput?.checked;
+    const willImport = skipDup ? built.length - dupCount : built.length;
+    els.sheetPreviewCount.textContent = target === "overwrite"
+      ? `${built.length} 行を取り込み（既存データは全消去）`
+      : `${willImport} 行を取り込み${dupCount ? ` / 重複 ${dupCount} 行を${skipDup ? "スキップ" : "そのまま追加"}` : ""}`;
+
+    const cols = ["date", "scenario", "system", "role", "gm", "players", "pc"];
+    const head = `<tr><th></th>${cols.map(c=>`<th>${escapeHtml((SHEET_TARGET_FIELDS.find(f=>f[0] === c) || [c, c])[1].split(/[ (（]/)[0])}</th>`).join("")}</tr>`;
+    const body = built.slice(0, 8).map(row=>{
+      const dup = existingKeys.has(sessionDupKey(row));
+      const cells = cols.map(c=>`<td>${escapeHtml(c === "date" ? getDateDisplay(row) : (row[c] || ""))}</td>`).join("");
+      return `<tr class="${dup ? "is-dup" : ""}"><td class="dup-mark">${dup ? "重複" : ""}</td>${cells}</tr>`;
+    }).join("");
+    els.sheetPreviewTable.innerHTML = head + body + (built.length > 8 ? `<tr><td></td><td colspan="${cols.length}" class="preview-more">ほか ${built.length - 8} 行…</td></tr>` : "");
+
+    updateRunImportEnabled();
+  }
+
+  function handleJsonFilePicked(event){
+    const file = event.target.files?.[0];
+    if(!file){ jsonImportPayload = null; updateRunImportEnabled(); return; }
     const reader = new FileReader();
     reader.onload = ()=>{
       try{
-        const imported = JSON.parse(String(reader.result));
-        const importedRows = Array.isArray(imported.rows) ? imported.rows.map(row=>normalizeImportedRow(row)) : [];
-        const importedColumns = Array.isArray(imported.columns) ? imported.columns : clone(defaultColumns);
-
-        if(mode === "overwrite"){
-          state = {
-            rows: importedRows,
-            columns: importedColumns.length ? importedColumns : clone(defaultColumns),
-            migrations: { ...(imported.migrations || {}), hashtagOptional: true }
-          };
-        }else{
-          state.rows = [...state.rows, ...importedRows.map(row=>({ ...row, id: cryptoId() }))];
-          state.columns = mergeColumns(state.columns, importedColumns);
-          state.migrations = { ...(state.migrations || {}), hashtagOptional: true };
-        }
-
-        activeId = state.rows[0]?.id || null;
-        saveAndRender();
-        alert(mode === "overwrite" ? "JSONを上書きインポートしました。" : "JSONを追加インポートしました。");
+        const parsed = JSON.parse(String(reader.result));
+        if(!parsed || !Array.isArray(parsed.rows)) throw new Error("no rows");
+        jsonImportPayload = parsed;
+        if(els.jsonFileName) els.jsonFileName.textContent = `${file.name}（${parsed.rows.length} 行）`;
       }catch(error){
         console.error(error);
-        alert("JSONの読み込みに失敗しました。");
+        jsonImportPayload = null;
+        if(els.jsonFileName) els.jsonFileName.textContent = "読み込みに失敗しました。JSON出力で作成したファイルを選んでください。";
       }
+      updateRunImportEnabled();
     };
     reader.readAsText(file);
-    event.target.value = "";
   }
 
-  function chooseImportMode(){
-    const dialog = document.getElementById("importModeDialog");
-    const form = document.getElementById("importModeForm");
-    const cancelButtons = [
-      document.getElementById("cancelImportModeBtn"),
-      document.getElementById("cancelImportModeActionBtn")
-    ];
+  function ensureColumnsForKeys(keys){
+    keys.forEach(key=>{
+      if(state.columns.some(col=>col.key === key)) return;
+      const optional = optionalColumns.find(col=>col.key === key);
+      if(optional) showColumn(optional);
+    });
+  }
 
-    if(!dialog || !form || typeof dialog.showModal !== "function"){
-      return Promise.resolve(confirm("現在のデータを上書きしますか？\nOK: 上書き保存 / キャンセル: 追加保存") ? "overwrite" : "append");
+  function runImport(){
+    const target = getImportTarget();
+    const tab = activeImportTab();
+    let importedRows = [];
+    let importedColumns = null;
+
+    if(tab === "json"){
+      if(!jsonImportPayload) return;
+      importedRows = jsonImportPayload.rows.map(row=>normalizeImportedRow(row));
+      importedColumns = Array.isArray(jsonImportPayload.columns) ? jsonImportPayload.columns : null;
+    }else{
+      importedRows = sheetDataRows()
+        .map(cells=>normalizeImportedRow(applySelfRole(coerceImportValues(buildRowFromCells(cells)))))
+        .filter(row=>row.scenario || row.date || row.pc || row.gm)
+        .map(row=>({ ...row, id: cryptoId() }));
+      if(!importedRows.length){ alert("取り込める行がありません。"); return; }
     }
 
-    return new Promise(resolve=>{
-      let settled = false;
-      function cleanup(){
-        form.removeEventListener("submit", onSubmit);
-        dialog.removeEventListener("cancel", onCancel);
-        dialog.removeEventListener("close", onClose);
-        cancelButtons.forEach(button=>button?.removeEventListener("click", onCancelClick));
-      }
-      function finish(value){
-        if(settled) return;
-        settled = true;
-        cleanup();
-        if(dialog.open) dialog.close();
-        resolve(value);
-      }
-      function onSubmit(event){
-        event.preventDefault();
-        const data = new FormData(form);
-        finish(data.get("importMode") === "append" ? "append" : "overwrite");
-      }
-      function onCancel(event){
-        event.preventDefault();
-        finish(null);
-      }
-      function onCancelClick(){ finish(null); }
-      function onClose(){
-        if(!settled) finish(null);
-      }
+    if(target !== "overwrite" && els.dupSkipInput?.checked){
+      const existingKeys = new Set(state.rows.map(sessionDupKey).filter(Boolean));
+      importedRows = importedRows.filter(row=>{ const k = sessionDupKey(row); return !k || !existingKeys.has(k); });
+    }
 
-      form.addEventListener("submit", onSubmit);
-      dialog.addEventListener("cancel", onCancel);
-      dialog.addEventListener("close", onClose);
-      cancelButtons.forEach(button=>button?.addEventListener("click", onCancelClick));
-      dialog.showModal();
-    });
+    if(target === "overwrite"){
+      state = {
+        rows: importedRows.map(row=>({ ...row, id: row.id || cryptoId() })),
+        columns: importedColumns && importedColumns.length ? importedColumns : clone(defaultColumns),
+        migrations: { ...(state.migrations || {}), hashtagOptional: true, reportedColumn: true }
+      };
+    }else{
+      state.rows = [...state.rows, ...importedRows.map(row=>({ ...row, id: row.id || cryptoId() }))];
+      if(importedColumns) state.columns = mergeColumns(state.columns, importedColumns);
+    }
+
+    if(tab === "sheet"){
+      const usedKeys = [...new Set(importSheet.mapping.filter(Boolean))];
+      ensureColumnsForKeys(usedKeys);
+    }
+
+    activeId = state.rows[0]?.id || null;
+    saveAndRender();
+    els.importDialog.close();
+    alert(`${importedRows.length} 件を取り込みました。`);
+  }
+
+  function downloadImportTemplate(){
+    const headers = SHEET_TARGET_FIELDS
+      .filter(([key])=>!["longNote", "scenarioCountKey"].includes(key))
+      .map(([, label])=>label.split(/[ (（]/)[0]);
+    const examples = [
+      ["2024-01-06", "悪霊の家", "CoC 6版", "PL", "のあ", "くま。、とこ", "御堂 蓮", "完結", "4h", "初回。導入〜脱出まで。", "", "#CoC #卓報告", "END A", "生還", "", "", ""],
+      ["2024/2/10, 2024/2/17", "塔の中", "CoC 7版", "KP", "自分", "A、B、C", "", "継続", "6h", "2週にわけて実施。", "塔シリーズ", "", "", "", "", "", ""]
+    ];
+    const csv = "﻿" + [headers, ...examples].map(cells=>cells.map(csvCell).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "session-log-import-template.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function csvCell(value){
+    const text = String(value == null ? "" : value);
+    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   }
 
   function normalizeImportedRow(row){
@@ -1357,6 +1688,6 @@
   }
 
   function exposeApi(){
-    window.SessionLogApp = { exportJson, openSessionDialog, closeDrawer, setSelfNames };
+    window.SessionLogApp = { exportJson, openSessionDialog, closeDrawer, setSelfNames, openImportDialog };
   }
 })();

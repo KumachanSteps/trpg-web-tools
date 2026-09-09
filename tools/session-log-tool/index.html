@@ -55,7 +55,7 @@
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.64 2026.09.07</p>
+        <p class="header-version">v1.65 2026.09.09</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -91,7 +91,7 @@
           <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></span><span>ショートカットパネルを開く</span></div>
           <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd></span><span>新しいセッションログを追加</span></div>
           <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></span><span>検索欄へ移動</span></div>
-          <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>J</kbd></span><span>JSON入力</span></div>
+          <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>J</kbd></span><span>インポート（スプレッドシート / JSON）</span></div>
           <div><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>E</kbd></span><span>JSON出力</span></div>
         </div>
       </div>
@@ -132,7 +132,7 @@
             <p data-i18n="tableDescription">「＋ 項目追加」からお気に入り、HO、エンディング、リンク、カスタム項目などを追加できます。</p>
           </div>
           <div class="table-actions table-import-actions">
-            <button id="importJsonBtn" class="header-button primary" type="button" data-i18n="jsonInput">JSON入力</button>
+            <button id="importJsonBtn" class="header-button primary" type="button" data-i18n="importData">インポート</button>
             <button id="exportJsonBtn" class="header-button secondary-cyan" type="button" data-i18n="jsonOutput">JSON出力</button>
             <button id="exportTextBtn" class="header-button secondary-amber" type="button" data-i18n="textOutput">テキスト出力</button>
           </div>
@@ -256,38 +256,60 @@
   </div>
 
 
-  <dialog id="importModeDialog" class="import-mode-dialog">
-    <form id="importModeForm" method="dialog">
-      <div class="import-mode-header">
-        <div>
-          <p>JSON IMPORT</p>
-          <h2>JSON入力方法を選択</h2>
+  <dialog id="importDialog" class="import-dialog">
+    <div class="import-dialog-head">
+      <div>
+        <p>IMPORT</p>
+        <h2>卓ログを取り込む</h2>
+      </div>
+      <button id="closeImportDialogBtn" type="button" class="icon-button" aria-label="閉じる">×</button>
+    </div>
+
+    <div class="import-dialog-scroll">
+      <label class="import-selfname">
+        <span>あなたの呼び名</span>
+        <input id="selfNameInput" type="text" placeholder="例：くま。（複数は「、」区切り）" autocomplete="off" />
+        <small>PL / KP の自動判定と「同卓者」カウントに使います。この端末内にのみ保存されます。</small>
+      </label>
+
+      <div class="import-tabs" role="tablist">
+        <button class="import-tab is-active" data-import-tab="sheet" type="button">スプレッドシート / 表を貼り付け</button>
+        <button class="import-tab" data-import-tab="json" type="button">JSON ファイル</button>
+      </div>
+
+      <div class="import-tabpanel" data-import-panel="sheet">
+        <p class="import-hint">Excel / Google スプレッドシートでセルを範囲コピーして下に貼り付け（またはCSVを貼り付け）。1行目は見出しにしてください。</p>
+        <button id="downloadTemplateBtn" type="button" class="mini-button">テンプレートCSVをダウンロード</button>
+        <textarea id="sheetPasteInput" rows="5" placeholder="日付&#9;シナリオ&#9;システム&#9;ロール&#9;GM&#9;PL&#9;PC&#9;状態&#9;時間&#9;メモ&#10;2024-01-06&#9;悪霊の家&#9;CoC 6版&#9;PL&#9;のあ&#9;くま。、とこ&#9;御堂 蓮&#9;完結&#9;4h&#9;初回"></textarea>
+        <div id="sheetMapArea" hidden>
+          <p class="import-sub">列の対応（自動判定を確認・修正してください）</p>
+          <div id="sheetMapGrid" class="sheet-map-grid"></div>
         </div>
-        <button id="cancelImportModeBtn" type="button" class="icon-button" aria-label="閉じる">×</button>
+        <div id="sheetPreviewArea" hidden>
+          <p class="import-sub">プレビュー <span id="sheetPreviewCount" class="import-count"></span></p>
+          <div class="sheet-preview-scroll"><table id="sheetPreviewTable"></table></div>
+        </div>
+        <p id="sheetParseMsg" class="import-msg" hidden></p>
       </div>
-      <div class="import-mode-body">
-        <label class="import-radio-card">
-          <input type="radio" name="importMode" value="overwrite" checked />
-          <span class="radio-mark" aria-hidden="true"></span>
-          <span>
-            <strong>上書き保存</strong>
-            <small>現在の卓ログを削除し、読み込んだJSONで置き換えます。</small>
-          </span>
-        </label>
-        <label class="import-radio-card">
-          <input type="radio" name="importMode" value="append" />
-          <span class="radio-mark" aria-hidden="true"></span>
-          <span>
-            <strong>追加保存</strong>
-            <small>現在の卓ログに、読み込んだJSONの内容を追加します。</small>
-          </span>
-        </label>
+
+      <div class="import-tabpanel" data-import-panel="json" hidden>
+        <p class="import-hint">このツールの「JSON出力」で作成したファイルを選択します。</p>
+        <button id="pickJsonBtn" type="button" class="mini-button">JSONファイルを選択…</button>
+        <p id="jsonFileName" class="import-filename"></p>
       </div>
-      <div class="import-mode-actions">
-        <button id="cancelImportModeActionBtn" class="mini-button" type="button">キャンセル</button>
-        <button id="confirmImportModeBtn" class="accent-button" type="submit">JSONを読み込む</button>
+    </div>
+
+    <div class="import-dialog-foot">
+      <div class="import-mode-row">
+        <label><input type="radio" name="importTarget" value="append" checked /> 追加</label>
+        <label><input type="radio" name="importTarget" value="overwrite" /> 上書き（既存を全消去）</label>
+        <label id="dupSkipWrap"><input type="checkbox" id="dupSkipInput" checked /> 重複行をスキップ</label>
       </div>
-    </form>
+      <div class="import-foot-actions">
+        <button id="cancelImportBtn" type="button" class="mini-button">キャンセル</button>
+        <button id="runImportBtn" type="button" class="accent-button" disabled>取り込む</button>
+      </div>
+    </div>
   </dialog>
 
   <dialog id="sessionDialog" class="session-dialog">

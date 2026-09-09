@@ -57,7 +57,7 @@
 
       if(key === "j"){
         event.preventDefault();
-        document.getElementById("jsonFileInput")?.click();
+        window.SessionLogApp?.openImportDialog?.();
       }
       if(key === "e"){
         event.preventDefault();
