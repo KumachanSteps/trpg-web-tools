@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.67";
+  const APP_VERSION = "v1.68";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -1118,8 +1118,13 @@
   }
 
   function applySelfRole(row){
-    if(row.role || !row.gm) return row;
+    if(row.role) return row;
     const selfNames = getSelfNames();
+    if(row.players && splitPeople(row.players).some(name=>selfNames.has(normalizePersonName(name)))){
+      row.role = "PL";
+      return row;
+    }
+    if(!row.gm) return row;
     const gmNames = splitPeople(row.gm);
     if(gmNames.length && gmNames.every(name=>selfNames.has(normalizePersonName(name)))) row.role = "KP";
     else row.role = "PL";
@@ -1254,11 +1259,45 @@
     return blocks.map(parseReportBlock).filter(row=>row && (row.scenario || row.gm || row.players || row.date));
   }
 
+  const REPORT_ROLE_RE = /^(kpc\s*[\/／]\s*kp|作\s*[\/／]\s*kp|kpc|skp|kp|dl|gm|進行|ゲームマスター|キーパー)\s*(?:[：:┊|｜・\/／]|\s)\s*(.+)$/i;
+
+  function parseParticipants(lines, headerIdx){
+    const bareHeader = headerIdx >= 0 ? lines[headerIdx].replace(/\s/g, "").toLowerCase() : "";
+    let plFirst = /^pl/.test(bareHeader);
+    let orderResolved = headerIdx >= 0;
+    const pcs = [], pls = [], hos = [];
+    const honor = /(さん|様|氏|ｻﾝ)\s*$/;
+    const stopRe = /(^|\s)#|(20|19)\d{2}\s*[\/年.\-]|end\b|エンド|エンディング|クリア|scenario\s*clear|全?生還|全?ロスト|グッドエンド|✧\s*$/i;
+    for(let i = (headerIdx >= 0 ? headerIdx + 1 : 0); i < lines.length; i++){
+      const line = lines[i];
+      if(REPORT_ROLE_RE.test(line)){ if(pcs.length && headerIdx < 0) break; continue; }
+      const hoM = line.match(/^(ho|pc)\s*(\d+)/i);
+      const cleaned = line
+        .replace(/^(ho\s*\d+|pc\s*\d+|pc|ho|自由)\s*[:：]?\s*/i, "")
+        .replace(/^[┗▹▸➤‣・\-\s]+/, "")
+        .trim();
+      if(stopRe.test(cleaned)){ if(pcs.length || pls.length) break; continue; }
+      const parts = cleaned.split(/\s*[\/／|｜┊]\s*/).map(p=>p.trim()).filter(Boolean);
+      if(parts.length !== 2){ if((pcs.length || pls.length) && headerIdx < 0) break; continue; }
+      if(headerIdx < 0 && !hoM && !pcs.length && !honor.test(parts[0]) && !honor.test(parts[1])) continue;
+      if(!orderResolved){
+        const l0 = honor.test(parts[0]), l1 = honor.test(parts[1]);
+        if(l1 && !l0) plFirst = false;
+        else if(l0 && !l1) plFirst = true;
+        orderResolved = true;
+      }
+      if(plFirst){ pls.push(parts[0]); pcs.push(parts[1]); }
+      else { pcs.push(parts[0]); pls.push(parts[1]); }
+      if(hoM) hos.push(`${(hoM[1] || "HO").toUpperCase()}${hoM[2]}`);
+    }
+    return { pcs, pls, hos };
+  }
+
   function parseReportBlock(block){
     const row = { longNote: block.trim() };
-    const norm = desmallcaps(block);
+    const norm = desmallcaps(block).normalize("NFKC");
     const lines = norm.split("\n").map(stripReportLine).filter(Boolean);
-    const joined = norm.normalize("NFKC");
+    const joined = norm;
 
     const tags = joined.match(/#[^\s#、,，。]+/g) || [];
     if(tags.length) row.hashtag = [...new Set(tags)].join(" ");
@@ -1281,42 +1320,32 @@
     }
 
     const gmNames = [];
-    const roleRe = /^(kpc\s*[\/／]\s*kp|作\s*[\/／]\s*kp|kp|dl|gm|skp|進行|ゲームマスター|キーパー)\s*[：:┊|・\/／]\s*(.+)$/i;
-    lines.forEach(line=>{
-      const m = line.match(roleRe);
+    const participantHeaderRe = l=>{
+      const bare = l.replace(/\s/g, "").toLowerCase();
+      return /^(pc|pl)[・.:：/／┊|｜](pl|pc)/.test(bare) || bare === "pcpl" || bare === "plpc";
+    };
+    lines.forEach((line, i)=>{
+      if(participantHeaderRe(line)) return;
+      const m = line.match(REPORT_ROLE_RE);
       if(m){
-        m[2].split(/[、,，\/／|｜]/).map(n=>n.replace(/(様|さん|氏)\s*$/, "").trim()).filter(Boolean).forEach(n=>{ if(n.length < 24) gmNames.push(n); });
+        m[2].split(/[、,，\/／|｜]/).map(n=>n.replace(/(様|さん|氏)\s*$/, "").trim())
+          .filter(n=>n && n.length < 24 && !REPORT_ROLE_RE.test(n) && !detectSystemFromText(n))
+          .forEach(n=>gmNames.push(n));
       }
     });
     lines.forEach((line, i)=>{
-      if(/^(kp|dl|gm|キーパー|ゲームマスター)…?\s*$/i.test(line) && lines[i + 1] && !roleRe.test(lines[i + 1]) && !/[「『]/.test(lines[i + 1])){
+      if(/^(kp|dl|gm|キーパー|ゲームマスター)…?\s*$/i.test(line) && lines[i + 1] && !REPORT_ROLE_RE.test(lines[i + 1]) && !/[「『]/.test(lines[i + 1]) && !participantHeaderRe(lines[i + 1])){
         const n = lines[i + 1].replace(/(様|さん|氏)\s*$/, "").trim();
         if(n && n.length < 24 && !detectSystemFromText(n)) gmNames.push(n);
       }
     });
     if(gmNames.length) row.gm = [...new Set(gmNames)].join("、");
 
-    const headerIdx = lines.findIndex(l=>{
-      const bare = l.replace(/\s/g, "").toLowerCase();
-      return /^(pc|pl|ᴘᴄ|ᴘʟ)[・.:：/／┊|｜](pl|pc|ᴘʟ|ᴘᴄ)/.test(bare) || bare === "pcpl" || bare === "plpc";
-    });
-    const plFirst = headerIdx >= 0 && /^(pl|ᴘʟ)/i.test(lines[headerIdx].replace(/\s/g, ""));
-    const pcs = [], pls = [];
-    if(headerIdx >= 0){
-      for(let i = headerIdx + 1; i < lines.length; i++){
-        const cleaned = lines[i].replace(/^(ho\s*\d+|pc\s*\d+|pc|ho|自由)\s*[:：]?\s*/i, "").replace(/^[┗▹▸\-‣・\s]+/, "").trim();
-        if(/(end\b|エンド|クリア|生還|ロスト|20\d{2}|#)/i.test(cleaned)) break;
-        const parts = cleaned.split(/\s*[\/／|｜┊]\s*/).map(p=>p.trim()).filter(Boolean);
-        if(parts.length === 2){
-          if(plFirst){ pls.push(parts[0]); pcs.push(parts[1]); }
-          else { pcs.push(parts[0]); pls.push(parts[1]); }
-        }else if(parts.length === 1 && (pcs.length || pls.length)){
-          break;
-        }
-      }
-    }
+    const headerIdx = lines.findIndex(participantHeaderRe);
+    const { pcs, pls, hos } = parseParticipants(lines, headerIdx);
     if(pcs.length) row.pc = [...new Set(pcs.filter(Boolean))].join(" / ");
     if(pls.length) row.players = [...new Set(pls.filter(Boolean))].join("、");
+    if(hos.length) row.ho = [...new Set(hos)].join(" ");
 
     const resLine = lines.find(l=>/(end\b|エンド|クリア|scenario\s*clear|生還|ロスト|グッドエンド|ゲームクリア)/i.test(l) && l.length < 48 && !/[「『【]/.test(l));
     if(resLine){
@@ -1432,7 +1461,7 @@
       ensureColumnsForKeys([...new Set(importSheet.mapping.filter(Boolean))]);
     }else if(tab === "text"){
       const keys = new Set();
-      importedRows.forEach(row=>["hashtag", "ending", "survival", "campaign"].forEach(k=>{ if(row[k]) keys.add(k); }));
+      importedRows.forEach(row=>["hashtag", "ending", "survival", "campaign", "ho"].forEach(k=>{ if(row[k]) keys.add(k); }));
       ensureColumnsForKeys([...keys]);
     }
 
