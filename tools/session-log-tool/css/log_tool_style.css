@@ -1082,3 +1082,4 @@ body.night-mode .field-unit{color:#94a3b8}
 .cc-speaker-meta{font-size:10.5px;color:#94a3b8;white-space:nowrap}
 .cc-speaker select{border:1px solid var(--border-soft);border-radius:8px;padding:4px 6px;font-size:11.5px;background:#fff}
 body.night-mode .ccfolia-fields input,body.night-mode .cc-speaker,body.night-mode .cc-speaker select{background:#111827;color:#e2e8f0}
+#ccToSheetBtn{align-self:flex-start;margin-top:4px}

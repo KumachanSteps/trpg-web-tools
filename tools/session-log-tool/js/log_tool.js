@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.69";
+  const APP_VERSION = "v1.70";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccSpeakers","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -144,6 +144,7 @@
       if(sp) sp.role = select.value;
       renderCcfoliaPreview();
     });
+    els.ccToSheetBtn?.addEventListener("click", convertCcfoliaToSheet);
     els.sheetMapGrid?.addEventListener("change", event=>{
       const select = event.target.closest("select[data-src-index]");
       if(!select) return;
@@ -929,6 +930,7 @@
     if(els.reportParseMsg){ els.reportParseMsg.hidden = true; els.reportParseMsg.textContent = ""; }
     if(els.ccfoliaParseMsg){ els.ccfoliaParseMsg.hidden = true; els.ccfoliaParseMsg.textContent = ""; }
     if(els.ccfoliaForm) els.ccfoliaForm.hidden = true;
+    if(els.ccToSheetBtn) els.ccToSheetBtn.disabled = true;
     if(els.ccfoliaFileName) els.ccfoliaFileName.textContent = "";
     if(els.ccfoliaFileInput) els.ccfoliaFileInput.value = "";
     ["ccScenario", "ccDate", "ccSystem"].forEach(id=>{ if(els[id]) els[id].value = ""; });
@@ -963,9 +965,10 @@
     let ready = false;
     if(tab === "json") ready = Boolean(jsonImportPayload);
     else if(tab === "text") ready = importReport.rows.length > 0;
-    else if(tab === "ccfolia") ready = Boolean(ccfoliaRow());
+    else if(tab === "ccfolia") ready = false; // CCFOLIA はスプレッドシートへ変換してから取り込む
     else ready = sheetDataRows().length > 0 && importSheet.mapping.some(Boolean);
     els.runImportBtn.disabled = !ready;
+    if(els.ccToSheetBtn) els.ccToSheetBtn.disabled = !ccfoliaRow();
   }
 
   function refreshActivePreview(){
@@ -1602,12 +1605,35 @@
 
   function renderCcfoliaPreview(){
     const row = ccfoliaRow();
+    if(els.ccToSheetBtn) els.ccToSheetBtn.disabled = !row;
     if(!row){
       if(els.importPreviewArea) els.importPreviewArea.hidden = true;
       updateRunImportEnabled();
       return;
     }
     renderImportPreview([normalizeImportedRow(applySelfRole(coerceImportValues({ ...row })))]);
+  }
+
+  function convertCcfoliaToSheet(){
+    const row = ccfoliaRow();
+    if(!row) return;
+    const applied = normalizeImportedRow(applySelfRole(coerceImportValues({ ...row })));
+    const cols = [
+      ["date", "日付"], ["scenario", "シナリオ"], ["system", "システム"],
+      ["role", "ロール"], ["gm", "GM"], ["players", "PL"], ["pc", "PC"]
+    ];
+    const header = cols.map(c=>c[1]).join("\t");
+    const values = cols.map(([key])=>{
+      if(key === "date") return (applied.dates && applied.dates[0]) || applied.date || "";
+      return applied[key] || "";
+    }).join("\t");
+    if(els.sheetPasteInput) els.sheetPasteInput.value = `${header}\n${values}`;
+    switchImportTab("sheet");
+    parseSheetInput();
+    if(els.sheetParseMsg){
+      els.sheetParseMsg.hidden = false;
+      els.sheetParseMsg.textContent = "CCFOLIA / ログから変換しました。内容を編集して「取り込む」してください。";
+    }
   }
 
   function handleJsonFilePicked(event){
@@ -1651,10 +1677,6 @@
     }else if(tab === "text"){
       importedRows = buildReportRows().map(row=>({ ...row, id: cryptoId() }));
       if(!importedRows.length){ alert("取り込める卓報告がありません。"); return; }
-    }else if(tab === "ccfolia"){
-      const row = ccfoliaRow();
-      if(!row){ alert("取り込める内容がありません。"); return; }
-      importedRows = [{ ...normalizeImportedRow(applySelfRole(coerceImportValues(row))), id: cryptoId() }];
     }else{
       importedRows = buildSheetRows().map(row=>({ ...row, id: cryptoId() }));
       if(!importedRows.length){ alert("取り込める行がありません。"); return; }
