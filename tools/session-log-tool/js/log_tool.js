@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.73";
+  const APP_VERSION = "v1.74";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -361,6 +361,7 @@
     els.tableBody.innerHTML = "";
     rows.forEach(row=>{
       const tr = document.createElement("tr");
+      tr.dataset.rowId = row.id;
       tr.className = row.id === activeId ? "selected-row" : "";
       tr.addEventListener("click",()=>{ activeId = row.id; renderTable(); renderDrawer(); });
       tr.addEventListener("dblclick",()=>openSessionDialog(row.id));
@@ -1768,14 +1769,17 @@
       });
     }
 
+    importedRows = importedRows.map(row=>({ ...row, id: row.id || cryptoId() }));
+    const importedIds = importedRows.map(row=>row.id);
+
     if(target === "overwrite"){
       state = {
-        rows: importedRows.map(row=>({ ...row, id: row.id || cryptoId() })),
+        rows: importedRows,
         columns: importedColumns && importedColumns.length ? importedColumns : clone(defaultColumns),
         migrations: { ...(state.migrations || {}), hashtagOptional: true, reportedColumn: true }
       };
     }else{
-      state.rows = [...state.rows, ...importedRows.map(row=>({ ...row, id: row.id || cryptoId() }))];
+      state.rows = [...state.rows, ...importedRows];
       if(importedColumns) state.columns = mergeColumns(state.columns, importedColumns);
     }
 
@@ -1787,10 +1791,51 @@
       ensureColumnsForKeys([...keys]);
     }
 
-    activeId = state.rows[0]?.id || null;
+    activeId = importedIds[0] || state.rows[0]?.id || null;
     saveAndRender();
     els.importDialog.close();
-    alert(`${importedRows.length} 件を取り込みました。`);
+    revealImportedRows(importedIds);
+  }
+
+  function revealImportedRows(ids){
+    const count = ids.length;
+    showLogToast(count ? `${count} 件を取り込みました` : "取り込みました");
+    if(!count) return;
+    const idSet = new Set(ids);
+    requestAnimationFrame(()=>{
+      const findRows = ()=>[...(els.tableBody?.querySelectorAll("tr[data-row-id]") || [])]
+        .filter(tr=>idSet.has(tr.dataset.rowId));
+      let trs = findRows();
+      if(!trs.length){
+        // 取り込んだ行が現在の絞り込みで隠れている → フィルタを解除して確認できるようにする
+        if(els.searchInput) els.searchInput.value = "";
+        if(els.systemFilter) els.systemFilter.value = "";
+        if(els.roleFilter) els.roleFilter.value = "";
+        renderTable();
+        trs = findRows();
+      }
+      trs.forEach(tr=>{
+        tr.classList.add("row-just-imported");
+        setTimeout(()=>tr.classList.remove("row-just-imported"), 2400);
+      });
+      trs[0]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  let logToastTimer = null;
+  function showLogToast(message){
+    let el = document.getElementById("logToast");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "logToast";
+      el.className = "log-toast";
+      el.setAttribute("role", "status");
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+    el.classList.add("is-visible");
+    clearTimeout(logToastTimer);
+    logToastTimer = setTimeout(()=>el.classList.remove("is-visible"), 2600);
   }
 
   function downloadImportTemplate(){
