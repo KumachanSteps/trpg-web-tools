@@ -1065,3 +1065,8 @@ body.night-mode .import-selfname input,body.night-mode #sheetPasteInput,body.nig
 body.night-mode .import-tab.is-active{background:#312e81;color:#c7d2fe}
 body.night-mode #sheetPreviewTable tr.is-dup{background:#3b2f1e}
 @media(max-width:560px){.import-dialog-foot{flex-direction:column;align-items:stretch}.import-foot-actions{margin-left:0;justify-content:flex-end}}
+
+.field-with-unit{display:flex;align-items:stretch;gap:6px}
+.field-with-unit input{flex:1;min-width:0}
+.field-unit{display:inline-flex;align-items:center;padding:0 2px;font-size:13px;font-weight:800;color:#64748b;white-space:nowrap}
+body.night-mode .field-unit{color:#94a3b8}

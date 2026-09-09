@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.65";
+  const APP_VERSION = "v1.66";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -220,6 +220,11 @@
       state.migrations = { ...(state.migrations || {}), reportedColumn: true };
       saveState();
     }
+    if(!state.migrations?.timeUnitStripped){
+      state.rows.forEach(row=>{ if(row.time) row.time = normalizeTimeValue(row.time); });
+      state.migrations = { ...(state.migrations || {}), timeUnitStripped: true };
+      saveState();
+    }
     if(!state.rows.length){
       state.rows = [];
       activeId = null;
@@ -408,6 +413,7 @@
     if(col.key === "role") return html(`<span class="role-pill ${roleClass(row.role)}">${escapeHtml(row.role || "")}</span>`);
     if(col.key === "hashtag") return textCell(row.hashtag, "hashtag-cell", 18);
     if(col.key === "fav") return html(`<span>${row.fav ? "★" : "☆"}</span>`);
+    if(col.key === "time") return document.createTextNode(timeDisplay(row.time));
     if(col.key === "reported"){
       const label = document.createElement("label");
       label.className = "reported-check";
@@ -448,7 +454,7 @@
         <h3>${escapeHtml(row.scenario || "")}</h3>
         <div class="drawer-meta">
           <div>日 ${escapeHtml(getDateDisplay(row))}</div>
-          <div>時 ${escapeHtml(row.time || "")}</div>
+          <div>時 ${escapeHtml(timeDisplay(row.time))}</div>
           <div>札 ${escapeHtml(row.system || "")}</div>
           <div>役 ${escapeHtml(row.role || "")}</div>
         </div>
@@ -573,6 +579,7 @@
     getDialogColumns().filter(c=>c.key !== "date").forEach(col=>{
       if(col.key === "system") row.system = form.get("system") === "__custom" ? (form.get("systemCustom") || "") : (form.get("system") || "");
       else if(col.key === "fav") row.fav = form.get("fav") ? "★" : "";
+      else if(col.key === "time") row.time = normalizeTimeValue(form.get("time") || "");
       else row[col.key] = form.get(col.key) || "";
     });
     const dates = form.getAll("dates").map(v=>String(v || "").trim()).filter(Boolean).sort();
@@ -841,7 +848,7 @@
     ["players", "PL（同卓者）"],
     ["pc", "PC（探索者）"],
     ["status", "状態（新規/継続/完結…）"],
-    ["time", "プレイ時間"],
+    ["time", "プレイ時間（時間数・数値のみ）"],
     ["note", "メモ・短い感想"],
     ["longNote", "長文感想"],
     ["campaign", "キャンペーン"],
@@ -1086,6 +1093,7 @@
       const raw = row.role.normalize("NFKC").trim();
       row.role = IMPORT_ROLE_MAP[raw] || IMPORT_ROLE_MAP[raw.toLowerCase()] || (ROLE_OPTIONS.includes(raw.toUpperCase()) ? raw.toUpperCase() : row.role);
     }
+    if(row.time) row.time = normalizeTimeValue(row.time);
     return row;
   }
 
@@ -1215,8 +1223,8 @@
       .filter(([key])=>!["longNote", "scenarioCountKey"].includes(key))
       .map(([, label])=>label.split(/[ (（]/)[0]);
     const examples = [
-      ["2024-01-06", "悪霊の家", "CoC 6版", "PL", "のあ", "くま。、とこ", "御堂 蓮", "完結", "4h", "初回。導入〜脱出まで。", "", "#CoC #卓報告", "END A", "生還", "", "", ""],
-      ["2024/2/10, 2024/2/17", "塔の中", "CoC 7版", "KP", "自分", "A、B、C", "", "継続", "6h", "2週にわけて実施。", "塔シリーズ", "", "", "", "", "", ""]
+      ["2024-01-06", "悪霊の家", "CoC 6版", "PL", "のあ", "くま。、とこ", "御堂 蓮", "完結", "4", "初回。導入〜脱出まで。", "", "#CoC #卓報告", "END A", "生還", "", "", ""],
+      ["2024/2/10, 2024/2/17", "塔の中", "CoC 7版", "KP", "自分", "A、B、C", "", "継続", "6", "2週にわけて実施。", "塔シリーズ", "", "", "", "", "", ""]
     ];
     const csv = "﻿" + [headers, ...examples].map(cells=>cells.map(csvCell).join(",")).join("\r\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -1530,6 +1538,7 @@
     if(col.key === "status") return `<select name="status">${STATUS_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
     if(col.key === "survival") return `<select name="survival">${SURVIVAL_OPTIONS.map(option=>`<option value="${escapeAttr(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option || "未設定")}</option>`).join("")}</select>`;
     if(col.key === "fav") return `<label class="fav-input"><input type="checkbox" name="fav" value="★" ${value ? "checked" : ""} /> <span>☆ / ★</span></label>`;
+    if(col.key === "time") return `<span class="field-with-unit"><input name="time" type="text" inputmode="decimal" value="${escapeAttr(normalizeTimeValue(value))}" placeholder="例：4" /><span class="field-unit">時間</span></span>`;
     if(isUrlColumn(col.key)) return `<input type="url" name="${escapeAttr(col.key)}" value="${escapeAttr(value)}" placeholder="https://" />`;
     return `<input name="${escapeAttr(col.key)}" value="${escapeAttr(value)}" />`;
   }
@@ -1633,6 +1642,23 @@
   }
 
   function sumHours(rows){ return rows.reduce((sum,row)=>sum + (parseFloat(String(row.time||"").match(/[\d.]+/)?.[0] || "0") || 0),0); }
+
+  function normalizeTimeValue(value){
+    const text = String(value == null ? "" : value).trim().normalize("NFKC");
+    if(!text) return "";
+    const hm = text.match(/^(\d+)\s*[:：時]\s*(\d{1,2})\s*分?$/);
+    if(hm){
+      const hours = Number(hm[1]) + Number(hm[2]) / 60;
+      return String(Math.round(hours * 100) / 100);
+    }
+    const num = text.match(/\d+(?:\.\d+)?/);
+    return num ? num[0] : "";
+  }
+
+  function timeDisplay(value){
+    const num = normalizeTimeValue(value);
+    return num ? `${num}時間` : "";
+  }
   function getCellClass(key){ return `cell-${cssSafeKey(key)} ${["scenario","players","pc","note","hashtag","date"].includes(key) ? "truncate-td" : ""}`.trim(); }
 
   function applyColumnWidth(element,col){
