@@ -5,14 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>卓ログトラッカー | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.ico" type="image/x-icon" />
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJD5JZML31"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag("js", new Date());
-    gtag("config", "G-NJD5JZML31");
-  </script>
+  <script async src="../../assets/js/analytics.js"></script>
   <link rel="stylesheet" href="css/log_tool_style.css" />
 </head>
 <body>
@@ -55,7 +48,7 @@
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.72 2026.09.09</p>
+        <p class="header-version">v1.73 2026.09.09</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -254,7 +247,6 @@
     <button id="floatingAddBtn" class="floating-add-button" type="button" title="卓を追加" aria-label="卓を追加">＋</button>
 
   </div>
-
 
   <dialog id="importDialog" class="import-dialog">
     <div class="import-dialog-head">
