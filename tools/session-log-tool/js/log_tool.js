@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.70";
+  const APP_VERSION = "v1.71";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -1465,24 +1465,53 @@
     return found.trim();
   }
 
-  function chatLogLines(text, name){
+  function deriveScenarioFromFilename(fileName){
+    return String(fileName || "")
+      .replace(/\.[a-z0-9]+$/i, "")
+      .replace(/[\[［(（]\s*(all|全部?|完全版?|ログ|log|セッション\s*\d*|まとめ)\s*[\]］)）]/gi, "")
+      .replace(/[\s_　-]*(?:第?\s*[0-9０-９一二三四五六七八九十百]+\s*(?:陣|回|話|日目|周目)|part\s*\d+|その\s*\d+|day\s*\d+)\s*$/i, "")
+      .replace(/[\s_　:：\-–—]+$/, "")
+      .replace(/[_　]+/g, " ")
+      .trim();
+  }
+
+  function cleanSpeakerName(raw){
+    return String(raw || "")
+      .replace(/^[!！*＊・\s　:：]+/, "")
+      .replace(/\s*[（(][ぁ-んァ-ヶ゛゜ー\s]+[)）]\s*$/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function isNoiseSpeaker(name){
+    const n = cleanSpeakerName(name);
+    if(!n) return true;
+    if(!/[ぁ-んァ-ヶ一-龠a-zA-Z]/.test(n)) return true;
+    if(/^\d{1,3}$/.test(n)) return true;
+    if(/^[＜〈《【▌■◆◇●○□★☆※▲△▼▽➤▸▶►◀]/.test(n)) return true;
+    if(/[＜〈《][^＞〉》]{1,12}[＞〉》]/.test(n) && n.length <= 16) return true;
+    if(/^ho\s*\d+\s*(主|副|表|裏|＜|:|：)?\s*$/i.test(n)) return true;
+    if(/^(prologue|epilogue|opening|ending|op|ed|導入|クロージング|オープニング|エンディング|幕間|中入り|休憩)$/i.test(n)) return true;
+    return false;
+  }
+
+  function chatLogLines(text){
     if(/<(p|body|html|div|table)\b/i.test(text)){
       const doc = new DOMParser().parseFromString(text, "text/html");
-      const title = doc.querySelector("title")?.textContent?.trim();
+      const title = doc.querySelector("title")?.textContent?.trim() || "";
       const rows = [...doc.querySelectorAll("p, tr, div.log, .p-log__row")].map(el=>{
-        const spans = [...el.querySelectorAll("span")];
-        if(spans.length >= 2){
-          const nameSpan = spans[spans.length >= 3 ? 1 : 0];
-          const nm = (spans.length >= 3 ? spans[1] : spans[spans.length - 1]).textContent.trim();
-          return { name: nm, text: el.textContent.replace(/\s+/g, " ").trim() };
-        }
-        return { name: "", text: el.textContent.replace(/\s+/g, " ").trim() };
-      }).filter(r=>r.text);
+        const spans = [...el.querySelectorAll("span")].map(s=>s.textContent.replace(/\s+/g, " ").trim());
+        const full = el.textContent.replace(/\s+/g, " ").trim();
+        // CCFOLIA: <span>[tab]</span><span>name</span> : <span>body</span>
+        if(spans.length >= 3) return { name: spans[1], text: spans.slice(2).join(" "), full };
+        if(spans.length === 2) return { name: spans[0], text: spans[1], full };
+        return { name: "", text: full, full };
+      }).filter(r=>r.full);
       return { title, rows };
     }
     return {
       title: "",
-      rows: text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>({ name: "", text: l }))
+      rows: text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>({ name: "", text: l, full: l }))
     };
   }
 
@@ -1492,13 +1521,16 @@
     els.ccfoliaFileName.textContent = files.map(f=>f.name).join("、");
     const loaded = await Promise.all(files.map(f=>f.text().then(text=>({ name: f.name, text, mtime: f.lastModified || 0 }))));
 
-    let scenario = "", system = "", date = "";
+    let scenario = "", system = "", timestampDate = "", filenameScenario = "";
     let latestMtime = 0;
+    let bodyText = "";
     const speakers = new Map();
-    const timestampRe = /(20\d{2})[-/年.](\d{1,2})[-/月.](\d{1,2})/;
+    const isoTsRe = /^\s*[\[［]?\s*(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]\d{1,2}:\d{2}/;
+    const anyTsRe = /(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]\d{1,2}:\d{2}/;
 
     for(const { name, text, mtime } of loaded){
       latestMtime = Math.max(latestMtime, mtime);
+      if(!filenameScenario) filenameScenario = deriveScenarioFromFilename(name);
       const looksJson = /\.json$/i.test(name) || /^\s*\{[\s\S]{0,600}"(kind|data|characters|name|params)"/.test(text);
       if(looksJson){
         try{
@@ -1508,30 +1540,38 @@
           const names = new Set();
           collectCharacterNames(data, names);
           names.forEach(nm=>{
-            if(!nm || nm.length > 24) return;
-            if(!speakers.has(nm)) speakers.set(nm, { name: nm, msgCount: 0, diceCount: 0, fromJson: true });
-            else speakers.get(nm).fromJson = true;
+            const clean = cleanSpeakerName(nm);
+            if(!clean || clean.length > 24 || isNoiseSpeaker(clean)) return;
+            if(!speakers.has(clean)) speakers.set(clean, { name: clean, msgCount: 0, diceCount: 0, fromJson: true });
+            else speakers.get(clean).fromJson = true;
           });
         }catch(_error){ /* not valid json, ignore */ }
         continue;
       }
-      const { title, rows } = chatLogLines(text, name);
-      if(title && !scenario){ scenario = cleanRoomName(title); if(!system) system = detectSystemFromText(title); }
-      rows.forEach(({ name: spName, text: body })=>{
-        if(!date){ const m = body.match(timestampRe); if(m) date = `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`; }
-        let nm = spName;
+      const { title, rows } = chatLogLines(text);
+      if(title && title !== "ccfolia - logs" && !scenario){ scenario = cleanRoomName(title); }
+      const tsCount = rows.filter(r=>isoTsRe.test(r.full)).length;
+      const useTimestamps = tsCount >= 10 && tsCount >= rows.length * 0.4;
+      rows.forEach(({ name: spName, text: body, full })=>{
+        bodyText += full + "\n";
+        if(useTimestamps && !timestampDate){
+          const m = full.match(anyTsRe);
+          if(m) timestampDate = `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+        }
+        let nm = cleanSpeakerName(spName);
         let msg = body;
         if(!nm){
           const cleaned = body
-            .replace(/^\s*\[[^\]]*\]\s*/, "")
-            .replace(/^\s*［[^］]*］\s*/, "")
+            .replace(/^\s*[\[［][^\]］]*[\]］]\s*/, "")
             .replace(/^\s*\d{1,2}:\d{2}(?::\d{2})?\s*/, "");
           const m = cleaned.match(/^([^:：\n]{1,24}?)\s*[:：]\s+(\S.*)$/);
           if(!m) return;
-          nm = m[1].trim();
+          nm = cleanSpeakerName(m[1]);
           msg = m[2];
         }
-        if(!nm || nm.length > 24 || /^(system|システム|bcdice|dicebot|ダイス(ロール)?|情報|メイン|全体|雑談|log)$/i.test(nm)) return;
+        if(!nm || nm.length > 24) return;
+        if(/^(system|システム|bcdice|dicebot|ダイスbot|ダイス(ロール)?|情報)$/i.test(nm)) return;
+        if(isNoiseSpeaker(nm)) return;
         if(!speakers.has(nm)) speakers.set(nm, { name: nm, msgCount: 0, diceCount: 0 });
         const s = speakers.get(nm);
         s.msgCount++;
@@ -1539,10 +1579,15 @@
       });
     }
 
+    if(!scenario) scenario = filenameScenario;
+    if(!system) system = detectSystemFromText(scenario + " " + bodyText.slice(0, 20000));
+
     importCcfolia.scenario = scenario;
     importCcfolia.system = system;
-    importCcfolia.date = date || (latestMtime ? new Date(latestMtime).toISOString().slice(0, 10) : "");
-    importCcfolia.speakers = [...speakers.values()].sort((a, b)=> (b.diceCount - a.diceCount) || (b.msgCount - a.msgCount) || (b.fromJson ? 1 : 0) - (a.fromJson ? 1 : 0));
+    importCcfolia.date = timestampDate || (latestMtime ? new Date(latestMtime).toISOString().slice(0, 10) : "");
+    importCcfolia.speakers = [...speakers.values()]
+      .filter(s=>s.fromJson || s.msgCount >= 2 || s.diceCount >= 1)
+      .sort((a, b)=> (b.diceCount - a.diceCount) || (b.msgCount - a.msgCount) || (b.fromJson ? 1 : 0) - (a.fromJson ? 1 : 0));
     autoAssignSpeakers();
 
     els.ccScenario.value = importCcfolia.scenario;
@@ -1565,10 +1610,12 @@
     const maxDice = Math.max(0, ...list.map(s=>s.diceCount));
     list.forEach((s, i)=>{
       const isSelf = selfNames.has(normalizePersonName(s.name));
+      if(/^(kp|dl|gm|kpc|skp|master|マスター|キーパー)$/i.test(s.name)){ s.role = "kp"; return; }
       if(/\bNPC\b|ＮＰＣ|モブ|背景|エキストラ/i.test(s.name)){ s.role = ""; return; }
       if(isSelf && (s.diceCount === 0 || s.diceCount * 3 < maxDice)){ s.role = "kp"; return; }
-      if(s.fromJson || s.diceCount > 0){ s.role = "pc"; return; }
-      s.role = (i < 5 && s.msgCount >= 2) ? "pc" : "";
+      if(s.fromJson){ s.role = "pc"; return; }
+      // 実PCはダイス・発言が突出する。KPが振るNPCの少数ダイスは PC にしない
+      s.role = (s.diceCount * 6 >= maxDice && s.diceCount >= 5) || s.msgCount >= 30 ? "pc" : "";
     });
   }
 
@@ -1587,9 +1634,10 @@
   }
 
   function ccfoliaRow(){
+    const notLabel = n=>!/^(kp|dl|gm|kpc|skp|master|マスター|キーパー)$/i.test(n);
     const pcs = importCcfolia.speakers.filter(s=>s.role === "pc").map(s=>s.name);
     const pls = importCcfolia.speakers.filter(s=>s.role === "pl").map(s=>s.name);
-    const kps = importCcfolia.speakers.filter(s=>s.role === "kp").map(s=>s.name);
+    const kps = importCcfolia.speakers.filter(s=>s.role === "kp").map(s=>s.name).filter(notLabel);
     const scenario = (els.ccScenario?.value || importCcfolia.scenario || "").trim();
     if(!scenario && !pcs.length && !kps.length) return null;
     const row = {
