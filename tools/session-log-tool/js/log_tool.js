@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.68";
+  const APP_VERSION = "v1.69";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccSpeakers","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -129,6 +129,21 @@
     els.selfNameInput?.addEventListener("change",()=>{ setSelfNames(els.selfNameInput.value); refreshActivePreview(); });
     els.sheetPasteInput?.addEventListener("input", scheduleSheetParse);
     els.reportPasteInput?.addEventListener("input", scheduleReportParse);
+    els.pickCcfoliaBtn?.addEventListener("click",()=>els.ccfoliaFileInput.click());
+    els.ccfoliaFileInput?.addEventListener("change", handleCcfoliaFiles);
+    ["ccScenario", "ccDate", "ccSystem"].forEach(id=>els[id]?.addEventListener("input",()=>{
+      importCcfolia.scenario = els.ccScenario.value;
+      importCcfolia.date = els.ccDate.value;
+      importCcfolia.system = els.ccSystem.value;
+      renderCcfoliaPreview();
+    }));
+    els.ccSpeakers?.addEventListener("change", event=>{
+      const select = event.target.closest("select[data-speaker]");
+      if(!select) return;
+      const sp = importCcfolia.speakers[Number(select.dataset.speaker)];
+      if(sp) sp.role = select.value;
+      renderCcfoliaPreview();
+    });
     els.sheetMapGrid?.addEventListener("change", event=>{
       const select = event.target.closest("select[data-src-index]");
       if(!select) return;
@@ -882,6 +897,7 @@
 
   const importSheet = { columns: [], rows: [], hasHeader: false, mapping: [] };
   const importReport = { rows: [] };
+  const importCcfolia = { scenario: "", date: "", system: "", speakers: [] };
   let jsonImportPayload = null;
   let sheetParseTimer = null;
   let reportParseTimer = null;
@@ -900,6 +916,10 @@
     importSheet.hasHeader = false;
     importSheet.mapping = [];
     importReport.rows = [];
+    importCcfolia.scenario = "";
+    importCcfolia.date = "";
+    importCcfolia.system = "";
+    importCcfolia.speakers = [];
     jsonImportPayload = null;
     if(els.sheetPasteInput) els.sheetPasteInput.value = "";
     if(els.reportPasteInput) els.reportPasteInput.value = "";
@@ -907,6 +927,11 @@
     if(els.importPreviewArea) els.importPreviewArea.hidden = true;
     if(els.sheetParseMsg){ els.sheetParseMsg.hidden = true; els.sheetParseMsg.textContent = ""; }
     if(els.reportParseMsg){ els.reportParseMsg.hidden = true; els.reportParseMsg.textContent = ""; }
+    if(els.ccfoliaParseMsg){ els.ccfoliaParseMsg.hidden = true; els.ccfoliaParseMsg.textContent = ""; }
+    if(els.ccfoliaForm) els.ccfoliaForm.hidden = true;
+    if(els.ccfoliaFileName) els.ccfoliaFileName.textContent = "";
+    if(els.ccfoliaFileInput) els.ccfoliaFileInput.value = "";
+    ["ccScenario", "ccDate", "ccSystem"].forEach(id=>{ if(els[id]) els[id].value = ""; });
     if(els.jsonFileName) els.jsonFileName.textContent = "";
     if(els.jsonFileInput) els.jsonFileInput.value = "";
     if(els.runImportBtn) els.runImportBtn.disabled = true;
@@ -938,6 +963,7 @@
     let ready = false;
     if(tab === "json") ready = Boolean(jsonImportPayload);
     else if(tab === "text") ready = importReport.rows.length > 0;
+    else if(tab === "ccfolia") ready = Boolean(ccfoliaRow());
     else ready = sheetDataRows().length > 0 && importSheet.mapping.some(Boolean);
     els.runImportBtn.disabled = !ready;
   }
@@ -946,6 +972,7 @@
     const tab = activeImportTab();
     if(tab === "sheet") refreshSheetPreview();
     else if(tab === "text") renderReportPreview();
+    else if(tab === "ccfolia") renderCcfoliaPreview();
     else if(els.importPreviewArea) els.importPreviewArea.hidden = true;
   }
 
@@ -1389,6 +1416,200 @@
     return rows;
   }
 
+  // ----- CCFOLIA 部屋データ / チャットログ -----
+
+  const DICE_RE = /\b\d{0,2}[dD]\d{1,3}\b|ccb?<=|\bscc?\b|1d100|→\s*(決定的成功|致命的失敗|クリティカル|ファンブル|スペシャル|成功|失敗)|【\s*(判定|技能|SAN)/i;
+
+  function walkJson(node, cb, depth){
+    depth = depth || 0;
+    if(node == null || depth > 8) return;
+    if(Array.isArray(node)){ if(node.length < 4000) node.forEach(n=>walkJson(n, cb, depth + 1)); return; }
+    if(typeof node === "object"){ cb(node, depth); Object.values(node).forEach(v=>walkJson(v, cb, depth + 1)); }
+  }
+
+  function cleanRoomName(name){
+    return String(name || "")
+      .replace(/[【\[（(]\s*(coc|coc6|coc7|新?クトゥルフ[^\]】）)]*|エモクロア|マダミス|シノビガミ|インセイン|dx3?|ダブルクロス|sw2\.?5?|ソード・?ワールド)\s*[】\]）)]/gi, "")
+      .replace(/\s*[\/／|｜]\s*(kp|dl|gm)\s*[:：].*/i, "")
+      .replace(/\s*(kp|dl|gm)\s*[:：]\s*\S+\s*$/i, "")
+      .replace(/\s*[:：]?\s*(募集中?|満卓|クローズ|進行中|終了|済|完走).*/i, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  }
+
+  function collectCharacterNames(data, into){
+    walkJson(data, node=>{
+      if((node.kind === "character" || node.type === "character") && node.data && typeof node.data.name === "string"){
+        into.add(node.data.name.trim());
+      }
+      if(Array.isArray(node.characters)){
+        node.characters.forEach(c=>{ if(c && typeof c.name === "string" && c.name.trim()) into.add(c.name.trim()); });
+      }
+    });
+  }
+
+  function findRoomName(data){
+    let found = "";
+    walkJson(data, node=>{
+      if(found) return;
+      if(node.kind === "room" && node.data && typeof node.data.name === "string"){ found = node.data.name; return; }
+      if(typeof node.name === "string" && node.name.trim() && node.name.length < 120 &&
+        (Array.isArray(node.characters) || node.mediaList || node.screenName || node.roomId || node.bgmUrl !== undefined)){
+        found = node.name;
+      }
+    });
+    if(!found && data && data.data && typeof data.data.name === "string") found = data.data.name;
+    return found.trim();
+  }
+
+  function chatLogLines(text, name){
+    if(/<(p|body|html|div|table)\b/i.test(text)){
+      const doc = new DOMParser().parseFromString(text, "text/html");
+      const title = doc.querySelector("title")?.textContent?.trim();
+      const rows = [...doc.querySelectorAll("p, tr, div.log, .p-log__row")].map(el=>{
+        const spans = [...el.querySelectorAll("span")];
+        if(spans.length >= 2){
+          const nameSpan = spans[spans.length >= 3 ? 1 : 0];
+          const nm = (spans.length >= 3 ? spans[1] : spans[spans.length - 1]).textContent.trim();
+          return { name: nm, text: el.textContent.replace(/\s+/g, " ").trim() };
+        }
+        return { name: "", text: el.textContent.replace(/\s+/g, " ").trim() };
+      }).filter(r=>r.text);
+      return { title, rows };
+    }
+    return {
+      title: "",
+      rows: text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>({ name: "", text: l }))
+    };
+  }
+
+  async function handleCcfoliaFiles(event){
+    const files = [...(event.target.files || [])];
+    if(!files.length) return;
+    els.ccfoliaFileName.textContent = files.map(f=>f.name).join("、");
+    const loaded = await Promise.all(files.map(f=>f.text().then(text=>({ name: f.name, text, mtime: f.lastModified || 0 }))));
+
+    let scenario = "", system = "", date = "";
+    let latestMtime = 0;
+    const speakers = new Map();
+    const timestampRe = /(20\d{2})[-/年.](\d{1,2})[-/月.](\d{1,2})/;
+
+    for(const { name, text, mtime } of loaded){
+      latestMtime = Math.max(latestMtime, mtime);
+      const looksJson = /\.json$/i.test(name) || /^\s*\{[\s\S]{0,600}"(kind|data|characters|name|params)"/.test(text);
+      if(looksJson){
+        try{
+          const data = JSON.parse(text);
+          const room = findRoomName(data);
+          if(room && !scenario){ scenario = cleanRoomName(room); if(!system) system = detectSystemFromText(room); }
+          const names = new Set();
+          collectCharacterNames(data, names);
+          names.forEach(nm=>{
+            if(!nm || nm.length > 24) return;
+            if(!speakers.has(nm)) speakers.set(nm, { name: nm, msgCount: 0, diceCount: 0, fromJson: true });
+            else speakers.get(nm).fromJson = true;
+          });
+        }catch(_error){ /* not valid json, ignore */ }
+        continue;
+      }
+      const { title, rows } = chatLogLines(text, name);
+      if(title && !scenario){ scenario = cleanRoomName(title); if(!system) system = detectSystemFromText(title); }
+      rows.forEach(({ name: spName, text: body })=>{
+        if(!date){ const m = body.match(timestampRe); if(m) date = `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`; }
+        let nm = spName;
+        let msg = body;
+        if(!nm){
+          const cleaned = body
+            .replace(/^\s*\[[^\]]*\]\s*/, "")
+            .replace(/^\s*［[^］]*］\s*/, "")
+            .replace(/^\s*\d{1,2}:\d{2}(?::\d{2})?\s*/, "");
+          const m = cleaned.match(/^([^:：\n]{1,24}?)\s*[:：]\s+(\S.*)$/);
+          if(!m) return;
+          nm = m[1].trim();
+          msg = m[2];
+        }
+        if(!nm || nm.length > 24 || /^(system|システム|bcdice|dicebot|ダイス(ロール)?|情報|メイン|全体|雑談|log)$/i.test(nm)) return;
+        if(!speakers.has(nm)) speakers.set(nm, { name: nm, msgCount: 0, diceCount: 0 });
+        const s = speakers.get(nm);
+        s.msgCount++;
+        if(DICE_RE.test(msg)) s.diceCount++;
+      });
+    }
+
+    importCcfolia.scenario = scenario;
+    importCcfolia.system = system;
+    importCcfolia.date = date || (latestMtime ? new Date(latestMtime).toISOString().slice(0, 10) : "");
+    importCcfolia.speakers = [...speakers.values()].sort((a, b)=> (b.diceCount - a.diceCount) || (b.msgCount - a.msgCount) || (b.fromJson ? 1 : 0) - (a.fromJson ? 1 : 0));
+    autoAssignSpeakers();
+
+    els.ccScenario.value = importCcfolia.scenario;
+    els.ccDate.value = importCcfolia.date;
+    els.ccSystem.value = importCcfolia.system;
+    els.ccfoliaForm.hidden = false;
+    renderSpeakerList();
+    renderCcfoliaPreview();
+
+    els.ccfoliaParseMsg.hidden = false;
+    els.ccfoliaParseMsg.textContent = importCcfolia.speakers.length
+      ? `発言者 ${importCcfolia.speakers.length} 名を検出。ダイス回数の多い順に PC を割り当てました。シナリオ名・日付・割り当てを確認してください。`
+      : "キャラ名・発言者を検出できませんでした。部屋データ（.json）かチャットログ（.html）か確認してください。";
+    els.ccfoliaFileInput.value = "";
+  }
+
+  function autoAssignSpeakers(){
+    const selfNames = getSelfNames();
+    const list = importCcfolia.speakers;
+    const maxDice = Math.max(0, ...list.map(s=>s.diceCount));
+    list.forEach((s, i)=>{
+      const isSelf = selfNames.has(normalizePersonName(s.name));
+      if(/\bNPC\b|ＮＰＣ|モブ|背景|エキストラ/i.test(s.name)){ s.role = ""; return; }
+      if(isSelf && (s.diceCount === 0 || s.diceCount * 3 < maxDice)){ s.role = "kp"; return; }
+      if(s.fromJson || s.diceCount > 0){ s.role = "pc"; return; }
+      s.role = (i < 5 && s.msgCount >= 2) ? "pc" : "";
+    });
+  }
+
+  function renderSpeakerList(){
+    if(!els.ccSpeakers) return;
+    els.ccSpeakers.innerHTML = importCcfolia.speakers.map((s, i)=>{
+      const opts = [["pc", "PC"], ["pl", "PL"], ["kp", "KP / GM"], ["", "除外"]]
+        .map(([v, label])=>`<option value="${v}" ${s.role === v ? "selected" : ""}>${label}</option>`).join("");
+      const parts = [];
+      if(s.fromJson) parts.push("駒");
+      if(s.msgCount) parts.push(`発言${s.msgCount}`);
+      if(s.diceCount) parts.push(`ダイス${s.diceCount}`);
+      const meta = parts.join("・") || "—";
+      return `<label class="cc-speaker"><span class="cc-speaker-name">${escapeHtml(s.name)}</span><span class="cc-speaker-meta">${meta}</span><select data-speaker="${i}">${opts}</select></label>`;
+    }).join("");
+  }
+
+  function ccfoliaRow(){
+    const pcs = importCcfolia.speakers.filter(s=>s.role === "pc").map(s=>s.name);
+    const pls = importCcfolia.speakers.filter(s=>s.role === "pl").map(s=>s.name);
+    const kps = importCcfolia.speakers.filter(s=>s.role === "kp").map(s=>s.name);
+    const scenario = (els.ccScenario?.value || importCcfolia.scenario || "").trim();
+    if(!scenario && !pcs.length && !kps.length) return null;
+    const row = {
+      scenario,
+      date: (els.ccDate?.value || importCcfolia.date || "").trim(),
+      system: (els.ccSystem?.value || importCcfolia.system || "").trim(),
+      pc: pcs.join(" / "),
+      players: pls.join("、"),
+      gm: kps.join("、")
+    };
+    return row;
+  }
+
+  function renderCcfoliaPreview(){
+    const row = ccfoliaRow();
+    if(!row){
+      if(els.importPreviewArea) els.importPreviewArea.hidden = true;
+      updateRunImportEnabled();
+      return;
+    }
+    renderImportPreview([normalizeImportedRow(applySelfRole(coerceImportValues({ ...row })))]);
+  }
+
   function handleJsonFilePicked(event){
     const file = event.target.files?.[0];
     if(!file){ jsonImportPayload = null; updateRunImportEnabled(); return; }
@@ -1430,6 +1651,10 @@
     }else if(tab === "text"){
       importedRows = buildReportRows().map(row=>({ ...row, id: cryptoId() }));
       if(!importedRows.length){ alert("取り込める卓報告がありません。"); return; }
+    }else if(tab === "ccfolia"){
+      const row = ccfoliaRow();
+      if(!row){ alert("取り込める内容がありません。"); return; }
+      importedRows = [{ ...normalizeImportedRow(applySelfRole(coerceImportValues(row))), id: cryptoId() }];
     }else{
       importedRows = buildSheetRows().map(row=>({ ...row, id: cryptoId() }));
       if(!importedRows.length){ alert("取り込める行がありません。"); return; }
