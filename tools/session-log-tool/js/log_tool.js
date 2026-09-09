@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.66";
+  const APP_VERSION = "v1.67";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","sheetPreviewArea","sheetPreviewCount","sheetPreviewTable","sheetParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -126,19 +126,17 @@
     els.runImportBtn?.addEventListener("click", runImport);
     els.pickJsonBtn?.addEventListener("click",()=>els.jsonFileInput.click());
     els.downloadTemplateBtn?.addEventListener("click", downloadImportTemplate);
-    els.selfNameInput?.addEventListener("change",()=>{ setSelfNames(els.selfNameInput.value); refreshSheetPreview(); });
+    els.selfNameInput?.addEventListener("change",()=>{ setSelfNames(els.selfNameInput.value); refreshActivePreview(); });
     els.sheetPasteInput?.addEventListener("input", scheduleSheetParse);
+    els.reportPasteInput?.addEventListener("input", scheduleReportParse);
     els.sheetMapGrid?.addEventListener("change", event=>{
       const select = event.target.closest("select[data-src-index]");
       if(!select) return;
       importSheet.mapping[Number(select.dataset.srcIndex)] = select.value;
       refreshSheetPreview();
     });
-    els.dupSkipInput?.addEventListener("change", refreshSheetPreview);
-    document.querySelectorAll('input[name="importTarget"]').forEach(radio=>radio.addEventListener("change",()=>{
-      if(els.dupSkipWrap) els.dupSkipWrap.classList.toggle("is-disabled", getImportTarget() === "overwrite");
-      refreshSheetPreview();
-    }));
+    els.dupSkipInput?.addEventListener("change", refreshActivePreview);
+    document.querySelectorAll('input[name="importTarget"]').forEach(radio=>radio.addEventListener("change", refreshActivePreview));
     els.importDialog?.querySelectorAll(".import-tab").forEach(tab=>tab.addEventListener("click",()=>switchImportTab(tab.dataset.importTab)));
     els.importDialog?.addEventListener("close", resetImportState);
     els.exportModeButtons = [...document.querySelectorAll("[data-export-mode]")];
@@ -883,8 +881,10 @@
   };
 
   const importSheet = { columns: [], rows: [], hasHeader: false, mapping: [] };
+  const importReport = { rows: [] };
   let jsonImportPayload = null;
   let sheetParseTimer = null;
+  let reportParseTimer = null;
 
   function openImportDialog(){
     resetImportState();
@@ -899,11 +899,14 @@
     importSheet.rows = [];
     importSheet.hasHeader = false;
     importSheet.mapping = [];
+    importReport.rows = [];
     jsonImportPayload = null;
     if(els.sheetPasteInput) els.sheetPasteInput.value = "";
+    if(els.reportPasteInput) els.reportPasteInput.value = "";
     if(els.sheetMapArea) els.sheetMapArea.hidden = true;
-    if(els.sheetPreviewArea) els.sheetPreviewArea.hidden = true;
+    if(els.importPreviewArea) els.importPreviewArea.hidden = true;
     if(els.sheetParseMsg){ els.sheetParseMsg.hidden = true; els.sheetParseMsg.textContent = ""; }
+    if(els.reportParseMsg){ els.reportParseMsg.hidden = true; els.reportParseMsg.textContent = ""; }
     if(els.jsonFileName) els.jsonFileName.textContent = "";
     if(els.jsonFileInput) els.jsonFileInput.value = "";
     if(els.runImportBtn) els.runImportBtn.disabled = true;
@@ -916,6 +919,8 @@
     els.importDialog?.querySelectorAll(".import-tabpanel").forEach(panel=>{
       panel.hidden = panel.dataset.importPanel !== tab;
     });
+    if(els.importPreviewArea) els.importPreviewArea.hidden = true;
+    refreshActivePreview();
     updateRunImportEnabled();
   }
 
@@ -930,13 +935,28 @@
   function updateRunImportEnabled(){
     if(!els.runImportBtn) return;
     const tab = activeImportTab();
-    const ready = tab === "json" ? Boolean(jsonImportPayload) : sheetDataRows().length > 0 && importSheet.mapping.some(Boolean);
+    let ready = false;
+    if(tab === "json") ready = Boolean(jsonImportPayload);
+    else if(tab === "text") ready = importReport.rows.length > 0;
+    else ready = sheetDataRows().length > 0 && importSheet.mapping.some(Boolean);
     els.runImportBtn.disabled = !ready;
+  }
+
+  function refreshActivePreview(){
+    const tab = activeImportTab();
+    if(tab === "sheet") refreshSheetPreview();
+    else if(tab === "text") renderReportPreview();
+    else if(els.importPreviewArea) els.importPreviewArea.hidden = true;
   }
 
   function scheduleSheetParse(){
     clearTimeout(sheetParseTimer);
     sheetParseTimer = setTimeout(parseSheetInput, 180);
+  }
+
+  function scheduleReportParse(){
+    clearTimeout(reportParseTimer);
+    reportParseTimer = setTimeout(parseReportInput, 220);
   }
 
   function parseDelimitedText(text){
@@ -998,7 +1018,7 @@
       importSheet.rows = [];
       importSheet.mapping = [];
       els.sheetMapArea.hidden = true;
-      els.sheetPreviewArea.hidden = true;
+      els.importPreviewArea.hidden = true;
       els.sheetParseMsg.hidden = true;
       updateRunImportEnabled();
       return;
@@ -1113,36 +1133,231 @@
     return date && scenario ? `${date}|${scenario}` : "";
   }
 
+  function buildSheetRows(){
+    return sheetDataRows()
+      .map(cells=>normalizeImportedRow(applySelfRole(coerceImportValues(buildRowFromCells(cells)))))
+      .filter(row=>row.scenario || row.date || row.pc || row.gm);
+  }
+
+  function buildReportRows(){
+    return importReport.rows
+      .map(partial=>normalizeImportedRow(applySelfRole(coerceImportValues({ ...partial }))))
+      .filter(row=>row.scenario || row.date || row.pc || row.gm);
+  }
+
   function refreshSheetPreview(){
     if(!importSheet.rows.length){
-      els.sheetPreviewArea.hidden = true;
+      if(els.importPreviewArea) els.importPreviewArea.hidden = true;
       updateRunImportEnabled();
       return;
     }
-    const target = getImportTarget();
-    const existingKeys = new Set(state.rows.map(sessionDupKey).filter(Boolean));
-    const built = sheetDataRows()
-      .map(cells=>normalizeImportedRow(applySelfRole(coerceImportValues(buildRowFromCells(cells)))))
-      .filter(row=>row.scenario || row.date || row.pc || row.gm);
-    const dupCount = built.filter(row=>{ const k = sessionDupKey(row); return k && existingKeys.has(k); }).length;
+    renderImportPreview(buildSheetRows());
+  }
 
-    els.sheetPreviewArea.hidden = false;
-    const skipDup = target !== "overwrite" && els.dupSkipInput?.checked;
+  function renderReportPreview(){
+    if(!importReport.rows.length){
+      if(els.importPreviewArea) els.importPreviewArea.hidden = true;
+      updateRunImportEnabled();
+      return;
+    }
+    renderImportPreview(buildReportRows());
+  }
+
+  function renderImportPreview(built){
+    const target = getImportTarget();
+    const skipDup = Boolean(els.dupSkipInput?.checked);
+    const existingKeys = new Set(target === "overwrite" ? [] : state.rows.map(sessionDupKey).filter(Boolean));
+    const dupSet = new Set(existingKeys);
+    let dupCount = 0;
+    built.forEach(row=>{
+      const k = sessionDupKey(row);
+      if(!k) return;
+      if(dupSet.has(k)) dupCount++;
+      else dupSet.add(k);
+    });
     const willImport = skipDup ? built.length - dupCount : built.length;
-    els.sheetPreviewCount.textContent = target === "overwrite"
-      ? `${built.length} 行を取り込み（既存データは全消去）`
-      : `${willImport} 行を取り込み${dupCount ? ` / 重複 ${dupCount} 行を${skipDup ? "スキップ" : "そのまま追加"}` : ""}`;
+
+    els.importPreviewArea.hidden = false;
+    els.importPreviewCount.textContent =
+      `${willImport} 件を取り込み` +
+      (target === "overwrite" ? "（既存データは全消去）" : "") +
+      (dupCount ? ` / 重複 ${dupCount} 件を${skipDup ? "スキップ" : "そのまま追加"}` : "");
 
     const cols = ["date", "scenario", "system", "role", "gm", "players", "pc"];
     const head = `<tr><th></th>${cols.map(c=>`<th>${escapeHtml((SHEET_TARGET_FIELDS.find(f=>f[0] === c) || [c, c])[1].split(/[ (（]/)[0])}</th>`).join("")}</tr>`;
-    const body = built.slice(0, 8).map(row=>{
+    const body = built.slice(0, 10).map(row=>{
       const dup = existingKeys.has(sessionDupKey(row));
-      const cells = cols.map(c=>`<td>${escapeHtml(c === "date" ? getDateDisplay(row) : (row[c] || ""))}</td>`).join("");
+      const cells = cols.map(c=>`<td>${escapeHtml(c === "date" ? getDateDisplay(row) : (c === "time" ? timeDisplay(row.time) : (row[c] || "")))}</td>`).join("");
       return `<tr class="${dup ? "is-dup" : ""}"><td class="dup-mark">${dup ? "重複" : ""}</td>${cells}</tr>`;
     }).join("");
-    els.sheetPreviewTable.innerHTML = head + body + (built.length > 8 ? `<tr><td></td><td colspan="${cols.length}" class="preview-more">ほか ${built.length - 8} 行…</td></tr>` : "");
+    els.importPreviewTable.innerHTML = head + body + (built.length > 10 ? `<tr><td></td><td colspan="${cols.length}" class="preview-more">ほか ${built.length - 10} 件…</td></tr>` : "");
 
     updateRunImportEnabled();
+  }
+
+  // ----- 卓報告テキスト / テキスト一覧のパース -----
+
+  const REPORT_SYSTEM_PATTERNS = [
+    [/新クトゥルフ神話trpg|新クトゥルフ|new\s*coc|coc\s*7版?|coc7/i, "CoC 7版"],
+    [/クトゥルフ神話trpg|coc\s*6版?|coc6/i, "CoC 6版"],
+    [/call of cthulhu|クトゥルフ|coc(?![0-9])/i, "CoC 7版"],
+    [/エモクロア|emoklore/i, "エモクロア"],
+    [/マーダーミステリー|マダミス|murder\s*mystery/i, "マダミス"],
+    [/シノビガミ/i, "シノビガミ"],
+    [/インセイン/i, "インセイン"],
+    [/ダブルクロス|double\s*cross/i, "ダブルクロス The 3rd Edition"],
+    [/ソード・?ワールド|sword\s*world/i, "ソード・ワールド2.5"],
+    [/フタリソウサ/i, "フタリソウサ"]
+  ];
+
+  const SMALL_CAPS_MAP = { "ᴀ":"A","ʙ":"B","ᴄ":"C","ᴅ":"D","ᴇ":"E","ꜰ":"F","ɢ":"G","ʜ":"H","ɪ":"I","ᴊ":"J","ᴋ":"K","ʟ":"L","ᴍ":"M","ɴ":"N","ᴏ":"O","ᴘ":"P","ꞯ":"Q","ʀ":"R","ꜱ":"S","ᴛ":"T","ᴜ":"U","ᴠ":"V","ᴡ":"W","ʏ":"Y","ᴢ":"Z" };
+
+  const SMALL_CAPS_RE = new RegExp(`[${Object.keys(SMALL_CAPS_MAP).join("")}]`, "g");
+  function desmallcaps(text){
+    return String(text || "").replace(SMALL_CAPS_RE, ch=>SMALL_CAPS_MAP[ch] || ch);
+  }
+
+  function detectSystemFromText(text){
+    const t = desmallcaps(String(text || "")).normalize("NFKC");
+    for(const [re, name] of REPORT_SYSTEM_PATTERNS){ if(re.test(t)) return name; }
+    return "";
+  }
+
+  function stripReportLine(line){
+    return String(line)
+      .replace(/^[\s　|｜┊┗▹▸▶►▷➜➤‣・･\-–—―━─=*✦✧✼⟡◤◢◈❖◇◆‖†✩⋆★☆✮✯⚝⛦≛▮▎ᐧ.·°˖˚₊‧꙳⌜⌟୨୧꒰꒱ঌ໒⧉]+/u, "")
+      .replace(/[\s　|｜┊◤◢⌜⌟୨୧‧₊˚꙳・.·°˖ ─—―━=✦✧]+$/u, "")
+      .trim();
+  }
+
+  function parseReportInput(){
+    importReport.rows = parseReportText(els.reportPasteInput.value);
+    renderReportPreview();
+    if(!els.reportParseMsg) return;
+    els.reportParseMsg.hidden = false;
+    els.reportParseMsg.textContent = importReport.rows.length
+      ? `${importReport.rows.length} 件を認識しました。プレビューで確認し、取り込み後に細部を編集できます。`
+      : "認識できませんでした。1件ずつ空行2つ以上（または --- 行）で区切り、システム名・「シナリオ名」・日付が含まれているか確認してください。";
+  }
+
+  function parseReportText(text){
+    const raw = String(text || "").replace(/\r\n?/g, "\n").replace(/[ \t]+$/gm, "").trim();
+    if(!raw) return [];
+    const bodyLines = raw.split("\n").map(l=>l.trim()).filter(Boolean);
+    const numbered = bodyLines.filter(l=>/^\d+[.．)]\s*\S/.test(l)).length;
+    if(numbered >= 3 && numbered >= bodyLines.length * 0.4) return parseListExport(raw);
+
+    const blocks = raw
+      .split(/\n[ \t　]*\n[ \t　]*\n+|\n[ \t　]*[-=—―━─_]{3,}[ \t　]*\n/)
+      .map(b=>b.trim())
+      .filter(Boolean);
+    return blocks.map(parseReportBlock).filter(row=>row && (row.scenario || row.gm || row.players || row.date));
+  }
+
+  function parseReportBlock(block){
+    const row = { longNote: block.trim() };
+    const norm = desmallcaps(block);
+    const lines = norm.split("\n").map(stripReportLine).filter(Boolean);
+    const joined = norm.normalize("NFKC");
+
+    const tags = joined.match(/#[^\s#、,，。]+/g) || [];
+    if(tags.length) row.hashtag = [...new Set(tags)].join(" ");
+
+    const dm = joined.match(/(20\d{2}|19\d{2})\s*[\/.\-年]\s*(\d{1,2})\s*[\/.\-月]\s*(\d{1,2})/);
+    if(dm) row.date = `${dm[1]}-${String(dm[2]).padStart(2, "0")}-${String(dm[3]).padStart(2, "0")}`;
+
+    row.system = detectSystemFromText(joined);
+
+    for(const line of lines){
+      const bm = line.match(/[「『【《〈](.+?)[」』】》〉]/);
+      if(bm){
+        const s = bm[1].trim();
+        if(s && !detectSystemFromText(s) && !/^(kp|dl|gm|pl|pc|ho\d|end|作)/i.test(s)){ row.scenario = s; break; }
+      }
+    }
+    if(!row.scenario){
+      const sysIdx = lines.findIndex(l=>detectSystemFromText(l) && l.length < 30);
+      if(sysIdx >= 0 && lines[sysIdx + 1]) row.scenario = lines[sysIdx + 1].replace(/[「『【《〈」』】》〉]/g, "").trim();
+    }
+
+    const gmNames = [];
+    const roleRe = /^(kpc\s*[\/／]\s*kp|作\s*[\/／]\s*kp|kp|dl|gm|skp|進行|ゲームマスター|キーパー)\s*[：:┊|・\/／]\s*(.+)$/i;
+    lines.forEach(line=>{
+      const m = line.match(roleRe);
+      if(m){
+        m[2].split(/[、,，\/／|｜]/).map(n=>n.replace(/(様|さん|氏)\s*$/, "").trim()).filter(Boolean).forEach(n=>{ if(n.length < 24) gmNames.push(n); });
+      }
+    });
+    lines.forEach((line, i)=>{
+      if(/^(kp|dl|gm|キーパー|ゲームマスター)…?\s*$/i.test(line) && lines[i + 1] && !roleRe.test(lines[i + 1]) && !/[「『]/.test(lines[i + 1])){
+        const n = lines[i + 1].replace(/(様|さん|氏)\s*$/, "").trim();
+        if(n && n.length < 24 && !detectSystemFromText(n)) gmNames.push(n);
+      }
+    });
+    if(gmNames.length) row.gm = [...new Set(gmNames)].join("、");
+
+    const headerIdx = lines.findIndex(l=>{
+      const bare = l.replace(/\s/g, "").toLowerCase();
+      return /^(pc|pl|ᴘᴄ|ᴘʟ)[・.:：/／┊|｜](pl|pc|ᴘʟ|ᴘᴄ)/.test(bare) || bare === "pcpl" || bare === "plpc";
+    });
+    const plFirst = headerIdx >= 0 && /^(pl|ᴘʟ)/i.test(lines[headerIdx].replace(/\s/g, ""));
+    const pcs = [], pls = [];
+    if(headerIdx >= 0){
+      for(let i = headerIdx + 1; i < lines.length; i++){
+        const cleaned = lines[i].replace(/^(ho\s*\d+|pc\s*\d+|pc|ho|自由)\s*[:：]?\s*/i, "").replace(/^[┗▹▸\-‣・\s]+/, "").trim();
+        if(/(end\b|エンド|クリア|生還|ロスト|20\d{2}|#)/i.test(cleaned)) break;
+        const parts = cleaned.split(/\s*[\/／|｜┊]\s*/).map(p=>p.trim()).filter(Boolean);
+        if(parts.length === 2){
+          if(plFirst){ pls.push(parts[0]); pcs.push(parts[1]); }
+          else { pcs.push(parts[0]); pls.push(parts[1]); }
+        }else if(parts.length === 1 && (pcs.length || pls.length)){
+          break;
+        }
+      }
+    }
+    if(pcs.length) row.pc = [...new Set(pcs.filter(Boolean))].join(" / ");
+    if(pls.length) row.players = [...new Set(pls.filter(Boolean))].join("、");
+
+    const resLine = lines.find(l=>/(end\b|エンド|クリア|scenario\s*clear|生還|ロスト|グッドエンド|ゲームクリア)/i.test(l) && l.length < 48 && !/[「『【]/.test(l));
+    if(resLine){
+      row.ending = resLine.replace(/^[-–—―─\s]+|[-–—―─\s]+$/g, "").trim();
+      const s = resLine.match(/全生還|全ロスト|生還|ロスト/);
+      if(s) row.survival = s[0];
+    }
+
+    return row;
+  }
+
+  function parseListExport(raw){
+    const rows = [];
+    let groupSystem = "", groupGm = "", groupRole = "";
+    raw.split("\n").map(l=>l.trim()).forEach(line=>{
+      if(!line) return;
+      const gh = line.match(/^【\s*(.+?)\s*】$/);
+      if(gh){
+        const g = gh[1];
+        const sys = detectSystemFromText(g);
+        if(sys) groupSystem = sys;
+        else if(/^(pl|kp|gm|dl)/i.test(g)) groupRole = g.toUpperCase().slice(0, 2);
+        else groupGm = g;
+        return;
+      }
+      if(/^[◼◻■□▪▫◾◽]?\s*GM(した|担当)/.test(line)){ groupRole = "KP"; return; }
+      const countHead = line.match(/^[◼◻■□▪▫◾◽]?[︎\s]*(\d+)\s*(pl|人)/i);
+      if(countHead){ groupRole = ""; return; }
+      const m = line.match(/^\d+[.．)]\s*(.+)$/);
+      if(!m) return;
+      const parts = m[1].split(/\s*[\/／]\s*/).map(p=>p.trim());
+      const row = { scenario: parts[0].replace(/[「『【《〈」』】》〉]/g, "").trim() };
+      if(parts[1]) row.system = detectSystemFromText(parts[1]) || parts[1];
+      if(parts[2] && /^(pl|kp|gm|dl)$/i.test(parts[2])) row.role = parts[2].toUpperCase();
+      if(parts[3]) row.date = parts[3];
+      if(!row.system && groupSystem) row.system = groupSystem;
+      if(!row.role && groupRole) row.role = groupRole;
+      if(!row.gm && groupGm) row.gm = groupGm;
+      if(row.scenario) rows.push(row);
+    });
+    return rows;
   }
 
   function handleJsonFilePicked(event){
@@ -1183,17 +1398,23 @@
       if(!jsonImportPayload) return;
       importedRows = jsonImportPayload.rows.map(row=>normalizeImportedRow(row));
       importedColumns = Array.isArray(jsonImportPayload.columns) ? jsonImportPayload.columns : null;
+    }else if(tab === "text"){
+      importedRows = buildReportRows().map(row=>({ ...row, id: cryptoId() }));
+      if(!importedRows.length){ alert("取り込める卓報告がありません。"); return; }
     }else{
-      importedRows = sheetDataRows()
-        .map(cells=>normalizeImportedRow(applySelfRole(coerceImportValues(buildRowFromCells(cells)))))
-        .filter(row=>row.scenario || row.date || row.pc || row.gm)
-        .map(row=>({ ...row, id: cryptoId() }));
+      importedRows = buildSheetRows().map(row=>({ ...row, id: cryptoId() }));
       if(!importedRows.length){ alert("取り込める行がありません。"); return; }
     }
 
-    if(target !== "overwrite" && els.dupSkipInput?.checked){
-      const existingKeys = new Set(state.rows.map(sessionDupKey).filter(Boolean));
-      importedRows = importedRows.filter(row=>{ const k = sessionDupKey(row); return !k || !existingKeys.has(k); });
+    if(els.dupSkipInput?.checked){
+      const seen = new Set(target === "overwrite" ? [] : state.rows.map(sessionDupKey).filter(Boolean));
+      importedRows = importedRows.filter(row=>{
+        const k = sessionDupKey(row);
+        if(!k) return true;
+        if(seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
     }
 
     if(target === "overwrite"){
@@ -1208,8 +1429,11 @@
     }
 
     if(tab === "sheet"){
-      const usedKeys = [...new Set(importSheet.mapping.filter(Boolean))];
-      ensureColumnsForKeys(usedKeys);
+      ensureColumnsForKeys([...new Set(importSheet.mapping.filter(Boolean))]);
+    }else if(tab === "text"){
+      const keys = new Set();
+      importedRows.forEach(row=>["hashtag", "ending", "survival", "campaign"].forEach(k=>{ if(row[k]) keys.add(k); }));
+      ensureColumnsForKeys([...keys]);
     }
 
     activeId = state.rows[0]?.id || null;

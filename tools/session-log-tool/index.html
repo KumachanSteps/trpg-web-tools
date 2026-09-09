@@ -55,7 +55,7 @@
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.66 2026.09.09</p>
+        <p class="header-version">v1.67 2026.09.09</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -273,7 +273,8 @@
       </label>
 
       <div class="import-tabs" role="tablist">
-        <button class="import-tab is-active" data-import-tab="sheet" type="button">スプレッドシート / 表を貼り付け</button>
+        <button class="import-tab is-active" data-import-tab="sheet" type="button">スプレッドシート</button>
+        <button class="import-tab" data-import-tab="text" type="button">卓報告テキスト</button>
         <button class="import-tab" data-import-tab="json" type="button">JSON ファイル</button>
       </div>
 
@@ -285,11 +286,13 @@
           <p class="import-sub">列の対応（自動判定を確認・修正してください）</p>
           <div id="sheetMapGrid" class="sheet-map-grid"></div>
         </div>
-        <div id="sheetPreviewArea" hidden>
-          <p class="import-sub">プレビュー <span id="sheetPreviewCount" class="import-count"></span></p>
-          <div class="sheet-preview-scroll"><table id="sheetPreviewTable"></table></div>
-        </div>
         <p id="sheetParseMsg" class="import-msg" hidden></p>
+      </div>
+
+      <div class="import-tabpanel" data-import-panel="text" hidden>
+        <p class="import-hint">過去の卓報告（X投稿など）や、このツールの「テキスト出力」を貼り付けます。複数件はあいだに<strong>空行を2つ以上</strong>、または <code>---</code> の区切り行を入れてください。自動抽出のあと下のプレビューで確認できます。</p>
+        <textarea id="reportPasteInput" rows="7" placeholder="新クトゥルフ神話TRPG&#10;「シナリオ名」&#10;KP：のあ&#10;PC/PL&#10;探索者A / PL名A&#10;探索者B / PL名B&#10;END A 生還&#10;2024/1/5&#10;#卓報告 #新クトゥルフ神話TRPG"></textarea>
+        <p id="reportParseMsg" class="import-msg" hidden></p>
       </div>
 
       <div class="import-tabpanel" data-import-panel="json" hidden>
@@ -297,13 +300,18 @@
         <button id="pickJsonBtn" type="button" class="mini-button">JSONファイルを選択…</button>
         <p id="jsonFileName" class="import-filename"></p>
       </div>
+
+      <div id="importPreviewArea" hidden>
+        <p class="import-sub">プレビュー <span id="importPreviewCount" class="import-count"></span></p>
+        <div class="sheet-preview-scroll"><table id="importPreviewTable"></table></div>
+      </div>
     </div>
 
     <div class="import-dialog-foot">
       <div class="import-mode-row">
         <label><input type="radio" name="importTarget" value="append" checked /> 追加</label>
         <label><input type="radio" name="importTarget" value="overwrite" /> 上書き（既存を全消去）</label>
-        <label id="dupSkipWrap"><input type="checkbox" id="dupSkipInput" checked /> 重複行をスキップ</label>
+        <label id="dupSkipWrap"><input type="checkbox" id="dupSkipInput" checked /> 重複をスキップ</label>
       </div>
       <div class="import-foot-actions">
         <button id="cancelImportBtn" type="button" class="mini-button">キャンセル</button>
