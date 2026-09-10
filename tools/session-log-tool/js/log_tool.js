@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.76";
+  const APP_VERSION = "v1.77";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -1600,6 +1600,21 @@
       .trim().toLowerCase();
   }
 
+  // ダイスの書式からシステムを推定（CCB→6版 / CC→7版 / プール6面→エモクロア など）
+  function detectCcfoliaSystem(scenario, body){
+    const named = detectSystemFromText(scenario);
+    if(named) return named;
+    const t = desmallcaps(String(body || "")).normalize("NFKC");
+    if(/エモクロア|emoklore/i.test(t)) return "エモクロア";
+    const ccb = (t.match(/(?:^|[^a-z])ccb\s*(?:<=|＜＝|\()/gi) || []).length;
+    const cc  = (t.match(/(?:^|[^a-z])cc\s*(?:\([^)]*\))?\s*(?:<=|＜＝|\()/gi) || []).length;
+    if(ccb || cc) return ccb >= cc ? "CoC 6版" : "CoC 7版";
+    // エモクロア: 2D6 プールで「成功数 / 決定的成功」判定
+    const pool = (t.match(/\b[1-9]\s*d6\b/gi) || []).length;
+    if(pool >= 6 && /成功数|決定的成功|フルスペック|◇+/.test(t)) return "エモクロア";
+    return detectSystemFromText(t.slice(0, 20000));
+  }
+
   // 1 本のチャットログを 1 セッションとして解析する
   function parseCcfoliaLog({ name, text, mtime }){
     const speakers = new Map();
@@ -1651,7 +1666,7 @@
     return {
       base: ccBaseName(name),
       scenario: scen,
-      system: detectSystemFromText(`${scen} ${bodyText.slice(0, 20000)}`),
+      system: detectCcfoliaSystem(scen, bodyText),
       dateList,
       fallbackDate: firstTsDate || (mtime ? new Date(mtime).toISOString().slice(0, 10) : ""),
       speakers
@@ -1808,17 +1823,19 @@
     }
   }
 
+  const CC_PC_DICE_THRESHOLD = 20;
+
   function autoAssignSpeakers(list = importCcfolia.speakers){
     const selfNames = getSelfNames();
-    const maxDice = Math.max(0, ...list.map(s=>s.diceCount));
     list.forEach((s)=>{
       const isSelf = selfNames.has(normalizePersonName(s.name));
-      if(/^(kp|dl|gm|kpc|skp|master|マスター|キーパー)$/i.test(s.name)){ s.role = "kp"; return; }
+      // KP / DL / GM / 戦闘用KP などのラベル名は PC にしない
+      if(CC_ROLE_LABEL_RE.test(s.name)){ s.role = "kp"; return; }
       if(/\bNPC\b|ＮＰＣ|モブ|背景|エキストラ/i.test(s.name)){ s.role = ""; return; }
-      if(isSelf && (s.diceCount === 0 || s.diceCount * 3 < maxDice)){ s.role = "kp"; return; }
       if(s.fromJson){ s.role = "pc"; return; }
-      // 実PCはダイス・発言が突出する。KPが振るNPCの少数ダイスは PC にしない
-      s.role = (s.diceCount * 6 >= maxDice && s.diceCount >= 5) || s.msgCount >= 30 ? "pc" : "";
+      if(isSelf && s.diceCount < CC_PC_DICE_THRESHOLD){ s.role = "kp"; return; }
+      // PC 換算はダイスロール 20 回以上
+      s.role = s.diceCount >= CC_PC_DICE_THRESHOLD ? "pc" : "";
     });
   }
 
@@ -1836,7 +1853,8 @@
     }).join("");
   }
 
-  const CC_ROLE_LABEL_RE = /^(kp|dl|gm|kpc|skp|master|マスター|キーパー)$/i;
+  // KP / DL / GM / 戦闘用KP / サブKP / KP（戦闘用）… は PC に数えない
+  const CC_ROLE_LABEL_RE = /^\s*(?:sub|サブ|副|戦闘用?|バトル|裏方?|進行)?\s*(?:kpc?|skp|dl|gmc?|game\s*master|master|マスター|キーパー|ディーラー|ゲームマスター?|ゲームマスタ)\s*(?:[（(][^）)]*[）)])?\s*$/i;
 
   function derivedCcGm(){
     return importCcfolia.speakers.filter(s=>s.role === "kp").map(s=>s.name).filter(n=>!CC_ROLE_LABEL_RE.test(n));
