@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.75";
+  const APP_VERSION = "v1.76";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetMapArea","sheetMapGrid","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -141,12 +141,30 @@
       renderCcfoliaPreview();
     });
     els.ccToSheetBtn?.addEventListener("click", convertCcfoliaToSheet);
-    els.sheetMapGrid?.addEventListener("change", event=>{
-      const select = event.target.closest("select[data-src-index]");
+    els.sheetGrid?.addEventListener("change", event=>{
+      const select = event.target.closest("select.sg-map");
       if(!select) return;
-      importSheet.mapping[Number(select.dataset.srcIndex)] = select.value;
-      refreshSheetPreview();
+      importSheet.mapping[Number(select.dataset.col)] = select.value;
+      renderSheetGrid();
     });
+    els.sheetGrid?.addEventListener("input", event=>{
+      const td = event.target.closest("td[contenteditable]");
+      if(!td) return;
+      const r = Number(td.dataset.row), c = Number(td.dataset.col);
+      if(importSheet.rows[r]) importSheet.rows[r][c] = td.textContent.replace(/\s+/g, " ").trim();
+      scheduleSheetSummary();
+    });
+    els.sheetGrid?.addEventListener("click", event=>{
+      const del = event.target.closest(".sg-del");
+      if(!del) return;
+      importSheet.rows.splice(Number(del.dataset.row), 1);
+      renderSheetGrid();
+    });
+    els.sheetAddRowBtn?.addEventListener("click",()=>{
+      importSheet.rows.push(new Array(importSheet.columns.length).fill(""));
+      renderSheetGrid();
+    });
+    els.sheetShowPasteBtn?.addEventListener("click", showSheetPaste);
     els.dupSkipInput?.addEventListener("change", refreshActivePreview);
     document.querySelectorAll('input[name="importTarget"]').forEach(radio=>radio.addEventListener("change", refreshActivePreview));
     els.importDialog?.querySelectorAll(".import-tab").forEach(tab=>tab.addEventListener("click",()=>switchImportTab(tab.dataset.importTab)));
@@ -898,6 +916,7 @@
   const importCcfolia = { scenario: "", date: "", system: "", speakers: [] };
   let jsonImportPayload = null;
   let sheetParseTimer = null;
+  let sheetSummaryTimer = null;
   let reportParseTimer = null;
 
   function openImportDialog(){
@@ -921,7 +940,9 @@
     jsonImportPayload = null;
     if(els.sheetPasteInput) els.sheetPasteInput.value = "";
     if(els.reportPasteInput) els.reportPasteInput.value = "";
-    if(els.sheetMapArea) els.sheetMapArea.hidden = true;
+    if(els.sheetGrid) els.sheetGrid.innerHTML = "";
+    if(els.sheetGridArea) els.sheetGridArea.hidden = true;
+    if(els.sheetPasteWrap) els.sheetPasteWrap.hidden = false;
     if(els.importPreviewArea) els.importPreviewArea.hidden = true;
     if(els.sheetParseMsg){ els.sheetParseMsg.hidden = true; els.sheetParseMsg.textContent = ""; }
     if(els.reportParseMsg){ els.reportParseMsg.hidden = true; els.reportParseMsg.textContent = ""; }
@@ -963,7 +984,7 @@
     if(tab === "json") ready = Boolean(jsonImportPayload);
     else if(tab === "text") ready = importReport.rows.length > 0;
     else if(tab === "ccfolia") ready = false; // CCFOLIA はスプレッドシートへ変換してから取り込む
-    else ready = sheetDataRows().length > 0 && importSheet.mapping.some(Boolean);
+    else ready = importSheet.rows.length > 0 && importSheet.mapping.some(Boolean);
     els.runImportBtn.disabled = !ready;
     if(els.ccToSheetBtn) els.ccToSheetBtn.disabled = !ccfoliaRow();
   }
@@ -1041,12 +1062,7 @@
       .map(cells=>cells.map(cell=>String(cell).trim()))
       .filter(cells=>cells.some(Boolean));
     if(!grid.length){
-      importSheet.columns = [];
-      importSheet.rows = [];
-      importSheet.mapping = [];
-      els.sheetMapArea.hidden = true;
-      els.importPreviewArea.hidden = true;
-      els.sheetParseMsg.hidden = true;
+      if(els.sheetParseMsg) els.sheetParseMsg.hidden = true;
       updateRunImportEnabled();
       return;
     }
@@ -1056,41 +1072,98 @@
     const firstRowGuesses = grid[0].map(guessFieldForHeader);
     const hasHeader = firstRowGuesses.filter(Boolean).length >= Math.min(2, width);
 
-    importSheet.hasHeader = hasHeader;
-    importSheet.rows = grid;
-    importSheet.columns = hasHeader
+    const columns = hasHeader
       ? grid[0].map((cell, i)=>cell || `列${i + 1}`)
       : grid[0].map((_, i)=>`列${i + 1}`);
-    importSheet.mapping = hasHeader
-      ? firstRowGuesses.slice()
-      : new Array(width).fill("");
+    const mapping = hasHeader ? firstRowGuesses.slice() : new Array(width).fill("");
+    const rows = hasHeader ? grid.slice(1) : grid.slice();
 
-    renderSheetMapping();
-    refreshSheetPreview();
-
-    els.sheetParseMsg.hidden = false;
-    els.sheetParseMsg.textContent = hasHeader
-      ? `見出し行を認識しました（${sheetDataRows().length} 行のデータ）。`
-      : `見出しが見つかりませんでした。すべての行をデータとして扱います（${sheetDataRows().length} 行）。下で列を割り当ててください。`;
+    setSheetData(columns, mapping, rows, hasHeader
+      ? `見出しを認識しました（${rows.length} 行）。セルをクリックで編集できます。`
+      : `見出しが無いので全行をデータとして扱います（${rows.length} 行）。見出しの ▼ で項目を割り当ててください。`);
   }
 
-  function sheetDataRows(){
-    if(!importSheet.rows.length) return [];
-    return importSheet.rows.slice(importSheet.hasHeader ? 1 : 0);
-  }
+  // ----- 編集できるスプレッドシートグリッド -----
 
-  function renderSheetMapping(){
-    els.sheetMapArea.hidden = false;
-    els.sheetMapGrid.innerHTML = "";
-    importSheet.columns.forEach((name, index)=>{
-      const wrap = document.createElement("label");
-      wrap.className = "sheet-map-row";
-      const options = [`<option value="">取り込まない</option>`]
-        .concat(SHEET_TARGET_FIELDS.map(([key, label])=>`<option value="${escapeAttr(key)}" ${importSheet.mapping[index] === key ? "selected" : ""}>${escapeHtml(label)}</option>`))
-        .join("");
-      wrap.innerHTML = `<span class="sheet-map-src">${escapeHtml(name)}</span><select data-src-index="${index}">${options}</select>`;
-      els.sheetMapGrid.appendChild(wrap);
+  function setSheetData(columns, mapping, rows, msg){
+    importSheet.columns = columns.slice();
+    importSheet.mapping = mapping.slice();
+    importSheet.hasHeader = true;
+    importSheet.rows = rows.map(r=>{
+      const cells = r.slice(0, columns.length);
+      while(cells.length < columns.length) cells.push("");
+      return cells.map(c=>String(c == null ? "" : c));
     });
+    if(msg && els.sheetParseMsg){ els.sheetParseMsg.hidden = false; els.sheetParseMsg.textContent = msg; }
+    if(els.sheetPasteWrap) els.sheetPasteWrap.hidden = true;
+    if(els.sheetGridArea) els.sheetGridArea.hidden = false;
+    if(els.importPreviewArea) els.importPreviewArea.hidden = true;
+    renderSheetGrid();
+  }
+
+  function showSheetPaste(){
+    importSheet.columns = [];
+    importSheet.mapping = [];
+    importSheet.rows = [];
+    if(els.sheetPasteInput) els.sheetPasteInput.value = "";
+    if(els.sheetGrid) els.sheetGrid.innerHTML = "";
+    if(els.sheetGridArea) els.sheetGridArea.hidden = true;
+    if(els.sheetParseMsg){ els.sheetParseMsg.hidden = true; els.sheetParseMsg.textContent = ""; }
+    if(els.sheetPasteWrap) els.sheetPasteWrap.hidden = false;
+    els.sheetPasteInput?.focus();
+    updateRunImportEnabled();
+  }
+
+  function sheetExistingDupKeys(){
+    return getImportTarget() === "overwrite"
+      ? new Set()
+      : new Set(state.rows.map(sessionDupKey).filter(Boolean));
+  }
+
+  function renderSheetGrid(){
+    if(!els.sheetGrid) return;
+    const cols = importSheet.columns;
+    const optionsFor = index => [`<option value="">取り込まない</option>`]
+      .concat(SHEET_TARGET_FIELDS.map(([key, label])=>
+        `<option value="${escapeAttr(key)}" ${importSheet.mapping[index] === key ? "selected" : ""}>${escapeHtml(label.split(/[ (（]/)[0])}</option>`))
+      .join("");
+    const existingKeys = sheetExistingDupKeys();
+    const head = `<thead><tr><th class="sg-rownum"></th>${cols.map((_, i)=>
+      `<th><select class="sg-map" data-col="${i}">${optionsFor(i)}</select></th>`).join("")}</tr></thead>`;
+    const body = importSheet.rows.map((row, ri)=>{
+      const built = normalizeImportedRow(applySelfRole(coerceImportValues(buildRowFromCells(row))));
+      const dup = existingKeys.has(sessionDupKey(built));
+      const tds = cols.map((_, ci)=>
+        `<td contenteditable="true" data-row="${ri}" data-col="${ci}">${escapeHtml(row[ci] || "")}</td>`).join("");
+      return `<tr class="${dup ? "is-dup" : ""}"><td class="sg-rownum"><button type="button" class="sg-del" data-row="${ri}" title="この行を削除">✕</button>${dup ? '<span class="sg-dup">重複</span>' : ""}</td>${tds}</tr>`;
+    }).join("");
+    els.sheetGrid.innerHTML = head + `<tbody>${body}</tbody>`;
+    updateSheetSummary();
+  }
+
+  function scheduleSheetSummary(){
+    clearTimeout(sheetSummaryTimer);
+    sheetSummaryTimer = setTimeout(updateSheetSummary, 200);
+  }
+
+  function updateSheetSummary(){
+    const built = buildSheetRows();
+    const skipDup = Boolean(els.dupSkipInput?.checked);
+    const seen = new Set(sheetExistingDupKeys());
+    let dup = 0;
+    built.forEach(row=>{
+      const k = sessionDupKey(row);
+      if(!k) return;
+      if(seen.has(k)) dup++; else seen.add(k);
+    });
+    const willImport = skipDup ? built.length - dup : built.length;
+    if(els.sheetGridCount){
+      els.sheetGridCount.textContent =
+        `${willImport} 件を取り込み` +
+        (getImportTarget() === "overwrite" ? "（既存は全消去）" : "") +
+        (dup ? ` / 重複 ${dup} 件` : "");
+    }
+    updateRunImportEnabled();
   }
 
   function buildRowFromCells(cells){
@@ -1166,7 +1239,7 @@
   }
 
   function buildSheetRows(){
-    return sheetDataRows()
+    return importSheet.rows
       .map(cells=>normalizeImportedRow(applySelfRole(coerceImportValues(buildRowFromCells(cells)))))
       .filter(row=>row.scenario || row.date || row.pc || row.gm);
   }
@@ -1178,12 +1251,16 @@
   }
 
   function refreshSheetPreview(){
-    if(!importSheet.rows.length){
-      if(els.importPreviewArea) els.importPreviewArea.hidden = true;
+    if(els.importPreviewArea) els.importPreviewArea.hidden = true;
+    if(importSheet.rows.length){
+      if(els.sheetPasteWrap) els.sheetPasteWrap.hidden = true;
+      if(els.sheetGridArea) els.sheetGridArea.hidden = false;
+      renderSheetGrid();
+    }else{
+      if(els.sheetGridArea) els.sheetGridArea.hidden = true;
+      if(els.sheetPasteWrap) els.sheetPasteWrap.hidden = false;
       updateRunImportEnabled();
-      return;
     }
-    renderImportPreview(buildSheetRows());
   }
 
   function renderReportPreview(){
@@ -1527,11 +1604,14 @@
   function parseCcfoliaLog({ name, text, mtime }){
     const speakers = new Map();
     const diceDates = new Set();
+    const allTsDates = new Set();
     let bodyText = "", firstTsDate = "";
     const { title, rows } = chatLogLines(text);
     let scenario = (title && title !== "ccfolia - logs") ? cleanRoomName(title) : "";
-    const tsCount = rows.filter(r=>CC_ISO_TS_RE.test(r.full)).length;
-    const useTimestamps = tsCount >= 10 && tsCount >= rows.length * 0.4;
+    // タイムスタンプは行頭とは限らない。行頭 or 行内どちらか一定数あれば採用
+    const isoTsCount = rows.filter(r=>CC_ISO_TS_RE.test(r.full)).length;
+    const anyTsCount = rows.filter(r=>CC_ANY_TS_RE.test(r.full)).length;
+    const useTimestamps = (isoTsCount >= 10 && isoTsCount >= rows.length * 0.4) || anyTsCount >= 3;
     rows.forEach(({ name: spName, text: body, full })=>{
       bodyText += full + "\n";
       let lineDate = "";
@@ -1539,6 +1619,7 @@
         const m = full.match(CC_ANY_TS_RE);
         if(m){
           lineDate = `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+          allTsDates.add(lineDate);
           if(!firstTsDate) firstTsDate = lineDate;
         }
       }
@@ -1565,11 +1646,13 @@
       }
     });
     const scen = scenario || deriveScenarioFromFilename(name);
+    // ダイスを振った日を優先。無ければタイムスタンプのある全日付
+    const dateList = (diceDates.size ? [...diceDates] : [...allTsDates]).sort();
     return {
       base: ccBaseName(name),
       scenario: scen,
       system: detectSystemFromText(`${scen} ${bodyText.slice(0, 20000)}`),
-      dateList: [...diceDates].sort(),
+      dateList,
       fallbackDate: firstTsDate || (mtime ? new Date(mtime).toISOString().slice(0, 10) : ""),
       speakers
     };
@@ -1610,12 +1693,12 @@
     ["role", "ロール"], ["gm", "GM"], ["players", "PL"], ["pc", "PC"]
   ];
 
-  function ccRowToSheetLine(row){
+  function ccRowToCells(row){
     const applied = normalizeImportedRow(applySelfRole(coerceImportValues({ ...row })));
     return CC_SHEET_COLS.map(([key])=>{
       if(key === "date") return (applied.dates && applied.dates.length ? applied.dates.join(", ") : (applied.date || ""));
       return applied[key] || "";
-    }).join("\t");
+    });
   }
 
   async function handleCcfoliaFiles(event){
@@ -1713,15 +1796,12 @@
   // 複数セッション → セッションごとに 1 行ずつスプレッドシートへ
   function routeCcfoliaSessionsToSheet(sessions){
     if(els.ccfoliaForm) els.ccfoliaForm.hidden = true;
-    const header = CC_SHEET_COLS.map(c=>c[1]).join("\t");
-    const lines = sessions.map(session=>ccRowToSheetLine(ccSessionToRow(session)));
-    if(els.sheetPasteInput) els.sheetPasteInput.value = [header, ...lines].join("\n");
+    const columns = CC_SHEET_COLS.map(c=>c[1]);
+    const mapping = CC_SHEET_COLS.map(c=>c[0]);
+    const rows = sessions.map(session=>ccRowToCells(ccSessionToRow(session)));
     switchImportTab("sheet");
-    parseSheetInput();
-    if(els.sheetParseMsg){
-      els.sheetParseMsg.hidden = false;
-      els.sheetParseMsg.textContent = `${sessions.length} 件のログをセッションごとの行に変換しました。各行を確認・編集して「取り込む」してください。`;
-    }
+    setSheetData(columns, mapping, rows,
+      `${sessions.length} 件のログをセッションごとの行に変換しました。各セルをクリックで編集し「取り込む」してください。`);
     if(els.ccfoliaParseMsg){
       els.ccfoliaParseMsg.hidden = false;
       els.ccfoliaParseMsg.textContent = `${sessions.length} 件のログを検出。セッションごとに分けてスプレッドシートに変換しました。`;
@@ -1808,23 +1888,11 @@
   function convertCcfoliaToSheet(){
     const row = ccfoliaRow();
     if(!row) return;
-    const applied = normalizeImportedRow(applySelfRole(coerceImportValues({ ...row })));
-    const cols = [
-      ["date", "日付"], ["scenario", "シナリオ"], ["system", "システム"],
-      ["role", "ロール"], ["gm", "GM"], ["players", "PL"], ["pc", "PC"]
-    ];
-    const header = cols.map(c=>c[1]).join("\t");
-    const values = cols.map(([key])=>{
-      if(key === "date") return (applied.dates && applied.dates.length ? applied.dates.join(", ") : (applied.date || ""));
-      return applied[key] || "";
-    }).join("\t");
-    if(els.sheetPasteInput) els.sheetPasteInput.value = `${header}\n${values}`;
+    const columns = CC_SHEET_COLS.map(c=>c[1]);
+    const mapping = CC_SHEET_COLS.map(c=>c[0]);
     switchImportTab("sheet");
-    parseSheetInput();
-    if(els.sheetParseMsg){
-      els.sheetParseMsg.hidden = false;
-      els.sheetParseMsg.textContent = "CCFOLIA / ログから変換しました。内容を編集して「取り込む」してください。";
-    }
+    setSheetData(columns, mapping, [ccRowToCells(row)],
+      "CCFOLIA / ログから変換しました。各セルをクリックで編集し「取り込む」してください。");
   }
 
   function handleJsonFilePicked(event){
