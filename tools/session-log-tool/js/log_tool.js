@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.79";
+  const APP_VERSION = "v1.80";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","clearAllRowsBtn","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -189,6 +189,9 @@
     els.addSessionTopBtn?.addEventListener("click",()=>openSessionDialog());
     els.floatingAddBtn?.addEventListener("click",()=>openSessionDialog());
     els.clearSamplesBtn?.addEventListener("click", clearSampleRows);
+    els.clearAllRowsBtn?.addEventListener("click", clearAllRows);
+    els.pickSheetFileBtn?.addEventListener("click",()=>els.sheetFileInput?.click());
+    els.sheetFileInput?.addEventListener("change", handleSheetFile);
     els.sessionForm.addEventListener("submit", handleSessionSave);
     els.sessionForm.addEventListener("click", handleDateFieldClick);
     els.sessionForm.addEventListener("change", handleSessionFormChange);
@@ -293,6 +296,30 @@
     els.sampleNotice.hidden = !n;
     const label = els.sampleNotice.querySelector("span");
     if(label) label.textContent = `サンプル${n}件を表示中です（集計には含まれません）。自分の記録を追加するか、右のボタンで消せます。`;
+  }
+
+  function clearAllRows(){
+    if(!state.rows.length){ showLogToast("削除する行はありません"); return; }
+    if(!confirm(`テーブルの全 ${state.rows.length} 行を削除します。よろしいですか？（サンプルも含む・元に戻せません）`)) return;
+    state.rows = [];
+    activeId = null;
+    saveAndRender();
+    showLogToast("全データを削除しました");
+  }
+
+  async function handleSheetFile(event){
+    const file = event.target.files && event.target.files[0];
+    if(!file) return;
+    if(els.sheetFileName) els.sheetFileName.textContent = file.name;
+    try{
+      const text = await file.text();
+      if(els.sheetPasteInput) els.sheetPasteInput.value = text;
+      if(els.sheetPasteWrap) els.sheetPasteWrap.hidden = false;
+      parseSheetInput();
+    }catch(_error){
+      if(els.sheetParseMsg){ els.sheetParseMsg.hidden = false; els.sheetParseMsg.textContent = "ファイルを読み込めませんでした。"; }
+    }
+    event.target.value = "";
   }
 
   function clearSampleRows(){
@@ -455,7 +482,19 @@
 
   function cellContent(row,col){
     if(col.key === "date") return html(`<span class="date-cell truncate-cell" title="${escapeAttr(getDateTitle(row))}">${escapeHtml(getDateDisplay(row))}</span>`);
-    if(col.key === "scenario") return textCell(row.scenario, "cell-scenario", getDynamicTextLimit(col));
+    if(col.key === "scenario"){
+      const wrap = document.createElement("span");
+      wrap.className = "cell-scenario-wrap";
+      wrap.appendChild(textCell(row.scenario, "cell-scenario", getDynamicTextLimit(col)));
+      const open = document.createElement("button");
+      open.type = "button";
+      open.className = "scenario-open-btn";
+      open.textContent = "OPEN";
+      open.title = "詳細・感想を開く";
+      open.addEventListener("click", event=>{ event.stopPropagation(); activeId = row.id; renderTable(); openDrawer(); });
+      wrap.appendChild(open);
+      return wrap;
+    }
     if(col.key === "players") return textCell(row.players, "", getDynamicTextLimit(col));
     if(col.key === "pc") return textCell(row.pc, "", getDynamicTextLimit(col));
     if(col.key === "note") return textCell(row.note, "", getDynamicTextLimit(col));
@@ -895,6 +934,8 @@
     ["scenario", "シナリオ名"],
     ["system", "システム"],
     ["role", "ロール (PL/KP/GM/DL)"],
+    ["roleKp", "KP列 (Yes/No→KP)"],
+    ["rolePl", "PL列 (Yes/No→PL)"],
     ["gm", "GM / KP / DL"],
     ["players", "PL（同卓者）"],
     ["pc", "PC（探索者）"],
@@ -916,11 +957,11 @@
     scenario: ["シナリオ", "シナリオ名", "題名", "タイトル", "作品名", "名前", "scenario", "title", "name"],
     system: ["システム", "システム名", "ゲームシステム", "ルール", "system"],
     role: ["ロール", "役割", "立場", "role", "plkp", "kppl"],
-    gm: ["gm", "kp", "dl", "キーパー", "ゲームマスター", "マスター", "gmkp", "進行役", "進行", "回し手"],
-    players: ["pl", "プレイヤー", "同卓者", "参加者", "メンバー", "players", "pcpl1", "pcpl2", "pcpl3", "pcpl4", "pcpl", "pl1", "pl2", "pl3", "pl4"],
-    pc: ["pc", "探索者", "キャラ", "キャラクター", "探索者名", "pc名", "自pc", "使用pc", "担当pc"],
-    status: ["状態", "ステータス", "進捗", "新規継続", "status"],
-    time: ["時間", "所要時間", "プレイ時間", "time", "hours"],
+    gm: ["gm", "kp", "dl", "キーパー", "ゲームマスター", "マスター", "gmkp", "進行役", "進行", "回し手", "keeper", "kp名", "gm名"],
+    players: ["pl", "プレイヤー", "同卓者", "参加者", "メンバー", "players", "player", "pcpl1", "pcpl2", "pcpl3", "pcpl4", "pcpl", "pl1", "pl2", "pl3", "pl4", "pl名"],
+    pc: ["pc", "探索者", "キャラ", "キャラクター", "探索者名", "pc名", "自pc", "使用pc", "担当pc", "charactername", "characternames", "キャラクター名", "キャラ名"],
+    status: ["状態", "ステータス", "進捗", "新規継続", "newcont", "newcontinue", "status"],
+    time: ["時間", "所要時間", "プレイ時間", "セッション時間", "time", "hours"],
     note: ["メモ", "備考", "ノート", "コメント", "note", "memo"],
     longNote: ["長文感想", "詳細メモ", "感想", "感想ネタバレ注意", "longnote"],
     campaign: ["キャンペーン", "シリーズ", "親アイテム", "campaign"],
@@ -962,6 +1003,8 @@
     jsonImportPayload = null;
     if(els.sheetPasteInput) els.sheetPasteInput.value = "";
     if(els.reportPasteInput) els.reportPasteInput.value = "";
+    if(els.sheetFileName) els.sheetFileName.textContent = "";
+    if(els.sheetFileInput) els.sheetFileInput.value = "";
     if(els.sheetGrid) els.sheetGrid.innerHTML = "";
     if(els.sheetGridArea) els.sheetGridArea.hidden = true;
     if(els.sheetPasteWrap) els.sheetPasteWrap.hidden = false;
@@ -1062,13 +1105,21 @@
   }
 
   function normalizeHeaderCell(value){
-    return String(value || "").normalize("NFKC").toLowerCase().replace(/[\s　_・／/]+/g, "").replace(/[()（）]/g, "");
+    // Notion は見出しを小型大文字（ᴛɪᴛʟᴇ 等）にすることがある
+    return desmallcaps(String(value || "")).normalize("NFKC").toLowerCase().replace(/[\s　_・／/]+/g, "").replace(/[()（）.]/g, "");
   }
 
-  function guessFieldForHeader(headerCell){
+  const BOOLISH_RE = /^(yes|no|true|false|✓|✔|✗|✘|はい|いいえ|有|無|○|◯|●|×|✕|y|n|1|0)$/i;
+
+  function guessFieldForHeader(headerCell, samples){
     const key = normalizeHeaderCell(headerCell);
     if(!key) return "";
-    const canonical = field => ({ sessionurl: "sessionUrl", scenariourl: "scenarioUrl", kansoururl: "kansouUrl", scenariocountkey: "scenarioCountKey" }[field] || field);
+    const canonical = field => ({ sessionurl: "sessionUrl", scenariourl: "scenarioUrl", kansoururl: "kansouUrl", scenariocountkey: "scenarioCountKey", rolekp: "roleKp", rolepl: "rolePl" }[field] || field);
+    // "KP" / "PL" 列が Yes/No チェックなら役割フラグとして扱う（名前列なら通常通り）
+    if((key === "kp" || key === "pl") && Array.isArray(samples)){
+      const vals = samples.map(v=>String(v || "").trim()).filter(Boolean);
+      if(vals.length && vals.every(v=>BOOLISH_RE.test(v))) return key === "kp" ? "roleKp" : "rolePl";
+    }
     const entries = Object.entries(SHEET_HEADER_ALIASES);
     for(const [field, aliases] of entries){
       if(aliases.includes(key)) return canonical(field);
@@ -1091,7 +1142,8 @@
     const width = Math.max(...grid.map(r=>r.length));
     grid.forEach(r=>{ while(r.length < width) r.push(""); });
 
-    const firstRowGuesses = grid[0].map(guessFieldForHeader);
+    const sampleRows = grid.slice(1, 8);
+    const firstRowGuesses = grid[0].map((cell, i)=>guessFieldForHeader(cell, sampleRows.map(r=>r[i])));
     const hasHeader = firstRowGuesses.filter(Boolean).length >= Math.min(2, width);
 
     const columns = hasHeader
@@ -1188,12 +1240,18 @@
     updateRunImportEnabled();
   }
 
+  const YESISH_RE = /^(yes|true|✓|✔|はい|有|○|◯|●|y|1|kp|pl|参加|通過|済)$/i;
+
   function buildRowFromCells(cells){
     const row = {};
     importSheet.mapping.forEach((key, i)=>{
       if(!key) return;
       const value = (cells[i] || "").trim();
       if(!value) return;
+      if(key === "roleKp" || key === "rolePl"){
+        if(!row.role && YESISH_RE.test(value)) row.role = key === "roleKp" ? "KP" : "PL";
+        return;
+      }
       row[key] = row[key] ? `${row[key]} / ${value}` : value;
     });
     return row;
@@ -1257,6 +1315,14 @@
       row.role = IMPORT_ROLE_MAP[raw] || IMPORT_ROLE_MAP[raw.toLowerCase()] || (ROLE_OPTIONS.includes(raw.toUpperCase()) ? raw.toUpperCase() : row.role);
     }
     if(row.time) row.time = normalizeTimeValue(row.time);
+    // 全角パイプ「｜」区切りを「、」に統一（PC / PL / GM の一覧）
+    ["players", "pc", "gm"].forEach(key=>{
+      if(!row[key]) return;
+      row[key] = String(row[key])
+        .replace(/\s*[｜]\s*/g, "、")
+        .replace(/、{2,}/g, "、")
+        .replace(/^[、\s]+|[、\s]+$/g, "");
+    });
     return row;
   }
 
