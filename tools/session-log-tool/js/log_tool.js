@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.74";
+  const APP_VERSION = "v1.75";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -1512,90 +1512,189 @@
     };
   }
 
+  const CC_ISO_TS_RE = /^\s*[\[［]?\s*(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]\d{1,2}:\d{2}/;
+  const CC_ANY_TS_RE = /(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]\d{1,2}:\d{2}/;
+
+  function ccBaseName(name){
+    return String(name || "")
+      .replace(/\.[a-z0-9]+$/i, "")
+      .replace(/[\[［(（]\s*(all|全部?|完全版?|ログ|log)\s*[\]］)）]/gi, "")
+      .replace(/[\s_　:：\-–—]+$/, "")
+      .trim().toLowerCase();
+  }
+
+  // 1 本のチャットログを 1 セッションとして解析する
+  function parseCcfoliaLog({ name, text, mtime }){
+    const speakers = new Map();
+    const diceDates = new Set();
+    let bodyText = "", firstTsDate = "";
+    const { title, rows } = chatLogLines(text);
+    let scenario = (title && title !== "ccfolia - logs") ? cleanRoomName(title) : "";
+    const tsCount = rows.filter(r=>CC_ISO_TS_RE.test(r.full)).length;
+    const useTimestamps = tsCount >= 10 && tsCount >= rows.length * 0.4;
+    rows.forEach(({ name: spName, text: body, full })=>{
+      bodyText += full + "\n";
+      let lineDate = "";
+      if(useTimestamps){
+        const m = full.match(CC_ANY_TS_RE);
+        if(m){
+          lineDate = `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+          if(!firstTsDate) firstTsDate = lineDate;
+        }
+      }
+      let nm = cleanSpeakerName(spName);
+      let msg = body;
+      if(!nm){
+        const cleaned = body
+          .replace(/^\s*[\[［][^\]］]*[\]］]\s*/, "")
+          .replace(/^\s*\d{1,2}:\d{2}(?::\d{2})?\s*/, "");
+        const m = cleaned.match(/^([^:：\n]{1,24}?)\s*[:：]\s+(\S.*)$/);
+        if(!m) return;
+        nm = cleanSpeakerName(m[1]);
+        msg = m[2];
+      }
+      if(!nm || nm.length > 24) return;
+      if(/^(system|システム|bcdice|dicebot|ダイスbot|ダイス(ロール)?|情報)$/i.test(nm)) return;
+      if(isNoiseSpeaker(nm)) return;
+      if(!speakers.has(nm)) speakers.set(nm, { name: nm, msgCount: 0, diceCount: 0 });
+      const s = speakers.get(nm);
+      s.msgCount++;
+      if(DICE_RE.test(msg)){
+        s.diceCount++;
+        if(lineDate) diceDates.add(lineDate);
+      }
+    });
+    const scen = scenario || deriveScenarioFromFilename(name);
+    return {
+      base: ccBaseName(name),
+      scenario: scen,
+      system: detectSystemFromText(`${scen} ${bodyText.slice(0, 20000)}`),
+      dateList: [...diceDates].sort(),
+      fallbackDate: firstTsDate || (mtime ? new Date(mtime).toISOString().slice(0, 10) : ""),
+      speakers
+    };
+  }
+
+  function ccSessionSpeakerList(session){
+    const list = [...session.speakers.values()]
+      .filter(s=>s.fromJson || s.msgCount >= 2 || s.diceCount >= 1)
+      .sort((a, b)=> (b.diceCount - a.diceCount) || (b.msgCount - a.msgCount) || (b.fromJson ? 1 : 0) - (a.fromJson ? 1 : 0));
+    autoAssignSpeakers(list);
+    return list;
+  }
+
+  // セッション（解析済み）→ スプレッドシート用の行オブジェクト
+  function ccSessionToRow(session){
+    const list = ccSessionSpeakerList(session);
+    const selfNames = getSelfNames();
+    const kp = [...new Set(list.filter(s=>s.role === "kp").map(s=>s.name).filter(n=>!CC_ROLE_LABEL_RE.test(n)))];
+    const pl = [...new Set(list.filter(s=>s.role === "pl").map(s=>s.name))];
+    const pc = list.filter(s=>s.role === "pc").map(s=>s.name);
+    let role = "";
+    if(kp.some(n=>selfNames.has(normalizePersonName(n)))) role = "KP";
+    else if(pc.concat(pl).some(n=>selfNames.has(normalizePersonName(n)))) role = "PL";
+    else if(kp.length) role = "PL";
+    return {
+      date: session.dateList.length ? session.dateList.join(", ") : (session.fallbackDate || ""),
+      scenario: session.scenario,
+      system: session.system,
+      role,
+      gm: kp.join("、"),
+      players: pl.join("、"),
+      pc: pc.join(" / ")
+    };
+  }
+
+  const CC_SHEET_COLS = [
+    ["date", "日付"], ["scenario", "シナリオ"], ["system", "システム"],
+    ["role", "ロール"], ["gm", "GM"], ["players", "PL"], ["pc", "PC"]
+  ];
+
+  function ccRowToSheetLine(row){
+    const applied = normalizeImportedRow(applySelfRole(coerceImportValues({ ...row })));
+    return CC_SHEET_COLS.map(([key])=>{
+      if(key === "date") return (applied.dates && applied.dates.length ? applied.dates.join(", ") : (applied.date || ""));
+      return applied[key] || "";
+    }).join("\t");
+  }
+
   async function handleCcfoliaFiles(event){
     const files = [...(event.target.files || [])];
     if(!files.length) return;
     els.ccfoliaFileName.textContent = files.map(f=>f.name).join("、");
     const loaded = await Promise.all(files.map(f=>f.text().then(text=>({ name: f.name, text, mtime: f.lastModified || 0 }))));
 
-    let scenario = "", system = "", timestampDate = "", filenameScenario = "";
-    let latestMtime = 0;
-    let bodyText = "";
-    const speakers = new Map();
-    const diceDates = new Set();
-    const isoTsRe = /^\s*[\[［]?\s*(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]\d{1,2}:\d{2}/;
-    const anyTsRe = /(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]\d{1,2}:\d{2}/;
+    const jsonFiles = [], logFiles = [];
+    loaded.forEach(f=>{
+      const looksJson = /\.json$/i.test(f.name) || /^\s*\{[\s\S]{0,600}"(kind|data|characters|name|params)"/.test(f.text);
+      (looksJson ? jsonFiles : logFiles).push(f);
+    });
 
-    for(const { name, text, mtime } of loaded){
-      latestMtime = Math.max(latestMtime, mtime);
-      if(!filenameScenario) filenameScenario = deriveScenarioFromFilename(name);
-      const looksJson = /\.json$/i.test(name) || /^\s*\{[\s\S]{0,600}"(kind|data|characters|name|params)"/.test(text);
-      if(looksJson){
-        try{
-          const data = JSON.parse(text);
-          const room = findRoomName(data);
-          if(room && !scenario){ scenario = cleanRoomName(room); if(!system) system = detectSystemFromText(room); }
-          const names = new Set();
-          collectCharacterNames(data, names);
-          names.forEach(nm=>{
-            const clean = cleanSpeakerName(nm);
-            if(!clean || clean.length > 24 || isNoiseSpeaker(clean)) return;
-            if(!speakers.has(clean)) speakers.set(clean, { name: clean, msgCount: 0, diceCount: 0, fromJson: true });
-            else speakers.get(clean).fromJson = true;
-          });
-        }catch(_error){ /* not valid json, ignore */ }
-        continue;
-      }
-      const { title, rows } = chatLogLines(text);
-      if(title && title !== "ccfolia - logs" && !scenario){ scenario = cleanRoomName(title); }
-      const tsCount = rows.filter(r=>isoTsRe.test(r.full)).length;
-      const useTimestamps = tsCount >= 10 && tsCount >= rows.length * 0.4;
-      rows.forEach(({ name: spName, text: body, full })=>{
-        bodyText += full + "\n";
-        let lineDate = "";
-        if(useTimestamps){
-          const m = full.match(anyTsRe);
-          if(m){
-            lineDate = `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
-            if(!timestampDate) timestampDate = lineDate;
-          }
-        }
-        let nm = cleanSpeakerName(spName);
-        let msg = body;
-        if(!nm){
-          const cleaned = body
-            .replace(/^\s*[\[［][^\]］]*[\]］]\s*/, "")
-            .replace(/^\s*\d{1,2}:\d{2}(?::\d{2})?\s*/, "");
-          const m = cleaned.match(/^([^:：\n]{1,24}?)\s*[:：]\s+(\S.*)$/);
-          if(!m) return;
-          nm = cleanSpeakerName(m[1]);
-          msg = m[2];
-        }
-        if(!nm || nm.length > 24) return;
-        if(/^(system|システム|bcdice|dicebot|ダイスbot|ダイス(ロール)?|情報)$/i.test(nm)) return;
-        if(isNoiseSpeaker(nm)) return;
-        if(!speakers.has(nm)) speakers.set(nm, { name: nm, msgCount: 0, diceCount: 0 });
-        const s = speakers.get(nm);
-        s.msgCount++;
-        if(DICE_RE.test(msg)){
-          s.diceCount++;
-          if(lineDate) diceDates.add(lineDate);
-        }
-      });
+    let jsonRoom = "";
+    const jsonChars = new Set();
+    const jsonCharsByBase = new Map();
+    jsonFiles.forEach(jf=>{
+      try{
+        const data = JSON.parse(jf.text);
+        const room = findRoomName(data);
+        if(room && !jsonRoom) jsonRoom = cleanRoomName(room);
+        const names = new Set();
+        collectCharacterNames(data, names);
+        const base = ccBaseName(jf.name);
+        names.forEach(nm=>{
+          const clean = cleanSpeakerName(nm);
+          if(!clean || clean.length > 24 || isNoiseSpeaker(clean)) return;
+          jsonChars.add(clean);
+          if(!jsonCharsByBase.has(base)) jsonCharsByBase.set(base, new Set());
+          jsonCharsByBase.get(base).add(clean);
+        });
+      }catch(_error){ /* not valid json, ignore */ }
+    });
+
+    let sessions = logFiles.map(parseCcfoliaLog);
+
+    // ログが無く部屋データだけ → 1 セッションとして扱う
+    if(!sessions.length && (jsonRoom || jsonChars.size)){
+      const latestMtime = loaded.reduce((m, f)=>Math.max(m, f.mtime || 0), 0);
+      sessions = [{
+        base: "",
+        scenario: jsonRoom,
+        system: jsonRoom ? detectSystemFromText(jsonRoom) : "",
+        dateList: [],
+        fallbackDate: latestMtime ? new Date(latestMtime).toISOString().slice(0, 10) : "",
+        speakers: new Map()
+      }];
     }
 
-    if(!scenario) scenario = filenameScenario;
-    if(!system) system = detectSystemFromText(scenario + " " + bodyText.slice(0, 20000));
+    // 部屋データのヒントを各セッションへ反映
+    sessions.forEach(session=>{
+      if(!session.scenario && jsonRoom) session.scenario = jsonRoom;
+      if(!session.system && jsonRoom) session.system = detectSystemFromText(jsonRoom) || session.system;
+      let chars = null;
+      if(sessions.length === 1) chars = jsonChars;
+      else if(jsonCharsByBase.has(session.base)) chars = jsonCharsByBase.get(session.base);
+      if(chars) chars.forEach(nm=>{
+        if(!session.speakers.has(nm)) session.speakers.set(nm, { name: nm, msgCount: 0, diceCount: 0, fromJson: true });
+        else session.speakers.get(nm).fromJson = true;
+      });
+    });
 
-    importCcfolia.scenario = scenario;
-    importCcfolia.system = system;
-    importCcfolia.date = diceDates.size
-      ? [...diceDates].sort().join(", ")
-      : (timestampDate || (latestMtime ? new Date(latestMtime).toISOString().slice(0, 10) : ""));
-    importCcfolia.speakers = [...speakers.values()]
-      .filter(s=>s.fromJson || s.msgCount >= 2 || s.diceCount >= 1)
-      .sort((a, b)=> (b.diceCount - a.diceCount) || (b.msgCount - a.msgCount) || (b.fromJson ? 1 : 0) - (a.fromJson ? 1 : 0));
-    autoAssignSpeakers();
+    if(sessions.length >= 2){
+      routeCcfoliaSessionsToSheet(sessions);
+    }else{
+      applyCcfoliaSessionToForm(sessions[0] || { scenario: "", system: "", dateList: [], fallbackDate: "", speakers: new Map() });
+    }
+    els.ccfoliaFileInput.value = "";
+  }
+
+  // 単一セッション → 従来の編集フォーム
+  function applyCcfoliaSessionToForm(session){
+    importCcfolia.scenario = session.scenario;
+    importCcfolia.system = session.system;
+    importCcfolia.date = session.dateList.length
+      ? session.dateList.join(", ")
+      : (session.fallbackDate || "");
+    importCcfolia.speakers = ccSessionSpeakerList(session);
 
     els.ccScenario.value = importCcfolia.scenario;
     els.ccDate.value = importCcfolia.date;
@@ -1609,14 +1708,30 @@
     els.ccfoliaParseMsg.textContent = importCcfolia.speakers.length
       ? `発言者 ${importCcfolia.speakers.length} 名を検出。PC の割り当てを確認し、ロール / GM / PL / 日付は下の欄で自由に編集できます。`
       : "キャラ名・発言者を検出できませんでした。部屋データ（.json）かチャットログ（.html）か確認してください。";
-    els.ccfoliaFileInput.value = "";
   }
 
-  function autoAssignSpeakers(){
+  // 複数セッション → セッションごとに 1 行ずつスプレッドシートへ
+  function routeCcfoliaSessionsToSheet(sessions){
+    if(els.ccfoliaForm) els.ccfoliaForm.hidden = true;
+    const header = CC_SHEET_COLS.map(c=>c[1]).join("\t");
+    const lines = sessions.map(session=>ccRowToSheetLine(ccSessionToRow(session)));
+    if(els.sheetPasteInput) els.sheetPasteInput.value = [header, ...lines].join("\n");
+    switchImportTab("sheet");
+    parseSheetInput();
+    if(els.sheetParseMsg){
+      els.sheetParseMsg.hidden = false;
+      els.sheetParseMsg.textContent = `${sessions.length} 件のログをセッションごとの行に変換しました。各行を確認・編集して「取り込む」してください。`;
+    }
+    if(els.ccfoliaParseMsg){
+      els.ccfoliaParseMsg.hidden = false;
+      els.ccfoliaParseMsg.textContent = `${sessions.length} 件のログを検出。セッションごとに分けてスプレッドシートに変換しました。`;
+    }
+  }
+
+  function autoAssignSpeakers(list = importCcfolia.speakers){
     const selfNames = getSelfNames();
-    const list = importCcfolia.speakers;
     const maxDice = Math.max(0, ...list.map(s=>s.diceCount));
-    list.forEach((s, i)=>{
+    list.forEach((s)=>{
       const isSelf = selfNames.has(normalizePersonName(s.name));
       if(/^(kp|dl|gm|kpc|skp|master|マスター|キーパー)$/i.test(s.name)){ s.role = "kp"; return; }
       if(/\bNPC\b|ＮＰＣ|モブ|背景|エキストラ/i.test(s.name)){ s.role = ""; return; }
