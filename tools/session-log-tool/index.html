@@ -49,7 +49,7 @@
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.80 2026.09.10</p>
+        <p class="header-version">v1.81 2026.09.10</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -187,6 +187,11 @@
           <button id="closeDrawerBtn" class="icon-button" type="button">×</button>
         </div>
         <div id="drawerContent" class="drawer-content"></div>
+        <div id="drawerFooter" class="drawer-footer" hidden>
+          <button id="drawerSaveBtn" type="button" class="drawer-foot-btn primary">保存</button>
+          <button id="drawerCloseBtn2" type="button" class="drawer-foot-btn">閉じる</button>
+          <button id="drawerToReportBtn" type="button" class="drawer-foot-btn accent">卓報告ジェネレータに移動</button>
+        </div>
       </aside>
     </main>
 

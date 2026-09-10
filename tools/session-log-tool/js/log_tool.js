@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.80";
+  const APP_VERSION = "v1.81";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","clearAllRowsBtn","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","clearAllRowsBtn","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","drawerFooter","drawerSaveBtn","drawerCloseBtn2","drawerToReportBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -186,6 +186,15 @@
     els.kansouTab.addEventListener("click", openDrawer);
     els.closeDrawerBtn.addEventListener("click", closeDrawer);
     els.drawerOverlay.addEventListener("click", closeDrawer);
+    els.drawerSaveBtn?.addEventListener("click",()=>{
+      saveState(); renderStats(); updateSampleNotice(); renderTable(); renderExport(); showLogToast("保存しました");
+    });
+    els.drawerCloseBtn2?.addEventListener("click",()=>{ saveState(); renderAll(); closeDrawer(); });
+    els.drawerToReportBtn?.addEventListener("click",()=>{
+      const row = state.rows.find(r=>r.id === activeId);
+      saveState();
+      if(row) openReportGenerator(row);
+    });
     els.addSessionTopBtn?.addEventListener("click",()=>openSessionDialog());
     els.floatingAddBtn?.addEventListener("click",()=>openSessionDialog());
     els.clearSamplesBtn?.addEventListener("click", clearSampleRows);
@@ -533,36 +542,224 @@
 
   function renderDrawer(){
     const row = state.rows.find(r=>r.id===activeId);
+    if(els.drawerFooter) els.drawerFooter.hidden = !row;
     if(!row){
-      els.drawerContent.innerHTML = `<p>選択中の卓はありません。</p>`;
+      els.drawerContent.innerHTML = `<p class="drawer-muted">選択中の卓はありません。テーブルの行、またはシナリオ名の「OPEN」から開いてください。</p>`;
       return;
     }
+    if(!Array.isArray(row.media)) row.media = [];
+    if(!Array.isArray(row.cushionLinks)) row.cushionLinks = [];
+    normalizeRowDates(row);
+
+    const sysList = SYSTEM_OPTIONS.map(s=>`<option value="${escapeAttr(s)}"></option>`).join("");
+    const roleOpts = ["", ...ROLE_OPTIONS].map(r=>`<option value="${escapeAttr(r)}" ${r === (row.role || "") ? "selected" : ""}>${r || "—"}</option>`).join("");
+    const statusOpts = ["", ...STATUS_OPTIONS].map(s=>`<option value="${escapeAttr(s)}" ${s === (row.status || "") ? "selected" : ""}>${s || "—"}</option>`).join("");
+
     els.drawerContent.innerHTML = `
-      <div class="drawer-card dark">
-        <p class="drawer-label">選択中の卓</p>
-        <h3>${escapeHtml(row.scenario || "")}</h3>
-        <div class="drawer-meta">
-          <div>日 ${escapeHtml(getDateDisplay(row))}</div>
-          <div>時 ${escapeHtml(timeDisplay(row.time))}</div>
-          <div>札 ${escapeHtml(row.system || "")}</div>
-          <div>役 ${escapeHtml(row.role || "")}</div>
-        </div>
+      <div class="drawer-scenario">
+        <p class="drawer-label">シナリオ</p>
+        <input class="drawer-title-input" data-field="scenario" value="${escapeAttr(row.scenario || "")}" placeholder="シナリオ名" />
       </div>
-      <div class="drawer-card"><p class="drawer-label">日程</p><strong>${escapeHtml(getDateTitle(row) || "未設定")}</strong></div>
-      <div class="drawer-card"><p class="drawer-label">GM / KP / DL</p><strong>${escapeHtml(row.gm || "")}</strong></div>
-      <div class="drawer-card"><p class="drawer-label">PL / PC</p><strong>${escapeHtml(row.players || "")}</strong><p>${escapeHtml(row.pc || "")}</p></div>
-      <div class="drawer-card"><p class="drawer-label">短いメモ</p><p>${escapeHtml(row.note || "")}</p><p class="drawer-muted">ハッシュタグは「＋ 項目追加」から任意項目として追加できます。</p></div>
-      <div class="drawer-card"><p class="drawer-label">長文感想</p><textarea id="drawerLongNote">${escapeHtml(row.longNote || "")}</textarea></div>
-      <div class="drawer-card report-link-card"><strong>卓報告ジェネレーター連携</strong><p>この行のシナリオ / システム / GM / PL / PC情報を卓報告ジェネレーターに渡す想定です。ハッシュタグなどの任意項目も追加して渡せます。</p><button id="drawerReportBtn" type="button">卓報告ジェネレーターへ送る</button></div>
-      <div class="drawer-actions"><button id="drawerDuplicateBtn" type="button">複製</button><button id="drawerDeleteBtn" class="danger-soft" type="button">⌫ 削除</button></div>
+
+      <div class="drawer-meta-grid">
+        <label><span>日付（複数は「, 」区切り）</span><input data-field="dateText" value="${escapeAttr((row.dates || []).join(", "))}" placeholder="2025-11-06, 2025-11-07" /></label>
+        <label><span>システム</span><input data-field="system" list="drawerSysList" value="${escapeAttr(row.system || "")}" /><datalist id="drawerSysList">${sysList}</datalist></label>
+        <label><span>ロール</span><select data-field="role">${roleOpts}</select></label>
+        <label><span>状態</span><select data-field="status">${statusOpts}</select></label>
+        <label><span>GM / KP / DL</span><input data-field="gm" value="${escapeAttr(row.gm || "")}" /></label>
+        <label><span>PL（同卓者）</span><input data-field="players" value="${escapeAttr(row.players || "")}" /></label>
+        <label><span>PC</span><input data-field="pc" value="${escapeAttr(row.pc || "")}" /></label>
+        <label><span>時間</span><span class="field-with-unit"><input data-field="time" inputmode="decimal" value="${escapeAttr(normalizeTimeValue(row.time))}" placeholder="例：4" /><span class="field-unit">時間</span></span></label>
+        <label><span>END</span><input data-field="ending" value="${escapeAttr(row.ending || "")}" /></label>
+        <label><span>生還 / ロスト</span><input data-field="survival" value="${escapeAttr(row.survival || "")}" /></label>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-sec-head">
+          <p class="drawer-label">画像 / X ポスト</p>
+          <span class="drawer-sec-actions">
+            <button type="button" class="mini-button" data-media-file>画像を追加</button>
+            <button type="button" class="mini-button" data-media-url>URL / X で追加</button>
+          </span>
+        </div>
+        <div class="drawer-media" data-media-list>${renderDrawerMedia(row)}</div>
+        <p class="drawer-muted">画像はこの端末に縮小して保存します（大きすぎると保存できません）。X ポスト・ふせったー等はリンクとして表示されます。</p>
+      </div>
+
+      <div class="drawer-section">
+        <p class="drawer-label">リザルト</p>
+        <textarea data-field="result" rows="4" placeholder="END / 生還 / 通過ルートなど">${escapeHtml(row.result || "")}</textarea>
+      </div>
+
+      <div class="drawer-section">
+        <p class="drawer-label">感想</p>
+        <textarea data-field="longNote" rows="8" placeholder="セッションの感想">${escapeHtml(row.longNote || "")}</textarea>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-sec-head">
+          <p class="drawer-label">ワンクッションリンク（ふせったー / ぽいぴく 等）</p>
+          <button type="button" class="mini-button" data-add-link>＋ リンク</button>
+        </div>
+        <div class="drawer-links" data-link-list>${renderDrawerLinks(row)}</div>
+      </div>
+
+      <div class="drawer-section">
+        <p class="drawer-label">短いメモ（一覧表示用）</p>
+        <textarea data-field="note" rows="2" placeholder="テーブルに出る短いメモ">${escapeHtml(row.note || "")}</textarea>
+      </div>
+
+      <div class="drawer-actions">
+        <button id="drawerDuplicateBtn" type="button">複製</button>
+        <button id="drawerDeleteBtn" class="danger-soft" type="button">⌫ この卓を削除</button>
+      </div>
     `;
-    document.getElementById("drawerLongNote")?.addEventListener("input",event=>{
-      row.longNote = event.target.value;
+    wireDrawer(row);
+  }
+
+  function wireDrawer(row){
+    const c = els.drawerContent;
+    c.querySelectorAll("[data-field]").forEach(el=>{
+      const handler = ()=>{
+        const f = el.dataset.field;
+        if(f === "dateText"){
+          const list = splitImportDates(el.value);
+          if(list.length){ row.dates = [...new Set(list)].sort(); row.date = row.dates[0]; }
+          else if(!el.value.trim()){ row.dates = []; row.date = ""; }
+        }else if(f === "time"){
+          row.time = normalizeTimeValue(el.value);
+        }else{
+          row[f] = el.value;
+        }
+        saveState();
+      };
+      el.addEventListener("input", handler);
+      el.addEventListener("change", handler);
+    });
+    c.querySelector("[data-media-file]")?.addEventListener("click",()=>pickDrawerImage(row));
+    c.querySelector("[data-media-url]")?.addEventListener("click",()=>addDrawerMediaUrl(row));
+    c.querySelector("[data-add-link]")?.addEventListener("click",()=>{ row.cushionLinks.push({ label: "", url: "" }); saveState(); refreshDrawerLinks(row); });
+    c.querySelector("[data-media-list]")?.addEventListener("click",ev=>{
+      const rm = ev.target.closest("[data-media-remove]");
+      if(rm){ row.media.splice(Number(rm.dataset.mediaRemove), 1); saveState(); refreshDrawerMedia(row); }
+    });
+    c.querySelector("[data-media-list]")?.addEventListener("input",ev=>{
+      const cap = ev.target.closest("[data-media-caption]");
+      if(cap){ const i = Number(cap.dataset.mediaCaption); if(row.media[i]) row.media[i].caption = cap.value; saveState(); }
+    });
+    c.querySelector("[data-link-list]")?.addEventListener("click",ev=>{
+      const rm = ev.target.closest("[data-link-remove]");
+      if(rm){ row.cushionLinks.splice(Number(rm.dataset.linkRemove), 1); saveState(); refreshDrawerLinks(row); }
+    });
+    c.querySelector("[data-link-list]")?.addEventListener("input",ev=>{
+      const el = ev.target.closest("[data-link-field]");
+      if(!el) return;
+      const i = Number(el.dataset.linkIndex);
+      if(row.cushionLinks[i]) row.cushionLinks[i][el.dataset.linkField] = el.value;
       saveState();
     });
-    document.getElementById("drawerReportBtn")?.addEventListener("click",()=>openReportGenerator(row));
     document.getElementById("drawerDuplicateBtn")?.addEventListener("click",()=>duplicateRow(row.id));
     document.getElementById("drawerDeleteBtn")?.addEventListener("click",()=>deleteRow(row.id));
+  }
+
+  function mediaLinkLabel(url){
+    try{
+      const u = new URL(url);
+      const host = u.hostname.replace(/^www\./, "");
+      if(/x\.com|twitter\.com/.test(host)) return "X ポスト";
+      return host;
+    }catch(_e){ return String(url).slice(0, 40); }
+  }
+
+  function renderDrawerMedia(row){
+    if(!row.media.length) return `<p class="drawer-muted">まだありません。</p>`;
+    return row.media.map((m, i)=>{
+      const body = m.type === "image"
+        ? `<img src="${escapeAttr(m.url)}" alt="" loading="lazy" />`
+        : `<a class="drawer-media-link" href="${escapeAttr(m.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(mediaLinkLabel(m.url))} ↗</a>`;
+      return `<figure class="drawer-media-item">
+        <button type="button" class="drawer-media-x" data-media-remove="${i}" title="削除">×</button>
+        ${body}
+        <input class="drawer-media-cap" data-media-caption="${i}" value="${escapeAttr(m.caption || "")}" placeholder="キャプション" />
+      </figure>`;
+    }).join("");
+  }
+
+  function renderDrawerLinks(row){
+    if(!row.cushionLinks.length) return `<p class="drawer-muted">まだありません。</p>`;
+    return row.cushionLinks.map((l, i)=>`
+      <div class="drawer-link-row">
+        <input data-link-field="label" data-link-index="${i}" value="${escapeAttr(l.label || "")}" placeholder="ラベル（ふせったー等）" />
+        <input data-link-field="url" data-link-index="${i}" value="${escapeAttr(l.url || "")}" placeholder="https://..." />
+        ${l.url ? `<a class="drawer-link-go" href="${escapeAttr(l.url)}" target="_blank" rel="noopener noreferrer">↗</a>` : ""}
+        <button type="button" class="drawer-link-x" data-link-remove="${i}">×</button>
+      </div>`).join("");
+  }
+
+  function refreshDrawerMedia(row){
+    const el = els.drawerContent.querySelector("[data-media-list]");
+    if(el) el.innerHTML = renderDrawerMedia(row);
+  }
+  function refreshDrawerLinks(row){
+    const el = els.drawerContent.querySelector("[data-link-list]");
+    if(el) el.innerHTML = renderDrawerLinks(row);
+  }
+
+  function downscaleImage(file, maxSide, quality){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      const img = new Image();
+      reader.onload = ()=>{ img.src = String(reader.result); };
+      reader.onerror = ()=>reject(new Error("read"));
+      img.onload = ()=>{
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        const scale = Math.min(1, maxSide / Math.max(w, h));
+        w = Math.max(1, Math.round(w * scale));
+        h = Math.max(1, Math.round(h * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = ()=>reject(new Error("decode"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function pickDrawerImage(row){
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async ()=>{
+      const file = input.files && input.files[0];
+      if(!file) return;
+      let dataUrl;
+      try{ dataUrl = await downscaleImage(file, 1000, 0.72); }
+      catch(_e){ alert("画像を読み込めませんでした。"); return; }
+      const kb = Math.round(dataUrl.length * 0.73 / 1024);
+      const totalKb = row.media.reduce((s, m)=> s + (m.type === "image" ? m.url.length * 0.73 / 1024 : 0), 0);
+      if(kb > 900 || totalKb + kb > 3200){
+        alert(`この画像は大きすぎて端末に保存できません（約 ${kb}KB）。\nX やふせったー等にアップロードして「URL / X で追加」から貼り付けてください。`);
+        return;
+      }
+      row.media.push({ type: "image", url: dataUrl, caption: "" });
+      try{ saveState(); }
+      catch(_e){ row.media.pop(); alert("ブラウザの保存領域が不足しています。画像は URL で追加してください。"); return; }
+      refreshDrawerMedia(row);
+    };
+    input.click();
+  }
+
+  function addDrawerMediaUrl(row){
+    const url = prompt("画像URL、または X / ふせったー / ぽいぴく 等のURLを貼り付け");
+    if(!url) return;
+    const clean = url.trim();
+    if(!/^https?:\/\//i.test(clean) && !/^data:image\//.test(clean)){ alert("URL の形式が正しくありません。"); return; }
+    const isImage = /\.(png|jpe?g|gif|webp|avif|bmp)(\?|#|$)/i.test(clean) || /^data:image\//.test(clean);
+    row.media.push({ type: isImage ? "image" : "link", url: clean, caption: "" });
+    saveState();
+    refreshDrawerMedia(row);
   }
 
   function getFilteredRows(){
@@ -691,6 +888,9 @@
     const row = state.rows.find(r=>r.id===id);
     if(!row) return;
     const copy = { ...row, id: cryptoId(), scenario: `${row.scenario || ""} Copy`, reported: false, sample: false };
+    if(Array.isArray(row.media)) copy.media = row.media.map(m=>({ ...m }));
+    if(Array.isArray(row.cushionLinks)) copy.cushionLinks = row.cushionLinks.map(l=>({ ...l }));
+    if(Array.isArray(row.dates)) copy.dates = row.dates.slice();
     state.rows.push(copy);
     activeId = copy.id;
     saveAndRender();
@@ -810,8 +1010,8 @@
     }
   }
 
-  function openDrawer(){ els.kansouDrawer.classList.add("open"); els.drawerOverlay.hidden = false; els.kansouDrawer.setAttribute("aria-hidden","false"); els.kansouTab.classList.add("hide"); renderDrawer(); }
-  function closeDrawer(){ els.kansouDrawer.classList.remove("open"); els.drawerOverlay.hidden = true; els.kansouDrawer.setAttribute("aria-hidden","true"); els.kansouTab.classList.remove("hide"); }
+  function openDrawer(){ els.kansouDrawer.classList.add("open"); els.drawerOverlay.hidden = false; els.kansouDrawer.setAttribute("aria-hidden","false"); els.kansouTab.classList.add("hide"); document.body.classList.add("drawer-open"); renderDrawer(); }
+  function closeDrawer(){ els.kansouDrawer.classList.remove("open"); els.drawerOverlay.hidden = true; els.kansouDrawer.setAttribute("aria-hidden","true"); els.kansouTab.classList.remove("hide"); document.body.classList.remove("drawer-open"); }
 
   function openReportGenerator(row){
     if(!row) return;
@@ -877,7 +1077,7 @@
       players: pairPlayers(row.players, row.pc).map(([pl, pc])=>({ pl, pc, characterUrl: "" })),
       format: normalizeSessionFormat(row.format || row.sessionFormat || ""),
       status: normalizeSessionStatus(row.status || ""),
-      memo: [row.note, row.longNote].map(v=>String(v || "").trim()).filter(Boolean).join("\n\n"),
+      memo: [row.note, row.result, row.longNote].map(v=>String(v || "").trim()).filter(Boolean).join("\n\n"),
       links: createReportLinks(row),
       hashtags: splitTags(row.hashtag || row.hashtags || row.tags || "")
     };
@@ -896,11 +1096,15 @@
   }
 
   function createReportLinks(row){
-    return [
+    const base = [
       { label: "Session", url: row.sessionUrl || "" },
       { label: "Scenario", url: row.scenarioUrl || "" },
       { label: "Kansou", url: row.kansouUrl || "" }
     ].filter(link=>link.url || ["Session", "Scenario"].includes(link.label));
+    (Array.isArray(row.cushionLinks) ? row.cushionLinks : [])
+      .filter(l=>l && l.url)
+      .forEach(l=>base.push({ label: l.label || "Link", url: l.url }));
+    return base;
   }
 
   function normalizeSessionFormat(value){
