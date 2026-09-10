@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.78";
+  const APP_VERSION = "v1.79";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -912,21 +912,21 @@
     ["scenarioCountKey", "シナリオ集計キー"]
   ];
   const SHEET_HEADER_ALIASES = {
-    date: ["日付", "日時", "開催日", "プレイ日", "セッション日", "date"],
-    scenario: ["シナリオ", "シナリオ名", "題名", "タイトル", "作品名", "scenario", "title"],
+    date: ["日付", "日時", "開催日", "プレイ日", "セッション日", "通過日", "date"],
+    scenario: ["シナリオ", "シナリオ名", "題名", "タイトル", "作品名", "名前", "scenario", "title", "name"],
     system: ["システム", "システム名", "ゲームシステム", "ルール", "system"],
-    role: ["ロール", "役割", "立場", "role", "plkp"],
-    gm: ["gm", "kp", "dl", "キーパー", "ゲームマスター", "マスター", "gmkp", "進行役"],
-    players: ["pl", "プレイヤー", "同卓者", "参加者", "メンバー", "players"],
-    pc: ["pc", "探索者", "キャラ", "キャラクター", "探索者名", "pc名"],
+    role: ["ロール", "役割", "立場", "role", "plkp", "kppl"],
+    gm: ["gm", "kp", "dl", "キーパー", "ゲームマスター", "マスター", "gmkp", "進行役", "進行", "回し手"],
+    players: ["pl", "プレイヤー", "同卓者", "参加者", "メンバー", "players", "pcpl1", "pcpl2", "pcpl3", "pcpl4", "pcpl", "pl1", "pl2", "pl3", "pl4"],
+    pc: ["pc", "探索者", "キャラ", "キャラクター", "探索者名", "pc名", "自pc", "使用pc", "担当pc"],
     status: ["状態", "ステータス", "進捗", "新規継続", "status"],
     time: ["時間", "所要時間", "プレイ時間", "time", "hours"],
     note: ["メモ", "備考", "ノート", "コメント", "note", "memo"],
-    longNote: ["長文感想", "詳細メモ", "感想", "longnote"],
-    campaign: ["キャンペーン", "シリーズ", "campaign"],
+    longNote: ["長文感想", "詳細メモ", "感想", "感想ネタバレ注意", "longnote"],
+    campaign: ["キャンペーン", "シリーズ", "親アイテム", "campaign"],
     hashtag: ["ハッシュタグ", "タグ", "hashtag", "tag", "tags"],
-    ending: ["エンディング", "結末", "ルート", "ending", "end"],
-    survival: ["生還", "生死", "ロスト", "survival"],
+    ending: ["エンディング", "結末", "ルート", "エンド", "end", "ending"],
+    survival: ["生還", "生死", "ロスト", "生還ロスト", "survival"],
     sessionurl: ["セッションurl", "ログurl", "ログ", "セッションリンク", "sessionurl"],
     scenariourl: ["シナリオurl", "配布ページ", "boothurl", "scenariourl"],
     kansoururl: ["感想url", "感想リンク", "kansoururl"],
@@ -1199,14 +1199,35 @@
     return row;
   }
 
+  const EN_MONTHS = {
+    january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7, august: 8,
+    september: 9, october: 10, november: 11, december: 12,
+    jan: 1, feb: 2, mar: 3, apr: 4, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12
+  };
+
   function toIsoDatePart(part){
-    const m = String(part || "").trim().normalize("NFKC").match(/(\d{4})\s*[\/.\-年]\s*(\d{1,2})\s*[\/.\-月]\s*(\d{1,2})/);
-    if(!m) return "";
-    return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+    const s = String(part || "").trim().normalize("NFKC");
+    // Notion 形式 "December 1, 2024" / "Dec 1 2024"
+    let m = s.match(/([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})/);
+    if(m && EN_MONTHS[m[1].toLowerCase()]){
+      return `${m[3]}-${String(EN_MONTHS[m[1].toLowerCase()]).padStart(2, "0")}-${String(m[2]).padStart(2, "0")}`;
+    }
+    m = s.match(/(\d{4})\s*[\/.\-年]\s*(\d{1,2})\s*[\/.\-月]\s*(\d{1,2})/);
+    if(m) return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+    return "";
   }
 
   function splitImportDates(value){
-    return String(value || "").split(/[、,，;；\s]+/).map(toIsoDatePart).filter(Boolean);
+    const s = String(value || "").trim();
+    if(!s) return [];
+    // 範囲表記（Notion の日付レンジ等）は開始日と終了日
+    if(/→|〜|~|–|—|\bto\b/i.test(s)){
+      return [...new Set(s.split(/\s*(?:→|〜|~|–|—|\bto\b)\s*/i).map(toIsoDatePart).filter(Boolean))];
+    }
+    // 英語月名の "December 1, 2024" は "," で分割しない
+    const hasEnMonth = /[A-Za-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}/.test(s);
+    const parts = hasEnMonth ? s.split(/\s*[、；;]\s*|\s{2,}/) : s.split(/[、,，;；\s]+/);
+    return [...new Set(parts.map(toIsoDatePart).filter(Boolean))];
   }
 
   const IMPORT_SYSTEM_MAP = {
