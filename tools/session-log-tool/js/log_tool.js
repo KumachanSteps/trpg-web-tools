@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.77";
+  const APP_VERSION = "v1.78";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -43,10 +43,10 @@
   const TABLE_TEXT_LIMIT_MAX = { scenario: 80, players: 60, pc: 60, note: 80 };
 
   const defaultRows = [
-    { id: cryptoId(), date: "2026-05-13", dates: ["2026-05-13"], scenario: "サンプルシナリオA", system: "CoC 6版", role: "PL", gm: "GMサンプル01", players: "PL-A、PL-B", pc: "PC-A", status: "新規", time: "4h", note: "初回セッション。導入と探索中心。", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
-    { id: cryptoId(), date: "2026-04-20", dates: ["2026-04-20"], scenario: "サンプルシナリオB", system: "CoC 7版", role: "KP", gm: "自分", players: "PL-C、PL-D、PL-E", pc: "PC-B / PC-C / PC-D", status: "新規", time: "5h", note: "日程調整済み。次回は中盤から再開。", longNote: "" },
-    { id: cryptoId(), date: "2026-03-15", dates: ["2026-03-15"], scenario: "サンプルシナリオC", system: "エモクロア", role: "DL", gm: "自分", players: "PL-F、PL-G", pc: "共鳴者A / 共鳴者B", status: "継続", time: "3.5h", note: "継続キャラクターで参加。感想メモあり。", longNote: "" },
-    { id: cryptoId(), date: "2026-02-28", dates: ["2026-02-28"], scenario: "サンプルキャンペーン 第2話", system: "マダミス", role: "PL", gm: "GMサンプル02", players: "PL-H、PL-I、PL-J", pc: "PC-E", status: "継続", time: "6h", note: "キャンペーン進行中。公開用メモは別途作成予定。", longNote: "" }
+    { id: cryptoId(), sample: true, date: "2026-05-13", dates: ["2026-05-13"], scenario: "サンプルシナリオA", system: "CoC 6版", role: "PL", gm: "GM名", players: "同卓者1、同卓者2", pc: "探索者A", status: "新規", time: "4h", note: "（これはサンプルです）導入と探索中心。", longNote: "◆ 好きなシーン\n\n◆ 好きなRP\n\n◆ キャラクター変化\n\n◆ 公開コメント下書き\n" },
+    { id: cryptoId(), sample: true, date: "2026-04-20", dates: ["2026-04-20"], scenario: "サンプルシナリオB", system: "CoC 7版", role: "KP", gm: "自分", players: "同卓者3、同卓者4、同卓者5", pc: "探索者B / 探索者C / 探索者D", status: "新規", time: "5h", note: "（これはサンプルです）次回は中盤から再開。", longNote: "" },
+    { id: cryptoId(), sample: true, date: "2026-03-15", dates: ["2026-03-15"], scenario: "サンプルシナリオC", system: "エモクロア", role: "DL", gm: "自分", players: "同卓者6、同卓者7", pc: "共鳴者A / 共鳴者B", status: "継続", time: "3.5h", note: "（これはサンプルです）継続キャラクターで参加。", longNote: "" },
+    { id: cryptoId(), sample: true, date: "2026-02-28", dates: ["2026-02-28"], scenario: "サンプルキャンペーン 第2話", system: "マダミス", role: "PL", gm: "GM名", players: "同卓者8、同卓者9、同卓者10", pc: "PC-E", status: "継続", time: "6h", note: "（これはサンプルです）キャンペーン進行中。", longNote: "" }
   ];
   const defaultColumns = [
     { key: "reported", label: "卓報告", locked: true, hideFixedLabel: true },
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -188,6 +188,7 @@
     els.drawerOverlay.addEventListener("click", closeDrawer);
     els.addSessionTopBtn?.addEventListener("click",()=>openSessionDialog());
     els.floatingAddBtn?.addEventListener("click",()=>openSessionDialog());
+    els.clearSamplesBtn?.addEventListener("click", clearSampleRows);
     els.sessionForm.addEventListener("submit", handleSessionSave);
     els.sessionForm.addEventListener("click", handleDateFieldClick);
     els.sessionForm.addEventListener("change", handleSessionFormChange);
@@ -201,6 +202,7 @@
     renderOptionalFields();
     renderVisibleFields();
     renderStats();
+    updateSampleNotice();
     renderTable();
     renderDrawer();
     renderExport();
@@ -275,11 +277,30 @@
     els.roleFilter.value = ["", "PL", "GM"].includes(roleValue) ? roleValue : "";
   }
 
+  function nonSampleRows(){ return state.rows.filter(row=>!row.sample); }
+
   function renderStats(){
-    animateStat("statSessions", countSessionDates(state.rows));
-    animateStat("statScenarios", countUniqueScenarios(state.rows));
-    animateStat("statPlayedTime", sumHours(state.rows), "h");
-    animateStat("statPlayedWith", countCoPlayers(state.rows));
+    const rows = nonSampleRows();
+    animateStat("statSessions", countSessionDates(rows));
+    animateStat("statScenarios", countUniqueScenarios(rows));
+    animateStat("statPlayedTime", sumHours(rows), "h");
+    animateStat("statPlayedWith", countCoPlayers(rows));
+  }
+
+  function updateSampleNotice(){
+    if(!els.sampleNotice) return;
+    const n = state.rows.filter(row=>row.sample).length;
+    els.sampleNotice.hidden = !n;
+    const label = els.sampleNotice.querySelector("span");
+    if(label) label.textContent = `サンプル${n}件を表示中です（集計には含まれません）。自分の記録を追加するか、右のボタンで消せます。`;
+  }
+
+  function clearSampleRows(){
+    const removed = state.rows.filter(row=>row.sample).map(row=>row.id);
+    if(!removed.length) return;
+    state.rows = state.rows.filter(row=>!row.sample);
+    if(removed.includes(activeId)) activeId = state.rows[0]?.id || null;
+    saveAndRender();
   }
 
   function animateStat(id, target, suffix=""){
@@ -380,7 +401,7 @@
     rows.forEach(row=>{
       const tr = document.createElement("tr");
       tr.dataset.rowId = row.id;
-      tr.className = row.id === activeId ? "selected-row" : "";
+      tr.className = [row.id === activeId ? "selected-row" : "", row.sample ? "is-sample" : ""].filter(Boolean).join(" ");
       tr.addEventListener("click",()=>{ activeId = row.id; renderTable(); renderDrawer(); });
       tr.addEventListener("dblclick",()=>openSessionDialog(row.id));
       state.columns.forEach(col=>{
@@ -615,6 +636,7 @@
     row.dates = unique(dates);
     row.date = row.dates[0] || "";
     row.longNote = els.longNoteInput.value;
+    delete row.sample; // 手で編集したらサンプル扱いを解除
     if(!editingId) state.rows.push(row);
     activeId = row.id;
     els.sessionDialog.close();
@@ -629,7 +651,7 @@
   function duplicateRow(id){
     const row = state.rows.find(r=>r.id===id);
     if(!row) return;
-    const copy = { ...row, id: cryptoId(), scenario: `${row.scenario || ""} Copy`, reported: false };
+    const copy = { ...row, id: cryptoId(), scenario: `${row.scenario || ""} Copy`, reported: false, sample: false };
     state.rows.push(copy);
     activeId = copy.id;
     saveAndRender();
@@ -2044,8 +2066,8 @@
       .filter(([key])=>!["longNote", "scenarioCountKey"].includes(key))
       .map(([, label])=>label.split(/[ (（]/)[0]);
     const examples = [
-      ["2024-01-06", "悪霊の家", "CoC 6版", "PL", "のあ", "くま。、とこ", "御堂 蓮", "完結", "4", "初回。導入〜脱出まで。", "", "#CoC #卓報告", "END A", "生還", "", "", ""],
-      ["2024/2/10, 2024/2/17", "塔の中", "CoC 7版", "KP", "自分", "A、B、C", "", "継続", "6", "2週にわけて実施。", "塔シリーズ", "", "", "", "", "", ""]
+      ["2024-01-06", "シナリオ名1", "CoC 6版", "PL", "GM名", "同卓者1、同卓者2", "探索者1", "完結", "4", "メモ（自由記入）", "", "#CoC #卓報告", "END A", "生還", "", "", ""],
+      ["2024/2/10, 2024/2/17", "シナリオ名2", "CoC 7版", "KP", "自分", "同卓者3、同卓者4、同卓者5", "", "継続", "6", "複数日程はカンマ区切り", "キャンペーン名", "", "", "", "", "", ""]
     ];
     const csv = "﻿" + [headers, ...examples].map(cells=>cells.map(csvCell).join(",")).join("\r\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -2111,6 +2133,7 @@
   function getExportRows(){
     const q = String(exportQuery || "").trim().toLocaleLowerCase("ja");
     const rows = state.rows.filter(row=>{
+      if(row.sample) return false;
       if(!q) return true;
       return [row.scenario, row.gm, row.players, row.pc, row.note, row.campaign]
         .some(value=>String(value || "").toLocaleLowerCase("ja").includes(q));

@@ -48,7 +48,7 @@
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.77 2026.09.10</p>
+        <p class="header-version">v1.78 2026.09.10</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -129,6 +129,11 @@
             <button id="exportJsonBtn" class="header-button secondary-cyan" type="button" data-i18n="jsonOutput">JSON出力</button>
             <button id="exportTextBtn" class="header-button secondary-amber" type="button" data-i18n="textOutput">テキスト出力</button>
           </div>
+        </div>
+
+        <div id="sampleNotice" class="sample-notice" hidden>
+          <span>サンプル4件を表示中です（集計には含まれません）。自分の記録を追加するか、右のボタンで消せます。</span>
+          <button id="clearSamplesBtn" type="button" class="mini-button">サンプルを削除</button>
         </div>
 
         <div class="drag-tip-row">
