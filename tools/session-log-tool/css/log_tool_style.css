@@ -140,6 +140,15 @@ body.drawer-open{overflow:hidden}
 .drawer-foot-btn{flex:1;border-radius:999px;padding:11px 8px;font-weight:900;font-size:13px;border:1px solid var(--border-soft);background:#fff;color:var(--text-soft)}
 .drawer-foot-btn.primary{background:#4f46e5;color:#fff;border-color:#4f46e5}
 .drawer-foot-btn.accent{background:#eef2ff;color:#4f46e5;border-color:#c7d2fe}
+.mini-confirm-overlay{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.42);display:flex;align-items:center;justify-content:center;padding:20px}
+.mini-confirm{width:min(360px,100%);background:#fff;color:#172033;border-radius:20px;padding:20px;box-shadow:0 30px 80px rgba(15,23,42,.35)}
+.mini-confirm p{margin:0 0 16px;font-size:14px;font-weight:700;line-height:1.6}
+.mini-confirm-actions{display:flex;gap:8px}
+.mini-confirm-actions button{flex:1;border-radius:999px;padding:10px;font-weight:850;border:1px solid var(--border-soft)}
+.mini-confirm-cancel{background:#fff;color:var(--text-soft)}
+.mini-confirm-ok{background:#e11d48;color:#fff;border-color:#e11d48}
+body.night-mode .mini-confirm{background:#111827;color:#e2e8f0}
+body.night-mode .mini-confirm-cancel{background:#1f2937;color:#e2e8f0}
 body.night-mode .drawer-title-input,body.night-mode .drawer-meta-grid input,body.night-mode .drawer-meta-grid select,body.night-mode .drawer-section textarea,body.night-mode .drawer-media-item,body.night-mode .drawer-footer,body.night-mode .drawer-link-row input{background:#111827;color:#e2e8f0}
 body.night-mode .drawer-media-cap{background:#0b1220}
 

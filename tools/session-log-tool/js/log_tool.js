@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.83";
+  const APP_VERSION = "v1.84";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -601,7 +601,6 @@
       </div>
 
       <div class="drawer-actions">
-        <button id="drawerDuplicateBtn" type="button">複製</button>
         <button id="drawerDeleteBtn" class="danger-soft" type="button">⌫ この卓を削除</button>
       </div>
     `;
@@ -650,7 +649,6 @@
       if(row.cushionLinks[i]) row.cushionLinks[i][el.dataset.linkField] = el.value;
       saveState();
     });
-    document.getElementById("drawerDuplicateBtn")?.addEventListener("click",()=>duplicateRow(row.id));
     document.getElementById("drawerDeleteBtn")?.addEventListener("click",()=>deleteRow(row.id));
 
     const mediaSection = c.querySelector("[data-media-list]")?.closest(".drawer-section");
@@ -923,28 +921,47 @@
     saveAndRender();
   }
 
-  function deleteEditingSession(){
-    if(editingId) deleteRow(editingId);
+  async function deleteEditingSession(){
+    if(!editingId) return;
+    if(!(await confirmAction("この卓ログを削除しますか？（元に戻せません）"))) return;
+    removeRowById(editingId);
     els.sessionDialog.close();
   }
 
-  function duplicateRow(id){
-    const row = state.rows.find(r=>r.id===id);
-    if(!row) return;
-    const copy = { ...row, id: cryptoId(), scenario: `${row.scenario || ""} Copy`, reported: false, sample: false };
-    if(Array.isArray(row.media)) copy.media = row.media.map(m=>({ ...m }));
-    if(Array.isArray(row.cushionLinks)) copy.cushionLinks = row.cushionLinks.map(l=>({ ...l }));
-    if(Array.isArray(row.dates)) copy.dates = row.dates.slice();
-    state.rows.push(copy);
-    activeId = copy.id;
-    saveAndRender();
-  }
-
-  function deleteRow(id){
-    if(!confirm("この卓ログを削除しますか？")) return;
+  function removeRowById(id){
     state.rows = state.rows.filter(r=>r.id!==id);
     if(activeId === id) activeId = state.rows[0]?.id || null;
     saveAndRender();
+  }
+
+  async function deleteRow(id){
+    if(!(await confirmAction("この卓ログを削除しますか？（元に戻せません）"))) return;
+    removeRowById(id);
+    if(els.kansouDrawer?.classList.contains("open")) closeDrawer();
+  }
+
+  // window.confirm() は同一ページで複数回呼ぶとブラウザに抑制されることがあるため、
+  // 削除確認は自前の軽量モーダルで行う。
+  function confirmAction(message){
+    return new Promise(resolve=>{
+      const overlay = document.createElement("div");
+      overlay.className = "mini-confirm-overlay";
+      overlay.innerHTML = `
+        <div class="mini-confirm" role="alertdialog" aria-modal="true">
+          <p>${escapeHtml(message)}</p>
+          <div class="mini-confirm-actions">
+            <button type="button" class="mini-confirm-cancel">キャンセル</button>
+            <button type="button" class="mini-confirm-ok">削除する</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      const finish = result=>{ overlay.remove(); document.removeEventListener("keydown", onKey); resolve(result); };
+      const onKey = e=>{ if(e.key === "Escape") finish(false); };
+      document.addEventListener("keydown", onKey);
+      overlay.querySelector(".mini-confirm-cancel").addEventListener("click",()=>finish(false));
+      overlay.querySelector(".mini-confirm-ok").addEventListener("click",()=>finish(true));
+      overlay.addEventListener("click", e=>{ if(e.target === overlay) finish(false); });
+    });
   }
 
   function createCustomField(){
