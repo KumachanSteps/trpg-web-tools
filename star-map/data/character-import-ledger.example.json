@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "generatedAt": "",
+  "policy": {
+    "publication": "private-local-only",
+    "detailPagesOpened": false,
+    "charashSystemScope": ["エモクロア"]
+  },
+  "sources": [
+    {
+      "id": "iachara",
+      "label": "いあきゃら",
+      "listUrl": "https://iachara.com/mypage",
+      "systems": ["CoC6", "CoC7"],
+      "count": 0,
+      "entries": []
+    },
+    {
+      "id": "charash",
+      "label": "キャラッシュ",
+      "listUrl": "https://charash.jp/",
+      "systems": ["エモクロア"],
+      "count": 0,
+      "entries": []
+    }
+  ]
+}
