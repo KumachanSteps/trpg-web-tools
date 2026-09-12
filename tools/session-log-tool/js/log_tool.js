@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.84";
+  const APP_VERSION = "v1.85";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -941,26 +941,30 @@
   }
 
   // window.confirm() は同一ページで複数回呼ぶとブラウザに抑制されることがあるため、
-  // 削除確認は自前の軽量モーダルで行う。
+  // 削除確認は自前の軽量モーダルで行う。<dialog>+showModal() で実装するのがポイント：
+  // ただの position:fixed な div だと、卓情報を編集などすでに開いている <dialog>
+  // （ブラウザのトップレイヤーに乗る）より必ず背面に描画されてしまい、クリックが
+  // 奥の div ではなく元のダイアログに当たって「反応しない」ように見えるバグになる。
   function confirmAction(message){
     return new Promise(resolve=>{
-      const overlay = document.createElement("div");
-      overlay.className = "mini-confirm-overlay";
-      overlay.innerHTML = `
-        <div class="mini-confirm" role="alertdialog" aria-modal="true">
+      const dlg = document.createElement("dialog");
+      dlg.className = "mini-confirm-dialog";
+      dlg.innerHTML = `
+        <div class="mini-confirm" role="alertdialog">
           <p>${escapeHtml(message)}</p>
           <div class="mini-confirm-actions">
             <button type="button" class="mini-confirm-cancel">キャンセル</button>
             <button type="button" class="mini-confirm-ok">削除する</button>
           </div>
         </div>`;
-      document.body.appendChild(overlay);
-      const finish = result=>{ overlay.remove(); document.removeEventListener("keydown", onKey); resolve(result); };
-      const onKey = e=>{ if(e.key === "Escape") finish(false); };
-      document.addEventListener("keydown", onKey);
-      overlay.querySelector(".mini-confirm-cancel").addEventListener("click",()=>finish(false));
-      overlay.querySelector(".mini-confirm-ok").addEventListener("click",()=>finish(true));
-      overlay.addEventListener("click", e=>{ if(e.target === overlay) finish(false); });
+      document.body.appendChild(dlg);
+      let finishResult = false;
+      dlg.addEventListener("close",()=>{ dlg.remove(); resolve(finishResult); });
+      dlg.querySelector(".mini-confirm-cancel").addEventListener("click",()=>{ finishResult = false; dlg.close(); });
+      dlg.querySelector(".mini-confirm-ok").addEventListener("click",()=>{ finishResult = true; dlg.close(); });
+      dlg.addEventListener("click", e=>{ if(e.target === dlg){ finishResult = false; dlg.close(); } });
+      if(typeof dlg.showModal === "function") dlg.showModal();
+      else dlg.setAttribute("open", "");
     });
   }
 

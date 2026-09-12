@@ -140,8 +140,9 @@ body.drawer-open{overflow:hidden}
 .drawer-foot-btn{flex:1;border-radius:999px;padding:11px 8px;font-weight:900;font-size:13px;border:1px solid var(--border-soft);background:#fff;color:var(--text-soft)}
 .drawer-foot-btn.primary{background:#4f46e5;color:#fff;border-color:#4f46e5}
 .drawer-foot-btn.accent{background:#eef2ff;color:#4f46e5;border-color:#c7d2fe}
-.mini-confirm-overlay{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.42);display:flex;align-items:center;justify-content:center;padding:20px}
-.mini-confirm{width:min(360px,100%);background:#fff;color:#172033;border-radius:20px;padding:20px;box-shadow:0 30px 80px rgba(15,23,42,.35)}
+.mini-confirm-dialog{border:0;padding:0;background:transparent;max-width:none;margin:auto}
+.mini-confirm-dialog::backdrop{background:rgba(15,23,42,.45)}
+.mini-confirm{width:min(360px,calc(100vw - 40px));background:#fff;color:#172033;border-radius:20px;padding:20px;box-shadow:0 30px 80px rgba(15,23,42,.35)}
 .mini-confirm p{margin:0 0 16px;font-size:14px;font-weight:700;line-height:1.6}
 .mini-confirm-actions{display:flex;gap:8px}
 .mini-confirm-actions button{flex:1;border-radius:999px;padding:10px;font-weight:850;border:1px solid var(--border-soft)}
