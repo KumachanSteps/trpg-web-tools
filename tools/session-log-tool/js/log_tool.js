@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.82";
+  const APP_VERSION = "v1.83";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -98,7 +98,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","clearAllRowsBtn","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","drawerFooter","drawerSaveBtn","drawerCloseBtn2","drawerToReportBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","drawerFooter","drawerSaveBtn","drawerCloseBtn2","drawerToReportBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -198,7 +198,6 @@
     els.addSessionTopBtn?.addEventListener("click",()=>openSessionDialog());
     els.floatingAddBtn?.addEventListener("click",()=>openSessionDialog());
     els.clearSamplesBtn?.addEventListener("click", clearSampleRows);
-    els.clearAllRowsBtn?.addEventListener("click", clearAllRows);
     els.pickSheetFileBtn?.addEventListener("click",()=>els.sheetFileInput?.click());
     els.sheetFileInput?.addEventListener("change", handleSheetFile);
     els.sessionForm.addEventListener("submit", handleSessionSave);
@@ -305,15 +304,6 @@
     els.sampleNotice.hidden = !n;
     const label = els.sampleNotice.querySelector("span");
     if(label) label.textContent = `サンプル${n}件を表示中です（集計には含まれません）。自分の記録を追加するか、右のボタンで消せます。`;
-  }
-
-  function clearAllRows(){
-    if(!state.rows.length){ showLogToast("削除する行はありません"); return; }
-    if(!confirm(`テーブルの全 ${state.rows.length} 行を削除します。よろしいですか？（サンプルも含む・元に戻せません）`)) return;
-    state.rows = [];
-    activeId = null;
-    saveAndRender();
-    showLogToast("全データを削除しました");
   }
 
   async function handleSheetFile(event){
@@ -551,7 +541,8 @@
     if(!Array.isArray(row.cushionLinks)) row.cushionLinks = [];
     normalizeRowDates(row);
 
-    const sysList = SYSTEM_OPTIONS.map(s=>`<option value="${escapeAttr(s)}"></option>`).join("");
+    const allSystems = unique([...SYSTEM_OPTIONS, ...state.rows.map(r=>r.system).filter(Boolean)]);
+    const sysList = allSystems.map(s=>`<option value="${escapeAttr(s)}"></option>`).join("");
     const roleOpts = ["", ...ROLE_OPTIONS].map(r=>`<option value="${escapeAttr(r)}" ${r === (row.role || "") ? "selected" : ""}>${r || "—"}</option>`).join("");
     const statusOpts = ["", ...STATUS_OPTIONS].map(s=>`<option value="${escapeAttr(s)}" ${s === (row.status || "") ? "selected" : ""}>${s || "—"}</option>`).join("");
 
@@ -615,6 +606,7 @@
       </div>
     `;
     wireDrawer(row);
+    loadTwitterWidgets();
   }
 
   function wireDrawer(row){
@@ -660,6 +652,31 @@
     });
     document.getElementById("drawerDuplicateBtn")?.addEventListener("click",()=>duplicateRow(row.id));
     document.getElementById("drawerDeleteBtn")?.addEventListener("click",()=>deleteRow(row.id));
+
+    const mediaSection = c.querySelector("[data-media-list]")?.closest(".drawer-section");
+    if(mediaSection){
+      ["dragenter", "dragover"].forEach(evt=>mediaSection.addEventListener(evt, e=>{
+        if(![...(e.dataTransfer?.types || [])].includes("Files")) return;
+        e.preventDefault();
+        mediaSection.classList.add("is-dragover");
+      }));
+      ["dragleave", "dragend"].forEach(evt=>mediaSection.addEventListener(evt, ()=>mediaSection.classList.remove("is-dragover")));
+      mediaSection.addEventListener("drop", async e=>{
+        e.preventDefault();
+        mediaSection.classList.remove("is-dragover");
+        const files = [...(e.dataTransfer?.files || [])].filter(f=>f.type.startsWith("image/"));
+        for(const file of files) await addDrawerImageFile(row, file);
+        if(files.length) refreshDrawerMedia(row);
+      });
+    }
+  }
+
+  const TWEET_URL_RE = /^https?:\/\/(?:www\.)?(?:twitter|x)\.com\/[^/?#]+\/status(?:es)?\/\d+/i;
+
+  function classifyMediaUrl(url){
+    if(TWEET_URL_RE.test(url)) return "tweet";
+    if(/\.(png|jpe?g|gif|webp|avif|bmp)(\?|#|$)/i.test(url) || /^data:image\//.test(url)) return "image";
+    return "link";
   }
 
   function mediaLinkLabel(url){
@@ -671,13 +688,36 @@
     }catch(_e){ return String(url).slice(0, 40); }
   }
 
+  let twitterWidgetsPromise = null;
+  function loadTwitterWidgets(){
+    if(!document.querySelector(".twitter-tweet")) return;
+    if(window.twttr?.widgets){ window.twttr.widgets.load(); return; }
+    if(!twitterWidgetsPromise){
+      twitterWidgetsPromise = new Promise(resolve=>{
+        const s = document.createElement("script");
+        s.src = "https://platform.twitter.com/widgets.js";
+        s.async = true;
+        s.onload = resolve;
+        s.onerror = resolve;
+        document.head.appendChild(s);
+      });
+    }
+    twitterWidgetsPromise.then(()=>window.twttr?.widgets?.load());
+  }
+
   function renderDrawerMedia(row){
-    if(!row.media.length) return `<p class="drawer-muted">まだありません。</p>`;
+    if(!row.media.length) return `<p class="drawer-muted">まだありません。画像はドラッグ＆ドロップでも追加できます。</p>`;
     return row.media.map((m, i)=>{
-      const body = m.type === "image"
-        ? `<img src="${escapeAttr(m.url)}" alt="" loading="lazy" />`
-        : `<a class="drawer-media-link" href="${escapeAttr(m.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(mediaLinkLabel(m.url))} ↗</a>`;
-      return `<figure class="drawer-media-item">
+      let body;
+      if(m.type === "image"){
+        body = `<img src="${escapeAttr(m.url)}" alt="" loading="lazy" />`;
+      }else if(m.type === "tweet"){
+        const tweetTheme = document.body.classList.contains("night-mode") ? "dark" : "light";
+        body = `<blockquote class="twitter-tweet" data-dnt="true" data-theme="${tweetTheme}"><a href="${escapeAttr(m.url)}"></a></blockquote>`;
+      }else{
+        body = `<a class="drawer-media-link" href="${escapeAttr(m.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(mediaLinkLabel(m.url))} ↗</a>`;
+      }
+      return `<figure class="drawer-media-item drawer-media-item-${escapeAttr(m.type)}">
         <button type="button" class="drawer-media-x" data-media-remove="${i}" title="削除">×</button>
         ${body}
         <input class="drawer-media-cap" data-media-caption="${i}" value="${escapeAttr(m.caption || "")}" placeholder="キャプション" />
@@ -699,6 +739,7 @@
   function refreshDrawerMedia(row){
     const el = els.drawerContent.querySelector("[data-media-list]");
     if(el) el.innerHTML = renderDrawerMedia(row);
+    loadTwitterWidgets();
   }
   function refreshDrawerLinks(row){
     const el = els.drawerContent.querySelector("[data-link-list]");
@@ -727,25 +768,29 @@
     });
   }
 
+  async function addDrawerImageFile(row, file){
+    if(!file.type || !file.type.startsWith("image/")){ return; }
+    let dataUrl;
+    try{ dataUrl = await downscaleImage(file, 1400, 0.75); }
+    catch(_e){ alert(`「${file.name}」を読み込めませんでした。`); return; }
+    const kb = Math.round(dataUrl.length * 0.73 / 1024);
+    const totalKb = row.media.reduce((s, m)=> s + (m.type === "image" ? m.url.length * 0.73 / 1024 : 0), 0);
+    if(kb > 1400 || totalKb + kb > 4500){
+      alert(`「${file.name}」は大きすぎて端末に保存できません（約 ${kb}KB）。\nX やふせったー等にアップロードして「URL / X で追加」から貼り付けてください。`);
+      return;
+    }
+    row.media.push({ type: "image", url: dataUrl, caption: "" });
+    try{ saveState(); }
+    catch(_e){ row.media.pop(); alert("ブラウザの保存領域が不足しています。画像は URL で追加してください。"); }
+  }
+
   function pickDrawerImage(row){
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
+    input.multiple = true;
     input.onchange = async ()=>{
-      const file = input.files && input.files[0];
-      if(!file) return;
-      let dataUrl;
-      try{ dataUrl = await downscaleImage(file, 1000, 0.72); }
-      catch(_e){ alert("画像を読み込めませんでした。"); return; }
-      const kb = Math.round(dataUrl.length * 0.73 / 1024);
-      const totalKb = row.media.reduce((s, m)=> s + (m.type === "image" ? m.url.length * 0.73 / 1024 : 0), 0);
-      if(kb > 900 || totalKb + kb > 3200){
-        alert(`この画像は大きすぎて端末に保存できません（約 ${kb}KB）。\nX やふせったー等にアップロードして「URL / X で追加」から貼り付けてください。`);
-        return;
-      }
-      row.media.push({ type: "image", url: dataUrl, caption: "" });
-      try{ saveState(); }
-      catch(_e){ row.media.pop(); alert("ブラウザの保存領域が不足しています。画像は URL で追加してください。"); return; }
+      for(const file of [...(input.files || [])]) await addDrawerImageFile(row, file);
       refreshDrawerMedia(row);
     };
     input.click();
@@ -756,8 +801,7 @@
     if(!url) return;
     const clean = url.trim();
     if(!/^https?:\/\//i.test(clean) && !/^data:image\//.test(clean)){ alert("URL の形式が正しくありません。"); return; }
-    const isImage = /\.(png|jpe?g|gif|webp|avif|bmp)(\?|#|$)/i.test(clean) || /^data:image\//.test(clean);
-    row.media.push({ type: isImage ? "image" : "link", url: clean, caption: "" });
+    row.media.push({ type: classifyMediaUrl(clean), url: clean, caption: "" });
     saveState();
     refreshDrawerMedia(row);
   }
