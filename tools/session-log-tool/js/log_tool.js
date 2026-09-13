@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.85";
+  const APP_VERSION = "v1.86";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -121,6 +121,7 @@
     els.resetFieldsBtn.addEventListener("click",()=>{ state.columns = clone(defaultColumns); state.hiddenColumns = []; saveAndRender(); });
     els.importJsonBtn.addEventListener("click", openImportDialog);
     els.jsonFileInput.addEventListener("change", handleJsonFilePicked);
+    els.exportJsonBtn.addEventListener("click", exportJson);
     els.closeImportDialogBtn?.addEventListener("click",()=>els.importDialog.close());
     els.cancelImportBtn?.addEventListener("click",()=>els.importDialog.close());
     els.runImportBtn?.addEventListener("click", runImport);
