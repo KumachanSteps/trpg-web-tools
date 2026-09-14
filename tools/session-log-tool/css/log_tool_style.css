@@ -938,6 +938,10 @@ body.night-mode .add-row-cell{background:rgba(30,41,59,.6)}
 body.night-mode .add-row-button{background:rgba(17,24,39,.6);border-color:#4338ca;color:#a5b4fc}
 body.night-mode .system-pill{background:#111827;color:#cbd5e1}
 body.night-mode .fixed-label{background:#111827;color:#94a3b8}
+body.night-mode .shortcut-panel-inner{background:#111827}
+body.night-mode .shortcut-panel-head{background:#1f2937;border-bottom-color:rgba(148,163,184,.24)}
+body.night-mode .shortcut-panel-list div{background:#1f2937;border-color:rgba(148,163,184,.24);color:#cbd5e1}
+body.night-mode kbd{background:#111827;color:#e2e8f0;border-color:rgba(148,163,184,.32)}
 body.night-mode .drag-tip-row{background:#111827;border-bottom-color:rgba(148,163,184,.16)}
 body.night-mode .drag-tip{background:#111827;color:#64748b;border-bottom-color:rgba(148,163,184,.16)}
 body.night-mode .portal-link{background:rgba(30,41,59,.68);color:#7dd3fc}
