@@ -929,8 +929,15 @@ body.night-mode .scenario-open-btn{background:#1f2937;border-color:#4338ca;color
 .sample-notice .mini-button{background:#fff;border-color:#fcd34d;color:#92620a}
 #sessionTable tr.is-sample td{background:repeating-linear-gradient(-45deg,rgba(148,163,184,.06),rgba(148,163,184,.06) 8px,transparent 8px,transparent 16px);color:#94a3b8}
 #sessionTable tr.is-sample.selected-row td{color:inherit}
-body.night-mode .sample-notice{background:#2a2410;border-color:#4d3b12;color:#fcd34d}
-body.night-mode .sample-notice .mini-button{background:#1f2937;color:#fcd34d}
+body.night-mode .sample-notice{background:#1f2937;border-color:rgba(148,163,184,.28);color:#fbbf24}
+body.night-mode .sample-notice .mini-button{background:#111827;border-color:rgba(148,163,184,.28);color:#fbbf24}
+body.night-mode .stat-card{background:#1f2937}
+body.night-mode .selected-row,body.night-mode .table-scroll tbody tr.selected-row{background:#1e293b}
+body.night-mode .cell-scenario{color:#e2e8f0}
+body.night-mode .add-row-cell{background:rgba(30,41,59,.6)}
+body.night-mode .add-row-button{background:rgba(17,24,39,.6);border-color:#4338ca;color:#a5b4fc}
+body.night-mode .system-pill{background:#111827;color:#cbd5e1}
+body.night-mode .fixed-label{background:#111827;color:#94a3b8}
 .drag-tip-row .drag-tip{padding:0;border:0;background:transparent;flex:1;min-width:240px}
 .drag-tip-row .field-panel-wrap{display:flex;gap:6px;align-items:center}
 .field-panel{width:min(360px,calc(100vw - 32px));max-height:min(560px,calc(100vh - 160px));overflow:auto}
