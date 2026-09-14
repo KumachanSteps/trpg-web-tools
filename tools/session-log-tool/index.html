@@ -7,7 +7,7 @@
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <script async src="../../assets/js/analytics.js"></script>
-  <link rel="stylesheet" href="css/log_tool_style.css?v=1.88" />
+  <link rel="stylesheet" href="css/log_tool_style.css?v=1.89" />
 </head>
 <body>
   <div class="app-shell">
@@ -49,7 +49,7 @@
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.88 2026.09.13</p>
+        <p class="header-version">v1.89 2026.09.13</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -271,7 +271,7 @@
     <div class="import-dialog-scroll">
       <label class="import-selfname">
         <span>あなたの呼び名</span>
-        <input id="selfNameInput" type="text" placeholder="例：くま。（複数は「、」区切り）" autocomplete="off" />
+        <input id="selfNameInput" type="text" placeholder="例：TRPG大好きプレイヤーA（複数は「、」区切り）" autocomplete="off" />
         <small>PL / KP の自動判定と「同卓者」カウントに使います。この端末内にのみ保存されます。</small>
       </label>
 
@@ -307,7 +307,7 @@
 
       <div class="import-tabpanel" data-import-panel="text" hidden>
         <p class="import-hint">過去の卓報告（X投稿など）や、このツールの「テキスト出力」を貼り付けます。複数件はあいだに<strong>空行を2つ以上</strong>、または <code>---</code> の区切り行を入れてください。自動抽出のあと下のプレビューで確認できます。</p>
-        <textarea id="reportPasteInput" rows="7" placeholder="新クトゥルフ神話TRPG&#10;「シナリオ名」&#10;KP：のあ&#10;PC/PL&#10;探索者A / PL名A&#10;探索者B / PL名B&#10;END A 生還&#10;2024/1/5&#10;#卓報告 #新クトゥルフ神話TRPG"></textarea>
+        <textarea id="reportPasteInput" rows="7" placeholder="新クトゥルフ神話TRPG&#10;「シナリオ名」&#10;KP：げーむますたーB&#10;PC/PL&#10;探索者A / PL名A&#10;探索者B / PL名B&#10;END A 生還&#10;2024/1/5&#10;#卓報告 #新クトゥルフ神話TRPG"></textarea>
         <p id="reportParseMsg" class="import-msg" hidden></p>
       </div>
 
@@ -376,9 +376,9 @@
     </form>
   </dialog>
 
-  <script src="js/i18n.js?v=1.88"></script>
-  <script src="js/language.js?v=1.88"></script>
-  <script src="js/shortcut.js?v=1.88"></script>
-  <script src="js/log_tool.js?v=1.88"></script>
+  <script src="js/i18n.js?v=1.89"></script>
+  <script src="js/language.js?v=1.89"></script>
+  <script src="js/shortcut.js?v=1.89"></script>
+  <script src="js/log_tool.js?v=1.89"></script>
 </body>
 </html>
