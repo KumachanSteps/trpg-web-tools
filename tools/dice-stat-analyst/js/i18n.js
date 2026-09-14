@@ -69,7 +69,7 @@ const I18N = {
     "summary.selectLog": "ログデータを選択ください。",
     "summary.noVisibleRolls": "表示対象のロールがありません。キャラクターのチェックを戻してください。",
     "summary.noVisibleCharacters": "表示対象のキャラクターがありません。キャラクターのチェックを戻してください。",
-    "summary.memo": "検出した{all}件のd100ロールのうち、表示対象{total}件を集計しました。検出キャラクター数は{characters}です。非表示ロール数は{hidden}件です。総ロール数{threshold}以下のキャラクターは初期状態で非表示です。クリティカル / ファンブルはログに出力された判定語のみで集計します。正気度ロールと1D100ロールのクリファンは、左パネルの統計オプションがONの時だけ含めます。",
+    "summary.memo": "検出した{all}件のd100ロールのうち、表示対象{total}件を集計しました。検出キャラクター数は{characters}です。非表示ロール数は{hidden}件です。総ロール数{threshold}以下のキャラクターは初期状態で非表示です。通常の判定はログの判定語で集計します。正気度ロールと1D100ロールは、左パネルの統計オプションがONの時だけログ形式から推定した版の数値基準でクリファンを集計します。",
 
     "card.totalRolls": "総ロール数",
     "card.totalRollsSub": "d100として抽出された件数",
@@ -187,7 +187,7 @@ const I18N = {
     "summary.selectLog": "Please select or paste a log file.",
     "summary.noVisibleRolls": "There are no visible rolls. Please re-enable characters from the character settings.",
     "summary.noVisibleCharacters": "There are no visible characters. Please re-enable characters from the character settings.",
-    "summary.memo": "Detected {all} d100 rolls and summarized {total} visible rolls. Detected characters: {characters}. Hidden rolls: {hidden}. Characters with {threshold} rolls or fewer are hidden by default. Criticals and fumbles are counted only from the result text in the log. Sanity rolls and 1D100 rolls are included in critical/fumble totals only when their statistics options are enabled.",
+    "summary.memo": "Detected {all} d100 rolls and summarized {total} visible rolls. Detected characters: {characters}. Hidden rolls: {hidden}. Characters with {threshold} rolls or fewer are hidden by default. Regular checks use the result labels in the log. When enabled, sanity and 1D100 rolls use numeric critical/fumble thresholds inferred from the log's CoC edition.",
 
     "card.totalRolls": "Total Rolls",
     "card.totalRollsSub": "Number of rolls extracted as d100",

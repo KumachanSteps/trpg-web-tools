@@ -1,8 +1,11 @@
 function classifyRoll(roll) {
   if (roll && roll.outcome) {
-    return shouldDowngradeCriticalFumble(roll)
-      ? downgradeCriticalFumble(roll)
-      : roll.outcome;
+    if (shouldDowngradeCriticalFumble(roll)) {
+      return downgradeCriticalFumble(roll);
+    }
+
+    const inferred = inferEnabledOptionalCriticalFumble(roll);
+    return inferred || roll.outcome;
   }
 
   const target = roll && Number.isInteger(roll.target)
@@ -17,10 +20,32 @@ function classifyRoll(roll) {
 function shouldDowngradeCriticalFumble(roll) {
   if (!roll || (roll.outcome !== 'Critical' && roll.outcome !== 'Fumble')) return false;
 
-  if (roll.isSanityRoll && !isCheckedOption('includeSanityCritFumble')) return true;
-  if (roll.isPlainD100Roll && !isCheckedOption('includePlainD100CritFumble')) return true;
+  if (roll.isSanityRoll) return !isCheckedOption('includeSanityCritFumble');
+  if (roll.isPlainD100Roll) return !isCheckedOption('includePlainD100CritFumble');
 
   return false;
+}
+
+function inferEnabledOptionalCriticalFumble(roll) {
+  if (!roll || !Number.isInteger(roll.value)) return null;
+
+  const enabled = roll.isSanityRoll
+    ? isCheckedOption('includeSanityCritFumble')
+    : roll.isPlainD100Roll
+      ? isCheckedOption('includePlainD100CritFumble')
+      : false;
+
+  if (!enabled) return null;
+
+  const edition = roll.edition === '6e' || roll.edition === '7e'
+    ? roll.edition
+    : state.detectedEdition;
+  const criticalMax = edition === '7e' ? 1 : 5;
+  const fumbleMin = edition === '7e' ? 100 : 96;
+
+  if (roll.value <= criticalMax) return 'Critical';
+  if (roll.value >= fumbleMin) return 'Fumble';
+  return null;
 }
 
 function isCheckedOption(id) {

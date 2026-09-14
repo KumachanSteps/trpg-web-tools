@@ -293,7 +293,7 @@ function buildRollObject({ value, target = null, text = '', context = '', editio
     edition,
     command,
     isSanityRoll: isSanityRollText(`${context} ${text}`),
-    isPlainD100Roll: isPlainD100Command(command),
+    isPlainD100Roll: isPlainD100Command(command) || isUntargetedD100Roll(command, target, context, text),
     resultText: resultText || text
   };
 }
@@ -305,6 +305,16 @@ function isSanityRollText(text) {
 
 function isPlainD100Command(command) {
   return /^(S?1D100|SD100|D100|D％|D%)$/i.test(String(command || ''));
+}
+
+function isUntargetedD100Roll(command, target, context, text) {
+  if (target !== null) return false;
+
+  const commandName = String(command || '');
+  const source = `${context} ${text}`;
+
+  return /^(S?CCB\d*|S?CC\d*)$/i.test(commandName)
+    && /\(\s*1D100\s*\)/i.test(source);
 }
 
 function detectOutcomeFromText(text, edition = 'unknown', target = null, value = null) {

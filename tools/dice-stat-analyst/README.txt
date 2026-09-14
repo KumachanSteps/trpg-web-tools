@@ -273,3 +273,11 @@ v1.381 input help height adjustment:
 - Removed the fixed max-height cap from the help block and replaced it with responsive minimum heights.
 - Kept the help block's internal scrolling for long content while allowing its visible area to extend closer to the panel bottom.
 - Updated version stamp to v1.381 2026/07/06.
+
+
+v1.382 optional critical/fumble classification fix:
+- Fixed the sanity-roll and plain-1D100 options so unlabeled results are classified by numeric thresholds when enabled.
+- The thresholds follow the CoC edition inferred from the log: 6e uses 1-5 / 96-100 and 7e uses 1 / 100.
+- Treats untargeted outputs such as CCB (1D100) > 98 as plain d100 rolls for this option.
+- Sanity rolls now follow the sanity option independently and no longer require the plain-1D100 option as well.
+- Updated version stamp to v1.382 2026/09/14.

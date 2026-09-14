@@ -22,6 +22,7 @@ const SESSION_LOG_TRANSFER_KEY = SESSION_LOG_TRANSFER_KEYS[0];
 const state = {
   rolls: [],
   filteredLines: [],
+  detectedEdition: '6e',
   hiddenCharacters: new Set(),
   sort: { key: 'index', direction: 'asc' },
   showCharacterControls: false,
@@ -186,7 +187,7 @@ function buildSessionLogTransferPayload(source = 'dice-stat-analyst') {
     type: 'session-log',
     source,
     tool: 'dice-stat-analyst',
-    version: 'v1.381',
+    version: 'v1.382',
     text,
     createdAt: new Date().toISOString()
   };
@@ -475,9 +476,11 @@ function analyze() {
 
   const filtered = filterLines(lines);
   const rolls = extractRollData(filtered);
+  const commandTypes = countCocCommandTypes(filtered);
 
   state.filteredLines = filtered;
   state.rolls = rolls;
+  state.detectedEdition = commandTypes.cc > commandTypes.ccb ? '7e' : '6e';
 
   applyDefaultCharacterVisibility(rolls);
   render();
