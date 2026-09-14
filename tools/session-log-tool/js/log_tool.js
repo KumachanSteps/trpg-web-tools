@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.92";
+  const APP_VERSION = "v1.93";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -428,7 +428,11 @@
     rows.forEach(row=>{
       const tr = document.createElement("tr");
       tr.dataset.rowId = row.id;
-      tr.className = [row.id === activeId ? "selected-row" : "", row.sample ? "is-sample" : ""].filter(Boolean).join(" ");
+      const isSelected = row.id === activeId;
+      tr.className = [isSelected ? "selected-row" : "", row.sample ? "is-sample" : ""].filter(Boolean).join(" ");
+      // CSS の :not([hidden]) 系と同様、環境によって .selected-row の背景 CSS が
+      // 何故か適用されないケースが確認できたため、確実性のため直接指定もしておく
+      tr.style.backgroundColor = isSelected ? "var(--selected-row-bg)" : "";
       tr.addEventListener("click",()=>{ activeId = row.id; renderTable(); renderDrawer(); });
       tr.addEventListener("dblclick",()=>openSessionDialog(row.id));
       state.columns.forEach(col=>{
