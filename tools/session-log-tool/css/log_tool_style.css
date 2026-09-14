@@ -932,7 +932,8 @@ body.night-mode .scenario-open-btn{background:#1f2937;border-color:#4338ca;color
 body.night-mode .sample-notice{background:#1f2937;border-color:rgba(148,163,184,.28);color:#fbbf24}
 body.night-mode .sample-notice .mini-button{background:#111827;border-color:rgba(148,163,184,.28);color:#fbbf24}
 body.night-mode .stat-card{background:#1f2937}
-body.night-mode .selected-row,body.night-mode .table-scroll tbody tr.selected-row{background:#1e293b}
+body.night-mode .selected-row{background:#1e293b}
+body.night-mode .table-scroll tbody tr.selected-row{background:#1e293b!important;box-shadow:inset 3px 0 0 #6366f1,0 0 18px rgba(99,102,241,.25)}
 body.night-mode .cell-scenario{color:#e2e8f0}
 body.night-mode .add-row-cell{background:rgba(30,41,59,.6)}
 body.night-mode .add-row-button{background:rgba(17,24,39,.6);border-color:#4338ca;color:#a5b4fc}
