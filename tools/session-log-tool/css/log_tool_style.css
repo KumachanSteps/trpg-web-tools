@@ -938,7 +938,7 @@ body.night-mode .add-row-cell{background:rgba(30,41,59,.6)}
 body.night-mode .add-row-button{background:rgba(17,24,39,.6);border-color:#4338ca;color:#a5b4fc}
 body.night-mode .system-pill{background:#111827;color:#cbd5e1}
 body.night-mode .fixed-label{background:#111827;color:#94a3b8}
-body.night-mode .drag-tip{background:#1f2937;color:#a5b4fc;border-bottom-color:rgba(148,163,184,.28)}
+body.night-mode .drag-tip{background:#111827;color:#94a3b8;border-bottom-color:rgba(148,163,184,.28)}
 body.night-mode .role-pl{background:#0e2f38;color:#67e8f9;border-color:rgba(103,232,249,.32)}
 body.night-mode .role-gm{background:#3f1220;color:#fda4af;border-color:rgba(253,164,175,.32)}
 .drag-tip-row .drag-tip{padding:0;border:0;background:transparent;flex:1;min-width:240px}
