@@ -304,6 +304,14 @@ function createDeveloperEditor(tool) {
 }
 
 function createToolCard(tool, index) {
+  if (tool.isPlaceholder) {
+    const placeholderCard = document.createElement("div");
+    placeholderCard.className = "tool-card tool-card-placeholder";
+    placeholderCard.setAttribute("aria-hidden", "true");
+    placeholderCard.dataset.toolId = tool.id;
+    return placeholderCard;
+  }
+
   const meta = statusMeta[tool.status] || statusMeta.idea;
   const effectiveHref = getToolHref(tool);
   const isDisabled = !effectiveHref || (!isDeveloperMode && tool.status === "idea");
@@ -325,6 +333,7 @@ function createToolCard(tool, index) {
     isDisabled ? "is-disabled" : "",
     isDevelopment ? "is-development" : "",
     isDeveloperMode ? "is-dev-editable" : "",
+    tool.preview ? "has-preview" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -352,6 +361,14 @@ function createToolCard(tool, index) {
   }
 
   card.innerHTML = `
+    ${
+      tool.preview
+        ? `<div class="tool-preview-popup" aria-hidden="true">
+            <img src="${escapeHtml(tool.preview)}" alt="" loading="lazy" />
+          </div>`
+        : ""
+    }
+
     <div class="tool-card-top">
       <div class="tool-icon" aria-hidden="true">${escapeHtml(tool.icon)}</div>
       <span class="status-badge ${escapeHtml(meta.className)}">
@@ -415,6 +432,37 @@ function renderTools() {
 
   bindDeveloperEditors();
 }
+
+function positionPreviewPopup(card) {
+  const popup = card.querySelector(".tool-preview-popup");
+
+  if (!popup) {
+    return;
+  }
+
+  popup.classList.remove("popup-align-left", "popup-align-right");
+
+  const rect = card.getBoundingClientRect();
+  const popupWidth = popup.offsetWidth || 320;
+  const margin = 16;
+  const cardCenter = rect.left + rect.width / 2;
+
+  if (cardCenter - popupWidth / 2 < margin) {
+    popup.classList.add("popup-align-left");
+  } else if (cardCenter + popupWidth / 2 > window.innerWidth - margin) {
+    popup.classList.add("popup-align-right");
+  }
+}
+
+toolsGrid.addEventListener("mouseover", (event) => {
+  const card = event.target.closest(".tool-card.has-preview");
+
+  if (!card || card.contains(event.relatedTarget)) {
+    return;
+  }
+
+  positionPreviewPopup(card);
+});
 
 function bindDeveloperEditors() {
   if (!isDeveloperMode) {

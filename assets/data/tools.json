@@ -28,7 +28,8 @@
     "description": {
       "ja": "TRPGの背景・シーン演出に使うモーション素材を作成するためのツールです。",
       "en": "A tool for creating motion background assets for TRPG scenes and visual direction."
-    }
+    },
+    "preview": "./assets/img/previews/haikei-motion-maker.png"
   },
   {
     "id": "coc-growth-checker",
@@ -52,7 +53,8 @@
     "description": {
       "ja": "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
       "en": "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules."
-    }
+    },
+    "preview": "./assets/img/previews/coc-growth-checker.png"
   },
   {
     "id": "dice-stat-analyst",
@@ -76,7 +78,8 @@
     "description": {
       "ja": "セッションログHTML / テキストから、探索者ごとの成功率・クリティカル・ファンブル・出目分布を解析します。",
       "en": "Analyze session logs and review each character’s success rate, criticals, fumbles, and dice roll distribution."
-    }
+    },
+    "preview": "./assets/img/previews/dice-stat-analyst.png"
   },
   {
     "id": "session-report-generator",
@@ -99,7 +102,8 @@
     "description": {
       "ja": "KP・PL・PC情報を入力し、X/Twitter向けの卓報告文を生成・編集・プレビューします。",
       "en": "Generate, edit, and preview session report posts for X/Twitter by entering KP, PL, and PC information."
-    }
+    },
+    "preview": "./assets/img/previews/session-report-generator.png"
   },
   {
     "id": "chat-palette-formatter",
@@ -123,7 +127,8 @@
     "description": {
       "ja": "CoC 6版・7版のチャットパレットを判定し、読みやすい形式へ整形するツールです。",
       "en": "A tool for formatting CoC 6e/7e chat palettes into a cleaner and more readable structure."
-    }
+    },
+    "preview": "./assets/img/previews/chat-palette-formatter.png"
   },
   {
     "id": "chara-sabun-kanri-tool",
@@ -146,7 +151,8 @@
     "description": {
       "ja": "キャラクター立ち絵の表情差分や画像差分を整理し、TRPGセッションや配信用に管理しやすくするツールです。",
       "en": "A tool for organizing character expression and portrait variations for TRPG sessions and streaming use."
-    }
+    },
+    "preview": "./assets/img/previews/chara-sabun-kanri-tool.png"
   },
   {
     "id": "gm-charashi-viewer",
@@ -169,7 +175,84 @@
     "description": {
       "ja": "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
       "en": "A GM/KP support tool for viewing and managing multiple character sheets on one screen."
-    }
+    },
+    "preview": "./assets/img/previews/gm-charashi-viewer.png"
+  },
+  {
+    "id": "npc-data-reader",
+    "icon": "🧾",
+    "status": "available",
+    "category": "gmSupport",
+    "badges": [
+      "preSession",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "GM支援",
+      "NPCチャットパレット生成",
+      "CCFOLIA駒JSON"
+    ],
+    "href": "./tools/npc-data-reader/",
+    "name": {
+      "ja": "NPCデータリーダー",
+      "en": "NPC Data Reader"
+    },
+    "description": {
+      "ja": "NPCデータやステータス情報を読み取り、セッション中に確認しやすい形式へ整理するGM/KP向け補助ツールです。",
+      "en": "A GM/KP support tool for reading NPC data and organizing stats into an easier-to-reference format during sessions."
+    },
+    "preview": "./assets/img/previews/npc-data-reader.png"
+  },
+  {
+    "id": "session-log-tool",
+    "icon": "🗒️",
+    "status": "available",
+    "category": "reportWriting",
+    "badges": [
+      "postSession",
+      "gmSupport",
+      "plSupport"
+    ],
+    "legacyKeywords": [
+      "卓報告",
+      "ログ管理"
+    ],
+    "href": "./tools/session-log-tool/",
+    "name": {
+      "ja": "卓ログトラッカー",
+      "en": "Session Log Tracker"
+    },
+    "description": {
+      "ja": "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
+      "en": "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists."
+    },
+    "devStage": "testing",
+    "preview": "./assets/img/previews/session-log-tool.png"
+  },
+  {
+    "id": "charamemo-generator",
+    "icon": "📋",
+    "status": "available",
+    "category": "characterUtility",
+    "badges": [
+      "preSession",
+      "plSupport",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "キャラクター支援"
+    ],
+    "href": "./tools/iachara-charamemo-creator/",
+    "name": {
+      "ja": "いあキャラMEMOジェネレータ",
+      "en": "Charamemo Generator"
+    },
+    "description": {
+      "ja": "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツールです。",
+      "en": "A tool for generating character memo and token-ready data from Iachara character information."
+    },
+    "devStage": "testing",
+    "preview": "./assets/img/previews/charamemo-generator.png"
   },
   {
     "id": "trpg-hashtag-searcher",
@@ -195,31 +278,8 @@
     "description": {
       "ja": "TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。",
       "en": "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords."
-    }
-  },
-  {
-    "id": "npc-data-reader",
-    "icon": "🧾",
-    "status": "available",
-    "category": "gmSupport",
-    "badges": [
-      "preSession",
-      "gmSupport"
-    ],
-    "legacyKeywords": [
-      "GM支援",
-      "NPCチャットパレット生成",
-      "CCFOLIA駒JSON"
-    ],
-    "href": "./tools/npc-data-reader/",
-    "name": {
-      "ja": "NPCデータリーダー",
-      "en": "NPC Data Reader"
     },
-    "description": {
-      "ja": "NPCデータやステータス情報を読み取り、セッション中に確認しやすい形式へ整理するGM/KP向け補助ツールです。",
-      "en": "A GM/KP support tool for reading NPC data and organizing stats into an easier-to-reference format during sessions."
-    }
+    "preview": "./assets/img/previews/trpg-hashtag-searcher.png"
   },
   {
     "id": "scenario-info-snippet-builder",
@@ -243,31 +303,8 @@
       "ja": "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
       "en": "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord."
     },
-    "devStage": "testing"
-  },
-  {
-    "id": "charamemo-generator",
-    "icon": "📋",
-    "status": "production",
-    "category": "characterUtility",
-    "badges": [
-      "preSession",
-      "plSupport",
-      "gmSupport"
-    ],
-    "legacyKeywords": [
-      "キャラクター支援"
-    ],
-    "href": "./tools/iachara-charamemo-creator/",
-    "name": {
-      "ja": "いあキャラMEMOジェネレータ",
-      "en": "Charamemo Generator"
-    },
-    "description": {
-      "ja": "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツールです。",
-      "en": "A tool for generating character memo and token-ready data from Iachara character information."
-    },
-    "devStage": "testing"
+    "devStage": "testing",
+    "preview": "./assets/img/previews/scenario-info-snippet-builder.png"
   },
   {
     "id": "kantan-icon-maker",
@@ -291,32 +328,8 @@
       "ja": "キャラクター立ち絵PNGから、TRPG用の1:1アイコンをかんたんに作成するツールです。",
       "en": "A simple tool for creating 1:1 TRPG icons from character standing PNG images."
     },
-    "devStage": "mockup"
-  },
-  {
-    "id": "session-log-tool",
-    "icon": "🗒️",
-    "status": "production",
-    "category": "reportWriting",
-    "badges": [
-      "postSession",
-      "gmSupport",
-      "plSupport"
-    ],
-    "legacyKeywords": [
-      "卓報告",
-      "ログ管理"
-    ],
-    "href": "./tools/session-log-tool/",
-    "name": {
-      "ja": "卓ログトラッカー",
-      "en": "Session Log Tracker"
-    },
-    "description": {
-      "ja": "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
-      "en": "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists."
-    },
-    "devStage": "testing"
+    "devStage": "mockup",
+    "preview": "./assets/img/previews/kantan-icon-maker.png"
   },
   {
     "id": "dice-table-tool",
@@ -368,7 +381,12 @@
       "ja": "TRPGキャラクターを一覧化し、立ち絵・プロフィール・技能・メモなどを整理して管理するためのキャラクターアーカイブツールです。",
       "en": "A character archive tool for organizing TRPG characters with portraits, profiles, skills, notes, and related information."
     },
-    "devStage": "mockup"
+    "devStage": "mockup",
+    "preview": "./assets/img/previews/chara-libra-tool.png"
+  },
+  {
+    "id": "placeholder-1",
+    "isPlaceholder": true
   },
   {
     "id": "scenario-dtp-designer",
