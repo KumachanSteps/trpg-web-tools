@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.98";
+  const APP_VERSION = "v1.99";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -572,14 +572,13 @@
 
       <div class="drawer-section">
         <div class="drawer-sec-head">
-          <p class="drawer-label">画像 / X ポスト</p>
+          <p class="drawer-label">X ポスト / リンク</p>
           <span class="drawer-sec-actions">
-            <button type="button" class="mini-button" data-media-file>画像を追加</button>
             <button type="button" class="mini-button" data-media-url>URL / X で追加</button>
           </span>
         </div>
         <div class="drawer-media" data-media-list>${renderDrawerMedia(row)}</div>
-        <p class="drawer-muted">画像はこの端末に縮小して保存します（大きすぎると保存できません）。X ポスト・ふせったー等はリンクとして表示されます。</p>
+        <p class="drawer-muted">X ポスト・ふせったー等はリンクとして表示されます。</p>
       </div>
 
       <div class="drawer-section">
@@ -632,7 +631,6 @@
       el.addEventListener("input", handler);
       el.addEventListener("change", handler);
     });
-    c.querySelector("[data-media-file]")?.addEventListener("click",()=>pickDrawerImage(row));
     c.querySelector("[data-media-url]")?.addEventListener("click",()=>addDrawerMediaUrl(row));
     c.querySelector("[data-add-link]")?.addEventListener("click",()=>{ row.cushionLinks.push({ label: "", url: "" }); saveState(); refreshDrawerLinks(row); });
     c.querySelector("[data-media-list]")?.addEventListener("click",ev=>{
@@ -655,23 +653,6 @@
       saveState();
     });
     document.getElementById("drawerDeleteBtn")?.addEventListener("click",()=>deleteRow(row.id));
-
-    const mediaSection = c.querySelector("[data-media-list]")?.closest(".drawer-section");
-    if(mediaSection){
-      ["dragenter", "dragover"].forEach(evt=>mediaSection.addEventListener(evt, e=>{
-        if(![...(e.dataTransfer?.types || [])].includes("Files")) return;
-        e.preventDefault();
-        mediaSection.classList.add("is-dragover");
-      }));
-      ["dragleave", "dragend"].forEach(evt=>mediaSection.addEventListener(evt, ()=>mediaSection.classList.remove("is-dragover")));
-      mediaSection.addEventListener("drop", async e=>{
-        e.preventDefault();
-        mediaSection.classList.remove("is-dragover");
-        const files = [...(e.dataTransfer?.files || [])].filter(f=>f.type.startsWith("image/"));
-        for(const file of files) await addDrawerImageFile(row, file);
-        if(files.length) refreshDrawerMedia(row);
-      });
-    }
   }
 
   const TWEET_URL_RE = /^https?:\/\/(?:www\.)?(?:twitter|x)\.com\/[^/?#]+\/status(?:es)?\/\d+/i;
@@ -709,7 +690,7 @@
   }
 
   function renderDrawerMedia(row){
-    if(!row.media.length) return `<p class="drawer-muted">まだありません。画像はドラッグ＆ドロップでも追加できます。</p>`;
+    if(!row.media.length) return `<p class="drawer-muted">まだありません。</p>`;
     return row.media.map((m, i)=>{
       let body;
       if(m.type === "image"){
@@ -749,61 +730,11 @@
     if(el) el.innerHTML = renderDrawerLinks(row);
   }
 
-  function downscaleImage(file, maxSide, quality){
-    return new Promise((resolve, reject)=>{
-      const reader = new FileReader();
-      const img = new Image();
-      reader.onload = ()=>{ img.src = String(reader.result); };
-      reader.onerror = ()=>reject(new Error("read"));
-      img.onload = ()=>{
-        let w = img.naturalWidth || img.width;
-        let h = img.naturalHeight || img.height;
-        const scale = Math.min(1, maxSide / Math.max(w, h));
-        w = Math.max(1, Math.round(w * scale));
-        h = Math.max(1, Math.round(h * scale));
-        const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", quality));
-      };
-      img.onerror = ()=>reject(new Error("decode"));
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function addDrawerImageFile(row, file){
-    if(!file.type || !file.type.startsWith("image/")){ return; }
-    let dataUrl;
-    try{ dataUrl = await downscaleImage(file, 1400, 0.75); }
-    catch(_e){ alert(`「${file.name}」を読み込めませんでした。`); return; }
-    const kb = Math.round(dataUrl.length * 0.73 / 1024);
-    const totalKb = row.media.reduce((s, m)=> s + (m.type === "image" ? m.url.length * 0.73 / 1024 : 0), 0);
-    if(kb > 1400 || totalKb + kb > 4500){
-      alert(`「${file.name}」は大きすぎて端末に保存できません（約 ${kb}KB）。\nX やふせったー等にアップロードして「URL / X で追加」から貼り付けてください。`);
-      return;
-    }
-    row.media.push({ type: "image", url: dataUrl, caption: "" });
-    try{ saveState(); }
-    catch(_e){ row.media.pop(); alert("ブラウザの保存領域が不足しています。画像は URL で追加してください。"); }
-  }
-
-  function pickDrawerImage(row){
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.multiple = true;
-    input.onchange = async ()=>{
-      for(const file of [...(input.files || [])]) await addDrawerImageFile(row, file);
-      refreshDrawerMedia(row);
-    };
-    input.click();
-  }
-
   function addDrawerMediaUrl(row){
     const url = prompt("画像URL、または X / ふせったー / ぽいぴく 等のURLを貼り付け");
     if(!url) return;
     const clean = url.trim();
-    if(!/^https?:\/\//i.test(clean) && !/^data:image\//.test(clean)){ alert("URL の形式が正しくありません。"); return; }
+    if(!/^https?:\/\//i.test(clean)){ alert("URL の形式が正しくありません。"); return; }
     row.media.push({ type: classifyMediaUrl(clean), url: clean, caption: "" });
     saveState();
     refreshDrawerMedia(row);
