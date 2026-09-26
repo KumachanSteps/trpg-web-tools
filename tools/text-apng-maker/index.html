@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <script async src="../../assets/js/analytics.js"></script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>文字画像APNGメーカー｜TRPG WEBツール観測所</title>
+  <meta name="description" content="「戦闘開始」のカットイン、トレイラーの文章演出、場所・時間のテロップなど、TRPGで使える文字アニメーションのAPNG素材をブラウザだけで作成できるツールです。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="./css/text-apng-maker.css?v=20260926-01" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="title-block">
+        <p class="eyebrow" id="appEyebrow">TRPG WEBツール観測所</p>
+        <h1 id="appTitle">文字画像APNGメーカー</h1>
+        <p class="lead" id="appLead">「戦闘開始」のカットイン、トレイラーの文章演出、場所・時間のテロップなど、TRPGで使える文字アニメーションのAPNG素材を作成します。</p>
+      </div>
+      <div class="header-actions">
+        <a class="header-nav-link" id="portalLink" href="../../">←TRPG WEBツール観測所</a>
+        <a class="x-share-link" id="xShareLink" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" aria-label="X / Twitterで共有"><span aria-hidden="true">𝕏</span></a>
+        <div class="language-switcher" id="languageSwitcher" role="group" aria-label="言語切替">
+          <button class="lang-choice-button is-active" type="button" data-lang-choice="ja" aria-pressed="true">JP</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="en" aria-pressed="false">EN</button>
+        </div>
+        <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer">使い方</button>
+        <button class="ghost-button" type="button" id="shortcutBtn" aria-expanded="false" aria-controls="shortcutDrawer">ショートカット</button>
+        <button class="ghost-button theme-button" type="button" id="themeBtn"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb">☀️</span></span></button>
+      </div>
+      <div class="version-engrave">v1.00 / 2026.09.26</div>
+    </header>
+
+    <section class="drawer" id="helpDrawer" hidden>
+      <h2 id="helpTitle">使い方</h2>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
+      <div class="guide-list" id="helpList"></div>
+      <div class="guide-notes" id="helpNotes"></div>
+    </section>
+
+    <section class="drawer" id="shortcutDrawer" hidden>
+      <h2 id="shortcutTitle">ショートカット一覧</h2>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
+      <div class="shortcut-grid" id="shortcutGrid"></div>
+    </section>
+
+    <main class="workspace">
+      <section class="panel control-panel" aria-labelledby="appTitle">
+        <div class="mode-tabs" id="modeTabs" role="tablist" aria-label="Mode">
+          <button class="mode-tab is-active" type="button" role="tab" data-mode="message" aria-selected="true">
+            <span class="mode-icon" aria-hidden="true">💥</span>
+            <span class="mode-text"><span class="mode-name">メッセージ</span><span class="mode-desc"></span></span>
+          </button>
+          <button class="mode-tab" type="button" role="tab" data-mode="trailer" aria-selected="false" tabindex="-1">
+            <span class="mode-icon" aria-hidden="true">📜</span>
+            <span class="mode-text"><span class="mode-name">トレイラー</span><span class="mode-desc"></span></span>
+          </button>
+          <button class="mode-tab" type="button" role="tab" data-mode="caption" aria-selected="false" tabindex="-1">
+            <span class="mode-icon" aria-hidden="true">📍</span>
+            <span class="mode-text"><span class="mode-name">場所・時間</span><span class="mode-desc"></span></span>
+          </button>
+        </div>
+
+        <div class="template-block">
+          <div class="template-head">
+            <p class="panel-kicker" id="templatesLabel">テンプレート</p>
+            <button class="link-button" type="button" id="resetModeBtn">↺ 初期化</button>
+          </div>
+          <p class="template-hint" id="templatesHint"></p>
+          <div class="template-strip" id="templateStrip"></div>
+        </div>
+
+        <div class="settings-tabs" id="settingsTabs" role="tablist" aria-label="Settings">
+          <button class="settings-tab is-active" type="button" role="tab" id="tab-text" data-tab="text" aria-selected="true" aria-controls="settingsBody">テキスト</button>
+          <button class="settings-tab" type="button" role="tab" id="tab-font" data-tab="font" aria-selected="false" aria-controls="settingsBody" tabindex="-1">フォント</button>
+          <button class="settings-tab" type="button" role="tab" id="tab-motion" data-tab="motion" aria-selected="false" aria-controls="settingsBody" tabindex="-1">動き</button>
+          <button class="settings-tab" type="button" role="tab" id="tab-style" data-tab="style" aria-selected="false" aria-controls="settingsBody" tabindex="-1">装飾</button>
+          <button class="settings-tab" type="button" role="tab" id="tab-layout" data-tab="layout" aria-selected="false" aria-controls="settingsBody" tabindex="-1">背景・配置</button>
+        </div>
+        <div class="settings-body" id="settingsBody" role="tabpanel"></div>
+      </section>
+
+      <section class="panel preview-panel">
+        <div class="preview-head">
+          <h2 class="panel-title" id="previewTitle">プレビュー</h2>
+          <span class="font-status" id="fontStatus" role="status" hidden></span>
+          <div class="preview-bg" role="group" aria-labelledby="previewBgLabel">
+            <span class="preview-bg-label" id="previewBgLabel">プレビュー背景</span>
+            <div class="chip-group compact" id="previewBgGroup">
+              <button class="chip" type="button" data-bg="checker">透明</button>
+              <button class="chip" type="button" data-bg="dark">黒</button>
+              <button class="chip" type="button" data-bg="light">白</button>
+              <button class="chip" type="button" data-bg="gray">グレー</button>
+              <button class="chip" type="button" data-bg="image">画像</button>
+            </div>
+            <input type="file" id="previewBgFile" accept="image/*" class="visually-hidden" tabindex="-1" aria-hidden="true" />
+          </div>
+        </div>
+
+        <div class="preview-stage-wrap" id="previewStageWrap">
+          <div class="preview-stage" id="previewStage" data-bg="checker">
+            <canvas id="previewCanvas" width="640" height="360"></canvas>
+          </div>
+        </div>
+
+        <div class="transport">
+          <div class="transport-row">
+            <button class="primary-button play-button" type="button" id="playBtn" aria-pressed="false">▶ 再生</button>
+            <button class="icon-button" type="button" id="restartBtn" aria-label="最初から">⟲</button>
+            <label class="toggle-inline"><span class="switch"><input type="checkbox" class="switch-input" id="loopPreviewInput" checked /><span class="switch-track" aria-hidden="true"></span></span><span id="loopPreviewText">ループ再生</span></label>
+            <span class="time-label" id="timeLabel">0.00 / 0.00 秒</span>
+          </div>
+          <div class="timeline" id="timelineSegments">
+            <span class="playhead" aria-hidden="true"></span>
+            <input type="range" class="scrub-input" id="scrubInput" min="0" max="1" step="0.01" value="0" aria-label="Timeline" />
+          </div>
+          <div class="timeline-legend" aria-hidden="true">
+            <span class="legend legend-in" id="legendIn">登場</span>
+            <span class="legend legend-hold" id="legendHold">表示</span>
+            <span class="legend legend-out" id="legendOut">退場</span>
+          </div>
+        </div>
+
+        <div class="export-card">
+          <div class="export-head">
+            <h2 class="panel-title" id="exportTitle">書き出し</h2>
+            <p class="info-line" id="infoLine"></p>
+          </div>
+          <div class="export-grid">
+            <label class="field compact-field"><span class="field-label" id="fpsLabel">FPS</span>
+              <select class="select-input" id="fpsSelect">
+                <option value="12">12</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="24">24</option>
+                <option value="30">30</option>
+                <option value="60">60</option>
+              </select>
+            </label>
+            <label class="field compact-field"><span class="field-label" id="loopLabel">ループ</span>
+              <select class="select-input" id="loopSelect">
+                <option value="infinite">ずっとループ</option>
+                <option value="once">1回再生（最後の状態で停止）</option>
+                <option value="count">回数を指定</option>
+              </select>
+            </label>
+            <label class="field compact-field color-mode-field"><span class="field-label" id="colorLabel">色数</span>
+              <select class="select-input" id="colorSelect">
+                <option value="palette">256色（軽量・おすすめ）</option>
+                <option value="full">フルカラー（高画質）</option>
+              </select>
+            </label>
+            <label class="field compact-field loop-count-field" id="loopCountWrap" hidden><span class="field-label" id="loopCountLabel">回数</span>
+              <input class="number-input" type="number" id="loopCountInput" min="1" max="999" step="1" value="3" />
+            </label>
+            <label class="field compact-field wide"><span class="field-label" id="fileNameLabel">ファイル名</span>
+              <input class="text-input" type="text" id="fileNameInput" spellcheck="false" autocomplete="off" />
+            </label>
+            <label class="toggle-inline wide"><span class="switch"><input type="checkbox" class="switch-input" id="posterInput" checked /><span class="switch-track" aria-hidden="true"></span></span><span id="posterText">APNG非対応の環境では完成状態の静止画を表示</span></label>
+            <label class="toggle-inline wide"><span class="switch"><input type="checkbox" class="switch-input" id="trimInput" /><span class="switch-track" aria-hidden="true"></span></span><span id="trimText">透明な余白を自動でトリミング</span></label>
+          </div>
+          <div class="export-actions">
+            <button class="accent-button export-main" type="button" id="exportApngBtn">APNGを書き出す</button>
+            <button class="ghost-button" type="button" id="exportPngBtn">PNG静止画</button>
+            <button class="ghost-button" type="button" id="exportZipBtn">連番PNG（ZIP）</button>
+          </div>
+          <div class="export-progress" id="exportProgress" hidden><span class="export-progress-bar" id="exportProgressBar"></span></div>
+          <div class="export-status-row">
+            <p class="export-status" id="exportStatus" role="status" aria-live="polite"></p>
+            <button class="clear-button" type="button" id="cancelExportBtn" hidden>中止</button>
+          </div>
+          <div class="export-result" id="exportResult" hidden>
+            <h3 id="resultTitle">書き出し結果</h3>
+            <div class="result-body">
+              <div class="result-preview"><img id="resultImage" alt="" /></div>
+              <div class="result-info">
+                <p class="result-meta" id="resultMeta"></p>
+                <p class="result-note" id="resultNote" hidden></p>
+                <div class="result-actions">
+                  <a class="accent-button download-button" id="downloadLink">ダウンロード</a>
+                  <button class="clear-button" type="button" id="clearResultBtn">クリア</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+    <footer class="legal-footer">
+      <h2 id="footerTitle">利用上の注意</h2>
+      <p id="footerNote1">本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。作成した画像はすべてブラウザ内で処理され、サーバーには送信されません。各TRPGシステム、シナリオ、外部サービス、フォントの利用規約・権利表記については、利用者自身でご確認ください。</p>
+      <p id="footerNote2">不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
+    </footer>
+  </div>
+
+  <script src="./js/engine.js?v=20260926-01"></script>
+  <script src="./js/fonts.js?v=20260926-01"></script>
+  <script src="./js/apng-encoder.js?v=20260926-01"></script>
+  <script src="./js/presets.js?v=20260926-01"></script>
+  <script src="./js/i18n.js?v=20260926-01"></script>
+  <script src="./js/controls.js?v=20260926-01"></script>
+  <script src="./js/main.js?v=20260926-01"></script>
+  <script src="./js/shortcut.js?v=20260926-01"></script>
+</body>
+</html>
