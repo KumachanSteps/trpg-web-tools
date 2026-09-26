@@ -665,8 +665,10 @@
     });
   }
 
+  // 1フレーム = 1/fps 秒。再生時間がタイムラインを1フレーム以上超えないよう切り上げ、
+  // 最後のフレームには終了時点（duration）の状態を描く（1回再生で止まる絵を正しくするため）
   function exportFrameCount(duration, fps) {
-    return Math.round(duration * fps) + 1;
+    return Math.max(1, Math.ceil(duration * fps - 1e-6));
   }
 
   function updateInfo() {
@@ -1006,7 +1008,7 @@
           await yieldToUi();
         }
       }
-      const info = `fps: ${fps}\nframes: ${count}\nsize: ${s.width}x${s.height}\nduration: ${duration.toFixed(3)}s\n`;
+      const info = `fps: ${fps}\nframes: ${count}\nsize: ${s.width}x${s.height}\nduration: ${(count / fps).toFixed(3)}s\n`;
       files.push({ name: `${base}_info.txt`, data: new TextEncoder().encode(info) });
       const zip = C.buildZip(files);
       showResult(zip, `${base}_frames.zip`, `${formatBytes(zip.size)} ・ ${count} PNG ・ ${fps}FPS`, false);

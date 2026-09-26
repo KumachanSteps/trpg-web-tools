@@ -550,6 +550,25 @@
     }
   }
 
+  // 縁取り・光彩・影が文字の外側にどれだけ広がるか（文字サイズ scene.fontSize 基準の px。スプライトの余白と同じ見積もり）
+  function effectExtents(scene) {
+    const outline = (scene.stroke && scene.stroke.on ? scene.stroke.width || 0 : 0) + (scene.stroke2 && scene.stroke2.on ? scene.stroke2.width || 0 : 0);
+    const ext = { l: outline, r: outline, t: outline, b: outline };
+    if (scene.glow && scene.glow.on) {
+      const g = outline + (scene.glow.size || 0) * 1.25;
+      ext.l = Math.max(ext.l, g); ext.r = Math.max(ext.r, g); ext.t = Math.max(ext.t, g); ext.b = Math.max(ext.b, g);
+    }
+    if (scene.shadow && scene.shadow.on) {
+      const blur = (scene.shadow.blur || 0) * 1.25;
+      const sx = scene.shadow.x || 0, sy = scene.shadow.y || 0;
+      ext.l = Math.max(ext.l, outline + blur - sx);
+      ext.r = Math.max(ext.r, outline + blur + sx);
+      ext.t = Math.max(ext.t, outline + blur - sy);
+      ext.b = Math.max(ext.b, outline + blur + sy);
+    }
+    return ext;
+  }
+
   function layoutPageAt(pageSpec, scene, env, size) {
     const vertical = scene.writing === 'v';
     const subSize = size * (scene.subSize || 0.35);
@@ -586,7 +605,7 @@
     return { main, sub, box, subSize };
   }
 
-  function placePage(page, scene, W, H, size) {
+  function placePage(page, scene, W, H, size, keep) {
     const ext = decoExtents(scene, size);
     const outer = { x0: page.box.x0 - ext.l, y0: page.box.y0 - ext.t, x1: page.box.x1 + ext.r, y1: page.box.y1 + ext.b };
     const anchor = scene.anchor || 'mc';
@@ -601,6 +620,27 @@
     else dy = H / 2 - (outer.y0 + outer.y1) / 2;
     dx += scene.offsetX || 0;
     dy += scene.offsetY || 0;
+    if (keep) {
+      // 自動縮小がオンのときは、余白の指定はそのままに、装飾・縁取り・光彩・影が画像からはみ出さないよう内側へ寄せる
+      const k = size / Math.max(1, scene.fontSize || size);
+      const fx = keep.effects;
+      if (keep.x) {
+        const x0 = page.box.x0 + dx - Math.max(ext.l, fx.l * k);
+        const x1 = page.box.x1 + dx + Math.max(ext.r, fx.r * k);
+        if (x1 - x0 <= W + 0.5) {
+          if (x0 < 0) dx -= x0;
+          else if (x1 > W) dx -= x1 - W;
+        }
+      }
+      if (keep.y) {
+        const y0 = page.box.y0 + dy - Math.max(ext.t, fx.t * k);
+        const y1 = page.box.y1 + dy + Math.max(ext.b, fx.b * k);
+        if (y1 - y0 <= H + 0.5) {
+          if (y0 < 0) dy -= y0;
+          else if (y1 > H) dy -= y1 - H;
+        }
+      }
+    }
     shiftGroup(page.main, dx, dy);
     if (page.sub) shiftGroup(page.sub, dx, dy);
     page.box = { x0: page.box.x0 + dx, y0: page.box.y0 + dy, x1: page.box.x1 + dx, y1: page.box.y1 + dy };
@@ -616,25 +656,39 @@
     const availW = Math.max(16, W - 2 * (scene.marginX || 0));
     const availH = Math.max(16, H - 2 * (scene.marginY || 0));
 
+    const autoFit = scene.autoFit !== false;
+    const effects = effectExtents(scene);
     let fit = 1;
-    if (scene.autoFit !== false) {
+    if (autoFit) {
       specs.forEach(spec => {
         const probe = layoutPageAt(spec, scene, env, baseSize);
         const ext = decoExtents(scene, baseSize);
-        const w = probe.box.x1 - probe.box.x0 + ext.l + ext.r;
-        const h = probe.box.y1 - probe.box.y0 + ext.t + ext.b;
+        const inkW = probe.box.x1 - probe.box.x0;
+        const inkH = probe.box.y1 - probe.box.y0;
+        // 文字＋装飾は余白の内側、文字＋装飾＋縁取り・光彩・影は画像の内側に収める（どれも文字サイズに比例）
+        const w = inkW + ext.l + ext.r;
+        const h = inkH + ext.t + ext.b;
+        const wAll = inkW + Math.max(ext.l, effects.l) + Math.max(ext.r, effects.r);
+        const hAll = inkH + Math.max(ext.t, effects.t) + Math.max(ext.b, effects.b);
         let f = 1;
-        if (!(scrolling && vertical) && w > availW) f = Math.min(f, availW / w);
-        if (!(scrolling && !vertical) && h > availH) f = Math.min(f, availH / h);
+        if (!(scrolling && vertical)) {
+          if (w > availW) f = Math.min(f, availW / w);
+          if (wAll > W) f = Math.min(f, W / wAll);
+        }
+        if (!(scrolling && !vertical)) {
+          if (h > availH) f = Math.min(f, availH / h);
+          if (hAll > H) f = Math.min(f, H / hAll);
+        }
         fit = Math.min(fit, f);
       });
       fit = Math.max(0.05, fit * (fit < 1 ? 0.985 : 1));
     }
+    const keep = autoFit ? { effects, x: !(scrolling && vertical), y: !(scrolling && !vertical) } : null;
     const size = baseSize * fit;
     const glyphs = [];
     const pages = specs.map((spec, index) => {
       const page = layoutPageAt(spec, scene, env, size);
-      placePage(page, scene, W, H, size);
+      placePage(page, scene, W, H, size, keep);
       const first = glyphs.length;
       const groups = [page.main, page.sub].filter(Boolean);
       groups.forEach(grp => {
