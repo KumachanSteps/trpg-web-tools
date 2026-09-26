@@ -52,6 +52,7 @@
     holdFx: 'none',
     hold: 1.5,
     holdPower: 1,
+    outEnabled: true,
     outFx: 'fade',
     outDur: 0.6,
     outStagger: 0,
@@ -261,7 +262,7 @@
           fontId: 'noto-serif-jp', weight: 700, fontSize: 40, lineHeight: 1.8, letterSpacing: 0.12,
           fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.9, blur: 10, x: 0, y: 3 },
-          reveal: 'scroll', scrollSpeed: 80, scrollFade: true, inFx: 'fade', hold: 0, outFx: 'none', startDelay: 0, endDelay: 0
+          reveal: 'scroll', scrollSpeed: 80, scrollFade: true, inFx: 'fade', hold: 0, startDelay: 0, endDelay: 0
         }
       }
     ],
@@ -449,7 +450,7 @@
 
   // テンプレートはスタイルと動きを初期値から組み立て直す。文章はユーザーが書き換えていなければ差し替える。
   function applyTemplate(scene, template, lang, replaceText) {
-    const keep = { text: scene.text, subText: scene.subText, width: scene.width, height: scene.height, sizePreset: scene.sizePreset };
+    const keep = { text: scene.text, subText: scene.subText, width: scene.width, height: scene.height, sizePreset: scene.sizePreset, outEnabled: scene.outEnabled };
     const fresh = deepMerge(deepMerge(clone(BASE), MODE_DEFAULTS[scene.mode] || {}), template.patch);
     Object.keys(scene).forEach(key => delete scene[key]);
     Object.assign(scene, fresh);
@@ -457,6 +458,8 @@
     scene.height = keep.height || fresh.height;
     scene.sizePreset = keep.sizePreset || fresh.sizePreset;
     scene.templateId = template.id;
+    // 退場の有無は利用者の選択なので、テンプレートを切り替えても引き継ぐ
+    if (!('outEnabled' in template.patch)) scene.outEnabled = keep.outEnabled !== false;
     if (replaceText) {
       scene.text = template.text ? (template.text[lang] ?? template.text.ja) : '';
       scene.subText = template.subText ? (template.subText[lang] ?? template.subText.ja) : '';

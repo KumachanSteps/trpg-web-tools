@@ -241,7 +241,7 @@
         { type: 'range', bind: 'holdPower', when: s => s.holdFx !== 'none', label: T('強さ', 'Strength'), min: 0.2, max: 3, step: 0.05, format: 'x' },
         { type: 'dynamicNote', key: 'hold' }
       ] },
-      { type: 'section', when: s => !(isTrailer(s) && s.reveal === 'scroll'), label: s => (isTrailer(s) ? T('退場（各ページ）', 'Out (each page)') : T('退場', 'Out')), children: [
+      { type: 'section', when: s => !(isTrailer(s) && s.reveal === 'scroll'), toggle: 'outEnabled', label: s => (isTrailer(s) ? T('退場（各ページ）', 'Out (each page)') : T('退場', 'Out')), children: [
         { type: 'effects', phase: 'out' },
         { type: 'select', bind: 'outDir', when: s => Boolean(outDef(s).dirs), label: T('方向', 'Direction'), options: s => (outDef(s).dirs || []).map(d => ({ value: d, label: OPT.dirs[d] })) },
         { type: 'range', bind: 'outDur', when: s => !['none', 'erase'].includes(s.outFx), label: T('時間', 'Duration'), min: 0.05, max: 4, step: 0.05, format: 's' },
@@ -779,6 +779,8 @@
           grid.innerHTML = '';
           list.forEach(fx => {
             if (mode === 'trailer' && phase === 'in' && fx.level === 'block') return;
+            // 「消さない」は退場スイッチ（outEnabled）で切り替えるため、カードには出さない
+            if (phase === 'out' && fx.level === 'none') return;
             const canvas = el('canvas', { width: 160, height: 90, class: 'effect-canvas', 'aria-hidden': 'true' });
             const name = el('span', { class: 'effect-name' });
             const badge = el('span', { class: 'effect-badge' });

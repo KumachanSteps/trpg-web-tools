@@ -775,7 +775,8 @@
     const decoAnimated = deco.type && deco.type !== 'none' && deco.anim !== 'none';
     const decoDur = decoAnimated ? Math.max(0.05, deco.dur || 0.4) : 0;
     const inDef = IN_MAP[scene.inFx] || IN_MAP.fade;
-    const outDef = OUT_MAP[scene.outFx] || OUT_MAP.fade;
+    // 「退場あり」がオフなら退場の種類に関係なく消さない
+    const outDef = scene.outEnabled === false ? OUT_MAP.none : (OUT_MAP[scene.outFx] || OUT_MAP.fade);
     const inDur = Math.max(0, scene.inDur ?? inDef.dur);
     const outDur = Math.max(0, scene.outDur ?? outDef.dur);
     const hold = Math.max(0, scene.hold ?? 1);
@@ -957,7 +958,10 @@
     T.bgIn = { start: t0, dur: bgDur };
     T.bgOut = lastPage && Number.isFinite(lastPage.end) ? { start: Math.max(t0, lastPage.end - bgDur), dur: bgDur } : null;
     // 各フェーズの区間（タイムライン表示用）
-    T.segments = T.pages.map(pg => ({ start: pg.start, inEnd: pg.inEnd, holdEnd: pg.holdEnd, end: Number.isFinite(pg.end) ? pg.end : T.duration }));
+    // 退場しない最後のページは、終了まで「表示」として扱う
+    T.segments = T.pages.map(pg => (Number.isFinite(pg.end)
+      ? { start: pg.start, inEnd: pg.inEnd, holdEnd: pg.holdEnd, end: pg.end }
+      : { start: pg.start, inEnd: pg.inEnd, holdEnd: T.duration, end: T.duration }));
     return T;
   }
 

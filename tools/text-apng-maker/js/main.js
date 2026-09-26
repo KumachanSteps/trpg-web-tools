@@ -59,6 +59,9 @@
     restartBtn: $('restartBtn'),
     loopPreview: $('loopPreviewInput'),
     loopPreviewText: $('loopPreviewText'),
+    exitToggle: $('exitToggle'),
+    exitInput: $('exitInput'),
+    exitText: $('exitText'),
     scrub: $('scrubInput'),
     timeLabel: $('timeLabel'),
     segments: $('timelineSegments'),
@@ -149,6 +152,13 @@
       const s = app.scenes[mode];
       if (String(s.fontId).startsWith('upload:') && !F.get(s.fontId)) s.fontId = 'noto-sans-jp';
       if (String(s.subFontId).startsWith('upload:') && !F.get(s.subFontId)) s.subFontId = 'same';
+      // 旧形式：退場の種類「消さない」は「退場あり」スイッチのオフへ移す
+      if (s.outFx === 'none' || !E.OUT_MAP[s.outFx]) {
+        if (s.outFx === 'none' && !(mode === 'trailer' && s.reveal === 'scroll')) s.outEnabled = false;
+        s.outFx = 'fade';
+        s.outDur = E.OUT_MAP.fade.dur;
+      }
+      s.outEnabled = s.outEnabled !== false;
     });
     if (saved) {
       if (MODES.includes(saved.mode)) app.mode = saved.mode;
@@ -176,18 +186,33 @@
 
   /* ================= 通知 ================= */
 
-  function toast(message, type = 'info', duration = 3200) {
+  // action: { label, run } を渡すと、通知の中にボタンを表示する
+  function toast(message, type = 'info', duration = 3200, action = null) {
     if (!message) return;
     const node = document.createElement('div');
     node.className = `toast toast-${type}`;
     node.setAttribute('role', type === 'error' ? 'alert' : 'status');
-    node.textContent = message;
-    els.toastHost.appendChild(node);
-    requestAnimationFrame(() => node.classList.add('is-visible'));
-    setTimeout(() => {
+    const text = document.createElement('span');
+    text.textContent = message;
+    node.appendChild(text);
+    let timer = 0;
+    const close = () => {
+      clearTimeout(timer);
       node.classList.remove('is-visible');
       setTimeout(() => node.remove(), 300);
-    }, duration);
+    };
+    if (action) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toast-action';
+      btn.textContent = action.label;
+      btn.addEventListener('click', () => { action.run(); close(); });
+      node.classList.add('has-action');
+      node.appendChild(btn);
+    }
+    els.toastHost.appendChild(node);
+    requestAnimationFrame(() => node.classList.add('is-visible'));
+    timer = setTimeout(close, duration);
   }
 
   function track(eventName, params = {}) {
@@ -268,6 +293,7 @@
       if (btn.dataset.bg === 'image') btn.title = d.previewBgImage;
     });
     els.loopPreviewText.textContent = d.loopPreview;
+    syncExitToggle();
     els.restartBtn.setAttribute('aria-label', d.restart);
     els.restartBtn.title = d.restart;
     els.legendIn.textContent = d.timeline.in;
@@ -370,13 +396,14 @@
       const font = F.get(value === 'same' ? s.fontId : value);
       if (font) s.subWeight = F.nearestWeight(font, s.subWeight || 400);
     }
-    if (path === 'reveal') {
-      if (value === 'scroll') {
-        s.outFx = 'none';
-      } else if (s.outFx === 'none') {
-        s.outFx = 'fade';
-        s.outDur = E.OUT_MAP.fade.dur;
-      }
+    if (path === 'outEnabled' && value === false && app.exportOpts.loop === 'infinite') {
+      toast(msg().exitOffLoop, 'info', 8000, {
+        label: msg().exitOffLoopAction,
+        run: () => {
+          setExportLoop('once');
+          toast(msg().loopSetOnce, 'success', 2600);
+        }
+      });
     }
     if (FONT_KEYS.has(path)) scheduleFontLoad(meta.text ? 250 : 0);
     invalidate();
@@ -552,6 +579,20 @@
     view.needsPrepare = false;
     updateTimelineBar();
     updateInfo();
+    syncExitToggle();
+  }
+
+  // プレビュー下の「退場あり」スイッチ（動きタブ「退場」見出しのスイッチと同じ設定）
+  function syncExitToggle() {
+    const s = scene();
+    const d = dict();
+    // スクロールは文字が画面の外へ流れて終わるため、退場の設定は使わない
+    const scroll = s.mode === 'trailer' && s.reveal === 'scroll';
+    els.exitText.textContent = d.exitToggle;
+    els.exitInput.checked = scroll || s.outEnabled !== false;
+    els.exitInput.disabled = scroll;
+    els.exitToggle.classList.toggle('is-disabled', scroll);
+    els.exitToggle.title = scroll ? d.exitToggleScroll : d.exitToggleTitle;
   }
 
   function renderFrame(now) {
@@ -920,7 +961,7 @@
       setProgress(1, msg().done);
       toast(msg().done, 'success');
       track('export_apng', {
-        mode: s.mode, in_fx: s.inFx, out_fx: s.outFx, hold_fx: s.holdFx, fps, color_mode: usePalette ? 'palette' : 'full',
+        mode: s.mode, in_fx: s.inFx, out_fx: s.outEnabled === false ? 'none' : s.outFx, hold_fx: s.holdFx, fps, color_mode: usePalette ? 'palette' : 'full',
         frames: count, size_kb: Math.round(blob.size / 1024), over_limit: blob.size > SIZE_GUIDE_BYTES, seconds: Math.round((performance.now() - started) / 100) / 10
       });
       return true;
@@ -1090,6 +1131,13 @@
 
   /* ================= 初期化 ================= */
 
+  function setExportLoop(loop) {
+    app.exportOpts.loop = loop;
+    els.loopSelect.value = loop;
+    els.loopCountWrap.hidden = loop !== 'count';
+    saveState();
+  }
+
   function bindExportOptions() {
     const o = app.exportOpts;
     els.fpsSelect.value = String(o.fps);
@@ -1101,7 +1149,7 @@
     els.fileNameInput.value = o.fileName || '';
     els.loopCountWrap.hidden = o.loop !== 'count';
     els.fpsSelect.addEventListener('change', () => { o.fps = Number(els.fpsSelect.value); updateInfo(); saveState(); });
-    els.loopSelect.addEventListener('change', () => { o.loop = els.loopSelect.value; els.loopCountWrap.hidden = o.loop !== 'count'; saveState(); });
+    els.loopSelect.addEventListener('change', () => setExportLoop(els.loopSelect.value));
     els.loopCount.addEventListener('change', () => { o.loopCount = Math.max(1, Math.min(999, Number(els.loopCount.value) || 1)); els.loopCount.value = String(o.loopCount); saveState(); });
     els.colorSelect.addEventListener('change', () => { o.color = els.colorSelect.value; saveState(); });
     els.posterInput.addEventListener('change', () => { o.poster = els.posterInput.checked; saveState(); });
@@ -1141,6 +1189,7 @@
     els.restartBtn.addEventListener('click', restartPreview);
     els.loopPreview.checked = app.loopPreview;
     els.loopPreview.addEventListener('change', () => { app.loopPreview = els.loopPreview.checked; saveState(); });
+    els.exitInput.addEventListener('change', () => handleChange('outEnabled', els.exitInput.checked));
     els.scrub.addEventListener('input', () => {
       pause();
       view.time = Number(els.scrub.value) || 0;

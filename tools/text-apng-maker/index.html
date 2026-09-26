@@ -112,7 +112,10 @@
           <div class="transport-row">
             <button class="primary-button play-button" type="button" id="playBtn" aria-pressed="false">▶ 再生</button>
             <button class="icon-button" type="button" id="restartBtn" aria-label="最初から">⟲</button>
-            <label class="toggle-inline"><span class="switch"><input type="checkbox" class="switch-input" id="loopPreviewInput" checked /><span class="switch-track" aria-hidden="true"></span></span><span id="loopPreviewText">ループ再生</span></label>
+            <div class="transport-toggles">
+              <label class="toggle-inline"><span class="switch"><input type="checkbox" class="switch-input" id="loopPreviewInput" checked /><span class="switch-track" aria-hidden="true"></span></span><span id="loopPreviewText">ループ再生</span></label>
+              <label class="toggle-inline" id="exitToggle"><span class="switch"><input type="checkbox" class="switch-input" id="exitInput" checked /><span class="switch-track" aria-hidden="true"></span></span><span id="exitText">退場あり</span></label>
+            </div>
             <span class="time-label" id="timeLabel">0.00 / 0.00 秒</span>
           </div>
           <div class="timeline" id="timelineSegments">

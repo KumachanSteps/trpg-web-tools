@@ -35,6 +35,7 @@
       helpNotes: [
         '※ 入力内容はこのブラウザ内（localStorage）にだけ保存され、サーバーには送信されません。',
         '※ 256色モードは容量が小さく、フルカラーはグラデーションや光彩がより滑らかになります。',
+        '※ プレビュー下の「退場あり」をオフにすると、登場したあと消えずに終わります。書き出しのループを「1回再生」にすると、最後の状態で止まるAPNGになります（場所のテロップを出したままにしたいときなど）。',
         '※ 容量を抑えるには「FPSを下げる」「画像サイズを小さくする」「表示中の動きをなしにする」「背景を透明にする」が効果的です。',
         '※ 利用するフォントのライセンスはご自身でご確認ください。Google Fonts のフォントは商用利用も可能なオープンライセンスです。'
       ],
@@ -60,6 +61,9 @@
       previewBgs: { checker: '透明', dark: '黒', light: '白', gray: 'グレー', image: '画像' },
       previewBgImage: '背景画像を選ぶ（プレビューのみ・書き出しには含まれません）',
       loopPreview: 'ループ再生',
+      exitToggle: '退場あり',
+      exitToggleTitle: 'オン：登場 → 表示 → 退場。オフ：退場せず、最後の状態のまま終わります（退場の種類は「動き」タブで選べます）',
+      exitToggleScroll: 'スクロールは文字が画面の外へ流れて終わるため、退場の設定はありません',
       play: '再生',
       pause: '一時停止',
       restart: '最初から',
@@ -116,7 +120,10 @@
         glowNeeded: '※「発光の明滅」は装飾タブで光彩をオンにすると効果が出ます。',
         autoFitNote: (from, to) => `はみ出すため文字サイズを ${Math.round(from)}px → ${Math.round(to)}px に自動調整しています。`,
         pages: n => `${n}ページ`,
-        durationHint: sec => `全体の長さ: ${sec.toFixed(2)}秒`
+        durationHint: sec => `全体の長さ: ${sec.toFixed(2)}秒`,
+        exitOffLoop: '退場なしにしました。書き出しが「ずっとループ」のままだと、最後まで表示したあと最初から繰り返します。表示したまま止めるなら「1回再生」がおすすめです。',
+        exitOffLoopAction: '1回再生にする',
+        loopSetOnce: '書き出しを「1回再生（最後の状態で停止）」にしました。'
       }
     },
     en: {
@@ -149,6 +156,7 @@
       helpNotes: [
         '* Your settings are stored only in this browser (localStorage) and are never sent to a server.',
         '* 256-color mode keeps files small; full color renders gradients and glows more smoothly.',
+        '* Turn off "Exit animation" under the preview to keep the text on screen after it appears. Set the export loop to "Play once" to make an APNG that stops on the final state (e.g. a location caption that stays up).',
         '* To reduce file size: lower the FPS, use a smaller image size, set the hold motion to none, or keep the background transparent.',
         '* Please check the license of any font you use. Google Fonts are open-licensed and can be used commercially.'
       ],
@@ -174,6 +182,9 @@
       previewBgs: { checker: 'Clear', dark: 'Black', light: 'White', gray: 'Gray', image: 'Image' },
       previewBgImage: 'Choose a background image (preview only, not exported)',
       loopPreview: 'Loop',
+      exitToggle: 'Exit animation',
+      exitToggleTitle: 'On: in → hold → out. Off: no exit — the text stays on screen at the end (choose the exit type on the Motion tab).',
+      exitToggleScroll: 'Scrolling text leaves the screen by itself, so there is no exit setting.',
       play: 'Play',
       pause: 'Pause',
       restart: 'Restart',
@@ -230,7 +241,10 @@
         glowNeeded: '* “Glow pulse” needs Glow turned on in the Style tab.',
         autoFitNote: (from, to) => `The text is too large, so the size is reduced from ${Math.round(from)} px to ${Math.round(to)} px.`,
         pages: n => `${n} pages`,
-        durationHint: sec => `Total length: ${sec.toFixed(2)} s`
+        durationHint: sec => `Total length: ${sec.toFixed(2)} s`,
+        exitOffLoop: 'Exit turned off. With "Loop forever" the export plays to the end and then starts over. To keep the text on screen, "Play once" is recommended.',
+        exitOffLoopAction: 'Play once',
+        loopSetOnce: 'Export set to "Play once (stop at the end)".'
       }
     }
   };
