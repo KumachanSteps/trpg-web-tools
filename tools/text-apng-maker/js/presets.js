@@ -87,14 +87,14 @@
         id: 'battle', icon: '⚔️', label: T('戦闘開始', 'Battle Start'),
         text: T('戦闘開始', 'BATTLE START'), subText: T('BATTLE START', 'ENGAGE'),
         patch: {
-          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 132, letterSpacing: 0.1,
-          subFontId: 'cinzel', subWeight: 700, subSize: 0.19, subLetterSpacing: 0.6, subGap: 0.55,
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 124, letterSpacing: 0.12,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.62,
           fill: { type: 'solid', color: '#ffffff' },
           stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.35, blur: 10, x: 0, y: 3 },
           glow: { on: false },
-          deco: { type: 'frame', color: '#000000', opacity: 0, color2: '#ffffff', thickness: 3, pad: 0.55, extend: 12, anim: 'grow', dur: 0.6 },
-          inFx: 'shrinkIn', inDur: 0.45, inStagger: 0.09, inPower: 0.8, hold: 1.4, outFx: 'zoomThrough', outDur: 0.5, subFx: 'fade', subDelay: -0.1
+          deco: { type: 'frame', color: '#000000', opacity: 0, color2: '#ffffff', thickness: 3, pad: 0.28, extend: 12, anim: 'grow', dur: 0.6 },
+          inFx: 'drop', inDur: 0.55, inStagger: 0.1, inPower: 1.1, hold: 1.4, outFx: 'zoomThrough', outDur: 0.5, subFx: 'fade', subDelay: -0.1
         }
       },
       {
@@ -139,12 +139,12 @@
         id: 'secret', icon: '🔒', label: T('秘匿を確認してください', 'Check Your Secret'),
         text: T('秘匿を確認してください', 'CHECK YOUR SECRET'), subText: T('SECRET HANDOUT', 'SECRET HANDOUT'),
         patch: {
-          fontId: 'zen-kaku-gothic-new', weight: 700, fontSize: 72, letterSpacing: 0.1,
+          fontId: 'biz-udpmincho', weight: 700, fontSize: 72, letterSpacing: 0.12,
           subPosition: 'above', subFontId: 'share-tech-mono', subWeight: 400, subSize: 0.32, subLetterSpacing: 0.35, subGap: 0.45,
           fill: { type: 'solid', color: '#ffffff' },
           stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#020b1a', opacity: 0.6, blur: 8, x: 0, y: 2 },
-          glow: { on: true, color: '#3a8dff', size: 14, strength: 0.55 },
+          glow: { on: true, color: '#3a8dff', size: 10, strength: 0.45 },
           subColorOn: true, subColor: '#8cc4ff',
           deco: { type: 'box', color: '#081a33', opacity: 0.85, color2: '#3a8dff', pad: 0.5, thickness: 2, radius: 0.14, anim: 'grow', dur: 0.4 },
           inFx: 'typewriter', inStagger: 0.05, hold: 2, outFx: 'fade', outDur: 0.45, subFx: 'fade', subDelay: -3
@@ -194,6 +194,21 @@
       },
       {
         id: 'typewriter', icon: '⌨️', label: T('タイプライター', 'Typewriter'),
+        text: T('拝啓\nこの手紙を読んでいるということは、\n私はもう、この町にはいないのでしょう。\n\nどうか、あの館には近づかないでください。',
+          'To whoever finds this letter,\nif you are reading this,\nI am no longer in this town.\n\nPlease, stay away from that mansion.'),
+        patch: {
+          fontId: 'special-elite', weight: 400, fontSize: 40, lineHeight: 1.9, letterSpacing: 0.04, align: 'start',
+          fill: { type: 'solid', color: '#221c16' },
+          stroke: { on: true, width: 0.8, color: '#221c16' }, stroke2: { on: false },
+          shadow: { on: true, color: '#221c16', opacity: 0.45, blur: 2, x: 0, y: 0 },
+          glow: { on: false },
+          deco: { type: 'box', color: '#efe6d0', opacity: 0.96, color2: '#c9b994', pad: 0.9, thickness: 1, radius: 0.03, anim: 'fade', dur: 0.5 },
+          reveal: 'char', cps: 14, glyphDur: 0.1, inFx: 'shrinkIn', inPower: 0.25, punctPause: 0.3, linePause: 0.45,
+          cursor: false, hold: 1.8, outFx: 'fade', outDur: 0.6, wrapChars: 24
+        }
+      },
+      {
+        id: 'syslog', icon: '🖥️', label: T('システムログ', 'System Log'),
         text: T('20XX年 X月X日\n調査記録 No.13\n\n対象の館では、夜ごと同じ時刻に\nピアノの音が聞こえるという。',
           'Date: 20XX / XX / XX\nInvestigation Log No.13\n\nEvery night at the same hour,\npiano music echoes through the mansion.'),
         patch: {

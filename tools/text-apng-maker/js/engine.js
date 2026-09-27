@@ -546,8 +546,8 @@
       case 'sides': return v ? { l: 0, r: 0, t: pad + ext, b: pad + ext } : { l: pad + ext, r: pad + ext, t: 0, b: 0 };
       case 'bar': return v ? { l: 0, r: pad + th, t: 0, b: 0 } : { l: pad + th, r: 0, t: 0, b: 0 };
       case 'band': return v ? { l: pad, r: pad, t: 0, b: 0 } : { l: 0, r: 0, t: pad, b: pad };
-      // タイトル枠：上辺（縦書きは右辺）は文字を横切るので外へは出ない。左右（縦書きは上下）の延長は画面内に収めて描く
-      case 'frame': return v ? { l: pad + th, r: 0, t: pad + th, b: pad + th } : { l: pad + th, r: pad + th, t: 0, b: pad + th };
+      // タイトル枠：メインの文字の周りに余白分はみ出す。左右（縦書きは上下）の延長は画面内に収めて描く
+      case 'frame': return { l: pad + th, r: pad + th, t: pad + th, b: pad + th };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
   }
@@ -788,8 +788,8 @@
       const isLast = pi === layout.pages.length - 1;
       const pg = { index: pi, blockIn: null, blockOut: null, decoIn: null, decoOut: null, scroll: null, cursor: null };
       const pageStart = cursor;
-      // 帯・枠が開いてから文字が出る（ボックスは「伸びる」ときだけ）
-      const opensFirst = deco.type === 'band' || deco.type === 'frame' || (deco.type === 'box' && deco.anim === 'grow');
+      // 帯・枠・ボックスが現れてから文字が出る
+      const opensFirst = deco.type === 'band' || deco.type === 'frame' || deco.type === 'box';
       const lead = decoAnimated && opensFirst ? Math.min(0.3, decoDur * 0.6) : 0;
       const textStart = pageStart + lead;
       if (decoAnimated) pg.decoIn = { start: pageStart, dur: decoDur };
@@ -1813,23 +1813,27 @@
           break;
         }
         case 'frame': {
-          // タイトル枠：最後の行の下寄り（インクの高さの72%）を上辺が横切り、文字が枠に乗って見える。
-          // 残りの辺はサブテキストを囲み、左右（縦書きは上下）は extend の分だけ延ばして画面の内側で止める
-          const CROSS = 0.72;
-          const mm = page.mainMetrics || { inkA: size * 0.8, inkD: size * 0.12 };
+          // タイトル枠：メインの文字だけを囲み、サブテキストは枠の外に置く（余白はサブテキストとの間の半分まで）。
+          // 左右（縦書きは上下）は extend の分だけ延ばして画面の内側で止める
           const inset = Math.max(th, (scene.marginX ?? 64) * 0.5);
+          const sb = page.subBox;
           let x0, y0, x1, y1;
           if (!vertical) {
-            const lineH = mm.inkA + mm.inkD;
-            y0 = mb.y1 - lineH * (1 - CROSS);
-            y1 = Math.max(box.y1, y0 + size * 0.55) + pad;
-            x0 = Math.max(-bs.x + inset, box.x0 - pad - ext);
-            x1 = Math.min(W - bs.x - inset, box.x1 + pad + ext);
+            let padT = pad, padB = pad;
+            if (sb && sb.y0 >= mb.y1) padB = Math.min(pad, (sb.y0 - mb.y1) / 2);
+            else if (sb && sb.y1 <= mb.y0) padT = Math.min(pad, (mb.y0 - sb.y1) / 2);
+            y0 = mb.y0 - padT;
+            y1 = mb.y1 + padB;
+            x0 = Math.max(-bs.x + inset, mb.x0 - pad - ext);
+            x1 = Math.min(W - bs.x - inset, mb.x1 + pad + ext);
           } else {
-            x1 = mb.x0 + size * (1 - CROSS);
-            x0 = Math.min(box.x0, x1 - size * 0.55) - pad;
-            y0 = Math.max(-bs.y + inset, box.y0 - pad - ext);
-            y1 = Math.min(H - bs.y - inset, box.y1 + pad + ext);
+            let padL = pad, padR = pad;
+            if (sb && sb.x1 <= mb.x0) padL = Math.min(pad, (mb.x0 - sb.x1) / 2);
+            else if (sb && sb.x0 >= mb.x1) padR = Math.min(pad, (sb.x0 - mb.x1) / 2);
+            x0 = mb.x0 - padL;
+            x1 = mb.x1 + padR;
+            y0 = Math.max(-bs.y + inset, mb.y0 - pad - ext);
+            y1 = Math.min(H - bs.y - inset, mb.y1 + pad + ext);
           }
           if (x1 - x0 < 1 || y1 - y0 < 1) break;
           const fillA = clamp(d.opacity ?? 0) * (grow ? clamp(g * 1.5) : 1);
