@@ -85,17 +85,17 @@
     message: [
       {
         id: 'battle', icon: '⚔️', label: T('戦闘開始', 'Battle Start'),
-        text: T('戦闘開始', 'BATTLE START'), subText: T('- BATTLE START -', '- ENCOUNTER -'),
+        text: T('戦闘開始', 'BATTLE START'), subText: T('BATTLE START', 'ENGAGE'),
         patch: {
-          fontId: 'dela-gothic-one', weight: 400, fontSize: 150, letterSpacing: 0.06,
-          subFontId: 'cinzel', subWeight: 700, subSize: 0.24, subLetterSpacing: 0.35, subGap: 0.28,
-          fill: { type: 'gradient', color: '#ffffff', color2: '#ffd76a', color3: '#ff8a00', dir: 'v' },
-          stroke: { on: true, width: 7, color: '#4a0000' }, stroke2: { on: true, width: 6, color: '#ffffff' },
-          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 14, x: 4, y: 8 },
-          glow: { on: true, color: '#ff3030', size: 36, strength: 1.3 },
-          subColorOn: true, subColor: '#ffffff',
-          deco: { type: 'band', color: '#000000', opacity: 0.6, pad: 0.35, soft: 0.5, sideFade: 0.25, anim: 'grow', dur: 0.4 },
-          inFx: 'slam', inDur: 0.75, hold: 1.2, outFx: 'zoomThrough', outDur: 0.5, subFx: 'fade', subDelay: -0.1
+          anchor: 'ml', marginX: 72, offsetX: 96, align: 'start',
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 132, letterSpacing: 0.1,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.19, subLetterSpacing: 0.6, subGap: 0.55,
+          fill: { type: 'solid', color: '#ffffff' },
+          stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.35, blur: 10, x: 0, y: 3 },
+          glow: { on: false },
+          deco: { type: 'frame', color: '#000000', opacity: 0, color2: '#ffffff', thickness: 3, pad: 0.5, extend: 12, anim: 'grow', dur: 0.6 },
+          inFx: 'shrinkIn', inDur: 0.45, inStagger: 0.09, inPower: 0.8, hold: 1.4, outFx: 'zoomThrough', outDur: 0.5, subFx: 'fade', subDelay: -0.1
         }
       },
       {
@@ -140,15 +140,15 @@
         id: 'secret', icon: '🔒', label: T('秘匿を確認してください', 'Check Your Secret'),
         text: T('秘匿を確認してください', 'CHECK YOUR SECRET'), subText: T('SECRET HANDOUT', 'SECRET HANDOUT'),
         patch: {
-          fontId: 'zen-kaku-gothic-new', weight: 700, fontSize: 80, letterSpacing: 0.12,
-          subPosition: 'above', subFontId: 'oswald', subWeight: 700, subSize: 0.34, subLetterSpacing: 0.5, subGap: 0.35,
+          fontId: 'zen-kaku-gothic-new', weight: 700, fontSize: 72, letterSpacing: 0.1,
+          subPosition: 'above', subFontId: 'share-tech-mono', subWeight: 400, subSize: 0.32, subLetterSpacing: 0.35, subGap: 0.45,
           fill: { type: 'solid', color: '#ffffff' },
-          stroke: { on: true, width: 3, color: '#14060a' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 12, x: 0, y: 4 },
-          glow: { on: false },
-          subColorOn: true, subColor: '#ff5c6c',
-          deco: { type: 'box', color: '#0d0609', opacity: 0.72, color2: '#ff5c6c', pad: 0.45, thickness: 3, radius: 0.08, anim: 'grow', dur: 0.4 },
-          inFx: 'blurIn', inDur: 0.7, inStagger: 0.03, hold: 2, outFx: 'blurOut', outDur: 0.6, outStagger: 0.02, subFx: 'fade', subDelay: -0.3
+          stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#020b1a', opacity: 0.6, blur: 8, x: 0, y: 2 },
+          glow: { on: true, color: '#3a8dff', size: 14, strength: 0.55 },
+          subColorOn: true, subColor: '#8cc4ff',
+          deco: { type: 'box', color: '#081a33', opacity: 0.85, color2: '#3a8dff', pad: 0.5, thickness: 2, radius: 0.14, anim: 'grow', dur: 0.4 },
+          inFx: 'typewriter', inStagger: 0.05, hold: 2, outFx: 'fade', outDur: 0.45, subFx: 'fade', subDelay: -3
         }
       },
       {

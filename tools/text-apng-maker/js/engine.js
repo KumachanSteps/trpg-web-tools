@@ -546,6 +546,8 @@
       case 'sides': return v ? { l: 0, r: 0, t: pad + ext, b: pad + ext } : { l: pad + ext, r: pad + ext, t: 0, b: 0 };
       case 'bar': return v ? { l: 0, r: pad + th, t: 0, b: 0 } : { l: pad + th, r: 0, t: 0, b: 0 };
       case 'band': return v ? { l: pad, r: pad, t: 0, b: 0 } : { l: 0, r: 0, t: pad, b: pad };
+      // タイトル枠：上辺（縦書きは右辺）は文字を横切るので外へは出ない。左右（縦書きは上下）の延長は画面内に収めて描く
+      case 'frame': return v ? { l: pad + th, r: 0, t: pad + th, b: pad + th } : { l: pad + th, r: pad + th, t: 0, b: pad + th };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
   }
@@ -786,7 +788,9 @@
       const isLast = pi === layout.pages.length - 1;
       const pg = { index: pi, blockIn: null, blockOut: null, decoIn: null, decoOut: null, scroll: null, cursor: null };
       const pageStart = cursor;
-      const lead = decoAnimated && deco.type === 'band' ? Math.min(0.3, decoDur * 0.6) : 0;
+      // 帯・枠が開いてから文字が出る（ボックスは「伸びる」ときだけ）
+      const opensFirst = deco.type === 'band' || deco.type === 'frame' || (deco.type === 'box' && deco.anim === 'grow');
+      const lead = decoAnimated && opensFirst ? Math.min(0.3, decoDur * 0.6) : 0;
       const textStart = pageStart + lead;
       if (decoAnimated) pg.decoIn = { start: pageStart, dur: decoDur };
       const pageGlyphs = glyphs.slice(page.first, page.last);
@@ -1806,6 +1810,54 @@
           corner(x0, y1, 1, -1);
           corner(x1, y1, -1, -1);
           ctx.stroke();
+          break;
+        }
+        case 'frame': {
+          // タイトル枠：最後の行の下寄り（インクの高さの72%）を上辺が横切り、文字が枠に乗って見える。
+          // 残りの辺はサブテキストを囲み、左右（縦書きは上下）は extend の分だけ延ばして画面の内側で止める
+          const CROSS = 0.72;
+          const mm = page.mainMetrics || { inkA: size * 0.8, inkD: size * 0.12 };
+          const inset = Math.max(th, (scene.marginX ?? 64) * 0.5);
+          let x0, y0, x1, y1;
+          if (!vertical) {
+            const lineH = mm.inkA + mm.inkD;
+            y0 = mb.y1 - lineH * (1 - CROSS);
+            y1 = Math.max(box.y1, y0 + size * 0.55) + pad;
+            x0 = Math.max(-bs.x + inset, box.x0 - pad - ext);
+            x1 = Math.min(W - bs.x - inset, box.x1 + pad + ext);
+          } else {
+            x1 = mb.x0 + size * (1 - CROSS);
+            x0 = Math.min(box.x0, x1 - size * 0.55) - pad;
+            y0 = Math.max(-bs.y + inset, box.y0 - pad - ext);
+            y1 = Math.min(H - bs.y - inset, box.y1 + pad + ext);
+          }
+          if (x1 - x0 < 1 || y1 - y0 < 1) break;
+          const fillA = clamp(d.opacity ?? 0) * (grow ? clamp(g * 1.5) : 1);
+          if (fillA > 0.002) {
+            ctx.save();
+            ctx.globalAlpha = alpha * fillA;
+            ctx.fillStyle = d.color || '#000000';
+            ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+            ctx.restore();
+          }
+          if ((d.thickness || 0) > 0) {
+            // 伸びるアニメーションでは、上辺（縦書きは右辺）の始点から一筆書きで線が伸びる／消える
+            const w = x1 - x0, h = y1 - y0, perimeter = 2 * (w + h);
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = th;
+            ctx.lineCap = 'butt';
+            ctx.lineJoin = 'miter';
+            if (grow && g < 0.999) ctx.setLineDash([perimeter * g, perimeter]);
+            ctx.beginPath();
+            if (!vertical) {
+              ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.lineTo(x1, y1); ctx.lineTo(x0, y1);
+            } else {
+              ctx.moveTo(x1, y0); ctx.lineTo(x1, y1); ctx.lineTo(x0, y1); ctx.lineTo(x0, y0);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
           break;
         }
         default: break;
