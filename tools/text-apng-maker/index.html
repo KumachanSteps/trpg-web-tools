@@ -19,8 +19,8 @@
       <div class="title-block">
         <p class="eyebrow" id="appEyebrow">TRPG WEBツール観測所</p>
         <h1 id="appTitle">文字画像APNGメーカー</h1>
-        <p class="lead" id="appLead">「戦闘開始」のカットイン、トレイラーの文章演出、場所・時間のテロップなど、TRPGで使える文字アニメーションのAPNG素材を作成します。</p>
       </div>
+      <p class="lead" id="appLead">「戦闘開始」のカットイン、トレイラーの文章演出、場所・時間のテロップなど、TRPGで使える文字アニメーションのAPNG素材を作成します。</p>
       <div class="header-actions">
         <a class="header-nav-link" id="portalLink" href="../../">←TRPG WEBツール観測所</a>
         <a class="x-share-link" id="xShareLink" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" aria-label="X / Twitterで共有"><span aria-hidden="true">𝕏</span></a>
@@ -53,16 +53,16 @@
       <section class="panel control-panel" aria-labelledby="appTitle">
         <div class="mode-tabs" id="modeTabs" role="tablist" aria-label="Mode">
           <button class="mode-tab is-active" type="button" role="tab" data-mode="message" aria-selected="true">
-            <span class="mode-icon" aria-hidden="true">💥</span>
-            <span class="mode-text"><span class="mode-name">メッセージ</span><span class="mode-desc"></span></span>
+            <span class="mode-head"><svg class="mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9A1.5 1.5 0 0 1 5.5 4z" /><path d="M12 7.5v3.6M12 13.4v.1" /></svg><span class="mode-name">メッセージ</span></span>
+            <span class="mode-desc">「戦闘開始」などのカットイン</span>
           </button>
           <button class="mode-tab" type="button" role="tab" data-mode="trailer" aria-selected="false" tabindex="-1">
-            <span class="mode-icon" aria-hidden="true">📜</span>
-            <span class="mode-text"><span class="mode-name">トレイラー</span><span class="mode-desc"></span></span>
+            <span class="mode-head"><svg class="mode-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5" /><path d="M7.5 4.5v15M16.5 4.5v15M3.5 9.5h4M3.5 14.5h4M16.5 9.5h4M16.5 14.5h4" /></svg><span class="mode-name">トレイラー</span></span>
+            <span class="mode-desc">長めの文章を表示</span>
           </button>
           <button class="mode-tab" type="button" role="tab" data-mode="caption" aria-selected="false" tabindex="-1">
-            <span class="mode-icon" aria-hidden="true">📍</span>
-            <span class="mode-text"><span class="mode-name">場所・時間</span><span class="mode-desc"></span></span>
+            <span class="mode-head"><svg class="mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.3" /></svg><span class="mode-name">場所・時間</span></span>
+            <span class="mode-desc">探索箇所・シーンのテロップ</span>
           </button>
         </div>
 
@@ -147,8 +147,8 @@
             </label>
             <label class="field compact-field"><span class="field-label" id="loopLabel">ループ</span>
               <select class="select-input" id="loopSelect">
-                <option value="infinite">ずっとループ</option>
                 <option value="once">1回再生（最後の状態で停止）</option>
+                <option value="infinite">ずっとループ</option>
                 <option value="count">回数を指定</option>
               </select>
             </label>
@@ -161,9 +161,14 @@
             <label class="field compact-field loop-count-field" id="loopCountWrap" hidden><span class="field-label" id="loopCountLabel">回数</span>
               <input class="number-input" type="number" id="loopCountInput" min="1" max="999" step="1" value="3" />
             </label>
-            <label class="field compact-field wide"><span class="field-label" id="fileNameLabel">ファイル名</span>
+            <div class="field compact-field wide file-name-field">
+              <div class="field-label-row">
+                <label class="field-label" id="fileNameLabel" for="fileNameInput">ファイル名</label>
+                <span class="file-auto-badge" id="fileNameAutoBadge">設定から自動入力</span>
+                <button class="link-button file-auto-button" type="button" id="fileNameAutoBtn" hidden>↺ 自動入力に戻す</button>
+              </div>
               <input class="text-input" type="text" id="fileNameInput" spellcheck="false" autocomplete="off" />
-            </label>
+            </div>
             <label class="toggle-inline wide"><span class="switch"><input type="checkbox" class="switch-input" id="posterInput" checked /><span class="switch-track" aria-hidden="true"></span></span><span id="posterText">APNG非対応の環境では完成状態の静止画を表示</span></label>
             <label class="toggle-inline wide"><span class="switch"><input type="checkbox" class="switch-input" id="trimInput" /><span class="switch-track" aria-hidden="true"></span></span><span id="trimText">透明な余白を自動でトリミング</span></label>
           </div>

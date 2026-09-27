@@ -36,6 +36,7 @@
         '※ 入力内容はこのブラウザ内（localStorage）にだけ保存され、サーバーには送信されません。',
         '※ 256色モードは容量が小さく、フルカラーはグラデーションや光彩がより滑らかになります。',
         '※ プレビュー下の「退場あり」をオフにすると、登場したあと消えずに終わります。書き出しのループを「1回再生」にすると、最後の状態で止まるAPNGになります（場所のテロップを出したままにしたいときなど）。',
+        '※ ファイル名は、文章や動きの設定から自動で入力されます。書き換えた後は「↺ 自動入力に戻す」で元に戻せます。',
         '※ 容量を抑えるには「FPSを下げる」「画像サイズを小さくする」「表示中の動きをなしにする」「背景を透明にする」が効果的です。',
         '※ 利用するフォントのライセンスはご自身でご確認ください。Google Fonts のフォントは商用利用も可能なオープンライセンスです。'
       ],
@@ -49,9 +50,9 @@
         ['Cmd/Ctrl/Alt + Shift + T', 'ライトモード / ナイトモード切り替え']
       ],
       modes: {
-        message: ['メッセージ', '「戦闘開始」など画面中央のカットイン'],
-        trailer: ['トレイラー', '長めの文章を文頭から表示'],
-        caption: ['場所・時間', '探索箇所・シーン・時刻のテロップ']
+        message: ['メッセージ', '「戦闘開始」などのカットイン'],
+        trailer: ['トレイラー', '長めの文章を表示'],
+        caption: ['場所・時間', '探索箇所・シーンのテロップ']
       },
       templates: 'テンプレート',
       templatesHint: '動き・フォント・色をまとめて設定します（書き換えた文章はそのまま残ります）',
@@ -78,6 +79,10 @@
       poster: 'APNG非対応の環境では完成状態の静止画を表示',
       trim: '透明な余白を自動でトリミング',
       fileName: 'ファイル名',
+      fileNameAuto: '設定から自動入力',
+      fileNameReset: '↺ 自動入力に戻す',
+      fileNameResetTitle: '文章や動きの設定から作った名前に戻します',
+      fileNoExit: '退場なし',
       exportApng: 'APNGを書き出す',
       exportPng: 'PNG静止画',
       exportZip: '連番PNG（ZIP）',
@@ -146,7 +151,7 @@
       footerNote2: `Please send bug reports and requests by DM to <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> on X. Not every report or request can be answered or addressed.`,
       helpTitle: 'Guide',
       helpSteps: [
-        '1. Pick a mode at the top left: “Message”, “Trailer”, or “Location & Time”.',
+        '1. Pick a mode at the top left: “Message”, “Trailer”, or “Place & Time”.',
         '2. Choose a template to set the font, colors, and motion in one click. You can switch templates even after editing your text.',
         '3. Fine-tune with the Text / Font / Motion / Style / Layout tabs. The preview on the right updates in real time.',
         '4. Hover over a motion card to see a small animated preview of that effect.',
@@ -157,6 +162,7 @@
         '* Your settings are stored only in this browser (localStorage) and are never sent to a server.',
         '* 256-color mode keeps files small; full color renders gradients and glows more smoothly.',
         '* Turn off "Exit animation" under the preview to keep the text on screen after it appears. Set the export loop to "Play once" to make an APNG that stops on the final state (e.g. a location caption that stays up).',
+        '* The file name is filled in automatically from your text and motion settings. After editing it, use “↺ Back to auto” to restore it.',
         '* To reduce file size: lower the FPS, use a smaller image size, set the hold motion to none, or keep the background transparent.',
         '* Please check the license of any font you use. Google Fonts are open-licensed and can be used commercially.'
       ],
@@ -166,13 +172,13 @@
         ['Cmd/Ctrl/Alt + Shift + P', 'Play / pause the preview'],
         ['Cmd/Ctrl/Alt + Shift + E', 'Export APNG'],
         ['Cmd/Ctrl/Alt + Shift + K', 'Save the current frame as a PNG still'],
-        ['Cmd/Ctrl/Alt + Shift + 1 / 2 / 3', 'Switch to Message / Trailer / Location & Time'],
+        ['Cmd/Ctrl/Alt + Shift + 1 / 2 / 3', 'Switch to Message / Trailer / Place & Time'],
         ['Cmd/Ctrl/Alt + Shift + T', 'Toggle light / night mode']
       ],
       modes: {
-        message: ['Message', 'Center cut-ins like “Battle Start”'],
-        trailer: ['Trailer', 'Longer text revealed from the start'],
-        caption: ['Location & Time', 'Captions for places, scenes, and times']
+        message: ['Message', '“Battle Start” cut-ins'],
+        trailer: ['Trailer', 'Show longer text'],
+        caption: ['Place & Time', 'Place & scene captions']
       },
       templates: 'Templates',
       templatesHint: 'Sets motion, font, and colors at once (your edited text is kept)',
@@ -199,6 +205,10 @@
       poster: 'Show the finished still where APNG is not supported',
       trim: 'Trim transparent margins automatically',
       fileName: 'File name',
+      fileNameAuto: 'Auto from settings',
+      fileNameReset: '↺ Back to auto',
+      fileNameResetTitle: 'Use the name built from your text and motion settings',
+      fileNoExit: 'no-exit',
       exportApng: 'Export APNG',
       exportPng: 'PNG still',
       exportZip: 'PNG sequence (ZIP)',

@@ -9,7 +9,7 @@
   const P = window.TextApngPresets;
   const C = window.TextApngCodec;
   const I18N = window.TextApngI18n;
-  const { ControlPanel, setPath } = window.TextApngControls;
+  const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
   const VERSION = 'v1.00';
   const STORAGE_KEY = 'textApngMaker.v1';
@@ -18,6 +18,8 @@
   const MAX_FRAMES = 1800;
   const SIZE_GUIDE_BYTES = 5 * 1024 * 1024;
   const MODES = ['message', 'trailer', 'caption'];
+  // 保存データの形式（2: 書き出しのループ初期値を「1回再生」に変更、ファイル名をモードごとに保持）
+  const STORAGE_SCHEMA = 2;
   const TABS = ['text', 'font', 'motion', 'style', 'layout'];
 
   const $ = id => document.getElementById(id);
@@ -85,6 +87,8 @@
     trimText: $('trimText'),
     fileNameLabel: $('fileNameLabel'),
     fileNameInput: $('fileNameInput'),
+    fileNameAutoBadge: $('fileNameAutoBadge'),
+    fileNameAutoBtn: $('fileNameAutoBtn'),
     exportApngBtn: $('exportApngBtn'),
     exportPngBtn: $('exportPngBtn'),
     exportZipBtn: $('exportZipBtn'),
@@ -112,7 +116,8 @@
     mode: 'message',
     tab: 'text',
     scenes: {},
-    exportOpts: { fps: 24, loop: 'infinite', loopCount: 3, color: 'palette', poster: true, trim: false, fileName: '' },
+    // fileNames: モードごとの手入力のファイル名（空なら設定から自動入力）
+    exportOpts: { fps: 24, loop: 'once', loopCount: 3, color: 'palette', poster: true, trim: false, fileNames: { message: '', trailer: '', caption: '' } },
     previewBg: 'checker',
     loopPreview: true
   };
@@ -163,7 +168,17 @@
     if (saved) {
       if (MODES.includes(saved.mode)) app.mode = saved.mode;
       if (TABS.includes(saved.tab)) app.tab = saved.tab;
-      if (saved.exportOpts) Object.assign(app.exportOpts, saved.exportOpts);
+      if (saved.exportOpts) {
+        const { loop, fileName, fileNames, ...rest } = saved.exportOpts;
+        Object.assign(app.exportOpts, rest);
+        // 旧形式のループ設定（初期値が「ずっとループ」だった頃）は引き継がず、「1回再生」から始める
+        if (saved.schema >= STORAGE_SCHEMA && ['once', 'infinite', 'count'].includes(loop)) app.exportOpts.loop = loop;
+        if (fileNames && typeof fileNames === 'object') {
+          MODES.forEach(m => { if (typeof fileNames[m] === 'string') app.exportOpts.fileNames[m] = fileNames[m]; });
+        } else if (typeof fileName === 'string' && fileName.trim()) {
+          app.exportOpts.fileNames[MODES.includes(saved.mode) ? saved.mode : 'message'] = fileName;
+        }
+      }
       if (saved.previewBg && saved.previewBg !== 'image') app.previewBg = saved.previewBg;
       if (typeof saved.loopPreview === 'boolean') app.loopPreview = saved.loopPreview;
     }
@@ -175,7 +190,7 @@
     saveTimer = setTimeout(() => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          mode: app.mode, tab: app.tab, scenes: app.scenes, exportOpts: app.exportOpts,
+          schema: STORAGE_SCHEMA, mode: app.mode, tab: app.tab, scenes: app.scenes, exportOpts: app.exportOpts,
           previewBg: app.previewBg, loopPreview: app.loopPreview
         }));
       } catch (error) {
@@ -309,6 +324,10 @@
     els.posterText.textContent = d.poster;
     els.trimText.textContent = d.trim;
     els.fileNameLabel.textContent = d.fileName;
+    els.fileNameAutoBadge.textContent = d.fileNameAuto;
+    els.fileNameAutoBtn.textContent = d.fileNameReset;
+    els.fileNameAutoBtn.title = d.fileNameResetTitle;
+    syncFileName();
     els.exportApngBtn.textContent = d.exportApng;
     els.exportPngBtn.textContent = d.exportPng;
     els.exportZipBtn.textContent = d.exportZip;
@@ -580,6 +599,7 @@
     updateTimelineBar();
     updateInfo();
     syncExitToggle();
+    syncFileName();
   }
 
   // プレビュー下の「退場あり」スイッチ（動きタブ「退場」見出しのスイッチと同じ設定）
@@ -809,6 +829,7 @@
   function resetMode() {
     if (!window.confirm(msg().storageReset)) return;
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
+    app.exportOpts.fileNames[app.mode] = '';
     renderTemplates();
     view.renderer.invalidateSprites();
     invalidate();
@@ -838,12 +859,49 @@
       .slice(0, 60);
   }
 
+  // 長い文章は16文字まで（句読点で区切れるならそこまで）
+  function shortTitle(text) {
+    const line = String(text || '').split('\n').map(l => l.trim()).find(Boolean) || '';
+    const chars = E.graphemes(line);
+    if (chars.length <= 16) return line;
+    const head = chars.slice(0, 16);
+    for (let i = head.length - 1; i >= 3; i--) {
+      if (/[、。，．！？!?,.]/.test(head[i])) return head.slice(0, i).join('');
+    }
+    return head.join('');
+  }
+
+  // 左の設定（文章・登場の動き／表示方法・退場の有無）からファイル名の候補を作る
+  function suggestFileName() {
+    const s = scene();
+    const d = dict();
+    const L = v => (v && typeof v === 'object' ? (v[app.lang] ?? v.ja) : (v || ''));
+    const parts = [shortTitle(s.text) || d.modes[s.mode][0]];
+    if (s.mode === 'trailer') {
+      const opt = OPT.reveal.find(o => o.value === (s.reveal || 'char'));
+      if (opt) parts.push(L(opt.label));
+    } else {
+      parts.push(L(FX_LABELS.in[s.inFx]));
+    }
+    const scroll = s.mode === 'trailer' && s.reveal === 'scroll';
+    if (!scroll && s.outEnabled === false) parts.push(d.fileNoExit);
+    return sanitizeFileName(parts.filter(Boolean).join('_'));
+  }
+
   function baseFileName() {
-    const custom = sanitizeFileName(app.exportOpts.fileName);
+    const custom = sanitizeFileName(app.exportOpts.fileNames[app.mode]);
     if (custom) return custom.replace(/\.(png|apng|zip)$/i, '');
-    const firstLine = String(scene().text || '').split('\n').find(line => line.trim()) || '';
-    const fromText = sanitizeFileName(E.graphemes(firstLine.trim()).slice(0, 16).join(''));
-    return fromText || 'text_apng';
+    return suggestFileName() || 'text_apng';
+  }
+
+  // ファイル名欄：手入力していなければ、設定から作った候補を入れておく（書き出しボタンはこの名前を使う）
+  function syncFileName() {
+    const custom = app.exportOpts.fileNames[app.mode] || '';
+    const suggestion = suggestFileName();
+    els.fileNameInput.placeholder = suggestion;
+    if (document.activeElement !== els.fileNameInput) els.fileNameInput.value = custom || suggestion;
+    els.fileNameAutoBadge.hidden = Boolean(custom);
+    els.fileNameAutoBtn.hidden = !custom;
   }
 
   function formatBytes(bytes) {
@@ -1146,7 +1204,6 @@
     els.colorSelect.value = o.color;
     els.posterInput.checked = Boolean(o.poster);
     els.trimInput.checked = Boolean(o.trim);
-    els.fileNameInput.value = o.fileName || '';
     els.loopCountWrap.hidden = o.loop !== 'count';
     els.fpsSelect.addEventListener('change', () => { o.fps = Number(els.fpsSelect.value); updateInfo(); saveState(); });
     els.loopSelect.addEventListener('change', () => setExportLoop(els.loopSelect.value));
@@ -1154,8 +1211,19 @@
     els.colorSelect.addEventListener('change', () => { o.color = els.colorSelect.value; saveState(); });
     els.posterInput.addEventListener('change', () => { o.poster = els.posterInput.checked; saveState(); });
     els.trimInput.addEventListener('change', () => { o.trim = els.trimInput.checked; saveState(); });
-    els.fileNameInput.addEventListener('input', () => { o.fileName = els.fileNameInput.value; saveState(); });
-    els.fileNameInput.addEventListener('focus', () => { if (!els.fileNameInput.value) els.fileNameInput.placeholder = baseFileName(); });
+    els.fileNameInput.addEventListener('input', () => {
+      const value = els.fileNameInput.value;
+      // 空欄、または候補と同じ名前なら自動入力のまま
+      o.fileNames[app.mode] = value.trim() && value !== suggestFileName() ? value : '';
+      syncFileName();
+      saveState();
+    });
+    els.fileNameInput.addEventListener('blur', syncFileName);
+    els.fileNameAutoBtn.addEventListener('click', () => {
+      o.fileNames[app.mode] = '';
+      syncFileName();
+      saveState();
+    });
   }
 
   function bindEvents() {

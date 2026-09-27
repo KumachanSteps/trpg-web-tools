@@ -99,8 +99,8 @@
         }
       },
       {
-        id: 'explore', icon: '🔍', label: T('探索開始', 'Investigation'),
-        text: T('探索開始', 'INVESTIGATION'), subText: T('INVESTIGATION', '- PHASE 1 -'),
+        id: 'explore', icon: '🔍', label: T('探索開始', 'Exploration'),
+        text: T('探索開始', 'EXPLORATION'), subText: T('EXPLORATION', '- PHASE 1 -'),
         patch: {
           fontId: 'shippori-mincho', weight: 800, fontSize: 116, letterSpacing: 0.28,
           subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.5, subGap: 0.4,
@@ -112,61 +112,16 @@
         }
       },
       {
-        id: 'session', icon: '🎲', label: T('セッション開始', 'Session Start'),
-        text: T('SESSION START', 'SESSION START'), subText: T('セッション開始', 'Good luck, investigators'),
+        id: 'investigate', icon: '🕵️', label: T('捜査開始', 'Investigation'),
+        text: T('捜査開始', 'INVESTIGATION'), subText: T('- INVESTIGATION -', '- CASE OPEN -'),
         patch: {
-          fontId: 'cinzel', weight: 700, fontSize: 104, letterSpacing: 0.16,
-          subFontId: 'noto-serif-jp', subWeight: 700, subSize: 0.28, subLetterSpacing: 0.3,
-          fill: { type: 'gradient', color: '#ffffff', color2: '#dfe6ee', color3: '#8f9cab', dir: 'v' },
-          stroke: { on: true, width: 2, color: '#1d2430' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 12, x: 0, y: 4 },
-          glow: { on: true, color: '#bcd7ff', size: 22, strength: 0.8 },
-          deco: { type: 'corners', color2: '#dfe6ee', pad: 0.45, thickness: 3, anim: 'grow', dur: 0.6 },
-          inFx: 'blurIn', inDur: 0.9, inStagger: 0.05, inOrder: 'center', hold: 1.5, outFx: 'blurOut', outDur: 0.7, subFx: 'fade'
-        }
-      },
-      {
-        id: 'gameover', icon: '💀', label: T('ゲームオーバー', 'Game Over'),
-        text: T('GAME OVER', 'GAME OVER'), subText: T('探索者は帰らなかった', 'The investigator never returned'),
-        patch: {
-          fontId: 'creepster', weight: 400, fontSize: 150, letterSpacing: 0.06,
-          subFontId: 'yuji-syuku', subWeight: 400, subSize: 0.24, subLetterSpacing: 0.2, subGap: 0.2,
-          fill: { type: 'gradient', color: '#ff6a6a', color2: '#b30000', color3: '#4a0000', dir: 'v' },
-          stroke: { on: true, width: 3, color: '#1a0000' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.85, blur: 20, x: 0, y: 6 },
-          glow: { on: true, color: '#ff1a1a', size: 40, strength: 1.1 },
-          subColorOn: true, subColor: '#e8d6d6',
-          bg: { type: 'vignette', color: '#000000', opacity: 0.6, sync: true },
-          inFx: 'glitch', inDur: 1.0, holdFx: 'flicker', hold: 1.6, outFx: 'glitch', outDur: 0.8, subFx: 'fade', subDelay: 0
-        }
-      },
-      {
-        id: 'sancheck', icon: '🌀', label: T('SANチェック', 'Sanity Check'),
-        text: T('SANチェック', 'SANITY CHECK'), subText: T('――正気を保てるか', '— Can you keep your mind?'),
-        patch: {
-          fontId: 'zen-antique', weight: 400, fontSize: 124, letterSpacing: 0.1,
-          subFontId: 'same', subWeight: 400, subSize: 0.26, subLetterSpacing: 0.2,
-          fill: { type: 'solid', color: '#ece6ff' },
-          stroke: { on: true, width: 3, color: '#12002a' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 16, x: 0, y: 5 },
-          glow: { on: true, color: '#8a4dff', size: 36, strength: 1.2 },
-          deco: { type: 'band', color: '#12001f', opacity: 0.55, pad: 0.5, soft: 0.7, sideFade: 0.35, anim: 'grow', dur: 0.5 },
-          inFx: 'flicker', inDur: 0.9, inStagger: 0.06, holdFx: 'shake', holdPower: 0.6, hold: 1.4, outFx: 'blurOut', outDur: 0.8, subFx: 'fade'
-        }
-      },
-      {
-        id: 'survived', icon: '🏆', label: T('生還', 'Survived'),
-        text: T('生還', 'SURVIVED'), subText: T('MISSION COMPLETE', 'MISSION COMPLETE'),
-        patch: {
-          fontId: 'zen-old-mincho', weight: 900, fontSize: 170, letterSpacing: 0.2,
-          subFontId: 'cinzel', subWeight: 700, subSize: 0.18, subLetterSpacing: 0.45, subGap: 0.3,
-          fill: { type: 'gradient', color: '#fffbe6', color2: '#ffd257', color3: '#b8860b', dir: 'v' },
-          stroke: { on: true, width: 4, color: '#3b2500' }, stroke2: { on: true, width: 5, color: '#fff3c4' },
-          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 6 },
-          glow: { on: true, color: '#ffd257', size: 40, strength: 1.2 },
-          subColorOn: true, subColor: '#fff3c4',
-          deco: { type: 'lines', color2: '#ffe7a3', pad: 0.3, extend: 1.0, thickness: 2, anim: 'grow', dur: 0.7 },
-          inFx: 'flash', inDur: 0.9, holdFx: 'glow', hold: 1.6, outFx: 'fade', outDur: 0.7, subFx: 'fade'
+          fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 112, letterSpacing: 0.24,
+          subFontId: 'special-elite', subWeight: 400, subSize: 0.24, subLetterSpacing: 0.3, subGap: 0.22,
+          fill: { type: 'solid', color: '#151515' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: false }, glow: { on: false },
+          subColorOn: true, subColor: '#151515',
+          deco: { type: 'band', color: '#f3c613', opacity: 1, pad: 0.3, soft: 0, sideFade: 0, anim: 'grow', dur: 0.35 },
+          inFx: 'typewriter', inStagger: 0.1, hold: 1.6, outFx: 'wipe', outDir: 'lr', outDur: 0.5, subFx: 'fade', subDelay: -0.1
         }
       },
       {
@@ -182,26 +137,45 @@
         }
       },
       {
-        id: 'critical', icon: '✨', label: T('クリティカル', 'Critical'),
-        text: T('クリティカル！', 'CRITICAL!'), subText: T('', ''),
+        id: 'secret', icon: '🔒', label: T('秘匿を確認してください', 'Check Your Secret'),
+        text: T('秘匿を確認してください', 'CHECK YOUR SECRET'), subText: T('SECRET HANDOUT', 'SECRET HANDOUT'),
         patch: {
-          fontId: 'mochiy-pop-one', weight: 400, fontSize: 120, letterSpacing: 0.02,
-          fill: { type: 'gradient', color: '#fffbd1', color2: '#ffe14d', color3: '#ff9d00', dir: 'v' },
-          stroke: { on: true, width: 7, color: '#6a2c00' }, stroke2: { on: true, width: 6, color: '#ffffff' },
-          shadow: { on: true, color: '#000000', opacity: 0.5, blur: 8, x: 0, y: 6 },
+          fontId: 'zen-kaku-gothic-new', weight: 700, fontSize: 80, letterSpacing: 0.12,
+          subPosition: 'above', subFontId: 'oswald', subWeight: 700, subSize: 0.34, subLetterSpacing: 0.5, subGap: 0.35,
+          fill: { type: 'solid', color: '#ffffff' },
+          stroke: { on: true, width: 3, color: '#14060a' }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 12, x: 0, y: 4 },
           glow: { on: false },
-          inFx: 'pop', inDur: 0.5, inStagger: 0.06, holdFx: 'wave', hold: 1.4, outFx: 'growOut', outDur: 0.4, outStagger: 0.03
+          subColorOn: true, subColor: '#ff5c6c',
+          deco: { type: 'box', color: '#0d0609', opacity: 0.72, color2: '#ff5c6c', pad: 0.45, thickness: 3, radius: 0.08, anim: 'grow', dur: 0.4 },
+          inFx: 'blurIn', inDur: 0.7, inStagger: 0.03, hold: 2, outFx: 'blurOut', outDur: 0.6, outStagger: 0.02, subFx: 'fade', subDelay: -0.3
         }
       },
       {
-        id: 'fumble', icon: '🫥', label: T('ファンブル', 'Fumble'),
-        text: T('ファンブル…', 'FUMBLE...'), subText: T('', ''),
+        id: 'break', icon: '☕', label: T('休憩中', 'On Break'),
+        text: T('休憩中', 'BREAK TIME'), subText: T('BREAK TIME', 'Back in a few minutes'),
         patch: {
-          fontId: 'rocknroll-one', weight: 400, fontSize: 118, letterSpacing: 0.04,
-          fill: { type: 'gradient', color: '#dfe7ff', color2: '#8fa3c7', color3: '#4a5a7a', dir: 'v' },
-          stroke: { on: true, width: 5, color: '#101624' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 10, x: 0, y: 6 },
-          inFx: 'bounce', inDur: 0.9, inStagger: 0.07, hold: 1.2, outFx: 'sink', outDur: 0.7, outStagger: 0.04
+          fontId: 'zen-maru-gothic', weight: 900, fontSize: 140, letterSpacing: 0.14,
+          subFontId: 'm-plus-rounded-1c', subWeight: 700, subSize: 0.24, subLetterSpacing: 0.35, subGap: 0.3,
+          fill: { type: 'gradient', color: '#fffdf7', color2: '#ffe6bf', color3: '', dir: 'v' },
+          stroke: { on: true, width: 7, color: '#6b3f1d' }, stroke2: { on: true, width: 6, color: '#ffffff' },
+          shadow: { on: true, color: '#3a1f0a', opacity: 0.35, blur: 10, x: 0, y: 6 },
+          glow: { on: false },
+          subColorOn: true, subColor: '#6b3f1d',
+          inFx: 'bounce', inDur: 0.9, inStagger: 0.1, holdFx: 'float', holdPower: 0.8, hold: 2.4, outFx: 'sink', outDur: 0.7, outStagger: 0.05, subFx: 'fade'
+        }
+      },
+      {
+        id: 'loading', icon: '⏳', label: T('Now Loading', 'Now Loading'),
+        text: T('Now Loading...', 'Now Loading...'), subText: T('しばらくお待ちください', 'Please wait a moment'),
+        patch: {
+          fontId: 'press-start-2p', weight: 400, fontSize: 64, letterSpacing: 0.04,
+          subFontId: 'dotgothic16', subWeight: 400, subSize: 0.42, subLetterSpacing: 0.2, subGap: 0.5,
+          fill: { type: 'solid', color: '#ffffff' },
+          stroke: { on: true, width: 4, color: '#1b1b3a' }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.55, blur: 0, x: 5, y: 5 },
+          glow: { on: false },
+          inFx: 'typewriter', inStagger: 0.07, holdFx: 'wave', holdPower: 1, hold: 2.4, outFx: 'fade', outDur: 0.4, subFx: 'fade', subDelay: 0
         }
       }
     ],
