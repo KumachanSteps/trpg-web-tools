@@ -811,8 +811,8 @@
 
   function applyTemplate(tpl) {
     const s = scene();
-    const replaceText = P.isSampleText(app.mode, s.text, s.subText);
-    P.applyTemplate(s, tpl, app.lang, replaceText);
+    // 書き換えていない文章・サブテキストだけ、新しいテンプレートの見本に差し替える
+    P.applyTemplate(s, tpl, app.lang, P.sampleState(app.mode, s.text, s.subText));
     s.mode = app.mode;
     renderTemplates();
     view.renderer.invalidateSprites();

@@ -87,14 +87,13 @@
         id: 'battle', icon: '⚔️', label: T('戦闘開始', 'Battle Start'),
         text: T('戦闘開始', 'BATTLE START'), subText: T('BATTLE START', 'ENGAGE'),
         patch: {
-          anchor: 'ml', marginX: 72, offsetX: 96, align: 'start',
           fontId: 'shippori-mincho-b1', weight: 800, fontSize: 132, letterSpacing: 0.1,
           subFontId: 'cinzel', subWeight: 700, subSize: 0.19, subLetterSpacing: 0.6, subGap: 0.55,
           fill: { type: 'solid', color: '#ffffff' },
           stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.35, blur: 10, x: 0, y: 3 },
           glow: { on: false },
-          deco: { type: 'frame', color: '#000000', opacity: 0, color2: '#ffffff', thickness: 3, pad: 0.5, extend: 12, anim: 'grow', dur: 0.6 },
+          deco: { type: 'frame', color: '#000000', opacity: 0, color2: '#ffffff', thickness: 3, pad: 0.55, extend: 12, anim: 'grow', dur: 0.6 },
           inFx: 'shrinkIn', inDur: 0.45, inStagger: 0.09, inPower: 0.8, hold: 1.4, outFx: 'zoomThrough', outDur: 0.5, subFx: 'fade', subDelay: -0.1
         }
       },
@@ -423,6 +422,7 @@
   }
 
   // テンプレートはスタイルと動きを初期値から組み立て直す。文章はユーザーが書き換えていなければ差し替える。
+  // replaceText: true / false、または { main, sub }（文章とサブテキストを別々に差し替えるか）
   function applyTemplate(scene, template, lang, replaceText) {
     const keep = { text: scene.text, subText: scene.subText, width: scene.width, height: scene.height, sizePreset: scene.sizePreset, outEnabled: scene.outEnabled };
     const fresh = deepMerge(deepMerge(clone(BASE), MODE_DEFAULTS[scene.mode] || {}), template.patch);
@@ -434,20 +434,37 @@
     scene.templateId = template.id;
     // 退場の有無は利用者の選択なので、テンプレートを切り替えても引き継ぐ
     if (!('outEnabled' in template.patch)) scene.outEnabled = keep.outEnabled !== false;
-    if (replaceText) {
-      scene.text = template.text ? (template.text[lang] ?? template.text.ja) : '';
-      scene.subText = template.subText ? (template.subText[lang] ?? template.subText.ja) : '';
-    } else {
-      scene.text = keep.text;
-      scene.subText = keep.subText;
-    }
+    const replace = replaceText && typeof replaceText === 'object' ? replaceText : { main: Boolean(replaceText), sub: Boolean(replaceText) };
+    scene.text = replace.main ? (template.text ? (template.text[lang] ?? template.text.ja) : '') : keep.text;
+    scene.subText = replace.sub ? (template.subText ? (template.subText[lang] ?? template.subText.ja) : '') : keep.subText;
     return scene;
   }
 
+  // 以前のバージョンのテンプレートの文章。保存データに残っていても見本として扱い、テンプレートの切り替えで差し替える
+  const LEGACY_SAMPLES = {
+    message: {
+      text: ['SESSION START', 'GAME OVER', 'SANチェック', 'SANITY CHECK', '生還', 'SURVIVED', 'クリティカル！', 'CRITICAL!', 'ファンブル…', 'FUMBLE...'],
+      subText: ['- BATTLE START -', '- ENCOUNTER -', 'INVESTIGATION', 'セッション開始', 'Good luck, investigators', '探索者は帰らなかった',
+        'The investigator never returned', '――正気を保てるか', '— Can you keep your mind?', 'MISSION COMPLETE']
+    }
+  };
+
+  // 文章・サブテキストがテンプレートの見本のままか（書き換えていない方だけ、切り替え時に新しい見本へ差し替える）
+  function sampleState(mode, text, subText) {
+    const texts = new Set(LEGACY_SAMPLES[mode] ? LEGACY_SAMPLES[mode].text : []);
+    const subs = new Set(LEGACY_SAMPLES[mode] ? LEGACY_SAMPLES[mode].subText : []);
+    (TEMPLATES[mode] || []).forEach(tpl => ['ja', 'en'].forEach(lang => {
+      if (tpl.text && tpl.text[lang]) texts.add(tpl.text[lang]);
+      if (tpl.subText && tpl.subText[lang]) subs.add(tpl.subText[lang]);
+    }));
+    const main = !String(text || '').trim() || texts.has(text);
+    const sub = subs.has(subText) || (!String(subText || '').trim() && main);
+    return { main, sub };
+  }
+
   function isSampleText(mode, text, subText) {
-    const list = TEMPLATES[mode] || [];
-    if (!String(text || '').trim()) return true;
-    return list.some(tpl => ['ja', 'en'].some(lang => tpl.text && tpl.text[lang] === text && ((tpl.subText && tpl.subText[lang]) || '') === (subText || '')));
+    const state = sampleState(mode, text, subText);
+    return state.main && state.sub;
   }
 
   root.TextApngPresets = {
@@ -461,6 +478,7 @@
     deepMerge,
     defaultScene,
     applyTemplate,
-    isSampleText
+    isSampleText,
+    sampleState
   };
 })(window);
