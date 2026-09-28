@@ -26,7 +26,7 @@
       helpTitle: '使い方',
       helpSteps: [
         '1. 左上で「メッセージ」「トレイラー」「場所・時間」から作りたい演出を選びます。',
-        '2. テンプレートを選ぶと、フォント・色・動きが一括で設定されます（メッセージは「戦闘」「探索・事件」「GM」「シーン・時間」「判定」の分類から選べます）。書き換えた文章は、メッセージではテンプレートごとに保存され、トレイラーと場所・時間ではテンプレートを切り替えても残ります。',
+        '2. テンプレートを選ぶと、フォント・色・動きが一括で設定されます（メッセージは「戦闘」「探索・事件」「GM」「シーン・時間」「判定」の分類から選べ、「判定」ではCoC6・CoC7・エモクロア・ダブクロのシステムごとに選べます）。書き換えた文章は、メッセージではテンプレートごとに保存され、トレイラーと場所・時間ではテンプレートを切り替えても残ります。',
         '3. 「テキスト」「フォント」「動き」「装飾」「背景・配置」のタブで細かく調整します。右側のプレビューはリアルタイムに更新されます。',
         '4. 動きのカードにマウスを乗せると、その効果の動きを小さなプレビューで確認できます。',
         '5. 「APNGを書き出す」で背景が透明な動く画像を作成します。「PNG静止画」は再生中なら完成状態を、一時停止中ならその瞬間を保存します。動画編集向けに「連番PNG（ZIP）」も書き出せます。',
@@ -56,6 +56,7 @@
       },
       templates: 'テンプレート',
       templateGroups: 'テンプレートの分類',
+      templateSystems: 'システム',
       templatesHint: mode => (mode === 'message'
         ? '動き・フォント・色をまとめて設定します（文章はテンプレートごとに保存されます）'
         : '動き・フォント・色をまとめて設定します（書き換えた文章はそのまま残ります）'),
@@ -155,7 +156,7 @@
       helpTitle: 'Guide',
       helpSteps: [
         '1. Pick a mode at the top left: “Message”, “Trailer”, or “Place & Time”.',
-        '2. Choose a template to set the font, colors, and motion in one click (Message templates are sorted into Combat, Investigation, GM, Scene & Time, and Dice). Edited text is saved separately for each template in Message mode, and stays when you switch templates in Trailer and Place & Time.',
+        '2. Choose a template to set the font, colors, and motion in one click (Message templates are sorted into Combat, Investigation, GM, Scene & Time, and Dice; Dice is further split by system: CoC 6e, CoC 7e, Emoklore, and Double Cross). Edited text is saved separately for each template in Message mode, and stays when you switch templates in Trailer and Place & Time.',
         '3. Fine-tune with the Text / Font / Motion / Style / Layout tabs. The preview on the right updates in real time.',
         '4. Hover over a motion card to see a small animated preview of that effect.',
         '5. Click “Export APNG” to create a moving image with a transparent background. “PNG still” saves the finished state while playing, or the exact paused moment. A PNG sequence (ZIP) is also available for video editing.',
@@ -185,6 +186,7 @@
       },
       templates: 'Templates',
       templateGroups: 'Template groups',
+      templateSystems: 'System',
       templatesHint: mode => (mode === 'message'
         ? 'Sets motion, font, and colors at once (edited text is saved for each template)'
         : 'Sets motion, font, and colors at once (your edited text is kept)'),

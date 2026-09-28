@@ -46,6 +46,7 @@
     templatesLabel: $('templatesLabel'),
     templatesHint: $('templatesHint'),
     templateGroups: $('templateGroups'),
+    templateSystems: $('templateSystems'),
     templateStrip: $('templateStrip'),
     resetBtn: $('resetModeBtn'),
     settingsTabs: $('settingsTabs'),
@@ -843,12 +844,24 @@
     return shownGroup[app.mode];
   }
 
+  // 分類の下のシステム（分類ごと・保存しない）。未選択なら、選んでいるテンプレートのシステムから始める
+  const shownSystem = {};
+  function currentSystem(group) {
+    if (!group || !group.systems) return null;
+    if (!group.systems.some(sy => sy.id === shownSystem[group.id])) {
+      const active = P.TEMPLATES[app.mode].find(tpl => tpl.id === scene().templateId);
+      shownSystem[group.id] = active && active.group === group.id && active.system ? active.system : group.systems[0].id;
+    }
+    return shownSystem[group.id];
+  }
+
   function renderTemplates() {
     const s = scene();
     // 作り直す前にフォーカスしていたボタンへ、作り直した後もフォーカスを戻す
     const focused = document.activeElement;
-    const refocus = focused && (els.templateGroups.contains(focused) || els.templateStrip.contains(focused))
-      ? (focused.dataset.group ? `[data-group="${focused.dataset.group}"]` : `[data-template="${focused.dataset.template}"]`) : '';
+    const lists = [els.templateGroups, els.templateSystems, els.templateStrip];
+    const refocus = focused && lists.some(list => list.contains(focused))
+      ? ['group', 'system', 'template'].filter(key => focused.dataset[key]).map(key => `[data-${key}="${focused.dataset[key]}"]`)[0] || '' : '';
     els.templatesHint.textContent = dict().templatesHint(app.mode);
     const groups = P.TEMPLATE_GROUPS[app.mode] || null;
     const group = currentGroup();
@@ -874,8 +887,36 @@
         els.templateGroups.appendChild(btn);
       });
     }
+    const groupDef = groups ? groups.find(g => g.id === group) : null;
+    const systems = groupDef && groupDef.systems ? groupDef.systems : null;
+    const system = currentSystem(groupDef);
+    els.templateSystems.hidden = !systems;
+    els.templateSystems.innerHTML = '';
+    if (systems) {
+      els.templateSystems.setAttribute('aria-label', dict().templateSystems);
+      const label = document.createElement('span');
+      label.className = 'template-systems-label';
+      label.textContent = dict().templateSystems;
+      els.templateSystems.appendChild(label);
+      systems.forEach(sy => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'template-system';
+        btn.dataset.system = sy.id;
+        btn.textContent = sy.label[app.lang];
+        const on = sy.id === system;
+        btn.classList.toggle('is-active', on);
+        btn.classList.toggle('has-current', Boolean(active && active.group === groupDef.id && active.system === sy.id));
+        btn.setAttribute('aria-pressed', String(on));
+        btn.addEventListener('click', () => {
+          shownSystem[groupDef.id] = sy.id;
+          renderTemplates();
+        });
+        els.templateSystems.appendChild(btn);
+      });
+    }
     els.templateStrip.innerHTML = '';
-    (P.TEMPLATES[app.mode] || []).filter(tpl => !groups || tpl.group === group).forEach(tpl => {
+    (P.TEMPLATES[app.mode] || []).filter(tpl => !groups || (tpl.group === group && (!system || tpl.system === system))).forEach(tpl => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'template-chip';
@@ -894,7 +935,7 @@
       els.templateStrip.appendChild(btn);
     });
     if (refocus) {
-      const target = els.templateGroups.querySelector(refocus) || els.templateStrip.querySelector(refocus);
+      const target = lists.map(list => list.querySelector(refocus)).find(Boolean);
       if (target) target.focus();
     }
   }
@@ -925,6 +966,7 @@
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
     app.editedTexts[app.mode] = {};
     delete shownGroup[app.mode];
+    (P.TEMPLATE_GROUPS[app.mode] || []).forEach(g => { delete shownSystem[g.id]; });
     app.exportOpts.fileNames[app.mode] = '';
     renderTemplates();
     view.renderer.invalidateSprites();

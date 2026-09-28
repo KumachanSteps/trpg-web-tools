@@ -109,21 +109,112 @@
     inFx: 'typewriter', inStagger: 0.05, hold: 2, outFx: 'fade', outDur: 0.45, subFx: 'fade', subDelay: -3
   };
 
-  // 判定結果（クリティカル・成功・失敗・ファンブル）で共通の文字設定
+  // 判定結果は成功の度合いで色を分ける（成功＝白、大きめの成功＝青、さらに上＝紫、クリティカル＝金、その上＝虹色、失敗＝灰、ファンブル＝赤）。
+  // 文字の設定は共通
   const DICE_TEXT = {
     fontId: 'dela-gothic-one', weight: 400, fontSize: 140, letterSpacing: 0.1,
     subFontId: 'oswald', subWeight: 700, subSize: 0.24, subLetterSpacing: 0.6, subGap: 0.28,
     subColorOn: true
   };
+  const DICE_SUCCESS = {
+    ...DICE_TEXT,
+    fill: { type: 'gradient', color: '#ffffff', color2: '#eef6ff', color3: '#b9d9ff', dir: 'v' },
+    stroke: { on: true, width: 5, color: '#1b3350' }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.55, blur: 12, x: 0, y: 5 },
+    glow: { on: true, color: '#8fc3ff', size: 16, strength: 0.45 },
+    subColor: '#cfe4ff',
+    inFx: 'pop', inDur: 0.55, inStagger: 0.06, hold: 1.4, outFx: 'fade', outDur: 0.5, subFx: 'fade'
+  };
+  const DICE_GOOD = {
+    ...DICE_TEXT,
+    fill: { type: 'gradient', color: '#ffffff', color2: '#cfe7ff', color3: '#4f9dff', dir: 'v' },
+    stroke: { on: true, width: 5, color: '#0a2148' }, stroke2: { on: true, width: 4, color: '#e6f2ff' },
+    shadow: { on: true, color: '#000000', opacity: 0.55, blur: 12, x: 0, y: 5 },
+    glow: { on: true, color: '#3d8bff', size: 26, strength: 0.8 },
+    subColor: '#9ccbff',
+    inFx: 'pop', inDur: 0.6, inStagger: 0.06, holdFx: 'glow', holdPower: 0.6, hold: 1.5, outFx: 'fade', outDur: 0.5, subFx: 'fade'
+  };
+  const DICE_GREAT = {
+    ...DICE_TEXT,
+    fill: { type: 'gradient', color: '#ffffff', color2: '#efdfff', color3: '#b27bff', dir: 'v' },
+    stroke: { on: true, width: 5, color: '#2a0d4d' }, stroke2: { on: true, width: 5, color: '#f4e9ff' },
+    shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 6 },
+    glow: { on: true, color: '#b06bff', size: 32, strength: 0.95 },
+    subColor: '#dcc2ff',
+    inFx: 'zoomIn', inDur: 0.7, holdFx: 'glow', holdPower: 0.8, hold: 1.6, outFx: 'growOut', outDur: 0.5, subFx: 'fade'
+  };
+  const DICE_CRITICAL = {
+    ...DICE_TEXT, fontSize: 130, letterSpacing: 0.06, subSize: 0.26,
+    fill: { type: 'gradient', color: '#fffbe6', color2: '#ffd257', color3: '#b8860b', dir: 'v' },
+    stroke: { on: true, width: 5, color: '#3b2500' }, stroke2: { on: true, width: 5, color: '#fff3c4' },
+    shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 6 },
+    glow: { on: true, color: '#ffd257', size: 36, strength: 1 },
+    subColor: '#ffe7a3',
+    inFx: 'flash', inDur: 0.8, holdFx: 'glow', holdPower: 1, hold: 1.6, outFx: 'growOut', outDur: 0.5, subFx: 'fade', subDelay: 0
+  };
+  const DICE_BEYOND = {
+    ...DICE_TEXT, fontSize: 130, letterSpacing: 0.06, subSize: 0.26,
+    fill: { type: 'gradient', color: '#fff6b0', color2: '#ff8ad8', color3: '#7b7dff', dir: 'v' },
+    stroke: { on: true, width: 5, color: '#1d0a33' }, stroke2: { on: true, width: 5, color: '#ffffff' },
+    shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 6 },
+    glow: { on: true, color: '#ff6ad5', size: 40, strength: 1.1 },
+    subColor: '#ffd1f1',
+    inFx: 'slam', inDur: 0.8, holdFx: 'pulse', holdPower: 1, hold: 1.8, outFx: 'growOut', outDur: 0.5, subFx: 'fade', subDelay: 0
+  };
+  const DICE_FAILURE = {
+    ...DICE_TEXT,
+    fill: { type: 'gradient', color: '#e3e6ec', color2: '#aab0bb', color3: '#6b717c', dir: 'v' },
+    stroke: { on: true, width: 5, color: '#1c1f25' }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.7, blur: 10, x: 0, y: 5 }, glow: { on: false },
+    subColor: '#9aa1ad',
+    inFx: 'drop', inDur: 0.6, inStagger: 0.08, hold: 1.3, outFx: 'sink', outDur: 0.7, outStagger: 0.06, subFx: 'fade'
+  };
+  const DICE_FUMBLE = {
+    ...DICE_TEXT, fontSize: 130, letterSpacing: 0.08, subSize: 0.26,
+    fill: { type: 'gradient', color: '#ff6a6a', color2: '#b30000', color3: '#4a0000', dir: 'v' },
+    stroke: { on: true, width: 4, color: '#140000' }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.85, blur: 18, x: 0, y: 6 },
+    glow: { on: true, color: '#ff1a1a', size: 34, strength: 1 },
+    subColor: '#ff8a8a',
+    inFx: 'glitch', inDur: 0.8, holdFx: 'glitch', holdPower: 0.8, hold: 1.8, outFx: 'sink', outDur: 0.8, outStagger: 0.05, subFx: 'fade'
+  };
+  // 判定の呼びかけ（共鳴判定・憑依判定など）
+  const CHECK_CALL = {
+    fontId: 'kaisei-decol', weight: 700, fontSize: 120, letterSpacing: 0.2,
+    subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.55, subGap: 0.4,
+    fill: { type: 'gradient', color: '#ffffff', color2: '#e9ddff', color3: '#b89cff', dir: 'v' },
+    stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#12002a', opacity: 0.7, blur: 12, x: 0, y: 4 },
+    glow: { on: true, color: '#a57bff', size: 28, strength: 0.8 },
+    subColorOn: true, subColor: '#d9c8ff',
+    deco: { type: 'corners', color2: '#c9b3ff', pad: 0.45, thickness: 2, anim: 'grow', dur: 0.6 },
+    inFx: 'emerge', inDur: 1.0, holdFx: 'glow', holdPower: 0.8, hold: 1.8, outFx: 'blurOut', outDur: 0.7, subFx: 'fade', subDelay: -0.2
+  };
+  // フェイズの見出し（ダブルクロスのオープニング〜エンディング）
+  const PHASE_TITLE = {
+    fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 92, letterSpacing: 0.14,
+    subFontId: 'orbitron', subWeight: 700, subSize: 0.26, subLetterSpacing: 0.55, subGap: 0.3,
+    fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.6, blur: 8, x: 0, y: 3 },
+    glow: { on: true, color: '#5ad1ff', size: 16, strength: 0.4 },
+    subColorOn: true, subColor: '#7fe3ff',
+    deco: { type: 'band', color: '#02060c', opacity: 0.72, pad: 0.45, soft: 0.2, sideFade: 0.2, anim: 'grow', dur: 0.45 },
+    inFx: 'wipe', inDir: 'lr', inDur: 0.7, hold: 1.6, outFx: 'wipe', outDir: 'lr', outDur: 0.6
+  };
 
-  // メッセージのテンプレートの分類（テンプレート一覧の上のタブ）
+  // メッセージのテンプレートの分類（テンプレート一覧の上のタブ）。systems があれば、その下にシステムの段を出す
   const TEMPLATE_GROUPS = {
     message: [
       { id: 'combat', label: T('戦闘', 'Combat') },
       { id: 'investigation', label: T('探索・事件', 'Investigation') },
       { id: 'gm', label: T('GM', 'GM') },
       { id: 'scene', label: T('シーン・時間', 'Scene & Time') },
-      { id: 'dice', label: T('判定', 'Dice') }
+      { id: 'dice', label: T('判定', 'Dice'), systems: [
+        { id: 'coc6', label: T('CoC6', 'CoC 6e') },
+        { id: 'coc7', label: T('CoC7', 'CoC 7e') },
+        { id: 'emoklore', label: T('エモクロア', 'Emoklore') },
+        { id: 'dx', label: T('ダブクロ', 'Double Cross') }
+      ] }
     ]
   };
 
@@ -143,13 +234,24 @@
         id: 'round', group: 'combat', icon: '🔔', label: T('ラウンド', 'Round'),
         text: T('ROUND 1', 'ROUND 1'), subText: T('', ''),
         patch: {
-          fontId: 'anton', weight: 400, italic: true, fontSize: 150, letterSpacing: 0.06,
-          fill: { type: 'gradient', color: '#ffffff', color2: '#ffe9a8', color3: '#ffb13b', dir: 'v' },
-          stroke: { on: true, width: 6, color: '#2a1200' }, stroke2: { on: true, width: 5, color: '#ffffff' },
-          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 12, x: 0, y: 6 },
-          glow: { on: true, color: '#ff7a1a', size: 26, strength: 0.7 },
-          deco: { type: 'sides', color2: '#ffffff', pad: 0.42, extend: 1.6, thickness: 4, anim: 'grow', dur: 0.5 },
-          inFx: 'slam', inDur: 0.6, hold: 1.3, outFx: 'zoomThrough', outDur: 0.45
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 124, letterSpacing: 0.16,
+          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.35, blur: 10, x: 0, y: 3 }, glow: { on: false },
+          deco: { type: 'sides', color2: '#ffffff', pad: 0.5, extend: 1.6, thickness: 3, anim: 'grow', dur: 0.6 },
+          inFx: 'drop', inDur: 0.55, inStagger: 0.1, inPower: 1.1, hold: 1.3, outFx: 'zoomThrough', outDur: 0.5
+        }
+      },
+      {
+        id: 'finalRound', group: 'combat', icon: '🔥', label: T('ファイナルラウンド', 'Final Round'),
+        text: T('FINAL ROUND', 'FINAL ROUND'), subText: T('', ''),
+        patch: {
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 124, letterSpacing: 0.1,
+          fill: { type: 'gradient', color: '#fff4e0', color2: '#ffc27a', color3: '#ff3b1f', dir: 'v' },
+          stroke: { on: true, width: 2, color: '#3a0600' }, stroke2: { on: false },
+          shadow: { on: true, color: '#1a0000', opacity: 0.7, blur: 12, x: 0, y: 4 },
+          glow: { on: true, color: '#ff2a10', size: 34, strength: 1 },
+          deco: { type: 'sides', color2: '#ff4a2a', pad: 0.45, extend: 1.0, thickness: 4, anim: 'grow', dur: 0.6 },
+          inFx: 'slam', inDur: 0.7, holdFx: 'pulse', holdPower: 1, hold: 1.6, outFx: 'zoomThrough', outDur: 0.5
         }
       },
       {
@@ -182,14 +284,13 @@
         id: 'emergency', group: 'investigation', icon: '⚠️', label: T('緊急事態', 'Emergency'),
         text: T('緊急事態', 'EMERGENCY'), subText: T('EMERGENCY', 'WARNING'),
         patch: {
-          fontId: 'dela-gothic-one', weight: 400, fontSize: 120, letterSpacing: 0.12,
-          subFontId: 'oswald', subWeight: 700, subSize: 0.3, subLetterSpacing: 0.6, subGap: 0.3,
-          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: true, width: 6, color: '#151515' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 10, x: 0, y: 4 },
-          glow: { on: true, color: '#ff2a1a', size: 26, strength: 0.9 },
+          fontId: 'noto-sans-jp', weight: 900, fontSize: 118, letterSpacing: 0.32,
+          subFontId: 'oswald', subWeight: 700, subSize: 0.26, subLetterSpacing: 0.7, subGap: 0.32,
+          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.65, blur: 8, x: 0, y: 3 }, glow: { on: false },
           subColorOn: true, subColor: '#f5c400',
           deco: { type: 'tape', pad: 0.3, anim: 'grow', dur: 0.55, tapeSize: 54, tapeSpeed: 110, tapeBlink: 0.55 },
-          inFx: 'slam', inDur: 0.45, inStagger: 0.06, hold: 1.8, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: -0.1
+          inFx: 'shutter', inDir: 'v', inDur: 0.45, hold: 1.8, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: -0.1
         }
       },
       {
@@ -244,17 +345,8 @@
       },
       {
         id: 'roleplay', group: 'gm', icon: '🎭', label: T('ロールプレイどうぞ', 'Roleplay Time'),
-        text: T('ロールプレイどうぞ', 'ROLEPLAY TIME'), subText: T('ROLE PLAY', 'The stage is yours'),
-        patch: {
-          fontId: 'zen-maru-gothic', weight: 900, fontSize: 104, letterSpacing: 0.08,
-          subFontId: 'm-plus-rounded-1c', subWeight: 700, subSize: 0.3, subLetterSpacing: 0.4, subGap: 0.35,
-          fill: { type: 'gradient', color: '#ffffff', color2: '#ffe3ec', color3: '', dir: 'v' },
-          stroke: { on: true, width: 6, color: '#7a2e57' }, stroke2: { on: false },
-          shadow: { on: true, color: '#3b0f28', opacity: 0.35, blur: 10, x: 0, y: 5 },
-          glow: { on: true, color: '#ffb3cf', size: 26, strength: 0.6 },
-          subColorOn: true, subColor: '#ffd6e6',
-          inFx: 'pop', inDur: 0.6, inStagger: 0.05, holdFx: 'float', holdPower: 0.8, hold: 2.2, outFx: 'fade', outDur: 0.5, subFx: 'fade'
-        }
+        text: T('ロールプレイどうぞ', 'ROLEPLAY TIME'), subText: T('ROLE PLAY', 'YOUR TURN'),
+        patch: SECRET_PATCH
       },
       {
         id: 'break', group: 'gm', icon: '☕', label: T('休憩中', 'On Break'),
@@ -332,84 +424,119 @@
         }
       },
       {
-        id: 'phase', group: 'scene', icon: '🌗', label: T('フェイズ', 'Phase'),
-        text: T('クライマックスフェイズ', 'CLIMAX PHASE'), subText: T('CLIMAX PHASE', ''),
-        patch: {
-          fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 92, letterSpacing: 0.14,
-          subFontId: 'orbitron', subWeight: 700, subSize: 0.26, subLetterSpacing: 0.55, subGap: 0.3,
-          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 8, x: 0, y: 3 },
-          glow: { on: true, color: '#5ad1ff', size: 16, strength: 0.4 },
-          subColorOn: true, subColor: '#7fe3ff',
-          deco: { type: 'band', color: '#02060c', opacity: 0.72, pad: 0.45, soft: 0.2, sideFade: 0.2, anim: 'grow', dur: 0.45 },
-          inFx: 'wipe', inDir: 'lr', inDur: 0.7, hold: 1.6, outFx: 'wipe', outDir: 'lr', outDur: 0.6
-        }
-      },
-      {
-        id: 'checkCall', group: 'dice', icon: '🎲', label: T('判定コール', 'Check Call'),
-        text: T('共鳴判定', 'SANITY CHECK'), subText: T('RESONANCE CHECK', 'ROLL THE DICE'),
-        patch: {
-          fontId: 'kaisei-decol', weight: 700, fontSize: 120, letterSpacing: 0.2,
-          subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.55, subGap: 0.4,
-          fill: { type: 'gradient', color: '#ffffff', color2: '#e9ddff', color3: '#b89cff', dir: 'v' },
-          stroke: { on: false }, stroke2: { on: false },
-          shadow: { on: true, color: '#12002a', opacity: 0.7, blur: 12, x: 0, y: 4 },
-          glow: { on: true, color: '#a57bff', size: 28, strength: 0.8 },
-          subColorOn: true, subColor: '#d9c8ff',
-          deco: { type: 'corners', color2: '#c9b3ff', pad: 0.45, thickness: 2, anim: 'grow', dur: 0.6 },
-          inFx: 'emerge', inDur: 1.0, holdFx: 'glow', holdPower: 0.8, hold: 1.8, outFx: 'blurOut', outDur: 0.7, subFx: 'fade', subDelay: -0.2
-        }
-      },
-      {
-        id: 'critical', group: 'dice', icon: '✨', label: T('クリティカル', 'Critical'),
-        text: T('クリティカル', 'CRITICAL!'), subText: T('CRITICAL', 'GREAT SUCCESS'),
-        patch: {
-          ...DICE_TEXT, fontSize: 130, letterSpacing: 0.06, subSize: 0.26,
-          fill: { type: 'gradient', color: '#fffbe6', color2: '#ffd257', color3: '#b8860b', dir: 'v' },
-          stroke: { on: true, width: 5, color: '#3b2500' }, stroke2: { on: true, width: 5, color: '#fff3c4' },
-          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 6 },
-          glow: { on: true, color: '#ffd257', size: 36, strength: 1 },
-          subColor: '#ffe7a3',
-          inFx: 'flash', inDur: 0.8, holdFx: 'glow', holdPower: 1, hold: 1.6, outFx: 'growOut', outDur: 0.5, subFx: 'fade', subDelay: 0
-        }
-      },
-      {
-        id: 'success', group: 'dice', icon: '⭕', label: T('成功', 'Success'),
+        id: 'coc6Success', group: 'dice', system: 'coc6', icon: '⭕', label: T('成功', 'Success'),
         text: T('成功', 'SUCCESS'), subText: T('SUCCESS', ''),
-        patch: {
-          ...DICE_TEXT,
-          fill: { type: 'gradient', color: '#ffffff', color2: '#e6f4ff', color3: '#8fc8ff', dir: 'v' },
-          stroke: { on: true, width: 5, color: '#0f2a52' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.55, blur: 12, x: 0, y: 5 },
-          glow: { on: true, color: '#58a6ff', size: 22, strength: 0.6 },
-          subColor: '#bfe0ff',
-          inFx: 'pop', inDur: 0.55, inStagger: 0.06, hold: 1.4, outFx: 'fade', outDur: 0.5, subFx: 'fade'
-        }
+        patch: DICE_SUCCESS
       },
       {
-        id: 'failure', group: 'dice', icon: '❌', label: T('失敗', 'Failure'),
+        id: 'coc6Failure', group: 'dice', system: 'coc6', icon: '❌', label: T('失敗', 'Failure'),
         text: T('失敗', 'FAILURE'), subText: T('FAILURE', ''),
-        patch: {
-          ...DICE_TEXT,
-          fill: { type: 'gradient', color: '#e3e6ec', color2: '#aab0bb', color3: '#6b717c', dir: 'v' },
-          stroke: { on: true, width: 5, color: '#1c1f25' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 10, x: 0, y: 5 }, glow: { on: false },
-          subColor: '#9aa1ad',
-          inFx: 'drop', inDur: 0.6, inStagger: 0.08, hold: 1.3, outFx: 'sink', outDur: 0.7, outStagger: 0.06, subFx: 'fade'
-        }
+        patch: DICE_FAILURE
       },
       {
-        id: 'fumble', group: 'dice', icon: '💀', label: T('ファンブル', 'Fumble'),
-        text: T('ファンブル', 'FUMBLE...'), subText: T('FUMBLE', 'CRITICAL FAILURE'),
-        patch: {
-          ...DICE_TEXT, fontSize: 130, letterSpacing: 0.08, subSize: 0.26,
-          fill: { type: 'gradient', color: '#ff6a6a', color2: '#b30000', color3: '#4a0000', dir: 'v' },
-          stroke: { on: true, width: 4, color: '#140000' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.85, blur: 18, x: 0, y: 6 },
-          glow: { on: true, color: '#ff1a1a', size: 34, strength: 1 },
-          subColor: '#ff8a8a',
-          inFx: 'glitch', inDur: 0.8, holdFx: 'glitch', holdPower: 0.8, hold: 1.8, outFx: 'sink', outDur: 0.8, outStagger: 0.05, subFx: 'fade'
-        }
+        id: 'coc6Special', group: 'dice', system: 'coc6', icon: '🌟', label: T('スペシャル', 'Special'),
+        text: T('スペシャル', 'SPECIAL'), subText: T('SPECIAL', ''),
+        patch: DICE_GREAT
+      },
+      {
+        id: 'coc6Critical', group: 'dice', system: 'coc6', icon: '✨', label: T('クリティカル', 'Critical'),
+        text: T('クリティカル', 'CRITICAL'), subText: T('CRITICAL', ''),
+        patch: DICE_CRITICAL
+      },
+      {
+        id: 'coc6Fumble', group: 'dice', system: 'coc6', icon: '💀', label: T('ファンブル', 'Fumble'),
+        text: T('ファンブル', 'FUMBLE'), subText: T('FUMBLE', ''),
+        patch: DICE_FUMBLE
+      },
+      {
+        id: 'coc7Critical', group: 'dice', system: 'coc7', icon: '✨', label: T('クリティカル', 'Critical'),
+        text: T('クリティカル', 'CRITICAL'), subText: T('CRITICAL', ''),
+        patch: DICE_CRITICAL
+      },
+      {
+        id: 'coc7Extreme', group: 'dice', system: 'coc7', icon: '🌟', label: T('イクストリーム成功', 'Extreme Success'),
+        text: T('イクストリーム成功', 'EXTREME SUCCESS'), subText: T('EXTREME SUCCESS', ''),
+        patch: DICE_GREAT
+      },
+      {
+        id: 'coc7Hard', group: 'dice', system: 'coc7', icon: '🔷', label: T('ハード成功', 'Hard Success'),
+        text: T('ハード成功', 'HARD SUCCESS'), subText: T('HARD SUCCESS', ''),
+        patch: DICE_GOOD
+      },
+      {
+        id: 'coc7Regular', group: 'dice', system: 'coc7', icon: '⭕', label: T('レギュラー成功', 'Regular Success'),
+        text: T('レギュラー成功', 'REGULAR SUCCESS'), subText: T('REGULAR SUCCESS', ''),
+        patch: DICE_SUCCESS
+      },
+      {
+        id: 'coc7Failure', group: 'dice', system: 'coc7', icon: '❌', label: T('失敗', 'Failure'),
+        text: T('失敗', 'FAILURE'), subText: T('FAILURE', ''),
+        patch: DICE_FAILURE
+      },
+      {
+        id: 'coc7Fumble', group: 'dice', system: 'coc7', icon: '💀', label: T('ファンブル', 'Fumble'),
+        text: T('ファンブル', 'FUMBLE'), subText: T('FUMBLE', ''),
+        patch: DICE_FUMBLE
+      },
+      {
+        id: 'emoSingle', group: 'dice', system: 'emoklore', icon: '⭕', label: T('シングル', 'Single'),
+        text: T('シングル', 'SINGLE'), subText: T('SINGLE', ''),
+        patch: DICE_SUCCESS
+      },
+      {
+        id: 'emoDouble', group: 'dice', system: 'emoklore', icon: '🔷', label: T('ダブル', 'Double'),
+        text: T('ダブル', 'DOUBLE'), subText: T('DOUBLE', ''),
+        patch: DICE_GOOD
+      },
+      {
+        id: 'emoTriple', group: 'dice', system: 'emoklore', icon: '🌟', label: T('トリプル', 'Triple'),
+        text: T('トリプル', 'TRIPLE'), subText: T('TRIPLE', ''),
+        patch: DICE_GREAT
+      },
+      {
+        id: 'emoMiracle', group: 'dice', system: 'emoklore', icon: '✨', label: T('ミラクル', 'Miracle'),
+        text: T('ミラクル', 'MIRACLE'), subText: T('MIRACLE', ''),
+        patch: DICE_CRITICAL
+      },
+      {
+        id: 'emoCatastrophe', group: 'dice', system: 'emoklore', icon: '☄️', label: T('カタストロフ', 'Catastrophe'),
+        text: T('カタストロフ', 'CATASTROPHE'), subText: T('CATASTROPHE', ''),
+        patch: DICE_BEYOND
+      },
+      {
+        id: 'emoFumble', group: 'dice', system: 'emoklore', icon: '💀', label: T('ファンブル', 'Fumble'),
+        text: T('ファンブル', 'FUMBLE'), subText: T('FUMBLE', ''),
+        patch: DICE_FUMBLE
+      },
+      {
+        id: 'emoResonance', group: 'dice', system: 'emoklore', icon: '🔮', label: T('共鳴判定', 'Resonance Check'),
+        text: T('共鳴判定', 'RESONANCE CHECK'), subText: T('RESONANCE CHECK', ''),
+        patch: CHECK_CALL
+      },
+      {
+        id: 'emoPossession', group: 'dice', system: 'emoklore', icon: '👻', label: T('憑依判定', 'Possession Check'),
+        text: T('憑依判定', 'POSSESSION CHECK'), subText: T('POSSESSION CHECK', ''),
+        patch: CHECK_CALL
+      },
+      {
+        id: 'dxOpening', group: 'dice', system: 'dx', icon: '🌅', label: T('オープニング', 'Opening'),
+        text: T('オープニングフェイズ', 'OPENING PHASE'), subText: T('OPENING PHASE', ''),
+        patch: PHASE_TITLE
+      },
+      {
+        id: 'dxMiddle', group: 'dice', system: 'dx', icon: '🧭', label: T('ミドルフェイズ', 'Middle'),
+        text: T('ミドルフェイズ', 'MIDDLE PHASE'), subText: T('MIDDLE PHASE', ''),
+        patch: PHASE_TITLE
+      },
+      {
+        id: 'dxClimax', group: 'dice', system: 'dx', icon: '⚡', label: T('クライマックス', 'Climax'),
+        text: T('クライマックスフェイズ', 'CLIMAX PHASE'), subText: T('CLIMAX PHASE', ''),
+        patch: PHASE_TITLE
+      },
+      {
+        id: 'dxEnding', group: 'dice', system: 'dx', icon: '🌙', label: T('エンディング', 'Ending'),
+        text: T('エンディングフェイズ', 'ENDING PHASE'), subText: T('ENDING PHASE', ''),
+        patch: PHASE_TITLE
       }
     ],
     trailer: [

@@ -480,6 +480,45 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
   background: var(--blue);
 }
 
+/* 分類の下のシステムの段（判定のみ）。分類より一段控えめな見た目にする */
+.template-systems {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: -2px 0 8px;
+  padding: 0 2px;
+}
+
+.template-systems[hidden] { display: none; }
+.template-systems-label { margin-right: 2px; color: var(--muted); font-size: 0.72rem; font-weight: 800; }
+
+.template-system {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--field);
+  color: var(--ink);
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: border-color .15s ease, background .15s ease;
+}
+
+.template-system:hover { border-color: var(--line-strong); }
+.template-system.is-active { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
+body.is-dark .template-system.is-active { color: #dfeeff; }
+.template-system.has-current:not(.is-active)::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
 .template-strip { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .template-chip {
