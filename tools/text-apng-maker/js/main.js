@@ -1070,9 +1070,9 @@
     if (chars.length <= 16) return line;
     const head = chars.slice(0, 16);
     for (let i = head.length - 1; i >= 3; i--) {
-      if (/[、。，．！？!?,.]/.test(head[i])) return head.slice(0, i).join('');
+      if (/[、。，．！？!?,.]/.test(head[i])) return head.slice(0, i).join('').trim();
     }
-    return head.join('');
+    return head.join('').trim();
   }
 
   // 左の設定（文章・登場の動き／表示方法・退場の有無）からファイル名の候補を作る

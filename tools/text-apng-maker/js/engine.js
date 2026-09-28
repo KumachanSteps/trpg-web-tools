@@ -100,6 +100,12 @@
   const PAUSE_SHORT = setOf('、，,・');
   const PAUSE_LONG = setOf('。．.！？!?…‥―');
 
+  // 「中央に1文字ずつ」：全文が出た瞬間の衝撃の長さ（秒）・中央の大きな文字の画像を残しておく上限（画素数）
+  const SOLO_PUNCH = 0.26;
+  const SOLO_CACHE_PIXELS = 24e6;
+  // 書き出しのフレーム時刻がちょうど切り替わりの瞬間に来ても、丸め誤差で1コマずれないようにする幅
+  const TIME_EPS = 1e-6;
+
   const isBlank = ch => ch === ' ' || ch === '　' || ch === '\t' || /^\s+$/.test(ch);
   const isWordChar = ch => /^[A-Za-z0-9'’\-_.,!?&:;%$#@/]$/.test(ch);
 
@@ -773,6 +779,9 @@
       outDur: new Float64Array(n),
       inFx: new Array(n),
       outFx: new Array(n),
+      // 「中央に1文字ずつ」で、その文字だけが中央に大きく出ている区間
+      soloStart: new Float64Array(n).fill(Infinity),
+      soloEnd: new Float64Array(n).fill(-Infinity),
       pages: [],
       duration: 0,
       posterTime: 0
@@ -787,15 +796,21 @@
     const inDur = Math.max(0, scene.inDur ?? inDef.dur);
     const outDur = Math.max(0, scene.outDur ?? outDef.dur);
     const hold = Math.max(0, scene.hold ?? 1);
+    const bg = scene.bg || {};
+    const bgDur = Math.max(0.3, decoDur || 0.4);
+    const bgSynced = Boolean(bg.type && bg.type !== 'none' && bg.sync && (bg.opacity ?? 0.5) > 0);
+    const solo = scene.mode === 'trailer' && scene.reveal === 'solo';
     let cursor = t0;
 
     layout.pages.forEach((page, pi) => {
       const isLast = pi === layout.pages.length - 1;
-      const pg = { index: pi, blockIn: null, blockOut: null, decoIn: null, decoOut: null, scroll: null, cursor: null };
+      const pg = { index: pi, blockIn: null, blockOut: null, decoIn: null, decoOut: null, scroll: null, cursor: null, solo: null };
       const pageStart = cursor;
       // 帯・テープ・枠・ボックスが現れてから文字が出る
       const opensFirst = ['band', 'tape', 'frame', 'box'].includes(deco.type);
-      const lead = decoAnimated && opensFirst ? Math.min(0.3, decoDur * 0.6) : 0;
+      let lead = decoAnimated && opensFirst ? Math.min(0.3, decoDur * 0.6) : 0;
+      // 「中央に1文字ずつ」は、背景が現れきってから1文字目を出す
+      if (solo && pi === 0 && bgSynced) lead = Math.max(lead, bgDur);
       const textStart = pageStart + lead;
       if (decoAnimated) pg.decoIn = { start: pageStart, dur: decoDur };
       const pageGlyphs = glyphs.slice(page.first, page.last);
@@ -836,6 +851,33 @@
         } else if (reveal === 'all') {
           mainG.forEach(g => { T.inStart[g.index] = textStart; T.inDur[g.index] = gDur; T.inFx[g.index] = fx; });
           inEnd = textStart + gDur;
+        } else if (reveal === 'solo') {
+          // 1文字ずつ画面の中央に大きく出してから、全文を一度に出す。空白と改行は1拍あける（続いても1拍）
+          const beat = 1 / Math.max(1, scene.cps || 12);
+          let k = 0;
+          let gap = false;
+          page.mainLines.forEach((line, li) => {
+            if (li > 0) gap = true;
+            line.idx.forEach(i => {
+              if (glyphs[i].blank) { gap = true; return; }
+              if (gap && k > 0) k++;
+              gap = false;
+              T.soloStart[i] = textStart + k * beat - TIME_EPS;
+              T.soloEnd[i] = textStart + (k + 1) * beat - TIME_EPS;
+              k++;
+            });
+          });
+          // 最後の文字のあと1拍おいて全文
+          const full = textStart + (k > 0 ? k + 1 : 0) * beat - TIME_EPS;
+          mainG.forEach(g => { T.inStart[g.index] = full; T.inDur[g.index] = 0; T.inFx[g.index] = null; });
+          // 叩きつけで大きくなっても画像からはみ出さない倍率
+          const b = page.box;
+          const edge = layout.size * 0.05;
+          const hw = Math.max(1, (b.x1 - b.x0) / 2), hh = Math.max(1, (b.y1 - b.y0) / 2);
+          const bcx = (b.x0 + b.x1) / 2, bcy = (b.y0 + b.y1) / 2;
+          const room = Math.min((Math.min(bcx, layout.W - bcx) - edge) / hw, (Math.min(bcy, layout.H - bcy) - edge) / hh);
+          pg.solo = { start: textStart, full, room: Math.max(1, room) };
+          inEnd = full + SOLO_PUNCH;
         } else {
           const cps = Math.max(1, scene.cps || 12);
           const punct = Math.max(0, scene.punctPause ?? 0.25);
@@ -963,7 +1005,6 @@
     const contentEnd = lastPage ? (Number.isFinite(lastPage.end) ? lastPage.end : lastPage.holdEnd) : t0;
     T.duration = Math.max(0.2, contentEnd + Math.max(0, scene.endDelay || 0));
     T.posterTime = T.pages.length ? Math.min(T.duration, T.pages[0].poster) : 0;
-    const bgDur = Math.max(0.3, decoDur || 0.4);
     T.bgIn = { start: t0, dur: bgDur };
     T.bgOut = lastPage && Number.isFinite(lastPage.end) ? { start: Math.max(t0, lastPage.end - bgDur), dur: bgDur } : null;
     // 各フェーズの区間（タイムライン表示用）
@@ -1062,7 +1103,8 @@
       if (strokeW > 0) { c.lineWidth = strokeW * 2; c.strokeText(g.ch, 0, 0); }
     };
 
-    const sprite = { ox, oy, w, h, glow: null, back: null, front: null };
+    // ink: 文字の形そのものの範囲（スプライト内の座標）
+    const sprite = { ox, oy, w, h, glow: null, back: null, front: null, ink: { x0: ox + l, y0: oy + t, x1: ox + r, y1: oy + b } };
 
     if (style.glow) {
       const c = makeCanvas(w, h).getContext('2d');
@@ -1201,6 +1243,9 @@
       this.prepared = null;
       this.spriteKey = '';
       this.sprites = null;
+      this.soloCache = new Map();
+      this.soloKey = '';
+      this.soloPixels = 0;
       this.st = { a: 1, x: 0, y: 0, s: 1, sx: 1, sy: 1, r: 0, blur: 0 };
     }
 
@@ -1322,6 +1367,20 @@
       }
       const hold = HOLD_MAP[scene.holdFx];
       if (hold && hold.block) hold.block(bs, t, scene.holdPower ?? 1, { size, seed });
+      if (pg.solo) {
+        // 全文が出た瞬間：少し大きく叩きつけてから落ち着く（小さな揺れと光つき）
+        const d = t - pg.solo.full;
+        const k = clamp(scene.soloImpact ?? 1, 0, 3);
+        if (k > 0 && d >= 0 && d < SOLO_PUNCH) {
+          const e = 1 - d / SOLO_PUNCH;
+          const decay = e * e * e;
+          const f = Math.floor(t * 30);
+          bs.s *= 1 + Math.min(0.2 * k, pg.solo.room - 1) * decay;
+          bs.x += (rnd(f, 3, seed) - 0.5) * size * 0.06 * k * decay;
+          bs.y += (rnd(f, 5, seed) - 0.5) * size * 0.06 * k * decay;
+          bs.bright = Math.max(bs.bright, clamp(0.6 * k * decay));
+        }
+      }
       if (pg.scroll) {
         const sc = pg.scroll;
         const p = sc.dur > 0 ? clamp((t - sc.start) / sc.dur) : 1;
@@ -1450,6 +1509,7 @@
       drawPass('back', 1);
       drawPass('front', 1);
       if (pg.cursor) this.drawCursor(pg, page, t, bs, [ba, bb, bc, bd, be, bf], scene);
+      if (pg.solo) this.drawSolo(pg, page, t, bs, scale, scene);
       lctx.setTransform(1, 0, 0, 1, 0, 0);
       lctx.globalAlpha = 1;
 
@@ -1510,6 +1570,71 @@
       bctx.drawImage(img, pad * f, pad * f, img.width * f, img.height * f);
       lctx.imageSmoothingQuality = 'high';
       lctx.drawImage(c, 0, 0, sw, sh, dx - pad, dy - pad, w, h);
+    }
+
+    // 「中央に1文字ずつ」：いま出ている1文字を、画像の中央に大きく描く
+    drawSolo(pg, page, t, bs, scale, scene) {
+      const { layout, timeline } = this.prepared;
+      if (t >= pg.solo.full) return;
+      let hit = -1;
+      for (let i = page.first; i < page.last; i++) {
+        if (t >= timeline.soloStart[i] && t < timeline.soloEnd[i]) { hit = i; break; }
+      }
+      if (hit < 0) return;
+      const sprite = this.soloSprite(layout.glyphs[hit], page, scene);
+      // 出た瞬間だけわずかに大きい（同じ文字が続いても区切りがわかる）
+      const p = clamp((t - timeline.soloStart[hit]) / Math.max(1e-6, timeline.soloEnd[hit] - timeline.soloStart[hit]));
+      const k = clamp(scene.soloImpact ?? 1, 0, 3);
+      const s = scale * (1 + 0.08 * k * (1 - p) * (1 - p));
+      const lctx = this.lctx;
+      lctx.setTransform(s, 0, 0, s, scale * layout.W / 2, scale * layout.H / 2);
+      [[sprite.glow, bs.a * bs.glowMul], [sprite.back, bs.a], [sprite.front, bs.a]].forEach(([img, amount]) => {
+        let total = img ? amount : 0;
+        while (total > 0.002) {
+          const alpha = Math.min(1, total);
+          total -= alpha;
+          lctx.globalAlpha = alpha;
+          lctx.drawImage(img, -sprite.icx, -sprite.icy);
+        }
+      });
+    }
+
+    // 中央に出す大きな文字の画像（画像の短い辺に対する割合で大きさを決め、文字ごとに作って残しておく）
+    soloSprite(g, page, scene) {
+      const { layout } = this.prepared;
+      const px = Math.max(8, Math.min(layout.W, layout.H) * clamp(scene.soloSize ?? 0.55, 0.05, 1));
+      const gen = `${this.spriteKey}|${px.toFixed(2)}`;
+      if (gen !== this.soloKey) {
+        this.soloCache = new Map();
+        this.soloPixels = 0;
+        this.soloKey = gen;
+      }
+      const key = `${g.ch}|${g.rot ? 1 : 0}`;
+      let sprite = this.soloCache.get(key);
+      if (sprite) {
+        this.soloCache.delete(key);
+        this.soloCache.set(key, sprite);
+        return sprite;
+      }
+      const k = px / g.size;
+      const font = this.fontsFor(scene).mainFont(px);
+      const metrics = page.mainMetrics || { inkA: g.size * 0.8, inkD: g.size * 0.12 };
+      const inkA = metrics.inkA * k, inkD = metrics.inkD * k;
+      this.measure.font = font;
+      const adv = this.measure.measureText(g.ch).width;
+      sprite = buildGlyphSprite({ ch: g.ch, size: px, vertical: g.vertical, rot: g.rot, bx: 0, by: inkA }, font, groupStyle(scene, 0, px), { w: adv, h: inkA + inkD, inkA, inkD });
+      sprite.icx = (sprite.ink.x0 + sprite.ink.x1) / 2;
+      sprite.icy = (sprite.ink.y0 + sprite.ink.y1) / 2;
+      sprite.pixels = sprite.w * sprite.h * [sprite.glow, sprite.back, sprite.front].filter(Boolean).length;
+      this.soloCache.set(key, sprite);
+      this.soloPixels += sprite.pixels;
+      // 大きな画像なので、しばらく使っていないものから捨てる
+      while (this.soloPixels > SOLO_CACHE_PIXELS && this.soloCache.size > 1) {
+        const [oldKey, old] = this.soloCache.entries().next().value;
+        this.soloCache.delete(oldKey);
+        this.soloPixels -= old.pixels;
+      }
+      return sprite;
     }
 
     drawCursor(pg, page, t, bs, m, scene) {

@@ -28,7 +28,7 @@
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     // トレイラー
     play: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9v6l5-3z"/>',
-    letter: '<path d="M6 3.5h8.5L18 7v13.5H6z"/><path d="M14 3.5V7h4M8.5 11h7M8.5 14h7M8.5 17h4.5"/>',
+    typewriter: '<path d="M7.5 8.5V3.5h9v5M3 8.5h18"/><path d="M4.5 11h15l1.5 8h-18z"/><path d="M8 15h.01M12 15h.01M16 15h.01"/>',
     terminal: '<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15h4.5"/>',
     rise: '<path d="M4 8h9M4 12h9M4 16h6M18 18.5V6.5M15 9.5l3-3 3 3"/>',
     wave: '<path d="M3 9c2.4-2 4.6-2 7 0s4.6 2 7 0c1.5-1.2 2.8-1.6 4-1.4M3 15c2.4-2 4.6-2 7 0s4.6 2 7 0c1.5-1.2 2.8-1.6 4-1.4"/>',

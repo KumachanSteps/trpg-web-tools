@@ -79,7 +79,9 @@
     cursor: false,
     cursorColor: '',
     scrollSpeed: 90,
-    scrollFade: true
+    scrollFade: true,
+    soloSize: 0.55,
+    soloImpact: 1
   };
 
   const T = (ja, en) => ({ ja, en });
@@ -554,18 +556,17 @@
         }
       },
       {
-        id: 'typewriter', icon: 'letter', label: T('タイプライター', 'Typewriter'),
-        text: T('拝啓\nこの手紙を読んでいるということは、\n私はもう、この町にはいないのでしょう。\n\nどうか、あの館には近づかないでください。',
-          'To whoever finds this letter,\nif you are reading this,\nI am no longer in this town.\n\nPlease, stay away from that mansion.'),
+        // 1文字ずつ画面の中央に大きく打ち出し、最後にタイトル全体をドンと出す（アニメのサブタイトル風）
+        id: 'typewriter', icon: 'typewriter', label: T('タイプライター', 'Typewriter'),
+        text: T('霧の館の殺人', 'THE MISTY MANOR MURDER'),
         patch: {
-          fontId: 'special-elite', weight: 400, fontSize: 40, lineHeight: 1.9, letterSpacing: 0.04, align: 'start',
-          fill: { type: 'solid', color: '#221c16' },
-          stroke: { on: true, width: 0.8, color: '#221c16' }, stroke2: { on: false },
-          shadow: { on: true, color: '#221c16', opacity: 0.45, blur: 2, x: 0, y: 0 },
-          glow: { on: false },
-          deco: { type: 'box', color: '#efe6d0', opacity: 0.96, color2: '#c9b994', pad: 0.9, thickness: 1, radius: 0.03, anim: 'fade', dur: 0.5 },
-          reveal: 'char', cps: 14, glyphDur: 0.1, inFx: 'shrinkIn', inPower: 0.25, punctPause: 0.3, linePause: 0.45,
-          cursor: false, hold: 1.8, outFx: 'fade', outDur: 0.6, wrapChars: 24
+          fontId: 'special-elite', weight: 400, fontSize: 120, lineHeight: 1.5, letterSpacing: 0.08, align: 'center',
+          // 同じ色の細い縁取りで、打ち込んだ活字のように少し太らせる
+          fill: { type: 'solid', color: '#f6f4ee' },
+          stroke: { on: true, width: 0.9, color: '#f6f4ee' }, stroke2: { on: false }, shadow: { on: false }, glow: { on: false },
+          bg: { type: 'solid', color: '#000000', opacity: 1, sync: true },
+          reveal: 'solo', cps: 12, soloSize: 0.65, soloImpact: 1, inFx: 'typewriter', wrapChars: 20,
+          cursor: false, hold: 2.2, outFx: 'fade', outDur: 0.5
         }
       },
       {

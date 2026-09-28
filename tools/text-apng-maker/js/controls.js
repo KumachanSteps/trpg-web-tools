@@ -94,6 +94,7 @@
     },
     reveal: [
       { value: 'char', label: T('1文字ずつ', 'Per character') },
+      { value: 'solo', label: T('中央に1文字ずつ', 'Per character at center') },
       { value: 'line', label: T('1行ずつ', 'Per line') },
       { value: 'sweep', label: T('なめらかに流れる', 'Smooth sweep') },
       { value: 'all', label: T('全体を同時に', 'All at once') },
@@ -217,8 +218,11 @@
     motion: [
       { type: 'section', when: isTrailer, label: T('表示の流れ', 'Reveal flow'), children: [
         { type: 'chips', bind: 'reveal', options: OPT.reveal },
-        { type: 'range', bind: 'cps', when: s => s.reveal === 'char', label: T('表示スピード', 'Speed'), min: 2, max: 40, step: 1, format: 'cps' },
-        { type: 'range', bind: 'glyphDur', when: s => s.reveal !== 'scroll' && s.inFx !== 'typewriter', label: T('1文字が現れるまでの時間', 'Fade time per character'), min: 0, max: 2, step: 0.05, format: 's' },
+        { type: 'note', when: s => s.reveal === 'solo', text: T('1文字ずつ画面の中央に大きく出したあと、全文を一度に出します', 'Each character flashes big at the center, then the whole text lands at once') },
+        { type: 'range', bind: 'cps', when: s => s.reveal === 'char' || s.reveal === 'solo', label: T('表示スピード', 'Speed'), min: 2, max: 40, step: 1, format: 'cps' },
+        { type: 'range', bind: 'soloSize', when: s => s.reveal === 'solo', label: T('中央の文字の大きさ（画像の短い辺に対して）', 'Center letter size (vs. the shorter side)'), min: 0.15, max: 0.9, step: 0.01, format: 'pct' },
+        { type: 'range', bind: 'soloImpact', when: s => s.reveal === 'solo', label: T('全文が出る瞬間の衝撃', 'Impact when the whole text lands'), min: 0, max: 2, step: 0.05, format: 'x' },
+        { type: 'range', bind: 'glyphDur', when: s => !['scroll', 'solo'].includes(s.reveal) && s.inFx !== 'typewriter', label: T('1文字が現れるまでの時間', 'Fade time per character'), min: 0, max: 2, step: 0.05, format: 's' },
         { type: 'range', bind: 'punctPause', when: s => s.reveal === 'char', label: T('句読点での間', 'Pause at punctuation'), min: 0, max: 1.5, step: 0.05, format: 's' },
         { type: 'range', bind: 'linePause', when: s => s.reveal === 'char', label: T('改行での間', 'Pause at line breaks'), min: 0, max: 2, step: 0.05, format: 's' },
         { type: 'range', bind: 'lineInterval', when: s => s.reveal === 'line' || s.reveal === 'sweep', label: T('次の行までの時間', 'Time between lines'), min: 0.1, max: 4, step: 0.05, format: 's' },
@@ -228,7 +232,7 @@
         { type: 'toggle', bind: 'cursor', when: s => s.reveal === 'char', label: T('入力カーソルを表示', 'Show a typing cursor') },
         { type: 'range', bind: 'pageGap', when: s => s.reveal !== 'scroll' && s.pageSplit, label: T('ページ間の空白', 'Gap between pages'), min: 0, max: 3, step: 0.05, format: 's' }
       ] },
-      { type: 'section', label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears') : T('登場', 'In')), children: [
+      { type: 'section', when: s => !(isTrailer(s) && s.reveal === 'solo'), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears') : T('登場', 'In')), children: [
         { type: 'effects', phase: 'in' },
         { type: 'select', bind: 'inDir', when: s => Boolean(inDef(s).dirs), label: T('方向', 'Direction'), options: s => (inDef(s).dirs || []).map(d => ({ value: d, label: OPT.dirs[d] })) },
         { type: 'range', bind: 'inDur', when: s => notTrailer(s) && s.inFx !== 'typewriter', label: T('時間', 'Duration'), min: 0.05, max: 4, step: 0.05, format: 's' },
