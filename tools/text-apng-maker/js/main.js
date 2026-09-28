@@ -9,6 +9,7 @@
   const P = window.TextApngPresets;
   const C = window.TextApngCodec;
   const I18N = window.TextApngI18n;
+  const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
   const VERSION = 'v1.00';
@@ -121,6 +122,10 @@
     // 書き換えた文章。メッセージはテンプレートごとに覚え（message: { テンプレートID: { text, subText } }）、
     // トレイラー・場所・時間はテンプレートを切り替えても引き継ぐ（trailer / caption: { text, subText }）
     editedTexts: { message: {}, trailer: {}, caption: {} },
+    // 分類ごと（判定はシステムごと）に編集中の場面を持つ（{ モード: { 'combat' / 'dice/coc6' など: scene } }）。今の場面も同じオブジェクトで入る
+    groupScenes: {},
+    // 分類ごとに最後に開いたシステム（{ dice: 'coc7' }）
+    lastSystems: {},
     // fileNames: モードごとの手入力のファイル名（空なら設定から自動入力）
     exportOpts: { fps: 24, loop: 'once', loopCount: 3, color: 'palette', poster: true, trim: false, fileNames: { message: '', trailer: '', caption: '' } },
     previewBg: 'checker',
@@ -155,20 +160,14 @@
       app.lang = lang === 'en' || lang === 'ja' ? lang : ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en';
     } catch (error) { app.lang = 'ja'; }
     MODES.forEach(mode => {
-      const base = P.defaultScene(mode, app.lang);
-      const stored = saved && saved.scenes && saved.scenes[mode];
-      app.scenes[mode] = stored ? P.deepMerge(base, stored) : base;
-      app.scenes[mode].mode = mode;
-      const s = app.scenes[mode];
-      if (String(s.fontId).startsWith('upload:') && !F.get(s.fontId)) s.fontId = 'noto-sans-jp';
-      if (String(s.subFontId).startsWith('upload:') && !F.get(s.subFontId)) s.subFontId = 'same';
-      // 旧形式：退場の種類「消さない」は「退場あり」スイッチのオフへ移す
-      if (s.outFx === 'none' || !E.OUT_MAP[s.outFx]) {
-        if (s.outFx === 'none' && !(mode === 'trailer' && s.reveal === 'scroll')) s.outEnabled = false;
-        s.outFx = 'fade';
-        s.outDur = E.OUT_MAP.fade.dur;
+      let s = restoreScene(mode, saved && saved.scenes && saved.scenes[mode]);
+      // 分類のあるモードで、今は無いテンプレートの場面（以前のバージョンの保存データ）は最初のテンプレートから始める
+      if (P.TEMPLATE_GROUPS[mode] && !templatePlace(mode, s.templateId)) {
+        const fresh = P.defaultScene(mode, app.lang);
+        Object.assign(fresh, { width: s.width, height: s.height, sizePreset: s.sizePreset, outEnabled: s.outEnabled });
+        s = fresh;
       }
-      s.outEnabled = s.outEnabled !== false;
+      app.scenes[mode] = s;
     });
     if (saved) {
       if (MODES.includes(saved.mode)) app.mode = saved.mode;
@@ -202,7 +201,53 @@
           if (!state.sub && mode === 'caption') app.editedTexts[mode].subText = s.subText;
         });
       }
+      const groupScenes = saved.groupScenes && typeof saved.groupScenes === 'object' ? saved.groupScenes : {};
+      Object.keys(P.TEMPLATE_GROUPS).forEach(mode => {
+        const stored = groupScenes[mode] && typeof groupScenes[mode] === 'object' ? groupScenes[mode] : {};
+        Object.keys(stored).forEach(key => {
+          const place = stored[key] && templatePlace(mode, stored[key].templateId);
+          if (place && place.key === key) groupStore(mode)[key] = restoreScene(mode, stored[key]);
+        });
+      });
+      const lastSystems = saved.lastSystems && typeof saved.lastSystems === 'object' ? saved.lastSystems : {};
+      Object.values(P.TEMPLATE_GROUPS).flat().forEach(g => {
+        if (g.systems && g.systems.some(sy => sy.id === lastSystems[g.id])) app.lastSystems[g.id] = lastSystems[g.id];
+      });
     }
+    // 今の場面は、その分類の編集中の場面そのもの
+    Object.keys(P.TEMPLATE_GROUPS).forEach(mode => {
+      const place = templatePlace(mode, app.scenes[mode].templateId);
+      if (place) groupStore(mode)[place.key] = app.scenes[mode];
+    });
+  }
+
+  // 保存データの場面を初期値と合わせて読み込む（古い形式の直しも含む）
+  function restoreScene(mode, stored) {
+    const base = P.defaultScene(mode, app.lang);
+    const s = stored && typeof stored === 'object' ? P.deepMerge(base, stored) : base;
+    s.mode = mode;
+    if (String(s.fontId).startsWith('upload:') && !F.get(s.fontId)) s.fontId = 'noto-sans-jp';
+    if (String(s.subFontId).startsWith('upload:') && !F.get(s.subFontId)) s.subFontId = 'same';
+    // 旧形式：退場の種類「消さない」は「退場あり」スイッチのオフへ移す
+    if (s.outFx === 'none' || !E.OUT_MAP[s.outFx]) {
+      if (s.outFx === 'none' && !(mode === 'trailer' && s.reveal === 'scroll')) s.outEnabled = false;
+      s.outFx = 'fade';
+      s.outDur = E.OUT_MAP.fade.dur;
+    }
+    s.outEnabled = s.outEnabled !== false;
+    return s;
+  }
+
+  // テンプレートの置き場所（分類と、あればシステム）。key は分類ごとの場面の保存先
+  function templatePlace(mode, templateId) {
+    const tpl = (P.TEMPLATES[mode] || []).find(t => t.id === templateId);
+    if (!tpl || !tpl.group) return null;
+    return { group: tpl.group, system: tpl.system || null, key: tpl.system ? `${tpl.group}/${tpl.system}` : tpl.group };
+  }
+
+  function groupStore(mode) {
+    if (!app.groupScenes[mode]) app.groupScenes[mode] = {};
+    return app.groupScenes[mode];
   }
 
   // 保存データから文章だけを取り出す
@@ -219,6 +264,7 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           schema: STORAGE_SCHEMA, mode: app.mode, tab: app.tab, scenes: app.scenes, editedTexts: app.editedTexts,
+          groupScenes: app.groupScenes, lastSystems: app.lastSystems,
           exportOpts: app.exportOpts, previewBg: app.previewBg, loopPreview: app.loopPreview
         }));
       } catch (error) {
@@ -832,27 +878,51 @@
     });
   }
 
-  // 表示中のテンプレートの分類（モードごと・保存しない）。未選択なら、選んでいるテンプレートの分類から始める
-  const shownGroup = {};
-  function currentGroup() {
+  // 今の場面の置き場所（分類のあるモードのみ）
+  function currentPlace() {
     const groups = P.TEMPLATE_GROUPS[app.mode];
     if (!groups) return null;
-    if (!groups.some(g => g.id === shownGroup[app.mode])) {
-      const active = P.TEMPLATES[app.mode].find(tpl => tpl.id === scene().templateId);
-      shownGroup[app.mode] = active && active.group ? active.group : groups[0].id;
-    }
-    return shownGroup[app.mode];
+    return templatePlace(app.mode, scene().templateId) || { group: groups[0].id, system: null, key: groups[0].id };
   }
 
-  // 分類の下のシステム（分類ごと・保存しない）。未選択なら、選んでいるテンプレートのシステムから始める
-  const shownSystem = {};
-  function currentSystem(group) {
-    if (!group || !group.systems) return null;
-    if (!group.systems.some(sy => sy.id === shownSystem[group.id])) {
-      const active = P.TEMPLATES[app.mode].find(tpl => tpl.id === scene().templateId);
-      shownSystem[group.id] = active && active.group === group.id && active.system ? active.system : group.systems[0].id;
+  // 分類（とシステム）を切り替えて、その分類の場面をプレビューする。
+  // 分類ごとに編集中の場面を持ち、初めて開く分類は最初のテンプレートから始める。画像サイズと退場の有無は引き継ぐ
+  function showPlace(groupId, systemId) {
+    if (view.exporting) return;
+    const mode = app.mode;
+    const group = (P.TEMPLATE_GROUPS[mode] || []).find(g => g.id === groupId);
+    if (!group) return;
+    let system = null;
+    if (group.systems) {
+      system = (group.systems.find(sy => sy.id === systemId) || group.systems.find(sy => sy.id === app.lastSystems[groupId]) || group.systems[0]).id;
+      app.lastSystems[groupId] = system;
     }
-    return shownSystem[group.id];
+    const key = system ? `${groupId}/${system}` : groupId;
+    const current = scene();
+    const from = currentPlace();
+    if (from.key === key) {
+      renderTemplates();
+      saveState();
+      return;
+    }
+    const store = groupStore(mode);
+    store[from.key] = current;
+    let next = store[key];
+    if (!next) {
+      next = P.defaultScene(mode, app.lang);
+      fillTemplate(next, P.TEMPLATES[mode].find(tpl => tpl.group === groupId && (!system || tpl.system === system)));
+      store[key] = next;
+    }
+    Object.assign(next, { width: current.width, height: current.height, sizePreset: current.sizePreset, outEnabled: current.outEnabled });
+    app.scenes[mode] = next;
+    renderTemplates();
+    panel.render(app.tab, els.settingsBody);
+    view.renderer.invalidateSprites();
+    invalidate();
+    layoutStage();
+    scheduleFontLoad(0);
+    saveState();
+    restartPreview();
   }
 
   function renderTemplates() {
@@ -864,8 +934,8 @@
       ? ['group', 'system', 'template'].filter(key => focused.dataset[key]).map(key => `[data-${key}="${focused.dataset[key]}"]`)[0] || '' : '';
     els.templatesHint.textContent = dict().templatesHint(app.mode);
     const groups = P.TEMPLATE_GROUPS[app.mode] || null;
-    const group = currentGroup();
-    const active = (P.TEMPLATES[app.mode] || []).find(tpl => tpl.id === s.templateId);
+    const place = currentPlace();
+    const group = place ? place.group : null;
     els.templateGroups.hidden = !groups;
     els.templateGroups.innerHTML = '';
     if (groups) {
@@ -878,18 +948,14 @@
         btn.textContent = g.label[app.lang];
         const on = g.id === group;
         btn.classList.toggle('is-active', on);
-        btn.classList.toggle('has-current', Boolean(active && active.group === g.id));
         btn.setAttribute('aria-pressed', String(on));
-        btn.addEventListener('click', () => {
-          shownGroup[app.mode] = g.id;
-          renderTemplates();
-        });
+        btn.addEventListener('click', () => showPlace(g.id));
         els.templateGroups.appendChild(btn);
       });
     }
     const groupDef = groups ? groups.find(g => g.id === group) : null;
     const systems = groupDef && groupDef.systems ? groupDef.systems : null;
-    const system = currentSystem(groupDef);
+    const system = systems ? (place.system || app.lastSystems[group] || systems[0].id) : null;
     els.templateSystems.hidden = !systems;
     els.templateSystems.innerHTML = '';
     if (systems) {
@@ -906,12 +972,8 @@
         btn.textContent = sy.label[app.lang];
         const on = sy.id === system;
         btn.classList.toggle('is-active', on);
-        btn.classList.toggle('has-current', Boolean(active && active.group === groupDef.id && active.system === sy.id));
         btn.setAttribute('aria-pressed', String(on));
-        btn.addEventListener('click', () => {
-          shownSystem[groupDef.id] = sy.id;
-          renderTemplates();
-        });
+        btn.addEventListener('click', () => showPlace(groupDef.id, sy.id));
         els.templateSystems.appendChild(btn);
       });
     }
@@ -921,13 +983,12 @@
       btn.type = 'button';
       btn.className = 'template-chip';
       btn.dataset.template = tpl.id;
-      const icon = document.createElement('span');
-      icon.className = 'template-icon';
-      icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = tpl.icon;
+      // アイコンは線画の SVG（システム別のチップはアイコンなし）
+      const icon = tpl.icon ? ICONS.create(tpl.icon, 'template-icon') : null;
+      if (icon) btn.appendChild(icon);
       const name = document.createElement('span');
       name.textContent = tpl.label[app.lang];
-      btn.append(icon, name);
+      btn.appendChild(name);
       const on = s.templateId === tpl.id;
       btn.classList.toggle('is-active', on);
       btn.setAttribute('aria-pressed', String(on));
@@ -940,15 +1001,18 @@
     }
   }
 
-  function applyTemplate(tpl) {
-    const s = scene();
-    // 文章は新しいテンプレートの見本にしたうえで、書き換えた文章があれば戻す
-    // （メッセージはそのテンプレートで書き換えた文章、トレイラー・場所・時間はテンプレートをまたいで共通の文章）
+  // テンプレートを場面に当てはめる。文章は新しいテンプレートの見本にしたうえで、書き換えた文章があれば戻す
+  // （メッセージはそのテンプレートで書き換えた文章、トレイラー・場所・時間はテンプレートをまたいで共通の文章）
+  function fillTemplate(s, tpl) {
     P.applyTemplate(s, tpl, app.lang);
     const memo = (app.mode === 'message' ? app.editedTexts.message[tpl.id] : app.editedTexts[app.mode]) || {};
     if (typeof memo.text === 'string') s.text = memo.text;
     if (typeof memo.subText === 'string') s.subText = memo.subText;
     s.mode = app.mode;
+  }
+
+  function applyTemplate(tpl) {
+    fillTemplate(scene(), tpl);
     renderTemplates();
     view.renderer.invalidateSprites();
     invalidate();
@@ -965,8 +1029,10 @@
     if (!window.confirm(msg().storageReset)) return;
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
     app.editedTexts[app.mode] = {};
-    delete shownGroup[app.mode];
-    (P.TEMPLATE_GROUPS[app.mode] || []).forEach(g => { delete shownSystem[g.id]; });
+    app.groupScenes[app.mode] = {};
+    (P.TEMPLATE_GROUPS[app.mode] || []).forEach(g => { delete app.lastSystems[g.id]; });
+    const place = templatePlace(app.mode, scene().templateId);
+    if (place) groupStore(app.mode)[place.key] = scene();
     app.exportOpts.fileNames[app.mode] = '';
     renderTemplates();
     view.renderer.invalidateSprites();

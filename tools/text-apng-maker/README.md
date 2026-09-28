@@ -22,6 +22,7 @@ tools/text-apng-maker/
    ├─ fonts.js         Google Fonts の遅延読み込み、フォントファイル・PCフォントの利用
    ├─ presets.js       モード別の初期値・テンプレート・スタイル/グラデーション/サイズのプリセット
    ├─ controls.js      設定パネル（宣言的なスキーマからUIを生成）と効果カードのミニプレビュー
+   ├─ icons.js         テンプレートのアイコン（線画のSVG）
    ├─ i18n.js          画面文言（日本語 / English）
    ├─ main.js          状態管理・保存、プレビュー再生、書き出し処理
    └─ shortcut.js      キーボードショートカット
@@ -43,4 +44,4 @@ tools/text-apng-maker/
 
 ## テンプレートの追加
 
-`js/presets.js` の `TEMPLATES` に、モードごとの配列として追加します。`patch` には初期値（`BASE`）からの差分だけを書きます。文章は `text` / `subText` に日本語・英語の両方を用意します。メッセージのテンプレートには、分類（`TEMPLATE_GROUPS` のID）を `group` に指定します。分類に `systems` がある場合は、システムのIDを `system` に指定します。
+`js/presets.js` の `TEMPLATES` に、モードごとの配列として追加します。`patch` には初期値（`BASE`）からの差分だけを書きます。文章は `text` / `subText` に日本語・英語の両方を用意します。メッセージのテンプレートには、分類（`TEMPLATE_GROUPS` のID）を `group` に指定します。分類に `systems` がある場合は、システムのIDを `system` に指定します。`icon` には `js/icons.js` のアイコン名を指定します（システム別のテンプレートはアイコンなし）。

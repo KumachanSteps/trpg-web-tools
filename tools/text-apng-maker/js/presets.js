@@ -221,17 +221,17 @@
   const TEMPLATES = {
     message: [
       {
-        id: 'battle', group: 'combat', icon: '⚔️', label: T('戦闘開始', 'Battle Start'),
+        id: 'battle', group: 'combat', icon: 'swords', label: T('戦闘開始', 'Battle Start'),
         text: T('戦闘開始', 'BATTLE START'), subText: T('BATTLE START', 'ENGAGE'),
         patch: BATTLE_PATCH
       },
       {
-        id: 'battleEnd', group: 'combat', icon: '🏁', label: T('戦闘終了', 'Battle End'),
+        id: 'battleEnd', group: 'combat', icon: 'flag', label: T('戦闘終了', 'Battle End'),
         text: T('戦闘終了', 'BATTLE END'), subText: T('BATTLE END', 'DISENGAGE'),
         patch: BATTLE_PATCH
       },
       {
-        id: 'round', group: 'combat', icon: '🔔', label: T('ラウンド', 'Round'),
+        id: 'round', group: 'combat', icon: 'bell', label: T('ラウンド', 'Round'),
         text: T('ROUND 1', 'ROUND 1'), subText: T('', ''),
         patch: {
           fontId: 'shippori-mincho-b1', weight: 800, fontSize: 124, letterSpacing: 0.16,
@@ -242,7 +242,7 @@
         }
       },
       {
-        id: 'finalRound', group: 'combat', icon: '🔥', label: T('ファイナルラウンド', 'Final Round'),
+        id: 'finalRound', group: 'combat', icon: 'flame', label: T('ファイナルラウンド', 'Final Round'),
         text: T('FINAL ROUND', 'FINAL ROUND'), subText: T('', ''),
         patch: {
           fontId: 'shippori-mincho-b1', weight: 800, fontSize: 124, letterSpacing: 0.1,
@@ -255,7 +255,7 @@
         }
       },
       {
-        id: 'explore', group: 'investigation', icon: '🔍', label: T('探索開始', 'Exploration'),
+        id: 'explore', group: 'investigation', icon: 'search', label: T('探索開始', 'Exploration'),
         text: T('探索開始', 'EXPLORATION'), subText: T('EXPLORATION', '- PHASE 1 -'),
         patch: {
           fontId: 'shippori-mincho', weight: 800, fontSize: 116, letterSpacing: 0.28,
@@ -268,7 +268,7 @@
         }
       },
       {
-        id: 'investigate', group: 'investigation', icon: '🕵️', label: T('捜査開始', 'Investigation'),
+        id: 'investigate', group: 'investigation', icon: 'badge', label: T('捜査開始', 'Investigation'),
         text: T('捜査開始', 'INVESTIGATION'), subText: T('- INVESTIGATION -', '- CASE OPEN -'),
         patch: {
           fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 112, letterSpacing: 0.24,
@@ -281,7 +281,7 @@
         }
       },
       {
-        id: 'emergency', group: 'investigation', icon: '⚠️', label: T('緊急事態', 'Emergency'),
+        id: 'emergency', group: 'investigation', icon: 'warning', label: T('緊急事態', 'Emergency'),
         text: T('緊急事態', 'EMERGENCY'), subText: T('EMERGENCY', 'WARNING'),
         patch: {
           fontId: 'noto-sans-jp', weight: 900, fontSize: 118, letterSpacing: 0.32,
@@ -294,7 +294,7 @@
         }
       },
       {
-        id: 'incident', group: 'investigation', icon: '🚨', label: T('事件発生', 'Incident'),
+        id: 'incident', group: 'investigation', icon: 'siren', label: T('事件発生', 'Incident'),
         text: T('事件発生', 'INCIDENT'), subText: T('INCIDENT', 'A CASE HAS BEGUN'),
         patch: {
           fontId: 'shippori-mincho-b1', weight: 800, fontSize: 130, letterSpacing: 0.18,
@@ -308,7 +308,7 @@
         }
       },
       {
-        id: 'message', group: 'investigation', icon: '✉️', label: T('メッセージ受信', 'New Message'),
+        id: 'message', group: 'investigation', icon: 'mail', label: T('メッセージ受信', 'New Message'),
         text: T('メッセージが届きました', 'You have a new message'), subText: T('新着メッセージ', 'NEW MESSAGE'),
         patch: {
           fontId: 'noto-sans-jp', weight: 700, fontSize: 56, letterSpacing: 0.06,
@@ -321,7 +321,7 @@
         }
       },
       {
-        id: 'call', group: 'investigation', icon: '📞', label: T('着信あり', 'Incoming Call'),
+        id: 'call', group: 'investigation', icon: 'phone', label: T('着信あり', 'Incoming Call'),
         text: T('着信あり', 'INCOMING CALL'), subText: T('非通知', 'Unknown Number'),
         patch: {
           fontId: 'noto-sans-jp', weight: 700, fontSize: 84, letterSpacing: 0.1,
@@ -334,22 +334,22 @@
         }
       },
       {
-        id: 'secret', group: 'gm', icon: '🔒', label: T('秘匿を確認してください', 'Check Your Secret'),
+        id: 'secret', group: 'gm', icon: 'lock', label: T('秘匿を確認してください', 'Check Your Secret'),
         text: T('秘匿を確認してください', 'CHECK YOUR SECRET'), subText: T('SECRET HANDOUT', 'SECRET HANDOUT'),
         patch: SECRET_PATCH
       },
       {
-        id: 'processing', group: 'gm', icon: '🔐', label: T('秘匿処理中', 'Processing Secrets'),
+        id: 'processing', group: 'gm', icon: 'loader', label: T('秘匿処理中', 'Processing Secrets'),
         text: T('秘匿処理中...', 'PROCESSING SECRETS...'), subText: T('SECRET HANDOUT', 'SECRET HANDOUT'),
         patch: { ...SECRET_PATCH, inStagger: 0.07, holdFx: 'glow', holdPower: 1, hold: 2.2 }
       },
       {
-        id: 'roleplay', group: 'gm', icon: '🎭', label: T('ロールプレイどうぞ', 'Roleplay Time'),
+        id: 'roleplay', group: 'gm', icon: 'mask', label: T('ロールプレイどうぞ', 'Roleplay Time'),
         text: T('ロールプレイどうぞ', 'ROLEPLAY TIME'), subText: T('ROLE PLAY', 'YOUR TURN'),
         patch: SECRET_PATCH
       },
       {
-        id: 'break', group: 'gm', icon: '☕', label: T('休憩中', 'On Break'),
+        id: 'break', group: 'gm', icon: 'coffee', label: T('休憩中', 'On Break'),
         text: T('休憩中', 'BREAK TIME'), subText: T('BREAK TIME', 'Back in a few minutes'),
         patch: {
           fontId: 'zen-maru-gothic', weight: 900, fontSize: 140, letterSpacing: 0.14,
@@ -363,7 +363,7 @@
         }
       },
       {
-        id: 'loading', group: 'gm', icon: '⏳', label: T('Now Loading', 'Now Loading'),
+        id: 'loading', group: 'gm', icon: 'hourglass', label: T('Now Loading', 'Now Loading'),
         text: T('Now Loading...', 'Now Loading...'), subText: T('しばらくお待ちください', 'Please wait a moment'),
         patch: {
           fontId: 'press-start-2p', weight: 400, fontSize: 64, letterSpacing: 0.04,
@@ -376,7 +376,7 @@
         }
       },
       {
-        id: 'simple', group: 'gm', icon: '💬', label: T('シンプル', 'Simple'),
+        id: 'simple', group: 'gm', icon: 'type', label: T('シンプル', 'Simple'),
         text: T('メッセージ', 'MESSAGE'), subText: T('', ''),
         patch: {
           fontId: 'noto-sans-jp', weight: 700, fontSize: 110, letterSpacing: 0.08,
@@ -386,7 +386,7 @@
         }
       },
       {
-        id: 'chapter', group: 'scene', icon: '📖', label: T('章タイトル', 'Chapter'),
+        id: 'chapter', group: 'scene', icon: 'book', label: T('章タイトル', 'Chapter'),
         text: T('第一章', 'CHAPTER I'), subText: T('「目覚めの夜」', '“The Night of Awakening”'),
         patch: {
           fontId: 'shippori-mincho-b1', weight: 800, fontSize: 128, letterSpacing: 0.22,
@@ -398,7 +398,7 @@
         }
       },
       {
-        id: 'day', group: 'scene', icon: '📅', label: T('一日目', 'Day 1'),
+        id: 'day', group: 'scene', icon: 'calendar', label: T('一日目', 'Day 1'),
         text: T('一日目', 'DAY 1'), subText: T('DAY 1', 'THE FIRST DAY'),
         patch: {
           fontId: 'shippori-mincho-b1', weight: 800, fontSize: 150, letterSpacing: 0.3,
@@ -412,7 +412,7 @@
         }
       },
       {
-        id: 'timeSkip', group: 'scene', icon: '🕐', label: T('時間経過', 'Time Skip'),
+        id: 'timeSkip', group: 'scene', icon: 'clock', label: T('時間経過', 'Time Skip'),
         text: T('一時間経過', 'ONE HOUR LATER'), subText: T('ONE HOUR LATER', ''),
         patch: {
           fontId: 'shippori-mincho', weight: 700, fontSize: 76, letterSpacing: 0.35,
@@ -424,124 +424,124 @@
         }
       },
       {
-        id: 'coc6Success', group: 'dice', system: 'coc6', icon: '⭕', label: T('成功', 'Success'),
+        id: 'coc6Success', group: 'dice', system: 'coc6', label: T('成功', 'Success'),
         text: T('成功', 'SUCCESS'), subText: T('SUCCESS', ''),
         patch: DICE_SUCCESS
       },
       {
-        id: 'coc6Failure', group: 'dice', system: 'coc6', icon: '❌', label: T('失敗', 'Failure'),
+        id: 'coc6Failure', group: 'dice', system: 'coc6', label: T('失敗', 'Failure'),
         text: T('失敗', 'FAILURE'), subText: T('FAILURE', ''),
         patch: DICE_FAILURE
       },
       {
-        id: 'coc6Special', group: 'dice', system: 'coc6', icon: '🌟', label: T('スペシャル', 'Special'),
+        id: 'coc6Special', group: 'dice', system: 'coc6', label: T('スペシャル', 'Special'),
         text: T('スペシャル', 'SPECIAL'), subText: T('SPECIAL', ''),
         patch: DICE_GREAT
       },
       {
-        id: 'coc6Critical', group: 'dice', system: 'coc6', icon: '✨', label: T('クリティカル', 'Critical'),
+        id: 'coc6Critical', group: 'dice', system: 'coc6', label: T('クリティカル', 'Critical'),
         text: T('クリティカル', 'CRITICAL'), subText: T('CRITICAL', ''),
         patch: DICE_CRITICAL
       },
       {
-        id: 'coc6Fumble', group: 'dice', system: 'coc6', icon: '💀', label: T('ファンブル', 'Fumble'),
+        id: 'coc6Fumble', group: 'dice', system: 'coc6', label: T('ファンブル', 'Fumble'),
         text: T('ファンブル', 'FUMBLE'), subText: T('FUMBLE', ''),
         patch: DICE_FUMBLE
       },
       {
-        id: 'coc7Critical', group: 'dice', system: 'coc7', icon: '✨', label: T('クリティカル', 'Critical'),
+        id: 'coc7Critical', group: 'dice', system: 'coc7', label: T('クリティカル', 'Critical'),
         text: T('クリティカル', 'CRITICAL'), subText: T('CRITICAL', ''),
         patch: DICE_CRITICAL
       },
       {
-        id: 'coc7Extreme', group: 'dice', system: 'coc7', icon: '🌟', label: T('イクストリーム成功', 'Extreme Success'),
+        id: 'coc7Extreme', group: 'dice', system: 'coc7', label: T('イクストリーム成功', 'Extreme Success'),
         text: T('イクストリーム成功', 'EXTREME SUCCESS'), subText: T('EXTREME SUCCESS', ''),
         patch: DICE_GREAT
       },
       {
-        id: 'coc7Hard', group: 'dice', system: 'coc7', icon: '🔷', label: T('ハード成功', 'Hard Success'),
+        id: 'coc7Hard', group: 'dice', system: 'coc7', label: T('ハード成功', 'Hard Success'),
         text: T('ハード成功', 'HARD SUCCESS'), subText: T('HARD SUCCESS', ''),
         patch: DICE_GOOD
       },
       {
-        id: 'coc7Regular', group: 'dice', system: 'coc7', icon: '⭕', label: T('レギュラー成功', 'Regular Success'),
+        id: 'coc7Regular', group: 'dice', system: 'coc7', label: T('レギュラー成功', 'Regular Success'),
         text: T('レギュラー成功', 'REGULAR SUCCESS'), subText: T('REGULAR SUCCESS', ''),
         patch: DICE_SUCCESS
       },
       {
-        id: 'coc7Failure', group: 'dice', system: 'coc7', icon: '❌', label: T('失敗', 'Failure'),
+        id: 'coc7Failure', group: 'dice', system: 'coc7', label: T('失敗', 'Failure'),
         text: T('失敗', 'FAILURE'), subText: T('FAILURE', ''),
         patch: DICE_FAILURE
       },
       {
-        id: 'coc7Fumble', group: 'dice', system: 'coc7', icon: '💀', label: T('ファンブル', 'Fumble'),
+        id: 'coc7Fumble', group: 'dice', system: 'coc7', label: T('ファンブル', 'Fumble'),
         text: T('ファンブル', 'FUMBLE'), subText: T('FUMBLE', ''),
         patch: DICE_FUMBLE
       },
       {
-        id: 'emoSingle', group: 'dice', system: 'emoklore', icon: '⭕', label: T('シングル', 'Single'),
+        id: 'emoSingle', group: 'dice', system: 'emoklore', label: T('シングル', 'Single'),
         text: T('シングル', 'SINGLE'), subText: T('SINGLE', ''),
         patch: DICE_SUCCESS
       },
       {
-        id: 'emoDouble', group: 'dice', system: 'emoklore', icon: '🔷', label: T('ダブル', 'Double'),
+        id: 'emoDouble', group: 'dice', system: 'emoklore', label: T('ダブル', 'Double'),
         text: T('ダブル', 'DOUBLE'), subText: T('DOUBLE', ''),
         patch: DICE_GOOD
       },
       {
-        id: 'emoTriple', group: 'dice', system: 'emoklore', icon: '🌟', label: T('トリプル', 'Triple'),
+        id: 'emoTriple', group: 'dice', system: 'emoklore', label: T('トリプル', 'Triple'),
         text: T('トリプル', 'TRIPLE'), subText: T('TRIPLE', ''),
         patch: DICE_GREAT
       },
       {
-        id: 'emoMiracle', group: 'dice', system: 'emoklore', icon: '✨', label: T('ミラクル', 'Miracle'),
+        id: 'emoMiracle', group: 'dice', system: 'emoklore', label: T('ミラクル', 'Miracle'),
         text: T('ミラクル', 'MIRACLE'), subText: T('MIRACLE', ''),
         patch: DICE_CRITICAL
       },
       {
-        id: 'emoCatastrophe', group: 'dice', system: 'emoklore', icon: '☄️', label: T('カタストロフ', 'Catastrophe'),
+        id: 'emoCatastrophe', group: 'dice', system: 'emoklore', label: T('カタストロフ', 'Catastrophe'),
         text: T('カタストロフ', 'CATASTROPHE'), subText: T('CATASTROPHE', ''),
         patch: DICE_BEYOND
       },
       {
-        id: 'emoFumble', group: 'dice', system: 'emoklore', icon: '💀', label: T('ファンブル', 'Fumble'),
+        id: 'emoFumble', group: 'dice', system: 'emoklore', label: T('ファンブル', 'Fumble'),
         text: T('ファンブル', 'FUMBLE'), subText: T('FUMBLE', ''),
         patch: DICE_FUMBLE
       },
       {
-        id: 'emoResonance', group: 'dice', system: 'emoklore', icon: '🔮', label: T('共鳴判定', 'Resonance Check'),
+        id: 'emoResonance', group: 'dice', system: 'emoklore', label: T('共鳴判定', 'Resonance Check'),
         text: T('共鳴判定', 'RESONANCE CHECK'), subText: T('RESONANCE CHECK', ''),
         patch: CHECK_CALL
       },
       {
-        id: 'emoPossession', group: 'dice', system: 'emoklore', icon: '👻', label: T('憑依判定', 'Possession Check'),
+        id: 'emoPossession', group: 'dice', system: 'emoklore', label: T('憑依判定', 'Possession Check'),
         text: T('憑依判定', 'POSSESSION CHECK'), subText: T('POSSESSION CHECK', ''),
         patch: CHECK_CALL
       },
       {
-        id: 'dxOpening', group: 'dice', system: 'dx', icon: '🌅', label: T('オープニング', 'Opening'),
+        id: 'dxOpening', group: 'dice', system: 'dx', label: T('オープニング', 'Opening'),
         text: T('オープニングフェイズ', 'OPENING PHASE'), subText: T('OPENING PHASE', ''),
         patch: PHASE_TITLE
       },
       {
-        id: 'dxMiddle', group: 'dice', system: 'dx', icon: '🧭', label: T('ミドルフェイズ', 'Middle'),
+        id: 'dxMiddle', group: 'dice', system: 'dx', label: T('ミドルフェイズ', 'Middle'),
         text: T('ミドルフェイズ', 'MIDDLE PHASE'), subText: T('MIDDLE PHASE', ''),
         patch: PHASE_TITLE
       },
       {
-        id: 'dxClimax', group: 'dice', system: 'dx', icon: '⚡', label: T('クライマックス', 'Climax'),
+        id: 'dxClimax', group: 'dice', system: 'dx', label: T('クライマックス', 'Climax'),
         text: T('クライマックスフェイズ', 'CLIMAX PHASE'), subText: T('CLIMAX PHASE', ''),
         patch: PHASE_TITLE
       },
       {
-        id: 'dxEnding', group: 'dice', system: 'dx', icon: '🌙', label: T('エンディング', 'Ending'),
+        id: 'dxEnding', group: 'dice', system: 'dx', label: T('エンディング', 'Ending'),
         text: T('エンディングフェイズ', 'ENDING PHASE'), subText: T('ENDING PHASE', ''),
         patch: PHASE_TITLE
       }
     ],
     trailer: [
       {
-        id: 'cinematic', icon: '🎞️', label: T('シネマティック', 'Cinematic'),
+        id: 'cinematic', icon: 'play', label: T('シネマティック', 'Cinematic'),
         text: T('その夜、町からひとつの灯りが消えた。\n誰も気づかないまま、時計の針だけが進んでいく。\n\n――真実を知る覚悟はあるか。',
           'That night, a single light vanished from the town.\nNo one noticed, and only the clock kept moving.\n\n— Are you ready to face the truth?'),
         patch: {
@@ -554,7 +554,7 @@
         }
       },
       {
-        id: 'typewriter', icon: '⌨️', label: T('タイプライター', 'Typewriter'),
+        id: 'typewriter', icon: 'letter', label: T('タイプライター', 'Typewriter'),
         text: T('拝啓\nこの手紙を読んでいるということは、\n私はもう、この町にはいないのでしょう。\n\nどうか、あの館には近づかないでください。',
           'To whoever finds this letter,\nif you are reading this,\nI am no longer in this town.\n\nPlease, stay away from that mansion.'),
         patch: {
@@ -569,7 +569,7 @@
         }
       },
       {
-        id: 'syslog', icon: '🖥️', label: T('システムログ', 'System Log'),
+        id: 'syslog', icon: 'terminal', label: T('システムログ', 'System Log'),
         text: T('20XX年 X月X日\n調査記録 No.13\n\n対象の館では、夜ごと同じ時刻に\nピアノの音が聞こえるという。',
           'Date: 20XX / XX / XX\nInvestigation Log No.13\n\nEvery night at the same hour,\npiano music echoes through the mansion.'),
         patch: {
@@ -581,7 +581,7 @@
         }
       },
       {
-        id: 'lines', icon: '📜', label: T('1行ずつ浮上', 'Line by Line'),
+        id: 'lines', icon: 'rise', label: T('1行ずつ浮上', 'Line by Line'),
         text: T('失われた記憶を辿り、\n彼らは再びあの村へ向かう。\n\n霧の向こうで、\n何かが目を覚まそうとしていた。',
           'Following their lost memories,\nthey return to that village once more.\n\nBeyond the fog,\nsomething was about to awaken.'),
         patch: {
@@ -593,7 +593,7 @@
         }
       },
       {
-        id: 'sweep', icon: '🌫️', label: T('流れるように', 'Smooth Sweep'),
+        id: 'sweep', icon: 'wave', label: T('流れるように', 'Smooth Sweep'),
         text: T('ここから先は、帰り道のない物語。\nそれでも、扉を開けますか。', 'Beyond this point lies a story with no way back.\nWill you still open the door?'),
         patch: {
           fontId: 'zen-old-mincho', weight: 700, fontSize: 50, lineHeight: 1.9, letterSpacing: 0.12,
@@ -604,7 +604,7 @@
         }
       },
       {
-        id: 'credits', icon: '🎬', label: T('エンドロール', 'End Credits'),
+        id: 'credits', icon: 'reel', label: T('エンドロール', 'End Credits'),
         text: T('STAFF\n\nシナリオ\n〇〇〇〇\n\nゲームマスター\n〇〇〇〇\n\n探索者\n〇〇〇〇\n〇〇〇〇\n〇〇〇〇\n\nThank you for playing!',
           'STAFF\n\nScenario\n〇〇〇〇\n\nGame Master\n〇〇〇〇\n\nInvestigators\n〇〇〇〇\n〇〇〇〇\n〇〇〇〇\n\nThank you for playing!'),
         patch: {
@@ -617,7 +617,7 @@
     ],
     caption: [
       {
-        id: 'converge', icon: '🏫', label: T('上下から合流', 'Converge'),
+        id: 'converge', icon: 'converge', label: T('上下から合流', 'Converge'),
         text: T('保健室', 'Infirmary'), subText: T('放課後 16:30', 'After School — 4:30 PM'),
         patch: {
           fontId: 'noto-serif-jp', weight: 700, fontSize: 110, letterSpacing: 0.2,
@@ -629,7 +629,7 @@
         }
       },
       {
-        id: 'float', icon: '🌙', label: T('浮かび上がる', 'Float Up'),
+        id: 'float', icon: 'floatUp', label: T('浮かび上がる', 'Float Up'),
         text: T('旧校舎 三階', 'Old Building, 3F'), subText: T('PM 7:45', '7:45 PM'),
         patch: {
           fontId: 'zen-kaku-gothic-new', weight: 700, fontSize: 96, letterSpacing: 0.14,
@@ -641,7 +641,7 @@
         }
       },
       {
-        id: 'cinema', icon: '🗼', label: T('字間シネマ', 'Cinematic Tracking'),
+        id: 'cinema', icon: 'spacing', label: T('字間シネマ', 'Cinematic Tracking'),
         text: T('TOKYO', 'TOKYO'), subText: T('2026.10.31 23:59', '2026.10.31 23:59'),
         patch: {
           fontId: 'cinzel', weight: 700, fontSize: 120, letterSpacing: 0.45,
@@ -653,7 +653,7 @@
         }
       },
       {
-        id: 'underline', icon: '📚', label: T('下線スライド（左下）', 'Underline (Bottom Left)'),
+        id: 'underline', icon: 'underline', label: T('下線スライド（左下）', 'Underline (Bottom Left)'),
         text: T('図書室', 'Library'), subText: T('午後 5時12分', '5:12 PM'),
         patch: {
           anchor: 'bl', align: 'start', marginX: 72, marginY: 64,
@@ -666,7 +666,7 @@
         }
       },
       {
-        id: 'vertical', icon: '⛩️', label: T('縦書き（右上）', 'Vertical (Top Right)'),
+        id: 'vertical', icon: 'vertical', label: T('縦書き（右上）', 'Vertical (Top Right)'),
         text: T('神社の境内', 'Shrine Grounds'), subText: T('深夜 二時', '2:00 AM'),
         patch: {
           writing: 'v', anchor: 'tr', align: 'start', marginX: 72, marginY: 56,
@@ -679,7 +679,7 @@
         }
       },
       {
-        id: 'boxed', icon: '🔬', label: T('ボックス（左上）', 'Boxed (Top Left)'),
+        id: 'boxed', icon: 'frame', label: T('ボックス（左上）', 'Boxed (Top Left)'),
         text: T('第三研究棟 地下', 'Research Wing B1'), subText: T('B1F ― 立入禁止区域', 'B1F — Restricted Area'),
         patch: {
           anchor: 'tl', align: 'start', marginX: 56, marginY: 48,
@@ -692,7 +692,7 @@
         }
       },
       {
-        id: 'clock', icon: '⏰', label: T('時刻表示', 'Time Stamp'),
+        id: 'clock', icon: 'stopwatch', label: T('時刻表示', 'Time Stamp'),
         text: T('23:59', '23:59'), subText: T('2026.10.31 SAT', '2026.10.31 SAT'),
         patch: {
           fontId: 'orbitron', weight: 700, fontSize: 130, letterSpacing: 0.12,

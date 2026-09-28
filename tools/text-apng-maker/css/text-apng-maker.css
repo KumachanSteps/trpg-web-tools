@@ -440,7 +440,7 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 
 .link-button:hover { color: var(--blue); background: var(--blue-soft); }
 
-/* テンプレートの分類（メッセージのみ）。選んでいるテンプレートがほかの分類にあるときは、その分類に点を付ける */
+/* テンプレートの分類（メッセージのみ）。分類を選ぶと、その分類の場面に切り替わる */
 .template-groups {
   display: flex;
   flex-wrap: wrap;
@@ -472,13 +472,6 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 
 .template-group:hover { color: var(--blue); }
 .template-group.is-active { background: var(--blue); color: #ffffff; box-shadow: var(--shadow-soft); }
-.template-group.has-current:not(.is-active)::after {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--blue);
-}
 
 /* 分類の下のシステムの段（判定のみ）。分類より一段控えめな見た目にする */
 .template-systems {
@@ -511,13 +504,6 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 .template-system:hover { border-color: var(--line-strong); }
 .template-system.is-active { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
 body.is-dark .template-system.is-active { color: #dfeeff; }
-.template-system.has-current:not(.is-active)::after {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--blue);
-}
 
 .template-strip { display: flex; flex-wrap: wrap; gap: 6px; }
 
@@ -537,7 +523,20 @@ body.is-dark .template-system.is-active { color: #dfeeff; }
 .template-chip:hover { transform: translateY(-1px); border-color: var(--line-strong); }
 .template-chip.is-active { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
 body.is-dark .template-chip.is-active { color: #dfeeff; }
-.template-icon { font-size: 0.95rem; }
+.template-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--muted);
+  transition: color .15s ease;
+}
+
+.template-chip.is-active .template-icon, .template-chip:hover .template-icon { color: var(--blue); }
 
 /* ---------- 設定タブ ---------- */
 
