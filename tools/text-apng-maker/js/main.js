@@ -116,6 +116,9 @@
     mode: 'message',
     tab: 'text',
     scenes: {},
+    // 書き換えた文章。メッセージはテンプレートごとに覚え（message: { テンプレートID: { text, subText } }）、
+    // トレイラー・場所・時間はテンプレートを切り替えても引き継ぐ（trailer / caption: { text, subText }）
+    editedTexts: { message: {}, trailer: {}, caption: {} },
     // fileNames: モードごとの手入力のファイル名（空なら設定から自動入力）
     exportOpts: { fps: 24, loop: 'once', loopCount: 3, color: 'palette', poster: true, trim: false, fileNames: { message: '', trailer: '', caption: '' } },
     previewBg: 'checker',
@@ -181,7 +184,30 @@
       }
       if (saved.previewBg && saved.previewBg !== 'image') app.previewBg = saved.previewBg;
       if (typeof saved.loopPreview === 'boolean') app.loopPreview = saved.loopPreview;
+      if (saved.editedTexts && typeof saved.editedTexts === 'object') {
+        const memos = saved.editedTexts;
+        P.TEMPLATES.message.forEach(tpl => {
+          const kept = pickTexts(memos.message && memos.message[tpl.id]);
+          if (Object.keys(kept).length) app.editedTexts.message[tpl.id] = kept;
+        });
+        ['trailer', 'caption'].forEach(mode => { app.editedTexts[mode] = pickTexts(memos[mode]); });
+      } else {
+        // 書き換えた文章を覚える仕組みより前の保存データ：トレイラー・場所・時間で書き換えていた文章はそのまま引き継ぐ
+        ['trailer', 'caption'].forEach(mode => {
+          const s = app.scenes[mode];
+          const state = P.sampleState(mode, s.text, s.subText);
+          if (!state.main) app.editedTexts[mode].text = s.text;
+          if (!state.sub && mode === 'caption') app.editedTexts[mode].subText = s.subText;
+        });
+      }
     }
+  }
+
+  // 保存データから文章だけを取り出す
+  function pickTexts(memo) {
+    const kept = {};
+    if (memo && typeof memo === 'object') ['text', 'subText'].forEach(key => { if (typeof memo[key] === 'string') kept[key] = memo[key]; });
+    return kept;
   }
 
   let saveTimer = 0;
@@ -190,8 +216,8 @@
     saveTimer = setTimeout(() => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          schema: STORAGE_SCHEMA, mode: app.mode, tab: app.tab, scenes: app.scenes, exportOpts: app.exportOpts,
-          previewBg: app.previewBg, loopPreview: app.loopPreview
+          schema: STORAGE_SCHEMA, mode: app.mode, tab: app.tab, scenes: app.scenes, editedTexts: app.editedTexts,
+          exportOpts: app.exportOpts, previewBg: app.previewBg, loopPreview: app.loopPreview
         }));
       } catch (error) {
         // 保存できない環境（プライベートモード等）でも動作は続ける
@@ -297,7 +323,6 @@
       btn.querySelector('.mode-desc').textContent = desc;
     });
     els.templatesLabel.textContent = d.templates;
-    els.templatesHint.textContent = d.templatesHint;
     els.resetBtn.textContent = app.lang === 'en' ? '↺ Reset' : '↺ 初期化';
     els.resetBtn.title = app.lang === 'en' ? 'Reset this mode to the defaults' : 'このモードを初期状態に戻す';
     els.settingsTabs.querySelectorAll('[data-tab]').forEach(btn => { btn.textContent = d.tabs[btn.dataset.tab]; });
@@ -406,6 +431,7 @@
   function handleChange(path, value, meta = {}) {
     const s = scene();
     setPath(s, path, value);
+    if (path === 'text' || path === 'subText') rememberText(s, path, value);
     if (path === 'fontId') {
       const font = F.get(value);
       if (font) s.weight = F.nearestWeight(font, s.weight || 700);
@@ -429,6 +455,24 @@
     if (!view.playing) showVisibleFrame();
     panel.refresh();
     saveState();
+  }
+
+  // 書き換えた文章を覚える。メッセージは選んでいるテンプレートの分として、トレイラー・場所・時間はテンプレートをまたいで共通に。
+  // 空のメインテキストは覚えない。メッセージでは見本と同じ文章も覚えない（どちらも、テンプレートを選ぶと見本に戻る）
+  function rememberText(s, key, value) {
+    const emptyMain = key === 'text' && !String(value).trim();
+    if (s.mode !== 'message') {
+      if (emptyMain) delete app.editedTexts[s.mode][key];
+      else app.editedTexts[s.mode][key] = value;
+      return;
+    }
+    const tpl = P.TEMPLATES.message.find(t => t.id === s.templateId);
+    if (!tpl) return;
+    const memo = app.editedTexts.message[tpl.id] || {};
+    if (emptyMain || value === P.sampleText(tpl, key, app.lang)) delete memo[key];
+    else memo[key] = value;
+    if (Object.keys(memo).length) app.editedTexts.message[tpl.id] = memo;
+    else delete app.editedTexts.message[tpl.id];
   }
 
   // 一時停止中に文字が映らない時刻（開始前・終了後）なら、完成状態の時刻へ移動して編集結果を見せる
@@ -788,6 +832,7 @@
 
   function renderTemplates() {
     const s = scene();
+    els.templatesHint.textContent = dict().templatesHint(app.mode);
     els.templateStrip.innerHTML = '';
     (P.TEMPLATES[app.mode] || []).forEach(tpl => {
       const btn = document.createElement('button');
@@ -811,8 +856,12 @@
 
   function applyTemplate(tpl) {
     const s = scene();
-    // 書き換えていない文章・サブテキストだけ、新しいテンプレートの見本に差し替える
-    P.applyTemplate(s, tpl, app.lang, P.sampleState(app.mode, s.text, s.subText));
+    // 文章は新しいテンプレートの見本にしたうえで、書き換えた文章があれば戻す
+    // （メッセージはそのテンプレートで書き換えた文章、トレイラー・場所・時間はテンプレートをまたいで共通の文章）
+    P.applyTemplate(s, tpl, app.lang);
+    const memo = (app.mode === 'message' ? app.editedTexts.message[tpl.id] : app.editedTexts[app.mode]) || {};
+    if (typeof memo.text === 'string') s.text = memo.text;
+    if (typeof memo.subText === 'string') s.subText = memo.subText;
     s.mode = app.mode;
     renderTemplates();
     view.renderer.invalidateSprites();
@@ -829,6 +878,7 @@
   function resetMode() {
     if (!window.confirm(msg().storageReset)) return;
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
+    app.editedTexts[app.mode] = {};
     app.exportOpts.fileNames[app.mode] = '';
     renderTemplates();
     view.renderer.invalidateSprites();

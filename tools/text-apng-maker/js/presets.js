@@ -432,14 +432,19 @@
   function defaultScene(mode, lang) {
     const scene = deepMerge(clone(BASE), MODE_DEFAULTS[mode] || {});
     const first = (TEMPLATES[mode] || [])[0];
-    if (first) applyTemplate(scene, first, lang, true);
+    if (first) applyTemplate(scene, first, lang);
     return scene;
   }
 
-  // テンプレートはスタイルと動きを初期値から組み立て直す。文章はユーザーが書き換えていなければ差し替える。
-  // replaceText: true / false、または { main, sub }（文章とサブテキストを別々に差し替えるか）
-  function applyTemplate(scene, template, lang, replaceText) {
-    const keep = { text: scene.text, subText: scene.subText, width: scene.width, height: scene.height, sizePreset: scene.sizePreset, outEnabled: scene.outEnabled };
+  // テンプレートの見本の文章（key: 'text' / 'subText'）
+  function sampleText(template, key, lang) {
+    const value = template[key];
+    return value ? (value[lang] ?? value.ja) : '';
+  }
+
+  // テンプレートはスタイル・動き・文章を初期値から組み立て直す（書き換えた文章を戻すのは呼び出し側）
+  function applyTemplate(scene, template, lang) {
+    const keep = { width: scene.width, height: scene.height, sizePreset: scene.sizePreset, outEnabled: scene.outEnabled };
     const fresh = deepMerge(deepMerge(clone(BASE), MODE_DEFAULTS[scene.mode] || {}), template.patch);
     Object.keys(scene).forEach(key => delete scene[key]);
     Object.assign(scene, fresh);
@@ -449,25 +454,15 @@
     scene.templateId = template.id;
     // 退場の有無は利用者の選択なので、テンプレートを切り替えても引き継ぐ
     if (!('outEnabled' in template.patch)) scene.outEnabled = keep.outEnabled !== false;
-    const replace = replaceText && typeof replaceText === 'object' ? replaceText : { main: Boolean(replaceText), sub: Boolean(replaceText) };
-    scene.text = replace.main ? (template.text ? (template.text[lang] ?? template.text.ja) : '') : keep.text;
-    scene.subText = replace.sub ? (template.subText ? (template.subText[lang] ?? template.subText.ja) : '') : keep.subText;
+    scene.text = sampleText(template, 'text', lang);
+    scene.subText = sampleText(template, 'subText', lang);
     return scene;
   }
 
-  // 以前のバージョンのテンプレートの文章。保存データに残っていても見本として扱い、テンプレートの切り替えで差し替える
-  const LEGACY_SAMPLES = {
-    message: {
-      text: ['SESSION START', 'GAME OVER', 'SANチェック', 'SANITY CHECK', '生還', 'SURVIVED', 'クリティカル！', 'CRITICAL!', 'ファンブル…', 'FUMBLE...'],
-      subText: ['- BATTLE START -', '- ENCOUNTER -', 'INVESTIGATION', 'セッション開始', 'Good luck, investigators', '探索者は帰らなかった',
-        'The investigator never returned', '――正気を保てるか', '— Can you keep your mind?', 'MISSION COMPLETE']
-    }
-  };
-
-  // 文章・サブテキストがテンプレートの見本のままか（書き換えていない方だけ、切り替え時に新しい見本へ差し替える）
+  // 文章・サブテキストが、いずれかのテンプレートの見本のままか（書き換えた文章を覚える仕組みより前の保存データの引き継ぎに使う）
   function sampleState(mode, text, subText) {
-    const texts = new Set(LEGACY_SAMPLES[mode] ? LEGACY_SAMPLES[mode].text : []);
-    const subs = new Set(LEGACY_SAMPLES[mode] ? LEGACY_SAMPLES[mode].subText : []);
+    const texts = new Set();
+    const subs = new Set();
     (TEMPLATES[mode] || []).forEach(tpl => ['ja', 'en'].forEach(lang => {
       if (tpl.text && tpl.text[lang]) texts.add(tpl.text[lang]);
       if (tpl.subText && tpl.subText[lang]) subs.add(tpl.subText[lang]);
@@ -475,11 +470,6 @@
     const main = !String(text || '').trim() || texts.has(text);
     const sub = subs.has(subText) || (!String(subText || '').trim() && main);
     return { main, sub };
-  }
-
-  function isSampleText(mode, text, subText) {
-    const state = sampleState(mode, text, subText);
-    return state.main && state.sub;
   }
 
   root.TextApngPresets = {
@@ -493,7 +483,7 @@
     deepMerge,
     defaultScene,
     applyTemplate,
-    isSampleText,
+    sampleText,
     sampleState
   };
 })(window);

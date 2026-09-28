@@ -26,7 +26,7 @@
       helpTitle: '使い方',
       helpSteps: [
         '1. 左上で「メッセージ」「トレイラー」「場所・時間」から作りたい演出を選びます。',
-        '2. テンプレートを選ぶと、フォント・色・動きが一括で設定されます。文章を書き換えてもテンプレートは切り替えられます。',
+        '2. テンプレートを選ぶと、フォント・色・動きが一括で設定されます。書き換えた文章は、メッセージではテンプレートごとに保存され、トレイラーと場所・時間ではテンプレートを切り替えても残ります。',
         '3. 「テキスト」「フォント」「動き」「装飾」「背景・配置」のタブで細かく調整します。右側のプレビューはリアルタイムに更新されます。',
         '4. 動きのカードにマウスを乗せると、その効果の動きを小さなプレビューで確認できます。',
         '5. 「APNGを書き出す」で背景が透明な動く画像を作成します。「PNG静止画」は再生中なら完成状態を、一時停止中ならその瞬間を保存します。動画編集向けに「連番PNG（ZIP）」も書き出せます。',
@@ -55,7 +55,9 @@
         caption: ['場所・時間', '探索箇所・シーンのテロップ']
       },
       templates: 'テンプレート',
-      templatesHint: '動き・フォント・色をまとめて設定します（書き換えた文章はそのまま残ります）',
+      templatesHint: mode => (mode === 'message'
+        ? '動き・フォント・色をまとめて設定します（文章はテンプレートごとに保存されます）'
+        : '動き・フォント・色をまとめて設定します（書き換えた文章はそのまま残ります）'),
       tabs: { text: 'テキスト', font: 'フォント', motion: '動き', style: '装飾', layout: '背景・配置' },
       preview: 'プレビュー',
       previewBg: 'プレビュー背景',
@@ -152,7 +154,7 @@
       helpTitle: 'Guide',
       helpSteps: [
         '1. Pick a mode at the top left: “Message”, “Trailer”, or “Place & Time”.',
-        '2. Choose a template to set the font, colors, and motion in one click. You can switch templates even after editing your text.',
+        '2. Choose a template to set the font, colors, and motion in one click. Edited text is saved separately for each template in Message mode, and stays when you switch templates in Trailer and Place & Time.',
         '3. Fine-tune with the Text / Font / Motion / Style / Layout tabs. The preview on the right updates in real time.',
         '4. Hover over a motion card to see a small animated preview of that effect.',
         '5. Click “Export APNG” to create a moving image with a transparent background. “PNG still” saves the finished state while playing, or the exact paused moment. A PNG sequence (ZIP) is also available for video editing.',
@@ -181,7 +183,9 @@
         caption: ['Place & Time', 'Place & scene captions']
       },
       templates: 'Templates',
-      templatesHint: 'Sets motion, font, and colors at once (your edited text is kept)',
+      templatesHint: mode => (mode === 'message'
+        ? 'Sets motion, font, and colors at once (edited text is saved for each template)'
+        : 'Sets motion, font, and colors at once (your edited text is kept)'),
       tabs: { text: 'Text', font: 'Font', motion: 'Motion', style: 'Style', layout: 'Layout' },
       preview: 'Preview',
       previewBg: 'Preview background',
