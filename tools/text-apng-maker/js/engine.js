@@ -546,6 +546,11 @@
       case 'sides': return v ? { l: 0, r: 0, t: pad + ext, b: pad + ext } : { l: pad + ext, r: pad + ext, t: 0, b: 0 };
       case 'bar': return v ? { l: 0, r: pad + th, t: 0, b: 0 } : { l: pad + th, r: 0, t: 0, b: 0 };
       case 'band': return v ? { l: pad, r: pad, t: 0, b: 0 } : { l: 0, r: 0, t: pad, b: pad };
+      // 虎柄テープ：文字の上下（縦書きは左右）にテープの太さ＋余白の分はみ出す。長さ方向は画面の端から端まで
+      case 'tape': {
+        const tw = d.tapeSize ?? 40;
+        return v ? { l: pad + tw, r: pad + tw, t: 0, b: 0 } : { l: 0, r: 0, t: pad + tw, b: pad + tw };
+      }
       // タイトル枠：メインの文字の周りに余白分はみ出す。左右（縦書きは上下）の延長は画面内に収めて描く
       case 'frame': return { l: pad + th, r: pad + th, t: pad + th, b: pad + th };
       default: return { l: 0, r: 0, t: 0, b: 0 };
@@ -788,8 +793,8 @@
       const isLast = pi === layout.pages.length - 1;
       const pg = { index: pi, blockIn: null, blockOut: null, decoIn: null, decoOut: null, scroll: null, cursor: null };
       const pageStart = cursor;
-      // 帯・枠・ボックスが現れてから文字が出る
-      const opensFirst = deco.type === 'band' || deco.type === 'frame' || deco.type === 'box';
+      // 帯・テープ・枠・ボックスが現れてから文字が出る
+      const opensFirst = ['band', 'tape', 'frame', 'box'].includes(deco.type);
       const lead = decoAnimated && opensFirst ? Math.min(0.3, decoDur * 0.6) : 0;
       const textStart = pageStart + lead;
       if (decoAnimated) pg.decoIn = { start: pageStart, dur: decoDur };
@@ -976,6 +981,13 @@
     c.width = Math.max(1, Math.ceil(w));
     c.height = Math.max(1, Math.ceil(h));
     return c;
+  }
+
+  // テープの点滅：0.5秒周期で、明るい状態から短く暗くなる（1で最も暗い）。phase は周期に対するずれ
+  function tapeBlinkWave(t, phase) {
+    const p = (((t / 0.5) + phase) % 1 + 1) % 1;
+    const smooth = (a, b, x) => { const k = clamp((x - a) / (b - a)); return k * k * (3 - 2 * k); };
+    return smooth(0.55, 0.62, p) * (1 - smooth(0.9, 0.97, p));
   }
 
   function colorWithAlpha(hex, alpha) {
@@ -1213,7 +1225,7 @@
         scene.subSize, scene.subGap, scene.subPosition, scene.writing, scene.align, scene.anchor, scene.marginX, scene.marginY,
         scene.offsetX, scene.offsetY, scene.autoFit, scene.wrapChars, scene.fill, scene.fillOpacity, scene.stroke, scene.stroke2,
         scene.shadow, scene.glow, scene.subColorOn, scene.subColor, scene.deco && scene.deco.type, scene.deco && scene.deco.pad,
-        scene.deco && scene.deco.extend, scene.deco && scene.deco.thickness, this.fontEpoch || 0
+        scene.deco && scene.deco.extend, scene.deco && scene.deco.thickness, scene.deco && scene.deco.tapeSize, this.fontEpoch || 0
       ]);
       if (spriteKey !== this.spriteKey || !this.sprites) {
         this.sprites = this.buildSprites(scene, layout, fonts);
@@ -1721,6 +1733,39 @@
           }
           break;
         }
+        case 'tape': {
+          // 虎柄テープ：文字の上下（縦書きは右と左）に、画面の端から端までしま模様のテープを張る。
+          // 上（右）のテープは左（上）へ、下（左）のテープは右（下）へ流れ、点滅する。
+          // 「伸びる」では、それぞれ流れる向きに画面の外からすべり込み、退場で流れる向きへ抜けていく
+          const tw = Math.max(2, (d.tapeSize ?? 40) * layout.fit);
+          const speed = Math.max(0, d.tapeSpeed ?? 90) * layout.fit;
+          const blink = clamp(d.tapeBlink ?? 0.5);
+          const colorA = d.tapeColor || '#f5c400';
+          const colorB = d.tapeStripe || '#151515';
+          const len = vertical ? H : W;
+          const origin = vertical ? -bs.y : -bs.x;
+          const inShift = grow ? len * ein : 0;
+          const outShift = grow ? len * eout : 0;
+          const baseA = grow ? 1 : ein * (1 - eout);
+          // 1本目（上／右）：流れる向きの逆側の端から入り、流れる向きへ抜ける
+          const firstA = origin + len - inShift, firstB = origin + len - outShift;
+          // 2本目（下／左）：反対向き
+          const secondA = origin + outShift, secondB = origin + inShift;
+          const drift = speed * t;
+          const tapes = vertical
+            ? [{ v0: box.x1 + pad, a: firstA, b: firstB, offset: origin - drift - inShift - outShift, phase: 0 },
+              { v0: box.x0 - pad - tw, a: secondA, b: secondB, offset: origin + drift + inShift + outShift, phase: 0.5 }]
+            : [{ v0: box.y0 - pad - tw, a: firstA, b: firstB, offset: origin - drift - inShift - outShift, phase: 0 },
+              { v0: box.y1 + pad, a: secondA, b: secondB, offset: origin + drift + inShift + outShift, phase: 0.5 }];
+          tapes.forEach(tp => {
+            const a = Math.max(origin, tp.a), b = Math.min(origin + len, tp.b);
+            if (b - a < 0.5) return;
+            ctx.globalAlpha = baseA * (1 - blink * tapeBlinkWave(t, tp.phase));
+            if (ctx.globalAlpha <= 0.002) return;
+            this.drawTape(ctx, vertical, a, b, tp.v0, tw, tp.offset, colorA, colorB);
+          });
+          break;
+        }
         case 'box': {
           const cx = (box.x0 + box.x1) / 2, cy = (box.y0 + box.y1) / 2;
           const hw = (box.x1 - box.x0) / 2 + pad, hh = (box.y1 - box.y0) / 2 + pad;
@@ -1866,6 +1911,37 @@
         }
         default: break;
       }
+      ctx.restore();
+    }
+
+    // しま模様のテープを1本描く。u は長さ方向（横書きは x、縦書きは y）、v0・tw は太さ方向の位置と太さ。
+    // しまの位置は offset だけで決まり、見えている範囲 [u0, u1] が変わっても模様は動かない
+    drawTape(ctx, vertical, u0, u1, v0, tw, offset, colorA, colorB) {
+      const pt = (u, v) => (vertical ? [v, u] : [u, v]);
+      ctx.save();
+      ctx.beginPath();
+      if (vertical) ctx.rect(v0, u0, tw, u1 - u0);
+      else ctx.rect(u0, v0, u1 - u0, tw);
+      ctx.clip();
+      ctx.fillStyle = colorA;
+      ctx.fill();
+      const period = tw * 1.3;
+      const stripe = period * 0.5;
+      const slant = tw;
+      const first = Math.floor((u0 - slant - stripe - offset) / period) - 1;
+      ctx.beginPath();
+      for (let k = first; ; k++) {
+        const u = k * period + offset;
+        if (u > u1 + period) break;
+        const p1 = pt(u, v0 + tw), p2 = pt(u + stripe, v0 + tw), p3 = pt(u + stripe + slant, v0), p4 = pt(u + slant, v0);
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.lineTo(p3[0], p3[1]);
+        ctx.lineTo(p4[0], p4[1]);
+        ctx.closePath();
+      }
+      ctx.fillStyle = colorB;
+      ctx.fill();
       ctx.restore();
     }
 

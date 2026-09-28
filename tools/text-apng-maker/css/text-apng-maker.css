@@ -440,6 +440,46 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 
 .link-button:hover { color: var(--blue); background: var(--blue-soft); }
 
+/* テンプレートの分類（メッセージのみ）。選んでいるテンプレートがほかの分類にあるときは、その分類に点を付ける */
+.template-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 0 0 8px;
+  padding: 3px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+}
+
+.template-groups[hidden] { display: none; }
+
+.template-group {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.template-group:hover { color: var(--blue); }
+.template-group.is-active { background: var(--blue); color: #ffffff; box-shadow: var(--shadow-soft); }
+.template-group.has-current:not(.is-active)::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
 .template-strip { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .template-chip {

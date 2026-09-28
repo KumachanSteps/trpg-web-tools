@@ -111,6 +111,7 @@
     deco: [
       { value: 'none', label: T('なし', 'None') },
       { value: 'band', label: T('帯', 'Band') },
+      { value: 'tape', label: T('虎柄テープ', 'Caution tape') },
       { value: 'box', label: T('ボックス', 'Box') },
       { value: 'frame', label: T('タイトル枠', 'Title frame') },
       { value: 'lines', label: T('上下ライン', 'Lines') },
@@ -304,10 +305,15 @@
         { type: 'chips', bind: 'deco.type', options: OPT.deco },
         { type: 'colors', when: s => s.deco.type !== 'none', items: [
           { bind: 'deco.color', label: T('塗り', 'Fill'), when: decoIs('band', 'box', 'frame') },
-          { bind: 'deco.color2', label: T('線', 'Line'), when: decoIs('box', 'frame', 'lines', 'underline', 'sides', 'bar', 'corners') }
+          { bind: 'deco.color2', label: T('線', 'Line'), when: decoIs('box', 'frame', 'lines', 'underline', 'sides', 'bar', 'corners') },
+          { bind: 'deco.tapeColor', label: T('テープ', 'Tape'), when: decoIs('tape') },
+          { bind: 'deco.tapeStripe', label: T('しま模様', 'Stripes'), when: decoIs('tape') }
         ] },
         { type: 'range', bind: 'deco.opacity', when: decoIs('band', 'box', 'frame'), label: T('塗りの濃さ', 'Fill opacity'), min: 0, max: 1, step: 0.01, format: 'pct' },
         { type: 'range', bind: 'deco.thickness', when: decoIs('box', 'frame', 'lines', 'underline', 'sides', 'bar', 'corners'), label: s => (['box', 'frame'].includes(s.deco.type) ? T('枠線の太さ（0で枠なし）', 'Border width (0 = none)') : T('線の太さ', 'Line width')), min: 0, max: 16, step: 0.5, format: 'px' },
+        { type: 'range', bind: 'deco.tapeSize', when: decoIs('tape'), label: T('テープの太さ', 'Tape width'), min: 8, max: 120, step: 1, format: 'px' },
+        { type: 'range', bind: 'deco.tapeSpeed', when: decoIs('tape'), label: T('テープの流れる速さ（0で止まる）', 'Tape speed (0 = still)'), min: 0, max: 400, step: 5, format: 'pxs' },
+        { type: 'range', bind: 'deco.tapeBlink', when: decoIs('tape'), label: T('テープの点滅（0で点滅しない）', 'Tape blink (0 = none)'), min: 0, max: 1, step: 0.01, format: 'pct' },
         { type: 'range', bind: 'deco.pad', when: s => s.deco.type !== 'none', label: T('文字との余白', 'Padding'), min: 0, max: 2, step: 0.01, format: 'em' },
         { type: 'range', bind: 'deco.extend', when: decoIs('lines', 'underline', 'sides'), label: T('線の長さ', 'Line length'), min: 0, max: 4, step: 0.05, format: 'em' },
         { type: 'range', bind: 'deco.extend', when: decoIs('frame'), label: T('枠の広がり（画面の端で止まります）', 'Frame extension (stops at the image edge)'), min: 0, max: 12, step: 0.1, format: 'em' },

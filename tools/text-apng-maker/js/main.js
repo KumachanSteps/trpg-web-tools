@@ -45,6 +45,7 @@
     modeTabs: $('modeTabs'),
     templatesLabel: $('templatesLabel'),
     templatesHint: $('templatesHint'),
+    templateGroups: $('templateGroups'),
     templateStrip: $('templateStrip'),
     resetBtn: $('resetModeBtn'),
     settingsTabs: $('settingsTabs'),
@@ -830,11 +831,51 @@
     });
   }
 
+  // 表示中のテンプレートの分類（モードごと・保存しない）。未選択なら、選んでいるテンプレートの分類から始める
+  const shownGroup = {};
+  function currentGroup() {
+    const groups = P.TEMPLATE_GROUPS[app.mode];
+    if (!groups) return null;
+    if (!groups.some(g => g.id === shownGroup[app.mode])) {
+      const active = P.TEMPLATES[app.mode].find(tpl => tpl.id === scene().templateId);
+      shownGroup[app.mode] = active && active.group ? active.group : groups[0].id;
+    }
+    return shownGroup[app.mode];
+  }
+
   function renderTemplates() {
     const s = scene();
+    // 作り直す前にフォーカスしていたボタンへ、作り直した後もフォーカスを戻す
+    const focused = document.activeElement;
+    const refocus = focused && (els.templateGroups.contains(focused) || els.templateStrip.contains(focused))
+      ? (focused.dataset.group ? `[data-group="${focused.dataset.group}"]` : `[data-template="${focused.dataset.template}"]`) : '';
     els.templatesHint.textContent = dict().templatesHint(app.mode);
+    const groups = P.TEMPLATE_GROUPS[app.mode] || null;
+    const group = currentGroup();
+    const active = (P.TEMPLATES[app.mode] || []).find(tpl => tpl.id === s.templateId);
+    els.templateGroups.hidden = !groups;
+    els.templateGroups.innerHTML = '';
+    if (groups) {
+      els.templateGroups.setAttribute('aria-label', dict().templateGroups);
+      groups.forEach(g => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'template-group';
+        btn.dataset.group = g.id;
+        btn.textContent = g.label[app.lang];
+        const on = g.id === group;
+        btn.classList.toggle('is-active', on);
+        btn.classList.toggle('has-current', Boolean(active && active.group === g.id));
+        btn.setAttribute('aria-pressed', String(on));
+        btn.addEventListener('click', () => {
+          shownGroup[app.mode] = g.id;
+          renderTemplates();
+        });
+        els.templateGroups.appendChild(btn);
+      });
+    }
     els.templateStrip.innerHTML = '';
-    (P.TEMPLATES[app.mode] || []).forEach(tpl => {
+    (P.TEMPLATES[app.mode] || []).filter(tpl => !groups || tpl.group === group).forEach(tpl => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'template-chip';
@@ -852,6 +893,10 @@
       btn.addEventListener('click', () => applyTemplate(tpl));
       els.templateStrip.appendChild(btn);
     });
+    if (refocus) {
+      const target = els.templateGroups.querySelector(refocus) || els.templateStrip.querySelector(refocus);
+      if (target) target.focus();
+    }
   }
 
   function applyTemplate(tpl) {
@@ -879,6 +924,7 @@
     if (!window.confirm(msg().storageReset)) return;
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
     app.editedTexts[app.mode] = {};
+    delete shownGroup[app.mode];
     app.exportOpts.fileNames[app.mode] = '';
     renderTemplates();
     view.renderer.invalidateSprites();
