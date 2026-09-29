@@ -130,7 +130,7 @@
     ...BATTLE_PATCH,
     subColorOn: true
   };
-  const diceFrame = (line, fill = { color: '#000000', opacity: 0 }, thickness = 3) => ({ ...BATTLE_PATCH.deco, color2: line, color: fill.color, opacity: fill.opacity, thickness });
+  const diceFrame = (line, fill = { color: '#000000', opacity: 0 }, thickness = 4.5) => ({ ...BATTLE_PATCH.deco, color2: line, color: fill.color, opacity: fill.opacity, thickness });
   const DICE_SUCCESS = {
     ...DICE_FRAME,
     fill: { type: 'solid', color: '#ffffff' },
@@ -162,7 +162,7 @@
     shadow: { on: true, color: '#2a1a00', opacity: 0.5, blur: 10, x: 0, y: 3 },
     glow: { on: true, color: '#ffc21a', size: 44, strength: 1.5 },
     subColor: '#ffe9a8',
-    deco: diceFrame('#ffd24a', undefined, 4),
+    deco: diceFrame('#ffd24a', undefined, 5.5),
     inFx: 'flash', inDur: 0.8, inStagger: 0, inPower: 1, holdFx: 'glow', holdPower: 1.2, hold: 1.6
   };
   const DICE_BEYOND = {
@@ -172,14 +172,14 @@
     shadow: { on: true, color: '#12002a', opacity: 0.5, blur: 10, x: 0, y: 3 },
     glow: { on: true, color: '#ff7ae0', size: 48, strength: 1.6 },
     subColor: '#ffd6f6',
-    deco: diceFrame('#ffe6ff', undefined, 4),
+    deco: diceFrame('#ffe6ff', undefined, 5.5),
     inFx: 'flash', inDur: 0.9, inStagger: 0, inPower: 1, holdFx: 'pulse', holdPower: 1, hold: 1.8
   };
   const DICE_FAILURE = {
     ...DICE_FRAME,
-    fill: { type: 'gradient', color: '#e6d6d6', color2: '#b08a8a', color3: '#6a3c3c', dir: 'v' },
+    fill: { type: 'gradient', color: '#ff9a9a', color2: '#e04848', color3: '#9e1f1f', dir: 'v' },
     shadow: { on: true, color: '#000000', opacity: 0.7, blur: 14, x: 0, y: 5 },
-    subColor: '#c79a9a',
+    subColor: '#e07a7a',
     deco: diceFrame('#8a2a2a', { color: '#120505', opacity: 0.55 }),
     outFx: 'sink', outDur: 0.7, outStagger: 0.06
   };
@@ -202,7 +202,7 @@
     shadow: { on: true, color: '#12002a', opacity: 0.7, blur: 12, x: 0, y: 4 },
     glow: { on: true, color: '#a57bff', size: 28, strength: 0.8 },
     subColorOn: true, subColor: '#d9c8ff',
-    deco: { type: 'corners', color2: '#c9b3ff', pad: 0.45, thickness: 2, anim: 'grow', dur: 0.6 },
+    deco: { type: 'corners', color2: '#c9b3ff', pad: 0.45, thickness: 3, anim: 'grow', dur: 0.6 },
     inFx: 'emerge', inDur: 1.0, holdFx: 'glow', holdPower: 0.8, hold: 1.8, outFx: 'blurOut', outDur: 0.7, subFx: 'fade', subDelay: -0.2
   };
   // フェイズの見出し（ダブルクロスのオープニング〜エンディング）
@@ -244,6 +244,21 @@
         id: 'battleEnd', group: 'combat', icon: 'flag', label: T('戦闘終了', 'Battle End'),
         text: T('戦闘終了', 'BATTLE END'), subText: T('BATTLE END', 'DISENGAGE'),
         patch: BATTLE_PATCH
+      },
+      {
+        // サイバー風：ネオンの水色、デジタルな書体、グリッチで起動
+        id: 'openCombat', group: 'combat', icon: 'chip', label: T('OPEN COMBAT', 'Open Combat'),
+        text: T('OPEN COMBAT', 'OPEN COMBAT'), subText: T('戦闘開始', 'COMBAT MODE : ONLINE'),
+        patch: {
+          fontId: 'orbitron', weight: 900, fontSize: 120, letterSpacing: 0.16,
+          subFontId: 'share-tech-mono', subWeight: 400, subSize: 0.3, subLetterSpacing: 0.5, subGap: 0.45,
+          fill: { type: 'gradient', color: '#ffffff', color2: '#b8f6ff', color3: '#3fd8ff', dir: 'v' },
+          stroke: { on: true, width: 1.5, color: '#00e5ff' }, stroke2: { on: false },
+          shadow: { on: false }, glow: { on: true, color: '#00d9ff', size: 30, strength: 1.3 },
+          subColorOn: true, subColor: '#6ff0ff',
+          deco: { type: 'lines', color2: '#00e5ff', pad: 0.3, extend: 0.6, thickness: 2, anim: 'grow', dur: 0.45 },
+          inFx: 'glitch', inDur: 0.8, holdFx: 'glitch', holdPower: 0.6, hold: 1.8, outFx: 'glitch', outDur: 0.5, subFx: 'typewriter', subDelay: -0.1
+        }
       },
       {
         id: 'round', group: 'combat', icon: 'bell', label: T('ラウンド', 'Round'),
@@ -493,14 +508,9 @@
         patch: DICE_FUMBLE
       },
       {
-        id: 'coc7Critical', group: 'dice', system: 'coc7', label: T('クリティカル', 'Critical'),
-        text: T('クリティカル', 'CRITICAL'), subText: T('CRITICAL', ''),
-        patch: DICE_CRITICAL
-      },
-      {
-        id: 'coc7Extreme', group: 'dice', system: 'coc7', label: T('イクストリーム成功', 'Extreme Success'),
-        text: T('イクストリーム成功', 'EXTREME SUCCESS'), subText: T('EXTREME SUCCESS', ''),
-        patch: DICE_GREAT
+        id: 'coc7Regular', group: 'dice', system: 'coc7', label: T('レギュラー成功', 'Regular Success'),
+        text: T('レギュラー成功', 'REGULAR SUCCESS'), subText: T('REGULAR SUCCESS', ''),
+        patch: DICE_SUCCESS
       },
       {
         id: 'coc7Hard', group: 'dice', system: 'coc7', label: T('ハード成功', 'Hard Success'),
@@ -508,9 +518,14 @@
         patch: DICE_GOOD
       },
       {
-        id: 'coc7Regular', group: 'dice', system: 'coc7', label: T('レギュラー成功', 'Regular Success'),
-        text: T('レギュラー成功', 'REGULAR SUCCESS'), subText: T('REGULAR SUCCESS', ''),
-        patch: DICE_SUCCESS
+        id: 'coc7Extreme', group: 'dice', system: 'coc7', label: T('イクストリーム成功', 'Extreme Success'),
+        text: T('イクストリーム成功', 'EXTREME SUCCESS'), subText: T('EXTREME SUCCESS', ''),
+        patch: DICE_GREAT
+      },
+      {
+        id: 'coc7Critical', group: 'dice', system: 'coc7', label: T('クリティカル', 'Critical'),
+        text: T('クリティカル', 'CRITICAL'), subText: T('CRITICAL', ''),
+        patch: DICE_CRITICAL
       },
       {
         id: 'coc7Failure', group: 'dice', system: 'coc7', label: T('失敗', 'Failure'),
