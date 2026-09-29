@@ -205,6 +205,15 @@
     deco: { type: 'corners', color2: '#c9b3ff', pad: 0.45, thickness: 3, anim: 'grow', dur: 0.6 },
     inFx: 'emerge', inDur: 1.0, holdFx: 'glow', holdPower: 0.8, hold: 1.8, outFx: 'blurOut', outDur: 0.7, subFx: 'fade', subDelay: -0.2
   };
+  // 共鳴判定は青系
+  const RESONANCE_CALL = {
+    ...CHECK_CALL,
+    fill: { type: 'gradient', color: '#ffffff', color2: '#dcebff', color3: '#7fb0ff', dir: 'v' },
+    shadow: { on: true, color: '#00102a', opacity: 0.7, blur: 12, x: 0, y: 4 },
+    glow: { on: true, color: '#4d8dff', size: 28, strength: 0.8 },
+    subColor: '#c6dcff',
+    deco: { ...CHECK_CALL.deco, color2: '#9fc4ff' }
+  };
   // フェイズの見出し（ダブルクロスのオープニング〜エンディング）
   const PHASE_TITLE = {
     fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 92, letterSpacing: 0.14,
@@ -308,6 +317,20 @@
           subColorOn: true, subColor: '#151515',
           deco: { type: 'band', color: '#f3c613', opacity: 1, pad: 0.3, soft: 0, sideFade: 0, anim: 'grow', dur: 0.35 },
           inFx: 'typewriter', inStagger: 0.1, hold: 1.6, outFx: 'wipe', outDir: 'lr', outDur: 0.5, subFx: 'fade', subDelay: -0.1
+        }
+      },
+      {
+        // 調査ノート：古い記録を手でなぞるように、左から書かれていく
+        id: 'research', group: 'investigation', icon: 'clipboard', label: T('調査開始', 'Research'),
+        text: T('調査開始', 'RESEARCH'), subText: T('- RESEARCH -', '- FIELD NOTES -'),
+        patch: {
+          fontId: 'kaisei-tokumin', weight: 800, fontSize: 116, letterSpacing: 0.2,
+          subFontId: 'special-elite', subWeight: 400, subSize: 0.24, subLetterSpacing: 0.3, subGap: 0.5,
+          fill: { type: 'solid', color: '#f3ead8' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#1a1206', opacity: 0.8, blur: 12, x: 0, y: 4 }, glow: { on: false },
+          subColorOn: true, subColor: '#e0b45c',
+          deco: { type: 'underline', color2: '#d9a441', pad: 0.18, extend: 0.6, thickness: 3, anim: 'grow', dur: 0.8 },
+          inFx: 'wipe', inDir: 'lr', inDur: 1.0, hold: 1.8, outFx: 'fade', outDur: 0.6, subFx: 'typewriter', subDelay: -0.2
         }
       },
       {
@@ -563,6 +586,11 @@
         patch: DICE_BEYOND
       },
       {
+        id: 'emoFailure', group: 'dice', system: 'emoklore', label: T('失敗', 'Failure'),
+        text: T('失敗', 'FAILURE'), subText: T('FAILURE', ''),
+        patch: DICE_FAILURE
+      },
+      {
         id: 'emoFumble', group: 'dice', system: 'emoklore', label: T('ファンブル', 'Fumble'),
         text: T('ファンブル', 'FUMBLE'), subText: T('FUMBLE', ''),
         patch: DICE_FUMBLE
@@ -570,7 +598,7 @@
       {
         id: 'emoResonance', group: 'dice', system: 'emoklore', label: T('共鳴判定', 'Resonance Check'),
         text: T('共鳴判定', 'RESONANCE CHECK'), subText: T('RESONANCE CHECK', ''),
-        patch: CHECK_CALL
+        patch: RESONANCE_CALL
       },
       {
         id: 'emoPossession', group: 'dice', system: 'emoklore', label: T('憑依判定', 'Possession Check'),
