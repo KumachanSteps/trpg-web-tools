@@ -29,6 +29,7 @@
     lineHeight: 1.5,
     subFontId: 'same',
     subWeight: 400,
+    subItalic: false,
     subSize: 0.3,
     subLetterSpacing: 0.25,
     subGap: 0.3,
@@ -81,7 +82,10 @@
     scrollSpeed: 90,
     scrollFade: true,
     soloSize: 0.55,
-    soloImpact: 1
+    soloPause: 0.4,
+    soloImpact: 1,
+    spreadHold: 0.5,
+    spreadDur: 0.9
   };
 
   const T = (ja, en) => ({ ja, en });
@@ -565,7 +569,7 @@
           fill: { type: 'solid', color: '#f6f4ee' },
           stroke: { on: true, width: 0.9, color: '#f6f4ee' }, stroke2: { on: false }, shadow: { on: false }, glow: { on: false },
           bg: { type: 'solid', color: '#000000', opacity: 1, sync: true },
-          reveal: 'solo', cps: 12, soloSize: 0.65, soloImpact: 1, inFx: 'typewriter', wrapChars: 20,
+          reveal: 'solo', cps: 8, soloSize: 0.65, soloPause: 0.6, soloImpact: 1, inFx: 'typewriter', wrapChars: 20,
           cursor: false, hold: 2.2, outFx: 'fade', outDur: 0.5
         }
       },
@@ -654,6 +658,18 @@
         }
       },
       {
+        id: 'clock', icon: 'stopwatch', label: T('時刻表示', 'Time Stamp'),
+        text: T('23:59', '23:59'), subText: T('2026.10.31 SAT', '2026.10.31 SAT'),
+        patch: {
+          fontId: 'orbitron', weight: 700, fontSize: 130, letterSpacing: 0.12,
+          subFontId: 'same', subWeight: 400, subSize: 0.2, subLetterSpacing: 0.4,
+          fill: { type: 'solid', color: '#dff9ff' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: false }, glow: { on: true, color: '#3ad7ff', size: 30, strength: 1 },
+          deco: { type: 'corners', color2: '#8feaff', pad: 0.4, thickness: 3, anim: 'grow', dur: 0.5 },
+          inFx: 'flicker', inDur: 0.8, inStagger: 0.05, hold: 2, outFx: 'flicker', outDur: 0.6, subFx: 'fade'
+        }
+      },
+      {
         id: 'underline', icon: 'underline', label: T('下線スライド（左下）', 'Underline (Bottom Left)'),
         text: T('図書室', 'Library'), subText: T('午後 5時12分', '5:12 PM'),
         patch: {
@@ -691,19 +707,8 @@
           deco: { type: 'box', color: '#05070c', opacity: 0.6, color2: '#8fd3ff', pad: 0.45, radius: 0.12, thickness: 0, anim: 'grow', dur: 0.5 },
           inFx: 'blurIn', inDur: 0.7, inStagger: 0.04, hold: 1.8, outFx: 'fade', outDur: 0.6, subFx: 'fade'
         }
-      },
-      {
-        id: 'clock', icon: 'stopwatch', label: T('時刻表示', 'Time Stamp'),
-        text: T('23:59', '23:59'), subText: T('2026.10.31 SAT', '2026.10.31 SAT'),
-        patch: {
-          fontId: 'orbitron', weight: 700, fontSize: 130, letterSpacing: 0.12,
-          subFontId: 'same', subWeight: 400, subSize: 0.2, subLetterSpacing: 0.4,
-          fill: { type: 'solid', color: '#dff9ff' }, stroke: { on: false }, stroke2: { on: false },
-          shadow: { on: false }, glow: { on: true, color: '#3ad7ff', size: 30, strength: 1 },
-          deco: { type: 'corners', color2: '#8feaff', pad: 0.4, thickness: 3, anim: 'grow', dur: 0.5 },
-          inFx: 'flicker', inDur: 0.8, inStagger: 0.05, hold: 2, outFx: 'flicker', outDur: 0.6, subFx: 'fade'
-        }
       }
+
     ]
   };
 

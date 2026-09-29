@@ -918,6 +918,30 @@ body.is-dark .chip.is-active { color: #dfeeff; }
 .font-card.is-loaded .font-card-sample, .font-card[data-font^="upload:"] .font-card-sample, .font-card[data-font^="local:"] .font-card-sample { opacity: 1; }
 .font-card-name { color: var(--muted); font-size: 0.7rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* 自作フォント（マイフォント）の登録・解除 */
+.font-register-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; }
+.font-register { cursor: pointer; }
+.font-register-note { flex: 1 1 220px; color: var(--muted); font-size: 0.7rem; line-height: 1.45; }
+.font-card-wrap { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); }
+.font-card-wrap .font-card { padding-right: 30px; }
+.font-remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.font-remove:hover, .font-remove:focus-visible { border-color: var(--danger); color: var(--danger); }
+.font-remove.is-armed { border-color: var(--danger); background: var(--danger); color: #fff; font-size: 0.68rem; }
+
 .font-extras { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; border-top: 1px dashed var(--line); }
 .font-extra-row { display: flex; gap: 6px; }
 .font-extra-row .text-input { flex: 1; min-height: 34px; }

@@ -95,6 +95,7 @@
     reveal: [
       { value: 'char', label: T('1文字ずつ', 'Per character') },
       { value: 'solo', label: T('中央に1文字ずつ', 'Per character at center') },
+      { value: 'spread', label: T('中央から左右に広がる', 'Spread from center') },
       { value: 'line', label: T('1行ずつ', 'Per line') },
       { value: 'sweep', label: T('なめらかに流れる', 'Smooth sweep') },
       { value: 'all', label: T('全体を同時に', 'All at once') },
@@ -205,12 +206,22 @@
     font: [
       { type: 'fontPicker', bind: 'fontId', label: T('フォント', 'Font') },
       { type: 'select', bind: 'weight', label: T('太さ', 'Weight'), options: s => fontWeightOptions(s.fontId), numeric: true },
+      { type: 'toggle', bind: 'italic', label: T('斜体（イタリック）にする', 'Italic') },
+      { type: 'colors', items: [
+        { bind: 'fill.color', label: s => (s.fill.type === 'gradient' ? T('文字の色1', 'Text color 1') : T('文字の色', 'Text color')) },
+        { bind: 'fill.color2', label: T('文字の色2', 'Text color 2'), when: s => s.fill.type === 'gradient' },
+        { bind: 'fill.color3', label: T('文字の色3', 'Text color 3'), when: s => s.fill.type === 'gradient', optional: true }
+      ] },
+      { type: 'note', text: T('グラデーション・縁取り・影は「装飾」タブで設定できます', 'Gradients, outlines and shadows are in the Style tab') },
       { type: 'range', bind: 'fontSize', label: T('文字サイズ', 'Font size'), min: 12, max: 400, step: 1, format: 'px' },
       { type: 'range', bind: 'letterSpacing', label: T('字間', 'Letter spacing'), min: -0.2, max: 1.2, step: 0.01, format: 'pct' },
       { type: 'range', bind: 'lineHeight', label: T('行間', 'Line height'), min: 0.9, max: 3.2, step: 0.05, format: 'x' },
       { type: 'heading', when: notTrailer, label: T('サブテキスト', 'Sub text') },
       { type: 'select', bind: 'subFontId', when: notTrailer, label: T('サブのフォント', 'Sub font'), options: () => fontSelectOptions(true) },
       { type: 'select', bind: 'subWeight', when: notTrailer, label: T('サブの太さ', 'Sub weight'), options: s => fontWeightOptions(s.subFontId === 'same' ? s.fontId : s.subFontId), numeric: true },
+      { type: 'toggle', bind: 'subItalic', when: notTrailer, label: T('サブを斜体（イタリック）にする', 'Italic sub text') },
+      { type: 'toggle', bind: 'subColorOn', when: notTrailer, label: T('サブテキストを別の色にする', 'Different color for sub text') },
+      { type: 'colors', when: s => notTrailer(s) && s.subColorOn, items: [{ bind: 'subColor', label: T('サブの色', 'Sub text color') }] },
       { type: 'range', bind: 'subSize', when: notTrailer, label: T('サブの大きさ（メイン比）', 'Sub size (vs. main)'), min: 0.1, max: 0.9, step: 0.01, format: 'pct' },
       { type: 'range', bind: 'subLetterSpacing', when: notTrailer, label: T('サブの字間', 'Sub letter spacing'), min: -0.2, max: 1.5, step: 0.01, format: 'pct' },
       { type: 'range', bind: 'subGap', when: notTrailer, label: T('メインとの間隔', 'Gap from the main text'), min: 0, max: 1.5, step: 0.01, format: 'em' }
@@ -219,10 +230,14 @@
       { type: 'section', when: isTrailer, label: T('表示の流れ', 'Reveal flow'), children: [
         { type: 'chips', bind: 'reveal', options: OPT.reveal },
         { type: 'note', when: s => s.reveal === 'solo', text: T('1文字ずつ画面の中央に大きく出したあと、全文を一度に出します', 'Each character flashes big at the center, then the whole text lands at once') },
+        { type: 'note', when: s => s.reveal === 'spread', text: T('全文の文字を中央に重ねて出したあと、左右に広げて並べます（縦書きは上下）', 'All characters appear stacked at the center, then spread out into the full text') },
+        { type: 'range', bind: 'spreadHold', when: s => s.reveal === 'spread', label: T('重ねて見せる時間', 'Time shown stacked'), min: 0, max: 3, step: 0.05, format: 's' },
+        { type: 'range', bind: 'spreadDur', when: s => s.reveal === 'spread', label: T('広がる時間', 'Spread time'), min: 0.1, max: 3, step: 0.05, format: 's' },
         { type: 'range', bind: 'cps', when: s => s.reveal === 'char' || s.reveal === 'solo', label: T('表示スピード', 'Speed'), min: 2, max: 40, step: 1, format: 'cps' },
         { type: 'range', bind: 'soloSize', when: s => s.reveal === 'solo', label: T('中央の文字の大きさ（画像の短い辺に対して）', 'Center letter size (vs. the shorter side)'), min: 0.15, max: 0.9, step: 0.01, format: 'pct' },
+        { type: 'range', bind: 'soloPause', when: s => s.reveal === 'solo', label: T('全文を出す前のタメ（何も出ない間）', 'Pause before the whole text (blank)'), min: 0, max: 2, step: 0.05, format: 's' },
         { type: 'range', bind: 'soloImpact', when: s => s.reveal === 'solo', label: T('全文が出る瞬間の衝撃', 'Impact when the whole text lands'), min: 0, max: 2, step: 0.05, format: 'x' },
-        { type: 'range', bind: 'glyphDur', when: s => !['scroll', 'solo'].includes(s.reveal) && s.inFx !== 'typewriter', label: T('1文字が現れるまでの時間', 'Fade time per character'), min: 0, max: 2, step: 0.05, format: 's' },
+        { type: 'range', bind: 'glyphDur', when: s => !['scroll', 'solo', 'spread'].includes(s.reveal) && s.inFx !== 'typewriter', label: T('1文字が現れるまでの時間', 'Fade time per character'), min: 0, max: 2, step: 0.05, format: 's' },
         { type: 'range', bind: 'punctPause', when: s => s.reveal === 'char', label: T('句読点での間', 'Pause at punctuation'), min: 0, max: 1.5, step: 0.05, format: 's' },
         { type: 'range', bind: 'linePause', when: s => s.reveal === 'char', label: T('改行での間', 'Pause at line breaks'), min: 0, max: 2, step: 0.05, format: 's' },
         { type: 'range', bind: 'lineInterval', when: s => s.reveal === 'line' || s.reveal === 'sweep', label: T('次の行までの時間', 'Time between lines'), min: 0.1, max: 4, step: 0.05, format: 's' },
@@ -232,7 +247,7 @@
         { type: 'toggle', bind: 'cursor', when: s => s.reveal === 'char', label: T('入力カーソルを表示', 'Show a typing cursor') },
         { type: 'range', bind: 'pageGap', when: s => s.reveal !== 'scroll' && s.pageSplit, label: T('ページ間の空白', 'Gap between pages'), min: 0, max: 3, step: 0.05, format: 's' }
       ] },
-      { type: 'section', when: s => !(isTrailer(s) && s.reveal === 'solo'), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears') : T('登場', 'In')), children: [
+      { type: 'section', when: s => !(isTrailer(s) && ['solo', 'spread'].includes(s.reveal)), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears') : T('登場', 'In')), children: [
         { type: 'effects', phase: 'in' },
         { type: 'select', bind: 'inDir', when: s => Boolean(inDef(s).dirs), label: T('方向', 'Direction'), options: s => (inDef(s).dirs || []).map(d => ({ value: d, label: OPT.dirs[d] })) },
         { type: 'range', bind: 'inDur', when: s => notTrailer(s) && s.inFx !== 'typewriter', label: T('時間', 'Duration'), min: 0.05, max: 4, step: 0.05, format: 's' },
@@ -827,17 +842,19 @@
       ]);
       const cats = el('div', { class: 'chip-group font-cats', role: 'group' });
       const grid = el('div', { class: 'font-grid', role: 'listbox' });
+      // 自作フォントの登録はいつでも押せるよう、一覧の外に置く
       const upload = el('input', { type: 'file', accept: '.ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2', class: 'visually-hidden', id: nextId('font-file') });
-      const uploadBtn = el('label', { class: 'mini-button', for: upload.id });
+      const uploadBtn = el('label', { class: 'mini-button font-register', for: upload.id });
+      const uploadNote = el('span', { class: 'font-register-note' });
+      const register = el('div', { class: 'font-register-row' }, [uploadBtn, upload, uploadNote]);
       const localInput = el('input', { type: 'text', class: 'text-input', spellcheck: 'false' });
       const localBtn = el('button', { type: 'button', class: 'mini-button' });
       const extras = el('div', { class: 'font-extras' }, [
-        el('div', { class: 'font-extra-row' }, [uploadBtn, upload]),
         el('div', { class: 'font-extra-row' }, [localInput, localBtn])
       ]);
       const panel = el('div', { class: 'font-panel', hidden: true }, [cats, grid, extras]);
       const label = el('span', { class: 'field-label' });
-      const node = el('div', { class: 'field field-wide font-picker' }, [label, toggle, panel]);
+      const node = el('div', { class: 'field field-wide font-picker' }, [label, toggle, register, panel]);
 
       const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
         entries.forEach(entry => {
@@ -870,7 +887,26 @@
             panel.hidden = true;
             toggle.setAttribute('aria-expanded', 'false');
           });
-          grid.appendChild(card);
+          if (font.user) {
+            // 登録の解除は、誤操作を防ぐため2回押しで行う
+            const en = this.getLang() === 'en';
+            const remove = el('button', { type: 'button', class: 'font-remove', 'data-remove': font.id, text: '×', title: en ? 'Remove from My Fonts' : '登録を解除', 'aria-label': `${en ? 'Remove' : '登録を解除'}: ${font.label || font.family}` });
+            let armed = 0;
+            remove.addEventListener('click', event => {
+              event.stopPropagation();
+              if (!armed) {
+                remove.classList.add('is-armed');
+                remove.textContent = en ? 'Remove?' : '解除する';
+                armed = setTimeout(() => { armed = 0; remove.classList.remove('is-armed'); remove.textContent = '×'; }, 3000);
+                return;
+              }
+              clearTimeout(armed);
+              this.onAction('removeFont', { id: font.id });
+            });
+            grid.appendChild(el('div', { class: 'font-card-wrap' }, [card, remove]));
+          } else {
+            grid.appendChild(card);
+          }
           if (observer && !font.user) observer.observe(card);
           else if (!font.user) F.loadPreview(font).then(alias => { if (alias) card.querySelector('.font-card-sample').style.fontFamily = `"${alias}"`; });
         });
@@ -917,7 +953,9 @@
         sample.textContent = font.cat === 'latin' ? 'Aa Bb 123' : 'あア永 Aa';
         sample.style.fontFamily = E.cssFontFamily(F.families(font.id));
         sample.style.fontWeight = String(scene.weight || 400);
-        uploadBtn.textContent = this.L(T('フォントファイルを読み込む（TTF / OTF / WOFF）', 'Load a font file (TTF / OTF / WOFF)'));
+        uploadBtn.textContent = this.L(T('＋ 自作フォントを登録（TTF / OTF / WOFF）', '+ Add your own font (TTF / OTF / WOFF)'));
+        uploadNote.textContent = this.L(T('登録したフォントはこのブラウザに保存され、次回も「マイフォント」から選べます（外部には送信されません）', 'Saved in this browser only and listed under “My Fonts” next time (never uploaded)'));
+        sample.style.fontStyle = scene.italic ? 'italic' : 'normal';
         localInput.placeholder = this.L(T('PCにあるフォント名（例：游明朝）', 'Installed font name (e.g. Georgia)'));
         localBtn.textContent = this.L(T('使う', 'Use'));
         panel.hidden = !this.fontPanelOpen;

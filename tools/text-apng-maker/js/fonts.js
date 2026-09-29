@@ -1,8 +1,8 @@
 /*
  * 文字画像APNGメーカー — フォント管理
  *  - Google Fonts（選択時にだけCSSを読み込み、使う文字のサブセットだけを取得）
- *  - フォントファイルの読み込み（TTF / OTF / WOFF / WOFF2）
- *  - PCにインストール済みのフォント名を指定
+ *  - フォントファイルの登録（TTF / OTF / WOFF / WOFF2）。ファイルはこのブラウザの IndexedDB に保存し、次回も使える
+ *  - PCにインストール済みのフォント名を指定（名前だけを覚える）
  */
 (function (root) {
   'use strict';
@@ -99,6 +99,99 @@
   const previewPromises = new Map();
   let uploadCounter = 0;
 
+  /* ---------- 登録したフォント（マイフォント）の保存 ----------
+   * 一覧（ID・フォント名・表示名）は localStorage に、フォントファイルの中身は IndexedDB に保存する。
+   * 一覧は起動時にすぐ読めるので、保存済みの場面が登録フォントを指していても初期フォントに戻らない。 */
+  const SAVED_KEY = 'textApngMakerFonts.v1';
+  const DB_NAME = 'textApngMakerFonts';
+  const DB_STORE = 'files';
+  let dbPromise = null;
+  let restoring = null;
+
+  function openDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+      try {
+        const req = root.indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => { req.result.createObjectStore(DB_STORE, { keyPath: 'id' }); };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+        req.onblocked = () => reject(new Error('blocked'));
+      } catch (error) {
+        reject(error);
+      }
+    });
+    dbPromise.catch(() => { dbPromise = null; });
+    return dbPromise;
+  }
+
+  function dbRun(mode, run) {
+    return openDb().then(db => new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, mode);
+      const req = run(tx.objectStore(DB_STORE));
+      tx.oncomplete = () => resolve(req.result);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    }));
+  }
+
+  function writeSaved() {
+    const list = Array.from(userFonts.values()).filter(f => f.saved)
+      .map(f => ({ id: f.id, family: f.family, label: f.label, bytes: f.bytes || 0, local: Boolean(f.local) }));
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(list)); } catch (error) { /* 保存できなくても今回は使える */ }
+  }
+
+  (function readSaved() {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); } catch (error) { list = []; }
+    if (!Array.isArray(list)) return;
+    list.forEach(entry => {
+      if (!entry || typeof entry.id !== 'string' || typeof entry.family !== 'string') return;
+      const label = String(entry.label || entry.family);
+      if (entry.local && entry.id === `local:${entry.family}`) {
+        userFonts.set(entry.id, { id: entry.id, family: entry.family, weights: [400, 700], cat: 'user', generic: 'sans-serif', user: true, local: true, saved: true, label });
+      } else if (!entry.local && entry.id === `upload:${entry.family}`) {
+        // ファイルの中身は restoreSaved() で読み戻す
+        userFonts.set(entry.id, { id: entry.id, family: entry.family, weights: [400], cat: 'user', generic: 'sans-serif', user: true, upload: true, saved: true, pending: true, label, bytes: Number(entry.bytes) || 0 });
+      }
+    });
+  })();
+
+  // 登録したフォントファイルを IndexedDB から読み戻して使えるようにする（何度呼んでも1回だけ）
+  function restoreSaved() {
+    if (restoring) return restoring;
+    const pending = Array.from(userFonts.values()).filter(f => f.pending);
+    restoring = (async () => {
+      const loaded = [];
+      if (!pending.length) return loaded;
+      let dbReady = true;
+      try { await openDb(); } catch (error) { dbReady = false; }
+      for (const font of pending) {
+        if (!dbReady) { userFonts.delete(font.id); continue; }
+        try {
+          const rec = await dbRun('readonly', store => store.get(font.id));
+          if (!rec || !rec.data) {
+            // 中身が消えていた登録は一覧からも外す
+            userFonts.delete(font.id);
+            continue;
+          }
+          const face = new FontFace(font.family, rec.data, { weight: '1 1000', style: 'normal' });
+          await face.load();
+          document.fonts.add(face);
+          font.face = face;
+          font.pending = false;
+          loaded.push(font);
+        } catch (error) {
+          userFonts.delete(font.id);
+        }
+      }
+      // 保存領域を開けなかったとき（プライベートモードなど）は一覧を残し、次回また試す
+      if (dbReady) writeSaved();
+      return loaded;
+    })();
+    return restoring;
+  }
+
   function googleCssUrl(font, extra = '') {
     const family = encodeURIComponent(font.family).replace(/%20/g, '+');
     const weights = font.weights || [400];
@@ -151,6 +244,7 @@
 
   // 指定したテキストの描画に必要なフォントを読み込む
   async function load(id, weight, text) {
+    if (get(id) && get(id).pending) await restoreSaved();
     const font = get(id) || byId.get('noto-sans-jp');
     const tasks = [ensureCss(font)];
     if (font.jp && byId.has(font.jp)) tasks.push(ensureCss(byId.get(font.jp)));
@@ -174,18 +268,53 @@
     return best;
   }
 
+  // フォントファイルを登録する。saved: このブラウザに保存できたか（できなければ今回だけ使える）
   async function addFontFile(file) {
     const buffer = await file.arrayBuffer();
+    const label = file.name.replace(/\.(ttf|otf|woff2?|ttc)$/i, '');
+    // 同じファイルをもう一度選んだときは、登録済みのものを使う
+    const same = Array.from(userFonts.values()).find(f => f.upload && !f.pending && f.label === label && f.bytes === buffer.byteLength);
+    if (same) return { font: same, saved: Boolean(same.saved), existing: true };
     uploadCounter += 1;
     const family = `TAM Upload ${Date.now().toString(36)}${uploadCounter}`;
-    const face = new FontFace(family, buffer, { weight: '1 1000', style: 'normal' });
+    const face = new FontFace(family, buffer.slice(0), { weight: '1 1000', style: 'normal' });
     await face.load();
     document.fonts.add(face);
-    const label = file.name.replace(/\.(ttf|otf|woff2?|ttc)$/i, '');
     const id = `upload:${family}`;
-    const font = { id, family, weights: [400], cat: 'user', generic: 'sans-serif', user: true, upload: true, label };
+    const font = { id, family, weights: [400], cat: 'user', generic: 'sans-serif', user: true, upload: true, label, bytes: buffer.byteLength, face };
     userFonts.set(id, font);
-    return font;
+    try {
+      await dbRun('readwrite', store => store.put({ id, family, label, bytes: buffer.byteLength, data: buffer, added: Date.now() }));
+      font.saved = true;
+      writeSaved();
+    } catch (error) {
+      font.saved = false;
+    }
+    return { font, saved: font.saved, existing: false };
+  }
+
+  // PCのフォント名を「マイフォント」に覚える
+  function saveLocalFont(id) {
+    const font = get(id);
+    if (!font || !font.local) return false;
+    font.saved = true;
+    writeSaved();
+    return true;
+  }
+
+  // 登録を解除する（フォントファイルもこのブラウザから消す）
+  async function removeFont(id) {
+    const font = userFonts.get(id);
+    if (!font) return false;
+    userFonts.delete(id);
+    if (font.face) {
+      try { document.fonts.delete(font.face); } catch (error) { /* 表示中の文字は代替フォントになる */ }
+    }
+    writeSaved();
+    if (font.upload) {
+      try { await dbRun('readwrite', store => store.delete(id)); } catch (error) { /* 次回の読み戻しで一覧から外れる */ }
+    }
+    return true;
   }
 
   // インストール済みフォントかどうかを文字幅の違いで推定
@@ -244,6 +373,9 @@
     ensureCss,
     nearestWeight,
     addFontFile,
+    saveLocalFont,
+    removeFont,
+    restoreSaved,
     isLocalFontAvailable,
     loadPreview,
     previewSample

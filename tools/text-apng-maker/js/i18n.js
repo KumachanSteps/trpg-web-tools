@@ -38,6 +38,7 @@
         '※ プレビュー下の「退場あり」をオフにすると、登場したあと消えずに終わります。書き出しのループを「1回再生」にすると、最後の状態で止まるAPNGになります（場所のテロップを出したままにしたいときなど）。',
         '※ ファイル名は、文章や動きの設定から自動で入力されます。書き換えた後は「↺ 自動入力に戻す」で元に戻せます。',
         '※ 容量を抑えるには「FPSを下げる」「画像サイズを小さくする」「表示中の動きをなしにする」「背景を透明にする」が効果的です。',
+        '※ 「フォント」タブの「＋ 自作フォントを登録」で、手持ちのフォントファイル（TTF / OTF / WOFF）を使えます。登録したフォントはこのブラウザ内（IndexedDB）にだけ保存され、次回も「マイフォント」から選べます。一覧の「×」を2回押すと登録を解除します。',
         '※ 利用するフォントのライセンスはご自身でご確認ください。Google Fonts のフォントは商用利用も可能なオープンライセンスです。'
       ],
       shortcutTitle: 'ショートカット一覧',
@@ -98,7 +99,10 @@
       messages: {
         loadingFont: 'フォントを読み込み中…',
         fontFailed: 'フォントを読み込めませんでした。代替フォントで表示しています。',
-        fontUploaded: name => `フォント「${name}」を読み込みました。`,
+        fontUploaded: name => `フォント「${name}」を読み込みました。このブラウザでは保存できないため、今回だけ使えます。`,
+        fontRegistered: name => `フォント「${name}」を登録しました。次回も「マイフォント」から選べます。`,
+        fontAlreadyRegistered: name => `フォント「${name}」は登録済みです。`,
+        fontRemoved: name => `フォント「${name}」の登録を解除しました。`,
         fontUploadFailed: 'フォントファイルを読み込めませんでした（TTF / OTF / WOFF / WOFF2 に対応）。',
         localFontMissing: name => `「${name}」はこのPCで見つかりませんでした。フォント名を確認してください。`,
         localFontSet: name => `PCのフォント「${name}」を使用します。`,
@@ -168,6 +172,7 @@
         '* Turn off "Exit animation" under the preview to keep the text on screen after it appears. Set the export loop to "Play once" to make an APNG that stops on the final state (e.g. a location caption that stays up).',
         '* The file name is filled in automatically from your text and motion settings. After editing it, use “↺ Back to auto” to restore it.',
         '* To reduce file size: lower the FPS, use a smaller image size, set the hold motion to none, or keep the background transparent.',
+        '* Use “+ Add your own font” in the Font tab to use your own font files (TTF / OTF / WOFF). Added fonts are saved only in this browser (IndexedDB) and stay under “My Fonts” next time. Press “×” twice in the list to remove one.',
         '* Please check the license of any font you use. Google Fonts are open-licensed and can be used commercially.'
       ],
       shortcutTitle: 'Keyboard shortcuts',
@@ -228,7 +233,10 @@
       messages: {
         loadingFont: 'Loading fonts…',
         fontFailed: 'Could not load the font. A fallback font is shown instead.',
-        fontUploaded: name => `Loaded the font “${name}”.`,
+        fontUploaded: name => `Loaded the font “${name}”. This browser can’t save it, so it’s available for this session only.`,
+        fontRegistered: name => `Added the font “${name}”. You’ll find it under “My Fonts” next time too.`,
+        fontAlreadyRegistered: name => `The font “${name}” is already added.`,
+        fontRemoved: name => `Removed the font “${name}”.`,
         fontUploadFailed: 'Could not read the font file (TTF / OTF / WOFF / WOFF2 are supported).',
         localFontMissing: name => `“${name}” was not found on this computer. Please check the font name.`,
         localFontSet: name => `Using the installed font “${name}”.`,

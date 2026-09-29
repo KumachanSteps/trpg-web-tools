@@ -105,6 +105,8 @@
   const SOLO_CACHE_PIXELS = 24e6;
   // 書き出しのフレーム時刻がちょうど切り替わりの瞬間に来ても、丸め誤差で1コマずれないようにする幅
   const TIME_EPS = 1e-6;
+  // 「中央から左右に広がる」：重なった文字が現れるまでの時間（秒）
+  const SPREAD_APPEAR = 0.25;
 
   const isBlank = ch => ch === ' ' || ch === '　' || ch === '\t' || /^\s+$/.test(ch);
   const isWordChar = ch => /^[A-Za-z0-9'’\-_.,!?&:;%$#@/]$/.test(ch);
@@ -782,6 +784,8 @@
       // 「中央に1文字ずつ」で、その文字だけが中央に大きく出ている区間
       soloStart: new Float64Array(n).fill(Infinity),
       soloEnd: new Float64Array(n).fill(-Infinity),
+      // 「中央から左右に広がる」で、重なっている間の不透明度（文字が多い行ほど薄くして、重なりが透けて見えるようにする）
+      stackAlpha: new Float64Array(n).fill(1),
       pages: [],
       duration: 0,
       posterTime: 0
@@ -804,7 +808,7 @@
 
     layout.pages.forEach((page, pi) => {
       const isLast = pi === layout.pages.length - 1;
-      const pg = { index: pi, blockIn: null, blockOut: null, decoIn: null, decoOut: null, scroll: null, cursor: null, solo: null };
+      const pg = { index: pi, blockIn: null, blockOut: null, decoIn: null, decoOut: null, scroll: null, cursor: null, solo: null, spread: null };
       const pageStart = cursor;
       // 帯・テープ・枠・ボックスが現れてから文字が出る
       const opensFirst = ['band', 'tape', 'frame', 'box'].includes(deco.type);
@@ -851,9 +855,24 @@
         } else if (reveal === 'all') {
           mainG.forEach(g => { T.inStart[g.index] = textStart; T.inDur[g.index] = gDur; T.inFx[g.index] = fx; });
           inEnd = textStart + gDur;
+        } else if (reveal === 'spread') {
+          // 各行の文字を中央に重ねて出し、少し見せてから左右（縦書きは上下）に広げて並べる
+          const b = page.box;
+          const stackHold = Math.max(0, scene.spreadHold ?? 0.5);
+          const dur = Math.max(0.05, scene.spreadDur ?? 0.9);
+          const start = textStart + SPREAD_APPEAR + stackHold;
+          mainG.forEach(g => { T.inStart[g.index] = textStart; T.inDur[g.index] = 0; T.inFx[g.index] = null; });
+          page.mainLines.forEach(line => {
+            const count = line.idx.filter(i => !glyphs[i].blank).length;
+            const alpha = clamp(1.8 / Math.sqrt(Math.max(1, count)), 0.3, 1);
+            line.idx.forEach(i => { T.stackAlpha[i] = alpha; });
+          });
+          pg.spread = { appear: textStart, start, dur, cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2 };
+          inEnd = start + dur;
         } else if (reveal === 'solo') {
           // 1文字ずつ画面の中央に大きく出してから、全文を一度に出す。空白と改行は1拍あける（続いても1拍）
           const beat = 1 / Math.max(1, scene.cps || 12);
+          const pause = Math.max(0, scene.soloPause ?? 0.4);
           let k = 0;
           let gap = false;
           page.mainLines.forEach((line, li) => {
@@ -867,8 +886,8 @@
               k++;
             });
           });
-          // 最後の文字のあと1拍おいて全文
-          const full = textStart + (k > 0 ? k + 1 : 0) * beat - TIME_EPS;
+          // 最後の文字のあと、タメ（何も出ない間）をおいて全文
+          const full = textStart + (k > 0 ? k * beat + pause : 0) - TIME_EPS;
           mainG.forEach(g => { T.inStart[g.index] = full; T.inDur[g.index] = 0; T.inFx[g.index] = null; });
           // 叩きつけで大きくなっても画像からはみ出さない倍率
           const b = page.box;
@@ -1256,7 +1275,7 @@
       const subWeight = scene.subWeight || mainWeight;
       return {
         mainFont: size => fontString(mainFam, mainWeight, size, scene.italic),
-        subFont: size => fontString(subFam, subWeight, size, scene.italic)
+        subFont: size => fontString(subFam, subWeight, size, scene.subItalic)
       };
     }
 
@@ -1266,7 +1285,7 @@
       const timeline = buildTimeline(scene, layout);
       const spriteKey = JSON.stringify([
         scene.text, scene.subText, scene.mode, scene.reveal, scene.pageSplit, scene.width, scene.height, scene.fontId, scene.subFontId,
-        scene.weight, scene.subWeight, scene.italic, scene.fontSize, scene.letterSpacing, scene.subLetterSpacing, scene.lineHeight,
+        scene.weight, scene.subWeight, scene.italic, scene.subItalic, scene.fontSize, scene.letterSpacing, scene.subLetterSpacing, scene.lineHeight,
         scene.subSize, scene.subGap, scene.subPosition, scene.writing, scene.align, scene.anchor, scene.marginX, scene.marginY,
         scene.offsetX, scene.offsetY, scene.autoFit, scene.wrapChars, scene.fill, scene.fillOpacity, scene.stroke, scene.stroke2,
         scene.shadow, scene.glow, scene.subColorOn, scene.subColor, scene.deco && scene.deco.type, scene.deco && scene.deco.pad,
@@ -1325,6 +1344,16 @@
       const outStart = T.outStart[i];
       if (t >= outStart && (T.outDur[i] === 0 || t >= outStart + T.outDur[i])) return false;
       st.a = 1; st.x = 0; st.y = 0; st.s = 1; st.sx = 1; st.sy = 1; st.r = 0; st.blur = 0;
+      const sp = T.pages[g.page].spread;
+      if (sp && t < sp.start + sp.dur) {
+        // 行ごとに中央で重なって現れ（少し大きい状態から）、行の向きに広がって本来の位置へ
+        const a = clamp((t - sp.appear) / SPREAD_APPEAR);
+        const k = t < sp.start ? 0 : EASE.outQuart(clamp((t - sp.start) / sp.dur));
+        st.a = EASE.outQuad(a) * lerp(T.stackAlpha[i], 1, k);
+        st.s = 1 + 0.25 * (1 - EASE.outCubic(a));
+        if (g.vertical) st.y = (sp.cy - g.cy) * (1 - k);
+        else st.x = (sp.cx - g.cx) * (1 - k);
+      }
       const inFx = T.inFx[i];
       const inDur = T.inDur[i];
       if (inFx && inFx.glyph && inDur > 0 && t < inStart + inDur) {

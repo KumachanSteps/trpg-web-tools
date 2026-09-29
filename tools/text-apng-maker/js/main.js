@@ -607,9 +607,11 @@
       return;
     }
     if (action === 'uploadFont') {
-      F.addFontFile(data.file).then(font => {
+      F.addFontFile(data.file).then(({ font, saved, existing }) => {
         useFont(data.bind, font);
-        toast(msg().fontUploaded(font.label), 'success');
+        if (existing) toast(msg().fontAlreadyRegistered(font.label), 'info', 3600);
+        else if (saved) toast(msg().fontRegistered(font.label), 'success', 4200);
+        else toast(msg().fontUploaded(font.label), 'warning', 5200);
       }).catch(() => toast(msg().fontUploadFailed, 'error', 4200));
       return;
     }
@@ -618,8 +620,31 @@
         toast(msg().localFontMissing(data.name), 'warning', 4200);
         return;
       }
-      useFont(data.bind, F.get(`local:${data.name}`));
+      const font = F.get(`local:${data.name}`);
+      F.saveLocalFont(font.id);
+      useFont(data.bind, font);
       toast(msg().localFontSet(data.name), 'success');
+      return;
+    }
+    if (action === 'removeFont') {
+      const font = F.get(data.id);
+      if (!font || !font.user) return;
+      F.removeFont(data.id).then(() => {
+        // 解除したフォントを使っていた場面は、初期のフォントに戻す
+        const fallback = F.get('noto-sans-jp');
+        const scenes = MODES.map(m => app.scenes[m]).concat(...Object.values(app.groupScenes).map(store => Object.values(store)));
+        new Set(scenes).forEach(s => {
+          if (s.fontId === data.id) { s.fontId = fallback.id; s.weight = F.nearestWeight(fallback, s.weight || 700); }
+          if (s.subFontId === data.id) s.subFontId = 'same';
+        });
+        view.renderer.invalidateSprites();
+        panel.mini.renderer.invalidateSprites();
+        scheduleFontLoad(0);
+        invalidate();
+        panel.render(app.tab, els.settingsBody);
+        saveState();
+        toast(msg().fontRemoved(font.label || font.family), 'success');
+      });
     }
   }
 
@@ -1526,6 +1551,8 @@
   prepare();
   view.time = view.prepared ? view.prepared.timeline.posterTime : 0;
   scheduleFontLoad(0);
+  // 登録したフォントファイルを読み戻したら、一覧（マイフォント）を更新する
+  F.restoreSaved().then(loaded => { if (loaded.length && app.tab === 'font') panel.render(app.tab, els.settingsBody); });
   play();
   track('tool_open', { mode: app.mode });
 })();
