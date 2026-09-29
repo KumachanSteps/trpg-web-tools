@@ -26,6 +26,8 @@
     book: '<path d="M12 6.5c-2-1.5-4.5-2-8-2v13c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2v-13c-3.5 0-6 .5-8 2zM12 6.5v13"/>',
     calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4M11 13.5l1.2-.9v5.4"/>',
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    checkCircle: '<circle cx="12" cy="12" r="8.5"/><path d="M8.2 12.4l2.6 2.6 5-5.4"/>',
+    xcard: '<rect x="4.5" y="3.5" width="15" height="17" rx="2"/><path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"/>',
     // トレイラー
     play: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9v6l5-3z"/>',
     typewriter: '<path d="M7.5 8.5V3.5h9v5M3 8.5h18"/><path d="M4.5 11h15l1.5 8h-18z"/><path d="M8 15h.01M12 15h.01M16 15h.01"/>',

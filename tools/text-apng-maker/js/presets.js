@@ -115,6 +115,15 @@
     inFx: 'typewriter', inStagger: 0.05, hold: 2, outFx: 'fade', outDur: 0.45, subFx: 'fade', subDelay: -3
   };
 
+  // ロールプレイどうぞ：秘匿確認と同じシステム画面の緑版
+  const ROLEPLAY_PATCH = {
+    ...SECRET_PATCH,
+    shadow: { on: true, color: '#021a0e', opacity: 0.6, blur: 8, x: 0, y: 2 },
+    glow: { on: true, color: '#2fd07a', size: 10, strength: 0.45 },
+    subColor: '#93ecb8',
+    deco: { type: 'box', color: '#062a1a', opacity: 0.85, color2: '#2fd07a', pad: 0.5, thickness: 2, radius: 0.14, anim: 'grow', dur: 0.4 }
+  };
+
   // 判定結果は成功の度合いで色を分ける（成功＝白、大きめの成功＝青、さらに上＝紫、クリティカル＝金、その上＝虹色、失敗＝灰、ファンブル＝赤）。
   // 文字の設定は共通
   const DICE_TEXT = {
@@ -244,7 +253,7 @@
           fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.35, blur: 10, x: 0, y: 3 }, glow: { on: false },
           deco: { type: 'sides', color2: '#ffffff', pad: 0.5, extend: 1.6, thickness: 3, anim: 'grow', dur: 0.6 },
-          inFx: 'drop', inDur: 0.55, inStagger: 0.1, inPower: 1.1, hold: 1.3, outFx: 'zoomThrough', outDur: 0.5
+          inFx: 'drop', inDur: 0.55, inStagger: 0.1, inPower: 1.1, hold: 1.3, outFx: 'fade', outDur: 0.5
         }
       },
       {
@@ -257,7 +266,7 @@
           shadow: { on: true, color: '#1a0000', opacity: 0.7, blur: 12, x: 0, y: 4 },
           glow: { on: true, color: '#ff2a10', size: 34, strength: 1 },
           deco: { type: 'sides', color2: '#ff4a2a', pad: 0.45, extend: 1.0, thickness: 4, anim: 'grow', dur: 0.6 },
-          inFx: 'slam', inDur: 0.7, holdFx: 'pulse', holdPower: 1, hold: 1.6, outFx: 'zoomThrough', outDur: 0.5
+          inFx: 'slam', inDur: 0.7, holdFx: 'glitch', holdPower: 1, hold: 1.6, outFx: 'zoomThrough', outDur: 0.5
         }
       },
       {
@@ -292,7 +301,7 @@
         patch: {
           fontId: 'noto-sans-jp', weight: 900, fontSize: 118, letterSpacing: 0.32,
           subFontId: 'oswald', subWeight: 700, subSize: 0.26, subLetterSpacing: 0.7, subGap: 0.32,
-          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: true, width: 4, color: '#8a0000' }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.65, blur: 8, x: 0, y: 3 }, glow: { on: false },
           subColorOn: true, subColor: '#f5c400',
           deco: { type: 'tape', pad: 0.3, anim: 'grow', dur: 0.55, tapeSize: 54, tapeSpeed: 110, tapeBlink: 0.55 },
@@ -300,17 +309,17 @@
         }
       },
       {
+        // 現場写真：ファインダーの四隅の枠と、カメラのフラッシュ
         id: 'incident', group: 'investigation', icon: 'siren', label: T('事件発生', 'Incident'),
-        text: T('事件発生', 'INCIDENT'), subText: T('INCIDENT', 'A CASE HAS BEGUN'),
+        text: T('事件発生', 'INCIDENT'), subText: T('CASE FILE No.013', 'CASE FILE No.013'),
         patch: {
-          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 130, letterSpacing: 0.18,
-          subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.35,
-          fill: { type: 'gradient', color: '#ff5a5a', color2: '#d6001c', color3: '#7a0010', dir: 'v' },
-          stroke: { on: true, width: 3, color: '#1a0003' }, stroke2: { on: true, width: 4, color: '#ffffff' },
-          shadow: { on: true, color: '#000000', opacity: 0.85, blur: 14, x: 0, y: 5 }, glow: { on: false },
-          subColorOn: true, subColor: '#ffffff',
-          deco: { type: 'band', color: '#050505', opacity: 0.82, pad: 0.35, soft: 0.25, sideFade: 0.15, anim: 'grow', dur: 0.35 },
-          inFx: 'slam', inDur: 0.6, hold: 1.6, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: 0
+          fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 120, letterSpacing: 0.3,
+          subFontId: 'special-elite', subWeight: 400, subSize: 0.22, subLetterSpacing: 0.3, subGap: 0.42,
+          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 10, x: 0, y: 3 }, glow: { on: false },
+          subColorOn: true, subColor: '#ff4040',
+          deco: { type: 'corners', color2: '#ffffff', pad: 0.5, thickness: 3, anim: 'grow', dur: 0.4 },
+          inFx: 'flash', inDur: 0.8, hold: 1.8, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: -0.2
         }
       },
       {
@@ -340,6 +349,21 @@
         }
       },
       {
+        // 白黒の帯に斜体の文字が左から一気に滑り込み、右へ抜けて消える
+        id: 'missionClear', group: 'investigation', icon: 'checkCircle', label: T('ミッションクリア', 'Mission Clear'),
+        text: T('MISSION CLEAR', 'MISSION CLEAR'), subText: T('ミッションクリア', 'ALL OBJECTIVES COMPLETE'),
+        patch: {
+          fontId: 'oswald', weight: 700, fontSize: 130, letterSpacing: 0.12, italic: true,
+          subFontId: 'noto-sans-jp', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.28, subItalic: true,
+          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: false }, glow: { on: false },
+          subColorOn: true, subColor: '#bdbdbd',
+          deco: { type: 'band', color: '#000000', opacity: 0.9, pad: 0.3, soft: 0, sideFade: 0, anim: 'grow', dur: 0.25 },
+          inFx: 'slide', inDir: 'left', inDur: 0.35, inStagger: 0.03, inPower: 2, hold: 1.6,
+          outFx: 'wipe', outDir: 'lr', outDur: 0.35, subFx: 'fade', subDelay: -0.1
+        }
+      },
+      {
         id: 'secret', group: 'gm', icon: 'lock', label: T('秘匿を確認してください', 'Check Your Secret'),
         text: T('秘匿を確認してください', 'CHECK YOUR SECRET'), subText: T('SECRET HANDOUT', 'SECRET HANDOUT'),
         patch: SECRET_PATCH
@@ -352,7 +376,7 @@
       {
         id: 'roleplay', group: 'gm', icon: 'mask', label: T('ロールプレイどうぞ', 'Roleplay Time'),
         text: T('ロールプレイどうぞ', 'ROLEPLAY TIME'), subText: T('ROLE PLAY', 'YOUR TURN'),
-        patch: SECRET_PATCH
+        patch: ROLEPLAY_PATCH
       },
       {
         id: 'break', group: 'gm', icon: 'coffee', label: T('休憩中', 'On Break'),
@@ -366,6 +390,20 @@
           glow: { on: false },
           subColorOn: true, subColor: '#6b3f1d',
           inFx: 'bounce', inDur: 0.9, inStagger: 0.1, holdFx: 'float', holdPower: 0.8, hold: 2.4, outFx: 'sink', outDur: 0.7, outStagger: 0.05, subFx: 'fade'
+        }
+      },
+      {
+        // セーフティツールのXカード：白いカードに赤い文字
+        id: 'xcard', group: 'gm', icon: 'xcard', label: T('Xカード', 'X-Card'),
+        text: T('X-Card', 'X-Card'), subText: T('一時中断をお願いします', 'Let’s pause for a moment'),
+        patch: {
+          fontId: 'anton', weight: 400, fontSize: 150, letterSpacing: 0.08,
+          subFontId: 'noto-sans-jp', subWeight: 700, subSize: 0.19, subLetterSpacing: 0.24, subGap: 0.42,
+          fill: { type: 'solid', color: '#e8202f' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: false }, glow: { on: false },
+          subColorOn: true, subColor: '#3b3b3b',
+          deco: { type: 'box', color: '#ffffff', opacity: 0.97, color2: '#e8202f', pad: 0.5, thickness: 4, radius: 0.08, anim: 'grow', dur: 0.35 },
+          inFx: 'pop', inDur: 0.5, inStagger: 0.05, hold: 2.2, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: -0.1
         }
       },
       {

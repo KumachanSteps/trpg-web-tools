@@ -190,6 +190,17 @@
         if (info.vertical) st.y += d; else st.x += d;
         st.a *= e;
       } },
+    // 行の文字を行の中央に重ねて出し、少し見せてから行の向きに広げる（トレイラーには同じ名前の「表示の流れ」がある）
+    { id: 'spread', level: 'glyph', ease: 'outQuart', dur: 1.3, stagger: 0, noTrailer: true,
+      glyph(st, e, p, g, k, info) {
+        const appear = clamp(p / 0.18);
+        const q = clamp((p - 0.42) / 0.58);
+        const m = info.ease ? info.ease(q) : EASE.outQuart(q);
+        const d = -g.lineOffset * (1 - m);
+        if (info.vertical) st.y += d; else st.x += d;
+        st.a *= EASE.outQuad(appear) * lerp(stackAlpha(g), 1, m);
+        st.s *= 1 + 0.25 * k * (1 - EASE.outCubic(appear));
+      } },
     { id: 'blurIn', level: 'glyph', ease: 'outCubic', dur: 0.8, stagger: 0.05,
       glyph(st, e, p, g, k) { st.blur += (1 - e) * 0.28 * g.size * k; st.a *= e; } },
     { id: 'pop', level: 'glyph', ease: 'outBack', dur: 0.5, stagger: 0.07,
@@ -363,6 +374,11 @@
   }
 
   // 効果ごとに使える方向だけを通す（別の効果で選んだ方向が残っていても破綻しない）
+  // 「中央から左右に広がる」で重なっている間の不透明度（文字が多い行ほど薄くして、重なりが透けて見えるようにする）
+  function stackAlpha(g) {
+    return clamp(1.8 / Math.sqrt(Math.max(1, g.lineCount || 1)), 0.3, 1);
+  }
+
   function dirFor(fx, dir) {
     if (!fx || !fx.dirs) return dir;
     return fx.dirs.includes(dir) ? dir : fx.dirs[0];
@@ -721,7 +737,11 @@
           glyphs.push(g);
         });
         grp.count = vis;
-        grp.lines.forEach(line => { line.idx = line.idx.map(i => i + (glyphs.length - grp.glyphs.length)); });
+        grp.lines.forEach(line => {
+          line.idx = line.idx.map(i => i + (glyphs.length - grp.glyphs.length));
+          const count = line.idx.filter(i => !glyphs[i].blank).length;
+          line.idx.forEach(i => { glyphs[i].lineCount = count; });
+        });
       });
       const b = page.box;
       glyphs.slice(first).forEach(g => {
@@ -784,8 +804,6 @@
       // 「中央に1文字ずつ」で、その文字だけが中央に大きく出ている区間
       soloStart: new Float64Array(n).fill(Infinity),
       soloEnd: new Float64Array(n).fill(-Infinity),
-      // 「中央から左右に広がる」で、重なっている間の不透明度（文字が多い行ほど薄くして、重なりが透けて見えるようにする）
-      stackAlpha: new Float64Array(n).fill(1),
       pages: [],
       duration: 0,
       posterTime: 0
@@ -823,7 +841,7 @@
       let inEnd = textStart;
 
       if (scene.mode === 'trailer') {
-        const fx = inDef.level === 'block' ? IN_MAP.fade : inDef;
+        const fx = inDef.level === 'block' || inDef.noTrailer ? IN_MAP.fade : inDef;
         const gDur = fx.id === 'typewriter' ? 0 : Math.max(0, scene.glyphDur ?? 0.4);
         const reveal = scene.reveal || 'char';
         if (reveal === 'scroll') {
@@ -862,11 +880,6 @@
           const dur = Math.max(0.05, scene.spreadDur ?? 0.9);
           const start = textStart + SPREAD_APPEAR + stackHold;
           mainG.forEach(g => { T.inStart[g.index] = textStart; T.inDur[g.index] = 0; T.inFx[g.index] = null; });
-          page.mainLines.forEach(line => {
-            const count = line.idx.filter(i => !glyphs[i].blank).length;
-            const alpha = clamp(1.8 / Math.sqrt(Math.max(1, count)), 0.3, 1);
-            line.idx.forEach(i => { T.stackAlpha[i] = alpha; });
-          });
           pg.spread = { appear: textStart, start, dur, cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2 };
           inEnd = start + dur;
         } else if (reveal === 'solo') {
@@ -1349,7 +1362,7 @@
         // 行ごとに中央で重なって現れ（少し大きい状態から）、行の向きに広がって本来の位置へ
         const a = clamp((t - sp.appear) / SPREAD_APPEAR);
         const k = t < sp.start ? 0 : EASE.outQuart(clamp((t - sp.start) / sp.dur));
-        st.a = EASE.outQuad(a) * lerp(T.stackAlpha[i], 1, k);
+        st.a = EASE.outQuad(a) * lerp(stackAlpha(g), 1, k);
         st.s = 1 + 0.25 * (1 - EASE.outCubic(a));
         if (g.vertical) st.y = (sp.cy - g.cy) * (1 - k);
         else st.x = (sp.cx - g.cx) * (1 - k);
@@ -1358,8 +1371,8 @@
       const inDur = T.inDur[i];
       if (inFx && inFx.glyph && inDur > 0 && t < inStart + inDur) {
         const p = clamp((t - inStart) / inDur);
-        const e = easeFn(scene.inEase, inFx.ease)(p);
-        inFx.glyph(st, e, p, g, scene.inPower ?? 1, info);
+        info.ease = easeFn(scene.inEase, inFx.ease);
+        inFx.glyph(st, info.ease(p), p, g, scene.inPower ?? 1, info);
       }
       const outFx = T.outFx[i];
       if (outFx && outFx.glyph && t >= outStart) {

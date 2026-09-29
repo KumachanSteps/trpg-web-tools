@@ -19,6 +19,7 @@
       converge: T('上下から合流', 'Converge'),
       slide: T('スライド', 'Slide'),
       tracking: T('字間が縮まる', 'Tracking in'),
+      spread: T('中央から左右に広がる', 'Spread from center'),
       blurIn: T('ぼかし解除', 'Blur in'),
       pop: T('ポップ', 'Pop'),
       shrinkIn: T('大きい所から', 'Shrink in'),
@@ -805,7 +806,7 @@
           lastMode = mode;
           grid.innerHTML = '';
           list.forEach(fx => {
-            if (mode === 'trailer' && phase === 'in' && fx.level === 'block') return;
+            if (mode === 'trailer' && phase === 'in' && (fx.level === 'block' || fx.noTrailer)) return;
             // 「消さない」は退場スイッチ（outEnabled）で切り替えるため、カードには出さない
             if (phase === 'out' && fx.level === 'none') return;
             const canvas = el('canvas', { width: 160, height: 90, class: 'effect-canvas', 'aria-hidden': 'true' });
