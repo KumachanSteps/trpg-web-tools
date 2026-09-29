@@ -124,74 +124,74 @@
     deco: { type: 'box', color: '#062a1a', opacity: 0.85, color2: '#2fd07a', pad: 0.5, thickness: 2, radius: 0.14, anim: 'grow', dur: 0.4 }
   };
 
-  // 判定結果は成功の度合いで色を分ける（成功＝白、大きめの成功＝青、さらに上＝紫、クリティカル＝金、その上＝虹色、失敗＝灰、ファンブル＝赤）。
-  // 文字の設定は共通
-  const DICE_TEXT = {
-    fontId: 'dela-gothic-one', weight: 400, fontSize: 140, letterSpacing: 0.1,
-    subFontId: 'oswald', subWeight: 700, subSize: 0.24, subLetterSpacing: 0.6, subGap: 0.28,
+  // 判定結果は「戦闘開始」と同じタイトル枠の中に出す。
+  // 成功は度合いが上がるほど明るく派手に（白 → 青い光 → 水色の強い光 → 金の閃光 → 虹色）、失敗は暗く沈み、ファンブルはさらに暗い赤に
+  const DICE_FRAME = {
+    ...BATTLE_PATCH,
     subColorOn: true
   };
+  const diceFrame = (line, fill = { color: '#000000', opacity: 0 }, thickness = 3) => ({ ...BATTLE_PATCH.deco, color2: line, color: fill.color, opacity: fill.opacity, thickness });
   const DICE_SUCCESS = {
-    ...DICE_TEXT,
-    fill: { type: 'gradient', color: '#ffffff', color2: '#eef6ff', color3: '#b9d9ff', dir: 'v' },
-    stroke: { on: true, width: 5, color: '#1b3350' }, stroke2: { on: false },
-    shadow: { on: true, color: '#000000', opacity: 0.55, blur: 12, x: 0, y: 5 },
-    glow: { on: true, color: '#8fc3ff', size: 16, strength: 0.45 },
-    subColor: '#cfe4ff',
-    inFx: 'pop', inDur: 0.55, inStagger: 0.06, hold: 1.4, outFx: 'fade', outDur: 0.5, subFx: 'fade'
+    ...DICE_FRAME,
+    fill: { type: 'solid', color: '#ffffff' },
+    glow: { on: true, color: '#ffffff', size: 14, strength: 0.35 },
+    subColor: '#e8eef8',
+    deco: diceFrame('#ffffff')
   };
   const DICE_GOOD = {
-    ...DICE_TEXT,
-    fill: { type: 'gradient', color: '#ffffff', color2: '#cfe7ff', color3: '#4f9dff', dir: 'v' },
-    stroke: { on: true, width: 5, color: '#0a2148' }, stroke2: { on: true, width: 4, color: '#e6f2ff' },
-    shadow: { on: true, color: '#000000', opacity: 0.55, blur: 12, x: 0, y: 5 },
-    glow: { on: true, color: '#3d8bff', size: 26, strength: 0.8 },
-    subColor: '#9ccbff',
-    inFx: 'pop', inDur: 0.6, inStagger: 0.06, holdFx: 'glow', holdPower: 0.6, hold: 1.5, outFx: 'fade', outDur: 0.5, subFx: 'fade'
+    ...DICE_FRAME,
+    fill: { type: 'gradient', color: '#ffffff', color2: '#e3f3ff', color3: '#9fd4ff', dir: 'v' },
+    glow: { on: true, color: '#58b4ff', size: 22, strength: 0.7 },
+    subColor: '#bfe3ff',
+    deco: diceFrame('#9fd4ff'),
+    holdFx: 'glow', holdPower: 0.5
   };
   const DICE_GREAT = {
-    ...DICE_TEXT,
-    fill: { type: 'gradient', color: '#ffffff', color2: '#efdfff', color3: '#b27bff', dir: 'v' },
-    stroke: { on: true, width: 5, color: '#2a0d4d' }, stroke2: { on: true, width: 5, color: '#f4e9ff' },
-    shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 6 },
-    glow: { on: true, color: '#b06bff', size: 32, strength: 0.95 },
-    subColor: '#dcc2ff',
-    inFx: 'zoomIn', inDur: 0.7, holdFx: 'glow', holdPower: 0.8, hold: 1.6, outFx: 'growOut', outDur: 0.5, subFx: 'fade'
+    ...DICE_FRAME,
+    fill: { type: 'gradient', color: '#ffffff', color2: '#dcfbff', color3: '#6fe3ff', dir: 'v' },
+    shadow: { on: true, color: '#001a26', opacity: 0.45, blur: 10, x: 0, y: 3 },
+    glow: { on: true, color: '#27d3ff', size: 32, strength: 1 },
+    subColor: '#c8f6ff',
+    deco: diceFrame('#7fe8ff'),
+    inFx: 'zoomIn', inDur: 0.6, inStagger: 0, inPower: 1, holdFx: 'glow', holdPower: 0.8
   };
   const DICE_CRITICAL = {
-    ...DICE_TEXT, fontSize: 130, letterSpacing: 0.06, subSize: 0.26,
-    fill: { type: 'gradient', color: '#fffbe6', color2: '#ffd257', color3: '#b8860b', dir: 'v' },
-    stroke: { on: true, width: 5, color: '#3b2500' }, stroke2: { on: true, width: 5, color: '#fff3c4' },
-    shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 6 },
-    glow: { on: true, color: '#ffd257', size: 36, strength: 1 },
-    subColor: '#ffe7a3',
-    inFx: 'flash', inDur: 0.8, holdFx: 'glow', holdPower: 1, hold: 1.6, outFx: 'growOut', outDur: 0.5, subFx: 'fade', subDelay: 0
+    ...DICE_FRAME,
+    fill: { type: 'gradient', color: '#fffef0', color2: '#ffe27a', color3: '#ffb300', dir: 'v' },
+    stroke: { on: true, width: 1.5, color: '#5a3a00' },
+    shadow: { on: true, color: '#2a1a00', opacity: 0.5, blur: 10, x: 0, y: 3 },
+    glow: { on: true, color: '#ffc21a', size: 44, strength: 1.5 },
+    subColor: '#ffe9a8',
+    deco: diceFrame('#ffd24a', undefined, 4),
+    inFx: 'flash', inDur: 0.8, inStagger: 0, inPower: 1, holdFx: 'glow', holdPower: 1.2, hold: 1.6
   };
   const DICE_BEYOND = {
-    ...DICE_TEXT, fontSize: 130, letterSpacing: 0.06, subSize: 0.26,
-    fill: { type: 'gradient', color: '#fff6b0', color2: '#ff8ad8', color3: '#7b7dff', dir: 'v' },
-    stroke: { on: true, width: 5, color: '#1d0a33' }, stroke2: { on: true, width: 5, color: '#ffffff' },
-    shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 6 },
-    glow: { on: true, color: '#ff6ad5', size: 40, strength: 1.1 },
-    subColor: '#ffd1f1',
-    inFx: 'slam', inDur: 0.8, holdFx: 'pulse', holdPower: 1, hold: 1.8, outFx: 'growOut', outDur: 0.5, subFx: 'fade', subDelay: 0
+    ...DICE_FRAME,
+    fill: { type: 'gradient', color: '#fffbe0', color2: '#ff9ee6', color3: '#8f8bff', dir: 'v' },
+    stroke: { on: true, width: 1.5, color: '#2a0f40' },
+    shadow: { on: true, color: '#12002a', opacity: 0.5, blur: 10, x: 0, y: 3 },
+    glow: { on: true, color: '#ff7ae0', size: 48, strength: 1.6 },
+    subColor: '#ffd6f6',
+    deco: diceFrame('#ffe6ff', undefined, 4),
+    inFx: 'flash', inDur: 0.9, inStagger: 0, inPower: 1, holdFx: 'pulse', holdPower: 1, hold: 1.8
   };
   const DICE_FAILURE = {
-    ...DICE_TEXT,
-    fill: { type: 'gradient', color: '#e3e6ec', color2: '#aab0bb', color3: '#6b717c', dir: 'v' },
-    stroke: { on: true, width: 5, color: '#1c1f25' }, stroke2: { on: false },
-    shadow: { on: true, color: '#000000', opacity: 0.7, blur: 10, x: 0, y: 5 }, glow: { on: false },
-    subColor: '#9aa1ad',
-    inFx: 'drop', inDur: 0.6, inStagger: 0.08, hold: 1.3, outFx: 'sink', outDur: 0.7, outStagger: 0.06, subFx: 'fade'
+    ...DICE_FRAME,
+    fill: { type: 'gradient', color: '#e6d6d6', color2: '#b08a8a', color3: '#6a3c3c', dir: 'v' },
+    shadow: { on: true, color: '#000000', opacity: 0.7, blur: 14, x: 0, y: 5 },
+    subColor: '#c79a9a',
+    deco: diceFrame('#8a2a2a', { color: '#120505', opacity: 0.55 }),
+    outFx: 'sink', outDur: 0.7, outStagger: 0.06
   };
   const DICE_FUMBLE = {
-    ...DICE_TEXT, fontSize: 130, letterSpacing: 0.08, subSize: 0.26,
-    fill: { type: 'gradient', color: '#ff6a6a', color2: '#b30000', color3: '#4a0000', dir: 'v' },
-    stroke: { on: true, width: 4, color: '#140000' }, stroke2: { on: false },
-    shadow: { on: true, color: '#000000', opacity: 0.85, blur: 18, x: 0, y: 6 },
-    glow: { on: true, color: '#ff1a1a', size: 34, strength: 1 },
-    subColor: '#ff8a8a',
-    inFx: 'glitch', inDur: 0.8, holdFx: 'glitch', holdPower: 0.8, hold: 1.8, outFx: 'sink', outDur: 0.8, outStagger: 0.05, subFx: 'fade'
+    ...DICE_FRAME,
+    fill: { type: 'gradient', color: '#ff5a5a', color2: '#b00000', color3: '#4a0000', dir: 'v' },
+    stroke: { on: true, width: 2, color: '#1a0000' },
+    shadow: { on: true, color: '#000000', opacity: 0.85, blur: 16, x: 0, y: 6 },
+    glow: { on: true, color: '#c00000', size: 30, strength: 1 },
+    subColor: '#ff7a7a',
+    deco: diceFrame('#b00000', { color: '#0a0000', opacity: 0.72 }),
+    inFx: 'glitch', inDur: 0.8, inStagger: 0, inPower: 1, holdFx: 'glitch', holdPower: 0.7, hold: 1.8, outFx: 'sink', outDur: 0.8, outStagger: 0.05
   };
   // 判定の呼びかけ（共鳴判定・憑依判定など）
   const CHECK_CALL = {
