@@ -505,13 +505,13 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 .template-system.is-active { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
 body.is-dark .template-system.is-active { color: #dfeeff; }
 
-.template-strip { display: flex; flex-wrap: wrap; gap: 5px; }
+.template-strip { display: flex; flex-wrap: wrap; gap: 4px; }
 
 .template-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 8px;
+  padding: 6px;
   border: 1.5px solid var(--line);
   border-radius: 999px;
   background: var(--panel-solid);
@@ -1050,6 +1050,9 @@ body.is-dark .font-status { color: #dfeeff; }
 .primary-button { background: linear-gradient(135deg, var(--blue), var(--blue-deep)); box-shadow: 0 8px 18px color-mix(in srgb, var(--blue) 30%, transparent); }
 .accent-button { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 32%, transparent); }
 .primary-button:not(:disabled):hover, .accent-button:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.05); }
+/* ナイトモードでは暗い背景に光がにじんで見えやすいので、ボタンの下の光を控えめにする */
+body.is-dark .accent-button { box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 14%, transparent); }
+body.is-dark .accent-button:not(:disabled):hover { filter: brightness(1.03); }
 
 .play-button { min-width: 116px; }
 

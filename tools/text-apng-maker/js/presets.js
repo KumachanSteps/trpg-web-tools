@@ -124,6 +124,15 @@
     deco: { type: 'box', color: '#062a1a', opacity: 0.85, color2: '#2fd07a', pad: 0.5, thickness: 2, radius: 0.14, anim: 'grow', dur: 0.4 }
   };
 
+  // ラウンド1〜5は同じデザイン（数字だけが違う）
+  const ROUND_PATCH = {
+    fontId: 'shippori-mincho-b1', weight: 800, fontSize: 124, letterSpacing: 0.16,
+    fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.35, blur: 10, x: 0, y: 3 }, glow: { on: false },
+    deco: { type: 'sides', color2: '#ffffff', pad: 0.5, extend: 1.6, thickness: 3, anim: 'grow', dur: 0.6 },
+    inFx: 'drop', inDur: 0.55, inStagger: 0.1, inPower: 1.1, hold: 1.3, outFx: 'fade', outDur: 0.5
+  };
+
   // 判定結果は「戦闘開始」と同じタイトル枠の中に出す。
   // 成功は度合いが上がるほど明るく派手に（白 → 青い光 → 水色の強い光 → 金の閃光 → 虹色）、失敗は暗く沈み、ファンブルはさらに暗い赤に
   const DICE_FRAME = {
@@ -270,17 +279,6 @@
         }
       },
       {
-        id: 'round', group: 'combat', icon: 'bell', label: T('ラウンド', 'Round'),
-        text: T('ROUND 1', 'ROUND 1'), subText: T('', ''),
-        patch: {
-          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 124, letterSpacing: 0.16,
-          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.35, blur: 10, x: 0, y: 3 }, glow: { on: false },
-          deco: { type: 'sides', color2: '#ffffff', pad: 0.5, extend: 1.6, thickness: 3, anim: 'grow', dur: 0.6 },
-          inFx: 'drop', inDur: 0.55, inStagger: 0.1, inPower: 1.1, hold: 1.3, outFx: 'fade', outDur: 0.5
-        }
-      },
-      {
         id: 'finalRound', group: 'combat', icon: 'flame', label: T('ファイナルラウンド', 'Final Round'),
         text: T('FINAL ROUND', 'FINAL ROUND'), subText: T('', ''),
         patch: {
@@ -292,6 +290,32 @@
           deco: { type: 'sides', color2: '#ff4a2a', pad: 0.45, extend: 1.0, thickness: 4, anim: 'grow', dur: 0.6 },
           inFx: 'slam', inDur: 0.7, holdFx: 'glitch', holdPower: 1, hold: 1.6, outFx: 'zoomThrough', outDur: 0.5
         }
+      },
+      {
+        // ラウンドのチップは数字違いが並ぶので、アイコンなしで1列に収める
+        id: 'round', group: 'combat', label: T('ラウンド1', 'Round 1'),
+        text: T('ROUND 1', 'ROUND 1'), subText: T('', ''),
+        patch: ROUND_PATCH
+      },
+      {
+        id: 'round2', group: 'combat', label: T('ラウンド2', 'Round 2'),
+        text: T('ROUND 2', 'ROUND 2'), subText: T('', ''),
+        patch: ROUND_PATCH
+      },
+      {
+        id: 'round3', group: 'combat', label: T('ラウンド3', 'Round 3'),
+        text: T('ROUND 3', 'ROUND 3'), subText: T('', ''),
+        patch: ROUND_PATCH
+      },
+      {
+        id: 'round4', group: 'combat', label: T('ラウンド4', 'Round 4'),
+        text: T('ROUND 4', 'ROUND 4'), subText: T('', ''),
+        patch: ROUND_PATCH
+      },
+      {
+        id: 'round5', group: 'combat', label: T('ラウンド5', 'Round 5'),
+        text: T('ROUND 5', 'ROUND 5'), subText: T('', ''),
+        patch: ROUND_PATCH
       },
       {
         id: 'explore', group: 'investigation', icon: 'search', label: T('探索開始', 'Exploration'),
