@@ -691,9 +691,10 @@
     ],
     trailer: [
       {
+        // 見本はシャーロック・ホームズの有名な一節（不可能を消去して残ったものが真実）のもじり
         id: 'cinematic', icon: 'play', label: T('シネマティック', 'Cinematic'),
-        text: T('その夜、町からひとつの灯りが消えた。\n誰も気づかないまま、時計の針だけが進んでいく。\n\n――真実を知る覚悟はあるか。',
-          'That night, a single light vanished from the town.\nNo one noticed, and only the clock kept moving.\n\n— Are you ready to face the truth?'),
+        text: T('霧のロンドン、ベイカー街221B。\n名探偵のもとに、奇妙な依頼が舞い込む。\n\nありえないものを消し去ったとき――\n残ったのは、この世ならざる真実だった。',
+          'Foggy London, 221B Baker Street.\nA strange case finds the great detective.\n\nEliminate the impossible —\nand whatever remains is not of this world.'),
         patch: {
           fontId: 'shippori-mincho', weight: 700, fontSize: 46, lineHeight: 1.9, letterSpacing: 0.08,
           fill: { type: 'solid', color: '#f5f0e6' }, stroke: { on: false }, stroke2: { on: false },
@@ -774,7 +775,6 @@
           fill: { type: 'solid', color: '#f2f5fa' }, stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.85, blur: 12, x: 0, y: 3 },
           glow: { on: true, color: '#a9c4ff', size: 18, strength: 0.5 },
-          bg: { type: 'vignette', color: '#000000', opacity: 0.5, sync: true },
           reveal: 'all', glyphDur: 1.4, inFx: 'blurIn', hold: 2.4, outFx: 'fade', outDur: 0.9
         }
       },

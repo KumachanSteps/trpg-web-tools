@@ -193,6 +193,7 @@
         const shared = pickTexts(memos.trailer);
         if (Object.keys(shared).length) keepAsTemplateText('trailer', shared);
         app.editedTexts.caption = pickTexts(memos.caption);
+        PER_TEMPLATE_TEXT.forEach(refreshSample);
       } else {
         // 書き換えた文章を覚える仕組みより前の保存データ：トレイラー・場所・時間で書き換えていた文章はそのまま引き継ぐ
         ['trailer', 'caption'].forEach(mode => {
@@ -250,6 +251,20 @@
     const kept = {};
     Object.keys(memo).forEach(key => { if (memo[key] !== P.sampleText(tpl, key, app.lang)) kept[key] = memo[key]; });
     if (Object.keys(kept).length) app.editedTexts[mode][tpl.id] = kept;
+  }
+
+  // 見本の文章が新しくなったテンプレート：書き換えていない文章（覚えていない文章）が今の見本と違えば、今の見本に置き換える。
+  // テンプレートごとに覚えるモードでは、書き換えた文章は必ず覚えているので、それ以外は以前の見本（空のメインテキストはそのまま）
+  function refreshSample(mode) {
+    const s = app.scenes[mode];
+    const tpl = P.TEMPLATES[mode].find(t => t.id === s.templateId);
+    if (!tpl) return;
+    const memo = app.editedTexts[mode][tpl.id] || {};
+    ['text', 'subText'].forEach(key => {
+      if (typeof memo[key] === 'string' || !String(s[key] || '').trim()) return;
+      const samples = ['ja', 'en'].map(lang => P.sampleText(tpl, key, lang));
+      if (!samples.includes(s[key])) s[key] = P.sampleText(tpl, key, app.lang);
+    });
   }
 
   // 保存データから文章だけを取り出す
