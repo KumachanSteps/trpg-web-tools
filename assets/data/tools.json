@@ -558,6 +558,39 @@
     }
   },
   {
+    "id": "indoor-map-maker",
+    "icon": "🏠",
+    "status": "idea",
+    "category": "scenarioPrep",
+    "badges": [
+      "preSession",
+      "duringSession",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "シナリオ準備",
+      "見取り図",
+      "間取り",
+      "マップ"
+    ],
+    "href": "",
+    "devHref": "./tools/indoor-map-maker/",
+    "devStage": "testing",
+    "devNote": {
+      "ja": "室内の見取り図エディター。テンプレート10種（1LDK〜廃病院）、ドア・窓・家具の配置、GM/PL別のPNG書き出し。クローズドテスト用。",
+      "en": "Indoor floor-plan editor with 10 templates (apartment to abandoned hospital), doors, windows and furniture, and separate GM/player PNG export. Closed test."
+    },
+    "name": {
+      "ja": "TRPG室内図メーカー",
+      "en": "TRPG Indoor Map Maker"
+    },
+    "description": {
+      "ja": "探索シーンで使う室内の見取り図を作成します。テンプレートから始めて部屋・ドア・窓・家具を置き、PL用とGM用の画像を書き出せます。",
+      "en": "Make indoor floor plans for investigation scenes. Start from a template, place rooms, doors, windows and furniture, and export player and GM images."
+    },
+    "preview": "./assets/img/previews/indoor-map-maker.png"
+  },
+  {
     "id": "bgm-organizer",
     "icon": "🎧",
     "status": "idea",
