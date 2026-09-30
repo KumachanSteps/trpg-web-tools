@@ -122,10 +122,6 @@
     // 書き換えた文章。メッセージはテンプレートごとに覚え（message: { テンプレートID: { text, subText } }）、
     // トレイラー・場所・時間はテンプレートを切り替えても引き継ぐ（trailer / caption: { text, subText }）
     editedTexts: { message: {}, trailer: {}, caption: {} },
-    // 分類ごと（判定はシステムごと）に編集中の場面を持つ（{ モード: { 'combat' / 'dice/coc6' など: scene } }）。今の場面も同じオブジェクトで入る
-    groupScenes: {},
-    // 分類ごとに最後に開いたシステム（{ dice: 'coc7' }）
-    lastSystems: {},
     // fileNames: モードごとの手入力のファイル名（空なら設定から自動入力）
     exportOpts: { fps: 24, loop: 'once', loopCount: 3, color: 'palette', poster: true, trim: false, fileNames: { message: '', trailer: '', caption: '' } },
     previewBg: 'checker',
@@ -201,24 +197,7 @@
           if (!state.sub && mode === 'caption') app.editedTexts[mode].subText = s.subText;
         });
       }
-      const groupScenes = saved.groupScenes && typeof saved.groupScenes === 'object' ? saved.groupScenes : {};
-      Object.keys(P.TEMPLATE_GROUPS).forEach(mode => {
-        const stored = groupScenes[mode] && typeof groupScenes[mode] === 'object' ? groupScenes[mode] : {};
-        Object.keys(stored).forEach(key => {
-          const place = stored[key] && templatePlace(mode, stored[key].templateId);
-          if (place && place.key === key) groupStore(mode)[key] = restoreScene(mode, stored[key]);
-        });
-      });
-      const lastSystems = saved.lastSystems && typeof saved.lastSystems === 'object' ? saved.lastSystems : {};
-      Object.values(P.TEMPLATE_GROUPS).flat().forEach(g => {
-        if (g.systems && g.systems.some(sy => sy.id === lastSystems[g.id])) app.lastSystems[g.id] = lastSystems[g.id];
-      });
     }
-    // 今の場面は、その分類の編集中の場面そのもの
-    Object.keys(P.TEMPLATE_GROUPS).forEach(mode => {
-      const place = templatePlace(mode, app.scenes[mode].templateId);
-      if (place) groupStore(mode)[place.key] = app.scenes[mode];
-    });
   }
 
   // 保存データの場面を初期値と合わせて読み込む（古い形式の直しも含む）
@@ -238,16 +217,21 @@
     return s;
   }
 
-  // テンプレートの置き場所（分類と、あればシステム）。key は分類ごとの場面の保存先
+  // テンプレートの置き場所（分類と、あればシステム）
   function templatePlace(mode, templateId) {
     const tpl = (P.TEMPLATES[mode] || []).find(t => t.id === templateId);
     if (!tpl || !tpl.group) return null;
-    return { group: tpl.group, system: tpl.system || null, key: tpl.system ? `${tpl.group}/${tpl.system}` : tpl.group };
+    return { group: tpl.group, system: tpl.system || null };
   }
 
-  function groupStore(mode) {
-    if (!app.groupScenes[mode]) app.groupScenes[mode] = {};
-    return app.groupScenes[mode];
+  // カテゴリ（モード）や分類・システムの先頭のテンプレート
+  function firstTemplate(mode, groupId, systemId) {
+    const list = P.TEMPLATES[mode] || [];
+    const groups = P.TEMPLATE_GROUPS[mode];
+    if (!groups) return list[0] || null;
+    const group = groups.find(g => g.id === groupId) || groups[0];
+    const system = group.systems ? (group.systems.find(sy => sy.id === systemId) || group.systems[0]).id : null;
+    return list.find(tpl => tpl.group === group.id && (!system || tpl.system === system)) || null;
   }
 
   // 保存データから文章だけを取り出す
@@ -264,7 +248,6 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           schema: STORAGE_SCHEMA, mode: app.mode, tab: app.tab, scenes: app.scenes, editedTexts: app.editedTexts,
-          groupScenes: app.groupScenes, lastSystems: app.lastSystems,
           exportOpts: app.exportOpts, previewBg: app.previewBg, loopPreview: app.loopPreview
         }));
       } catch (error) {
@@ -632,8 +615,7 @@
       F.removeFont(data.id).then(() => {
         // 解除したフォントを使っていた場面は、初期のフォントに戻す
         const fallback = F.get('noto-sans-jp');
-        const scenes = MODES.map(m => app.scenes[m]).concat(...Object.values(app.groupScenes).map(store => Object.values(store)));
-        new Set(scenes).forEach(s => {
+        MODES.map(m => app.scenes[m]).forEach(s => {
           if (s.fontId === data.id) { s.fontId = fallback.id; s.weight = F.nearestWeight(fallback, s.weight || 700); }
           if (s.subFontId === data.id) s.subFontId = 'same';
         });
@@ -872,8 +854,11 @@
 
   /* ================= モード・テンプレート・タブ ================= */
 
+  // カテゴリ（メッセージ／トレイラー／場所・時間）を切り替え、その先頭のテンプレートを選んでプレビューする。
+  // 開いているカテゴリをもう一度押したときは、編集中の内容をそのまま残す
   function setMode(mode) {
     if (!MODES.includes(mode) || view.exporting) return false;
+    if (mode === app.mode) return true;
     app.mode = mode;
     els.modeTabs.querySelectorAll('[data-mode]').forEach(btn => {
       const on = btn.dataset.mode === mode;
@@ -882,14 +867,7 @@
       btn.tabIndex = on ? 0 : -1;
     });
     els.body.dataset.mode = mode;
-    renderTemplates();
-    panel.render(app.tab, els.settingsBody);
-    view.renderer.invalidateSprites();
-    invalidate();
-    layoutStage();
-    scheduleFontLoad(0);
-    saveState();
-    restartPreview();
+    showTemplate(firstTemplate(mode));
     return true;
   }
 
@@ -907,39 +885,23 @@
   function currentPlace() {
     const groups = P.TEMPLATE_GROUPS[app.mode];
     if (!groups) return null;
-    return templatePlace(app.mode, scene().templateId) || { group: groups[0].id, system: null, key: groups[0].id };
+    return templatePlace(app.mode, scene().templateId) || { group: groups[0].id, system: null };
   }
 
-  // 分類（とシステム）を切り替えて、その分類の場面をプレビューする。
-  // 分類ごとに編集中の場面を持ち、初めて開く分類は最初のテンプレートから始める。画像サイズと退場の有無は引き継ぐ
+  // 分類（判定ではシステム）を切り替え、その先頭のテンプレートを選んでプレビューする。
+  // 開いている分類やシステムをもう一度押したときは、編集中の内容をそのまま残す
   function showPlace(groupId, systemId) {
     if (view.exporting) return;
-    const mode = app.mode;
-    const group = (P.TEMPLATE_GROUPS[mode] || []).find(g => g.id === groupId);
-    if (!group) return;
-    let system = null;
-    if (group.systems) {
-      system = (group.systems.find(sy => sy.id === systemId) || group.systems.find(sy => sy.id === app.lastSystems[groupId]) || group.systems[0]).id;
-      app.lastSystems[groupId] = system;
-    }
-    const key = system ? `${groupId}/${system}` : groupId;
-    const current = scene();
+    const groups = P.TEMPLATE_GROUPS[app.mode] || [];
+    if (!groups.some(g => g.id === groupId)) return;
     const from = currentPlace();
-    if (from.key === key) {
-      renderTemplates();
-      saveState();
-      return;
-    }
-    const store = groupStore(mode);
-    store[from.key] = current;
-    let next = store[key];
-    if (!next) {
-      next = P.defaultScene(mode, app.lang);
-      fillTemplate(next, P.TEMPLATES[mode].find(tpl => tpl.group === groupId && (!system || tpl.system === system)));
-      store[key] = next;
-    }
-    Object.assign(next, { width: current.width, height: current.height, sizePreset: current.sizePreset, outEnabled: current.outEnabled });
-    app.scenes[mode] = next;
+    if (from && from.group === groupId && (!systemId || from.system === systemId)) return;
+    showTemplate(firstTemplate(app.mode, groupId, systemId));
+  }
+
+  // テンプレートを選び直してプレビューする（チップを押したときと同じ中身で、通知は出さない）。画像サイズと退場の有無は引き継ぐ
+  function showTemplate(tpl) {
+    if (tpl) fillTemplate(scene(), tpl);
     renderTemplates();
     panel.render(app.tab, els.settingsBody);
     view.renderer.invalidateSprites();
@@ -980,7 +942,7 @@
     }
     const groupDef = groups ? groups.find(g => g.id === group) : null;
     const systems = groupDef && groupDef.systems ? groupDef.systems : null;
-    const system = systems ? (place.system || app.lastSystems[group] || systems[0].id) : null;
+    const system = systems ? (place.system || systems[0].id) : null;
     els.templateSystems.hidden = !systems;
     els.templateSystems.innerHTML = '';
     if (systems) {
@@ -1066,10 +1028,6 @@
     if (!window.confirm(msg().storageReset)) return;
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
     app.editedTexts[app.mode] = {};
-    app.groupScenes[app.mode] = {};
-    (P.TEMPLATE_GROUPS[app.mode] || []).forEach(g => { delete app.lastSystems[g.id]; });
-    const place = templatePlace(app.mode, scene().templateId);
-    if (place) groupStore(app.mode)[place.key] = scene();
     app.exportOpts.fileNames[app.mode] = '';
     renderTemplates();
     view.renderer.invalidateSprites();

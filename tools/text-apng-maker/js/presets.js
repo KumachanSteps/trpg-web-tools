@@ -344,18 +344,18 @@
         }
       },
       {
-        // 調査報告書の見出し：紙にタイプライターで打ったような黒インクの題字と、赤いリボンで打った報告書番号
+        // 調査報告の見出し：黒一色のかっちりした明朝（和文タイプの印字のような字面）を1文字ずつ打ち込み、
+        // 下に黒いラインを走らせて、タイプライター書体の RESEARCH を小さく添える
         id: 'research', group: 'investigation', icon: 'clipboard', label: T('調査開始', 'Research'),
-        text: T('調査開始', 'RESEARCH'), subText: T('調査報告書　No.013', 'INVESTIGATION REPORT  No.013'),
+        text: T('調査開始', 'RESEARCH'), subText: T('RESEARCH', 'FIELD NOTES'),
         patch: {
-          fontId: 'special-elite', weight: 400, fontSize: 112, letterSpacing: 0.32,
-          subPosition: 'above', subFontId: 'same', subWeight: 400, subSize: 0.24, subLetterSpacing: 0.16, subGap: 0.5,
-          // 同じ色の細い縁取りと、ごく弱いにじみでインクの質感を出す
-          fill: { type: 'solid', color: '#211b15' }, stroke: { on: true, width: 0.8, color: '#211b15' }, stroke2: { on: false },
-          shadow: { on: true, color: '#211b15', opacity: 0.35, blur: 2, x: 0, y: 0 }, glow: { on: false },
-          subColorOn: true, subColor: '#9e2626',
-          deco: { type: 'box', color: '#efe6d0', opacity: 0.97, color2: '#bfae86', pad: 0.62, thickness: 1, radius: 0.03, anim: 'fade', dur: 0.35 },
-          inFx: 'typewriter', inStagger: 0.14, hold: 2, outFx: 'fade', outDur: 0.5, subFx: 'typewriter', subDelay: 0
+          fontId: 'biz-udpmincho', weight: 700, fontSize: 116, letterSpacing: 0.3,
+          subFontId: 'special-elite', subWeight: 400, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.55,
+          fill: { type: 'solid', color: '#111111' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: false }, glow: { on: false },
+          subColorOn: true, subColor: '#111111',
+          deco: { type: 'underline', color2: '#111111', pad: 0.2, extend: 0.4, thickness: 2.5, anim: 'grow', dur: 0.7 },
+          inFx: 'typewriter', inStagger: 0.14, hold: 2, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: 0
         }
       },
       {
