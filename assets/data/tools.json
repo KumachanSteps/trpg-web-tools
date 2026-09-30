@@ -32,43 +32,6 @@
     "preview": "./assets/img/previews/haikei-motion-maker.png"
   },
   {
-    "id": "text-apng-maker",
-    "icon": "🔤",
-    "status": "available",
-    "category": "scenarioPrep",
-    "badges": [
-      "preSession",
-      "duringSession",
-      "gmSupport",
-      "plSupport"
-    ],
-    "legacyKeywords": [
-      "素材制作",
-      "文字画像",
-      "APNG",
-      "カットイン",
-      "テロップ",
-      "トレイラー",
-      "シナリオ準備"
-    ],
-    "href": "./tools/text-apng-maker/",
-    "devHref": "./tools/text-apng-maker/",
-    "devStage": "testing",
-    "devNote": {
-      "ja": "カットイン・トレイラー・場所/時間テロップの文字APNG素材を作成。公開前の動作確認・容量チェック用。",
-      "en": "Creates text APNG assets for cut-ins, trailers, and location/time captions; used for pre-release checks and file-size review."
-    },
-    "name": {
-      "ja": "文字画像APNGメーカー",
-      "en": "Text Image APNG Maker"
-    },
-    "description": {
-      "ja": "「戦闘開始」などのカットイン、トレイラーの文章演出、場所・時間のテロップを、背景が透明な動くAPNG素材として作成できるツールです。",
-      "en": "Create animated APNG text assets with transparent backgrounds — cut-ins like “Battle Start”, trailer text, and location/time captions."
-    },
-    "preview": "./assets/img/previews/text-apng-maker.png"
-  },
-  {
     "id": "coc-growth-checker",
     "icon": "🌱",
     "status": "available",
@@ -422,6 +385,10 @@
     "preview": "./assets/img/previews/chara-libra-tool.png"
   },
   {
+    "id": "placeholder-1",
+    "isPlaceholder": true
+  },
+  {
     "id": "scenario-dtp-designer",
     "icon": "📐",
     "status": "idea",
@@ -557,6 +524,37 @@
     "description": {
       "ja": "セッション日程、準備タスク、PL連絡、素材確認をまとめる卓準備カレンダー構想です。",
       "en": "A concept for managing session dates, prep tasks, player reminders, and material checks."
+    }
+  },
+  {
+    "id": "text-apng-maker",
+    "icon": "🔤",
+    "status": "idea",
+    "category": "characterUtility",
+    "badges": [
+      "preSession",
+      "gmSupport",
+      "plSupport"
+    ],
+    "legacyKeywords": [
+      "キャラクター支援",
+      "文字画像",
+      "APNG"
+    ],
+    "href": "",
+    "devHref": "./tools/text-apng-maker/",
+    "devStage": "concept",
+    "devNote": {
+      "ja": "文字画像/APNG出力の仕様と素材導線を検討中。",
+      "en": "Developer preview for text-image/APNG output specs and asset flow."
+    },
+    "name": {
+      "ja": "文字画像APNGメーカー",
+      "en": "Text Image APNG Maker"
+    },
+    "description": {
+      "ja": "セッション素材や配信用の文字画像・簡易APNGを作る補助ツール構想です。",
+      "en": "A concept for creating text-image assets and simple APNGs for sessions or streams."
     }
   },
   {
