@@ -12,9 +12,10 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.01';
+  const VERSION = 'v1.02';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
+  const LANGS = ['ja', 'ko', 'en'];
   const THEME_KEY = 'textApngMakerTheme';
   const MAX_FRAMES = 1800;
   const SIZE_GUIDE_BYTES = 5 * 1024 * 1024;
@@ -156,12 +157,19 @@
   const dict = () => I18N[app.lang] || I18N.ja;
   const msg = () => dict().messages;
 
+  // 保存された言語が無いときは、ブラウザの言語（日本語・韓国語以外は英語）
+  function browserLang() {
+    const lang = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').toLowerCase();
+    if (lang.startsWith('ja')) return 'ja';
+    return lang.startsWith('ko') ? 'ko' : 'en';
+  }
+
   function loadState() {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (error) { saved = null; }
     try {
       const lang = localStorage.getItem(LANG_KEY);
-      app.lang = lang === 'en' || lang === 'ja' ? lang : ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+      app.lang = LANGS.includes(lang) ? lang : browserLang();
     } catch (error) { app.lang = 'ja'; }
     MODES.forEach(mode => {
       let s = restoreScene(mode, saved && saved.scenes && saved.scenes[mode]);
@@ -268,7 +276,7 @@
     const memo = app.editedTexts[mode][tpl.id] || {};
     ['text', 'subText'].forEach(key => {
       if (typeof memo[key] === 'string' || !String(s[key] || '').trim()) return;
-      const samples = ['ja', 'en'].map(lang => P.sampleText(tpl, key, lang));
+      const samples = ['ja', 'en', 'ko'].map(lang => P.sampleText(tpl, key, lang));
       if (!samples.includes(s[key])) s[key] = P.sampleText(tpl, key, app.lang);
     });
   }
@@ -396,8 +404,8 @@
       btn.querySelector('.mode-desc').textContent = desc;
     });
     els.templatesLabel.textContent = d.templates;
-    els.resetBtn.textContent = app.lang === 'en' ? '↺ Reset' : '↺ 初期化';
-    els.resetBtn.title = app.lang === 'en' ? 'Reset this mode to the defaults' : 'このモードを初期状態に戻す';
+    els.resetBtn.textContent = d.reset;
+    els.resetBtn.title = d.resetTitle;
     els.settingsTabs.querySelectorAll('[data-tab]').forEach(btn => { btn.textContent = d.tabs[btn.dataset.tab]; });
     els.previewTitle.textContent = d.preview;
     els.previewBgLabel.textContent = d.previewBg;
@@ -902,7 +910,7 @@
   function updateTransport(duration) {
     els.scrub.max = String(duration);
     if (document.activeElement !== els.scrub || view.playing) els.scrub.value = String(view.time);
-    els.timeLabel.textContent = `${view.time.toFixed(2)} / ${duration.toFixed(2)}${app.lang === 'en' ? ' s' : ' 秒'}`;
+    els.timeLabel.textContent = `${view.time.toFixed(2)} / ${duration.toFixed(2)}${dict().seconds}`;
     const pct = duration > 0 ? (view.time / duration) * 100 : 0;
     els.segments.style.setProperty('--playhead', `${pct}%`);
   }
@@ -1578,7 +1586,7 @@
 
   function bindEvents() {
     els.langButtons.forEach(btn => btn.addEventListener('click', () => {
-      app.lang = btn.dataset.langChoice === 'en' ? 'en' : 'ja';
+      app.lang = LANGS.includes(btn.dataset.langChoice) ? btn.dataset.langChoice : 'ja';
       try { localStorage.setItem(LANG_KEY, app.lang); } catch (error) { /* noop */ }
       applyLanguage();
     }));
