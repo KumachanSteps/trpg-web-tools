@@ -1,0 +1,1231 @@
+/* TRPG室内図メーカー — 家具・アイテムの一覧と描画
+ * 描画関数は「ローカル座標（0,0）〜（w,h）、単位はマス」で描く。
+ * 向きの約束: 背面（壁に付ける側）が上（y=0）。回転は時計回り 90° 刻み。 */
+(function (global) {
+  'use strict';
+
+  const TAU = Math.PI * 2;
+
+  /* ---------- 描画ヘルパー ---------- */
+
+  function rr(c, x, y, w, h, r) {
+    const rad = Math.max(0, Math.min(r || 0, w / 2, h / 2));
+    c.beginPath();
+    c.moveTo(x + rad, y);
+    c.lineTo(x + w - rad, y);
+    c.arcTo(x + w, y, x + w, y + rad, rad);
+    c.lineTo(x + w, y + h - rad);
+    c.arcTo(x + w, y + h, x + w - rad, y + h, rad);
+    c.lineTo(x + rad, y + h);
+    c.arcTo(x, y + h, x, y + h - rad, rad);
+    c.lineTo(x, y + rad);
+    c.arcTo(x, y, x + rad, y, rad);
+    c.closePath();
+  }
+
+  function box(c, S, x, y, w, h, r, fill) {
+    rr(c, x, y, w, h, r);
+    c.fillStyle = fill || S.fill;
+    c.fill();
+    c.stroke();
+  }
+
+  function line(c, x1, y1, x2, y2) {
+    c.beginPath();
+    c.moveTo(x1, y1);
+    c.lineTo(x2, y2);
+    c.stroke();
+  }
+
+  function circle(c, S, x, y, r, fill, noStroke) {
+    c.beginPath();
+    c.arc(x, y, r, 0, TAU);
+    if (fill !== false) { c.fillStyle = fill || S.fill; c.fill(); }
+    if (!noStroke) c.stroke();
+  }
+
+  function ellipse(c, S, x, y, rx, ry, fill) {
+    c.beginPath();
+    c.ellipse(x, y, rx, ry, 0, 0, TAU);
+    if (fill !== false) { c.fillStyle = fill || S.fill; c.fill(); }
+    c.stroke();
+  }
+
+  function thin(c, S, factor = 0.6) { c.lineWidth = S.lw * factor; }
+  function normal(c, S) { c.lineWidth = S.lw; }
+
+  function dashed(c, S, on) {
+    c.setLineDash(on ? [S.lw * 3, S.lw * 2.5] : []);
+  }
+
+  function chair(c, S, x, y, w, h) {
+    box(c, S, x + w * 0.1, y + h * 0.18, w * 0.8, h * 0.72, w * 0.18);
+    thin(c, S);
+    box(c, S, x + w * 0.12, y + h * 0.02, w * 0.76, h * 0.22, w * 0.1);
+    normal(c, S);
+  }
+
+  function label(c, S, text, x, y, size, color) {
+    c.save();
+    c.fillStyle = color || S.line;
+    c.font = `800 ${size}px ${S.font}`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(text, x, y);
+    c.restore();
+  }
+
+  /* ---------- 構造 ---------- */
+
+  function stairs(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    const step = 0.5;
+    const n = Math.max(2, Math.round(h / step));
+    for (let i = 1; i < n; i++) line(c, 0, (h / n) * i, w, (h / n) * i);
+    // 上り方向の矢印（下から上へ）
+    normal(c, S);
+    c.strokeStyle = S.accentLine;
+    line(c, w / 2, h - 0.35, w / 2, 0.4);
+    c.beginPath();
+    c.moveTo(w / 2 - 0.3, 0.8);
+    c.lineTo(w / 2, 0.35);
+    c.lineTo(w / 2 + 0.3, 0.8);
+    c.stroke();
+    c.beginPath();
+    c.arc(w / 2, h - 0.35, 0.1, 0, TAU);
+    c.fillStyle = S.accentLine;
+    c.fill();
+  }
+
+  function stairsU(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    const land = Math.min(h * 0.4, w * 0.5);
+    const half = w / 2;
+    line(c, 0, land, w, land);
+    line(c, half, land, half, h);
+    const n = Math.max(2, Math.round((h - land) / 0.5));
+    for (let i = 1; i < n; i++) {
+      const y = land + ((h - land) / n) * i;
+      line(c, 0, y, w, y);
+    }
+    normal(c, S);
+    c.strokeStyle = S.accentLine;
+    c.beginPath();
+    c.moveTo(half / 2, h - 0.35);
+    c.lineTo(half / 2, land / 2);
+    c.lineTo(half + half / 2, land / 2);
+    c.lineTo(half + half / 2, h - 0.6);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(half + half / 2 - 0.3, h - 0.95);
+    c.lineTo(half + half / 2, h - 0.5);
+    c.lineTo(half + half / 2 + 0.3, h - 0.95);
+    c.stroke();
+  }
+
+  function spiral(c, S, w, h) {
+    const r = Math.min(w, h) / 2;
+    circle(c, S, w / 2, h / 2, r);
+    thin(c, S);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU;
+      line(c, w / 2 + Math.cos(a) * r * 0.2, h / 2 + Math.sin(a) * r * 0.2, w / 2 + Math.cos(a) * r, h / 2 + Math.sin(a) * r);
+    }
+    normal(c, S);
+    circle(c, S, w / 2, h / 2, r * 0.2, S.soft);
+  }
+
+  function elevator(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0, S.soft);
+    const m = Math.min(w, h) * 0.12;
+    box(c, S, m, m, w - m * 2, h - m * 2, 0);
+    thin(c, S);
+    line(c, m, m, w - m, h - m);
+    line(c, w - m, m, m, h - m);
+    normal(c, S);
+    line(c, w * 0.3, h - 0.02, w * 0.7, h - 0.02);
+  }
+
+  function pillar(c, S, w, h) {
+    rr(c, 0, 0, w, h, 0);
+    c.fillStyle = S.wall;
+    c.fill();
+  }
+
+  function fireplace(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0, S.soft);
+    box(c, S, w * 0.2, h * 0.15, w * 0.6, h * 0.6, 0.1, S.dark);
+    thin(c, S);
+    line(c, 0, h * 0.85, w, h * 0.85);
+  }
+
+  /* ---------- リビング ---------- */
+
+  function sofa(seats) {
+    return (c, S, w, h) => {
+      box(c, S, 0, 0, w, h, 0.25);
+      const arm = Math.min(0.4, w * 0.12);
+      const back = h * 0.26;
+      thin(c, S);
+      line(c, arm, back, w - arm, back);
+      line(c, arm, back, arm, h);
+      line(c, w - arm, back, w - arm, h);
+      const seatW = (w - arm * 2) / seats;
+      for (let i = 1; i < seats; i++) line(c, arm + seatW * i, back, arm + seatW * i, h - 0.05);
+      normal(c, S);
+    };
+  }
+
+  function sofaL(c, S, w, h) {
+    // L字ソファ（背面は上と左）
+    c.beginPath();
+    c.moveTo(0.15, 0);
+    c.lineTo(w - 0.15, 0);
+    c.quadraticCurveTo(w, 0, w, 0.15);
+    c.lineTo(w, 1.8);
+    c.lineTo(1.8, 1.8);
+    c.lineTo(1.8, h - 0.15);
+    c.quadraticCurveTo(1.8, h, 1.65, h);
+    c.lineTo(0.15, h);
+    c.quadraticCurveTo(0, h, 0, h - 0.15);
+    c.lineTo(0, 0.15);
+    c.quadraticCurveTo(0, 0, 0.15, 0);
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    c.beginPath();
+    c.moveTo(w - 0.35, 1.8);
+    c.lineTo(w - 0.35, 0.45);
+    c.lineTo(0.45, 0.45);
+    c.lineTo(0.45, h - 0.35);
+    c.lineTo(1.8, h - 0.35);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function armchair(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.3);
+    thin(c, S);
+    rr(c, w * 0.2, h * 0.3, w * 0.6, h * 0.65, 0.15);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function table(c, S, w, h) { box(c, S, 0, 0, w, h, 0.08); }
+
+  function tableRound(c, S, w, h) { ellipse(c, S, w / 2, h / 2, w / 2, h / 2); }
+
+  function lowtable(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.1);
+    thin(c, S);
+    rr(c, 0.18, 0.18, w - 0.36, h - 0.36, 0.05);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function dining(perSide) {
+    return (c, S, w, h) => {
+      const chairH = Math.min(1, h * 0.28);
+      const tableH = h - chairH * 2 + 0.3;
+      const tableY = chairH - 0.15;
+      const slot = w / perSide;
+      for (let i = 0; i < perSide; i++) {
+        const cx = slot * i + slot / 2;
+        chair(c, S, cx - 0.45, 0, 0.9, chairH);
+        c.save();
+        c.translate(cx, h);
+        c.rotate(Math.PI);
+        chair(c, S, -0.45, 0, 0.9, chairH);
+        c.restore();
+      }
+      box(c, S, 0.05, tableY, w - 0.1, tableH, 0.08);
+    };
+  }
+
+  function roundDining(c, S, w, h) {
+    const cx = w / 2, cy = h / 2;
+    const r = Math.min(w, h) * 0.28;
+    for (let i = 0; i < 4; i++) {
+      c.save();
+      c.translate(cx, cy);
+      c.rotate((i * Math.PI) / 2);
+      chair(c, S, -0.45, -Math.min(w, h) / 2, 0.9, 0.95);
+      c.restore();
+    }
+    circle(c, S, cx, cy, r);
+  }
+
+  function chairItem(c, S, w, h) { chair(c, S, 0, 0, w, h); }
+
+  function desk(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    thin(c, S);
+    line(c, w * 0.62, 0, w * 0.62, h);
+    line(c, w * 0.62, h * 0.5, w, h * 0.5);
+    normal(c, S);
+  }
+
+  function deskSet(c, S, w, h) {
+    const dh = h * 0.55;
+    // 椅子は机側を向く（背もたれは下）
+    c.save();
+    c.translate(w / 2, h);
+    c.rotate(Math.PI);
+    chair(c, S, -0.45, 0, 0.9, Math.min(1, h - dh + 0.2));
+    c.restore();
+    box(c, S, 0, 0, w, dh, 0.05);
+    thin(c, S);
+    rr(c, w * 0.3, 0.12, w * 0.4, 0.14, 0.03);
+    c.stroke();
+    rr(c, w * 0.3, dh * 0.55, w * 0.4, dh * 0.22, 0.03);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function bookshelf(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    const n = Math.max(1, Math.round(w / 1.2));
+    for (let i = 1; i < n; i++) line(c, (w / n) * i, 0, (w / n) * i, h);
+    // 本の背
+    c.strokeStyle = S.softLine;
+    for (let x = 0.12; x < w - 0.05; x += 0.16) line(c, x, h * 0.15, x, h * 0.8);
+    normal(c, S);
+  }
+
+  function cabinet(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    const n = Math.max(1, Math.round(w / 1));
+    for (let i = 1; i < n; i++) line(c, (w / n) * i, 0, (w / n) * i, h);
+    line(c, 0, h - 0.12, w, h - 0.12);
+    normal(c, S);
+  }
+
+  function tv(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    rr(c, w * 0.12, h * 0.3, w * 0.76, h * 0.22, 0.02);
+    c.fillStyle = S.dark;
+    c.fill();
+  }
+
+  function rug(c, S, w, h) {
+    rr(c, 0, 0, w, h, 0.15);
+    c.fillStyle = S.rug;
+    c.fill();
+    thin(c, S);
+    dashed(c, S, true);
+    rr(c, 0.25, 0.25, w - 0.5, h - 0.5, 0.1);
+    c.stroke();
+    dashed(c, S, false);
+    normal(c, S);
+  }
+
+  function plant(c, S, w, h) {
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+    c.save();
+    c.fillStyle = S.green;
+    c.strokeStyle = S.greenLine;
+    thin(c, S);
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * TAU;
+      c.beginPath();
+      c.ellipse(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5, r * 0.48, r * 0.22, a, 0, TAU);
+      c.fill();
+      c.stroke();
+    }
+    c.restore();
+    circle(c, S, cx, cy, r * 0.28, S.fill);
+  }
+
+  function lamp(c, S, w, h) {
+    const r = Math.min(w, h) / 2;
+    circle(c, S, w / 2, h / 2, r * 0.85);
+    thin(c, S);
+    line(c, w / 2 - r, h / 2, w / 2 + r, h / 2);
+    line(c, w / 2, h / 2 - r, w / 2, h / 2 + r);
+    normal(c, S);
+  }
+
+  function pianoGrand(c, S, w, h) {
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(w, 0);
+    c.lineTo(w, h * 0.55);
+    c.bezierCurveTo(w, h * 0.95, w * 0.62, h, w * 0.45, h * 0.86);
+    c.bezierCurveTo(w * 0.3, h * 0.72, 0, h * 0.8, 0, h * 0.45);
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    rr(c, w * 0.05, 0.05, w * 0.9, 0.5, 0.02);
+    c.fillStyle = S.soft;
+    c.fill();
+    thin(c, S);
+    c.stroke();
+    for (let x = w * 0.1; x < w * 0.92; x += 0.18) line(c, x, 0.05, x, 0.35);
+    normal(c, S);
+    // 椅子は鍵盤の手前（上）に置く想定なので描かない
+  }
+
+  function pianoUpright(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.03);
+    rr(c, 0.1, h * 0.6, w - 0.2, h * 0.35, 0.02);
+    c.fillStyle = S.soft;
+    c.fill();
+    thin(c, S);
+    c.stroke();
+    for (let x = 0.2; x < w - 0.1; x += 0.18) line(c, x, h * 0.6, x, h * 0.85);
+    normal(c, S);
+  }
+
+  /* ---------- 寝室 ---------- */
+
+  function bed(pillows) {
+    return (c, S, w, h) => {
+      box(c, S, 0, 0, w, h, 0.08);
+      thin(c, S);
+      const pw = (w - 0.3) / pillows;
+      for (let i = 0; i < pillows; i++) {
+        rr(c, 0.15 + pw * i + 0.06, 0.18, pw - 0.12, 0.55, 0.12);
+        c.stroke();
+      }
+      // 掛け布団の折り返し
+      c.beginPath();
+      c.moveTo(0, h * 0.3);
+      c.lineTo(w, h * 0.3);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(w, h * 0.3);
+      c.lineTo(w * 0.62, h * 0.3);
+      c.lineTo(w, h * 0.45);
+      c.stroke();
+      normal(c, S);
+    };
+  }
+
+  function futon(c, S, w, h) {
+    rr(c, 0, 0, w, h, 0.3);
+    c.fillStyle = S.fill;
+    c.fill();
+    thin(c, S);
+    c.stroke();
+    rr(c, w * 0.25, 0.2, w * 0.5, 0.5, 0.15);
+    c.stroke();
+    line(c, 0.1, h * 0.28, w - 0.1, h * 0.28);
+    normal(c, S);
+  }
+
+  function wardrobe(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    dashed(c, S, true);
+    line(c, 0.1, h / 2, w - 0.1, h / 2);
+    dashed(c, S, false);
+    for (let x = 0.35; x < w - 0.2; x += 0.35) line(c, x - 0.12, h / 2 - 0.25, x + 0.12, h / 2 + 0.25);
+    normal(c, S);
+  }
+
+  function dresser(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.03);
+    thin(c, S);
+    line(c, 0, h - 0.15, w, h - 0.15);
+    line(c, w / 2, 0, w / 2, h - 0.15);
+    normal(c, S);
+  }
+
+  function nightstand(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    thin(c, S);
+    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.25, false);
+    normal(c, S);
+  }
+
+  /* ---------- キッチン ---------- */
+
+  function burners(c, S, x, y, w, h, n) {
+    thin(c, S);
+    const r = Math.min(w / (n + 0.6), h) * 0.28;
+    for (let i = 0; i < n; i++) {
+      const cx = x + (w / n) * (i + 0.5);
+      circle(c, S, cx, y + h / 2, r, false);
+      circle(c, S, cx, y + h / 2, r * 0.45, false);
+    }
+    normal(c, S);
+  }
+
+  function basin(c, S, x, y, w, h) {
+    thin(c, S);
+    rr(c, x, y, w, h, Math.min(w, h) * 0.25);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    circle(c, S, x + w / 2, y + h * 0.35, 0.06, S.line, true);
+    normal(c, S);
+  }
+
+  function kitchen(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    // コンロ（左）とシンク（右）
+    const stoveW = Math.min(1.6, w * 0.34);
+    thin(c, S);
+    rr(c, 0.15, 0.15, stoveW, h - 0.3, 0.05);
+    c.stroke();
+    normal(c, S);
+    burners(c, S, 0.15, 0.15, stoveW, h - 0.3, 2);
+    const sinkW = Math.min(1.8, w * 0.36);
+    basin(c, S, w - sinkW - 0.35, 0.2, sinkW, h - 0.45);
+  }
+
+  function sinkItem(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    basin(c, S, 0.2, 0.2, w - 0.4, h - 0.45);
+  }
+
+  function stove(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    burners(c, S, 0.1, 0.1, w - 0.2, h - 0.2, Math.max(2, Math.round(w / 0.8)));
+  }
+
+  function fridge(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    thin(c, S);
+    line(c, 0.12, h - 0.18, w - 0.12, h - 0.18);
+    rr(c, 0.15, 0.15, w - 0.3, h - 0.45, 0.04);
+    c.stroke();
+    normal(c, S);
+    label(c, S, 'R', w / 2, (h - 0.3) / 2 + 0.08, Math.min(w, h) * 0.42, S.softLine);
+  }
+
+  function island(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    thin(c, S);
+    rr(c, 0.15, 0.15, w - 0.3, h - 0.3, 0.03);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function counterBar(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    thin(c, S);
+    line(c, 0, h * 0.3, w, h * 0.3);
+    normal(c, S);
+  }
+
+  /* ---------- 水回り ---------- */
+
+  function toilet(c, S, w, h) {
+    box(c, S, w * 0.08, 0, w * 0.84, h * 0.3, 0.06);
+    ellipse(c, S, w / 2, h * 0.62, w * 0.42, h * 0.36);
+    thin(c, S);
+    ellipse(c, S, w / 2, h * 0.64, w * 0.25, h * 0.22, false);
+    normal(c, S);
+  }
+
+  function washbasin(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.04);
+    thin(c, S);
+    ellipse(c, S, w / 2, h * 0.55, w * 0.32, h * 0.3, S.water);
+    circle(c, S, w / 2, h * 0.14, 0.06, S.line, true);
+    normal(c, S);
+  }
+
+  function bathtub(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.12);
+    thin(c, S);
+    rr(c, 0.15, 0.15, w - 0.3, h - 0.3, Math.min(w, h) * 0.25);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    circle(c, S, w / 2, h - 0.45, 0.08, false);
+    normal(c, S);
+  }
+
+  function shower(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.02, S.water);
+    thin(c, S);
+    dashed(c, S, true);
+    line(c, 0, 0, w, h);
+    line(c, w, 0, 0, h);
+    dashed(c, S, false);
+    circle(c, S, w / 2, h / 2, 0.14, S.fill);
+    normal(c, S);
+  }
+
+  function washer(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.06);
+    thin(c, S);
+    circle(c, S, w / 2, h / 2 + 0.05, Math.min(w, h) * 0.32, S.soft);
+    line(c, 0.1, 0.22, w - 0.1, 0.22);
+    normal(c, S);
+  }
+
+  function unitbath(c, S, w, h) {
+    // 浴槽＋洗い場のユニットバス（浴槽が上）
+    box(c, S, 0, 0, w, h, 0.05, S.water);
+    const tubH = Math.min(h * 0.45, 1.6);
+    box(c, S, 0.1, 0.1, w - 0.2, tubH, 0.15);
+    thin(c, S);
+    rr(c, 0.25, 0.25, w - 0.5, tubH - 0.3, 0.2);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    circle(c, S, w / 2, tubH + (h - tubH) / 2, 0.1, false);
+    normal(c, S);
+  }
+
+  /* ---------- オフィス・施設 ---------- */
+
+  function meeting(perSide) {
+    return dining(perSide);
+  }
+
+  function reception(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05, S.soft);
+    thin(c, S);
+    rr(c, 0.2, h * 0.45, w - 0.4, h * 0.4, 0.05);
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+  }
+
+  function locker(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    const n = Math.max(1, Math.round(w / 0.6));
+    for (let i = 1; i < n; i++) line(c, (w / n) * i, 0, (w / n) * i, h);
+    for (let i = 0; i < n; i++) line(c, (w / n) * i + 0.12, h * 0.25, (w / n) * (i + 1) - 0.12, h * 0.25);
+    normal(c, S);
+  }
+
+  function filing(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    line(c, 0.1, h - 0.14, w - 0.1, h - 0.14);
+    line(c, w / 2 - 0.15, h - 0.3, w / 2 + 0.15, h - 0.3);
+    normal(c, S);
+  }
+
+  function whiteboard(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.02);
+    thin(c, S);
+    line(c, 0.1, h / 2, w - 0.1, h / 2);
+    normal(c, S);
+  }
+
+  function copier(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    thin(c, S);
+    rr(c, 0.15, 0.15, w - 0.3, h * 0.45, 0.03);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+  }
+
+  function bench(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.08);
+    thin(c, S);
+    for (let y = h * 0.33; y < h - 0.05; y += h * 0.33) line(c, 0.08, y, w - 0.08, y);
+    normal(c, S);
+  }
+
+  function vending(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.03, S.soft);
+    thin(c, S);
+    rr(c, 0.15, h * 0.55, w - 0.3, h * 0.3, 0.02);
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+  }
+
+  function rack(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0, S.dark);
+    c.strokeStyle = S.fill;
+    thin(c, S);
+    for (let y = 0.25; y < h - 0.1; y += 0.25) line(c, 0.12, y, w - 0.12, y);
+    normal(c, S);
+  }
+
+  function labBench(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.03);
+    thin(c, S);
+    line(c, 0, h / 2, w, h / 2);
+    normal(c, S);
+    basin(c, S, w / 2 - 0.4, h / 2 - 0.35, 0.8, 0.7);
+  }
+
+  function tank(c, S, w, h) {
+    const r = Math.min(w, h) / 2;
+    circle(c, S, w / 2, h / 2, r, S.soft);
+    thin(c, S);
+    circle(c, S, w / 2, h / 2, r * 0.72, S.water);
+    for (let i = 0; i < 3; i++) circle(c, S, w / 2 + (i - 1) * r * 0.25, h / 2 + (i % 2 ? -1 : 1) * r * 0.2, r * 0.07, false);
+    normal(c, S);
+  }
+
+  /* ---------- 病院 ---------- */
+
+  function hospitalBed(c, S, w, h) {
+    box(c, S, 0.1, 0.12, w - 0.2, h - 0.2, 0.08);
+    c.fillStyle = S.line;
+    c.fillRect(0.05, 0, w - 0.1, 0.16);
+    c.fillRect(0.1, h - 0.12, w - 0.2, 0.1);
+    thin(c, S);
+    rr(c, w * 0.22, 0.32, w * 0.56, 0.5, 0.12);
+    c.stroke();
+    line(c, 0.1, h * 0.34, w - 0.1, h * 0.34);
+    normal(c, S);
+    c.strokeStyle = S.softLine;
+    line(c, 0.02, h * 0.25, 0.02, h * 0.62);
+    line(c, w - 0.02, h * 0.25, w - 0.02, h * 0.62);
+  }
+
+  function examBed(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.1);
+    thin(c, S);
+    line(c, 0, h * 0.25, w, h * 0.25);
+    rr(c, w * 0.18, 0.12, w * 0.64, h * 0.1, 0.08);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function opTable(c, S, w, h) {
+    // 手術台＋無影灯
+    thin(c, S);
+    dashed(c, S, true);
+    circle(c, S, w / 2, h / 2, Math.min(w, h * 0.5) * 0.48, false);
+    dashed(c, S, false);
+    normal(c, S);
+    box(c, S, w * 0.3, h * 0.08, w * 0.4, h * 0.84, 0.1);
+    thin(c, S);
+    line(c, w * 0.3, h * 0.28, w * 0.7, h * 0.28);
+    normal(c, S);
+  }
+
+  function medCabinet(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    line(c, w / 2, 0, w / 2, h);
+    normal(c, S);
+    c.fillStyle = S.red;
+    const s = Math.min(w, h) * 0.18;
+    c.fillRect(w / 4 - s / 2, h / 2 - s * 1.5, s, s * 3);
+    c.fillRect(w / 4 - s * 1.5, h / 2 - s / 2, s * 3, s);
+  }
+
+  function wheelchair(c, S, w, h) {
+    box(c, S, w * 0.22, h * 0.2, w * 0.56, h * 0.55, 0.06);
+    c.fillStyle = S.line;
+    c.fillRect(0, h * 0.2, w * 0.14, h * 0.6);
+    c.fillRect(w * 0.86, h * 0.2, w * 0.14, h * 0.6);
+    thin(c, S);
+    line(c, w * 0.22, h * 0.2, w * 0.78, h * 0.2);
+    circle(c, S, w * 0.3, h * 0.9, 0.08, false);
+    circle(c, S, w * 0.7, h * 0.9, 0.08, false);
+    normal(c, S);
+  }
+
+  function ivStand(c, S, w, h) {
+    const r = Math.min(w, h) / 2;
+    thin(c, S);
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * TAU;
+      line(c, w / 2, h / 2, w / 2 + Math.cos(a) * r, h / 2 + Math.sin(a) * r);
+    }
+    normal(c, S);
+    circle(c, S, w / 2, h / 2, r * 0.3, S.water);
+  }
+
+  function curtain(c, S, w, h) {
+    thin(c, S, 0.9);
+    c.strokeStyle = S.softLine;
+    c.beginPath();
+    const y = h / 2;
+    const amp = Math.min(0.12, h * 0.4);
+    for (let x = 0; x <= w + 1e-6; x += 0.05) {
+      const yy = y + Math.sin(x * 9) * amp;
+      if (x === 0) c.moveTo(x, yy); else c.lineTo(x, yy);
+    }
+    c.stroke();
+    normal(c, S);
+  }
+
+  function morgue(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0, S.soft);
+    const n = Math.max(1, Math.round(w / 1.4));
+    const dw = w / n;
+    thin(c, S);
+    for (let i = 0; i < n; i++) {
+      rr(c, dw * i + 0.12, 0.2, dw - 0.24, h - 0.4, 0.03);
+      c.fillStyle = S.fill;
+      c.fill();
+      c.stroke();
+      line(c, dw * i + dw / 2 - 0.2, h - 0.45, dw * i + dw / 2 + 0.2, h - 0.45);
+    }
+    normal(c, S);
+  }
+
+  /* ---------- 探索・ホラー ---------- */
+
+  function rand(seed) {
+    let s = seed >>> 0 || 1;
+    return () => {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+  }
+
+  function debris(c, S, w, h) {
+    const r = rand(7);
+    c.save();
+    thin(c, S);
+    for (let i = 0; i < 9; i++) {
+      const cx = 0.3 + r() * (w - 0.6);
+      const cy = 0.3 + r() * (h - 0.6);
+      const size = 0.18 + r() * 0.45;
+      c.beginPath();
+      const k = 4 + Math.floor(r() * 3);
+      for (let j = 0; j < k; j++) {
+        const a = (j / k) * TAU + r() * 0.5;
+        const rad = size * (0.6 + r() * 0.5);
+        const px = cx + Math.cos(a) * rad, py = cy + Math.sin(a) * rad;
+        if (j === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.closePath();
+      c.fillStyle = i % 3 === 0 ? S.dark : S.soft;
+      c.fill();
+      c.stroke();
+    }
+    c.restore();
+  }
+
+  function blood(c, S, w, h) {
+    const r = rand(13);
+    c.save();
+    c.fillStyle = S.blood;
+    c.beginPath();
+    const cx = w / 2, cy = h / 2, base = Math.min(w, h) * 0.32;
+    const k = 14;
+    for (let j = 0; j <= k; j++) {
+      const a = (j / k) * TAU;
+      const rad = base * (0.75 + r() * 0.45);
+      const px = cx + Math.cos(a) * rad * (w / Math.min(w, h)), py = cy + Math.sin(a) * rad * (h / Math.min(w, h));
+      if (j === 0) c.moveTo(px, py); else c.quadraticCurveTo(cx + Math.cos(a - 0.2) * rad * 1.15, cy + Math.sin(a - 0.2) * rad * 1.15, px, py);
+    }
+    c.closePath();
+    c.fill();
+    for (let i = 0; i < 6; i++) {
+      const a = r() * TAU;
+      const d = base * (1.25 + r() * 0.5);
+      c.beginPath();
+      c.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 0.05 + r() * 0.08, 0, TAU);
+      c.fill();
+    }
+    c.restore();
+  }
+
+  function body(c, S, w, h) {
+    // チョークで描いた人型の輪郭（上から見た図）
+    c.save();
+    c.strokeStyle = S.chalk;
+    c.lineWidth = S.lw * 1.3;
+    dashed(c, S, true);
+    const cx = w / 2;
+    c.beginPath();
+    c.arc(cx, h * 0.1, Math.min(w * 0.18, h * 0.08), 0, TAU);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(cx - w * 0.14, h * 0.19);
+    c.lineTo(cx - w * 0.44, h * 0.42);
+    c.lineTo(cx - w * 0.36, h * 0.46);
+    c.lineTo(cx - w * 0.14, h * 0.3);
+    c.lineTo(cx - w * 0.16, h * 0.55);
+    c.lineTo(cx - w * 0.3, h * 0.96);
+    c.lineTo(cx - w * 0.14, h * 0.97);
+    c.lineTo(cx, h * 0.62);
+    c.lineTo(cx + w * 0.14, h * 0.97);
+    c.lineTo(cx + w * 0.3, h * 0.96);
+    c.lineTo(cx + w * 0.16, h * 0.55);
+    c.lineTo(cx + w * 0.14, h * 0.3);
+    c.lineTo(cx + w * 0.4, h * 0.2);
+    c.lineTo(cx + w * 0.36, h * 0.14);
+    c.lineTo(cx + w * 0.14, h * 0.19);
+    c.closePath();
+    c.stroke();
+    c.restore();
+  }
+
+  function evidence(c, S, w, h, item) {
+    c.beginPath();
+    c.moveTo(w * 0.05, h * 0.9);
+    c.lineTo(w / 2, h * 0.08);
+    c.lineTo(w * 0.95, h * 0.9);
+    c.closePath();
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.stroke();
+    const text = (item && item.label) ? String(item.label).slice(0, 3) : '1';
+    label(c, S, text, w / 2, h * 0.62, Math.min(w, h) * 0.4, '#1d1d1d');
+  }
+
+  function magicCircle(c, S, w, h) {
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 0.05;
+    c.save();
+    c.strokeStyle = S.ritual;
+    c.lineWidth = S.lw * 1.2;
+    c.beginPath(); c.arc(cx, cy, r, 0, TAU); c.stroke();
+    c.lineWidth = S.lw * 0.7;
+    c.beginPath(); c.arc(cx, cy, r * 0.84, 0, TAU); c.stroke();
+    c.beginPath();
+    for (let i = 0; i <= 5; i++) {
+      const a = -Math.PI / 2 + (i * 2 * TAU) / 5;
+      const px = cx + Math.cos(a) * r * 0.84, py = cy + Math.sin(a) * r * 0.84;
+      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.stroke();
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * TAU;
+      c.beginPath();
+      c.arc(cx + Math.cos(a) * r * 0.92, cy + Math.sin(a) * r * 0.92, r * 0.035, 0, TAU);
+      c.stroke();
+    }
+    c.beginPath(); c.arc(cx, cy, r * 0.22, 0, TAU); c.stroke();
+    c.restore();
+  }
+
+  function altar(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.03, S.soft);
+    c.fillStyle = S.ritualSoft;
+    c.fillRect(w * 0.35, 0, w * 0.3, h);
+    c.strokeRect(w * 0.35, 0, w * 0.3, h);
+    candleAt(c, S, w * 0.15, h * 0.35, 0.16);
+    candleAt(c, S, w * 0.85, h * 0.35, 0.16);
+  }
+
+  function candleAt(c, S, x, y, r) {
+    c.save();
+    const g = c.createRadialGradient(x, y, 0, x, y, r * 2.4);
+    g.addColorStop(0, 'rgba(255, 200, 90, 0.55)');
+    g.addColorStop(1, 'rgba(255, 200, 90, 0)');
+    c.fillStyle = g;
+    c.beginPath(); c.arc(x, y, r * 2.4, 0, TAU); c.fill();
+    c.restore();
+    circle(c, S, x, y, r, S.fill);
+    circle(c, S, x, y, r * 0.35, S.flame, true);
+  }
+
+  function candle(c, S, w, h) { candleAt(c, S, w / 2, h / 2, Math.min(w, h) * 0.28); }
+
+  function cage(c, S, w, h) {
+    c.save();
+    c.lineWidth = S.lw * 1.4;
+    c.strokeRect(0, 0, w, h);
+    thin(c, S, 0.9);
+    for (let x = 0.3; x < w - 0.1; x += 0.3) line(c, x, 0, x, h);
+    c.restore();
+  }
+
+  function crate(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0, S.wood);
+    thin(c, S);
+    line(c, 0, 0, w, h);
+    line(c, w, 0, 0, h);
+    rr(c, 0.12, 0.12, w - 0.24, h - 0.24, 0);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function barrel(c, S, w, h) {
+    const r = Math.min(w, h) / 2;
+    circle(c, S, w / 2, h / 2, r, S.wood);
+    thin(c, S);
+    circle(c, S, w / 2, h / 2, r * 0.75, false);
+    circle(c, S, w / 2, h / 2, r * 0.12, S.line);
+    normal(c, S);
+  }
+
+  function safe(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.04, S.dark);
+    c.strokeStyle = S.fill;
+    thin(c, S);
+    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.25, false);
+    line(c, w / 2, h / 2 - Math.min(w, h) * 0.25, w / 2, h / 2);
+    normal(c, S);
+  }
+
+  function glass(c, S, w, h) {
+    const r = rand(29);
+    c.save();
+    thin(c, S);
+    c.fillStyle = S.water;
+    for (let i = 0; i < 9; i++) {
+      const cx = 0.2 + r() * (w - 0.4), cy = 0.2 + r() * (h - 0.4);
+      const s = 0.1 + r() * 0.22;
+      const a = r() * TAU;
+      c.beginPath();
+      c.moveTo(cx + Math.cos(a) * s, cy + Math.sin(a) * s);
+      c.lineTo(cx + Math.cos(a + 2.2) * s * 0.7, cy + Math.sin(a + 2.2) * s * 0.7);
+      c.lineTo(cx + Math.cos(a + 4) * s, cy + Math.sin(a + 4) * s);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
+    c.restore();
+  }
+
+  function markerIcon(symbol, color) {
+    return (c, S, w, h) => {
+      const r = Math.min(w, h) / 2 - 0.04;
+      circle(c, S, w / 2, h / 2, r, S[color] || color);
+      label(c, S, symbol, w / 2, h / 2 + r * 0.06, r * 1.25, '#ffffff');
+    };
+  }
+
+  function danger(c, S, w, h) {
+    c.beginPath();
+    c.moveTo(w / 2, h * 0.06);
+    c.lineTo(w * 0.96, h * 0.92);
+    c.lineTo(w * 0.04, h * 0.92);
+    c.closePath();
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.stroke();
+    label(c, S, '!', w / 2, h * 0.64, Math.min(w, h) * 0.5, '#1d1d1d');
+  }
+
+  function footprints(c, S, w, h) {
+    c.fillStyle = S.dark;
+    const n = Math.max(2, Math.round(h / 0.7));
+    for (let i = 0; i < n; i++) {
+      const x = w / 2 + (i % 2 ? 0.18 : -0.18) * (w / 1);
+      const y = h - (h / n) * (i + 0.5);
+      c.beginPath();
+      c.ellipse(x, y, Math.min(0.12, w * 0.15), Math.min(0.24, h / n * 0.4), 0, 0, TAU);
+      c.fill();
+    }
+  }
+
+  function coffin(c, S, w, h) {
+    c.beginPath();
+    c.moveTo(w * 0.3, 0);
+    c.lineTo(w * 0.7, 0);
+    c.lineTo(w, h * 0.25);
+    c.lineTo(w * 0.72, h);
+    c.lineTo(w * 0.28, h);
+    c.lineTo(0, h * 0.25);
+    c.closePath();
+    c.fillStyle = S.wood;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    line(c, w / 2, h * 0.15, w / 2, h * 0.45);
+    line(c, w * 0.38, h * 0.24, w * 0.62, h * 0.24);
+    normal(c, S);
+  }
+
+  function tape(c, S, w, h) {
+    c.save();
+    c.fillStyle = S.yellow;
+    c.fillRect(0, 0, w, h);
+    c.beginPath();
+    c.rect(0, 0, w, h);
+    c.clip();
+    c.fillStyle = '#1d1d1d';
+    for (let x = -h; x < w + h; x += h * 2.2) {
+      c.beginPath();
+      c.moveTo(x, h);
+      c.lineTo(x + h, 0);
+      c.lineTo(x + h * 1.8, 0);
+      c.lineTo(x + h * 0.8, h);
+      c.closePath();
+      c.fill();
+    }
+    c.restore();
+  }
+
+  /* ---------- 屋外 ---------- */
+
+  function car(c, S, w, h) {
+    box(c, S, 0.1, 0, w - 0.2, h, Math.min(w, h) * 0.22);
+    thin(c, S);
+    // フロントガラス・リアガラス
+    rr(c, 0.45, h * 0.28, w - 0.9, h * 0.12, 0.15);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    rr(c, 0.5, h * 0.72, w - 1, h * 0.09, 0.12);
+    c.fill();
+    c.stroke();
+    rr(c, 0.4, h * 0.42, w - 0.8, h * 0.28, 0.1);
+    c.stroke();
+    // ミラー
+    c.fillStyle = S.line;
+    c.fillRect(0, h * 0.3, 0.12, 0.25);
+    c.fillRect(w - 0.12, h * 0.3, 0.12, 0.25);
+    normal(c, S);
+  }
+
+  function tree(c, S, w, h) {
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 0.05;
+    c.save();
+    c.fillStyle = S.green;
+    c.strokeStyle = S.greenLine;
+    thin(c, S);
+    c.beginPath();
+    const k = 9;
+    for (let i = 0; i <= k; i++) {
+      const a = (i / k) * TAU;
+      const px = cx + Math.cos(a) * r * 0.82, py = cy + Math.sin(a) * r * 0.82;
+      if (i === 0) c.moveTo(px, py);
+      else c.quadraticCurveTo(cx + Math.cos(a - Math.PI / k) * r * 1.12, cy + Math.sin(a - Math.PI / k) * r * 1.12, px, py);
+    }
+    c.fill();
+    c.stroke();
+    c.beginPath(); c.arc(cx, cy, r * 0.1, 0, TAU); c.fillStyle = S.greenLine; c.fill();
+    c.restore();
+  }
+
+  function bush(c, S, w, h) {
+    c.save();
+    c.fillStyle = S.green;
+    c.strokeStyle = S.greenLine;
+    thin(c, S);
+    const r = Math.min(w, h) / 2;
+    [[0.5, 0.35], [0.3, 0.6], [0.7, 0.62], [0.5, 0.7]].forEach(([px, py]) => {
+      c.beginPath();
+      c.arc(w * px, h * py, r * 0.42, 0, TAU);
+      c.fill();
+      c.stroke();
+    });
+    c.restore();
+  }
+
+  function outdoorBench(c, S, w, h) { bench(c, S, w, h); }
+
+  /* ---------- カタログ ---------- */
+
+  const GROUPS = [
+    { id: 'structure', name: { ja: '階段・構造', en: 'Stairs & structure', ko: '계단·구조' } },
+    { id: 'living', name: { ja: 'リビング', en: 'Living', ko: '거실' } },
+    { id: 'bedroom', name: { ja: '寝室', en: 'Bedroom', ko: '침실' } },
+    { id: 'kitchen', name: { ja: 'キッチン', en: 'Kitchen', ko: '주방' } },
+    { id: 'bath', name: { ja: '水回り', en: 'Bath & WC', ko: '욕실·화장실' } },
+    { id: 'office', name: { ja: 'オフィス・施設', en: 'Office & facility', ko: '사무·시설' } },
+    { id: 'medical', name: { ja: '病院・研究', en: 'Hospital & lab', ko: '병원·연구' } },
+    { id: 'horror', name: { ja: '探索・ホラー', en: 'Investigation & horror', ko: '탐색·호러' } },
+    { id: 'outdoor', name: { ja: '屋外', en: 'Outdoor', ko: '옥외' } }
+  ];
+
+  const A = (id, group, w, h, draw, name, extra) => ({ id, group, w, h, draw, name, ...(extra || {}) });
+
+  const ASSETS = [
+    A('stairs', 'structure', 2, 5, stairs, { ja: '階段', en: 'Stairs', ko: '계단' }),
+    A('stairs_u', 'structure', 5, 5, stairsU, { ja: '折り返し階段', en: 'U-turn stairs', ko: '꺾인 계단' }),
+    A('spiral', 'structure', 4, 4, spiral, { ja: '螺旋階段', en: 'Spiral stairs', ko: '나선 계단' }),
+    A('elevator', 'structure', 4, 4, elevator, { ja: 'エレベーター', en: 'Elevator', ko: '엘리베이터' }),
+    A('pillar', 'structure', 1, 1, pillar, { ja: '柱', en: 'Pillar', ko: '기둥' }),
+    A('fireplace', 'structure', 3, 1.2, fireplace, { ja: '暖炉', en: 'Fireplace', ko: '벽난로' }),
+
+    A('sofa2', 'living', 3.2, 1.8, sofa(2), { ja: 'ソファ（2人掛け）', en: 'Sofa (2 seats)', ko: '소파(2인)' }),
+    A('sofa3', 'living', 4.4, 1.8, sofa(3), { ja: 'ソファ（3人掛け）', en: 'Sofa (3 seats)', ko: '소파(3인)' }),
+    A('sofaL', 'living', 5, 4, sofaL, { ja: 'L字ソファ', en: 'L-shaped sofa', ko: 'L자 소파' }),
+    A('armchair', 'living', 1.8, 1.8, armchair, { ja: '一人掛けチェア', en: 'Armchair', ko: '1인용 의자' }),
+    A('lowtable', 'living', 2.2, 1.2, lowtable, { ja: 'ローテーブル', en: 'Coffee table', ko: '낮은 테이블' }),
+    A('dining2', 'living', 2.2, 3.2, dining(1), { ja: 'ダイニング（2人）', en: 'Dining set (2)', ko: '식탁 세트(2인)' }),
+    A('dining4', 'living', 3, 3.4, dining(2), { ja: 'ダイニング（4人）', en: 'Dining set (4)', ko: '식탁 세트(4인)' }),
+    A('dining6', 'living', 4.4, 3.4, dining(3), { ja: 'ダイニング（6人）', en: 'Dining set (6)', ko: '식탁 세트(6인)' }),
+    A('dining_round', 'living', 3.4, 3.4, roundDining, { ja: '丸テーブル（4人）', en: 'Round table (4)', ko: '원형 테이블(4인)' }),
+    A('table', 'living', 2.8, 1.6, table, { ja: 'テーブル', en: 'Table', ko: '테이블' }),
+    A('table_round', 'living', 1.8, 1.8, tableRound, { ja: '丸テーブル', en: 'Round table', ko: '원형 테이블' }),
+    A('chair', 'living', 1, 1, chairItem, { ja: '椅子', en: 'Chair', ko: '의자' }),
+    A('tv', 'living', 3.2, 0.9, tv, { ja: 'テレビ台', en: 'TV stand', ko: 'TV 받침대' }),
+    A('bookshelf', 'living', 3, 0.8, bookshelf, { ja: '本棚', en: 'Bookshelf', ko: '책장' }),
+    A('cabinet', 'living', 3, 1, cabinet, { ja: '棚・キャビネット', en: 'Cabinet', ko: '수납장' }),
+    A('rug', 'living', 4, 3, rug, { ja: 'ラグ', en: 'Rug', ko: '러그' }, { under: true }),
+    A('plant', 'living', 1.2, 1.2, plant, { ja: '観葉植物', en: 'Plant', ko: '화분' }),
+    A('lamp', 'living', 0.9, 0.9, lamp, { ja: 'フロアランプ', en: 'Floor lamp', ko: '스탠드' }),
+    A('piano', 'living', 3, 3.8, pianoGrand, { ja: 'グランドピアノ', en: 'Grand piano', ko: '그랜드 피아노' }),
+    A('piano_up', 'living', 3, 1.3, pianoUpright, { ja: 'アップライトピアノ', en: 'Upright piano', ko: '업라이트 피아노' }),
+
+    A('bed_single', 'bedroom', 2, 4, bed(1), { ja: 'シングルベッド', en: 'Single bed', ko: '싱글 침대' }),
+    A('bed_double', 'bedroom', 2.8, 4, bed(2), { ja: 'ダブルベッド', en: 'Double bed', ko: '더블 침대' }),
+    A('futon', 'bedroom', 2, 4, futon, { ja: '布団', en: 'Futon', ko: '이불(요)' }),
+    A('wardrobe', 'bedroom', 3, 1.2, wardrobe, { ja: 'クローゼット・洋服ダンス', en: 'Wardrobe', ko: '옷장' }),
+    A('dresser', 'bedroom', 2, 0.9, dresser, { ja: 'チェスト・ドレッサー', en: 'Dresser', ko: '서랍장' }),
+    A('nightstand', 'bedroom', 0.9, 0.9, nightstand, { ja: 'ナイトテーブル', en: 'Nightstand', ko: '협탁' }),
+    A('desk', 'bedroom', 2.4, 1.2, desk, { ja: '机', en: 'Desk', ko: '책상' }),
+    A('desk_set', 'bedroom', 2.4, 2.4, deskSet, { ja: '机と椅子', en: 'Desk & chair', ko: '책상과 의자' }),
+
+    A('kitchen', 'kitchen', 5, 1.3, kitchen, { ja: 'システムキッチン', en: 'Kitchen counter', ko: '시스템 키친' }),
+    A('sink', 'kitchen', 2, 1.3, sinkItem, { ja: 'シンク', en: 'Sink', ko: '싱크대' }),
+    A('stove', 'kitchen', 2, 1.3, stove, { ja: 'コンロ', en: 'Stove', ko: '가스레인지' }),
+    A('fridge', 'kitchen', 1.4, 1.4, fridge, { ja: '冷蔵庫', en: 'Refrigerator', ko: '냉장고' }),
+    A('island', 'kitchen', 4, 2, island, { ja: 'キッチンカウンター（アイランド）', en: 'Kitchen island', ko: '아일랜드 식탁' }),
+    A('counter', 'kitchen', 4, 1.2, counterBar, { ja: 'カウンター・作業台', en: 'Counter', ko: '카운터·작업대' }),
+    A('cupboard', 'kitchen', 3, 0.9, cabinet, { ja: '食器棚', en: 'Cupboard', ko: '찬장' }),
+
+    A('toilet', 'bath', 1, 1.6, toilet, { ja: 'トイレ', en: 'Toilet', ko: '변기' }),
+    A('washbasin', 'bath', 1.6, 1.1, washbasin, { ja: '洗面台', en: 'Washbasin', ko: '세면대' }),
+    A('bathtub', 'bath', 1.6, 3, bathtub, { ja: '浴槽', en: 'Bathtub', ko: '욕조' }),
+    A('unitbath', 'bath', 3, 3.2, unitbath, { ja: 'ユニットバス', en: 'Bathtub & wash area', ko: '욕조+씻는 곳' }),
+    A('shower', 'bath', 1.8, 1.8, shower, { ja: 'シャワー', en: 'Shower', ko: '샤워' }),
+    A('washer', 'bath', 1.3, 1.3, washer, { ja: '洗濯機', en: 'Washing machine', ko: '세탁기' }),
+
+    A('office_desk', 'office', 2.4, 1.4, desk, { ja: '事務机', en: 'Office desk', ko: '사무용 책상' }),
+    A('meeting6', 'office', 4.8, 3.6, meeting(3), { ja: '会議テーブル（6人）', en: 'Meeting table (6)', ko: '회의 테이블(6인)' }),
+    A('reception', 'office', 5, 1.4, reception, { ja: '受付カウンター', en: 'Reception desk', ko: '접수 카운터' }),
+    A('locker', 'office', 3, 1, locker, { ja: 'ロッカー', en: 'Lockers', ko: '사물함' }),
+    A('filing', 'office', 1, 1.2, filing, { ja: '書類棚', en: 'Filing cabinet', ko: '서류함' }),
+    A('whiteboard', 'office', 3, 0.4, whiteboard, { ja: 'ホワイトボード・黒板', en: 'Whiteboard', ko: '화이트보드' }),
+    A('copier', 'office', 1.4, 1.2, copier, { ja: 'コピー機', en: 'Copier', ko: '복사기' }),
+    A('bench', 'office', 4, 1, bench, { ja: 'ベンチ・長椅子', en: 'Bench', ko: '벤치' }),
+    A('vending', 'office', 2, 1.4, vending, { ja: '自動販売機', en: 'Vending machine', ko: '자판기' }),
+
+    A('hospital_bed', 'medical', 2.2, 4.2, hospitalBed, { ja: '病院ベッド', en: 'Hospital bed', ko: '병원 침대' }),
+    A('exam_bed', 'medical', 1.4, 3.6, examBed, { ja: '診察台', en: 'Exam bed', ko: '진찰대' }),
+    A('op_table', 'medical', 3, 4.4, opTable, { ja: '手術台', en: 'Operating table', ko: '수술대' }),
+    A('med_cabinet', 'medical', 3, 1, medCabinet, { ja: '薬品棚', en: 'Medicine cabinet', ko: '약품장' }),
+    A('wheelchair', 'medical', 1.3, 1.4, wheelchair, { ja: '車椅子', en: 'Wheelchair', ko: '휠체어' }),
+    A('iv_stand', 'medical', 0.7, 0.7, ivStand, { ja: '点滴スタンド', en: 'IV stand', ko: '링거대' }),
+    A('curtain', 'medical', 4, 0.3, curtain, { ja: 'カーテン（仕切り）', en: 'Privacy curtain', ko: '칸막이 커튼' }),
+    A('morgue', 'medical', 4.2, 2.4, morgue, { ja: '遺体安置庫', en: 'Morgue drawers', ko: '시신 보관함' }),
+    A('lab_bench', 'medical', 4, 1.6, labBench, { ja: '実験台', en: 'Lab bench', ko: '실험대' }),
+    A('tank', 'medical', 2.4, 2.4, tank, { ja: '培養槽・タンク', en: 'Specimen tank', ko: '배양조·탱크' }),
+    A('rack', 'medical', 1.4, 2, rack, { ja: 'サーバーラック', en: 'Server rack', ko: '서버 랙' }),
+
+    A('evidence', 'horror', 0.9, 0.9, evidence, { ja: '証拠マーカー', en: 'Evidence marker', ko: '증거 마커' }, { labelInside: true }),
+    A('clue', 'horror', 1, 1, markerIcon('?', 'blue'), { ja: '手がかり（？）', en: 'Clue marker (?)', ko: '단서 마커(?)' }),
+    A('danger', 'horror', 1, 1, danger, { ja: '危険（！）', en: 'Danger (!)', ko: '위험(!)' }),
+    A('blood', 'horror', 2, 2, blood, { ja: '血痕', en: 'Bloodstain', ko: '핏자국' }, { under: true }),
+    A('body', 'horror', 2.2, 4, body, { ja: '人型の輪郭', en: 'Body outline', ko: '사람 윤곽' }, { under: true }),
+    A('footprints', 'horror', 1, 3, footprints, { ja: '足跡', en: 'Footprints', ko: '발자국' }, { under: true }),
+    A('debris', 'horror', 3, 2.4, debris, { ja: '瓦礫', en: 'Debris', ko: '잔해' }),
+    A('glass', 'horror', 1.6, 1.6, glass, { ja: '割れたガラス', en: 'Broken glass', ko: '깨진 유리' }, { under: true }),
+    A('magic_circle', 'horror', 5, 5, magicCircle, { ja: '魔法陣', en: 'Ritual circle', ko: '마법진' }, { under: true }),
+    A('altar', 'horror', 3, 1.6, altar, { ja: '祭壇', en: 'Altar', ko: '제단' }),
+    A('candle', 'horror', 0.8, 0.8, candle, { ja: '燭台', en: 'Candle', ko: '촛대' }),
+    A('cage', 'horror', 3, 3, cage, { ja: '檻・鉄格子', en: 'Cage', ko: '우리·쇠창살' }),
+    A('coffin', 'horror', 1.8, 4, coffin, { ja: '棺', en: 'Coffin', ko: '관' }),
+    A('crate', 'horror', 1.6, 1.6, crate, { ja: '木箱', en: 'Crate', ko: '나무 상자' }),
+    A('barrel', 'horror', 1.2, 1.2, barrel, { ja: '樽', en: 'Barrel', ko: '술통' }),
+    A('safe', 'horror', 1.2, 1.2, safe, { ja: '金庫', en: 'Safe', ko: '금고' }),
+    A('tape', 'horror', 6, 0.35, tape, { ja: '立入禁止テープ', en: 'Police tape', ko: '출입금지 테이프' }),
+
+    A('car', 'outdoor', 4, 9, car, { ja: '自動車', en: 'Car', ko: '자동차' }),
+    A('tree', 'outdoor', 3, 3, tree, { ja: '木', en: 'Tree', ko: '나무' }),
+    A('bush', 'outdoor', 1.6, 1.6, bush, { ja: '植え込み', en: 'Shrub', ko: '관목' }),
+    A('garden_bench', 'outdoor', 3, 1, outdoorBench, { ja: '屋外ベンチ', en: 'Garden bench', ko: '옥외 벤치' })
+  ];
+
+  const BY_ID = Object.fromEntries(ASSETS.map(a => [a.id, a]));
+
+  global.IMM = global.IMM || {};
+  Object.assign(global.IMM, { ASSET_GROUPS: GROUPS, ASSETS, ASSET: BY_ID, drawHelpers: { rr } });
+})(window);
