@@ -552,7 +552,7 @@
           inFx: 'fade', inDur: 0.6, hold: 1.6, outFx: 'fade', outDur: 0.6
         }
       },
-      // シーン・時間：物語の構成（章・プロローグ・エピローグ・幕間・回想）→ 日付（一日目・一日後・最終日）→ 時刻（翌朝・真夜中・時間経過）→ 場面の切り替え（一方その頃）
+      // シーン・時間：物語の構成（章・プロローグ・エピローグ・幕間・回想）→ 日付（一日目・一日後・最終日）→ 時刻（翌朝・真夜中・時間経過）
       {
         id: 'chapter', group: 'scene', icon: 'book', label: T('章タイトル', 'Chapter'),
         text: T('第一章', 'CHAPTER I'), subText: T('「目覚めの夜」', '“The Night of Awakening”'),
@@ -664,20 +664,6 @@
           shadow: { on: true, color: '#000000', opacity: 0.8, blur: 12, x: 0, y: 3 }, glow: { on: false },
           deco: { type: 'sides', color2: '#f2f2f2', pad: 0.55, extend: 2.6, thickness: 1.5, anim: 'grow', dur: 1.0 },
           inFx: 'fade', inDur: 1.0, inStagger: 0.06, hold: 1.5, outFx: 'fade', outDur: 0.9, subFx: 'fade', subDelay: -0.2
-        }
-      },
-      {
-        // 別行動の場面へ：上下の線が中央から伸び、文字が左から現れて右へ消える
-        id: 'meanwhile', group: 'scene', icon: 'shuffle', label: T('一方その頃', 'Meanwhile'),
-        text: T('一方その頃', 'MEANWHILE'), subText: T('MEANWHILE', 'ELSEWHERE...'),
-        patch: {
-          fontId: 'noto-serif-jp', weight: 700, fontSize: 100, letterSpacing: 0.3,
-          subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.7, subGap: 0.45,
-          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.8, blur: 12, x: 0, y: 4 }, glow: { on: false },
-          subColorOn: true, subColor: '#c8ced8',
-          deco: { type: 'lines', color2: '#e6e9ef', pad: 0.35, extend: 1.0, thickness: 1.5, anim: 'grow', dur: 0.6 },
-          inFx: 'wipe', inDir: 'lr', inDur: 0.9, hold: 1.6, outFx: 'wipe', outDir: 'lr', outDur: 0.7, subFx: 'fade', subDelay: -0.2
         }
       },
       {
