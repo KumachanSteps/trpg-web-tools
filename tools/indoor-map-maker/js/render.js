@@ -809,11 +809,13 @@
 
     // 下の階（うっすら表示）
     if (opts.ghost) {
-      const g = M.computeWalls(opts.ghost, { playerView: opts.playerView });
+      // PL表示ではGM専用の部屋・家具を下の階からも除く
+      const ghost = M.visibleFloor(opts.ghost, opts.playerView);
+      const g = M.computeWalls(ghost, { playerView: opts.playerView });
       c.save();
       c.globalAlpha = 0.14;
       g.runs.forEach(run => drawRun(c, run, { ...theme, wall: theme.gm, rail: theme.gm }, lw, false));
-      opts.ghost.items.forEach(item => {
+      ghost.items.forEach(item => {
         if (item.t === 'stairs' || item.t === 'stairs_u' || item.t === 'spiral' || item.t === 'elevator') drawItem(c, item, theme, lw, { editor: false });
       });
       c.restore();
