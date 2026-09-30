@@ -105,10 +105,12 @@
   const SOLO_CACHE_PIXELS = 24e6;
   // 書き出しのフレーム時刻がちょうど切り替わりの瞬間に来ても、丸め誤差で1コマずれないようにする幅
   const TIME_EPS = 1e-6;
-  // 「中央から左右に広がる」：重なった文字が現れるまでの時間（秒）と、重なりのばらけ具合
-  // （本来の位置までの距離の何割だけ左右にずらして重ねるか。0 だと中央の一点に集まる）
+  // 「中央から左右に広がる」：重なった文字が現れるまでの時間（秒）と、重なりのばらけ具合。
+  // 本来の位置までの距離の SPREAD_LOOSE 割だけ左右にずらして重ねる（0 だと中央の一点に集まる）。
+  // ただし重なりの広がり（中央から片側）は文字の大きさの SPREAD_REACH 倍までにして、長い行でも中央にまとめる
   const SPREAD_APPEAR = 0.25;
   const SPREAD_LOOSE = 0.2;
+  const SPREAD_REACH = 0.9;
   // 表示中の「点滅」：1回の周期（秒）と、その中で付いている割合
   const BLINK_PERIOD = 0.5;
   const BLINK_ON = 0.6;
@@ -201,7 +203,7 @@
         const appear = clamp(p / 0.18);
         const q = clamp((p - 0.42) / 0.58);
         const m = info.ease ? info.ease(q) : EASE.outQuart(q);
-        const d = -g.lineOffset * (1 - m) * (1 - SPREAD_LOOSE);
+        const d = -g.lineOffset * (1 - m) * (1 - spreadLoose(g.lineReach, g.size));
         if (info.vertical) st.y += d; else st.x += d;
         st.a *= EASE.outQuad(appear) * lerp(stackAlpha(g), 1, m);
         st.s *= 1 + 0.25 * k * (1 - EASE.outCubic(appear));
@@ -386,6 +388,11 @@
   }
 
   // 効果ごとに使える方向だけを通す（別の効果で選んだ方向が残っていても破綻しない）
+  // 「中央から左右に広がる」で重なるときのばらけ具合（reach：行の中で中央からいちばん遠い文字までの距離）
+  function spreadLoose(reach, size) {
+    return reach > 0 ? Math.min(SPREAD_LOOSE, SPREAD_REACH * size / reach) : SPREAD_LOOSE;
+  }
+
   // 「中央から左右に広がる」で重なっている間の不透明度（文字が多い行ほど薄くして、重なりが透けて見えるようにする）
   function stackAlpha(g) {
     return clamp(1.8 / Math.sqrt(Math.max(1, g.lineCount || 1)), 0.3, 1);
@@ -491,6 +498,7 @@
             penX, baseline: row.baseline, inkA: row.inkA, inkD: row.inkD
           });
         });
+        setLineReach(glyphs, lineIdx);
         lineInfos.push({ idx: lineIdx, x0, x1: x0 + row.lineW, baseline: row.baseline, inkA: row.inkA, inkD: row.inkD, visible: row.visible });
       });
       let inkA = 0, inkD = 0;
@@ -551,10 +559,17 @@
         });
         pos += adv + ls * size;
       });
+      setLineReach(glyphs, lineIdx);
       lineInfos.push({ idx: lineIdx, x0: cxCol - size / 2, x1: cxCol + size / 2, top, bottom: top + lens[ci], visible: chars.some(ch => !isBlank(ch)) });
     });
     const x0 = cols.length ? -(cols.length - 1) * pitch - size / 2 : -size / 2;
     return { glyphs, lines: lineInfos, box: { x0, y0: 0, x1: size / 2, y1: Math.max(maxLen, size * 0.1) }, metrics: { inkA: size / 2, inkD: size / 2 } };
+  }
+
+  // 行の中央からいちばん遠い文字までの距離（「中央から左右に広がる」の重なりの広がりに使う）
+  function setLineReach(glyphs, idx) {
+    const reach = Math.max(0, ...idx.map(i => (glyphs[i].blank ? 0 : Math.abs(glyphs[i].lineOffset))));
+    idx.forEach(i => { glyphs[i].lineReach = reach; });
   }
 
   function shiftGroup(group, dx, dy) {
@@ -899,6 +914,12 @@
           const start = textStart + SPREAD_APPEAR + stackHold;
           mainG.forEach(g => { T.inStart[g.index] = textStart; T.inDur[g.index] = 0; T.inFx[g.index] = null; });
           pg.spread = { appear: textStart, start, dur, cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2 };
+          // 行ごとのばらけ具合（中央からいちばん遠い文字までの距離で決める）
+          page.mainLines.forEach(line => {
+            const list = line.idx.map(i => glyphs[i]).filter(g => !g.blank);
+            const reach = Math.max(0, ...list.map(g => Math.abs(g.vertical ? g.cy - pg.spread.cy : g.cx - pg.spread.cx)));
+            list.forEach(g => { g.spreadLoose = spreadLoose(reach, g.size); });
+          });
           inEnd = start + dur;
         } else if (reveal === 'solo') {
           // 1文字ずつ画面の中央に大きく出してから、全文を一度に出す。空白と改行は1拍あける（続いても1拍）
@@ -1382,7 +1403,7 @@
         const k = t < sp.start ? 0 : EASE.outQuart(clamp((t - sp.start) / sp.dur));
         st.a = EASE.outQuad(a) * lerp(stackAlpha(g), 1, k);
         st.s = 1 + 0.25 * (1 - EASE.outCubic(a));
-        const pull = (1 - k) * (1 - SPREAD_LOOSE);
+        const pull = (1 - k) * (1 - (g.spreadLoose ?? SPREAD_LOOSE));
         if (g.vertical) st.y = (sp.cy - g.cy) * pull;
         else st.x = (sp.cx - g.cx) * pull;
       }
