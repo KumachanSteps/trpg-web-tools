@@ -1020,10 +1020,22 @@
       btn.addEventListener('click', () => applyTemplate(tpl));
       els.templateStrip.appendChild(btn);
     });
+    reserveTemplateRows();
     if (refocus) {
       const target = lists.map(list => list.querySelector(refocus)).find(Boolean);
       if (target) target.focus();
     }
+  }
+
+  // チップが1段で足りる分類（シーン・時間など）でも2段分の高さを確保し、分類を切り替えても下の設定タブが上下しないようにする。
+  // チップの高さは画面の拡大率で枠線の太さが変わるため、実際に並んだチップから測る
+  function reserveTemplateRows() {
+    const strip = els.templateStrip;
+    strip.style.minHeight = '';
+    const chip = strip.querySelector('.template-chip');
+    const height = chip ? chip.getBoundingClientRect().height : 0;
+    const gap = parseFloat(window.getComputedStyle(strip).rowGap) || 0;
+    strip.style.minHeight = height > 0 ? `${(height * 2 + gap).toFixed(2)}px` : '';
   }
 
   // テンプレートを場面に当てはめる。文章は新しいテンプレートの見本にしたうえで、書き換えた文章があれば戻す
@@ -1515,7 +1527,7 @@
     els.exportZipBtn.addEventListener('click', exportZip);
     els.cancelBtn.addEventListener('click', () => { view.cancel = true; });
     els.clearResultBtn.addEventListener('click', () => { clearResult(); els.status.textContent = ''; });
-    window.addEventListener('resize', () => layoutStage());
+    window.addEventListener('resize', () => { layoutStage(); reserveTemplateRows(); });
     if ('ResizeObserver' in window) new ResizeObserver(() => layoutStage()).observe(els.stageWrap);
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && view.playing) pause();

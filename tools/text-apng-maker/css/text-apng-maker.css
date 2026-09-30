@@ -505,7 +505,8 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 .template-system.is-active { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
 body.is-dark .template-system.is-active { color: #dfeeff; }
 
-.template-strip { display: flex; flex-wrap: wrap; gap: 4px; }
+/* 2段分の高さを確保しても（main.js の reserveTemplateRows）、段は上に詰めてチップ自体は伸ばさない */
+.template-strip { display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-start; gap: 4px; }
 
 .template-chip {
   display: inline-flex;
