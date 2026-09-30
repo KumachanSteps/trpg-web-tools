@@ -1131,16 +1131,22 @@
       .slice(0, 60);
   }
 
-  // 長い文章は16文字まで（句読点で区切れるならそこまで）
+  // 長い文章は16文字まで（句読点・ダッシュ・三点リーダーで区切れるならそこまで、欧文は単語の切れ目まで）。
+  // 末尾に残ったダッシュ・三点リーダーは除く
   function shortTitle(text) {
     const line = String(text || '').split('\n').map(l => l.trim()).find(Boolean) || '';
+    const tidy = str => str.replace(/[―—–…‥\s]+$/u, '').trim();
     const chars = E.graphemes(line);
-    if (chars.length <= 16) return line;
+    if (chars.length <= 16) return tidy(line) || line;
     const head = chars.slice(0, 16);
     for (let i = head.length - 1; i >= 3; i--) {
-      if (/[、。，．！？!?,.]/.test(head[i])) return head.slice(0, i).join('').trim();
+      if (/[、。，．！？!?,.―—…‥]/.test(head[i])) return tidy(head.slice(0, i).join(''));
     }
-    return head.join('').trim();
+    if (chars[16] !== ' ') {
+      const space = head.lastIndexOf(' ');
+      if (space >= 3) return tidy(head.slice(0, space).join(''));
+    }
+    return tidy(head.join(''));
   }
 
   // 左の設定（文章・登場の動き／表示方法・退場の有無）からファイル名の候補を作る
