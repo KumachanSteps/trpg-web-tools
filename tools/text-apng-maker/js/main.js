@@ -1000,16 +1000,7 @@
     }
     els.templateStrip.innerHTML = '';
     (P.TEMPLATES[app.mode] || []).filter(tpl => !groups || (tpl.group === group && (!system || tpl.system === system))).forEach(tpl => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'template-chip';
-      btn.dataset.template = tpl.id;
-      // アイコンは線画の SVG（システム別のチップはアイコンなし）
-      const icon = tpl.icon ? ICONS.create(tpl.icon, 'template-icon') : null;
-      if (icon) btn.appendChild(icon);
-      const name = document.createElement('span');
-      name.textContent = tpl.label[app.lang];
-      btn.appendChild(name);
+      const btn = templateChip(tpl);
       const on = s.templateId === tpl.id;
       btn.classList.toggle('is-active', on);
       btn.setAttribute('aria-pressed', String(on));
@@ -1023,15 +1014,62 @@
     }
   }
 
-  // チップが1段で足りる分類（シーン・時間など）でも2段分の高さを確保し、分類を切り替えても下の設定タブが上下しないようにする。
-  // チップの高さは画面の拡大率で枠線の太さが変わるため、実際に並んだチップから測る
+  // テンプレートのチップ（アイコンは線画の SVG。システム別のチップはアイコンなし）
+  function templateChip(tpl) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'template-chip';
+    btn.dataset.template = tpl.id;
+    const icon = tpl.icon ? ICONS.create(tpl.icon, 'template-icon') : null;
+    if (icon) btn.appendChild(icon);
+    const name = document.createElement('span');
+    name.textContent = tpl.label[app.lang];
+    btn.appendChild(name);
+    return btn;
+  }
+
+  // チップの少ない分類でも、モードの中でいちばん段数の多い分類（2段未満なら2段）に合わせて高さを確保し、
+  // 分類を切り替えても下の設定タブが上下しないようにする。チップの高さは画面の拡大率で枠線の太さが変わるため、実際に並んだチップから測る
   function reserveTemplateRows() {
     const strip = els.templateStrip;
     strip.style.minHeight = '';
     const chip = strip.querySelector('.template-chip');
     const height = chip ? chip.getBoundingClientRect().height : 0;
+    if (!(height > 0)) return;
     const gap = parseFloat(window.getComputedStyle(strip).rowGap) || 0;
-    strip.style.minHeight = height > 0 ? `${(height * 2 + gap).toFixed(2)}px` : '';
+    const rows = Math.max(2, maxTemplateRows());
+    strip.style.minHeight = `${(height * rows + gap * (rows - 1)).toFixed(2)}px`;
+  }
+
+  // モードの各分類（システムがあればシステムごと）のチップを見えない帯に並べて、いちばん多い段数を数える（モード・言語・幅ごとに覚える）
+  const rowsCache = { key: '', rows: 0 };
+  function maxTemplateRows() {
+    const strip = els.templateStrip;
+    if (!strip.clientWidth) return 2;
+    const key = `${app.mode}|${app.lang}|${strip.clientWidth}`;
+    if (rowsCache.key === key) return rowsCache.rows;
+    const all = P.TEMPLATES[app.mode] || [];
+    const groups = P.TEMPLATE_GROUPS[app.mode];
+    const sets = [];
+    if (!groups) sets.push(all);
+    else groups.forEach(g => {
+      if (g.systems) g.systems.forEach(sy => sets.push(all.filter(t => t.group === g.id && t.system === sy.id)));
+      else sets.push(all.filter(t => t.group === g.id));
+    });
+    const probe = document.createElement('div');
+    probe.className = 'template-strip';
+    probe.setAttribute('aria-hidden', 'true');
+    Object.assign(probe.style, { position: 'absolute', visibility: 'hidden', pointerEvents: 'none', left: '-10000px', top: '0', width: `${strip.clientWidth}px` });
+    strip.parentNode.appendChild(probe);
+    let rows = 1;
+    sets.forEach(list => {
+      probe.innerHTML = '';
+      list.forEach(tpl => probe.appendChild(templateChip(tpl)));
+      rows = Math.max(rows, new Set([...probe.children].map(c => Math.round(c.offsetTop))).size);
+    });
+    probe.remove();
+    Object.assign(rowsCache, { key, rows });
+    return rows;
   }
 
   // テンプレートを場面に当てはめる。文章は新しいテンプレートの見本にしたうえで、書き換えた文章があれば戻す

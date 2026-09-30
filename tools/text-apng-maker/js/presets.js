@@ -136,6 +136,28 @@
     inFx: 'drop', inDur: 0.55, inStagger: 0.1, inPower: 1.1, hold: 1.3, outFx: 'fade', outDur: 0.5
   };
 
+  // 章タイトル・プロローグ・エピローグは同じデザイン（光と下線の色だけが違う）
+  const CHAPTER_PATCH = {
+    fontId: 'shippori-mincho-b1', weight: 800, fontSize: 128, letterSpacing: 0.22,
+    subFontId: 'same', subWeight: 400, subSize: 0.3, subLetterSpacing: 0.15, subGap: 0.45,
+    fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.8, blur: 14, x: 0, y: 4 },
+    deco: { type: 'underline', color2: '#ffffff', pad: 0.3, extend: 0.5, thickness: 2, anim: 'grow', dur: 0.9 },
+    inFx: 'blurIn', inDur: 1.0, inStagger: 0.15, hold: 1.6, outFx: 'fade', outDur: 0.8, subFx: 'fade', subDelay: -0.2
+  };
+
+  // 一日目・最終日は同じデザイン
+  const DAY_PATCH = {
+    fontId: 'shippori-mincho-b1', weight: 800, fontSize: 150, letterSpacing: 0.3,
+    subFontId: 'same', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.5, subGap: 0.5,
+    fill: { type: 'solid', color: '#fff6e3' }, stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.75, blur: 14, x: 0, y: 4 },
+    glow: { on: true, color: '#ffcf7a', size: 22, strength: 0.45 },
+    subColorOn: true, subColor: '#e8c27a',
+    deco: { type: 'underline', color2: '#e0b35a', pad: 0.3, extend: 0.9, thickness: 2, anim: 'grow', dur: 0.9 },
+    inFx: 'rise', inDur: 1.1, inStagger: 0.12, hold: 1.6, outFx: 'fade', outDur: 0.8, subFx: 'fade', subDelay: -0.3
+  };
+
   // 判定結果は「戦闘開始」と同じタイトル枠の中に出す。
   // 成功は度合いが上がるほど明るく派手に（白 → 青い光 → 水色の強い光 → 金の閃光 → 虹色）、失敗は暗く沈み、ファンブルはさらに暗い赤に
   const DICE_FRAME = {
@@ -530,30 +552,106 @@
           inFx: 'fade', inDur: 0.6, hold: 1.6, outFx: 'fade', outDur: 0.6
         }
       },
+      // シーン・時間：物語の構成（章・プロローグ・エピローグ・幕間・回想）→ 日付（一日目・一日後・最終日）→ 時刻（翌朝・真夜中・時間経過）→ 場面の切り替え（一方その頃）
       {
         id: 'chapter', group: 'scene', icon: 'book', label: T('章タイトル', 'Chapter'),
         text: T('第一章', 'CHAPTER I'), subText: T('「目覚めの夜」', '“The Night of Awakening”'),
+        patch: CHAPTER_PATCH
+      },
+      {
+        // 章タイトルの姉妹版：夜明け前のような青白い光
+        id: 'prologue', group: 'scene', icon: 'feather', label: T('プロローグ', 'Prologue'),
+        text: T('プロローグ', 'PROLOGUE'), subText: T('「すべての始まり」', '“Where It All Began”'),
+        patch: { ...CHAPTER_PATCH, glow: { on: true, color: '#9fbaff', size: 22, strength: 0.5 }, deco: { ...CHAPTER_PATCH.deco, color2: '#c9d8ff' } }
+      },
+      {
+        // 章タイトルの姉妹版：物語を閉じる温かい光
+        id: 'epilogue', group: 'scene', icon: 'bookClosed', label: T('エピローグ', 'Epilogue'),
+        text: T('エピローグ', 'EPILOGUE'), subText: T('「そして、夜が明ける」', '“And So the Night Ends”'),
+        patch: { ...CHAPTER_PATCH, glow: { on: true, color: '#ffd59a', size: 22, strength: 0.5 }, deco: { ...CHAPTER_PATCH.deco, color2: '#f0d6a4' } }
+      },
+      {
+        // 上下の細い金の線と欧文のサブで端正に
+        id: 'intermission', group: 'scene', icon: 'curtain', label: T('幕間', 'Intermission'),
+        text: T('幕間', 'INTERLUDE'), subText: T('INTERMISSION', 'BETWEEN THE ACTS'),
         patch: {
-          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 128, letterSpacing: 0.22,
-          subFontId: 'same', subWeight: 400, subSize: 0.3, subLetterSpacing: 0.15, subGap: 0.45,
-          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.8, blur: 14, x: 0, y: 4 },
-          deco: { type: 'underline', color2: '#ffffff', pad: 0.3, extend: 0.5, thickness: 2, anim: 'grow', dur: 0.9 },
-          inFx: 'blurIn', inDur: 1.0, inStagger: 0.15, hold: 1.6, outFx: 'fade', outDur: 0.8, subFx: 'fade', subDelay: -0.2
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 130, letterSpacing: 0.6,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.7, subGap: 0.5,
+          fill: { type: 'solid', color: '#f7f1e3' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.75, blur: 14, x: 0, y: 4 }, glow: { on: false },
+          subColorOn: true, subColor: '#d8c28a',
+          deco: { type: 'lines', color2: '#d8c28a', pad: 0.35, extend: 0.9, thickness: 1.5, anim: 'grow', dur: 0.9 },
+          inFx: 'fade', inDur: 1.0, inStagger: 0.2, hold: 1.8, outFx: 'fade', outDur: 0.9, subFx: 'fade', subDelay: -0.3
+        }
+      },
+      {
+        // セピア色の文字がぼかしからにじみ出て、ぼやけながら消える
+        id: 'flashback', group: 'scene', icon: 'history', label: T('回想', 'Flashback'),
+        text: T('回想', 'FLASHBACK'), subText: T('FLASHBACK', 'YEARS AGO'),
+        patch: {
+          fontId: 'zen-old-mincho', weight: 700, fontSize: 140, letterSpacing: 0.5,
+          subFontId: 'cinzel', subWeight: 400, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.45,
+          fill: { type: 'gradient', color: '#f6e7c8', color2: '#dcb983', color3: '#9a7446', dir: 'v' },
+          stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#1e1206', opacity: 0.7, blur: 14, x: 0, y: 4 },
+          glow: { on: true, color: '#c89b5a', size: 24, strength: 0.5 },
+          subColorOn: true, subColor: '#d9bd8e',
+          inFx: 'blurIn', inDur: 1.4, inStagger: 0.2, hold: 1.6, outFx: 'blurOut', outDur: 1.1, subFx: 'fade', subDelay: -0.4
         }
       },
       {
         id: 'day', group: 'scene', icon: 'calendar', label: T('一日目', 'Day 1'),
         text: T('一日目', 'DAY 1'), subText: T('DAY 1', 'THE FIRST DAY'),
+        patch: DAY_PATCH
+      },
+      {
+        // 映画の「ONE DAY LATER」：字間が縮まりながら現れる
+        id: 'dayLater', group: 'scene', icon: 'calendarNext', label: T('一日後', 'One Day Later'),
+        text: T('一日後', 'ONE DAY LATER'), subText: T('ONE DAY LATER', '24 HOURS LATER'),
         patch: {
-          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 150, letterSpacing: 0.3,
-          subFontId: 'same', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.5, subGap: 0.5,
-          fill: { type: 'solid', color: '#fff6e3' }, stroke: { on: false }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.75, blur: 14, x: 0, y: 4 },
-          glow: { on: true, color: '#ffcf7a', size: 22, strength: 0.45 },
-          subColorOn: true, subColor: '#e8c27a',
-          deco: { type: 'underline', color2: '#e0b35a', pad: 0.3, extend: 0.9, thickness: 2, anim: 'grow', dur: 0.9 },
-          inFx: 'rise', inDur: 1.1, inStagger: 0.12, hold: 1.6, outFx: 'fade', outDur: 0.8, subFx: 'fade', subDelay: -0.3
+          fontId: 'shippori-mincho', weight: 800, fontSize: 110, letterSpacing: 0.45,
+          subFontId: 'cinzel', subWeight: 400, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.45,
+          fill: { type: 'solid', color: '#f2f2f2' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.8, blur: 14, x: 0, y: 4 },
+          glow: { on: true, color: '#ffffff', size: 18, strength: 0.3 },
+          inFx: 'tracking', inDur: 1.6, hold: 1.4, outFx: 'tracking', outDur: 1.2, subFx: 'fade', subDelay: -0.6
+        }
+      },
+      {
+        id: 'finalDay', group: 'scene', icon: 'calendarFlag', label: T('最終日', 'Final Day'),
+        text: T('最終日', 'FINAL DAY'), subText: T('FINAL DAY', 'THE LAST DAY'),
+        patch: DAY_PATCH
+      },
+      {
+        // 朝日：白から淡い金色に変わる文字と温かい光が、下からゆっくり浮かび上がる
+        id: 'nextMorning', group: 'scene', icon: 'sunrise', label: T('翌朝', 'Next Morning'),
+        text: T('翌朝', 'MORNING'), subText: T('THE NEXT MORNING', 'THE NEXT DAY'),
+        patch: {
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 150, letterSpacing: 0.4,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.45,
+          fill: { type: 'gradient', color: '#ffffff', color2: '#fff0c8', color3: '#ffcf73', dir: 'v' },
+          stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#3a2400', opacity: 0.5, blur: 12, x: 0, y: 4 },
+          glow: { on: true, color: '#ffc15a', size: 34, strength: 0.8 },
+          subColorOn: true, subColor: '#ffd98a',
+          inFx: 'rise', inDur: 1.4, inStagger: 0.15, inPower: 0.8, holdFx: 'glow', holdPower: 0.5, hold: 1.6,
+          outFx: 'fade', outDur: 1.0, subFx: 'fade', subDelay: -0.3
+        }
+      },
+      {
+        // 月明かり：青白い文字がぼかしから現れ、表示中は光がかすかに揺らぐ
+        id: 'midnight', group: 'scene', icon: 'moon', label: T('真夜中', 'Midnight'),
+        text: T('午前零時', 'MIDNIGHT'), subText: T('MIDNIGHT', '12:00 AM'),
+        patch: {
+          fontId: 'shippori-mincho', weight: 700, fontSize: 110, letterSpacing: 0.4,
+          subFontId: 'cinzel', subWeight: 400, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.45,
+          fill: { type: 'gradient', color: '#f2f7ff', color2: '#c9dbff', color3: '#8fb0f0', dir: 'v' },
+          stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000814', opacity: 0.8, blur: 14, x: 0, y: 4 },
+          glow: { on: true, color: '#6f9bff', size: 28, strength: 0.8 },
+          subColorOn: true, subColor: '#aac4ff',
+          inFx: 'blurIn', inDur: 1.2, inStagger: 0.1, holdFx: 'glow', holdPower: 0.7, hold: 1.8,
+          outFx: 'blurOut', outDur: 1.0, subFx: 'fade', subDelay: -0.3
         }
       },
       {
@@ -566,6 +664,20 @@
           shadow: { on: true, color: '#000000', opacity: 0.8, blur: 12, x: 0, y: 3 }, glow: { on: false },
           deco: { type: 'sides', color2: '#f2f2f2', pad: 0.55, extend: 2.6, thickness: 1.5, anim: 'grow', dur: 1.0 },
           inFx: 'fade', inDur: 1.0, inStagger: 0.06, hold: 1.5, outFx: 'fade', outDur: 0.9, subFx: 'fade', subDelay: -0.2
+        }
+      },
+      {
+        // 別行動の場面へ：上下の線が中央から伸び、文字が左から現れて右へ消える
+        id: 'meanwhile', group: 'scene', icon: 'shuffle', label: T('一方その頃', 'Meanwhile'),
+        text: T('一方その頃', 'MEANWHILE'), subText: T('MEANWHILE', 'ELSEWHERE...'),
+        patch: {
+          fontId: 'noto-serif-jp', weight: 700, fontSize: 100, letterSpacing: 0.3,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.7, subGap: 0.45,
+          fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.8, blur: 12, x: 0, y: 4 }, glow: { on: false },
+          subColorOn: true, subColor: '#c8ced8',
+          deco: { type: 'lines', color2: '#e6e9ef', pad: 0.35, extend: 1.0, thickness: 1.5, anim: 'grow', dur: 0.6 },
+          inFx: 'wipe', inDir: 'lr', inDur: 0.9, hold: 1.6, outFx: 'wipe', outDir: 'lr', outDur: 0.7, subFx: 'fade', subDelay: -0.2
         }
       },
       {
