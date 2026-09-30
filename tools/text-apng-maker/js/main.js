@@ -40,6 +40,12 @@
     themeBtn: $('themeBtn'),
     helpDrawer: $('helpDrawer'),
     shortcutDrawer: $('shortcutDrawer'),
+    rulesBtn: $('rulesBtn'),
+    rulesDrawer: $('rulesDrawer'),
+    rulesTitle: $('rulesTitle'),
+    rulesBody: $('rulesBody'),
+    resultRule: $('resultRule'),
+    footerNote3: $('footerNote3'),
     helpTitle: $('helpTitle'),
     helpList: $('helpList'),
     helpNotes: $('helpNotes'),
@@ -340,6 +346,7 @@
     els.lead.textContent = d.lead;
     els.portalLink.textContent = d.backToPortal;
     els.helpBtn.textContent = d.help;
+    els.rulesBtn.textContent = d.rulesBtn;
     els.shortcutBtn.textContent = d.shortcuts;
     els.langSwitcher.setAttribute('aria-label', d.langGroup);
     els.shareLink.setAttribute('aria-label', d.shareLabel);
@@ -363,6 +370,8 @@
       p.textContent = note;
       els.helpNotes.appendChild(p);
     });
+    els.rulesTitle.textContent = d.rulesTitle;
+    renderRules(d.rules);
     els.shortcutTitle.textContent = d.shortcutTitle;
     els.shortcutGrid.innerHTML = '';
     d.shortcutRows.forEach(([keys, text]) => {
@@ -424,14 +433,74 @@
     els.resultTitle.textContent = d.resultTitle;
     els.downloadLink.textContent = d.download;
     els.clearResultBtn.textContent = d.clear;
+    els.resultRule.innerHTML = d.resultRule;
     els.footerTitle.textContent = d.footerTitle;
     els.footerNote1.innerHTML = d.footerNote1;
     els.footerNote2.innerHTML = d.footerNote2;
+    els.footerNote3.innerHTML = d.footerNote3;
     syncThemeButton();
     syncPlayButton();
     renderTemplates();
     panel.render(app.tab, els.settingsBody);
     updateInfo();
+  }
+
+  // 利用ルール（かんたん版）：許可と禁止を並べ、クレジットはその場でコピーできるようにする
+  function renderRules(r) {
+    const el = (tag, className, text) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text != null) node.textContent = text;
+      return node;
+    };
+    const body = els.rulesBody;
+    body.innerHTML = '';
+    body.appendChild(el('p', 'rules-intro', r.intro));
+    const grid = el('div', 'rules-grid');
+    [['allow', r.allowTitle, r.allow, '○'], ['deny', r.denyTitle, r.deny, '×']].forEach(([kind, title, items, mark]) => {
+      const card = el('section', `rules-card is-${kind}`);
+      card.appendChild(el('h3', null, title));
+      const list = el('ul');
+      items.forEach(text => {
+        const li = el('li');
+        li.append(el('span', 'rules-mark', mark), el('span', null, text));
+        list.appendChild(li);
+      });
+      card.appendChild(list);
+      grid.appendChild(card);
+    });
+    body.appendChild(grid);
+    body.appendChild(el('p', 'rules-note', r.note));
+    const credit = el('section', 'rules-credit');
+    credit.append(el('h3', null, r.creditTitle), el('p', null, r.creditLead));
+    const line = el('div', 'rules-credit-line');
+    const copy = el('button', 'ghost-button rules-copy', r.copy);
+    copy.type = 'button';
+    copy.dataset.copyCredit = '';
+    line.append(el('code', null, r.credit), copy);
+    credit.append(line, el('p', 'rules-where', r.creditWhere));
+    body.appendChild(credit);
+    const foot = el('p', 'rules-foot');
+    const link = el('a', null, r.details);
+    link.href = './terms.html';
+    link.target = '_blank';
+    link.rel = 'noopener';
+    foot.appendChild(link);
+    if (r.translation) foot.appendChild(el('span', 'rules-translation', r.translation));
+    body.appendChild(foot);
+  }
+
+  function copyCredit() {
+    const r = dict().rules;
+    const fail = () => toast(r.copyFailed, 'warning', 4200);
+    if (!navigator.clipboard || !navigator.clipboard.writeText) { fail(); return; }
+    navigator.clipboard.writeText(r.credit).then(() => toast(r.copied, 'success', 2200), fail);
+  }
+
+  // 書き出し結果やフッターの「利用ルール」から開く（ページ上部のドロワーまで移動する）
+  function openRules() {
+    if (els.rulesDrawer.hidden) toggleDrawer(els.rulesDrawer);
+    els.rulesDrawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   /* ================= テーマ ================= */
@@ -1448,20 +1517,23 @@
 
   /* ================= ドロワー ================= */
 
+  function drawerPairs() {
+    return [[els.helpDrawer, els.helpBtn], [els.rulesDrawer, els.rulesBtn], [els.shortcutDrawer, els.shortcutBtn]];
+  }
+
   function toggleDrawer(drawer) {
     const open = drawer.hidden;
-    [els.helpDrawer, els.shortcutDrawer].forEach(d => { d.hidden = true; });
+    drawerPairs().forEach(([d]) => { d.hidden = true; });
     drawer.hidden = !open;
-    els.helpBtn.setAttribute('aria-expanded', String(!els.helpDrawer.hidden));
-    els.shortcutBtn.setAttribute('aria-expanded', String(!els.shortcutDrawer.hidden));
+    drawerPairs().forEach(([d, btn]) => btn.setAttribute('aria-expanded', String(!d.hidden)));
   }
 
   function closeDrawers() {
-    const wasOpen = !els.helpDrawer.hidden || !els.shortcutDrawer.hidden;
-    els.helpDrawer.hidden = true;
-    els.shortcutDrawer.hidden = true;
-    els.helpBtn.setAttribute('aria-expanded', 'false');
-    els.shortcutBtn.setAttribute('aria-expanded', 'false');
+    const wasOpen = drawerPairs().some(([d]) => !d.hidden);
+    drawerPairs().forEach(([d, btn]) => {
+      d.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    });
     return wasOpen;
   }
 
@@ -1511,6 +1583,15 @@
       applyLanguage();
     }));
     els.helpBtn.addEventListener('click', () => toggleDrawer(els.helpDrawer));
+    els.rulesBtn.addEventListener('click', () => toggleDrawer(els.rulesDrawer));
+    // 利用ルールを開く・クレジットをコピーするボタン（ドロワー・書き出し結果・フッターの文中にある）
+    document.addEventListener('click', event => {
+      const target = event.target.closest('[data-open-rules], [data-copy-credit]');
+      if (!target) return;
+      event.preventDefault();
+      if (target.hasAttribute('data-copy-credit')) copyCredit();
+      else openRules();
+    });
     els.shortcutBtn.addEventListener('click', () => toggleDrawer(els.shortcutDrawer));
     document.querySelectorAll('[data-close-drawer]').forEach(btn => btn.addEventListener('click', closeDrawers));
     els.themeBtn.addEventListener('click', toggleTheme);

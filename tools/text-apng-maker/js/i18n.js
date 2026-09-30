@@ -14,6 +14,36 @@
       backToPortal: '←TRPG WEBツール観測所',
       help: '使い方',
       shortcuts: 'ショートカット',
+      rulesBtn: '利用ルール',
+      rulesTitle: '利用ルール',
+      // 生成物の利用ルール（かんたん版）。詳細版は terms.html。文言を変えるときは terms.html も合わせて直す
+      rules: {
+        intro: '本メーカーで生成したAPNG画像は、TRPGセッション・配信・動画・ゲームなどの素材として使用できます。使用にあたっての申請・報告は不要です。',
+        allowTitle: '許可',
+        allow: [
+          '商用・非商用、個人・法人を問わず、TRPGセッション・配信・動画・ゲーム・Webサイト等の制作物での使用',
+          '生成したAPNG素材の加工（速度、色彩、大きさ、合成等）',
+          'TRPGシナリオ本文、ココフォリアルームデータ、配布ZIP等への収録'
+        ],
+        denyTitle: '禁止',
+        deny: [
+          '加工・改変の有無を問わず、生成物そのものを素材として二次配布・販売・転売・譲渡する行為',
+          '生成物を素材として不特定多数へ公開する行為（素材集・素材パック・テンプレート集への収録を含む）',
+          '生成物の自作発言、および本ツールそのもの・主要部分の無断複製、再配布、転載'
+        ],
+        note: '※作品の一部としての同梱、およびセッションに必要な範囲での参加者間の共有は可能です。APNG素材そのものの提供を主目的とした配布はできません。',
+        creditTitle: 'クレジット',
+        creditLead: '公開・頒布・収益化を伴うコンテンツで使用する場合は、以下のクレジットを記載してください。',
+        credit: '文字画像APNGメーカー / くま。TRPG WEBツール観測所',
+        creditWhere: '作品説明、動画・配信の概要欄、Readme、配布ページ等、閲覧者が確認できる場所への記載で構いません。個人的なセッションや非公開での使用では不要です。',
+        copy: 'コピー',
+        copied: 'クレジットをコピーしました',
+        copyFailed: 'コピーできませんでした。文字を選択してコピーしてください',
+        details: '利用規約（詳細版）を読む',
+        translation: ''
+      },
+      resultRule: '公開・頒布・収益化するときは、クレジットの記載をお願いします。<span class="result-rule-actions"><button class="link-button" type="button" data-copy-credit>クレジットをコピー</button><button class="link-button" type="button" data-open-rules>利用ルール</button></span>',
+      footerNote3: '生成したAPNG画像は、<button class="link-button" type="button" data-open-rules>利用ルール</button>の範囲で自由に使えます。詳しくは<a href="./terms.html" target="_blank" rel="noopener">利用規約（詳細版）</a>をご確認ください。',
       close: '閉じる',
       themeLight: 'ライトモード（クリックでナイトモード）',
       themeDark: 'ナイトモード（クリックでライトモード）',
@@ -148,6 +178,35 @@
       backToPortal: '← TRPG Web Tools Observatory',
       help: 'Guide',
       shortcuts: 'Shortcuts',
+      rulesBtn: 'Usage rules',
+      rulesTitle: 'Usage rules',
+      rules: {
+        intro: 'APNG images made with this tool can be used as assets in TRPG sessions, streams, videos, games, and more. No application or notice is needed.',
+        allowTitle: 'Allowed',
+        allow: [
+          'Use in TRPG sessions, streams, videos, games, websites, and other works — commercial or non-commercial, by individuals or organizations',
+          'Editing the generated APNGs (speed, colors, size, compositing, etc.)',
+          'Including them in TRPG scenario texts, CCFOLIA room data, distributed ZIP files, etc.'
+        ],
+        denyTitle: 'Not allowed',
+        deny: [
+          'Redistributing, selling, reselling, or transferring the generated images themselves as assets, whether edited or not',
+          'Publishing the generated images as assets for the general public (including in asset collections, asset packs, or template sets)',
+          'Claiming the generated images as entirely your own work; copying, redistributing, or reposting this tool itself or its main parts without permission'
+        ],
+        note: '* Bundling them as part of a work, and sharing them among participants as needed for a session, are allowed. Distribution whose main purpose is to provide the APNG assets themselves is not.',
+        creditTitle: 'Credit',
+        creditLead: 'When you use them in content that is published, distributed, or monetized, please include this credit:',
+        credit: '文字画像APNGメーカー / くま。TRPG WEBツール観測所',
+        creditWhere: 'Anywhere viewers can see it is fine — a work description, a video or stream description, a Readme, a distribution page, etc. Not needed for personal sessions or private use.',
+        copy: 'Copy',
+        copied: 'Credit copied',
+        copyFailed: 'Could not copy. Please select the text and copy it.',
+        details: 'Read the full terms (Japanese)',
+        translation: 'This English text is a reference translation. The Japanese version prevails.'
+      },
+      resultRule: 'Please include the credit when you publish, distribute, or monetize it. <span class="result-rule-actions"><button class="link-button" type="button" data-copy-credit>Copy credit</button><button class="link-button" type="button" data-open-rules>Usage rules</button></span>',
+      footerNote3: 'Images made with this tool can be used freely within the <button class="link-button" type="button" data-open-rules>usage rules</button>. For details, see the <a href="./terms.html" target="_blank" rel="noopener">full terms (Japanese)</a>.',
       close: 'Close',
       themeLight: 'Light mode (click for night mode)',
       themeDark: 'Night mode (click for light mode)',
