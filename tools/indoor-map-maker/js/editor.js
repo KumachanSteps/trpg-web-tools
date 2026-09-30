@@ -2044,8 +2044,6 @@
       body.appendChild(h('p', { class: 'lib-section' }, pick(group.name)));
       const grid = h('div', { class: 'room-list' });
       group.items.forEach(([id, cat, w, hh]) => {
-        const swatch = h('span', { class: 'room-swatch' });
-        swatch.style.background = M.THEMES.clean.fills[cat] || '#ffffff';
         const card = h('button', {
           type: 'button', class: 'room-card', draggable: 'true', dataset: { room: id },
           title: `${t(`roomPresets.${id}`)} ${meters(w, hh)}`,
@@ -2057,7 +2055,8 @@
             e.dataTransfer.setData('text/imm-room', id);
             e.dataTransfer.effectAllowed = 'copy';
           }
-        }, swatch, h('span', { class: 'room-text' }, h('span', { class: 'room-name' }, t(`roomPresets.${id}`)), h('span', { class: 'room-size' }, meters(w, hh))));
+        }, h('span', { class: 'room-text' }, h('span', { class: 'room-name' }, t(`roomPresets.${id}`)), h('span', { class: 'room-size' }, meters(w, hh))));
+        card.style.setProperty('--room-color', M.THEMES.clean.fills[cat] || '#ffffff');
         grid.appendChild(card);
       });
       body.appendChild(grid);

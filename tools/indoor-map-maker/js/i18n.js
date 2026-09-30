@@ -332,7 +332,7 @@
       living: 'Living room', ldk: 'LDK', dining: 'Dining room', kitchen: 'Kitchen', bedroom: 'Bedroom', western: 'Room', washitsu: 'Tatami room',
       child: 'Kid\'s room', study: 'Study', bath: 'Bathroom', wash: 'Washroom', toilet: 'WC', entrance: 'Entrance', hall: 'Hallway',
       stairs: 'Stairwell', closet: 'Closet', storage: 'Storage', office: 'Office', meeting: 'Meeting room', lobby: 'Lobby',
-      guest: 'Guest room', ward: 'Ward', exam: 'Exam room', surgery: 'Operating room', lab: 'Laboratory', ritual: 'Ritual chamber', sealed: 'Sealed area',
+      guest: 'Guest room', ward: 'Ward', exam: 'Exam room', surgery: 'Operating room', lab: 'Lab', ritual: 'Ritual chamber', sealed: 'Sealed area',
       garage: 'Garage', balcony: 'Balcony', garden: 'Garden', porch: 'Porch', cell: 'Cell'
     },
     props: {
