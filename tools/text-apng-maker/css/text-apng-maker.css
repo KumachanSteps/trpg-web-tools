@@ -1266,6 +1266,48 @@ body.is-dark .toast-action:hover { color: #ffffff; }
 .toast-error { border-left-color: var(--danger); }
 .toast-info { border-left-color: var(--blue); }
 
+/* ---------- 利用ルール（ドロワーと terms.html で共通） ---------- */
+
+.rules-body { display: grid; gap: 10px; font-size: 0.84rem; line-height: 1.65; }
+.rules-body p { margin: 0; }
+.rules-intro { font-weight: 700; }
+.rules-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rules-card { padding: 10px 13px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel-soft); }
+.rules-card h3 { margin: 0 0 6px; font-size: 0.86rem; }
+.rules-card ul { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.rules-card li { display: grid; grid-template-columns: 1.3em minmax(0, 1fr); }
+.rules-mark { font-weight: 900; }
+.rules-card.is-allow h3, .rules-card.is-allow .rules-mark { color: var(--ok); }
+.rules-card.is-deny h3, .rules-card.is-deny .rules-mark { color: var(--danger); }
+.rules-note, .rules-where, .rules-translation { color: var(--muted); }
+.rules-credit { padding: 10px 13px; border: 1px solid color-mix(in srgb, var(--blue) 30%, var(--line)); border-radius: 13px; background: var(--blue-soft); }
+.rules-credit h3 { margin: 0 0 4px; color: var(--blue-deep); font-size: 0.86rem; }
+body.is-dark .rules-credit h3 { color: var(--blue); }
+.rules-credit-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 7px 0; }
+.rules-credit-line code { padding: 5px 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--field); font-family: inherit; font-weight: 800; user-select: all; }
+.rules-copy { min-height: 1.9rem; padding: 0.25rem 0.8rem; font-size: 0.78rem; }
+.rules-where { font-size: 0.8rem; }
+.rules-foot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.rules-foot a { color: var(--blue); font-weight: 800; text-decoration: none; }
+.rules-foot a:hover { text-decoration: underline; }
+.rules-translation { font-size: 0.76rem; }
+
+.link-button { padding: 0; border: 0; background: none; color: var(--blue); font: inherit; font-weight: 800; cursor: pointer; }
+.link-button:hover { text-decoration: underline; }
+.result-rule { margin: 8px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.55; }
+.result-rule-actions { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; margin-left: 6px; }
+
+/* 利用規約ページ */
+.rules-page .app-header, .rules-page .legal-footer, .rules-doc, .rules-lang-note { width: 100%; max-width: 980px; margin-left: auto; margin-right: auto; }
+.rules-lang-note { margin-top: -4px; margin-bottom: -4px; color: var(--muted); font-size: 0.78rem; }
+.rules-doc { padding: 22px 26px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow-soft); }
+.rules-doc > h2 { margin: 0 0 12px; font-size: 1.12rem; }
+.rules-doc .rules-body { font-size: 0.9rem; }
+.rules-terms { display: grid; gap: 16px; font-size: 0.9rem; line-height: 1.8; }
+.rules-terms h3 { margin: 0 0 4px; font-size: 0.96rem; }
+.rules-terms p { margin: 0; }
+.rules-terms p + p { margin-top: 6px; }
+
 /* ---------- フッター ---------- */
 
 .legal-footer {
@@ -1294,6 +1336,8 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
 }
 
 @media (max-width: 760px) {
+  .rules-grid { grid-template-columns: 1fr; }
+  .rules-doc { padding: 18px 16px; }
   .app-shell { padding: 10px; gap: 10px; }
   .app-header { grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "lead" "actions"; row-gap: 10px; padding: 16px 16px 28px; }
   .header-actions { justify-content: flex-start; }
