@@ -791,8 +791,8 @@
       {
         // 見本はシャーロック・ホームズの有名な一節（不可能を消去して残ったものが真実）のもじり
         id: 'cinematic', icon: 'play', label: T('シネマティック', 'Cinematic'),
-        text: T('霧のロンドン、ベイカー街221B。\n名探偵のもとに、奇妙な依頼が舞い込む。\n\nありえないものを消し去ったとき――\n残ったのは、この世ならざる真実だった。',
-          'Foggy London, 221B Baker Street.\nA strange case finds the great detective.\n\nEliminate the impossible —\nand whatever remains is not of this world.'),
+        text: T('ありえないものを消し去ったとき――\n残ったのは、この世ならざる真実だった。',
+          'Eliminate the impossible —\nand whatever remains is not of this world.'),
         patch: {
           fontId: 'shippori-mincho', weight: 700, fontSize: 46, lineHeight: 1.9, letterSpacing: 0.08,
           fill: { type: 'solid', color: '#f5f0e6' }, stroke: { on: false }, stroke2: { on: false },
