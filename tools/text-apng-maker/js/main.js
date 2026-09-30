@@ -12,7 +12,7 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.00';
+  const VERSION = 'v1.01';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const THEME_KEY = 'textApngMakerTheme';
