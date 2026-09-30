@@ -281,6 +281,24 @@
     });
   }
 
+  // 言語を切り替えたとき：書き換えていない見本の文章（別の言語の見本のまま）を、新しい言語の見本にする
+  function localizeSamples() {
+    let changed = false;
+    MODES.forEach(mode => {
+      const s = app.scenes[mode];
+      const tpl = (P.TEMPLATES[mode] || []).find(t => t.id === s.templateId);
+      if (!tpl) return;
+      ['text', 'subText'].forEach(key => {
+        const next = P.sampleText(tpl, key, app.lang);
+        if (s[key] === next) return;
+        if (!LANGS.some(lang => lang !== app.lang && P.sampleText(tpl, key, lang) === s[key])) return;
+        s[key] = next;
+        changed = true;
+      });
+    });
+    return changed;
+  }
+
   // 保存データから文章だけを取り出す
   function pickTexts(memo) {
     const kept = {};
@@ -1588,7 +1606,15 @@
     els.langButtons.forEach(btn => btn.addEventListener('click', () => {
       app.lang = LANGS.includes(btn.dataset.langChoice) ? btn.dataset.langChoice : 'ja';
       try { localStorage.setItem(LANG_KEY, app.lang); } catch (error) { /* noop */ }
+      const changed = localizeSamples();
       applyLanguage();
+      if (!changed) return;
+      view.renderer.invalidateSprites();
+      invalidate();
+      layoutStage();
+      scheduleFontLoad(0);
+      saveState();
+      restartPreview();
     }));
     els.helpBtn.addEventListener('click', () => toggleDrawer(els.helpDrawer));
     els.rulesBtn.addEventListener('click', () => toggleDrawer(els.rulesDrawer));
