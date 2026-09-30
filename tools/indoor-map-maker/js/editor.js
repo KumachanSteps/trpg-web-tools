@@ -2668,13 +2668,10 @@
     }
     const pv = Math.min(app.exp.px, 16);
     const canvas = M.renderImage(floors, exportOptions(pv));
-    let w = Math.round((canvas.width / pv) * app.exp.px), hh = Math.round((canvas.height / pv) * app.exp.px);
-    let note = '';
-    if (Math.max(w, hh) > 16000) {
-      const k = 16000 / Math.max(w, hh);
-      w = Math.round(w * k); hh = Math.round(hh * k);
-      note = ` · ${t('exp.tooLarge')}`;
-    }
+    const cw = canvas.width / pv, ch = canvas.height / pv;
+    const k = M.exportScale(cw, ch, app.exp.px);
+    const w = Math.round(cw * k), hh = Math.round(ch * k);
+    const note = k < app.exp.px ? ` · ${t('exp.tooLarge')}` : '';
     info.textContent = `${t('exp.info', { w, h: hh })}${app.exp.range === 'each' && multi ? ` × ${app.project.floors.length}` : ''}${note}`;
     const img = h('img', { alt: '' });
     img.src = canvas.toDataURL('image/png');

@@ -319,6 +319,23 @@
       c.strokeStyle = theme.rail;
       c.lineWidth = lw * 1.2;
       if (w.kind === 'fence') c.setLineDash([lw * 5, lw * 3]);
+    } else if (w.kind === 'bars') {
+      // 鉄格子（斜め）：横木に丸い格子を等間隔に並べる
+      c.strokeStyle = theme.wall;
+      c.fillStyle = theme.wall;
+      c.lineWidth = lw * 0.8;
+      c.beginPath();
+      c.moveTo(w.x1, w.y1);
+      c.lineTo(w.x2, w.y2);
+      c.stroke();
+      const n = Math.max(1, Math.round(Math.hypot(w.x2 - w.x1, w.y2 - w.y1) / 0.3));
+      for (let i = 0; i <= n; i++) {
+        c.beginPath();
+        c.arc(w.x1 + ((w.x2 - w.x1) * i) / n, w.y1 + ((w.y2 - w.y1) * i) / n, info.t * 0.5, 0, TAU);
+        c.fill();
+      }
+      c.restore();
+      return;
     } else if (w.kind === 'glass') {
       c.strokeStyle = theme.glass;
       c.lineWidth = info.t;
@@ -902,6 +919,16 @@
     return box;
   }
 
+  // キャンバスの上限：1辺 16000px、総画素数 4000万px（RGBA で約160MB）。iPhone / iPad の Safari は 16,777,216px まで
+  const EXPORT_MAX_SIDE = 16000;
+  const IOS = typeof navigator !== 'undefined' && (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+  const EXPORT_MAX_AREA = IOS ? 16777216 : 40e6;
+
+  /* w×h マスの画像を 1マス px で書き出すときの実際の倍率（上限を超えるときは縮める） */
+  function exportScale(w, h, px) {
+    return Math.min(px, EXPORT_MAX_SIDE / w, EXPORT_MAX_SIDE / h, Math.sqrt(EXPORT_MAX_AREA / (w * h)));
+  }
+
   /**
    * floors を 1枚の画像に描く（複数なら横に並べ、長くなりすぎるときは折り返す。フロア名を上に書く）
    * opts: { theme, px (1マスのピクセル数), lang, showSize, hideNames, playerView, grid, transparent, margin, titles }
@@ -935,8 +962,7 @@
     }
     const totalW = layout.w;
     const totalH = layout.h;
-    const maxSide = 16000;
-    const scale = Math.min(px, maxSide / totalW, maxSide / totalH);
+    const scale = exportScale(totalW, totalH, px);
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(totalW * scale);
     canvas.height = Math.round(totalH * scale);
@@ -1017,6 +1043,6 @@
 
   global.IMM = global.IMM || {};
   Object.assign(global.IMM, {
-    THEMES, drawFloor, renderImage, drawAssetIcon, drawOpeningIcon, drawOpening, drawItem, labelMetrics, textBox, lineWidth, roomFill
+    THEMES, drawFloor, renderImage, exportScale, drawAssetIcon, drawOpeningIcon, drawOpening, drawItem, labelMetrics, textBox, lineWidth, roomFill
   });
 })(window);
