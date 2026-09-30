@@ -105,8 +105,13 @@
   const SOLO_CACHE_PIXELS = 24e6;
   // 書き出しのフレーム時刻がちょうど切り替わりの瞬間に来ても、丸め誤差で1コマずれないようにする幅
   const TIME_EPS = 1e-6;
-  // 「中央から左右に広がる」：重なった文字が現れるまでの時間（秒）
+  // 「中央から左右に広がる」：重なった文字が現れるまでの時間（秒）と、重なりのばらけ具合
+  // （本来の位置までの距離の何割だけ左右にずらして重ねるか。0 だと中央の一点に集まる）
   const SPREAD_APPEAR = 0.25;
+  const SPREAD_LOOSE = 0.2;
+  // 表示中の「点滅」：1回の周期（秒）と、その中で付いている割合
+  const BLINK_PERIOD = 0.5;
+  const BLINK_ON = 0.6;
 
   const isBlank = ch => ch === ' ' || ch === '　' || ch === '\t' || /^\s+$/.test(ch);
   const isWordChar = ch => /^[A-Za-z0-9'’\-_.,!?&:;%$#@/]$/.test(ch);
@@ -190,13 +195,13 @@
         if (info.vertical) st.y += d; else st.x += d;
         st.a *= e;
       } },
-    // 行の文字を行の中央に重ねて出し、少し見せてから行の向きに広げる（トレイラーには同じ名前の「表示の流れ」がある）
+    // 行の文字を行の中央に（少し左右にばらけて）重ねて出し、少し見せてから行の向きに広げる（トレイラーには同じ名前の「表示の流れ」がある）
     { id: 'spread', level: 'glyph', ease: 'outQuart', dur: 1.3, stagger: 0, noTrailer: true,
       glyph(st, e, p, g, k, info) {
         const appear = clamp(p / 0.18);
         const q = clamp((p - 0.42) / 0.58);
         const m = info.ease ? info.ease(q) : EASE.outQuart(q);
-        const d = -g.lineOffset * (1 - m);
+        const d = -g.lineOffset * (1 - m) * (1 - SPREAD_LOOSE);
         if (info.vertical) st.y += d; else st.x += d;
         st.a *= EASE.outQuad(appear) * lerp(stackAlpha(g), 1, m);
         st.s *= 1 + 0.25 * k * (1 - EASE.outCubic(appear));
@@ -353,6 +358,13 @@
     { id: 'flicker', block(bs, t, k, info) {
       const f = Math.floor(t * 12);
       if (rnd(f, 5, info.seed) < 0.09 * k) bs.layerAlpha *= 0.2 + rnd(f, 6, info.seed) * 0.35;
+    } },
+    // 点滅：登場し終えてから一定の間隔で消えたり付いたりする（装飾は消さない）。強さで、消えている間の薄さが変わる
+    { id: 'blink', block(bs, t, k, info) {
+      const since = info.since ?? t;
+      if (since < 0) return;
+      const c = (since % BLINK_PERIOD) / BLINK_PERIOD;
+      if (c >= BLINK_ON) bs.layerAlpha *= clamp(1 - 0.85 * k);
     } },
     { id: 'glitch', block(bs, t, k) {
       const c = t % 1.7;
@@ -555,11 +567,17 @@
     group.box = { x0: group.box.x0 + dx, y0: group.box.y0 + dy, x1: group.box.x1 + dx, y1: group.box.y1 + dy };
   }
 
+  // 縁取り（内側＋外側）の太さ（文字サイズ scene.fontSize 基準の px）
+  function outlineWidth(scene) {
+    return (scene.stroke && scene.stroke.on ? scene.stroke.width || 0 : 0) + (scene.stroke2 && scene.stroke2.on ? scene.stroke2.width || 0 : 0);
+  }
+
   // 装飾がテキストの外側にどれだけはみ出すか
   function decoExtents(scene, size) {
     const d = scene.deco || {};
     const pad = (d.pad || 0) * size;
-    const th = d.thickness || 0;
+    // 線にも縁取りをつけるときは、その分だけ外側に広がる
+    const th = (d.thickness || 0) + (d.outline ? outlineWidth(scene) : 0);
     const ext = (d.extend || 0) * size;
     const v = scene.writing === 'v';
     switch (d.type) {
@@ -583,7 +601,7 @@
 
   // 縁取り・光彩・影が文字の外側にどれだけ広がるか（文字サイズ scene.fontSize 基準の px。スプライトの余白と同じ見積もり）
   function effectExtents(scene) {
-    const outline = (scene.stroke && scene.stroke.on ? scene.stroke.width || 0 : 0) + (scene.stroke2 && scene.stroke2.on ? scene.stroke2.width || 0 : 0);
+    const outline = outlineWidth(scene);
     const ext = { l: outline, r: outline, t: outline, b: outline };
     if (scene.glow && scene.glow.on) {
       const g = outline + (scene.glow.size || 0) * 1.25;
@@ -1359,13 +1377,14 @@
       st.a = 1; st.x = 0; st.y = 0; st.s = 1; st.sx = 1; st.sy = 1; st.r = 0; st.blur = 0;
       const sp = T.pages[g.page].spread;
       if (sp && t < sp.start + sp.dur) {
-        // 行ごとに中央で重なって現れ（少し大きい状態から）、行の向きに広がって本来の位置へ
+        // 行ごとに中央で（少し左右にばらけて）重なって現れ（少し大きい状態から）、行の向きに広がって本来の位置へ
         const a = clamp((t - sp.appear) / SPREAD_APPEAR);
         const k = t < sp.start ? 0 : EASE.outQuart(clamp((t - sp.start) / sp.dur));
         st.a = EASE.outQuad(a) * lerp(stackAlpha(g), 1, k);
         st.s = 1 + 0.25 * (1 - EASE.outCubic(a));
-        if (g.vertical) st.y = (sp.cy - g.cy) * (1 - k);
-        else st.x = (sp.cx - g.cx) * (1 - k);
+        const pull = (1 - k) * (1 - SPREAD_LOOSE);
+        if (g.vertical) st.y = (sp.cy - g.cy) * pull;
+        else st.x = (sp.cx - g.cx) * pull;
       }
       const inFx = T.inFx[i];
       const inDur = T.inDur[i];
@@ -1408,7 +1427,7 @@
         }
       }
       const hold = HOLD_MAP[scene.holdFx];
-      if (hold && hold.block) hold.block(bs, t, scene.holdPower ?? 1, { size, seed });
+      if (hold && hold.block) hold.block(bs, t, scene.holdPower ?? 1, { size, seed, since: t - pg.inEnd });
       if (pg.solo) {
         // 全文が出た瞬間：少し大きく叩きつけてから落ち着く（小さな揺れと光つき）
         const d = t - pg.solo.full;
@@ -1564,7 +1583,7 @@
       }
       if (bs.mask) this.applyMask(bs.mask, rect, layout.size * 0.6 * scale);
       if (pg.scroll && scene.scrollFade !== false) this.applyEdgeFade(pg.scroll.vertical, cw, ch);
-      if (bs.glitch > 0.01) this.applyGlitch(bs.glitch, t, rect, layout.size * scale, pg.index);
+      if (bs.glitch > 0.01) this.applyGlitch(bs.glitch, t, rect, layout.size * scale, pg.index, scene);
     }
 
     drawSprite(lctx, it, sprite, img, alpha, m, bs, scale) {
@@ -1803,7 +1822,8 @@
       lctx.restore();
     }
 
-    applyGlitch(amount, t, rect, sizePx, seedBase) {
+    // ノイズ：左右にずらした2色の写し（scene.glitchColor / glitchColor2）と、横に切ってずらした帯
+    applyGlitch(amount, t, rect, sizePx, seedBase, scene) {
       const cw = this.layer.width, ch = this.layer.height;
       const lctx = this.lctx;
       const a = this.tmpA.getContext('2d');
@@ -1831,8 +1851,8 @@
         lctx.globalAlpha = 0.8;
         lctx.drawImage(this.tmpB, dx, 0);
       };
-      tint('rgb(255, 40, 90)', -shift);
-      tint('rgb(40, 230, 255)', shift);
+      tint(scene.glitchColor || '#ff285a', -shift);
+      tint(scene.glitchColor2 || '#28e6ff', shift);
       lctx.globalAlpha = 1;
       lctx.drawImage(this.tmpA, 0, 0);
       // 横スライス
@@ -1874,15 +1894,32 @@
       ctx.save();
       ctx.setTransform(scale, 0, 0, scale, bs.x * scale, bs.y * scale);
       ctx.globalAlpha = alpha;
-      const line = (x0, y0, x1, y1) => {
+      // 線の装飾にも文字と同じ縁取りをつける：外側の縁取り → 縁取り → 線の順に、太い線から重ねる
+      const edges = [];
+      if (d.outline) {
+        const e1 = scene.stroke && scene.stroke.on ? Math.max(0, scene.stroke.width || 0) * layout.fit : 0;
+        const e2 = scene.stroke2 && scene.stroke2.on ? Math.max(0, scene.stroke2.width || 0) * layout.fit : 0;
+        if (e2 > 0) edges.push({ w: th + 2 * (e1 + e2), color: scene.stroke2.color });
+        if (e1 > 0) edges.push({ w: th + 2 * e1, color: scene.stroke.color });
+      }
+      // path は線の形を作る関数（線の端の縁取りは、端を四角く伸ばして囲む）
+      const strokePath = (path, cap) => {
+        edges.forEach(edge => {
+          ctx.strokeStyle = edge.color;
+          ctx.lineWidth = edge.w;
+          ctx.lineCap = 'square';
+          ctx.beginPath();
+          path();
+          ctx.stroke();
+        });
         ctx.strokeStyle = lineColor;
         ctx.lineWidth = th;
-        ctx.lineCap = 'butt';
+        ctx.lineCap = cap;
         ctx.beginPath();
-        ctx.moveTo(x0, y0);
-        ctx.lineTo(x1, y1);
+        path();
         ctx.stroke();
       };
+      const line = (x0, y0, x1, y1) => strokePath(() => { ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); }, 'butt');
       switch (d.type) {
         case 'band': {
           const soft = clamp(d.soft ?? 0.4, 0, 1) * 0.5;
@@ -2007,21 +2044,18 @@
           const x0 = box.x0 - pad, y0 = box.y0 - pad, x1 = box.x1 + pad, y1 = box.y1 + pad;
           const arm = Math.min(x1 - x0, y1 - y0) * 0.28 * g;
           const inset = (1 - g) * size * 0.4;
-          ctx.strokeStyle = lineColor;
-          ctx.lineWidth = th;
-          ctx.lineCap = 'square';
-          ctx.beginPath();
           const corner = (x, y, sx, sy) => {
             const cx = x + sx * -inset, cy = y + sy * -inset;
             ctx.moveTo(cx + sx * arm, cy);
             ctx.lineTo(cx, cy);
             ctx.lineTo(cx, cy + sy * arm);
           };
-          corner(x0, y0, 1, 1);
-          corner(x1, y0, -1, 1);
-          corner(x0, y1, 1, -1);
-          corner(x1, y1, -1, -1);
-          ctx.stroke();
+          strokePath(() => {
+            corner(x0, y0, 1, 1);
+            corner(x1, y0, -1, 1);
+            corner(x0, y1, 1, -1);
+            corner(x1, y1, -1, -1);
+          }, 'square');
           break;
         }
         case 'frame': {
@@ -2059,19 +2093,16 @@
           if ((d.thickness || 0) > 0) {
             // 伸びるアニメーションでは、上辺（縦書きは右辺）の始点から一筆書きで線が伸びる／消える
             const w = x1 - x0, h = y1 - y0, perimeter = 2 * (w + h);
-            ctx.strokeStyle = lineColor;
-            ctx.lineWidth = th;
-            ctx.lineCap = 'butt';
             ctx.lineJoin = 'miter';
             if (grow && g < 0.999) ctx.setLineDash([perimeter * g, perimeter]);
-            ctx.beginPath();
-            if (!vertical) {
-              ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.lineTo(x1, y1); ctx.lineTo(x0, y1);
-            } else {
-              ctx.moveTo(x1, y0); ctx.lineTo(x1, y1); ctx.lineTo(x0, y1); ctx.lineTo(x0, y0);
-            }
-            ctx.closePath();
-            ctx.stroke();
+            strokePath(() => {
+              if (!vertical) {
+                ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.lineTo(x1, y1); ctx.lineTo(x0, y1);
+              } else {
+                ctx.moveTo(x1, y0); ctx.lineTo(x1, y1); ctx.lineTo(x0, y1); ctx.lineTo(x0, y0);
+              }
+              ctx.closePath();
+            }, 'butt');
             ctx.setLineDash([]);
           }
           break;

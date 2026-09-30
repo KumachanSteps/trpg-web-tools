@@ -65,6 +65,7 @@
       shake: T('震え', 'Tremble'),
       glow: T('発光の明滅', 'Glow pulse'),
       flicker: T('ちらつき', 'Flicker'),
+      blink: T('点滅', 'Blink'),
       glitch: T('時々ノイズ', 'Glitch bursts')
     }
   };
@@ -313,6 +314,12 @@
         { type: 'range', bind: 'glow.size', label: T('広がり', 'Size'), min: 2, max: 150, step: 1, format: 'px' },
         { type: 'range', bind: 'glow.strength', label: T('強さ', 'Strength'), min: 0.2, max: 3, step: 0.05, format: 'x' }
       ] },
+      { type: 'section', when: s => [s.inFx, s.holdFx, s.outFx].includes('glitch'), label: T('ノイズの色', 'Noise colors'), children: [
+        { type: 'colors', items: [
+          { bind: 'glitchColor', label: T('色1', 'Color 1') },
+          { bind: 'glitchColor2', label: T('色2', 'Color 2') }
+        ] }
+      ] },
       { type: 'section', when: notTrailer, label: T('サブテキストを別の色にする', 'Different color for sub text'), toggle: 'subColorOn', children: [
         { type: 'colors', items: [{ bind: 'subColor', label: T('色', 'Color') }] }
       ] },
@@ -331,6 +338,7 @@
         ] },
         { type: 'range', bind: 'deco.opacity', when: decoIs('band', 'box', 'frame'), label: T('塗りの濃さ', 'Fill opacity'), min: 0, max: 1, step: 0.01, format: 'pct' },
         { type: 'range', bind: 'deco.thickness', when: decoIs('box', 'frame', 'lines', 'underline', 'sides', 'bar', 'corners'), label: s => (['box', 'frame'].includes(s.deco.type) ? T('枠線の太さ（0で枠なし）', 'Border width (0 = none)') : T('線の太さ', 'Line width')), min: 0, max: 16, step: 0.5, format: 'px' },
+        { type: 'toggle', bind: 'deco.outline', when: s => decoIs('frame', 'lines', 'underline', 'sides', 'bar', 'corners')(s) && (s.stroke.on || s.stroke2.on), label: T('線にも文字と同じ縁取りをつける', 'Outline the lines like the text') },
         { type: 'range', bind: 'deco.tapeSize', when: decoIs('tape'), label: T('テープの太さ', 'Tape width'), min: 8, max: 120, step: 1, format: 'px' },
         { type: 'range', bind: 'deco.tapeSpeed', when: decoIs('tape'), label: T('テープの流れる速さ（0で止まる）', 'Tape speed (0 = still)'), min: 0, max: 400, step: 5, format: 'pxs' },
         { type: 'range', bind: 'deco.tapeBlink', when: decoIs('tape'), label: T('テープの点滅（0で点滅しない）', 'Tape blink (0 = none)'), min: 0, max: 1, step: 0.01, format: 'pct' },

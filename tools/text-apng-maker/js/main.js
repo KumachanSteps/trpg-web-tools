@@ -19,6 +19,8 @@
   const MAX_FRAMES = 1800;
   const SIZE_GUIDE_BYTES = 5 * 1024 * 1024;
   const MODES = ['message', 'trailer', 'caption'];
+  // 書き換えた文章をテンプレートごとに覚えるモード（場所・時間は、テンプレートを切り替えても同じ文章を使う）
+  const PER_TEMPLATE_TEXT = ['message', 'trailer'];
   // 保存データの形式（2: 書き出しのループ初期値を「1回再生」に変更、ファイル名をモードごとに保持）
   const STORAGE_SCHEMA = 2;
   const TABS = ['text', 'font', 'motion', 'style', 'layout'];
@@ -119,8 +121,8 @@
     mode: 'message',
     tab: 'text',
     scenes: {},
-    // 書き換えた文章。メッセージはテンプレートごとに覚え（message: { テンプレートID: { text, subText } }）、
-    // トレイラー・場所・時間はテンプレートを切り替えても引き継ぐ（trailer / caption: { text, subText }）
+    // 書き換えた文章。メッセージ・トレイラーはテンプレートごとに覚え（message / trailer: { テンプレートID: { text, subText } }）、
+    // 場所・時間はテンプレートを切り替えても引き継ぐ（caption: { text, subText }）
     editedTexts: { message: {}, trailer: {}, caption: {} },
     // fileNames: モードごとの手入力のファイル名（空なら設定から自動入力）
     exportOpts: { fps: 24, loop: 'once', loopCount: 3, color: 'palette', poster: true, trim: false, fileNames: { message: '', trailer: '', caption: '' } },
@@ -183,18 +185,24 @@
       if (typeof saved.loopPreview === 'boolean') app.loopPreview = saved.loopPreview;
       if (saved.editedTexts && typeof saved.editedTexts === 'object') {
         const memos = saved.editedTexts;
-        P.TEMPLATES.message.forEach(tpl => {
-          const kept = pickTexts(memos.message && memos.message[tpl.id]);
-          if (Object.keys(kept).length) app.editedTexts.message[tpl.id] = kept;
-        });
-        ['trailer', 'caption'].forEach(mode => { app.editedTexts[mode] = pickTexts(memos[mode]); });
+        PER_TEMPLATE_TEXT.forEach(mode => P.TEMPLATES[mode].forEach(tpl => {
+          const kept = pickTexts(memos[mode] && memos[mode][tpl.id]);
+          if (Object.keys(kept).length) app.editedTexts[mode][tpl.id] = kept;
+        }));
+        // 以前のトレイラーは、書き換えた文章をテンプレートをまたいで共通に覚えていた：開いていたテンプレートの分として引き継ぐ
+        const shared = pickTexts(memos.trailer);
+        if (Object.keys(shared).length) keepAsTemplateText('trailer', shared);
+        app.editedTexts.caption = pickTexts(memos.caption);
       } else {
         // 書き換えた文章を覚える仕組みより前の保存データ：トレイラー・場所・時間で書き換えていた文章はそのまま引き継ぐ
         ['trailer', 'caption'].forEach(mode => {
           const s = app.scenes[mode];
           const state = P.sampleState(mode, s.text, s.subText);
-          if (!state.main) app.editedTexts[mode].text = s.text;
-          if (!state.sub && mode === 'caption') app.editedTexts[mode].subText = s.subText;
+          const kept = {};
+          if (!state.main) kept.text = s.text;
+          if (!state.sub && mode === 'caption') kept.subText = s.subText;
+          if (mode === 'trailer') keepAsTemplateText(mode, kept);
+          else Object.assign(app.editedTexts[mode], kept);
         });
       }
     }
@@ -232,6 +240,16 @@
     const group = groups.find(g => g.id === groupId) || groups[0];
     const system = group.systems ? (group.systems.find(sy => sy.id === systemId) || group.systems[0]).id : null;
     return list.find(tpl => tpl.group === group.id && (!system || tpl.system === system)) || null;
+  }
+
+  // 以前の保存データの文章を、開いていたテンプレートの分として覚える（見本と同じ文章は覚えない）
+  function keepAsTemplateText(mode, memo) {
+    const s = app.scenes[mode];
+    const tpl = P.TEMPLATES[mode].find(t => t.id === s.templateId);
+    if (!tpl || app.editedTexts[mode][tpl.id]) return;
+    const kept = {};
+    Object.keys(memo).forEach(key => { if (memo[key] !== P.sampleText(tpl, key, app.lang)) kept[key] = memo[key]; });
+    if (Object.keys(kept).length) app.editedTexts[mode][tpl.id] = kept;
   }
 
   // 保存データから文章だけを取り出す
@@ -488,22 +506,23 @@
     saveState();
   }
 
-  // 書き換えた文章を覚える。メッセージは選んでいるテンプレートの分として、トレイラー・場所・時間はテンプレートをまたいで共通に。
-  // 空のメインテキストは覚えない。メッセージでは見本と同じ文章も覚えない（どちらも、テンプレートを選ぶと見本に戻る）
+  // 書き換えた文章を覚える。メッセージ・トレイラーは選んでいるテンプレートの分として、場所・時間はテンプレートをまたいで共通に。
+  // 空のメインテキストは覚えない。テンプレートごとに覚えるときは見本と同じ文章も覚えない（どちらも、テンプレートを選ぶと見本に戻る）
   function rememberText(s, key, value) {
     const emptyMain = key === 'text' && !String(value).trim();
-    if (s.mode !== 'message') {
-      if (emptyMain) delete app.editedTexts[s.mode][key];
-      else app.editedTexts[s.mode][key] = value;
+    const memos = app.editedTexts[s.mode];
+    if (!PER_TEMPLATE_TEXT.includes(s.mode)) {
+      if (emptyMain) delete memos[key];
+      else memos[key] = value;
       return;
     }
-    const tpl = P.TEMPLATES.message.find(t => t.id === s.templateId);
+    const tpl = P.TEMPLATES[s.mode].find(t => t.id === s.templateId);
     if (!tpl) return;
-    const memo = app.editedTexts.message[tpl.id] || {};
+    const memo = memos[tpl.id] || {};
     if (emptyMain || value === P.sampleText(tpl, key, app.lang)) delete memo[key];
     else memo[key] = value;
-    if (Object.keys(memo).length) app.editedTexts.message[tpl.id] = memo;
-    else delete app.editedTexts.message[tpl.id];
+    if (Object.keys(memo).length) memos[tpl.id] = memo;
+    else delete memos[tpl.id];
   }
 
   // 一時停止中に文字が映らない時刻（開始前・終了後）なら、完成状態の時刻へ移動して編集結果を見せる
@@ -1001,10 +1020,11 @@
   }
 
   // テンプレートを場面に当てはめる。文章は新しいテンプレートの見本にしたうえで、書き換えた文章があれば戻す
-  // （メッセージはそのテンプレートで書き換えた文章、トレイラー・場所・時間はテンプレートをまたいで共通の文章）
+  // （メッセージ・トレイラーはそのテンプレートで書き換えた文章、場所・時間はテンプレートをまたいで共通の文章）
   function fillTemplate(s, tpl) {
     P.applyTemplate(s, tpl, app.lang);
-    const memo = (app.mode === 'message' ? app.editedTexts.message[tpl.id] : app.editedTexts[app.mode]) || {};
+    const memos = app.editedTexts[app.mode];
+    const memo = (PER_TEMPLATE_TEXT.includes(app.mode) ? memos[tpl.id] : memos) || {};
     if (typeof memo.text === 'string') s.text = memo.text;
     if (typeof memo.subText === 'string') s.subText = memo.subText;
     s.mode = app.mode;

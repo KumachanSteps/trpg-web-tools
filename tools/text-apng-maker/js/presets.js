@@ -42,7 +42,7 @@
     subColorOn: false,
     subColor: '#ffffff',
     deco: {
-      type: 'none', color: '#000000', opacity: 0.55, color2: '#ffffff', pad: 0.4, extend: 0.8, thickness: 3, soft: 0.5, sideFade: 0.3, radius: 0.2, anim: 'grow', dur: 0.45,
+      type: 'none', color: '#000000', opacity: 0.55, color2: '#ffffff', pad: 0.4, extend: 0.8, thickness: 3, outline: false, soft: 0.5, sideFade: 0.3, radius: 0.2, anim: 'grow', dur: 0.45,
       tapeColor: '#f5c400', tapeStripe: '#151515', tapeSize: 40, tapeSpeed: 90, tapeBlink: 0.5
     },
     bg: { type: 'none', color: '#000000', opacity: 0.45, sync: true },
@@ -56,6 +56,9 @@
     holdFx: 'none',
     hold: 1.5,
     holdPower: 1,
+    // ノイズ（グリッチ）で左右にずれる2色
+    glitchColor: '#ff285a',
+    glitchColor2: '#28e6ff',
     outEnabled: true,
     outFx: 'fade',
     outDur: 0.6,
@@ -115,7 +118,7 @@
     inFx: 'typewriter', inStagger: 0.05, hold: 2, outFx: 'fade', outDur: 0.45, subFx: 'fade', subDelay: -3
   };
 
-  // ロールプレイどうぞ：秘匿確認と同じシステム画面の緑版
+  // ロールプレイをどうぞ：秘匿確認と同じシステム画面の緑版
   const ROLEPLAY_PATCH = {
     ...SECRET_PATCH,
     shadow: { on: true, color: '#021a0e', opacity: 0.6, blur: 8, x: 0, y: 2 },
@@ -318,6 +321,23 @@
         patch: ROUND_PATCH
       },
       {
+        // 赤と黒：黒い帯に赤い文字。ノイズ（グリッチ）の色ずれも赤と黒にして、画面全体の色を崩さない
+        id: 'defeat', group: 'combat', icon: 'skull', label: T('敗北', 'Defeat'),
+        text: T('敗北', 'DEFEAT'), subText: T('DEFEAT', 'BATTLE LOST'),
+        patch: {
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 150, letterSpacing: 0.3,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.9, subGap: 0.45,
+          fill: { type: 'gradient', color: '#ff7070', color2: '#e41414', color3: '#780000', dir: 'v' },
+          stroke: { on: true, width: 2, color: '#000000' }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.9, blur: 14, x: 0, y: 5 },
+          glow: { on: true, color: '#c80000', size: 30, strength: 1 },
+          subColorOn: true, subColor: '#e03a3a',
+          deco: { type: 'band', color: '#000000', opacity: 0.88, pad: 0.42, soft: 0.25, sideFade: 0.35, anim: 'grow', dur: 0.35 },
+          glitchColor: '#ff2020', glitchColor2: '#000000',
+          inFx: 'glitch', inDur: 0.9, holdFx: 'glitch', holdPower: 1, hold: 1.8, outFx: 'glitch', outDur: 0.8, subFx: 'fade', subDelay: -0.2
+        }
+      },
+      {
         id: 'explore', group: 'investigation', icon: 'search', label: T('探索開始', 'Exploration'),
         text: T('探索開始', 'EXPLORATION'), subText: T('EXPLORATION', '- PHASE 1 -'),
         patch: {
@@ -345,16 +365,17 @@
       },
       {
         // 調査報告の見出し：黒一色のかっちりした明朝（和文タイプの印字のような字面）を1文字ずつ打ち込み、
-        // 下に黒いラインを走らせて、タイプライター書体の RESEARCH を小さく添える
+        // 下に黒いラインを走らせて、タイプライター書体の RESEARCH を小さく添える。
+        // 暗い背景でも読めるように、文字とラインに白い縁取り（4px）をつける
         id: 'research', group: 'investigation', icon: 'clipboard', label: T('調査開始', 'Research'),
         text: T('調査開始', 'RESEARCH'), subText: T('RESEARCH', 'FIELD NOTES'),
         patch: {
           fontId: 'biz-udpmincho', weight: 700, fontSize: 116, letterSpacing: 0.3,
           subFontId: 'special-elite', subWeight: 400, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.55,
-          fill: { type: 'solid', color: '#111111' }, stroke: { on: false }, stroke2: { on: false },
+          fill: { type: 'solid', color: '#111111' }, stroke: { on: true, width: 4, color: '#ffffff' }, stroke2: { on: false },
           shadow: { on: false }, glow: { on: false },
           subColorOn: true, subColor: '#111111',
-          deco: { type: 'underline', color2: '#111111', pad: 0.2, extend: 0.4, thickness: 2.5, anim: 'grow', dur: 0.7 },
+          deco: { type: 'underline', color2: '#111111', outline: true, pad: 0.2, extend: 0.4, thickness: 2.5, anim: 'grow', dur: 0.7 },
           inFx: 'typewriter', inStagger: 0.14, hold: 2, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: 0
         }
       },
@@ -383,6 +404,23 @@
           subColorOn: true, subColor: '#ff4040',
           deco: { type: 'corners', color2: '#ffffff', pad: 0.5, thickness: 3, anim: 'grow', dur: 0.4 },
           inFx: 'flash', inDur: 0.8, hold: 1.8, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: -0.2
+        }
+      },
+      {
+        // 疾走感：斜体の文字が左から一気に駆け込み、琥珀色の警告灯のように点滅して、右へ走り抜ける。上下の線が素早く伸びる
+        id: 'chase', group: 'investigation', icon: 'dash', label: T('追跡開始', 'Chase'),
+        text: T('追跡開始', 'CHASE START'), subText: T('CHASE START', 'IN PURSUIT'),
+        patch: {
+          fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 124, letterSpacing: 0.12, italic: true,
+          subFontId: 'oswald', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.3, subItalic: true,
+          fill: { type: 'gradient', color: '#ffffff', color2: '#ffe3a3', color3: '#ff9d1a', dir: 'v' },
+          stroke: { on: true, width: 2, color: '#3a1400' }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 8, x: 0, y: 3 },
+          glow: { on: true, color: '#ff8a00', size: 22, strength: 0.8 },
+          subColorOn: true, subColor: '#ffb347',
+          deco: { type: 'lines', color2: '#ffb347', pad: 0.3, extend: 1.6, thickness: 3, anim: 'grow', dur: 0.25 },
+          inFx: 'slide', inDir: 'left', inDur: 0.3, inStagger: 0.03, inPower: 2.5, holdFx: 'blink', holdPower: 1, hold: 2,
+          outFx: 'slide', outDir: 'right', outDur: 0.3, outStagger: 0.02, outPower: 2.5, subFx: 'fade', subDelay: -0.1
         }
       },
       {
@@ -437,8 +475,8 @@
         patch: { ...SECRET_PATCH, inStagger: 0.07, holdFx: 'glow', holdPower: 1, hold: 2.2 }
       },
       {
-        id: 'roleplay', group: 'gm', icon: 'mask', label: T('ロールプレイどうぞ', 'Roleplay Time'),
-        text: T('ロールプレイどうぞ', 'ROLEPLAY TIME'), subText: T('ROLE PLAY', 'YOUR TURN'),
+        id: 'roleplay', group: 'gm', icon: 'mask', label: T('ロールプレイをどうぞ', 'Roleplay Time'),
+        text: T('ロールプレイをどうぞ', 'ROLEPLAY TIME'), subText: T('ROLE PLAY', 'YOUR TURN'),
         patch: ROLEPLAY_PATCH
       },
       {
@@ -456,7 +494,7 @@
         }
       },
       {
-        // セーフティツールのXカード：白いカードに赤い文字
+        // セーフティツールのXカード：黒いカードに赤い文字と赤い縁
         id: 'xcard', group: 'gm', icon: 'xcard', label: T('Xカード', 'X-Card'),
         text: T('X-Card', 'X-Card'), subText: T('一時中断をお願いします', 'Let’s pause for a moment'),
         patch: {
@@ -464,8 +502,8 @@
           subFontId: 'noto-sans-jp', subWeight: 700, subSize: 0.19, subLetterSpacing: 0.24, subGap: 0.42,
           fill: { type: 'solid', color: '#e8202f' }, stroke: { on: false }, stroke2: { on: false },
           shadow: { on: false }, glow: { on: false },
-          subColorOn: true, subColor: '#3b3b3b',
-          deco: { type: 'box', color: '#ffffff', opacity: 0.97, color2: '#e8202f', pad: 0.5, thickness: 4, radius: 0.08, anim: 'grow', dur: 0.35 },
+          subColorOn: true, subColor: '#ff6b73',
+          deco: { type: 'box', color: '#0b0b0d', opacity: 0.95, color2: '#e8202f', pad: 0.5, thickness: 4, radius: 0.08, anim: 'grow', dur: 0.35 },
           inFx: 'pop', inDur: 0.5, inStagger: 0.05, hold: 2.2, outFx: 'fade', outDur: 0.5, subFx: 'fade', subDelay: -0.1
         }
       },
@@ -483,7 +521,7 @@
         }
       },
       {
-        id: 'simple', group: 'gm', icon: 'type', label: T('シンプル', 'Simple'),
+        id: 'simple', group: 'gm', icon: 'type', label: T('シンプルテキスト', 'Simple Text'),
         text: T('メッセージ', 'MESSAGE'), subText: T('', ''),
         patch: {
           fontId: 'noto-sans-jp', weight: 700, fontSize: 110, letterSpacing: 0.08,
@@ -712,6 +750,32 @@
           shadow: { on: true, color: '#000000', opacity: 0.85, blur: 12, x: 0, y: 3 },
           glow: { on: true, color: '#ffffff', size: 16, strength: 0.4 },
           reveal: 'sweep', sweepDur: 1.5, lineInterval: 1.4, glyphDur: 0.5, inFx: 'fade', hold: 1.8, outFx: 'fade', outDur: 0.9
+        }
+      },
+      {
+        // 文章の文字が中央で重なって現れ、扉が開くように左右へ広がって一文になる
+        id: 'spread', icon: 'spreadOut', label: T('中央から左右', 'Center Spread'),
+        text: T('閉ざされた扉が、いま開かれる。', 'The sealed door now swings open.'),
+        patch: {
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 64, lineHeight: 1.7, letterSpacing: 0.14,
+          fill: { type: 'solid', color: '#f5efe3' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.85, blur: 12, x: 0, y: 3 },
+          glow: { on: true, color: '#ffd9a0', size: 20, strength: 0.5 },
+          bg: { type: 'vignette', color: '#000000', opacity: 0.55, sync: true },
+          reveal: 'spread', spreadHold: 0.5, spreadDur: 0.9, inFx: 'fade', hold: 2, outFx: 'fade', outDur: 0.8
+        }
+      },
+      {
+        // 全文をぼかしから一度に浮かび上がらせる（ポスターのキャッチコピーのように）
+        id: 'allAtOnce', icon: 'textAll', label: T('全文同時表示', 'All at Once'),
+        text: T('真実は、いつも霧の向こうにある。\n――さあ、探索を始めよう。', 'The truth always lies beyond the fog.\n— Now, let the investigation begin.'),
+        patch: {
+          fontId: 'zen-old-mincho', weight: 700, fontSize: 52, lineHeight: 1.9, letterSpacing: 0.12,
+          fill: { type: 'solid', color: '#f2f5fa' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.85, blur: 12, x: 0, y: 3 },
+          glow: { on: true, color: '#a9c4ff', size: 18, strength: 0.5 },
+          bg: { type: 'vignette', color: '#000000', opacity: 0.5, sync: true },
+          reveal: 'all', glyphDur: 1.4, inFx: 'blurIn', hold: 2.4, outFx: 'fade', outDur: 0.9
         }
       },
       {
