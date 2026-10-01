@@ -56,6 +56,8 @@ body.is-dark {
 
 * { box-sizing: border-box; }
 html, body { min-height: 100%; }
+/* 韓国語は単語（空白で区切られたまとまり）の途中で改行しない */
+html:lang(ko) body { word-break: keep-all; overflow-wrap: anywhere; }
 
 body {
   margin: 0;

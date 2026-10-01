@@ -116,7 +116,8 @@
   const BLINK_ON = 0.6;
 
   const isBlank = ch => ch === ' ' || ch === '　' || ch === '\t' || /^\s+$/.test(ch);
-  const isWordChar = ch => /^[A-Za-z0-9'’\-_.,!?&:;%$#@/]$/.test(ch);
+  // ハングルも英単語と同じく、単語（空白で区切られたまとまり）の途中では改行しない
+  const isWordChar = ch => /^[A-Za-z0-9'’\-_.,!?&:;%$#@/\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]$/.test(ch);
 
   // 禁則処理つきの自動改行（英単語は分割しない）
   function wrapParagraph(chars, maxW, measure, lsPx) {
