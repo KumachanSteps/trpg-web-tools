@@ -65,6 +65,7 @@
       helpNotes: [
         '※ 入力内容はこのブラウザ内（localStorage）にだけ保存され、サーバーには送信されません。',
         '※ 256色モードは容量が小さく、フルカラーはグラデーションや光彩がより滑らかになります。',
+        '※ 書き出しのループは、テンプレートを選ぶと、そのテンプレートに合わせて設定されます。ふだんは「1回再生」、画面に出したままにすることが多い「GM」と「判定」のテンプレートは「ずっとループ」です。',
         '※ プレビュー下の「退場あり」をオフにすると、登場したあと消えずに終わります。書き出しのループを「1回再生」にすると、最後の状態で止まるAPNGになります（場所のテロップを出したままにしたいときなど）。',
         '※ ファイル名は、文章や動きの設定から自動で入力されます。書き換えた後は「↺ 自動入力に戻す」で元に戻せます。',
         '※ 容量を抑えるには「FPSを下げる」「画像サイズを小さくする」「表示中の動きをなしにする」「背景を透明にする」が効果的です。',
@@ -228,6 +229,7 @@
       helpNotes: [
         '* Your settings are stored only in this browser (localStorage) and are never sent to a server.',
         '* 256-color mode keeps files small; full color renders gradients and glows more smoothly.',
+        '* Choosing a template also sets the export loop: “Play once” for most templates, and “Loop forever” for GM and Dice templates, which usually stay on screen.',
         '* Turn off "Exit animation" under the preview to keep the text on screen after it appears. Set the export loop to "Play once" to make an APNG that stops on the final state (e.g. a location caption that stays up).',
         '* The file name is filled in automatically from your text and motion settings. After editing it, use “↺ Back to auto” to restore it.',
         '* To reduce file size: lower the FPS, use a smaller image size, set the hold motion to none, or keep the background transparent.',

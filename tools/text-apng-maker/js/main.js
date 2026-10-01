@@ -12,7 +12,7 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.01';
+  const VERSION = 'v1.02';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const THEME_KEY = 'textApngMakerTheme';
@@ -21,8 +21,9 @@
   const MODES = ['message', 'trailer', 'caption'];
   // 書き換えた文章をテンプレートごとに覚えるモード（場所・時間は、テンプレートを切り替えても同じ文章を使う）
   const PER_TEMPLATE_TEXT = ['message', 'trailer'];
-  // 保存データの形式（2: 書き出しのループ初期値を「1回再生」に変更、ファイル名をモードごとに保持）
-  const STORAGE_SCHEMA = 2;
+  // 保存データの形式（2: 書き出しのループ初期値を「1回再生」に変更、ファイル名をモードごとに保持
+  //                  3: 書き出しのループの初期値をテンプレートごとに（GM・判定は「ずっとループ」）
+  const STORAGE_SCHEMA = 3;
   const TABS = ['text', 'font', 'motion', 'style', 'layout'];
 
   const $ = id => document.getElementById(id);
@@ -158,6 +159,7 @@
 
   function loadState() {
     let saved = null;
+    let keepLoop = false;
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (error) { saved = null; }
     try {
       const lang = localStorage.getItem(LANG_KEY);
@@ -179,8 +181,11 @@
       if (saved.exportOpts) {
         const { loop, fileName, fileNames, ...rest } = saved.exportOpts;
         Object.assign(app.exportOpts, rest);
-        // 旧形式のループ設定（初期値が「ずっとループ」だった頃）は引き継がず、「1回再生」から始める
-        if (saved.schema >= STORAGE_SCHEMA && ['once', 'infinite', 'count'].includes(loop)) app.exportOpts.loop = loop;
+        // 旧形式のループ設定（初期値がテンプレートによらなかった頃）は引き継がず、開いているテンプレートの初期値から始める
+        if (saved.schema >= STORAGE_SCHEMA && ['once', 'infinite', 'count'].includes(loop)) {
+          app.exportOpts.loop = loop;
+          keepLoop = true;
+        }
         if (fileNames && typeof fileNames === 'object') {
           MODES.forEach(m => { if (typeof fileNames[m] === 'string') app.exportOpts.fileNames[m] = fileNames[m]; });
         } else if (typeof fileName === 'string' && fileName.trim()) {
@@ -213,6 +218,12 @@
         });
       }
     }
+    if (!keepLoop) app.exportOpts.loop = P.exportLoop(currentTemplate());
+  }
+
+  // モードで開いているテンプレート
+  function currentTemplate(mode = app.mode) {
+    return (P.TEMPLATES[mode] || []).find(t => t.id === app.scenes[mode].templateId) || null;
   }
 
   // 保存データの場面を初期値と合わせて読み込む（古い形式の直しも含む）
@@ -1004,7 +1015,10 @@
 
   // テンプレートを選び直してプレビューする（チップを押したときと同じ中身で、通知は出さない）。画像サイズと退場の有無は引き継ぐ
   function showTemplate(tpl) {
-    if (tpl) fillTemplate(scene(), tpl);
+    if (tpl) {
+      fillTemplate(scene(), tpl);
+      setExportLoop(P.exportLoop(tpl));
+    }
     renderTemplates();
     panel.render(app.tab, els.settingsBody);
     view.renderer.invalidateSprites();
@@ -1154,6 +1168,7 @@
 
   function applyTemplate(tpl) {
     fillTemplate(scene(), tpl);
+    setExportLoop(P.exportLoop(tpl));
     renderTemplates();
     view.renderer.invalidateSprites();
     invalidate();
@@ -1171,6 +1186,7 @@
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
     app.editedTexts[app.mode] = {};
     app.exportOpts.fileNames[app.mode] = '';
+    setExportLoop(P.exportLoop(currentTemplate()));
     renderTemplates();
     view.renderer.invalidateSprites();
     invalidate();
