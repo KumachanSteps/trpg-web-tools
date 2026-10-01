@@ -18,6 +18,7 @@
   const els = {
     body: document.body,
     sheet: $('sheet'),
+    toc: $('toc'),
     editionToggle: $('editionToggle'),
     presetBtn: $('presetBtn'),
     presetMenu: $('presetMenu'),
@@ -269,6 +270,7 @@
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: app.state, savedAt: Date.now() })); } catch (error) { /* noop */ }
     }, 250);
     if (!els.expModal.hidden) scheduleExport();
+    updateTocCounts();
   }
 
   const rowState = (secId, ruleId) => app.state.secs[secId].rows[ruleId];
@@ -370,11 +372,79 @@
     EDITIONS[app.state.edition].forEach(secId => els.sheet.appendChild(renderSection(secId)));
     els.sheet.querySelectorAll('textarea').forEach(autoGrow);
     window.scrollTo(0, scrollY);
+    renderToc();
+  }
+
+  /* ================= 目次（左パネル） ================= */
+
+  function renderToc() {
+    els.toc.innerHTML = '';
+    const link = (target, label, cls, count) => h('a', { href: `#${target}`, class: `toc-link ${cls}`, dataset: { target } },
+      h('span', { class: 'toc-text' }, label), count ? h('span', { class: 'toc-count', dataset: { count: target } }, count) : null);
+    els.toc.appendChild(link('part-info', t('toc.info'), 'toc-info'));
+    EDITIONS[app.state.edition].forEach(secId => {
+      const group = h('div', { class: `toc-group tone-${secId === 'common' ? 'common' : 'edition'}` });
+      group.appendChild(link(`sec-${secId}`, pick(SECTION[secId].full), 'toc-sec'));
+      SECTION[secId].cats.forEach(catId => group.appendChild(link(`cat-${secId}-${catId}`, pick(R.CATS[catId]), 'toc-cat', tocCount(secId, catId))));
+      els.toc.appendChild(group);
+    });
+    els.toc.appendChild(link('part-remarks', t('info.remarks'), 'toc-info'));
+    syncTocActive();
+  }
+
+  function tocCount(secId, catId) {
+    const items = catRows(secId, catId);
+    return `${items.filter(item => item.row.vis).length}/${items.length}`;
+  }
+
+  function updateTocCounts() {
+    els.toc.querySelectorAll('[data-count]').forEach(node => {
+      const m = node.dataset.count.match(/^cat-(\w+)-(\w+)$/);
+      if (m && SECTION[m[1]]) node.textContent = tocCount(m[1], m[2]);
+    });
+  }
+
+  /* 画面上部に来ている見出しを目次で強調する */
+  function syncTocActive() {
+    const links = [...els.toc.querySelectorAll('.toc-link')];
+    let current = links[0];
+    links.forEach(a => {
+      const el = document.getElementById(a.dataset.target);
+      if (el && el.getBoundingClientRect().top < 140) current = a;
+    });
+    links.forEach(a => a.classList.toggle('is-active', a === current));
+    if (current && els.toc.scrollHeight > els.toc.clientHeight) {
+      const top = current.offsetTop - els.toc.clientHeight / 2;
+      if (Math.abs(els.toc.scrollTop - top) > els.toc.clientHeight / 3) els.toc.scrollTop = top;
+    }
+    if (current && els.toc.scrollWidth > els.toc.clientWidth) {
+      const left = current.offsetLeft - 12;
+      if (current.offsetLeft < els.toc.scrollLeft || current.offsetLeft + current.offsetWidth > els.toc.scrollLeft + els.toc.clientWidth) els.toc.scrollLeft = left;
+    }
+  }
+
+  function onTocClick(event) {
+    const a = event.target.closest('.toc-link');
+    if (!a) return;
+    event.preventDefault();
+    const target = document.getElementById(a.dataset.target);
+    if (!target) return;
+    /* 折りたたんだカテゴリは開いてから移動する */
+    if (target.classList.contains('cat') && target.classList.contains('is-collapsed')) {
+      delete app.state.collapsed[`${target.dataset.sec}:${target.dataset.cat}`];
+      target.classList.remove('is-collapsed');
+      const btn = target.querySelector('.cat-toggle');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+      save();
+    }
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const offset = window.innerWidth <= 860 ? els.toc.offsetHeight + 12 : 12;
+    window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset, behavior: reduce ? 'auto' : 'smooth' });
   }
 
   function renderSection(secId) {
     const sec = SECTION[secId];
-    const node = h('section', { class: `sheet-section tone-${secId === 'common' ? 'common' : 'edition'}`, dataset: { sec: secId } },
+    const node = h('section', { class: `sheet-section tone-${secId === 'common' ? 'common' : 'edition'}`, id: `sec-${secId}`, dataset: { sec: secId } },
       h('h2', { class: 'section-title' }, pick(sec.full)),
       h('div', { class: 'col-head', 'aria-hidden': 'true' },
         h('span'), h('span', null, t('cols.rule')), h('span', null, t('cols.value')), h('span', null, t('cols.note')))
@@ -394,7 +464,7 @@
   function renderCategory(secId, catId) {
     const key = `${secId}:${catId}`;
     const collapsed = Boolean(app.state.collapsed[key]);
-    const node = h('div', { class: `cat${collapsed ? ' is-collapsed' : ''}`, dataset: { sec: secId, cat: catId } });
+    const node = h('div', { class: `cat${collapsed ? ' is-collapsed' : ''}`, id: `cat-${secId}-${catId}`, dataset: { sec: secId, cat: catId } });
     node.appendChild(renderCatHead(secId, catId));
     const list = h('div', { class: 'cat-rows' });
     catRows(secId, catId).forEach(({ rule, row }) => list.appendChild(renderRow(secId, rule, row)));
@@ -903,6 +973,12 @@
     infoField(els.infoRemarks, 'remarks');
 
     els.sheet.addEventListener('click', onSheetClick);
+    els.toc.addEventListener('click', onTocClick);
+    let tocFrame = 0;
+    window.addEventListener('scroll', () => {
+      if (tocFrame) return;
+      tocFrame = requestAnimationFrame(() => { tocFrame = 0; syncTocActive(); });
+    }, { passive: true });
     els.sheet.addEventListener('input', onSheetInput);
     els.sheet.addEventListener('change', onSheetChange);
     initSwipe();

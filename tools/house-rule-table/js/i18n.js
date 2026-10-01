@@ -63,6 +63,7 @@
       remarksPh: '表のいちばん下に載せたい補足（任意）',
       optional: '空欄の項目は表に出ません'
     },
+    toc: { label: '目次', info: '表の情報' },
     cols: { rule: 'ルール', value: '適用・設定', note: '説明・注記' },
     row: {
       show: '表に載せる',
@@ -186,6 +187,7 @@
       remarksPh: 'Anything to add at the bottom of the table (optional)',
       optional: 'Empty fields are left out of the table'
     },
+    toc: { label: 'Contents', info: 'Table details' },
     cols: { rule: 'Rule', value: 'Setting', note: 'Notes' },
     row: {
       show: 'Show in table',
@@ -309,6 +311,7 @@
       remarksPh: '표 맨 아래에 넣을 보충 설명(선택)',
       optional: '빈 항목은 표에 나오지 않습니다'
     },
+    toc: { label: '목차', info: '표 정보' },
     cols: { rule: '룰', value: '적용・설정', note: '설명・주석' },
     row: {
       show: '표에 넣기',

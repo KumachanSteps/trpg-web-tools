@@ -11,7 +11,7 @@
   <meta name="description" content="クトゥルフ神話TRPG（6版・7版）の卓で使うハウスルールを、よくあるルールから選んで表にまとめ、画像（PNG）・テキスト・Markdownで書き出せるツールです。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/house-rule-table.css?v=20261001-02" />
+  <link rel="stylesheet" href="./css/house-rule-table.css?v=20261001-03" />
 </head>
 <body>
   <div class="app-shell">
@@ -61,8 +61,10 @@
       <div class="guide-notes" id="helpNotes"></div>
     </section>
 
+    <div class="layout">
+    <nav class="toc" id="toc" data-i18n-label="toc.label" aria-label="目次"></nav>
     <main class="workspace">
-      <section class="card info-card" aria-labelledby="infoHeading">
+      <section class="card info-card" id="part-info" aria-labelledby="infoHeading">
         <h2 class="visually-hidden" id="infoHeading" data-i18n="info.heading">表の情報</h2>
         <input class="title-input" id="infoTitle" type="text" maxlength="120" data-i18n-ph="info.titlePh" data-i18n-label="info.heading" />
         <div class="info-grid">
@@ -76,13 +78,14 @@
 
       <div class="sheet" id="sheet"></div>
 
-      <section class="card remarks-card">
+      <section class="card remarks-card" id="part-remarks">
         <label class="field">
           <span class="section-title small" data-i18n="info.remarks">その他・備考</span>
           <textarea class="text-input" id="infoRemarks" rows="2" maxlength="4000" data-i18n-ph="info.remarksPh"></textarea>
         </label>
       </section>
     </main>
+    </div>
 
     <div class="modal-backdrop" id="expModal" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="expTitle">
@@ -114,9 +117,9 @@
     </footer>
   </div>
 
-  <script src="./js/rules.js?v=20261001-02"></script>
-  <script src="./js/i18n.js?v=20261001-02"></script>
-  <script src="./js/exporter.js?v=20261001-02"></script>
-  <script src="./js/app.js?v=20261001-02"></script>
+  <script src="./js/rules.js?v=20261001-03"></script>
+  <script src="./js/i18n.js?v=20261001-03"></script>
+  <script src="./js/exporter.js?v=20261001-03"></script>
+  <script src="./js/app.js?v=20261001-03"></script>
 </body>
 </html>
