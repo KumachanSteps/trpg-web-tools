@@ -12,17 +12,19 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.01';
+  const VERSION = 'v1.04';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
+  const LANGS = ['ja', 'ko', 'en'];
   const THEME_KEY = 'textApngMakerTheme';
   const MAX_FRAMES = 1800;
   const SIZE_GUIDE_BYTES = 5 * 1024 * 1024;
   const MODES = ['message', 'trailer', 'caption'];
   // 書き換えた文章をテンプレートごとに覚えるモード（場所・時間は、テンプレートを切り替えても同じ文章を使う）
   const PER_TEMPLATE_TEXT = ['message', 'trailer'];
-  // 保存データの形式（2: 書き出しのループ初期値を「1回再生」に変更、ファイル名をモードごとに保持）
-  const STORAGE_SCHEMA = 2;
+  // 保存データの形式（2: 書き出しのループ初期値を「1回再生」に変更、ファイル名をモードごとに保持
+  //                  3: 書き出しのループの初期値をテンプレートごとに（GM・判定は「ずっとループ」）
+  const STORAGE_SCHEMA = 3;
   const TABS = ['text', 'font', 'motion', 'style', 'layout'];
 
   const $ = id => document.getElementById(id);
@@ -156,12 +158,20 @@
   const dict = () => I18N[app.lang] || I18N.ja;
   const msg = () => dict().messages;
 
+  // 保存された言語が無いときは、ブラウザの言語（日本語・韓国語以外は英語）
+  function browserLang() {
+    const lang = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').toLowerCase();
+    if (lang.startsWith('ja')) return 'ja';
+    return lang.startsWith('ko') ? 'ko' : 'en';
+  }
+
   function loadState() {
     let saved = null;
+    let keepLoop = false;
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (error) { saved = null; }
     try {
       const lang = localStorage.getItem(LANG_KEY);
-      app.lang = lang === 'en' || lang === 'ja' ? lang : ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+      app.lang = LANGS.includes(lang) ? lang : browserLang();
     } catch (error) { app.lang = 'ja'; }
     MODES.forEach(mode => {
       let s = restoreScene(mode, saved && saved.scenes && saved.scenes[mode]);
@@ -179,8 +189,11 @@
       if (saved.exportOpts) {
         const { loop, fileName, fileNames, ...rest } = saved.exportOpts;
         Object.assign(app.exportOpts, rest);
-        // 旧形式のループ設定（初期値が「ずっとループ」だった頃）は引き継がず、「1回再生」から始める
-        if (saved.schema >= STORAGE_SCHEMA && ['once', 'infinite', 'count'].includes(loop)) app.exportOpts.loop = loop;
+        // 旧形式のループ設定（初期値がテンプレートによらなかった頃）は引き継がず、開いているテンプレートの初期値から始める
+        if (saved.schema >= STORAGE_SCHEMA && ['once', 'infinite', 'count'].includes(loop)) {
+          app.exportOpts.loop = loop;
+          keepLoop = true;
+        }
         if (fileNames && typeof fileNames === 'object') {
           MODES.forEach(m => { if (typeof fileNames[m] === 'string') app.exportOpts.fileNames[m] = fileNames[m]; });
         } else if (typeof fileName === 'string' && fileName.trim()) {
@@ -213,6 +226,12 @@
         });
       }
     }
+    if (!keepLoop) app.exportOpts.loop = P.exportLoop(currentTemplate());
+  }
+
+  // モードで開いているテンプレート
+  function currentTemplate(mode = app.mode) {
+    return (P.TEMPLATES[mode] || []).find(t => t.id === app.scenes[mode].templateId) || null;
   }
 
   // 保存データの場面を初期値と合わせて読み込む（古い形式の直しも含む）
@@ -268,9 +287,27 @@
     const memo = app.editedTexts[mode][tpl.id] || {};
     ['text', 'subText'].forEach(key => {
       if (typeof memo[key] === 'string' || !String(s[key] || '').trim()) return;
-      const samples = ['ja', 'en'].map(lang => P.sampleText(tpl, key, lang));
+      const samples = ['ja', 'en', 'ko'].map(lang => P.sampleText(tpl, key, lang));
       if (!samples.includes(s[key])) s[key] = P.sampleText(tpl, key, app.lang);
     });
+  }
+
+  // 言語を切り替えたとき：書き換えていない見本の文章（別の言語の見本のまま）を、新しい言語の見本にする
+  function localizeSamples() {
+    let changed = false;
+    MODES.forEach(mode => {
+      const s = app.scenes[mode];
+      const tpl = (P.TEMPLATES[mode] || []).find(t => t.id === s.templateId);
+      if (!tpl) return;
+      ['text', 'subText'].forEach(key => {
+        const next = P.sampleText(tpl, key, app.lang);
+        if (s[key] === next) return;
+        if (!LANGS.some(lang => lang !== app.lang && P.sampleText(tpl, key, lang) === s[key])) return;
+        s[key] = next;
+        changed = true;
+      });
+    });
+    return changed;
   }
 
   // 保存データから文章だけを取り出す
@@ -396,8 +433,8 @@
       btn.querySelector('.mode-desc').textContent = desc;
     });
     els.templatesLabel.textContent = d.templates;
-    els.resetBtn.textContent = app.lang === 'en' ? '↺ Reset' : '↺ 初期化';
-    els.resetBtn.title = app.lang === 'en' ? 'Reset this mode to the defaults' : 'このモードを初期状態に戻す';
+    els.resetBtn.textContent = d.reset;
+    els.resetBtn.title = d.resetTitle;
     els.settingsTabs.querySelectorAll('[data-tab]').forEach(btn => { btn.textContent = d.tabs[btn.dataset.tab]; });
     els.previewTitle.textContent = d.preview;
     els.previewBgLabel.textContent = d.previewBg;
@@ -902,7 +939,7 @@
   function updateTransport(duration) {
     els.scrub.max = String(duration);
     if (document.activeElement !== els.scrub || view.playing) els.scrub.value = String(view.time);
-    els.timeLabel.textContent = `${view.time.toFixed(2)} / ${duration.toFixed(2)}${app.lang === 'en' ? ' s' : ' 秒'}`;
+    els.timeLabel.textContent = `${view.time.toFixed(2)} / ${duration.toFixed(2)}${dict().seconds}`;
     const pct = duration > 0 ? (view.time / duration) * 100 : 0;
     els.segments.style.setProperty('--playhead', `${pct}%`);
   }
@@ -1004,7 +1041,10 @@
 
   // テンプレートを選び直してプレビューする（チップを押したときと同じ中身で、通知は出さない）。画像サイズと退場の有無は引き継ぐ
   function showTemplate(tpl) {
-    if (tpl) fillTemplate(scene(), tpl);
+    if (tpl) {
+      fillTemplate(scene(), tpl);
+      setExportLoop(P.exportLoop(tpl));
+    }
     renderTemplates();
     panel.render(app.tab, els.settingsBody);
     view.renderer.invalidateSprites();
@@ -1154,6 +1194,7 @@
 
   function applyTemplate(tpl) {
     fillTemplate(scene(), tpl);
+    setExportLoop(P.exportLoop(tpl));
     renderTemplates();
     view.renderer.invalidateSprites();
     invalidate();
@@ -1171,6 +1212,7 @@
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
     app.editedTexts[app.mode] = {};
     app.exportOpts.fileNames[app.mode] = '';
+    setExportLoop(P.exportLoop(currentTemplate()));
     renderTemplates();
     view.renderer.invalidateSprites();
     invalidate();
@@ -1232,6 +1274,8 @@
     }
     const scroll = s.mode === 'trailer' && s.reveal === 'scroll';
     if (!scroll && s.outEnabled === false) parts.push(d.fileNoExit);
+    // 書き出しが「ずっとループ」なら、ファイル名の末尾に「_ループ」をつける
+    if (app.exportOpts.loop === 'infinite') parts.push(d.fileLoop);
     return sanitizeFileName(parts.filter(Boolean).join('_'));
   }
 
@@ -1543,6 +1587,7 @@
     app.exportOpts.loop = loop;
     els.loopSelect.value = loop;
     els.loopCountWrap.hidden = loop !== 'count';
+    syncFileName();
     saveState();
   }
 
@@ -1578,9 +1623,17 @@
 
   function bindEvents() {
     els.langButtons.forEach(btn => btn.addEventListener('click', () => {
-      app.lang = btn.dataset.langChoice === 'en' ? 'en' : 'ja';
+      app.lang = LANGS.includes(btn.dataset.langChoice) ? btn.dataset.langChoice : 'ja';
       try { localStorage.setItem(LANG_KEY, app.lang); } catch (error) { /* noop */ }
+      const changed = localizeSamples();
       applyLanguage();
+      if (!changed) return;
+      view.renderer.invalidateSprites();
+      invalidate();
+      layoutStage();
+      scheduleFontLoad(0);
+      saveState();
+      restartPreview();
     }));
     els.helpBtn.addEventListener('click', () => toggleDrawer(els.helpDrawer));
     els.rulesBtn.addEventListener('click', () => toggleDrawer(els.rulesDrawer));

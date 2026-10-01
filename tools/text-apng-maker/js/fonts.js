@@ -8,16 +8,18 @@
   'use strict';
 
   const CATEGORIES = [
-    { id: 'gothic', label: { ja: 'ゴシック', en: 'Gothic / Sans' } },
-    { id: 'mincho', label: { ja: '明朝', en: 'Mincho / Serif' } },
-    { id: 'round', label: { ja: '丸ゴ・ポップ', en: 'Rounded / Pop' } },
-    { id: 'display', label: { ja: 'デザイン', en: 'Display' } },
-    { id: 'brush', label: { ja: '筆・手書き', en: 'Brush / Handwritten' } },
-    { id: 'latin', label: { ja: '欧文', en: 'Latin' } },
-    { id: 'user', label: { ja: 'マイフォント', en: 'My Fonts' } }
+    { id: 'gothic', label: { ja: 'ゴシック', en: 'Gothic / Sans', ko: '고딕' } },
+    { id: 'mincho', label: { ja: '明朝', en: 'Mincho / Serif', ko: '명조' } },
+    { id: 'round', label: { ja: '丸ゴ・ポップ', en: 'Rounded / Pop', ko: '둥근 고딕·팝' } },
+    { id: 'display', label: { ja: 'デザイン', en: 'Display', ko: '디자인' } },
+    { id: 'brush', label: { ja: '筆・手書き', en: 'Brush / Handwritten', ko: '붓·손글씨' } },
+    { id: 'korean', label: { ja: '韓国語（ハングル）', en: 'Korean (Hangul)', ko: '한글' } },
+    { id: 'latin', label: { ja: '欧文', en: 'Latin', ko: '영문' } },
+    { id: 'user', label: { ja: 'マイフォント', en: 'My Fonts', ko: '마이 폰트' } }
   ];
 
   // jp: 欧文フォントで日本語を表示するときの代替フォント
+  // ko: ハングルを表示するときの代替フォント（日本語フォントにはハングルが無いため。省略時は KO_BY_CAT で分類ごとに決める）
   const CATALOG = [
     { id: 'noto-sans-jp', family: 'Noto Sans JP', weights: [400, 700, 900], cat: 'gothic', generic: 'sans-serif' },
     { id: 'zen-kaku-gothic-new', family: 'Zen Kaku Gothic New', weights: [400, 700, 900], cat: 'gothic', generic: 'sans-serif' },
@@ -66,6 +68,28 @@
     { id: 'zen-kurenaido', family: 'Zen Kurenaido', weights: [400], cat: 'brush', generic: 'cursive' },
     { id: 'yusei-magic', family: 'Yusei Magic', weights: [400], cat: 'brush', generic: 'cursive' },
 
+    { id: 'noto-sans-kr', family: 'Noto Sans KR', weights: [400, 700, 900], cat: 'korean', generic: 'sans-serif', jp: 'noto-sans-jp' },
+    { id: 'gothic-a1', family: 'Gothic A1', weights: [400, 700, 900], cat: 'korean', generic: 'sans-serif', jp: 'noto-sans-jp' },
+    { id: 'nanum-gothic', family: 'Nanum Gothic', weights: [400, 700, 800], cat: 'korean', generic: 'sans-serif', jp: 'noto-sans-jp' },
+    { id: 'ibm-plex-sans-kr', family: 'IBM Plex Sans KR', weights: [400, 700], cat: 'korean', generic: 'sans-serif', jp: 'noto-sans-jp' },
+    { id: 'noto-serif-kr', family: 'Noto Serif KR', weights: [400, 700, 900], cat: 'korean', generic: 'serif', jp: 'noto-serif-jp' },
+    { id: 'nanum-myeongjo', family: 'Nanum Myeongjo', weights: [400, 700, 800], cat: 'korean', generic: 'serif', jp: 'noto-serif-jp' },
+    { id: 'gowun-batang', family: 'Gowun Batang', weights: [400, 700], cat: 'korean', generic: 'serif', jp: 'noto-serif-jp' },
+    { id: 'hahmlet', family: 'Hahmlet', weights: [400, 700, 900], cat: 'korean', generic: 'serif', jp: 'noto-serif-jp' },
+    { id: 'song-myung', family: 'Song Myung', weights: [400], cat: 'korean', generic: 'serif', jp: 'zen-old-mincho' },
+    { id: 'gowun-dodum', family: 'Gowun Dodum', weights: [400], cat: 'korean', generic: 'sans-serif', jp: 'zen-maru-gothic' },
+    { id: 'jua', family: 'Jua', weights: [400], cat: 'korean', generic: 'sans-serif', jp: 'mochiy-pop-one' },
+    { id: 'do-hyeon', family: 'Do Hyeon', weights: [400], cat: 'korean', generic: 'sans-serif', jp: 'dela-gothic-one' },
+    { id: 'black-han-sans', family: 'Black Han Sans', weights: [400], cat: 'korean', generic: 'sans-serif', jp: 'dela-gothic-one' },
+    { id: 'gugi', family: 'Gugi', weights: [400], cat: 'korean', generic: 'sans-serif', jp: 'rocknroll-one' },
+    { id: 'bagel-fat-one', family: 'Bagel Fat One', weights: [400], cat: 'korean', generic: 'sans-serif', jp: 'mochiy-pop-one' },
+    { id: 'gasoek-one', family: 'Gasoek One', weights: [400], cat: 'korean', generic: 'sans-serif', jp: 'dela-gothic-one' },
+    { id: 'nanum-brush-script', family: 'Nanum Brush Script', weights: [400], cat: 'korean', generic: 'cursive', jp: 'yuji-syuku' },
+    { id: 'east-sea-dokdo', family: 'East Sea Dokdo', weights: [400], cat: 'korean', generic: 'cursive', jp: 'yuji-boku' },
+    { id: 'nanum-pen-script', family: 'Nanum Pen Script', weights: [400], cat: 'korean', generic: 'cursive', jp: 'klee-one' },
+    { id: 'gaegu', family: 'Gaegu', weights: [400, 700], cat: 'korean', generic: 'cursive', jp: 'yomogi' },
+    { id: 'nanum-gothic-coding', family: 'Nanum Gothic Coding', weights: [400, 700], cat: 'korean', generic: 'monospace', jp: 'dotgothic16' },
+
     { id: 'cinzel', family: 'Cinzel', weights: [400, 700, 900], cat: 'latin', generic: 'serif', jp: 'noto-serif-jp' },
     { id: 'cinzel-decorative', family: 'Cinzel Decorative', weights: [400, 700, 900], cat: 'latin', generic: 'serif', jp: 'noto-serif-jp' },
     { id: 'playfair-display', family: 'Playfair Display', weights: [400, 700, 900], cat: 'latin', generic: 'serif', jp: 'noto-serif-jp' },
@@ -94,6 +118,31 @@
   ];
 
   const byId = new Map(CATALOG.map(font => [font.id, font]));
+
+  // 日本語フォント・欧文フォントでハングルを表示するときの代替フォント（分類ごと。等幅・筆書きなどは個別に上書き）
+  const KO_BY_CAT = { gothic: 'noto-sans-kr', mincho: 'noto-serif-kr', round: 'jua', display: 'do-hyeon', brush: 'nanum-brush-script', latin: 'noto-sans-kr', user: 'noto-sans-kr' };
+  const KO_BY_FONT = {
+    'kaisei-opti': 'gowun-batang', 'hina-mincho': 'gowun-batang', 'zen-maru-gothic': 'gowun-dodum', 'kosugi-maru': 'gowun-dodum', 'kiwi-maru': 'gowun-dodum',
+    'hachi-maru-pop': 'gaegu', 'dela-gothic-one': 'black-han-sans', 'rampart-one': 'black-han-sans', 'reggae-one': 'black-han-sans', 'dotgothic16': 'nanum-gothic-coding',
+    'zen-antique': 'song-myung', 'shippori-antique': 'song-myung', 'kaisei-decol': 'gowun-batang', 'new-tegomin': 'song-myung',
+    'klee-one': 'nanum-pen-script', 'yomogi': 'nanum-pen-script', 'zen-kurenaido': 'nanum-pen-script', 'yusei-magic': 'gaegu', 'yuji-boku': 'east-sea-dokdo'
+  };
+
+  // ハングルの代替フォント（ハングルを持つフォントは null）
+  function koFallback(font) {
+    if (!font || font.cat === 'korean') return null;
+    if (KO_BY_FONT[font.id]) return byId.get(KO_BY_FONT[font.id]);
+    if (font.jp && KO_BY_FONT[font.jp]) return byId.get(KO_BY_FONT[font.jp]);
+    if (font.cat === 'latin') {
+      if (font.generic === 'serif') return byId.get('noto-serif-kr');
+      if (font.generic === 'monospace') return byId.get('nanum-gothic-coding');
+      if (font.generic === 'cursive') return byId.get(font.jp === 'yuji-mai' ? 'nanum-pen-script' : 'nanum-brush-script');
+      if (font.jp === 'dela-gothic-one') return byId.get('black-han-sans');
+    }
+    return byId.get(KO_BY_CAT[font.cat] || 'noto-sans-kr');
+  }
+
+  const HANGUL = /[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]/;
   const userFonts = new Map();
   const cssPromises = new Map();
   const previewPromises = new Map();
@@ -234,6 +283,8 @@
     const list = [font.family];
     if (font.jp && byId.has(font.jp)) list.push(byId.get(font.jp).family);
     if (font.user) list.push('Noto Sans JP');
+    const ko = koFallback(font);
+    if (ko) list.push(ko.family);
     list.push(font.generic || 'sans-serif');
     return list;
   }
@@ -249,6 +300,9 @@
     const tasks = [ensureCss(font)];
     if (font.jp && byId.has(font.jp)) tasks.push(ensureCss(byId.get(font.jp)));
     if (font.user) tasks.push(ensureCss(byId.get('noto-sans-jp')));
+    // ハングルの代替フォントは、ハングルを使うときだけ読み込む
+    const ko = koFallback(font);
+    if (ko && HANGUL.test(String(text || ''))) tasks.push(ensureCss(ko));
     await Promise.all(tasks);
     if (!document.fonts || !document.fonts.load) return;
     const fam = root.TextApngEngine ? root.TextApngEngine.cssFontFamily(families(font.id)) : `"${font.family}"`;
@@ -332,7 +386,8 @@
   }
 
   function previewSample(font) {
-    return font.cat === 'latin' ? 'Aa Bb 123' : 'あア永 Aa';
+    if (font.cat === 'latin') return 'Aa Bb 123';
+    return font.cat === 'korean' ? '한글 Aa' : 'あア永 Aa';
   }
 
   // フォント選択パネル用：フォント名の見本だけを小さなサブセットで取得（別名で登録）
