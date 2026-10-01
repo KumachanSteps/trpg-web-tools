@@ -366,7 +366,7 @@
   function track(eventName, params = {}) {
     if (typeof window.gtag !== 'function') return;
     try {
-      window.gtag('event', eventName, { tool_id: 'text_apng_maker', tool_version: VERSION, language: app.lang, ...params });
+      window.gtag('event', eventName, { tool_id: 'text_apng_maker_ex', tool_version: VERSION, language: app.lang, ...params });
     } catch (error) {
       // 計測に失敗してもツールの動作には影響させない
     }
