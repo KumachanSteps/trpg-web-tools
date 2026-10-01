@@ -357,35 +357,35 @@
         }
       },
       {
-        // EX：交差した剣が飛び込んでぶつかり、盾が降りてくる紋章の上に「戦闘開始」
+        // EX：金の細い線で描いた剣と盾の紋章。剣が交差して光り、盾の輪郭が引かれ、暗い帯が開いて「戦闘開始」
         id: 'battleCrest', group: 'combat', icon: 'shield', label: T('剣と盾の戦闘開始', 'Sword & Shield Battle Start', '검과 방패의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'ENGAGE', 'BATTLE START'),
         patch: {
-          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 132, letterSpacing: 0.1,
-          subFontId: 'cinzel-decorative', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.4, subGap: 0.4,
-          fill: { type: 'gradient', color: '#fffbea', color2: '#ffe08a', color3: '#c98a1e', dir: 'v' },
-          stroke: { on: true, width: 3, color: '#2a1804' }, stroke2: { on: true, width: 7, color: '#0b0703' },
-          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 14, x: 0, y: 5 },
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 108, letterSpacing: 0.3,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.24, subLetterSpacing: 0.6, subGap: 0.42,
+          fill: { type: 'gradient', color: '#ffffff', color2: '#fdf6e6', color3: '#ead8a8', dir: 'v' },
+          stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.55, blur: 10, x: 0, y: 2 },
           glow: { on: false },
-          subColorOn: true, subColor: '#ffe7a3',
-          sfx: { type: 'crest', color: '#d9b45a', color2: '#1d2a4a', power: 1 },
-          inFx: 'shrinkIn', inDur: 0.5, inStagger: 0.07, hold: 1.8, outFx: 'fade', outDur: 0.6, subFx: 'fade', subDelay: -0.1
+          subColorOn: true, subColor: '#d8b46a',
+          sfx: { type: 'crest', color: '#d8b46a', color2: '#0b0e16', power: 1 },
+          inFx: 'rise', inDur: 0.7, inStagger: 0.05, inPower: 0.35, hold: 1.8, outFx: 'fade', outDur: 0.6, subFx: 'fade', subDelay: -0.2
         }
       },
       {
-        // EX：照準が定まり、4発の着弾で弾痕が残ってから「戦闘開始」が叩きつけられる
+        // EX：四隅の照準が定まり、3発の曳光弾が着弾 → 斜めの赤い帯が走り込んで「戦闘開始」が叩きつけられる
         id: 'battleGunshot', group: 'combat', icon: 'crosshair', label: T('銃撃の戦闘開始', 'Gunfire Battle Start', '총격의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'OPEN FIRE', 'BATTLE START'),
         patch: {
-          fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 124, letterSpacing: 0.08,
-          subFontId: 'black-ops-one', subWeight: 400, subSize: 0.24, subLetterSpacing: 0.35, subGap: 0.4,
+          fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 120, letterSpacing: 0.06, italic: true,
+          subFontId: 'oswald', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.45, subGap: 0.6, subItalic: true,
           fill: { type: 'solid', color: '#ffffff' },
-          stroke: { on: true, width: 4, color: '#111111' }, stroke2: { on: false },
-          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 8, x: 4, y: 6 },
+          stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#0d0d10', opacity: 1, blur: 0, x: 5, y: 5 },
           glow: { on: false },
-          subColorOn: true, subColor: '#ffb347',
-          sfx: { type: 'gunshot', color: '#ffb347', color2: '#ff3b3b', power: 1 },
-          inFx: 'slam', inDur: 0.7, hold: 1.8, outFx: 'fade', outDur: 0.6, subFx: 'fade', subDelay: -0.2
+          subColorOn: true, subColor: '#ffffff',
+          sfx: { type: 'gunshot', color: '#ff2e43', color2: '#0d0d10', power: 1 },
+          inFx: 'slam', inDur: 0.55, inPower: 0.5, hold: 1.8, outFx: 'wipe', outDir: 'lr', outDur: 0.45, subFx: 'fade', subDelay: -0.25
         }
       },
       {

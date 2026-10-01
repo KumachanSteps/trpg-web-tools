@@ -612,8 +612,11 @@
   function sfxExtents(scene, size) {
     switch (sfxOf(scene).type) {
       case 'frame': return { l: size * 0.95, r: size * 0.95, t: size * 0.6, b: size * 0.6 };
-      case 'crest': return { l: 0, r: 0, t: size * 1.1, b: size * 0.5 };
-      case 'gunshot': return { l: size * 0.45, r: size * 0.45, t: size * 0.6, b: size * 0.6 };
+      case 'crest': {
+        // 紋章は文字の帯の上に載る。下は帯の余白だけ
+        return { l: 0, r: 0, t: size * (0.45 + 2.3 * crestScale(sfxOf(scene).power ?? 1)), b: size * 0.35 };
+      }
+      case 'gunshot': return { l: size, r: size, t: size, b: size * 0.55 };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
   }
@@ -1027,6 +1030,7 @@
           } else {
             const fx = subFxId === 'same' ? inDef : (IN_MAP[subFxId] && IN_MAP[subFxId].level === 'glyph' ? IN_MAP[subFxId] : IN_MAP.fade);
             const subStart = Math.max(textStart, inEnd + (scene.subDelay ?? -0.2));
+            pg.subStart = subStart;
             const ranks = orderRanks(subVis.length, subFxId === 'same' ? scene.inOrder : 'forward', 31 + pi);
             const baseStagger = subFxId === 'same' ? Math.min(scene.inStagger || 0, 0.05) : 0.035;
             const stagger = fx.id === 'typewriter' ? 0.05 : (subFxId === 'fade' ? 0 : baseStagger);
@@ -1343,23 +1347,30 @@
     cyber: { lead: 1.35, tail: 0.4 },
     katana: { lead: 0, tail: 0 },
     frame: { lead: 0.45, tail: 0 },
-    crest: { lead: 0.7, tail: 0 },
-    gunshot: { lead: 1.0, tail: 0 }
+    crest: { lead: 0.88, tail: 0 },
+    gunshot: { lead: 0.9, tail: 0 }
   };
   // 文字の後ろに描く演出（装飾枠・剣と盾・銃撃）。ほかは文字の上に描く
   const SFX_BACK = new Set(['frame', 'crest', 'gunshot']);
   // 装飾枠：線が角から辺の中央まで伸びる時間
   const FRAME_DRAW = 0.55;
-  // 剣と盾：剣が飛び込んで交差するまで / 盾が現れる時間
-  const CREST_SWORDS = 0.35;
-  const CREST_SHIELD = 0.25;
-  // 銃撃：照準が定まるまで / 着弾の時刻と位置（文字の中心から。x は文字の幅の半分＋α、y は文字の大きさが単位）
-  const GUN_LOCK = 0.4;
+  // 剣と盾：剣が飛び込んで止まるまで / 盾の輪郭を引く時間 / 帯が左右に開き始める時刻と開く時間
+  const CREST_SWORDS = 0.3;
+  const CREST_SHIELD = 0.34;
+  const CREST_BAND_AT = 0.62;
+  const CREST_BAND = 0.4;
+  // 剣と盾：盾の先端（または柄頭）と帯の間のすき間（文字の大きさが単位）/ 剣の長さに対する、交点から柄頭の下端までの高さ
+  const CREST_GAP = 0.12;
+  const CREST_POMMEL = 0.307;
+  // 銃撃：四隅の照準が定まるまで / 曳光弾が画面の外から届くまで / 赤い帯が走り込む時刻 /
+  // 着弾の時刻と位置（x はメインの文字の幅の半分、ox と y は文字の大きさが単位。dx, dy は弾の飛ぶ向き）
+  const GUN_LOCK = 0.32;
+  const GUN_TRACER = 0.07;
+  const GUN_BAND = 0.78;
   const GUN_SHOTS = [
-    { t: 0.45, x: -0.78, y: -0.6 },
-    { t: 0.6, x: 0.82, y: 0.5 },
-    { t: 0.72, x: -0.22, y: 0.8 },
-    { t: 0.84, x: 0.38, y: -0.75 }
+    { t: 0.42, x: -0.62, y: -1.0, dx: 1, dy: 0.22 },
+    { t: 0.54, x: 1, ox: 0.12, y: 1.0, dx: -1, dy: -0.18 },
+    { t: 0.66, x: 0.28, y: -1.06, dx: -0.5, dy: 1 }
   ];
   const SFX_TYPES = Object.keys(SFX_TIMING);
   // 雷：左右から走る電気が中央で出会うまで / 中央の火花が散りきるまで / 退場前の落雷
@@ -1380,6 +1391,11 @@
   function sfxOf(scene) {
     const sfx = scene.sfx || {};
     return SFX_TIMING[sfx.type] ? sfx : { type: 'none' };
+  }
+
+  // 剣と盾：強さで紋章の大きさを少しだけ変える（盾が帯に隠れない範囲）
+  function crestScale(k) {
+    return clamp(k, 0.85, 1.3);
   }
 
   function sfxTiming(scene) {
@@ -1479,135 +1495,105 @@
     ctx.restore();
   }
 
-  // 盾の形（原点が中心。上辺はゆるく弧を描き、下は尖る）
-  function shieldPath(ctx, w, h) {
-    const top = -h * 0.45, bot = h * 0.55, hw = w / 2;
-    ctx.beginPath();
-    ctx.moveTo(-hw, top);
-    ctx.quadraticCurveTo(0, top - h * 0.07, hw, top);
-    ctx.lineTo(hw, top + h * 0.38);
-    ctx.bezierCurveTo(hw, bot - h * 0.24, w * 0.2, bot - h * 0.08, 0, bot);
-    ctx.bezierCurveTo(-w * 0.2, bot - h * 0.08, -hw, bot - h * 0.24, -hw, top + h * 0.38);
-    ctx.closePath();
+  // 盾の輪郭の右半分（上辺の中央 → 右上の角 → 右の辺 → 下の先端）。原点が中心。上辺は中央が少し下がる
+  function shieldHalf(w, h) {
+    const hw = w / 2, pts = [];
+    const top = -h * 0.44, corner = -h * 0.5, side = -h * 0.06, bot = h * 0.5;
+    for (let i = 0; i <= 10; i++) {
+      const u = i / 10;
+      pts.push([hw * u, lerp(top, corner, u * u)]);
+    }
+    pts.push([hw, side]);
+    for (let i = 1; i <= 16; i++) {
+      const u = i / 16, v = 1 - u;
+      const x = v * v * v * hw + 3 * v * v * u * hw + 3 * v * u * u * hw * 0.42;
+      const y = v * v * v * side + 3 * v * v * u * h * 0.24 + 3 * v * u * u * h * 0.42 + u * u * u * bot;
+      pts.push([x, y]);
+    }
+    return pts;
   }
 
-  // 剣（原点が刃の中ほど。切っ先が上、柄が下）
-  function drawSword(ctx, L, gold) {
-    const bw = L * 0.045;
-    const tip = -L * 0.55, guard = L * 0.2;
-    const blade = ctx.createLinearGradient(-bw, 0, bw, 0);
-    blade.addColorStop(0, '#7d8899');
-    blade.addColorStop(0.45, '#f5f8ff');
-    blade.addColorStop(0.55, '#dfe5ef');
-    blade.addColorStop(1, '#8b97aa');
-    ctx.fillStyle = blade;
-    ctx.strokeStyle = 'rgba(15, 20, 30, 0.7)';
-    ctx.lineWidth = L * 0.006;
+  function mirrorX(pts) {
+    return pts.map(([x, y]) => [-x, y]);
+  }
+
+  // 折れ線の一部（from〜to は長さの割合 0〜1）をパスに足す
+  function polyPartial(ctx, pts, from, to) {
+    from = clamp(from); to = clamp(to);
+    if (to <= from) return;
+    const lens = [0];
+    for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    const total = lens[lens.length - 1] || 1;
+    const at = s => {
+      let i = 1;
+      while (i < pts.length - 1 && lens[i] < s) i++;
+      const u = clamp((s - lens[i - 1]) / ((lens[i] - lens[i - 1]) || 1));
+      return [lerp(pts[i - 1][0], pts[i][0], u), lerp(pts[i - 1][1], pts[i][1], u)];
+    };
+    const s0 = from * total, s1 = to * total;
+    const a = at(s0), b = at(s1);
+    ctx.moveTo(a[0], a[1]);
+    for (let i = 1; i < pts.length - 1; i++) if (lens[i] > s0 && lens[i] < s1) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.lineTo(b[0], b[1]);
+  }
+
+  // 剣（線画）：原点が2本の交わる点、切っ先が上。金の細い線で縁取る（dark を渡すと刃と柄をその色で塗る）
+  function drawSwordLine(ctx, L, gold, dark, lw) {
+    const bw = L * 0.026;
+    const tip = -L * 0.47, guard = L * 0.27, grip = L * 0.385;
+    ctx.lineJoin = 'miter';
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = gold;
+    ctx.fillStyle = dark || 'rgba(0, 0, 0, 0)';
+    ctx.lineWidth = lw;
     ctx.beginPath();
     ctx.moveTo(0, tip);
-    ctx.lineTo(bw, tip + bw * 3.2);
+    ctx.lineTo(bw, tip + bw * 4);
     ctx.lineTo(bw, guard);
     ctx.lineTo(-bw, guard);
-    ctx.lineTo(-bw, tip + bw * 3.2);
+    ctx.lineTo(-bw, tip + bw * 4);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    // 樋（刃の中央の溝）
-    ctx.strokeStyle = 'rgba(95, 105, 125, 0.55)';
-    ctx.lineWidth = bw * 0.3;
-    ctx.beginPath(); ctx.moveTo(0, tip + bw * 5); ctx.lineTo(0, guard - bw); ctx.stroke();
-    // 鍔・柄・柄頭
-    const gg = ctx.createLinearGradient(0, guard, 0, guard + L * 0.045);
-    gg.addColorStop(0, '#fff0b8'); gg.addColorStop(0.5, gold); gg.addColorStop(1, '#6b4a12');
-    ctx.fillStyle = gg;
-    ctx.lineWidth = L * 0.006;
-    ctx.strokeStyle = 'rgba(40, 25, 5, 0.8)';
+    // 樋（刃の中央の細い線）
+    ctx.lineWidth = lw * 0.5;
+    ctx.beginPath(); ctx.moveTo(0, tip + bw * 6); ctx.lineTo(0, guard - bw * 1.5); ctx.stroke();
+    // 柄と柄頭
+    const hw = bw * 0.55, pr = bw * 0.95;
+    ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.rect(-hw, guard, hw * 2, grip - guard); ctx.fill(); ctx.stroke();
     ctx.beginPath();
-    ctx.rect(-L * 0.17, guard, L * 0.34, L * 0.045);
+    ctx.moveTo(0, grip); ctx.lineTo(pr * 0.75, grip + pr); ctx.lineTo(0, grip + pr * 2); ctx.lineTo(-pr * 0.75, grip + pr);
+    ctx.closePath();
     ctx.fill(); ctx.stroke();
-    diamond(ctx, -L * 0.19, guard + L * 0.0225, L * 0.04, gold);
-    diamond(ctx, L * 0.19, guard + L * 0.0225, L * 0.04, gold);
-    ctx.fillStyle = '#4a2c17';
-    ctx.fillRect(-bw * 0.75, guard + L * 0.045, bw * 1.5, L * 0.17);
-    ctx.strokeStyle = 'rgba(20, 10, 5, 0.6)';
-    ctx.beginPath();
-    for (let i = 1; i < 6; i++) {
-      const yy = guard + L * 0.045 + (L * 0.17) * i / 6;
-      ctx.moveTo(-bw * 0.75, yy); ctx.lineTo(bw * 0.75, yy - bw * 0.4);
-    }
-    ctx.stroke();
-    const pg = ctx.createRadialGradient(-bw * 0.4, guard + L * 0.23, 0, 0, guard + L * 0.24, bw * 1.4);
-    pg.addColorStop(0, '#fff3c4'); pg.addColorStop(1, gold);
-    ctx.fillStyle = pg;
-    ctx.beginPath(); ctx.arc(0, guard + L * 0.24, bw * 1.3, 0, TAU); ctx.fill(); ctx.stroke();
+    // 鍔：細い横棒と両端の小さなひし形
+    const gw = L * 0.1;
+    ctx.lineWidth = lw * 1.7;
+    ctx.beginPath(); ctx.moveTo(-gw, guard); ctx.lineTo(gw, guard); ctx.stroke();
+    diamond(ctx, -gw, guard, lw * 2.4, gold);
+    diamond(ctx, gw, guard, lw * 2.4, gold);
   }
 
-  // 弾痕（周りの欠け・放射状のひび・同心円のひび・穴）。grow でひびが伸びる
-  function drawBulletHole(ctx, x, y, size, seed, grow, alpha) {
+  // 弾痕：黒い穴・細い白い輪・まっすぐなひび。grow でひびが伸びる
+  function drawBulletHole(ctx, x, y, size, seed, grow, alpha, dark) {
     if (alpha <= 0.002) return;
-    const R = size * 0.075;
+    const R = size * 0.05;
     ctx.save();
     ctx.globalAlpha *= clamp(alpha);
-    const chip = ctx.createRadialGradient(x, y, R * 0.6, x, y, R * 2.8);
-    chip.addColorStop(0, 'rgba(35, 35, 40, 0.9)');
-    chip.addColorStop(0.45, 'rgba(120, 120, 130, 0.5)');
-    chip.addColorStop(1, 'rgba(170, 170, 180, 0)');
-    ctx.fillStyle = chip;
-    ctx.beginPath(); ctx.arc(x, y, R * 2.8, 0, TAU); ctx.fill();
-    ctx.strokeStyle = 'rgba(235, 242, 255, 0.85)';
-    ctx.lineWidth = Math.max(0.8, size * 0.009);
-    ctx.lineJoin = 'round';
-    const n = 7 + Math.floor(rnd(seed, 1, 3) * 4);
-    const angs = [];
-    for (let i = 0; i < n; i++) {
-      const ang = (i + rnd(seed, i, 5) * 0.7) / n * TAU;
-      angs.push(ang);
-      const len = size * (0.35 + rnd(seed, i, 7) * 0.65) * grow;
-      if (len < R * 1.2) continue;
-      strokePath(ctx, boltPoints(x + Math.cos(ang) * R, y + Math.sin(ang) * R, x + Math.cos(ang) * len, y + Math.sin(ang) * len, seed * 31 + i, 3, 0.1));
-    }
-    for (let i = 0; i < n; i++) {
-      if (rnd(seed, i, 9) > 0.6) continue;
-      const rr = size * (0.16 + rnd(seed, i, 11) * 0.14) * grow;
-      if (rr < R * 1.3) continue;
-      ctx.beginPath();
-      ctx.arc(x, y, rr, angs[i], angs[(i + 1) % n] + (i === n - 1 ? TAU : 0));
-      ctx.stroke();
-    }
-    ctx.fillStyle = '#060607';
-    ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-    ctx.lineWidth = R * 0.22;
-    ctx.beginPath(); ctx.arc(x, y, R * 0.92, -2.5, -0.9); ctx.stroke();
-    ctx.restore();
-  }
-
-  // 飛び散る火花（中心から放射状。age は経過秒）
-  function drawSparks(ctx, x, y, age, life, count, size, seed, color, scale) {
-    if (age < 0 || age > life) return;
-    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
     ctx.lineCap = 'round';
-    ctx.shadowColor = color;
-    ctx.shadowBlur = size * 0.08 * scale;
-    ctx.strokeStyle = '#fff6dc';
-    const base = ctx.globalAlpha;
-    for (let i = 0; i < count; i++) {
-      const lf = life * (0.5 + 0.5 * rnd(i, 1, seed));
-      if (age > lf) continue;
-      const ang = rnd(i, 2, seed) * TAU;
-      const v = size * (3 + rnd(i, 3, seed) * 6);
-      const travel = (1 - Math.exp(-age * 6)) / 6;
-      const px = x + Math.cos(ang) * v * travel;
-      const py = y + Math.sin(ang) * v * travel + size * 1.2 * age * age;
-      const tl = Math.max(size * 0.04, v * Math.exp(-age * 6) * 0.04);
-      const fade = 1 - age / lf;
-      ctx.globalAlpha = base * fade;
-      ctx.lineWidth = size * 0.022 * (0.5 + 0.7 * fade);
-      ctx.beginPath();
-      ctx.moveTo(px - Math.cos(ang) * tl, py - Math.sin(ang) * tl);
-      ctx.lineTo(px, py);
-      ctx.stroke();
+    ctx.lineWidth = Math.max(1, size * 0.011);
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const ang = (i + rnd(seed, i, 5) * 0.6) / 6 * TAU;
+      const r0 = R * 1.7, r1 = r0 + size * (0.1 + rnd(seed, i, 7) * 0.18) * grow;
+      ctx.moveTo(x + Math.cos(ang) * r0, y + Math.sin(ang) * r0);
+      ctx.lineTo(x + Math.cos(ang) * r1, y + Math.sin(ang) * r1);
     }
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, R * 1.55, 0, TAU); ctx.stroke();
+    ctx.fillStyle = dark;
+    ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
     ctx.restore();
   }
 
@@ -1925,8 +1911,8 @@
       if (sfx.type === 'lightning') this.drawLightning(ctx, pg, mb, t, scale, scene, sfx, k);
       else if (sfx.type === 'katana') this.drawKatana(ctx, pg, mb, t, scale, scene, sfx, k);
       else if (sfx.type === 'frame') this.drawFrame(ctx, pg, page, t, scale, scene, sfx, k);
-      else if (sfx.type === 'crest') this.drawCrest(ctx, pg, mb, t, scale, scene, sfx, k);
-      else if (sfx.type === 'gunshot') this.drawGunshot(ctx, pg, mb, t, scale, scene, sfx, k);
+      else if (sfx.type === 'crest') this.drawCrest(ctx, pg, page, t, scale, scene, sfx, k);
+      else if (sfx.type === 'gunshot') this.drawGunshot(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, t, scale, scene, sfx, k);
     }
@@ -2348,180 +2334,336 @@
       }
     }
 
-    // 剣と盾：交差した2本の剣が左右の下から飛び込み、ぶつかって火花 → 盾が降りてくる → 文字。
-    // 表示中は盾に光が走り、周りがきらめく。退場では文字と一緒に少し大きくなりながら消える
-    drawCrest(ctx, pg, mb, t, scale, scene, sfx, k) {
+    // 剣と盾：金の細い線だけで描く紋章を、文字の帯の上に置く。2本の剣が刃の向きに飛び込んで交差し、きらめく →
+    // 盾の輪郭が上から先端まで線で引かれ、先端から金の細線が左右へ走って暗い帯が開き、文字。
+    // 表示中は光が盾の縁を下って細線へ流れ、退場では全体が少し大きくなりながら消える
+    drawCrest(ctx, pg, page, t, scale, scene, sfx, k) {
       const d = t - pg.start;
       if (d < 0) return;
       const size = this.prepared.layout.size;
-      const gold = sfx.color || '#d9b45a';
-      const field = sfx.color2 || '#1d2a4a';
+      const gold = sfx.color || '#d8b46a';
+      const dark = sfx.color2 || '#0b0e16';
+      const b = page.box;
+      const em = crestScale(k);
+      const SH = size * 1.5 * em, SW = SH * 0.8, L = size * 3.4 * em;
+      const lw = size * 0.022;
+      const bandT = b.y0 - size * 0.3, bandB = b.y1 + size * 0.3;
+      // 盾の中心（剣の柄頭が帯にかからない高さ）と剣の交点
+      const ey = bandT - size * CREST_GAP - Math.max(SH * 0.5, L * CREST_POMMEL - size * 0.1 * em);
+      const sy = ey - size * 0.1 * em;
+      const tipY = ey + SH * 0.5;
       const out = outProgress(pg, t);
-      const cx = mb.cx, cy = mb.cy;
-      const SH = size * 2.5 * Math.max(0.6, Math.min(1.4, k)), SW = SH * 0.8;
-      const L = SH * 1.55;
-      const crossY = cy - SH * 0.05;
+      const midY = (ey - SH * 0.5 + bandB) / 2;
       ctx.globalAlpha = 1 - EASE.inQuad(out);
-      ctx.translate(cx, cy);
-      ctx.scale(1 + out * 0.12, 1 + out * 0.12);
-      ctx.translate(-cx, -cy);
-      // 剣：それぞれの柄の方向から、刃の向きに沿って飛び込む
-      const se = EASE.outCubic(clamp(d / CREST_SWORDS));
+      ctx.translate((b.x0 + b.x1) / 2, midY);
+      ctx.scale(1 + out * 0.05, 1 + out * 0.05);
+      ctx.translate(0, -midY);
+      // 1) 帯：盾の先端から金の細線が左右へ走り、暗い帯が開く（紋章の後ろ）
+      const be = EASE.outExpo(clamp((d - CREST_BAND_AT) / CREST_BAND));
+      // 帯の端は画像の端までに薄れきるように（長い文字では文字の端が薄い部分にかかる）
+      const textHalf = (b.x1 - b.x0) / 2;
+      const bw = Math.min(textHalf + size * 1.6, Math.max(scene.width / 2, textHalf + size * 0.5));
+      const lineW = bw * 1.15;
+      const fade = (w, color, alpha) => {
+        const g = ctx.createLinearGradient(-w, 0, w, 0);
+        g.addColorStop(0, colorWithAlpha(color, 0));
+        g.addColorStop(0.3, colorWithAlpha(color, alpha));
+        g.addColorStop(0.7, colorWithAlpha(color, alpha));
+        g.addColorStop(1, colorWithAlpha(color, 0));
+        return g;
+      };
+      // 盾の先端から帯まで細い線を下ろし、帯の上の線の中央に小さなひし形
+      const drop = EASE.outCubic(clamp((d - CREST_BAND_AT + 0.12) / 0.14));
+      if (drop > 0) {
+        ctx.fillStyle = gold;
+        ctx.fillRect(-lw * 0.4, tipY, lw * 0.8, (bandT - tipY) * drop);
+      }
+      if (be > 0) {
+        const w = bw * be, lw2 = lineW * be;
+        ctx.fillStyle = fade(w, dark, 0.88 * EASE.outCubic(clamp((d - CREST_BAND_AT) / (CREST_BAND * 0.7))));
+        ctx.fillRect(-w, bandT, w * 2, bandB - bandT);
+        ctx.fillStyle = fade(lw2, gold, 1);
+        ctx.fillRect(-lw2, bandT - lw, lw2 * 2, lw);
+        ctx.fillRect(-lw2, bandB, lw2 * 2, lw);
+        diamond(ctx, 0, bandT - lw * 0.5, size * 0.075 * EASE.outBack(clamp((d - CREST_BAND_AT) / 0.2)), gold);
+      }
+      const half = shieldHalf(SW, SH), halfL = mirrorX(half);
+      const s0 = CREST_SWORDS * 0.8;
+      const fillA = clamp((d - s0) / (CREST_SHIELD * 0.8));
+      // 2) 剣：柄の方向から刃の向きに沿って飛び込み、交差したところで止まる（飛び込む間は刃の向きに光の筋）。
+      // 盾が塗り終わったら盾の内側には描かない（退場で薄くなっても盾越しに見えないように）
+      ctx.save();
+      if (fillA >= 1) {
+        ctx.beginPath();
+        ctx.rect(-scene.width * 2, -scene.height * 2, scene.width * 4, scene.height * 4);
+        ctx.moveTo(half[0][0], ey + half[0][1]);
+        half.forEach(([x, y]) => ctx.lineTo(x, ey + y));
+        for (let i = halfL.length - 1; i >= 0; i--) ctx.lineTo(halfL[i][0], ey + halfL[i][1]);
+        ctx.closePath();
+        ctx.clip('evenodd');
+      }
+      ctx.translate(0, sy);
+      const se = EASE.outExpo(clamp(d / CREST_SWORDS));
       [Math.PI / 4, -Math.PI / 4].forEach(rot => {
         ctx.save();
-        ctx.translate(cx, crossY);
         ctx.rotate(rot);
-        ctx.translate(0, L * 1.3 * (1 - se));
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-        ctx.shadowBlur = size * 0.1 * scale;
-        drawSword(ctx, L, gold);
+        const q = d / (CREST_SWORDS * 0.6);
+        if (q < 1) {
+          const g = ctx.createLinearGradient(0, L * 0.6, 0, -L * 0.5);
+          g.addColorStop(0, colorWithAlpha(gold, 0));
+          g.addColorStop(1, colorWithAlpha(gold, 0.6 * (1 - q)));
+          ctx.fillStyle = g;
+          ctx.fillRect(-lw * 0.5, -L * 0.5, lw, L * 1.1);
+        }
+        ctx.translate(0, L * 0.9 * (1 - se));
+        ctx.globalAlpha *= clamp(d / 0.08);
+        drawSwordLine(ctx, L, gold, null, lw);
         ctx.restore();
       });
-      // 盾：大きめから降りてきて収まる
-      const sq = clamp((d - CREST_SWORDS * 0.85) / CREST_SHIELD);
-      if (sq > 0) {
-        const s2 = lerp(1.5, 1, EASE.outCubic(sq));
+      ctx.restore();
+      // 3) 盾：上辺の中央から左右の縁を下へ線で引き、内側の線が続く。中は暗く塗って剣の中ほどを隠し、中央にひし形
+      ctx.save();
+      ctx.translate(0, ey);
+      const draw = EASE.inOutCubic(clamp((d - s0) / CREST_SHIELD));
+      const draw2 = EASE.inOutCubic(clamp((d - s0 - 0.1) / CREST_SHIELD));
+      if (fillA > 0) {
         ctx.save();
-        ctx.globalAlpha *= clamp(sq * 2);
-        ctx.translate(cx, cy);
-        ctx.scale(s2, s2);
-        shieldPath(ctx, SW, SH);
-        ctx.fillStyle = field;
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-        ctx.shadowBlur = size * 0.18 * scale;
+        ctx.globalAlpha *= fillA;
+        ctx.fillStyle = dark;
+        ctx.beginPath();
+        polyPartial(ctx, half, 0, 1);
+        ctx.lineTo(0, half[0][1]);
+        polyPartial(ctx, halfL, 0, 1);
         ctx.fill();
-        ctx.shadowBlur = 0;
-        const shade = ctx.createLinearGradient(0, -SH * 0.5, 0, SH * 0.55);
-        shade.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
-        shade.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
-        shade.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
-        ctx.fillStyle = shade;
-        ctx.fill();
-        // 盾の模様：十字の帯
-        ctx.save();
-        ctx.clip();
-        ctx.fillStyle = colorWithAlpha(gold, 0.28);
-        ctx.fillRect(-SW * 0.07, -SH, SW * 0.14, SH * 2);
-        ctx.fillRect(-SW, -SH * 0.12, SW * 2, SH * 0.12);
-        // 表示中：斜めの光が盾を横切る
-        if (t >= pg.inEnd && t < pg.holdEnd) {
-          const u = ((t - pg.inEnd) % 2.4) / 2.4;
-          const gx = lerp(-SW * 1.2, SW * 1.2, u);
-          const sweep = ctx.createLinearGradient(gx - SW * 0.25, -SH * 0.2, gx + SW * 0.25, SH * 0.2);
-          sweep.addColorStop(0, 'rgba(255, 255, 255, 0)');
-          sweep.addColorStop(0.5, 'rgba(255, 255, 255, 0.35)');
-          sweep.addColorStop(1, 'rgba(255, 255, 255, 0)');
-          ctx.fillStyle = sweep;
-          ctx.fillRect(-SW, -SH, SW * 2, SH * 2);
-        }
-        ctx.restore();
-        // 金の縁（太い外枠と細い内枠）
-        ctx.strokeStyle = gold;
-        ctx.lineWidth = SH * 0.045;
-        ctx.shadowColor = gold;
-        ctx.shadowBlur = size * 0.08 * scale;
-        shieldPath(ctx, SW, SH);
-        ctx.stroke();
-        ctx.lineWidth = SH * 0.012;
-        ctx.save();
-        ctx.scale(0.85, 0.87);
-        shieldPath(ctx, SW, SH);
-        ctx.restore();
-        ctx.stroke();
         ctx.restore();
       }
-      // 剣がぶつかった瞬間：閃光・きらめき・火花
-      const c = d - CREST_SWORDS;
-      if (c >= 0 && c < 0.6) {
-        drawFlash(ctx, cx, crossY, size * 2.2, gold, 0.9 * Math.pow(1 - c / 0.6, 2));
-        twinkle(ctx, cx, crossY - SH * 0.35, size * 1.1 * (1 - c / 0.6), '#ffffff', 1 - c / 0.6);
-        drawSparks(ctx, cx, crossY - SH * 0.35, c, 0.6, 20, size, 88, gold, scale);
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = gold;
+      if (draw > 0) {
+        ctx.lineWidth = lw * 1.5;
+        ctx.beginPath(); polyPartial(ctx, half, 0, draw); polyPartial(ctx, halfL, 0, draw); ctx.stroke();
       }
-      // 表示中：周りがきらめく
-      if (t >= pg.inEnd - 0.2 && t < pg.holdEnd) {
-        for (let i = 0; i < 6; i++) {
-          const ang = (i / 6) * TAU + 0.4;
-          const px = cx + Math.cos(ang) * SW * (0.75 + 0.15 * rnd(i, 1, 66));
-          const py = cy + Math.sin(ang) * SH * (0.55 + 0.12 * rnd(i, 2, 66));
-          const ph = Math.sin(TAU * ((t - pg.inEnd) / 1.6 + rnd(i, 3, 66)));
-          if (ph > 0.4) twinkle(ctx, px, py, size * 0.22 * (ph - 0.4) / 0.6, '#fff6d8', (ph - 0.4) / 0.6);
+      if (draw2 > 0) {
+        ctx.save();
+        ctx.scale(0.84, 0.84);
+        ctx.lineWidth = lw * 0.6 / 0.84;
+        ctx.beginPath(); polyPartial(ctx, half, 0, draw2); polyPartial(ctx, halfL, 0, draw2); ctx.stroke();
+        ctx.restore();
+      }
+      const dm = EASE.outBack(clamp((d - s0 - CREST_SHIELD * 0.7) / 0.25));
+      if (dm > 0) diamond(ctx, 0, -SH * 0.03, size * 0.13 * em * dm, gold);
+      ctx.restore();
+      // 表示中：光が盾の縁を上から先端へ下り、そのまま上の細線を左右へ流れる
+      if (t >= pg.inEnd && t < pg.holdEnd) {
+        const v = ((t - pg.inEnd) % 2.8) / 2.8 * 2.5 - 0.15;
+        const a = clamp((t - pg.inEnd) / 0.3) * clamp((pg.holdEnd - t) / 0.3) * clamp(k);
+        if (a > 0.002) {
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.shadowColor = gold;
+          ctx.shadowBlur = size * 0.12 * scale;
+          if (v < 1.12) {
+            ctx.save();
+            ctx.translate(0, ey);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = lw * 1.5;
+            ctx.lineCap = 'round';
+            ctx.beginPath(); polyPartial(ctx, half, v - 0.12, v); polyPartial(ctx, halfL, v - 0.12, v); ctx.stroke();
+            ctx.restore();
+          }
+          // 先端から帯までの細い線を下る
+          const dv = (v - 1) / 0.2;
+          if (dv > 0 && dv < 1.4) {
+            const y1 = lerp(tipY, bandT, clamp(dv)), y0 = Math.max(tipY, y1 - size * 0.4);
+            const g = ctx.createLinearGradient(0, y0, 0, y1);
+            g.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            g.addColorStop(1, `rgba(255, 255, 255, ${clamp(1.4 - dv)})`);
+            ctx.fillStyle = g;
+            ctx.fillRect(-lw * 0.6, y0, lw * 1.2, y1 - y0);
+          }
+          const hv = (v - 1.2) / 1.15;
+          if (hv > -0.05 && hv < 1) {
+            const x = Math.max(0, hv) * lineW, seg = size * 0.9;
+            [1, -1].forEach(dir => {
+              const g = ctx.createLinearGradient(dir * (x - seg), 0, dir * x, 0);
+              g.addColorStop(0, 'rgba(255, 255, 255, 0)');
+              g.addColorStop(1, `rgba(255, 255, 255, ${clamp(1 - hv)})`);
+              ctx.fillStyle = g;
+              ctx.fillRect(Math.min(dir * (x - seg), dir * x), bandT - lw * 1.25, seg, lw * 1.5);
+            });
+          }
+          ctx.restore();
         }
+      }
+      // 剣が止まった瞬間：交点に白いきらめき
+      const c = d - CREST_SWORDS * 0.5;
+      if (c >= 0 && c < 0.45) {
+        const q = c / 0.45;
+        twinkle(ctx, 0, sy, size * 0.9 * (1 - q * 0.5), '#ffffff', Math.pow(1 - q, 1.5) * clamp(k));
+        drawFlash(ctx, 0, sy, size * 0.8, gold, 0.6 * Math.pow(1 - q, 2) * clamp(k));
       }
     }
 
-    // 銃撃：照準が定まる → 4発の着弾（閃光・火花・ひびの入った弾痕）→ 文字。
-    // 表示中は弾痕から煙が上がり、退場では文字と一緒に消える
-    drawGunshot(ctx, pg, mb, t, scale, scene, sfx, k) {
+    // 銃撃：四隅の照準が飛び込んで文字の位置に定まる → 3発の曳光弾が画面の外から飛んできて着弾（光と弾痕）→
+    // 斜めの赤い帯が左から走り込み、文字が叩きつけられる。退場では帯が右へ抜け、照準は広がって消える
+    drawGunshot(ctx, pg, page, t, scale, scene, sfx, k) {
       const d = t - pg.start;
       if (d < 0) return;
-      const size = this.prepared.layout.size;
-      const flashColor = sfx.color || '#ffb347';
-      const aim = sfx.color2 || '#ff3b3b';
-      const fade = 1 - EASE.inQuad(outProgress(pg, t));
-      const cx = mb.cx, cy = mb.cy;
-      const reach = (mb.x1 - mb.x0) / 2 + size * 0.3;
-      ctx.globalAlpha = fade;
-      // 照準：大きく回りながら縮んで中央に定まり、撃ち始めると消える
-      const ra = clamp(d / 0.15) * (1 - clamp((d - GUN_SHOTS[0].t) / 0.25));
-      if (ra > 0.002) {
-        const e = EASE.outCubic(clamp(d / GUN_LOCK));
-        const R = size * 1.1 * (1 + 1.6 * (1 - e));
-        ctx.save();
-        ctx.globalAlpha *= ra;
-        ctx.translate(cx, cy);
-        ctx.rotate((1 - e) * 0.9);
-        ctx.strokeStyle = aim;
-        ctx.shadowColor = aim;
-        ctx.shadowBlur = size * 0.08 * scale;
-        ctx.lineWidth = size * 0.025;
-        ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.stroke();
-        ctx.lineWidth = size * 0.012;
-        ctx.beginPath(); ctx.arc(0, 0, R * 0.62, 0, TAU); ctx.stroke();
-        ctx.lineWidth = size * 0.025;
-        ctx.beginPath();
-        for (let i = 0; i < 4; i++) {
-          const a = i * Math.PI / 2;
-          ctx.moveTo(Math.cos(a) * R * 0.3, Math.sin(a) * R * 0.3);
-          ctx.lineTo(Math.cos(a) * R * 1.25, Math.sin(a) * R * 1.25);
-        }
-        ctx.stroke();
-        ctx.fillStyle = aim;
-        ctx.beginPath(); ctx.arc(0, 0, size * 0.03, 0, TAU); ctx.fill();
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const red = sfx.color || '#ff2e43';
+      const dark = sfx.color2 || '#0d0d10';
+      const mb = mainBox(layout, page);
+      const b = page.box;
+      const W = scene.width, H = scene.height;
+      const out = outProgress(pg, t);
+      const lw = size * 0.03;
+      // 撃つたびに照準が小さく揺れる
+      let kick = 0;
+      GUN_SHOTS.forEach(s => { const a = d - s.t; if (a >= 0 && a < 0.12) kick += 1 - a / 0.12; });
+      const jx = noise1(t * 50, 3) * size * 0.04 * kick, jy = noise1(t * 50, 9) * size * 0.04 * kick;
+      // 赤い帯（メインの文字の後ろ）の位置
+      const bh = size * 0.6, sk = size * 0.26, pad = size * 0.42;
+      const bx0 = mb.x0 - pad, bx1 = mb.x1 + pad, by0 = mb.cy - bh, by1 = mb.cy + bh;
+      // 1) 四隅の照準：外から飛び込んで帯と文字を囲む位置に定まり、定まった瞬間に赤く2回光る
+      const fx0 = Math.min(bx0 - sk, b.x0) - size * 0.35, fx1 = Math.max(bx1 + sk, b.x1) + size * 0.35;
+      const fy0 = mb.cy - size * 1.45, fy1 = b.y1 + size * 0.5;
+      const la = clamp(d / 0.1) * (1 - clamp(out / 0.7));
+      if (la > 0.002) {
+        const spread = (1 - EASE.outBack(clamp(d / GUN_LOCK))) * size * 1.2 + EASE.outCubic(out) * size * 0.8;
+        const arm = size * 0.36;
         const lock = d - GUN_LOCK;
-        if (lock >= 0 && lock < 0.2) {
-          ctx.globalAlpha *= 1 - lock / 0.2;
-          ctx.lineWidth = size * 0.02;
-          ctx.beginPath(); ctx.arc(0, 0, R * (1 + lock * 2.5), 0, TAU); ctx.stroke();
+        const blink = (lock >= 0 && lock < 0.06) || (lock >= 0.12 && lock < 0.18);
+        ctx.save();
+        ctx.globalAlpha *= la;
+        ctx.strokeStyle = blink ? red : '#ffffff';
+        ctx.lineWidth = lw;
+        ctx.lineCap = 'square';
+        ctx.lineJoin = 'miter';
+        ctx.beginPath();
+        [[fx0, fy0, 1, 1], [fx1, fy0, -1, 1], [fx0, fy1, 1, -1], [fx1, fy1, -1, -1]].forEach(([x, y, sx, sy]) => {
+          const px = x - sx * spread + jx, py = y - sy * spread * 0.6 + jy;
+          ctx.moveTo(px, py + sy * arm);
+          ctx.lineTo(px, py);
+          ctx.lineTo(px + sx * arm, py);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+      // 中央の小さな照準（十字と赤い点）。帯が来たら消える
+      const ca = clamp((d - 0.1) / 0.12) * (1 - clamp((d - GUN_BAND + 0.08) / 0.1));
+      if (ca > 0.002) {
+        const x = mb.cx + jx, y = mb.cy + jy, r0 = size * 0.08, r1 = size * 0.22;
+        ctx.save();
+        ctx.globalAlpha *= ca;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = lw * 0.7;
+        ctx.beginPath();
+        ctx.moveTo(x - r1, y); ctx.lineTo(x - r0, y); ctx.moveTo(x + r0, y); ctx.lineTo(x + r1, y);
+        ctx.moveTo(x, y - r1); ctx.lineTo(x, y - r0); ctx.moveTo(x, y + r0); ctx.lineTo(x, y + r1);
+        ctx.stroke();
+        ctx.fillStyle = red;
+        ctx.beginPath(); ctx.arc(x, y, size * 0.03, 0, TAU); ctx.fill();
+        ctx.restore();
+      }
+      // 2) 着弾：曳光弾が画面の外から走り、白い光と赤い輪が弾けて弾痕が残る
+      const holeA = 1 - EASE.inQuad(out);
+      const reach = (mb.x1 - mb.x0) / 2;
+      const far = Math.hypot(W, H);
+      GUN_SHOTS.forEach((s, i) => {
+        const a = d - s.t;
+        if (a < -GUN_TRACER) return;
+        const hx = mb.cx + s.x * reach + (s.ox || 0) * size, hy = mb.cy + s.y * size;
+        const n = Math.hypot(s.dx, s.dy), dx = s.dx / n, dy = s.dy / n;
+        if (a < 0.1) {
+          const head = far * (1 - clamp((a + GUN_TRACER) / GUN_TRACER));
+          const tail = head + size * 3.2;
+          const ta = a > 0 ? 1 - a / 0.1 : 1;
+          const g = ctx.createLinearGradient(hx - dx * tail, hy - dy * tail, hx - dx * head, hy - dy * head);
+          g.addColorStop(0, colorWithAlpha(red, 0));
+          g.addColorStop(0.7, colorWithAlpha(red, 0.8 * ta));
+          g.addColorStop(1, `rgba(255, 255, 255, ${ta})`);
+          ctx.save();
+          ctx.strokeStyle = g;
+          ctx.lineWidth = size * 0.026;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(hx - dx * tail, hy - dy * tail);
+          ctx.lineTo(hx - dx * head, hy - dy * head);
+          ctx.stroke();
+          ctx.restore();
+        }
+        if (a < 0) return;
+        drawBulletHole(ctx, hx, hy, size, 500 + i * 17, EASE.outCubic(clamp(a / 0.08)), holeA, dark);
+        if (a < 0.2) {
+          const q = a / 0.2;
+          ctx.save();
+          ctx.globalAlpha *= (1 - q) * clamp(k);
+          ctx.strokeStyle = red;
+          ctx.lineWidth = lw * 0.8 * (1 - q);
+          ctx.beginPath(); ctx.arc(hx, hy, size * (0.12 + 0.45 * EASE.outCubic(q)), 0, TAU); ctx.stroke();
+          ctx.restore();
+        }
+        if (a < 0.09) {
+          const q = a / 0.09;
+          ctx.save();
+          ctx.globalAlpha *= 1 - q;
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = size * 0.018;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          for (let j = 0; j < 8; j++) {
+            const ang = (j + rnd(i, j, 41) * 0.5) / 8 * TAU;
+            const r1 = size * (0.28 + 0.3 * rnd(i, j, 43)) * (0.7 + 0.3 * q);
+            ctx.moveTo(hx + Math.cos(ang) * size * 0.1, hy + Math.sin(ang) * size * 0.1);
+            ctx.lineTo(hx + Math.cos(ang) * r1, hy + Math.sin(ang) * r1);
+          }
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(hx, hy, size * 0.09 * (1 - q), 0, TAU); ctx.fill();
+          ctx.restore();
+        }
+      });
+      // 3) 帯：斜めの赤い帯が左から走り込む（後ろに暗い影の帯）。サブの文字の後ろには暗い色の札。
+      // 退場では帯も札も、文字と一緒に斜めの切り口で右へ抜ける
+      const bIn = EASE.outExpo(clamp((d - GUN_BAND) / 0.22));
+      // 抜けるときは文字の消え方に少し遅れて、文字より先に帯がなくならないように
+      const bOut = EASE.inOutCubic(clamp((out - 0.1) / 0.9));
+      if (bIn > 0 && bOut < 1) {
+        const para = (x0, x1, y0, y1, slant, ox, oy) => {
+          ctx.beginPath();
+          ctx.moveTo(x0 + slant + ox, y0 + oy); ctx.lineTo(x1 + slant + ox, y0 + oy);
+          ctx.lineTo(x1 - slant + ox, y1 + oy); ctx.lineTo(x0 - slant + ox, y1 + oy);
+          ctx.closePath();
+        };
+        const right = lerp(fx0 - size, fx1 + size, bIn);
+        const left = lerp(bx0 - sk * 2 - size * 0.3, bx1 + size * 0.3, bOut);
+        const slope = sk / bh, top = fy0 - size, bottom = fy1 + size;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(left + slope * (mb.cy - top), top); ctx.lineTo(right + slope * (mb.cy - top), top);
+        ctx.lineTo(right - slope * (bottom - mb.cy), bottom); ctx.lineTo(left - slope * (bottom - mb.cy), bottom);
+        ctx.closePath();
+        ctx.clip();
+        ctx.fillStyle = dark;
+        para(bx0, bx1, by0, by1, sk, size * 0.1, size * 0.1);
+        ctx.fill();
+        ctx.fillStyle = red;
+        para(bx0, bx1, by0, by1, sk, 0, 0);
+        ctx.fill();
+        const sb = page.subBox;
+        const sub0 = Number.isFinite(pg.subStart) ? pg.subStart : pg.textStart;
+        const e = EASE.outExpo(clamp((t - sub0 + 0.05) / 0.25));
+        if (sb && e > 0) {
+          const px = size * 0.24, py = size * 0.07;
+          const x0 = sb.x0 - px;
+          ctx.fillStyle = dark;
+          para(x0, lerp(x0, sb.x1 + px, e), sb.y0 - py, sb.y1 + py, size * 0.08, 0, 0);
+          ctx.fill();
         }
         ctx.restore();
       }
-      // 着弾
-      GUN_SHOTS.forEach((shot, i) => {
-        const a = d - shot.t;
-        if (a < 0) return;
-        const x = cx + shot.x * reach, y = cy + shot.y * size * 1.1;
-        // 煙：弾痕からゆっくり立ちのぼる
-        const smokeIn = clamp((a - 0.05) / 0.4);
-        if (smokeIn > 0) {
-          for (let j = 0; j < 3; j++) {
-            const ph = (((a - 0.05) / 1.8 + j / 3) % 1 + 1) % 1;
-            const r = size * (0.08 + 0.22 * ph);
-            const sx = x + Math.sin(ph * 5 + i + j) * size * 0.12;
-            const sy = y - ph * size * 0.9;
-            const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
-            g.addColorStop(0, `rgba(210, 210, 215, ${0.22 * (1 - ph) * smokeIn})`);
-            g.addColorStop(1, 'rgba(210, 210, 215, 0)');
-            ctx.fillStyle = g;
-            ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
-          }
-        }
-        drawBulletHole(ctx, x, y, size, 500 + i * 17, EASE.outCubic(clamp(a / 0.08)), 1);
-        if (a < 0.14) {
-          drawFlash(ctx, x, y, size * (0.6 + a * 4), flashColor, 0.95 * clamp(k) * (1 - a / 0.14));
-          if (a < 0.06) twinkle(ctx, x, y, size * 0.7, '#fffbe8', 1 - a / 0.06);
-        }
-        drawSparks(ctx, x, y, a, 0.32, 12, size, 300 + i, flashColor, scale);
-      });
     }
 
     drawBackground(ctx, t, scale) {
