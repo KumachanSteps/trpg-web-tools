@@ -12,7 +12,7 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.02';
+  const VERSION = 'v1.03';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const LANGS = ['ja', 'ko', 'en'];
@@ -1274,6 +1274,8 @@
     }
     const scroll = s.mode === 'trailer' && s.reveal === 'scroll';
     if (!scroll && s.outEnabled === false) parts.push(d.fileNoExit);
+    // 書き出しが「ずっとループ」なら、ファイル名の末尾に「_ループ」をつける
+    if (app.exportOpts.loop === 'infinite') parts.push(d.fileLoop);
     return sanitizeFileName(parts.filter(Boolean).join('_'));
   }
 
@@ -1585,6 +1587,7 @@
     app.exportOpts.loop = loop;
     els.loopSelect.value = loop;
     els.loopCountWrap.hidden = loop !== 'count';
+    syncFileName();
     saveState();
   }
 
