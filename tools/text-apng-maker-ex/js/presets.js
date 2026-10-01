@@ -88,7 +88,9 @@
     soloPause: 0.4,
     soloImpact: 1,
     spreadHold: 0.5,
-    spreadDur: 0.9
+    spreadDur: 0.9,
+    // EXの演出（雷・サイバー警告・刀の斬撃）。type: 'none' / 'lightning' / 'cyber' / 'katana'
+    sfx: { type: 'none', color: '#8fd3ff', color2: '#14040a', power: 1, word: 'WARNING' }
   };
 
   const T = (ja, en, ko) => ({ ja, en, ko });
@@ -291,6 +293,52 @@
         id: 'battleEnd', group: 'combat', icon: 'flag', label: T('戦闘終了', 'Battle End', '전투 종료'),
         text: T('戦闘終了', 'BATTLE END', '전투 종료'), subText: T('BATTLE END', 'DISENGAGE', 'BATTLE END'),
         patch: BATTLE_PATCH
+      },
+      {
+        // EX：落雷とともに現れ、文字の上を電気が走り、もう一度の落雷で消える
+        id: 'battleLightning', group: 'combat', icon: 'bolt', label: T('雷鳴の戦闘開始', 'Thunder Battle Start', '뇌명의 전투 개시'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'ENGAGE', 'BATTLE START'),
+        patch: {
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 128, letterSpacing: 0.12,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.55,
+          fill: { type: 'gradient', color: '#ffffff', color2: '#e3f4ff', color3: '#8fd3ff', dir: 'v' },
+          stroke: { on: true, width: 2, color: '#0a1a33' }, stroke2: { on: false },
+          shadow: { on: true, color: '#000814', opacity: 0.6, blur: 10, x: 0, y: 3 },
+          glow: { on: true, color: '#4ab8ff', size: 26, strength: 0.9 },
+          subColorOn: true, subColor: '#bfe6ff',
+          sfx: { type: 'lightning', color: '#8fd3ff', power: 1 },
+          inFx: 'flash', inDur: 0.6, hold: 2, outFx: 'fade', outDur: 0.45, subFx: 'fade', subDelay: -0.2
+        }
+      },
+      {
+        // EX：画像の上下に「WARNING」の帯がグリッチで現れ、中央の「ENGAGE」が点滅する
+        id: 'cyberWarning', group: 'combat', icon: 'warning', label: T('WARNING / ENGAGE', 'Warning / Engage', 'WARNING / ENGAGE'),
+        text: T('ENGAGE', 'ENGAGE', 'ENGAGE'), subText: T('BATTLE START', 'BATTLE START', 'BATTLE START'),
+        patch: {
+          fontId: 'orbitron', weight: 900, fontSize: 132, letterSpacing: 0.18,
+          subFontId: 'share-tech-mono', subWeight: 400, subSize: 0.24, subLetterSpacing: 0.6, subGap: 0.5,
+          fill: { type: 'gradient', color: '#ffffff', color2: '#ffd0d6', color3: '#ff3a52', dir: 'v' },
+          stroke: { on: true, width: 1.5, color: '#ff2b4a' }, stroke2: { on: false },
+          shadow: { on: false }, glow: { on: true, color: '#ff1f3d', size: 28, strength: 1.1 },
+          subColorOn: true, subColor: '#ff8a9a',
+          glitchColor: '#ff1f3d', glitchColor2: '#2af0ff',
+          sfx: { type: 'cyber', color: '#ff2b4a', color2: '#14040a', power: 1, word: 'WARNING' },
+          inFx: 'glitch', inDur: 0.7, holdFx: 'blink', holdPower: 0.9, hold: 2.4, outFx: 'glitch', outDur: 0.5, subFx: 'typewriter', subDelay: -0.1
+        }
+      },
+      {
+        // EX：中央に一閃 → 切れた「戦闘開始」が出て、上半分は右へ・下半分は左へずれて消える
+        id: 'katanaSlash', group: 'combat', icon: 'katana', label: T('一閃の戦闘開始', 'Katana Battle Start', '일섬의 전투 개시'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('', '', ''),
+        patch: {
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 136, letterSpacing: 0.14,
+          fill: { type: 'solid', color: '#ffffff' },
+          stroke: { on: true, width: 2, color: '#1b1b1f' }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.55, blur: 10, x: 0, y: 4 },
+          glow: { on: false },
+          sfx: { type: 'katana', color: '#cfe6ff', power: 1 },
+          inFx: 'flash', inDur: 0.35, hold: 1.4, outFx: 'split', outDur: 0.8
+        }
       },
       {
         // サイバー風：ネオンの水色、デジタルな書体、グリッチで起動

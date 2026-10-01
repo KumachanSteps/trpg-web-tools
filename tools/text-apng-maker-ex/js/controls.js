@@ -55,7 +55,8 @@
       recede: T('遠ざかる', 'Recede', '멀어짐'),
       wipe: T('ワイプ', 'Wipe', '와이프'),
       shutter: T('閉じる', 'Fold', '닫기'),
-      glitch: T('グリッチ', 'Glitch', '글리치')
+      glitch: T('グリッチ', 'Glitch', '글리치'),
+      split: T('斬られて左右へ', 'Sliced apart', '베여서 좌우로')
     },
     hold: {
       none: T('なし', 'None', '없음'),
@@ -248,6 +249,23 @@
         { type: 'toggle', bind: 'scrollFade', when: s => s.reveal === 'scroll', label: T('画面の端でフェードさせる', 'Fade near the edges', '화면 끝에서 페이드') },
         { type: 'toggle', bind: 'cursor', when: s => s.reveal === 'char', label: T('入力カーソルを表示', 'Show a typing cursor', '입력 커서 표시') },
         { type: 'range', bind: 'pageGap', when: s => s.reveal !== 'scroll' && s.pageSplit, label: T('ページ間の空白', 'Gap between pages', '페이지 사이 공백'), min: 0, max: 3, step: 0.05, format: 's' }
+      ] },
+      { type: 'section', label: T('演出（EX）', 'Scene effects (EX)', '연출 (EX)'), children: [
+        { type: 'chips', bind: 'sfx.type', options: [
+          { value: 'none', label: T('なし', 'None', '없음') },
+          { value: 'lightning', label: T('雷', 'Lightning', '번개') },
+          { value: 'cyber', label: T('サイバー警告', 'Cyber warning', '사이버 경고') },
+          { value: 'katana', label: T('刀の一閃', 'Katana slash', '칼의 일섬') }
+        ] },
+        { type: 'note', when: s => s.sfx.type === 'lightning', text: T('落雷とともに文字が現れ、表示中は文字の上を電気が走り、退場の瞬間にもう一度落雷します', 'A lightning strike brings the text in, electricity crawls over it while shown, and a second strike sends it out', '낙뢰와 함께 글자가 나타나고, 표시 중에는 글자 위로 전기가 흐르며, 퇴장하는 순간 다시 한번 낙뢰가 칩니다') },
+        { type: 'note', when: s => s.sfx.type === 'cyber', text: T('画像の上下に警告の帯がグリッチで現れて流れ続け、文字が消えたあとにグリッチで消えます', 'Warning bands glitch in at the top and bottom, keep scrolling, and glitch out after the text', '이미지 위아래에 경고 띠가 글리치로 나타나 계속 흐르고, 글자가 사라진 뒤 글리치로 사라집니다') },
+        { type: 'note', when: s => s.sfx.type === 'katana', text: T('中央に一閃が走ってから、切れ目の入った文字が現れます。退場を「斬られて左右へ」にすると、切り口から上下がずれて消えます', 'A slash crosses the center, then the text appears already cut. With the “Sliced apart” exit, the halves slide away along the cut', '중앙에 일섬이 지나간 뒤 베인 자국이 있는 글자가 나타납니다. 퇴장을 「베여서 좌우로」로 하면 베인 자리에서 위아래가 어긋나며 사라집니다') },
+        { type: 'colors', when: s => s.sfx.type !== 'none', items: [
+          { bind: 'sfx.color', label: T('演出の色', 'Effect color', '연출 색') },
+          { bind: 'sfx.color2', label: T('帯の地の色', 'Band color', '띠 바탕색'), when: s => s.sfx.type === 'cyber' }
+        ] },
+        { type: 'text', bind: 'sfx.word', when: s => s.sfx.type === 'cyber', label: T('帯の文字', 'Band text', '띠 문자'), placeholder: T('WARNING', 'WARNING', 'WARNING') },
+        { type: 'range', bind: 'sfx.power', when: s => s.sfx.type !== 'none', label: T('強さ', 'Strength', '강도'), min: 0.2, max: 2, step: 0.05, format: 'x' }
       ] },
       { type: 'section', when: s => !(isTrailer(s) && ['solo', 'spread'].includes(s.reveal)), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears', '한 글자가 나타나는 방식') : T('登場', 'In', '등장')), children: [
         { type: 'effects', phase: 'in' },
