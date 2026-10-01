@@ -242,6 +242,25 @@
       c.restore();
       return;
     }
+    if (run.kind === 'bars') {
+      // 鉄格子：細い横木に丸い格子を等間隔に並べる
+      c.save();
+      c.strokeStyle = theme.wall;
+      c.fillStyle = theme.wall;
+      c.lineWidth = lw * 0.8;
+      c.beginPath();
+      if (run.o === 'h') { c.moveTo(a, run.c); c.lineTo(b, run.c); } else { c.moveTo(run.c, a); c.lineTo(run.c, b); }
+      c.stroke();
+      const n = Math.max(1, Math.round((b - a) / 0.3));
+      for (let i = 0; i <= n; i++) {
+        const p = a + ((b - a) * i) / n;
+        c.beginPath();
+        if (run.o === 'h') c.arc(p, run.c, t * 0.5, 0, Math.PI * 2); else c.arc(run.c, p, t * 0.5, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+      return;
+    }
     if (run.kind === 'rail') {
       c.save();
       c.strokeStyle = theme.rail;
@@ -300,6 +319,23 @@
       c.strokeStyle = theme.rail;
       c.lineWidth = lw * 1.2;
       if (w.kind === 'fence') c.setLineDash([lw * 5, lw * 3]);
+    } else if (w.kind === 'bars') {
+      // 鉄格子（斜め）：横木に丸い格子を等間隔に並べる
+      c.strokeStyle = theme.wall;
+      c.fillStyle = theme.wall;
+      c.lineWidth = lw * 0.8;
+      c.beginPath();
+      c.moveTo(w.x1, w.y1);
+      c.lineTo(w.x2, w.y2);
+      c.stroke();
+      const n = Math.max(1, Math.round(Math.hypot(w.x2 - w.x1, w.y2 - w.y1) / 0.3));
+      for (let i = 0; i <= n; i++) {
+        c.beginPath();
+        c.arc(w.x1 + ((w.x2 - w.x1) * i) / n, w.y1 + ((w.y2 - w.y1) * i) / n, info.t * 0.5, 0, TAU);
+        c.fill();
+      }
+      c.restore();
+      return;
     } else if (w.kind === 'glass') {
       c.strokeStyle = theme.glass;
       c.lineWidth = info.t;
@@ -654,6 +690,7 @@
   /* ---------- 部屋ラベル ---------- */
 
   function roomName(room, opts) {
+    if (opts.hideNames) return '';
     if (opts.playerView && room.plName) return room.plName;
     return room.name || '';
   }
@@ -787,7 +824,7 @@
   }
 
   /**
-   * floor: フロアデータ / opts: { theme, zoom, lang, showSize, playerView, editor, grid, viewRect, ghost }
+   * floor: フロアデータ / opts: { theme, zoom, lang, showSize, hideNames, playerView, editor, grid, viewRect, ghost }
    * ctx は「1単位 = 1マス」に変換済みであること。
    */
   function drawFloor(c, floorIn, opts) {
@@ -882,9 +919,19 @@
     return box;
   }
 
+  // キャンバスの上限：1辺 16000px、総画素数 4000万px（RGBA で約160MB）。iPhone / iPad の Safari は 16,777,216px まで
+  const EXPORT_MAX_SIDE = 16000;
+  const IOS = typeof navigator !== 'undefined' && (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+  const EXPORT_MAX_AREA = IOS ? 16777216 : 40e6;
+
+  /* w×h マスの画像を 1マス px で書き出すときの実際の倍率（上限を超えるときは縮める） */
+  function exportScale(w, h, px) {
+    return Math.min(px, EXPORT_MAX_SIDE / w, EXPORT_MAX_SIDE / h, Math.sqrt(EXPORT_MAX_AREA / (w * h)));
+  }
+
   /**
-   * floors を 1枚の画像に描く（複数なら横に並べ、フロア名を上に書く）
-   * opts: { theme, px (1マスのピクセル数), lang, showSize, playerView, grid, transparent, margin, titles }
+   * floors を 1枚の画像に描く（複数なら横に並べ、長くなりすぎるときは折り返す。フロア名を上に書く）
+   * opts: { theme, px (1マスのピクセル数), lang, showSize, hideNames, playerView, grid, transparent, margin, titles }
    */
   function renderImage(floors, opts) {
     const theme = THEMES[opts.theme] || THEMES.clean;
@@ -899,10 +946,23 @@
       return { x: bb.x - margin, y: bb.y - margin - titleH, w: bb.w + margin * 2, h: bb.h + margin * 2 + titleH };
     });
     const gap = floors.length > 1 ? 1 : 0;
-    const totalW = frames.reduce((sum, f) => sum + f.w, 0) + gap * (frames.length - 1);
-    const totalH = Math.max(...frames.map(f => f.h));
-    const maxSide = 16000;
-    const scale = Math.min(px, maxSide / totalW, maxSide / totalH);
+    // 横一列が極端に長くなるとき（細長い校舎や階数の多い建物）は、4:3 に近くなる列数で折り返す
+    const fh = Math.max(...frames.map(f => f.h));
+    const sizeFor = cols => {
+      const rows = Math.ceil(frames.length / cols);
+      return { cols, w: frames.reduce((sum, f, i) => sum + (i < cols ? f.w : 0), 0) + gap * (cols - 1), h: rows * fh + gap * (rows - 1) };
+    };
+    const offAspect = l => Math.abs(Math.log(l.w / l.h / (4 / 3)));
+    let layout = sizeFor(frames.length);
+    if (layout.w / layout.h > 5) {
+      for (let cols = 1; cols < frames.length; cols++) {
+        const cand = sizeFor(cols);
+        if (offAspect(cand) < offAspect(layout)) layout = cand;
+      }
+    }
+    const totalW = layout.w;
+    const totalH = layout.h;
+    const scale = exportScale(totalW, totalH, px);
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(totalW * scale);
     canvas.height = Math.round(totalH * scale);
@@ -914,12 +974,14 @@
     let offset = 0;
     floors.forEach((floor, index) => {
       const f = frames[index];
+      const row = Math.floor(index / layout.cols);
+      if (index % layout.cols === 0) offset = 0;
       c.save();
-      c.setTransform(scale, 0, 0, scale, (offset - f.x) * scale, -f.y * scale);
+      c.setTransform(scale, 0, 0, scale, (offset - f.x) * scale, (row * (fh + gap) - f.y) * scale);
       const view = { x: f.x, y: f.y, w: f.w, h: f.h };
       drawFloor(c, floor, {
         theme: opts.transparent ? { ...theme, bg: 'transparent' } : theme,
-        zoom: scale, lang: opts.lang, showSize: opts.showSize, playerView: opts.playerView,
+        zoom: scale, lang: opts.lang, showSize: opts.showSize, hideNames: opts.hideNames, playerView: opts.playerView,
         editor: false, grid: opts.grid, viewRect: view, background: false
       });
       if (titleH) {
@@ -981,6 +1043,6 @@
 
   global.IMM = global.IMM || {};
   Object.assign(global.IMM, {
-    THEMES, drawFloor, renderImage, drawAssetIcon, drawOpeningIcon, drawOpening, drawItem, labelMetrics, textBox, lineWidth, roomFill
+    THEMES, drawFloor, renderImage, exportScale, drawAssetIcon, drawOpeningIcon, drawOpening, drawItem, labelMetrics, textBox, lineWidth, roomFill
   });
 })(window);

@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.00';
+  const VERSION = 'v1.01';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -50,7 +50,8 @@
     'bed_single', 'bed_double', 'wardrobe', 'dresser', 'nightstand', 'desk', 'desk_set',
     'kitchen', 'sink', 'stove', 'fridge', 'counter', 'cupboard', 'toilet', 'washbasin', 'bathtub', 'shower', 'washer',
     'office_desk', 'reception', 'locker', 'filing', 'whiteboard', 'copier', 'vending', 'bench',
-    'hospital_bed', 'exam_bed', 'med_cabinet', 'morgue', 'lab_bench', 'rack', 'altar', 'garden_bench'
+    'hospital_bed', 'exam_bed', 'med_cabinet', 'morgue', 'lab_bench', 'rack', 'altar', 'garden_bench',
+    'stage', 'dumbbell_rack'
   ]);
   const SWING_DOORS = new Set(['door', 'door2', 'locked', 'secret', 'broken']);
   const PRESET_COLORS = ['#fbf1df', '#e8f2e1', '#e1eef8', '#f6dedb', '#eee2f3', '#f1efea', '#e6e7ea', '#2e2230'];
@@ -245,7 +246,8 @@
   const fmt = v => String(round2(v));
   const cur = () => app.project.floors[app.project.active];
   const theme = () => M.THEMES[app.project.theme] || M.THEMES.clean;
-  const isTyping = el => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
+  const NON_TEXT_INPUTS = ['checkbox', 'radio', 'button', 'range', 'color'];
+  const isTyping = el => el && ((el.tagName === 'INPUT' && !NON_TEXT_INPUTS.includes(el.type)) || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
 
   function toast(message, type = 'info', duration = 3200, action = null) {
     if (!message) return;
@@ -310,6 +312,7 @@
     const out = M.emptyProject(typeof p.name === 'string' ? p.name : '');
     out.theme = M.THEMES[p.theme] ? p.theme : 'clean';
     out.showSize = ['none', 'jo', 'm2', 'm'].includes(p.showSize) ? p.showSize : 'none';
+    out.showNames = p.showNames !== false;
     out.floors = p.floors.filter(f => f && typeof f === 'object').map(f => ({
       id: String(f.id || M.uid('f')),
       name: String(f.name == null ? '' : f.name),
@@ -684,7 +687,7 @@
     return Math.hypot(px - (w.x1 + k * dx), py - (w.y1 + k * dy));
   }
 
-  const labelOpts = () => ({ playerView: app.playerView, showSize: app.project.showSize, lang: app.lang });
+  const labelOpts = () => ({ playerView: app.playerView, showSize: app.project.showSize, hideNames: app.project.showNames === false, lang: app.lang });
 
   function hitTest(wx, wy, options = {}) {
     const f = M.visibleFloor(cur(), app.playerView);
@@ -801,8 +804,8 @@
     const viewRect = { x: -view.ox / z, y: -view.oy / z, w: view.w / z, h: view.h / z };
     const ghost = app.ghost && app.project.active > 0 ? app.project.floors[app.project.active - 1] : null;
     M.drawFloor(c, cur(), {
-      theme: th, zoom: z, lang: app.lang, showSize: app.project.showSize, playerView: app.playerView,
-      editor: true, grid: app.grid, viewRect, ghost
+      theme: th, zoom: z, lang: app.lang, showSize: app.project.showSize, hideNames: app.project.showNames === false,
+      playerView: app.playerView, editor: true, grid: app.grid, viewRect, ghost
     });
     drawOverlays(c, th);
     els.wrap.style.background = th.bg;
@@ -2096,6 +2099,12 @@
       c.moveTo(x1, y + 2.2); c.lineTo(x2, y + 2.2);
       c.stroke();
       if (kind === 'glass') { c.fillStyle = 'rgba(156, 203, 238, 0.6)'; c.fillRect(x1, y - 2.2, x2 - x1, 4.4); }
+    } else if (kind === 'bars') {
+      c.strokeStyle = th.wall;
+      c.fillStyle = th.wall;
+      c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(x1, y); c.lineTo(x2, y); c.stroke();
+      for (let x = x1; x <= x2 + 0.1; x += 4) { c.beginPath(); c.arc(x, y, 1.7, 0, Math.PI * 2); c.fill(); }
     } else if (kind === 'fence') {
       c.strokeStyle = th.rail;
       c.lineWidth = 1.4;
@@ -2384,6 +2393,7 @@
     body.appendChild(head(t('props.mapTitle'), p.name || t('msg.untitled')));
     body.appendChild(textField(t('props.mapName'), () => p.name, v => { p.name = v; syncMapTitle(); }, { placeholder: t('props.mapNamePh') }));
     body.appendChild(selectField(t('props.style'), Object.entries(M.THEMES).map(([id, th]) => ({ value: id, label: pick(th.name) })), () => p.theme, v => { p.theme = v; }));
+    body.appendChild(toggleField(t('props.showNames'), () => p.showNames !== false, v => { p.showNames = v; }));
     body.appendChild(selectField(t('props.sizeLabel'), ['none', 'jo', 'm2', 'm'].map(v => ({ value: v, label: t(`props.sizeModes.${v}`) })), () => p.showSize, v => { p.showSize = v; }));
     body.appendChild(prefToggle(t('props.grid'), () => app.grid, v => { app.grid = v; }));
     body.appendChild(prefToggle(t('props.ghost'), () => app.ghost, v => { app.ghost = v; }));
@@ -2577,7 +2587,7 @@
 
   function newMap() {
     change(() => {
-      const keep = { theme: app.project.theme === 'horror' ? 'clean' : app.project.theme, showSize: app.project.showSize };
+      const keep = { theme: app.project.theme === 'horror' ? 'clean' : app.project.theme, showSize: app.project.showSize, showNames: app.project.showNames !== false };
       app.project = { ...M.emptyProject(t('newMapName')), ...keep };
     });
     app.sel = [];
@@ -2607,6 +2617,7 @@
   function exportOptions(px) {
     return {
       theme: app.exp.theme || app.project.theme, px, lang: app.lang, showSize: app.project.showSize,
+      hideNames: app.project.showNames === false,
       playerView: app.exp.view === 'pl', grid: app.exp.grid, transparent: app.exp.transparent
     };
   }
@@ -2657,13 +2668,10 @@
     }
     const pv = Math.min(app.exp.px, 16);
     const canvas = M.renderImage(floors, exportOptions(pv));
-    let w = Math.round((canvas.width / pv) * app.exp.px), hh = Math.round((canvas.height / pv) * app.exp.px);
-    let note = '';
-    if (Math.max(w, hh) > 16000) {
-      const k = 16000 / Math.max(w, hh);
-      w = Math.round(w * k); hh = Math.round(hh * k);
-      note = ` · ${t('exp.tooLarge')}`;
-    }
+    const cw = canvas.width / pv, ch = canvas.height / pv;
+    const k = M.exportScale(cw, ch, app.exp.px);
+    const w = Math.round(cw * k), hh = Math.round(ch * k);
+    const note = k < app.exp.px ? ` · ${t('exp.tooLarge')}` : '';
     info.textContent = `${t('exp.info', { w, h: hh })}${app.exp.range === 'each' && multi ? ` × ${app.project.floors.length}` : ''}${note}`;
     const img = h('img', { alt: '' });
     img.src = canvas.toDataURL('image/png');

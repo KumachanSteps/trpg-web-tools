@@ -60,6 +60,7 @@
     { id: 'glass', t: 0.14, name: { ja: 'ガラス壁', en: 'Glass wall', ko: '유리벽' } },
     { id: 'rail', t: 0.1, name: { ja: '手すり・腰壁', en: 'Railing', ko: '난간' } },
     { id: 'fence', t: 0.1, name: { ja: '柵・フェンス', en: 'Fence', ko: '울타리' } },
+    { id: 'bars', t: 0.14, name: { ja: '鉄格子', en: 'Bars', ko: '쇠창살' } },
     { id: 'broken', t: 0.3, name: { ja: '崩れた壁', en: 'Crumbling wall', ko: '무너진 벽' } }
   ];
   const WALL = Object.fromEntries(WALL_KINDS.map(w => [w.id, w]));
@@ -72,7 +73,7 @@
   }
 
   function emptyProject(name) {
-    return { app: 'indoor-map-maker', v: 1, name: name || '', theme: 'clean', showSize: 'none', floors: [emptyFloor('1F')], active: 0 };
+    return { app: 'indoor-map-maker', v: 1, name: name || '', theme: 'clean', showSize: 'none', showNames: true, floors: [emptyFloor('1F')], active: 0 };
   }
 
   /* プレイヤー版では GM 専用のものを除く */
@@ -241,6 +242,16 @@
       : { x: o.x - pad, y: o.y, w: pad * 2, h: o.len };
   }
 
+  /* 開口が壁からはみ出して描かれる距離（開き戸の軌跡など）。長い開口や引き戸で余白が広がりすぎないように */
+  function openingReach(o) {
+    if (['door', 'locked', 'broken', 'secret'].includes(o.kind)) return o.len;
+    if (o.kind === 'door2') return o.len / 2;
+    if (o.kind === 'auto') return o.len * 0.35;
+    if (o.kind === 'folding') return o.len * 0.42;
+    if (o.kind === 'hole') return 1;
+    return 0.5;
+  }
+
   /* 床の中身すべての外接矩形 */
   function floorBounds(floor) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -252,7 +263,7 @@
     floor.items.forEach(i => add(i.x, i.y, i.w, i.h));
     floor.walls.forEach(w => { add(w.x1, w.y1); add(w.x2, w.y2); });
     floor.openings.forEach(o => {
-      const r = openingRect(o, o.len);
+      const r = openingRect(o, openingReach(o));
       add(r.x, r.y, r.w, r.h);
     });
     floor.texts.forEach(t => add(t.x - 2, t.y - 0.5, 4, 1));

@@ -579,8 +579,8 @@
     "devHref": "./tools/indoor-map-maker/",
     "devStage": "testing",
     "devNote": {
-      "ja": "室内の見取り図エディター。テンプレート10種（1LDK〜廃病院）、ドア・窓・家具の配置、GM/PL別のPNG書き出し。クローズドテスト用。",
-      "en": "Indoor floor-plan editor with 10 templates (apartment to abandoned hospital), doors, windows and furniture, and separate GM/player PNG export. Closed test."
+      "ja": "室内の見取り図エディター。テンプレート19種（1LDK・タワーマンション・ホテル・学校・警察署・図書館・劇場・廃病院など）、ドア・窓・家具の配置、GM/PL別のPNG書き出し。クローズドテスト用。",
+      "en": "Indoor floor-plan editor with 19 templates (apartments, high-rise condo, hotel, school, police station, library, theatre, abandoned hospital and more), doors, windows and furniture, and separate GM/player PNG export. Closed test."
     },
     "name": {
       "ja": "TRPG室内図メーカー",
