@@ -327,7 +327,7 @@
         }
       },
       {
-        // EX：中央に一閃 → 切れた「戦闘開始」が出て、上半分は右へ・下半分は左へずれて消える
+        // EX：「戦闘開始」がそのまま出る → 中央を一閃が走って切れる → 上半分は右へ・下半分は左へずれて消える
         id: 'katanaSlash', group: 'combat', icon: 'katana', label: T('一閃の戦闘開始', 'Katana Battle Start', '일섬의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('', '', ''),
         patch: {
@@ -337,7 +337,7 @@
           shadow: { on: true, color: '#000000', opacity: 0.55, blur: 10, x: 0, y: 4 },
           glow: { on: false },
           sfx: { type: 'katana', color: '#cfe6ff', power: 1 },
-          inFx: 'flash', inDur: 0.35, hold: 1.4, outFx: 'split', outDur: 0.8
+          inFx: 'fade', inDur: 0.45, hold: 1.2, outFx: 'split', outDur: 1.4
         }
       },
       {

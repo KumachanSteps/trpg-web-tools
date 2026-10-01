@@ -102,6 +102,9 @@
 
   // 「中央に1文字ずつ」：全文が出た瞬間の衝撃の長さ（秒）・中央の大きな文字の画像を残しておく上限（画素数）
   const SOLO_PUNCH = 0.26;
+  // 退場「斬られて左右へ」：切れる瞬間 / 上下がずれ始める瞬間（退場の時間に対する割合）
+  const SPLIT_CUT = 0.15;
+  const SPLIT_SLIDE = 0.4;
   const SOLO_CACHE_PIXELS = 24e6;
   // 書き出しのフレーム時刻がちょうど切り替わりの瞬間に来ても、丸め誤差で1コマずれないようにする幅
   const TIME_EPS = 1e-6;
@@ -341,11 +344,15 @@
         bs.a *= (1 - Math.pow(p, 3)) * (p < 0.15 ? 1 : (rnd(frame, 5, info.seed) < 0.85 - 0.6 * p ? 1 : 0.1));
         bs.x += (rnd(frame, 9, info.seed) - 0.5) * 0.18 * info.size * p * k;
       } },
-    // 斬られて左右へ：文字の中央の高さで横に切れて、上半分は右へ、下半分は左へずれて消える（EX）
-    { id: 'split', level: 'block', ease: 'inCubic', dur: 0.8,
+    // 斬られて左右へ（EX）：文字の中央の高さで横に切れて少しずれ、ひと呼吸おいてから
+    // 上半分は右へ、下半分は左へずれて消える。切れる瞬間・ずれ始める瞬間は時間の割合で決まっている
+    { id: 'split', level: 'block', ease: 'linear', dur: 1.4,
       block(bs, e, p, k, info) {
-        bs.split = Math.max(bs.split, e * info.size * 4 * k);
-        bs.a *= 1 - clamp((p - 0.45) / 0.55);
+        if (p < SPLIT_CUT) return;
+        const q = clamp((p - SPLIT_SLIDE) / (1 - SPLIT_SLIDE));
+        bs.split = Math.max(bs.split, info.size * (0.08 + 4 * EASE.inCubic(q)) * k);
+        bs.splitGap = Math.max(bs.splitGap, info.size * 0.03 * k);
+        bs.a *= 1 - clamp((q - 0.35) / 0.65);
       } }
   ];
 
@@ -1318,7 +1325,7 @@
     none: { lead: 0, tail: 0 },
     lightning: { lead: 0.6, tail: 0 },
     cyber: { lead: 1.35, tail: 0.4 },
-    katana: { lead: 0.5, tail: 0 }
+    katana: { lead: 0, tail: 0 }
   };
   const SFX_TYPES = Object.keys(SFX_TIMING);
   // 雷：左右から走る電気が中央で出会うまで / 中央の火花が散りきるまで / 退場前の落雷
@@ -1326,10 +1333,10 @@
   const SPARK_DUR = 0.75;
   const SPARK_COUNT = 36;
   const STRIKE_DUR = 0.42;
-  // 刀：一閃が横切る時間 / 一閃の光が消えるまで / 文字が出たときの切り口の光 / 叩きつけの揺れ
+  // 刀：一閃が横切る時間 / 一閃の光が消えるまで / 切れた瞬間の切り口の光 / 切れた瞬間の揺れ
   const SLASH_SWEEP = 0.14;
   const SLASH_DUR = 0.5;
-  const CUT_GLINT = 0.6;
+  const CUT_GLINT = 0.4;
   const CUT_IMPACT = 0.3;
   // サイバー：画面いっぱいの警告 / その終わりにグリッチで引いていく時間 / 表示中のノイズの間隔
   const CYBER_COVER = 1.25;
@@ -1376,23 +1383,34 @@
       const d = t - pg.holdEnd;
       if (scene.outEnabled !== false && d >= 0 && d < 0.25) bs.bright = Math.max(bs.bright, clamp((1 - d / 0.25) * 0.9 * k));
     } else if (sfx.type === 'katana') {
-      // 斬られた直後から、切り口で上下が少しずれて、すき間があいたまま見せる
-      if (t >= pg.textStart) {
-        bs.split = Math.max(bs.split, size * 0.1 * k);
+      const cut = katanaCut(pg);
+      // 退場が「斬られて左右へ」でなければ、切れたあとは上下が少しずれたまま見せる
+      if (t >= cut && !splitOut(pg)) {
+        bs.split = Math.max(bs.split, size * 0.08 * k);
         bs.splitGap = Math.max(bs.splitGap, size * 0.03 * k);
       }
-      // 出た瞬間の衝撃（小さな揺れと光）
-      const d = t - pg.textStart;
+      // 切れた瞬間の衝撃（小さな揺れと光）
+      const d = t - cut;
       if (d >= 0 && d < CUT_IMPACT) {
         const decay = Math.pow(1 - d / CUT_IMPACT, 2);
-        bs.x += noise1(t * 40, 7) * size * 0.06 * k * decay;
-        bs.y += noise1(t * 40, 19) * size * 0.04 * k * decay;
-        bs.bright = Math.max(bs.bright, 0.7 * decay);
+        bs.x += noise1(t * 40, 7) * size * 0.05 * k * decay;
+        bs.y += noise1(t * 40, 19) * size * 0.03 * k * decay;
+        bs.bright = Math.max(bs.bright, 0.6 * decay);
       }
     } else if (sfx.type === 'cyber') {
       const c = (t - pg.start) % CYBER_BURST;
       if (t >= pg.inEnd && t < pg.holdEnd && c < 0.1) bs.glitch = Math.max(bs.glitch, 0.4 * k);
     }
+  }
+
+  function splitOut(pg) {
+    return Boolean(pg.blockOut && pg.blockOut.fx.id === 'split');
+  }
+
+  // 刀の一閃が文字を切る時刻：退場の始め（退場が「斬られて左右へ」なら、その切れる瞬間）
+  function katanaCut(pg) {
+    if (splitOut(pg)) return pg.blockOut.start + pg.blockOut.dur * SPLIT_CUT;
+    return pg.holdEnd + SLASH_SWEEP;
   }
 
   // 稲妻の折れ線（中点をずらしていく。同じ seed なら同じ形）
@@ -1814,9 +1832,10 @@
       }
     }
 
-    // 刀：画面を横切る一閃 → 閃光 → 切れ目の入った文字が叩きつけるように出る（切り口が光る）
-    // 退場「斬られて左右へ」では、切り口にもう一度光を走らせる
+    // 刀：そのまま出ていた文字の上を、退場の始めに一閃が横切って閃光 → 切り口が光って文字が切れる
+    // （退場「斬られて左右へ」と組み合わせると、そのあと上下がずれて消える）
     drawKatana(ctx, pg, mb, t, scale, scene, sfx, k) {
+      if (!Number.isFinite(pg.holdEnd)) return;
       const color = sfx.color || '#cfe6ff';
       const size = this.prepared.layout.size;
       const W = scene.width;
@@ -1840,7 +1859,8 @@
         ctx.fill();
         ctx.restore();
       };
-      const d = t - pg.start;
+      const cut = katanaCut(pg);
+      const d = t - (cut - SLASH_SWEEP);
       if (d >= 0 && d < SLASH_DUR) {
         const th = size * 0.1 * k;
         if (d < SLASH_SWEEP) {
@@ -1855,16 +1875,9 @@
         const f = (d - 0.08) / (SLASH_DUR - 0.08);
         if (f >= 0) drawFlash(ctx, mb.cx, y, W * 0.6, color, 0.85 * k * Math.pow(1 - f, 2), 0.22);
       }
-      // 文字が出たとき：切り口に沿って細い光
-      const g = t - pg.textStart;
-      if (g >= 0 && g < CUT_GLINT) {
-        const q = g / CUT_GLINT;
-        blade(mb.x0 - size * 0.4, mb.x1 + size * 0.4, size * 0.018 * k, 1 - q);
-      }
-      if (Number.isFinite(pg.holdEnd) && scene.outEnabled !== false && scene.outFx === 'split') {
-        const q = (t - pg.holdEnd) / 0.3;
-        if (q >= 0 && q < 1) blade(Math.max(0, mb.x0 - size * 1.4), Math.min(W, mb.x1 + size * 1.4), size * 0.025 * k, 1 - q);
-      }
+      // 切れた瞬間：切り口に沿って細い光
+      const g = t - cut;
+      if (g >= 0 && g < CUT_GLINT) blade(mb.x0 - size * 0.4, mb.x1 + size * 0.4, size * 0.018 * k, 1 - g / CUT_GLINT);
     }
 
     // サイバー：画面いっぱいに赤い警告（WARNINGの列と警告マーク）がグリッチで出て引いていき、
