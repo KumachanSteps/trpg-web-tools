@@ -802,7 +802,7 @@
           fill: { type: 'solid', color: '#f5f0e6' }, stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.85, blur: 10, x: 0, y: 3 },
           glow: { on: true, color: '#8fb0ff', size: 18, strength: 0.6 },
-          bg: { type: 'vignette', color: '#000000', opacity: 0.6, sync: true },
+          bg: { type: 'none' },
           reveal: 'char', cps: 12, glyphDur: 0.5, inFx: 'blurIn', hold: 1.6, outFx: 'fade', outDur: 0.8, wrapChars: 26, cursor: false
         }
       },
@@ -840,7 +840,7 @@
           fontId: 'noto-serif-jp', weight: 700, fontSize: 48, lineHeight: 1.9, letterSpacing: 0.1,
           fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.9, blur: 12, x: 0, y: 3 },
-          bg: { type: 'bottom', color: '#000000', opacity: 0.7, sync: true },
+          bg: { type: 'none' },
           reveal: 'line', lineInterval: 1.1, glyphDur: 0.9, inFx: 'rise', hold: 1.6, outFx: 'fade', outDur: 0.7
         }
       },
@@ -864,7 +864,7 @@
           fill: { type: 'solid', color: '#f5efe3' }, stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.85, blur: 12, x: 0, y: 3 },
           glow: { on: true, color: '#ffd9a0', size: 20, strength: 0.5 },
-          bg: { type: 'vignette', color: '#000000', opacity: 0.55, sync: true },
+          bg: { type: 'none' },
           reveal: 'spread', spreadHold: 0.5, spreadDur: 0.9, inFx: 'fade', hold: 2, outFx: 'fade', outDur: 0.8
         }
       },
