@@ -8,14 +8,15 @@
 
   const FONT = '"Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Yu Gothic UI", Meiryo, system-ui, sans-serif';
 
+  /* dark は画面と同じマットダークグレー＋黄色の罫線。影やグラデーションは使わない */
   const PALETTE = {
     light: {
-      bg: '#ffffff', ink: '#1f2a3a', muted: '#66758a', faint: '#8a97a8', line: 'rgba(76, 100, 132, 0.16)', zebra: '#f4f7fb',
-      accent: '#3a78d8', common: '#66758a', o: '#1f9d6b', x: '#8f9bab', m: '#d9622b', modBg: 'rgba(224, 112, 60, 0.08)', top: '#3a78d8'
+      bg: '#ffffff', ink: '#222326', muted: '#62646b', faint: '#8a8c93', line: '#e2dccb', zebra: '#f6f5f1',
+      accent: '#a67c00', common: '#62646b', o: '#2f8f5f', x: '#8a8c93', m: '#cf6a2c', modBg: 'rgba(207, 106, 44, 0.08)', top: '#e3b938'
     },
     dark: {
-      bg: '#0d1b2f', ink: '#eef6ff', muted: '#9fb0c6', faint: '#7f90a7', line: 'rgba(168, 204, 255, 0.14)', zebra: 'rgba(255, 255, 255, 0.035)',
-      accent: '#69a8ff', common: '#9fb0c6', o: '#3cc98f', x: '#7d8da3', m: '#f08a55', modBg: 'rgba(240, 138, 85, 0.12)', top: '#69a8ff'
+      bg: '#232427', ink: '#e9e7e1', muted: '#9d9fa6', faint: '#74767d', line: 'rgba(227, 185, 56, 0.3)', zebra: '#2a2b2f',
+      accent: '#e3b938', common: '#9d9fa6', o: '#5fb98a', x: '#8b8d94', m: '#e98a4f', modBg: 'rgba(233, 138, 79, 0.1)', top: '#e3b938'
     }
   };
 
@@ -141,7 +142,7 @@
       if (draw) {
         ctx.fillStyle = pal.bg;
         ctx.fillRect(0, 0, W, ctx.canvas.height / scale);
-        fill(pal.top, 0, 0, W, 5);
+        fill(pal.top, 0, 0, W, 3);
       }
 
       /* 表題 */
@@ -160,7 +161,7 @@
       model.sections.forEach((sec, si) => {
         y += si ? 18 : 4;
         const tone = sec.tone === 'common' ? pal.common : pal.accent;
-        fill(tone, PAD, y + 2, 4, 20, 2);
+        fill(tone, PAD, y + 2, 3, 20);
         text(sec.title, PAD + 14, y + 1, narrow ? 17 : 19, 800, pal.ink);
         y += 32;
 
@@ -227,7 +228,7 @@
 
       if (model.remarks) {
         y += 22;
-        fill(pal.common, PAD, y + 2, 4, 18, 2);
+        fill(pal.common, PAD, y + 2, 3, 18);
         text(model.remarksLabel, PAD + 14, y, 16, 800, pal.ink);
         y += 28;
         lines(model.remarks, inner - 12, 13.5, 400).forEach(line => { text(line, PAD + 2, y, 13.5, 400, pal.ink); y += 21; });

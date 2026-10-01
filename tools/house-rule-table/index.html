@@ -11,19 +11,15 @@
   <meta name="description" content="クトゥルフ神話TRPG（6版・7版）の卓で使うハウスルールを、よくあるルールから選んで表にまとめ、画像（PNG）・テキスト・Markdownで書き出せるツールです。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/house-rule-table.css?v=20261001-01" />
+  <link rel="stylesheet" href="./css/house-rule-table.css?v=20261001-02" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <div class="title-block">
-        <p class="eyebrow" data-i18n="eyebrow">TRPG WEBツール観測所</p>
-        <h1 id="appTitle" data-i18n="title">CoCハウスルール表メーカー</h1>
-      </div>
-      <p class="lead" data-i18n="lead"></p>
-      <div class="header-actions">
-        <a class="header-nav-link" href="../../" data-i18n="portal">←TRPG WEBツール観測所</a>
-        <a class="x-share-link" id="xShareLink" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" data-i18n-label="share" aria-label="X / Twitterで共有"><span aria-hidden="true">𝕏</span></a>
+      <div class="header-row">
+        <h1 class="app-name" id="appTitle"><span data-i18n="title">CoCハウスルール表メーカー</span><span class="app-version">v1.00 / 2026.10.01</span></h1>
+        <span class="header-spacer"></span>
+        <a class="header-nav-link" href="../../"><span class="nav-long" data-i18n="portal">←TRPG WEBツール観測所</span><span class="nav-short" data-i18n="portalShort">←観測所</span></a>
         <div class="language-switcher" role="group" data-i18n-label="langGroup" aria-label="言語切替">
           <button class="lang-choice-button is-active" type="button" data-lang-choice="ja" aria-pressed="true">JP</button>
           <span class="lang-divider" aria-hidden="true">|</span>
@@ -31,18 +27,9 @@
           <span class="lang-divider" aria-hidden="true">|</span>
           <button class="lang-choice-button" type="button" data-lang-choice="ko" aria-pressed="false">KR</button>
         </div>
-        <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
-        <button class="ghost-button theme-button" type="button" id="themeBtn"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb">☀️</span></span></button>
       </div>
-      <div class="version-engrave">v1.00 / 2026.10.01</div>
     </header>
 
-    <section class="drawer" id="helpDrawer" hidden>
-      <h2 data-i18n="help">使い方</h2>
-      <button class="drawer-close" type="button" data-close-drawer data-i18n-label="close" aria-label="閉じる">×</button>
-      <div class="guide-list" id="helpList"></div>
-      <div class="guide-notes" id="helpNotes"></div>
-    </section>
 
     <div class="toolbar">
       <div class="segment-group edition-toggle" id="editionToggle" role="group" data-i18n-label="bar.edition" aria-label="版">
@@ -60,11 +47,19 @@
         </div>
       </div>
       <span class="bar-spacer"></span>
+      <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
       <button class="ghost-button" type="button" id="openBtn" data-i18n="bar.open">開く</button>
       <button class="ghost-button" type="button" id="saveBtn" data-i18n="bar.save">保存</button>
       <input type="file" id="openFile" accept=".json,application/json" class="visually-hidden" tabindex="-1" aria-hidden="true" />
       <button class="accent-button" type="button" id="exportBtn" data-i18n="bar.export">書き出す</button>
     </div>
+
+    <section class="drawer" id="helpDrawer" hidden>
+      <h2 data-i18n="help">使い方</h2>
+      <button class="drawer-close" type="button" data-close-drawer data-i18n-label="close" aria-label="閉じる">×</button>
+      <div class="guide-list" id="helpList"></div>
+      <div class="guide-notes" id="helpNotes"></div>
+    </section>
 
     <main class="workspace">
       <section class="card info-card" aria-labelledby="infoHeading">
@@ -119,9 +114,9 @@
     </footer>
   </div>
 
-  <script src="./js/rules.js?v=20261001-01"></script>
-  <script src="./js/i18n.js?v=20261001-01"></script>
-  <script src="./js/exporter.js?v=20261001-01"></script>
-  <script src="./js/app.js?v=20261001-01"></script>
+  <script src="./js/rules.js?v=20261001-02"></script>
+  <script src="./js/i18n.js?v=20261001-02"></script>
+  <script src="./js/exporter.js?v=20261001-02"></script>
+  <script src="./js/app.js?v=20261001-02"></script>
 </body>
 </html>

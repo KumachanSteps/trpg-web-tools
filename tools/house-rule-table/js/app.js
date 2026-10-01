@@ -10,10 +10,8 @@
   const VERSION = 'v1.00';
   const STORAGE_KEY = 'houseRuleTable.v1';
   const LANG_KEY = 'houseRuleTableLang';
-  const THEME_KEY = 'houseRuleTableTheme';
   const LANGS = ['ja', 'en', 'ko'];
   const EDITIONS = { 6: ['6', 'common'], 7: ['7', 'common'], both: ['6', '7', 'common'] };
-  const PUBLIC_URL = 'https://kumachansteps.github.io/trpg-web-tools/tools/house-rule-table/';
   const SECTION = Object.fromEntries(R.SECTIONS.map(sec => [sec.id, sec]));
 
   const $ = id => document.getElementById(id);
@@ -31,8 +29,6 @@
     helpDrawer: $('helpDrawer'),
     helpList: $('helpList'),
     helpNotes: $('helpNotes'),
-    themeBtn: $('themeBtn'),
-    shareLink: $('xShareLink'),
     infoTitle: $('infoTitle'),
     infoKp: $('infoKp'),
     infoSystem: $('infoSystem'),
@@ -104,9 +100,6 @@
     d.helpItems.forEach(text => els.helpList.appendChild(h('p', null, text)));
     els.helpNotes.innerHTML = '';
     d.helpNotes.forEach(text => els.helpNotes.appendChild(h('p', null, text)));
-    const url = location.protocol.startsWith('http') ? location.href.split('#')[0] : PUBLIC_URL;
-    els.shareLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${d.shareText} ${url}`)}`;
-    syncThemeButton();
     syncInfo();
     renderSheet();
     if (!els.expModal.hidden) renderExport();
@@ -186,32 +179,6 @@
   };
   const uid = () => `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   const clone = value => JSON.parse(JSON.stringify(value));
-
-  /* ================= テーマ ================= */
-
-  function syncThemeButton() {
-    const dark = els.body.classList.contains('is-dark');
-    const thumb = els.themeBtn.querySelector('.theme-toggle-thumb');
-    if (thumb) thumb.textContent = dark ? '☾' : '☀️';
-    const label = dark ? t('themeDark') : t('themeLight');
-    els.themeBtn.setAttribute('aria-label', label);
-    els.themeBtn.title = label;
-    els.themeBtn.setAttribute('aria-pressed', String(dark));
-  }
-
-  function initTheme() {
-    let saved = null;
-    try { saved = localStorage.getItem(THEME_KEY); } catch (error) { saved = null; }
-    const dark = saved ? saved === 'dark' : Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    els.body.classList.toggle('is-dark', dark);
-  }
-
-  function toggleTheme() {
-    const dark = !els.body.classList.contains('is-dark');
-    els.body.classList.toggle('is-dark', dark);
-    try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (error) { /* noop */ }
-    syncThemeButton();
-  }
 
   /* ================= 状態 ================= */
 
@@ -764,7 +731,7 @@
 
   function openExport() {
     if (!app.exp.theme) {
-      app.exp.theme = els.body.classList.contains('is-dark') ? 'dark' : 'light';
+      app.exp.theme = 'dark';
       if (window.innerWidth <= 720) app.exp.layout = 'narrow';
     }
     els.expModal.hidden = false;
@@ -815,7 +782,7 @@
     const rerender = () => renderExport();
     if (exp.fmt === 'png') {
       els.expOptions.append(
-        segment(t('exp.theme'), [['light', t('exp.light')], ['dark', t('exp.dark')]], exp.theme, v => { exp.theme = v; rerender(); }),
+        segment(t('exp.theme'), [['dark', t('exp.dark')], ['light', t('exp.light')]], exp.theme, v => { exp.theme = v; rerender(); }),
         segment(t('exp.layout'), [['wide', t('exp.wide')], ['narrow', t('exp.narrow')]], exp.layout, v => { exp.layout = v; rerender(); })
       );
     }
@@ -894,7 +861,6 @@
       try { localStorage.setItem(LANG_KEY, app.lang); } catch (error) { /* noop */ }
       applyLanguage();
     }));
-    els.themeBtn.addEventListener('click', toggleTheme);
     els.helpBtn.addEventListener('click', () => {
       const open = els.helpDrawer.hidden;
       els.helpDrawer.hidden = !open;
@@ -970,7 +936,6 @@
 
   function init() {
     app.lang = detectLang();
-    initTheme();
     app.state = loadState();
     bind();
     applyLanguage();
