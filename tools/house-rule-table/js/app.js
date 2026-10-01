@@ -262,7 +262,8 @@
         if (!got) return;
         const row = bucket.rows[rule.id];
         row.val = got.val === null || rule.opts.some(op => op.id === got.val) ? got.val : row.val;
-        if (Number.isFinite(Number(got.n))) row.n = Number(got.n);
+        const numOp = rule.opts.find(op => op.num && op.id === row.val);
+        if (numOp && Number.isFinite(Number(got.n))) row.n = Math.min(numOp.num.max, Math.max(numOp.num.min, Math.round(Number(got.n))));
         row.note = typeof got.note === 'string' ? got.note.slice(0, 2000) : '';
         row.vis = Boolean(got.vis);
         if (typeof got.name === 'string' && got.name.trim()) row.name = got.name.slice(0, 200);
@@ -631,9 +632,10 @@
     else if (field === 'text') loc.row.text = value;
     else if (field === 'n') {
       const num = Number(value);
-      if (value !== '' && Number.isFinite(num)) loc.row.n = Math.round(num);
-      const chip = loc.rowEl.querySelector('.chip.is-on');
       const op = loc.rule.opts.find(item => item.id === loc.row.val);
+      /* 入力欄の min / max はブラウザが止めないので、ここで範囲に収める */
+      if (value !== '' && Number.isFinite(num) && op && op.num) loc.row.n = Math.min(op.num.max, Math.max(op.num.min, Math.round(num)));
+      const chip = loc.rowEl.querySelector('.chip.is-on');
       if (chip && op) chip.textContent = optLabel(op, loc.row.n);
     } else if (field === 'name') {
       if (loc.rule) {
