@@ -255,14 +255,25 @@
           { value: 'none', label: T('なし', 'None', '없음') },
           { value: 'lightning', label: T('雷', 'Lightning', '번개') },
           { value: 'cyber', label: T('サイバー警告', 'Cyber warning', '사이버 경고') },
-          { value: 'katana', label: T('刀の一閃', 'Katana slash', '칼의 일섬') }
+          { value: 'katana', label: T('刀の一閃', 'Katana slash', '칼의 일섬') },
+          { value: 'frame', label: T('装飾枠', 'Ornate frame', '장식 틀') },
+          { value: 'crest', label: T('剣と盾', 'Sword & shield', '검과 방패') },
+          { value: 'gunshot', label: T('銃撃', 'Gunfire', '총격') }
         ] },
+        { type: 'note', when: s => s.sfx.type === 'frame', text: T('四隅の飾りが現れ、二重線の枠が角から伸びて文字を囲みます。表示中は光が枠をなぞり、退場では線が角へ戻ります', 'Corner ornaments appear and a double-line frame grows from the corners around the text. Light traces the frame while shown, and the lines pull back into the corners on exit', '네 모서리 장식이 나타나고 이중선 틀이 모서리에서 뻗어 글자를 감쌉니다. 표시 중에는 빛이 틀을 따라 돌고, 퇴장할 때 선이 모서리로 돌아갑니다') },
+        { type: 'note', when: s => s.sfx.type === 'crest', text: T('交差した2本の剣が飛び込んでぶつかり、盾が降りてきて紋章になります。文字は紋章の手前に出ます', 'Two crossed swords fly in and clash, then a shield drops in to form a crest behind the text', '교차한 두 자루의 검이 날아와 부딪히고, 방패가 내려와 문장이 됩니다. 글자는 문장 앞에 나타납니다') },
+        { type: 'note', when: s => s.sfx.type === 'gunshot', text: T('照準が定まり、4発の着弾でひびの入った弾痕が残ってから文字が出ます。表示中は弾痕から煙が上がります', 'A reticle locks on, four shots leave cracked bullet holes, then the text appears. Smoke rises from the holes while shown', '조준이 고정되고 네 발의 착탄으로 금이 간 탄흔이 남은 뒤 글자가 나타납니다. 표시 중에는 탄흔에서 연기가 피어오릅니다') },
         { type: 'note', when: s => s.sfx.type === 'lightning', text: T('左右から電気が横に走って中央で大きな火花が散り、文字が現れます。表示中は文字の上を電気が走り、退場の直前にもう一度落雷します', 'Electricity races in from both sides and bursts into a big spark at the center, bringing the text in. Arcs crackle over it while shown, and a second strike hits right before it fades out', '좌우에서 전기가 가로로 달려와 중앙에서 큰 불꽃이 튀며 글자가 나타납니다. 표시 중에는 글자 위로 전기가 흐르고, 퇴장 직전에 다시 한번 낙뢰가 칩니다') },
         { type: 'note', when: s => s.sfx.type === 'cyber', text: T('画面いっぱいに赤い警告（文字の列と警告マーク）がグリッチで出てから引いていき、上下に警告の帯が流れ続けます。文字が消えたあと、帯もグリッチで消えます', 'A red warning (scrolling rows and a warning sign) glitches over the whole image, then pulls back into bands at the top and bottom that keep scrolling. The bands glitch out after the text', '이미지 전체에 빨간 경고(문자 줄과 경고 마크)가 글리치로 나타났다가 물러나고, 위아래에 경고 띠가 계속 흐릅니다. 글자가 사라진 뒤 띠도 글리치로 사라집니다') },
         { type: 'note', when: s => s.sfx.type === 'katana', text: T('文字がそのまま現れたあと、退場の始めに中央を一閃が走って文字が切れます。退場を「斬られて左右へ」にすると、そのあと上半分は右へ・下半分は左へずれて消えます', 'The text appears whole, then a slash crosses the center at the start of the exit and cuts it. With the “Sliced apart” exit, the top half then slides right and the bottom half left as they fade', '글자가 그대로 나타난 뒤, 퇴장이 시작될 때 중앙에 일섬이 지나가며 글자가 베입니다. 퇴장을 「베여서 좌우로」로 하면 그 뒤 위쪽 절반은 오른쪽으로, 아래쪽 절반은 왼쪽으로 어긋나며 사라집니다') },
         { type: 'colors', when: s => s.sfx.type !== 'none', items: [
           { bind: 'sfx.color', label: T('演出の色', 'Effect color', '연출 색') },
-          { bind: 'sfx.color2', label: T('帯の地の色', 'Band color', '띠 바탕색'), when: s => s.sfx.type === 'cyber' }
+          { bind: 'sfx.color2', label: s => ({
+            cyber: T('帯の地の色', 'Band color', '띠 바탕색'),
+            frame: T('内側の線の色', 'Inner line color', '안쪽 선 색'),
+            crest: T('盾の色', 'Shield color', '방패 색'),
+            gunshot: T('照準の色', 'Reticle color', '조준 색')
+          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot'].includes(s.sfx.type) }
         ] },
         { type: 'text', bind: 'sfx.word', when: s => s.sfx.type === 'cyber', label: T('帯の文字', 'Band text', '띠 문자'), placeholder: T('WARNING', 'WARNING', 'WARNING') },
         { type: 'range', bind: 'sfx.power', when: s => s.sfx.type !== 'none', label: T('強さ', 'Strength', '강도'), min: 0.2, max: 2, step: 0.05, format: 'x' }
