@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <script async src="../../assets/js/analytics.js"></script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- クローズドテスト中は検索エンジンに載せない（一般公開するときに外す） -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>CoCハウスルール表メーカー｜TRPG WEBツール観測所</title>
+  <meta name="description" content="クトゥルフ神話TRPG（6版・7版）の卓で使うハウスルールを、よくあるルールから選んで表にまとめ、画像（PNG）・テキスト・Markdownで書き出せるツールです。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="stylesheet" href="./css/house-rule-table.css?v=20261001-01" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="title-block">
+        <p class="eyebrow" data-i18n="eyebrow">TRPG WEBツール観測所</p>
+        <h1 id="appTitle" data-i18n="title">CoCハウスルール表メーカー</h1>
+      </div>
+      <p class="lead" data-i18n="lead"></p>
+      <div class="header-actions">
+        <a class="header-nav-link" href="../../" data-i18n="portal">←TRPG WEBツール観測所</a>
+        <a class="x-share-link" id="xShareLink" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" data-i18n-label="share" aria-label="X / Twitterで共有"><span aria-hidden="true">𝕏</span></a>
+        <div class="language-switcher" role="group" data-i18n-label="langGroup" aria-label="言語切替">
+          <button class="lang-choice-button is-active" type="button" data-lang-choice="ja" aria-pressed="true">JP</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="en" aria-pressed="false">EN</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="ko" aria-pressed="false">KR</button>
+        </div>
+        <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
+        <button class="ghost-button theme-button" type="button" id="themeBtn"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb">☀️</span></span></button>
+      </div>
+      <div class="version-engrave">v1.00 / 2026.10.01</div>
+    </header>
+
+    <section class="drawer" id="helpDrawer" hidden>
+      <h2 data-i18n="help">使い方</h2>
+      <button class="drawer-close" type="button" data-close-drawer data-i18n-label="close" aria-label="閉じる">×</button>
+      <div class="guide-list" id="helpList"></div>
+      <div class="guide-notes" id="helpNotes"></div>
+    </section>
+
+    <div class="toolbar">
+      <div class="segment-group edition-toggle" id="editionToggle" role="group" data-i18n-label="bar.edition" aria-label="版">
+        <button class="segment" type="button" data-edition="6" data-i18n="bar.ed6">6版</button>
+        <button class="segment" type="button" data-edition="7" data-i18n="bar.ed7">7版</button>
+        <button class="segment" type="button" data-edition="both" data-i18n="bar.both">両方</button>
+      </div>
+      <div class="preset-wrap">
+        <button class="ghost-button" type="button" id="presetBtn" aria-expanded="false" aria-controls="presetMenu"><span data-i18n="bar.preset">プリセット</span><svg class="btn-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
+        <div class="preset-menu" id="presetMenu" role="menu" hidden>
+          <p class="preset-title" data-i18n="bar.presetTitle">プリセットを選ぶ</p>
+          <button type="button" role="menuitem" data-preset="raw"><b data-i18n="bar.presetRaw"></b><span data-i18n="bar.presetRawNote"></span></button>
+          <button type="button" role="menuitem" data-preset="pop"><b data-i18n="bar.presetPop"></b><span data-i18n="bar.presetPopNote"></span></button>
+          <button type="button" role="menuitem" data-preset="clear" class="is-quiet"><b data-i18n="bar.presetClear"></b><span data-i18n="bar.presetClearNote"></span></button>
+        </div>
+      </div>
+      <span class="bar-spacer"></span>
+      <button class="ghost-button" type="button" id="openBtn" data-i18n="bar.open">開く</button>
+      <button class="ghost-button" type="button" id="saveBtn" data-i18n="bar.save">保存</button>
+      <input type="file" id="openFile" accept=".json,application/json" class="visually-hidden" tabindex="-1" aria-hidden="true" />
+      <button class="accent-button" type="button" id="exportBtn" data-i18n="bar.export">書き出す</button>
+    </div>
+
+    <main class="workspace">
+      <section class="card info-card" aria-labelledby="infoHeading">
+        <h2 class="visually-hidden" id="infoHeading" data-i18n="info.heading">表の情報</h2>
+        <input class="title-input" id="infoTitle" type="text" maxlength="120" data-i18n-ph="info.titlePh" data-i18n-label="info.heading" />
+        <div class="info-grid">
+          <label class="field"><span class="field-label" data-i18n="info.kp">KP名</span><input class="text-input" id="infoKp" type="text" maxlength="120" /></label>
+          <label class="field"><span class="field-label" data-i18n="info.system">対象システム</span><input class="text-input" id="infoSystem" type="text" maxlength="120" /></label>
+          <label class="field"><span class="field-label" data-i18n="info.scenario">適用シナリオ</span><input class="text-input" id="infoScenario" type="text" maxlength="200" /></label>
+          <label class="field"><span class="field-label" data-i18n="info.date">更新日</span><input class="text-input" id="infoDate" type="date" /></label>
+        </div>
+        <p class="info-note" data-i18n="info.optional">空欄の項目は表に出ません</p>
+      </section>
+
+      <div class="sheet" id="sheet"></div>
+
+      <section class="card remarks-card">
+        <label class="field">
+          <span class="section-title small" data-i18n="info.remarks">その他・備考</span>
+          <textarea class="text-input" id="infoRemarks" rows="2" maxlength="4000" data-i18n-ph="info.remarksPh"></textarea>
+        </label>
+      </section>
+    </main>
+
+    <div class="modal-backdrop" id="expModal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="expTitle">
+        <button class="drawer-close" type="button" data-close-modal data-i18n-label="close" aria-label="閉じる">×</button>
+        <h2 id="expTitle" data-i18n="exp.title">書き出す</h2>
+        <div class="exp-tabs" id="expTabs" role="tablist">
+          <button type="button" role="tab" data-fmt="png" data-i18n="exp.png">画像（PNG）</button>
+          <button type="button" role="tab" data-fmt="txt" data-i18n="exp.txt">テキスト</button>
+          <button type="button" role="tab" data-fmt="md" data-i18n="exp.md">Markdown</button>
+        </div>
+        <div class="exp-layout">
+          <div class="exp-side">
+            <div class="exp-options" id="expOptions"></div>
+            <p class="exp-hint" id="expHint"></p>
+            <div class="exp-actions" id="expActions"></div>
+          </div>
+          <div class="exp-preview" id="expPreview"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+    <footer class="legal-footer">
+      <h2 data-i18n="footer.title">利用上の注意</h2>
+      <p data-i18n-html="footer.note1"></p>
+      <p data-i18n-html="footer.note2"></p>
+      <p data-i18n-html="footer.note3"></p>
+    </footer>
+  </div>
+
+  <script src="./js/rules.js?v=20261001-01"></script>
+  <script src="./js/i18n.js?v=20261001-01"></script>
+  <script src="./js/exporter.js?v=20261001-01"></script>
+  <script src="./js/app.js?v=20261001-01"></script>
+</body>
+</html>

@@ -593,6 +593,40 @@
     "preview": "./assets/img/previews/indoor-map-maker.png"
   },
   {
+    "id": "house-rule-table",
+    "icon": "📋",
+    "status": "idea",
+    "category": "gmSupport",
+    "badges": [
+      "preSession",
+      "gmSupport",
+      "plSupport"
+    ],
+    "legacyKeywords": [
+      "シナリオ準備",
+      "ハウスルール",
+      "CoC",
+      "6版",
+      "7版"
+    ],
+    "href": "",
+    "devHref": "./tools/house-rule-table/",
+    "devStage": "testing",
+    "devNote": {
+      "ja": "CoC 6版・7版のハウスルール表エディター。よくあるルール約90件のプリセット、PNG・テキスト・Markdown書き出し。日本語・韓国語・英語。クローズドテスト用。",
+      "en": "House rule table editor for CoC 6th/7th edition with about 90 preset rules and PNG, text and Markdown export. Japanese, Korean and English UI. Closed test."
+    },
+    "name": {
+      "ja": "CoCハウスルール表メーカー",
+      "en": "CoC House Rule Table Prepper"
+    },
+    "description": {
+      "ja": "クトゥルフ神話TRPG 6版・7版の卓で使うハウスルールを、よくあるルールから選んで表にまとめ、Discordや募集文に貼れる画像・テキストで書き出せます。",
+      "en": "Pick the house rules your Call of Cthulhu 6th/7th edition table uses from common ones and export them as an image or text for Discord or recruitment posts."
+    },
+    "preview": "./assets/img/previews/house-rule-table.png"
+  },
+  {
     "id": "bgm-organizer",
     "icon": "🎧",
     "status": "idea",
