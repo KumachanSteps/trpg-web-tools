@@ -276,6 +276,10 @@
     ]
   };
 
+  // 書き出しのループの初期値（テンプレートを選ぶと、この値になる）。ふだんは「1回再生」。
+  // 画面に出したままにすることが多いGMの案内と判定の結果は「ずっとループ」。テンプレートに loop があればそれを使う
+  const LOOP_BY_GROUP = { gm: 'infinite', dice: 'infinite' };
+
   const TEMPLATES = {
     message: [
       {
@@ -1094,6 +1098,11 @@
     return scene;
   }
 
+  // テンプレートの書き出しのループの初期値（'once' / 'infinite'）
+  function exportLoop(template) {
+    return (template && (template.loop || LOOP_BY_GROUP[template.group])) || 'once';
+  }
+
   // 文章・サブテキストが、いずれかのテンプレートの見本のままか（書き換えた文章を覚える仕組みより前の保存データの引き継ぎに使う）
   function sampleState(mode, text, subText) {
     const texts = new Set();
@@ -1120,6 +1129,7 @@
     defaultScene,
     applyTemplate,
     sampleText,
-    sampleState
+    sampleState,
+    exportLoop
   };
 })(window);

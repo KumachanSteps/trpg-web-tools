@@ -112,7 +112,8 @@ h1, h2, h3, p { margin-top: 0; }
 .app-header {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  /* タイトルは1行の幅をとり、入りきらないときはボタンの側を折り返す（タイトルを語の途中で改行しない） */
+  grid-template-columns: auto minmax(min-content, 1fr);
   /* 説明文はボタン列の下まで使い、1行に収めてヘッダーを低くする */
   grid-template-areas: "title actions" "lead lead";
   column-gap: 1rem;
@@ -141,7 +142,14 @@ h1 {
   margin-bottom: 7px;
   font-size: clamp(1.5rem, 3vw, 2.3rem);
   line-height: 1.1;
+  /* 「メーカ｜ー」のような語の途中の改行をしない（どうしても入らない狭さのときだけ折り返す） */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
+
+/* 見出しが折り返すときは行の長さをそろえ、日本語は文節の途中で切らない（対応ブラウザのみ） */
+h2, h3 { text-wrap: balance; }
+html:lang(ja) :is(h2, h3) { word-break: auto-phrase; }
 
 .lead {
   grid-area: lead;
@@ -161,6 +169,9 @@ h1 {
   align-content: flex-start;
   gap: 8px;
 }
+
+/* ボタンが2行に分かれるとき、テーマの切り替えだけが次の行に残らないよう、ショートカットと組にする */
+.header-actions-end { display: inline-flex; align-items: center; gap: 8px; }
 
 .header-nav-link, .ghost-button, .x-share-link {
   display: inline-flex;
@@ -416,6 +427,11 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 .mode-tab.is-active .mode-icon, .mode-tab:hover .mode-icon { color: var(--blue); }
 .mode-name { min-width: 0; font-size: 0.92rem; font-weight: 900; line-height: 1.25; }
 .mode-desc { max-width: 100%; color: var(--muted); font-size: 0.68rem; line-height: 1.35; font-feature-settings: "palt"; }
+
+/* 短い説明やラベルが折り返すときは、行の長さをそろえ（1〜2文字だけが次の行に残らないように）、
+   日本語は文節の途中で切らない（どちらも対応ブラウザのみ。ほかのブラウザは通常の折り返し） */
+.mode-desc, .template-hint, .field-label, .field-row > label, .toggle-field, .toggle-inline { text-wrap: balance; }
+html:lang(ja) :is(.mode-desc, .template-hint, .field-label, .field-row > label, .toggle-field, .toggle-inline) { word-break: auto-phrase; }
 
 /* ---------- テンプレート ---------- */
 
@@ -1141,16 +1157,20 @@ body.is-dark .accent-button:not(:disabled):hover { filter: brightness(1.03); }
 .export-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; }
 .info-line { margin: 0; color: var(--muted); font-size: 0.78rem; font-weight: 700; }
 
+/* 書き出しの設定：選択肢の文字が欠けないよう、それぞれの欄はいちばん長い選択肢の幅より狭くせず、
+   横に入りきらない欄は次の行へ回す（パネルの幅や言語が変わっても、パネルの外へはみ出さない） */
 .export-grid {
-  display: grid;
-  grid-template-columns: minmax(84px, 0.55fr) minmax(170px, 1.2fr) minmax(190px, 1.3fr);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
   gap: 8px 10px;
-  align-items: end;
 }
 
-.export-grid .loop-count-field { grid-column: 2; }
-
-.export-grid .wide { grid-column: 1 / -1; }
+.export-grid > .field { flex: 1 1 auto; min-width: auto; max-width: 100%; }
+.export-grid .select-input { width: auto; }
+.export-grid > .fps-field { flex-grow: 0.5; }
+.export-grid > .loop-count-field { flex: 0 0 5.5rem; }
+.export-grid > .wide { flex: 1 1 100%; }
 .compact-field .select-input, .compact-field .number-input, .compact-field .text-input { min-height: 34px; padding: 5px 8px; font-size: 0.84rem; }
 
 .field-label-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-height: 22px; }
@@ -1350,13 +1370,26 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
   .shortcut-grid { grid-template-columns: 1fr; }
   .shortcut-grid > span { margin-bottom: 4px; }
   .export-main { width: 100%; }
-  .export-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .export-grid .loop-count-field { grid-column: auto; }
-  .export-grid .color-mode-field { grid-column: 1 / -1; }
   .settings-tab { padding: 7px 8px; font-size: 0.8rem; }
   .template-chip { padding: 5px 9px; font-size: 0.78rem; }
   .time-label { margin-left: 0; width: 100%; }
   .effect-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+}
+
+/* スマートフォンの狭い幅（320px まで）：語の途中で折り返したり、パネルの外へはみ出したりしないようにする */
+@media (max-width: 420px) {
+  /* カテゴリの名前はアイコンの下に置く */
+  .mode-tab { align-items: center; padding: 8px 5px; text-align: center; }
+  .mode-head { flex-direction: column; gap: 3px; }
+  .mode-name { font-size: 0.84rem; word-break: keep-all; }
+  /* 設定のタブは5つとも1行に収める */
+  .settings-tabs { gap: 2px; }
+  .settings-tab { padding: 7px 4px; font-size: 0.76rem; }
+  .font-register { max-width: 100%; white-space: normal; }
+}
+
+@media (max-width: 350px) {
+  h1 { font-size: 1.4rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
