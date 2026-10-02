@@ -1109,6 +1109,259 @@
 
   function outdoorBench(c, S, w, h) { bench(c, S, w, h); }
 
+  /* ---------- 学校・図書館 ---------- */
+
+  function schoolDesk(c, S, w, h) {
+    // 学校の机と椅子。椅子の背もたれが上、机は下（座った人は下を向く）
+    const chairH = Math.min(0.9, h * 0.45);
+    chair(c, S, w * 0.2, 0, w * 0.6, chairH);
+    box(c, S, 0.05, chairH + 0.08, w - 0.1, h - chairH - 0.12, 0.05);
+  }
+
+  function lectern(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    thin(c, S);
+    rr(c, w * 0.12, h * 0.38, w * 0.76, h * 0.44, 0.03);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+  }
+
+  function lectureRow(c, S, w, h) {
+    // 固定机と椅子の列。椅子が上、机が下
+    const n = Math.max(1, Math.round(w / 1.2));
+    const slot = w / n;
+    const seatH = h * 0.48;
+    for (let i = 0; i < n; i++) chair(c, S, slot * i + slot * 0.14, 0, slot * 0.72, seatH);
+    box(c, S, 0, seatH + 0.08, w, h - seatH - 0.1, 0.04);
+  }
+
+  function bookstack(c, S, w, h) {
+    // 両面の書架（上下どちらの通路からも本を取れる）
+    box(c, S, 0, 0, w, h, 0);
+    thin(c, S);
+    line(c, 0, h / 2, w, h / 2);
+    const n = Math.max(1, Math.round(w / 1.8));
+    for (let i = 1; i < n; i++) line(c, (w / n) * i, 0, (w / n) * i, h);
+    c.strokeStyle = S.softLine;
+    for (let x = 0.12; x < w - 0.05; x += 0.16) {
+      line(c, x, h * 0.1, x, h * 0.4);
+      line(c, x, h * 0.6, x, h * 0.9);
+    }
+    normal(c, S);
+  }
+
+  /* ---------- 娯楽・スポーツ ---------- */
+
+  function stageFloor(c, S, w, h) {
+    // 舞台。上が奥（壁側）、下の縁が客席側
+    c.fillStyle = S.wood;
+    c.fillRect(0, 0, w, h);
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.45);
+    for (let y = 0.5; y < h - 0.05; y += 0.5) line(c, 0, y, w, y);
+    c.strokeStyle = S.line;
+    normal(c, S);
+    c.strokeRect(0, 0, w, h);
+    c.lineWidth = S.lw * 2.4;
+    line(c, 0, h - S.lw * 1.2, w, h - S.lw * 1.2);
+    normal(c, S);
+  }
+
+  function seatRow(c, S, w, h) {
+    // 客席1列。背もたれが上、客は下を向く
+    const n = Math.max(1, Math.round(w));
+    const slot = w / n;
+    for (let i = 0; i < n; i++) {
+      rr(c, slot * i + 0.05, 0, slot - 0.1, h, 0.1);
+      c.fillStyle = S.fill;
+      c.fill();
+      c.stroke();
+      thin(c, S);
+      line(c, slot * i + 0.1, h * 0.32, slot * (i + 1) - 0.1, h * 0.32);
+      normal(c, S);
+    }
+  }
+
+  function pew(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.08);
+    thin(c, S);
+    line(c, 0.08, h * 0.3, w - 0.08, h * 0.3);
+    normal(c, S);
+  }
+
+  function speakerBox(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05, S.soft);
+    thin(c, S);
+    circle(c, S, w / 2, h * 0.58, Math.min(w, h) * 0.3, S.fill);
+    circle(c, S, w / 2, h * 0.58, Math.min(w, h) * 0.1, S.dark);
+    normal(c, S);
+  }
+
+  function drumKit(c, S, w, h) {
+    // ドラムセット。奏者は上（ステージの奥）に座り、下の客席側を向く
+    thin(c, S);
+    circle(c, S, w * 0.5, h * 0.16, 0.3, S.soft);                  // 椅子
+    rr(c, w * 0.34, h * 0.62, w * 0.32, h * 0.34, 0.06);            // バスドラム
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    circle(c, S, w * 0.3, h * 0.42, 0.34);                          // スネア
+    circle(c, S, w * 0.42, h * 0.56, 0.26);                         // タム
+    circle(c, S, w * 0.58, h * 0.56, 0.26);
+    circle(c, S, w * 0.76, h * 0.4, 0.38);                          // フロアタム
+    [[0.12, 0.34, 0.3], [0.14, 0.82, 0.4], [0.88, 0.8, 0.44]].forEach(([x, y, r]) => circle(c, S, w * x, h * y, r, S.yellow));
+    normal(c, S);
+  }
+
+  function mixerDesk(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05);
+    thin(c, S);
+    rr(c, 0.15, 0.12, w - 0.3, h * 0.58, 0.03);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    const n = Math.max(3, Math.round((w - 0.3) / 0.26));
+    for (let i = 0; i < n; i++) {
+      const x = 0.15 + ((w - 0.3) * (i + 0.5)) / n;
+      line(c, x, 0.22, x, 0.06 + h * 0.56);
+    }
+    normal(c, S);
+  }
+
+  function stool(c, S, w, h) {
+    const r = Math.min(w, h) / 2;
+    circle(c, S, w / 2, h / 2, r * 0.92);
+    thin(c, S);
+    circle(c, S, w / 2, h / 2, r * 0.5, false);
+    normal(c, S);
+  }
+
+  function booth(c, S, w, h) {
+    // ボックス席。上下に背もたれ付きの長椅子、真ん中にテーブル
+    const seatH = Math.min(1.2, h * 0.3);
+    box(c, S, 0, 0, w, seatH, 0.12);
+    box(c, S, 0, h - seatH, w, seatH, 0.12);
+    thin(c, S);
+    line(c, 0.1, seatH * 0.36, w - 0.1, seatH * 0.36);
+    line(c, 0.1, h - seatH * 0.36, w - 0.1, h - seatH * 0.36);
+    normal(c, S);
+    box(c, S, 0.2, seatH + 0.15, w - 0.4, h - seatH * 2 - 0.3, 0.06);
+  }
+
+  function billiards(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.12, S.wood);
+    rr(c, 0.28, 0.28, w - 0.56, h - 0.56, 0.04);
+    c.fillStyle = S.green;
+    c.fill();
+    c.stroke();
+    const e = 0.28;
+    const long = w >= h;
+    const pockets = long
+      ? [[e, e], [w / 2, e - 0.04], [w - e, e], [e, h - e], [w / 2, h - e + 0.04], [w - e, h - e]]
+      : [[e, e], [e - 0.04, h / 2], [e, h - e], [w - e, e], [w - e + 0.04, h / 2], [w - e, h - e]];
+    pockets.forEach(([x, y]) => circle(c, S, x, y, 0.13, S.line, true));
+  }
+
+  function banquetRound(c, S, w, h) {
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2;
+    for (let i = 0; i < 8; i++) {
+      c.save();
+      c.translate(cx, cy);
+      c.rotate((i * Math.PI) / 4);
+      chair(c, S, -0.42, -R, 0.84, 0.9);
+      c.restore();
+    }
+    circle(c, S, cx, cy, R - 0.95);
+  }
+
+  function pool(c, S, w, h) {
+    // プール。長い辺の方向にコースロープ、はしごは右上
+    box(c, S, 0, 0, w, h, 0.1, S.water);
+    thin(c, S);
+    rr(c, 0.3, 0.3, w - 0.6, h - 0.6, 0.06);
+    c.stroke();
+    const along = h >= w;
+    const across = along ? w : h;
+    const lanes = Math.max(1, Math.round((across - 0.6) / 4.5));
+    c.strokeStyle = S.blue;
+    dashed(c, S, true);
+    for (let i = 1; i < lanes; i++) {
+      const p = 0.3 + ((across - 0.6) * i) / lanes;
+      if (along) line(c, p, 0.9, p, h - 0.9);
+      else line(c, 0.9, p, w - 0.9, p);
+    }
+    dashed(c, S, false);
+    c.strokeStyle = S.line;
+    const lx = w - 1.3;
+    line(c, lx, 0.1, lx, 0.9);
+    line(c, lx + 0.6, 0.1, lx + 0.6, 0.9);
+    line(c, lx, 0.5, lx + 0.6, 0.5);
+    normal(c, S);
+  }
+
+  function deckChair(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.2);
+    thin(c, S);
+    line(c, 0.1, h * 0.3, w - 0.1, h * 0.3);
+    for (let y = h * 0.42; y < h - 0.15; y += 0.36) line(c, 0.22, y, w - 0.22, y);
+    normal(c, S);
+  }
+
+  function treadmill(c, S, w, h) {
+    // ランニングマシン。操作盤が上
+    box(c, S, 0, 0, w, h, 0.12, S.soft);
+    box(c, S, 0.2, 0.15, w - 0.4, 0.55, 0.06, S.dark);
+    thin(c, S);
+    rr(c, 0.32, 0.95, w - 0.64, h - 1.2, 0.08);
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    for (let y = 1.3; y < h - 0.35; y += 0.45) line(c, 0.4, y, w - 0.4, y);
+    normal(c, S);
+  }
+
+  function exerciseBike(c, S, w, h) {
+    // エアロバイク。ハンドルとホイールが上
+    thin(c, S);
+    rr(c, w * 0.38, h * 0.12, w * 0.24, h * 0.76, 0.1);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+    line(c, w * 0.08, h * 0.12, w * 0.92, h * 0.12);
+    circle(c, S, w / 2, h * 0.3, Math.min(w * 0.3, h * 0.14), S.dark);
+    box(c, S, w * 0.28, h * 0.66, w * 0.44, h * 0.24, 0.12);
+  }
+
+  function weightBench(c, S, w, h) {
+    // ベンチプレス。バーベルとラックが上
+    box(c, S, w * 0.3, h * 0.3, w * 0.4, h * 0.66, 0.1);
+    thin(c, S);
+    line(c, w * 0.18, h * 0.08, w * 0.18, h * 0.3);
+    line(c, w * 0.82, h * 0.08, w * 0.82, h * 0.3);
+    normal(c, S);
+    line(c, 0.05, h * 0.14, w - 0.05, h * 0.14);
+    box(c, S, 0.02, h * 0.05, 0.16, h * 0.18, 0.03, S.dark);
+    box(c, S, w - 0.18, h * 0.05, 0.16, h * 0.18, 0.03, S.dark);
+  }
+
+  function dumbbellRack(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.05, S.soft);
+    const n = Math.max(1, Math.round(w / 1));
+    const slot = w / n;
+    const r = Math.min(0.16, h * 0.28, slot * 0.18);
+    for (let i = 0; i < n; i++) {
+      const cx = slot * i + slot / 2;
+      thin(c, S);
+      line(c, cx - slot * 0.3, h * 0.5, cx + slot * 0.3, h * 0.5);
+      normal(c, S);
+      circle(c, S, cx - slot * 0.3, h * 0.5, r, S.dark);
+      circle(c, S, cx + slot * 0.3, h * 0.5, r, S.dark);
+    }
+  }
+
   /* ---------- カタログ ---------- */
 
   const GROUPS = [
@@ -1119,6 +1372,8 @@
     { id: 'bath', name: { ja: '水回り', en: 'Bath & WC', ko: '욕실·화장실' } },
     { id: 'office', name: { ja: 'オフィス・施設', en: 'Office & facility', ko: '사무·시설' } },
     { id: 'medical', name: { ja: '病院・研究', en: 'Hospital & lab', ko: '병원·연구' } },
+    { id: 'school', name: { ja: '学校・図書館', en: 'School & library', ko: '학교·도서관' } },
+    { id: 'leisure', name: { ja: '娯楽・スポーツ', en: 'Leisure & sports', ko: '오락·스포츠' } },
     { id: 'horror', name: { ja: '探索・ホラー', en: 'Investigation & horror', ko: '탐색·호러' } },
     { id: 'outdoor', name: { ja: '屋外', en: 'Outdoor', ko: '옥외' } }
   ];
@@ -1199,6 +1454,28 @@
     A('lab_bench', 'medical', 4, 1.6, labBench, { ja: '実験台', en: 'Lab bench', ko: '실험대' }),
     A('tank', 'medical', 2.4, 2.4, tank, { ja: '培養槽・タンク', en: 'Specimen tank', ko: '배양조·탱크' }),
     A('rack', 'medical', 1.4, 2, rack, { ja: 'サーバーラック', en: 'Server rack', ko: '서버 랙' }),
+
+    A('school_desk', 'school', 1.4, 2, schoolDesk, { ja: '学校の机と椅子', en: 'School desk', ko: '학교 책상' }),
+    A('lectern', 'school', 1.8, 1.1, lectern, { ja: '教卓・演台', en: 'Lectern', ko: '교탁·연단' }),
+    A('lecture_row', 'school', 7.2, 2, lectureRow, { ja: '講義室の机（固定席）', en: 'Lecture desk row', ko: '강의실 고정 책상' }),
+    A('bookstack', 'school', 4, 1.4, bookstack, { ja: '両面書架', en: 'Library stack', ko: '양면 서가' }),
+
+    A('stage', 'leisure', 12, 6, stageFloor, { ja: 'ステージ', en: 'Stage', ko: '무대' }, { under: true }),
+    A('seats', 'leisure', 6, 1.2, seatRow, { ja: '客席（1列）', en: 'Seat row', ko: '객석(1열)' }),
+    A('pew', 'leisure', 6, 1.2, pew, { ja: '長椅子（教会）', en: 'Pew', ko: '신도석' }),
+    A('speaker', 'leisure', 1.2, 1, speakerBox, { ja: 'スピーカー', en: 'Speaker', ko: '스피커' }),
+    A('drums', 'leisure', 3.2, 2.8, drumKit, { ja: 'ドラムセット', en: 'Drum kit', ko: '드럼 세트' }),
+    A('mixer', 'leisure', 3, 1.4, mixerDesk, { ja: '音響卓（PA）', en: 'Mixing desk', ko: '음향 콘솔' }),
+    A('stool', 'leisure', 0.8, 0.8, stool, { ja: 'スツール', en: 'Stool', ko: '스툴' }),
+    A('booth', 'leisure', 3, 4, booth, { ja: 'ボックス席', en: 'Booth', ko: '부스석' }),
+    A('billiards', 'leisure', 5, 2.8, billiards, { ja: 'ビリヤード台', en: 'Pool table', ko: '당구대' }),
+    A('banquet_round', 'leisure', 5.6, 5.6, banquetRound, { ja: '宴会テーブル（8人）', en: 'Banquet table (8)', ko: '연회 테이블(8인)' }),
+    A('pool', 'leisure', 12, 25, pool, { ja: 'プール', en: 'Swimming pool', ko: '수영장' }, { under: true }),
+    A('deck_chair', 'leisure', 1.4, 3.6, deckChair, { ja: 'デッキチェア', en: 'Sun lounger', ko: '선베드' }),
+    A('treadmill', 'leisure', 1.8, 4, treadmill, { ja: 'ランニングマシン', en: 'Treadmill', ko: '러닝머신' }),
+    A('exercise_bike', 'leisure', 1.2, 2.6, exerciseBike, { ja: 'エアロバイク', en: 'Exercise bike', ko: '실내 자전거' }),
+    A('weight_bench', 'leisure', 3, 3.2, weightBench, { ja: 'ベンチプレス', en: 'Weight bench', ko: '벤치프레스' }),
+    A('dumbbell_rack', 'leisure', 3, 1, dumbbellRack, { ja: 'ダンベルラック', en: 'Dumbbell rack', ko: '덤벨 랙' }),
 
     A('evidence', 'horror', 0.9, 0.9, evidence, { ja: '証拠マーカー', en: 'Evidence marker', ko: '증거 마커' }, { labelInside: true }),
     A('clue', 'horror', 1, 1, markerIcon('?', 'blue'), { ja: '手がかり（？）', en: 'Clue marker (?)', ko: '단서 마커(?)' }),
