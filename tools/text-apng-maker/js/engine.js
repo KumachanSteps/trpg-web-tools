@@ -1614,7 +1614,9 @@
     // 筋の付け根は毎フレーム、その時点の文字の形から探す（文字が動いても、消えても付いていく）
     drawDrips(pg, t, rect, sizePx, scene) {
       const d = scene.drip;
-      const since = t - (Number.isFinite(pg.inEnd) ? pg.inEnd : pg.start) + 0.15;
+      // スクロールで流れるページは、流れ終わると同時に消えるので、流れ始めから垂らす
+      const base = pg.scroll ? pg.scroll.start : (Number.isFinite(pg.inEnd) ? pg.inEnd : pg.start);
+      const since = t - base + 0.15;
       if (since <= 0) return;
       const cw = this.layer.width, ch = this.layer.height;
       const x0 = Math.max(0, Math.floor(rect.x)), y0 = Math.max(0, Math.floor(rect.y));
