@@ -15,4 +15,4 @@
 
 ## 公開状態
 
-クローズドテスト中: `tools.json` は `status: "idea"`・`href: ""`、`index.html` に `noindex`。一般公開時は `href` を入れ、`noindex` を外し、changelog に追記する。
+観測所に「開発中」（`tools.json` の `status: "production"`）として掲載。検索エンジンにも載る（noindexなし）。正式公開時は `status` を `available` にし、changelog に追記する。
