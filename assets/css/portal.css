@@ -380,6 +380,13 @@ input {
   color: var(--text);
 }
 
+.language-divider {
+  color: var(--muted);
+  font-size: 0.78rem;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
 .mode-button {
   display: inline-flex;
   align-items: center;
