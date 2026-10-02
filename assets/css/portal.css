@@ -664,6 +664,12 @@ body.theme-dawn .category-button.is-active {
   margin-top: 26px;
 }
 
+/* 状態（公開中・開発中・アイデアなど）が変わるところで行を改める */
+.tools-grid-break {
+  grid-column: 1 / -1;
+  height: 0;
+}
+
 .tool-card {
   position: relative;
   display: flex;
