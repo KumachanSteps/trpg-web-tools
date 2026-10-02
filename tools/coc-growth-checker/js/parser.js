@@ -749,10 +749,8 @@ function setupEvents(){
   $("summaryShotBtn")?.addEventListener("click", () => document.body.classList.add("screenshot-mode"));
   $("screenshotExitBtn")?.addEventListener("click", () => document.body.classList.remove("screenshot-mode"));
   $("themeToggleBtn")?.addEventListener("click", toggleTheme);
-  $("languageToggleBtn")?.addEventListener("click", () => {
-    const languages = ["ja", "en", "ko"];
-    const currentIndex = languages.indexOf(getCurrentLanguage());
-    setLanguage(languages[(currentIndex + 1) % languages.length]);
+  document.querySelectorAll("[data-language]").forEach(button => {
+    button.addEventListener("click", () => setLanguage(button.dataset.language));
   });
   document.addEventListener("languagechange", renderAll);
   $("xShareBtn")?.addEventListener("click", openXShare);

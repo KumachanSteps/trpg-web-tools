@@ -2402,6 +2402,12 @@ header.site-header{
   padding-inline:8px !important;
 }
 
+.header-top-row .language-switcher{display:inline-flex;align-items:center;overflow:hidden;height:36px;border:1px solid var(--border-cyan);border-radius:999px;background:var(--cyan-bg);box-sizing:border-box}
+.header-top-row .language-choice{width:36px;height:36px;padding:0;border:0;border-right:1px solid var(--border-cyan);border-radius:0;background:transparent;color:var(--cyan-strong);font:inherit;font-size:11px;font-weight:800;line-height:1;cursor:pointer;box-shadow:none;transform:none}
+.header-top-row .language-choice:last-child{border-right:0}.header-top-row .language-choice.is-active{background:var(--cyan);color:#020617}.header-top-row .language-choice:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
+body.dark .header-top-row .language-switcher{background:rgba(14,165,233,.08)}
+@media (max-width:720px){.header-top-row .language-switcher{height:32px}.header-top-row .language-choice{width:32px;height:32px;font-size:10px}}
+
 /* かなり縦が狭い画面向け */
 @media (max-height: 720px) {
   #rawInput {

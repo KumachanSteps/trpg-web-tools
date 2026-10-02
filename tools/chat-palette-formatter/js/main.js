@@ -1,8 +1,8 @@
 let editionMode = "auto";
 let detectedEdition = "";
 
-function t(key) {
-  return window.ChatPaletteLanguage?.t(key) || key;
+function t(key, vars = {}) {
+  return window.ChatPaletteLanguage?.t(key, vars) || key;
 }
 
 function editionLabel(edition) {
@@ -34,7 +34,7 @@ function setEditionMode(mode) {
     return;
   }
 
-  setStatus(t("manualModePrefix") + editionLabel(mode) + t("manualModeSuffix"));
+  setStatus(t("manualMode", { edition: editionLabel(mode) }));
 }
 
 function handleInputChange() {
@@ -56,7 +56,7 @@ function handleInputChange() {
   detectedEdition = window.ChatPaletteParser.detectEdition(extracted.text);
 
   if (editionMode === "auto") {
-    setStatus(t("detectPrefix") + editionLabel(detectedEdition) + t("detectSuffix"));
+    setStatus(t("detectStatus", { edition: editionLabel(detectedEdition) }));
   }
 
   formatPalette();
@@ -145,21 +145,13 @@ function clearAll() {
   setStatus(t("cleared"));
 }
 
-const ANALYSIS_SERVICE_LABELS = {
-  iachara: "いあきゃら",
-  charash: "キャラッシュ",
-  charaeno: "Charaeno",
-  "character-storage": "キャラクター保管庫",
-  "generic-palette": "チャットパレット",
-  unknown: "判定不可"
-};
+function analysisServiceLabel(service) {
+  return t(`analysis.service.${service}`);
+}
 
-const ANALYSIS_EDITION_SOURCE = {
-  url: "（URLから）",
-  palette: "（技能から）",
-  manual: "（手動）",
-  unknown: ""
-};
+function analysisEditionSource(source) {
+  return source === "unknown" ? "" : t(`analysis.source.${source}`);
+}
 
 function analysisText(value) {
   return document.createTextNode(value);
@@ -197,12 +189,12 @@ function renderAnalysis(rawInput) {
 
   box.hidden = false;
 
-  document.getElementById("apService").textContent = ANALYSIS_SERVICE_LABELS[meta.service] || meta.service;
+  document.getElementById("apService").textContent = analysisServiceLabel(meta.service) || meta.service;
 
   const editionEl = document.getElementById("apEdition");
 
   editionEl.textContent = (meta.edition === "6e" || meta.edition === "7e")
-    ? editionLabel(meta.edition) + (ANALYSIS_EDITION_SOURCE[meta.editionSource] || "")
+    ? editionLabel(meta.edition) + analysisEditionSource(meta.editionSource)
     : t("apEditionUnknown");
 
   const nameEl = document.getElementById("apName");
@@ -264,7 +256,7 @@ function renderAnalysis(rawInput) {
 
   if (derived.DB) derivedParts.push("DB " + derived.DB);
   if (derived.MOV !== null) derivedParts.push("MOV " + derived.MOV);
-  if (derived.build !== null) derivedParts.push("ビルド " + derived.build);
+  if (derived.build !== null) derivedParts.push(t("analysis.build") + " " + derived.build);
 
   derivedEl.textContent = derivedParts.join("　");
   derivedEl.hidden = derivedParts.length === 0;
@@ -272,13 +264,11 @@ function renderAnalysis(rawInput) {
   const countsEl = document.getElementById("apCounts");
   const counts = character.counts;
   countsEl.textContent = "";
-  countsEl.append(
-    analysisText("技能 "),
-    analysisStrong(String(counts.skills)),
-    analysisText(` 件（初期値 ${counts.skillsInitial}）　武器・ダメージ行 `),
-    analysisStrong(String(counts.weapons)),
-    analysisText(" 件")
-  );
+  countsEl.textContent = t("analysis.counts", {
+    skills: counts.skills,
+    initial: counts.skillsInitial,
+    weapons: counts.weapons
+  });
 
   const warnEl = document.getElementById("apWarn");
 
@@ -395,4 +385,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderAnalysis(document.getElementById("input").value);
   setStatus(t("initialStatus"));
+
+  document.addEventListener("languagechange", () => {
+    handleInputChange();
+    renderAnalysis(document.getElementById("input").value);
+  });
 });

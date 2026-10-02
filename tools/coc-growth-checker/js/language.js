@@ -46,11 +46,11 @@ function applyTranslations(){
     const key = element.getAttribute("data-i18n-title");
     element.setAttribute("title", t(key, element.getAttribute("title") || ""));
   });
-  const languageToggle = document.getElementById("languageToggleBtn");
-  if (languageToggle) {
-    languageToggle.textContent = "JP | EN | KR";
-    languageToggle.setAttribute("aria-label", t("language.select", "表示言語を選択"));
-  }
+  document.querySelectorAll("[data-language]").forEach(button => {
+    const active = button.dataset.language === currentLanguage;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
   updateDynamicTexts?.();
 }
 

@@ -112,6 +112,10 @@ button:hover {
   min-width: 0;
 }
 
+.language-switcher{display:inline-flex;align-items:center;overflow:hidden;border:1px solid rgba(15,23,42,.12);border-radius:999px;background:rgba(255,255,255,.78);height:26px}
+.language-choice{width:34px;height:26px;padding:0;border:0;border-right:1px solid rgba(15,23,42,.10);border-radius:0;background:transparent;color:#334155;font:inherit;font-size:11px;font-weight:800;cursor:pointer;box-shadow:none}
+.language-choice:last-child{border-right:0}.language-choice.is-active{background:#67e8f9;color:#0f172a}.language-choice:focus-visible{outline:2px solid #06b6d4;outline-offset:-2px}
+
 .portal-link,
 .header-pill {
   display: inline-flex;

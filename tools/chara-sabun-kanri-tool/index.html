@@ -10,53 +10,59 @@
   <meta
     name="description"
     content="TRPG立ち絵・表情差分の画像確認、ファイル名整理、CCFOLIA向け@差分チャットパレット作成を支援するWebツールです。"
+    data-i18n-content="meta.description"
   />
 
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="css/style.css?v=0.16" />
+  <link rel="stylesheet" href="css/style.css?v=0.17" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
       <div class="title-block">
-        <p class="eyebrow">TRPG WEBツール観測所</p>
-        <h1>キャラ差分管理ツール</h1>
-        <p class="lead">立ち絵・表情差分をまとめて確認し、ファイル名を整えて、CCFOLIA向けの <strong>@差分</strong> チャットパレットを生成します。</p>
+        <p class="eyebrow" data-i18n="app.eyebrow">TRPG WEBツール観測所</p>
+        <h1 data-i18n="app.title">キャラ差分管理ツール</h1>
+        <p class="lead" data-i18n-html="app.lead">立ち絵・表情差分をまとめて確認し、ファイル名を整えて、CCFOLIA向けの <strong>@差分</strong> チャットパレットを生成します。</p>
       </div>
 
-      <nav class="header-actions" aria-label="ヘッダー操作">
-        <a class="header-nav-link" href="https://kumachansteps.github.io/trpg-web-tools/">←TRPG WEBツール観測所</a>
-        <a class="x-share-link" id="xPostBtn" href="https://twitter.com/intent/tweet?text=%E3%82%AD%E3%83%A3%E3%83%A9%E5%B7%AE%E5%88%86%E7%AE%A1%E7%90%86%E3%83%84%E3%83%BC%E3%83%AB%EF%BD%9CTRPG%20WEB%E3%83%84%E3%83%BC%E3%83%AB%E8%A6%B3%E6%B8%AC%E6%89%80%20%E3%81%A7%E5%B7%AE%E5%88%86%E3%82%92%E7%AE%A1%E7%90%86%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%EF%BC%81%0Ahttps%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2Ftools%2Fchara-sabun-kanri-tool%2F" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿"><span>𝕏</span></a>
-        <button type="button" class="ghost-button" id="usageToggleBtn" aria-expanded="false" aria-controls="usagePanel">使い方</button>
-        <button type="button" class="ghost-button" id="shortcutToggleBtn" aria-expanded="false" aria-controls="shortcutPanel">ショートカット</button>
-        <button type="button" class="ghost-button" id="resetAllBtn">リセット</button>
+      <nav class="header-actions" aria-label="ヘッダー操作" data-i18n-aria-label="aria.header">
+        <a class="header-nav-link" href="https://kumachansteps.github.io/trpg-web-tools/" data-i18n="nav.back">←TRPG WEBツール観測所</a>
+        <a class="x-share-link" id="xPostBtn" href="https://twitter.com/intent/tweet?text=%E3%82%AD%E3%83%A3%E3%83%A9%E5%B7%AE%E5%88%86%E7%AE%A1%E7%90%86%E3%83%84%E3%83%BC%E3%83%AB%EF%BD%9CTRPG%20WEB%E3%83%84%E3%83%BC%E3%83%AB%E8%A6%B3%E6%B8%AC%E6%89%80%20%E3%81%A7%E5%B7%AE%E5%88%86%E3%82%92%E7%AE%A1%E7%90%86%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%EF%BC%81%0Ahttps%3A%2F%2Fkumachansteps.github.io%2Ftrpg-web-tools%2Ftools%2Fchara-sabun-kanri-tool%2F" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿" data-i18n-aria-label="aria.x"><span>𝕏</span></a>
+        <div class="language-switcher" role="group" aria-label="表示言語を選択" data-i18n-aria-label="language.select">
+          <button class="language-choice is-active" type="button" data-language="ja" aria-pressed="true">JP</button>
+          <button class="language-choice" type="button" data-language="en" aria-pressed="false">EN</button>
+          <button class="language-choice" type="button" data-language="ko" aria-pressed="false">KR</button>
+        </div>
+        <button type="button" class="ghost-button" id="usageToggleBtn" aria-expanded="false" aria-controls="usagePanel" data-i18n="button.usage">使い方</button>
+        <button type="button" class="ghost-button" id="shortcutToggleBtn" aria-expanded="false" aria-controls="shortcutPanel" data-i18n="button.shortcuts">ショートカット</button>
+        <button type="button" class="ghost-button" id="resetAllBtn" data-i18n="button.reset">リセット</button>
       </nav>
 
-      <div class="version-engrave">v0.16 / 2026.06.11</div>
+      <div class="version-engrave">v0.17 / 2026.10.02</div>
 
       <section class="header-drawer" id="usagePanel" aria-hidden="true">
         <div class="drawer-inner">
-          <h2>使い方</h2>
+          <h2 data-i18n="usage.title">使い方</h2>
           <ol>
-            <li>画像をドラッグ&ドロップ、またはクリックして複数画像を選択します。</li>
-            <li>メインファイル名を入力し、各サムネイル横の差分名を編集します。</li>
-            <li>必要に応じて「番号追加」をONにすると、<code>メインファイル名01_差分名.png</code> の形式になります。</li>
-            <li>「画像をZIPでダウンロード」で画像一式を保存できます。</li>
-            <li>「@差分チャパレをコピー」で、CCFOLIAなどに貼り付ける差分切替用チャットパレットをコピーできます。</li>
+            <li data-i18n="usage.step1">画像をドラッグ&ドロップ、またはクリックして複数画像を選択します。</li>
+            <li data-i18n="usage.step2">メインファイル名を入力し、各サムネイル横の差分名を編集します。</li>
+            <li data-i18n-html="usage.step3">必要に応じて「番号追加」をONにすると、<code>メインファイル名01_差分名.png</code> の形式になります。</li>
+            <li data-i18n="usage.step4">「画像をZIPでダウンロード」で画像一式を保存できます。</li>
+            <li data-i18n="usage.step5">「@差分チャパレをコピー」で、CCFOLIAなどに貼り付ける差分切替用チャットパレットをコピーできます。</li>
           </ol>
         </div>
       </section>
 
       <section class="header-drawer" id="shortcutPanel" aria-hidden="true">
         <div class="drawer-inner">
-          <h2>ショートカット</h2>
+          <h2 data-i18n="shortcuts.title">ショートカット</h2>
           <div class="shortcut-grid">
-            <span>Ctrl / Cmd + Shift + O</span><span>画像ファイルを選択</span>
-            <span>Ctrl / Cmd + Shift + E</span><span>ZIP出力</span>
-            <span>Ctrl / Cmd + Shift + C</span><span>@差分チャパレをコピー</span>
-            <span>Ctrl / Cmd + Shift + N</span><span>番号追加 ON / OFF</span>
-            <span>Esc</span><span>使い方 / ショートカットを閉じる。未展開時はリセット（確認ダイアログを表示）</span>
+            <span>Ctrl / Cmd + Shift + O</span><span data-i18n="shortcuts.open">画像ファイルを選択</span>
+            <span>Ctrl / Cmd + Shift + E</span><span data-i18n="shortcuts.zip">ZIP出力</span>
+            <span>Ctrl / Cmd + Shift + C</span><span data-i18n="shortcuts.copy">@差分チャパレをコピー</span>
+            <span>Ctrl / Cmd + Shift + N</span><span data-i18n="shortcuts.number">番号追加 ON / OFF</span>
+            <span>Esc</span><span data-i18n="shortcuts.escape">使い方 / ショートカットを閉じる。未展開時はリセット（確認ダイアログを表示）</span>
           </div>
         </div>
       </section>
@@ -67,25 +73,25 @@
         <div class="panel-heading">
           <div>
             <p class="section-kicker">01 / Open</p>
-            <h2>画像アップロード</h2>
+            <h2 data-i18n="upload.title">画像アップロード</h2>
           </div>
           <span class="pill" id="fileCountPill">0 files</span>
         </div>
 
         <div class="drop-zone" id="dropZone" tabindex="0">
           <div class="drop-icon">＋</div>
-          <p><strong>PNG / JPG / WEBP</strong> をドラッグ&ドロップ</p>
-          <p class="subtext">またはクリックして複数ファイルを選択</p>
+          <p data-i18n-html="upload.drop"><strong>PNG / JPG / WEBP</strong> をドラッグ&ドロップ</p>
+          <p class="subtext" data-i18n="upload.click">またはクリックして複数ファイルを選択</p>
           <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple />
         </div>
 
         <div class="field-row">
-          <label for="mainNameInput">メインファイル名</label>
-          <input type="text" id="mainNameInput" placeholder="例：hanabishi_hibana" />
-          <p class="input-help">出力名は <code>メインファイル名_差分名.png</code> になります。</p>
+          <label for="mainNameInput" data-i18n="upload.mainName">メインファイル名</label>
+          <input type="text" id="mainNameInput" placeholder="例：hanabishi_hibana" data-i18n-placeholder="upload.mainPlaceholder" />
+          <p class="input-help" data-i18n-html="upload.help">出力名は <code>メインファイル名_差分名.png</code> になります。</p>
         </div>
 
-        <p class="status-line" id="statusLine">画像を読み込んでください。</p>
+        <p class="status-line" id="statusLine" data-i18n="status.initial">画像を読み込んでください。</p>
       </section>
 
       <section class="panel thumb-panel">
@@ -93,17 +99,17 @@
           <div>
             <p class="section-kicker">02 / Name</p>
             <div class="thumb-heading-line">
-              <h2>サムネイル一覧</h2>
+              <h2 data-i18n="thumb.title">サムネイル一覧</h2>
               <label class="number-toggle" for="numberToggle">
                 <input type="checkbox" id="numberToggle" checked />
-                <span>番号追加</span>
+                <span data-i18n="thumb.number">番号追加</span>
               </label>
             </div>
           </div>
-          <span class="small-note">クリックで大きく表示</span>
+          <span class="small-note" data-i18n="thumb.clickPreview">クリックで大きく表示</span>
         </div>
         <div class="thumb-list" id="thumbList">
-          <div class="empty-state">画像を追加すると、ここにサムネイルと差分名入力欄が表示されます。</div>
+          <div class="empty-state" data-i18n="thumb.empty">画像を追加すると、ここにサムネイルと差分名入力欄が表示されます。</div>
         </div>
       </section>
 
@@ -111,19 +117,19 @@
         <div class="panel-heading compact">
           <div>
             <p class="section-kicker">03 / Review</p>
-            <h2>大プレビュー</h2>
+            <h2 data-i18n="preview.title">大プレビュー</h2>
           </div>
           <span class="pill muted" id="activeNamePill">No image</span>
         </div>
         <div class="large-preview" id="largePreview">
           <div class="preview-empty">Preview</div>
-          <img id="previewImage" alt="選択中の差分プレビュー" />
+          <img id="previewImage" alt="選択中の差分プレビュー" data-i18n-alt="preview.alt" />
         </div>
         <div class="filename-preview" id="filenamePreview">出力ファイル名：-</div>
 
         <div class="suggestion-block preview-suggestions">
           <div class="suggestion-head">
-            <h3>差分名サジェスト</h3>
+            <h3 data-i18n="preview.suggestions">差分名サジェスト</h3>
           </div>
           <div class="suggestion-chips" id="suggestionChips"></div>
         </div>
@@ -133,22 +139,22 @@
         <div class="panel-heading compact">
           <div>
             <p class="section-kicker">04 / Export & Copy</p>
-            <h2>出力</h2>
+            <h2 data-i18n="output.title">出力</h2>
           </div>
         </div>
 
         <div class="output-actions">
-          <button type="button" class="primary-button" id="exportZipBtn">画像をZIPでダウンロード</button>
-          <button type="button" class="secondary-button" id="copyPaletteBtn">@差分チャパレをコピー</button>
+          <button type="button" class="primary-button" id="exportZipBtn" data-i18n="output.download">画像をZIPでダウンロード</button>
+          <button type="button" class="secondary-button" id="copyPaletteBtn" data-i18n="output.copy">@差分チャパレをコピー</button>
         </div>
 
-        <label class="textarea-label" for="paletteOutput">生成されるチャットパレット</label>
+        <label class="textarea-label" for="paletteOutput" data-i18n="output.palette">生成されるチャットパレット</label>
         <textarea id="paletteOutput" spellcheck="false" placeholder="@通常&#10;@笑顔&#10;@怒り" readonly></textarea>
       </section>
     </main>
 
     <footer class="app-footer">
-      <p><strong>利用上の注意</strong> 本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。 不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
+      <p data-i18n-html="footer.note"><strong>利用上の注意</strong> 本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。 不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
     </footer>
   </div>
 
@@ -157,6 +163,7 @@
   <datalist id="sabunSuggestions"></datalist>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="js/main.js?v=0.16"></script>
+  <script src="js/i18n.js?v=0.17"></script>
+  <script src="js/main.js?v=0.17"></script>
 </body>
 </html>

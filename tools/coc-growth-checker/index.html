@@ -8,7 +8,7 @@
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <title>CoC 6版 / 7版 成長チェッカーv2｜TRPG WEBツール観測所</title>
-  <link rel="stylesheet" href="./css/growth_checker_style.css?v=2.71" />
+  <link rel="stylesheet" href="./css/growth_checker_style.css?v=2.72" />
 </head>
 
 <body>
@@ -27,7 +27,11 @@
 
         <div class="header-actions">
           <a id="xShareBtn" class="x-link-button" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" aria-label="このツールを使ったことをXに投稿" data-i18n-aria-label="aria.xShare">X</a>
-          <button id="languageToggleBtn" class="language-toggle-button" type="button" aria-label="表示言語を選択">JP | EN | KR</button>
+          <div class="language-switcher" role="group" aria-label="表示言語を選択" data-i18n-aria-label="language.select">
+            <button class="language-choice is-active" type="button" data-language="ja" aria-pressed="true">JP</button>
+            <button class="language-choice" type="button" data-language="en" aria-pressed="false">EN</button>
+            <button class="language-choice" type="button" data-language="ko" aria-pressed="false">KR</button>
+          </div>
           <button id="howtoHelpBtn" class="howto-help-button" type="button" aria-expanded="false" aria-controls="howtoDrawer" data-i18n="button.howto">使い方</button>
           <button id="shortcutHelpBtn" class="shortcut-help-button" type="button" aria-expanded="false" aria-controls="shortcutDrawer" data-i18n="button.shortcuts">ショートカット</button>
           <button id="themeToggleBtn" class="theme-switch" type="button" aria-label="ナイトモードに切替" aria-pressed="false" title="ナイトモードに切替">
@@ -59,7 +63,7 @@
           </div>
           <p class="site-description" data-i18n="app.description">セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。</p>
         </div>
-        <div class="version-stamp">v2.71 2026.10.01</div>
+        <div class="version-stamp">v2.72 2026.10.02</div>
       </div>
     </div>
   </header>
@@ -194,9 +198,9 @@
     <p data-i18n-html="footer.body2">不具合報告や要望は、Xの <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
   </section>
 
-  <script src="./js/i18n.js?v=2.71"></script>
-  <script src="./js/language.js?v=2.71"></script>
-  <script src="./js/parser.js?v=2.71"></script>
+  <script src="./js/i18n.js?v=2.72"></script>
+  <script src="./js/language.js?v=2.72"></script>
+  <script src="./js/parser.js?v=2.72"></script>
   <script src="./js/shortcut.js"></script>
 </body>
 </html>
