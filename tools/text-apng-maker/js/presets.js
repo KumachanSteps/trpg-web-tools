@@ -39,8 +39,6 @@
     stroke2: { on: false, width: 6, color: '#ffffff' },
     shadow: { on: true, color: '#000000', opacity: 0.6, blur: 12, x: 0, y: 5 },
     glow: { on: false, color: '#7fb4ff', size: 28, strength: 1 },
-    // 血のしたたり（文字の下から垂れる筋）
-    drip: { on: false, color: '#8a0000', amount: 1, length: 1 },
     subColorOn: false,
     subColor: '#ffffff',
     deco: {
@@ -229,7 +227,7 @@
     deco: diceFrame('#b00000', { color: '#0a0000', opacity: 0.72 }),
     inFx: 'glitch', inDur: 0.8, inStagger: 0, inPower: 1, holdFx: 'glitch', holdPower: 0.7, hold: 1.8, outFx: 'sink', outDur: 0.8, outStagger: 0.05
   };
-  // 正気度ロール：骨のような白い文字に暗い赤の光、文字の下から血が垂れ、時々ノイズが走る
+  // 正気度ロール：骨のような白い文字に暗い赤の光、時々ノイズが走る
   const SAN_ROLL = {
     ...DICE_FRAME,
     fill: { type: 'gradient', color: '#f6f1e8', color2: '#dccfbd', color3: '#9c8670', dir: 'v' },
@@ -239,11 +237,10 @@
     subFontId: 'nosifer', subWeight: 400, subSize: 0.18, subLetterSpacing: 0.35,
     subColor: '#b01212',
     deco: diceFrame('#6e0b0b', { color: '#050000', opacity: 0.7 }),
-    drip: { on: true, color: '#7a0000', amount: 1, length: 1.1 },
     glitchColor: '#ff1a1a', glitchColor2: '#2a0000',
     inFx: 'flicker', inDur: 1.0, inStagger: 0, holdFx: 'glitch', holdPower: 0.6, hold: 2.4, outFx: 'blurOut', outDur: 0.8, outStagger: 0
   };
-  // SANチェック：血のように赤い文字を叩きつけ、たっぷり血が垂れて、強いノイズが走る
+  // SANチェック：血のように赤い文字を叩きつけ、強いノイズが走る
   const SAN_CHECK = {
     ...DICE_FRAME,
     fontId: 'dela-gothic-one', weight: 400, letterSpacing: 0.08,
@@ -254,7 +251,6 @@
     subFontId: 'nosifer', subWeight: 400, subSize: 0.18, subLetterSpacing: 0.35,
     subColor: '#ff5a5a',
     deco: diceFrame('#a00000', { color: '#0a0000', opacity: 0.75 }, 5),
-    drip: { on: true, color: '#9a0000', amount: 1.4, length: 1.3 },
     glitchColor: '#ff0000', glitchColor2: '#000000',
     inFx: 'glitch', inDur: 0.8, inStagger: 0, inPower: 1, holdFx: 'glitch', holdPower: 1, hold: 2.4, outFx: 'glitch', outDur: 0.7, outStagger: 0
   };
