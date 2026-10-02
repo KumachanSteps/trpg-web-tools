@@ -12,7 +12,7 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.04';
+  const VERSION = 'v1.05';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const LANGS = ['ja', 'ko', 'en'];
@@ -33,7 +33,20 @@
     title: $('appTitle'),
     lead: $('appLead'),
     eyebrow: $('appEyebrow'),
+    header: document.querySelector('.app-header'),
     portalLink: $('portalLink'),
+    portalLong: $('portalLong'),
+    portalShort: $('portalShort'),
+    headerMenuBtn: $('headerMenuBtn'),
+    controlPanel: $('controlPanel'),
+    sheetBar: $('sheetBar'),
+    sheetToggle: $('sheetToggle'),
+    sheetTitle: $('sheetTitle'),
+    sheetSummary: $('sheetSummary'),
+    sheetExportBtn: $('sheetExportBtn'),
+    sheetScroll: $('sheetScroll'),
+    exportCard: $('exportCard'),
+    transport: document.querySelector('.transport'),
     shareLink: $('xShareLink'),
     langButtons: document.querySelectorAll('[data-lang-choice]'),
     langSwitcher: $('languageSwitcher'),
@@ -381,7 +394,15 @@
     els.eyebrow.textContent = d.portalName;
     els.title.textContent = d.title;
     els.lead.textContent = d.lead;
-    els.portalLink.textContent = d.backToPortal;
+    els.portalLong.textContent = d.backToPortal;
+    els.portalShort.textContent = d.portalShort;
+    els.portalLink.setAttribute('aria-label', d.backToPortal);
+    els.headerMenuBtn.setAttribute('aria-label', d.menu);
+    els.headerMenuBtn.title = d.menu;
+    els.sheetTitle.textContent = d.sheetTitle;
+    els.sheetExportBtn.textContent = d.toExport;
+    els.sheetExportBtn.title = d.toExportTitle;
+    syncSheetLabels();
     els.helpBtn.textContent = d.help;
     els.rulesBtn.textContent = d.rulesBtn;
     els.shortcutBtn.textContent = d.shortcuts;
@@ -886,7 +907,8 @@
     const s = scene();
     const wrap = els.stageWrap;
     const availW = Math.max(120, wrap.clientWidth);
-    const availH = Math.max(160, Math.min(window.innerHeight * 0.6, 620));
+    // スマートフォンでは、下から開く設定のシートと一緒に見られるよう、プレビューを画面の3分の1ほどに収める
+    const availH = isPhone() ? Math.max(140, window.innerHeight * 0.32) : Math.max(160, Math.min(window.innerHeight * 0.6, 620));
     const ratio = s.width / s.height;
     let w = availW;
     let h = w / ratio;
@@ -1117,6 +1139,7 @@
       els.templateStrip.appendChild(btn);
     });
     reserveTemplateRows();
+    syncSheetLabels();
     if (refocus) {
       const target = lists.map(list => list.querySelector(refocus)).find(Boolean);
       if (target) target.focus();
@@ -1570,6 +1593,12 @@
     drawerPairs().forEach(([d]) => { d.hidden = true; });
     drawer.hidden = !open;
     drawerPairs().forEach(([d, btn]) => btn.setAttribute('aria-expanded', String(!d.hidden)));
+    // スマートフォン：開いた説明はページの上にあるので、シートを閉じてそこまで移動する
+    if (open && isPhone()) {
+      setHeaderMenu(false);
+      setSheet('peek');
+      drawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function closeDrawers() {
@@ -1705,6 +1734,254 @@
     });
   }
 
+  /* ================= スマートフォン表示 =================
+   * - ヘッダー：ページの先頭では2行（タイトル・テーマ・共有／観測所・言語・使い方・利用ルール）。
+   *   スクロールしたときや設定のシートを開いたときは1行（タイトル・言語・テーマ・⋯）にたたみ、残りは「⋯」で出し入れする
+   * - 設定パネル：プレビューの上に重なる、下から引き出すシート。peek（帯だけ）・half（プレビューと再生ボタンの下まで）・full の3段階
+   * - 書き出し：プレビューの下（ページを下へスクロールした先）。シートの帯の「書き出し ↓」からも移動できる */
+
+  const phoneQuery = window.matchMedia('(max-width: 760px)');
+  const SHEET_STATES = ['peek', 'half', 'full'];
+  const sheet = { state: 'peek', drag: null, visible: { peek: 64, half: 320, full: 600 }, full: 600, baseViewH: 0, baseWidth: 0, typing: false, holdCompactUntil: 0 };
+  let headerCompact = false;
+
+  function isPhone() { return phoneQuery.matches; }
+
+  // シートの帯の見出し：今のモードとテンプレート
+  function syncSheetLabels() {
+    if (!els.sheetSummary) return;
+    const d = dict();
+    const tpl = (P.TEMPLATES[app.mode] || []).find(t => t.id === scene().templateId);
+    els.sheetSummary.textContent = [d.modes[app.mode][0], tpl ? tpl.label[app.lang] : ''].filter(Boolean).join(' · ');
+    els.sheetToggle.setAttribute('aria-label', `${sheet.state === 'peek' ? d.sheetOpen : d.sheetClose}（${els.sheetSummary.textContent}）`);
+  }
+
+  function setHeaderMenu(open) {
+    els.header.classList.toggle('is-menu-open', open);
+    els.headerMenuBtn.setAttribute('aria-expanded', String(open));
+  }
+
+  // 先頭から少しでもスクロールしたら1行に。戻すのはほぼ先頭まで戻ったとき（行数が変わってページが動いても行き来しないように）
+  function syncHeaderCompact() {
+    let compact = false;
+    if (isPhone()) {
+      const y = window.scrollY;
+      compact = sheet.state !== 'peek' || performance.now() < sheet.holdCompactUntil || (headerCompact ? y > 4 : y > 40);
+    }
+    if (compact === headerCompact) return;
+    headerCompact = compact;
+    els.body.classList.toggle('is-header-compact', compact);
+    if (!compact) setHeaderMenu(false);
+  }
+
+  const isTextField = el => Boolean(el) && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && /^(text|search|number|url|email|)$/.test(el.type)));
+
+  // 画面の高さ（キーボードが開いたときは見えている部分）とヘッダー・再生操作の位置から、シートの高さと各段階で見える高さを決める
+  function measureSheet() {
+    if (!isPhone()) return;
+    const vv = window.visualViewport;
+    const viewBottom = vv ? vv.height + vv.offsetTop : window.innerHeight;
+    const keyboard = Math.max(0, Math.round(window.innerHeight - viewBottom));
+    const viewH = window.innerHeight - keyboard;
+    if (window.innerWidth !== sheet.baseWidth) { sheet.baseWidth = window.innerWidth; sheet.baseViewH = 0; }
+    sheet.baseViewH = Math.max(sheet.baseViewH, viewH);
+    const headerBottom = headerCompact ? Math.max(0, els.header.getBoundingClientRect().bottom) : 64;
+    const full = Math.max(200, Math.round(viewH - headerBottom - 8));
+    const peek = Math.round(els.sheetBar.getBoundingClientRect().height + safeBottom());
+    // half：ページの先頭で、プレビューと再生ボタン・タイムラインが隠れない高さ
+    const transportBottom = els.transport.getBoundingClientRect().bottom + window.scrollY;
+    const half = Math.round(Math.min(full * 0.72, Math.max(viewH * 0.36, viewH - transportBottom - 10)));
+    sheet.full = full;
+    sheet.visible = { peek, half: Math.max(peek + 80, half), full };
+    // 文字を入力中でキーボードが開いているときは、入力欄が隠れないよう全体まで広げる
+    sheet.typing = isTextField(document.activeElement) && els.controlPanel.contains(document.activeElement) && viewH < sheet.baseViewH - 120;
+    const style = els.body.style;
+    style.setProperty('--sheet-h', `${full}px`);
+    style.setProperty('--sheet-kb', `${keyboard}px`);
+    style.setProperty('--sheet-peek', `${peek}px`);
+    if (!sheet.drag) applySheetY(sheet.visible[sheet.typing ? 'full' : sheet.state]);
+  }
+
+  let safeProbe = null;
+  function safeBottom() {
+    if (!safeProbe) {
+      safeProbe = document.createElement('div');
+      safeProbe.style.cssText = 'position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom, 0px);visibility:hidden;pointer-events:none;';
+      document.body.appendChild(safeProbe);
+    }
+    return safeProbe.getBoundingClientRect().height || 0;
+  }
+
+  function applySheetY(visibleH) {
+    const y = Math.max(0, sheet.full - visibleH);
+    els.body.style.setProperty('--sheet-y', `${Math.round(y)}px`);
+  }
+
+  function setSheet(state) {
+    if (!SHEET_STATES.includes(state)) return;
+    const opening = sheet.state === 'peek' && state !== 'peek';
+    sheet.state = state;
+    els.body.dataset.sheet = state;
+    els.sheetToggle.setAttribute('aria-expanded', String(state !== 'peek'));
+    // 閉じたシートの中身にはキーボードのフォーカスが入らないようにする
+    els.sheetScroll.inert = isPhone() && state === 'peek';
+    syncSheetLabels();
+    if (!isPhone()) return;
+    syncHeaderCompact();
+    if (state !== 'peek') setHeaderMenu(false);
+    // 開くときはプレビューが見えるようページの先頭へ戻す
+    if (opening && window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'smooth' });
+    requestAnimationFrame(measureSheet);
+  }
+
+  // 帯のドラッグ（マウス・タッチ・ペン共通）。離したときは速さと位置から一番近い段階に止める
+  function startSheetDrag(clientY, time) {
+    els.controlPanel.classList.add('is-dragging');
+    const current = sheet.visible[sheet.typing ? 'full' : sheet.state];
+    sheet.drag = { startY: clientY, startVisible: current, lastY: clientY, lastT: time, v: 0, moved: false };
+  }
+
+  function moveSheetDrag(clientY, time) {
+    const g = sheet.drag;
+    if (!g) return;
+    const dy = clientY - g.startY;
+    if (Math.abs(dy) > 6) g.moved = true;
+    const dt = Math.max(1, time - g.lastT);
+    g.v = 0.7 * ((clientY - g.lastY) / dt) + 0.3 * g.v;
+    g.lastY = clientY;
+    g.lastT = time;
+    const visible = Math.min(sheet.full, Math.max(sheet.visible.peek, g.startVisible - dy));
+    applySheetY(visible);
+  }
+
+  function endSheetDrag(clientY) {
+    const g = sheet.drag;
+    if (!g) return false;
+    sheet.drag = null;
+    els.controlPanel.classList.remove('is-dragging');
+    if (!g.moved) { applySheetY(sheet.visible[sheet.state]); return false; }
+    const visible = Math.min(sheet.full, Math.max(sheet.visible.peek, g.startVisible - (clientY - g.startY)));
+    let target;
+    if (Math.abs(g.v) > 0.45) {
+      // すばやく弾いたときは、その向きの次の段階へ
+      const order = SHEET_STATES.filter(st => g.v < 0 ? sheet.visible[st] > visible + 4 : sheet.visible[st] < visible - 4);
+      target = g.v < 0 ? order[0] : order[order.length - 1];
+    }
+    if (!target) target = SHEET_STATES.reduce((best, st) => (Math.abs(sheet.visible[st] - visible) < Math.abs(sheet.visible[best] - visible) ? st : best), 'peek');
+    if (sheet.typing && target !== 'full') document.activeElement.blur();
+    setSheet(target);
+    applySheetY(sheet.visible[target]);
+    return true;
+  }
+
+  function bindPhoneLayout() {
+    // 帯：ドラッグで開け閉め。タップは「閉じている⇔半分」の切り替え
+    // （少し動かしてからドラッグとして扱う。最初から捕まえるとタップのクリックが帯のボタンに届かないため）
+    let press = null;
+    let dragEndAt = 0;
+    const onPressMove = event => {
+      if (!press || event.pointerId !== press.id) return;
+      if (!sheet.drag) {
+        if (Math.abs(event.clientY - press.y) < 6) return;
+        startSheetDrag(press.y, press.t);
+      }
+      moveSheetDrag(event.clientY, event.timeStamp);
+    };
+    const onPressEnd = event => {
+      if (!press || event.pointerId !== press.id) return;
+      press = null;
+      window.removeEventListener('pointermove', onPressMove);
+      window.removeEventListener('pointerup', onPressEnd);
+      window.removeEventListener('pointercancel', onPressEnd);
+      if (endSheetDrag(event.clientY)) dragEndAt = performance.now();
+    };
+    els.sheetBar.addEventListener('pointerdown', event => {
+      if (!isPhone() || event.button > 0 || event.target.closest('#sheetExportBtn')) return;
+      press = { id: event.pointerId, y: event.clientY, t: event.timeStamp };
+      window.addEventListener('pointermove', onPressMove);
+      window.addEventListener('pointerup', onPressEnd);
+      window.addEventListener('pointercancel', onPressEnd);
+    });
+    els.sheetToggle.addEventListener('click', () => {
+      // ドラッグの直後に続くクリックは無視する
+      if (performance.now() - dragEndAt < 400) return;
+      setSheet(sheet.state === 'peek' ? 'half' : 'peek');
+    });
+    // 中身がいちばん上までスクロールされているときは、下へのスワイプでシートを下げる
+    let touch = null;
+    els.sheetScroll.addEventListener('touchstart', event => {
+      if (!isPhone() || event.touches.length !== 1 || sheet.state === 'peek') { touch = null; return; }
+      const t = event.touches[0];
+      touch = { x: t.clientX, y: t.clientY, atTop: els.sheetScroll.scrollTop <= 0, active: false };
+    }, { passive: true });
+    els.sheetScroll.addEventListener('touchmove', event => {
+      if (!touch || !touch.atTop) return;
+      const t = event.touches[0];
+      const dx = t.clientX - touch.x;
+      const dy = t.clientY - touch.y;
+      if (!touch.active) {
+        if (dy > 10 && dy > Math.abs(dx) * 1.2 && els.sheetScroll.scrollTop <= 0) {
+          touch.active = true;
+          startSheetDrag(touch.y, event.timeStamp);
+        } else if (Math.abs(dy) > 10 || Math.abs(dx) > 10) {
+          touch = null;
+          return;
+        } else return;
+      }
+      event.preventDefault();
+      moveSheetDrag(t.clientY, event.timeStamp);
+    }, { passive: false });
+    const touchEnd = event => {
+      if (touch && touch.active) endSheetDrag(event.changedTouches[0].clientY);
+      touch = null;
+    };
+    els.sheetScroll.addEventListener('touchend', touchEnd);
+    els.sheetScroll.addEventListener('touchcancel', touchEnd);
+
+    els.sheetExportBtn.addEventListener('click', () => {
+      // 先にヘッダーを1行にしてから位置を測る（スクロールの途中でヘッダーが縮んで行き過ぎないように）
+      sheet.holdCompactUntil = performance.now() + 1200;
+      setSheet('peek');
+      requestAnimationFrame(() => {
+        const top = els.exportCard.getBoundingClientRect().top + window.scrollY - els.header.getBoundingClientRect().height - 16;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      });
+    });
+    els.headerMenuBtn.addEventListener('click', () => setHeaderMenu(!els.header.classList.contains('is-menu-open')));
+    document.addEventListener('click', event => {
+      if (els.header.classList.contains('is-menu-open') && !els.header.contains(event.target)) setHeaderMenu(false);
+    });
+    // メニューから共有・観測所へ移動したら閉じる
+    [els.portalLink, els.shareLink].forEach(link => link.addEventListener('click', () => setHeaderMenu(false)));
+
+    window.addEventListener('scroll', syncHeaderCompact, { passive: true });
+    const remeasure = () => requestAnimationFrame(measureSheet);
+    window.addEventListener('resize', remeasure);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', remeasure);
+    els.controlPanel.addEventListener('focusin', () => setTimeout(() => {
+      measureSheet();
+      // 入力欄がキーボードやシートの外に隠れないようにする
+      if (sheet.typing && isTextField(document.activeElement)) document.activeElement.scrollIntoView({ block: 'nearest' });
+    }, 320));
+    els.controlPanel.addEventListener('focusout', () => setTimeout(measureSheet, 320));
+    if ('ResizeObserver' in window) new ResizeObserver(remeasure).observe(els.header);
+    const onChange = () => {
+      if (isPhone()) {
+        setSheet(sheet.state);
+      } else {
+        // 広い画面に戻ったら、シート・ヘッダーの指定を外して元の2列の表示にする
+        ['--sheet-h', '--sheet-kb', '--sheet-peek', '--sheet-y'].forEach(name => els.body.style.removeProperty(name));
+        els.sheetScroll.inert = false;
+        setHeaderMenu(false);
+        syncHeaderCompact();
+      }
+      layoutStage();
+    };
+    if (phoneQuery.addEventListener) phoneQuery.addEventListener('change', onChange);
+    else if (phoneQuery.addListener) phoneQuery.addListener(onChange);
+    setSheet('peek');
+  }
+
   window.TextApngMakerApi = {
     togglePlay,
     exportApng: () => { exportApng(); return true; },
@@ -1730,6 +2007,7 @@
   });
   syncTabs();
   applyLanguage();
+  bindPhoneLayout();
   layoutStage();
   prepare();
   view.time = view.prepared ? view.prepared.timeline.posterTime : 0;

@@ -4,14 +4,14 @@
   <script async src="../../assets/js/analytics.js"></script>
 
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>文字画像APNGメーカー｜TRPG WEBツール観測所</title>
   <meta name="description" content="「戦闘開始」のカットイン、トレイラーの文章演出、場所・時間のテロップなど、TRPGで使える文字アニメーションのAPNG素材をブラウザだけで作成できるツールです。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="./css/text-apng-maker.css?v=20261001-04" />
+  <link rel="stylesheet" href="./css/text-apng-maker.css?v=20261003-05" />
 </head>
 <body>
   <div class="app-shell">
@@ -19,10 +19,11 @@
       <div class="title-block">
         <p class="eyebrow" id="appEyebrow">TRPG WEBツール観測所</p>
         <h1 id="appTitle">文字画像APNGメーカー</h1>
+        <div class="version-engrave">v1.05 / 2026.10.03</div>
       </div>
       <p class="lead" id="appLead">「戦闘開始」のカットイン、トレイラーの文章演出、場所・時間のテロップなど、TRPGで使える文字アニメーションのAPNG素材を作成します。</p>
       <div class="header-actions">
-        <a class="header-nav-link" id="portalLink" href="../../">←TRPG WEBツール観測所</a>
+        <a class="header-nav-link" id="portalLink" href="../../"><span class="portal-long" id="portalLong">←TRPG WEBツール観測所</span><span class="portal-short" id="portalShort" aria-hidden="true">← 観測所</span></a>
         <a class="x-share-link" id="xShareLink" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" aria-label="X / Twitterで共有"><span aria-hidden="true">𝕏</span></a>
         <div class="language-switcher" id="languageSwitcher" role="group" aria-label="言語切替">
           <button class="lang-choice-button is-active" type="button" data-lang-choice="ja" aria-pressed="true">JP</button>
@@ -37,8 +38,10 @@
           <button class="ghost-button" type="button" id="shortcutBtn" aria-expanded="false" aria-controls="shortcutDrawer">ショートカット</button>
           <button class="ghost-button theme-button" type="button" id="themeBtn"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb">☀️</span></span></button>
         </span>
+        <!-- スマートフォン：ヘッダーを1行にたたんだときに、残りのボタンを出し入れする -->
+        <button class="ghost-button header-menu-button" type="button" id="headerMenuBtn" aria-expanded="false" aria-label="メニュー"><span aria-hidden="true">⋯</span></button>
+        <span class="header-break" aria-hidden="true"></span>
       </div>
-      <div class="version-engrave">v1.04 / 2026.10.01</div>
     </header>
 
     <section class="drawer" id="helpDrawer" hidden>
@@ -61,7 +64,18 @@
     </section>
 
     <main class="workspace">
-      <section class="panel control-panel" aria-labelledby="appTitle">
+      <section class="panel control-panel" id="controlPanel" aria-labelledby="appTitle">
+        <!-- スマートフォン：設定パネルは下から引き出すシート。この帯をスワイプ・タップして開け閉めする -->
+        <div class="sheet-bar" id="sheetBar">
+          <span class="sheet-handle" aria-hidden="true"></span>
+          <button class="sheet-toggle" type="button" id="sheetToggle" aria-expanded="false" aria-controls="sheetScroll">
+            <span class="sheet-title" id="sheetTitle">設定</span>
+            <span class="sheet-summary" id="sheetSummary"></span>
+            <span class="sheet-chevron" aria-hidden="true"></span>
+          </button>
+          <button class="sheet-export" type="button" id="sheetExportBtn">書き出し ↓</button>
+        </div>
+        <div class="sheet-scroll" id="sheetScroll">
         <div class="mode-tabs" id="modeTabs" role="tablist" aria-label="Mode">
           <button class="mode-tab is-active" type="button" role="tab" data-mode="message" aria-selected="true">
             <span class="mode-head"><svg class="mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9A1.5 1.5 0 0 1 5.5 4z" /><path d="M12 7.5v3.6M12 13.4v.1" /></svg><span class="mode-name">メッセージ</span></span>
@@ -96,6 +110,7 @@
           <button class="settings-tab" type="button" role="tab" id="tab-layout" data-tab="layout" aria-selected="false" aria-controls="settingsBody" tabindex="-1">背景・配置</button>
         </div>
         <div class="settings-body" id="settingsBody" role="tabpanel"></div>
+        </div>
       </section>
 
       <section class="panel preview-panel">
@@ -142,7 +157,7 @@
           </div>
         </div>
 
-        <div class="export-card">
+        <div class="export-card" id="exportCard">
           <div class="export-head">
             <h2 class="panel-title" id="exportTitle">書き出し</h2>
             <p class="info-line" id="infoLine"></p>
@@ -224,14 +239,14 @@
     </footer>
   </div>
 
-  <script src="./js/engine.js?v=20261001-04"></script>
-  <script src="./js/fonts.js?v=20261001-04"></script>
-  <script src="./js/apng-encoder.js?v=20261001-04"></script>
-  <script src="./js/presets.js?v=20261001-04"></script>
-  <script src="./js/i18n.js?v=20261001-04"></script>
-  <script src="./js/controls.js?v=20261001-04"></script>
-  <script src="./js/icons.js?v=20261001-04"></script>
-  <script src="./js/main.js?v=20261001-04"></script>
-  <script src="./js/shortcut.js?v=20261001-04"></script>
+  <script src="./js/engine.js?v=20261003-05"></script>
+  <script src="./js/fonts.js?v=20261003-05"></script>
+  <script src="./js/apng-encoder.js?v=20261003-05"></script>
+  <script src="./js/presets.js?v=20261003-05"></script>
+  <script src="./js/i18n.js?v=20261003-05"></script>
+  <script src="./js/controls.js?v=20261003-05"></script>
+  <script src="./js/icons.js?v=20261003-05"></script>
+  <script src="./js/main.js?v=20261003-05"></script>
+  <script src="./js/shortcut.js?v=20261003-05"></script>
 </body>
 </html>

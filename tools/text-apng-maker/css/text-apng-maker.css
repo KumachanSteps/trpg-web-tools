@@ -267,6 +267,10 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
   opacity: 0.6;
 }
 
+/* スマートフォン用の部品（広い画面では使わない） */
+.portal-short, .header-menu-button, .header-break, .sheet-bar { display: none; }
+.sheet-scroll { display: contents; }
+
 /* ---------- ドロワー ---------- */
 
 .drawer {
@@ -1390,6 +1394,201 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
 
 @media (max-width: 350px) {
   h1 { font-size: 1.4rem; }
+}
+
+/* ---------- スマートフォン：ヘッダーをたたみ、設定は下から引き出すシート、プレビューは背景に ---------- */
+
+@media (max-width: 760px) {
+  .app-shell {
+    gap: 10px;
+    padding: 8px max(8px, env(safe-area-inset-right)) calc(var(--sheet-peek, 64px) + 16px) max(8px, env(safe-area-inset-left));
+  }
+
+  /* ヘッダー：先頭では2行（タイトル・共有・テーマ／観測所・言語・使い方・利用ルール）。説明文とショートカットは出さない */
+  .app-header {
+    position: sticky;
+    top: 6px;
+    z-index: 40;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 6px;
+    padding: 10px 12px;
+    border-radius: 18px;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .eyebrow, .lead, #shortcutBtn { display: none; }
+  .title-block { order: 1; flex: 1 1 0; min-width: 0; }
+  h1 { margin: 0; font-size: 1.22rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .version-engrave { position: static; margin-top: 3px; font-size: 0.64rem; line-height: 1.2; }
+  .header-actions, .header-actions-end { display: contents; }
+  .header-nav-link, .ghost-button, .x-share-link { min-height: 2rem; padding: 0.3rem 0.62rem; font-size: 0.76rem; box-shadow: none; }
+  .x-share-link { order: 2; min-width: 2rem; padding: 0; font-size: 0.95rem; }
+  .theme-button { order: 3; min-width: 46px; padding: 0 2px; }
+  .theme-toggle-track { width: 40px; height: 22px; }
+  .theme-toggle-thumb { width: 18px; height: 18px; font-size: 0.66rem; }
+  body.is-dark .theme-toggle-thumb { transform: translateX(18px); }
+  .header-break { display: block; order: 4; flex-basis: 100%; height: 0; }
+  #portalLink { order: 5; }
+  .portal-long { display: none; }
+  .portal-short { display: inline; }
+  .language-switcher { order: 6; min-height: 2rem; gap: 0; padding: 0 0.2rem; }
+  .lang-choice-button { padding: 0.25rem 0.24rem; font-size: 0.74rem; }
+  .lang-divider { font-size: 0.66rem; }
+  #helpBtn { order: 7; }
+  #rulesBtn { order: 8; }
+  /* 2行目（観測所・言語・使い方・利用ルール）が折り返さないよう、狭い画面ではボタンを詰める */
+  @media (max-width: 400px) {
+    .app-header { column-gap: 5px; padding-inline: 10px; }
+    .header-nav-link, .ghost-button { padding-inline: 0.42rem; font-size: 0.72rem; }
+  }
+  @media (max-width: 359px) {
+    .app-header { column-gap: 4px; }
+    .header-nav-link, .ghost-button { padding-inline: 0.34rem; font-size: 0.68rem; }
+    .lang-divider { display: none; }
+  }
+
+  /* スクロールしたとき・シートを開いたとき：1行（タイトル・言語・テーマ・⋯）。⋯ で観測所・使い方・利用ルール・共有の行を出し入れする */
+  body.is-header-compact .app-header { padding: 6px 8px 6px 12px; row-gap: 6px; }
+  body.is-header-compact h1 { font-size: clamp(0.82rem, 3.9vw, 1rem); }
+  html:not([lang="ja"]) body.is-header-compact h1 { font-size: clamp(0.76rem, 3.3vw, 0.9rem); }
+  body.is-header-compact .version-engrave { display: none; }
+  body.is-header-compact .language-switcher { order: 2; }
+  body.is-header-compact .theme-button { order: 3; }
+  /* 1行のときのテーマ切り替えは、つまみのアイコンだけにする */
+  body.is-header-compact .theme-button { width: 2rem; min-width: 2rem; padding: 0; }
+  body.is-header-compact .theme-toggle-track { width: 22px; height: 22px; border: 0; background: transparent; }
+  body.is-header-compact .theme-toggle-thumb, body.is-dark.is-header-compact .theme-toggle-thumb { top: 2px; left: 2px; background: transparent; box-shadow: none; font-size: 0.9rem; transform: none; }
+  body.is-dark.is-header-compact .theme-toggle-thumb { color: #e2e8f0; font-size: 1rem; }
+  body.is-header-compact .header-menu-button { display: inline-flex; order: 4; min-width: 2rem; padding: 0; font-size: 1.05rem; letter-spacing: 0; }
+  body.is-header-compact .header-menu-button[aria-expanded="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
+  body.is-header-compact :is(#portalLink, #xShareLink, #helpBtn, #rulesBtn) { display: none; }
+  body.is-header-compact .header-break { display: none; }
+  body.is-header-compact .app-header.is-menu-open :is(#portalLink, #xShareLink, #helpBtn, #rulesBtn) { display: inline-flex; }
+  body.is-header-compact .app-header.is-menu-open .header-break { display: block; order: 5; }
+  body.is-header-compact .app-header.is-menu-open #portalLink { order: 6; }
+  body.is-header-compact .app-header.is-menu-open #helpBtn { order: 7; }
+  body.is-header-compact .app-header.is-menu-open #rulesBtn { order: 8; }
+  body.is-header-compact .app-header.is-menu-open #xShareLink { order: 9; }
+  /* 幅 380px 未満では、1行のときテーマも ⋯ の中に入れてタイトルの幅を空ける */
+  @media (max-width: 379px) {
+    body.is-header-compact .theme-button { display: none; }
+    body.is-header-compact .app-header.is-menu-open .theme-button { display: inline-flex; order: 10; }
+  }
+
+  .drawer { scroll-margin-top: 72px; }
+
+  /* プレビュー（背景）：見出しは省き、背景の切り替えは1行に */
+  .workspace { display: block; }
+  .preview-panel { gap: 10px; padding: 10px; }
+  .preview-head .panel-title { display: none; }
+  .preview-bg { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .preview-bg::-webkit-scrollbar { display: none; }
+  .preview-bg-label { flex: none; white-space: nowrap; }
+  .preview-bg .chip-group { flex-wrap: nowrap; }
+  .preview-bg .chip { flex: none; }
+  .export-card { scroll-margin-top: 64px; }
+  /* 再生操作：再生・最初から・時間を1行に。スイッチは次の行 */
+  .transport-row { row-gap: 6px; }
+  .time-label { width: auto; margin-left: auto; }
+  /* シートを開いている間は、プレビューと再生ボタン・タイムラインだけを残して、シートを広く使う */
+  body:not([data-sheet="peek"]) :is(.preview-head, .transport-toggles, .timeline-legend) { display: none; }
+
+  /* 設定のシート */
+  .control-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--sheet-kb, 0px);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    height: var(--sheet-h, 70vh);
+    padding: 0;
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+    background: var(--panel-solid);
+    box-shadow: 0 -10px 30px rgba(25, 43, 76, 0.18);
+    transform: translateY(var(--sheet-y, calc(100% - 64px)));
+    transition: transform .32s cubic-bezier(.22, .8, .24, 1);
+    will-change: transform;
+  }
+  body.is-dark .control-panel { box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45); }
+  .control-panel.is-dragging { transition: none; }
+
+  .sheet-bar {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px 10px;
+    border-bottom: 1px solid transparent;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body:not([data-sheet="peek"]) .sheet-bar { border-bottom-color: var(--line); }
+  .sheet-handle {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 42px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--line-strong);
+    transform: translateX(-50%);
+  }
+  .sheet-toggle {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 4px 2px;
+    border: 0;
+    background: none;
+    text-align: left;
+  }
+  .sheet-title { flex: none; font-size: 0.95rem; font-weight: 900; }
+  .sheet-summary { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--muted); font-size: 0.8rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+  .sheet-chevron {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    margin: 4px 8px 0;
+    border-right: 2.5px solid var(--blue);
+    border-bottom: 2.5px solid var(--blue);
+    transform: rotate(-135deg);
+    transition: transform .2s ease, margin .2s ease;
+  }
+  body:not([data-sheet="peek"]) .sheet-chevron { margin-top: -4px; transform: rotate(45deg); }
+  .sheet-export {
+    flex: none;
+    min-height: 2rem;
+    padding: 0.3rem 0.75rem;
+    border: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent-deep);
+    font-size: 0.76rem;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+  body.is-dark .sheet-export { color: var(--accent); }
+  .sheet-scroll {
+    display: block;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 10px 12px calc(18px + env(safe-area-inset-bottom));
+  }
+
+  /* お知らせはシートと重ならないよう、ヘッダーの下に出す */
+  .toast-host { top: 62px; right: 10px; bottom: auto; left: 10px; align-items: center; max-width: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
