@@ -18,7 +18,7 @@ const twinkleStarsContainer = document.getElementById("twinkleStars");
 
 const themeStorageKey = "trpgPortalThemeV2";
 const devToolsStorageKey = "trpgPortalDevToolsDraftV1";
-const toolsDataUrl = "./assets/data/tools.json";
+const toolsDataUrl = "./assets/data/tools.json?v=20261001-01";
 const isDeveloperMode = document.body.dataset.portalMode === "developer";
 const devSaveButton = document.getElementById("devSaveButton");
 const devExportButton = document.getElementById("devExportButton");
@@ -591,4 +591,3 @@ async function initPortal() {
 }
 
 initPortal();
-

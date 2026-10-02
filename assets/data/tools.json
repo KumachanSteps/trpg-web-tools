@@ -19,15 +19,18 @@
     "devStage": "testing",
     "devNote": {
       "ja": "背景・シーン演出向けモーション素材の公開準備中。公開前チェックと導線確認用。",
-      "en": "Preparing motion background assets for release; used for pre-release checks and navigation review."
+      "en": "Preparing motion background assets for release; used for pre-release checks and navigation review.",
+      "ko": "배경 및 장면 연출용 모션 소재의 공개 준비와 이동 경로를 확인하기 위한 페이지입니다."
     },
     "name": {
       "ja": "背景モーションメーカー",
-      "en": "Background Motion Maker"
+      "en": "Background Motion Maker",
+      "ko": "배경 모션 메이커"
     },
     "description": {
       "ja": "TRPGの背景・シーン演出に使うモーション素材を作成するためのツールです。",
-      "en": "A tool for creating motion background assets for TRPG scenes and visual direction."
+      "en": "A tool for creating motion background assets for TRPG scenes and visual direction.",
+      "ko": "TRPG 배경과 장면 연출에 사용할 모션 소재를 만드는 도구입니다."
     }
   },
   {
@@ -47,11 +50,13 @@
     "href": "./tools/coc-growth-checker/",
     "name": {
       "ja": "CoC 6版/7版 成長チェッカー",
-      "en": "CoC 6e/7e Growth Checker"
+      "en": "CoC 6e/7e Growth Checker",
+      "ko": "CoC 6판/7판 성장 체크 도구"
     },
     "description": {
       "ja": "セッションログから、CoC 6版・7版の成長チェック対象技能をハウスルール別に抽出・整理します。",
-      "en": "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules."
+      "en": "Extract and organize CoC 6e/7e growth check candidates from session logs according to selected house rules.",
+      "ko": "세션 로그에서 CoC 6판·7판의 성장 체크 대상 기능을 하우스 룰별로 추출하고 정리합니다."
     }
   },
   {
@@ -71,11 +76,13 @@
     "href": "./tools/dice-stat-analyst/",
     "name": {
       "ja": "ダイス解析アナライザー",
-      "en": "Dice Stat Analyst"
+      "en": "Dice Stat Analyst",
+      "ko": "주사위 통계 분석기"
     },
     "description": {
       "ja": "セッションログHTML / テキストから、探索者ごとの成功率・クリティカル・ファンブル・出目分布を解析します。",
-      "en": "Analyze session logs and review each character’s success rate, criticals, fumbles, and dice roll distribution."
+      "en": "Analyze session logs and review each character’s success rate, criticals, fumbles, and dice roll distribution.",
+      "ko": "세션 로그 HTML 또는 텍스트에서 탐사자별 성공률, 크리티컬, 펌블, 주사위 결과 분포를 분석합니다."
     }
   },
   {
@@ -94,11 +101,13 @@
     "href": "./tools/session-report-generator/",
     "name": {
       "ja": "卓報告ジェネレーター",
-      "en": "Session Report Generator"
+      "en": "Session Report Generator",
+      "ko": "세션 후기 생성기"
     },
     "description": {
       "ja": "KP・PL・PC情報を入力し、X/Twitter向けの卓報告文を生成・編集・プレビューします。",
-      "en": "Generate, edit, and preview session report posts for X/Twitter by entering KP, PL, and PC information."
+      "en": "Generate, edit, and preview session report posts for X/Twitter by entering KP, PL, and PC information.",
+      "ko": "KP, PL, PC 정보를 입력해 X/Twitter용 세션 후기 문구를 생성하고 편집하며 미리 볼 수 있습니다."
     }
   },
   {
@@ -118,11 +127,13 @@
     "href": "./tools/chat-palette-formatter/",
     "name": {
       "ja": "チャットパレット整形ツール",
-      "en": "Chat Palette Formatter"
+      "en": "Chat Palette Formatter",
+      "ko": "채팅 팔레트 정리 도구"
     },
     "description": {
       "ja": "CoC 6版・7版のチャットパレットを判定し、読みやすい形式へ整形するツールです。",
-      "en": "A tool for formatting CoC 6e/7e chat palettes into a cleaner and more readable structure."
+      "en": "A tool for formatting CoC 6e/7e chat palettes into a cleaner and more readable structure.",
+      "ko": "CoC 6판·7판 채팅 팔레트를 판별해 읽기 쉬운 형식으로 정리하는 도구입니다."
     }
   },
   {
@@ -141,11 +152,13 @@
     "href": "./tools/chara-sabun-kanri-tool/",
     "name": {
       "ja": "キャラ差分管理ツール",
-      "en": "Character Expression Manager"
+      "en": "Character Expression Manager",
+      "ko": "캐릭터 표정 차분 관리 도구"
     },
     "description": {
       "ja": "キャラクター立ち絵の表情差分や画像差分を整理し、TRPGセッションや配信用に管理しやすくするツールです。",
-      "en": "A tool for organizing character expression and portrait variations for TRPG sessions and streaming use."
+      "en": "A tool for organizing character expression and portrait variations for TRPG sessions and streaming use.",
+      "ko": "캐릭터 스탠딩 이미지의 표정과 이미지 차분을 정리해 TRPG 세션이나 방송에서 관리하기 쉽게 만드는 도구입니다."
     }
   },
   {
@@ -164,11 +177,13 @@
     "href": "./tools/gm-charashi-viewer/",
     "name": {
       "ja": "GM用キャラシビューワー",
-      "en": "GM Character Sheet Viewer"
+      "en": "GM Character Sheet Viewer",
+      "ko": "GM용 캐릭터 시트 뷰어"
     },
     "description": {
       "ja": "KP / GM向けに、複数のキャラクターシートを一画面で確認・管理するビューアです。",
-      "en": "A GM/KP support tool for viewing and managing multiple character sheets on one screen."
+      "en": "A GM/KP support tool for viewing and managing multiple character sheets on one screen.",
+      "ko": "KP/GM이 여러 캐릭터 시트를 한 화면에서 확인하고 관리할 수 있는 뷰어입니다."
     }
   },
   {
@@ -190,11 +205,13 @@
     "href": "./tools/trpg-hashtag-searcher/",
     "name": {
       "ja": "使えるハッシュタグ検索",
-      "en": "Usable Hashtag Finder"
+      "en": "Usable Hashtag Finder",
+      "ko": "활용 가능한 해시태그 검색"
     },
     "description": {
       "ja": "TRPG配信や卓報告に使えるハッシュタグを、シナリオ名・配信名・関連語句から探しやすくする検索支援ツールです。",
-      "en": "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords."
+      "en": "A hashtag search support tool for finding usable hashtags for TRPG livestreams, session reports, scenarios, and related keywords.",
+      "ko": "시나리오명, 방송명, 관련 키워드로 TRPG 방송이나 세션 후기에 활용할 해시태그를 찾기 쉽게 도와주는 검색 도구입니다."
     }
   },
   {
@@ -214,11 +231,13 @@
     "href": "./tools/npc-data-reader/",
     "name": {
       "ja": "NPCデータリーダー",
-      "en": "NPC Data Reader"
+      "en": "NPC Data Reader",
+      "ko": "NPC 데이터 리더"
     },
     "description": {
       "ja": "NPCデータやステータス情報を読み取り、セッション中に確認しやすい形式へ整理するGM/KP向け補助ツールです。",
-      "en": "A GM/KP support tool for reading NPC data and organizing stats into an easier-to-reference format during sessions."
+      "en": "A GM/KP support tool for reading NPC data and organizing stats into an easier-to-reference format during sessions.",
+      "ko": "NPC 데이터와 능력치 정보를 읽어 세션 중 확인하기 쉬운 형식으로 정리하는 GM/KP용 보조 도구입니다."
     }
   },
   {
@@ -237,11 +256,13 @@
     "href": "./tools/scenario-snippet-builder/",
     "name": {
       "ja": "シナリオ情報カードビルダー",
-      "en": "Scenario Info Snippet Builder"
+      "en": "Scenario Info Snippet Builder",
+      "ko": "시나리오 정보 카드 빌더"
     },
     "description": {
       "ja": "シナリオ情報、探索箇所、資料、技能成功情報などをCCFOLIA / Discord向けに整形します。",
-      "en": "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord."
+      "en": "Format scenario information, investigation points, documents, and skill-success snippets for CCFOLIA or Discord.",
+      "ko": "시나리오 정보, 조사 장소, 자료, 기능 성공 정보 등을 CCFOLIA 또는 Discord용으로 정리합니다."
     },
     "devStage": "testing"
   },
@@ -261,11 +282,13 @@
     "href": "./tools/iachara-charamemo-creator/",
     "name": {
       "ja": "いあキャラMEMOジェネレータ",
-      "en": "Charamemo Generator"
+      "en": "Charamemo Generator",
+      "ko": "Iachara 캐릭터 메모 생성기"
     },
     "description": {
       "ja": "いあきゃらのキャラクター情報から、キャラメモやコマ用データを生成するツールです。",
-      "en": "A tool for generating character memo and token-ready data from Iachara character information."
+      "en": "A tool for generating character memo and token-ready data from Iachara character information.",
+      "ko": "Iachara의 캐릭터 정보로 캐릭터 메모와 토큰용 데이터를 생성하는 도구입니다."
     },
     "devStage": "testing"
   },
@@ -285,11 +308,13 @@
     "href": "./tools/kantan-icon-maker/",
     "name": {
       "ja": "かんたんアイコンメーカー",
-      "en": "Kantan Icon Maker"
+      "en": "Kantan Icon Maker",
+      "ko": "간편 아이콘 메이커"
     },
     "description": {
       "ja": "キャラクター立ち絵PNGから、TRPG用の1:1アイコンをかんたんに作成するツールです。",
-      "en": "A simple tool for creating 1:1 TRPG icons from character standing PNG images."
+      "en": "A simple tool for creating 1:1 TRPG icons from character standing PNG images.",
+      "ko": "캐릭터 스탠딩 PNG 이미지로 TRPG용 1:1 아이콘을 간편하게 만드는 도구입니다."
     },
     "devStage": "mockup"
   },
@@ -310,11 +335,13 @@
     "href": "./tools/session-log-tool/",
     "name": {
       "ja": "卓ログトラッカー",
-      "en": "Session Log Tracker"
+      "en": "Session Log Tracker",
+      "ko": "세션 로그 트래커"
     },
     "description": {
       "ja": "遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。",
-      "en": "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists."
+      "en": "A session log management tool for recording played sessions and connecting them to reflections, session reports, and played-session lists.",
+      "ko": "플레이한 세션을 기록하고 감상, 세션 후기, 플레이 완료 목록으로 연결하는 로그 관리 도구입니다."
     },
     "devStage": "testing"
   },
@@ -336,11 +363,13 @@
     "href": "./tools/dice-table-tool/",
     "name": {
       "ja": "ダイス表ツール",
-      "en": "Dice Table Tool"
+      "en": "Dice Table Tool",
+      "ko": "주사위 표 도구"
     },
     "description": {
       "ja": "食事・飲み物・NPC特徴・イベントなど、TRPGで使えるオリジナルダイス表を作成・管理するツールです。",
-      "en": "A tool for creating and managing original TRPG dice tables, such as food, drinks, NPC traits, and random events."
+      "en": "A tool for creating and managing original TRPG dice tables, such as food, drinks, NPC traits, and random events.",
+      "ko": "음식, 음료, NPC 특징, 이벤트 등 TRPG에서 사용할 오리지널 주사위 표를 만들고 관리하는 도구입니다."
     },
     "devStage": "prototype"
   },
@@ -362,11 +391,13 @@
     "href": "./tools/chara-libra-tool/",
     "name": {
       "ja": "キャラクタ星間図",
-      "en": "Chara Libra"
+      "en": "Chara Libra",
+      "ko": "캐릭터 성간도"
     },
     "description": {
       "ja": "TRPGキャラクターを一覧化し、立ち絵・プロフィール・技能・メモなどを整理して管理するためのキャラクターアーカイブツールです。",
-      "en": "A character archive tool for organizing TRPG characters with portraits, profiles, skills, notes, and related information."
+      "en": "A character archive tool for organizing TRPG characters with portraits, profiles, skills, notes, and related information.",
+      "ko": "TRPG 캐릭터의 스탠딩 이미지, 프로필, 기능, 메모 등을 목록으로 정리하고 관리하는 캐릭터 아카이브 도구입니다."
     },
     "devStage": "mockup"
   },
@@ -385,11 +416,13 @@
     "href": "./tools/scenario-dtp-designer/",
     "name": {
       "ja": "シナリオDTPデザイナー",
-      "en": "Scenario DTP Designer"
+      "en": "Scenario DTP Designer",
+      "ko": "시나리오 DTP 디자이너"
     },
     "description": {
       "ja": "シナリオ本文を見やすいレイアウトに整え、PDF化や配布用テキストの下準備を支援するDTP補助ツールです。",
-      "en": "A DTP support tool for arranging scenario text into a readable layout and preparing it for PDF or distribution-ready formatting."
+      "en": "A DTP support tool for arranging scenario text into a readable layout and preparing it for PDF or distribution-ready formatting.",
+      "ko": "시나리오 본문을 읽기 쉬운 레이아웃으로 정리하고 PDF 또는 배포용 텍스트 준비를 돕는 DTP 보조 도구입니다."
     },
     "devStage": "mockup"
   },
@@ -408,11 +441,13 @@
     "href": "./tools/scenario-pdf-parser/",
     "name": {
       "ja": "シナリオPDFパーサー",
-      "en": "Scenario PDF Parser"
+      "en": "Scenario PDF Parser",
+      "ko": "시나리오 PDF 파서"
     },
     "description": {
       "ja": "シナリオPDFをTXT形式に変換し、コピペしやすいテキストとして整理するためのツールです。",
-      "en": "A tool for parsing scenario PDFs into TXT format for easier copying and pasting."
+      "en": "A tool for parsing scenario PDFs into TXT format for easier copying and pasting.",
+      "ko": "시나리오 PDF를 TXT 형식으로 변환해 복사하고 붙여넣기 쉬운 텍스트로 정리하는 도구입니다."
     },
     "devStage": "mockup"
   },
@@ -436,15 +471,18 @@
     "devStage": "concept",
     "devNote": {
       "ja": "配信予定の取得元・検索条件・お気に入り管理の設計確認用。",
-      "en": "Developer preview for source, search-condition, and favorites-management design."
+      "en": "Developer preview for source, search-condition, and favorites-management design.",
+      "ko": "방송 일정 데이터 출처, 검색 조건, 즐겨찾기 관리 설계를 확인하는 개발자 미리 보기입니다."
     },
     "name": {
       "ja": "TRPG配信観測所",
-      "en": "TRPG Haishin Observatory"
+      "en": "TRPG Haishin Observatory",
+      "ko": "TRPG 방송 관측소"
     },
     "description": {
       "ja": "YouTubeのTRPG配信予定を整理し、シナリオ・チャンネル・GM/KP/PL・ハッシュタグから検索、Fav管理する観測ツール構想です。",
-      "en": "A future observatory tool for tracking TRPG livestream schedules and filtering by scenario, channel, GM/KP/PL, hashtag, and favorites."
+      "en": "A future observatory tool for tracking TRPG livestream schedules and filtering by scenario, channel, GM/KP/PL, hashtag, and favorites.",
+      "ko": "YouTube TRPG 방송 일정을 정리하고 시나리오, 채널, GM/KP/PL, 해시태그, 즐겨찾기로 검색하는 관측 도구 구상입니다."
     }
   },
   {
@@ -466,15 +504,18 @@
     "devStage": "concept",
     "devNote": {
       "ja": "シナリオDBの項目設計とフィルター構成を検討中。",
-      "en": "Developer preview for scenario database fields and filter design."
+      "en": "Developer preview for scenario database fields and filter design.",
+      "ko": "시나리오 데이터베이스 항목과 필터 구성을 검토하는 개발자 미리 보기입니다."
     },
     "name": {
       "ja": "TRPGシナリオ データベース",
-      "en": "TRPG Scenario Organizer"
+      "en": "TRPG Scenario Organizer",
+      "ko": "TRPG 시나리오 데이터베이스"
     },
     "description": {
       "ja": "BOOTHやPixivなどで見つけたTRPGシナリオを、システム・人数・時間・秘匿有無・テーマなどで整理、検索するデータベース構想です。",
-      "en": "A future database concept for organizing TRPG scenarios by system, player count, playtime, hidden handouts, themes, and favorites."
+      "en": "A future database concept for organizing TRPG scenarios by system, player count, playtime, hidden handouts, themes, and favorites.",
+      "ko": "BOOTH나 Pixiv 등에서 찾은 TRPG 시나리오를 시스템, 인원, 시간, 비공개 핸드아웃, 테마 등으로 정리하고 검색하는 데이터베이스 구상입니다."
     }
   },
   {
@@ -497,15 +538,18 @@
     "devStage": "mockup",
     "devNote": {
       "ja": "卓準備タスク、日程、PL連絡の画面構成確認用。",
-      "en": "Developer preview for prep tasks, scheduling, and player-contact layout."
+      "en": "Developer preview for prep tasks, scheduling, and player-contact layout.",
+      "ko": "세션 준비 작업, 일정, 플레이어 연락 화면 구성을 확인하는 개발자 미리 보기입니다."
     },
     "name": {
       "ja": "卓準備カレンダー",
-      "en": "TRPG Session Prep Calendar"
+      "en": "TRPG Session Prep Calendar",
+      "ko": "TRPG 세션 준비 캘린더"
     },
     "description": {
       "ja": "セッション日程、準備タスク、PL連絡、素材確認をまとめる卓準備カレンダー構想です。",
-      "en": "A concept for managing session dates, prep tasks, player reminders, and material checks."
+      "en": "A concept for managing session dates, prep tasks, player reminders, and material checks.",
+      "ko": "세션 일정, 준비 작업, 플레이어 연락, 소재 확인을 한곳에서 관리하는 세션 준비 캘린더 구상입니다."
     }
   },
   {
@@ -528,15 +572,18 @@
     "devStage": "concept",
     "devNote": {
       "ja": "文字画像/APNG出力の仕様と素材導線を検討中。",
-      "en": "Developer preview for text-image/APNG output specs and asset flow."
+      "en": "Developer preview for text-image/APNG output specs and asset flow.",
+      "ko": "문자 이미지 및 APNG 출력 사양과 소재 흐름을 검토하는 개발자 미리 보기입니다."
     },
     "name": {
       "ja": "文字画像APNGメーカー",
-      "en": "Text Image APNG Maker"
+      "en": "Text Image APNG Maker",
+      "ko": "문자 이미지 APNG 메이커"
     },
     "description": {
       "ja": "セッション素材や配信用の文字画像・簡易APNGを作る補助ツール構想です。",
-      "en": "A concept for creating text-image assets and simple APNGs for sessions or streams."
+      "en": "A concept for creating text-image assets and simple APNGs for sessions or streams.",
+      "ko": "세션 소재나 방송용 문자 이미지와 간단한 APNG를 만드는 보조 도구 구상입니다."
     }
   },
   {
@@ -559,15 +606,18 @@
     "devStage": "mockup",
     "devNote": {
       "ja": "シーン別BGM/SE/URL管理の入力項目と並び順を確認中。",
-      "en": "Developer preview for scene BGM/SE/URL fields and ordering."
+      "en": "Developer preview for scene BGM/SE/URL fields and ordering.",
+      "ko": "장면별 BGM, 효과음, URL 관리 항목과 정렬 순서를 확인하는 개발자 미리 보기입니다."
     },
     "name": {
       "ja": "BGM Organizer / シーンBGMプランナー",
-      "en": "BGM Organizer / Scene BGM Planner"
+      "en": "BGM Organizer / Scene BGM Planner",
+      "ko": "BGM Organizer / 장면 BGM 플래너"
     },
     "description": {
       "ja": "TRPGシーンごとにBGM、SE、URL、メモを整理するプランナー構想です。",
-      "en": "A planner concept for organizing BGM, sound effects, URLs, and notes by TRPG scene."
+      "en": "A planner concept for organizing BGM, sound effects, URLs, and notes by TRPG scene.",
+      "ko": "TRPG 장면별로 BGM, 효과음, URL, 메모를 정리하는 플래너 구상입니다."
     }
   },
   {
@@ -590,15 +640,18 @@
     "devStage": "prototype",
     "devNote": {
       "ja": "CCFOLIA画面比率補助のブックマークレット動作検証用。",
-      "en": "Developer preview for validating the CCFOLIA aspect-ratio helper bookmarklet."
+      "en": "Developer preview for validating the CCFOLIA aspect-ratio helper bookmarklet.",
+      "ko": "CCFOLIA 화면 비율 보조 북마클릿의 동작을 검증하는 개발자 미리 보기입니다."
     },
     "name": {
       "ja": "Ratio Calc Bookmarklet",
-      "en": "Ratio Calc Bookmarklet"
+      "en": "Ratio Calc Bookmarklet",
+      "ko": "비율 계산 북마클릿"
     },
     "description": {
       "ja": "CCFOLIA上で画面・マーカーパネルの縦横比計算を補助するブックマークレット構想です。",
-      "en": "A bookmarklet concept for helping calculate screen and marker-panel aspect ratios in CCFOLIA."
+      "en": "A bookmarklet concept for helping calculate screen and marker-panel aspect ratios in CCFOLIA.",
+      "ko": "CCFOLIA에서 화면과 마커 패널의 가로세로 비율 계산을 돕는 북마클릿 구상입니다."
     }
   }
 ]

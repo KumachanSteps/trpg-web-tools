@@ -26,8 +26,25 @@
     return getDefaultLanguage();
   }
 
+  function getSupportedLanguages() {
+    const i18n = getI18n();
+    return Object.keys(i18n?.ui || {});
+  }
+
+  function getAdjacentLanguage(direction = 1) {
+    const languages = getSupportedLanguages();
+    const currentIndex = languages.indexOf(getLanguage());
+
+    if (!languages.length) {
+      return getDefaultLanguage();
+    }
+
+    const nextIndex = (currentIndex + direction + languages.length) % languages.length;
+    return languages[nextIndex];
+  }
+
   function getNextLanguage() {
-    return getLanguage() === "ja" ? "en" : "ja";
+    return getAdjacentLanguage(1);
   }
 
   function getLocalizedValue(value, language = getLanguage()) {
@@ -103,10 +120,12 @@
 
     document.querySelectorAll(".language-buttons").forEach((switchElement) => {
       switchElement.dataset.currentLang = language;
-      switchElement.setAttribute(
-        "aria-label",
-        language === "ja" ? "Switch language to English" : "言語を日本語に切り替え"
-      );
+      const labels = {
+        ja: "表示言語を選択",
+        en: "Select display language",
+        ko: "표시 언어 선택",
+      };
+      switchElement.setAttribute("aria-label", labels[language] || labels.en);
     });
   }
 
@@ -161,19 +180,19 @@
       });
 
       switchElement.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
+        if ((event.key === "Enter" || event.key === " ") && event.target === switchElement) {
           event.preventDefault();
           setLanguage(getNextLanguage());
         }
 
         if (event.key === "ArrowLeft") {
           event.preventDefault();
-          setLanguage("ja");
+          setLanguage(getAdjacentLanguage(-1));
         }
 
         if (event.key === "ArrowRight") {
           event.preventDefault();
-          setLanguage("en");
+          setLanguage(getAdjacentLanguage(1));
         }
       });
     });
