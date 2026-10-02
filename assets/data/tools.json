@@ -321,7 +321,7 @@
   {
     "id": "scenario-info-snippet-builder",
     "icon": "✂️",
-    "status": "production",
+    "status": "idea",
     "category": "scenarioPrep",
     "badges": [
       "preSession",
@@ -331,7 +331,8 @@
     "legacyKeywords": [
       "シナリオ準備"
     ],
-    "href": "./tools/scenario-snippet-builder/",
+    "href": "",
+    "devHref": "./tools/scenario-snippet-builder/",
     "name": {
       "ja": "シナリオ情報カードビルダー",
       "en": "Scenario Info Snippet Builder"
@@ -397,7 +398,7 @@
   {
     "id": "chara-libra-tool",
     "icon": "⚖️",
-    "status": "production",
+    "status": "idea",
     "category": "characterUtility",
     "badges": [
       "preSession",
@@ -409,7 +410,8 @@
     "legacyKeywords": [
       "キャラクター支援"
     ],
-    "href": "./tools/chara-libra-tool/",
+    "href": "",
+    "devHref": "./tools/chara-libra-tool/",
     "name": {
       "ja": "キャラクタ星間図",
       "en": "Chara Libra"
@@ -591,6 +593,40 @@
       "en": "Make indoor floor plans for investigation scenes. Start from a template, place rooms, doors, windows and furniture, and export player and GM images."
     },
     "preview": "./assets/img/previews/indoor-map-maker.png"
+  },
+  {
+    "id": "house-rule-table",
+    "icon": "📋",
+    "status": "production",
+    "category": "gmSupport",
+    "badges": [
+      "preSession",
+      "gmSupport",
+      "plSupport"
+    ],
+    "legacyKeywords": [
+      "シナリオ準備",
+      "ハウスルール",
+      "CoC",
+      "6版",
+      "7版"
+    ],
+    "href": "./tools/house-rule-table/",
+    "devHref": "./tools/house-rule-table/",
+    "devStage": "testing",
+    "devNote": {
+      "ja": "CoC 6版・7版のハウスルール表エディター。よくあるルール約90件のプリセット、PNG・テキスト・Markdown書き出し。日本語・韓国語・英語。開発中として公開。",
+      "en": "House rule table editor for CoC 6th/7th edition with about 90 preset rules and PNG, text and Markdown export. Japanese, Korean and English UI. Public as in development."
+    },
+    "name": {
+      "ja": "CoCハウスルール表メーカー",
+      "en": "CoC House Rule Table Prepper"
+    },
+    "description": {
+      "ja": "クトゥルフ神話TRPG 6版・7版の卓で使うハウスルールを、よくあるルールから選んで表にまとめ、Discordや募集文に貼れる画像・テキストで書き出せます。",
+      "en": "Pick the house rules your Call of Cthulhu 6th/7th edition table uses from common ones and export them as an image or text for Discord or recruitment posts."
+    },
+    "preview": "./assets/img/previews/house-rule-table.png"
   },
   {
     "id": "bgm-organizer",
