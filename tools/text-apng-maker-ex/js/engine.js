@@ -353,7 +353,10 @@
         bs.split = Math.max(bs.split, info.size * (0.08 + 4 * EASE.inCubic(q)) * k);
         bs.splitGap = Math.max(bs.splitGap, info.size * 0.03 * k);
         bs.a *= 1 - clamp((q - 0.35) / 0.65);
-      } }
+      } },
+    // 燃えて消える：燃え際が左から右へ進み、そこより左が消える（炎の演出があれば燃え際に火が立つ）
+    { id: 'burn', level: 'block', ease: 'linear', dur: 1.1,
+      block(bs, e) { bs.mask = { dir: 'burn', p: e, out: true }; } }
   ];
 
   const HOLD_EFFECTS = [
@@ -617,6 +620,7 @@
         return { l: 0, r: 0, t: size * (0.45 + 2.3 * crestScale(sfxOf(scene).power ?? 1)), b: size * 0.35 };
       }
       case 'gunshot': return { l: size, r: size, t: size, b: size * 0.55 };
+      case 'flame': return { l: size * 0.4, r: size * 0.4, t: size * 0.7, b: size * 0.2 };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
   }
@@ -1015,8 +1019,10 @@
           const ranks = orderRanks(vis.length, scene.inOrder, 17 + pi);
           const stagger = inDef.id === 'typewriter' ? Math.max(0.01, scene.inStagger || 0.08) : Math.max(0, scene.inStagger || 0);
           const dur = inDef.id === 'typewriter' ? 0 : inDur;
+          // EXの炎：火が文字の下を通りすぎたところから、1文字ずつ立ち上がる
+          const flame = sfxOf(scene).type === 'flame' ? flameSpan(mainBox(layout, page), layout.size) : null;
           vis.forEach((g, i) => {
-            T.inStart[g.index] = textStart + ranks[i] * stagger;
+            T.inStart[g.index] = flame ? flameIgnite({ start: pageStart }, flame, g.cx) + FLAME_RISE_LAG : textStart + ranks[i] * stagger;
             T.inDur[g.index] = dur;
             T.inFx[g.index] = inDef;
             inEnd = Math.max(inEnd, T.inStart[g.index] + dur);
@@ -1348,7 +1354,8 @@
     katana: { lead: 0, tail: 0 },
     frame: { lead: 0.45, tail: 0 },
     crest: { lead: 0.88, tail: 0 },
-    gunshot: { lead: 0.9, tail: 0 }
+    gunshot: { lead: 0.9, tail: 0 },
+    flame: { lead: 0.15, tail: 0 }
   };
   // 文字の後ろに描く演出（装飾枠・剣と盾・銃撃）。ほかは文字の上に描く
   const SFX_BACK = new Set(['frame', 'crest', 'gunshot']);
@@ -1372,6 +1379,12 @@
     { t: 0.54, x: 1, ox: 0.12, y: 1.0, dx: -1, dy: -0.18 },
     { t: 0.66, x: 0.28, y: -1.06, dx: -0.5, dy: 1 }
   ];
+  // 炎：火が走る範囲の左右の余裕（文字の大きさが単位）/ 左端から右端まで走る時間 / 文字が燃えたあとから立ち上がるまでの遅れ /
+  // 「燃えて消える」の燃え際のぼかし幅
+  const FLAME_PAD = 1.2;
+  const FLAME_RUN = 0.8;
+  const FLAME_RISE_LAG = 0.06;
+  const BURN_SOFT = 0.6;
   const SFX_TYPES = Object.keys(SFX_TIMING);
   // 雷：左右から走る電気が中央で出会うまで / 中央の火花が散りきるまで / 退場前の落雷
   const ARC_RUN = 0.42;
@@ -1447,6 +1460,9 @@
         bs.y += noise1(t * 40, 19) * size * 0.03 * k * decay;
         bs.bright = Math.max(bs.bright, 0.6 * decay);
       }
+    } else if (sfx.type === 'flame') {
+      // 燃えている間は光彩がゆらめく
+      if (t >= pg.inEnd - 0.3) bs.glowMul *= 1 + 0.35 * k * noise1(t * 7, 5 + pg.index);
     } else if (sfx.type === 'cyber') {
       const c = (t - pg.start) % CYBER_BURST;
       if (t >= pg.inEnd && t < pg.holdEnd && c < 0.1) bs.glitch = Math.max(bs.glitch, 0.4 * k);
@@ -1595,6 +1611,50 @@
     ctx.fillStyle = dark;
     ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
     ctx.restore();
+  }
+
+  // 炎：火が左から右へ走る範囲（メインの文字の左右に少し余裕をとる）と、位置 x に火がつく時刻
+  function flameSpan(mb, size) {
+    return { L: mb.x0 - size * FLAME_PAD, R: mb.x1 + size * FLAME_PAD };
+  }
+
+  function flameIgnite(pg, span, x) {
+    return pg.start + FLAME_RUN * clamp((x - span.L) / Math.max(1, span.R - span.L));
+  }
+
+  // 「燃えて消える」退場の燃え際（文字の層の座標。この位置より左はもう燃えて消えている）
+  function burnFront(pg, page, t, scene, size) {
+    const bo = pg.blockOut;
+    if (!bo || bo.fx.id !== 'burn' || t < bo.start) return null;
+    const p = easeFn(scene.outEase, bo.fx.ease)(clamp((t - bo.start) / bo.dur));
+    const b = page.box, pad = size * 0.25, s = size * BURN_SOFT;
+    return { x: lerp(b.x0 - pad - s, b.x1 + pad, p), p, soft: s };
+  }
+
+  // 炎の舌：根元が白く、上へ行くほど橙から赤へ透けていく。sway で先端が揺れる
+  function flameTongue(ctx, x, y, w, h, sway, alpha, fire, core) {
+    if (alpha <= 0.002 || h <= 1 || w <= 0.5) return;
+    const g = ctx.createLinearGradient(x, y, x + sway, y - h);
+    g.addColorStop(0, `rgba(255, 238, 196, ${clamp(alpha * 0.8)})`);
+    g.addColorStop(0.22, colorWithAlpha(core, clamp(alpha)));
+    g.addColorStop(0.55, colorWithAlpha(fire, clamp(alpha * 0.85)));
+    g.addColorStop(1, colorWithAlpha(fire, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2, y);
+    ctx.bezierCurveTo(x - w / 2, y - h * 0.45, x + sway * 0.55 - w * 0.12, y - h * 0.72, x + sway, y - h);
+    ctx.bezierCurveTo(x + sway * 0.55 + w * 0.12, y - h * 0.72, x + w / 2, y - h * 0.45, x + w / 2, y);
+    ctx.quadraticCurveTo(x, y + w * 0.3, x - w / 2, y);
+    ctx.fill();
+  }
+
+  // 火の粉：小さな光の点（明るい芯の色から炎の色へ、消えながら小さくなる）
+  function ember(ctx, x, y, r, q, fire, core) {
+    if (q >= 1 || r <= 0) return;
+    ctx.fillStyle = colorWithAlpha(q < 0.4 ? core : fire, clamp(1 - q));
+    ctx.beginPath();
+    ctx.arc(x, y, r * (1 - q * 0.6), 0, TAU);
+    ctx.fill();
   }
 
   // 稲妻の折れ線（中点をずらしていく。同じ seed なら同じ形）
@@ -1902,7 +1962,7 @@
     drawSfx(ctx, pg, page, t, scale, scene, layer) {
       const sfx = sfxOf(scene);
       if (sfx.type === 'none') return;
-      if ((layer === 'back') !== SFX_BACK.has(sfx.type)) return;
+      if (sfx.type !== 'flame' && (layer === 'back') !== SFX_BACK.has(sfx.type)) return;
       const { layout } = this.prepared;
       const mb = mainBox(layout, page);
       const k = clamp(sfx.power ?? 1, 0, 3);
@@ -1913,6 +1973,7 @@
       else if (sfx.type === 'frame') this.drawFrame(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'crest') this.drawCrest(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'gunshot') this.drawGunshot(ctx, pg, page, t, scale, scene, sfx, k);
+      else if (sfx.type === 'flame') this.drawFlame(ctx, pg, page, t, scale, scene, sfx, k, layer);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, t, scale, scene, sfx, k);
     }
@@ -2666,6 +2727,118 @@
       }
     }
 
+    // 炎：文字の下を火が左から右へ走り、燃えたあとから文字が立ち上がる → 表示中は文字から炎が立ちのぼり火の粉が舞う →
+    // 退場（燃えて消える）では燃え際が左から右へ進み、文字が燃え尽きていく。
+    // 文字の後ろ（back）に文字の炎、手前（front）に走る火・燃え際・火の粉を描く
+    drawFlame(ctx, pg, page, t, scale, scene, sfx, k, layer) {
+      const d = t - pg.start;
+      if (d < 0) return;
+      const size = this.prepared.layout.size;
+      const mb = mainBox(this.prepared.layout, page);
+      const fire = sfx.color || '#ff6a1a';
+      const core = sfx.color2 || '#ffd36b';
+      const span = flameSpan(mb, size);
+      const burn = burnFront(pg, page, t, scene, size);
+      const gone = burn && burn.p >= 1;
+      const flick = (a, b) => 0.5 + 0.5 * noise1(t * a, b);
+      ctx.globalCompositeOperation = 'lighter';
+      if (layer === 'back') {
+        // 文字から立ちのぼる炎（文字が立ち上がるにつれて燃え始め、燃え際より左では消える）
+        mb.list.forEach((g, gi) => {
+          const lit = clamp((t - flameIgnite(pg, span, g.cx) - 0.25) / 0.5);
+          if (lit <= 0) return;
+          for (let j = 0; j < 3; j++) {
+            const x = g.cx + (j - 1) * g.size * 0.3;
+            let a = lit * clamp(k);
+            if (burn) a *= clamp((x - burn.x) / (burn.soft * 0.6));
+            if (a <= 0.002) continue;
+            const seed = gi * 7 + j;
+            const h = g.size * (0.42 + 0.4 * flick(5 + j, seed)) * Math.min(1.6, k);
+            const sway = noise1(t * 2.6, seed + 40) * g.size * 0.18;
+            flameTongue(ctx, x, g.cy + g.size * 0.05, g.size * 0.36, h + g.size * 0.17, sway, 0.75 * a, fire, core);
+          }
+        });
+        return;
+      }
+      // 1) 文字の下を走る火：火がついたところから燃え上がり、しばらくして収まる
+      const base = mb.y1 + size * 0.02;
+      const step = size * 0.2;
+      const n = Math.ceil((span.R - span.L) / step);
+      for (let i = 0; i <= n; i++) {
+        const x = span.L + i * step + (rnd(i, 1, 77) - 0.5) * step * 0.6;
+        const age = t - flameIgnite(pg, span, x);
+        if (age < 0) continue;
+        const I = clamp(age / 0.07) * (age < 0.3 ? 1 : Math.exp(-(age - 0.3) * 3.2));
+        if (I < 0.01) continue;
+        const h = size * (0.55 + 0.75 * flick(6, i)) * I * Math.min(1.6, k);
+        const sway = noise1(t * 3, i + 9) * size * 0.2;
+        flameTongue(ctx, x, base, size * 0.34, h, sway, 0.9 * I, fire, core);
+        if (I > 0.3) flameTongue(ctx, x, base, size * 0.16, h * 0.55, sway * 0.6, I, core, '#ffffff');
+      }
+      // 火の先頭：明るく光る
+      const hp = d / FLAME_RUN;
+      if (hp >= 0 && hp < 1.05) {
+        const hx = lerp(span.L, span.R, clamp(hp));
+        drawFlash(ctx, hx, base - size * 0.3, size * 1.3, fire, 0.75 * clamp(k) * (1 - clamp((hp - 1) / 0.05)), 0.7);
+      }
+      // 2) 燃え際：左から右へ進む縦の炎と光
+      if (burn && !gone) {
+        const b = page.box;
+        const x = burn.x + burn.soft * 0.5;
+        const top = b.y0 - size * 0.1, bot = b.y1 + size * 0.1;
+        const rows = Math.max(2, Math.ceil((bot - top) / (size * 0.42)));
+        const a = clamp(burn.p / 0.06) * clamp((1 - burn.p) / 0.08) * clamp(k);
+        // 燃え際の細い光の帯
+        const eg = ctx.createLinearGradient(x - burn.soft * 0.5, 0, x + burn.soft * 0.4, 0);
+        eg.addColorStop(0, colorWithAlpha(fire, 0));
+        eg.addColorStop(0.6, colorWithAlpha(core, 0.55 * a));
+        eg.addColorStop(1, colorWithAlpha(fire, 0));
+        ctx.fillStyle = eg;
+        ctx.fillRect(x - burn.soft * 0.5, top, burn.soft * 0.9, bot - top);
+        drawFlash(ctx, x, (top + bot) / 2, (bot - top) * 0.8, fire, 0.3 * a, 1.2);
+        for (let r = 0; r <= rows; r++) {
+          const seed = 300 + r;
+          const y = lerp(bot, top, (r + 0.3 * rnd(r, 1, 31)) / rows);
+          const h = size * (0.4 + 0.5 * flick(7, seed));
+          const sway = size * 0.08 + noise1(t * 3, seed) * size * 0.08;
+          flameTongue(ctx, x + (rnd(r, 2, 31) - 0.5) * size * 0.3 + noise1(t * 4, seed + 5) * size * 0.08, y, size * 0.3, h, sway, 0.55 * a, fire, core);
+        }
+      }
+      // 3) 火の粉：走る火から舞い上がり、表示中は文字の上から、退場では燃え際から飛ぶ
+      const emberR = size * 0.03;
+      for (let i = 0; i < 28; i++) {
+        const x0 = lerp(span.L, span.R, rnd(i, 1, 55));
+        const born = flameIgnite(pg, span, x0) + rnd(i, 2, 55) * 0.4;
+        const life = 0.8 + rnd(i, 3, 55) * 0.7;
+        const age = t - born;
+        if (age < 0 || age > life) continue;
+        const q = age / life;
+        ember(ctx, x0 + Math.sin(age * 4 + i) * size * 0.15, base - age * size * (1 + rnd(i, 4, 55) * 1.2), emberR, q, fire, core);
+      }
+      if (t >= pg.inEnd - 0.3 && !gone) {
+        const P = 1.6;
+        for (let i = 0; i < 14; i++) {
+          const x0 = lerp(mb.x0, mb.x1, rnd(i, 1, 66));
+          if (burn && x0 < burn.x) continue;
+          const age = ((t - pg.inEnd) / P + rnd(i, 2, 66)) % 1 * P;
+          const q = age / P;
+          ember(ctx, x0 + Math.sin(age * 3 + i) * size * 0.2, mb.y0 - age * size * (0.6 + rnd(i, 3, 66) * 0.8), emberR, q, fire, core);
+        }
+      }
+      if (burn) {
+        for (let i = 0; i < 24; i++) {
+          const pBorn = rnd(i, 1, 88);
+          const age = (burn.p - pBorn) * (pg.blockOut.dur);
+          const life = 0.6 + rnd(i, 2, 88) * 0.6;
+          if (age < 0 || age > life) continue;
+          const b = page.box;
+          const x0 = lerp(b.x0 - size * 0.25 - burn.soft, b.x1 + size * 0.25, pBorn) + burn.soft * 0.5;
+          const y0 = lerp(b.y0, b.y1, rnd(i, 3, 88));
+          ember(ctx, x0 + age * size * (0.6 + rnd(i, 4, 88)), y0 - age * size * (1.2 + rnd(i, 5, 88)), emberR, age / life, fire, core);
+        }
+      }
+    }
+
     drawBackground(ctx, t, scale) {
       const { scene, timeline } = this.prepared;
       const bg = scene.bg || {};
@@ -2928,6 +3101,17 @@
       lctx.setTransform(1, 0, 0, 1, 0, 0);
       lctx.globalCompositeOperation = 'destination-in';
       let grad;
+      if (mask.dir === 'burn') {
+        // 燃え際より左は消え、燃え際からぼかし幅の分で元に戻る
+        const front = lerp(rect.x - s, rect.x + rect.w, p);
+        grad = lctx.createLinearGradient(front, 0, front + s, 0);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0,0,0,1)');
+        lctx.fillStyle = grad;
+        lctx.fillRect(0, 0, cw, ch);
+        lctx.restore();
+        return;
+      }
       const horizontal = mask.dir === 'lr' || mask.dir === 'rl' || mask.dir === 'center';
       if (mask.dir === 'center') {
         const c = horizontal ? rect.x + rect.w / 2 : rect.y + rect.h / 2;

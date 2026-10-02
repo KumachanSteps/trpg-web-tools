@@ -389,6 +389,22 @@
         }
       },
       {
+        // EX：文字の下を火が左から右へ走り、燃えたあとから「戦闘開始」が立ち上がる。燃え続けて、最後は左から右へ燃えて消える
+        id: 'battleFlame', group: 'combat', icon: 'flame', label: T('炎の戦闘開始', 'Flame Battle Start', '불꽃의 전투 개시'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'IGNITE', 'BATTLE START'),
+        patch: {
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 124, letterSpacing: 0.12,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.45,
+          fill: { type: 'gradient', color: '#fff6dc', color2: '#ffc04a', color3: '#ff4a14', dir: 'v' },
+          stroke: { on: true, width: 2, color: '#3a0800' }, stroke2: { on: false },
+          shadow: { on: false },
+          glow: { on: true, color: '#ff4a10', size: 30, strength: 1 },
+          subColorOn: true, subColor: '#ffb066',
+          sfx: { type: 'flame', color: '#ff6a1a', color2: '#ffd36b', power: 1 },
+          inFx: 'rise', inDur: 0.6, inPower: 0.6, hold: 2.0, outFx: 'burn', outDur: 1.1, subFx: 'fade', subDelay: -0.2
+        }
+      },
+      {
         // サイバー風：ネオンの水色、デジタルな書体、グリッチで起動
         id: 'openCombat', group: 'combat', icon: 'chip', label: T('OPEN COMBAT', 'Open Combat', 'OPEN COMBAT'),
         text: T('OPEN COMBAT', 'OPEN COMBAT', 'OPEN COMBAT'), subText: T('戦闘開始', 'COMBAT MODE : ONLINE', '전투 개시'),
