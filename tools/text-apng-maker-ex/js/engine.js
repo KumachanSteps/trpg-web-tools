@@ -620,7 +620,7 @@
         return { l: 0, r: 0, t: size * (0.45 + 2.3 * crestScale(sfxOf(scene).power ?? 1)), b: size * 0.35 };
       }
       case 'gunshot': return { l: size, r: size, t: size, b: size * 0.55 };
-      case 'flame': return { l: size * 0.4, r: size * 0.4, t: size * 0.7, b: size * 0.2 };
+      case 'flame': return { l: size * 0.4, r: size * 0.4, t: size * 1.1, b: size * 0.2 };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
   }
@@ -1631,30 +1631,58 @@
     return { x: lerp(b.x0 - pad - s, b.x1 + pad, p), p, soft: s };
   }
 
-  // 炎の舌：根元が白く、上へ行くほど橙から赤へ透けていく。sway で先端が揺れる
-  function flameTongue(ctx, x, y, w, h, sway, alpha, fire, core) {
-    if (alpha <= 0.002 || h <= 1 || w <= 0.5) return;
-    const g = ctx.createLinearGradient(x, y, x + sway, y - h);
-    g.addColorStop(0, `rgba(255, 238, 196, ${clamp(alpha * 0.8)})`);
-    g.addColorStop(0.22, colorWithAlpha(core, clamp(alpha)));
-    g.addColorStop(0.55, colorWithAlpha(fire, clamp(alpha * 0.85)));
-    g.addColorStop(1, colorWithAlpha(fire, 0));
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(x - w / 2, y);
-    ctx.bezierCurveTo(x - w / 2, y - h * 0.45, x + sway * 0.55 - w * 0.12, y - h * 0.72, x + sway, y - h);
-    ctx.bezierCurveTo(x + sway * 0.55 + w * 0.12, y - h * 0.72, x + w / 2, y - h * 0.45, x + w / 2, y);
-    ctx.quadraticCurveTo(x, y + w * 0.3, x - w / 2, y);
-    ctx.fill();
+  // 2色を混ぜる（#rrggbb どうし。f=0 で a、1 で b）
+  function mixHex(a, b, f) {
+    const p = h => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h || '')); const n = m ? parseInt(m[1], 16) : 0; return [n >> 16, (n >> 8) & 255, n & 255]; };
+    const A = p(a), B = p(b);
+    return '#' + A.map((v, i) => Math.round(lerp(v, B[i], f)).toString(16).padStart(2, '0')).join('');
   }
 
-  // 火の粉：小さな光の点（明るい芯の色から炎の色へ、消えながら小さくなる）
-  function ember(ctx, x, y, r, q, fire, core) {
-    if (q >= 1 || r <= 0) return;
-    ctx.fillStyle = colorWithAlpha(q < 0.4 ? core : fire, clamp(1 - q));
-    ctx.beginPath();
-    ctx.arc(x, y, r * (1 - q * 0.6), 0, TAU);
-    ctx.fill();
+  // 漫画風の炎の舌：根元から ang の向きに伸び、先へ行くほど curl だけ曲がって渦を巻く。
+  // 幅は根元が太く先は細い。輪郭の点（左側→先端→右側）を返す。lenK, wK で内側の層用に短く細くする
+  function curlOutline(f, lenK, wK) {
+    const N = 16, pts = [], right = [];
+    let x = f.x, y = f.y;
+    const step = f.len * lenK / N;
+    for (let i = 0; i <= N; i++) {
+      const s = i / N;
+      const th = f.ang + f.curl * Math.pow(s, 2.6);
+      const w = f.w * wK * Math.pow(1 - s, 0.85) * (0.75 + 0.5 * Math.sin(Math.min(1, s * 3) * Math.PI / 2)) / 2;
+      const nx = -Math.sin(th), ny = Math.cos(th);
+      pts.push([x + nx * w, y + ny * w]);
+      right.push([x - nx * w, y - ny * w]);
+      x += Math.cos(th) * step;
+      y += Math.sin(th) * step;
+    }
+    return pts.concat(right.reverse());
+  }
+
+  // 炎の舌をまとめて描く：墨の輪郭（全体のシルエットだけが残る）→ 外側の濃い赤 → 橙 → 黄の芯、の順に層ごとに塗る
+  function drawCurlFlames(ctx, list, fire, core, ink, inkW) {
+    if (!list.length) return;
+    const outer = mixHex(fire, '#a00800', 0.45);
+    const layers = [[1, 1, outer], [0.8, 0.62, fire], [0.58, 0.3, core]];
+    const path = (f, lk, wk) => {
+      const pts = curlOutline(f, lk, wk);
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.closePath();
+    };
+    ctx.lineJoin = 'round';
+    list.forEach(f => {
+      ctx.globalAlpha = clamp(f.a);
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = inkW * 2;
+      ctx.beginPath(); path(f, 1, 1); ctx.stroke();
+    });
+    layers.forEach(([lk, wk, color]) => {
+      ctx.fillStyle = color;
+      list.forEach(f => {
+        ctx.globalAlpha = clamp(f.a);
+        ctx.beginPath(); path(f, lk, wk); ctx.fill();
+      });
+    });
+    ctx.globalAlpha = 1;
   }
 
   // 稲妻の折れ線（中点をずらしていく。同じ seed なら同じ形）
@@ -2727,9 +2755,9 @@
       }
     }
 
-    // 炎：文字の下を火が左から右へ走り、燃えたあとから文字が立ち上がる → 表示中は文字から炎が立ちのぼり火の粉が舞う →
-    // 退場（燃えて消える）では燃え際が左から右へ進み、文字が燃え尽きていく。
-    // 文字の後ろ（back）に文字の炎、手前（front）に走る火・燃え際・火の粉を描く
+    // 炎（漫画風）：文字の下を、右へなびいて渦を巻く炎が左から右へ走り、燃えたあとから文字が立ち上がる →
+    // 表示中は文字から渦巻く炎が立ちのぼり火の粉が舞う → 退場（燃えて消える）では燃え際が左から右へ進んで文字が燃え尽きる。
+    // 炎は墨の輪郭と、濃い赤・橙・黄のべた塗りの層で描く。文字の後ろ（back）に文字の炎、手前（front）に走る火・燃え際・火の粉
     drawFlame(ctx, pg, page, t, scale, scene, sfx, k, layer) {
       const d = t - pg.start;
       if (d < 0) return;
@@ -2737,104 +2765,121 @@
       const mb = mainBox(this.prepared.layout, page);
       const fire = sfx.color || '#ff6a1a';
       const core = sfx.color2 || '#ffd36b';
+      const ink = '#2a0600';
+      const inkW = size * 0.022;
       const span = flameSpan(mb, size);
       const burn = burnFront(pg, page, t, scene, size);
       const gone = burn && burn.p >= 1;
-      const flick = (a, b) => 0.5 + 0.5 * noise1(t * a, b);
-      ctx.globalCompositeOperation = 'lighter';
+      const wob = (a, b) => noise1(t * a, b);
+      const big = Math.min(1.6, k);
       if (layer === 'back') {
-        // 文字から立ちのぼる炎（文字が立ち上がるにつれて燃え始め、燃え際より左では消える）
+        // 文字から立ちのぼる炎：左右へ交互に巻く
+        const list = [];
         mb.list.forEach((g, gi) => {
-          const lit = clamp((t - flameIgnite(pg, span, g.cx) - 0.25) / 0.5);
+          const lit = clamp((t - flameIgnite(pg, span, g.cx) - 0.25) / 0.45);
           if (lit <= 0) return;
-          for (let j = 0; j < 3; j++) {
-            const x = g.cx + (j - 1) * g.size * 0.3;
-            let a = lit * clamp(k);
+          for (let j = 0; j < 2; j++) {
+            const x = g.cx + (j - 0.5) * g.size * 0.42;
+            let a = lit;
             if (burn) a *= clamp((x - burn.x) / (burn.soft * 0.6));
             if (a <= 0.002) continue;
-            const seed = gi * 7 + j;
-            const h = g.size * (0.42 + 0.4 * flick(5 + j, seed)) * Math.min(1.6, k);
-            const sway = noise1(t * 2.6, seed + 40) * g.size * 0.18;
-            flameTongue(ctx, x, g.cy + g.size * 0.05, g.size * 0.36, h + g.size * 0.17, sway, 0.75 * a, fire, core);
+            const seed = gi * 7 + j, dir = (gi + j) % 2 ? 1 : -1;
+            list.push({
+              x, y: g.cy - g.size * 0.12,
+              len: g.size * (1.15 + 0.3 * wob(4 + j, seed)) * big * EASE.outCubic(lit),
+              w: g.size * 0.36,
+              ang: -Math.PI / 2 + dir * 0.4 + wob(2.2, seed + 20) * 0.15,
+              curl: -dir * (2.4 + 0.6 * wob(2.8, seed + 40)),
+              a
+            });
           }
         });
+        drawCurlFlames(ctx, list, fire, core, ink, inkW);
         return;
       }
-      // 1) 文字の下を走る火：火がついたところから燃え上がり、しばらくして収まる
-      const base = mb.y1 + size * 0.02;
-      const step = size * 0.2;
+      // 1) 文字の下を走る火：右へなびき、先が後ろへ巻き上がる。燃え上がってしばらくすると収まる
+      const base = mb.y1 + size * 0.04;
+      const step = size * 0.26;
       const n = Math.ceil((span.R - span.L) / step);
+      const run = [];
       for (let i = 0; i <= n; i++) {
-        const x = span.L + i * step + (rnd(i, 1, 77) - 0.5) * step * 0.6;
+        const x = span.L + i * step + (rnd(i, 1, 77) - 0.5) * step * 0.5;
         const age = t - flameIgnite(pg, span, x);
         if (age < 0) continue;
-        const I = clamp(age / 0.07) * (age < 0.3 ? 1 : Math.exp(-(age - 0.3) * 3.2));
-        if (I < 0.01) continue;
-        const h = size * (0.55 + 0.75 * flick(6, i)) * I * Math.min(1.6, k);
-        const sway = noise1(t * 3, i + 9) * size * 0.2;
-        flameTongue(ctx, x, base, size * 0.34, h, sway, 0.9 * I, fire, core);
-        if (I > 0.3) flameTongue(ctx, x, base, size * 0.16, h * 0.55, sway * 0.6, I, core, '#ffffff');
+        const I = clamp(age / 0.08) * (age < 0.3 ? 1 : Math.exp(-(age - 0.3) * 3.2));
+        if (I < 0.03) continue;
+        run.push({
+          x, y: base,
+          len: size * (1.0 + 0.7 * rnd(i, 2, 77) + 0.2 * wob(5, i)) * I * big,
+          w: size * 0.3 * (0.6 + 0.4 * I),
+          ang: -1.05 + wob(2.5, i + 9) * 0.15,
+          curl: -(2.8 + 0.8 * rnd(i, 3, 77) + 0.4 * wob(3, i + 30)),
+          a: 1
+        });
       }
-      // 火の先頭：明るく光る
+      // 火の先頭：大きく渦を巻く炎
       const hp = d / FLAME_RUN;
-      if (hp >= 0 && hp < 1.05) {
-        const hx = lerp(span.L, span.R, clamp(hp));
-        drawFlash(ctx, hx, base - size * 0.3, size * 1.3, fire, 0.75 * clamp(k) * (1 - clamp((hp - 1) / 0.05)), 0.7);
+      if (hp >= 0 && hp < 1) {
+        const hx = lerp(span.L, span.R, hp);
+        run.push({ x: hx, y: base, len: size * 2.0 * big, w: size * 0.55, ang: -0.7 + wob(6, 3) * 0.1, curl: -3.6, a: 1 });
+        drawFlash(ctx, hx + size * 0.4, base - size * 0.5, size * 1.1, fire, 0.4 * clamp(k));
       }
-      // 2) 燃え際：左から右へ進む縦の炎と光
+      drawCurlFlames(ctx, run, fire, core, ink, inkW);
+      // 2) 燃え際：右上へなびいて渦を巻く炎が、左から右へ進む
       if (burn && !gone) {
         const b = page.box;
         const x = burn.x + burn.soft * 0.5;
         const top = b.y0 - size * 0.1, bot = b.y1 + size * 0.1;
-        const rows = Math.max(2, Math.ceil((bot - top) / (size * 0.42)));
-        const a = clamp(burn.p / 0.06) * clamp((1 - burn.p) / 0.08) * clamp(k);
-        // 燃え際の細い光の帯
-        const eg = ctx.createLinearGradient(x - burn.soft * 0.5, 0, x + burn.soft * 0.4, 0);
-        eg.addColorStop(0, colorWithAlpha(fire, 0));
-        eg.addColorStop(0.6, colorWithAlpha(core, 0.55 * a));
-        eg.addColorStop(1, colorWithAlpha(fire, 0));
-        ctx.fillStyle = eg;
-        ctx.fillRect(x - burn.soft * 0.5, top, burn.soft * 0.9, bot - top);
-        drawFlash(ctx, x, (top + bot) / 2, (bot - top) * 0.8, fire, 0.3 * a, 1.2);
+        const rows = Math.max(2, Math.ceil((bot - top) / (size * 0.38)));
+        const a = clamp(burn.p / 0.06) * clamp((1 - burn.p) / 0.08);
+        const edge = [];
         for (let r = 0; r <= rows; r++) {
           const seed = 300 + r;
-          const y = lerp(bot, top, (r + 0.3 * rnd(r, 1, 31)) / rows);
-          const h = size * (0.4 + 0.5 * flick(7, seed));
-          const sway = size * 0.08 + noise1(t * 3, seed) * size * 0.08;
-          flameTongue(ctx, x + (rnd(r, 2, 31) - 0.5) * size * 0.3 + noise1(t * 4, seed + 5) * size * 0.08, y, size * 0.3, h, sway, 0.55 * a, fire, core);
+          edge.push({
+            x: x + (rnd(r, 2, 31) - 0.5) * size * 0.25, y: lerp(bot, top, (r + 0.3 * rnd(r, 1, 31)) / rows),
+            len: size * (0.85 + 0.3 * wob(6, seed)) * big, w: size * 0.3,
+            ang: -0.8 + wob(3, seed) * 0.15, curl: -(2.5 + 0.6 * rnd(r, 3, 31)), a
+          });
         }
+        drawCurlFlames(ctx, edge, fire, core, ink, inkW);
       }
-      // 3) 火の粉：走る火から舞い上がり、表示中は文字の上から、退場では燃え際から飛ぶ
-      const emberR = size * 0.03;
-      for (let i = 0; i < 28; i++) {
+      // 3) 火の粉：走る火から舞い上がり、表示中は文字の上から、退場では燃え際から飛ぶ（墨の縁どりつきの小さな粒）
+      const emberR = size * 0.035;
+      const dot = (x, y, q) => {
+        if (q >= 1) return;
+        ctx.globalAlpha = clamp(1 - q);
+        ctx.fillStyle = ink;
+        ctx.beginPath(); ctx.arc(x, y, emberR * (1 - q * 0.5) + inkW * 0.6, 0, TAU); ctx.fill();
+        ctx.fillStyle = q < 0.5 ? core : fire;
+        ctx.beginPath(); ctx.arc(x, y, emberR * (1 - q * 0.5), 0, TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+      };
+      for (let i = 0; i < 22; i++) {
         const x0 = lerp(span.L, span.R, rnd(i, 1, 55));
         const born = flameIgnite(pg, span, x0) + rnd(i, 2, 55) * 0.4;
         const life = 0.8 + rnd(i, 3, 55) * 0.7;
         const age = t - born;
         if (age < 0 || age > life) continue;
-        const q = age / life;
-        ember(ctx, x0 + Math.sin(age * 4 + i) * size * 0.15, base - age * size * (1 + rnd(i, 4, 55) * 1.2), emberR, q, fire, core);
+        dot(x0 + age * size * 0.6 + Math.sin(age * 4 + i) * size * 0.12, base - size * 0.3 - age * size * (1 + rnd(i, 4, 55) * 1.2), age / life);
       }
       if (t >= pg.inEnd - 0.3 && !gone) {
         const P = 1.6;
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < 12; i++) {
           const x0 = lerp(mb.x0, mb.x1, rnd(i, 1, 66));
           if (burn && x0 < burn.x) continue;
           const age = ((t - pg.inEnd) / P + rnd(i, 2, 66)) % 1 * P;
-          const q = age / P;
-          ember(ctx, x0 + Math.sin(age * 3 + i) * size * 0.2, mb.y0 - age * size * (0.6 + rnd(i, 3, 66) * 0.8), emberR, q, fire, core);
+          dot(x0 + Math.sin(age * 3 + i) * size * 0.2, mb.y0 - size * 0.4 - age * size * (0.6 + rnd(i, 3, 66) * 0.8), age / P);
         }
       }
       if (burn) {
-        for (let i = 0; i < 24; i++) {
+        for (let i = 0; i < 20; i++) {
           const pBorn = rnd(i, 1, 88);
-          const age = (burn.p - pBorn) * (pg.blockOut.dur);
+          const age = (burn.p - pBorn) * pg.blockOut.dur;
           const life = 0.6 + rnd(i, 2, 88) * 0.6;
           if (age < 0 || age > life) continue;
           const b = page.box;
           const x0 = lerp(b.x0 - size * 0.25 - burn.soft, b.x1 + size * 0.25, pBorn) + burn.soft * 0.5;
-          const y0 = lerp(b.y0, b.y1, rnd(i, 3, 88));
-          ember(ctx, x0 + age * size * (0.6 + rnd(i, 4, 88)), y0 - age * size * (1.2 + rnd(i, 5, 88)), emberR, age / life, fire, core);
+          dot(x0 + age * size * (0.6 + rnd(i, 4, 88)), lerp(b.y0, b.y1, rnd(i, 3, 88)) - age * size * (1.2 + rnd(i, 5, 88)), age / life);
         }
       }
     }
