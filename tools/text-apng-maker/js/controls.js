@@ -314,6 +314,11 @@
         { type: 'range', bind: 'glow.size', label: T('広がり', 'Size', '퍼짐'), min: 2, max: 150, step: 1, format: 'px' },
         { type: 'range', bind: 'glow.strength', label: T('強さ', 'Strength', '강도'), min: 0.2, max: 3, step: 0.05, format: 'x' }
       ] },
+      { type: 'section', label: T('血のしたたり', 'Blood drips', '피 흘러내림'), toggle: 'drip.on', children: [
+        { type: 'colors', items: [{ bind: 'drip.color', label: T('色', 'Color', '색') }] },
+        { type: 'range', bind: 'drip.amount', label: T('量', 'Amount', '양'), min: 0.2, max: 3, step: 0.05, format: 'x' },
+        { type: 'range', bind: 'drip.length', label: T('長さ', 'Length', '길이'), min: 0.2, max: 3, step: 0.05, format: 'x' }
+      ] },
       { type: 'section', when: s => [s.inFx, s.holdFx, s.outFx].includes('glitch'), label: T('ノイズの色', 'Noise colors', '노이즈 색'), children: [
         { type: 'colors', items: [
           { bind: 'glitchColor', label: T('色1', 'Color 1', '색 1') },
