@@ -92,11 +92,26 @@ function getSelectedRuleLabel(){
 
 function updateDynamicTexts(){
   const guide = $("summaryGuideText");
-  if (!guide) return;
   const rule = getSelectedRuleLabel();
-  guide.textContent = state.hasAnalyzed
-    ? t("message.after", "現在は「{rule}」の設定でログを解析、成長判定が可能な技能を出力しました。\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。", { rule })
-    : t("message.before", "現在は「{rule}」の設定でログを解析、成長判定が可能な技能をリストします。\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。", { rule });
+  if (guide) {
+    guide.textContent = state.hasAnalyzed
+      ? t("message.after", "現在は「{rule}」の設定でログを解析、成長判定が可能な技能を出力しました。\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。", { rule })
+      : t("message.before", "現在は「{rule}」の設定でログを解析、成長判定が可能な技能をリストします。\n他の出力ルールをご使用の場合は左のパネルからご希望の出力ルールをお選びください。", { rule });
+  }
+
+  const inputToggle = $("inputToggleBtn");
+  if (inputToggle) {
+    const collapsed = $("appLayout")?.classList.contains("input-collapsed");
+    inputToggle.setAttribute("aria-label", t(collapsed ? "button.openInputPanel" : "button.collapseInputPanel"));
+  }
+
+  const themeToggle = $("themeToggleBtn");
+  if (themeToggle) {
+    const isDark = document.body.classList.contains("dark");
+    const label = t(isDark ? "theme.switchToLight" : "theme.switchToDark");
+    themeToggle.setAttribute("aria-label", label);
+    themeToggle.setAttribute("title", label);
+  }
 }
 
 function normalizeEscapedNewlines(value){
@@ -235,7 +250,7 @@ function extractSkillName(line){
   if (/幸運|LUCK/i.test(text)) return "幸運";
   const ability = text.match(/\b(STR|CON|POW|DEX|APP|SIZ|INT|EDU)\b(?:\s*[×xX*]\s*\d+)?/i);
   if (ability) return ability[0].toUpperCase().replace(/\s+/g, "");
-  return "技能名不明";
+  return t("skill.unknown", "技能名不明");
 }
 
 function normalizeSkillName(skill){
@@ -246,7 +261,7 @@ function normalizeSkillName(skill){
     .replace(/\s+/g, " ")
     .trim();
 
-  return normalized || "技能名不明";
+  return normalized || t("skill.unknown", "技能名不明");
 }
 
 function extractTargetNumber(line){
@@ -341,7 +356,7 @@ function sortSkillsByPriority(items){
   const firstBySkill = new Map();
 
   items.forEach((item, index) => {
-    const skill = item.skill || "技能名不明";
+    const skill = item.skill || t("skill.unknown", "技能名不明");
     const current = firstBySkill.get(skill);
     const candidate = {
       skill,
@@ -373,7 +388,7 @@ function isEligibleForGrowth(roll, mode, successSeen, includeParamRolls){
 
   if (roll.isLuck) {
     return roll.classification === "critical" && roll.value === 1
-      ? { ...roll, skill:"POW成長判定", reason:"critical" }
+      ? { ...roll, skill:t("skill.powGrowth", "POW成長判定"), reason:"critical" }
       : null;
   }
 
@@ -522,11 +537,14 @@ function renderSummaryText(){
     return acc;
   }, {});
 
-  const lines = [`[セッション名：${session}][選択ルール：${rule}]`, ""];
+  const lines = [t("output.header", "[セッション名：{session}][選択ルール：{rule}]", { session, rule }), ""];
   Object.entries(grouped).forEach(([character, items], groupIndex) => {
     const skills = sortSkillsByPriority(items);
     if (groupIndex > 0) lines.push("");
-    lines.push(`【${character}】【成長判定候補：${skills.join("、")}】`);
+    lines.push(t("output.candidate", "【{character}】【成長判定候補：{skills}】", {
+      character,
+      skills: skills.join(t("output.skillSeparator", "、"))
+    }));
     items.forEach(item => lines.push(item.line));
   });
   output.value = lines.join("\n");
@@ -600,7 +618,7 @@ function buildTransferPayload(){
     source: "coc-growth-checker",
     sourceName: "CoC 6版 / 7版 成長チェッカーv2",
     target: "dice-stat-analyst",
-    sessionName: state.sessionName || (raw.trim() ? "貼り付けログ" : ""),
+    sessionName: state.sessionName || (raw.trim() ? t("message.pastedLog", "貼り付けログ") : ""),
     logText: raw,
     createdAt: new Date().toISOString(),
   };
@@ -720,7 +738,7 @@ function setupFileInput(){
 function setupEvents(){
   $("analyzeBtn")?.addEventListener("click", analyze);
   $("clearBtn")?.addEventListener("click", () => { if (window.confirm(t("confirm.clear"))) clearAll(); });
-  $("rawInput")?.addEventListener("input", () => { state.sessionName = state.sessionName || "貼り付けログ"; scheduleAnalyze(); });
+  $("rawInput")?.addEventListener("input", () => { state.sessionName = state.sessionName || t("message.pastedLog", "貼り付けログ"); scheduleAnalyze(); });
   $("autoHideMaxRolls")?.addEventListener("input", () => { applyAutoVisibility(); renderAll(); });
   $("includeParamRolls")?.addEventListener("change", renderSummaryText);
   document.querySelectorAll('input[name="ruleMode"]').forEach(input => input.addEventListener("change", renderSummaryText));
@@ -731,7 +749,12 @@ function setupEvents(){
   $("summaryShotBtn")?.addEventListener("click", () => document.body.classList.add("screenshot-mode"));
   $("screenshotExitBtn")?.addEventListener("click", () => document.body.classList.remove("screenshot-mode"));
   $("themeToggleBtn")?.addEventListener("click", toggleTheme);
-  $("languageToggleBtn")?.addEventListener("click", () => setLanguage(getCurrentLanguage() === "ja" ? "en" : "ja"));
+  $("languageToggleBtn")?.addEventListener("click", () => {
+    const languages = ["ja", "en", "ko"];
+    const currentIndex = languages.indexOf(getCurrentLanguage());
+    setLanguage(languages[(currentIndex + 1) % languages.length]);
+  });
+  document.addEventListener("languagechange", renderAll);
   $("xShareBtn")?.addEventListener("click", openXShare);
   $("diceAnalystLink")?.addEventListener("click", openDiceAnalystWithCurrentLog);
   setupFileInput();

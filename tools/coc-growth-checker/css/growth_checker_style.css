@@ -975,6 +975,12 @@ body.dark .theme-switch-thumb-moon{
   text-shadow:0 1px 4px rgba(15,23,42,.20);
 }
 
+/* Three-language switcher */
+.language-toggle-button{
+  min-width:104px;
+  padding-inline:12px;
+}
+
 body.dark .theme-switch-thumb-moon::before{
   content:"☾" !important;
   display:block !important;

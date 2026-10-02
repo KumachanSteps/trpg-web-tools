@@ -8,7 +8,7 @@
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <title>CoC 6版 / 7版 成長チェッカーv2｜TRPG WEBツール観測所</title>
-  <link rel="stylesheet" href="./css/growth_checker_style.css" />
+  <link rel="stylesheet" href="./css/growth_checker_style.css?v=2.71" />
 </head>
 
 <body>
@@ -26,8 +26,8 @@
         </div>
 
         <div class="header-actions">
-          <a id="xShareBtn" class="x-link-button" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" aria-label="このツールを使ったことをXに投稿">X</a>
-          <button id="languageToggleBtn" class="language-toggle-button" type="button" aria-label="日本語 / 英語表示を切替">JP/EN</button>
+          <a id="xShareBtn" class="x-link-button" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" aria-label="このツールを使ったことをXに投稿" data-i18n-aria-label="aria.xShare">X</a>
+          <button id="languageToggleBtn" class="language-toggle-button" type="button" aria-label="表示言語を選択">JP | EN | KR</button>
           <button id="howtoHelpBtn" class="howto-help-button" type="button" aria-expanded="false" aria-controls="howtoDrawer" data-i18n="button.howto">使い方</button>
           <button id="shortcutHelpBtn" class="shortcut-help-button" type="button" aria-expanded="false" aria-controls="shortcutDrawer" data-i18n="button.shortcuts">ショートカット</button>
           <button id="themeToggleBtn" class="theme-switch" type="button" aria-label="ナイトモードに切替" aria-pressed="false" title="ナイトモードに切替">
@@ -59,7 +59,7 @@
           </div>
           <p class="site-description" data-i18n="app.description">セッションログHTML / テキストからd100ロールを抽出し、ハウスルールに応じた探索者ごとの成長チェック候補技能を整理します。</p>
         </div>
-        <div class="version-stamp">v2.69 2026.06.27</div>
+        <div class="version-stamp">v2.71 2026.10.01</div>
       </div>
     </div>
   </header>
@@ -68,7 +68,7 @@
     <div class="howto-drawer-inner">
       <div class="howto-drawer-title">
         <span data-i18n="howto.title">使い方</span>
-        <button id="howtoDrawerCloseBtn" class="howto-drawer-close" type="button" aria-label="使い方を閉じる">×</button>
+        <button id="howtoDrawerCloseBtn" class="howto-drawer-close" type="button" aria-label="使い方を閉じる" data-i18n-aria-label="aria.closeHowto">×</button>
       </div>
       <div class="howto-list">
         <div class="howto-item" data-i18n="howto.step1">1. セッションログHTML / txtファイルを選択、またはログ本文を貼り付けます。</div>
@@ -82,7 +82,7 @@
         <div class="shortcut-drawer-inner">
           <div class="shortcut-drawer-title">
             <span data-i18n="shortcut.title">ショートカット一覧</span>
-            <button id="shortcutDrawerCloseBtn" class="shortcut-drawer-close" type="button" aria-label="ショートカットを閉じる">×</button>
+            <button id="shortcutDrawerCloseBtn" class="shortcut-drawer-close" type="button" aria-label="ショートカットを閉じる" data-i18n-aria-label="aria.closeShortcuts">×</button>
           </div>
           <div class="shortcut-list">
             <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl/Cmd</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>O</kbd></div><div class="shortcut-desc" data-i18n="shortcut.file">ファイル選択</div></div>
@@ -189,14 +189,14 @@
   </main>
 
   <section class="tool-footer-note">
-    <h2>利用上の注意</h2>
-    <p>本ツールは、開発者 <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
-    <p>不具合報告や要望は、Xの <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
+    <h2 data-i18n="footer.title">利用上の注意</h2>
+    <p data-i18n-html="footer.body1">本ツールは、開発者 <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
+    <p data-i18n-html="footer.body2">不具合報告や要望は、Xの <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
   </section>
 
-  <script src="./js/i18n.js"></script>
-  <script src="./js/language.js"></script>
-  <script src="./js/parser.js"></script>
+  <script src="./js/i18n.js?v=2.71"></script>
+  <script src="./js/language.js?v=2.71"></script>
+  <script src="./js/parser.js?v=2.71"></script>
   <script src="./js/shortcut.js"></script>
 </body>
 </html>
