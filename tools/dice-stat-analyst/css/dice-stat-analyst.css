@@ -2394,6 +2394,14 @@ header.site-header{
   }
 }
 
+/* Three-language switcher */
+.header-top-row .language-toggle-button{
+  width:104px !important;
+  min-width:104px !important;
+  max-width:104px !important;
+  padding-inline:8px !important;
+}
+
 /* かなり縦が狭い画面向け */
 @media (max-height: 720px) {
   #rawInput {

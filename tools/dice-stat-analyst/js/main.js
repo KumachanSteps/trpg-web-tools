@@ -500,8 +500,10 @@ function toggleLanguage() {
     return;
   }
 
+  const languages = ['ja', 'en', 'ko'];
   const current = getCurrentLanguage();
-  const next = current === 'ja' ? 'en' : 'ja';
+  const currentIndex = languages.indexOf(current);
+  const next = languages[(currentIndex + 1) % languages.length];
 
   setLanguage(next);
 }
@@ -516,11 +518,9 @@ function updateLanguageToggleLabel() {
     current = getCurrentLanguage();
   }
 
-  button.textContent = 'JP/EN';
+  button.textContent = 'JP | EN | KR';
 
-  const label = current === 'ja'
-    ? tr('language.switchToEnglish', '英語表示に切替')
-    : tr('language.switchToJapanese', '日本語表示に切替');
+  const label = tr('language.select', '表示言語を選択');
 
   button.setAttribute('title', label);
   button.setAttribute('aria-label', label);

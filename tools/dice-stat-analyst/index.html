@@ -12,7 +12,7 @@
   <title>ダイス統計アナライザー｜TRPG Webツール観測所</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="./css/dice-stat-analyst.css">
+  <link rel="stylesheet" href="./css/dice-stat-analyst.css?v=1.384">
 </head>
 
 <body>
@@ -29,7 +29,7 @@
             data-i18n="nav.backToTools"
           >
             ← TRPG Webツール観測所
-            <span class="portal-tooltip">TRPG Webツール観測所 に戻る</span>
+            <span class="portal-tooltip" data-i18n="tooltip.backToTools">TRPG Webツール観測所 に戻る</span>
           </a>
 
           <span class="header-pill header-pill-cyan" data-i18n="tag.diceLogInput">
@@ -54,6 +54,8 @@
               rel="noopener noreferrer"
               aria-label="X/Twitterでこのツールについて投稿する"
               title="X/Twitterで投稿する"
+              data-i18n-aria-label="aria.xShare"
+              data-i18n-title="aria.xShareTitle"
             >
               X
             </a>
@@ -62,9 +64,9 @@
               id="languageToggleBtn"
               class="header-action-button language-toggle-button"
               type="button"
-              aria-label="英語表示に切替"
+              aria-label="表示言語を選択"
             >
-              JP/EN
+              JP | EN | KR
             </button>
 
             <button
@@ -73,6 +75,7 @@
               type="button"
               aria-label="使い方を表示"
               data-i18n="button.howTo"
+              data-i18n-aria-label="aria.howTo"
             >
               使い方
             </button>
@@ -83,6 +86,7 @@
               type="button"
               aria-label="ショートカット一覧を開く"
               data-i18n="button.shortcuts"
+              data-i18n-aria-label="aria.shortcuts"
             >
               ショートカット
             </button>
@@ -145,7 +149,7 @@
           </p>
         </div>
       </div>
-    <div class="header-version-stamp">v1.382 2026/09/14</div>
+    <div class="header-version-stamp">v1.384 2026/10/01</div>
     </div>
   </header>
 
@@ -164,6 +168,7 @@
             class="header-slide-panel-close"
             type="button"
             aria-label="使い方パネルを閉じる"
+            data-i18n-aria-label="aria.closeHowTo"
           >
             ×
           </button>
@@ -200,6 +205,7 @@
             class="header-slide-panel-close"
             type="button"
             aria-label="ショートカット一覧を閉じる"
+            data-i18n-aria-label="aria.closeShortcuts"
           >
             ×
           </button>
@@ -235,6 +241,7 @@
           class="shortcut-modal-close"
           type="button"
           aria-label="ショートカット一覧を閉じる"
+          data-i18n-aria-label="aria.closeShortcuts"
         >
           ×
         </button>
@@ -453,7 +460,7 @@
 
       <div id="summary" class="tab-panel active">
         <div class="character-control-bar">
-          <button id="characterControlToggleBtn" class="character-control-toggle" type="button" data-i18n="openCharacterSettings">
+          <button id="characterControlToggleBtn" class="character-control-toggle" type="button" data-i18n="button.showCharacterControls">
             表示キャラ設定を開く▼
           </button>
         </div>
@@ -461,37 +468,37 @@
         <div id="characterControls" class="character-controls"></div>
         <div id="characterSummary" class="character-summary-grid"></div>
 
-        <h2 data-i18n="overallSummaryTitle">全体サマリー</h2>
+        <h2 data-i18n="summary.overallTitle">全体サマリー</h2>
 
         <div class="grid-results">
           <div class="card">
-            <div class="label" data-i18n="totalRolls">総ロール数</div>
+            <div class="label" data-i18n="card.totalRolls">総ロール数</div>
             <div id="totalRolls" class="value">0</div>
-            <div class="sub" data-i18n="totalRollsSub">d100として抽出された件数</div>
+            <div class="sub" data-i18n="card.totalRollsSub">d100として抽出された件数</div>
           </div>
 
           <div class="card">
-            <div class="label" data-i18n="successFail">成功 / 失敗</div>
+            <div class="label" data-i18n="card.successFail">成功 / 失敗</div>
             <div id="successFailCount" class="value">0 / 0</div>
             <div id="successFailRate" class="sub">0.00% / 0.00%</div>
           </div>
 
           <div class="card">
-            <div class="label" data-i18n="criticalFumble">クリティカル / ファンブル</div>
+            <div class="label" data-i18n="card.critFumble">クリティカル / ファンブル</div>
             <div id="critFumbleCount" class="value">0 / 0</div>
             <div id="critFumbleRate" class="sub">0.00% / 0.00%</div>
           </div>
 
           <div class="card">
-            <div class="label" data-i18n="averageRoll">平均出目</div>
+            <div class="label" data-i18n="card.averageRoll">平均出目</div>
             <div id="averageRoll" class="value">-</div>
-            <div class="sub" data-i18n="averageRollSub">抽出値の平均</div>
+            <div class="sub" data-i18n="card.averageRollSub">抽出値の平均</div>
           </div>
         </div>
 
         <div class="card summary-memo-card">
-          <h3 data-i18n="memoTitle">メモ</h3>
-          <p id="summaryMemo" class="note" data-i18n="initialMemo">
+          <h3 data-i18n="summary.memoTitle">メモ</h3>
+          <p id="summaryMemo" class="note" data-i18n="summary.selectLog">
             ログを入力して「分析する」を押してください。
           </p>
         </div>
@@ -543,25 +550,19 @@
   </div>
   
   <section class="tool-footer-note">
-  <h2>利用上の注意</h2>
-  <p>
-    本ツールは、開発者 <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。
-    各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
-  </p>
-  <p>
-    不具合報告や要望は、Xの <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。
-    ただし、すべての報告や要望に返信・対応できるとは限りません。
-  </p>
-</section>
+    <h2 data-i18n="footer.title">利用上の注意</h2>
+    <p data-i18n-html="footer.body1">本ツールは、開発者 <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。</p>
+    <p data-i18n-html="footer.body2">不具合報告や要望は、Xの <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。</p>
+  </section>
 
   <!-- JavaScript -->
-<script src="./js/utils.js?v=1.382"></script>
-  <script src="./js/i18n.js?v=1.382"></script>
-  <script src="./js/language.js?v=1.382"></script>
-  <script src="./js/parser.js?v=1.382"></script>
-  <script src="./js/analyzer.js?v=1.382"></script>
-  <script src="./js/renderer.js?v=1.382"></script>
-  <script src="./js/shortcuts.js?v=1.382"></script>
-  <script src="./js/main.js?v=1.382"></script>
+<script src="./js/utils.js?v=1.384"></script>
+  <script src="./js/i18n.js?v=1.384"></script>
+  <script src="./js/language.js?v=1.384"></script>
+  <script src="./js/parser.js?v=1.384"></script>
+  <script src="./js/analyzer.js?v=1.384"></script>
+  <script src="./js/renderer.js?v=1.384"></script>
+  <script src="./js/shortcuts.js?v=1.384"></script>
+  <script src="./js/main.js?v=1.384"></script>
 </body>
 </html>

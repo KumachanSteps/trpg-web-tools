@@ -1,6 +1,8 @@
 const LANGUAGE_STORAGE_KEY = "diceStatAnalystLanguage";
 
-let currentLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) || "ja";
+let currentLanguage = I18N[localStorage.getItem(LANGUAGE_STORAGE_KEY)]
+  ? localStorage.getItem(LANGUAGE_STORAGE_KEY)
+  : "ja";
 
 function getCurrentLanguage() {
   return currentLanguage;
@@ -30,6 +32,7 @@ function t(key, fallback = "", vars = {}) {
 
 function applyTranslations() {
   document.documentElement.lang = currentLanguage;
+  document.title = t("meta.title", document.title);
 
   document.querySelectorAll("[data-i18n]").forEach(element => {
     if (element.dataset.dynamic === "true") return;
