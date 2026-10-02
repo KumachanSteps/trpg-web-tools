@@ -1780,7 +1780,11 @@
   function measureSheet() {
     if (!isPhone()) return;
     const vv = window.visualViewport;
-    const viewBottom = vv ? vv.height + vv.offsetTop : window.innerHeight;
+    // キーボードの高さは、文字の入力欄にフォーカスがあるときだけ数える
+    // （ピンチで拡大したときも見えている範囲は狭くなるが、それはキーボードではない）
+    const editing = isTextField(document.activeElement);
+    const zoomed = Boolean(vv) && vv.scale > 1.01;
+    const viewBottom = vv && editing && !zoomed ? vv.height + vv.offsetTop : window.innerHeight;
     const keyboard = Math.max(0, Math.round(window.innerHeight - viewBottom));
     const viewH = window.innerHeight - keyboard;
     if (window.innerWidth !== sheet.baseWidth) { sheet.baseWidth = window.innerWidth; sheet.baseViewH = 0; }

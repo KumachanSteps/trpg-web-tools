@@ -1399,13 +1399,13 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
 /* ---------- スマートフォン：ヘッダーをたたみ、設定は下から引き出すシート、プレビューは背景に ---------- */
 
 @media (max-width: 760px) {
-  .app-shell {
+  .maker-shell {
     gap: 10px;
     padding: 8px max(8px, env(safe-area-inset-right)) calc(var(--sheet-peek, 64px) + 16px) max(8px, env(safe-area-inset-left));
   }
 
-  /* ヘッダー：先頭では2行（タイトル・共有・テーマ／観測所・言語・使い方・利用ルール）。説明文とショートカットは出さない */
-  .app-header {
+  /* ヘッダー（ツールの画面だけ。terms.html は元の表示のまま）：先頭では2行（タイトル・共有・テーマ／観測所・言語・使い方・利用ルール）。説明文とショートカットは出さない */
+  .maker-header {
     position: sticky;
     top: 6px;
     z-index: 40;
@@ -1418,12 +1418,12 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
   }
-  .eyebrow, .lead, #shortcutBtn { display: none; }
-  .title-block { order: 1; flex: 1 1 0; min-width: 0; }
-  h1 { margin: 0; font-size: 1.22rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  :where(.maker-header) :is(.eyebrow, .lead, #shortcutBtn) { display: none; }
+  :where(.maker-header) .title-block { order: 1; flex: 1 1 0; min-width: 0; }
+  :where(.maker-header) h1 { margin: 0; font-size: 1.22rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .version-engrave { position: static; margin-top: 3px; font-size: 0.64rem; line-height: 1.2; }
-  .header-actions, .header-actions-end { display: contents; }
-  .header-nav-link, .ghost-button, .x-share-link { min-height: 2rem; padding: 0.3rem 0.62rem; font-size: 0.76rem; box-shadow: none; }
+  :where(.maker-header) :is(.header-actions, .header-actions-end) { display: contents; }
+  :where(.maker-header) :is(.header-nav-link, .ghost-button, .x-share-link) { min-height: 2rem; padding: 0.3rem 0.62rem; font-size: 0.76rem; box-shadow: none; }
   .x-share-link { order: 2; min-width: 2rem; padding: 0; font-size: 0.95rem; }
   .theme-button { order: 3; min-width: 46px; padding: 0 2px; }
   .theme-toggle-track { width: 40px; height: 22px; }
@@ -1440,12 +1440,12 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
   #rulesBtn { order: 8; }
   /* 2行目（観測所・言語・使い方・利用ルール）が折り返さないよう、狭い画面ではボタンを詰める */
   @media (max-width: 400px) {
-    .app-header { column-gap: 5px; padding-inline: 10px; }
-    .header-nav-link, .ghost-button { padding-inline: 0.42rem; font-size: 0.72rem; }
+    .maker-header { column-gap: 5px; padding-inline: 10px; }
+    :where(.maker-header) :is(.header-nav-link, .ghost-button) { padding-inline: 0.42rem; font-size: 0.72rem; }
   }
   @media (max-width: 359px) {
-    .app-header { column-gap: 4px; }
-    .header-nav-link, .ghost-button { padding-inline: 0.34rem; font-size: 0.68rem; }
+    .maker-header { column-gap: 4px; }
+    :where(.maker-header) :is(.header-nav-link, .ghost-button) { padding-inline: 0.34rem; font-size: 0.68rem; }
     .lang-divider { display: none; }
   }
 
@@ -1476,6 +1476,9 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
     body.is-header-compact .theme-button { display: none; }
     body.is-header-compact .app-header.is-menu-open .theme-button { display: inline-flex; order: 10; }
   }
+
+  /* 入力欄は16px以上に（iOS は16px未満の入力欄にフォーカスすると画面を拡大するため） */
+  :is(.text-input, .select-input, .number-input), .number-box .number-input, .compact-field :is(.select-input, .number-input, .text-input) { font-size: 16px; }
 
   .drawer { scroll-margin-top: 72px; }
 
