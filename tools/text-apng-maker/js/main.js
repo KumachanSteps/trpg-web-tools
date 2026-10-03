@@ -12,7 +12,7 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.05';
+  const VERSION = 'v1.06';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const LANGS = ['ja', 'ko', 'en'];
@@ -1226,7 +1226,8 @@
     scheduleFontLoad(0);
     saveState();
     restartPreview();
-    toast(msg().templateApplied(tpl.label[app.lang]), 'success', 2200);
+    // スマートフォン表示では、通知がプレビューの上に重なるので出さない（選んだ結果はプレビューとシートのバーで分かる）
+    if (!isPhone()) toast(msg().templateApplied(tpl.label[app.lang]), 'success', 2200);
     track('template_apply', { mode: app.mode, template: tpl.id });
   }
 
