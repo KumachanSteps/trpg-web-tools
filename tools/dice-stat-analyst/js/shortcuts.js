@@ -54,20 +54,6 @@ function exitScreenshotMode() {
 
 
 
-async 
-
-
-
-
-async 
-
-async 
-
-async 
-
-
-
-
 function handleGlobalKeydown(event) {
   const key = String(event.key || '').toLowerCase();
   const isCommand = event.ctrlKey || event.metaKey;

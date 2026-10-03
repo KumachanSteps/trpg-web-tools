@@ -380,6 +380,13 @@ input {
   color: var(--text);
 }
 
+.language-divider {
+  color: var(--muted);
+  font-size: 0.78rem;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
 .mode-button {
   display: inline-flex;
   align-items: center;
@@ -655,6 +662,12 @@ body.theme-dawn .category-button.is-active {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
   margin-top: 26px;
+}
+
+/* 状態（公開中・開発中・アイデアなど）が変わるところで行を改める */
+.tools-grid-break {
+  grid-column: 1 / -1;
+  height: 0;
 }
 
 .tool-card {

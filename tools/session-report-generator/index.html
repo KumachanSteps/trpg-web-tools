@@ -6,7 +6,7 @@
   <title>卓報告ジェネレータ｜TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="css/report_gen_style.css" />
+  <link rel="stylesheet" href="css/report_gen_style.css?v=1.72" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body>
@@ -14,14 +14,19 @@
     <div class="header-inner">
       <div class="header-top-tags">
         <span class="portal-link-wrap">
-          <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG Webツール観測所に戻る">← TRPG Webツール観測所</a>
+          <a class="portal-link" href="https://kumachansteps.github.io/trpg-web-tools/" title="TRPG Webツール観測所に戻る" data-i18n="nav.back" data-i18n-title="aria.back">← TRPG Webツール観測所</a>
         </span>
         <span class="header-pill header-pill-cyan">X / Twitter</span>
-        <span class="header-pill header-pill-violet">卓報告</span>
-        <span class="header-pill header-pill-amber">テンプレ生成</span>
-        <div class="header-actions" aria-label="ヘルプメニュー">
-          <button id="usageToggleButton" class="header-action-button" type="button" aria-controls="usagePanel" aria-expanded="false">使い方</button>
-          <button id="shortcutToggleButton" class="header-action-button" type="button" aria-controls="shortcutPanel" aria-expanded="false">ショートカット</button>
+        <span class="header-pill header-pill-violet" data-i18n="tag.report">卓報告</span>
+        <span class="header-pill header-pill-amber" data-i18n="tag.template">テンプレ生成</span>
+        <div class="header-actions" aria-label="ヘルプメニュー" data-i18n-aria-label="aria.helpMenu">
+          <div class="language-switcher" role="group" aria-label="表示言語を選択" data-i18n-aria-label="language.select">
+            <button class="language-choice is-active" type="button" data-language="ja" aria-pressed="true">JP</button>
+            <button class="language-choice" type="button" data-language="en" aria-pressed="false">EN</button>
+            <button class="language-choice" type="button" data-language="ko" aria-pressed="false">KR</button>
+          </div>
+          <button id="usageToggleButton" class="header-action-button" type="button" aria-controls="usagePanel" aria-expanded="false" data-i18n="button.usage">使い方</button>
+          <button id="shortcutToggleButton" class="header-action-button" type="button" aria-controls="shortcutPanel" aria-expanded="false" data-i18n="button.shortcuts">ショートカット</button>
         </div>
       </div>
       <div class="header-title-area">
@@ -31,39 +36,39 @@
             <span class="icon-star">✦</span>
             <span class="icon-style-a">A</span>
           </span>
-          <span>卓報告ジェネレータ</span>
+          <span data-i18n="app.title">卓報告ジェネレータ</span>
         </h1>
-        <p class="header-version">v1.70 2026.09.09</p>
+        <p class="header-version">v1.72 2026.10.02</p>
         <p class="site-description">
-          <span>SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
-          <span>シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
+          <span data-i18n="app.description1">SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
+          <span data-i18n="app.description2">シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
         </p>
       </div>
       <div class="header-help-panels" aria-live="polite">
         <section id="usagePanel" class="header-help-panel" hidden>
-          <h2>使い方</h2>
+          <h2 data-i18n="usage.title">使い方</h2>
           <ol>
-            <li>卓報告サンプルリストから使いたい文面スタイルを選びます。</li>
-            <li>システム、シナリオ名、KP / GM / DL、PC / PL、ENDなどを入力します。</li>
-            <li>必要に応じて文字スタイルやアスキーアートを選び、右側のプレビューを直接編集します。</li>
-            <li>完成したら「コピー」または下部の「𝕏 に投稿」から投稿画面を開けます。</li>
+            <li data-i18n="usage.step1">卓報告サンプルリストから使いたい文面スタイルを選びます。</li>
+            <li data-i18n="usage.step2">システム、シナリオ名、KP / GM / DL、PC / PL、ENDなどを入力します。</li>
+            <li data-i18n="usage.step3">必要に応じて文字スタイルやアスキーアートを選び、右側のプレビューを直接編集します。</li>
+            <li data-i18n="usage.step4">完成したら「コピー」または下部の「𝕏 に投稿」から投稿画面を開けます。</li>
           </ol>
         </section>
         <section id="shortcutPanel" class="header-help-panel" hidden>
-          <h2>ショートカット</h2>
+          <h2 data-i18n="shortcuts.title">ショートカット</h2>
           <dl>
-            <div><dt>Cmd / Ctrl + Shift + C</dt><dd>プレビュー本文をコピーします（Cmd / Ctrl + Enter も可）。</dd></div>
-            <div><dt>Cmd / Ctrl + Shift + P</dt><dd>プレビュー本文を 𝕏 に投稿します。</dd></div>
-            <div><dt>Cmd / Ctrl + Z</dt><dd>プレビューの編集を1つ元に戻します。</dd></div>
-            <div><dt>Cmd / Ctrl + Shift + Z</dt><dd>元に戻した編集をやり直します。</dd></div>
-            <div><dt>Cmd / Ctrl + E</dt><dd>プレビュー編集欄へフォーカスします。</dd></div>
-            <div><dt>Cmd + Option + ↑ / ↓</dt><dd>卓報告サンプルリストを前後に切り替えます。</dd></div>
-            <div><dt>Cmd + Option + ← / →</dt><dd>文字スタイル（フォント）を前後に切り替えます。</dd></div>
-            <div><dt>Cmd + Option + R</dt><dd>手動編集を破棄し、入力内容からプレビューを作り直します。</dd></div>
-            <div><dt>?</dt><dd>このショートカットパネルを開閉します。</dd></div>
-            <div><dt>Esc</dt><dd>使い方 / ショートカットのパネルを閉じます。</dd></div>
+            <div><dt>Cmd / Ctrl + Shift + C</dt><dd data-i18n="shortcuts.copy">プレビュー本文をコピーします（Cmd / Ctrl + Enter も可）。</dd></div>
+            <div><dt>Cmd / Ctrl + Shift + P</dt><dd data-i18n="shortcuts.post">プレビュー本文を 𝕏 に投稿します。</dd></div>
+            <div><dt>Cmd / Ctrl + Z</dt><dd data-i18n="shortcuts.undo">プレビューの編集を1つ元に戻します。</dd></div>
+            <div><dt>Cmd / Ctrl + Shift + Z</dt><dd data-i18n="shortcuts.redo">元に戻した編集をやり直します。</dd></div>
+            <div><dt>Cmd / Ctrl + E</dt><dd data-i18n="shortcuts.focus">プレビュー編集欄へフォーカスします。</dd></div>
+            <div><dt>Cmd + Option + ↑ / ↓</dt><dd data-i18n="shortcuts.style">卓報告サンプルリストを前後に切り替えます。</dd></div>
+            <div><dt>Cmd + Option + ← / →</dt><dd data-i18n="shortcuts.font">文字スタイル（フォント）を前後に切り替えます。</dd></div>
+            <div><dt>Cmd + Option + R</dt><dd data-i18n="shortcuts.rebuild">手動編集を破棄し、入力内容からプレビューを作り直します。</dd></div>
+            <div><dt>?</dt><dd data-i18n="shortcuts.toggle">このショートカットパネルを開閉します。</dd></div>
+            <div><dt>Esc</dt><dd data-i18n="shortcuts.close">使い方 / ショートカットのパネルを閉じます。</dd></div>
           </dl>
-          <p>Windows では Cmd を Ctrl、Option を Alt に読み替えてください。</p>
+          <p data-i18n="shortcuts.note">Windows では Cmd を Ctrl、Option を Alt に読み替えてください。</p>
         </section>
       </div>
     </div>
@@ -71,26 +76,26 @@
 
   <main class="main app-shell">
     <section class="panel input-panel" aria-labelledby="inputPanelTitle">
-      <h2 id="inputPanelTitle">入力</h2>
+      <h2 id="inputPanelTitle" data-i18n="input.title">入力</h2>
 
       <section class="section basic-section" aria-label="基本情報">
         <div class="grid-2">
           <div class="field-block">
-            <label for="reportStyle">卓報告サンプルリスト</label>
+            <label for="reportStyle" data-i18n="input.reportStyle">卓報告サンプルリスト</label>
             <select id="reportStyle"></select>
-            <p class="hint">SNS実例の構造だけを参考にしたテンプレートです。</p>
+            <p class="hint" data-i18n="input.reportHint">SNS実例の構造だけを参考にしたテンプレートです。</p>
           </div>
 
           <div class="field-block">
-            <label for="fontVariant">文字スタイル</label>
+            <label for="fontVariant" data-i18n="input.fontStyle">文字スタイル</label>
             <select id="fontVariant"></select>
-            <p class="hint">システム名・役職・枠名・END・日付など、テンプレート側で指定された部分だけ変換します。</p>
+            <p class="hint" data-i18n="input.fontHint">システム名・役職・枠名・END・日付など、テンプレート側で指定された部分だけ変換します。</p>
           </div>
         </div>
 
         <div class="grid-2 stacked-grid">
           <div class="field-block">
-            <label for="systemSelect">システム</label>
+            <label for="systemSelect" data-i18n="input.system">システム</label>
             <select id="systemSelect">
               <option value="call_of_cthulhu">Call of Cthulhu</option>
               <option value="coc">CoC</option>
@@ -105,94 +110,94 @@
               <option value="double_cross">ダブルクロス The 3rd Edition</option>
               <option value="sword_world_25">ソード・ワールド2.5</option>
               <option value="futari_sousa">フタリソウサ</option>
-              <option value="custom">自由入力</option>
+              <option value="custom" data-i18n="input.custom">自由入力</option>
             </select>
-            <input id="customSystemText" class="custom-system-input" placeholder="システム名を入力" />
+            <input id="customSystemText" class="custom-system-input" placeholder="システム名を入力" data-i18n-placeholder="input.systemPlaceholder" />
           </div>
 
           <div class="field-block">
-            <label for="authorText">作者 / 作</label>
-            <input id="authorText" placeholder="例：〇〇様 / 〇〇 様" />
+            <label for="authorText" data-i18n="input.author">作者 / 作</label>
+            <input id="authorText" placeholder="例：〇〇様 / 〇〇 様" data-i18n-placeholder="input.authorPlaceholder" />
           </div>
         </div>
 
         <div class="grid-2 stacked-grid">
           <div class="field-block">
-            <label for="scenarioTitle">シナリオ名</label>
-            <input id="scenarioTitle" placeholder="例：黒き嵐が来る前に" />
+            <label for="scenarioTitle" data-i18n="input.scenario">シナリオ名</label>
+            <input id="scenarioTitle" placeholder="例：黒き嵐が来る前に" data-i18n-placeholder="input.scenarioPlaceholder" />
           </div>
 
           <div class="field-block">
-            <label for="resultText">通過 / END / 結果</label>
-            <input id="resultText" placeholder="例：END A 両生還 / 全生還" />
+            <label for="resultText" data-i18n="input.result">通過 / END / 結果</label>
+            <input id="resultText" placeholder="例：END A 両生還 / 全生還" data-i18n-placeholder="input.resultPlaceholder" />
           </div>
         </div>
       </section>
 
       <section class="section gm-section" aria-label="GM情報">
         <div class="section-head">
-          <label>GM / KP / DL / その他</label>
+          <label data-i18n="gm.title">GM / KP / DL / その他</label>
           <div class="suffix-checks" aria-label="敬称">
-            <span>敬称</span>
-            <label><input type="checkbox" name="suffixChoice" value="none" checked />なし</label>
-            <label><input type="checkbox" name="suffixChoice" value="様" />〇〇様</label>
-            <label><input type="checkbox" name="suffixChoice" value="さん" />〇〇さん</label>
+            <span data-i18n="gm.honorific">敬称</span>
+            <label><input type="checkbox" name="suffixChoice" value="none" checked /><span data-i18n="gm.none">なし</span></label>
+            <label><input type="checkbox" name="suffixChoice" value="様" /><span data-i18n="gm.sama">〇〇様</span></label>
+            <label><input type="checkbox" name="suffixChoice" value="さん" /><span data-i18n="gm.san">〇〇さん</span></label>
           </div>
         </div>
         <div id="gmContainer" data-default-rows="1"></div>
-        <p class="hint">緑の＋で進行役を追加できます。KPC/KP型では、名前欄に「KPC名 / KP名」のように入れると綺麗です。</p>
+        <p class="hint" data-i18n="gm.hint">緑の＋で進行役を追加できます。KPC/KP型では、名前欄に「KPC名 / KP名」のように入れると綺麗です。</p>
       </section>
 
       <section class="section player-section" aria-label="参加者情報">
         <div class="grid-2">
           <div>
             <label>HO / PC / PL</label>
-            <p class="hint">HO、PC名、PL名を1行で入力します。HO補足は通常未入力でOKです。</p>
+            <p class="hint" data-i18n="player.hint1">HO、PC名、PL名を1行で入力します。HO補足は通常未入力でOKです。</p>
           </div>
 
           <div class="field-block">
-            <label for="nameInputOrder">PC名・PL名の入力順</label>
+            <label for="nameInputOrder" data-i18n="player.order">PC名・PL名の入力順</label>
             <select id="nameInputOrder">
-              <option value="pcpl">PC名 → PL名</option>
-              <option value="plpc">PL名 → PC名</option>
+              <option value="pcpl" data-i18n="player.pcpl">PC名 → PL名</option>
+              <option value="plpc" data-i18n="player.plpc">PL名 → PC名</option>
             </select>
           </div>
         </div>
 
         <div id="playerContainer" class="participant-container" data-default-rows="1"></div>
         <div class="btns">
-          <button id="addPlayerButton" type="button">＋ 参加者を追加</button>
+          <button id="addPlayerButton" type="button" data-i18n="player.add">＋ 参加者を追加</button>
         </div>
-        <p class="hint">枠が PC/PL・PL/PC の場合は見出しに反映します。PC1・HO1 は個別行に表示されます。</p>
+        <p class="hint" data-i18n="player.hint2">枠が PC/PL・PL/PC の場合は見出しに反映します。PC1・HO1 は個別行に表示されます。</p>
       </section>
 
       <section class="section misc-section" aria-label="補足情報">
         <div class="grid-2">
           <div class="field-block">
-            <label for="dateText">日付</label>
+            <label for="dateText" data-i18n="misc.date">日付</label>
             <input id="dateText" placeholder="今日の日付" />
           </div>
 
           <div class="field-block">
-            <label for="hashtagText">ハッシュタグ</label>
-            <input id="hashtagText" placeholder="例：#卓報告 #クトゥルフ神話TRPG" />
+            <label for="hashtagText" data-i18n="misc.hashtag">ハッシュタグ</label>
+            <input id="hashtagText" placeholder="例：#卓報告 #クトゥルフ神話TRPG" data-i18n-placeholder="misc.hashtagPlaceholder" />
           </div>
         </div>
         <div class="field-block">
-          <label for="memoText">備考 / メモ</label>
-          <textarea id="memoText" placeholder="卓ログトラッカーからのメモや補足"></textarea>
+          <label for="memoText" data-i18n="misc.memo">備考 / メモ</label>
+          <textarea id="memoText" placeholder="卓ログトラッカーからのメモや補足" data-i18n-placeholder="misc.memoPlaceholder"></textarea>
         </div>
       </section>
 
       <section class="section decoration-panel" aria-label="アスキーアートと装飾">
-        <label>アスキーアート / 装飾</label>
-        <p class="hint">クリックすると、右側プレビューの編集中カーソル位置に挿入されます。</p>
+        <label data-i18n="decoration.title">アスキーアート / 装飾</label>
+        <p class="hint" data-i18n="decoration.hint">クリックすると、右側プレビューの編集中カーソル位置に挿入されます。</p>
         <div id="asciiArtContainer" class="ascii-preview-panel"></div>
       </section>
     </section>
 
     <section class="panel preview-panel" aria-labelledby="previewPanelTitle">
-      <h2 id="previewPanelTitle">X風プレビュー / 編集</h2>
+      <h2 id="previewPanelTitle" data-i18n="preview.title">X風プレビュー / 編集</h2>
 
       <div class="twitter-card">
         <div class="tweet-head">
@@ -206,8 +211,8 @@
         <div id="fontToolbar" class="font-toolbar" aria-label="文字スタイルショートカット"></div>
 
         <div class="preview-editor-wrap">
-          <textarea id="tweetPreview" placeholder="ここに生成結果が表示されます。直接編集もできます。"></textarea>
-          <div id="previewResizeHandle" class="preview-resize-handle" title="プレビュー欄の高さを調整"></div>
+          <textarea id="tweetPreview" placeholder="ここに生成結果が表示されます。直接編集もできます。" data-i18n-placeholder="preview.placeholder"></textarea>
+          <div id="previewResizeHandle" class="preview-resize-handle" title="プレビュー欄の高さを調整" data-i18n-title="preview.resizeTitle"></div>
         </div>
 
         <div class="count-line">
@@ -216,38 +221,38 @@
         </div>
 
         <div class="btns preview-actions">
-          <button id="copyButton" type="button" class="primary" title="コピー（Ctrl / ⌘ + Shift + C、または Ctrl / ⌘ + Enter）">コピー</button>
-          <button id="undoButton" type="button" title="元に戻す（Ctrl / ⌘ + Z）">元に戻す</button>
-          <button id="redoButton" type="button" title="やり直す（Ctrl / ⌘ + Shift + Z）">やり直す</button>
-          <button id="clearPreviewButton" type="button" class="danger">消去</button>
+          <button id="copyButton" type="button" class="primary" title="コピー（Ctrl / ⌘ + Shift + C、または Ctrl / ⌘ + Enter）" data-i18n="button.copy" data-i18n-title="button.copyTitle">コピー</button>
+          <button id="undoButton" type="button" title="元に戻す（Ctrl / ⌘ + Z）" data-i18n="button.undo" data-i18n-title="button.undoTitle">元に戻す</button>
+          <button id="redoButton" type="button" title="やり直す（Ctrl / ⌘ + Shift + Z）" data-i18n="button.redo" data-i18n-title="button.redoTitle">やり直す</button>
+          <button id="clearPreviewButton" type="button" class="danger" data-i18n="button.delete">消去</button>
         </div>
       </div>
 
-      <p class="hint">文字数は簡易カウントです。URL短縮や絵文字幅など、X本体の厳密な仕様とは異なる場合があります。</p>
+      <p class="hint" data-i18n="preview.countHint">文字数は簡易カウントです。URL短縮や絵文字幅など、X本体の厳密な仕様とは異なる場合があります。</p>
     </section>
   </main>
 
   <section class="tool-footer-note">
-    <h2>利用上の注意</h2>
-    <p>
+    <h2 data-i18n="footer.title">利用上の注意</h2>
+    <p data-i18n="footer.body1">
       本ツールは、開発者 @KumachanSteps による個人制作の非公式TRPG支援ツールです。
       各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
     </p>
-    <p>
+    <p data-i18n="footer.body2">
       不具合報告や要望は、Xの @KumachanSteps 宛のDMにてお送りください。
       ただし、すべての報告や要望に返信・対応できるとは限りません。
     </p>
   </section>
 
   <div class="bottom-actions" aria-label="生成操作">
-    <button id="generateButton" type="button" class="primary bottom-action-button" title="𝕏 に投稿（Ctrl / ⌘ + Shift + P）">𝕏 に投稿</button>
-    <button id="clearAllButton" type="button" class="subtle bottom-action-button">入力をクリア</button>
+    <button id="generateButton" type="button" class="primary bottom-action-button" title="𝕏 に投稿（Ctrl / ⌘ + Shift + P）" data-i18n="button.post" data-i18n-title="button.postTitle">𝕏 に投稿</button>
+    <button id="clearAllButton" type="button" class="subtle bottom-action-button" data-i18n="button.clearAll">入力をクリア</button>
   </div>
 
-  <script src="js/i18l.js"></script>
-  <script src="js/language.js"></script>
+  <script src="js/i18l.js?v=1.72"></script>
+  <script src="js/language.js?v=1.72"></script>
   <script src="js/perser.js"></script>
   <script src="js/template.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=1.72"></script>
 </body>
 </html>

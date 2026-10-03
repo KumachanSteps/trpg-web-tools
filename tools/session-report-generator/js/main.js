@@ -2,6 +2,7 @@
   'use strict';
 
   const $ = id => document.getElementById(id);
+  const t = (key, vars = {}) => window.REPORT_GEN_LANGUAGE?.t(key, vars) || key;
   const REPORT_PENDING_IMPORT_KEY = 'trpgWebTools.sessionReportGenerator.pendingImport';
 
   let isResetting = false;
@@ -25,6 +26,14 @@
     { id: 'modernSans', label: '𝖠 モダンスタイル（サンセリフ）', tooltip: 'モダン（サンセリフ）', chipClass: 'f-modern' },
     { id: 'plain', label: 'A 変換なし', tooltip: '変換なし', chipClass: 'f-plain' }
   ];
+  const FONT_LABELS = {
+    en: { sansBoldItalic:'𝘼 Bold + Italic (Sans Serif)', sansBold:'𝗔 Bold (Sans Serif)', sansItalic:'𝘈 Italic (Sans Serif)', serifBoldItalic:'𝑨 Bold + Italic (Serif)', serifBold:'𝐀 Bold (Serif)', serifItalic:'𝐴 Italic (Serif)', smallCaps:'ᴀ Small Caps', typewriter:'𝙰 Typewriter (Monospace)', modernSans:'𝖠 Modern (Sans Serif)', plain:'A No conversion' },
+    ko: { sansBoldItalic:'𝘼 굵게 + 기울임 (산세리프)', sansBold:'𝗔 굵게 (산세리프)', sansItalic:'𝘈 기울임 (산세리프)', serifBoldItalic:'𝑨 굵게 + 기울임 (세리프)', serifBold:'𝐀 굵게 (세리프)', serifItalic:'𝐴 기울임 (세리프)', smallCaps:'ᴀ 스몰 캡스', typewriter:'𝙰 타자기 (고정폭)', modernSans:'𝖠 모던 (산세리프)', plain:'A 변환 없음' }
+  };
+  const REPORT_STYLE_LABELS = {
+    en: { classic:'Classic: Standard and Readable', minimal:'Minimal: Short and Simple', frame:'✦ Frame', 'asterisk-frame':'✼ Frame', fancy:'⟡ Decorative Frame', block:'▮ Block', 'ho-focus':'HO List Focus', 'kpc-pair':'KPC One-on-One', emoklore:'✧ Top and Bottom Frame', 'wide-title':'◤ Wide Title ◢', zigzag:'◢◤◢ Zigzag', 'corner-frame':'Corner Frame', 'triangle-heading':'Triangle Heading', 'scenario-clear':'Scenario-focused', 'handwritten-title':'Handwritten Title', 'double-line':'Double Line', 'ribbon-title':'Ribbon Title' },
+    ko: { classic:'클래식: 표준·읽기 쉬움', minimal:'미니멀: 짧고 간결함', frame:'✦ 프레임', 'asterisk-frame':'✼ 프레임', fancy:'⟡ 장식 프레임', block:'▮ 블록', 'ho-focus':'HO 목록 중심', 'kpc-pair':'KPC 타이만', emoklore:'✧ 위아래 프레임', 'wide-title':'◤ 와이드 제목 ◢', zigzag:'◢◤◢ 지그재그', 'corner-frame':'코너 프레임', 'triangle-heading':'삼각형 제목', 'scenario-clear':'시나리오 중심', 'handwritten-title':'손글씨 제목', 'double-line':'이중선', 'ribbon-title':'리본 제목' }
+  };
 
   const FONT_MAPS = {
     sansBoldItalic: { upper: 0x1D63C, lower: 0x1D656, digit: 0x1D7EC },
@@ -95,13 +104,18 @@
   function populateReportStyles() {
     const select = $('reportStyle');
     const styles = window.ReportTemplate?.REPORT_STYLES || [];
-    select.innerHTML = styles.map(style => `<option value="${escapeHtml(style.id)}">${escapeHtml(style.label)}</option>`).join('');
+    const selected = select.value;
+    const lang = window.REPORT_GEN_LANGUAGE?.current || 'ja';
+    select.innerHTML = styles.map(style => `<option value="${escapeHtml(style.id)}">${escapeHtml(REPORT_STYLE_LABELS[lang]?.[style.id] || style.label)}</option>`).join('');
+    if (styles.some(style => style.id === selected)) select.value = selected;
   }
 
   function populateFontVariants() {
     const select = $('fontVariant');
-    select.innerHTML = FONT_VARIANTS.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`).join('');
-    select.value = 'sansBoldItalic';
+    const selected = select.value || 'sansBoldItalic';
+    const lang = window.REPORT_GEN_LANGUAGE?.current || 'ja';
+    select.innerHTML = FONT_VARIANTS.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(FONT_LABELS[lang]?.[item.id] || item.label)}</option>`).join('');
+    select.value = selected;
   }
 
   let chipTooltipEl = null;
@@ -140,12 +154,14 @@
     if (!toolbar) return;
     toolbar.innerHTML = '';
     FONT_VARIANTS.forEach(item => {
+      const lang = window.REPORT_GEN_LANGUAGE?.current || 'ja';
+      const localizedLabel = FONT_LABELS[lang]?.[item.id] || item.tooltip;
       const button = document.createElement('button');
       button.type = 'button';
       button.className = `font-chip ${item.chipClass}`;
       button.dataset.variant = item.id;
-      button.dataset.tooltip = item.tooltip;
-      button.setAttribute('aria-label', item.tooltip);
+      button.dataset.tooltip = localizedLabel;
+      button.setAttribute('aria-label', localizedLabel);
       button.textContent = 'A';
       button.addEventListener('click', () => {
         pushHistory();
@@ -219,7 +235,7 @@
 
   function getSystemName() {
     const key = $('systemSelect').value;
-    if (key === 'custom') return $('customSystemText').value.trim() || 'システム名';
+    if (key === 'custom') return $('customSystemText').value.trim() || t('dynamic.systemFallback');
     return SYSTEM_NAMES[key] || key;
   }
 
@@ -243,7 +259,9 @@
 
   function sampleName(index, type) {
     const letters = ['A','B','C','D','E','F','G','H','I'];
-    return type === 'pc' ? `探索者${letters[index] || index + 1}` : `PL名${letters[index] || index + 1}`;
+    return type === 'pc'
+      ? t('dynamic.pcFallback', { letter: letters[index] || index + 1 })
+      : t('dynamic.plFallback', { letter: letters[index] || index + 1 });
   }
 
   function addGM(value = '', role = 'KP') {
@@ -251,7 +269,7 @@
     row.className = 'row';
     row.innerHTML = `
       <div>
-        <label>役割</label>
+        <label data-i18n="dynamic.role">${escapeHtml(t('dynamic.role'))}</label>
         <select class="gm-role">
           <option value="KP">KP</option>
           <option value="DL">DL</option>
@@ -263,11 +281,11 @@
         </select>
       </div>
       <div>
-        <label>名前</label>
-        <input class="gm-name" value="${escapeHtml(value)}" placeholder="例：KPC名 / KP名">
+        <label data-i18n="dynamic.name">${escapeHtml(t('dynamic.name'))}</label>
+        <input class="gm-name" value="${escapeHtml(value)}" placeholder="${escapeHtml(t('dynamic.name'))}">
       </div>
-      <button class="icon-button add-inline" type="button" aria-label="進行役を追加">＋</button>
-      <button class="icon-button danger-inline" type="button" aria-label="削除">×</button>
+      <button class="icon-button add-inline" type="button" aria-label="${escapeHtml(t('dynamic.addGm'))}" data-i18n-aria-label="dynamic.addGm">＋</button>
+      <button class="icon-button danger-inline" type="button" aria-label="${escapeHtml(t('dynamic.delete'))}" data-i18n-aria-label="dynamic.delete">×</button>
     `;
     $('gmContainer').appendChild(row);
     row.querySelector('.gm-role').value = role;
@@ -326,20 +344,20 @@
     row.className = `participant-row name-order-${$('nameInputOrder').value}`;
     row.innerHTML = `
       <div class="slot-field">
-        <label>枠</label>
+        <label data-i18n="dynamic.slot">${escapeHtml(t('dynamic.slot'))}</label>
         <select class="player-slot" ${isFirst ? '' : 'disabled'}>${buildSlotOptions(selected, isFirst)}</select>
       </div>
       <div class="ho-field">
-        <label>HO補足</label>
-        <input class="ho-name" value="${escapeHtml(ho)}" placeholder="通常は空欄でOK">
+        <label data-i18n="dynamic.ho">${escapeHtml(t('dynamic.ho'))}</label>
+        <input class="ho-name" value="${escapeHtml(ho)}" placeholder="${escapeHtml(t('dynamic.hoPlaceholder'))}" data-i18n-placeholder="dynamic.hoPlaceholder">
       </div>
       <div class="pc-field">
-        <label>PC名</label>
-        <input class="pc-name" value="${escapeHtml(pc)}" placeholder="例：探索者名">
+        <label data-i18n="dynamic.pc">${escapeHtml(t('dynamic.pc'))}</label>
+        <input class="pc-name" value="${escapeHtml(pc)}" placeholder="${escapeHtml(t('dynamic.pcPlaceholder'))}" data-i18n-placeholder="dynamic.pcPlaceholder">
       </div>
       <div class="pl-field">
-        <label>PL名</label>
-        <input class="pl-name" value="${escapeHtml(pl)}" placeholder="例：佐藤">
+        <label data-i18n="dynamic.pl">${escapeHtml(t('dynamic.pl'))}</label>
+        <input class="pl-name" value="${escapeHtml(pl)}" placeholder="${escapeHtml(t('dynamic.plPlaceholder'))}" data-i18n-placeholder="dynamic.plPlaceholder">
       </div>
       <button class="danger delete-field" type="button">×</button>
     `;
@@ -363,7 +381,7 @@
       const raw = row.querySelector('.gm-name')?.value.trim() || '';
       return {
         role: row.querySelector('.gm-role')?.value || 'KP',
-        name: addSuffix(raw || (useSample && index === 0 ? 'KP名' : ''), suffix)
+        name: addSuffix(raw || (useSample && index === 0 ? 'KP' : ''), suffix)
       };
     }).filter(item => item.name);
 
@@ -378,17 +396,17 @@
       };
     }).filter(item => item.pc || item.pl || item.ho);
 
-    if (useSample && !gms.length) gms = [{ role: 'KP', name: 'KP名' }];
-    if (useSample && !players.length) players = [{ slot: 'HO1', ho: '', pc: '探索者A', pl: 'PL名A' }];
+    if (useSample && !gms.length) gms = [{ role: 'KP', name: 'KP' }];
+    if (useSample && !players.length) players = [{ slot: 'HO1', ho: '', pc: sampleName(0, 'pc'), pl: sampleName(0, 'pl') }];
 
     return {
       style: $('reportStyle').value || 'classic',
       fontVariant: $('fontVariant').value || 'sansBoldItalic',
       styleText,
       system: getSystemName(),
-      scenario: $('scenarioTitle').value.trim() || (useSample ? 'シナリオ名' : ''),
+      scenario: $('scenarioTitle').value.trim() || (useSample ? t('dynamic.scenarioFallback') : ''),
       author: addAuthorSuffix($('authorText').value.trim()),
-      result: $('resultText').value.trim() || (useSample ? 'END A 両生還' : ''),
+      result: $('resultText').value.trim() || (useSample ? 'END A' : ''),
       date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder || getTodayString() : ''),
       hashtags: $('hashtagText').value.trim(),
       memo: $('memoText')?.value.trim() || '',
@@ -522,11 +540,11 @@
     if (!preview) return;
     try {
       await navigator.clipboard.writeText(preview.value);
-      alert('コピーしました。');
+      alert(t('dynamic.copyDone'));
     } catch (e) {
       preview.select();
       document.execCommand('copy');
-      alert('コピーしました。');
+      alert(t('dynamic.copyDone'));
     }
   }
 
@@ -535,7 +553,7 @@
     if (!preview) return;
     const text = preview.value.trim();
     if (!text) {
-      alert('投稿する卓報告文がありません。');
+      alert(t('dynamic.noPost'));
       return;
     }
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
@@ -553,7 +571,7 @@
   function updateCount() {
     const count = tweetLength($('tweetPreview').value);
     $('charCount').textContent = `${count} / 280`;
-    $('limitStatus').textContent = count <= 280 ? 'OK' : `${count - 280}字オーバー`;
+    $('limitStatus').textContent = count <= 280 ? 'OK' : t('dynamic.over', { count: count - 280 });
     $('limitStatus').className = count <= 280 ? 'count-ok' : 'count-bad';
   }
 
@@ -889,32 +907,30 @@
       payload = readPendingReportImport();
     } catch (error) {
       console.error(error);
-      if (confirm('卓ログトラッカーからの連携データを読み込めませんでした。\n破損している可能性があります。削除しますか？')) {
+      if (confirm(t('import.corrupt'))) {
         clearPendingReportImport();
       }
       return;
     }
     if (!payload?.items?.length) return;
 
-    const action = prompt([
-      '卓ログトラッカーから卓報告データを読み込みますか？',
-      '',
-      'シナリオ名、日付、GM、PL、PC情報をフォームに反映します。',
-      '反映後も内容は自由に編集できます。',
-      '',
-      '「読み込む」「あとで」「破棄」のいずれかを入力してください。'
-    ].join('\n'), '読み込む');
+    const importActions = {
+      load: t('import.load'),
+      later: t('import.later'),
+      discard: t('import.discard')
+    };
+    const action = prompt(t('import.prompt', importActions), importActions.load);
 
-    if (action === null || action === 'あとで') return;
-    if (action === '破棄') {
+    if (action === null || action.trim().toLocaleLowerCase() === importActions.later.toLocaleLowerCase()) return;
+    if (action.trim().toLocaleLowerCase() === importActions.discard.toLocaleLowerCase()) {
       clearPendingReportImport();
       return;
     }
-    if (action !== '読み込む') return;
+    if (action.trim().toLocaleLowerCase() !== importActions.load.toLocaleLowerCase()) return;
 
     applyReportImportItems(payload.items);
     clearPendingReportImport();
-    showToast('卓ログトラッカーから読み込みました');
+    showToast(t('dynamic.imported'));
   }
 
   function applyReportImportItems(items) {
@@ -988,6 +1004,12 @@
     bindEvents();
     renderPreview();
     handlePendingReportImport();
+    document.addEventListener('languagechange', () => {
+      populateReportStyles();
+      populateFontVariants();
+      renderFontToolbar();
+      renderPreview();
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);

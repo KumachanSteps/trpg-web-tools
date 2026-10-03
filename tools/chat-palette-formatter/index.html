@@ -6,7 +6,7 @@
   <title>CoCチャパレ整形ツールv2｜TRPG Webツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="css/palette-style.css" />
+  <link rel="stylesheet" href="css/palette-style.css?v=2.57" />
 
   <script async src="../../assets/js/analytics.js"></script>
 </head>
@@ -20,6 +20,8 @@
         rel="noopener noreferrer"
         aria-label="Xで使用報告を投稿する"
         title="Xで使用報告を投稿する"
+        data-i18n-aria-label="aria.x"
+        data-i18n-title="aria.x"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M18.36 3.72h2.74l-6.02 6.88 7.08 9.36h-5.54l-4.34-5.68-4.96 5.68H4.58l6.44-7.36-6.8-8.88h5.68l3.92 5.18 4.54-5.18Zm-.96 14.6h1.52L9.08 5.28H7.44L17.4 18.32Z"/>
@@ -32,17 +34,24 @@
             class="portal-link"
             href="https://kumachansteps.github.io/trpg-web-tools/"
             aria-label="TRPG Webツール観測所へ戻る"
+            data-i18n="nav.back"
+            data-i18n-aria-label="aria.back"
           >← TRPG Webツール観測所</a>
-          <span class="header-pill header-pill-cyan">いあきゃら駒JSON入力</span>
-          <span class="header-pill header-pill-violet">CoC 6版/7版</span>
-          <span class="header-pill header-pill-amber">出力後に編集可能</span>
+          <span class="header-pill header-pill-cyan" data-i18n="tag.json">いあきゃら駒JSON入力</span>
+          <span class="header-pill header-pill-violet" data-i18n="tag.coc">CoC 6版/7版</span>
+          <span class="header-pill header-pill-amber" data-i18n="tag.editable">出力後に編集可能</span>
+          <div class="language-switcher" role="group" aria-label="表示言語を選択" data-i18n-aria-label="language.select">
+            <button class="language-choice is-active" type="button" data-language="ja" aria-pressed="true">JP</button>
+            <button class="language-choice" type="button" data-language="en" aria-pressed="false">EN</button>
+            <button class="language-choice" type="button" data-language="ko" aria-pressed="false">KR</button>
+          </div>
         </div>
 
         <div class="header-title-area">
-          <h1 class="site-title">CoCチャパレ整形ツールv2</h1>
+          <h1 class="site-title" data-i18n="app.title">CoCチャパレ整形ツールv2</h1>
           <p class="site-description">
-            <span>チャットパレット本文、またはJSON形式のキャラクター駒データを貼り付けて、CoC 6版 / 7版向けに見やすく整形します。</span>
-            <span class="description-line-2"><span class="description-text">入力欄にデータを貼り付け、「分類して出力」ボタンで整形結果を表示します。</span><span class="header-version">v2.56 2026/09/06</span></span>
+            <span data-i18n="app.description">チャットパレット本文、またはJSON形式のキャラクター駒データを貼り付けて、CoC 6版 / 7版向けに見やすく整形します。</span>
+            <span class="description-line-2"><span class="description-text" data-i18n="app.instruction">入力欄にデータを貼り付け、「分類して出力」ボタンで整形結果を表示します。</span><span class="header-version">v2.57 2026/10/02</span></span>
           </p>
         </div>
       </div>
@@ -52,7 +61,7 @@
       元のチャットパレット、またはキャラクター駒JSONを貼り付けてください。形式とCoC 6版 / 7版は自動判定します。
     </div>
 
-    <section class="analysis-preview" id="analysisPreview" hidden aria-label="解析結果プレビュー">
+    <section class="analysis-preview" id="analysisPreview" hidden aria-label="解析結果プレビュー" data-i18n-aria-label="aria.analysis">
       <div class="analysis-line analysis-head">
         <span class="analysis-tag" id="apService">—</span>
         <span class="analysis-tag analysis-tag-edition" id="apEdition">—</span>
@@ -66,39 +75,40 @@
 
     <main class="main">
       <section class="container input-panel">
-        <h2>入力欄</h2>
+        <h2 data-i18n="input.title">入力欄</h2>
 
         <div class="text-area-wrap">
           <textarea
             id="input"
             placeholder="元のチャットパレット、またはキャラクター駒JSONデータをコピー＆ペーストしてください"
+            data-i18n-placeholder="input.placeholder"
           ></textarea>
         </div>
 
         <div class="input-action-row">
-          <div class="edition-control" aria-label="CoC版指定">
-            <span class="edition-label">版指定</span>
+          <div class="edition-control" aria-label="CoC版指定" data-i18n-aria-label="aria.edition">
+            <span class="edition-label" data-i18n="input.edition">版指定</span>
             <div class="edition-toggle">
-              <button type="button" class="active" data-edition="auto">自動</button>
-              <button type="button" data-edition="6e">6版</button>
-              <button type="button" data-edition="7e">7版</button>
+              <button type="button" class="active" data-edition="auto" data-i18n="input.auto">自動</button>
+              <button type="button" data-edition="6e" data-i18n="input.6e">6版</button>
+              <button type="button" data-edition="7e" data-i18n="input.7e">7版</button>
             </div>
           </div>
 
-          <button type="button" id="formatButton">分類して出力</button>
+          <button type="button" id="formatButton" data-i18n="button.format">分類して出力</button>
         </div>
       </section>
 
       <section class="container output-panel">
         <h2 class="output-panel-title">
-          <span>出力欄</span>
+          <span data-i18n="output.title">出力欄</span>
           <label class="command-add-toggle" for="commandAddToggle">
             <input type="checkbox" id="commandAddToggle" />
-            <span>コマンド追加</span>
+            <span data-i18n="output.addCommands">コマンド追加</span>
           </label>
           <label class="command-add-toggle" for="initialToCategoryToggle">
             <input type="checkbox" id="initialToCategoryToggle" />
-            <span>初期値もカテゴリ分け</span>
+            <span data-i18n="output.initialCategory">初期値もカテゴリ分け</span>
           </label>
         </h2>
 
@@ -106,34 +116,35 @@
           <textarea
             id="output"
             placeholder="整形後のテキストがここに表示されます（手動編集も可能です）"
+            data-i18n-placeholder="output.placeholder"
           ></textarea>
         </div>
 
         <div class="action-row">
-          <button type="button" id="copyButton">コピー</button>
-          <button type="button" class="btn-clear" id="clearButton">クリア</button>
+          <button type="button" id="copyButton" data-i18n="button.copy">コピー</button>
+          <button type="button" class="btn-clear" id="clearButton" data-i18n="button.clear">クリア</button>
         </div>
       </section>
     </main>
 
     <footer class="app-footer">
-  <h2>利用上の注意</h2>
-  <p>
+  <h2 data-i18n="footer.title">利用上の注意</h2>
+  <p data-i18n-html="footer.body1">
     本ツールは、開発者 <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。
     各TRPGシステム、シナリオ、外部サービスの利用規約・権利表記については、利用者自身でご確認ください。
   </p>
-  <p>
+  <p data-i18n-html="footer.body2">
     不具合報告や要望は、Xの <a class="footer-x-link" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。
     ただし、すべての報告や要望に返信・対応できるとは限りません。
   </p>
     </footer>
   </div>
 
-  <script src="js/i18n.js"></script>
+  <script src="js/i18n.js?v=2.57"></script>
   <script src="../../shared/coc-palette/parser.js"></script>
   <script src="../../shared/coc-palette/sources.js"></script>
   <script src="../../shared/coc-palette/schema.js"></script>
-  <script src="js/language.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/language.js?v=2.57"></script>
+  <script src="js/main.js?v=2.57"></script>
 </body>
 </html>

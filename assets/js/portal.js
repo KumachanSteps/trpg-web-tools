@@ -426,7 +426,27 @@ function renderTools() {
     return;
   }
 
-  filteredTools.forEach((tool, index) => {
+  // 公開中 → 公開準備中 → 開発中 → アイデア の順に並べ、状態が変わるところで行を改める
+  const statusOrder = ["available", "preparing", "production", "idea"];
+  const rank = (tool) => {
+    const position = statusOrder.indexOf(tool.status);
+    return position === -1 ? statusOrder.length : position;
+  };
+  const sortedTools = filteredTools
+    .map((tool, order) => ({ tool, order }))
+    .sort((a, b) => rank(a.tool) - rank(b.tool) || a.order - b.order)
+    .map(({ tool }) => tool);
+
+  let previousRank = null;
+  sortedTools.forEach((tool, index) => {
+    const currentRank = rank(tool);
+    if (previousRank !== null && currentRank !== previousRank) {
+      const rowBreak = document.createElement("div");
+      rowBreak.className = "tools-grid-break";
+      rowBreak.setAttribute("aria-hidden", "true");
+      toolsGrid.appendChild(rowBreak);
+    }
+    previousRank = currentRank;
     toolsGrid.appendChild(createToolCard(tool, index));
   });
 

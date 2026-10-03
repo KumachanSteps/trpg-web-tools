@@ -1,6 +1,50 @@
 (() => {
   'use strict';
 
+  const LANGUAGE_STORAGE_KEY = 'charaSabunLanguage';
+  const LANGUAGES = ['ja', 'en', 'ko'];
+  let currentLanguage = window.CHARA_SABUN_I18N?.[localStorage.getItem(LANGUAGE_STORAGE_KEY)]
+    ? localStorage.getItem(LANGUAGE_STORAGE_KEY)
+    : 'ja';
+
+  function t(key, vars = {}, fallback = '') {
+    if (!vars || typeof vars !== 'object') {
+      fallback = String(vars || '');
+      vars = {};
+    }
+    const value = window.CHARA_SABUN_I18N?.[currentLanguage]?.[key]
+      ?? window.CHARA_SABUN_I18N?.ja?.[key]
+      ?? fallback
+      ?? key;
+    return String(value).replace(/\{(\w+)\}/g, (_, name) => Object.prototype.hasOwnProperty.call(vars, name) ? vars[name] : `{${name}}`);
+  }
+
+  function applyTranslations() {
+    document.documentElement.lang = currentLanguage;
+    document.title = t('meta.title');
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+    for (const [attribute, datasetKey] of [['placeholder', 'i18nPlaceholder'], ['aria-label', 'i18nAriaLabel'], ['alt', 'i18nAlt'], ['content', 'i18nContent']]) {
+      document.querySelectorAll(`[data-${datasetKey.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}]`).forEach(el => el.setAttribute(attribute, t(el.dataset[datasetKey])));
+    }
+    els.languageButtons.forEach(button => {
+      const active = button.dataset.language === currentLanguage;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    renderSuggestions();
+    renderThumbnails();
+    updateLargePreview();
+  }
+
+  function setLanguage(language) {
+    if (!LANGUAGES.includes(language)) return;
+    currentLanguage = language;
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    applyTranslations();
+  }
+
   const SUGGESTIONS = [
     { label: '通常', value: '通常' },
     { label: '笑顔', value: '笑顔' },
@@ -26,6 +70,10 @@
     { label: '発狂', value: '発狂' },
     { label: '絶望', value: '絶望' }
   ];
+  const SUGGESTION_LABELS = {
+    en: { 通常:'Normal', 笑顔:'Smile', 怒り:'Angry', 泣き:'Crying', 驚き:'Surprised', 困惑:'Confused', 照れ:'Blushing', 焦り:'Flustered', 微笑:'Gentle smile', 真剣:'Serious', 悲哀:'Sorrow', 喜び:'Joy', 呆れ:'Exasperated', 疑問:'Questioning', 媚び:'Flattering', 不安:'Anxious', 目閉じ:'Eyes closed', ジト目:'Unimpressed', ウィンク:'Wink', 負傷:'Injured', 戦闘:'Battle', 発狂:'Madness', 絶望:'Despair' },
+    ko: { 通常:'기본', 笑顔:'미소', 怒り:'분노', 泣き:'울음', 驚き:'놀람', 困惑:'곤혹', 照れ:'부끄러움', 焦り:'초조', 微笑:'옅은 미소', 真剣:'진지함', 悲哀:'비애', 喜び:'기쁨', 呆れ:'어이없음', 疑問:'의문', 媚び:'아첨', 不安:'불안', 目閉じ:'눈 감음', ジト目:'못마땅한 눈', ウィンク:'윙크', 負傷:'부상', 戦闘:'전투', 発狂:'광기', 絶望:'절망' }
+  };
   const ROMAN_TO_JP = [
     ['tsuujou', '通常'], ['normal', '通常'], ['default', '通常'],
     ['egao', '笑顔'], ['smile', '笑顔'], ['ikari', '怒り'], ['angry', '怒り'],
@@ -65,11 +113,13 @@
     usagePanel: document.getElementById('usagePanel'),
     shortcutPanel: document.getElementById('shortcutPanel'),
     toastMessage: document.getElementById('toastMessage'),
+    languageButtons: document.querySelectorAll('[data-language]'),
   };
 
   function init() {
     els.numberToggle.checked = true;
     els.thumbList.setAttribute('tabindex', '0');
+    applyTranslations();
     renderSuggestions();
     bindEvents();
     updateOutput();
@@ -100,6 +150,8 @@
     els.exportZipBtn.addEventListener('click', exportZip);
     els.copyPaletteBtn.addEventListener('click', copyPalette);
     els.resetAllBtn.addEventListener('click', confirmAndClearAll);
+    els.languageButtons.forEach(button => button.addEventListener('click', () => setLanguage(button.dataset.language)));
+    els.suggestionChips.addEventListener('click', handleSuggestionClick);
 
     els.usageToggleBtn.addEventListener('click', () => toggleDrawer('usage'));
     els.shortcutToggleBtn.addEventListener('click', () => toggleDrawer('shortcut'));
@@ -143,7 +195,7 @@
       event.preventDefault();
       els.numberToggle.checked = !els.numberToggle.checked;
       refreshNames();
-      setStatus(`番号追加を${els.numberToggle.checked ? 'ON' : 'OFF'}にしました。`, 'ok');
+      setStatus(t('status.number', { state: els.numberToggle.checked ? 'ON' : 'OFF' }), 'ok');
     }
   }
 
@@ -187,24 +239,24 @@
   function renderSuggestions() {
     els.suggestionList.innerHTML = SUGGESTIONS.map((item) => `<option value="${escapeHtml(item.value)}"></option>`).join('');
     els.suggestionChips.innerHTML = SUGGESTIONS.map((item) => (
-      `<button type="button" class="chip" data-suggestion="${escapeHtml(item.value)}">${escapeHtml(item.label)}</button>`
+      `<button type="button" class="chip" data-suggestion="${escapeHtml(item.value)}">${escapeHtml(SUGGESTION_LABELS[currentLanguage]?.[item.value] || item.label)}</button>`
     )).join('');
+  }
 
-    els.suggestionChips.addEventListener('click', (event) => {
+  function handleSuggestionClick(event) {
       const button = event.target.closest('[data-suggestion]');
       if (!button) return;
       const activeItem = getActiveItem();
-      if (!activeItem) return setStatus('先に画像を選択してください。', 'warn');
+      if (!activeItem) return setStatus(t('status.selectFirst'), 'warn');
       activeItem.sabunName = button.dataset.suggestion;
       renderThumbnails();
       updateOutput();
       updatePreviewMeta();
-    });
   }
 
   function addFiles(fileList) {
     const imageFiles = Array.from(fileList || []).filter((file) => file.type.startsWith('image/'));
-    if (imageFiles.length === 0) return setStatus('画像ファイルが見つかりませんでした。', 'warn');
+    if (imageFiles.length === 0) return setStatus(t('status.noImages'), 'warn');
 
     const existingKeys = new Set(state.items.map((item) => `${item.file.name}_${item.file.size}_${item.file.lastModified}`));
     const newItems = imageFiles
@@ -226,14 +278,14 @@
     renderThumbnails();
     updateLargePreview();
     updateOutput();
-    setStatus(`${newItems.length}件の画像を追加しました。`, 'ok');
+    setStatus(t('status.added', { count: newItems.length }), 'ok');
     els.fileInput.value = '';
   }
 
   function inferSabunName(filename, index) {
     const base = removeExtension(filename).toLowerCase();
     const matched = ROMAN_TO_JP.find(([roman]) => base.includes(roman.toLowerCase()));
-    return matched ? matched[1] : (SUGGESTIONS[index]?.value || `差分${index + 1}`);
+    return matched ? matched[1] : (SUGGESTIONS[index]?.value || t('fallback.variant', { number: index + 1 }));
   }
 
   function refreshNames() {
@@ -246,7 +298,7 @@
     els.fileCountPill.textContent = `${state.items.length} files`;
 
     if (state.items.length === 0) {
-      els.thumbList.innerHTML = '<div class="empty-state">画像を追加すると、ここにサムネイルと差分名入力欄が表示されます。</div>';
+      els.thumbList.innerHTML = `<div class="empty-state">${escapeHtml(t('thumb.empty'))}</div>`;
       return;
     }
 
@@ -254,14 +306,14 @@
       const finalName = makeOutputFilename(item, index);
       const activeClass = item.id === state.activeId ? ' is-active' : '';
       return `
-        <div class="thumb-item${activeClass}" data-id="${item.id}" draggable="true" role="button" tabindex="-1" aria-label="${escapeHtml(item.file.name)}を選択">
-          <button type="button" class="thumb-button" tabindex="-1" aria-label="${escapeHtml(item.file.name)}をプレビュー">
+        <div class="thumb-item${activeClass}" data-id="${item.id}" draggable="true" role="button" tabindex="-1" aria-label="${escapeHtml(t('thumb.select', { name: item.file.name }))}">
+          <button type="button" class="thumb-button" tabindex="-1" aria-label="${escapeHtml(t('thumb.preview', { name: item.file.name }))}">
             <img src="${item.objectUrl}" alt="${escapeHtml(item.file.name)}" draggable="false" />
           </button>
           <div class="thumb-meta">
             <p class="source-name">${index + 1}. ${escapeHtml(item.file.name)}</p>
             <div class="thumb-controls">
-              <input type="text" value="${escapeHtml(item.sabunName)}" list="sabunSuggestions" aria-label="差分名" data-name-input />
+              <input type="text" value="${escapeHtml(item.sabunName)}" list="sabunSuggestions" aria-label="${escapeHtml(t('thumb.name'))}" data-name-input />
               <div class="final-name">${escapeHtml(finalName)}</div>
             </div>
           </div>
@@ -368,7 +420,7 @@
     updateLargePreview();
     updateOutput();
     scrollActiveThumbIntoView();
-    setStatus('サムネイルの順番を変更しました。', 'ok');
+    setStatus(t('status.reordered'), 'ok');
   }
 
   function renderActiveThumbnailState() {
@@ -388,7 +440,7 @@
       els.largePreview.classList.remove('has-image');
       els.previewImage.removeAttribute('src');
       els.activeNamePill.textContent = 'No image';
-      els.filenamePreview.textContent = '出力ファイル名：-';
+      els.filenamePreview.textContent = t('preview.filename', { name: '-' });
       return;
     }
     els.previewImage.src = activeItem.objectUrl;
@@ -400,8 +452,8 @@
     const activeItem = getActiveItem();
     if (!activeItem) return;
     const index = state.items.indexOf(activeItem);
-    els.activeNamePill.textContent = activeItem.sabunName || '未入力';
-    els.filenamePreview.textContent = `出力ファイル名：${makeOutputFilename(activeItem, index)}`;
+    els.activeNamePill.textContent = activeItem.sabunName || t('preview.unset');
+    els.filenamePreview.textContent = t('preview.filename', { name: makeOutputFilename(activeItem, index) });
   }
 
   function updateOutput() {
@@ -416,7 +468,7 @@
 
   async function exportZip() {
     if (state.items.length === 0) return;
-    if (typeof JSZip === 'undefined') return setStatus('ZIP出力ライブラリを読み込めませんでした。ネット接続を確認してください。', 'error');
+    if (typeof JSZip === 'undefined') return setStatus(t('status.zipLibrary'), 'error');
 
     const mainName = getMainName();
     const usedNames = new Map();
@@ -430,14 +482,14 @@
     zip.file('sabun-chatpalette.txt', els.paletteOutput.value);
 
     try {
-      setStatus('ZIPを生成しています。', 'warn');
+      setStatus(t('status.zipCreating'), 'warn');
       const blob = await zip.generateAsync({ type: 'blob' });
       downloadBlob(blob, `${mainName}_sabun.zip`);
-      setStatus('画像ZIPのダウンロードを開始しました。', 'ok');
-      showToast('画像ZIPのダウンロードが完了しました。');
+      setStatus(t('status.zipStarted'), 'ok');
+      showToast(t('status.zipDone'));
     } catch (error) {
       console.error(error);
-      setStatus('ZIP出力に失敗しました。', 'error');
+      setStatus(t('status.zipFailed'), 'error');
     }
   }
 
@@ -447,18 +499,18 @@
 
     try {
       await navigator.clipboard.writeText(text);
-      setStatus('@差分チャットパレットをコピーしました。', 'ok');
+      setStatus(t('status.copied'), 'ok');
     } catch (error) {
       els.paletteOutput.removeAttribute('readonly');
       els.paletteOutput.select();
       document.execCommand('copy');
       els.paletteOutput.setAttribute('readonly', 'readonly');
-      setStatus('コピーを実行しました。うまくいかない場合はテキスト欄から手動コピーしてください。', 'warn');
+      setStatus(t('status.copyManual'), 'warn');
     }
   }
 
   function confirmAndClearAll() {
-    const ok = window.confirm('すべての画像・差分名・入力内容をリセットします。よろしいですか？');
+    const ok = window.confirm(t('status.resetConfirm'));
     if (!ok) return;
     clearAll();
   }
@@ -473,7 +525,7 @@
     renderThumbnails();
     updateLargePreview();
     updateOutput();
-    setStatus('リセットしました。', 'ok');
+    setStatus(t('status.reset'), 'ok');
   }
 
   function getActiveItem() {
@@ -531,7 +583,7 @@
     URL.revokeObjectURL(url);
   }
 
-  function showToast(message = 'ダウンロードが完了しました。') {
+  function showToast(message = t('status.downloadDone')) {
     if (!els.toastMessage) return;
     els.toastMessage.textContent = message;
     els.toastMessage.setAttribute('aria-hidden', 'false');

@@ -54,10 +54,9 @@ function bindEvents() {
     themeToggleBtn.addEventListener('click', toggleTheme);
   }
 
-  const languageToggleBtn = $('languageToggleBtn') || $('langToggleBtn');
-  if (languageToggleBtn) {
-    languageToggleBtn.addEventListener('click', toggleLanguage);
-  }
+  document.querySelectorAll('[data-language]').forEach(button => {
+    button.addEventListener('click', () => setLanguage(button.dataset.language));
+  });
 
   const howToBtn = $('howToBtn');
   const howToPanelCloseBtn = $('howToPanelCloseBtn');
@@ -494,36 +493,18 @@ function initializeLanguageUI() {
   updateLanguageToggleLabel();
 }
 
-function toggleLanguage() {
-  if (typeof getCurrentLanguage !== 'function' || typeof setLanguage !== 'function') {
-    console.warn('Language functions are not loaded yet.');
-    return;
-  }
-
-  const current = getCurrentLanguage();
-  const next = current === 'ja' ? 'en' : 'ja';
-
-  setLanguage(next);
-}
-
 function updateLanguageToggleLabel() {
-  const button = $('languageToggleBtn') || $('langToggleBtn');
-  if (!button) return;
-
   let current = 'ja';
 
   if (typeof getCurrentLanguage === 'function') {
     current = getCurrentLanguage();
   }
 
-  button.textContent = 'JP/EN';
-
-  const label = current === 'ja'
-    ? tr('language.switchToEnglish', '英語表示に切替')
-    : tr('language.switchToJapanese', '日本語表示に切替');
-
-  button.setAttribute('title', label);
-  button.setAttribute('aria-label', label);
+  document.querySelectorAll('[data-language]').forEach(button => {
+    const active = button.dataset.language === current;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
 }
 
 /* =========================================================

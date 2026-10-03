@@ -50,6 +50,9 @@ body{min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Se
   background:rgba(29,155,240,.12);
   box-shadow:0 12px 24px rgba(29,155,240,.12);
 }
+.language-switcher{display:inline-flex;align-items:center;overflow:hidden;border:1px solid rgba(29,155,240,.32);border-radius:999px;background:rgba(255,255,255,.68);height:30px}
+.language-choice{width:36px;height:30px;padding:0;border:0;border-right:1px solid rgba(29,155,240,.24);border-radius:0;background:transparent;color:#0369a1;font:inherit;font-size:11px;font-weight:800;cursor:pointer;box-shadow:none}
+.language-choice:last-child{border-right:0}.language-choice.is-active{background:#38bdf8;color:#082f49}.language-choice:focus-visible{outline:2px solid #0ea5e9;outline-offset:-2px}
 .header-help-panels{
   position:relative;
   z-index:50;

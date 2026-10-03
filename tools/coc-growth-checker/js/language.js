@@ -1,5 +1,7 @@
 const LANGUAGE_STORAGE_KEY = "cocGrowthCheckerLanguage";
-let currentLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) || "ja";
+let currentLanguage = I18N[localStorage.getItem(LANGUAGE_STORAGE_KEY)]
+  ? localStorage.getItem(LANGUAGE_STORAGE_KEY)
+  : "ja";
 
 function getCurrentLanguage(){ return currentLanguage; }
 
@@ -21,6 +23,7 @@ function setLanguage(language){
 
 function applyTranslations(){
   document.documentElement.lang = currentLanguage;
+  document.title = t("meta.title", document.title);
   document.querySelectorAll("[data-i18n]").forEach(element => {
     if (element.dataset.dynamic === "true") return;
     const key = element.getAttribute("data-i18n");
@@ -35,11 +38,19 @@ function applyTranslations(){
     const key = element.getAttribute("data-i18n-placeholder");
     element.setAttribute("placeholder", t(key, element.getAttribute("placeholder") || ""));
   });
-  const languageToggle = document.getElementById("languageToggleBtn");
-  if (languageToggle) {
-    languageToggle.textContent = "JP/EN";
-    languageToggle.setAttribute("aria-label", currentLanguage === "ja" ? t("language.switchToEnglish") : t("language.switchToJapanese"));
-  }
+  document.querySelectorAll("[data-i18n-aria-label]").forEach(element => {
+    const key = element.getAttribute("data-i18n-aria-label");
+    element.setAttribute("aria-label", t(key, element.getAttribute("aria-label") || ""));
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(element => {
+    const key = element.getAttribute("data-i18n-title");
+    element.setAttribute("title", t(key, element.getAttribute("title") || ""));
+  });
+  document.querySelectorAll("[data-language]").forEach(button => {
+    const active = button.dataset.language === currentLanguage;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
   updateDynamicTexts?.();
 }
 
