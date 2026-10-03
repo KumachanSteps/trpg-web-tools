@@ -73,17 +73,17 @@
       <aside class="status-summary" aria-label="Changelog summary">
         <div class="summary-grid">
           <div class="summary-item">
-            <p class="summary-number">10</p>
+            <p id="availableCount" class="summary-number">12</p>
             <p class="summary-label">使用可能</p>
           </div>
 
           <div class="summary-item">
-            <p class="summary-number">6</p>
+            <p id="productionCount" class="summary-number">3</p>
             <p class="summary-label">開発中</p>
           </div>
 
           <div class="summary-item">
-            <p class="summary-number">6</p>
+            <p id="ideaCount" class="summary-number">10</p>
             <p class="summary-label">アイデア</p>
           </div>
         </div>
@@ -521,5 +521,22 @@
     </footer>
   </main>
 
+  <script>
+    // 件数はトップページと同じくツール一覧（assets/data/tools.json）から数える。上の数字は読み込めなかったときの表示
+    (function () {
+      fetch('./assets/data/tools.json', { cache: 'no-cache' })
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (tools) {
+          if (!Array.isArray(tools)) return;
+          var counts = {};
+          tools.forEach(function (tool) { if (tool && tool.status) counts[tool.status] = (counts[tool.status] || 0) + 1; });
+          [['availableCount', 'available'], ['productionCount', 'production'], ['ideaCount', 'idea']].forEach(function (pair) {
+            var el = document.getElementById(pair[0]);
+            if (el) el.textContent = String(counts[pair[1]] || 0);
+          });
+        })
+        .catch(function () {});
+    })();
+  </script>
 </body>
 </html>
