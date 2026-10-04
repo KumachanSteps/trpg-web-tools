@@ -839,6 +839,17 @@
 
     // 部屋の床
     floor.rooms.forEach(room => {
+      if (room.masked) {
+        // PL表示のGM専用の部屋：中を灰色で伏せる
+        c.fillStyle = theme.defaultFill || '#ffffff';
+        c.fillRect(room.x, room.y, room.w, room.h);
+        c.save();
+        c.globalAlpha = 0.38;
+        c.fillStyle = theme.arc;
+        c.fillRect(room.x, room.y, room.w, room.h);
+        c.restore();
+        return;
+      }
       c.fillStyle = roomFill(theme, room);
       c.fillRect(room.x, room.y, room.w, room.h);
       drawPattern(c, room, theme, lw);
@@ -896,7 +907,7 @@
 
     // ラベル
     if (!opts.hideLabels) {
-      floor.rooms.forEach(room => drawRoomLabel(c, room, theme, opts));
+      floor.rooms.forEach(room => { if (!room.masked) drawRoomLabel(c, room, theme, opts); });
       floor.texts.forEach(t => drawText(c, t, theme, opts));
     }
     return walls;

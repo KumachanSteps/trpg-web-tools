@@ -77,15 +77,24 @@
   }
 
   /* プレイヤー版では GM 専用のものを除く */
+  /*
+   * PL表示用の階。GM専用の部屋は壁の枠だけを残して中を伏せる（masked）。
+   * 中にある家具・文字・壁・入れ子の部屋・内側のドアは見せない。部屋の縁にあるドア・窓は残す。
+   */
   function visibleFloor(floor, playerView) {
     if (!playerView) return floor;
+    const hidden = floor.rooms.filter(r => r.gm);
+    const inside = (x, y) => hidden.some(r => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h);
+    const masked = r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, cat: r.cat, noWall: r.noWall, name: '', masked: true });
     return {
       ...floor,
-      rooms: floor.rooms.filter(r => !r.gm),
-      walls: floor.walls.filter(w => !w.gm),
-      openings: floor.openings.filter(o => !o.gm && o.kind !== 'secret'),
-      items: floor.items.filter(i => !i.gm),
-      texts: floor.texts.filter(t => !t.gm)
+      rooms: floor.rooms
+        .filter(r => r.gm || !hidden.some(g => rectContains(g, r)))
+        .map(r => (r.gm ? masked(r) : r)),
+      walls: floor.walls.filter(w => !w.gm && !inside((w.x1 + w.x2) / 2, (w.y1 + w.y2) / 2)),
+      openings: floor.openings.filter(o => !o.gm && o.kind !== 'secret' && !inside(o.o === 'h' ? o.x + o.len / 2 : o.x, o.o === 'h' ? o.y : o.y + o.len / 2)),
+      items: floor.items.filter(i => !i.gm && !inside(i.x + i.w / 2, i.y + i.h / 2)),
+      texts: floor.texts.filter(t => !t.gm && !inside(t.x, t.y))
     };
   }
 
