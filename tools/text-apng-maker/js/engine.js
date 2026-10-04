@@ -842,7 +842,10 @@
       duration: 0,
       posterTime: 0
     };
-    const t0 = Math.max(0, scene.startDelay || 0);
+    // 「登場あり」がオフなら登場の動き（装飾・背景の現れ、開始までの待ちも）をなくし、各ページを最初から全部描いた状態で出す。
+    // スクロールは流れること自体が登場なので対象外
+    const noIn = scene.inEnabled === false && !(scene.mode === 'trailer' && scene.reveal === 'scroll');
+    const t0 = noIn ? 0 : Math.max(0, scene.startDelay || 0);
     const deco = scene.deco || {};
     const decoAnimated = deco.type && deco.type !== 'none' && deco.anim !== 'none';
     const decoDur = decoAnimated ? Math.max(0.05, deco.dur || 0.4) : 0;
@@ -864,17 +867,19 @@
       const pageStart = cursor;
       // 帯・テープ・枠・ボックスが現れてから文字が出る
       const opensFirst = ['band', 'tape', 'frame', 'box'].includes(deco.type);
-      let lead = decoAnimated && opensFirst ? Math.min(0.3, decoDur * 0.6) : 0;
+      let lead = decoAnimated && opensFirst && !noIn ? Math.min(0.3, decoDur * 0.6) : 0;
       // 「中央に1文字ずつ」は、背景が現れきってから1文字目を出す
-      if (solo && pi === 0 && bgSynced) lead = Math.max(lead, bgDur);
+      if (solo && pi === 0 && bgSynced && !noIn) lead = Math.max(lead, bgDur);
       const textStart = pageStart + lead;
-      if (decoAnimated) pg.decoIn = { start: pageStart, dur: decoDur };
+      if (decoAnimated) pg.decoIn = { start: pageStart, dur: noIn ? 0 : decoDur };
       const pageGlyphs = glyphs.slice(page.first, page.last);
       const mainG = pageGlyphs.filter(g => g.group === 0);
       const subG = pageGlyphs.filter(g => g.group === 1);
       let inEnd = textStart;
 
-      if (scene.mode === 'trailer') {
+      if (noIn) {
+        pageGlyphs.forEach(g => { T.inStart[g.index] = textStart; T.inDur[g.index] = 0; T.inFx[g.index] = null; });
+      } else if (scene.mode === 'trailer') {
         const fx = inDef.level === 'block' || inDef.noTrailer ? IN_MAP.fade : inDef;
         const gDur = fx.id === 'typewriter' ? 0 : Math.max(0, scene.glyphDur ?? 0.4);
         const reveal = scene.reveal || 'char';
@@ -1077,7 +1082,8 @@
     const contentEnd = lastPage ? (Number.isFinite(lastPage.end) ? lastPage.end : lastPage.holdEnd) : t0;
     T.duration = Math.max(0.2, contentEnd + Math.max(0, scene.endDelay || 0));
     T.posterTime = T.pages.length ? Math.min(T.duration, T.pages[0].poster) : 0;
-    T.bgIn = { start: t0, dur: bgDur };
+    // 登場なしでは背景も最初から出しておく（0秒目から不透明度が最大になるよう、開始を手前にずらす）
+    T.bgIn = noIn ? { start: t0 - bgDur, dur: bgDur } : { start: t0, dur: bgDur };
     T.bgOut = lastPage && Number.isFinite(lastPage.end) ? { start: Math.max(t0, lastPage.end - bgDur), dur: bgDur } : null;
     // 各フェーズの区間（タイムライン表示用）
     // 退場しない最後のページは、終了まで「表示」として扱う

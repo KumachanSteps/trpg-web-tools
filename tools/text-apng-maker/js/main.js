@@ -12,7 +12,7 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.07';
+  const VERSION = 'v1.08';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const LANGS = ['ja', 'ko', 'en'];
@@ -87,6 +87,9 @@
     restartBtn: $('restartBtn'),
     loopPreview: $('loopPreviewInput'),
     loopPreviewText: $('loopPreviewText'),
+    entryToggle: $('entryToggle'),
+    entryInput: $('entryInput'),
+    entryText: $('entryText'),
     exitToggle: $('exitToggle'),
     exitInput: $('exitInput'),
     exitText: $('exitText'),
@@ -191,7 +194,7 @@
       // 分類のあるモードで、今は無いテンプレートの場面（以前のバージョンの保存データ）は最初のテンプレートから始める
       if (P.TEMPLATE_GROUPS[mode] && !templatePlace(mode, s.templateId)) {
         const fresh = P.defaultScene(mode, app.lang);
-        Object.assign(fresh, { width: s.width, height: s.height, sizePreset: s.sizePreset, outEnabled: s.outEnabled });
+        Object.assign(fresh, { width: s.width, height: s.height, sizePreset: s.sizePreset, inEnabled: s.inEnabled, outEnabled: s.outEnabled });
         s = fresh;
       }
       app.scenes[mode] = s;
@@ -261,6 +264,7 @@
       s.outDur = E.OUT_MAP.fade.dur;
     }
     s.outEnabled = s.outEnabled !== false;
+    s.inEnabled = s.inEnabled !== false;
     return s;
   }
 
@@ -873,6 +877,12 @@
     els.exitInput.disabled = scroll;
     els.exitToggle.classList.toggle('is-disabled', scroll);
     els.exitToggle.title = scroll ? d.exitToggleScroll : d.exitToggleTitle;
+    // 登場あり：スクロールは画面の外から流れてくること自体が登場なので使わない
+    els.entryText.textContent = d.entryToggle;
+    els.entryInput.checked = scroll || s.inEnabled !== false;
+    els.entryInput.disabled = scroll;
+    els.entryToggle.classList.toggle('is-disabled', scroll);
+    els.entryToggle.title = scroll ? d.entryToggleScroll : d.entryToggleTitle;
   }
 
   function renderFrame(now) {
@@ -1297,6 +1307,7 @@
       parts.push(L(FX_LABELS.in[s.inFx]));
     }
     const scroll = s.mode === 'trailer' && s.reveal === 'scroll';
+    if (!scroll && s.inEnabled === false) parts.push(d.fileNoEnter);
     if (!scroll && s.outEnabled === false) parts.push(d.fileNoExit);
     // 書き出しが「ずっとループ」なら、ファイル名の末尾に「_ループ」をつける
     if (app.exportOpts.loop === 'infinite') parts.push(d.fileLoop);
@@ -1434,7 +1445,7 @@
       setProgress(1, msg().done);
       toast(msg().done, 'success');
       track('export_apng', {
-        mode: s.mode, in_fx: s.inFx, out_fx: s.outEnabled === false ? 'none' : s.outFx, hold_fx: s.holdFx, fps, color_mode: usePalette ? 'palette' : 'full',
+        mode: s.mode, in_fx: s.inEnabled === false ? 'none' : s.inFx, out_fx: s.outEnabled === false ? 'none' : s.outFx, hold_fx: s.holdFx, fps, color_mode: usePalette ? 'palette' : 'full',
         frames: count, size_kb: Math.round(blob.size / 1024), over_limit: blob.size > SIZE_GUIDE_BYTES, seconds: Math.round((performance.now() - started) / 100) / 10
       });
       return true;
@@ -1699,6 +1710,7 @@
     els.restartBtn.addEventListener('click', restartPreview);
     els.loopPreview.checked = app.loopPreview;
     els.loopPreview.addEventListener('change', () => { app.loopPreview = els.loopPreview.checked; saveState(); });
+    els.entryInput.addEventListener('change', () => handleChange('inEnabled', els.entryInput.checked));
     els.exitInput.addEventListener('change', () => handleChange('outEnabled', els.exitInput.checked));
     els.scrub.addEventListener('input', () => {
       pause();

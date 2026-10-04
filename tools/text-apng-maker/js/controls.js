@@ -249,7 +249,7 @@
         { type: 'toggle', bind: 'cursor', when: s => s.reveal === 'char', label: T('入力カーソルを表示', 'Show a typing cursor', '입력 커서 표시') },
         { type: 'range', bind: 'pageGap', when: s => s.reveal !== 'scroll' && s.pageSplit, label: T('ページ間の空白', 'Gap between pages', '페이지 사이 공백'), min: 0, max: 3, step: 0.05, format: 's' }
       ] },
-      { type: 'section', when: s => !(isTrailer(s) && ['solo', 'spread'].includes(s.reveal)), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears', '한 글자가 나타나는 방식') : T('登場', 'In', '등장')), children: [
+      { type: 'section', when: s => !(isTrailer(s) && ['solo', 'spread'].includes(s.reveal)), toggle: s => (isTrailer(s) ? null : 'inEnabled'), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears', '한 글자가 나타나는 방식') : T('登場', 'In', '등장')), children: [
         { type: 'effects', phase: 'in' },
         { type: 'select', bind: 'inDir', when: s => Boolean(inDef(s).dirs), label: T('方向', 'Direction', '방향'), options: s => (inDef(s).dirs || []).map(d => ({ value: d, label: OPT.dirs[d] })) },
         { type: 'range', bind: 'inDur', when: s => notTrailer(s) && s.inFx !== 'typewriter', label: T('時間', 'Duration', '시간'), min: 0.05, max: 4, step: 0.05, format: 's' },
@@ -633,12 +633,16 @@
       const node = el('section', { class: 'control-section' }, [head, body]);
       this.add(() => { title.textContent = this.L(item.label); });
       if (item.toggle) {
+        // toggle は設定の名前、または場面ごとに名前（スイッチを出さないときは null）を返す関数
         const input = el('input', { type: 'checkbox', class: 'switch-input' });
         const sw = el('label', { class: 'switch' }, [input, el('span', { class: 'switch-track', 'aria-hidden': 'true' })]);
-        input.addEventListener('change', () => this.set(item.toggle, input.checked));
+        let path = typeof item.toggle === 'function' ? null : item.toggle;
+        input.addEventListener('change', () => { if (path) this.set(path, input.checked); });
         head.appendChild(sw);
         this.add(scene => {
-          const on = Boolean(getPath(scene, item.toggle));
+          path = typeof item.toggle === 'function' ? item.toggle(scene) : item.toggle;
+          sw.hidden = !path;
+          const on = !path || Boolean(getPath(scene, path));
           input.checked = on;
           input.setAttribute('aria-label', this.L(item.label));
           body.hidden = !on;
