@@ -983,6 +983,7 @@ body.is-dark .toast-action:hover { color: #ffffff; }
 .mini-bar button:hover { background: var(--blue-soft); color: var(--blue); }
 .mini-bar button.is-danger:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
 .mini-bar button:disabled { opacity: 0.35; cursor: not-allowed; background: transparent; color: var(--ink); }
+.mini-bar button.is-gm { color: var(--danger); }
 .mini-bar button.is-on { background: var(--blue-soft); color: var(--blue); }
 .mini-bar svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 

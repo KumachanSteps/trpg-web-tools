@@ -57,6 +57,8 @@
   const ICONS = {
     rotate: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7" /><path d="M20 4v5h-5" /></svg>',
     lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9.5" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>',
+    eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></svg>',
+    eyeOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /><path d="M4 4l16 16" /></svg>',
     unlock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9.5" rx="2" /><path d="M8 11V8a4 4 0 0 1 7.6-1.7" /></svg>'
   };
   const PRESET_COLORS = ['#fbf1df', '#e8f2e1', '#e1eef8', '#f6dedb', '#eee2f3', '#f1efea', '#e6e7ea', '#2e2230'];
@@ -210,7 +212,7 @@
       btn.setAttribute('aria-label', name);
     });
     els.miniBar.querySelectorAll('[data-mini]').forEach(btn => {
-      if (btn.dataset.mini === 'lock') return;
+      if (btn.dataset.mini === 'lock' || btn.dataset.mini === 'gm') return;
       btn.title = d.mini[btn.dataset.mini];
       btn.setAttribute('aria-label', d.mini[btn.dataset.mini]);
     });
@@ -1069,6 +1071,16 @@
     const onlyItems = types.size === 1 && types.has('item');
     const oneDoor = entries.length === 1 && entries[0].type === 'opening' && SWING_DOORS.has(entries[0].obj.kind);
     const rooms = entries.filter(e => e.type === 'room');
+    const gmBtn = els.miniBar.querySelector('[data-mini="gm"]');
+    const gmOnly = entries.every(e => e.obj.gm);
+    if (gmBtn.dataset.state !== String(gmOnly)) {
+      gmBtn.dataset.state = String(gmOnly);
+      gmBtn.innerHTML = gmOnly ? ICONS.eyeOff : ICONS.eye;
+    }
+    gmBtn.classList.toggle('is-gm', gmOnly);
+    gmBtn.title = t(gmOnly ? 'mini.gmOnly' : 'mini.plVisible');
+    gmBtn.setAttribute('aria-label', gmBtn.title);
+    gmBtn.setAttribute('aria-pressed', String(gmOnly));
     const lockBtn = els.miniBar.querySelector('[data-mini="lock"]');
     lockBtn.hidden = !rooms.length;
     if (rooms.length) {
@@ -1402,6 +1414,20 @@
         }
       }
     }));
+  }
+
+  // 目のボタン：PLにも見せる ⇔ GM専用
+  function toggleGm() {
+    const entries = selEntries();
+    if (!entries.length) return;
+    const gm = !entries.every(e => e.obj.gm);
+    change(() => entries.forEach(e => { if (gm) e.obj.gm = true; else delete e.obj.gm; }));
+    if (app.playerView) {
+      const f = M.visibleFloor(cur(), true);
+      app.sel = app.sel.filter(s => f[TYPE_KEY[s.type]].some(o => o.id === s.id));
+    }
+    renderProps(true);
+    requestRender();
   }
 
   function toggleLock() {
@@ -2500,7 +2526,7 @@
   }
 
   function selectionSig() {
-    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}`;
+    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}${(getObj(s.type, s.id) || {}).gm ? ':G' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}`;
   }
 
   function refreshProps() {
@@ -2949,6 +2975,7 @@
       if (action === 'flip') flipSelection();
       if (action === 'hinge') flipHinge();
       if (action === 'lock') toggleLock();
+      if (action === 'gm') toggleGm();
       if (action === 'duplicate') duplicateSelection();
       if (action === 'delete') deleteSelection();
     }));

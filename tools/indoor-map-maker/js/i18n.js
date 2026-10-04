@@ -26,7 +26,7 @@
       '3. 「ドア・窓」を選んで壁に近づけると吸い付きます。クリックで設置。ドアはカーソルのある側に開きます。',
       '4. 「家具・小物」はクリックで選んでから置くか、キャンバスへドラッグします。壁の近くでは背中を壁に向けてぴったり付きます。',
       '5. 選んだものは右のパネルで名前・大きさ・向き・色を変えられます。部屋を動かすと中の家具やドアも一緒に動きます（Altキーを押しながらで部屋だけ）。',
-      '6. 「GM専用」にした部屋・家具・隠し扉は、PL表示と PL用の書き出しには出ません。部屋ごとにPL向けの別名もつけられます。',
+      '6. 「GM専用」にした家具・隠し扉は、PL表示と PL用の書き出しには出ません。GM専用の部屋は壁の枠だけが見え、中は灰色で伏せられます（中の家具なども隠れます）。選んだときに出る目のボタンで切り替えられます。部屋ごとにPL向けの別名もつけられます。',
       '7. 「画像を書き出す」でPNGを保存します。1マス = 0.5m。ココフォリアなどのマップ画像にそのまま使えます。'
     ],
     helpNotes: [
@@ -174,7 +174,7 @@
       renamePrompt: '階の名前'
     },
     zoom: { in: '拡大', out: '縮小', fit: '全体を表示' },
-    mini: { lock: 'ロック (L)', unlock: 'ロック解除 (L)', rotate: '回転 (R)', flip: '反転 (F)', hinge: '吊元を反転', duplicate: '複製 (Cmd/Ctrl+D)', delete: '削除 (Delete)' },
+    mini: { plVisible: 'PLにも表示（クリックでGM専用）', gmOnly: 'GM専用（クリックでPLにも表示）', lock: 'ロック (L)', unlock: 'ロック解除 (L)', rotate: '回転 (R)', flip: '反転 (F)', hinge: '吊元を反転', duplicate: '複製 (Cmd/Ctrl+D)', delete: '削除 (Delete)' },
     tpl: {
       title: 'テンプレートから始める',
       intro: '実際の間取りの定石に沿って作った見取り図です。読み込んだあとで自由に編集できます。',
@@ -258,7 +258,7 @@
       '3. Pick a door or window and move it near a wall: it snaps into place. Click to place it. Doors swing toward the side your cursor is on.',
       '4. Click a furniture piece and then click the map, or drag it onto the canvas. Near a wall it turns its back to the wall and sits flush.',
       '5. Edit the name, size, direction and color of the selection in the right panel. Moving a room also moves the furniture and doors inside it (hold Alt to move the room alone).',
-      '6. Rooms, furniture and secret doors marked GM only are hidden in Player view and in player exports. Rooms can also have a separate player-facing name.',
+      '6. Furniture and secret doors marked GM only are hidden in Player view and in player exports. A GM-only room shows only its walls, with the inside grayed out and its contents hidden. Toggle it with the eye button that appears when you select something. Rooms can also have a separate player-facing name.',
       '7. Export saves a PNG. One cell is 0.5 m, so the image works directly as a map in VTTs such as CCFOLIA.'
     ],
     helpNotes: [
@@ -406,7 +406,7 @@
       renamePrompt: 'Floor name'
     },
     zoom: { in: 'Zoom in', out: 'Zoom out', fit: 'Fit to screen' },
-    mini: { lock: 'Lock (L)', unlock: 'Unlock (L)', rotate: 'Rotate (R)', flip: 'Mirror (F)', hinge: 'Flip hinge', duplicate: 'Duplicate (Cmd/Ctrl+D)', delete: 'Delete (Delete)' },
+    mini: { plVisible: 'Visible to players (click for GM only)', gmOnly: 'GM only (click to show players)', lock: 'Lock (L)', unlock: 'Unlock (L)', rotate: 'Rotate (R)', flip: 'Mirror (F)', hinge: 'Flip hinge', duplicate: 'Duplicate (Cmd/Ctrl+D)', delete: 'Delete (Delete)' },
     tpl: {
       title: 'Start from a template',
       intro: 'Floor plans built on real-world layout conventions. Edit anything after loading.',
@@ -490,7 +490,7 @@
       '3. 「문·창문」을 고르고 벽에 가까이 가져가면 달라붙습니다. 클릭하면 설치됩니다. 문은 커서가 있는 쪽으로 열립니다.',
       '4. 「가구·소품」은 클릭해서 고른 뒤 배치하거나 캔버스로 드래그합니다. 벽 근처에서는 등을 벽에 대고 딱 붙습니다.',
       '5. 선택한 것은 오른쪽 패널에서 이름·크기·방향·색을 바꿀 수 있습니다. 방을 옮기면 안의 가구와 문도 함께 움직입니다(Alt를 누르면 방만).',
-      '6. 「GM 전용」으로 한 방·가구·비밀문은 PL 보기와 PL용 이미지에 나오지 않습니다. 방마다 PL에게 보일 이름을 따로 붙일 수도 있습니다.',
+      '6. 「GM 전용」으로 한 가구·비밀문은 PL 보기와 PL용 이미지에 나오지 않습니다. GM 전용 방은 벽 테두리만 보이고 안은 회색으로 가려집니다(안의 가구 등도 숨겨집니다). 선택하면 나오는 눈 버튼으로 바꿀 수 있습니다. 방마다 PL에게 보일 이름을 따로 붙일 수도 있습니다.',
       '7. 「이미지 내보내기」로 PNG를 저장합니다. 1칸 = 0.5m. 코코포리아 등의 맵 이미지로 바로 쓸 수 있습니다.'
     ],
     helpNotes: [
@@ -638,7 +638,7 @@
       renamePrompt: '층 이름'
     },
     zoom: { in: '확대', out: '축소', fit: '전체 보기' },
-    mini: { lock: '잠금 (L)', unlock: '잠금 해제 (L)', rotate: '회전 (R)', flip: '반전 (F)', hinge: '경첩 반전', duplicate: '복제 (Cmd/Ctrl+D)', delete: '삭제 (Delete)' },
+    mini: { plVisible: 'PL에게도 표시(클릭하면 GM 전용)', gmOnly: 'GM 전용(클릭하면 PL에게도 표시)', lock: '잠금 (L)', unlock: '잠금 해제 (L)', rotate: '회전 (R)', flip: '반전 (F)', hinge: '경첩 반전', duplicate: '복제 (Cmd/Ctrl+D)', delete: '삭제 (Delete)' },
     tpl: {
       title: '템플릿에서 시작하기',
       intro: '실제 평면도의 정석에 맞춰 만든 도면입니다. 불러온 뒤 자유롭게 편집할 수 있습니다.',
