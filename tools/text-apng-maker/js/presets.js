@@ -59,6 +59,7 @@
     // ノイズ（グリッチ）で左右にずれる2色
     glitchColor: '#ff285a',
     glitchColor2: '#28e6ff',
+    inEnabled: true,
     outEnabled: true,
     outFx: 'fade',
     outDur: 0.6,
@@ -1130,7 +1131,7 @@
 
   // テンプレートはスタイル・動き・文章を初期値から組み立て直す（書き換えた文章を戻すのは呼び出し側）
   function applyTemplate(scene, template, lang) {
-    const keep = { width: scene.width, height: scene.height, sizePreset: scene.sizePreset, outEnabled: scene.outEnabled };
+    const keep = { width: scene.width, height: scene.height, sizePreset: scene.sizePreset, inEnabled: scene.inEnabled, outEnabled: scene.outEnabled };
     const fresh = deepMerge(deepMerge(clone(BASE), MODE_DEFAULTS[scene.mode] || {}), template.patch);
     Object.keys(scene).forEach(key => delete scene[key]);
     Object.assign(scene, fresh);
@@ -1140,6 +1141,8 @@
     scene.templateId = template.id;
     // 退場の有無は利用者の選択なので、テンプレートを切り替えても引き継ぐ
     if (!('outEnabled' in template.patch)) scene.outEnabled = keep.outEnabled !== false;
+    // 登場の有無も同じく引き継ぐ
+    if (!('inEnabled' in template.patch)) scene.inEnabled = keep.inEnabled !== false;
     scene.text = sampleText(template, 'text', lang);
     scene.subText = sampleText(template, 'subText', lang);
     return scene;
