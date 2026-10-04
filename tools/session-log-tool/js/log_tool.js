@@ -1,12 +1,12 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.99";
+  const APP_VERSION = "v1.100";
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
   const SYSTEM_OPTIONS = ["CoC 7版", "CoC 6版", "エモクロア", "マダミス"];
-  const ROLE_OPTIONS = ["PL", "KP", "GM", "DL"];
+  const ROLE_OPTIONS = ["PL", "KP", "SKP", "GM", "DL"];
   const STATUS_OPTIONS = ["新規", "継続", "完結", "中止", "予定"];
   const SURVIVAL_OPTIONS = ["", "生還", "ロスト", "全生還", "全ロスト", "継続", "不明"];
   const COLUMN_DEFAULT_WIDTHS = {
@@ -1138,7 +1138,7 @@
     ["date", "日付"],
     ["scenario", "シナリオ名"],
     ["system", "システム"],
-    ["role", "ロール (PL/KP/GM/DL)"],
+    ["role", "ロール (PL/KP/SKP/GM/DL)"],
     ["roleKp", "KP列 (Yes/No→KP)"],
     ["rolePl", "PL列 (Yes/No→PL)"],
     ["gm", "GM / KP / DL"],
@@ -1502,7 +1502,7 @@
     "coc7": "CoC 7版", "coc 7": "CoC 7版", "coc7版": "CoC 7版", "coc 7版": "CoC 7版"
   };
   const IMPORT_ROLE_MAP = {
-    "キーパー": "KP", "kp": "KP", "ゲームマスター": "GM", "マスター": "GM", "gm": "GM",
+    "キーパー": "KP", "kp": "KP", "skp": "SKP", "サブkp": "SKP", "サブキーパー": "SKP", "ゲームマスター": "GM", "マスター": "GM", "gm": "GM",
     "ディーラー": "DL", "dl": "DL", "プレイヤー": "PL", "pl": "PL"
   };
 
@@ -2681,7 +2681,7 @@
 
   function normalizeRoleGroup(role){
     const value = String(role || "").trim().toUpperCase();
-    if(["GM", "KP", "DL"].includes(value)) return "GM";
+    if(["GM", "KP", "SKP", "DL"].includes(value)) return "GM";
     if(value === "PL") return "PL";
     return value;
   }
