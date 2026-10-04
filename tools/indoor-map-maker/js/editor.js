@@ -1235,7 +1235,27 @@
 
   // 動かしてよいもの：ロック中の部屋は外す（中身も、別に選んだもの以外は動かさない）
   function movable(sel, alone) {
-    return withContents(sel.filter(s => !(s.type === 'room' && (getObj(s.type, s.id) || {}).locked)), alone);
+    const key = s => `${s.type}:${s.id}`;
+    const f = cur();
+    const isLocked = s => s.type === 'room' && Boolean((getObj(s.type, s.id) || {}).locked);
+    const top = sel.filter(s => !isLocked(s));
+    // 選んだ部屋ごとの中身（Alt のときは部屋だけ）
+    const carried = alone ? [] : top.filter(s => s.type === 'room').map(s => {
+      const room = getObj('room', s.id);
+      return { room, keys: new Set(roomContents(f, room).map(key)) };
+    });
+    // ロック中の部屋は動かさない。その中身も動かさないが、ロック中の部屋より小さい部屋（中のクローゼットなど）の
+    // 中身として運ぶときと、直接選んだものは動かす
+    const pinned = new Set();
+    f.rooms.filter(r => r.locked).forEach(r => {
+      pinned.add(`room:${r.id}`);
+      roomContents(f, r).forEach(c => {
+        const k = key(c);
+        if (!carried.some(cr => cr.keys.has(k) && cr.room.w * cr.room.h < r.w * r.h)) pinned.add(k);
+      });
+    });
+    const picked = new Set(top.map(key));
+    return withContents(top, alone).filter(s => !pinned.has(key(s)) || (picked.has(key(s)) && !isLocked(s)));
   }
 
   function translate(type, o, dx, dy) {
@@ -1365,16 +1385,20 @@
         [o.x1, o.y1] = pt(o.x1, o.y1).map(round2);
         [o.x2, o.y2] = pt(o.x2, o.y2).map(round2);
       } else if (type === 'opening') {
+        // 開き戸は side を画面の向き（横線は下、縦線は右が +）で、引き戸・折れ戸などは線に沿ったローカル座標（縦線は左が +）で描く
+        const swing = SWING_DOORS.has(o.kind);
+        const flipSide = () => { o.side = o.side === -1 ? 1 : -1; };
         if (o.o === 'h') {
-          // 横 → 縦：始点はそのまま上端に、下に開く扉は左に開く
+          // 横 → 縦：始点はそのまま上端に。下側は左側になる
           [o.x, o.y] = pt(o.x, o.y).map(round2);
           o.o = 'v';
-          o.side = o.side === -1 ? 1 : -1;
+          if (swing) flipSide();
         } else {
-          // 縦 → 横：下端が始点（左端）になるので吊元は反対側
+          // 縦 → 横：下端が始点（左端）になるので吊元は反対側。右側は下側に、左側は上側になる
           [o.x, o.y] = pt(o.x, o.y + o.len).map(round2);
           o.o = 'h';
           o.hinge = o.hinge ? 0 : 1;
+          if (!swing) flipSide();
         }
       }
     }));
