@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.01';
+  const VERSION = 'v1.02';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -54,6 +54,11 @@
     'stage', 'dumbbell_rack'
   ]);
   const SWING_DOORS = new Set(['door', 'door2', 'locked', 'secret', 'broken']);
+  const ICONS = {
+    rotate: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7" /><path d="M20 4v5h-5" /></svg>',
+    lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9.5" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>',
+    unlock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9.5" rx="2" /><path d="M8 11V8a4 4 0 0 1 7.6-1.7" /></svg>'
+  };
   const PRESET_COLORS = ['#fbf1df', '#e8f2e1', '#e1eef8', '#f6dedb', '#eee2f3', '#f1efea', '#e6e7ea', '#2e2230'];
 
   const $ = id => document.getElementById(id);
@@ -205,6 +210,7 @@
       btn.setAttribute('aria-label', name);
     });
     els.miniBar.querySelectorAll('[data-mini]').forEach(btn => {
+      if (btn.dataset.mini === 'lock') return;
       btn.title = d.mini[btn.dataset.mini];
       btn.setAttribute('aria-label', d.mini[btn.dataset.mini]);
     });
@@ -752,7 +758,16 @@
     const [{ type, obj }] = selEntries();
     if (!obj) return [];
     const out = [];
-    if (type === 'room' || type === 'item') {
+    if (type === 'room' && obj.locked) {
+      // ロック中の部屋は大きさを変えられない（名前の位置だけ動かせる）
+      if (!obj.hideLabel) {
+        const m = M.labelMetrics(ctx, obj, labelOpts(), theme());
+        if (m) {
+          const p = toScreen(m.box.x + m.box.w, m.box.y + m.box.h / 2);
+          out.push({ id: 'label', x: p.x + 9, y: p.y, cursor: 'move', round: true });
+        }
+      }
+    } else if (type === 'room' || type === 'item') {
       const a = toScreen(obj.x, obj.y), b = toScreen(obj.x + obj.w, obj.y + obj.h);
       const g = 5;
       const x1 = a.x - g, y1 = a.y - g, x2 = b.x + g, y2 = b.y + g, cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
@@ -884,6 +899,26 @@
         c.restore();
       });
     }
+    // ロック中の部屋に鍵の印
+    f.rooms.forEach(r => {
+      if (!r.locked || (app.playerView && r.gm)) return;
+      const s = Math.min(0.55, r.w * 0.2, r.h * 0.2);
+      const x = r.x + 0.22, y = r.y + 0.22;
+      c.save();
+      c.strokeStyle = th.label;
+      c.fillStyle = th.label;
+      c.globalAlpha = 0.75;
+      c.lineWidth = s * 0.14;
+      c.beginPath();
+      c.arc(x + s / 2, y + s * 0.45, s * 0.26, Math.PI, 0);
+      c.lineTo(x + s * 0.76, y + s * 0.55);
+      c.moveTo(x + s * 0.24, y + s * 0.55);
+      c.lineTo(x + s * 0.24, y + s * 0.45);
+      c.stroke();
+      M.drawHelpers.rr(c, x + s * 0.1, y + s * 0.55, s * 0.8, s * 0.6, s * 0.1);
+      c.fill();
+      c.restore();
+    });
     // ホバー
     if (ui.hover && !ui.drag && app.tool === 'select' && !isSelected(ui.hover.type, ui.hover.id)) {
       const obj = getObj(ui.hover.type, ui.hover.id);
@@ -1033,7 +1068,23 @@
     const types = new Set(entries.map(e => e.type));
     const onlyItems = types.size === 1 && types.has('item');
     const oneDoor = entries.length === 1 && entries[0].type === 'opening' && SWING_DOORS.has(entries[0].obj.kind);
-    els.miniBar.querySelector('[data-mini="rotate"]').hidden = !onlyItems;
+    const rooms = entries.filter(e => e.type === 'room');
+    const lockBtn = els.miniBar.querySelector('[data-mini="lock"]');
+    lockBtn.hidden = !rooms.length;
+    if (rooms.length) {
+      const locked = rooms.every(e => e.obj.locked);
+      const label = t(locked ? 'mini.unlock' : 'mini.lock');
+      if (lockBtn.dataset.state !== String(locked)) {
+        lockBtn.dataset.state = String(locked);
+        lockBtn.innerHTML = locked ? ICONS.lock : ICONS.unlock;
+      }
+      lockBtn.classList.toggle('is-on', locked);
+      lockBtn.title = label;
+      lockBtn.setAttribute('aria-label', label);
+    }
+    const rotateBtn = els.miniBar.querySelector('[data-mini="rotate"]');
+    rotateBtn.hidden = !(onlyItems || rooms.length);
+    rotateBtn.disabled = rooms.length > 0 && rooms.every(e => e.obj.locked);
     els.miniBar.querySelector('[data-mini="flip"]').hidden = !(onlyItems || oneDoor);
     els.miniBar.querySelector('[data-mini="hinge"]').hidden = !oneDoor;
     const a = toScreen(box.x + box.w / 2, box.y);
@@ -1132,7 +1183,9 @@
   }
 
   function deleteSelection() {
-    const entries = selEntries();
+    const all = selEntries();
+    const entries = all.filter(e => !(e.type === 'room' && e.obj.locked));
+    if (entries.length < all.length) toast(t('msg.lockedSkip'), 'warning', 3200);
     if (!entries.length) return;
     const hadRoom = entries.some(e => e.type === 'room');
     change(() => {
@@ -1180,6 +1233,11 @@
     return out;
   }
 
+  // 動かしてよいもの：ロック中の部屋は外す（中身も、別に選んだもの以外は動かさない）
+  function movable(sel, alone) {
+    return withContents(sel.filter(s => !(s.type === 'room' && (getObj(s.type, s.id) || {}).locked)), alone);
+  }
+
   function translate(type, o, dx, dy) {
     if (type === 'wall') { o.x1 += dx; o.x2 += dx; o.y1 += dy; o.y2 += dy; } else { o.x += dx; o.y += dy; }
   }
@@ -1188,6 +1246,7 @@
     return entries.map(({ type, id }) => {
       const copy = M.clone(getObj(type, id));
       copy.id = M.uid(type[0]);
+      delete copy.locked;
       translate(type, copy, dx, dy);
       return { type, obj: copy, src: id };
     });
@@ -1234,6 +1293,7 @@
     change(() => cb.entries.forEach(e => {
       const copy = M.clone(e.obj);
       copy.id = M.uid(e.type[0]);
+      delete copy.locked;
       translate(e.type, copy, dx, dy);
       addObject(e.type, copy);
       if (e.top) added.push({ type: e.type, id: copy.id });
@@ -1256,11 +1316,76 @@
 
   function rotateSelection() {
     const entries = selEntries();
+    if (entries.some(e => e.type === 'room')) {
+      rotateRooms(entries);
+      return;
+    }
     if (entries.some(e => e.type === 'item')) {
       change(() => entries.forEach(e => { if (e.type === 'item') rotateItem(e.obj, 90); }));
     } else if (entries.length === 1 && entries[0].type === 'opening') {
       change(() => { entries[0].obj.hinge = entries[0].obj.hinge ? 0 : 1; });
     }
+  }
+
+  /* 部屋を中身（家具・ドア/窓・文字・壁・入れ子の部屋）ごと時計回りに90°回す */
+  function rotateRooms(entries) {
+    const top = entries.filter(e => !(e.type === 'room' && e.obj.locked));
+    const rooms = top.filter(e => e.type === 'room').map(e => e.obj);
+    if (!rooms.length) { toast(t('msg.locked'), 'warning', 3200); return; }
+    if (top.length < entries.length) toast(t('msg.lockedSkip'), 'warning', 3200);
+    const x1 = Math.min(...rooms.map(r => r.x)), y1 = Math.min(...rooms.map(r => r.y));
+    const x2 = Math.max(...rooms.map(r => r.x + r.w)), y2 = Math.max(...rooms.map(r => r.y + r.h));
+    const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+    // 回したあとも部屋がマス目に乗るように、左上を整数にそろえる
+    const dx = Math.round(cx + cy - y2) - (cx + cy - y2);
+    const dy = Math.round(cy - cx + x1) - (cy - cx + x1);
+    const pt = (x, y) => [cx + cy - y + dx, cy - cx + x + dy];
+    const rect = o => {
+      const [ax, ay] = pt(o.x, o.y + o.h);
+      const w = o.w;
+      o.x = round2(ax); o.y = round2(ay); o.w = o.h; o.h = w;
+    };
+    change(() => movable(top.map(e => ({ type: e.type, id: e.id })), false).forEach(({ type, id }) => {
+      const o = getObj(type, id);
+      if (type === 'room') {
+        rect(o);
+        if (o.lx || o.ly) {
+          // 名前のずらし量も一緒に回す
+          const lx = round2(-(o.ly || 0)), ly = round2(o.lx || 0);
+          delete o.lx; delete o.ly;
+          if (lx) o.lx = lx;
+          if (ly) o.ly = ly;
+        }
+      } else if (type === 'item') {
+        rect(o);
+        o.rot = ((o.rot || 0) + 90) % 360;
+      } else if (type === 'text') {
+        [o.x, o.y] = pt(o.x, o.y).map(round2);
+      } else if (type === 'wall') {
+        [o.x1, o.y1] = pt(o.x1, o.y1).map(round2);
+        [o.x2, o.y2] = pt(o.x2, o.y2).map(round2);
+      } else if (type === 'opening') {
+        if (o.o === 'h') {
+          // 横 → 縦：始点はそのまま上端に、下に開く扉は左に開く
+          [o.x, o.y] = pt(o.x, o.y).map(round2);
+          o.o = 'v';
+          o.side = o.side === -1 ? 1 : -1;
+        } else {
+          // 縦 → 横：下端が始点（左端）になるので吊元は反対側
+          [o.x, o.y] = pt(o.x, o.y + o.len).map(round2);
+          o.o = 'h';
+          o.hinge = o.hinge ? 0 : 1;
+        }
+      }
+    }));
+  }
+
+  function toggleLock() {
+    const rooms = selEntries().filter(e => e.type === 'room');
+    if (!rooms.length) return;
+    const lock = !rooms.every(e => e.obj.locked);
+    change(() => rooms.forEach(e => { if (lock) e.obj.locked = true; else delete e.obj.locked; }));
+    renderProps(true);
   }
 
   function flipSelection() {
@@ -1292,8 +1417,8 @@
 
   // 矢印キーでの移動（続けて押した分は1回の「元に戻す」にまとめる）
   function nudge(dx, dy, big) {
-    const entries = withContents(app.sel, false);
-    if (!entries.length) return;
+    const entries = movable(app.sel, false);
+    if (!entries.length) { if (app.sel.some(s => s.type === 'room')) toast(t('msg.locked'), 'warning', 2400); return; }
     const hasRoom = entries.some(e => e.type === 'room');
     const step = hasRoom ? (big ? 4 : 1) : (big ? 1 : 0.25);
     if (!ui.nudgeBefore) ui.nudgeBefore = snapshot();
@@ -1371,7 +1496,12 @@
           return;
         }
         if (!isSelected(hit.type, hit.id)) setSelection([hit]);
-        const entries = withContents(app.sel, event.altKey).map(s => ({ ...s, orig: M.clone(getObj(s.type, s.id)) }));
+        if (hit.type === 'room' && getObj('room', hit.id).locked) {
+          // ロック中の部屋：選ぶだけ。ドラッグすると範囲選択になる
+          startDrag({ mode: 'marquee', start: w, add: false, base: app.sel.slice(), before: null });
+          return;
+        }
+        const entries = movable(app.sel, event.altKey).map(s => ({ ...s, orig: M.clone(getObj(s.type, s.id)) }));
         startDrag({ mode: 'move', start: w, sx, sy, entries, alt: event.altKey, step: entries.some(e => e.type === 'room') ? 1 : 0.25 });
         return;
       }
@@ -1433,6 +1563,7 @@
   function eraseAt(w, allowRooms) {
     const hit = hitTest(w.x, w.y, { skipRooms: !allowRooms });
     if (!hit) return;
+    if (hit.type === 'room' && getObj('room', hit.id).locked) { toast(t('msg.lockedSkip'), 'warning', 2400); return; }
     const key = TYPE_KEY[hit.type];
     cur()[key] = cur()[key].filter(o => o.id !== hit.id);
     app.sel = app.sel.filter(s => s.id !== hit.id);
@@ -1843,6 +1974,7 @@
       return;
     }
     if (event.code === 'KeyF') { flipSelection(); return; }
+    if (event.code === 'KeyL') { toggleLock(); return; }
     if (event.code === 'KeyG') { app.grid = !app.grid; savePrefs(); renderProps(true); requestRender(); return; }
     if (event.code === 'KeyP') { setPlayerView(!app.playerView); return; }
     if (event.key === '0') { fitView(); return; }
@@ -2251,7 +2383,7 @@
   }
 
   function numberField(label, get, set, opts = {}) {
-    const input = h('input', { class: 'number-input', type: 'number', step: opts.step || 0.25, min: opts.min != null ? opts.min : null, max: opts.max != null ? opts.max : null, inputmode: 'decimal' });
+    const input = h('input', { class: 'number-input', type: 'number', step: opts.step || 0.25, min: opts.min != null ? opts.min : null, max: opts.max != null ? opts.max : null, inputmode: 'decimal', disabled: opts.disabled });
     input.value = fmt(get());
     liveInput(input, v => {
       const n = Number(v);
@@ -2344,7 +2476,7 @@
   }
 
   function selectionSig() {
-    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}`;
+    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}`;
   }
 
   function refreshProps() {
@@ -2384,6 +2516,15 @@
     return h('div', { class: 'props-head' }, h('div', null, h('p', { class: 'panel-kicker' }, kicker), h('p', { class: 'props-title' }, title)), sub ? h('span', { class: 'props-sub' }, sub) : null);
   }
 
+  // 見出しの右上に並べる小さなアイコンボタン
+  function headTools(buttons) {
+    return h('div', { class: 'props-tools' }, buttons.map(b => {
+      const btn = h('button', { type: 'button', class: `props-tool${b.on ? ' is-on' : ''}`, title: b.label, 'aria-label': b.label, 'aria-pressed': b.pressed == null ? null : String(b.pressed), disabled: b.disabled, onclick: b.run });
+      btn.innerHTML = b.icon;
+      return btn;
+    }));
+  }
+
   const cellsSuffix = () => t('props.cells');
   const orderButtons = () => [{ label: t('props.front'), run: () => reorder(true) }, { label: t('props.back'), run: () => reorder(false) }];
   const commonButtons = () => [{ label: t('props.duplicate'), run: duplicateSelection }, { label: t('props.delete'), run: deleteSelection, danger: true }];
@@ -2411,6 +2552,10 @@
   function roomProps(body, r) {
     const cats = M.CATEGORIES.map(c => ({ value: c.id, label: pick(c.name) }));
     const titleNode = head(t('props.room'), r.name || '—');
+    titleNode.appendChild(headTools([
+      { icon: r.locked ? ICONS.lock : ICONS.unlock, label: t(r.locked ? 'mini.unlock' : 'mini.lock'), on: r.locked, pressed: Boolean(r.locked), run: toggleLock },
+      { icon: ICONS.rotate, label: t('mini.rotate'), disabled: r.locked, run: rotateSelection }
+    ]));
     body.appendChild(titleNode);
     const title = titleNode.querySelector('.props-title');
     body.appendChild(textField(t('props.name'), () => r.name, v => { r.name = v; title.textContent = v || '—'; }, { focus: 'name' }));
@@ -2420,12 +2565,14 @@
       const area = M.roomArea(r);
       return [[`${t('props.area')} `, `${meters(r.w, r.h)} · ${fmt(area)}㎡ · ${(area / M.TATAMI_M2).toFixed(1)}${app.lang === 'en' ? ' jo' : app.lang === 'ko' ? '첩' : '帖'}`]];
     }));
+    const lockedOpt = { step: 1, suffix: cellsSuffix(), disabled: r.locked };
     body.appendChild(h('div', { class: 'props-grid' },
-      numberField(t('props.x'), () => r.x, v => { r.x = Math.round(v); }, { step: 1, suffix: cellsSuffix() }),
-      numberField(t('props.y'), () => r.y, v => { r.y = Math.round(v); }, { step: 1, suffix: cellsSuffix() }),
-      numberField(t('props.w'), () => r.w, v => { r.w = Math.max(1, Math.round(v)); }, { step: 1, min: 1, suffix: cellsSuffix() }),
-      numberField(t('props.h'), () => r.h, v => { r.h = Math.max(1, Math.round(v)); }, { step: 1, min: 1, suffix: cellsSuffix() })
+      numberField(t('props.x'), () => r.x, v => { r.x = Math.round(v); }, lockedOpt),
+      numberField(t('props.y'), () => r.y, v => { r.y = Math.round(v); }, lockedOpt),
+      numberField(t('props.w'), () => r.w, v => { r.w = Math.max(1, Math.round(v)); }, { ...lockedOpt, min: 1 }),
+      numberField(t('props.h'), () => r.h, v => { r.h = Math.max(1, Math.round(v)); }, { ...lockedOpt, min: 1 })
     ));
+    if (r.locked) body.appendChild(h('p', { class: 'props-tip' }, t('props.lockedNote')));
     body.appendChild(colorField(t('props.color'), () => r.color || '', v => { r.color = v || undefined; if (!v) delete r.color; }, M.roomFill(theme(), { cat: r.cat })));
     body.appendChild(toggleField(t('props.gmOnly'), () => r.gm, v => { r.gm = v || undefined; if (!v) delete r.gm; }));
     body.appendChild(toggleField(t('props.hideLabel'), () => r.hideLabel, v => { r.hideLabel = v || undefined; if (!v) delete r.hideLabel; }));
@@ -2500,7 +2647,14 @@
   function multiProps(body, entries) {
     body.appendChild(head(t('props.multi', { n: entries.length }), ''));
     body.appendChild(toggleField(t('props.gmOnly'), () => entries.every(e => e.obj.gm), v => entries.forEach(e => { if (v) e.obj.gm = true; else delete e.obj.gm; })));
-    if (entries.some(e => e.type === 'item')) {
+    const roomsSel = entries.filter(e => e.type === 'room');
+    if (roomsSel.length) {
+      const locked = roomsSel.every(e => e.obj.locked);
+      body.appendChild(actions([
+        { label: t(locked ? 'mini.unlock' : 'mini.lock'), run: toggleLock },
+        { label: t('mini.rotate'), run: rotateSelection }
+      ]));
+    } else if (entries.some(e => e.type === 'item')) {
       body.appendChild(actions([
         { label: t('mini.rotate'), run: rotateSelection },
         { label: t('mini.flip'), run: flipSelection }
@@ -2770,6 +2924,7 @@
       if (action === 'rotate') rotateSelection();
       if (action === 'flip') flipSelection();
       if (action === 'hinge') flipHinge();
+      if (action === 'lock') toggleLock();
       if (action === 'duplicate') duplicateSelection();
       if (action === 'delete') deleteSelection();
     }));

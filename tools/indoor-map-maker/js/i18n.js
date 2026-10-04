@@ -41,7 +41,8 @@
       ['W', '壁ツール（Shiftで斜めの壁）'],
       ['D / N', 'ドア / 窓ツール'],
       ['T / E', '文字 / 消しゴム'],
-      ['R / F', '選んだものを回転 / 左右反転（ドアは開く向きの反転）'],
+      ['R / F', '選んだものを回転（部屋は中身ごと）/ 左右反転（ドアは開く向きの反転）'],
+      ['L', '選んだ部屋をロック / ロック解除'],
       ['Delete', '選んだものを削除'],
       ['矢印キー', '少しずつ動かす（Shiftで大きく）'],
       ['Cmd/Ctrl + Z', '元に戻す（Shiftを足すとやり直し）'],
@@ -138,6 +139,7 @@
       colorAuto: '自動',
       gmOnly: 'GM専用（PLには見せない）',
       hideLabel: '名前を表示しない',
+      lockedNote: 'ロック中は位置と大きさを変えられません。中の家具やドアは編集できます。',
       noWall: '壁を作らない（LDKのゆるい区切りなど）',
       note: 'GMメモ',
       notePh: '手がかり・判定・イベントなど（画像には出ません）',
@@ -172,7 +174,7 @@
       renamePrompt: '階の名前'
     },
     zoom: { in: '拡大', out: '縮小', fit: '全体を表示' },
-    mini: { rotate: '回転 (R)', flip: '反転 (F)', hinge: '吊元を反転', duplicate: '複製 (Cmd/Ctrl+D)', delete: '削除 (Delete)' },
+    mini: { lock: 'ロック (L)', unlock: 'ロック解除 (L)', rotate: '回転 (R)', flip: '反転 (F)', hinge: '吊元を反転', duplicate: '複製 (Cmd/Ctrl+D)', delete: '削除 (Delete)' },
     tpl: {
       title: 'テンプレートから始める',
       intro: '実際の間取りの定石に沿って作った見取り図です。読み込んだあとで自由に編集できます。',
@@ -217,6 +219,8 @@
       pasted: '{n}個を貼り付けました',
       storageFull: 'ブラウザへの自動保存に失敗しました。「保存」でファイルに書き出してください。',
       noUndo: 'これ以上戻せません',
+      locked: 'この部屋はロック中です。動かすにはロックを解除してください',
+      lockedSkip: 'ロック中の部屋はそのままにしました',
       untitled: '無題のマップ'
     },
     newRoom: '部屋',
@@ -269,7 +273,8 @@
       ['W', 'Wall tool (Shift for diagonal walls)'],
       ['D / N', 'Door / window tool'],
       ['T / E', 'Text / eraser'],
-      ['R / F', 'Rotate / mirror the selection (flips the swing of doors)'],
+      ['R / F', 'Rotate (rooms turn with everything inside) / mirror the selection (flips the swing of doors)'],
+      ['L', 'Lock / unlock the selected rooms'],
       ['Delete', 'Delete the selection'],
       ['Arrow keys', 'Nudge (Shift for bigger steps)'],
       ['Cmd/Ctrl + Z', 'Undo (add Shift to redo)'],
@@ -366,6 +371,7 @@
       colorAuto: 'Auto',
       gmOnly: 'GM only (hidden from players)',
       hideLabel: 'Hide the name',
+      lockedNote: 'While locked, the position and size stay fixed. Furniture and doors inside can still be edited.',
       noWall: 'No walls (open plan zones)',
       note: 'GM note',
       notePh: 'Clues, checks, events… (not printed)',
@@ -400,7 +406,7 @@
       renamePrompt: 'Floor name'
     },
     zoom: { in: 'Zoom in', out: 'Zoom out', fit: 'Fit to screen' },
-    mini: { rotate: 'Rotate (R)', flip: 'Mirror (F)', hinge: 'Flip hinge', duplicate: 'Duplicate (Cmd/Ctrl+D)', delete: 'Delete (Delete)' },
+    mini: { lock: 'Lock (L)', unlock: 'Unlock (L)', rotate: 'Rotate (R)', flip: 'Mirror (F)', hinge: 'Flip hinge', duplicate: 'Duplicate (Cmd/Ctrl+D)', delete: 'Delete (Delete)' },
     tpl: {
       title: 'Start from a template',
       intro: 'Floor plans built on real-world layout conventions. Edit anything after loading.',
@@ -445,6 +451,8 @@
       pasted: 'Pasted {n}',
       storageFull: 'Autosave failed in this browser. Use Save to download a file.',
       noUndo: 'Nothing to undo',
+      locked: 'This room is locked. Unlock it to move it.',
+      lockedSkip: 'Locked rooms were left as they are',
       untitled: 'Untitled map'
     },
     newRoom: 'Room',
@@ -497,7 +505,8 @@
       ['W', '벽 도구(Shift로 대각선 벽)'],
       ['D / N', '문 / 창문 도구'],
       ['T / E', '글자 / 지우개'],
-      ['R / F', '선택한 것을 회전 / 좌우 반전(문은 여는 방향 반전)'],
+      ['R / F', '선택한 것을 회전(방은 안의 것과 함께) / 좌우 반전(문은 여는 방향 반전)'],
+      ['L', '선택한 방 잠금 / 잠금 해제'],
       ['Delete', '선택한 것을 삭제'],
       ['방향키', '조금씩 이동(Shift로 크게)'],
       ['Cmd/Ctrl + Z', '실행 취소(Shift를 더하면 다시 실행)'],
@@ -594,6 +603,7 @@
       colorAuto: '자동',
       gmOnly: 'GM 전용(PL에게 숨김)',
       hideLabel: '이름 숨기기',
+      lockedNote: '잠겨 있는 동안 위치와 크기는 바꿀 수 없습니다. 안의 가구와 문은 편집할 수 있습니다.',
       noWall: '벽 만들지 않기(LDK의 느슨한 구분 등)',
       note: 'GM 메모',
       notePh: '단서·판정·이벤트 등(이미지에는 나오지 않음)',
@@ -628,7 +638,7 @@
       renamePrompt: '층 이름'
     },
     zoom: { in: '확대', out: '축소', fit: '전체 보기' },
-    mini: { rotate: '회전 (R)', flip: '반전 (F)', hinge: '경첩 반전', duplicate: '복제 (Cmd/Ctrl+D)', delete: '삭제 (Delete)' },
+    mini: { lock: '잠금 (L)', unlock: '잠금 해제 (L)', rotate: '회전 (R)', flip: '반전 (F)', hinge: '경첩 반전', duplicate: '복제 (Cmd/Ctrl+D)', delete: '삭제 (Delete)' },
     tpl: {
       title: '템플릿에서 시작하기',
       intro: '실제 평면도의 정석에 맞춰 만든 도면입니다. 불러온 뒤 자유롭게 편집할 수 있습니다.',
@@ -673,6 +683,8 @@
       pasted: '{n}개를 붙여넣었습니다',
       storageFull: '브라우저 자동 저장에 실패했습니다. 「저장」으로 파일을 내려받으세요.',
       noUndo: '더 이상 되돌릴 수 없습니다',
+      locked: '이 방은 잠겨 있습니다. 옮기려면 잠금을 해제하세요',
+      lockedSkip: '잠긴 방은 그대로 두었습니다',
       untitled: '제목 없는 지도'
     },
     newRoom: '방',
