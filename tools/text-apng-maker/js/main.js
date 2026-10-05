@@ -12,7 +12,7 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.10';
+  const VERSION = 'v1.11';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const LANGS = ['ja', 'ko', 'en', 'zh'];
@@ -21,6 +21,8 @@
   const SIZE_GUIDE_BYTES = 5 * 1024 * 1024;
   // WebP の画質（非可逆。0.9 で文字の縁のにじみは等倍ではほぼ分からず、フルカラーの APNG の半分前後の容量）
   const WEBP_QUALITY = 0.9;
+  // まとめて書き出すときの上限（件数）
+  const BATCH_MAX = 50;
   const MODES = ['message', 'trailer', 'caption'];
   // 書き換えた文章をテンプレートごとに覚えるモード（場所・時間は、テンプレートを切り替えても同じ文章を使う）
   const PER_TEMPLATE_TEXT = ['message', 'trailer'];
@@ -123,6 +125,12 @@
     exportApngBtn: $('exportApngBtn'),
     exportWebpBtn: $('exportWebpBtn'),
     exportNote: $('exportNote'),
+    batchSummary: $('batchSummary'),
+    batchLabel: $('batchLabel'),
+    batchInput: $('batchInput'),
+    batchHint: $('batchHint'),
+    batchFormat: $('batchFormat'),
+    batchExportBtn: $('batchExportBtn'),
     exportPngBtn: $('exportPngBtn'),
     exportZipBtn: $('exportZipBtn'),
     progress: $('exportProgress'),
@@ -153,7 +161,11 @@
     // 場所・時間はテンプレートを切り替えても引き継ぐ（caption: { text, subText }）
     editedTexts: { message: {}, trailer: {}, caption: {} },
     // fileNames: モードごとの手入力のファイル名（空なら設定から自動入力）
-    exportOpts: { fps: 24, loop: 'once', loopCount: 3, color: 'palette', poster: true, trim: false, fileNames: { message: '', trailer: '', caption: '' } },
+    exportOpts: {
+      fps: 24, loop: 'once', loopCount: 3, color: 'palette', poster: true, trim: false, fileNames: { message: '', trailer: '', caption: '' },
+      // まとめて書き出す文章（モードごと）と形式
+      batch: { message: '', trailer: '', caption: '' }, batchFormat: 'apng'
+    },
     previewBg: 'checker',
     loopPreview: true
   };
@@ -211,8 +223,11 @@
       if (MODES.includes(saved.mode)) app.mode = saved.mode;
       if (TABS.includes(saved.tab)) app.tab = saved.tab;
       if (saved.exportOpts) {
-        const { loop, fileName, fileNames, ...rest } = saved.exportOpts;
+        const { loop, fileName, fileNames, batch, batchFormat, ...rest } = saved.exportOpts;
         Object.assign(app.exportOpts, rest);
+        // まとめて書き出す文章（モードごと）と形式
+        if (batch && typeof batch === 'object') MODES.forEach(m => { if (typeof batch[m] === 'string') app.exportOpts.batch[m] = batch[m]; });
+        if (batchFormat === 'webp') app.exportOpts.batchFormat = 'webp';
         // 旧形式のループ設定（初期値がテンプレートによらなかった頃）は引き継がず、開いているテンプレートの初期値から始める
         if (saved.schema >= STORAGE_SCHEMA && ['once', 'infinite', 'count'].includes(loop)) {
           app.exportOpts.loop = loop;
@@ -460,9 +475,11 @@
       span.textContent = text;
       els.shortcutGrid.append(keyBox, span);
     });
+    // 小さいスマートフォンでは、入りきらない見出し・選択肢を短い文言にする（d.compact にある分だけ）
+    const short = isCompact() ? d.compact : {};
     els.modeTabs.querySelectorAll('[data-mode]').forEach(btn => {
       const [name, desc] = d.modes[btn.dataset.mode];
-      btn.querySelector('.mode-name').textContent = name;
+      btn.querySelector('.mode-name').textContent = (short.modes && short.modes[btn.dataset.mode]) || name;
       btn.querySelector('.mode-desc').textContent = desc;
     });
     els.templatesLabel.textContent = d.templates;
@@ -485,10 +502,10 @@
     els.exportTitle.textContent = d.exportTitle;
     els.fpsLabel.textContent = d.fps;
     els.loopLabel.textContent = d.loop;
-    Array.from(els.loopSelect.options).forEach(o => { o.textContent = d.loopOptions[o.value]; });
+    Array.from(els.loopSelect.options).forEach(o => { o.textContent = (short.loopOptions && short.loopOptions[o.value]) || d.loopOptions[o.value]; });
     els.loopCountLabel.textContent = d.loopCount;
     els.colorLabel.textContent = d.colorMode;
-    Array.from(els.colorSelect.options).forEach(o => { o.textContent = d.colorOptions[o.value]; });
+    Array.from(els.colorSelect.options).forEach(o => { o.textContent = (short.colorOptions && short.colorOptions[o.value]) || d.colorOptions[o.value]; });
     els.posterText.textContent = d.poster;
     els.trimText.textContent = d.trim;
     els.fileNameLabel.textContent = d.fileName;
@@ -499,6 +516,7 @@
     els.exportApngBtn.textContent = d.exportApng;
     els.exportWebpBtn.textContent = d.exportWebp;
     els.exportNote.textContent = d.exportNote;
+    syncBatch();
     els.exportPngBtn.textContent = d.exportPng;
     els.exportZipBtn.textContent = d.exportZip;
     els.cancelBtn.textContent = d.cancel;
@@ -606,6 +624,7 @@
   const panel = new ControlPanel({
     getScene: scene,
     getLang: () => app.lang,
+    isCompact: () => isCompact(),
     onChange: handleChange,
     onAction: handleAction,
     getInfo: infoFor
@@ -1052,6 +1071,7 @@
     });
     els.body.dataset.mode = mode;
     showTemplate(firstTemplate(mode));
+    syncBatch();
     return true;
   }
 
@@ -1307,8 +1327,7 @@
   }
 
   // 左の設定（文章・登場の動き／表示方法・退場の有無）からファイル名の候補を作る
-  function suggestFileName() {
-    const s = scene();
+  function suggestFileName(s = scene()) {
     const d = dict();
     const L = v => (v && typeof v === 'object' ? (v[app.lang] ?? v.ja) : (v || ''));
     const parts = [shortTitle(s.text) || d.modes[s.mode][0]];
@@ -1350,7 +1369,7 @@
   function setExporting(on) {
     view.exporting = on;
     view.cancel = false;
-    [els.exportApngBtn, els.exportWebpBtn, els.exportPngBtn, els.exportZipBtn].forEach(btn => { btn.disabled = on; });
+    [els.exportApngBtn, els.exportWebpBtn, els.exportPngBtn, els.exportZipBtn, els.batchExportBtn].forEach(btn => { btn.disabled = on; });
     els.cancelBtn.hidden = !on;
     els.progress.hidden = !on;
     els.body.classList.toggle('is-exporting', on);
@@ -1376,14 +1395,119 @@
     return Boolean(String(s.text || '').trim() || (s.mode !== 'trailer' && String(s.subText || '').trim()));
   }
 
-  // 動く画像の書き出し（format: 'apng' / 'webp'）。フレームの描き方・自動トリミング・ループは共通で、
-  // APNG は 256色に減色できる（色数の設定）、WebP は常にフルカラーの非可逆圧縮（WEBP_QUALITY）
+  // その形式を書き出せない環境なら、その案内（書き出せるなら空）
+  function unsupportedText(format) {
+    if (format === 'webp') return C.isWebpSupported() ? '' : msg().webpUnsupported;
+    return C.isCompressionSupported() ? '' : msg().unsupported;
+  }
+
+  function loopText(loops) {
+    return loops === 0 ? msg().loopInfinite : (loops === 1 ? msg().loopOnce : msg().loopCount(loops));
+  }
+
+  // 1つの場面を動く画像にする（format: 'apng' / 'webp'）。フレームの描き方・自動トリミング・ループは共通で、
+  // APNG は 256色に減色できる（色数の設定）、WebP は常にフルカラーの非可逆圧縮（WEBP_QUALITY）。
+  // onProgress(割合, 文言) で進み具合を知らせる。フレームが多すぎるときは code: 'TOO_MANY_FRAMES' で止める
+  async function encodeAnimation(s, opts, format, onProgress) {
+    const webp = format === 'webp';
+    await ensureFonts(s);
+    const renderer = new E.TextRenderer({ resolveFont: (id, text) => F.families(id, text) });
+    const prepared = renderer.prepare(s);
+    const duration = prepared.timeline.duration;
+    const fps = Math.max(1, Number(opts.fps) || 24);
+    const count = exportFrameCount(duration, fps);
+    if (count > MAX_FRAMES) {
+      const error = new Error('Too many frames.');
+      error.code = 'TOO_MANY_FRAMES';
+      error.count = count;
+      throw error;
+    }
+    const W = s.width, H = s.height;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const timeAt = i => (i === count - 1 ? duration : Math.min(i / fps, duration));
+    const grab = t => {
+      renderer.render(ctx, t, { scale: 1 });
+      return ctx.getImageData(0, 0, W, H).data;
+    };
+    const usePalette = !webp && opts.color !== 'full';
+    const needAnalysis = usePalette || opts.trim;
+    let quantizer = null;
+    let crop = null;
+    const analysisShare = needAnalysis ? 0.4 : 0;
+    if (needAnalysis) {
+      quantizer = usePalette ? new C.PaletteQuantizer(256) : null;
+      const analyzer = new C.FrameAnalyzer(W, H, { quantizer });
+      for (let i = 0; i < count; i++) {
+        checkCancel();
+        analyzer.add(grab(timeAt(i)));
+        if (i % 3 === 0 || i === count - 1) {
+          onProgress((i + 1) / count * analysisShare, msg().analyzing(i + 1, count));
+          await yieldToUi();
+        }
+      }
+      if (opts.poster && !webp) analyzer.add(grab(prepared.timeline.posterTime));
+      if (opts.trim && analyzer.bounds) {
+        const m = 2;
+        const b = analyzer.bounds;
+        const x0 = Math.max(0, b.x0 - m), y0 = Math.max(0, b.y0 - m);
+        const x1 = Math.min(W, b.x1 + m), y1 = Math.min(H, b.y1 + m);
+        if (x1 - x0 < W || y1 - y0 < H) crop = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+      }
+      if (quantizer) quantizer.build();
+    }
+    const outW = crop ? crop.w : W;
+    const outH = crop ? crop.h : H;
+    const shape = data => (crop ? C.cropFrame(data, W, crop) : data);
+    const loops = opts.loop === 'once' ? 1 : (opts.loop === 'count' ? Math.max(1, Math.min(999, Number(opts.loopCount) || 1)) : 0);
+    const encoder = webp
+      ? new C.WebpEncoder({ width: outW, height: outH, fps, loops, quality: WEBP_QUALITY })
+      : new C.ApngEncoder({ width: outW, height: outH, fps, loops, quantizer });
+    // APNG非対応の環境で出す静止画は APNG だけのもの
+    if (opts.poster && !webp) await encoder.setDefaultImage(shape(grab(prepared.timeline.posterTime)));
+    const encoding = webp ? msg().encodingWebp : msg().encoding;
+    for (let i = 0; i < count; i++) {
+      checkCancel();
+      await encoder.addFrame(shape(grab(timeAt(i))));
+      if (i % 2 === 0 || i === count - 1) {
+        onProgress(analysisShare + (i + 1) / count * (1 - analysisShare), encoding(i + 1, count));
+        await yieldToUi();
+      }
+    }
+    checkCancel();
+    const blob = encoder.finish();
+    const colors = webp ? msg().colorsWebp(WEBP_QUALITY) : (quantizer ? msg().colorsPalette(quantizer.isLossless) : msg().colorsFull);
+    return { blob, width: outW, height: outH, count, stored: encoder.frameCount, loops, colors, fps, colorMode: webp ? 'webp' : (usePalette ? 'palette' : 'full') };
+  }
+
+  // 書き出しが止まったときの案内（中止・非対応・フレーム数の上限・そのほかの失敗）
+  function exportFailed(error) {
+    let text = msg().failed;
+    let kind = 'error';
+    if (error && error.code === 'CANCELLED') {
+      text = msg().cancelled;
+      kind = 'warning';
+    } else if (error && error.code === 'WEBP_UNSUPPORTED') {
+      text = msg().webpUnsupported;
+    } else if (error && error.code === 'COMPRESSION_UNSUPPORTED') {
+      text = msg().unsupported;
+    } else if (error && error.code === 'TOO_MANY_FRAMES') {
+      text = msg().tooManyFrames(error.count, MAX_FRAMES);
+    } else {
+      console.error(error);
+    }
+    els.status.textContent = text;
+    toast(text, kind, kind === 'warning' ? undefined : 6000);
+  }
+
   async function exportAnimated(format) {
     if (view.exporting) return false;
     const webp = format === 'webp';
     const s = P.clone(scene());
     if (!hasVisibleText(s)) { toast(msg().emptyText, 'warning'); return false; }
-    const unsupported = webp ? (C.isWebpSupported() ? '' : msg().webpUnsupported) : (C.isCompressionSupported() ? '' : msg().unsupported);
+    const unsupported = unsupportedText(format);
     if (unsupported) { toast(unsupported, 'error', 6000); els.status.textContent = unsupported; return false; }
     const opts = { ...app.exportOpts };
     pause();
@@ -1391,102 +1515,125 @@
     clearResult();
     const started = performance.now();
     try {
-      await ensureFonts(s);
-      const renderer = new E.TextRenderer({ resolveFont: (id, text) => F.families(id, text) });
-      const prepared = renderer.prepare(s);
-      const duration = prepared.timeline.duration;
-      const fps = Math.max(1, Number(opts.fps) || 24);
-      const count = exportFrameCount(duration, fps);
-      if (count > MAX_FRAMES) {
-        toast(msg().tooManyFrames(count, MAX_FRAMES), 'error', 5200);
-        els.status.textContent = msg().tooManyFrames(count, MAX_FRAMES);
-        return false;
-      }
-      const W = s.width, H = s.height;
-      const canvas = document.createElement('canvas');
-      canvas.width = W;
-      canvas.height = H;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      const timeAt = i => (i === count - 1 ? duration : Math.min(i / fps, duration));
-      const grab = t => {
-        renderer.render(ctx, t, { scale: 1 });
-        return ctx.getImageData(0, 0, W, H).data;
-      };
-      const usePalette = !webp && opts.color !== 'full';
-      const needAnalysis = usePalette || opts.trim;
-      let quantizer = null;
-      let crop = null;
-      const analysisShare = needAnalysis ? 0.4 : 0;
-      if (needAnalysis) {
-        quantizer = usePalette ? new C.PaletteQuantizer(256) : null;
-        const analyzer = new C.FrameAnalyzer(W, H, { quantizer });
-        for (let i = 0; i < count; i++) {
-          checkCancel();
-          analyzer.add(grab(timeAt(i)));
-          if (i % 3 === 0 || i === count - 1) {
-            setProgress((i + 1) / count * analysisShare, msg().analyzing(i + 1, count));
-            await yieldToUi();
-          }
-        }
-        if (opts.poster && !webp) analyzer.add(grab(prepared.timeline.posterTime));
-        if (opts.trim && analyzer.bounds) {
-          const m = 2;
-          const b = analyzer.bounds;
-          const x0 = Math.max(0, b.x0 - m), y0 = Math.max(0, b.y0 - m);
-          const x1 = Math.min(W, b.x1 + m), y1 = Math.min(H, b.y1 + m);
-          if (x1 - x0 < W || y1 - y0 < H) crop = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
-        }
-        if (quantizer) quantizer.build();
-      }
-      const outW = crop ? crop.w : W;
-      const outH = crop ? crop.h : H;
-      const shape = data => (crop ? C.cropFrame(data, W, crop) : data);
-      const loops = opts.loop === 'once' ? 1 : (opts.loop === 'count' ? Math.max(1, Math.min(999, Number(opts.loopCount) || 1)) : 0);
-      const encoder = webp
-        ? new C.WebpEncoder({ width: outW, height: outH, fps, loops, quality: WEBP_QUALITY })
-        : new C.ApngEncoder({ width: outW, height: outH, fps, loops, quantizer });
-      // APNG非対応の環境で出す静止画は APNG だけのもの
-      if (opts.poster && !webp) await encoder.setDefaultImage(shape(grab(prepared.timeline.posterTime)));
-      const encoding = webp ? msg().encodingWebp : msg().encoding;
-      for (let i = 0; i < count; i++) {
-        checkCancel();
-        await encoder.addFrame(shape(grab(timeAt(i))));
-        if (i % 2 === 0 || i === count - 1) {
-          setProgress(analysisShare + (i + 1) / count * (1 - analysisShare), encoding(i + 1, count));
-          await yieldToUi();
-        }
-      }
-      checkCancel();
-      const blob = encoder.finish();
+      const r = await encodeAnimation(s, opts, format, setProgress);
       const name = `${baseFileName()}.${webp ? 'webp' : 'png'}`;
-      const colors = webp ? msg().colorsWebp(WEBP_QUALITY) : (quantizer ? msg().colorsPalette(quantizer.isLossless) : msg().colorsFull);
-      const loopText = loops === 0 ? msg().loopInfinite : (loops === 1 ? msg().loopOnce : msg().loopCount(loops));
-      showResult(blob, name, msg().resultMeta(formatBytes(blob.size), outW, outH, count, encoder.frameCount, colors, loopText), format);
+      showResult(r.blob, name, msg().resultMeta(formatBytes(r.blob.size), r.width, r.height, r.count, r.stored, r.colors, loopText(r.loops)), format);
       const done = webp ? msg().webpDone : msg().done;
       setProgress(1, done);
       toast(done, 'success');
       track(webp ? 'export_webp' : 'export_apng', {
-        mode: s.mode, in_fx: s.inEnabled === false ? 'none' : s.inFx, out_fx: s.outEnabled === false ? 'none' : s.outFx, hold_fx: s.holdFx, fps, color_mode: webp ? 'webp' : (usePalette ? 'palette' : 'full'),
-        frames: count, size_kb: Math.round(blob.size / 1024), over_limit: blob.size > SIZE_GUIDE_BYTES, seconds: Math.round((performance.now() - started) / 100) / 10
+        mode: s.mode, in_fx: s.inEnabled === false ? 'none' : s.inFx, out_fx: s.outEnabled === false ? 'none' : s.outFx, hold_fx: s.holdFx, fps: r.fps, color_mode: r.colorMode,
+        frames: r.count, size_kb: Math.round(r.blob.size / 1024), over_limit: r.blob.size > SIZE_GUIDE_BYTES, seconds: Math.round((performance.now() - started) / 100) / 10
       });
       return true;
     } catch (error) {
-      if (error && error.code === 'CANCELLED') {
-        els.status.textContent = msg().cancelled;
-        toast(msg().cancelled, 'warning');
-      } else if (error && (error.code === 'COMPRESSION_UNSUPPORTED' || error.code === 'WEBP_UNSUPPORTED')) {
-        const text = error.code === 'WEBP_UNSUPPORTED' ? msg().webpUnsupported : msg().unsupported;
-        els.status.textContent = text;
-        toast(text, 'error', 6000);
-      } else {
-        console.error(error);
-        els.status.textContent = msg().failed;
-        toast(msg().failed, 'error', 5000);
-      }
+      exportFailed(error);
       return false;
     } finally {
       setExporting(false);
     }
+  }
+
+  /* ---------- まとめて書き出す ---------- */
+
+  // 1行に1つ。メッセージ・場所・時間では「|」（全角の「｜」・タブも可）のあとがサブテキスト。
+  // 区切りの無い行は、いまのサブテキストをそのまま使う（「保健室|」のように区切りだけ書けばサブテキストなし）
+  function parseBatch(text, s) {
+    const items = [];
+    String(text || '').split(/\r?\n/).forEach(line => {
+      if (!line.trim()) return;
+      if (s.mode === 'trailer') {
+        items.push({ text: line.trim(), subText: '' });
+        return;
+      }
+      const cut = line.search(/[|｜\t]/);
+      if (cut < 0) items.push({ text: line.trim(), subText: s.subText });
+      else items.push({ text: line.slice(0, cut).trim(), subText: line.slice(cut + 1).trim() });
+    });
+    return items.filter(item => item.text || item.subText);
+  }
+
+  // 入力欄・見出し・件数の表示（モードごとに別の文章を覚える）
+  function syncBatch() {
+    const d = dict();
+    const o = app.exportOpts;
+    els.batchSummary.textContent = d.batchSummary;
+    els.batchLabel.textContent = d.batchLabel;
+    els.batchInput.placeholder = app.mode === 'trailer' ? d.batchPlaceholderTrailer : d.batchPlaceholder;
+    if (document.activeElement !== els.batchInput) els.batchInput.value = o.batch[app.mode] || '';
+    els.batchFormat.value = o.batchFormat;
+    els.batchFormat.setAttribute('aria-label', d.batchFormat);
+    els.batchExportBtn.textContent = d.batchExport;
+    els.batchHint.textContent = d.batchHint(parseBatch(els.batchInput.value, scene()).length, BATCH_MAX, app.mode);
+  }
+
+  async function exportBatch() {
+    if (view.exporting) return false;
+    const format = app.exportOpts.batchFormat === 'webp' ? 'webp' : 'apng';
+    const base = P.clone(scene());
+    const items = parseBatch(els.batchInput.value, base);
+    if (!items.length) { toast(msg().batchEmpty, 'warning'); els.batchInput.focus(); return false; }
+    if (items.length > BATCH_MAX) { toast(msg().batchTooMany(BATCH_MAX), 'warning', 4200); return false; }
+    const unsupported = unsupportedText(format);
+    if (unsupported) { toast(unsupported, 'error', 6000); els.status.textContent = unsupported; return false; }
+    const opts = { ...app.exportOpts };
+    const ext = format === 'webp' ? 'webp' : 'png';
+    pause();
+    setExporting(true);
+    clearResult();
+    const started = performance.now();
+    try {
+      const files = [];
+      const used = new Set();
+      const over = [];
+      for (let k = 0; k < items.length; k++) {
+        const s = P.clone(base);
+        s.text = items[k].text;
+        if (s.mode !== 'trailer') s.subText = items[k].subText;
+        const label = shortTitle(s.text) || shortTitle(s.subText);
+        const r = await encodeAnimation(s, opts, format, ratio => setProgress((k + ratio) / items.length, msg().batchProgress(k + 1, items.length, label)));
+        // 同じ名前になったら _2, _3 … をつける
+        const stem = suggestFileName(s) || 'text_apng';
+        let name = `${stem}.${ext}`;
+        for (let n = 2; used.has(name); n++) name = `${stem}_${n}.${ext}`;
+        used.add(name);
+        if (r.blob.size > SIZE_GUIDE_BYTES) over.push(name);
+        files.push({ name, data: new Uint8Array(await r.blob.arrayBuffer()) });
+      }
+      checkCancel();
+      const zip = C.buildZip(files);
+      const d = dict();
+      const zipName = `${sanitizeFileName(d.batchZip(d.modes[base.mode][0], files.length)) || 'text_apng_batch'}.zip`;
+      showResult(zip, zipName, msg().batchMeta(files.length, format === 'webp' ? 'WebP' : 'APNG', formatBytes(zip.size)), null);
+      els.resultNote.textContent = over.length ? msg().batchOver(over.join('、')) : msg().batchWithin;
+      els.resultNote.className = `result-note ${over.length ? 'is-warning' : 'is-ok'}`;
+      els.resultNote.hidden = false;
+      triggerDownload();
+      const done = msg().batchDone(files.length);
+      setProgress(1, done);
+      toast(done, 'success');
+      track('export_batch', {
+        mode: base.mode, format, items: files.length, fps: Math.max(1, Number(opts.fps) || 24), size_kb: Math.round(zip.size / 1024),
+        over_limit: over.length, seconds: Math.round((performance.now() - started) / 100) / 10
+      });
+      return true;
+    } catch (error) {
+      exportFailed(error);
+      return false;
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function bindBatch() {
+    const o = app.exportOpts;
+    els.batchInput.addEventListener('input', () => {
+      o.batch[app.mode] = els.batchInput.value;
+      els.batchHint.textContent = dict().batchHint(parseBatch(els.batchInput.value, scene()).length, BATCH_MAX, app.mode);
+      saveState();
+    });
+    els.batchFormat.addEventListener('change', () => { o.batchFormat = els.batchFormat.value === 'webp' ? 'webp' : 'apng'; saveState(); });
+    els.batchExportBtn.addEventListener('click', exportBatch);
   }
 
   function exportApng() {
@@ -1787,11 +1934,14 @@
    * - 書き出し：プレビューの下（ページを下へスクロールした先）。シートの帯の「書き出し ↓」からも移動できる */
 
   const phoneQuery = window.matchMedia('(max-width: 760px)');
+  // 小さいスマートフォン（幅 430px 以下）：選択肢・見出しの文言を短くする（applyLanguage と設定パネルの画像サイズ）
+  const compactQuery = window.matchMedia('(max-width: 430px)');
   const SHEET_STATES = ['peek', 'half', 'full'];
   const sheet = { state: 'peek', drag: null, visible: { peek: 64, half: 320, full: 600 }, full: 600, baseViewH: 0, baseWidth: 0, typing: false, holdCompactUntil: 0 };
   let headerCompact = false;
 
   function isPhone() { return phoneQuery.matches; }
+  function isCompact() { return compactQuery.matches; }
 
   // シートの帯の見出し：今のモードとテンプレート
   function syncSheetLabels() {
@@ -2029,6 +2179,9 @@
     };
     if (phoneQuery.addEventListener) phoneQuery.addEventListener('change', onChange);
     else if (phoneQuery.addListener) phoneQuery.addListener(onChange);
+    // 短い文言に切り替わる幅をまたいだら、文言を付け直す
+    if (compactQuery.addEventListener) compactQuery.addEventListener('change', applyLanguage);
+    else if (compactQuery.addListener) compactQuery.addListener(applyLanguage);
     setSheet('peek');
   }
 
@@ -2047,6 +2200,7 @@
   loadState();
   initTheme();
   bindExportOptions();
+  bindBatch();
   bindEvents();
   setPreviewBg(app.previewBg);
   els.body.dataset.mode = app.mode;

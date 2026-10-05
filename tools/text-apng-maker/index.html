@@ -11,7 +11,7 @@
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="./css/text-apng-maker.css?v=20261005-03" />
+  <link rel="stylesheet" href="./css/text-apng-maker.css?v=20261005-04" />
 </head>
 <body>
   <div class="app-shell maker-shell">
@@ -19,7 +19,7 @@
       <div class="title-block">
         <p class="eyebrow" id="appEyebrow">TRPG WEBツール観測所</p>
         <h1 id="appTitle">文字画像APNGメーカー</h1>
-        <div class="version-engrave">v1.10 / 2026.10.05</div>
+        <div class="version-engrave">v1.11 / 2026.10.05</div>
       </div>
       <p class="lead" id="appLead">「戦闘開始」のカットイン、トレイラーの文章演出、場所・時間のテロップなど、TRPGで使える文字アニメーションのAPNG素材を作成します。</p>
       <div class="header-actions">
@@ -215,6 +215,22 @@
             <button class="ghost-button" type="button" id="exportZipBtn">連番PNG（ZIP）</button>
           </div>
           <p class="export-note" id="exportNote">※ APNGは劣化のない画質（256色なら最も軽量）、WebPはフルカラーのまま容量を抑えた形式で、細部がわずかににじむことがあります。</p>
+          <!-- まとめて書き出す：1行に1つずつ書いた文章を、いまのデザインと書き出しの設定で書き出して ZIP にまとめる（ふだんは閉じておく） -->
+          <details class="batch-export" id="batchExport">
+            <summary class="batch-summary" id="batchSummary">まとめて書き出す（同じデザインで複数の文章）</summary>
+            <div class="batch-body">
+              <label class="field-label" for="batchInput" id="batchLabel">文章（1行に1つ）</label>
+              <textarea class="text-input batch-input" id="batchInput" rows="4" spellcheck="false"></textarea>
+              <p class="batch-hint" id="batchHint"></p>
+              <div class="batch-actions">
+                <select class="select-input batch-format" id="batchFormat" aria-label="形式">
+                  <option value="apng">APNG</option>
+                  <option value="webp">WebP</option>
+                </select>
+                <button class="ghost-button" type="button" id="batchExportBtn">まとめて書き出す（ZIP）</button>
+              </div>
+            </div>
+          </details>
           <div class="export-progress" id="exportProgress" hidden><span class="export-progress-bar" id="exportProgressBar"></span></div>
           <div class="export-status-row">
             <p class="export-status" id="exportStatus" role="status" aria-live="polite"></p>
@@ -249,15 +265,15 @@
     </footer>
   </div>
 
-  <script src="./js/engine.js?v=20261005-03"></script>
-  <script src="./js/fonts.js?v=20261005-03"></script>
-  <script src="./js/apng-encoder.js?v=20261005-03"></script>
-  <script src="./js/webp-encoder.js?v=20261005-03"></script>
-  <script src="./js/presets.js?v=20261005-03"></script>
-  <script src="./js/i18n.js?v=20261005-03"></script>
-  <script src="./js/controls.js?v=20261005-03"></script>
-  <script src="./js/icons.js?v=20261005-03"></script>
-  <script src="./js/main.js?v=20261005-03"></script>
-  <script src="./js/shortcut.js?v=20261005-03"></script>
+  <script src="./js/engine.js?v=20261005-04"></script>
+  <script src="./js/fonts.js?v=20261005-04"></script>
+  <script src="./js/apng-encoder.js?v=20261005-04"></script>
+  <script src="./js/webp-encoder.js?v=20261005-04"></script>
+  <script src="./js/presets.js?v=20261005-04"></script>
+  <script src="./js/i18n.js?v=20261005-04"></script>
+  <script src="./js/controls.js?v=20261005-04"></script>
+  <script src="./js/icons.js?v=20261005-04"></script>
+  <script src="./js/main.js?v=20261005-04"></script>
+  <script src="./js/shortcut.js?v=20261005-04"></script>
 </body>
 </html>
