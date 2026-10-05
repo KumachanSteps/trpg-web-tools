@@ -1304,8 +1304,13 @@
     }
   })();
 
+  // フォントの並びを決める場面の文章（メインとサブ。中国語の文章では中国語フォントを先に使うので、メインとサブで字形が揃うよう両方で判断する）
+  function fontText(scene) {
+    return scene.mode === 'trailer' ? String(scene.text || '') : `${scene.text || ''}\n${scene.subText || ''}`;
+  }
+
   function fontFamiliesFor(scene, group, resolveFont) {
-    return resolveFont(group === 1 && scene.subFontId && scene.subFontId !== 'same' ? scene.subFontId : scene.fontId);
+    return resolveFont(group === 1 && scene.subFontId && scene.subFontId !== 'same' ? scene.subFontId : scene.fontId, fontText(scene));
   }
 
   class TextRenderer {
@@ -2234,6 +2239,7 @@
     graphemes,
     fontString,
     cssFontFamily,
+    fontText,
     computeLayout,
     buildTimeline,
     FILTER_SUPPORTED

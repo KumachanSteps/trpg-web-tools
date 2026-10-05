@@ -12,10 +12,10 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
 
-  const VERSION = 'v1.08';
+  const VERSION = 'v1.09';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
-  const LANGS = ['ja', 'ko', 'en'];
+  const LANGS = ['ja', 'ko', 'en', 'zh'];
   const THEME_KEY = 'textApngMakerTheme';
   const MAX_FRAMES = 1800;
   const SIZE_GUIDE_BYTES = 5 * 1024 * 1024;
@@ -155,7 +155,7 @@
   };
 
   const view = {
-    renderer: new E.TextRenderer({ resolveFont: id => F.families(id) }),
+    renderer: new E.TextRenderer({ resolveFont: (id, text) => F.families(id, text) }),
     prepared: null,
     needsPrepare: true,
     time: 0,
@@ -174,11 +174,15 @@
   const dict = () => I18N[app.lang] || I18N.ja;
   const msg = () => dict().messages;
 
-  // 保存された言語が無いときは、ブラウザの言語（日本語・韓国語以外は英語）
+  // 保存された言語（自分で選んだ言語）が無いときは、ブラウザの言語。
+  // 優先する言語の順に見て、最初に対応している言語を使う（どれにも対応していなければ英語）
   function browserLang() {
-    const lang = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').toLowerCase();
-    if (lang.startsWith('ja')) return 'ja';
-    return lang.startsWith('ko') ? 'ko' : 'en';
+    const prefs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'ja']);
+    for (const pref of prefs) {
+      const code = String(pref || '').toLowerCase().split(/[-_]/)[0];
+      if (LANGS.includes(code)) return code;
+    }
+    return 'en';
   }
 
   function loadState() {
@@ -304,7 +308,7 @@
     const memo = app.editedTexts[mode][tpl.id] || {};
     ['text', 'subText'].forEach(key => {
       if (typeof memo[key] === 'string' || !String(s[key] || '').trim()) return;
-      const samples = ['ja', 'en', 'ko'].map(lang => P.sampleText(tpl, key, lang));
+      const samples = LANGS.map(lang => P.sampleText(tpl, key, lang));
       if (!samples.includes(s[key])) s[key] = P.sampleText(tpl, key, app.lang);
     });
   }
@@ -811,9 +815,11 @@
   }
 
   async function ensureFonts(s) {
-    const tasks = [F.load(s.fontId, s.weight, `${s.text}${s.mode === 'trailer' ? '' : s.subText}`)];
+    // 代替フォントの並びは、描画（engine の fontText）と同じ文章で決める
+    const all = E.fontText(s);
+    const tasks = [F.load(s.fontId, s.weight, `${s.text}${s.mode === 'trailer' ? '' : s.subText}`, all)];
     if (s.mode !== 'trailer' && s.subText) {
-      tasks.push(F.load(s.subFontId === 'same' ? s.fontId : s.subFontId, s.subWeight, s.subText));
+      tasks.push(F.load(s.subFontId === 'same' ? s.fontId : s.subFontId, s.subWeight, s.subText, all));
     }
     await Promise.all(tasks);
   }
@@ -1376,7 +1382,7 @@
     const started = performance.now();
     try {
       await ensureFonts(s);
-      const renderer = new E.TextRenderer({ resolveFont: id => F.families(id) });
+      const renderer = new E.TextRenderer({ resolveFont: (id, text) => F.families(id, text) });
       const prepared = renderer.prepare(s);
       const duration = prepared.timeline.duration;
       const fps = Math.max(1, Number(opts.fps) || 24);
@@ -1476,7 +1482,7 @@
     const s = P.clone(scene());
     if (!hasVisibleText(s)) { toast(msg().emptyText, 'warning'); return false; }
     await ensureFonts(s);
-    const renderer = new E.TextRenderer({ resolveFont: id => F.families(id) });
+    const renderer = new E.TextRenderer({ resolveFont: (id, text) => F.families(id, text) });
     const prepared = renderer.prepare(s);
     const canvas = document.createElement('canvas');
     canvas.width = s.width;
@@ -1508,7 +1514,7 @@
     clearResult();
     try {
       await ensureFonts(s);
-      const renderer = new E.TextRenderer({ resolveFont: id => F.families(id) });
+      const renderer = new E.TextRenderer({ resolveFont: (id, text) => F.families(id, text) });
       const prepared = renderer.prepare(s);
       const duration = prepared.timeline.duration;
       const count = exportFrameCount(duration, fps);

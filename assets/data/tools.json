@@ -23,9 +23,9 @@
     "devHref": "./tools/text-apng-maker/",
     "devStage": "testing",
     "devNote": {
-      "ja": "カットイン・トレイラー・場所/時間テロップの文字APNG素材を作成。画面は日本語・韓国語・英語に対応。",
-      "en": "Creates text APNG assets for cut-ins, trailers, and location/time captions. UI in Japanese, Korean, and English.",
-      "ko": "컷인, 트레일러, 장소·시간 자막용 문자 APNG 소재를 만듭니다. 일본어·한국어·영어 UI를 지원합니다."
+      "ja": "カットイン・トレイラー・場所/時間テロップの文字APNG素材を作成。画面は日本語・英語・韓国語・中国語（簡体字）に対応。",
+      "en": "Creates text APNG assets for cut-ins, trailers, and location/time captions. UI in Japanese, English, Korean, and Simplified Chinese.",
+      "ko": "컷인, 트레일러, 장소·시간 자막용 문자 APNG 소재를 만듭니다. 일본어·영어·한국어·중국어(간체) UI를 지원합니다."
     },
     "name": {
       "ja": "文字画像APNGメーカー",

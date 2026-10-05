@@ -7,160 +7,160 @@
   const E = root.TextApngEngine;
   const F = root.TextApngFonts;
   const P = root.TextApngPresets;
-  const T = (ja, en, ko) => ({ ja, en, ko });
+  const T = (ja, en, ko, zh) => ({ ja, en, ko, zh });
 
   /* ---------- 効果名 ---------- */
 
   const FX_LABELS = {
     in: {
-      fade: T('フェード', 'Fade', '페이드'),
-      rise: T('浮かび上がる', 'Rise', '떠오르기'),
-      drop: T('降りてくる', 'Drop', '내려오기'),
-      converge: T('上下から合流', 'Converge', '위아래에서 합류'),
-      slide: T('スライド', 'Slide', '슬라이드'),
-      tracking: T('字間が縮まる', 'Tracking in', '자간이 좁혀짐'),
-      spread: T('中央から左右に広がる', 'Spread from center', '중앙에서 좌우로 펼쳐짐'),
-      blurIn: T('ぼかし解除', 'Blur in', '흐림 해제'),
-      pop: T('ポップ', 'Pop', '팝'),
-      shrinkIn: T('大きい所から', 'Shrink in', '크게 시작해 축소'),
-      spin: T('回転', 'Spin', '회전'),
-      flip: T('めくれる', 'Flip', '넘겨지기'),
-      bounce: T('落下バウンド', 'Bounce', '낙하 바운드'),
-      scatter: T('集合', 'Assemble', '집합'),
-      typewriter: T('タイプライター', 'Typewriter', '타자기'),
-      flicker: T('明滅', 'Flicker', '명멸'),
-      slam: T('叩きつけ', 'Slam', '내리치기'),
-      zoomIn: T('迫ってくる', 'Zoom in', '다가오기'),
-      emerge: T('奥から現れる', 'Emerge', '안쪽에서 나타나기'),
-      wipe: T('ワイプ', 'Wipe', '와이프'),
-      shutter: T('展開', 'Unfold', '펼치기'),
-      glitch: T('グリッチ', 'Glitch', '글리치'),
-      flash: T('閃光', 'Flash', '섬광')
+      fade: T('フェード', 'Fade', '페이드', '淡入'),
+      rise: T('浮かび上がる', 'Rise', '떠오르기', '浮现'),
+      drop: T('降りてくる', 'Drop', '내려오기', '落下'),
+      converge: T('上下から合流', 'Converge', '위아래에서 합류', '上下汇合'),
+      slide: T('スライド', 'Slide', '슬라이드', '滑入'),
+      tracking: T('字間が縮まる', 'Tracking in', '자간이 좁혀짐', '字距收拢'),
+      spread: T('中央から左右に広がる', 'Spread from center', '중앙에서 좌우로 펼쳐짐', '从中央向两侧展开'),
+      blurIn: T('ぼかし解除', 'Blur in', '흐림 해제', '模糊变清晰'),
+      pop: T('ポップ', 'Pop', '팝', '弹出'),
+      shrinkIn: T('大きい所から', 'Shrink in', '크게 시작해 축소', '由大缩小'),
+      spin: T('回転', 'Spin', '회전', '旋转'),
+      flip: T('めくれる', 'Flip', '넘겨지기', '翻转'),
+      bounce: T('落下バウンド', 'Bounce', '낙하 바운드', '落下弹跳'),
+      scatter: T('集合', 'Assemble', '집합', '聚合'),
+      typewriter: T('タイプライター', 'Typewriter', '타자기', '打字机'),
+      flicker: T('明滅', 'Flicker', '명멸', '明灭'),
+      slam: T('叩きつけ', 'Slam', '내리치기', '重击砸入'),
+      zoomIn: T('迫ってくる', 'Zoom in', '다가오기', '逼近'),
+      emerge: T('奥から現れる', 'Emerge', '안쪽에서 나타나기', '从深处浮现'),
+      wipe: T('ワイプ', 'Wipe', '와이프', '擦除'),
+      shutter: T('展開', 'Unfold', '펼치기', '展开'),
+      glitch: T('グリッチ', 'Glitch', '글리치', '故障'),
+      flash: T('閃光', 'Flash', '섬광', '闪光')
     },
     out: {
-      none: T('消さない', 'Keep', '지우지 않음'),
-      fade: T('フェード', 'Fade', '페이드'),
-      rise: T('上へ消える', 'Float away', '위로 사라짐'),
-      sink: T('下へ沈む', 'Sink', '아래로 가라앉음'),
-      diverge: T('上下に分かれる', 'Diverge', '위아래로 갈라짐'),
-      slide: T('スライド', 'Slide', '슬라이드'),
-      tracking: T('字間が広がる', 'Tracking out', '자간이 넓어짐'),
-      blurOut: T('ぼやける', 'Blur out', '흐려짐'),
-      growOut: T('膨らんで消える', 'Grow out', '부풀며 사라짐'),
-      shrink: T('縮んで消える', 'Shrink', '줄어들며 사라짐'),
-      scatter: T('飛び散る', 'Scatter', '흩어짐'),
-      erase: T('1文字ずつ消去', 'Erase', '한 글자씩 지우기'),
-      flicker: T('明滅', 'Flicker', '명멸'),
-      zoomThrough: T('迫って消える', 'Zoom through', '다가오며 사라짐'),
-      recede: T('遠ざかる', 'Recede', '멀어짐'),
-      wipe: T('ワイプ', 'Wipe', '와이프'),
-      shutter: T('閉じる', 'Fold', '닫기'),
-      glitch: T('グリッチ', 'Glitch', '글리치')
+      none: T('消さない', 'Keep', '지우지 않음', '不消失'),
+      fade: T('フェード', 'Fade', '페이드', '淡出'),
+      rise: T('上へ消える', 'Float away', '위로 사라짐', '向上消失'),
+      sink: T('下へ沈む', 'Sink', '아래로 가라앉음', '向下沉没'),
+      diverge: T('上下に分かれる', 'Diverge', '위아래로 갈라짐', '上下分离'),
+      slide: T('スライド', 'Slide', '슬라이드', '滑出'),
+      tracking: T('字間が広がる', 'Tracking out', '자간이 넓어짐', '字距散开'),
+      blurOut: T('ぼやける', 'Blur out', '흐려짐', '逐渐模糊'),
+      growOut: T('膨らんで消える', 'Grow out', '부풀며 사라짐', '膨胀消失'),
+      shrink: T('縮んで消える', 'Shrink', '줄어들며 사라짐', '缩小消失'),
+      scatter: T('飛び散る', 'Scatter', '흩어짐', '飞散'),
+      erase: T('1文字ずつ消去', 'Erase', '한 글자씩 지우기', '逐字消除'),
+      flicker: T('明滅', 'Flicker', '명멸', '明灭'),
+      zoomThrough: T('迫って消える', 'Zoom through', '다가오며 사라짐', '逼近消失'),
+      recede: T('遠ざかる', 'Recede', '멀어짐', '远去'),
+      wipe: T('ワイプ', 'Wipe', '와이프', '擦除'),
+      shutter: T('閉じる', 'Fold', '닫기', '收起'),
+      glitch: T('グリッチ', 'Glitch', '글리치', '故障')
     },
     hold: {
-      none: T('なし', 'None', '없음'),
-      float: T('ふわふわ', 'Float', '둥실둥실'),
-      wave: T('波打つ', 'Wave', '물결'),
-      pulse: T('鼓動', 'Heartbeat', '고동'),
-      shake: T('震え', 'Tremble', '떨림'),
-      glow: T('発光の明滅', 'Glow pulse', '발광 명멸'),
-      flicker: T('ちらつき', 'Flicker', '깜박거림'),
-      blink: T('点滅', 'Blink', '점멸'),
-      glitch: T('時々ノイズ', 'Glitch bursts', '가끔 노이즈')
+      none: T('なし', 'None', '없음', '无'),
+      float: T('ふわふわ', 'Float', '둥실둥실', '轻轻飘浮'),
+      wave: T('波打つ', 'Wave', '물결', '波浪'),
+      pulse: T('鼓動', 'Heartbeat', '고동', '心跳'),
+      shake: T('震え', 'Tremble', '떨림', '颤抖'),
+      glow: T('発光の明滅', 'Glow pulse', '발광 명멸', '光晕明灭'),
+      flicker: T('ちらつき', 'Flicker', '깜박거림', '忽明忽暗'),
+      blink: T('点滅', 'Blink', '점멸', '闪烁'),
+      glitch: T('時々ノイズ', 'Glitch bursts', '가끔 노이즈', '间歇故障')
     }
   };
 
   const OPT = {
     order: [
-      { value: 'forward', label: T('先頭から', 'From the start', '처음부터') },
-      { value: 'reverse', label: T('末尾から', 'From the end', '끝에서부터') },
-      { value: 'center', label: T('中央から', 'From the center', '중앙에서부터') },
-      { value: 'edges', label: T('両端から', 'From the edges', '양 끝에서부터') },
-      { value: 'random', label: T('ランダム', 'Random', '랜덤') }
+      { value: 'forward', label: T('先頭から', 'From the start', '처음부터', '从开头') },
+      { value: 'reverse', label: T('末尾から', 'From the end', '끝에서부터', '从末尾') },
+      { value: 'center', label: T('中央から', 'From the center', '중앙에서부터', '从中间') },
+      { value: 'edges', label: T('両端から', 'From the edges', '양 끝에서부터', '从两端') },
+      { value: 'random', label: T('ランダム', 'Random', '랜덤', '随机') }
     ],
     ease: [
-      { value: 'auto', label: T('おまかせ', 'Auto', '자동') },
-      { value: 'out', label: T('減速', 'Ease out', '감속') },
-      { value: 'strong', label: T('強い減速', 'Strong ease out', '강한 감속') },
-      { value: 'smooth', label: T('なめらか', 'Smooth', '부드럽게') },
-      { value: 'back', label: T('行き過ぎて戻る', 'Back', '지나쳤다 돌아옴') },
-      { value: 'elastic', label: T('バネ', 'Elastic', '스프링') },
-      { value: 'bounce', label: T('バウンド', 'Bounce', '바운드') },
-      { value: 'linear', label: T('一定', 'Linear', '일정') },
-      { value: 'in', label: T('加速', 'Ease in', '가속') }
+      { value: 'auto', label: T('おまかせ', 'Auto', '자동', '自动') },
+      { value: 'out', label: T('減速', 'Ease out', '감속', '减速') },
+      { value: 'strong', label: T('強い減速', 'Strong ease out', '강한 감속', '强减速') },
+      { value: 'smooth', label: T('なめらか', 'Smooth', '부드럽게', '平滑') },
+      { value: 'back', label: T('行き過ぎて戻る', 'Back', '지나쳤다 돌아옴', '超出回弹') },
+      { value: 'elastic', label: T('バネ', 'Elastic', '스프링', '弹簧') },
+      { value: 'bounce', label: T('バウンド', 'Bounce', '바운드', '弹跳') },
+      { value: 'linear', label: T('一定', 'Linear', '일정', '匀速') },
+      { value: 'in', label: T('加速', 'Ease in', '가속', '加速') }
     ],
     dirs: {
-      left: T('左', 'Left', '왼쪽'), right: T('右', 'Right', '오른쪽'), up: T('上', 'Up', '위'), down: T('下', 'Down', '아래'),
-      lr: T('左 → 右', 'Left → Right', '왼쪽 → 오른쪽'), rl: T('右 → 左', 'Right → Left', '오른쪽 → 왼쪽'), tb: T('上 → 下', 'Top → Bottom', '위 → 아래'), bt: T('下 → 上', 'Bottom → Top', '아래 → 위'),
-      center: T('中央から', 'From center', '중앙에서'), v: T('上下に', 'Vertical', '위아래로'), h: T('左右に', 'Horizontal', '좌우로')
+      left: T('左', 'Left', '왼쪽', '左'), right: T('右', 'Right', '오른쪽', '右'), up: T('上', 'Up', '위', '上'), down: T('下', 'Down', '아래', '下'),
+      lr: T('左 → 右', 'Left → Right', '왼쪽 → 오른쪽', '左 → 右'), rl: T('右 → 左', 'Right → Left', '오른쪽 → 왼쪽', '右 → 左'), tb: T('上 → 下', 'Top → Bottom', '위 → 아래', '上 → 下'), bt: T('下 → 上', 'Bottom → Top', '아래 → 위', '下 → 上'),
+      center: T('中央から', 'From center', '중앙에서', '从中央'), v: T('上下に', 'Vertical', '위아래로', '上下'), h: T('左右に', 'Horizontal', '좌우로', '左右')
     },
     reveal: [
-      { value: 'char', label: T('1文字ずつ', 'Per character', '한 글자씩') },
-      { value: 'solo', label: T('中央に1文字ずつ', 'Per character at center', '중앙에 한 글자씩') },
-      { value: 'spread', label: T('中央から左右に広がる', 'Spread from center', '중앙에서 좌우로 펼쳐짐') },
-      { value: 'line', label: T('1行ずつ', 'Per line', '한 줄씩') },
-      { value: 'sweep', label: T('なめらかに流れる', 'Smooth sweep', '부드럽게 흐름') },
-      { value: 'all', label: T('全体を同時に', 'All at once', '전체를 동시에') },
-      { value: 'scroll', label: T('スクロール', 'Scroll', '스크롤') }
+      { value: 'char', label: T('1文字ずつ', 'Per character', '한 글자씩', '逐字') },
+      { value: 'solo', label: T('中央に1文字ずつ', 'Per character at center', '중앙에 한 글자씩', '中央逐字') },
+      { value: 'spread', label: T('中央から左右に広がる', 'Spread from center', '중앙에서 좌우로 펼쳐짐', '从中央向两侧展开') },
+      { value: 'line', label: T('1行ずつ', 'Per line', '한 줄씩', '逐行') },
+      { value: 'sweep', label: T('なめらかに流れる', 'Smooth sweep', '부드럽게 흐름', '流畅扫过') },
+      { value: 'all', label: T('全体を同時に', 'All at once', '전체를 동시에', '整体同时') },
+      { value: 'scroll', label: T('スクロール', 'Scroll', '스크롤', '滚动') }
     ],
     subFx: [
-      { value: 'same', label: T('メインと同じ', 'Same as main', '메인과 같음') },
-      { value: 'fade', label: T('フェード', 'Fade', '페이드') },
-      { value: 'rise', label: T('浮かび上がる', 'Rise', '떠오르기') },
-      { value: 'blurIn', label: T('ぼかし解除', 'Blur in', '흐림 해제') },
-      { value: 'tracking', label: T('字間が縮まる', 'Tracking in', '자간이 좁혀짐') },
-      { value: 'typewriter', label: T('タイプライター', 'Typewriter', '타자기') },
-      { value: 'slide', label: T('スライド', 'Slide', '슬라이드') }
+      { value: 'same', label: T('メインと同じ', 'Same as main', '메인과 같음', '与主文本相同') },
+      { value: 'fade', label: T('フェード', 'Fade', '페이드', '淡入') },
+      { value: 'rise', label: T('浮かび上がる', 'Rise', '떠오르기', '浮现') },
+      { value: 'blurIn', label: T('ぼかし解除', 'Blur in', '흐림 해제', '模糊变清晰') },
+      { value: 'tracking', label: T('字間が縮まる', 'Tracking in', '자간이 좁혀짐', '字距收拢') },
+      { value: 'typewriter', label: T('タイプライター', 'Typewriter', '타자기', '打字机') },
+      { value: 'slide', label: T('スライド', 'Slide', '슬라이드', '滑入') }
     ],
     deco: [
-      { value: 'none', label: T('なし', 'None', '없음') },
-      { value: 'band', label: T('帯', 'Band', '띠') },
-      { value: 'tape', label: T('虎柄テープ', 'Caution tape', '경고 테이프') },
-      { value: 'box', label: T('ボックス', 'Box', '박스') },
-      { value: 'frame', label: T('タイトル枠', 'Title frame', '타이틀 틀') },
-      { value: 'lines', label: T('上下ライン', 'Lines', '위아래 라인') },
-      { value: 'underline', label: T('下線', 'Underline', '밑줄') },
-      { value: 'sides', label: T('サイドライン', 'Side lines', '사이드 라인') },
-      { value: 'bar', label: T('アクセントバー', 'Accent bar', '악센트 바') },
-      { value: 'corners', label: T('コーナー枠', 'Corners', '코너 틀') }
+      { value: 'none', label: T('なし', 'None', '없음', '无') },
+      { value: 'band', label: T('帯', 'Band', '띠', '色带') },
+      { value: 'tape', label: T('虎柄テープ', 'Caution tape', '경고 테이프', '警戒胶带') },
+      { value: 'box', label: T('ボックス', 'Box', '박스', '方框') },
+      { value: 'frame', label: T('タイトル枠', 'Title frame', '타이틀 틀', '标题框') },
+      { value: 'lines', label: T('上下ライン', 'Lines', '위아래 라인', '上下线') },
+      { value: 'underline', label: T('下線', 'Underline', '밑줄', '下划线') },
+      { value: 'sides', label: T('サイドライン', 'Side lines', '사이드 라인', '两侧线') },
+      { value: 'bar', label: T('アクセントバー', 'Accent bar', '악센트 바', '强调条') },
+      { value: 'corners', label: T('コーナー枠', 'Corners', '코너 틀', '角框') }
     ],
     decoAnim: [
-      { value: 'grow', label: T('伸びる', 'Grow', '늘어나기') },
-      { value: 'fade', label: T('フェード', 'Fade', '페이드') },
-      { value: 'none', label: T('なし', 'None', '없음') }
+      { value: 'grow', label: T('伸びる', 'Grow', '늘어나기', '伸展') },
+      { value: 'fade', label: T('フェード', 'Fade', '페이드', '淡入') },
+      { value: 'none', label: T('なし', 'None', '없음', '无') }
     ],
     bg: [
-      { value: 'none', label: T('なし（透明）', 'None (clear)', '없음 (투명)') },
-      { value: 'solid', label: T('単色', 'Solid', '단색') },
-      { value: 'vignette', label: T('ビネット', 'Vignette', '비네트') },
-      { value: 'bottom', label: T('下からグラデ', 'Bottom fade', '아래에서 그라데이션') },
-      { value: 'top', label: T('上からグラデ', 'Top fade', '위에서 그라데이션') }
+      { value: 'none', label: T('なし（透明）', 'None (clear)', '없음 (투명)', '无（透明）') },
+      { value: 'solid', label: T('単色', 'Solid', '단색', '纯色') },
+      { value: 'vignette', label: T('ビネット', 'Vignette', '비네트', '暗角') },
+      { value: 'bottom', label: T('下からグラデ', 'Bottom fade', '아래에서 그라데이션', '底部渐变') },
+      { value: 'top', label: T('上からグラデ', 'Top fade', '위에서 그라데이션', '顶部渐变') }
     ],
     writing: [
-      { value: 'h', label: T('横書き', 'Horizontal', '가로쓰기') },
-      { value: 'v', label: T('縦書き', 'Vertical', '세로쓰기') }
+      { value: 'h', label: T('横書き', 'Horizontal', '가로쓰기', '横排') },
+      { value: 'v', label: T('縦書き', 'Vertical', '세로쓰기', '竖排') }
     ],
     fillType: [
-      { value: 'solid', label: T('単色', 'Solid', '단색') },
-      { value: 'gradient', label: T('グラデーション', 'Gradient', '그라데이션') }
+      { value: 'solid', label: T('単色', 'Solid', '단색', '纯色') },
+      { value: 'gradient', label: T('グラデーション', 'Gradient', '그라데이션', '渐变') }
     ],
     gradDir: [
-      { value: 'v', label: T('縦（1行ごと）', 'Vertical (per line)', '세로 (한 줄마다)') },
-      { value: 'h', label: T('横（全体）', 'Horizontal (whole)', '가로 (전체)') },
-      { value: 'd', label: T('斜め（全体）', 'Diagonal (whole)', '대각선 (전체)') }
+      { value: 'v', label: T('縦（1行ごと）', 'Vertical (per line)', '세로 (한 줄마다)', '纵向（逐行）') },
+      { value: 'h', label: T('横（全体）', 'Horizontal (whole)', '가로 (전체)', '横向（整体）') },
+      { value: 'd', label: T('斜め（全体）', 'Diagonal (whole)', '대각선 (전체)', '斜向（整体）') }
     ]
   };
 
   const FORMATS = {
-    s: { digits: 2, suffix: T('秒', 's', '초') },
-    sSigned: { digits: 2, suffix: T('秒', 's', '초') },
-    px: { digits: 0, suffix: T('px', 'px', 'px') },
-    pct: { digits: 0, suffix: T('%', '%', '%'), mul: 100 },
-    x: { digits: 2, suffix: T('倍', '×', '배') },
-    em: { digits: 2, suffix: T('em', 'em', 'em') },
-    cps: { digits: 0, suffix: T('字/秒', 'chars/s', '자/초') },
-    pxs: { digits: 0, suffix: T('px/秒', 'px/s', 'px/초') },
-    chars: { digits: 0, suffix: T('字', 'chars', '자') }
+    s: { digits: 2, suffix: T('秒', 's', '초', '秒') },
+    sSigned: { digits: 2, suffix: T('秒', 's', '초', '秒') },
+    px: { digits: 0, suffix: T('px', 'px', 'px', 'px') },
+    pct: { digits: 0, suffix: T('%', '%', '%', '%'), mul: 100 },
+    x: { digits: 2, suffix: T('倍', '×', '배', '倍') },
+    em: { digits: 2, suffix: T('em', 'em', 'em', 'em') },
+    cps: { digits: 0, suffix: T('字/秒', 'chars/s', '자/초', '字/秒') },
+    pxs: { digits: 0, suffix: T('px/秒', 'px/s', 'px/초', 'px/秒') },
+    chars: { digits: 0, suffix: T('字', 'chars', '자', '字') }
   };
 
   const isTrailer = s => s.mode === 'trailer';
@@ -172,200 +172,200 @@
   function fontWeightOptions(fontId) {
     const font = F.get(fontId) || F.get('noto-sans-jp');
     const names = { 100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold', 900: 'Black' };
-    return (font.weights || [400]).map(w => ({ value: w, label: T(`${w}（${names[w] || w}）`, `${w} (${names[w] || w})`, `${w} (${names[w] || w})`) }));
+    return (font.weights || [400]).map(w => ({ value: w, label: T(`${w}（${names[w] || w}）`, `${w} (${names[w] || w})`, `${w} (${names[w] || w})`, `${w}（${names[w] || w}）`) }));
   }
 
   function fontSelectOptions(includeSame) {
     const opts = [];
-    if (includeSame) opts.push({ value: 'same', label: T('メインと同じ', 'Same as main', '메인과 같음') });
+    if (includeSame) opts.push({ value: 'same', label: T('メインと同じ', 'Same as main', '메인과 같음', '与主文本相同') });
     F.CATEGORIES.forEach(cat => {
       const fonts = F.list().filter(f => f.cat === cat.id);
       if (!fonts.length) return;
-      opts.push({ group: cat.label, options: fonts.map(f => ({ value: f.id, label: T(f.label || f.family, f.label || f.family, f.label || f.family) })) });
+      opts.push({ group: cat.label, options: fonts.map(f => ({ value: f.id, label: T(f.label || f.family, f.label || f.family, f.label || f.family, f.label || f.family) })) });
     });
     return opts;
   }
 
   const SCHEMA = {
     text: [
-      { type: 'textarea', bind: 'text', id: 'mainTextInput', label: s => (isTrailer(s) ? T('本文', 'Body text', '본문') : T('メインテキスト', 'Main text', '메인 텍스트')), rows: s => (isTrailer(s) ? 8 : 2) },
-      { type: 'note', when: isTrailer, text: T('改行はそのまま反映されます。何も書かない行（空行）でページを区切れます。', 'Line breaks are kept. A blank line starts a new page.', '줄바꿈은 그대로 반영됩니다. 아무것도 쓰지 않은 줄(빈 줄)로 페이지를 나눌 수 있습니다.') },
-      { type: 'text', bind: 'subText', when: notTrailer, label: T('サブテキスト（任意）', 'Sub text (optional)', '서브 텍스트 (선택)'), placeholder: T('例：BATTLE START ／ 放課後 16:30', 'e.g. BATTLE START / 4:30 PM', '예: BATTLE START / 방과 후 16:30') },
-      { type: 'segment', bind: 'subPosition', when: notTrailer, label: T('サブテキストの位置', 'Sub text position', '서브 텍스트 위치'),
+      { type: 'textarea', bind: 'text', id: 'mainTextInput', label: s => (isTrailer(s) ? T('本文', 'Body text', '본문', '正文') : T('メインテキスト', 'Main text', '메인 텍스트', '主文本')), rows: s => (isTrailer(s) ? 8 : 2) },
+      { type: 'note', when: isTrailer, text: T('改行はそのまま反映されます。何も書かない行（空行）でページを区切れます。', 'Line breaks are kept. A blank line starts a new page.', '줄바꿈은 그대로 반영됩니다. 아무것도 쓰지 않은 줄(빈 줄)로 페이지를 나눌 수 있습니다.', '换行会原样保留。用空行（什么都不写的行）可以分页。') },
+      { type: 'text', bind: 'subText', when: notTrailer, label: T('サブテキスト（任意）', 'Sub text (optional)', '서브 텍스트 (선택)', '副文本（可选）'), placeholder: T('例：BATTLE START ／ 放課後 16:30', 'e.g. BATTLE START / 4:30 PM', '예: BATTLE START / 방과 후 16:30', '例：BATTLE START ／ 放学后 16:30') },
+      { type: 'segment', bind: 'subPosition', when: notTrailer, label: T('サブテキストの位置', 'Sub text position', '서브 텍스트 위치', '副文本位置'),
         options: s => (s.writing === 'v'
-          ? [{ value: 'above', label: T('右（前）', 'Right (before)', '오른쪽 (앞)') }, { value: 'below', label: T('左（後）', 'Left (after)', '왼쪽 (뒤)') }]
-          : [{ value: 'above', label: T('上', 'Above', '위') }, { value: 'below', label: T('下', 'Below', '아래') }]) },
-      { type: 'segment', bind: 'writing', label: T('書字方向', 'Writing direction', '쓰기 방향'), options: OPT.writing },
-      { type: 'segment', bind: 'align', label: T('揃え', 'Alignment', '정렬'),
+          ? [{ value: 'above', label: T('右（前）', 'Right (before)', '오른쪽 (앞)', '右（前）') }, { value: 'below', label: T('左（後）', 'Left (after)', '왼쪽 (뒤)', '左（后）') }]
+          : [{ value: 'above', label: T('上', 'Above', '위', '上方') }, { value: 'below', label: T('下', 'Below', '아래', '下方') }]) },
+      { type: 'segment', bind: 'writing', label: T('書字方向', 'Writing direction', '쓰기 방향', '文字方向'), options: OPT.writing },
+      { type: 'segment', bind: 'align', label: T('揃え', 'Alignment', '정렬', '对齐'),
         options: s => (s.writing === 'v'
-          ? [{ value: 'start', label: T('上', 'Top', '위') }, { value: 'center', label: T('中央', 'Center', '중앙') }, { value: 'end', label: T('下', 'Bottom', '아래') }]
-          : [{ value: 'start', label: T('左', 'Left', '왼쪽') }, { value: 'center', label: T('中央', 'Center', '중앙') }, { value: 'end', label: T('右', 'Right', '오른쪽') }]) },
-      { type: 'range', bind: 'wrapChars', when: isTrailer, label: T('自動改行（1行の最大文字数・0で改行しない）', 'Auto wrap (max chars per line, 0 = off)', '자동 줄바꿈 (한 줄 최대 글자 수, 0이면 줄바꿈 안 함)'), min: 0, max: 60, step: 1, format: 'chars' },
-      { type: 'toggle', bind: 'pageSplit', when: s => isTrailer(s) && s.reveal !== 'scroll', label: T('空行でページを分ける', 'Split pages at blank lines', '빈 줄에서 페이지 나누기') },
-      { type: 'toggle', bind: 'autoFit', label: T('はみ出す場合は自動で縮小する', 'Shrink automatically when the text overflows', '넘칠 경우 자동으로 축소') },
+          ? [{ value: 'start', label: T('上', 'Top', '위', '顶部') }, { value: 'center', label: T('中央', 'Center', '중앙', '居中') }, { value: 'end', label: T('下', 'Bottom', '아래', '底部') }]
+          : [{ value: 'start', label: T('左', 'Left', '왼쪽', '左') }, { value: 'center', label: T('中央', 'Center', '중앙', '居中') }, { value: 'end', label: T('右', 'Right', '오른쪽', '右') }]) },
+      { type: 'range', bind: 'wrapChars', when: isTrailer, label: T('自動改行（1行の最大文字数・0で改行しない）', 'Auto wrap (max chars per line, 0 = off)', '자동 줄바꿈 (한 줄 최대 글자 수, 0이면 줄바꿈 안 함)', '自动换行（每行最多字数，0 为不换行）'), min: 0, max: 60, step: 1, format: 'chars' },
+      { type: 'toggle', bind: 'pageSplit', when: s => isTrailer(s) && s.reveal !== 'scroll', label: T('空行でページを分ける', 'Split pages at blank lines', '빈 줄에서 페이지 나누기', '以空行分页') },
+      { type: 'toggle', bind: 'autoFit', label: T('はみ出す場合は自動で縮小する', 'Shrink automatically when the text overflows', '넘칠 경우 자동으로 축소', '超出时自动缩小') },
       { type: 'dynamicNote', key: 'autoFit' }
     ],
     font: [
-      { type: 'fontPicker', bind: 'fontId', label: T('フォント', 'Font', '폰트') },
-      { type: 'select', bind: 'weight', label: T('太さ', 'Weight', '굵기'), options: s => fontWeightOptions(s.fontId), numeric: true },
-      { type: 'toggle', bind: 'italic', label: T('斜体（イタリック）にする', 'Italic', '기울임꼴(이탤릭)로 하기') },
+      { type: 'fontPicker', bind: 'fontId', label: T('フォント', 'Font', '폰트', '字体') },
+      { type: 'select', bind: 'weight', label: T('太さ', 'Weight', '굵기', '粗细'), options: s => fontWeightOptions(s.fontId), numeric: true },
+      { type: 'toggle', bind: 'italic', label: T('斜体（イタリック）にする', 'Italic', '기울임꼴(이탤릭)로 하기', '设为斜体') },
       { type: 'colors', items: [
-        { bind: 'fill.color', label: s => (s.fill.type === 'gradient' ? T('文字の色1', 'Text color 1', '글자 색 1') : T('文字の色', 'Text color', '글자 색')) },
-        { bind: 'fill.color2', label: T('文字の色2', 'Text color 2', '글자 색 2'), when: s => s.fill.type === 'gradient' },
-        { bind: 'fill.color3', label: T('文字の色3', 'Text color 3', '글자 색 3'), when: s => s.fill.type === 'gradient', optional: true }
+        { bind: 'fill.color', label: s => (s.fill.type === 'gradient' ? T('文字の色1', 'Text color 1', '글자 색 1', '文字颜色 1') : T('文字の色', 'Text color', '글자 색', '文字颜色')) },
+        { bind: 'fill.color2', label: T('文字の色2', 'Text color 2', '글자 색 2', '文字颜色 2'), when: s => s.fill.type === 'gradient' },
+        { bind: 'fill.color3', label: T('文字の色3', 'Text color 3', '글자 색 3', '文字颜色 3'), when: s => s.fill.type === 'gradient', optional: true }
       ] },
-      { type: 'note', text: T('グラデーション・縁取り・影は「装飾」タブで設定できます', 'Gradients, outlines and shadows are in the Style tab', '그라데이션·테두리·그림자는 「장식」 탭에서 설정할 수 있습니다') },
-      { type: 'range', bind: 'fontSize', label: T('文字サイズ', 'Font size', '글자 크기'), min: 12, max: 400, step: 1, format: 'px' },
-      { type: 'range', bind: 'letterSpacing', label: T('字間', 'Letter spacing', '자간'), min: -0.2, max: 1.2, step: 0.01, format: 'pct' },
-      { type: 'range', bind: 'lineHeight', label: T('行間', 'Line height', '행간'), min: 0.9, max: 3.2, step: 0.05, format: 'x' },
-      { type: 'heading', when: notTrailer, label: T('サブテキスト', 'Sub text', '서브 텍스트') },
-      { type: 'select', bind: 'subFontId', when: notTrailer, label: T('サブのフォント', 'Sub font', '서브 폰트'), options: () => fontSelectOptions(true) },
-      { type: 'select', bind: 'subWeight', when: notTrailer, label: T('サブの太さ', 'Sub weight', '서브 굵기'), options: s => fontWeightOptions(s.subFontId === 'same' ? s.fontId : s.subFontId), numeric: true },
-      { type: 'toggle', bind: 'subItalic', when: notTrailer, label: T('サブを斜体（イタリック）にする', 'Italic sub text', '서브를 기울임꼴(이탤릭)로 하기') },
-      { type: 'toggle', bind: 'subColorOn', when: notTrailer, label: T('サブテキストを別の色にする', 'Different color for sub text', '서브 텍스트를 다른 색으로 하기') },
-      { type: 'colors', when: s => notTrailer(s) && s.subColorOn, items: [{ bind: 'subColor', label: T('サブの色', 'Sub text color', '서브 색') }] },
-      { type: 'range', bind: 'subSize', when: notTrailer, label: T('サブの大きさ（メイン比）', 'Sub size (vs. main)', '서브 크기 (메인 대비)'), min: 0.1, max: 0.9, step: 0.01, format: 'pct' },
-      { type: 'range', bind: 'subLetterSpacing', when: notTrailer, label: T('サブの字間', 'Sub letter spacing', '서브 자간'), min: -0.2, max: 1.5, step: 0.01, format: 'pct' },
-      { type: 'range', bind: 'subGap', when: notTrailer, label: T('メインとの間隔', 'Gap from the main text', '메인과의 간격'), min: 0, max: 1.5, step: 0.01, format: 'em' }
+      { type: 'note', text: T('グラデーション・縁取り・影は「装飾」タブで設定できます', 'Gradients, outlines and shadows are in the Style tab', '그라데이션·테두리·그림자는 「장식」 탭에서 설정할 수 있습니다', '渐变、描边和阴影可在“装饰”选项卡中设置') },
+      { type: 'range', bind: 'fontSize', label: T('文字サイズ', 'Font size', '글자 크기', '文字大小'), min: 12, max: 400, step: 1, format: 'px' },
+      { type: 'range', bind: 'letterSpacing', label: T('字間', 'Letter spacing', '자간', '字距'), min: -0.2, max: 1.2, step: 0.01, format: 'pct' },
+      { type: 'range', bind: 'lineHeight', label: T('行間', 'Line height', '행간', '行距'), min: 0.9, max: 3.2, step: 0.05, format: 'x' },
+      { type: 'heading', when: notTrailer, label: T('サブテキスト', 'Sub text', '서브 텍스트', '副文本') },
+      { type: 'select', bind: 'subFontId', when: notTrailer, label: T('サブのフォント', 'Sub font', '서브 폰트', '副文本字体'), options: () => fontSelectOptions(true) },
+      { type: 'select', bind: 'subWeight', when: notTrailer, label: T('サブの太さ', 'Sub weight', '서브 굵기', '副文本粗细'), options: s => fontWeightOptions(s.subFontId === 'same' ? s.fontId : s.subFontId), numeric: true },
+      { type: 'toggle', bind: 'subItalic', when: notTrailer, label: T('サブを斜体（イタリック）にする', 'Italic sub text', '서브를 기울임꼴(이탤릭)로 하기', '副文本设为斜体') },
+      { type: 'toggle', bind: 'subColorOn', when: notTrailer, label: T('サブテキストを別の色にする', 'Different color for sub text', '서브 텍스트를 다른 색으로 하기', '副文本使用其他颜色') },
+      { type: 'colors', when: s => notTrailer(s) && s.subColorOn, items: [{ bind: 'subColor', label: T('サブの色', 'Sub text color', '서브 색', '副文本颜色') }] },
+      { type: 'range', bind: 'subSize', when: notTrailer, label: T('サブの大きさ（メイン比）', 'Sub size (vs. main)', '서브 크기 (메인 대비)', '副文本大小（相对主文本）'), min: 0.1, max: 0.9, step: 0.01, format: 'pct' },
+      { type: 'range', bind: 'subLetterSpacing', when: notTrailer, label: T('サブの字間', 'Sub letter spacing', '서브 자간', '副文本字距'), min: -0.2, max: 1.5, step: 0.01, format: 'pct' },
+      { type: 'range', bind: 'subGap', when: notTrailer, label: T('メインとの間隔', 'Gap from the main text', '메인과의 간격', '与主文本的间距'), min: 0, max: 1.5, step: 0.01, format: 'em' }
     ],
     motion: [
-      { type: 'section', when: isTrailer, label: T('表示の流れ', 'Reveal flow', '표시 흐름'), children: [
+      { type: 'section', when: isTrailer, label: T('表示の流れ', 'Reveal flow', '표시 흐름', '显示方式'), children: [
         { type: 'chips', bind: 'reveal', options: OPT.reveal },
-        { type: 'note', when: s => s.reveal === 'solo', text: T('1文字ずつ画面の中央に大きく出したあと、全文を一度に出します', 'Each character flashes big at the center, then the whole text lands at once', '한 글자씩 화면 중앙에 크게 보여 준 뒤, 전문을 한 번에 표시합니다') },
-        { type: 'note', when: s => s.reveal === 'spread', text: T('全文の文字を中央に重ねて出したあと、左右に広げて並べます（縦書きは上下）', 'All characters appear stacked at the center, then spread out into the full text', '전문의 글자를 중앙에 겹쳐 보여 준 뒤, 좌우로 펼쳐 나열합니다 (세로쓰기는 위아래)') },
-        { type: 'range', bind: 'spreadHold', when: s => s.reveal === 'spread', label: T('重ねて見せる時間', 'Time shown stacked', '겹쳐 보여 주는 시간'), min: 0, max: 3, step: 0.05, format: 's' },
-        { type: 'range', bind: 'spreadDur', when: s => s.reveal === 'spread', label: T('広がる時間', 'Spread time', '펼쳐지는 시간'), min: 0.1, max: 3, step: 0.05, format: 's' },
-        { type: 'range', bind: 'cps', when: s => s.reveal === 'char' || s.reveal === 'solo', label: T('表示スピード', 'Speed', '표시 속도'), min: 2, max: 40, step: 1, format: 'cps' },
-        { type: 'range', bind: 'soloSize', when: s => s.reveal === 'solo', label: T('中央の文字の大きさ（画像の短い辺に対して）', 'Center letter size (vs. the shorter side)', '중앙 글자 크기 (이미지의 짧은 변 대비)'), min: 0.15, max: 0.9, step: 0.01, format: 'pct' },
-        { type: 'range', bind: 'soloPause', when: s => s.reveal === 'solo', label: T('全文を出す前のタメ（何も出ない間）', 'Pause before the whole text (blank)', '전문 표시 전의 뜸 (아무것도 나오지 않는 시간)'), min: 0, max: 2, step: 0.05, format: 's' },
-        { type: 'range', bind: 'soloImpact', when: s => s.reveal === 'solo', label: T('全文が出る瞬間の衝撃', 'Impact when the whole text lands', '전문이 나오는 순간의 충격'), min: 0, max: 2, step: 0.05, format: 'x' },
-        { type: 'range', bind: 'glyphDur', when: s => !['scroll', 'solo', 'spread'].includes(s.reveal) && s.inFx !== 'typewriter', label: T('1文字が現れるまでの時間', 'Fade time per character', '한 글자가 나타나기까지의 시간'), min: 0, max: 2, step: 0.05, format: 's' },
-        { type: 'range', bind: 'punctPause', when: s => s.reveal === 'char', label: T('句読点での間', 'Pause at punctuation', '문장 부호에서의 간격'), min: 0, max: 1.5, step: 0.05, format: 's' },
-        { type: 'range', bind: 'linePause', when: s => s.reveal === 'char', label: T('改行での間', 'Pause at line breaks', '줄바꿈에서의 간격'), min: 0, max: 2, step: 0.05, format: 's' },
-        { type: 'range', bind: 'lineInterval', when: s => s.reveal === 'line' || s.reveal === 'sweep', label: T('次の行までの時間', 'Time between lines', '다음 줄까지의 시간'), min: 0.1, max: 4, step: 0.05, format: 's' },
-        { type: 'range', bind: 'sweepDur', when: s => s.reveal === 'sweep', label: T('1行が流れる時間', 'Sweep time per line', '한 줄이 흐르는 시간'), min: 0.2, max: 5, step: 0.05, format: 's' },
-        { type: 'range', bind: 'scrollSpeed', when: s => s.reveal === 'scroll', label: T('スクロール速度', 'Scroll speed', '스크롤 속도'), min: 10, max: 400, step: 5, format: 'pxs' },
-        { type: 'toggle', bind: 'scrollFade', when: s => s.reveal === 'scroll', label: T('画面の端でフェードさせる', 'Fade near the edges', '화면 끝에서 페이드') },
-        { type: 'toggle', bind: 'cursor', when: s => s.reveal === 'char', label: T('入力カーソルを表示', 'Show a typing cursor', '입력 커서 표시') },
-        { type: 'range', bind: 'pageGap', when: s => s.reveal !== 'scroll' && s.pageSplit, label: T('ページ間の空白', 'Gap between pages', '페이지 사이 공백'), min: 0, max: 3, step: 0.05, format: 's' }
+        { type: 'note', when: s => s.reveal === 'solo', text: T('1文字ずつ画面の中央に大きく出したあと、全文を一度に出します', 'Each character flashes big at the center, then the whole text lands at once', '한 글자씩 화면 중앙에 크게 보여 준 뒤, 전문을 한 번에 표시합니다', '逐字在画面中央放大显示，最后一次性显示全文') },
+        { type: 'note', when: s => s.reveal === 'spread', text: T('全文の文字を中央に重ねて出したあと、左右に広げて並べます（縦書きは上下）', 'All characters appear stacked at the center, then spread out into the full text', '전문의 글자를 중앙에 겹쳐 보여 준 뒤, 좌우로 펼쳐 나열합니다 (세로쓰기는 위아래)', '所有文字先在中央重叠出现，再向左右展开排列（竖排时为上下）') },
+        { type: 'range', bind: 'spreadHold', when: s => s.reveal === 'spread', label: T('重ねて見せる時間', 'Time shown stacked', '겹쳐 보여 주는 시간', '重叠显示时间'), min: 0, max: 3, step: 0.05, format: 's' },
+        { type: 'range', bind: 'spreadDur', when: s => s.reveal === 'spread', label: T('広がる時間', 'Spread time', '펼쳐지는 시간', '展开时间'), min: 0.1, max: 3, step: 0.05, format: 's' },
+        { type: 'range', bind: 'cps', when: s => s.reveal === 'char' || s.reveal === 'solo', label: T('表示スピード', 'Speed', '표시 속도', '显示速度'), min: 2, max: 40, step: 1, format: 'cps' },
+        { type: 'range', bind: 'soloSize', when: s => s.reveal === 'solo', label: T('中央の文字の大きさ（画像の短い辺に対して）', 'Center letter size (vs. the shorter side)', '중앙 글자 크기 (이미지의 짧은 변 대비)', '中央文字大小（相对图像短边）'), min: 0.15, max: 0.9, step: 0.01, format: 'pct' },
+        { type: 'range', bind: 'soloPause', when: s => s.reveal === 'solo', label: T('全文を出す前のタメ（何も出ない間）', 'Pause before the whole text (blank)', '전문 표시 전의 뜸 (아무것도 나오지 않는 시간)', '显示全文前的停顿（空白时间）'), min: 0, max: 2, step: 0.05, format: 's' },
+        { type: 'range', bind: 'soloImpact', when: s => s.reveal === 'solo', label: T('全文が出る瞬間の衝撃', 'Impact when the whole text lands', '전문이 나오는 순간의 충격', '全文出现时的冲击感'), min: 0, max: 2, step: 0.05, format: 'x' },
+        { type: 'range', bind: 'glyphDur', when: s => !['scroll', 'solo', 'spread'].includes(s.reveal) && s.inFx !== 'typewriter', label: T('1文字が現れるまでの時間', 'Fade time per character', '한 글자가 나타나기까지의 시간', '单字显现时间'), min: 0, max: 2, step: 0.05, format: 's' },
+        { type: 'range', bind: 'punctPause', when: s => s.reveal === 'char', label: T('句読点での間', 'Pause at punctuation', '문장 부호에서의 간격', '标点处停顿'), min: 0, max: 1.5, step: 0.05, format: 's' },
+        { type: 'range', bind: 'linePause', when: s => s.reveal === 'char', label: T('改行での間', 'Pause at line breaks', '줄바꿈에서의 간격', '换行处停顿'), min: 0, max: 2, step: 0.05, format: 's' },
+        { type: 'range', bind: 'lineInterval', when: s => s.reveal === 'line' || s.reveal === 'sweep', label: T('次の行までの時間', 'Time between lines', '다음 줄까지의 시간', '到下一行的时间'), min: 0.1, max: 4, step: 0.05, format: 's' },
+        { type: 'range', bind: 'sweepDur', when: s => s.reveal === 'sweep', label: T('1行が流れる時間', 'Sweep time per line', '한 줄이 흐르는 시간', '每行扫过时间'), min: 0.2, max: 5, step: 0.05, format: 's' },
+        { type: 'range', bind: 'scrollSpeed', when: s => s.reveal === 'scroll', label: T('スクロール速度', 'Scroll speed', '스크롤 속도', '滚动速度'), min: 10, max: 400, step: 5, format: 'pxs' },
+        { type: 'toggle', bind: 'scrollFade', when: s => s.reveal === 'scroll', label: T('画面の端でフェードさせる', 'Fade near the edges', '화면 끝에서 페이드', '在画面边缘淡化') },
+        { type: 'toggle', bind: 'cursor', when: s => s.reveal === 'char', label: T('入力カーソルを表示', 'Show a typing cursor', '입력 커서 표시', '显示输入光标') },
+        { type: 'range', bind: 'pageGap', when: s => s.reveal !== 'scroll' && s.pageSplit, label: T('ページ間の空白', 'Gap between pages', '페이지 사이 공백', '页间空白'), min: 0, max: 3, step: 0.05, format: 's' }
       ] },
-      { type: 'section', when: s => !(isTrailer(s) && ['solo', 'spread'].includes(s.reveal)), toggle: s => (isTrailer(s) ? null : 'inEnabled'), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears', '한 글자가 나타나는 방식') : T('登場', 'In', '등장')), children: [
+      { type: 'section', when: s => !(isTrailer(s) && ['solo', 'spread'].includes(s.reveal)), toggle: s => (isTrailer(s) ? null : 'inEnabled'), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears', '한 글자가 나타나는 방식', '单字显现方式') : T('登場', 'In', '등장', '登场')), children: [
         { type: 'effects', phase: 'in' },
-        { type: 'select', bind: 'inDir', when: s => Boolean(inDef(s).dirs), label: T('方向', 'Direction', '방향'), options: s => (inDef(s).dirs || []).map(d => ({ value: d, label: OPT.dirs[d] })) },
-        { type: 'range', bind: 'inDur', when: s => notTrailer(s) && s.inFx !== 'typewriter', label: T('時間', 'Duration', '시간'), min: 0.05, max: 4, step: 0.05, format: 's' },
-        { type: 'range', bind: 'inStagger', when: s => notTrailer(s) && inDef(s).level === 'glyph', label: T('文字ごとのずらし', 'Delay between characters', '글자마다의 시간차'), min: 0, max: 0.6, step: 0.01, format: 's' },
-        { type: 'select', bind: 'inOrder', when: s => notTrailer(s) && inDef(s).level === 'glyph', label: T('順番', 'Order', '순서'), options: OPT.order },
-        { type: 'select', bind: 'inEase', when: s => s.inFx !== 'typewriter', label: T('動きのカーブ', 'Easing', '움직임 곡선'), options: OPT.ease },
-        { type: 'range', bind: 'inPower', when: s => !['fade', 'typewriter'].includes(s.inFx), label: T('強さ', 'Strength', '강도'), min: 0.2, max: 2.5, step: 0.05, format: 'x' }
+        { type: 'select', bind: 'inDir', when: s => Boolean(inDef(s).dirs), label: T('方向', 'Direction', '방향', '方向'), options: s => (inDef(s).dirs || []).map(d => ({ value: d, label: OPT.dirs[d] })) },
+        { type: 'range', bind: 'inDur', when: s => notTrailer(s) && s.inFx !== 'typewriter', label: T('時間', 'Duration', '시간', '时长'), min: 0.05, max: 4, step: 0.05, format: 's' },
+        { type: 'range', bind: 'inStagger', when: s => notTrailer(s) && inDef(s).level === 'glyph', label: T('文字ごとのずらし', 'Delay between characters', '글자마다의 시간차', '逐字延迟'), min: 0, max: 0.6, step: 0.01, format: 's' },
+        { type: 'select', bind: 'inOrder', when: s => notTrailer(s) && inDef(s).level === 'glyph', label: T('順番', 'Order', '순서', '顺序'), options: OPT.order },
+        { type: 'select', bind: 'inEase', when: s => s.inFx !== 'typewriter', label: T('動きのカーブ', 'Easing', '움직임 곡선', '缓动曲线'), options: OPT.ease },
+        { type: 'range', bind: 'inPower', when: s => !['fade', 'typewriter'].includes(s.inFx), label: T('強さ', 'Strength', '강도', '强度'), min: 0.2, max: 2.5, step: 0.05, format: 'x' }
       ] },
-      { type: 'section', label: s => (isTrailer(s) && s.reveal !== 'scroll' ? T('表示中（各ページ）', 'Hold (each page)', '표시 중 (각 페이지)') : T('表示中', 'Hold', '표시 중')), children: [
-        { type: 'range', bind: 'hold', when: s => !(isTrailer(s) && s.reveal === 'scroll'), label: T('表示時間', 'Hold time', '표시 시간'), min: 0, max: 10, step: 0.1, format: 's' },
+      { type: 'section', label: s => (isTrailer(s) && s.reveal !== 'scroll' ? T('表示中（各ページ）', 'Hold (each page)', '표시 중 (각 페이지)', '显示中（每页）') : T('表示中', 'Hold', '표시 중', '显示中')), children: [
+        { type: 'range', bind: 'hold', when: s => !(isTrailer(s) && s.reveal === 'scroll'), label: T('表示時間', 'Hold time', '표시 시간', '显示时长'), min: 0, max: 10, step: 0.1, format: 's' },
         { type: 'chips', bind: 'holdFx', options: Object.keys(FX_LABELS.hold).map(id => ({ value: id, label: FX_LABELS.hold[id] })) },
-        { type: 'range', bind: 'holdPower', when: s => s.holdFx !== 'none', label: T('強さ', 'Strength', '강도'), min: 0.2, max: 3, step: 0.05, format: 'x' },
+        { type: 'range', bind: 'holdPower', when: s => s.holdFx !== 'none', label: T('強さ', 'Strength', '강도', '强度'), min: 0.2, max: 3, step: 0.05, format: 'x' },
         { type: 'dynamicNote', key: 'hold' }
       ] },
-      { type: 'section', when: s => !(isTrailer(s) && s.reveal === 'scroll'), toggle: 'outEnabled', label: s => (isTrailer(s) ? T('退場（各ページ）', 'Out (each page)', '퇴장 (각 페이지)') : T('退場', 'Out', '퇴장')), children: [
+      { type: 'section', when: s => !(isTrailer(s) && s.reveal === 'scroll'), toggle: 'outEnabled', label: s => (isTrailer(s) ? T('退場（各ページ）', 'Out (each page)', '퇴장 (각 페이지)', '退场（每页）') : T('退場', 'Out', '퇴장', '退场')), children: [
         { type: 'effects', phase: 'out' },
-        { type: 'select', bind: 'outDir', when: s => Boolean(outDef(s).dirs), label: T('方向', 'Direction', '방향'), options: s => (outDef(s).dirs || []).map(d => ({ value: d, label: OPT.dirs[d] })) },
-        { type: 'range', bind: 'outDur', when: s => !['none', 'erase'].includes(s.outFx), label: T('時間', 'Duration', '시간'), min: 0.05, max: 4, step: 0.05, format: 's' },
-        { type: 'range', bind: 'outStagger', when: s => outDef(s).level === 'glyph', label: T('文字ごとのずらし', 'Delay between characters', '글자마다의 시간차'), min: 0, max: 0.6, step: 0.01, format: 's' },
-        { type: 'select', bind: 'outOrder', when: s => outDef(s).level === 'glyph', label: T('順番', 'Order', '순서'), options: OPT.order },
-        { type: 'select', bind: 'outEase', when: s => !['none', 'erase'].includes(s.outFx), label: T('動きのカーブ', 'Easing', '움직임 곡선'), options: OPT.ease },
-        { type: 'range', bind: 'outPower', when: s => !['none', 'fade', 'erase'].includes(s.outFx), label: T('強さ', 'Strength', '강도'), min: 0.2, max: 2.5, step: 0.05, format: 'x' }
+        { type: 'select', bind: 'outDir', when: s => Boolean(outDef(s).dirs), label: T('方向', 'Direction', '방향', '方向'), options: s => (outDef(s).dirs || []).map(d => ({ value: d, label: OPT.dirs[d] })) },
+        { type: 'range', bind: 'outDur', when: s => !['none', 'erase'].includes(s.outFx), label: T('時間', 'Duration', '시간', '时长'), min: 0.05, max: 4, step: 0.05, format: 's' },
+        { type: 'range', bind: 'outStagger', when: s => outDef(s).level === 'glyph', label: T('文字ごとのずらし', 'Delay between characters', '글자마다의 시간차', '逐字延迟'), min: 0, max: 0.6, step: 0.01, format: 's' },
+        { type: 'select', bind: 'outOrder', when: s => outDef(s).level === 'glyph', label: T('順番', 'Order', '순서', '顺序'), options: OPT.order },
+        { type: 'select', bind: 'outEase', when: s => !['none', 'erase'].includes(s.outFx), label: T('動きのカーブ', 'Easing', '움직임 곡선', '缓动曲线'), options: OPT.ease },
+        { type: 'range', bind: 'outPower', when: s => !['none', 'fade', 'erase'].includes(s.outFx), label: T('強さ', 'Strength', '강도', '强度'), min: 0.2, max: 2.5, step: 0.05, format: 'x' }
       ] },
-      { type: 'section', label: T('タイミング', 'Timing', '타이밍'), children: [
-        { type: 'select', bind: 'subFx', when: notTrailer, label: T('サブテキストの登場', 'Sub text entrance', '서브 텍스트 등장'), options: OPT.subFx },
-        { type: 'range', bind: 'subDelay', when: notTrailer, label: T('サブの登場（メイン登場完了からの差）', 'Sub text timing (after main finishes)', '서브 등장 (메인 등장 완료 후 시간차)'), min: -2, max: 2, step: 0.05, format: 'sSigned' },
-        { type: 'range', bind: 'startDelay', label: T('開始前の空白', 'Blank time before', '시작 전 공백'), min: 0, max: 3, step: 0.05, format: 's' },
-        { type: 'range', bind: 'endDelay', label: T('終了後の空白', 'Blank time after', '종료 후 공백'), min: 0, max: 5, step: 0.05, format: 's' },
+      { type: 'section', label: T('タイミング', 'Timing', '타이밍', '时机'), children: [
+        { type: 'select', bind: 'subFx', when: notTrailer, label: T('サブテキストの登場', 'Sub text entrance', '서브 텍스트 등장', '副文本登场'), options: OPT.subFx },
+        { type: 'range', bind: 'subDelay', when: notTrailer, label: T('サブの登場（メイン登場完了からの差）', 'Sub text timing (after main finishes)', '서브 등장 (메인 등장 완료 후 시간차)', '副文本登场（相对主文本登场完成的时差）'), min: -2, max: 2, step: 0.05, format: 'sSigned' },
+        { type: 'range', bind: 'startDelay', label: T('開始前の空白', 'Blank time before', '시작 전 공백', '开始前空白'), min: 0, max: 3, step: 0.05, format: 's' },
+        { type: 'range', bind: 'endDelay', label: T('終了後の空白', 'Blank time after', '종료 후 공백', '结束后空白'), min: 0, max: 5, step: 0.05, format: 's' },
         { type: 'dynamicNote', key: 'duration' }
       ] }
     ],
     style: [
-      { type: 'stylePresets', label: T('スタイルプリセット', 'Style presets', '스타일 프리셋') },
-      { type: 'section', label: T('文字の塗り', 'Fill', '글자 채우기'), children: [
+      { type: 'stylePresets', label: T('スタイルプリセット', 'Style presets', '스타일 프리셋', '样式预设') },
+      { type: 'section', label: T('文字の塗り', 'Fill', '글자 채우기', '文字填充'), children: [
         { type: 'segment', bind: 'fill.type', options: OPT.fillType },
         { type: 'colors', items: [
-          { bind: 'fill.color', label: s => (s.fill.type === 'gradient' ? T('色1', 'Color 1', '색 1') : T('色', 'Color', '색')) },
-          { bind: 'fill.color2', label: T('色2', 'Color 2', '색 2'), when: s => s.fill.type === 'gradient' },
-          { bind: 'fill.color3', label: T('色3', 'Color 3', '색 3'), when: s => s.fill.type === 'gradient', optional: true }
+          { bind: 'fill.color', label: s => (s.fill.type === 'gradient' ? T('色1', 'Color 1', '색 1', '颜色 1') : T('色', 'Color', '색', '颜色')) },
+          { bind: 'fill.color2', label: T('色2', 'Color 2', '색 2', '颜色 2'), when: s => s.fill.type === 'gradient' },
+          { bind: 'fill.color3', label: T('色3', 'Color 3', '색 3', '颜色 3'), when: s => s.fill.type === 'gradient', optional: true }
         ] },
-        { type: 'segment', bind: 'fill.dir', when: s => s.fill.type === 'gradient', label: T('グラデーションの向き', 'Gradient direction', '그라데이션 방향'), options: OPT.gradDir },
+        { type: 'segment', bind: 'fill.dir', when: s => s.fill.type === 'gradient', label: T('グラデーションの向き', 'Gradient direction', '그라데이션 방향', '渐变方向'), options: OPT.gradDir },
         { type: 'gradientPresets', when: s => s.fill.type === 'gradient' },
-        { type: 'range', bind: 'fillOpacity', label: T('塗りの不透明度', 'Fill opacity', '채우기 불투명도'), min: 0, max: 1, step: 0.01, format: 'pct' }
+        { type: 'range', bind: 'fillOpacity', label: T('塗りの不透明度', 'Fill opacity', '채우기 불투명도', '填充不透明度'), min: 0, max: 1, step: 0.01, format: 'pct' }
       ] },
-      { type: 'section', label: T('縁取り', 'Outline', '테두리'), toggle: 'stroke.on', children: [
-        { type: 'colors', items: [{ bind: 'stroke.color', label: T('色', 'Color', '색') }] },
-        { type: 'range', bind: 'stroke.width', label: T('太さ', 'Width', '굵기'), min: 0.5, max: 30, step: 0.5, format: 'px' }
+      { type: 'section', label: T('縁取り', 'Outline', '테두리', '描边'), toggle: 'stroke.on', children: [
+        { type: 'colors', items: [{ bind: 'stroke.color', label: T('色', 'Color', '색', '颜色') }] },
+        { type: 'range', bind: 'stroke.width', label: T('太さ', 'Width', '굵기', '粗细'), min: 0.5, max: 30, step: 0.5, format: 'px' }
       ] },
-      { type: 'section', label: T('外側の縁取り', 'Outer outline', '바깥 테두리'), toggle: 'stroke2.on', children: [
-        { type: 'colors', items: [{ bind: 'stroke2.color', label: T('色', 'Color', '색') }] },
-        { type: 'range', bind: 'stroke2.width', label: T('太さ', 'Width', '굵기'), min: 0.5, max: 40, step: 0.5, format: 'px' }
+      { type: 'section', label: T('外側の縁取り', 'Outer outline', '바깥 테두리', '外描边'), toggle: 'stroke2.on', children: [
+        { type: 'colors', items: [{ bind: 'stroke2.color', label: T('色', 'Color', '색', '颜色') }] },
+        { type: 'range', bind: 'stroke2.width', label: T('太さ', 'Width', '굵기', '粗细'), min: 0.5, max: 40, step: 0.5, format: 'px' }
       ] },
-      { type: 'section', label: T('影', 'Shadow', '그림자'), toggle: 'shadow.on', children: [
-        { type: 'colors', items: [{ bind: 'shadow.color', label: T('色', 'Color', '색') }] },
-        { type: 'range', bind: 'shadow.opacity', label: T('濃さ', 'Opacity', '농도'), min: 0, max: 1, step: 0.01, format: 'pct' },
-        { type: 'range', bind: 'shadow.blur', label: T('ぼかし', 'Blur', '흐림'), min: 0, max: 80, step: 1, format: 'px' },
-        { type: 'range', bind: 'shadow.x', label: T('横のずれ', 'Offset X', '가로 어긋남'), min: -60, max: 60, step: 1, format: 'px' },
-        { type: 'range', bind: 'shadow.y', label: T('縦のずれ', 'Offset Y', '세로 어긋남'), min: -60, max: 60, step: 1, format: 'px' }
+      { type: 'section', label: T('影', 'Shadow', '그림자', '阴影'), toggle: 'shadow.on', children: [
+        { type: 'colors', items: [{ bind: 'shadow.color', label: T('色', 'Color', '색', '颜色') }] },
+        { type: 'range', bind: 'shadow.opacity', label: T('濃さ', 'Opacity', '농도', '浓度'), min: 0, max: 1, step: 0.01, format: 'pct' },
+        { type: 'range', bind: 'shadow.blur', label: T('ぼかし', 'Blur', '흐림', '模糊'), min: 0, max: 80, step: 1, format: 'px' },
+        { type: 'range', bind: 'shadow.x', label: T('横のずれ', 'Offset X', '가로 어긋남', '水平偏移'), min: -60, max: 60, step: 1, format: 'px' },
+        { type: 'range', bind: 'shadow.y', label: T('縦のずれ', 'Offset Y', '세로 어긋남', '垂直偏移'), min: -60, max: 60, step: 1, format: 'px' }
       ] },
-      { type: 'section', label: T('光彩（グロー）', 'Glow', '광채 (글로우)'), toggle: 'glow.on', children: [
-        { type: 'colors', items: [{ bind: 'glow.color', label: T('色', 'Color', '색') }] },
-        { type: 'range', bind: 'glow.size', label: T('広がり', 'Size', '퍼짐'), min: 2, max: 150, step: 1, format: 'px' },
-        { type: 'range', bind: 'glow.strength', label: T('強さ', 'Strength', '강도'), min: 0.2, max: 3, step: 0.05, format: 'x' }
+      { type: 'section', label: T('光彩（グロー）', 'Glow', '광채 (글로우)', '外发光'), toggle: 'glow.on', children: [
+        { type: 'colors', items: [{ bind: 'glow.color', label: T('色', 'Color', '색', '颜色') }] },
+        { type: 'range', bind: 'glow.size', label: T('広がり', 'Size', '퍼짐', '扩散'), min: 2, max: 150, step: 1, format: 'px' },
+        { type: 'range', bind: 'glow.strength', label: T('強さ', 'Strength', '강도', '强度'), min: 0.2, max: 3, step: 0.05, format: 'x' }
       ] },
-      { type: 'section', when: s => [s.inFx, s.holdFx, s.outFx].includes('glitch'), label: T('ノイズの色', 'Noise colors', '노이즈 색'), children: [
+      { type: 'section', when: s => [s.inFx, s.holdFx, s.outFx].includes('glitch'), label: T('ノイズの色', 'Noise colors', '노이즈 색', '故障色'), children: [
         { type: 'colors', items: [
-          { bind: 'glitchColor', label: T('色1', 'Color 1', '색 1') },
-          { bind: 'glitchColor2', label: T('色2', 'Color 2', '색 2') }
+          { bind: 'glitchColor', label: T('色1', 'Color 1', '색 1', '颜色 1') },
+          { bind: 'glitchColor2', label: T('色2', 'Color 2', '색 2', '颜色 2') }
         ] }
       ] },
-      { type: 'section', when: notTrailer, label: T('サブテキストを別の色にする', 'Different color for sub text', '서브 텍스트를 다른 색으로 하기'), toggle: 'subColorOn', children: [
-        { type: 'colors', items: [{ bind: 'subColor', label: T('色', 'Color', '색') }] }
+      { type: 'section', when: notTrailer, label: T('サブテキストを別の色にする', 'Different color for sub text', '서브 텍스트를 다른 색으로 하기', '副文本使用其他颜色'), toggle: 'subColorOn', children: [
+        { type: 'colors', items: [{ bind: 'subColor', label: T('色', 'Color', '색', '颜色') }] }
       ] },
-      { type: 'section', when: s => isTrailer(s) && s.cursor, label: T('カーソル', 'Cursor', '커서'), children: [
-        { type: 'colors', items: [{ bind: 'cursorColor', label: T('色（空欄で文字色）', 'Color (blank = text color)', '색 (비워 두면 글자 색)'), optional: true }] }
+      { type: 'section', when: s => isTrailer(s) && s.cursor, label: T('カーソル', 'Cursor', '커서', '光标'), children: [
+        { type: 'colors', items: [{ bind: 'cursorColor', label: T('色（空欄で文字色）', 'Color (blank = text color)', '색 (비워 두면 글자 색)', '颜色（留空则使用文字颜色）'), optional: true }] }
       ] }
     ],
     layout: [
-      { type: 'section', label: T('装飾', 'Decoration', '장식'), children: [
+      { type: 'section', label: T('装飾', 'Decoration', '장식', '装饰'), children: [
         { type: 'chips', bind: 'deco.type', options: OPT.deco },
         { type: 'colors', when: s => s.deco.type !== 'none', items: [
-          { bind: 'deco.color', label: T('塗り', 'Fill', '채우기'), when: decoIs('band', 'box', 'frame') },
-          { bind: 'deco.color2', label: T('線', 'Line', '선'), when: decoIs('box', 'frame', 'lines', 'underline', 'sides', 'bar', 'corners') },
-          { bind: 'deco.tapeColor', label: T('テープ', 'Tape', '테이프'), when: decoIs('tape') },
-          { bind: 'deco.tapeStripe', label: T('しま模様', 'Stripes', '줄무늬'), when: decoIs('tape') }
+          { bind: 'deco.color', label: T('塗り', 'Fill', '채우기', '填充'), when: decoIs('band', 'box', 'frame') },
+          { bind: 'deco.color2', label: T('線', 'Line', '선', '线条'), when: decoIs('box', 'frame', 'lines', 'underline', 'sides', 'bar', 'corners') },
+          { bind: 'deco.tapeColor', label: T('テープ', 'Tape', '테이프', '胶带'), when: decoIs('tape') },
+          { bind: 'deco.tapeStripe', label: T('しま模様', 'Stripes', '줄무늬', '条纹'), when: decoIs('tape') }
         ] },
-        { type: 'range', bind: 'deco.opacity', when: decoIs('band', 'box', 'frame'), label: T('塗りの濃さ', 'Fill opacity', '채우기 농도'), min: 0, max: 1, step: 0.01, format: 'pct' },
-        { type: 'range', bind: 'deco.thickness', when: decoIs('box', 'frame', 'lines', 'underline', 'sides', 'bar', 'corners'), label: s => (['box', 'frame'].includes(s.deco.type) ? T('枠線の太さ（0で枠なし）', 'Border width (0 = none)', '테두리 굵기 (0이면 테두리 없음)') : T('線の太さ', 'Line width', '선 굵기')), min: 0, max: 16, step: 0.5, format: 'px' },
-        { type: 'toggle', bind: 'deco.outline', when: s => decoIs('frame', 'lines', 'underline', 'sides', 'bar', 'corners')(s) && (s.stroke.on || s.stroke2.on), label: T('線にも文字と同じ縁取りをつける', 'Outline the lines like the text', '선에도 글자와 같은 테두리 달기') },
-        { type: 'range', bind: 'deco.tapeSize', when: decoIs('tape'), label: T('テープの太さ', 'Tape width', '테이프 굵기'), min: 8, max: 120, step: 1, format: 'px' },
-        { type: 'range', bind: 'deco.tapeSpeed', when: decoIs('tape'), label: T('テープの流れる速さ（0で止まる）', 'Tape speed (0 = still)', '테이프가 흐르는 속도 (0이면 멈춤)'), min: 0, max: 400, step: 5, format: 'pxs' },
-        { type: 'range', bind: 'deco.tapeBlink', when: decoIs('tape'), label: T('テープの点滅（0で点滅しない）', 'Tape blink (0 = none)', '테이프 점멸 (0이면 점멸 안 함)'), min: 0, max: 1, step: 0.01, format: 'pct' },
-        { type: 'range', bind: 'deco.pad', when: s => s.deco.type !== 'none', label: T('文字との余白', 'Padding', '글자와의 여백'), min: 0, max: 2, step: 0.01, format: 'em' },
-        { type: 'range', bind: 'deco.extend', when: decoIs('lines', 'underline', 'sides'), label: T('線の長さ', 'Line length', '선 길이'), min: 0, max: 4, step: 0.05, format: 'em' },
-        { type: 'range', bind: 'deco.extend', when: decoIs('frame'), label: T('枠の広がり（画面の端で止まります）', 'Frame extension (stops at the image edge)', '틀의 확장 (화면 끝에서 멈춥니다)'), min: 0, max: 12, step: 0.1, format: 'em' },
-        { type: 'range', bind: 'deco.soft', when: decoIs('band'), label: T('ふちのぼかし', 'Edge softness', '가장자리 흐림'), min: 0, max: 1, step: 0.01, format: 'pct' },
-        { type: 'range', bind: 'deco.sideFade', when: decoIs('band'), label: T('両端のフェード', 'End fade', '양 끝 페이드'), min: 0, max: 1, step: 0.01, format: 'pct' },
-        { type: 'range', bind: 'deco.radius', when: decoIs('box'), label: T('角の丸み', 'Corner radius', '모서리 둥글기'), min: 0, max: 1, step: 0.01, format: 'em' },
-        { type: 'segment', bind: 'deco.anim', when: s => s.deco.type !== 'none', label: T('装飾のアニメーション', 'Decoration animation', '장식 애니메이션'), options: OPT.decoAnim },
-        { type: 'range', bind: 'deco.dur', when: s => s.deco.type !== 'none' && s.deco.anim !== 'none', label: T('装飾のアニメーション時間', 'Decoration animation time', '장식 애니메이션 시간'), min: 0.1, max: 2.5, step: 0.05, format: 's' }
+        { type: 'range', bind: 'deco.opacity', when: decoIs('band', 'box', 'frame'), label: T('塗りの濃さ', 'Fill opacity', '채우기 농도', '填充浓度'), min: 0, max: 1, step: 0.01, format: 'pct' },
+        { type: 'range', bind: 'deco.thickness', when: decoIs('box', 'frame', 'lines', 'underline', 'sides', 'bar', 'corners'), label: s => (['box', 'frame'].includes(s.deco.type) ? T('枠線の太さ（0で枠なし）', 'Border width (0 = none)', '테두리 굵기 (0이면 테두리 없음)', '边框粗细（0 为无边框）') : T('線の太さ', 'Line width', '선 굵기', '线条粗细')), min: 0, max: 16, step: 0.5, format: 'px' },
+        { type: 'toggle', bind: 'deco.outline', when: s => decoIs('frame', 'lines', 'underline', 'sides', 'bar', 'corners')(s) && (s.stroke.on || s.stroke2.on), label: T('線にも文字と同じ縁取りをつける', 'Outline the lines like the text', '선에도 글자와 같은 테두리 달기', '线条也添加与文字相同的描边') },
+        { type: 'range', bind: 'deco.tapeSize', when: decoIs('tape'), label: T('テープの太さ', 'Tape width', '테이프 굵기', '胶带宽度'), min: 8, max: 120, step: 1, format: 'px' },
+        { type: 'range', bind: 'deco.tapeSpeed', when: decoIs('tape'), label: T('テープの流れる速さ（0で止まる）', 'Tape speed (0 = still)', '테이프가 흐르는 속도 (0이면 멈춤)', '胶带流动速度（0 为静止）'), min: 0, max: 400, step: 5, format: 'pxs' },
+        { type: 'range', bind: 'deco.tapeBlink', when: decoIs('tape'), label: T('テープの点滅（0で点滅しない）', 'Tape blink (0 = none)', '테이프 점멸 (0이면 점멸 안 함)', '胶带闪烁（0 为不闪烁）'), min: 0, max: 1, step: 0.01, format: 'pct' },
+        { type: 'range', bind: 'deco.pad', when: s => s.deco.type !== 'none', label: T('文字との余白', 'Padding', '글자와의 여백', '与文字的间距'), min: 0, max: 2, step: 0.01, format: 'em' },
+        { type: 'range', bind: 'deco.extend', when: decoIs('lines', 'underline', 'sides'), label: T('線の長さ', 'Line length', '선 길이', '线条长度'), min: 0, max: 4, step: 0.05, format: 'em' },
+        { type: 'range', bind: 'deco.extend', when: decoIs('frame'), label: T('枠の広がり（画面の端で止まります）', 'Frame extension (stops at the image edge)', '틀의 확장 (화면 끝에서 멈춥니다)', '边框延伸（到画面边缘为止）'), min: 0, max: 12, step: 0.1, format: 'em' },
+        { type: 'range', bind: 'deco.soft', when: decoIs('band'), label: T('ふちのぼかし', 'Edge softness', '가장자리 흐림', '边缘柔化'), min: 0, max: 1, step: 0.01, format: 'pct' },
+        { type: 'range', bind: 'deco.sideFade', when: decoIs('band'), label: T('両端のフェード', 'End fade', '양 끝 페이드', '两端淡化'), min: 0, max: 1, step: 0.01, format: 'pct' },
+        { type: 'range', bind: 'deco.radius', when: decoIs('box'), label: T('角の丸み', 'Corner radius', '모서리 둥글기', '圆角'), min: 0, max: 1, step: 0.01, format: 'em' },
+        { type: 'segment', bind: 'deco.anim', when: s => s.deco.type !== 'none', label: T('装飾のアニメーション', 'Decoration animation', '장식 애니메이션', '装饰动画'), options: OPT.decoAnim },
+        { type: 'range', bind: 'deco.dur', when: s => s.deco.type !== 'none' && s.deco.anim !== 'none', label: T('装飾のアニメーション時間', 'Decoration animation time', '장식 애니메이션 시간', '装饰动画时长'), min: 0.1, max: 2.5, step: 0.05, format: 's' }
       ] },
-      { type: 'section', label: T('背景（画像全体）', 'Background (whole image)', '배경 (이미지 전체)'), children: [
+      { type: 'section', label: T('背景（画像全体）', 'Background (whole image)', '배경 (이미지 전체)', '背景（整个图像）'), children: [
         { type: 'chips', bind: 'bg.type', options: OPT.bg },
-        { type: 'colors', when: s => s.bg.type !== 'none', items: [{ bind: 'bg.color', label: T('色', 'Color', '색') }] },
-        { type: 'range', bind: 'bg.opacity', when: s => s.bg.type !== 'none', label: T('濃さ', 'Opacity', '농도'), min: 0, max: 1, step: 0.01, format: 'pct' },
-        { type: 'toggle', bind: 'bg.sync', when: s => s.bg.type !== 'none', label: T('文字の登場・退場に合わせてフェード', 'Fade with the text', '글자의 등장·퇴장에 맞춰 페이드') }
+        { type: 'colors', when: s => s.bg.type !== 'none', items: [{ bind: 'bg.color', label: T('色', 'Color', '색', '颜色') }] },
+        { type: 'range', bind: 'bg.opacity', when: s => s.bg.type !== 'none', label: T('濃さ', 'Opacity', '농도', '浓度'), min: 0, max: 1, step: 0.01, format: 'pct' },
+        { type: 'toggle', bind: 'bg.sync', when: s => s.bg.type !== 'none', label: T('文字の登場・退場に合わせてフェード', 'Fade with the text', '글자의 등장·퇴장에 맞춰 페이드', '随文字登场、退场淡入淡出') }
       ] },
-      { type: 'section', label: T('画像サイズ', 'Image size', '이미지 크기'), children: [
+      { type: 'section', label: T('画像サイズ', 'Image size', '이미지 크기', '图像尺寸'), children: [
         { type: 'size' }
       ] },
-      { type: 'section', label: T('配置', 'Position', '배치'), children: [
-        { type: 'anchor', bind: 'anchor', label: T('基準位置', 'Anchor', '기준 위치') },
-        { type: 'range', bind: 'marginX', label: T('左右の余白', 'Side margin', '좌우 여백'), min: 0, max: 400, step: 1, format: 'px' },
-        { type: 'range', bind: 'marginY', label: T('上下の余白', 'Top/bottom margin', '상하 여백'), min: 0, max: 400, step: 1, format: 'px' },
-        { type: 'range', bind: 'offsetX', label: T('横の微調整', 'Nudge X', '가로 미세 조정'), min: -800, max: 800, step: 1, format: 'px' },
-        { type: 'range', bind: 'offsetY', label: T('縦の微調整', 'Nudge Y', '세로 미세 조정'), min: -800, max: 800, step: 1, format: 'px' }
+      { type: 'section', label: T('配置', 'Position', '배치', '位置'), children: [
+        { type: 'anchor', bind: 'anchor', label: T('基準位置', 'Anchor', '기준 위치', '基准位置') },
+        { type: 'range', bind: 'marginX', label: T('左右の余白', 'Side margin', '좌우 여백', '左右边距'), min: 0, max: 400, step: 1, format: 'px' },
+        { type: 'range', bind: 'marginY', label: T('上下の余白', 'Top/bottom margin', '상하 여백', '上下边距'), min: 0, max: 400, step: 1, format: 'px' },
+        { type: 'range', bind: 'offsetX', label: T('横の微調整', 'Nudge X', '가로 미세 조정', '水平微调'), min: -800, max: 800, step: 1, format: 'px' },
+        { type: 'range', bind: 'offsetY', label: T('縦の微調整', 'Nudge Y', '세로 미세 조정', '垂直微调'), min: -800, max: 800, step: 1, format: 'px' }
       ] }
     ]
   };
@@ -410,7 +410,7 @@
   class MiniPreviews {
     constructor(getScene) {
       this.getScene = getScene;
-      this.renderer = new E.TextRenderer({ resolveFont: id => F.families(id) });
+      this.renderer = new E.TextRenderer({ resolveFont: (id, text) => F.families(id, text) });
       this.canvas = document.createElement('canvas');
       this.canvas.width = 320;
       this.canvas.height = 180;
@@ -537,9 +537,9 @@
       this.fontCategory = 'all';
     }
 
-    // 日本語・英語・韓国語の3つから、今の言語の文言を選ぶ
-    pick(ja, en, ko) {
-      return this.L(T(ja, en, ko));
+    // 日本語・英語・韓国語・中国語から、今の言語の文言を選ぶ
+    pick(ja, en, ko, zh) {
+      return this.L(T(ja, en, ko, zh));
     }
 
     L(label) {
@@ -676,7 +676,7 @@
     }
 
     buildRange(item) {
-      const fmt = FORMATS[item.format] || { digits: 2, suffix: T('', '', '') };
+      const fmt = FORMATS[item.format] || { digits: 2, suffix: T('', '', '', '') };
       const mul = fmt.mul || 1;
       const range = el('input', { type: 'range', class: 'range-input', min: item.min, max: item.max, step: item.step });
       const number = el('input', { type: 'number', class: 'number-input', min: item.min * mul, max: item.max * mul, step: item.step * mul, inputmode: 'decimal' });
@@ -804,9 +804,9 @@
           text.textContent = this.L(ci.label);
           wrap.classList.toggle('is-empty', !v);
           if (v) input.value = v;
-          hex.textContent = v ? String(v).toUpperCase() : this.pick('未使用', 'Not used', '사용 안 함');
+          hex.textContent = v ? String(v).toUpperCase() : this.pick('未使用', 'Not used', '사용 안 함', '未使用');
           if (clear) clear.textContent = v ? '×' : '+';
-          if (clear) clear.setAttribute('aria-label', v ? this.pick('色を外す', 'Remove color', '색 제거') : this.pick('色を追加', 'Add color', '색 추가'));
+          if (clear) clear.setAttribute('aria-label', v ? this.pick('色を外す', 'Remove color', '색 제거', '移除颜色') : this.pick('色を追加', 'Add color', '색 추가', '添加颜色'));
         });
       });
       return this.withVisibility(el('div', { class: 'field field-wide' }, [row]), item);
@@ -844,10 +844,10 @@
           card.setAttribute('aria-pressed', String(on));
           card.querySelector('.effect-name').textContent = this.L(FX_LABELS[phase][card.dataset.fx]);
           const badge = card.querySelector('.effect-badge');
-          badge.textContent = fx.level === 'block' ? this.pick('全体', 'Whole', '전체') : (fx.level === 'glyph' ? this.pick('1文字ずつ', 'Per char', '한 글자씩') : '');
+          badge.textContent = fx.level === 'block' ? this.pick('全体', 'Whole', '전체', '整体') : (fx.level === 'glyph' ? this.pick('1文字ずつ', 'Per char', '한 글자씩', '逐字') : '');
           badge.hidden = !badge.textContent;
         });
-        grid.setAttribute('aria-label', this.L(phase === 'in' ? T('登場エフェクト', 'Entrance effects', '등장 효과') : T('退場エフェクト', 'Exit effects', '퇴장 효과')));
+        grid.setAttribute('aria-label', this.L(phase === 'in' ? T('登場エフェクト', 'Entrance effects', '등장 효과', '登场效果') : T('退場エフェクト', 'Exit effects', '퇴장 효과', '退场效果')));
       });
       return el('div', { class: 'field field-wide' }, [grid]);
     }
@@ -907,14 +907,14 @@
           });
           if (font.user) {
             // 登録の解除は、誤操作を防ぐため2回押しで行う
-            const unregister = this.pick('登録を解除', 'Remove', '등록 해제');
-            const remove = el('button', { type: 'button', class: 'font-remove', 'data-remove': font.id, text: '×', title: this.pick('登録を解除', 'Remove from My Fonts', '마이 폰트에서 해제'), 'aria-label': `${unregister}: ${font.label || font.family}` });
+            const unregister = this.pick('登録を解除', 'Remove', '등록 해제', '移除');
+            const remove = el('button', { type: 'button', class: 'font-remove', 'data-remove': font.id, text: '×', title: this.pick('登録を解除', 'Remove from My Fonts', '마이 폰트에서 해제', '从“我的字体”中移除'), 'aria-label': `${unregister}: ${font.label || font.family}` });
             let armed = 0;
             remove.addEventListener('click', event => {
               event.stopPropagation();
               if (!armed) {
                 remove.classList.add('is-armed');
-                remove.textContent = this.pick('解除する', 'Remove?', '해제할까요?');
+                remove.textContent = this.pick('解除する', 'Remove?', '해제할까요?', '确定移除？');
                 armed = setTimeout(() => { armed = 0; remove.classList.remove('is-armed'); remove.textContent = '×'; }, 3000);
                 return;
               }
@@ -932,7 +932,7 @@
 
       const buildCats = () => {
         cats.innerHTML = '';
-        [{ id: 'all', label: T('すべて', 'All', '전체') }].concat(F.CATEGORIES).forEach(cat => {
+        [{ id: 'all', label: T('すべて', 'All', '전체', '全部') }].concat(F.CATEGORIES).forEach(cat => {
           if (cat.id === 'user' && !F.list().some(f => f.cat === 'user')) return;
           const btn = el('button', { type: 'button', class: 'chip', text: this.L(cat.label) });
           btn.classList.toggle('is-active', this.fontCategory === cat.id);
@@ -968,14 +968,16 @@
         const font = F.get(scene.fontId) || F.get('noto-sans-jp');
         label.textContent = this.L(item.label);
         current.textContent = font.label || font.family;
-        sample.textContent = font.cat === 'latin' ? 'Aa Bb 123' : 'あア永 Aa';
-        sample.style.fontFamily = E.cssFontFamily(F.families(font.id));
+        // 見本は、今の文章を描くときと同じフォントの並びで出す（中国語の文章なら、代替の中国語フォントの字形）
+        const text = E.fontText(scene);
+        sample.textContent = font.cat !== 'latin' && F.isChineseText(text) ? '汉字 Aa' : F.previewSample(font);
+        sample.style.fontFamily = E.cssFontFamily(F.families(font.id, text));
         sample.style.fontWeight = String(scene.weight || 400);
-        uploadBtn.textContent = this.L(T('＋ 自作フォントを登録（TTF / OTF / WOFF）', '+ Add your own font (TTF / OTF / WOFF)', '＋ 직접 만든 폰트 등록 (TTF / OTF / WOFF)'));
-        uploadNote.textContent = this.L(T('登録したフォントはこのブラウザに保存され、次回も「マイフォント」から選べます（外部には送信されません）', 'Saved in this browser only and listed under “My Fonts” next time (never uploaded)', '등록한 폰트는 이 브라우저에 저장되어 다음에도 「마이 폰트」에서 고를 수 있습니다 (외부로 전송되지 않습니다)'));
+        uploadBtn.textContent = this.L(T('＋ 自作フォントを登録（TTF / OTF / WOFF）', '+ Add your own font (TTF / OTF / WOFF)', '＋ 직접 만든 폰트 등록 (TTF / OTF / WOFF)', '＋ 添加自己的字体（TTF / OTF / WOFF）'));
+        uploadNote.textContent = this.L(T('登録したフォントはこのブラウザに保存され、次回も「マイフォント」から選べます（外部には送信されません）', 'Saved in this browser only and listed under “My Fonts” next time (never uploaded)', '등록한 폰트는 이 브라우저에 저장되어 다음에도 「마이 폰트」에서 고를 수 있습니다 (외부로 전송되지 않습니다)', '添加的字体仅保存在此浏览器中，下次也可从“我的字体”中选择（不会上传到外部）'));
         sample.style.fontStyle = scene.italic ? 'italic' : 'normal';
-        localInput.placeholder = this.L(T('PCにあるフォント名（例：游明朝）', 'Installed font name (e.g. Georgia)', 'PC에 설치된 폰트 이름 (예: 맑은 고딕)'));
-        localBtn.textContent = this.L(T('使う', 'Use', '사용'));
+        localInput.placeholder = this.L(T('PCにあるフォント名（例：游明朝）', 'Installed font name (e.g. Georgia)', 'PC에 설치된 폰트 이름 (예: 맑은 고딕)', '电脑中已安装的字体名（例：微软雅黑）'));
+        localBtn.textContent = this.L(T('使う', 'Use', '사용', '使用'));
         panel.hidden = !this.fontPanelOpen;
         toggle.setAttribute('aria-expanded', String(this.fontPanelOpen));
         if (this.fontPanelOpen) {
@@ -1022,9 +1024,9 @@
     buildAnchor(item) {
       const grid = el('div', { class: 'anchor-grid', role: 'group' });
       const names = {
-        tl: T('左上', 'Top left', '왼쪽 위'), tc: T('上', 'Top', '위'), tr: T('右上', 'Top right', '오른쪽 위'),
-        ml: T('左', 'Left', '왼쪽'), mc: T('中央', 'Center', '중앙'), mr: T('右', 'Right', '오른쪽'),
-        bl: T('左下', 'Bottom left', '왼쪽 아래'), bc: T('下', 'Bottom', '아래'), br: T('右下', 'Bottom right', '오른쪽 아래')
+        tl: T('左上', 'Top left', '왼쪽 위', '左上'), tc: T('上', 'Top', '위', '上'), tr: T('右上', 'Top right', '오른쪽 위', '右上'),
+        ml: T('左', 'Left', '왼쪽', '左'), mc: T('中央', 'Center', '중앙', '中央'), mr: T('右', 'Right', '오른쪽', '右'),
+        bl: T('左下', 'Bottom left', '왼쪽 아래', '左下'), bc: T('下', 'Bottom', '아래', '下'), br: T('右下', 'Bottom right', '오른쪽 아래', '右下')
       };
       ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'].forEach(key => {
         const btn = el('button', { type: 'button', class: 'anchor-cell', 'data-value': key }, [el('span', { class: 'anchor-dot', 'aria-hidden': 'true' })]);
@@ -1060,14 +1062,14 @@
       w.addEventListener('change', commit);
       h.addEventListener('change', commit);
       this.add(scene => {
-        label.textContent = this.L(T('サイズ', 'Size', '크기'));
+        label.textContent = this.L(T('サイズ', 'Size', '크기', '尺寸'));
         this.fillOptions(select, P.SIZE_PRESETS.map(p => ({ value: p.id, label: p.label })));
         select.value = scene.sizePreset || 'custom';
         if (document.activeElement !== w) w.value = scene.width;
         if (document.activeElement !== h) h.value = scene.height;
         custom.hidden = scene.sizePreset !== 'custom';
-        w.setAttribute('aria-label', this.L(T('幅', 'Width', '너비')));
-        h.setAttribute('aria-label', this.L(T('高さ', 'Height', '높이')));
+        w.setAttribute('aria-label', this.L(T('幅', 'Width', '너비', '宽度')));
+        h.setAttribute('aria-label', this.L(T('高さ', 'Height', '높이', '高度')));
       });
       return el('div', { class: 'field field-wide' }, [label, select, custom]);
     }
