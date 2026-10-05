@@ -1199,6 +1199,18 @@ body.is-dark .file-auto-badge { color: #dfeeff; }
 .webp-button { background: linear-gradient(135deg, #475569, var(--blue-deep)); box-shadow: 0 8px 18px color-mix(in srgb, #475569 30%, transparent); }
 body.is-dark .webp-button { background: linear-gradient(135deg, #4a5a72, #2f62b6); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
 .export-note { margin: -2px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.5; }
+/* まとめて書き出す：ふだんは1行の見出しだけ（開くと入力欄が出る） */
+.batch-export { padding-top: 8px; border-top: 1px dashed var(--line); }
+.batch-summary { display: inline-flex; align-items: center; gap: 6px; color: var(--blue-deep); font-size: 0.84rem; font-weight: 800; cursor: pointer; list-style: none; }
+.batch-summary::-webkit-details-marker { display: none; }
+.batch-summary::before { content: '▸'; display: inline-block; transition: transform .15s ease; }
+.batch-export[open] > .batch-summary::before { transform: rotate(90deg); }
+body.is-dark .batch-summary { color: var(--blue); }
+.batch-body { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+textarea.batch-input { min-height: 88px; }
+.batch-hint { margin: 0; color: var(--muted); font-size: 0.76rem; line-height: 1.5; }
+.batch-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.batch-actions .select-input { width: auto; }
 
 .export-progress { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .export-progress-bar { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--blue), var(--cyan)); transition: width .2s ease; }

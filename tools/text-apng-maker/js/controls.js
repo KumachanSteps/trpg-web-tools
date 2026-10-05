@@ -528,6 +528,7 @@
     constructor(options) {
       this.getScene = options.getScene;
       this.getLang = options.getLang;
+      this.isCompact = options.isCompact;
       this.onChange = options.onChange;
       this.onAction = options.onAction;
       this.getInfo = options.getInfo;
@@ -1063,7 +1064,10 @@
       h.addEventListener('change', commit);
       this.add(scene => {
         label.textContent = this.L(T('サイズ', 'Size', '크기', '尺寸'));
-        this.fillOptions(select, P.SIZE_PRESETS.map(p => ({ value: p.id, label: p.label })));
+        // 小さいスマートフォンでは「1920 × 1080」の × の前後の空白を詰める（選択肢が欄からはみ出さないように）
+        const tight = label => Object.fromEntries(Object.entries(label).map(([lang, text]) => [lang, text.replace(/\s*×\s*/, '×')]));
+        const compact = this.isCompact && this.isCompact();
+        this.fillOptions(select, P.SIZE_PRESETS.map(p => ({ value: p.id, label: compact ? tight(p.label) : p.label })));
         select.value = scene.sizePreset || 'custom';
         if (document.activeElement !== w) w.value = scene.width;
         if (document.activeElement !== h) h.value = scene.height;
