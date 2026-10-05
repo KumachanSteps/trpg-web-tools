@@ -3,23 +3,25 @@
  *  - Google Fonts（選択時にだけCSSを読み込み、使う文字のサブセットだけを取得）
  *  - フォントファイルの登録（TTF / OTF / WOFF / WOFF2）。ファイルはこのブラウザの IndexedDB に保存し、次回も使える
  *  - PCにインストール済みのフォント名を指定（名前だけを覚える）
+ *  - 日本語フォントに無い文字（ハングル・簡体字）は、近い雰囲気のフォントで自動的に表示する
  */
 (function (root) {
   'use strict';
 
   const CATEGORIES = [
-    { id: 'gothic', label: { ja: 'ゴシック', en: 'Gothic / Sans', ko: '고딕' } },
-    { id: 'mincho', label: { ja: '明朝', en: 'Mincho / Serif', ko: '명조' } },
-    { id: 'round', label: { ja: '丸ゴ・ポップ', en: 'Rounded / Pop', ko: '둥근 고딕·팝' } },
-    { id: 'display', label: { ja: 'デザイン', en: 'Display', ko: '디자인' } },
-    { id: 'brush', label: { ja: '筆・手書き', en: 'Brush / Handwritten', ko: '붓·손글씨' } },
-    { id: 'korean', label: { ja: '韓国語（ハングル）', en: 'Korean (Hangul)', ko: '한글' } },
-    { id: 'latin', label: { ja: '欧文', en: 'Latin', ko: '영문' } },
-    { id: 'user', label: { ja: 'マイフォント', en: 'My Fonts', ko: '마이 폰트' } }
+    { id: 'gothic', label: { ja: 'ゴシック', en: 'Gothic / Sans', ko: '고딕', zh: '黑体' } },
+    { id: 'mincho', label: { ja: '明朝', en: 'Mincho / Serif', ko: '명조', zh: '明朝体' } },
+    { id: 'round', label: { ja: '丸ゴ・ポップ', en: 'Rounded / Pop', ko: '둥근 고딕·팝', zh: '圆体·波普' } },
+    { id: 'display', label: { ja: 'デザイン', en: 'Display', ko: '디자인', zh: '设计字体' } },
+    { id: 'brush', label: { ja: '筆・手書き', en: 'Brush / Handwritten', ko: '붓·손글씨', zh: '毛笔·手写' } },
+    { id: 'korean', label: { ja: '韓国語（ハングル）', en: 'Korean (Hangul)', ko: '한글', zh: '韩文' } },
+    { id: 'chinese', label: { ja: '中国語（簡体字）', en: 'Chinese (Simplified)', ko: '중국어 (간체)', zh: '中文（简体）' } },
+    { id: 'latin', label: { ja: '欧文', en: 'Latin', ko: '영문', zh: '西文' } },
+    { id: 'user', label: { ja: 'マイフォント', en: 'My Fonts', ko: '마이 폰트', zh: '我的字体' } }
   ];
 
   // jp: 欧文フォントで日本語を表示するときの代替フォント
-  // ko: ハングルを表示するときの代替フォント（日本語フォントにはハングルが無いため。省略時は KO_BY_CAT で分類ごとに決める）
+  // ハングル・簡体字は日本語フォントに無いため、代替フォントを KO_BY_* / ZH_BY_* で分類・フォントごとに決める
   const CATALOG = [
     { id: 'noto-sans-jp', family: 'Noto Sans JP', weights: [400, 700, 900], cat: 'gothic', generic: 'sans-serif' },
     { id: 'zen-kaku-gothic-new', family: 'Zen Kaku Gothic New', weights: [400, 700, 900], cat: 'gothic', generic: 'sans-serif' },
@@ -90,6 +92,16 @@
     { id: 'gaegu', family: 'Gaegu', weights: [400, 700], cat: 'korean', generic: 'cursive', jp: 'yomogi' },
     { id: 'nanum-gothic-coding', family: 'Nanum Gothic Coding', weights: [400, 700], cat: 'korean', generic: 'monospace', jp: 'dotgothic16' },
 
+    { id: 'noto-sans-sc', family: 'Noto Sans SC', weights: [400, 700, 900], cat: 'chinese', generic: 'sans-serif', jp: 'noto-sans-jp' },
+    { id: 'noto-serif-sc', family: 'Noto Serif SC', weights: [400, 700, 900], cat: 'chinese', generic: 'serif', jp: 'noto-serif-jp' },
+    { id: 'zcool-xiaowei', family: 'ZCOOL XiaoWei', weights: [400], cat: 'chinese', generic: 'serif', jp: 'shippori-mincho' },
+    { id: 'zcool-qingke-huangyou', family: 'ZCOOL QingKe HuangYou', weights: [400], cat: 'chinese', generic: 'sans-serif', jp: 'dela-gothic-one' },
+    { id: 'zcool-kuaile', family: 'ZCOOL KuaiLe', weights: [400], cat: 'chinese', generic: 'sans-serif', jp: 'mochiy-pop-one' },
+    { id: 'ma-shan-zheng', family: 'Ma Shan Zheng', weights: [400], cat: 'chinese', generic: 'cursive', jp: 'yuji-syuku' },
+    { id: 'zhi-mang-xing', family: 'Zhi Mang Xing', weights: [400], cat: 'chinese', generic: 'cursive', jp: 'yuji-mai' },
+    { id: 'liu-jian-mao-cao', family: 'Liu Jian Mao Cao', weights: [400], cat: 'chinese', generic: 'cursive', jp: 'yuji-boku' },
+    { id: 'long-cang', family: 'Long Cang', weights: [400], cat: 'chinese', generic: 'cursive', jp: 'klee-one' },
+
     { id: 'cinzel', family: 'Cinzel', weights: [400, 700, 900], cat: 'latin', generic: 'serif', jp: 'noto-serif-jp' },
     { id: 'cinzel-decorative', family: 'Cinzel Decorative', weights: [400, 700, 900], cat: 'latin', generic: 'serif', jp: 'noto-serif-jp' },
     { id: 'playfair-display', family: 'Playfair Display', weights: [400, 700, 900], cat: 'latin', generic: 'serif', jp: 'noto-serif-jp' },
@@ -131,6 +143,8 @@
   // ハングルの代替フォント（ハングルを持つフォントは null）
   function koFallback(font) {
     if (!font || font.cat === 'korean') return null;
+    // 中国語のフォントは、日本語を表示するときの代替フォントに合わせる
+    if (font.cat === 'chinese' && font.jp && byId.has(font.jp)) return koFallback(byId.get(font.jp));
     if (KO_BY_FONT[font.id]) return byId.get(KO_BY_FONT[font.id]);
     if (font.jp && KO_BY_FONT[font.jp]) return byId.get(KO_BY_FONT[font.jp]);
     if (font.cat === 'latin') {
@@ -143,6 +157,81 @@
   }
 
   const HANGUL = /[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7af\ud7b0-\ud7ff]/;
+
+  // 日本語フォント・欧文フォントで中国語（簡体字）を表示するときの代替フォント（分類ごと。雰囲気の違うものは個別に上書き）
+  const ZH_BY_CAT = { gothic: 'noto-sans-sc', mincho: 'noto-serif-sc', round: 'noto-sans-sc', display: 'zcool-qingke-huangyou', brush: 'ma-shan-zheng', user: 'noto-sans-sc' };
+  const ZH_BY_FONT = {
+    'kaisei-opti': 'zcool-xiaowei', 'hina-mincho': 'zcool-xiaowei', 'kaisei-decol': 'zcool-xiaowei',
+    'mochiy-pop-one': 'zcool-kuaile', 'hachi-maru-pop': 'zcool-kuaile', 'potta-one': 'zcool-kuaile', 'rocknroll-one': 'zcool-kuaile', 'darumadrop-one': 'zcool-kuaile', 'yusei-magic': 'zcool-kuaile',
+    'stick': 'noto-sans-sc', 'dotgothic16': 'noto-sans-sc', 'shippori-antique': 'noto-sans-sc', 'zen-antique': 'noto-serif-sc', 'new-tegomin': 'noto-serif-sc',
+    'yuji-mai': 'zhi-mang-xing', 'klee-one': 'long-cang', 'yomogi': 'long-cang', 'zen-kurenaido': 'long-cang'
+  };
+
+  // 簡体字の代替フォント（簡体字を持つフォントは null）。欧文・韓国語のフォントは、日本語を表示するときの代替フォントに合わせる
+  function zhFallback(font) {
+    if (!font || font.cat === 'chinese') return null;
+    if (ZH_BY_FONT[font.id]) return byId.get(ZH_BY_FONT[font.id]);
+    if (font.jp && byId.has(font.jp)) return zhFallback(byId.get(font.jp));
+    return byId.get(ZH_BY_CAT[font.cat] || 'noto-sans-sc');
+  }
+
+  // 中国語（簡体字）らしい漢字の表：GB2312 の漢字のうち、日本語フォントが持つ JIS X 0208 の漢字に無いもの（3,433字）。
+  // U+4E00 から1文字1ビット（下位ビットから）で並べて base64 にしたもの
+  const ZH_ONLY_BITS = [
+    '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',
+    'AI4A'
+  ].join('');
+  const ZH_BASE = 0x4e00;
+  let zhOnlyTable = null;
+  // かな（ひらがな・カタカナ。長音符「ー」と中黒「・」は除く）
+  const KANA = /[\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fd-\u30ff\u31f0-\u31ff\uff66-\uff9d]/;
+
+  // 中国語の文章か：日本語フォントに無い簡体字を含み、かなを含まない。
+  // 中国語の文章では、日本語フォントにある漢字と無い簡体字とで字形が混ざらないよう、近い中国語フォントを先に使う
+  function isChineseText(text) {
+    const str = String(text || '');
+    if (!str || KANA.test(str)) return false;
+    if (!zhOnlyTable) {
+      const bin = atob(ZH_ONLY_BITS);
+      zhOnlyTable = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) zhOnlyTable[i] = bin.charCodeAt(i);
+    }
+    for (let i = 0; i < str.length; i++) {
+      const n = str.charCodeAt(i) - ZH_BASE;
+      if (n >= 0 && (n >> 3) < zhOnlyTable.length && (zhOnlyTable[n >> 3] & (1 << (n & 7)))) return true;
+    }
+    return false;
+  }
+
   const userFonts = new Map();
   const cssPromises = new Map();
   const previewPromises = new Map();
@@ -278,7 +367,10 @@
     return null;
   }
 
-  function families(id) {
+  // 描画に使うフォントの並び（先にあるフォントから、その文字を持つものが使われる）。
+  // text：描く文章（場面のメインとサブ）。中国語の文章では、簡体字の代替フォントを日本語フォントより先に置く
+  //       （欧文フォント・登録したフォントは、そのフォントのすぐ後ろ。欧文・登録したフォントの字形はそのまま使う）
+  function families(id, text) {
     const font = get(id) || byId.get('noto-sans-jp');
     const list = [font.family];
     if (font.jp && byId.has(font.jp)) list.push(byId.get(font.jp).family);
@@ -286,6 +378,8 @@
     const ko = koFallback(font);
     if (ko) list.push(ko.family);
     list.push(font.generic || 'sans-serif');
+    const zh = isChineseText(text) ? zhFallback(font) : null;
+    if (zh) list.splice(font.cat === 'latin' || font.user ? 1 : 0, 0, zh.family);
     return list;
   }
 
@@ -293,19 +387,24 @@
     return Promise.race([promise, new Promise(resolve => setTimeout(() => resolve(null), ms))]);
   }
 
-  // 指定したテキストの描画に必要なフォントを読み込む
-  async function load(id, weight, text) {
+  // 指定したテキストの描画に必要なフォントを読み込む。
+  // sceneText：代替フォントの並びを決める場面の文章（families に渡すのと同じもの。省略時は text）
+  async function load(id, weight, text, sceneText) {
     if (get(id) && get(id).pending) await restoreSaved();
     const font = get(id) || byId.get('noto-sans-jp');
+    const context = sceneText === undefined ? text : sceneText;
     const tasks = [ensureCss(font)];
     if (font.jp && byId.has(font.jp)) tasks.push(ensureCss(byId.get(font.jp)));
     if (font.user) tasks.push(ensureCss(byId.get('noto-sans-jp')));
     // ハングルの代替フォントは、ハングルを使うときだけ読み込む
     const ko = koFallback(font);
     if (ko && HANGUL.test(String(text || ''))) tasks.push(ensureCss(ko));
+    // 簡体字の代替フォントは、中国語の文章のときだけ読み込む
+    const zh = isChineseText(context) ? zhFallback(font) : null;
+    if (zh) tasks.push(ensureCss(zh));
     await Promise.all(tasks);
     if (!document.fonts || !document.fonts.load) return;
-    const fam = root.TextApngEngine ? root.TextApngEngine.cssFontFamily(families(font.id)) : `"${font.family}"`;
+    const fam = root.TextApngEngine ? root.TextApngEngine.cssFontFamily(families(font.id, context)) : `"${font.family}"`;
     const sample = String(text || '').replace(/\s+/g, '') || 'あA';
     const w = nearestWeight(font, weight);
     try {
@@ -387,6 +486,7 @@
 
   function previewSample(font) {
     if (font.cat === 'latin') return 'Aa Bb 123';
+    if (font.cat === 'chinese') return '汉字 Aa';
     return font.cat === 'korean' ? '한글 Aa' : 'あア永 Aa';
   }
 
@@ -424,6 +524,7 @@
     get,
     list,
     families,
+    isChineseText,
     load,
     ensureCss,
     nearestWeight,
