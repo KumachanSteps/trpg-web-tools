@@ -1192,7 +1192,13 @@ body.is-dark .file-auto-badge { color: #dfeeff; }
 .file-auto-button { margin-left: auto; padding: 1px 6px; font-size: 0.72rem; }
 
 .export-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.export-main { min-width: 190px; font-size: 1rem; }
+/* 動く画像の書き出し（APNG・WebP）は同じ大きさに等分する。狭いときは縦に並べ、PNG静止画・連番PNG は入らなければ次の行へ */
+.export-primary { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5em, 1fr)); gap: 8px; flex: 1 1 22em; }
+.export-main { min-width: 0; font-size: 1rem; white-space: nowrap; }
+/* WebP：APNG（オレンジ）と同じ形で色だけ変える（背景モーションメーカーの WebP ボタンと同じ灰青） */
+.webp-button { background: linear-gradient(135deg, #475569, var(--blue-deep)); box-shadow: 0 8px 18px color-mix(in srgb, #475569 30%, transparent); }
+body.is-dark .webp-button { background: linear-gradient(135deg, #4a5a72, #2f62b6); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
+.export-note { margin: -2px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.5; }
 
 .export-progress { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .export-progress-bar { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--blue), var(--cyan)); transition: width .2s ease; }
