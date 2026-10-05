@@ -1558,7 +1558,7 @@
     const d = dict();
     const o = app.exportOpts;
     els.batchSummary.textContent = d.batchSummary;
-    els.batchLabel.textContent = d.batchLabel(app.mode);
+    els.batchLabel.textContent = d.batchLabel;
     els.batchInput.placeholder = app.mode === 'trailer' ? d.batchPlaceholderTrailer : d.batchPlaceholder;
     if (document.activeElement !== els.batchInput) els.batchInput.value = o.batch[app.mode] || '';
     els.batchFormat.value = o.batchFormat;

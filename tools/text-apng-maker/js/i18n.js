@@ -144,13 +144,13 @@
       exportWebp: 'WebPを書き出す',
       exportNote: '※ APNGは劣化のない画質（256色なら最も軽量）、WebPはフルカラーのまま容量を抑えた形式で、細部がわずかににじむことがあります。',
       batchSummary: 'まとめて書き出す（同じデザインで複数の文章）',
-      batchLabel: mode => (mode === 'trailer' ? '文章（1行に1つ）' : '文章（1行に1つ。サブテキストは「|」のあとに）'),
+      batchLabel: '文章（1行に1つ）',
       batchPlaceholder: '保健室|放課後 16:30\n図書室|午後 5時12分\n屋上',
       batchPlaceholderTrailer: '霧の館の殺人\n第二の事件\n真相編',
       batchHint: (n, max, mode) => (n
         ? `${n}件を、いまのデザインと書き出しの設定で1つずつ書き出し、ZIPにまとめます（最大${max}件）。`
         : `1行に1つずつ書くと、いまのデザインと書き出しの設定でまとめて書き出せます（最大${max}件）。`)
-        + (mode === 'trailer' ? '' : '「|」の無い行は、いまのサブテキストを使います。'),
+        + (mode === 'trailer' ? '' : 'サブテキストは「|」のあとに書けます（「|」の無い行は、いまのサブテキストを使います）。'),
       batchFormat: '形式',
       batchExport: 'まとめて書き出す（ZIP）',
       batchZip: (mode, n) => `${mode}_まとめて${n}件`,
@@ -353,13 +353,13 @@
       exportWebp: 'WebP 내보내기',
       exportNote: '※ APNG는 화질 저하가 없고(256색이면 가장 가벼움), WebP는 풀 컬러를 유지하면서 용량을 줄인 형식이라 세부가 약간 번질 수 있습니다.',
       batchSummary: '한꺼번에 내보내기 (같은 디자인으로 여러 문장)',
-      batchLabel: mode => (mode === 'trailer' ? '문장 (한 줄에 하나)' : '문장 (한 줄에 하나. 서브 텍스트는 「|」 뒤에)'),
+      batchLabel: '문장 (한 줄에 하나)',
       batchPlaceholder: '보건실|방과 후 16:30\n도서실|오후 5시 12분\n옥상',
       batchPlaceholderTrailer: '안개 저택 살인사건\n두 번째 사건\n진상 편',
       batchHint: (n, max, mode) => (n
         ? `${n}개를 지금의 디자인과 내보내기 설정으로 하나씩 내보내 ZIP으로 묶습니다 (최대 ${max}개).`
         : `한 줄에 하나씩 쓰면 지금의 디자인과 내보내기 설정으로 한꺼번에 내보낼 수 있습니다 (최대 ${max}개).`)
-        + (mode === 'trailer' ? '' : ' 「|」가 없는 줄은 지금의 서브 텍스트를 씁니다.'),
+        + (mode === 'trailer' ? '' : ' 서브 텍스트는 「|」 뒤에 씁니다 (「|」가 없는 줄은 지금의 서브 텍스트를 씁니다).'),
       batchFormat: '형식',
       batchExport: '한꺼번에 내보내기 (ZIP)',
       batchZip: (mode, n) => `${mode}_한꺼번에_${n}개`,
@@ -562,13 +562,13 @@
       exportWebp: 'Export WebP',
       exportNote: '* APNG is lossless (and lightest with 256 colors), while WebP keeps full color at a smaller size but may slightly soften fine details.',
       batchSummary: 'Batch export (many texts, same design)',
-      batchLabel: mode => (mode === 'trailer' ? 'Texts (one per line)' : 'Texts (one per line; sub text after “|”)'),
+      batchLabel: 'Texts (one per line)',
       batchPlaceholder: 'Infirmary|After School — 4:30 PM\nLibrary|5:12 PM\nRooftop',
       batchPlaceholderTrailer: 'THE MISTY MANOR MURDER\nThe Second Case\nThe Truth',
       batchHint: (n, max, mode) => (n
         ? `Exports ${n} ${n === 1 ? 'file' : 'files'} with the current design and export settings, bundled in a ZIP (up to ${max}).`
         : `Write one text per line to export them all with the current design and export settings (up to ${max}).`)
-        + (mode === 'trailer' ? '' : ' Lines without “|” keep the current sub text.'),
+        + (mode === 'trailer' ? '' : ' Put the sub text after “|” (lines without it keep the current sub text).'),
       batchFormat: 'Format',
       batchExport: 'Export all (ZIP)',
       batchZip: (mode, n) => `${mode}_batch_${n}`,
@@ -771,13 +771,13 @@
       exportWebp: '导出WebP',
       exportNote: '※ APNG画质无损（256色时文件最小），WebP则在保持全彩的同时压缩体积，细节可能略有模糊。',
       batchSummary: '批量导出（同一设计、多段文字）',
-      batchLabel: mode => (mode === 'trailer' ? '文字（每行一段）' : '文字（每行一段，副文本写在“|”之后）'),
+      batchLabel: '文字（每行一段）',
       batchPlaceholder: '医务室|放学后 16:30\n图书室|下午 5点12分\n天台',
       batchPlaceholderTrailer: '雾之馆杀人事件\n第二起事件\n真相篇',
       batchHint: (n, max, mode) => (n
         ? `将以当前的设计和导出设置逐个导出这${n}段文字，并打包为ZIP（最多${max}段）。`
         : `每行写一段文字，即可用当前的设计和导出设置批量导出（最多${max}段）。`)
-        + (mode === 'trailer' ? '' : '没有“|”的行将使用当前的副文本。'),
+        + (mode === 'trailer' ? '' : '副文本写在“|”之后（没有“|”的行将使用当前的副文本）。'),
       batchFormat: '格式',
       batchExport: '批量导出（ZIP）',
       batchZip: (mode, n) => `${mode}_批量${n}个`,
