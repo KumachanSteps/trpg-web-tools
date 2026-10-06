@@ -49,6 +49,8 @@
 
     { id: 'dela-gothic-one', family: 'Dela Gothic One', weights: [400], cat: 'display', generic: 'sans-serif' },
     { id: 'rocknroll-one', family: 'RocknRoll One', weights: [400], cat: 'display', generic: 'sans-serif' },
+    // 装甲明朝はGoogle Fontsにないため、このサイトに置いたファイルを読み込む（SIL OFL 1.1）
+    { id: 'soukou-mincho', family: 'Soukou Mincho', weights: [400], cat: 'display', generic: 'serif', css: 'fonts/soukou-mincho/soukou-mincho.css' },
     { id: 'reggae-one', family: 'Reggae One', weights: [400], cat: 'display', generic: 'sans-serif' },
     { id: 'rampart-one', family: 'Rampart One', weights: [400], cat: 'display', generic: 'sans-serif' },
     { id: 'train-one', family: 'Train One', weights: [400], cat: 'display', generic: 'sans-serif' },
@@ -257,7 +259,7 @@
     const promise = new Promise(resolve => {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = googleCssUrl(font);
+      link.href = font.css || googleCssUrl(font);
       link.dataset.fontId = font.id;
       link.onload = () => resolve(true);
       link.onerror = () => resolve(false);
@@ -397,6 +399,8 @@
   function loadPreview(font) {
     if (!font || font.user) return Promise.resolve(font ? font.family : null);
     if (previewPromises.has(font.id)) return previewPromises.get(font.id);
+    // このサイトに置いたフォントは、本体をそのまま見本に使う
+    if (font.css) return ensureCss(font).then(ok => (ok ? font.family : null));
     const alias = `TAM Preview ${font.id}`;
     const weight = nearestWeight(font, 700);
     const promise = (async () => {

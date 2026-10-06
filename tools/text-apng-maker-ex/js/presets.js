@@ -299,8 +299,8 @@
         id: 'battleLightning', group: 'combat', icon: 'bolt', label: T('雷鳴の戦闘開始', 'Thunder Battle Start', '뇌명의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'ENGAGE', 'BATTLE START'),
         patch: {
-          fontId: 'reggae-one', weight: 400, fontSize: 128, letterSpacing: 0.1,
-          subFontId: 'oswald', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.7, subGap: 0.5,
+          fontId: 'soukou-mincho', weight: 400, fontSize: 128, letterSpacing: 0.12,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.5,
           fill: { type: 'gradient', color: '#ffffff', color2: '#e3f4ff', color3: '#8fd3ff', dir: 'v' },
           stroke: { on: true, width: 2, color: '#0a1a33' }, stroke2: { on: false },
           shadow: { on: true, color: '#000814', opacity: 0.6, blur: 10, x: 0, y: 3 },
