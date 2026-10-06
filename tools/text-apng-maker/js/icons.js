@@ -56,7 +56,9 @@
     underline: '<path d="M7 4v7a5 5 0 0 0 10 0V4M5 20h14"/>',
     vertical: '<path d="M17.5 4v16M12 4v11M6.5 4v7"/>',
     frame: '<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7.5 10h9M7.5 14h6"/>',
-    stopwatch: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M10 3h4M12 3v3M18.3 7.2l1.2-1.2"/>'
+    stopwatch: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M10 3h4M12 3v3M18.3 7.2l1.2-1.2"/>',
+    // マイテンプレート
+    star: '<path d="M12 3.6l2.55 5.2 5.7.83-4.13 4.02.98 5.68L12 16.65l-5.1 2.68.98-5.68L3.75 9.63l5.7-.83z"/>'
   };
 
   const NS = 'http://www.w3.org/2000/svg';

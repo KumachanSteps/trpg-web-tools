@@ -561,6 +561,90 @@ body.is-dark .template-chip.is-active { color: #dfeeff; }
 
 .template-chip.is-active .template-icon, .template-chip:hover .template-icon { color: var(--blue); }
 
+/* マイテンプレート（今の設定に名前をつけて保存したもの）。組み込みのテンプレートの下に、点線で区切って並べる */
+.my-templates { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.my-templates-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 8px; margin-bottom: 6px; }
+.my-templates-label { display: inline-flex; align-items: center; gap: 4px; margin: 0; color: var(--muted); font-size: 0.74rem; font-weight: 800; white-space: nowrap; }
+.my-templates-label .template-icon { width: 14px; height: 14px; }
+.my-templates-tools { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 12px; margin-left: auto; }
+.my-templates-tools .link-button { font-size: 0.72rem; white-space: nowrap; }
+.my-templates-tools .link-button[hidden] { display: none; }
+.my-template-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+
+.my-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-solid);
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+
+.my-chip:hover { transform: translateY(-1px); border-color: var(--line-strong); }
+.my-chip.is-active { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
+body.is-dark .my-chip.is-active { color: #dfeeff; }
+.my-chip-apply {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 6px 2px 6px 7px;
+  border: 0;
+  border-radius: 999px 0 0 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.my-chip-apply .template-icon { color: var(--accent); }
+.my-chip-name { min-width: 0; max-width: 15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.my-chip-remove {
+  flex: none;
+  min-width: 22px;
+  height: 22px;
+  margin: 0 4px 0 1px;
+  padding: 0 5px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.my-chip-remove:hover, .my-chip-remove:focus-visible { border-color: var(--danger); color: var(--danger); }
+.my-chip-remove.is-armed { border-color: var(--danger); background: var(--danger); color: #fff; font-size: 0.68rem; }
+
+/* 「＋ 今の設定を保存」：保存したテンプレートが並ぶ場所の最後に置く */
+.my-template-add {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 11px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+
+.my-template-add:hover { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
+body.is-dark .my-template-add:hover { color: #dfeeff; }
+
+/* 名前を入れて保存する欄（「＋ 今の設定を保存」を押すと開く） */
+.my-save-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.my-save-form[hidden] { display: none; }
+.my-save-form .text-input { flex: 1 1 9em; width: auto; min-width: 0; min-height: 34px; padding: 5px 10px; }
+/* 保存・キャンセルは組にして、入りきらないときは2つそろって次の行（右寄せ）へ */
+.my-save-actions { display: inline-flex; gap: 6px; margin-left: auto; }
+.my-save-form .accent-button, .my-save-form .ghost-button { min-height: 34px; padding: 6px 14px; font-size: 0.8rem; box-shadow: none; }
+
 /* ---------- 設定タブ ---------- */
 
 .settings-tabs {
@@ -1396,6 +1480,8 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
   .export-main { width: 100%; }
   .settings-tab { padding: 7px 8px; font-size: 0.8rem; }
   .template-chip { padding: 5px 9px; font-size: 0.78rem; }
+  .my-chip-apply { padding: 5px 2px 5px 8px; font-size: 0.78rem; }
+  .my-template-add { padding: 5px 10px; }
   .time-label { margin-left: 0; width: 100%; }
   .effect-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
 }

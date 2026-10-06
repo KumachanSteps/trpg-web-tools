@@ -10,9 +10,9 @@
   const C = window.TextApngCodec;
   const I18N = window.TextApngI18n;
   const ICONS = window.TextApngIcons;
-  const { ControlPanel, setPath, FX_LABELS, OPT } = window.TextApngControls;
+  const { ControlPanel, setPath, FX_LABELS, OPT, SCHEMA } = window.TextApngControls;
 
-  const VERSION = 'v1.11';
+  const VERSION = 'v1.12';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const LANGS = ['ja', 'ko', 'en', 'zh'];
@@ -23,6 +23,13 @@
   const WEBP_QUALITY = 0.9;
   // まとめて書き出すときの上限（件数）
   const BATCH_MAX = 50;
+  // マイテンプレート（今の設定に名前をつけて保存したもの）。場面の保存データとは別に保存し、「↺ 初期化」では消さない
+  const MY_KEY = 'textApngMakerMyTemplates';
+  const MY_VERSION = 1;
+  const MY_FILE_FORMAT = 'text-apng-maker/my-templates';
+  // モードごとに保存できる数・名前の長さ（文字）
+  const MY_MAX = 30;
+  const MY_NAME_MAX = 30;
   const MODES = ['message', 'trailer', 'caption'];
   // 書き換えた文章をテンプレートごとに覚えるモード（場所・時間は、テンプレートを切り替えても同じ文章を使う）
   const PER_TEMPLATE_TEXT = ['message', 'trailer'];
@@ -76,6 +83,15 @@
     templateGroups: $('templateGroups'),
     templateSystems: $('templateSystems'),
     templateStrip: $('templateStrip'),
+    myTemplatesLabel: $('myTemplatesLabel'),
+    myTemplateStrip: $('myTemplateStrip'),
+    myExportBtn: $('myExportBtn'),
+    myImportBtn: $('myImportBtn'),
+    myImportFile: $('myImportFile'),
+    mySaveForm: $('mySaveForm'),
+    myNameInput: $('myNameInput'),
+    mySaveSubmit: $('mySaveSubmit'),
+    mySaveCancel: $('mySaveCancel'),
     resetBtn: $('resetModeBtn'),
     settingsTabs: $('settingsTabs'),
     settingsBody: $('settingsBody'),
@@ -209,9 +225,12 @@
       const lang = localStorage.getItem(LANG_KEY);
       app.lang = LANGS.includes(lang) ? lang : browserLang();
     } catch (error) { app.lang = 'ja'; }
+    // マイテンプレートを先に読む（開いていた場面がマイテンプレートのこともある）
+    loadMy();
     MODES.forEach(mode => {
       let s = restoreScene(mode, saved && saved.scenes && saved.scenes[mode]);
       // 分類のあるモードで、今は無いテンプレートの場面（以前のバージョンの保存データ）は最初のテンプレートから始める
+      // （マイテンプレートの場面は、そのマイテンプレートを削除していてもそのまま続ける）
       if (P.TEMPLATE_GROUPS[mode] && !templatePlace(mode, s.templateId)) {
         const fresh = P.defaultScene(mode, app.lang);
         Object.assign(fresh, { width: s.width, height: s.height, sizePreset: s.sizePreset, inEnabled: s.inEnabled, outEnabled: s.outEnabled });
@@ -243,7 +262,7 @@
       if (typeof saved.loopPreview === 'boolean') app.loopPreview = saved.loopPreview;
       if (saved.editedTexts && typeof saved.editedTexts === 'object') {
         const memos = saved.editedTexts;
-        PER_TEMPLATE_TEXT.forEach(mode => P.TEMPLATES[mode].forEach(tpl => {
+        PER_TEMPLATE_TEXT.forEach(mode => [...P.TEMPLATES[mode], ...myItems(mode)].forEach(tpl => {
           const kept = pickTexts(memos[mode] && memos[mode][tpl.id]);
           if (Object.keys(kept).length) app.editedTexts[mode][tpl.id] = kept;
         }));
@@ -268,9 +287,9 @@
     if (!keepLoop) app.exportOpts.loop = P.exportLoop(currentTemplate());
   }
 
-  // モードで開いているテンプレート
+  // モードで開いているテンプレート（組み込み・マイテンプレート）
   function currentTemplate(mode = app.mode) {
-    return (P.TEMPLATES[mode] || []).find(t => t.id === app.scenes[mode].templateId) || null;
+    return findTemplate(mode, app.scenes[mode].templateId);
   }
 
   // 保存データの場面を初期値と合わせて読み込む（古い形式の直しも含む）
@@ -291,8 +310,15 @@
     return s;
   }
 
-  // テンプレートの置き場所（分類と、あればシステム）
+  // テンプレートの置き場所（分類と、あればシステム）。
+  // マイテンプレートは、もとにしたテンプレートの置き場所（分からないとき・削除したときは最初の分類）
   function templatePlace(mode, templateId) {
+    if (isMyId(templateId)) {
+      const groups = P.TEMPLATE_GROUPS[mode];
+      if (!groups) return null;
+      const item = findMy(templateId);
+      return (item && item.base && templatePlace(mode, item.base)) || { group: groups[0].id, system: null };
+    }
     const tpl = (P.TEMPLATES[mode] || []).find(t => t.id === templateId);
     if (!tpl || !tpl.group) return null;
     return { group: tpl.group, system: tpl.system || null };
@@ -485,6 +511,15 @@
     els.templatesLabel.textContent = d.templates;
     els.resetBtn.textContent = d.reset;
     els.resetBtn.title = d.resetTitle;
+    els.myTemplatesLabel.textContent = d.myTemplates;
+    els.myExportBtn.textContent = (short.myExport) || d.myExport;
+    els.myExportBtn.title = d.myExportTitle;
+    els.myImportBtn.textContent = (short.myImport) || d.myImport;
+    els.myImportBtn.title = d.myImportTitle;
+    els.myNameInput.placeholder = d.myNameLabel;
+    els.myNameInput.setAttribute('aria-label', d.myNameLabel);
+    els.mySaveCancel.textContent = d.myCancel;
+    syncMySaveButton();
     els.settingsTabs.querySelectorAll('[data-tab]').forEach(btn => { btn.textContent = d.tabs[btn.dataset.tab]; });
     els.previewTitle.textContent = d.preview;
     els.previewBgLabel.textContent = d.previewBg;
@@ -691,7 +726,7 @@
       else memos[key] = value;
       return;
     }
-    const tpl = P.TEMPLATES[s.mode].find(t => t.id === s.templateId);
+    const tpl = findTemplate(s.mode, s.templateId);
     if (!tpl) return;
     const memo = memos[tpl.id] || {};
     if (emptyMain || value === P.sampleText(tpl, key, app.lang)) delete memo[key];
@@ -1070,6 +1105,8 @@
       btn.tabIndex = on ? 0 : -1;
     });
     els.body.dataset.mode = mode;
+    // 開いていた保存の欄は、そのモードの設定を保存するためのものなので閉じる
+    els.mySaveForm.hidden = true;
     showTemplate(firstTemplate(mode));
     syncBatch();
     return true;
@@ -1107,7 +1144,7 @@
   function showTemplate(tpl) {
     if (tpl) {
       fillTemplate(scene(), tpl);
-      setExportLoop(P.exportLoop(tpl));
+      applyTemplateLoop(tpl);
     }
     renderTemplates();
     panel.render(app.tab, els.settingsBody);
@@ -1181,6 +1218,7 @@
       els.templateStrip.appendChild(btn);
     });
     reserveTemplateRows();
+    renderMyTemplates();
     syncSheetLabels();
     if (refocus) {
       const target = lists.map(list => list.querySelector(refocus)).find(Boolean);
@@ -1247,19 +1285,35 @@
   }
 
   // テンプレートを場面に当てはめる。文章は新しいテンプレートの見本にしたうえで、書き換えた文章があれば戻す
-  // （メッセージ・トレイラーはそのテンプレートで書き換えた文章、場所・時間はテンプレートをまたいで共通の文章）
+  // （メッセージ・トレイラーはそのテンプレートで書き換えた文章、場所・時間はテンプレートをまたいで共通の文章）。
+  // マイテンプレートは、保存したときの画像サイズにも戻す。このブラウザで使えないフォントの名前を返す
   function fillTemplate(s, tpl) {
     P.applyTemplate(s, tpl, app.lang);
+    let missing = [];
+    if (tpl.my) {
+      ['width', 'height', 'sizePreset'].forEach(key => { if (key in tpl.patch) s[key] = tpl.patch[key]; });
+      missing = fixMissingFonts(s, tpl.fontNames);
+    }
     const memos = app.editedTexts[app.mode];
     const memo = (PER_TEMPLATE_TEXT.includes(app.mode) ? memos[tpl.id] : memos) || {};
     if (typeof memo.text === 'string') s.text = memo.text;
     if (typeof memo.subText === 'string') s.subText = memo.subText;
     s.mode = app.mode;
+    return missing;
+  }
+
+  // テンプレートの書き出しのループにする（マイテンプレートで回数を指定していたときは、その回数も戻す）
+  function applyTemplateLoop(tpl) {
+    if (tpl && tpl.my && tpl.loop === 'count') {
+      app.exportOpts.loopCount = Math.max(1, Math.min(999, Number(tpl.loopCount) || 3));
+      els.loopCount.value = String(app.exportOpts.loopCount);
+    }
+    setExportLoop(P.exportLoop(tpl));
   }
 
   function applyTemplate(tpl) {
-    fillTemplate(scene(), tpl);
-    setExportLoop(P.exportLoop(tpl));
+    const missing = fillTemplate(scene(), tpl);
+    applyTemplateLoop(tpl);
     renderTemplates();
     view.renderer.invalidateSprites();
     invalidate();
@@ -1269,12 +1323,16 @@
     saveState();
     restartPreview();
     // スマートフォン表示では、通知がプレビューの上に重なるので出さない（選んだ結果はプレビューとシートのバーで分かる）
-    if (!isPhone()) toast(msg().templateApplied(tpl.label[app.lang]), 'success', 2200);
-    track('template_apply', { mode: app.mode, template: tpl.id });
+    if (!isPhone()) toast((tpl.my ? msg().myApplied : msg().templateApplied)(tpl.label[app.lang]), 'success', 2200);
+    // 使えないフォントの案内は、スマートフォンでも出す
+    if (missing.length) toast(msg().myFontMissing(missing), 'warning', 6000);
+    // マイテンプレートの名前は送らない
+    track(tpl.my ? 'my_template_apply' : 'template_apply', tpl.my ? { mode: app.mode } : { mode: app.mode, template: tpl.id });
   }
 
   function resetMode() {
     if (!window.confirm(msg().storageReset)) return;
+    els.mySaveForm.hidden = true;
     app.scenes[app.mode] = P.defaultScene(app.mode, app.lang);
     app.editedTexts[app.mode] = {};
     app.exportOpts.fileNames[app.mode] = '';
@@ -1288,6 +1346,460 @@
     saveState();
     restartPreview();
     toast(msg().resetDone, 'info', 2200);
+  }
+
+  /* ================= マイテンプレート =================
+   * 今の設定（フォント・色・動き・画像サイズ・登場／退場の有無・文章・書き出しのループ）に名前をつけて、モードごとに保存する。
+   * 選ぶと組み込みのテンプレートと同じように場面に当てはめる。ファイル（JSON）に保存して、別のPCやほかのGMのブラウザで追加できる */
+
+  const my = { items: [] };
+
+  // 読み込んだ設定で、0 にすると時間や速さが計算できなくなる項目の下限（設定パネルのスライダーの下限）
+  const STYLE_MIN = (() => {
+    const mins = {};
+    const visit = item => {
+      if (!item || typeof item !== 'object') return;
+      if (item.type === 'range' && typeof item.bind === 'string' && item.min > 0) mins[item.bind] = item.min;
+      ['children', 'items'].forEach(key => { if (Array.isArray(item[key])) item[key].forEach(visit); });
+    };
+    Object.values(SCHEMA).forEach(list => { if (Array.isArray(list)) list.forEach(visit); });
+    return mins;
+  })();
+
+  function isMyId(id) { return typeof id === 'string' && id.startsWith('my-'); }
+  function myItems(mode) { return my.items.filter(item => item.mode === mode); }
+  function findMy(id) { return my.items.find(item => item.id === id) || null; }
+
+  function newMyId() {
+    let id = '';
+    do id = `my-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`; while (findMy(id));
+    return id;
+  }
+
+  // 名前：改行などの制御文字を除いて空白をまとめ、MY_NAME_MAX 文字まで
+  function cleanMyName(name) {
+    const tidy = String(name || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+    return E.graphemes(tidy).slice(0, MY_NAME_MAX).join('').trim();
+  }
+
+  // マイテンプレートを、組み込みのテンプレートと同じ形にする（名前・文章はどの言語でも同じ）
+  function myDef(item) {
+    const all = value => ({ ja: value, en: value, ko: value, zh: value });
+    return {
+      id: item.id, my: true, label: all(item.name), text: all(item.text), subText: all(item.subText),
+      patch: item.style, loop: item.loop, loopCount: item.loopCount, base: item.base, fontNames: item.fontNames
+    };
+  }
+
+  // モードのテンプレート（組み込み・マイテンプレート）を ID で探す
+  function findTemplate(mode, id) {
+    if (isMyId(id)) {
+      const item = findMy(id);
+      return item && item.mode === mode ? myDef(item) : null;
+    }
+    return (P.TEMPLATES[mode] || []).find(t => t.id === id) || null;
+  }
+
+  // 設定を、場面の初期値にある項目・同じ種類の値だけにする（文章とモードは別に持つ）。
+  // 数値は有限の値だけ。画像サイズは 32〜3840px、時間や速さはスライダーの下限まで
+  function sanitizeStyle(raw, base = P.BASE, path = '') {
+    const out = {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+    Object.keys(base).forEach(key => {
+      if (!path && ['mode', 'text', 'subText'].includes(key)) return;
+      if (!Object.prototype.hasOwnProperty.call(raw, key)) return;
+      const def = base[key];
+      const value = raw[key];
+      const bind = path ? `${path}.${key}` : key;
+      if (def && typeof def === 'object') {
+        const nested = sanitizeStyle(value, def, bind);
+        if (Object.keys(nested).length) out[key] = nested;
+      } else if (typeof def === 'number') {
+        if (typeof value === 'number' && Number.isFinite(value)) out[key] = Math.max(STYLE_MIN[bind] || -1e5, Math.min(1e5, value));
+      } else if (typeof def === 'string') {
+        if (typeof value === 'string' && value.length <= 200) out[key] = value;
+      } else if (typeof def === 'boolean') {
+        if (typeof value === 'boolean') out[key] = value;
+      }
+    });
+    if (!path) ['width', 'height'].forEach(key => { if (key in out) out[key] = Math.round(Math.min(3840, Math.max(32, out[key]))); });
+    return out;
+  }
+
+  // 保存データ・ファイルのマイテンプレートを確かめて、使える形にする（使えなければ null。ID が無ければ空）
+  function sanitizeMyItem(raw) {
+    if (!raw || typeof raw !== 'object' || !MODES.includes(raw.mode)) return null;
+    const style = sanitizeStyle(raw.style);
+    if (!Object.keys(style).length) return null;
+    const fontNames = {};
+    if (raw.fontNames && typeof raw.fontNames === 'object') {
+      Object.keys(raw.fontNames).forEach(id => {
+        if (/^(upload|local):/.test(id) && typeof raw.fontNames[id] === 'string') fontNames[id] = raw.fontNames[id].slice(0, 100);
+      });
+    }
+    const saved = Number(raw.saved);
+    return {
+      id: typeof raw.id === 'string' && /^my-[a-z0-9]{4,32}$/.test(raw.id) ? raw.id : '',
+      mode: raw.mode,
+      name: cleanMyName(raw.name) || dict().myUntitled,
+      style,
+      text: typeof raw.text === 'string' ? raw.text.slice(0, 10000) : '',
+      subText: typeof raw.subText === 'string' ? raw.subText.slice(0, 1000) : '',
+      loop: ['once', 'infinite', 'count'].includes(raw.loop) ? raw.loop : 'once',
+      loopCount: Math.max(1, Math.min(999, Math.round(Number(raw.loopCount)) || 3)),
+      base: typeof raw.base === 'string' && (P.TEMPLATES[raw.mode] || []).some(t => t.id === raw.base) ? raw.base : null,
+      fontNames,
+      saved: Number.isFinite(saved) && saved > 0 ? saved : Date.now()
+    };
+  }
+
+  function loadMy() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(MY_KEY) || 'null'); } catch (error) { saved = null; }
+    my.items = [];
+    (saved && Array.isArray(saved.items) ? saved.items : []).forEach(raw => {
+      const item = sanitizeMyItem(raw);
+      if (!item) return;
+      if (!item.id || findMy(item.id)) item.id = newMyId();
+      my.items.push(item);
+    });
+  }
+
+  // 保存できたか（保存できない環境では、ページを開いている間だけ使える）
+  function writeMy() {
+    try {
+      localStorage.setItem(MY_KEY, JSON.stringify({ version: MY_VERSION, items: my.items }));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // 使っている登録フォント・PCのフォントの名前（ほかのブラウザで見つからないときの案内に使う）
+  function userFontNames(s) {
+    const names = {};
+    [s.fontId, s.subFontId].forEach(id => {
+      const font = /^(upload|local):/.test(String(id)) ? F.get(id) : null;
+      if (font) names[id] = String(font.label || font.family);
+    });
+    return names;
+  }
+
+  // このブラウザに無いフォントを確かめる。登録したフォント（ファイル）が無ければ標準のフォントに戻し、
+  // PCのフォントが無ければそのまま（代わりのフォントで表示される）。見つからなかったフォントの名前を返す
+  function fixMissingFonts(s, names = {}) {
+    const missing = [];
+    const nameOf = id => (names && names[id]) || String(id).replace(/^(upload|local):/, '');
+    if (String(s.fontId).startsWith('upload:') && !F.get(s.fontId)) {
+      missing.push(nameOf(s.fontId));
+      const fallback = F.get('noto-sans-jp');
+      s.fontId = fallback.id;
+      s.weight = F.nearestWeight(fallback, s.weight || 700);
+    }
+    if (String(s.subFontId).startsWith('upload:') && !F.get(s.subFontId)) {
+      missing.push(nameOf(s.subFontId));
+      s.subFontId = 'same';
+    }
+    [s.fontId, s.subFontId].forEach(id => {
+      if (String(id).startsWith('local:') && !F.isLocalFontAvailable(String(id).slice(6))) missing.push(nameOf(id));
+    });
+    return [...new Set(missing)];
+  }
+
+  // 同じモードに同じ名前があれば「名前 (2)」「名前 (3)」…にする
+  function uniqueMyName(mode, name) {
+    const taken = new Set(myItems(mode).map(item => item.name));
+    if (!taken.has(name)) return name;
+    for (let n = 2; ; n++) {
+      const suffix = ` (${n})`;
+      const head = E.graphemes(name).slice(0, MY_NAME_MAX - suffix.length).join('').trim();
+      if (!taken.has(head + suffix)) return head + suffix;
+    }
+  }
+
+  // 保存するときの名前の候補：マイテンプレートを開いていればその名前（上書き保存になる）、
+  // 組み込みのテンプレートなら「テンプレート名（カスタム）」（同じ名前があれば番号をつける）
+  function defaultMyName() {
+    const tpl = currentTemplate();
+    if (tpl && tpl.my) return tpl.label[app.lang];
+    const d = dict();
+    return uniqueMyName(app.mode, cleanMyName(d.myDefaultName(tpl ? tpl.label[app.lang] : d.modes[app.mode][0])));
+  }
+
+  function renderMyTemplates() {
+    const d = dict();
+    const s = scene();
+    const strip = els.myTemplateStrip;
+    // 作り直す前にフォーカスしていたボタンへ、作り直した後もフォーカスを戻す
+    const focused = document.activeElement;
+    let refocus = '';
+    if (focused && strip.contains(focused)) {
+      if (focused.dataset.my) refocus = `[data-my="${focused.dataset.my}"]`;
+      else if (focused.dataset.myRemove) refocus = `[data-my-remove="${focused.dataset.myRemove}"]`;
+      else refocus = '.my-template-add';
+    }
+    strip.innerHTML = '';
+    myItems(app.mode).forEach(item => strip.appendChild(myChip(item, s.templateId === item.id)));
+    if (els.mySaveForm.hidden) {
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'my-template-add';
+      add.textContent = d.myAdd;
+      add.title = d.myAddTitle;
+      add.addEventListener('click', openMySave);
+      strip.appendChild(add);
+    }
+    els.myExportBtn.hidden = !my.items.length;
+    if (refocus) {
+      const target = strip.querySelector(refocus);
+      if (target) target.focus();
+    }
+  }
+
+  // マイテンプレートのチップ（押すと適用、「×」を2回押すと削除）
+  function myChip(item, on) {
+    const d = dict();
+    const wrap = document.createElement('span');
+    wrap.className = 'my-chip';
+    wrap.classList.toggle('is-active', on);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'my-chip-apply';
+    btn.dataset.my = item.id;
+    btn.setAttribute('aria-pressed', String(on));
+    btn.title = item.name;
+    const icon = ICONS.create('star', 'template-icon');
+    if (icon) btn.appendChild(icon);
+    const name = document.createElement('span');
+    name.className = 'my-chip-name';
+    name.textContent = item.name;
+    btn.appendChild(name);
+    btn.addEventListener('click', () => applyMyTemplate(item.id));
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'my-chip-remove';
+    remove.dataset.myRemove = item.id;
+    remove.textContent = '×';
+    remove.title = d.myRemove;
+    remove.setAttribute('aria-label', `${d.myRemove}: ${item.name}`);
+    // 削除は、誤操作を防ぐため2回押しで行う（フォントの登録解除と同じ）
+    let armed = 0;
+    remove.addEventListener('click', () => {
+      if (!armed) {
+        remove.classList.add('is-armed');
+        remove.textContent = d.myRemoveConfirm;
+        remove.setAttribute('aria-label', `${d.myRemoveConfirm}: ${item.name}`);
+        armed = setTimeout(() => {
+          armed = 0;
+          remove.classList.remove('is-armed');
+          remove.textContent = '×';
+          remove.setAttribute('aria-label', `${d.myRemove}: ${item.name}`);
+        }, 3000);
+        return;
+      }
+      clearTimeout(armed);
+      removeMyTemplate(item.id);
+    });
+    wrap.append(btn, remove);
+    return wrap;
+  }
+
+  function applyMyTemplate(id) {
+    const item = findMy(id);
+    if (item && item.mode === app.mode) applyTemplate(myDef(item));
+  }
+
+  function openMySave() {
+    els.mySaveForm.hidden = false;
+    els.myNameInput.value = defaultMyName();
+    syncMySaveButton();
+    renderMyTemplates();
+    els.myNameInput.focus();
+    els.myNameInput.select();
+  }
+
+  // 閉じたか（開いていなければ false）
+  function closeMySave(refocus = false) {
+    if (els.mySaveForm.hidden) return false;
+    els.mySaveForm.hidden = true;
+    renderMyTemplates();
+    if (refocus) {
+      const add = els.myTemplateStrip.querySelector('.my-template-add');
+      if (add) add.focus();
+    }
+    return true;
+  }
+
+  // 同じモードに同じ名前があれば「上書き保存」にする
+  function syncMySaveButton() {
+    const d = dict();
+    const name = cleanMyName(els.myNameInput.value);
+    els.mySaveSubmit.textContent = name && myItems(app.mode).some(item => item.name === name) ? d.myOverwrite : d.mySave;
+  }
+
+  function saveMyTemplate() {
+    const s = scene();
+    const m = msg();
+    const name = cleanMyName(els.myNameInput.value) || defaultMyName();
+    const existing = myItems(app.mode).find(item => item.name === name) || null;
+    if (!existing && myItems(app.mode).length >= MY_MAX) {
+      toast(m.myFull(MY_MAX), 'warning', 6000);
+      return;
+    }
+    const current = currentTemplate();
+    const item = existing || { id: newMyId(), mode: app.mode, base: null };
+    Object.assign(item, {
+      name,
+      style: sanitizeStyle(P.clone(s)),
+      text: String(s.text || ''),
+      subText: String(s.subText || ''),
+      loop: app.exportOpts.loop,
+      loopCount: app.exportOpts.loopCount,
+      base: current ? (current.my ? current.base : current.id) : item.base,
+      fontNames: userFontNames(s),
+      saved: Date.now()
+    });
+    if (!existing) my.items.push(item);
+    // 今の文章がこのマイテンプレートの見本になるので、このテンプレートで覚えていた書き換えは消す
+    if (PER_TEMPLATE_TEXT.includes(app.mode)) delete app.editedTexts[app.mode][item.id];
+    s.templateId = item.id;
+    const stored = writeMy();
+    els.mySaveForm.hidden = true;
+    renderTemplates();
+    saveState();
+    toast((existing ? m.myOverwritten : m.mySaved)(name), 'success', 2600);
+    if (!stored) toast(m.myNotStored, 'warning', 8000);
+    track('my_template_save', { mode: app.mode, overwrite: Boolean(existing), items: myItems(app.mode).length });
+    const chip = els.myTemplateStrip.querySelector(`[data-my="${item.id}"]`);
+    if (chip) chip.focus();
+  }
+
+  function removeMyTemplate(id) {
+    const index = my.items.findIndex(item => item.id === id);
+    if (index < 0) return;
+    const [item] = my.items.splice(index, 1);
+    const perTemplate = PER_TEMPLATE_TEXT.includes(item.mode);
+    const memo = perTemplate ? app.editedTexts[item.mode][item.id] : undefined;
+    if (memo) delete app.editedTexts[item.mode][item.id];
+    writeMy();
+    renderTemplates();
+    saveState();
+    // 開いていたマイテンプレートを削除しても、場面の設定はそのまま残る（もう一度保存し直せる）
+    toast(msg().myRemoved(item.name), 'info', 6000, {
+      label: msg().undo,
+      run: () => {
+        if (findMy(item.id)) return;
+        my.items.splice(Math.min(index, my.items.length), 0, item);
+        if (memo && !app.editedTexts[item.mode][item.id]) app.editedTexts[item.mode][item.id] = memo;
+        writeMy();
+        renderTemplates();
+        saveState();
+      }
+    });
+    track('my_template_delete', { mode: item.mode });
+  }
+
+  function downloadBlob(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.hidden = true;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  // すべてのモードのマイテンプレートを1つのファイル（JSON）にする
+  function exportMyTemplates() {
+    if (!my.items.length) { toast(msg().myExportEmpty, 'info'); return; }
+    const data = {
+      format: MY_FILE_FORMAT,
+      version: MY_VERSION,
+      tool: `文字画像APNGメーカー ${VERSION}`,
+      exported: new Date().toISOString(),
+      templates: my.items.map(({ id, ...rest }) => rest)
+    };
+    const now = new Date();
+    const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const name = `${sanitizeFileName(dict().myFileName) || 'my_templates'}_${stamp}.json`;
+    downloadBlob(new Blob([`${JSON.stringify(data, null, 2)}\n`], { type: 'application/json' }), name);
+    toast(msg().myExported(my.items.length), 'success');
+    track('my_template_export', { items: my.items.length });
+  }
+
+  // 名前・設定・文章・ループが同じか（同じファイルを2回読み込んでも増やさない）
+  function sameMyContent(a, b) {
+    return a.name === b.name && a.text === b.text && a.subText === b.subText && a.loop === b.loop
+      && (a.loop !== 'count' || a.loopCount === b.loopCount) && JSON.stringify(a.style) === JSON.stringify(b.style);
+  }
+
+  // ファイル（JSON）のマイテンプレートを追加する。同じものは追加せず、同じ名前で中身が違うものは番号をつける
+  async function importMyTemplates(file) {
+    if (!file) return;
+    const m = msg();
+    let list = null;
+    try {
+      if (file.size > 5 * 1024 * 1024) throw new Error('Too large.');
+      const data = JSON.parse(await file.text());
+      if (data && typeof data === 'object' && Array.isArray(data.templates) && (!data.format || data.format === MY_FILE_FORMAT)) list = data.templates;
+    } catch (error) {
+      list = null;
+    }
+    const added = [];
+    let same = 0;
+    let full = 0;
+    (list || []).forEach(raw => {
+      const item = sanitizeMyItem(raw);
+      if (!item) return;
+      const mine = myItems(item.mode);
+      if (mine.some(other => sameMyContent(other, item))) { same += 1; return; }
+      if (mine.length >= MY_MAX) { full += 1; return; }
+      item.id = newMyId();
+      item.name = uniqueMyName(item.mode, item.name);
+      my.items.push(item);
+      added.push(item);
+    });
+    if (!added.length && !same && !full) {
+      toast(m.myImportFailed, 'error', 6000);
+      return;
+    }
+    const stored = added.length ? writeMy() : true;
+    renderTemplates();
+    const d = dict();
+    const parts = MODES.map(mode => [mode, added.filter(item => item.mode === mode).length])
+      .filter(([, n]) => n).map(([mode, n]) => m.myModeCount(d.modes[mode][0], n));
+    toast(m.myImportResult(added.length, parts, same, full, MY_MAX), added.length ? 'success' : 'info', 7000);
+    if (!stored) toast(m.myNotStored, 'warning', 8000);
+    track('my_template_import', { items: added.length, duplicates: same, over_limit: full });
+  }
+
+  function bindMyTemplates() {
+    els.mySaveForm.addEventListener('submit', event => {
+      event.preventDefault();
+      saveMyTemplate();
+    });
+    els.myNameInput.addEventListener('input', syncMySaveButton);
+    els.myNameInput.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      closeMySave(true);
+    });
+    els.mySaveCancel.addEventListener('click', () => closeMySave(true));
+    els.myExportBtn.addEventListener('click', exportMyTemplates);
+    els.myImportBtn.addEventListener('click', () => els.myImportFile.click());
+    els.myImportFile.addEventListener('change', () => {
+      const file = els.myImportFile.files && els.myImportFile.files[0];
+      els.myImportFile.value = '';
+      importMyTemplates(file);
+    });
+    // ほかのタブで保存・削除したら、一覧を読み直す
+    window.addEventListener('storage', event => {
+      if (event.key !== MY_KEY) return;
+      loadMy();
+      renderTemplates();
+    });
   }
 
   function setTab(tab) {
@@ -1947,7 +2459,7 @@
   function syncSheetLabels() {
     if (!els.sheetSummary) return;
     const d = dict();
-    const tpl = (P.TEMPLATES[app.mode] || []).find(t => t.id === scene().templateId);
+    const tpl = currentTemplate();
     els.sheetSummary.textContent = [d.modes[app.mode][0], tpl ? tpl.label[app.lang] : ''].filter(Boolean).join(' · ');
     els.sheetToggle.setAttribute('aria-label', `${sheet.state === 'peek' ? d.sheetOpen : d.sheetClose}（${els.sheetSummary.textContent}）`);
   }
@@ -2193,6 +2705,7 @@
     setMode: index => setMode(MODES[index]),
     toggleTheme: () => { toggleTheme(); return true; },
     closeDrawers,
+    closeMySave: () => closeMySave(true),
     stopPreview: () => { if (view.playing) { pause(); return true; } return false; },
     isExporting: () => view.exporting
   };
@@ -2201,6 +2714,7 @@
   initTheme();
   bindExportOptions();
   bindBatch();
+  bindMyTemplates();
   bindEvents();
   setPreviewBg(app.previewBg);
   els.body.dataset.mode = app.mode;

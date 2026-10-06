@@ -17,7 +17,8 @@
     const api = window.TextApngMakerApi;
     if (!api) return;
     if (event.key === 'Escape') {
-      if (api.closeDrawers() || api.stopPreview()) event.preventDefault();
+      // マイテンプレートの名前の欄 → 使い方などの説明 → プレビューの順に閉じる・止める
+      if ((api.closeMySave && api.closeMySave()) || api.closeDrawers() || api.stopPreview()) event.preventDefault();
       return;
     }
     if (!hasModifier(event)) return;
