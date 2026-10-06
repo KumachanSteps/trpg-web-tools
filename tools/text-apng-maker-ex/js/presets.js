@@ -299,24 +299,24 @@
         id: 'battleLightning', group: 'combat', icon: 'bolt', label: T('雷鳴の戦闘開始', 'Thunder Battle Start', '뇌명의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'ENGAGE', 'BATTLE START'),
         patch: {
-          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 112, letterSpacing: 0.24,
-          subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.42,
-          fill: { type: 'gradient', color: '#ffffff', color2: '#eef8ff', color3: '#a8dcff', dir: 'v' },
-          stroke: { on: false }, stroke2: { on: false },
-          shadow: { on: true, color: '#000814', opacity: 0.5, blur: 10, x: 0, y: 2 },
-          glow: { on: true, color: '#4ab8ff', size: 18, strength: 0.5 },
-          subColorOn: true, subColor: '#8fd3ff',
-          sfx: { type: 'lightning', color: '#8fd3ff', color2: '#070d18', power: 1 },
+          fontId: 'shippori-mincho-b1', weight: 800, fontSize: 128, letterSpacing: 0.12,
+          subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.55,
+          fill: { type: 'gradient', color: '#ffffff', color2: '#e3f4ff', color3: '#8fd3ff', dir: 'v' },
+          stroke: { on: true, width: 2, color: '#0a1a33' }, stroke2: { on: false },
+          shadow: { on: true, color: '#000814', opacity: 0.6, blur: 10, x: 0, y: 3 },
+          glow: { on: true, color: '#4ab8ff', size: 26, strength: 0.9 },
+          subColorOn: true, subColor: '#bfe6ff',
+          sfx: { type: 'lightning', color: '#8fd3ff', power: 1 },
           inFx: 'flash', inDur: 0.6, hold: 2, outFx: 'fade', outDur: 0.45, subFx: 'fade', subDelay: -0.2
         }
       },
       {
-        // EX：警告マークが点滅して横一本の線につぶれ、暗い帯に開いて「ENGAGE」がグリッチで出る。帯の上下に小さく「WARNING」が流れる
+        // EX：走査線と回る照準・警告マーク・左右の表示が起動して点滅し、横一本の線につぶれて暗い帯に開き「ENGAGE」がグリッチで出る
         id: 'cyberWarning', group: 'combat', icon: 'warning', label: T('WARNING / ENGAGE', 'Warning / Engage', 'WARNING / ENGAGE'),
         text: T('ENGAGE', 'ENGAGE', 'ENGAGE'), subText: T('BATTLE START', 'BATTLE START', 'BATTLE START'),
         patch: {
-          fontId: 'orbitron', weight: 900, fontSize: 112, letterSpacing: 0.24,
-          subFontId: 'share-tech-mono', subWeight: 400, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.42,
+          fontId: 'tektur', weight: 800, fontSize: 116, letterSpacing: 0.22,
+          subFontId: 'kode-mono', subWeight: 400, subSize: 0.2, subLetterSpacing: 0.7, subGap: 0.42,
           fill: { type: 'gradient', color: '#ffffff', color2: '#fff0f2', color3: '#ff9aa8', dir: 'v' },
           stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.5, blur: 10, x: 0, y: 2 }, glow: { on: true, color: '#ff1f3d', size: 16, strength: 0.5 },
@@ -399,7 +399,7 @@
           stroke: { on: false }, stroke2: { on: false },
           shadow: { on: true, color: '#000000', opacity: 0.5, blur: 10, x: 0, y: 2 },
           glow: { on: true, color: '#ff5a1a', size: 20, strength: 0.55 },
-          subColorOn: true, subColor: '#ff9a48',
+          subColorOn: true, subColor: '#ffe2c0',
           sfx: { type: 'flame', color: '#ff7a2a', color2: '#ffd9a0', power: 1 },
           inFx: 'rise', inDur: 0.6, inPower: 0.4, hold: 2.0, outFx: 'burn', outDur: 1.3, subFx: 'fade', subDelay: -0.2
         }

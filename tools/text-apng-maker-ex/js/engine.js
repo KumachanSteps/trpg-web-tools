@@ -621,7 +621,6 @@
       }
       case 'gunshot': return { l: size, r: size, t: size, b: size * 0.55 };
       case 'flame': return { l: 0, r: 0, t: size * 0.35, b: size * 0.35 };
-      case 'lightning': return { l: 0, r: 0, t: size * 0.35, b: size * 0.35 };
       case 'cyber': return { l: 0, r: 0, t: size * 0.55, b: size * 0.55 };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
@@ -1353,7 +1352,7 @@
   const SFX_TIMING = {
     none: { lead: 0, tail: 0 },
     lightning: { lead: 0.6, tail: 0 },
-    cyber: { lead: 0.75, tail: 0.3 },
+    cyber: { lead: 1.05, tail: 0.3 },
     katana: { lead: 0, tail: 0 },
     frame: { lead: 0.45, tail: 0 },
     crest: { lead: 0.88, tail: 0 },
@@ -1362,8 +1361,8 @@
   };
   // 文字の後ろに描く演出（装飾枠・剣と盾・銃撃・サイバー）。ほかは文字の上に描く
   const SFX_BACK = new Set(['frame', 'crest', 'gunshot', 'cyber']);
-  // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に電気や炎）
-  const SFX_BOTH = new Set(['lightning', 'flame']);
+  // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎）
+  const SFX_BOTH = new Set(['flame']);
   // 装飾枠：線が角から辺の中央まで伸びる時間
   const FRAME_DRAW = 0.55;
   // 剣と盾：剣が飛び込んで止まるまで / 盾の輪郭を引く時間 / 帯が左右に開き始める時刻と開く時間
@@ -1392,8 +1391,10 @@
   const BURN_SOFT = 0.6;
   const FLAME_BAND = '#120c0a';
   const SFX_TYPES = Object.keys(SFX_TIMING);
-  // 雷：左右から走る電気が中央で出会うまで / 退場前の落雷
+  // 雷：左右から走る電気が中央で出会うまで / 中央の火花が散りきるまで / 退場前の落雷
   const ARC_RUN = 0.42;
+  const SPARK_DUR = 0.75;
+  const SPARK_COUNT = 36;
   const STRIKE_DUR = 0.42;
   // 刀：一閃が横切る時間 / 一閃の光が消えるまで / 切れた瞬間の切り口の光 / 切れた瞬間の揺れ
   const SLASH_SWEEP = 0.14;
@@ -1401,7 +1402,7 @@
   const CUT_GLINT = 0.4;
   const CUT_IMPACT = 0.3;
   // サイバー：警告マークが点滅して線につぶれるまで / 表示中のノイズの間隔
-  const CYBER_ALERT = 0.6;
+  const CYBER_ALERT = 0.9;
   const CYBER_BURST = 1.4;
 
   function sfxOf(scene) {
@@ -1443,7 +1444,8 @@
     if (sfx.type === 'lightning') {
       if (t >= pg.inEnd && t < pg.holdEnd) {
         const pulse = 0.5 + 0.5 * Math.sin(TAU * (t - pg.inEnd) / 0.8);
-        bs.glowMul *= 1 + 0.35 * k * pulse;
+        bs.glowMul *= 1 + 0.9 * k * pulse;
+        if (rnd(Math.floor(t * 15), 3, pg.index) < 0.18) bs.bright = Math.max(bs.bright, 0.22 * k);
       }
       const d = t - pg.holdEnd;
       if (scene.outEnabled !== false && d >= 0 && d < 0.25) bs.bright = Math.max(bs.bright, clamp((1 - d / 0.25) * 0.9 * k));
@@ -1636,20 +1638,40 @@
     return { x: lerp(b.x0 - pad - s, b.x1 + pad, p), p, soft: s };
   }
 
-  // 細い炎の舌（加算で描く）：根元が明るく、先へ行くほど炎の色で透ける
-  function flameLick(ctx, x, y, w, h, sway, alpha, fire, core) {
+  // 炎の舌：根元が太く、先へ行くほど細く大きくゆらぐ形。下から上へ inner → outer の色で塗り、先は透ける
+  function flameTongue(ctx, x, y, w, h, t, seed, inner, outer, alpha) {
     if (alpha <= 0.002 || h <= 1) return;
-    const g = ctx.createLinearGradient(x, y, x + sway, y - h);
-    g.addColorStop(0, colorWithAlpha(core, clamp(alpha)));
-    g.addColorStop(0.4, colorWithAlpha(fire, clamp(alpha * 0.8)));
-    g.addColorStop(1, colorWithAlpha(fire, 0));
+    const n = 10, left = [], right = [];
+    for (let i = 0; i <= n; i++) {
+      const v = i / n;
+      const cx = x + noise1(t * 2.4 - v * 1.8, seed) * w * 1.2 * v * v + noise1(t * 6 - v * 3, seed + 7) * w * 0.22 * v;
+      const hw = w / 2 * Math.pow(1 - v, 0.85) * (1 + 0.3 * Math.sin(Math.PI * clamp(v * 2.4)));
+      left.push([cx - hw, y - h * v]);
+      right.push([cx + hw, y - h * v]);
+    }
+    const pts = left.concat(right.reverse());
+    const g = ctx.createLinearGradient(0, y, 0, y - h);
+    g.addColorStop(0, colorWithAlpha(inner, clamp(alpha)));
+    g.addColorStop(0.45, colorWithAlpha(outer, clamp(alpha * 0.85)));
+    g.addColorStop(1, colorWithAlpha(outer, 0));
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.moveTo(x - w / 2, y);
-    ctx.quadraticCurveTo(x - w * 0.4, y - h * 0.55, x + sway, y - h);
-    ctx.quadraticCurveTo(x + w * 0.4, y - h * 0.55, x + w / 2, y);
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+    }
+    ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
     ctx.closePath();
     ctx.fill();
+  }
+
+  // 2つの色を混ぜる（#rrggbb）
+  function mixHex(a, b, u) {
+    const pa = parseInt(String(a).slice(1, 7), 16), pb = parseInt(String(b).slice(1, 7), 16);
+    if (!Number.isFinite(pa) || !Number.isFinite(pb)) return a;
+    const ch = sh => Math.round(lerp((pa >> sh) & 255, (pb >> sh) & 255, u));
+    return `#${((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1)}`;
   }
 
   // 稲妻の折れ線（中点をずらしていく。同じ seed なら同じ形）
@@ -1668,6 +1690,20 @@
       disp *= 0.55;
     }
     return pts;
+  }
+
+  // 稲妻：本体と、途中から分かれる枝
+  function boltWithBranches(x0, y0, x1, y1, seed) {
+    const main = boltPoints(x0, y0, x1, y1, seed, 6, 0.2);
+    const len = Math.hypot(x1 - x0, y1 - y0);
+    const paths = [{ pts: main, w: 1 }];
+    [0.3, 0.55].forEach((at, bi) => {
+      const from = main[Math.floor(main.length * at)];
+      const ang = Math.atan2(y1 - y0, x1 - x0) + (rnd(seed, 300 + bi, 9) < 0.5 ? -1 : 1) * (0.45 + rnd(seed, 310 + bi, 9) * 0.5);
+      const bl = len * (0.22 + rnd(seed, 320 + bi, 9) * 0.18);
+      paths.push({ pts: boltPoints(from[0], from[1], from[0] + Math.cos(ang) * bl, from[1] + Math.sin(ang) * bl, seed + 17 + bi, 4, 0.22), w: 0.45 });
+    });
+    return paths;
   }
 
   function strokePath(ctx, pts) {
@@ -1949,7 +1985,7 @@
       const k = clamp(sfx.power ?? 1, 0, 3);
       ctx.save();
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      if (sfx.type === 'lightning') this.drawLightning(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      if (sfx.type === 'lightning') this.drawLightning(ctx, pg, mb, t, scale, scene, sfx, k);
       else if (sfx.type === 'katana') this.drawKatana(ctx, pg, mb, t, scale, scene, sfx, k);
       else if (sfx.type === 'frame') this.drawFrame(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'crest') this.drawCrest(ctx, pg, page, t, scale, scene, sfx, k);
@@ -1959,98 +1995,106 @@
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, page, t, scale, scene, sfx, k);
     }
 
-    // 雷：左右の端から細い電気が横に走って中央で出会い、白い閃光が横に伸びて暗い帯になり、文字が光って現れる →
-    // 表示中は帯の上下の線をときどき短い電気が走る → 退場の直前に1本の落雷が帯に落ち、文字が白く光って消える。
-    // 色は電気の色と白と暗い帯だけ。帯は文字の後ろ（back）、電気と閃光は手前（front）に描く
-    drawLightning(ctx, pg, page, t, scale, scene, sfx, k, layer) {
-      const d = t - pg.start;
-      if (d < 0) return;
+    // 雷：左右から電気が横に走って中央でぶつかり、大きな火花 → 文字の上を電気が走る → もう一度落雷して消える
+    drawLightning(ctx, pg, mb, t, scale, scene, sfx, k) {
       const color = sfx.color || '#8fd3ff';
       const size = this.prepared.layout.size;
-      const W = scene.width;
-      const mb = mainBox(this.prepared.layout, page);
-      const b = page.box;
-      const cx = (b.x0 + b.x1) / 2, cy = mb.cy;
-      const bandT = b.y0 - size * 0.3, bandB = b.y1 + size * 0.3;
-      const bw = Math.min((b.x1 - b.x0) / 2 + size * 1.6, Math.max(W / 2, (b.x1 - b.x0) / 2 + size * 0.5));
-      const lw = size * 0.02;
-      const meet = d - ARC_RUN;
-      const open = EASE.outExpo(clamp((meet - 0.04) / 0.4));
-      const out = outProgress(pg, t);
-      const fade = 1 - EASE.inQuad(out);
-      if (layer === 'back') {
-        if (open <= 0) return;
-        const w = bw * open;
-        const g = ctx.createLinearGradient(cx - w, 0, cx + w, 0);
-        const band = sfx.color2 || '#070d18';
-        g.addColorStop(0, colorWithAlpha(band, 0));
-        g.addColorStop(0.3, colorWithAlpha(band, 0.86 * fade));
-        g.addColorStop(0.7, colorWithAlpha(band, 0.86 * fade));
-        g.addColorStop(1, colorWithAlpha(band, 0));
-        ctx.fillStyle = g;
-        const h = EASE.outCubic(clamp((meet - 0.04) / 0.3));
-        ctx.fillRect(cx - w, lerp(cy, bandT, h), w * 2, lerp(0, bandB - bandT, h));
-        const lg = ctx.createLinearGradient(cx - w * 1.12, 0, cx + w * 1.12, 0);
-        lg.addColorStop(0, colorWithAlpha(color, 0));
-        lg.addColorStop(0.3, colorWithAlpha(color, fade));
-        lg.addColorStop(0.7, colorWithAlpha(color, fade));
-        lg.addColorStop(1, colorWithAlpha(color, 0));
-        ctx.fillStyle = lg;
-        ctx.fillRect(cx - w * 1.12, lerp(cy, bandT, h) - lw, w * 2.24, lw);
-        ctx.fillRect(cx - w * 1.12, lerp(cy, bandB, h), w * 2.24, lw);
-        return;
-      }
-      // 1) 左右の端から中央へ、細い電気が1本ずつ横に走る
-      if (d < ARC_RUN + 0.05) {
-        const e = EASE.inOutCubic(clamp(d / ARC_RUN)) * 0.6 + clamp(d / ARC_RUN) * 0.4;
+      const W = scene.width, H = scene.height;
+      const cx = mb.cx, cy = mb.cy;
+      // 1) 画面の左右の端から中央へ、電気が横に走る
+      const d0 = t - pg.start;
+      if (d0 >= 0 && d0 < ARC_RUN + 0.06) {
+        const e = EASE.inOutCubic(clamp(d0 / ARC_RUN)) * 0.6 + clamp(d0 / ARC_RUN) * 0.4;
         const frame = Math.floor(t * 30);
         [0, W].forEach((x0, si) => {
           const head = lerp(x0, cx, e);
           if (Math.abs(head - x0) < 1) return;
-          drawGlowPath(ctx, boltPoints(x0, cy, head, cy, frame * 5 + si, 6, 0.06), size * 0.026, color, 1, scale);
-          drawFlash(ctx, head, cy, size * 0.6, color, 0.6 * clamp(k));
+          const y0 = cy + (rnd(frame, si, 3) - 0.5) * size * 0.4;
+          drawGlowPath(ctx, boltPoints(x0, y0, head, cy, frame * 5 + si, 6, 0.1), size * 0.042, color, 1, scale);
+          const y1 = cy + (rnd(frame, si, 4) - 0.5) * size * 0.5;
+          drawGlowPath(ctx, boltPoints(x0, y1, head, cy, frame * 5 + si + 50, 6, 0.14), size * 0.018, color, 0.8, scale);
+          drawFlash(ctx, head, cy, size * 0.7, color, 0.7 * k);
         });
       }
-      // 2) 出会った瞬間：横に伸びる白い閃光（このあと帯になる）と、上下へ短い電気
-      if (meet >= 0 && meet < 0.5) {
-        const q = meet / 0.5;
-        const sw = bw * EASE.outExpo(clamp(meet / 0.2));
-        const g = ctx.createLinearGradient(cx - sw, 0, cx + sw, 0);
-        g.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        g.addColorStop(0.5, `rgba(255, 255, 255, ${clamp((1 - q) * k)})`);
-        g.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = g;
-        ctx.fillRect(cx - sw, cy - lw, sw * 2, lw * 2);
-        drawFlash(ctx, cx, cy, size * 2.2, color, 0.9 * Math.pow(1 - q, 2) * clamp(k), 0.45);
-        if (meet < 0.3 && (meet < 0.08 || (meet > 0.11 && meet < 0.2) || meet > 0.23)) {
-          const flick = Math.floor(meet * 30);
-          [[-1, -0.7], [1, -0.6], [-1, 0.65], [1, 0.75]].forEach(([sx, sy], i) => {
-            const len = size * (1.6 + 0.8 * rnd(i, 1, 19)) * Math.min(1.5, k);
-            drawGlowPath(ctx, boltPoints(cx, cy, cx + sx * len, cy + sy * len, 900 + i + flick * 7, 5, 0.18), size * 0.03, color, 1 - meet / 0.3, scale);
-          });
+      // 2) 中央で大きな火花：閃光・放射状の稲妻・飛び散る火の粉
+      const d1 = t - (pg.start + ARC_RUN);
+      if (d1 >= 0 && d1 < SPARK_DUR) {
+        const q = d1 / SPARK_DUR;
+        const grow = 0.5 + 0.5 * EASE.outCubic(clamp(d1 / 0.15));
+        drawFlash(ctx, cx, cy, Math.max(W, H) * 0.7 * grow, color, 0.95 * k * Math.pow(1 - q, 2));
+        if (d1 < 0.34 && (d1 < 0.1 || d1 > 0.13)) {
+          const rays = 12;
+          const flick = Math.floor(d1 * 30);
+          for (let i = 0; i < rays; i++) {
+            const ang = (i / rays) * TAU + (rnd(i, 7, 77) - 0.5) * 0.5;
+            const len = size * (2 + rnd(i, 8, 77) * 2.4) * Math.min(1.6, k);
+            const pts = boltPoints(cx, cy, cx + Math.cos(ang) * len, cy + Math.sin(ang) * len * 0.75, 900 + i + flick * 13, 4, 0.22);
+            drawGlowPath(ctx, pts, size * 0.034, color, 1 - d1 / 0.34, scale);
+          }
         }
-      }
-      // 3) 表示中：帯の上下の線を、ときどき短い電気が走る
-      if (t >= pg.inEnd - 0.2 && t < pg.holdEnd) {
-        const P = 0.75, c = (t - pg.inEnd) / P, n = Math.floor(c), f = c - n;
-        if (f < 0.22) {
-          const top = rnd(n, 1, 29) < 0.5;
-          const y = top ? bandT - lw / 2 : bandB + lw / 2;
-          const x0 = cx + (rnd(n, 2, 29) - 0.5) * bw * 1.2;
-          const len = size * (1 + rnd(n, 3, 29) * 1.2) * (rnd(n, 4, 29) < 0.5 ? -1 : 1);
-          const frame = Math.floor(t * 30);
-          const run = EASE.outCubic(clamp(f / 0.1));
-          drawGlowPath(ctx, boltPoints(x0, y, x0 + len * run, y, frame * 7 + n, 5, 0.14), size * 0.022, color, (1 - clamp((f - 0.12) / 0.1)) * fade * clamp(k), scale);
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.shadowColor = color;
+        ctx.shadowBlur = size * 0.1 * scale;
+        ctx.strokeStyle = '#ffffff';
+        const n = Math.round(SPARK_COUNT * Math.min(1.5, k));
+        for (let i = 0; i < n; i++) {
+          const life = SPARK_DUR * (0.45 + 0.55 * rnd(i, 1, 55));
+          if (d1 > life) continue;
+          const ang = rnd(i, 2, 55) * TAU;
+          const v = size * (4 + rnd(i, 3, 55) * 10);
+          const travel = (1 - Math.exp(-d1 * 5)) / 5;
+          const px = cx + Math.cos(ang) * v * travel;
+          const py = cy + Math.sin(ang) * v * travel + size * 1.5 * d1 * d1;
+          const tl = Math.max(size * 0.06, v * Math.exp(-d1 * 5) * 0.05);
+          const fade = 1 - d1 / life;
+          ctx.globalAlpha = fade;
+          ctx.lineWidth = size * 0.03 * (0.5 + 0.7 * fade);
+          ctx.beginPath();
+          ctx.moveTo(px - Math.cos(ang) * tl, py - Math.sin(ang) * tl);
+          ctx.lineTo(px, py);
+          ctx.stroke();
         }
+        ctx.restore();
       }
-      // 4) 退場の直前に、1本の落雷が帯の上の線に落ちる
+      // 3) 退場の直前にもう一度落雷
       const d2 = t - pg.holdEnd;
       if (scene.outEnabled !== false && Number.isFinite(pg.holdEnd) && d2 >= 0 && d2 <= STRIKE_DUR) {
-        const q = d2 / STRIKE_DUR;
-        const sx = cx + (b.x1 - b.x0) * 0.18;
-        drawFlash(ctx, sx, bandT, size * 2.4, color, 0.6 * clamp(k) * Math.pow(1 - q, 2), 0.6);
-        if (d2 < 0.06 || (d2 > 0.1 && d2 < 0.18)) {
-          drawGlowPath(ctx, boltPoints(sx - size * 0.6, -size, sx, bandT - lw, 23 + pg.index, 6, 0.12), size * 0.03, color, 1 - q, scale);
+        const seed = 23 + pg.index;
+        const fade = 1 - d2 / STRIKE_DUR;
+        drawFlash(ctx, cx, cy, Math.max(W, H) * 0.65, color, 0.55 * k * fade * fade);
+        if (d2 < 0.07 || (d2 > 0.12 && d2 < 0.2) || (d2 > 0.26 && d2 < 0.33)) {
+          for (let b = 0; b < 2; b++) {
+            const sx = cx + (rnd(seed, b, 1) - 0.5) * W * 0.5;
+            const ex = cx + (rnd(seed, b, 2) - 0.5) * (mb.x1 - mb.x0) * 0.6;
+            const ey = cy + (rnd(seed, b, 3) - 0.5) * (mb.y1 - mb.y0) * 0.4;
+            boltWithBranches(sx, -H * 0.05, ex, ey, seed * 7 + b).forEach(path => {
+              drawGlowPath(ctx, path.pts, size * 0.05 * path.w * (b ? 0.7 : 1), color, fade * (b ? 0.8 : 1), scale);
+            });
+          }
+        }
+      }
+      // 表示中：文字の上を電気が走る（脈打つように強弱）
+      if (t >= pg.inEnd - 0.15 && t < pg.holdEnd && mb.list.length) {
+        const frame = Math.floor(t * 15);
+        const pulse = 0.55 + 0.45 * Math.sin(TAU * (t - pg.inEnd) / 0.8);
+        const n = 3 + Math.floor(rnd(frame, 1, 41) * 4 * Math.min(1.5, k));
+        for (let i = 0; i < n; i++) {
+          if (rnd(frame, 10 + i, 41) < 0.15) continue;
+          const gi = Math.floor(rnd(frame, 20 + i, 41) * mb.list.length);
+          const a = mb.list[gi];
+          const b = mb.list[Math.min(mb.list.length - 1, gi + 1)] || a;
+          const r = a.size * 0.45;
+          const x0 = a.cx + (rnd(frame, 30 + i, 41) - 0.5) * r * 2, y0 = a.cy + (rnd(frame, 40 + i, 41) - 0.5) * r * 2;
+          let x1 = b.cx + (rnd(frame, 50 + i, 41) - 0.5) * r * 2, y1 = b.cy + (rnd(frame, 60 + i, 41) - 0.5) * r * 2;
+          // ときどき文字の外へ火花が飛ぶ
+          if (a === b || rnd(frame, 70 + i, 41) < 0.25) {
+            const ang = rnd(frame, 80 + i, 41) * TAU;
+            x1 = x0 + Math.cos(ang) * a.size * 0.9;
+            y1 = y0 + Math.sin(ang) * a.size * 0.9;
+          }
+          const pts = boltPoints(x0, y0, x1, y1, frame * 13 + i, 4, 0.3);
+          drawGlowPath(ctx, pts, size * 0.02 * (0.7 + 0.6 * pulse), color, clamp(pulse * k), scale);
         }
       }
     }
@@ -2103,7 +2147,7 @@
       if (g >= 0 && g < CUT_GLINT) blade(mb.x0 - size * 0.4, mb.x1 + size * 0.4, size * 0.018 * k, 1 - g / CUT_GLINT);
     }
 
-    // サイバー：画面が少し暗くなり、四隅に照準の角、中央に細い線の警告マークと「WARNING」が点滅 →
+    // サイバー：画面が少し暗くなり走査線が流れ、四隅に照準の角、中央に回る目盛りの輪・警告マーク・左右の表示・「WARNING」が組み上がって点滅 →
     // マークが横一本の線につぶれ、その線が暗い帯に開いて文字がグリッチで出る →
     // 表示中は帯の上下に小さな「WARNING //」が流れ、ときどき短いノイズ → 退場で帯が線に閉じてグリッチで消える。
     // 色は警告色と暗い帯と白だけ。すべて文字の後ろに描く
@@ -2180,46 +2224,159 @@
         }
       }
 
-      // 3) 中央の警告マークと「WARNING」：点滅したあと、横一本の線につぶれる
+      // 3) 中央の照準（回る目盛りの輪・警告マーク・左右の表示・大きな「WARNING」）が起動するように組み上がり、
+      //    点滅したあと、横一本の線につぶれる。そのあいだ走査線が画面を上から下へ1回なでる
       if (settle < 0.14) {
-        const on = d < 0.06 ? rnd(frame, 1, seed) < 0.5 : !(d > 0.26 && d < 0.34);
         const sy = 1 - EASE.inCubic(clamp(settle / 0.12));
-        if (d < 0.12) glitch = Math.max(glitch, 0.5);
+        if (d < 0.1) glitch = Math.max(glitch, 0.5);
+        if (Math.abs(d - 0.5) < 0.04) glitch = Math.max(glitch, 0.45);
         if (settle > -0.02) glitch = Math.max(glitch, 0.7);
+        const on = d < 0.08 ? rnd(frame, 1, seed) < 0.5 : !(d > 0.5 && d < 0.56);
+        // 走査線：細いすじを全面に、明るい1本が上から下へ
+        if (dim > 0.002) {
+          lctx.save();
+          lctx.globalAlpha = 0.07 * dim * a0;
+          lctx.fillStyle = color;
+          const gap = Math.max(3, H / 180);
+          for (let y = 0; y < H; y += gap) lctx.fillRect(0, y, W, gap * 0.35);
+          const sweep = clamp(d / (CYBER_ALERT * 0.8));
+          if (sweep < 1) {
+            const sy0 = H * EASE.inOutCubic(sweep), sh = size * 0.6;
+            const g = lctx.createLinearGradient(0, sy0 - sh, 0, sy0);
+            g.addColorStop(0, colorWithAlpha(color, 0));
+            g.addColorStop(1, colorWithAlpha(color, 0.3));
+            lctx.globalAlpha = a0;
+            lctx.fillStyle = g;
+            lctx.fillRect(0, sy0 - sh, W, sh);
+            lctx.fillStyle = colorWithAlpha(color, 0.9);
+            lctx.fillRect(0, sy0 - lw * 0.5, W, lw * 0.5);
+          }
+          lctx.restore();
+        }
         if (on && sy > 0.01) {
-          const S = size * 1.15, th = S * 0.87;
-          const ty = cy - size * 0.3;
+          const R = size * 1.3;
+          const ox = W / 2, oy = cy - size * 0.2;
+          const boot = u => EASE.outCubic(clamp((d - u) / 0.18));
           lctx.save();
           lctx.globalAlpha = a0;
-          lctx.translate(W / 2, cy);
+          lctx.translate(ox, cy);
           lctx.scale(1, sy);
-          lctx.translate(-W / 2, -cy);
-          lctx.shadowColor = color;
-          lctx.shadowBlur = size * 0.12 * scale;
+          lctx.translate(-ox, -cy);
           lctx.strokeStyle = color;
           lctx.fillStyle = color;
-          lctx.lineJoin = 'miter';
-          lctx.lineWidth = lw * 1.6;
-          lctx.beginPath();
-          lctx.moveTo(W / 2, ty - th / 2);
-          lctx.lineTo(W / 2 + S / 2, ty + th / 2);
-          lctx.lineTo(W / 2 - S / 2, ty + th / 2);
-          lctx.closePath();
-          lctx.stroke();
-          const ew = lw * 1.8;
-          lctx.fillRect(W / 2 - ew / 2, ty - th * 0.14, ew, th * 0.36);
-          lctx.fillRect(W / 2 - ew / 2, ty + th * 0.29, ew, ew);
-          // 下に小さく「WARNING」と、両側に細い線
-          const fy = ty + th / 2 + size * 0.36, fs = size * 0.24;
-          lctx.font = fontString(fam, 700, fs, false);
-          spaced(fs * 0.5);
-          lctx.fillText(word, W / 2 + fs * 0.25, fy);
-          const tw = lctx.measureText(word).width;
-          spaced(0);
+          lctx.shadowColor = color;
+          lctx.shadowBlur = size * 0.08 * scale;
+          lctx.lineCap = 'butt';
+          // 外側：12個の目盛りが順に点いて、ゆっくり回る
+          const rot = d * 0.9;
+          lctx.lineWidth = lw * 1.3;
+          for (let i = 0; i < 12; i++) {
+            if (d < 0.04 + i * 0.018) continue;
+            const a = rot + i / 12 * TAU;
+            lctx.beginPath(); lctx.arc(ox, oy, R, a, a + TAU / 12 * 0.62); lctx.stroke();
+          }
+          // 内側の細い輪と、上下左右の目盛り
+          const ib = boot(0.08);
+          if (ib > 0) {
+            lctx.lineWidth = lw * 0.6;
+            lctx.globalAlpha = a0 * 0.6;
+            lctx.beginPath(); lctx.arc(ox, oy, R * 0.8, -Math.PI / 2, -Math.PI / 2 + TAU * ib); lctx.stroke();
+            lctx.globalAlpha = a0;
+            lctx.lineWidth = lw;
+            lctx.beginPath();
+            for (let i = 0; i < 4; i++) {
+              const a = i / 4 * TAU;
+              lctx.moveTo(ox + Math.cos(a) * R * 0.8, oy + Math.sin(a) * R * 0.8);
+              lctx.lineTo(ox + Math.cos(a) * R * (0.8 - 0.12 * ib), oy + Math.sin(a) * R * (0.8 - 0.12 * ib));
+            }
+            lctx.stroke();
+          }
+          // 逆向きに速く回る、太い短い弧が2本
+          const sb = boot(0.14);
+          if (sb > 0) {
+            lctx.lineWidth = lw * 2.6;
+            const a = -d * 3.2;
+            [0, Math.PI].forEach(o => { lctx.beginPath(); lctx.arc(ox, oy, R * 1.13, a + o, a + o + 0.7 * sb); lctx.stroke(); });
+          }
+          // 警告マーク：二重線の三角と「！」
+          const tb = boot(0.18);
+          if (tb > 0) {
+            const S = R * 0.95 * (0.8 + 0.2 * tb), th = S * 0.87;
+            const tri = (sc) => {
+              lctx.beginPath();
+              lctx.moveTo(ox, oy - th / 2 * sc + th * 0.06);
+              lctx.lineTo(ox + S / 2 * sc, oy + th / 2 * sc + th * 0.06);
+              lctx.lineTo(ox - S / 2 * sc, oy + th / 2 * sc + th * 0.06);
+              lctx.closePath();
+            };
+            lctx.globalAlpha = a0 * tb;
+            lctx.lineJoin = 'miter';
+            tri(1); lctx.fillStyle = colorWithAlpha(color, 0.14); lctx.fill();
+            lctx.lineWidth = lw * 1.6; lctx.stroke();
+            lctx.lineWidth = lw * 0.5; tri(0.8); lctx.stroke();
+            lctx.fillStyle = color;
+            const ew = lw * 2;
+            lctx.fillRect(ox - ew / 2, oy - th * 0.08, ew, th * 0.3);
+            lctx.fillRect(ox - ew / 2, oy + th * 0.28, ew, ew);
+          }
           lctx.shadowBlur = 0;
-          lctx.fillRect(W / 2 - tw / 2 - size * 0.55, fy - lw * 0.3, size * 0.35, lw * 0.6);
-          lctx.fillRect(W / 2 + tw / 2 + size * 0.2, fy - lw * 0.3, size * 0.35, lw * 0.6);
+          // 左右の表示：引き出し線と、1文字ずつ打ち出される小さな文字
+          const fs = size * 0.13;
+          lctx.font = fontString(fam, scene.subWeight || 400, fs, false);
+          spaced(fs * 0.2);
+          const lines = [
+            [-1, ['SYS//ALERT', 'CODE 0xE7', `LV.0${1 + Math.floor(rnd(seed, 3, 1) * 8)}`]],
+            [1, ['HOSTILE', 'DETECTED', '']]
+          ];
+          lines.forEach(([side, rows], si) => {
+            const lb = boot(0.2 + si * 0.06);
+            if (lb <= 0) return;
+            const x0 = ox + side * R * 1.25, x1 = x0 + side * size * 0.5 * lb;
+            lctx.globalAlpha = a0;
+            lctx.fillRect(Math.min(x0, x1), oy - size * 0.32 - lw * 0.3, Math.abs(x1 - x0), lw * 0.6);
+            lctx.textAlign = side < 0 ? 'right' : 'left';
+            rows.forEach((txt, ri) => {
+              const shown = Math.floor(clamp((d - 0.26 - si * 0.06 - ri * 0.07) / 0.18) * txt.length);
+              const y = oy - size * 0.16 + ri * fs * 1.5;
+              lctx.globalAlpha = a0 * (ri === 0 ? 1 : 0.7);
+              if (shown > 0) lctx.fillText(txt.slice(0, shown), x1, y);
+            });
+            // 右側の3行目は、満ちていくゲージ
+            if (side > 0) {
+              const gp = clamp((d - 0.34) / 0.3);
+              const n = 8, cwid = fs * 0.55, gy = oy - size * 0.16 + 2 * fs * 1.5 - fs * 0.35;
+              for (let i = 0; i < n; i++) {
+                lctx.globalAlpha = a0 * (i < Math.round(gp * n) ? 1 : 0.25);
+                lctx.fillRect(x1 + i * cwid * 1.35, gy, cwid, fs * 0.7);
+              }
+            }
+          });
+          spaced(0);
+          // 下に大きく「WARNING」：角かっこで挟む
+          const wb = boot(0.24);
+          if (wb > 0) {
+            const wfs = size * 0.36, wy = oy + R * 1.13 + size * 0.42;
+            lctx.globalAlpha = a0 * wb;
+            lctx.font = fontString(fontFamiliesFor(scene, 0, this.resolveFont), scene.weight || 700, wfs, false);
+            spaced(wfs * 0.45);
+            lctx.textAlign = 'center';
+            lctx.shadowColor = color;
+            lctx.shadowBlur = size * 0.1 * scale;
+            lctx.fillText(word, ox + wfs * 0.22, wy);
+            const tw = lctx.measureText(word).width;
+            spaced(0);
+            lctx.shadowBlur = 0;
+            const bx = tw / 2 + size * 0.3, bh = wfs * 0.75, arm = size * 0.12;
+            lctx.lineWidth = lw;
+            lctx.beginPath();
+            [-1, 1].forEach(s => {
+              const x = ox + s * bx * (0.7 + 0.3 * wb);
+              lctx.moveTo(x - s * arm, wy - bh); lctx.lineTo(x, wy - bh); lctx.lineTo(x, wy + bh); lctx.lineTo(x - s * arm, wy + bh);
+            });
+            lctx.stroke();
+          }
           lctx.restore();
+          lctx.textAlign = 'center';
         }
       }
 
@@ -2732,7 +2889,7 @@
     }
 
     // 炎：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と上の線が現れ、文字が立ち上がる →
-    // 表示中は下の線に小さな炎がゆらぎ、火の粉が帯の中を昇る → 退場（燃えて消える）では光る燃え際が左から右へ進み、帯も文字も燃え尽きる。
+    // 表示中は下の線から3層の炎が立ちのぼってゆらぎ、火の粉が帯の中を昇る → 退場（燃えて消える）では光る燃え際が左から右へ進み、帯も文字も燃え尽きる。
     // 色は炎の色（線・火の粉）と芯の色（燃えている先端）と暗い帯だけ
     drawFlame(ctx, pg, page, t, scale, scene, sfx, k, layer) {
       if (layer === 'front') return this.drawFlameFront(ctx, pg, page, t, scale, scene, sfx, k);
@@ -2783,18 +2940,32 @@
           drawFlash(ctx, hx, y, size * 0.9, fire, 0.7 * fade * clamp(k), 0.6);
         });
       }
-      // 下の線の炎：走る先端の後ろでは高く、表示中は低くゆらぐ
-      const step = size * 0.42;
+      // 下の線から立ちのぼる炎の壁：走る先端のすぐ後ろは高く燃え上がり、そのあとは帯の下半分でゆらぎ続ける。
+      // 奥から 深い赤 → 炎の色 → 芯の色 の3層。炎の明かりが帯の下を照らす
+      const deep = mixHex(fire, '#7a0c06', 0.45);
+      const step = size * 0.2;
+      const wall = [];
       for (let i = 0; i * step <= W; i++) {
-        const x = span.L + i * step + (rnd(i, 1, 23) - 0.5) * step * 0.8;
+        const x = span.L + i * step + (rnd(i, 1, 23) - 0.5) * step * 0.7;
         if (x < x0 || x > head) continue;
         const behind = (head - x) / size;
-        const rise = d < FLAME_RUN + 0.6 ? Math.exp(-behind * 0.7) : 0;
-        const edge = clamp((x - span.L) / (W * 0.3)) * clamp((span.R - x) / (W * 0.3));
-        const calm = 0.04 + 0.16 * rnd(i, 2, 23) * (0.4 + 0.6 * (0.5 + 0.5 * noise1(t * 5, i)));
-        const h = size * (calm + 0.55 * rise) * Math.min(1.6, k) * edge;
-        flameLick(ctx, x, bandB, size * 0.14, h, noise1(t * 3, i + 50) * size * 0.06, 0.8 * edge, fire, core);
+        const rise = d < FLAME_RUN + 0.8 ? Math.exp(-behind * 0.55) * (1 - clamp((d - FLAME_RUN) / 0.8)) : 0;
+        const edge = clamp((x - span.L) / (W * 0.28)) * clamp((span.R - x) / (W * 0.28));
+        const flick = 0.7 + 0.3 * noise1(t * 4.5, i * 3 + 1);
+        const tall = rnd(i, 4, 23) < 0.22 ? 0.35 : 0;
+        const calm = (0.5 + 0.3 * rnd(i, 2, 23) + tall) * flick;
+        const h = size * (calm + 1.1 * rise) * Math.min(1.6, k) * edge;
+        const born = clamp((head - x) / (size * 0.25));
+        wall.push({ x, h: h * born, w: size * (0.34 + 0.12 * rnd(i, 3, 23)), i, edge });
       }
+      wall.forEach(f => drawFlash(ctx, f.x, bandB, size * 0.7, fire, 0.12 * f.edge * clamp(k), 0.6));
+      ctx.globalCompositeOperation = 'source-over';
+      wall.forEach(f => flameTongue(ctx, f.x, bandB + lw, f.w, f.h, t, f.i * 5 + 1, fire, deep, 0.75 * f.edge));
+      ctx.globalCompositeOperation = 'lighter';
+      wall.forEach(f => flameTongue(ctx, f.x, bandB + lw, f.w * 0.62, f.h * 0.72, t, f.i * 5 + 1, core, fire, 0.7 * f.edge));
+      wall.forEach(f => flameTongue(ctx, f.x, bandB + lw, f.w * 0.3, f.h * 0.38, t, f.i * 5 + 1, '#ffffff', core, 0.55 * f.edge));
+      ctx.fillStyle = fadeEnds(0, 1, fire, 1);
+      if (head > x0) ctx.fillRect(x0, bandB, head - x0, lw);
       // 火の粉：帯の中を昇る
       for (let i = 0; i < 18; i++) {
         const x = lerp(span.L, span.R, rnd(i, 1, 61));
@@ -2827,13 +2998,22 @@
       g.addColorStop(1, colorWithAlpha(core, 0.95 * a));
       ctx.fillStyle = g;
       ctx.fillRect(x - burn.soft * 0.6, top, burn.soft * 0.6 + size * 0.06, bot - top);
-      ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * a})`;
-      ctx.fillRect(x, top, size * 0.02, bot - top);
-      const n = Math.ceil((bot - top) / (size * 0.3));
+      ctx.fillStyle = colorWithAlpha(core, 0.8 * a);
+      ctx.fillRect(x, top, size * 0.018, bot - top);
+      // 燃え際に沿って、下から上へ炎の舌を重ねる（3層）
+      const deep = mixHex(fire, '#7a0c06', 0.45);
+      const n = Math.ceil((bot - top) / (size * 0.36));
+      const rows = [];
       for (let r = 0; r <= n; r++) {
         const y = lerp(bot, top, r / n);
-        flameLick(ctx, x, y, size * 0.12, size * (0.18 + 0.14 * (0.5 + 0.5 * noise1(t * 7, r))), size * 0.12, 0.7 * a, fire, core);
+        const h = size * (0.5 + 0.5 * rnd(r, 1, 77)) * (0.75 + 0.25 * noise1(t * 5, r)) * Math.min(1.5, k);
+        rows.push({ x: x - size * 0.06 + (rnd(r, 2, 77) - 0.5) * size * 0.22, y: y + (rnd(r, 3, 77) - 0.5) * size * 0.12, h, w: size * (0.3 + 0.14 * rnd(r, 4, 77)), r });
       }
+      ctx.globalCompositeOperation = 'source-over';
+      rows.forEach(f => flameTongue(ctx, f.x, f.y, f.w, f.h, t, 300 + f.r, fire, deep, 0.7 * a));
+      ctx.globalCompositeOperation = 'lighter';
+      rows.forEach(f => flameTongue(ctx, f.x, f.y, f.w * 0.6, f.h * 0.7, t, 300 + f.r, core, fire, 0.65 * a));
+      rows.forEach(f => flameTongue(ctx, f.x, f.y, f.w * 0.28, f.h * 0.38, t, 300 + f.r, '#ffffff', core, 0.5 * a));
       for (let i = 0; i < 22; i++) {
         const pBorn = rnd(i, 1, 88);
         const age = (burn.p - pBorn) * pg.blockOut.dur;
