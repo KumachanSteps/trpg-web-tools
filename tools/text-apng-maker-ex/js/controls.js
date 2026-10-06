@@ -262,10 +262,12 @@
           { value: 'gunshot', label: T('銃撃', 'Gunfire', '총격') },
           { value: 'flame', label: T('炎', 'Flame', '불꽃') },
           { value: 'p5round', label: T('ラウンド表示（赤と黒）', 'Round call (red & black)', '라운드 표시（빨강과 검정）') },
+          { value: 'p5round2', label: T('ラウンド表示 Ver2（2本の線）', 'Round call v2 (two lines)', '라운드 표시 Ver2（두 줄의 선）') },
           { value: 'p5gun', label: T('銃弾（赤と黒）', 'Gunfire (red & black)', '총탄（빨강과 검정）') }
         ] },
         { type: 'note', when: s => s.sfx.type === 'flame', text: T('導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯が現れて、文字が1文字ずつ立ち上がります。表示中は下の線から炎が立ちのぼってゆらぎ、火の粉が昇ります。退場を「燃えて消える」にすると、光る燃え際が左から右へ進んで帯も文字も燃え尽きます', 'A fuse-like fire runs left to right along the line under the band; the dark band appears behind it and each character rises up. Flames rise and flicker from the bottom line and embers drift up while shown. With the “Burn away” exit, a glowing edge sweeps left to right and burns away the band and text', '도화선 같은 불이 띠 아래 선을 따라 왼쪽에서 오른쪽으로 달리고, 불이 지나간 자리에 어두운 띠가 나타나며 글자가 한 글자씩 솟아오릅니다. 표시 중에는 아래 선에서 불꽃이 피어올라 일렁이고 불티가 솟아오릅니다. 퇴장을 「불타 사라지기」로 하면 빛나는 경계가 왼쪽에서 오른쪽으로 지나가며 띠와 글자가 타 버립니다') },
         { type: 'note', when: s => s.sfx.type === 'p5round', text: T('画面の奥の一点から、赤と黒の太い線が手前へ伸び、細いすじが飛んできます。文字はその一点の近くから斜めに大きくなりながら飛んできて、黒い札と赤い影の上で止まります。退場では文字も線も手前へ抜けます', 'Thick red and black lines shoot toward the viewer from a vanishing point, with streaks flying past. The text flies in from near that point, growing and tilting, and lands on a black plate with a red shadow. On exit everything rushes past the viewer', '화면 안쪽의 한 점에서 빨강과 검정의 굵은 선이 앞으로 뻗고, 가는 줄기가 날아옵니다. 글자는 그 점 근처에서 비스듬히 커지며 날아와 검은 판과 빨간 그림자 위에 멈춥니다. 퇴장할 때는 글자도 선도 앞으로 빠져나갑니다') },
+        { type: 'note', when: s => s.sfx.type === 'p5round2', text: T('画面の奥の一点から、赤と黒の2本の線が斜めに手前へ伸び、その間を文字が奥から飛んできて止まります。表示中は線の上を白い光が手前へ流れ、退場では文字が手前へ抜けて線も消えていきます', 'Two red and black lines extend diagonally toward the viewer from a vanishing point, and the text flies in between them and stops. White light runs along the lines while shown; on exit the text rushes forward and the lines fade away', '화면 안쪽의 한 점에서 빨강과 검정의 두 선이 비스듬히 앞으로 뻗고, 그 사이로 글자가 안쪽에서 날아와 멈춥니다. 표시 중에는 선 위를 하얀 빛이 앞으로 흐르고, 퇴장할 때는 글자가 앞으로 빠지며 선도 사라집니다') },
         { type: 'note', when: s => s.sfx.type === 'p5gun', text: T('画面の外から3発の銃弾が飛び、着弾のたびに赤いギザギザの衝撃と弾痕が残って画面が揺れます。斜めの黒い帯が走り込み、1文字ずつ赤と黒の札が傾いて飛び出します。退場では帯も文字も左へ抜けます', 'Three shots fly in from off-screen; each hit leaves a jagged red impact and a bullet hole and shakes the image. A slanted black band slides in and each character pops out on a tilted red or black card. On exit the band and text dash off to the left', '화면 밖에서 세 발의 총탄이 날아와, 착탄할 때마다 빨간 톱니 모양 충격과 탄흔이 남고 화면이 흔들립니다. 비스듬한 검은 띠가 들어오고, 한 글자씩 빨강과 검정의 카드가 기울어져 튀어나옵니다. 퇴장할 때는 띠도 글자도 왼쪽으로 빠집니다') },
         { type: 'note', when: s => s.sfx.type === 'frame', text: T('四隅の飾りが現れ、二重線の枠が角から伸びて文字を囲みます。表示中は光が枠をなぞり、退場では線が角へ戻ります', 'Corner ornaments appear and a double-line frame grows from the corners around the text. Light traces the frame while shown, and the lines pull back into the corners on exit', '네 모서리 장식이 나타나고 이중선 틀이 모서리에서 뻗어 글자를 감쌉니다. 표시 중에는 빛이 틀을 따라 돌고, 퇴장할 때 선이 모서리로 돌아갑니다') },
         { type: 'note', when: s => s.sfx.type === 'crest', text: T('金の細い線で描いた剣と盾の紋章が文字の上に現れます。剣が交差して光り、盾の輪郭が引かれてから、暗い帯が左右に開いて文字が出ます。表示中は光が盾の縁から帯の線へ流れます', 'A gold line-art crest of crossed swords and a shield draws in above the text. The swords cross with a glint, the shield outline traces in, then a dark band opens behind the text. Light runs down the shield edge into the band line while shown', '금색 가는 선으로 그린 검과 방패 문장이 글자 위에 나타납니다. 검이 교차하며 빛나고 방패 윤곽이 그려진 뒤, 어두운 띠가 좌우로 열리며 글자가 나타납니다. 표시 중에는 빛이 방패 가장자리에서 띠의 선으로 흐릅니다') },
@@ -282,8 +284,9 @@
             gunshot: T('影と弾痕の色', 'Shadow & bullet hole color', '그림자와 탄흔 색'),
             flame: T('炎の芯の色', 'Flame core color', '불꽃 심지 색'),
             p5round: T('黒の色', 'Black color', '검정 색'),
+            p5round2: T('黒の色', 'Black color', '검정 색'),
             p5gun: T('黒の色', 'Black color', '검정 색')
-          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot', 'flame', 'p5round', 'p5gun'].includes(s.sfx.type) }
+          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot', 'flame', 'p5round', 'p5round2', 'p5gun'].includes(s.sfx.type) }
         ] },
         { type: 'text', bind: 'sfx.word', when: s => s.sfx.type === 'cyber', label: T('警告の文字', 'Warning text', '경고 문자'), placeholder: T('WARNING', 'WARNING', 'WARNING') },
         { type: 'range', bind: 'sfx.power', when: s => s.sfx.type !== 'none', label: T('強さ', 'Strength', '강도'), min: 0.2, max: 2, step: 0.05, format: 'x' }

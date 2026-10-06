@@ -623,6 +623,7 @@
       case 'flame': return { l: 0, r: 0, t: size * 0.35, b: size * 0.35 };
       case 'cyber': return { l: 0, r: 0, t: size * 0.55, b: size * 0.55 };
       case 'p5round': return { l: size * 0.35, r: size * 0.35, t: size * 0.55, b: size * 0.55 };
+      case 'p5round2': return { l: size * 0.3, r: size * 0.3, t: size * 1.1, b: size * 1.1 };
       case 'p5gun': return { l: size * 0.45, r: size * 0.45, t: size * 0.75, b: size * 0.75 };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
@@ -1361,10 +1362,11 @@
     gunshot: { lead: 0.9, tail: 0 },
     flame: { lead: 0.15, tail: 0 },
     p5round: { lead: 0.35, tail: 0.25 },
+    p5round2: { lead: 0.3, tail: 0.3 },
     p5gun: { lead: 0.7, tail: 0 }
   };
   // 文字の後ろに描く演出（装飾枠・剣と盾・銃撃・サイバー・赤と黒の2種）。ほかは文字の上に描く
-  const SFX_BACK = new Set(['frame', 'crest', 'gunshot', 'cyber', 'p5round', 'p5gun']);
+  const SFX_BACK = new Set(['frame', 'crest', 'gunshot', 'cyber', 'p5round', 'p5round2', 'p5gun']);
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎）
   const SFX_BOTH = new Set(['flame']);
   // 装飾枠：線が角から辺の中央まで伸びる時間
@@ -1483,6 +1485,30 @@
     ctx.closePath();
   }
 
+  // ラウンド表示 Ver2：消失点（文字の中心から。文字の大きさが単位）/ 文字が飛んでくる時間 / 2本の線が伸びきるまで
+  const P5_VP2 = { x: 4.2, y: -2.2 };
+  const P5_ZOOM2 = 0.42;
+  const P5_RAIL = 0.34;
+
+  // ラウンド表示 Ver2 の文字の動き：消失点から2本の線の間を通って手前へ飛んできて止まり、退場でさらに手前へ抜ける。
+  // 傾きは2本の線の向きにそろえる
+  function p5Round2State(pg, t, size) {
+    const z = clamp((t - pg.textStart) / P5_ZOOM2);
+    const e = EASE.outExpo(z);
+    const q = outProgress(pg, t);
+    const qq = EASE.inQuad(q);
+    const len = Math.hypot(P5_VP2.x, P5_VP2.y);
+    return {
+      s: Math.max(0.05, lerp(0.08, 1, e)) * (1 + 0.03 * clamp((t - pg.inEnd) / 2)) * (1 + 1.3 * qq),
+      x: P5_VP2.x * size * (1 - e) - P5_VP2.x / len * size * 2.2 * qq,
+      y: P5_VP2.y * size * (1 - e) - P5_VP2.y / len * size * 2.2 * qq,
+      r: Math.atan2(P5_VP2.y, P5_VP2.x),
+      shown: t >= pg.textStart,
+      z,
+      q
+    };
+  }
+
   // 戦闘開始と銃撃：1文字ずつの札の傾き（文字にも少し同じ傾きをつける）
   function p5CardTilt(index) {
     return (rnd(index, 3, 57) - 0.5) * 0.36;
@@ -1561,6 +1587,12 @@
       // 止まった瞬間に白く光る
       const hit = t - (pg.textStart + P5_ZOOM * 0.55);
       if (hit >= 0 && hit < 0.2) bs.bright = Math.max(bs.bright, (1 - hit / 0.2) * 0.7 * k);
+    } else if (sfx.type === 'p5round2') {
+      const st = p5Round2State(pg, t, size);
+      if (!st.shown) bs.a = 0;
+      bs.s *= st.s; bs.x += st.x; bs.y += st.y; bs.r += st.r;
+      const hit = t - (pg.textStart + P5_ZOOM2 * 0.6);
+      if (hit >= 0 && hit < 0.2) bs.bright = Math.max(bs.bright, (1 - hit / 0.2) * 0.6 * k);
     } else if (sfx.type === 'p5gun') {
       const st = p5GunState(pg, t, size, scene.width);
       bs.x += st.x; bs.y += st.y; bs.r += st.r;
@@ -2110,6 +2142,7 @@
       else if (sfx.type === 'gunshot') this.drawGunshot(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'flame') this.drawFlame(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'p5round') this.drawP5Round(ctx, pg, page, t, scale, scene, sfx, k);
+      else if (sfx.type === 'p5round2') this.drawP5Round2(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'p5gun') this.drawP5Gun(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, page, t, scale, scene, sfx, k);
@@ -3244,6 +3277,87 @@
         p5Star(ctx, bcx, bcy, size * (1.6 + 1.6 * EASE.outCubic(p)), 12, 5, 0.2);
         ctx.stroke();
         ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    // ラウンド表示 Ver2（赤と黒）：画面の奥の一点から、赤と黒の2本の線が斜めに手前へ伸びる →
+    // その間を「ROUND 1」が奥から飛んできて止まる → 表示中は線の上を白い光が手前へ流れる →
+    // 退場では文字が手前へ抜け、線も奥から手前へ消えていく
+    drawP5Round2(ctx, pg, page, t, scale, scene, sfx, k) {
+      const d = t - pg.start;
+      if (d < 0) return;
+      const size = this.prepared.layout.size;
+      const red = sfx.color || '#e8112d';
+      const dark = sfx.color2 || '#0b0b0e';
+      const b = page.box;
+      const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+      const vx = cx + P5_VP2.x * size, vy = cy + P5_VP2.y * size;
+      const len = Math.hypot(P5_VP2.x, P5_VP2.y);
+      const nx = -P5_VP2.y / len, ny = P5_VP2.x / len;
+      // 線と文字が重ならない間隔：文字の奥側の端でも、2本の線の間に文字が収まるようにする
+      const dist = len * size;
+      const near = Math.max(0.35, 1 - ((b.x1 - b.x0) / 2 + size * 0.3) / dist);
+      const h = ((b.y1 - b.y0) / 2 + size * 0.22) / near;
+      const st = p5Round2State(pg, t, size);
+      const tail = SFX_TIMING.p5round2.tail;
+      const gone = Number.isFinite(pg.outEnd) ? clamp((t - pg.holdEnd) / Math.max(0.05, pg.outEnd + tail - pg.holdEnd)) : 0;
+      if (gone >= 1) return;
+      // 線の上の点：l = 0 が消失点、l = 1 が文字の上（下）の位置。手前ほど太い
+      const LMAX = 7;
+      const rail = (side, color, delay, w1) => {
+        const grow = EASE.outExpo(clamp((d - delay) / P5_RAIL));
+        if (grow <= 0) return;
+        const tx = cx + nx * h * side, ty = cy + ny * h * side;
+        const at = l => [vx + (tx - vx) * l, vy + (ty - vy) * l];
+        const l0 = LMAX * EASE.inCubic(gone), l1 = LMAX * grow;
+        if (l1 <= l0) return;
+        // 太さは線の外側へ広げ、内側の縁は文字に沿ってまっすぐにする
+        const quad = (la, lb, wa, wb, off) => {
+          const [ax, ay] = at(la), [bx, by] = at(lb);
+          ctx.beginPath();
+          ctx.moveTo(ax + nx * side * off * la, ay + ny * side * off * la);
+          ctx.lineTo(bx + nx * side * off * lb, by + ny * side * off * lb);
+          ctx.lineTo(bx + nx * side * (off + wb) * lb, by + ny * side * (off + wb) * lb);
+          ctx.lineTo(ax + nx * side * (off + wa) * la, ay + ny * side * (off + wa) * la);
+          ctx.closePath();
+          ctx.fill();
+        };
+        ctx.fillStyle = color;
+        quad(l0, l1, w1, w1, 0);
+        // 内側に白い細線
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        quad(l0, l1, w1 * 0.1, w1 * 0.1, -w1 * 0.25);
+        // 表示中：白い光が奥から手前へ流れる
+        if (st.shown && gone <= 0) {
+          const P = 1.1;
+          const ph = ((t - pg.textStart) / P + (side > 0 ? 0.5 : 0)) % 1;
+          const lc = Math.pow(ph, 2) * LMAX;
+          const lw = 0.1 + lc * 0.25;
+          if (lc - lw > l0 && lc < l1) {
+            ctx.fillStyle = '#ffffff';
+            quad(Math.max(l0, lc - lw), lc, w1 * 0.3, w1 * 0.3, -w1 * 0.35);
+          }
+        }
+      };
+      ctx.save();
+      ctx.lineJoin = 'miter';
+      rail(-1, red, 0, size * 0.2 * Math.min(1.5, k));
+      rail(1, dark, 0.07, size * 0.2 * Math.min(1.5, k));
+      // 文字が止まった瞬間：2本の線の間に白い閃光
+      const hit = t - (pg.textStart + P5_ZOOM2 * 0.6);
+      if (hit >= 0 && hit < 0.25) {
+        const p = hit / 0.25;
+        ctx.translate(cx, cy);
+        ctx.rotate(st.r);
+        ctx.globalAlpha = (1 - p) * 0.9 * clamp(k);
+        const g = ctx.createLinearGradient(-size * 4, 0, size * 4, 0);
+        g.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        g.addColorStop(0.5, 'rgba(255, 255, 255, 1)');
+        g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = g;
+        const fh = h * 2 * (0.15 + 0.85 * EASE.outCubic(p));
+        ctx.fillRect(-size * 4, -fh / 2, size * 8, fh * (1 - p * 0.6));
       }
       ctx.restore();
     }

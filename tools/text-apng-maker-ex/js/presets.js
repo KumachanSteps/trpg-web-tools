@@ -403,6 +403,20 @@
         }
       },
       {
+        // EX：赤と黒 Ver2。奥から手前へ斜めに伸びる2本の線の間を「ROUND 1」が飛んできて止まる
+        id: 'roundCall2', group: 'combat', icon: 'badge', label: T('ROUND 1 Ver2（2本の線）', 'Round 1 v2 (Two Lines)', 'ROUND 1 Ver2（두 줄의 선）'),
+        text: T('ROUND 1', 'ROUND 1', 'ROUND 1'), subText: T('', '', ''),
+        patch: {
+          fontId: 'anton', weight: 400, fontSize: 128, letterSpacing: 0.06,
+          fill: { type: 'solid', color: '#ffffff' },
+          stroke: { on: true, width: 3, color: '#0b0b0e' }, stroke2: { on: false },
+          shadow: { on: true, color: '#e8112d', opacity: 1, blur: 0, x: 6, y: 6 },
+          glow: { on: false },
+          sfx: { type: 'p5round2', color: '#e8112d', color2: '#0b0b0e', power: 1 },
+          inFx: 'fade', inDur: 0.12, hold: 2.0, outFx: 'fade', outDur: 0.35
+        }
+      },
+      {
         // EX：赤と黒。3発の銃弾が赤いギザギザの衝撃と弾痕を残し、斜めの黒い帯が走り込んで、赤と黒の札の上に1文字ずつ文字が飛び出す
         id: 'battleGunRedBlack', group: 'combat', icon: 'crosshair', label: T('戦闘開始＋銃弾（赤と黒）', 'Battle Start + Gunfire (Red & Black)', '전투 개시＋총탄（빨강과 검정）'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'TAKE AIM', 'BATTLE START'),
