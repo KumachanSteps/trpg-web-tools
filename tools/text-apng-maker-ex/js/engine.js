@@ -622,6 +622,8 @@
       case 'gunshot': return { l: size, r: size, t: size, b: size * 0.55 };
       case 'flame': return { l: 0, r: 0, t: size * 0.35, b: size * 0.35 };
       case 'cyber': return { l: 0, r: 0, t: size * 0.55, b: size * 0.55 };
+      case 'p5round': return { l: size * 0.35, r: size * 0.35, t: size * 0.55, b: size * 0.55 };
+      case 'p5gun': return { l: size * 0.45, r: size * 0.45, t: size * 0.75, b: size * 0.75 };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
   }
@@ -1357,10 +1359,12 @@
     frame: { lead: 0.45, tail: 0 },
     crest: { lead: 0.88, tail: 0 },
     gunshot: { lead: 0.9, tail: 0 },
-    flame: { lead: 0.15, tail: 0 }
+    flame: { lead: 0.15, tail: 0 },
+    p5round: { lead: 0.35, tail: 0.25 },
+    p5gun: { lead: 0.7, tail: 0 }
   };
-  // 文字の後ろに描く演出（装飾枠・剣と盾・銃撃・サイバー）。ほかは文字の上に描く
-  const SFX_BACK = new Set(['frame', 'crest', 'gunshot', 'cyber']);
+  // 文字の後ろに描く演出（装飾枠・剣と盾・銃撃・サイバー・赤と黒の2種）。ほかは文字の上に描く
+  const SFX_BACK = new Set(['frame', 'crest', 'gunshot', 'cyber', 'p5round', 'p5gun']);
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎）
   const SFX_BOTH = new Set(['flame']);
   // 装飾枠：線が角から辺の中央まで伸びる時間
@@ -1404,6 +1408,89 @@
   // サイバー：警告マークが点滅して線につぶれるまで / 表示中のノイズの間隔
   const CYBER_ALERT = 0.9;
   const CYBER_BURST = 1.4;
+
+  // 赤と黒の演出（ラウンド表示・戦闘開始と銃撃）で共通の、文字の傾き（ラジアン。右上がり）
+  const P5_TILT = -0.12;
+  // ラウンド表示：文字が奥から手前へ飛んでくる時間 / 消失点の位置（文字の中心から。文字の大きさが単位）
+  const P5_ZOOM = 0.5;
+  const P5_VP = { x: 2.2, y: -1.1 };
+  // 戦闘開始と銃撃：着弾の時刻と位置（x はメインの文字の幅の半分、y は文字の大きさが単位）/ 黒い帯が走り込む時刻
+  const P5_SHOTS = [
+    { t: 0.1, x: -0.95, y: -0.55 },
+    { t: 0.26, x: 1.02, y: 0.5 },
+    { t: 0.42, x: 0.2, y: -0.8 }
+  ];
+  const P5_BAND = 0.56;
+
+  // ラウンド表示の文字の動き：消失点の近くで小さく → 手前へ飛んできて少し行きすぎて止まる → 表示中はわずかに迫る →
+  // 退場で画面の手前へ抜けていく
+  function p5RoundState(pg, t, size) {
+    const z = clamp((t - pg.textStart) / P5_ZOOM);
+    const e = EASE.outExpo(z);
+    let s = Math.max(0.03, EASE.outBack(z));
+    const hold = Number.isFinite(pg.holdEnd) ? clamp((t - pg.inEnd) / Math.max(0.1, pg.holdEnd - pg.inEnd)) : 0;
+    s *= 1 + 0.04 * hold;
+    const q = outProgress(pg, t);
+    s *= 1 + 1.4 * q * q;
+    return {
+      s,
+      x: P5_VP.x * size * (1 - e),
+      y: P5_VP.y * size * (1 - e),
+      r: P5_TILT + (1 - e) * 0.5,
+      shown: t >= pg.textStart,
+      z,
+      q
+    };
+  }
+
+  // 戦闘開始と銃撃の文字の動き：着弾のたびに揺れ、退場で左へ一気に抜ける
+  function p5GunState(pg, t, size, width) {
+    let x = 0, y = 0;
+    const d = t - pg.start;
+    P5_SHOTS.forEach((sh, i) => {
+      const u = d - sh.t;
+      if (u < 0 || u > 0.22) return;
+      const decay = Math.pow(1 - u / 0.22, 2);
+      x += noise1(t * 60, 11 + i) * size * 0.08 * decay;
+      y += noise1(t * 60, 29 + i) * size * 0.06 * decay;
+    });
+    const u = d - P5_BAND - 0.12;
+    if (u >= 0 && u < 0.2) y += Math.sin(u / 0.2 * Math.PI) * size * 0.05 * (1 - u / 0.2);
+    const q = EASE.inCubic(outProgress(pg, t));
+    x -= width * 1.3 * q;
+    return { x, y, r: P5_TILT * 0.6, q };
+  }
+
+  // ギザギザの星（衝撃の形）：n 本のとがりを持つ多角形。とがりの長さは seed で少しずつ変える
+  function p5Star(ctx, x, y, r, n, seed, rot) {
+    ctx.beginPath();
+    for (let i = 0; i < n * 2; i++) {
+      const a = rot + i / (n * 2) * TAU;
+      const rr = i % 2 ? r * (0.42 + 0.12 * rnd(seed, i, 3)) : r * (0.8 + 0.35 * rnd(seed, i, 5));
+      const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+      if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+    }
+    ctx.closePath();
+  }
+
+  // 平行四辺形（横に傾けた札・帯）。中心 (x, y)、幅 w、高さ h、上辺を右へ skew だけずらす
+  function p5Slab(ctx, x, y, w, h, skew) {
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 + skew / 2, y - h / 2);
+    ctx.lineTo(x + w / 2 + skew / 2, y - h / 2);
+    ctx.lineTo(x + w / 2 - skew / 2, y + h / 2);
+    ctx.lineTo(x - w / 2 - skew / 2, y + h / 2);
+    ctx.closePath();
+  }
+
+  // 戦闘開始と銃撃：1文字ずつの札の傾き（文字にも少し同じ傾きをつける）
+  function p5CardTilt(index) {
+    return (rnd(index, 3, 57) - 0.5) * 0.36;
+  }
+
+  function sfxGlyphTilt(scene, g) {
+    return sfxOf(scene).type === 'p5gun' && g.group === 0 ? p5CardTilt(g.index) * 0.55 : 0;
+  }
 
   function sfxOf(scene) {
     const sfx = scene.sfx || {};
@@ -1467,6 +1554,16 @@
     } else if (sfx.type === 'flame') {
       // 燃えている間は光彩がゆらめく
       if (t >= pg.inEnd - 0.3) bs.glowMul *= 1 + 0.2 * k * noise1(t * 5, 5 + pg.index);
+    } else if (sfx.type === 'p5round') {
+      const st = p5RoundState(pg, t, size);
+      if (!st.shown) bs.a = 0;
+      bs.s *= st.s; bs.x += st.x; bs.y += st.y; bs.r += st.r;
+      // 止まった瞬間に白く光る
+      const hit = t - (pg.textStart + P5_ZOOM * 0.55);
+      if (hit >= 0 && hit < 0.2) bs.bright = Math.max(bs.bright, (1 - hit / 0.2) * 0.7 * k);
+    } else if (sfx.type === 'p5gun') {
+      const st = p5GunState(pg, t, size, scene.width);
+      bs.x += st.x; bs.y += st.y; bs.r += st.r;
     } else if (sfx.type === 'cyber') {
       const c = (t - pg.start) % CYBER_BURST;
       if (t >= pg.inEnd && t < pg.holdEnd && c < 0.1) bs.glitch = Math.max(bs.glitch, 0.4 * k);
@@ -2012,6 +2109,8 @@
       else if (sfx.type === 'crest') this.drawCrest(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'gunshot') this.drawGunshot(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'flame') this.drawFlame(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'p5round') this.drawP5Round(ctx, pg, page, t, scale, scene, sfx, k);
+      else if (sfx.type === 'p5gun') this.drawP5Gun(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, page, t, scale, scene, sfx, k);
     }
@@ -3057,6 +3156,215 @@
       }
     }
 
+    // ラウンド表示（赤と黒）：消失点から画面の手前へ赤と黒の太い線が伸び、細いすじが奥から飛んでくる →
+    // 「ROUND 1」が消失点の近くから斜めに大きくなりながら飛んできて、黒い札と赤い影の上で止まる →
+    // 表示中はすじが流れ続け、退場では文字も線も画面の手前へ抜けていく
+    drawP5Round(ctx, pg, page, t, scale, scene, sfx, k) {
+      const d = t - pg.start;
+      if (d < 0) return;
+      const size = this.prepared.layout.size;
+      const W = scene.width, H = scene.height;
+      const red = sfx.color || '#e8112d';
+      const dark = sfx.color2 || '#0b0b0e';
+      const b = page.box;
+      const bcx = (b.x0 + b.x1) / 2, bcy = (b.y0 + b.y1) / 2;
+      const vx = bcx + P5_VP.x * size, vy = bcy + P5_VP.y * size;
+      const st = p5RoundState(pg, t, size);
+      let fade = 1;
+      if (Number.isFinite(pg.outEnd)) fade = 1 - clamp((t - (pg.outEnd - 0.1)) / (SFX_TIMING.p5round.tail + 0.1));
+      if (fade <= 0) return;
+      const far = Math.hypot(W, H) * 1.1;
+      const speed = 1 + 2.5 * st.q;
+      ctx.save();
+      ctx.globalAlpha = fade * (1 - 0.6 * st.q);
+      // 1) 消失点から伸びる太い線（くさび形）。順に伸びて、ゆっくり回る
+      const rays = 11;
+      const spin = d * 0.12 + st.q * 0.4;
+      for (let i = 0; i < rays; i++) {
+        const grow = EASE.outExpo(clamp((d - i * 0.018) / 0.32));
+        if (grow <= 0) continue;
+        const a = i / rays * TAU + (rnd(i, 1, 71) - 0.5) * 0.35 + spin;
+        const half = (0.035 + 0.1 * rnd(i, 2, 71)) * (i % 4 === 3 ? 0.35 : 1);
+        const r0 = size * 0.25, r1 = r0 + (far - r0) * grow;
+        ctx.fillStyle = i % 4 === 3 ? 'rgba(255, 255, 255, 0.9)' : (i % 2 ? red : colorWithAlpha(dark, 0.94));
+        ctx.beginPath();
+        ctx.moveTo(vx + Math.cos(a - half * 0.15) * r0, vy + Math.sin(a - half * 0.15) * r0);
+        ctx.lineTo(vx + Math.cos(a - half) * r1, vy + Math.sin(a - half) * r1);
+        ctx.lineTo(vx + Math.cos(a + half) * r1, vy + Math.sin(a + half) * r1);
+        ctx.lineTo(vx + Math.cos(a + half * 0.15) * r0, vy + Math.sin(a + half * 0.15) * r0);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // 2) 奥から飛んでくる細いすじ：手前に来るほど長く太く
+      const n = Math.round(46 * Math.min(1.5, k));
+      for (let i = 0; i < n; i++) {
+        const P = 0.55 + 0.4 * rnd(i, 3, 73);
+        const age = ((d * speed / P + rnd(i, 4, 73)) % 1);
+        if (d < 0.1 * rnd(i, 5, 73)) continue;
+        const a = rnd(i, 6, 73) * TAU;
+        const r = size * 0.3 * Math.exp(age * 4);
+        if (r > far) continue;
+        const len = r * 0.45, w = Math.max(1, r * 0.014);
+        const c = Math.cos(a), sn = Math.sin(a);
+        const pick = rnd(i, 7, 73);
+        ctx.strokeStyle = pick < 0.45 ? 'rgba(255, 255, 255, 0.85)' : (pick < 0.8 ? red : dark);
+        ctx.lineWidth = w;
+        ctx.lineCap = 'butt';
+        ctx.beginPath();
+        ctx.moveTo(vx + c * (r - len), vy + sn * (r - len));
+        ctx.lineTo(vx + c * r, vy + sn * r);
+        ctx.stroke();
+      }
+      // 3) 文字の後ろの札：文字と同じ動き（大きさ・位置・傾き）で、黒い札に赤い影
+      if (st.shown) {
+        ctx.save();
+        ctx.translate(bcx + st.x, bcy + st.y);
+        ctx.rotate(st.r);
+        ctx.scale(st.s, st.s);
+        ctx.globalAlpha = fade * Math.pow(1 - st.q, 2);
+        const w = (b.x1 - b.x0) + size * 0.9, h = (b.y1 - b.y0) + size * 0.34, sk = size * 0.4;
+        ctx.fillStyle = red;
+        p5Slab(ctx, size * 0.16, size * 0.16, w, h, sk); ctx.fill();
+        ctx.fillStyle = dark;
+        p5Slab(ctx, 0, 0, w, h, sk); ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = size * 0.025;
+        p5Slab(ctx, 0, 0, w - size * 0.18, h - size * 0.18, sk); ctx.stroke();
+        ctx.restore();
+      }
+      // 4) 止まった瞬間：白い衝撃の星が広がって消える
+      const hit = t - (pg.textStart + P5_ZOOM * 0.55);
+      if (hit >= 0 && hit < 0.25) {
+        const p = hit / 0.25;
+        ctx.save();
+        ctx.globalAlpha = fade * (1 - p) * clamp(k);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineJoin = 'miter';
+        ctx.lineWidth = size * 0.12 * (1 - p);
+        p5Star(ctx, bcx, bcy, size * (1.6 + 1.6 * EASE.outCubic(p)), 12, 5, 0.2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    // 戦闘開始と銃撃（赤と黒）：画面の外から3発、着弾のたびに赤いギザギザの衝撃と弾痕が残って画面が揺れる →
+    // 斜めの黒い帯が左から走り込み、1文字ずつ赤と黒の札が傾いて飛び出し、その上に文字が出る →
+    // 退場では帯も札も文字も左へ一気に抜ける
+    drawP5Gun(ctx, pg, page, t, scale, scene, sfx, k) {
+      const d = t - pg.start;
+      if (d < 0) return;
+      const size = this.prepared.layout.size;
+      const W = scene.width;
+      const red = sfx.color || '#e8112d';
+      const dark = sfx.color2 || '#0b0b0e';
+      const { layout, timeline } = this.prepared;
+      const mb = mainBox(layout, page);
+      const b = page.box;
+      const bcx = (b.x0 + b.x1) / 2, bcy = (b.y0 + b.y1) / 2;
+      const st = p5GunState(pg, t, size, W);
+      ctx.save();
+      ctx.globalAlpha = 1 - st.q * st.q;
+      ctx.translate(bcx + st.x, bcy + st.y);
+      ctx.rotate(st.r);
+      // 1) 斜めの黒い帯：左から走り込む。上下に赤い帯、内側に白い細線
+      const bu = d - P5_BAND;
+      if (bu >= 0) {
+        const e = EASE.outExpo(clamp(bu / 0.22));
+        const h = (b.y1 - b.y0) + size * 0.55;
+        const span = W * 2.4;
+        const cx = lerp(-W * 1.6, 0, e) - W * 1.4 * st.q;
+        ctx.fillStyle = red;
+        p5Slab(ctx, cx + size * 0.1, -h / 2 - size * 0.06, span, size * 0.22, size * 0.1); ctx.fill();
+        p5Slab(ctx, cx - size * 0.1, h / 2 + size * 0.06, span, size * 0.22, size * 0.1); ctx.fill();
+        ctx.fillStyle = dark;
+        p5Slab(ctx, cx, 0, span, h, size * 0.3); ctx.fill();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fillRect(cx - span / 2, -h / 2 + size * 0.1, span, size * 0.02);
+        ctx.fillRect(cx - span / 2, h / 2 - size * 0.12, span, size * 0.02);
+      }
+      // 2) 1文字ずつの札：文字の出るタイミングで傾いて飛び出す。赤と黒を交互に、反対の色の影
+      mb.list.forEach((g, i) => {
+        const t0 = timeline.inStart[g.index], dur = Math.max(0.05, timeline.inDur[g.index] || 0.3);
+        const p = clamp((t - t0 + 0.04) / dur);
+        if (p <= 0) return;
+        const s = EASE.outBack(p);
+        const x = g.cx - bcx, y = g.cy - bcy;
+        const tilt = p5CardTilt(g.index);
+        const cw = g.size * (1.08 + 0.12 * rnd(g.index, 4, 57)), chh = g.size * (1.12 + 0.14 * rnd(g.index, 5, 57));
+        const main = i % 2 ? dark : red, shade = i % 2 ? red : dark;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(tilt);
+        ctx.scale(s, s);
+        ctx.fillStyle = shade;
+        ctx.fillRect(-cw / 2 + size * 0.08, -chh / 2 + size * 0.08, cw, chh);
+        ctx.fillStyle = main;
+        ctx.fillRect(-cw / 2, -chh / 2, cw, chh);
+        // 黒い札は帯に沈まないよう、白い細い縁をつける
+        if (i % 2) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = size * 0.03;
+          ctx.strokeRect(-cw / 2 + size * 0.05, -chh / 2 + size * 0.05, cw - size * 0.1, chh - size * 0.1);
+        }
+        ctx.restore();
+      });
+      ctx.restore();
+      // 3) 銃弾：画面の外から白い曳光が飛び、着弾で赤い衝撃の星が開いて縮み、弾痕とひびが残る
+      const out = 1 - st.q;
+      P5_SHOTS.forEach((sh, i) => {
+        const u = d - sh.t;
+        if (u < -0.07) return;
+        const hx = mb.cx + sh.x * (mb.x1 - mb.x0) / 2 + st.x, hy = mb.cy + sh.y * size + st.y;
+        if (u < 0) {
+          const p = (u + 0.07) / 0.07;
+          const sx = i % 2 ? W + size : -size, sy = hy - size * (1.5 - i);
+          const ex = lerp(sx, hx, p), ey = lerp(sy, hy, p);
+          const g = ctx.createLinearGradient(lerp(sx, ex, 0.4), lerp(sy, ey, 0.4), ex, ey);
+          g.addColorStop(0, 'rgba(255, 255, 255, 0)');
+          g.addColorStop(1, 'rgba(255, 255, 255, 1)');
+          ctx.strokeStyle = g;
+          ctx.lineWidth = size * 0.035;
+          ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(lerp(sx, ex, 0.4), lerp(sy, ey, 0.4)); ctx.lineTo(ex, ey); ctx.stroke();
+          return;
+        }
+        const burst = u < 0.3 ? EASE.outBack(clamp(u / 0.1)) * (1 - 0.45 * EASE.inOutCubic(clamp((u - 0.1) / 0.2))) : 0.55;
+        const R = size * 0.85 * burst * Math.min(1.4, k);
+        ctx.save();
+        ctx.globalAlpha = out;
+        ctx.lineJoin = 'miter';
+        p5Star(ctx, hx, hy, R, 9, 40 + i, i * 0.7);
+        ctx.fillStyle = red; ctx.fill();
+        ctx.strokeStyle = dark; ctx.lineWidth = size * 0.05; ctx.stroke();
+        p5Star(ctx, hx, hy, R * 0.55, 9, 60 + i, i * 0.7 + 0.3);
+        ctx.fillStyle = '#ffffff'; ctx.fill();
+        // ひび
+        ctx.strokeStyle = dark;
+        ctx.lineWidth = size * 0.02;
+        ctx.beginPath();
+        for (let c = 0; c < 5; c++) {
+          const a = (c + rnd(i, c, 9) * 0.7) / 5 * TAU;
+          const r1 = size * (0.16 + 0.3 * rnd(i, c, 11)) * EASE.outCubic(clamp(u / 0.12));
+          ctx.moveTo(hx + Math.cos(a) * size * 0.07, hy + Math.sin(a) * size * 0.07);
+          ctx.lineTo(hx + Math.cos(a) * r1, hy + Math.sin(a) * r1);
+        }
+        ctx.stroke();
+        ctx.fillStyle = dark;
+        ctx.beginPath(); ctx.arc(hx, hy, size * 0.075, 0, TAU); ctx.fill();
+        ctx.restore();
+        // 着弾の瞬間の白い閃光
+        if (u < 0.08) {
+          ctx.save();
+          ctx.globalAlpha = 1 - u / 0.08;
+          ctx.fillStyle = '#ffffff';
+          p5Star(ctx, hx, hy, size * 1.3, 12, 80 + i, 0);
+          ctx.fill();
+          ctx.restore();
+        }
+      });
+    }
+
     drawBackground(ctx, t, scale) {
       const { scene, timeline } = this.prepared;
       const bg = scene.bg || {};
@@ -3116,7 +3424,7 @@
         if (g.blank || !g.sprite) continue;
         info.dir = t >= timeline.outStart[i] ? dirFor(timeline.outFx[i], scene.outDir) : dirFor(timeline.inFx[i], scene.inDir);
         if (!this.glyphState(g, t, scene, info, st)) continue;
-        list.push({ g, a: st.a * bs.a, x: st.x, y: st.y, s: st.s, sx: st.sx, sy: st.sy, r: st.r, blur: st.blur });
+        list.push({ g, a: st.a * bs.a, x: st.x, y: st.y, s: st.s, sx: st.sx, sy: st.sy, r: st.r + sfxGlyphTilt(scene, g), blur: st.blur });
       }
       const drawPass = (layerName, alphaMul) => {
         for (let j = 0; j < list.length; j++) {

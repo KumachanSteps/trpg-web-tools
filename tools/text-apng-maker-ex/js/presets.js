@@ -389,6 +389,35 @@
         }
       },
       {
+        // EX：赤と黒。消失点から手前へ太い線が伸び、「ROUND 1」が奥から斜めに大きくなりながら飛んできて止まる
+        id: 'roundCall', group: 'combat', icon: 'badge', label: T('ROUND 1（赤と黒）', 'Round 1 (Red & Black)', 'ROUND 1（빨강과 검정）'),
+        text: T('ROUND 1', 'ROUND 1', 'ROUND 1'), subText: T('', '', ''),
+        patch: {
+          fontId: 'anton', weight: 400, fontSize: 132, letterSpacing: 0.04,
+          fill: { type: 'solid', color: '#ffffff' },
+          stroke: { on: true, width: 3, color: '#0b0b0e' }, stroke2: { on: false },
+          shadow: { on: true, color: '#e8112d', opacity: 1, blur: 0, x: 7, y: 7 },
+          glow: { on: false },
+          sfx: { type: 'p5round', color: '#e8112d', color2: '#0b0b0e', power: 1 },
+          inFx: 'fade', inDur: 0.12, hold: 2.0, outFx: 'fade', outDur: 0.35
+        }
+      },
+      {
+        // EX：赤と黒。3発の銃弾が赤いギザギザの衝撃と弾痕を残し、斜めの黒い帯が走り込んで、赤と黒の札の上に1文字ずつ文字が飛び出す
+        id: 'battleGunRedBlack', group: 'combat', icon: 'crosshair', label: T('戦闘開始＋銃弾（赤と黒）', 'Battle Start + Gunfire (Red & Black)', '전투 개시＋총탄（빨강과 검정）'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'TAKE AIM', 'BATTLE START'),
+        patch: {
+          fontId: 'zen-kaku-gothic-new', weight: 900, fontSize: 116, letterSpacing: 0.22,
+          subFontId: 'anton', subWeight: 400, subSize: 0.24, subLetterSpacing: 0.4, subGap: 0.55,
+          fill: { type: 'solid', color: '#ffffff' },
+          stroke: { on: true, width: 2.5, color: '#0b0b0e' }, stroke2: { on: false },
+          shadow: { on: false }, glow: { on: false },
+          subColorOn: true, subColor: '#ffffff',
+          sfx: { type: 'p5gun', color: '#e8112d', color2: '#0b0b0e', power: 1 },
+          inFx: 'pop', inDur: 0.4, hold: 1.8, outFx: 'fade', outDur: 0.4, subFx: 'fade', subDelay: -0.1
+        }
+      },
+      {
         // EX：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と「戦闘開始」が立ち上がる。最後は左から右へ燃えて消える
         id: 'battleFlame', group: 'combat', icon: 'flame', label: T('炎の戦闘開始', 'Flame Battle Start', '불꽃의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'IGNITE', 'BATTLE START'),
