@@ -623,7 +623,7 @@
       case 'flame': return { l: 0, r: 0, t: size * 0.35, b: size * 0.35 };
       case 'cyber': return { l: 0, r: 0, t: size * 0.55, b: size * 0.55 };
       case 'p5round': return { l: size * 0.35, r: size * 0.35, t: size * 0.55, b: size * 0.55 };
-      case 'p5round2': return { l: size * 0.3, r: size * 0.3, t: size * 1.1, b: size * 1.1 };
+      case 'p5round2': return { l: size * 0.3, r: size * 0.3, t: size * 0.7, b: size * 0.7 };
       case 'p5gun': return { l: size * 0.45, r: size * 0.45, t: size * 0.75, b: size * 0.75 };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
@@ -1486,7 +1486,7 @@
   }
 
   // ラウンド表示 Ver2：消失点（文字の中心から。文字の大きさが単位）/ 文字が飛んでくる時間 / 2本の線が伸びきるまで
-  const P5_VP2 = { x: 3.3, y: -1.75 };
+  const P5_VP2 = { x: 3.4, y: -1.4 };
   const P5_ZOOM2 = 0.42;
   const P5_RAIL = 0.34;
 
@@ -3349,8 +3349,8 @@
       };
       ctx.save();
       ctx.lineJoin = 'miter';
-      rail(-1, red, 0, size * 0.2 * Math.min(1.5, k));
-      rail(1, dark, 0.07, size * 0.2 * Math.min(1.5, k));
+      rail(-1, red, 0, size * 0.13 * Math.min(1.5, k));
+      rail(1, dark, 0.07, size * 0.13 * Math.min(1.5, k));
       // 文字が止まった瞬間：2本の線の間に白い閃光
       const hit = t - (pg.textStart + P5_ZOOM2 * 0.6);
       if (hit >= 0 && hit < 0.25) {
@@ -3564,24 +3564,15 @@
           }
         }
       };
-      // 遠近つきの文字は短冊を少し重ねて描くので、半透明のまま描くと継ぎ目が濃く見える。
-      // 不透明で描いてから層全体を薄くする
-      let layerA = 1;
-      if (list.some(it => it.persp)) {
-        layerA = list.reduce((m, it) => Math.max(m, it.a), 0);
-        if (layerA > 0 && layerA < 1) list.forEach(it => { it.a /= layerA; });
-        else layerA = 1;
+      // 遠近つきの文字（ラウンド表示 Ver2）は別の作業用キャンバスで変形してから重ねる
+      const persp = list.filter(it => it.persp);
+      if (persp.length) {
+        list.splice(0, list.length, ...list.filter(it => !it.persp));
+        this.drawPerspText(lctx, persp, [ba, bb, bc, bd, be, bf], scale, bs.glowMul);
       }
       drawPass('glow', bs.glowMul);
       drawPass('back', 1);
       drawPass('front', 1);
-      if (layerA < 1) {
-        lctx.setTransform(1, 0, 0, 1, 0, 0);
-        lctx.globalCompositeOperation = 'destination-in';
-        lctx.globalAlpha = layerA;
-        lctx.fillRect(0, 0, cw, ch);
-        lctx.globalCompositeOperation = 'source-over';
-      }
       if (pg.cursor) this.drawCursor(pg, page, t, bs, [ba, bb, bc, bd, be, bf], scene);
       if (pg.solo) this.drawSolo(pg, page, t, bs, scale, scene);
       lctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -3605,7 +3596,6 @@
     }
 
     drawSprite(lctx, it, sprite, img, alpha, m, bs, scale) {
-      if (it.persp) { this.drawSpritePersp(lctx, it, sprite, img, alpha, m); return; }
       const [ba, bb, bc, bd, be, bf] = m;
       const gx = it.g.cx + it.x, gy = it.g.cy + it.y;
       const gc = Math.cos(it.r), gs = Math.sin(it.r);
@@ -3625,25 +3615,68 @@
       else lctx.drawImage(img, dx, dy);
     }
 
-    // 遠近つきの文字：縦の細い短冊に分け、短冊ごとにその位置の縮尺で描く（台形に近い形になる）
-    drawSpritePersp(lctx, it, sprite, img, alpha, m) {
+    // 遠近つきの文字：線と同じ遠近で、手前ほど大きく、消失点に近いほど小さくなるよう1文字ずつ変形する。
+    // 文字の軸にそろえた作業用キャンバスに、出力の1ピクセル幅の縦の列ごとに縮尺を変えて写し、
+    // 最後にまとめて傾けて重ねる（列が重ならず、継ぎ目や輪郭のギザギザが出ない）
+    drawPerspText(lctx, items, m, scale, glowMul) {
       const [ba, bb, bc, bd, be, bf] = m;
-      const { dist, bcx, bcy } = it.persp;
-      const g = it.g;
-      const dx = g.ox - sprite.ox, dy = g.oy - sprite.oy;
-      const w = sprite.w, h = sprite.h;
-      const n = Math.max(1, Math.ceil(w / (g.size / 14)));
-      const sw = w / n;
-      lctx.globalAlpha = alpha;
-      for (let i = 0; i < n; i++) {
-        const u0 = dx + sw * i, uc = u0 + sw / 2;
-        const p = p5Round2Map(g.cx + uc - bcx, dist);
-        const k = p.lam * it.s;
-        const ox = bcx + p.x + it.x, oy = bcy + (g.cy - bcy) * p.lam + it.y;
-        lctx.setTransform(ba * k, bb * k, bc * k, bd * k, ba * ox + bc * oy + be, bb * ox + bd * oy + bf);
-        // 短冊のつなぎ目に隙間が出ないよう、描く幅を少しだけ広げる
-        lctx.drawImage(img, sw * i, 0, Math.min(sw + 0.75, w - sw * i), h, u0 - uc, dy, Math.min(sw + 0.75, w - sw * i), h);
-      }
+      const { dist, bcx, bcy } = items[0].persp;
+      const R = clamp(scale * 2, 1, 4);
+      // 列の幅：出力のおよそ1ピクセル分（作業用キャンバスは2倍の細かさ）
+      const CW = Math.max(1, Math.round(R / Math.max(scale, 0.25)));
+      const geo = items.map(it => {
+        const g = it.g, sp = it.g.sprite;
+        const dx = g.ox - sp.ox, dy = g.oy - sp.oy;
+        const gx = g.cx + it.x - bcx, gy = g.cy + it.y - bcy;
+        const a = p5Round2Map(gx + it.s * dx, dist), b = p5Round2Map(gx + it.s * (dx + sp.w), dist);
+        const yTop = gy + it.s * dy, yBot = yTop + it.s * sp.h;
+        return { it, g, sp, dx, dy, gx, yTop, a, b, yExt: Math.max(Math.abs(yTop), Math.abs(yBot)) * a.lam };
+      });
+      let x0 = Infinity, x1 = -Infinity, yMax = 1;
+      geo.forEach(q => { x0 = Math.min(x0, q.a.x); x1 = Math.max(x1, q.b.x); yMax = Math.max(yMax, q.yExt); });
+      x1 = Math.min(x1, dist * 0.999);
+      if (!(x1 > x0)) return;
+      const OW = Math.min(8192, Math.ceil((x1 - x0) * R) + 2), OH = Math.min(8192, Math.ceil(yMax * 2 * R) + 2);
+      const off = this.perspTmp || (this.perspTmp = makeCanvas(8, 8));
+      if (off.width < OW || off.height < OH) { off.width = Math.max(off.width, OW); off.height = Math.max(off.height, OH); }
+      const o = off.getContext('2d');
+      o.setTransform(1, 0, 0, 1, 0, 0);
+      o.globalCompositeOperation = 'source-over';
+      o.globalAlpha = 1;
+      o.clearRect(0, 0, OW, OH);
+      o.imageSmoothingEnabled = true;
+      o.imageSmoothingQuality = 'high';
+      const pass = (layerName, mul) => {
+        geo.forEach(q => {
+          const img = q.sp[layerName];
+          if (!img) return;
+          let total = q.it.a * mul;
+          while (total > 0.002) {
+            o.globalAlpha = Math.min(1, total);
+            total -= o.globalAlpha;
+            const c0 = Math.max(0, Math.floor((q.a.x - x0) * R)), c1 = Math.min(OW, Math.ceil((q.b.x - x0) * R));
+            for (let c = c0; c < c1; c += CW) {
+              const xm = x0 + (c + CW / 2) / R;
+              const lam = 1 - xm / dist;
+              if (lam <= 0) break;
+              const X = -dist * Math.log(lam);
+              const su = (X - q.gx) / q.it.s - q.dx;
+              const half = CW / 2 / (R * lam * q.it.s);
+              const s0 = Math.max(0, su - half), s1 = Math.min(q.sp.w, su + half);
+              if (s1 <= s0) continue;
+              o.drawImage(img, s0, 0, s1 - s0, q.sp.h, c, (q.yTop * lam + yMax) * R, CW, q.sp.h * q.it.s * lam * R);
+            }
+          }
+        });
+      };
+      pass('glow', glowMul);
+      pass('back', 1);
+      pass('front', 1);
+      const ox = bcx + x0, oy = bcy - yMax;
+      lctx.setTransform(ba / R, bb / R, bc / R, bd / R, ba * ox + bc * oy + be, bb * ox + bd * oy + bf);
+      lctx.globalAlpha = 1;
+      lctx.imageSmoothingQuality = 'high';
+      lctx.drawImage(off, 0, 0, OW, OH, 0, 0, OW, OH);
     }
 
     drawBlurred(lctx, img, dx, dy, blur) {
