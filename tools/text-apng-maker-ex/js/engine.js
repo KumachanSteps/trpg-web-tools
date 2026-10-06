@@ -1714,24 +1714,45 @@
   }
 
   // 光る線：外側のにじみ（色）→ 芯（白）
-  function drawGlowPath(ctx, pts, width, color, alpha, scale) {
-    if (alpha <= 0.002) return;
+  // 電気の線：細くにじむ光の上に、根元から先へ細くなる芯と白い芯線。脇にもう1本、細くゆれる筋を添える。
+  // 角は丸めず鋭く折る。加算で重ねるので、交わったところほど明るい
+  function drawGlowPath(ctx, pts, width, color, alpha, scale, taper = 0.7) {
+    if (alpha <= 0.002 || pts.length < 2) return;
     ctx.save();
-    ctx.lineJoin = 'round';
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = clamp(alpha);
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 4;
     ctx.lineCap = 'round';
-    ctx.globalAlpha = alpha;
     ctx.shadowColor = color;
-    ctx.shadowBlur = width * 6 * scale;
-    ctx.strokeStyle = colorWithAlpha(color, 0.45);
-    ctx.lineWidth = width * 4;
+    ctx.shadowBlur = width * 7 * scale;
+    ctx.strokeStyle = colorWithAlpha(color, 0.22);
+    ctx.lineWidth = width * 2.6;
     strokePath(ctx, pts);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width * 1.8;
-    strokePath(ctx, pts);
-    ctx.shadowBlur = width * 2 * scale;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = width * 0.7;
-    strokePath(ctx, pts);
+    ctx.shadowBlur = 0;
+    const n = pts.length - 1, chunks = Math.min(8, n);
+    const pass = (list, w, col) => {
+      ctx.strokeStyle = col;
+      for (let c = 0; c < chunks; c++) {
+        const i0 = Math.floor(c * n / chunks), i1 = Math.floor((c + 1) * n / chunks);
+        ctx.lineWidth = Math.max(0.5, w * (1 - taper * (c + 0.5) / chunks));
+        ctx.beginPath();
+        ctx.moveTo(list[i0][0], list[i0][1]);
+        for (let i = i0 + 1; i <= i1; i++) ctx.lineTo(list[i][0], list[i][1]);
+        ctx.stroke();
+      }
+    };
+    // 脇の細い筋：本体から少しずれて、ところどころ離れる
+    const seed = Math.floor(Math.abs(pts[0][0] * 7 + pts[n][1] * 13));
+    const side = pts.map(([x, y], i) => {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n, i + 1)];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      const off = (rnd(seed, i, 31) - 0.5) * width * 3.2 * Math.sin(Math.PI * i / n);
+      return [x - (b[1] - a[1]) / len * off, y + (b[0] - a[0]) / len * off];
+    });
+    pass(side, width * 0.45, colorWithAlpha(color, 0.75));
+    pass(pts, width * 1.15, color);
+    pass(pts, width * 0.45, '#ffffff');
     ctx.restore();
   }
 
@@ -2023,13 +2044,14 @@
         const grow = 0.5 + 0.5 * EASE.outCubic(clamp(d1 / 0.15));
         drawFlash(ctx, cx, cy, Math.max(W, H) * 0.7 * grow, color, 0.95 * k * Math.pow(1 - q, 2));
         if (d1 < 0.34 && (d1 < 0.1 || d1 > 0.13)) {
-          const rays = 12;
+          const rays = 9;
           const flick = Math.floor(d1 * 30);
           for (let i = 0; i < rays; i++) {
             const ang = (i / rays) * TAU + (rnd(i, 7, 77) - 0.5) * 0.5;
             const len = size * (2 + rnd(i, 8, 77) * 2.4) * Math.min(1.6, k);
-            const pts = boltPoints(cx, cy, cx + Math.cos(ang) * len, cy + Math.sin(ang) * len * 0.75, 900 + i + flick * 13, 4, 0.22);
-            drawGlowPath(ctx, pts, size * 0.034, color, 1 - d1 / 0.34, scale);
+            boltWithBranches(cx, cy, cx + Math.cos(ang) * len, cy + Math.sin(ang) * len * 0.75, 900 + i + flick * 13).forEach(path => {
+              drawGlowPath(ctx, path.pts, size * 0.034 * path.w, color, 1 - d1 / 0.34, scale);
+            });
           }
         }
         ctx.save();
@@ -2078,7 +2100,7 @@
       if (t >= pg.inEnd - 0.15 && t < pg.holdEnd && mb.list.length) {
         const frame = Math.floor(t * 15);
         const pulse = 0.55 + 0.45 * Math.sin(TAU * (t - pg.inEnd) / 0.8);
-        const n = 3 + Math.floor(rnd(frame, 1, 41) * 4 * Math.min(1.5, k));
+        const n = 2 + Math.floor(rnd(frame, 1, 41) * 3 * Math.min(1.5, k));
         for (let i = 0; i < n; i++) {
           if (rnd(frame, 10 + i, 41) < 0.15) continue;
           const gi = Math.floor(rnd(frame, 20 + i, 41) * mb.list.length);
@@ -2093,8 +2115,15 @@
             x1 = x0 + Math.cos(ang) * a.size * 0.9;
             y1 = y0 + Math.sin(ang) * a.size * 0.9;
           }
-          const pts = boltPoints(x0, y0, x1, y1, frame * 13 + i, 4, 0.3);
-          drawGlowPath(ctx, pts, size * 0.02 * (0.7 + 0.6 * pulse), color, clamp(pulse * k), scale);
+          const pts = boltPoints(x0, y0, x1, y1, frame * 13 + i, 5, 0.32);
+          const w = size * 0.016 * (0.75 + 0.5 * pulse), al = clamp(pulse * k);
+          drawGlowPath(ctx, pts, w, color, al, scale, 0.5);
+          // 途中から短く枝分かれする
+          const m = pts[Math.floor(pts.length * (0.3 + 0.4 * rnd(frame, 90 + i, 41)))];
+          const fa = Math.atan2(y1 - y0, x1 - x0) + (rnd(frame, 95 + i, 41) < 0.5 ? -1 : 1) * (0.5 + 0.5 * rnd(frame, 96 + i, 41));
+          const fl = Math.hypot(x1 - x0, y1 - y0) * 0.35;
+          drawGlowPath(ctx, boltPoints(m[0], m[1], m[0] + Math.cos(fa) * fl, m[1] + Math.sin(fa) * fl, frame * 17 + i, 4, 0.3), w * 0.55, color, al * 0.8, scale, 0.8);
+          drawFlash(ctx, x1, y1, a.size * 0.35, color, 0.35 * al);
         }
       }
     }
