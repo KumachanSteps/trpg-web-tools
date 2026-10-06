@@ -1486,7 +1486,7 @@
   }
 
   // ラウンド表示 Ver2：消失点（文字の中心から。文字の大きさが単位）/ 文字が飛んでくる時間 / 2本の線が伸びきるまで
-  const P5_VP2 = { x: 4.2, y: -2.2 };
+  const P5_VP2 = { x: 3.3, y: -1.75 };
   const P5_ZOOM2 = 0.42;
   const P5_RAIL = 0.34;
 
@@ -1497,11 +1497,12 @@
     const e = EASE.outExpo(z);
     const q = outProgress(pg, t);
     const qq = EASE.inQuad(q);
-    const len = Math.hypot(P5_VP2.x, P5_VP2.y);
+    // 消失点を中心に拡大・移動する（飛んでくる間も退場で手前へ抜ける間も、文字が2本の線の間に収まる）
+    const s = Math.max(0.05, lerp(0.08, 1, e)) * (1 + 1.6 * qq);
     return {
-      s: Math.max(0.05, lerp(0.08, 1, e)) * (1 + 0.03 * clamp((t - pg.inEnd) / 2)) * (1 + 1.3 * qq),
-      x: P5_VP2.x * size * (1 - e) - P5_VP2.x / len * size * 2.2 * qq,
-      y: P5_VP2.y * size * (1 - e) - P5_VP2.y / len * size * 2.2 * qq,
+      s,
+      x: P5_VP2.x * size * (1 - s),
+      y: P5_VP2.y * size * (1 - s),
       r: Math.atan2(P5_VP2.y, P5_VP2.x),
       shown: t >= pg.textStart,
       z,
@@ -1516,6 +1517,14 @@
 
   function sfxGlyphTilt(scene, g) {
     return sfxOf(scene).type === 'p5gun' && g.group === 0 ? p5CardTilt(g.index) * 0.55 : 0;
+  }
+
+  // ラウンド表示 Ver2：文字も2本の線と同じ遠近にする（消失点に近いほど小さく、手前ほど大きく）。
+  // 線の幅は消失点からの距離に比例して縮むので、文字の各位置を「その位置の線の幅」と同じ割合 λ で縮め、
+  // 横方向もその割合で詰める。文字の上下が線の内側にぴったり接する
+  function p5Round2Map(x, dist) {
+    const lam = Math.exp(-x / dist);
+    return { x: dist * (1 - lam), lam };
   }
 
   function sfxOf(scene) {
@@ -3295,10 +3304,8 @@
       const vx = cx + P5_VP2.x * size, vy = cy + P5_VP2.y * size;
       const len = Math.hypot(P5_VP2.x, P5_VP2.y);
       const nx = -P5_VP2.y / len, ny = P5_VP2.x / len;
-      // 線と文字が重ならない間隔：文字の奥側の端でも、2本の線の間に文字が収まるようにする
-      const dist = len * size;
-      const near = Math.max(0.35, 1 - ((b.x1 - b.x0) / 2 + size * 0.3) / dist);
-      const h = ((b.y1 - b.y0) / 2 + size * 0.22) / near;
+      // 線の内側の縁が文字の上端と下端にぴったり接する間隔（文字も同じ遠近で並ぶ）
+      const h = (b.y1 - b.y0) / 2;
       const st = p5Round2State(pg, t, size);
       const tail = SFX_TIMING.p5round2.tail;
       const gone = Number.isFinite(pg.outEnd) ? clamp((t - pg.holdEnd) / Math.max(0.05, pg.outEnd + tail - pg.holdEnd)) : 0;
@@ -3323,11 +3330,11 @@
           ctx.closePath();
           ctx.fill();
         };
-        ctx.fillStyle = color;
-        quad(l0, l1, w1, w1, 0);
-        // 内側に白い細線
+        // 文字に接する内側に白い細線、その外側に色の帯
         ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        quad(l0, l1, w1 * 0.1, w1 * 0.1, -w1 * 0.25);
+        quad(l0, l1, w1 * 0.12, w1 * 0.12, 0);
+        ctx.fillStyle = color;
+        quad(l0, l1, w1, w1, w1 * 0.12);
         // 表示中：白い光が奥から手前へ流れる
         if (st.shown && gone <= 0) {
           const P = 1.1;
@@ -3336,7 +3343,7 @@
           const lw = 0.1 + lc * 0.25;
           if (lc - lw > l0 && lc < l1) {
             ctx.fillStyle = '#ffffff';
-            quad(Math.max(l0, lc - lw), lc, w1 * 0.3, w1 * 0.3, -w1 * 0.35);
+            quad(Math.max(l0, lc - lw), lc, w1 * 0.3, w1 * 0.3, 0);
           }
         }
       };
@@ -3538,7 +3545,8 @@
         if (g.blank || !g.sprite) continue;
         info.dir = t >= timeline.outStart[i] ? dirFor(timeline.outFx[i], scene.outDir) : dirFor(timeline.inFx[i], scene.inDir);
         if (!this.glyphState(g, t, scene, info, st)) continue;
-        list.push({ g, a: st.a * bs.a, x: st.x, y: st.y, s: st.s, sx: st.sx, sy: st.sy, r: st.r + sfxGlyphTilt(scene, g), blur: st.blur });
+        const persp = g.group === 0 && sfxOf(scene).type === 'p5round2' ? { dist: Math.hypot(P5_VP2.x, P5_VP2.y) * layout.size, bcx, bcy } : null;
+        list.push({ g, a: st.a * bs.a, x: st.x, y: st.y, s: st.s, sx: st.sx, sy: st.sy, r: st.r + sfxGlyphTilt(scene, g), blur: st.blur, persp });
       }
       const drawPass = (layerName, alphaMul) => {
         for (let j = 0; j < list.length; j++) {
@@ -3556,9 +3564,24 @@
           }
         }
       };
+      // 遠近つきの文字は短冊を少し重ねて描くので、半透明のまま描くと継ぎ目が濃く見える。
+      // 不透明で描いてから層全体を薄くする
+      let layerA = 1;
+      if (list.some(it => it.persp)) {
+        layerA = list.reduce((m, it) => Math.max(m, it.a), 0);
+        if (layerA > 0 && layerA < 1) list.forEach(it => { it.a /= layerA; });
+        else layerA = 1;
+      }
       drawPass('glow', bs.glowMul);
       drawPass('back', 1);
       drawPass('front', 1);
+      if (layerA < 1) {
+        lctx.setTransform(1, 0, 0, 1, 0, 0);
+        lctx.globalCompositeOperation = 'destination-in';
+        lctx.globalAlpha = layerA;
+        lctx.fillRect(0, 0, cw, ch);
+        lctx.globalCompositeOperation = 'source-over';
+      }
       if (pg.cursor) this.drawCursor(pg, page, t, bs, [ba, bb, bc, bd, be, bf], scene);
       if (pg.solo) this.drawSolo(pg, page, t, bs, scale, scene);
       lctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -3582,6 +3605,7 @@
     }
 
     drawSprite(lctx, it, sprite, img, alpha, m, bs, scale) {
+      if (it.persp) { this.drawSpritePersp(lctx, it, sprite, img, alpha, m); return; }
       const [ba, bb, bc, bd, be, bf] = m;
       const gx = it.g.cx + it.x, gy = it.g.cy + it.y;
       const gc = Math.cos(it.r), gs = Math.sin(it.r);
@@ -3599,6 +3623,27 @@
       const dx = it.g.ox - sprite.ox, dy = it.g.oy - sprite.oy;
       if (screenBlur > 0.35) this.drawBlurred(lctx, img, dx, dy, spriteBlur);
       else lctx.drawImage(img, dx, dy);
+    }
+
+    // 遠近つきの文字：縦の細い短冊に分け、短冊ごとにその位置の縮尺で描く（台形に近い形になる）
+    drawSpritePersp(lctx, it, sprite, img, alpha, m) {
+      const [ba, bb, bc, bd, be, bf] = m;
+      const { dist, bcx, bcy } = it.persp;
+      const g = it.g;
+      const dx = g.ox - sprite.ox, dy = g.oy - sprite.oy;
+      const w = sprite.w, h = sprite.h;
+      const n = Math.max(1, Math.ceil(w / (g.size / 14)));
+      const sw = w / n;
+      lctx.globalAlpha = alpha;
+      for (let i = 0; i < n; i++) {
+        const u0 = dx + sw * i, uc = u0 + sw / 2;
+        const p = p5Round2Map(g.cx + uc - bcx, dist);
+        const k = p.lam * it.s;
+        const ox = bcx + p.x + it.x, oy = bcy + (g.cy - bcy) * p.lam + it.y;
+        lctx.setTransform(ba * k, bb * k, bc * k, bd * k, ba * ox + bc * oy + be, bb * ox + bd * oy + bf);
+        // 短冊のつなぎ目に隙間が出ないよう、描く幅を少しだけ広げる
+        lctx.drawImage(img, sw * i, 0, Math.min(sw + 0.75, w - sw * i), h, u0 - uc, dy, Math.min(sw + 0.75, w - sw * i), h);
+      }
     }
 
     drawBlurred(lctx, img, dx, dy, blur) {
