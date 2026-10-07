@@ -27,7 +27,12 @@
     { id: 'garage', name: { ja: '車庫・機械室', en: 'Garage / plant', ko: '차고·기계실' } },
     { id: 'balcony', name: { ja: 'バルコニー・テラス', en: 'Balcony / terrace', ko: '발코니·테라스' }, outdoor: true, edge: 'rail', pattern: 'deck' },
     { id: 'garden', name: { ja: '庭・屋外', en: 'Garden / outdoor', ko: '정원·옥외' }, outdoor: true, edge: 'none', pattern: 'grass' },
-    { id: 'porch', name: { ja: 'ポーチ・通路（屋外）', en: 'Porch / path', ko: '포치·옥외 통로' }, outdoor: true, edge: 'none', pattern: 'stone' }
+    { id: 'porch', name: { ja: 'ポーチ・通路（屋外）', en: 'Porch / path', ko: '포치·옥외 통로' }, outdoor: true, edge: 'none', pattern: 'stone' },
+    { id: 'doma', name: { ja: '土間', en: 'Earthen floor (doma)', ko: '흙바닥(도마)' }, pattern: 'speckle' },
+    { id: 'tech', name: { ja: '機関・艦内（SF）', en: 'Tech / ship deck', ko: '기관·함내(SF)' }, pattern: 'panel' },
+    { id: 'field', name: { ja: '田畑', en: 'Field', ko: '밭·논' }, outdoor: true, edge: 'none', pattern: 'rows' },
+    { id: 'water', name: { ja: '水辺・池・川', en: 'Water', ko: '물가·연못·강' }, outdoor: true, edge: 'none', pattern: 'water' },
+    { id: 'cave', name: { ja: '洞窟・岩場', en: 'Cave', ko: '동굴·바위' }, outdoor: true, edge: 'rock', pattern: 'speckle' }
   ];
   const CAT = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
 
@@ -61,7 +66,8 @@
     { id: 'rail', t: 0.1, name: { ja: '手すり・腰壁', en: 'Railing', ko: '난간' } },
     { id: 'fence', t: 0.1, name: { ja: '柵・フェンス', en: 'Fence', ko: '울타리' } },
     { id: 'bars', t: 0.14, name: { ja: '鉄格子', en: 'Bars', ko: '쇠창살' } },
-    { id: 'broken', t: 0.3, name: { ja: '崩れた壁', en: 'Crumbling wall', ko: '무너진 벽' } }
+    { id: 'broken', t: 0.3, name: { ja: '崩れた壁', en: 'Crumbling wall', ko: '무너진 벽' } },
+    { id: 'rock', t: 0.7, name: { ja: '岩壁', en: 'Rock wall', ko: '암벽' } }
   ];
   const WALL = Object.fromEntries(WALL_KINDS.map(w => [w.id, w]));
 
@@ -135,7 +141,7 @@
     }
     const room = a || b;
     const cat = CAT[room.cat] || {};
-    if (cat.outdoor) return cat.edge === 'rail' ? 'rail' : null;
+    if (cat.outdoor) return cat.edge === 'rail' || cat.edge === 'rock' ? cat.edge : null;
     return 'ext';
   }
 

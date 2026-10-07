@@ -17,7 +17,8 @@
       fills: {
         living: '#fbf1df', bedroom: '#e8f2e1', washitsu: '#eef0d4', kitchen: '#fbe8d6', wet: '#e1eef8', hall: '#f1efea',
         storage: '#e8e4dc', public: '#f7eed9', office: '#ebe8f5', medical: '#dff1ee', special: '#eee2f3', danger: '#f6dedb',
-        garage: '#e6e7ea', balcony: '#edf0f3', garden: '#e1efd6', porch: '#ece8e0'
+        garage: '#e6e7ea', balcony: '#edf0f3', garden: '#e1efd6', porch: '#ece8e0',
+        doma: '#e7dccb', tech: '#e3e8ee', field: '#ebe3c3', water: '#cde5f6', cave: '#ddd7cd'
       },
       patternLine: 'rgba(60, 70, 90, 0.12)',
       furn: {
@@ -65,7 +66,8 @@
       fills: {
         living: '#e9d9b6', bedroom: '#e3dab5', washitsu: '#e6dcae', kitchen: '#ead3ad', wet: '#dcd8c0', hall: '#ebdfc2',
         storage: '#ddd0b0', public: '#e9d6b0', office: '#e0d6bb', medical: '#dcdcc0', special: '#e0cdb8', danger: '#e2c3ad',
-        garage: '#dcd2bb', balcony: '#e7dcc0', garden: '#d9dcb2', porch: '#e3d7bb'
+        garage: '#dcd2bb', balcony: '#e7dcc0', garden: '#d9dcb2', porch: '#e3d7bb',
+        doma: '#e0cfac', tech: '#dcd6c2', field: '#dfd6a8', water: '#d2d8c8', cave: '#d5c9ae'
       },
       patternLine: 'rgba(96, 70, 40, 0.14)',
       furn: {
@@ -83,7 +85,8 @@
       fills: {
         living: '#2a2729', bedroom: '#262a28', washitsu: '#2b2a24', kitchen: '#2d2724', wet: '#232830', hall: '#242326',
         storage: '#211f21', public: '#2b2826', office: '#25242b', medical: '#212a2a', special: '#2e2230', danger: '#3a1f1f',
-        garage: '#222224', balcony: '#1e1e22', garden: '#1d231c', porch: '#201f22'
+        garage: '#222224', balcony: '#1e1e22', garden: '#1d231c', porch: '#201f22',
+        doma: '#2a2622', tech: '#22262c', field: '#25251a', water: '#1b2530', cave: '#272422'
       },
       patternLine: 'rgba(255,255,255,0.05)',
       furn: {
@@ -171,6 +174,49 @@
         c.moveTo(x - 0.08, y + 0.06); c.lineTo(x, y - 0.08); c.lineTo(x + 0.08, y + 0.06);
       }
       c.stroke();
+    } else if (p === 'speckle') {
+      // 土間・洞窟：土や砂利の粒
+      let s = (room.x * 73856093) ^ (room.y * 19349663) ^ 0x5bd1e995;
+      const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+      c.fillStyle = theme.patternLine;
+      const count = Math.floor(room.w * room.h * 0.9);
+      for (let i = 0; i < count; i++) {
+        const x = room.x + rnd() * room.w, y = room.y + rnd() * room.h, r = 0.03 + rnd() * 0.05;
+        c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
+      }
+    } else if (p === 'water') {
+      // 水面：短い波線
+      c.beginPath();
+      for (let y = room.y + 0.6, row = 0; y < room.y + room.h; y += 0.9, row++) {
+        for (let x = room.x + (row % 2 ? 0.2 : 0.9); x < room.x + room.w - 0.6; x += 1.6) {
+          c.moveTo(x, y);
+          c.quadraticCurveTo(x + 0.2, y - 0.16, x + 0.4, y);
+          c.quadraticCurveTo(x + 0.6, y + 0.16, x + 0.8, y);
+        }
+      }
+      c.lineWidth = lw * 1.1;
+      c.stroke();
+    } else if (p === 'rows') {
+      // 田畑：畝の線
+      c.beginPath();
+      if (room.w >= room.h) for (let y = room.y + 0.6; y < room.y + room.h; y += 0.8) { c.moveTo(room.x + 0.3, y); c.lineTo(room.x + room.w - 0.3, y); }
+      else for (let x = room.x + 0.6; x < room.x + room.w; x += 0.8) { c.moveTo(x, room.y + 0.3); c.lineTo(x, room.y + room.h - 0.3); }
+      c.lineWidth = lw * 1.4;
+      c.stroke();
+    } else if (p === 'panel') {
+      // 艦内の床パネル（1m 角）とリベット
+      c.beginPath();
+      for (let x = room.x + 2; x < room.x + room.w; x += 2) { c.moveTo(x, room.y); c.lineTo(x, room.y + room.h); }
+      for (let y = room.y + 2; y < room.y + room.h; y += 2) { c.moveTo(room.x, y); c.lineTo(room.x + room.w, y); }
+      c.stroke();
+      c.fillStyle = theme.patternLine;
+      for (let x = room.x; x < room.x + room.w; x += 2) {
+        for (let y = room.y; y < room.y + room.h; y += 2) {
+          [[0.25, 0.25], [1.75, 0.25], [0.25, 1.75], [1.75, 1.75]].forEach(([dx, dy]) => {
+            if (x + dx < room.x + room.w && y + dy < room.y + room.h) { c.beginPath(); c.arc(x + dx, y + dy, 0.05, 0, TAU); c.fill(); }
+          });
+        }
+      }
     } else if (p === 'stone') {
       c.beginPath();
       for (let y = room.y, row = 0; y < room.y + room.h; y += 1, row++) {
@@ -284,6 +330,39 @@
       return;
     }
     c.fillStyle = theme.wall;
+    if (run.kind === 'rock') {
+      // 岩壁：でこぼこした厚い帯。ゆらぎは位置だけで決まるので、同じ線上の区間どうしはつながる
+      const noise = (p, k) => {
+        let h = (Math.round(p * 4) * 374761393 + Math.round(run.c * 4) * 668265263 + k * 2246822519) >>> 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+      };
+      const pts = [];
+      for (let p = a; p < b + 1e-6; p = Math.min(b, p + 0.25)) {
+        pts.push(p);
+        if (p >= b) break;
+      }
+      const off = (p, k) => (t / 2) * (0.55 + noise(p, k) * 0.9);
+      c.beginPath();
+      pts.forEach((p, i) => {
+        const d = -off(p, 1);
+        if (run.o === 'h') (i ? c.lineTo(p, run.c + d) : c.moveTo(p, run.c + d));
+        else (i ? c.lineTo(run.c + d, p) : c.moveTo(run.c + d, p));
+      });
+      pts.slice().reverse().forEach(p => {
+        const d = off(p, 2);
+        if (run.o === 'h') c.lineTo(p, run.c + d); else c.lineTo(run.c + d, p);
+      });
+      c.closePath();
+      c.fill();
+      [[run.capA, run.a], [run.capB, run.b]].forEach(([cap, p]) => {
+        if (!cap) return;
+        c.beginPath();
+        if (run.o === 'h') c.arc(p, run.c, t * 0.55, 0, TAU); else c.arc(run.c, p, t * 0.55, 0, TAU);
+        c.fill();
+      });
+      return;
+    }
     if (run.kind === 'broken') {
       // 崩れた壁：途切れ途切れにして端をギザギザにする
       let s = Math.floor(run.a * 131 + run.c * 71) >>> 0;

@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.03';
+  const VERSION = 'v1.04';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -39,6 +39,9 @@
     { id: 'special', name: { ja: '特殊・屋外', en: 'Special & outdoor', ko: '특수·옥외' }, items: [
       ['ritual', 'special', 10, 10], ['sealed', 'danger', 6, 6], ['cell', 'danger', 4, 5], ['garage', 'garage', 7, 11],
       ['balcony', 'balcony', 12, 3], ['garden', 'garden', 12, 8], ['porch', 'porch', 6, 3]
+    ] },
+    { id: 'world', name: { ja: '和風・SF・自然', en: 'Japanese, sci-fi, nature', ko: '일본풍·SF·자연' }, items: [
+      ['doma', 'doma', 8, 8], ['deck', 'tech', 8, 6], ['cave', 'cave', 12, 10], ['water', 'water', 8, 6], ['field', 'field', 12, 8]
     ] }
   ];
   const ROOM_PRESETS = {};
@@ -51,7 +54,7 @@
     'kitchen', 'sink', 'stove', 'fridge', 'counter', 'cupboard', 'toilet', 'washbasin', 'bathtub', 'shower', 'washer',
     'office_desk', 'reception', 'locker', 'filing', 'whiteboard', 'copier', 'vending', 'bench',
     'hospital_bed', 'exam_bed', 'med_cabinet', 'morgue', 'lab_bench', 'rack', 'altar', 'garden_bench',
-    'stage', 'dumbbell_rack'
+    'stage', 'dumbbell_rack', 'barber_chair', 'kamado', 'butsudan', 'tokonoma', 'console'
   ]);
   const SWING_DOORS = new Set(['door', 'door2', 'locked', 'secret', 'broken']);
   const ICONS = {

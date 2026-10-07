@@ -1464,6 +1464,359 @@
     }
   }
 
+  /* ---------- レトロ（1920年代）・和風 ---------- */
+
+  function glow(c, x, y, r, rgb) {
+    c.save();
+    const g = c.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${rgb}, 0.55)`);
+    g.addColorStop(1, `rgba(${rgb}, 0)`);
+    c.fillStyle = g;
+    c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
+    c.restore();
+  }
+
+  function barberChair(c, S, w, h) {
+    // 理容椅子。背もたれが上（鏡の側）、足置きが下
+    box(c, S, w * 0.14, h * 0.04, w * 0.72, h * 0.3, 0.15, S.soft);
+    box(c, S, w * 0.06, h * 0.28, w * 0.88, h * 0.44, 0.18);
+    thin(c, S);
+    line(c, w * 0.24, h * 0.32, w * 0.24, h * 0.68);
+    line(c, w * 0.76, h * 0.32, w * 0.76, h * 0.68);
+    normal(c, S);
+    box(c, S, w * 0.3, h * 0.76, w * 0.4, h * 0.18, 0.06, S.dark);
+  }
+
+  function gramophone(c, S, w, h) {
+    // 蓄音機：木の台とレコード、ラッパ
+    box(c, S, 0, h * 0.3, w * 0.72, h * 0.68, 0.05, S.wood);
+    circle(c, S, w * 0.36, h * 0.64, Math.min(w, h) * 0.24, S.dark);
+    circle(c, S, w * 0.36, h * 0.64, Math.min(w, h) * 0.05, S.fill);
+    thin(c, S);
+    line(c, w * 0.36, h * 0.64, w * 0.66, h * 0.36);
+    normal(c, S);
+    ellipse(c, S, w * 0.72, h * 0.28, w * 0.26, h * 0.24, S.yellow);
+    circle(c, S, w * 0.72, h * 0.28, Math.min(w, h) * 0.06, S.line);
+  }
+
+  function irori(c, S, w, h) {
+    // 囲炉裏：木の枠と灰、真ん中に自在鉤の鉄瓶
+    box(c, S, 0, 0, w, h, 0, S.wood);
+    box(c, S, w * 0.16, h * 0.16, w * 0.68, h * 0.68, 0, S.soft);
+    glow(c, w / 2, h / 2, Math.min(w, h) * 0.34, '255, 140, 60');
+    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.15, S.dark);
+    thin(c, S);
+    line(c, w * 0.5, h * 0.35, w * 0.5, h * 0.2);
+    normal(c, S);
+  }
+
+  function kamado(c, S, w, h) {
+    // かまど（竈）：土の台に焚き口と釜が並ぶ
+    box(c, S, 0, 0, w, h, 0.25, S.soft);
+    const n = Math.max(1, Math.round(w / 1.5));
+    for (let i = 0; i < n; i++) {
+      const cx = (w / n) * (i + 0.5);
+      circle(c, S, cx, h * 0.45, Math.min(w / n, h) * 0.3, S.dark);
+      circle(c, S, cx, h * 0.45, Math.min(w / n, h) * 0.18, S.fill);
+      c.fillStyle = S.flame;
+      c.fillRect(cx - 0.15, h * 0.86, 0.3, h * 0.1);
+    }
+  }
+
+  function well(c, S, w, h) {
+    // 井戸：石の井筒と水面、つるべの桶
+    const r = Math.min(w, h) / 2;
+    circle(c, S, w / 2, h / 2, r * 0.95, S.soft);
+    circle(c, S, w / 2, h / 2, r * 0.62, S.water);
+    thin(c, S);
+    line(c, w * 0.05, h / 2, w * 0.95, h / 2);
+    normal(c, S);
+    box(c, S, w * 0.68, h * 0.12, r * 0.36, r * 0.36, 0.05, S.wood);
+  }
+
+  function torii(c, S, w, h) {
+    // 鳥居（上から見た図）：笠木と2本の柱
+    c.save();
+    rr(c, 0, h * 0.28, w, h * 0.44, 0.08);
+    c.fillStyle = S.red;
+    c.fill();
+    c.stroke();
+    [0.16, 0.84].forEach(px => circle(c, S, w * px, h / 2, Math.min(h * 0.48, 0.45), S.red));
+    c.restore();
+  }
+
+  function komainu(c, S, w, h) {
+    // 狛犬：台座と、座った獅子
+    box(c, S, 0, 0, w, h, 0.05, S.soft);
+    ellipse(c, S, w / 2, h * 0.58, w * 0.26, h * 0.3, S.fill);
+    circle(c, S, w / 2, h * 0.3, Math.min(w, h) * 0.18, S.fill);
+  }
+
+  function lantern(c, S, w, h) {
+    // 石灯籠：六角の笠と火袋
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 * 0.95;
+    c.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * TAU + Math.PI / 6;
+      if (i === 0) c.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); else c.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+    c.closePath();
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    glow(c, cx, cy, r * 0.7, '255, 190, 90');
+    circle(c, S, cx, cy, r * 0.28, S.flame);
+  }
+
+  function temizuya(c, S, w, h) {
+    // 手水舎：屋根（破線）の下に水盤と柄杓
+    thin(c, S);
+    dashed(c, S, true);
+    rr(c, 0, 0, w, h, 0);
+    c.stroke();
+    dashed(c, S, false);
+    normal(c, S);
+    box(c, S, w * 0.18, h * 0.3, w * 0.64, h * 0.4, 0.08, S.soft);
+    box(c, S, w * 0.24, h * 0.38, w * 0.52, h * 0.24, 0.05, S.water);
+    thin(c, S);
+    [0.35, 0.5, 0.65].forEach(px => line(c, w * px, h * 0.3, w * px - 0.15, h * 0.18));
+    normal(c, S);
+  }
+
+  function butsudan(c, S, w, h) {
+    // 仏壇：扉を開いた箱と灯明
+    box(c, S, 0, 0, w, h * 0.7, 0.03, S.dark);
+    box(c, S, w * 0.12, h * 0.06, w * 0.76, h * 0.56, 0.02, S.yellow);
+    line(c, 0, h * 0.7, -w * 0.12, h * 0.98);
+    line(c, w, h * 0.7, w * 1.12, h * 0.98);
+    candleAt(c, S, w * 0.3, h * 0.34, 0.12);
+    candleAt(c, S, w * 0.7, h * 0.34, 0.12);
+  }
+
+  function tokonoma(c, S, w, h) {
+    // 床の間：一段上がった床板と掛け軸、花瓶
+    box(c, S, 0, 0, w, h, 0, S.wood);
+    box(c, S, w * 0.4, 0.04, w * 0.2, h * 0.16, 0, S.fill);
+    circle(c, S, w * 0.78, h * 0.55, Math.min(w, h) * 0.16, S.soft);
+    thin(c, S);
+    line(c, 0, h * 0.92, w, h * 0.92);
+    normal(c, S);
+  }
+
+  function hokora(c, S, w, h) {
+    // 祠：小さな社。屋根の棟と扉
+    box(c, S, w * 0.1, h * 0.1, w * 0.8, h * 0.8, 0.04, S.wood);
+    thin(c, S);
+    line(c, w * 0.1, h * 0.1, w / 2, h / 2);
+    line(c, w * 0.9, h * 0.1, w / 2, h / 2);
+    line(c, w * 0.1, h * 0.9, w / 2, h / 2);
+    line(c, w * 0.9, h * 0.9, w / 2, h / 2);
+    normal(c, S);
+    box(c, S, w * 0.32, h * 0.82, w * 0.36, h * 0.16, 0.02, S.red);
+  }
+
+  function saisen(c, S, w, h) {
+    // 賽銭箱：格子の口
+    box(c, S, 0, 0, w, h, 0.03, S.wood);
+    thin(c, S);
+    const n = Math.max(3, Math.round(w / 0.25));
+    for (let i = 1; i < n; i++) line(c, (w / n) * i, h * 0.2, (w / n) * i, h * 0.8);
+    normal(c, S);
+  }
+
+  /* ---------- SF ---------- */
+
+  function consoleDesk(c, S, w, h) {
+    // 操作卓：奥にモニター、手前にボタン列
+    box(c, S, 0, 0, w, h, 0.2, S.soft);
+    const n = Math.max(1, Math.round(w / 1.2));
+    const slot = w / n;
+    for (let i = 0; i < n; i++) box(c, S, slot * i + slot * 0.12, h * 0.1, slot * 0.76, h * 0.38, 0.06, S.blue);
+    c.fillStyle = S.line;
+    for (let x = 0.3; x < w - 0.15; x += 0.35) { c.beginPath(); c.arc(x, h * 0.72, 0.06, 0, TAU); c.fill(); }
+  }
+
+  function pilotSeat(c, S, w, h) {
+    // 操縦席：ひじ掛けに操作パネル
+    box(c, S, w * 0.2, h * 0.08, w * 0.6, h * 0.7, w * 0.16);
+    thin(c, S);
+    line(c, w * 0.24, h * 0.32, w * 0.76, h * 0.32);
+    normal(c, S);
+    box(c, S, 0, h * 0.3, w * 0.18, h * 0.6, 0.05, S.dark);
+    box(c, S, w * 0.82, h * 0.3, w * 0.18, h * 0.6, 0.05, S.dark);
+  }
+
+  function cryopod(c, S, w, h) {
+    // 冷凍睡眠カプセル：丸いカプセルとガラス窓
+    box(c, S, 0, 0, w, h, Math.min(w, h) * 0.48, S.soft);
+    box(c, S, w * 0.18, h * 0.12, w * 0.64, h * 0.56, w * 0.3, S.water);
+    thin(c, S);
+    line(c, w * 0.1, h * 0.78, w * 0.9, h * 0.78);
+    normal(c, S);
+    c.fillStyle = S.blue;
+    c.fillRect(w * 0.4, h * 0.84, w * 0.2, h * 0.06);
+  }
+
+  function reactor(c, S, w, h) {
+    // 動力炉：二重の囲いと光る炉心
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+    circle(c, S, cx, cy, r * 0.96, S.soft);
+    c.save();
+    c.setLineDash([S.lw * 4, S.lw * 3]);
+    c.strokeStyle = S.yellow;
+    c.lineWidth = S.lw * 2;
+    c.beginPath(); c.arc(cx, cy, r * 0.8, 0, TAU); c.stroke();
+    c.restore();
+    circle(c, S, cx, cy, r * 0.6, S.dark);
+    glow(c, cx, cy, r * 0.6, '90, 180, 255');
+    circle(c, S, cx, cy, r * 0.26, S.blue);
+  }
+
+  function holoTable(c, S, w, h) {
+    // ホログラム卓：丸い卓と投影された星図
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+    circle(c, S, cx, cy, r * 0.95, S.soft);
+    glow(c, cx, cy, r * 0.8, '90, 180, 255');
+    thin(c, S);
+    c.strokeStyle = S.blue;
+    circle(c, S, cx, cy, r * 0.62, false);
+    circle(c, S, cx, cy, r * 0.32, false);
+    line(c, cx - r * 0.62, cy, cx + r * 0.62, cy);
+    line(c, cx, cy - r * 0.62, cx, cy + r * 0.62);
+    normal(c, S);
+  }
+
+  function hatch(c, S, w, h) {
+    // 床・天井のハッチ：丸い扉とハンドル
+    box(c, S, 0, 0, w, h, 0.1, S.soft);
+    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.4, S.dark);
+    c.strokeStyle = S.fill;
+    thin(c, S);
+    line(c, w * 0.3, h / 2, w * 0.7, h / 2);
+    line(c, w / 2, h * 0.3, w / 2, h * 0.7);
+    normal(c, S);
+  }
+
+  /* ---------- 自然・キャンプ ---------- */
+
+  function blob(c, w, h, seed, k = 9, jag = 0.18) {
+    // 不規則な輪郭（岩など）。seed が同じなら同じ形
+    let s = seed >>> 0;
+    const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    c.beginPath();
+    for (let i = 0; i < k; i++) {
+      const a = (i / k) * TAU;
+      const f = 1 - jag + rnd() * jag;
+      const px = w / 2 + Math.cos(a) * (w / 2) * f, py = h / 2 + Math.sin(a) * (h / 2) * f;
+      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.closePath();
+  }
+
+  function rock(c, S, w, h) {
+    blob(c, w, h, Math.round(w * 37 + h * 101), 9, 0.28);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    line(c, w * 0.3, h * 0.35, w * 0.55, h * 0.5);
+    line(c, w * 0.55, h * 0.5, w * 0.62, h * 0.72);
+    normal(c, S);
+  }
+
+  function tent(c, S, w, h) {
+    // テント：四角い屋根と棟、手前（下）が入口
+    box(c, S, 0, 0, w, h, 0.1, S.yellow);
+    thin(c, S);
+    line(c, 0, 0, w / 2, h * 0.5);
+    line(c, w, 0, w / 2, h * 0.5);
+    line(c, 0, h, w / 2, h * 0.5);
+    line(c, w, h, w / 2, h * 0.5);
+    normal(c, S);
+    c.beginPath();
+    c.moveTo(w * 0.36, h); c.lineTo(w / 2, h * 0.72); c.lineTo(w * 0.64, h); c.closePath();
+    c.fillStyle = S.dark;
+    c.fill();
+    c.stroke();
+  }
+
+  function campfire(c, S, w, h) {
+    // たき火：石の輪と組んだ薪
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+    glow(c, cx, cy, r * 1.1, '255, 150, 60');
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * TAU;
+      circle(c, S, cx + Math.cos(a) * r * 0.78, cy + Math.sin(a) * r * 0.78, r * 0.18, S.soft);
+    }
+    c.save();
+    c.strokeStyle = S.line;
+    c.lineWidth = S.lw * 2.2;
+    line(c, cx - r * 0.42, cy - r * 0.3, cx + r * 0.42, cy + r * 0.3);
+    line(c, cx - r * 0.42, cy + r * 0.3, cx + r * 0.42, cy - r * 0.3);
+    c.restore();
+    circle(c, S, cx, cy, r * 0.2, S.flame, true);
+  }
+
+  function picnicTable(c, S, w, h) {
+    // ピクニックテーブル：天板と両側のベンチ
+    box(c, S, 0.05, 0, w - 0.1, h * 0.22, 0.05, S.wood);
+    box(c, S, 0, h * 0.3, w, h * 0.4, 0.05, S.wood);
+    box(c, S, 0.05, h * 0.78, w - 0.1, h * 0.22, 0.05, S.wood);
+  }
+
+  function logSeat(c, S, w, h) {
+    // 丸太（ベンチ・薪）
+    box(c, S, 0, 0, w, h, Math.min(w, h) * 0.48, S.wood);
+    thin(c, S);
+    const r = Math.min(w, h) * 0.3;
+    if (w >= h) { circle(c, S, w - r * 1.4, h / 2, r, false); line(c, r, h * 0.35, w - r * 2.6, h * 0.35); }
+    else { circle(c, S, w / 2, h - r * 1.4, r, false); line(c, w * 0.35, r, w * 0.35, h - r * 2.6); }
+    normal(c, S);
+  }
+
+  function bones(c, S, w, h) {
+    // 骨：頭蓋骨と交差した骨
+    c.save();
+    c.strokeStyle = S.softLine;
+    c.lineWidth = S.lw * 1.8;
+    line(c, w * 0.08, h * 0.2, w * 0.92, h * 0.9);
+    line(c, w * 0.92, h * 0.2, w * 0.08, h * 0.9);
+    c.restore();
+    circle(c, S, w / 2, h * 0.42, Math.min(w, h) * 0.26, S.fill);
+    c.fillStyle = S.line;
+    [0.4, 0.6].forEach(px => { c.beginPath(); c.arc(w * px, h * 0.4, Math.min(w, h) * 0.06, 0, TAU); c.fill(); });
+  }
+
+  function pit(c, S, w, h) {
+    // 竪穴・落とし穴：深い穴
+    blob(c, w, h, Math.round(w * 53 + h * 17), 11, 0.14);
+    c.save();
+    const g = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) / 2);
+    g.addColorStop(0, 'rgba(0,0,0,0.85)');
+    g.addColorStop(1, 'rgba(0,0,0,0.35)');
+    c.fillStyle = g;
+    c.fill();
+    c.restore();
+    c.stroke();
+  }
+
+  function boat(c, S, w, h) {
+    // 小舟：先が上
+    c.beginPath();
+    c.moveTo(w / 2, 0);
+    c.quadraticCurveTo(w, h * 0.25, w * 0.94, h);
+    c.lineTo(w * 0.06, h);
+    c.quadraticCurveTo(0, h * 0.25, w / 2, 0);
+    c.closePath();
+    c.fillStyle = S.wood;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    line(c, w * 0.14, h * 0.45, w * 0.86, h * 0.45);
+    line(c, w * 0.1, h * 0.75, w * 0.9, h * 0.75);
+    normal(c, S);
+  }
+
   /* ---------- カタログ ---------- */
 
   const GROUPS = [
@@ -1477,7 +1830,10 @@
     { id: 'school', name: { ja: '学校・図書館', en: 'School & library', ko: '학교·도서관' } },
     { id: 'leisure', name: { ja: '娯楽・スポーツ', en: 'Leisure & sports', ko: '오락·스포츠' } },
     { id: 'horror', name: { ja: '探索・ホラー', en: 'Investigation & horror', ko: '탐색·호러' } },
-    { id: 'outdoor', name: { ja: '屋外', en: 'Outdoor', ko: '옥외' } }
+    { id: 'outdoor', name: { ja: '屋外', en: 'Outdoor', ko: '옥외' } },
+    { id: 'retro', name: { ja: '1920年代・和風', en: '1920s & Japanese', ko: '1920년대·일본풍' } },
+    { id: 'sf', name: { ja: 'SF', en: 'Sci-fi', ko: 'SF' } },
+    { id: 'nature', name: { ja: '自然・キャンプ', en: 'Nature & camping', ko: '자연·캠핑' } }
   ];
 
   const A = (id, group, w, h, draw, name, extra) => ({ id, group, w, h, draw, name, ...(extra || {}) });
@@ -1608,7 +1964,37 @@
     A('car', 'outdoor', 4, 9, car, { ja: '自動車', en: 'Car', ko: '자동차' }),
     A('tree', 'outdoor', 3, 3, tree, { ja: '木', en: 'Tree', ko: '나무' }),
     A('bush', 'outdoor', 1.6, 1.6, bush, { ja: '植え込み', en: 'Shrub', ko: '관목' }),
-    A('garden_bench', 'outdoor', 3, 1, outdoorBench, { ja: '屋外ベンチ', en: 'Garden bench', ko: '옥외 벤치' })
+    A('garden_bench', 'outdoor', 3, 1, outdoorBench, { ja: '屋外ベンチ', en: 'Garden bench', ko: '옥외 벤치' }),
+
+    A('barber_chair', 'retro', 1.6, 2, barberChair, { ja: '理容椅子', en: 'Barber chair', ko: '이발 의자' }),
+    A('gramophone', 'retro', 1.4, 1.4, gramophone, { ja: '蓄音機', en: 'Gramophone', ko: '축음기' }),
+    A('irori', 'retro', 3, 3, irori, { ja: '囲炉裏', en: 'Irori hearth', ko: '이로리(화로)' }),
+    A('kamado', 'retro', 3, 1.4, kamado, { ja: 'かまど', en: 'Kamado stove', ko: '아궁이' }),
+    A('butsudan', 'retro', 1.8, 1.2, butsudan, { ja: '仏壇', en: 'Buddhist altar', ko: '불단' }),
+    A('tokonoma', 'retro', 3.6, 1.4, tokonoma, { ja: '床の間', en: 'Tokonoma alcove', ko: '도코노마' }),
+    A('well', 'retro', 2.2, 2.2, well, { ja: '井戸', en: 'Well', ko: '우물' }),
+    A('torii', 'retro', 8, 1.2, torii, { ja: '鳥居', en: 'Torii gate', ko: '도리이' }),
+    A('komainu', 'retro', 1.4, 1.4, komainu, { ja: '狛犬', en: 'Komainu guardian', ko: '고마이누' }),
+    A('lantern', 'retro', 1.2, 1.2, lantern, { ja: '石灯籠', en: 'Stone lantern', ko: '석등' }),
+    A('temizuya', 'retro', 4, 3, temizuya, { ja: '手水舎', en: 'Purification fountain', ko: '데미즈야' }),
+    A('hokora', 'retro', 1.6, 1.6, hokora, { ja: '祠', en: 'Small shrine', ko: '사당' }),
+    A('saisen', 'retro', 2.4, 1, saisen, { ja: '賽銭箱', en: 'Offering box', ko: '새전함' }),
+
+    A('console', 'sf', 3.6, 1.4, consoleDesk, { ja: '操作卓・コンソール', en: 'Console', ko: '콘솔' }),
+    A('pilot_seat', 'sf', 1.6, 1.8, pilotSeat, { ja: '操縦席', en: 'Pilot seat', ko: '조종석' }),
+    A('cryopod', 'sf', 1.8, 4, cryopod, { ja: '冷凍睡眠カプセル', en: 'Cryopod', ko: '냉동 수면 캡슐' }),
+    A('reactor', 'sf', 5, 5, reactor, { ja: '動力炉', en: 'Reactor', ko: '동력로' }),
+    A('holo_table', 'sf', 3.4, 3.4, holoTable, { ja: 'ホログラム卓', en: 'Holo table', ko: '홀로그램 테이블' }),
+    A('hatch', 'sf', 2, 2, hatch, { ja: 'ハッチ', en: 'Hatch', ko: '해치' }),
+
+    A('rock', 'nature', 2.4, 2, rock, { ja: '岩', en: 'Rock', ko: '바위' }),
+    A('tent', 'nature', 4, 4, tent, { ja: 'テント', en: 'Tent', ko: '텐트' }),
+    A('campfire', 'nature', 1.6, 1.6, campfire, { ja: 'たき火', en: 'Campfire', ko: '모닥불' }),
+    A('picnic', 'nature', 3.6, 3, picnicTable, { ja: 'ピクニックテーブル', en: 'Picnic table', ko: '피크닉 테이블' }),
+    A('log', 'nature', 3, 0.8, logSeat, { ja: '丸太', en: 'Log', ko: '통나무' }),
+    A('bones', 'nature', 1.4, 1.2, bones, { ja: '骨', en: 'Bones', ko: '뼈' }, { under: true }),
+    A('pit', 'nature', 2.4, 2.4, pit, { ja: '竪穴・落とし穴', en: 'Pit', ko: '구덩이' }),
+    A('boat', 'nature', 2.2, 5, boat, { ja: '小舟', en: 'Rowboat', ko: '작은 배' })
   ];
 
   const BY_ID = Object.fromEntries(ASSETS.map(a => [a.id, a]));

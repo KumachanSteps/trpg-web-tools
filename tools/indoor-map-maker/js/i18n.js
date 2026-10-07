@@ -112,7 +112,8 @@
       child: '子ども部屋', study: '書斎', bath: '浴室', wash: '洗面室', toilet: 'トイレ', entrance: '玄関', hall: '廊下',
       stairs: '階段室', closet: 'クローゼット', storage: '倉庫', office: '事務室', meeting: '会議室', lobby: 'ロビー',
       guest: '客室', ward: '病室', exam: '診察室', surgery: '手術室', lab: '研究室', ritual: '儀式の間', sealed: '封鎖区画',
-      garage: '車庫', balcony: 'バルコニー', garden: '庭', porch: 'ポーチ', cell: '独房'
+      garage: '車庫', balcony: 'バルコニー', garden: '庭', porch: 'ポーチ', cell: '独房',
+      doma: '土間', field: '畑', water: '池・川', cave: '洞窟', deck: '艦内区画'
     },
     props: {
       mapTitle: 'マップ設定',
@@ -358,7 +359,8 @@
       child: 'Kid\'s room', study: 'Study', bath: 'Bathroom', wash: 'Washroom', toilet: 'WC', entrance: 'Entrance', hall: 'Hallway',
       stairs: 'Stairwell', closet: 'Closet', storage: 'Storage', office: 'Office', meeting: 'Meeting room', lobby: 'Lobby',
       guest: 'Guest room', ward: 'Ward', exam: 'Exam room', surgery: 'Operating room', lab: 'Lab', ritual: 'Ritual chamber', sealed: 'Sealed area',
-      garage: 'Garage', balcony: 'Balcony', garden: 'Garden', porch: 'Porch', cell: 'Cell'
+      garage: 'Garage', balcony: 'Balcony', garden: 'Garden', porch: 'Porch', cell: 'Cell',
+      doma: 'Earthen floor', field: 'Field', water: 'Pond / river', cave: 'Cave', deck: 'Ship section'
     },
     props: {
       mapTitle: 'Map settings',
@@ -604,7 +606,8 @@
       child: '아이 방', study: '서재', bath: '욕실', wash: '세면실', toilet: '화장실', entrance: '현관', hall: '복도',
       stairs: '계단실', closet: '옷장', storage: '창고', office: '사무실', meeting: '회의실', lobby: '로비',
       guest: '객실', ward: '병실', exam: '진찰실', surgery: '수술실', lab: '연구실', ritual: '의식의 방', sealed: '봉쇄 구역',
-      garage: '차고', balcony: '발코니', garden: '정원', porch: '포치', cell: '독방'
+      garage: '차고', balcony: '발코니', garden: '정원', porch: '포치', cell: '독방',
+      doma: '흙바닥', field: '밭', water: '연못·강', cave: '동굴', deck: '함내 구역'
     },
     props: {
       mapTitle: '지도 설정',
