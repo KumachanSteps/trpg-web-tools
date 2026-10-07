@@ -1872,19 +1872,278 @@
     { id: 'horror', name: T('廃墟・事件', 'Ruins & crime', '폐허·사건') }
   ];
 
+  /* ---------- 隠し手がかり（「隠し手がかり入りで読み込む」で足す） ----------
+   * [階, 部屋名(日本語), 小物, 説明]。置き場所は部屋の中の空いているところを自動で探す。
+   * 手がかりは clue: true になり、「隠し手がかり ON/OFF」で GM/PL表示とは別に隠せる。 */
+  const C = (floor, room, t, text) => ({ floor, room, t, text });
+  const SWING = new Set(['door', 'door2', 'locked', 'secret', 'broken']);
+  const CLUES = {
+    '1ldk': [
+      C('1F', '個室', 'diary', T('破れた日記', 'Torn diary', '찢긴 일기')),
+      C('1F', '個室', 'phone', T('鳴るスマホ', 'Buzzing phone', '진동하는 폰')),
+      C('1F', 'LDK', 'pills', T('ラベルのない薬', 'Unlabeled pills', '라벨 없는 약'))
+    ],
+    '2ldk': [
+      C('1F', '洋室1', 'diary', T('鍵付きの日記', 'Locked diary', '잠긴 일기장')),
+      C('1F', 'LDK', 'photo', T('切り抜かれた家族写真', 'Family photo, one face cut out', '한 명이 오려진 가족사진')),
+      C('1F', 'LDK', 'phone', T('留守電が1件', 'One voicemail', '음성 메시지 1건')),
+      C('1F', '洋室2', 'key', T('合鍵', 'Spare key', '여벌 열쇠'))
+    ],
+    house: [
+      C('1F', 'リビング', 'photo', T('暖炉の上の古い写真', 'Old photo on the mantel', '벽난로 위의 오래된 사진')),
+      C('1F', 'キッチン', 'knife', T('包丁が1本足りない', 'One kitchen knife missing', '식칼 한 자루가 없다')),
+      C('1F', 'ダイニング', 'memo', T('テーブルのレシート', 'Receipt on the table', '테이블 위 영수증')),
+      C('2F', '主寝室', 'diary', T('妻の日記', 'The wife\'s diary', '아내의 일기')),
+      C('2F', '寝室3', 'clue', T('壁紙の裏の落書き', 'Scrawl behind the wallpaper', '벽지 뒤의 낙서')),
+      C('2F', '寝室2', 'key', T('箱に隠された鍵', 'Key hidden in a box', '상자에 숨긴 열쇠'))
+    ],
+    mansion: [
+      C('B1', 'ワインセラー', 'clue', T('1本だけ埃のない瓶', 'One bottle free of dust', '먼지 없는 병 하나')),
+      C('B1', 'ボイラー室', 'memo', T('燃え残った手紙', 'Half-burned letter', '타다 남은 편지')),
+      C('1F', '書斎', 'diary', T('当主の手記', 'The master\'s journal', '당주의 수기')),
+      C('1F', '図書室', 'clue', T('抜かれた本の隙間', 'Gap in the shelf', '책이 빠진 틈')),
+      C('1F', '厨房', 'knife', T('研いだばかりの包丁', 'Freshly sharpened cleaver', '막 간 식칼')),
+      C('2F', '主寝室', 'photo', T('顔を塗りつぶした写真', 'Photo with the face blacked out', '얼굴이 칠해진 사진')),
+      C('2F', '子供部屋', 'idol', T('見知らぬ神像', 'Idol of an unknown god', '알 수 없는 신상')),
+      C('2F', '音楽室', 'memo', T('楽譜に挟まれた暗号', 'Cipher tucked in sheet music', '악보에 끼운 암호'))
+    ],
+    apartment: [
+      C('1F', '102号室', 'diary', T('隣人の観察日記', 'Diary watching the neighbors', '이웃 관찰 일기')),
+      C('1F', '103号室', 'phone', T('鳴り続けるスマホ', 'Phone that keeps ringing', '계속 울리는 휴대폰')),
+      C('1F', '共用廊下', 'memo', T('破られた手紙', 'Torn-up letter', '찢긴 편지')),
+      C('1F', '駐車場', 'clue', T('新しいタイヤ痕', 'Fresh tire marks', '새로 생긴 타이어 자국')),
+      C('2F', '204号室', 'photo', T('隠し撮り写真の束', 'Stack of candid photos', '몰래 찍은 사진 뭉치')),
+      C('2F', '201号室', 'key', T('102号室の合鍵', 'Spare key to unit 102', '102호 여벌 열쇠'))
+    ],
+    tower: [
+      C('1F', '防災センター', 'memo', T('監視カメラの記録メモ', 'CCTV log note', 'CCTV 기록 메모')),
+      C('1F', 'ラウンジ', 'phone', T('置き忘れたスマホ', 'Forgotten phone', '두고 간 휴대폰')),
+      C('1F', '管理事務室', 'key', T('マスターキー', 'Master key', '마스터키')),
+      C('20F', '2001号室', 'diary', T('住人の手帳', 'Resident\'s planner', '주민의 수첩')),
+      C('20F', '2003号室', 'pills', T('大量の睡眠薬', 'Far too many sleeping pills', '대량의 수면제')),
+      C('20F', 'トランクルーム', 'clue', T('床を引きずった跡', 'Drag marks on the floor', '바닥을 끈 자국'))
+    ],
+    hotel: [
+      C('1F', 'ロビー', 'memo', T('宿泊者名簿の写し', 'Copy of the guest list', '숙박자 명부 사본')),
+      C('1F', '厨房', 'knife', T('刃こぼれした包丁', 'Chipped knife', '이가 빠진 칼')),
+      C('2F', 'チャペル', 'idol', T('祭壇の奇妙な像', 'Strange idol by the altar', '제단의 기묘한 석상')),
+      C('2F', '宴会厨房', 'clue', T('布をかけた大きな荷物', 'Large bundle under a sheet', '천을 덮은 큰 짐')),
+      C('3F', '屋内プール', 'key', T('プールの底に沈んだ鍵', 'Key at the bottom of the pool', '수영장 바닥의 열쇠')),
+      C('7F', '707', 'diary', T('宿泊客の日記', 'A guest\'s diary', '투숙객의 일기')),
+      C('8F', '主寝室', 'photo', T('破られた写真', 'Torn photograph', '찢긴 사진')),
+      C('8F', 'バーパントリー', 'pills', T('睡眠薬の空き瓶', 'Empty sleeping-pill bottle', '빈 수면제 병'))
+    ],
+    hospital: [
+      C('1F', '診察室2', 'memo', T('書きかけのカルテ', 'Unfinished chart', '쓰다 만 차트')),
+      C('1F', '薬局', 'pills', T('数の合わない劇薬', 'Controlled drugs don\'t add up', '수가 안 맞는 극약')),
+      C('1F', '霊安室', 'clue', T('名札のない遺体袋', 'Body bag with no tag', '이름표 없는 시신 가방')),
+      C('2F', '205（個室）', 'diary', T('患者の日記', 'Patient\'s diary', '환자의 일기')),
+      C('2F', 'ナースステーション', 'key', T('薬品庫の鍵', 'Drug storage key', '약품고 열쇠')),
+      C('2F', '汚物処理室', 'knife', T('血のついたメス', 'Bloodied scalpel', '피 묻은 메스'))
+    ],
+    school: [
+      C('1F', '職員室', 'memo', T('書き換えた成績表', 'Altered grade sheet', '고쳐 쓴 성적표')),
+      C('1F', '保健室', 'pills', T('来室記録と薬', 'Visit log and medicine', '방문 기록과 약')),
+      C('1F', '校長室', 'key', T('旧校舎の鍵', 'Key to the old building', '구교사 열쇠')),
+      C('2F', '音楽室', 'photo', T('肖像画の裏の写真', 'Photo behind a portrait', '초상화 뒤의 사진')),
+      C('2F', '理科準備室', 'idol', T('棚の奥の奇妙な像', 'Strange idol on a shelf', '선반 안쪽의 기묘한 석상')),
+      C('2F', '2年3組', 'diary', T('机の中の交換日記', 'Shared diary in a desk', '책상 속 교환 일기'))
+    ],
+    police: [
+      C('1F', '当直室', 'memo', T('空白のある当直日誌', 'Duty log with a gap', '공백이 있는 당직 일지')),
+      C('1F', '車庫', 'clue', T('タイヤについた赤土', 'Red clay on the tires', '타이어에 묻은 붉은 흙')),
+      C('2F', '証拠品保管庫', 'knife', T('封の切られた証拠品', 'Evidence with a broken seal', '봉인이 뜯긴 증거품')),
+      C('2F', '取調室2', 'diary', T('供述調書の写し', 'Copy of a statement', '진술 조서 사본')),
+      C('2F', '資料室', 'photo', T('未解決事件の写真', 'Cold case photos', '미해결 사건 사진')),
+      C('2F', '署長室', 'key', T('金庫の鍵', 'Safe key', '금고 열쇠')),
+      C('2F', '留置室3', 'clue', T('壁の引っかき傷', 'Scratches on the wall', '벽의 긁힌 자국'))
+    ],
+    library: [
+      C('B1', '貴重書庫', 'diary', T('鍵付きの古写本', 'Locked old manuscript', '잠긴 고사본')),
+      C('B1', '閉架書庫', 'memo', T('貸出記録の切れ端', 'Scrap of a loan record', '대출 기록 조각')),
+      C('B1', '機械室', 'clue', T('床下へ続く跡', 'Marks leading under the floor', '바닥 밑으로 이어진 흔적')),
+      C('1F', '郷土資料室', 'photo', T('古い集合写真', 'Old group photo', '오래된 단체 사진')),
+      C('1F', '児童コーナー', 'idol', T('誰のものでもない人形', 'A doll nobody owns', '주인 없는 인형')),
+      C('1F', '事務室', 'key', T('閉架書庫の鍵', 'Closed stacks key', '폐가 서고 열쇠'))
+    ],
+    university: [
+      C('1F', '大講義室', 'memo', T('黒板の消し残し', 'Half-erased blackboard', '덜 지운 칠판')),
+      C('1F', '学生ラウンジ', 'phone', T('置き忘れたスマホ', 'Forgotten phone', '두고 간 휴대폰')),
+      C('2F', '研究室3', 'diary', T('教授の研究ノート', 'Professor\'s notebook', '교수의 연구 노트')),
+      C('2F', '研究室5', 'idol', T('出土品の像', 'Excavated idol', '출토품 석상')),
+      C('2F', '実験室', 'pills', T('試薬の空き瓶', 'Empty reagent bottle', '빈 시약병')),
+      C('2F', '院生室', 'key', T('研究室3の合鍵', 'Spare key to Office 3', '연구실3 여벌 열쇠'))
+    ],
+    bar: [
+      C('B1', 'バー', 'memo', T('コースターの走り書き', 'Note on a coaster', '코스터의 메모')),
+      C('B1', 'VIPルーム', 'photo', T('密会の写真', 'Photo of a secret meeting', '밀회 사진')),
+      C('B1', 'キッチン', 'knife', T('隠されたナイフ', 'Hidden knife', '숨겨진 칼')),
+      C('B1', '事務室', 'diary', T('裏帳簿', 'Second set of books', '이중 장부')),
+      C('B1', '倉庫', 'key', T('VIPルームの鍵', 'VIP room key', 'VIP룸 열쇠'))
+    ],
+    livehouse: [
+      C('B1', '受付', 'phone', T('落とし物のスマホ', 'Lost phone', '분실물 휴대폰')),
+      C('B1', 'ホール', 'clue', T('床に落ちたピック', 'Guitar pick on the floor', '바닥에 떨어진 피크')),
+      C('B1', '楽屋1', 'diary', T('ボーカルの手帳', 'Singer\'s notebook', '보컬의 수첩')),
+      C('B1', '楽屋2', 'pills', T('楽屋の薬', 'Pills in the green room', '대기실의 약')),
+      C('B1', '機材倉庫', 'knife', T('ケーブルを切った刃物', 'Blade that cut the cables', '케이블을 자른 칼날')),
+      C('B1', '事務室', 'memo', T('脅迫状', 'Threatening letter', '협박장'))
+    ],
+    theatre: [
+      C('1F', '舞台', 'clue', T('奈落の蓋のずれ', 'Trapdoor lid out of place', '어긋난 무대 함정 뚜껑')),
+      C('1F', '客席', 'key', T('座席の下の鍵', 'Key under a seat', '좌석 밑의 열쇠')),
+      C('1F', '楽屋2', 'photo', T('鏡に貼られた写真', 'Photo taped to the mirror', '거울에 붙은 사진')),
+      C('1F', '楽屋3', 'memo', T('脅迫状', 'Threatening letter', '협박장')),
+      C('1F', '大道具倉庫', 'knife', T('本物の短剣', 'A real dagger', '진짜 단검')),
+      C('1F', '調整室', 'diary', T('キューシートの書き込み', 'Notes on the cue sheet', '큐시트의 메모'))
+    ],
+    haibyoin: [
+      C('B1', '解剖室', 'knife', T('錆びたメス', 'Rusted scalpel', '녹슨 메스')),
+      C('B1', 'カルテ庫', 'diary', T('消されたカルテ', 'Erased medical chart', '지워진 차트')),
+      C('B1', '隔離病室', 'memo', T('壁に刻まれた日付', 'Dates carved into the wall', '벽에 새긴 날짜')),
+      C('B1', '霊安室', 'key', T('遺体袋の中の鍵', 'Key inside a body bag', '시신 가방 속 열쇠')),
+      C('1F', '受付・会計', 'phone', T('なぜか通じる電話', 'A phone that still works', '어째선지 연결되는 전화')),
+      C('2F', '206（4床）', 'photo', T('看護師の集合写真', 'Group photo of the nurses', '간호사 단체 사진')),
+      C('2F', '処置室', 'pills', T('残された薬瓶', 'Abandoned pill bottles', '남겨진 약병'))
+    ],
+    haioku: [
+      C('1F', 'リビング', 'photo', T('1人だけ顔のない家族写真', 'Family photo, one face missing', '한 명만 얼굴 없는 가족사진')),
+      C('1F', 'キッチン', 'memo', T('冷蔵庫に貼られたメモ', 'Note on the fridge', '냉장고에 붙은 메모')),
+      C('1F', 'ファミリールーム', 'clue', T('床の黒い染み', 'Black stain on the floor', '바닥의 검은 얼룩')),
+      C('2F', '主寝室', 'diary', T('母親の日記', 'The mother\'s diary', '어머니의 일기')),
+      C('2F', '寝室3', 'idol', T('子供が作った人形', 'Doll a child made', '아이가 만든 인형')),
+      C('2F', '寝室2', 'key', T('屋根裏の鍵', 'Attic key', '다락방 열쇠'))
+    ],
+    haibiru: [
+      C('1F', '元テナント（店舗跡）', 'clue', T('シャッター裏の落書き', 'Graffiti behind the shutter', '셔터 뒤의 낙서')),
+      C('1F', '管理人室', 'diary', T('管理人日誌', 'Janitor\'s logbook', '관리인 일지')),
+      C('1F', '機械室', 'key', T('屋上の鍵', 'Rooftop key', '옥상 열쇠')),
+      C('2F', '事務所跡', 'memo', T('シュレッダーの残り', 'Shredder leftovers', '파쇄기 잔해')),
+      C('2F', '社長室', 'photo', T('破られた集合写真', 'Torn group photo', '찢긴 단체 사진')),
+      C('2F', '倉庫', 'knife', T('隠された凶器', 'Hidden weapon', '숨겨진 흉기'))
+    ],
+    crime: [
+      C('1F', '個室', 'diary', T('被害者の手帳', 'Victim\'s planner', '피해자의 수첩')),
+      C('1F', 'バルコニー', 'phone', T('最後の発信履歴', 'Last outgoing call', '마지막 발신 기록'))
+    ]
+  };
+
+  // 文字の幅（キャンバスで測る。測れないときは、日本語・韓国語は1文字 ≒ 文字サイズ、英数字は約0.6倍で見積もる）
+  let measureCtx = null;
+  function textWidth(str, size, weight = 600) {
+    if (!measureCtx && typeof document !== 'undefined') measureCtx = document.createElement('canvas').getContext('2d');
+    if (measureCtx && M.THEMES) {
+      measureCtx.font = `${weight} 100px ${M.THEMES.clean.font}`;
+      return (measureCtx.measureText(String(str)).width * size) / 100;
+    }
+    let w = 0;
+    for (const ch of String(str)) w += /[\u3000-\u30ff\u3400-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(ch) ? 1 : 0.6;
+    return w * size;
+  }
+
+  // 長い説明を2行に分ける（英語は空白で、日本語・韓国語は真ん中あたりで）
+  function wrapText(text) {
+    const chars = Array.from(text);
+    if (chars.length < 7) return text;
+    const mid = chars.length / 2;
+    let cut = -1;
+    chars.forEach((ch, i) => { if ((ch === ' ' || ch === '、' || ch === ',') && (cut < 0 || Math.abs(i - mid) < Math.abs(cut - mid))) cut = i; });
+    if (cut > 0 && Math.abs(cut - mid) < chars.length * 0.3) {
+      const keep = chars[cut] === ' ' ? 0 : 1;
+      return `${chars.slice(0, cut + keep).join('').trim()}\n${chars.slice(cut + 1).join('').trim()}`;
+    }
+    const at = Math.ceil(mid);
+    return `${chars.slice(0, at).join('')}\n${chars.slice(at).join('')}`;
+  }
+
+  const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+  // 部屋の中で w×h の空いている場所を探す（家具・ドアの開く範囲・部屋名・ほかの文字を避け、部屋の中央寄りを選ぶ）
+  function findSpot(f, room, w, h, lang) {
+    const inset = 0.35, step = 0.25;
+    const pad = (r, p) => ({ x: r.x - p, y: r.y - p, w: r.w + p * 2, h: r.h + p * 2 });
+    const blocks = [];
+    f.items.forEach(i => { if (!(M.ASSET[i.t] && M.ASSET[i.t].under)) blocks.push(pad(i, 0.12)); });
+    f.texts.forEach(t => {
+      const s = t.size || 0.7;
+      const tw = textWidth(M.pick(t.i18n || t.text, lang), s);
+      blocks.push({ x: t.x - tw / 2 - 0.15, y: t.y - s * 0.75, w: tw + 0.3, h: s * 1.5 });
+    });
+    // ドア・窓の前は空けておく。開き戸は開く側を扉の幅だけ、反対側と引き戸・窓は少しだけ
+    f.openings.forEach(o => {
+      const swingDoor = SWING.has(o.kind);
+      const near = M.OPEN[o.kind] && M.OPEN[o.kind].group === 'door' ? 0.6 : 0.4;
+      const plus = swingDoor && (o.side || 1) > 0 ? o.len + 0.1 : near;
+      const minus = swingDoor && (o.side || 1) < 0 ? o.len + 0.1 : near;
+      blocks.push(o.o === 'h' ? { x: o.x - 0.1, y: o.y - minus, w: o.len + 0.2, h: minus + plus } : { x: o.x - minus, y: o.y - 0.1, w: minus + plus, h: o.len + 0.2 });
+    });
+    f.walls.forEach(wl => blocks.push(pad({ x: Math.min(wl.x1, wl.x2), y: Math.min(wl.y1, wl.y2), w: Math.abs(wl.x2 - wl.x1), h: Math.abs(wl.y2 - wl.y1) }, 0.25)));
+    f.rooms.forEach(r => { if (r !== room && M.rectContains(room, r)) blocks.push(pad(r, 0.2)); });
+    // 部屋名（面積の表示があってもなくても重ならないように）
+    const named = { ...room, name: M.pick(room.name, lang) };
+    if (measureCtx && M.labelMetrics) {
+      ['none', 'm2'].forEach(showSize => {
+        const label = M.labelMetrics(measureCtx, named, { lang, showSize }, M.THEMES.clean);
+        if (label) blocks.push(pad(label.box, 0.2));
+      });
+    }
+    const target = { x: room.x + room.w / 2, y: room.y + room.h / 2 };
+    let best = null;
+    for (let y = room.y + inset; y + h <= room.y + room.h - inset + 1e-6; y += step) {
+      for (let x = room.x + inset; x + w <= room.x + room.w - inset + 1e-6; x += step) {
+        const r = { x, y, w, h };
+        if (blocks.some(b => overlaps(r, b))) continue;
+        const d = Math.hypot(x + w / 2 - target.x, y + h / 2 - target.y);
+        if (!best || d < best.d) best = { x, y, d };
+      }
+    }
+    return best;
+  }
+
+  function addClues(floors, id, lang) {
+    (CLUES[id] || []).forEach(clue => {
+      const f = floors.find(fl => M.pick(fl.name, 'ja') === clue.floor);
+      const room = f && f.rooms.find(r => M.pick(r.name, 'ja') === clue.room);
+      const a = M.ASSET[clue.t];
+      if (!room || !a) return;
+      const gap = 0.1;
+      // 1行 → 2行に折り返し → 文字を小さく、の順で入る形を探す。どれも入らなければ、小物だけが入る場所に置く
+      const one = M.pick(clue.text, lang), two = wrapText(one);
+      const tries = [[one, 0.42], [two, 0.42], [one, 0.34], [two, 0.34]];
+      let placed = null;
+      for (const [text, size] of tries) {
+        const lines = text.split('\n');
+        const tw = Math.max(...lines.map(l => textWidth(l, size))) + 0.2;
+        const bw = Math.max(a.w, tw), bh = a.h + gap + size * 1.25 * lines.length;
+        const spot = findSpot(f, room, bw, bh, lang);
+        if (spot) { placed = { spot, ox: (bw - a.w) / 2, text, size, lines: lines.length }; break; }
+      }
+      if (!placed) {
+        const spot = findSpot(f, room, a.w, a.h, lang) || { x: room.x + room.w / 2 - a.w / 2, y: room.y + 0.4 };
+        placed = { spot, ox: 0, text: two, size: 0.34, lines: two.split('\n').length };
+      }
+      const r2 = v => Math.round(v * 100) / 100;
+      const ix = r2(placed.spot.x + placed.ox), iy = r2(placed.spot.y);
+      f.items.push({ t: clue.t, x: ix, y: iy, w: a.w, h: a.h, rot: 0, clue: true });
+      f.texts.push({ text: placed.text, x: r2(ix + a.w / 2), y: r2(iy + a.h + gap + (placed.size * 1.25 * placed.lines) / 2), size: placed.size, bold: false, clue: true });
+    });
+  }
+
   /* テンプレートを現在の言語でプロジェクト用のフロアに変換する */
   function instantiate(id, lang, options = {}) {
     const tpl = TEMPLATES.find(t => t.id === id);
     if (!tpl) return null;
     const floors = tpl.build();
+    if (options.structureOnly) floors.forEach(f => { f.items = []; f.texts = []; });
+    if (options.clues) addClues(floors, id, lang);
     return floors.map(f => ({
       id: M.uid('f'),
       name: M.pick(f.name, lang),
       rooms: f.rooms.map(r => ({ ...r, id: M.uid('r'), name: M.pick(r.name, lang), plName: M.pick(r.plName, lang), note: M.pick(r.note, lang) })),
       walls: f.walls.map(w => ({ ...w, id: M.uid('w') })),
       openings: f.openings.map(o => ({ ...o, id: M.uid('o') })),
-      items: options.structureOnly ? [] : f.items.filter(i => M.ASSET[i.t]).map(i => ({ ...i, id: M.uid('i') })),
-      texts: options.structureOnly ? [] : f.texts.map(t => {
+      items: f.items.filter(i => M.ASSET[i.t]).map(i => ({ ...i, id: M.uid('i') })),
+      texts: f.texts.map(t => {
         const out = { ...t, id: M.uid('t'), text: t.i18n ? M.pick(t.i18n, lang) : M.pick(t.text, lang) };
         delete out.i18n;
         return out;
@@ -1893,5 +2152,5 @@
   }
 
   global.IMM = global.IMM || {};
-  Object.assign(global.IMM, { TEMPLATES, TEMPLATE_GROUPS, instantiateTemplate: instantiate });
+  Object.assign(global.IMM, { TEMPLATES, TEMPLATE_GROUPS, TEMPLATE_CLUES: CLUES, instantiateTemplate: instantiate });
 })(window);

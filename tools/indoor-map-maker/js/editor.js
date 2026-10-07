@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.02';
+  const VERSION = 'v1.03';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -101,6 +101,9 @@
     tplGroups: $('tplGroups'),
     tplGrid: $('tplGrid'),
     tplStructureOnly: $('tplStructureOnly'),
+    tplClues: $('tplClues'),
+    clueToggle: $('clueToggle'),
+    clueState: $('clueState'),
     expModal: $('expModal'),
     expOptions: $('expOptions'),
     expPreview: $('expPreview'),
@@ -115,6 +118,7 @@
     armed: null,
     sel: [],
     playerView: false,
+    showClues: true,
     grid: true,
     ghost: true,
     libTab: 'rooms',
@@ -125,7 +129,7 @@
     redo: [],
     rev: 0,
     clipboard: null,
-    exp: { range: 'current', view: 'pl', theme: '', px: 48, grid: false, transparent: false }
+    exp: { range: 'current', view: 'pl', clues: 'show', theme: '', px: 48, grid: false, transparent: false }
   };
   const view = { zoom: ZOOM_BASE, ox: 0, oy: 0, w: 0, h: 0, dpr: 1, dirty: false };
   const ui = {
@@ -179,6 +183,7 @@
     const d = dict();
     document.documentElement.lang = app.lang;
     document.title = d.meta.title;
+    syncClueToggle();
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', d.meta.description);
     document.querySelectorAll('[data-i18n]').forEach(node => { node.textContent = t(node.dataset.i18n); });
@@ -353,11 +358,13 @@
     if (!prefs) return;
     if (typeof prefs.grid === 'boolean') app.grid = prefs.grid;
     if (typeof prefs.ghost === 'boolean') app.ghost = prefs.ghost;
+    if (typeof prefs.showClues === 'boolean') app.showClues = prefs.showClues;
     if (['rooms', 'openings', 'furniture'].includes(prefs.libTab)) app.libTab = prefs.libTab;
     if (prefs.exp && typeof prefs.exp === 'object') {
       const e = prefs.exp;
       if (['current', 'all', 'each'].includes(e.range)) app.exp.range = e.range;
       if (['pl', 'gm'].includes(e.view)) app.exp.view = e.view;
+      if (['show', 'hide'].includes(e.clues)) app.exp.clues = e.clues;
       if ([24, 32, 48, 64, 96].includes(e.px)) app.exp.px = e.px;
       app.exp.grid = Boolean(e.grid);
       app.exp.transparent = Boolean(e.transparent);
@@ -366,7 +373,7 @@
 
   function savePrefs() {
     try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify({ grid: app.grid, ghost: app.ghost, libTab: app.libTab, exp: { ...app.exp, theme: '' } }));
+      localStorage.setItem(PREFS_KEY, JSON.stringify({ grid: app.grid, ghost: app.ghost, showClues: app.showClues, libTab: app.libTab, exp: { ...app.exp, theme: '' } }));
     } catch (error) { /* noop */ }
   }
 
@@ -517,8 +524,13 @@
     requestRender();
   }
 
+  /* 画面に見えている階（PL表示・隠し手がかりの表示を反映） */
+  function shownFloor(playerView = app.playerView) {
+    return M.visibleFloor(cur(), playerView, !app.showClues);
+  }
+
   function selectAll() {
-    const f = M.visibleFloor(cur(), app.playerView);
+    const f = shownFloor();
     const next = [];
     Object.entries(TYPE_KEY).forEach(([type, key]) => f[key].forEach(o => next.push({ type, id: o.id })));
     setSelection(next);
@@ -698,7 +710,7 @@
   const labelOpts = () => ({ playerView: app.playerView, showSize: app.project.showSize, hideNames: app.project.showNames === false, lang: app.lang });
 
   function hitTest(wx, wy, options = {}) {
-    const f = M.visibleFloor(cur(), app.playerView);
+    const f = shownFloor();
     const tol = 5 / view.zoom;
     const th = theme();
     for (let i = f.texts.length - 1; i >= 0; i--) {
@@ -822,11 +834,27 @@
     const ghost = app.ghost && app.project.active > 0 ? app.project.floors[app.project.active - 1] : null;
     M.drawFloor(c, cur(), {
       theme: th, zoom: z, lang: app.lang, showSize: app.project.showSize, hideNames: app.project.showNames === false,
-      playerView: app.playerView, editor: true, grid: app.grid, viewRect, ghost
+      playerView: app.playerView, hideClues: !app.showClues, editor: true, grid: app.grid, viewRect, ghost
     });
     drawOverlays(c, th);
+    if (!app.playerView) drawGmBadge(c, th);
     els.wrap.style.background = th.bg;
     positionMiniBar();
+  }
+
+  // GM表示中は作業スペースの左上に半透明の「GM用」を出す（PL表示と取り違えないように）
+  function drawGmBadge(c, th) {
+    const strip = els.toolStrip.getBoundingClientRect();
+    const wrap = els.canvas.getBoundingClientRect();
+    const x = Math.max(14, strip.right - wrap.left + 14);
+    c.save();
+    c.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    c.globalAlpha = 0.4;
+    c.font = '900 26px system-ui, sans-serif';
+    c.textBaseline = 'top';
+    c.fillStyle = th.gm;
+    c.fillText(t('badge.gm'), x, 12);
+    c.restore();
   }
 
   function outline(c, r, width, dash) {
@@ -1081,6 +1109,15 @@
     gmBtn.title = t(gmOnly ? 'mini.gmOnly' : 'mini.plVisible');
     gmBtn.setAttribute('aria-label', gmBtn.title);
     gmBtn.setAttribute('aria-pressed', String(gmOnly));
+    const clueBtn = els.miniBar.querySelector('[data-mini="clue"]');
+    clueBtn.hidden = !entries.every(e => e.type === 'item' || e.type === 'text');
+    if (!clueBtn.hidden) {
+      const clue = entries.every(e => e.obj.clue);
+      clueBtn.classList.toggle('is-clue', clue);
+      clueBtn.title = t(clue ? 'mini.clueOn' : 'mini.clueOff');
+      clueBtn.setAttribute('aria-label', clueBtn.title);
+      clueBtn.setAttribute('aria-pressed', String(clue));
+    }
     const lockBtn = els.miniBar.querySelector('[data-mini="lock"]');
     lockBtn.hidden = !rooms.length;
     if (rooms.length) {
@@ -1422,12 +1459,26 @@
     if (!entries.length) return;
     const gm = !entries.every(e => e.obj.gm);
     change(() => entries.forEach(e => { if (gm) e.obj.gm = true; else delete e.obj.gm; }));
-    if (app.playerView) {
-      const f = M.visibleFloor(cur(), true);
-      app.sel = app.sel.filter(s => f[TYPE_KEY[s.type]].some(o => o.id === s.id));
-    }
+    if (app.playerView) dropHiddenSelection();
     renderProps(true);
     requestRender();
+  }
+
+  // 虫めがねのボタン：隠し手がかりにする ⇔ ふつうの家具・文字
+  function toggleClue() {
+    const entries = selEntries().filter(e => e.type === 'item' || e.type === 'text');
+    if (!entries.length) return;
+    const clue = !entries.every(e => e.obj.clue);
+    change(() => entries.forEach(e => { if (clue) e.obj.clue = true; else delete e.obj.clue; }));
+    if (!app.showClues) dropHiddenSelection();
+    renderProps(true);
+    requestRender();
+  }
+
+  // 見えなくなったものを選択から外す
+  function dropHiddenSelection() {
+    const f = shownFloor();
+    app.sel = app.sel.filter(s => f[TYPE_KEY[s.type]].some(o => o.id === s.id));
   }
 
   function toggleLock() {
@@ -1684,7 +1735,7 @@
       d.moved = true;
       const x1 = Math.min(d.start.x, w.x), y1 = Math.min(d.start.y, w.y);
       d.rect = { x: x1, y: y1, w: Math.abs(w.x - d.start.x), h: Math.abs(w.y - d.start.y) };
-      const f = M.visibleFloor(cur(), app.playerView);
+      const f = shownFloor();
       const found = [];
       Object.entries(TYPE_KEY).forEach(([type, key]) => f[key].forEach(o => {
         const b = objBounds(type, o);
@@ -2027,6 +2078,7 @@
     if (event.code === 'KeyL') { toggleLock(); return; }
     if (event.code === 'KeyG') { app.grid = !app.grid; savePrefs(); renderProps(true); requestRender(); return; }
     if (event.code === 'KeyP') { setPlayerView(!app.playerView); return; }
+    if (event.code === 'KeyC') { setShowClues(!app.showClues); return; }
     if (event.key === '0') { fitView(); return; }
     if (event.key === '+' || event.key === '=' || event.key === ';') { zoomAt(view.w / 2, view.h / 2, 1.25); return; }
     if (event.key === '-') { zoomAt(view.w / 2, view.h / 2, 0.8); return; }
@@ -2066,9 +2118,33 @@
       btn.setAttribute('aria-pressed', String(active));
     });
     if (on) {
-      const f = M.visibleFloor(cur(), true);
-      app.sel = app.sel.filter(s => f[TYPE_KEY[s.type]].some(o => o.id === s.id));
+      dropHiddenSelection();
       renderProps();
+    }
+    requestRender();
+  }
+
+  /* 隠し手がかりの表示 ON/OFF（GM/PL表示とは別。部屋の中は見せて、手がかりだけ伏せる） */
+  function syncClueToggle() {
+    const on = app.showClues;
+    els.clueToggle.classList.toggle('is-on', on);
+    els.clueToggle.setAttribute('aria-pressed', String(on));
+    els.clueState.textContent = on ? 'ON' : 'OFF';
+    els.clueToggle.title = t(on ? 'bar.cluesOnTip' : 'bar.cluesOffTip');
+  }
+
+  function setShowClues(on, quiet) {
+    app.showClues = on;
+    syncClueToggle();
+    if (!on) {
+      dropHiddenSelection();
+      renderProps();
+    }
+    if (!quiet) {
+      savePrefs();
+      // 小物と説明文で1つの手がかり。小物がなければ文字の数で数える
+      const count = app.project.floors.reduce((n, f) => n + (f.items.filter(i => i.clue).length || f.texts.filter(x => x.clue).length), 0);
+      toast(t(on ? 'msg.cluesShown' : 'msg.cluesHidden', { n: count }), 'info', 2600);
     }
     requestRender();
   }
@@ -2526,7 +2602,7 @@
   }
 
   function selectionSig() {
-    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}${(getObj(s.type, s.id) || {}).gm ? ':G' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}`;
+    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}${(getObj(s.type, s.id) || {}).gm ? ':G' : ''}${(getObj(s.type, s.id) || {}).clue ? ':C' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}`;
   }
 
   function refreshProps() {
@@ -2650,6 +2726,7 @@
     body.appendChild(toggleField(t('props.flip'), () => it.flip, v => { it.flip = v || undefined; if (!v) delete it.flip; }));
     body.appendChild(colorField(t('props.color'), () => it.color || '', v => { it.color = v || undefined; if (!v) delete it.color; }, theme().furn.fill));
     body.appendChild(toggleField(t('props.gmOnly'), () => it.gm, v => { it.gm = v || undefined; if (!v) delete it.gm; }));
+    body.appendChild(toggleField(t('props.clue'), () => it.clue, v => { if (v) it.clue = true; else delete it.clue; }));
     body.appendChild(h('div', { class: 'props-sep' }));
     body.appendChild(actions([...orderButtons(), ...commonButtons()]));
   }
@@ -2690,6 +2767,7 @@
     body.appendChild(toggleField(t('props.bold'), () => x.bold !== false, v => { if (v) delete x.bold; else x.bold = false; }));
     body.appendChild(colorField(t('props.color'), () => x.color || '', v => { x.color = v || undefined; if (!v) delete x.color; }, theme().label));
     body.appendChild(toggleField(t('props.gmOnly'), () => x.gm, v => { x.gm = v || undefined; if (!v) delete x.gm; }));
+    body.appendChild(toggleField(t('props.clue'), () => x.clue, v => { if (v) x.clue = true; else delete x.clue; }));
     body.appendChild(h('div', { class: 'props-sep' }));
     body.appendChild(actions(commonButtons()));
   }
@@ -2697,6 +2775,8 @@
   function multiProps(body, entries) {
     body.appendChild(head(t('props.multi', { n: entries.length }), ''));
     body.appendChild(toggleField(t('props.gmOnly'), () => entries.every(e => e.obj.gm), v => entries.forEach(e => { if (v) e.obj.gm = true; else delete e.obj.gm; })));
+    const clueTargets = entries.filter(e => e.type === 'item' || e.type === 'text');
+    if (clueTargets.length) body.appendChild(toggleField(t('props.clue'), () => clueTargets.every(e => e.obj.clue), v => clueTargets.forEach(e => { if (v) e.obj.clue = true; else delete e.obj.clue; })));
     const roomsSel = entries.filter(e => e.type === 'room');
     if (roomsSel.length) {
       const locked = roomsSel.every(e => e.obj.locked);
@@ -2772,7 +2852,7 @@
   function loadTemplate(id) {
     const tpl = M.TEMPLATES.find(tp => tp.id === id);
     if (!tpl) return;
-    const floors = M.instantiateTemplate(id, app.lang, { structureOnly: els.tplStructureOnly.checked });
+    const floors = M.instantiateTemplate(id, app.lang, { structureOnly: els.tplStructureOnly.checked, clues: els.tplClues.checked });
     change(() => {
       const p = app.project;
       p.floors = floors;
@@ -2784,9 +2864,10 @@
     closeModals();
     setTool('select');
     fitView();
+    if (els.tplClues.checked && !app.showClues) setShowClues(true, true);
     renderAll();
     toast(t('msg.templateLoaded', { name: pick(tpl.name) }), 'success', 4000, undoAction());
-    track('template_load', { template: id, structure_only: els.tplStructureOnly.checked });
+    track('template_load', { template: id, structure_only: els.tplStructureOnly.checked, clues: els.tplClues.checked });
   }
 
   function newMap() {
@@ -2810,6 +2891,7 @@
   function openExport() {
     closeDrawers();
     if (!app.exp.theme) app.exp.theme = app.project.theme;
+    app.exp.clues = app.showClues ? 'show' : 'hide';
     els.expModal.hidden = false;
     renderExport();
   }
@@ -2822,7 +2904,8 @@
     return {
       theme: app.exp.theme || app.project.theme, px, lang: app.lang, showSize: app.project.showSize,
       hideNames: app.project.showNames === false,
-      playerView: app.exp.view === 'pl', grid: app.exp.grid, transparent: app.exp.transparent
+      playerView: app.exp.view === 'pl', hideClues: app.exp.clues === 'hide', grid: app.exp.grid, transparent: app.exp.transparent,
+      gmBadge: app.exp.view === 'pl' ? null : t('badge.gm')
     };
   }
 
@@ -2840,6 +2923,9 @@
     const multi = app.project.floors.length > 1;
     if (multi) box.appendChild(seg(t('exp.range'), 'range', [['current', t('exp.current')], ['all', t('exp.all')], ['each', t('exp.each')]]));
     box.appendChild(seg(t('exp.view'), 'view', [['pl', t('exp.pl')], ['gm', t('exp.gm')]]));
+    if (app.project.floors.some(f => f.items.some(i => i.clue) || f.texts.some(x => x.clue))) {
+      box.appendChild(seg(t('exp.clues'), 'clues', [['show', t('exp.cluesShow')], ['hide', t('exp.cluesHide')]]));
+    }
     const style = h('select', { class: 'select-input' });
     Object.entries(M.THEMES).forEach(([id, th]) => style.appendChild(h('option', { value: id }, pick(th.name))));
     style.value = app.exp.theme || app.project.theme;
@@ -2865,7 +2951,7 @@
     // プレビュー（小さめに描いて、実寸は計算で出す）
     els.expPreview.innerHTML = '';
     const floors = exportFloors();
-    if (!floors.some(f => M.floorBounds(M.visibleFloor(f, app.exp.view === 'pl')))) {
+    if (!floors.some(f => M.floorBounds(M.visibleFloor(f, app.exp.view === 'pl', app.exp.clues === 'hide')))) {
       els.expPreview.appendChild(h('p', { class: 'export-info' }, t('exp.empty')));
       info.textContent = '';
       return;
@@ -2890,6 +2976,7 @@
     const parts = [fileBase()];
     if (floor) parts.push(String(floor.name || '').replace(/[\\/:*?"<>|\s]+/g, '_'));
     parts.push(app.exp.view === 'pl' ? 'PL' : 'GM');
+    if (app.exp.clues === 'hide' && app.project.floors.some(f => f.items.some(i => i.clue) || f.texts.some(x => x.clue))) parts.push(t('exp.noClueSuffix'));
     return `${parts.filter(Boolean).join('_')}.png`;
   }
 
@@ -2900,14 +2987,14 @@
       ? app.project.floors.map(f => ({ floors: [f], name: exportName(f) }))
       : [{ floors: exportFloors(), name: exportName(app.exp.range === 'all' && multi ? null : (multi ? cur() : null)) }];
     for (const job of jobs) {
-      if (!job.floors.some(f => M.floorBounds(M.visibleFloor(f, app.exp.view === 'pl')))) continue;
+      if (!job.floors.some(f => M.floorBounds(M.visibleFloor(f, app.exp.view === 'pl', app.exp.clues === 'hide')))) continue;
       const canvas = M.renderImage(job.floors, exportOptions(px));
       const blob = await canvasBlob(canvas);
       if (blob) download(blob, job.name);
       await new Promise(r => setTimeout(r, 250));
     }
     toast(t('exp.saved'), 'success');
-    track('export_png', { range: app.exp.range, view: app.exp.view, px, theme: app.exp.theme || app.project.theme });
+    track('export_png', { range: app.exp.range, view: app.exp.view, clues: app.exp.clues, px, theme: app.exp.theme || app.project.theme });
   }
 
   async function copyExport() {
@@ -2976,6 +3063,7 @@
       if (action === 'hinge') flipHinge();
       if (action === 'lock') toggleLock();
       if (action === 'gm') toggleGm();
+      if (action === 'clue') toggleClue();
       if (action === 'duplicate') duplicateSelection();
       if (action === 'delete') deleteSelection();
     }));
@@ -2992,6 +3080,7 @@
     els.redoBtn.addEventListener('click', redo);
     els.exportBtn.addEventListener('click', openExport);
     els.viewToggle.querySelectorAll('[data-view]').forEach(btn => btn.addEventListener('click', () => setPlayerView(btn.dataset.view === 'pl')));
+    els.clueToggle.addEventListener('click', () => setShowClues(!app.showClues));
     els.zoomIn.addEventListener('click', () => zoomAt(view.w / 2, view.h / 2, 1.25));
     els.zoomOut.addEventListener('click', () => zoomAt(view.w / 2, view.h / 2, 0.8));
     els.zoomValue.addEventListener('click', fitView);
@@ -3048,7 +3137,7 @@
     get project() { return app.project; },
     get selection() { return app.sel.slice(); },
     get view() { return { ...view }; },
-    setTool, loadTemplate, fitView, undo, redo, toWorld, toScreen, openExport, openTemplates, switchFloor, setPlayerView
+    setTool, loadTemplate, fitView, undo, redo, toWorld, toScreen, openExport, openTemplates, switchFloor, setPlayerView, setShowClues
   };
 
   start();

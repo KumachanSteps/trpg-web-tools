@@ -841,6 +841,32 @@ body.is-dark .toast-action:hover { color: #ffffff; }
 .editor-bar .icon-button { width: 34px; height: 34px; font-size: 0.95rem; }
 .editor-bar .segment-group { padding: 2px; }
 .editor-bar .segment { padding: 5px 10px; font-size: 0.76rem; white-space: nowrap; }
+/* 隠し手がかりの ON/OFF（キャンバスの右上に浮かべる） */
+.clue-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 4px 8px 4px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-solid);
+  box-shadow: var(--shadow-soft);
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.clue-toggle:hover { border-color: var(--line-strong); }
+.clue-state { padding: 1px 7px; border-radius: 999px; background: var(--line); font-size: 0.68rem; letter-spacing: 0.04em; }
+.clue-toggle.is-on { border-color: color-mix(in srgb, var(--warn) 60%, transparent); color: var(--warn); }
+.clue-toggle.is-on .clue-state { background: var(--warn); color: #ffffff; }
+body.is-dark .clue-toggle.is-on .clue-state { color: #1b1206; }
 .bar-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 .canvas-wrap {
@@ -985,6 +1011,7 @@ body.is-dark .toast-action:hover { color: #ffffff; }
 .mini-bar button:disabled { opacity: 0.35; cursor: not-allowed; background: transparent; color: var(--ink); }
 .mini-bar button.is-gm { color: var(--danger); }
 .mini-bar button.is-on { background: var(--blue-soft); color: var(--blue); }
+.mini-bar button.is-clue { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
 .mini-bar svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 .floor-bar {
@@ -1117,6 +1144,7 @@ body.is-dark .toast-action:hover { color: #ffffff; }
 
 .modal h2 { margin: 0; font-size: 1.1rem; }
 .modal-intro { margin: -4px 0 0; color: var(--muted); font-size: 0.82rem; }
+.tpl-options { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .modal-head-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-right: 40px; }
 
 .tpl-groups { display: flex; flex-wrap: wrap; gap: 5px; }
