@@ -81,7 +81,8 @@
    * PL表示用の階。GM専用の部屋は壁の枠だけを残して中を伏せる（masked）。
    * 中にある家具・文字・壁・入れ子の部屋・内側のドアは見せない。部屋の縁にあるドア・窓は残す。
    */
-  function visibleFloor(floor, playerView) {
+  function visibleFloor(floor, playerView, hideClues) {
+    if (hideClues) floor = withoutClues(floor);
     if (!playerView) return floor;
     const hidden = floor.rooms.filter(r => r.gm);
     const inside = (x, y) => hidden.some(r => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h);
@@ -96,6 +97,15 @@
       items: floor.items.filter(i => !i.gm && !inside(i.x + i.w / 2, i.y + i.h / 2)),
       texts: floor.texts.filter(t => !t.gm && !inside(t.x, t.y))
     };
+  }
+
+  /*
+   * 隠し手がかり（clue: true の家具・文字）を除いた階。GM/PL表示とは別に切り替える。
+   * 部屋の中は見せたいが、手がかりはまだ見せたくないときに使う。
+   */
+  function withoutClues(floor) {
+    if (!floor.items.some(i => i.clue) && !floor.texts.some(t => t.clue)) return floor;
+    return { ...floor, items: floor.items.filter(i => !i.clue), texts: floor.texts.filter(t => !t.clue) };
   }
 
   /* ---------- 壁の自動生成 ---------- */

@@ -980,6 +980,108 @@
     c.restore();
   }
 
+  /* ---------- 手がかりの小物 ---------- */
+
+  function memo(c, S, w, h) {
+    c.save();
+    c.translate(w / 2, h / 2);
+    c.rotate(-0.12);
+    box(c, S, -w * 0.42, -h * 0.4, w * 0.84, h * 0.8, 0.02, S.fill);
+    thin(c, S, 0.55);
+    c.strokeStyle = S.softLine;
+    for (let i = 0; i < 3; i++) line(c, -w * 0.3, -h * 0.18 + i * h * 0.17, w * (i === 2 ? 0.08 : 0.3), -h * 0.18 + i * h * 0.17);
+    c.restore();
+  }
+
+  function diary(c, S, w, h) {
+    box(c, S, w * 0.06, h * 0.06, w * 0.88, h * 0.88, 0.04, S.wood);
+    c.fillStyle = S.dark;
+    c.fillRect(w * 0.06, h * 0.06, w * 0.14, h * 0.88);
+    c.strokeRect(w * 0.06, h * 0.06, w * 0.14, h * 0.88);
+    thin(c, S, 0.6);
+    c.strokeRect(w * 0.36, h * 0.3, w * 0.42, h * 0.22);
+    normal(c, S);
+  }
+
+  function keyItem(c, S, w, h) {
+    const r = Math.min(w * 0.2, h * 0.36);
+    c.save();
+    c.lineWidth = S.lw * 1.2;
+    c.strokeStyle = S.line;
+    c.fillStyle = S.yellow;
+    circle(c, S, w * 0.08 + r, h / 2, r, S.yellow);
+    circle(c, S, w * 0.08 + r, h / 2, r * 0.38, S.fill);
+    line(c, w * 0.08 + r * 2, h / 2, w * 0.94, h / 2);
+    line(c, w * 0.8, h / 2, w * 0.8, h * 0.8);
+    line(c, w * 0.92, h / 2, w * 0.92, h * 0.74);
+    c.restore();
+  }
+
+  function knife(c, S, w, h) {
+    c.beginPath();
+    c.moveTo(w * 0.42, h * 0.25);
+    c.lineTo(w * 0.98, h * 0.5);
+    c.lineTo(w * 0.42, h * 0.75);
+    c.closePath();
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    box(c, S, w * 0.02, h * 0.28, w * 0.36, h * 0.44, h * 0.12, S.dark);
+    line(c, w * 0.4, h * 0.12, w * 0.4, h * 0.88);
+  }
+
+  function photo(c, S, w, h) {
+    c.save();
+    c.translate(w / 2, h / 2);
+    c.rotate(0.1);
+    box(c, S, -w * 0.42, -h * 0.42, w * 0.84, h * 0.84, 0.02, S.fill);
+    c.fillStyle = S.soft;
+    c.fillRect(-w * 0.32, -h * 0.32, w * 0.64, h * 0.46);
+    thin(c, S, 0.6);
+    c.strokeRect(-w * 0.32, -h * 0.32, w * 0.64, h * 0.46);
+    c.beginPath();
+    c.arc(0, -h * 0.13, Math.min(w, h) * 0.1, 0, TAU);
+    c.moveTo(-w * 0.16, h * 0.14);
+    c.quadraticCurveTo(0, -h * 0.06, w * 0.16, h * 0.14);
+    c.stroke();
+    c.restore();
+  }
+
+  function phone(c, S, w, h) {
+    box(c, S, w * 0.1, h * 0.04, w * 0.8, h * 0.92, Math.min(w, h) * 0.16, S.dark);
+    c.fillStyle = S.water;
+    c.fillRect(w * 0.2, h * 0.14, w * 0.6, h * 0.66);
+    circle(c, S, w / 2, h * 0.88, Math.min(w, h) * 0.05, S.fill, true);
+  }
+
+  function pills(c, S, w, h) {
+    box(c, S, w * 0.24, h * 0.2, w * 0.52, h * 0.74, 0.06, S.water);
+    box(c, S, w * 0.2, h * 0.04, w * 0.6, h * 0.2, 0.04, S.fill);
+    thin(c, S, 0.6);
+    c.strokeRect(w * 0.3, h * 0.45, w * 0.4, h * 0.24);
+    normal(c, S);
+  }
+
+  function idol(c, S, w, h) {
+    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.44, S.soft);
+    c.save();
+    c.fillStyle = S.ritual;
+    c.beginPath();
+    c.ellipse(w / 2, h * 0.42, w * 0.18, h * 0.2, 0, 0, TAU);
+    c.fill();
+    c.stroke();
+    thin(c, S, 0.8);
+    c.strokeStyle = S.ritual;
+    for (let i = 0; i < 5; i++) {
+      const a = Math.PI * (0.15 + i * 0.175);
+      c.beginPath();
+      c.moveTo(w / 2 + Math.cos(a) * w * 0.12, h * 0.55);
+      c.quadraticCurveTo(w / 2 + Math.cos(a) * w * 0.3, h * 0.66, w / 2 + Math.cos(a) * w * 0.26, h * 0.82);
+      c.stroke();
+    }
+    c.restore();
+  }
+
   function markerIcon(symbol, color) {
     return (c, S, w, h) => {
       const r = Math.min(w, h) / 2 - 0.04;
@@ -1479,6 +1581,14 @@
 
     A('evidence', 'horror', 0.9, 0.9, evidence, { ja: '証拠マーカー', en: 'Evidence marker', ko: '증거 마커' }, { labelInside: true }),
     A('clue', 'horror', 1, 1, markerIcon('?', 'blue'), { ja: '手がかり（？）', en: 'Clue marker (?)', ko: '단서 마커(?)' }),
+    A('memo', 'horror', 0.8, 0.6, memo, { ja: 'メモ・紙片', en: 'Note', ko: '메모·종잇조각' }),
+    A('diary', 'horror', 1, 0.8, diary, { ja: '日記・手帳', en: 'Diary', ko: '일기장·수첩' }),
+    A('key', 'horror', 0.9, 0.45, keyItem, { ja: '鍵', en: 'Key', ko: '열쇠' }),
+    A('knife', 'horror', 1.2, 0.4, knife, { ja: '刃物', en: 'Knife', ko: '칼' }),
+    A('photo', 'horror', 0.8, 0.7, photo, { ja: '写真', en: 'Photo', ko: '사진' }),
+    A('phone', 'horror', 0.5, 0.9, phone, { ja: '携帯電話', en: 'Phone', ko: '휴대전화' }),
+    A('pills', 'horror', 0.6, 0.7, pills, { ja: '薬瓶', en: 'Pill bottle', ko: '약병' }),
+    A('idol', 'horror', 0.9, 0.9, idol, { ja: '奇妙な像', en: 'Strange idol', ko: '기묘한 석상' }),
     A('danger', 'horror', 1, 1, danger, { ja: '危険（！）', en: 'Danger (!)', ko: '위험(!)' }),
     A('blood', 'horror', 2, 2, blood, { ja: '血痕', en: 'Bloodstain', ko: '핏자국' }, { under: true }),
     A('body', 'horror', 2.2, 4, body, { ja: '人型の輪郭', en: 'Body outline', ko: '사람 윤곽' }, { under: true }),

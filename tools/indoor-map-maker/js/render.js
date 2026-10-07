@@ -26,7 +26,7 @@
         ritual: '#7b2d8e', ritualSoft: '#e7d3ee', flame: '#ffb13d', chalk: '#4b5563', rug: '#f3e6d5', wood: '#e9d3b1',
         blue: '#3a78d8', accentLine: '#5a616d'
       },
-      door: '#3b404a', arc: '#8a919c', window: '#5a616d', glass: '#9ccbee', gm: '#8b3fd1', font: SANS
+      door: '#3b404a', arc: '#8a919c', window: '#5a616d', glass: '#9ccbee', gm: '#8b3fd1', clue: '#d97706', font: SANS
     },
     mono: {
       name: { ja: 'モノクロ図面', en: 'Monochrome', ko: '흑백 도면' },
@@ -42,7 +42,7 @@
         ritual: '#222222', ritualSoft: '#eeeeee', flame: '#999999', chalk: '#333333', rug: '#f6f6f6', wood: '#f2f2f2',
         blue: '#444444', accentLine: '#333333'
       },
-      door: '#111111', arc: '#666666', window: '#333333', glass: '#ffffff', gm: '#7a3bb8', font: SANS
+      door: '#111111', arc: '#666666', window: '#333333', glass: '#ffffff', gm: '#7a3bb8', clue: '#b45309', font: SANS
     },
     blueprint: {
       name: { ja: 'ブループリント', en: 'Blueprint', ko: '청사진' },
@@ -56,7 +56,7 @@
         yellow: 'rgba(255,255,255,0.2)', ritual: '#ffd1f0', ritualSoft: 'rgba(255,255,255,0.12)', flame: '#ffe8a8', chalk: '#ffffff',
         rug: 'rgba(255,255,255,0.05)', wood: 'rgba(255,255,255,0.1)', blue: 'rgba(255,255,255,0.25)', accentLine: '#dbe8ff'
       },
-      door: '#f2f7ff', arc: '#9fbce6', window: '#dbe8ff', glass: 'rgba(255,255,255,0.35)', gm: '#ffd36b', font: SANS
+      door: '#f2f7ff', arc: '#9fbce6', window: '#dbe8ff', glass: 'rgba(255,255,255,0.35)', gm: '#ffd36b', clue: '#7cf0c8', font: SANS
     },
     paper: {
       name: { ja: '古びた図面', en: 'Old paper', ko: '낡은 도면' },
@@ -74,7 +74,7 @@
         ritual: '#6b2a2a', ritualSoft: '#dcc4ac', flame: '#d9922c', chalk: '#5d4830', rug: '#e6d2ac', wood: '#dcc198',
         blue: '#5d6f80', accentLine: '#5d4830'
       },
-      door: '#4a3826', arc: '#8a7152', window: '#5d4830', glass: '#d9d6c0', gm: '#8e3b8a', font: SERIF
+      door: '#4a3826', arc: '#8a7152', window: '#5d4830', glass: '#d9d6c0', gm: '#8e3b8a', clue: '#b5651d', font: SERIF
     },
     horror: {
       name: { ja: 'ホラー調査', en: 'Horror', ko: '호러 조사' },
@@ -92,7 +92,7 @@
         ritual: '#c43c3c', ritualSoft: '#4a2a2e', flame: '#ffb13d', chalk: '#e9e2d6', rug: '#352f33', wood: '#4a3c32',
         blue: '#5271a3', accentLine: '#b1a99c'
       },
-      door: '#d8d0c3', arc: '#8d867b', window: '#b1a99c', glass: '#3c4855', gm: '#e05d9b', font: SERIF
+      door: '#d8d0c3', arc: '#8d867b', window: '#b1a99c', glass: '#3c4855', gm: '#e05d9b', clue: '#ffb020', font: SERIF
     }
   };
 
@@ -668,6 +668,7 @@
     c.lineCap = 'round';
     asset.draw(c, S, local.w, local.h, item);
     c.restore();
+    if (item.clue && opts.editor) drawClueMark(c, item.x + item.w, item.y, theme, lw);
     if (item.gm && opts.editor) {
       c.save();
       c.strokeStyle = theme.gm;
@@ -685,6 +686,25 @@
       haloText(c, item.label, item.x + item.w / 2, item.y + item.h / 2, theme.label, theme.halo, size * 0.3);
       c.restore();
     }
+  }
+
+  /* 隠し手がかりの印（編集画面だけ）：右上に小さな虫めがね */
+  function drawClueMark(c, x, y, theme, lw) {
+    const r = 0.26;
+    c.save();
+    c.fillStyle = theme.clue || '#d97706';
+    c.beginPath();
+    c.arc(x, y, r + 0.1, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = '#ffffff';
+    c.lineWidth = Math.max(lw, 0.06);
+    c.lineCap = 'round';
+    c.beginPath();
+    c.arc(x - 0.04, y - 0.04, r * 0.48, 0, Math.PI * 2);
+    c.moveTo(x + r * 0.26, y + r * 0.26);
+    c.lineTo(x + r * 0.62, y + r * 0.62);
+    c.stroke();
+    c.restore();
   }
 
   /* ---------- 部屋ラベル ---------- */
@@ -785,7 +805,7 @@
     const lines = String(t.text || '').split('\n');
     lines.forEach((ln, i) => {
       const y = t.y + (i - (lines.length - 1) / 2) * size * 1.25;
-      haloText(c, ln, t.x, y, t.color || (t.gm ? theme.gm : theme.label), theme.halo, size * 0.3);
+      haloText(c, ln, t.x, y, t.color || (t.gm ? theme.gm : t.clue && opts.editor ? theme.clue : theme.label), theme.halo, size * 0.3);
     });
     c.restore();
   }
@@ -824,12 +844,12 @@
   }
 
   /**
-   * floor: フロアデータ / opts: { theme, zoom, lang, showSize, hideNames, playerView, editor, grid, viewRect, ghost }
+   * floor: フロアデータ / opts: { theme, zoom, lang, showSize, hideNames, playerView, hideClues, editor, grid, viewRect, ghost }
    * ctx は「1単位 = 1マス」に変換済みであること。
    */
   function drawFloor(c, floorIn, opts) {
     const theme = typeof opts.theme === 'string' ? THEMES[opts.theme] || THEMES.clean : opts.theme;
-    const floor = M.visibleFloor(floorIn, opts.playerView);
+    const floor = M.visibleFloor(floorIn, opts.playerView, opts.hideClues);
     const lw = lineWidth(opts.zoom);
     if (opts.viewRect && opts.background !== false) {
       c.fillStyle = theme.bg;
@@ -915,10 +935,10 @@
 
   /* ---------- 書き出し ---------- */
 
-  function exportBounds(floors, playerView) {
+  function exportBounds(floors, playerView, hideClues) {
     let box = null;
     floors.forEach(f => {
-      const b = M.floorBounds(M.visibleFloor(f, playerView));
+      const b = M.floorBounds(M.visibleFloor(f, playerView, hideClues));
       if (!b) return;
       if (!box) box = { ...b };
       else {
@@ -942,15 +962,15 @@
 
   /**
    * floors を 1枚の画像に描く（複数なら横に並べ、長くなりすぎるときは折り返す。フロア名を上に書く）
-   * opts: { theme, px (1マスのピクセル数), lang, showSize, hideNames, playerView, grid, transparent, margin, titles, gmBadge (GM用の画像に入れる文字) }
+   * opts: { theme, px (1マスのピクセル数), lang, showSize, hideNames, playerView, hideClues, grid, transparent, margin, titles, gmBadge (GM用の画像に入れる文字) }
    */
   function renderImage(floors, opts) {
     const theme = THEMES[opts.theme] || THEMES.clean;
     const margin = opts.margin == null ? 2 : opts.margin;
     const px = opts.px || 32;
-    const boxes = floors.map(f => M.floorBounds(M.visibleFloor(f, opts.playerView)) || { x: 0, y: 0, w: 10, h: 8 });
+    const boxes = floors.map(f => M.floorBounds(M.visibleFloor(f, opts.playerView, opts.hideClues)) || { x: 0, y: 0, w: 10, h: 8 });
     // 複数フロアは同じ基準位置で重なるように、全フロア共通の範囲を使う
-    const common = floors.length > 1 ? exportBounds(floors, opts.playerView) : null;
+    const common = floors.length > 1 ? exportBounds(floors, opts.playerView, opts.hideClues) : null;
     const titleH = floors.length > 1 || opts.titles ? 2 : 0;
     const frames = boxes.map(b => {
       const bb = common || b;
@@ -995,7 +1015,7 @@
       const view = { x: f.x, y: f.y, w: f.w, h: f.h };
       drawFloor(c, floor, {
         theme: opts.transparent ? { ...theme, bg: 'transparent' } : theme,
-        zoom: scale, lang: opts.lang, showSize: opts.showSize, hideNames: opts.hideNames, playerView: opts.playerView,
+        zoom: scale, lang: opts.lang, showSize: opts.showSize, hideNames: opts.hideNames, playerView: opts.playerView, hideClues: opts.hideClues,
         editor: false, grid: opts.grid, viewRect: view, background: false
       });
       if (titleH) {
