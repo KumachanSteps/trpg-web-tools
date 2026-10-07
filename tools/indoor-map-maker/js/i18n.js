@@ -223,6 +223,7 @@
       lockedSkip: 'ロック中の部屋はそのままにしました',
       untitled: '無題のマップ'
     },
+    badge: { gm: 'GM用' },
     newRoom: '部屋',
     newText: 'テキスト',
     newMapName: '新しいマップ',
@@ -455,6 +456,7 @@
       lockedSkip: 'Locked rooms were left as they are',
       untitled: 'Untitled map'
     },
+    badge: { gm: 'GM view' },
     newRoom: 'Room',
     newText: 'Text',
     newMapName: 'New map',
@@ -687,6 +689,7 @@
       lockedSkip: '잠긴 방은 그대로 두었습니다',
       untitled: '제목 없는 지도'
     },
+    badge: { gm: 'GM용' },
     newRoom: '방',
     newText: '텍스트',
     newMapName: '새 지도',

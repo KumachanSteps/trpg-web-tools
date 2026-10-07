@@ -942,7 +942,7 @@
 
   /**
    * floors を 1枚の画像に描く（複数なら横に並べ、長くなりすぎるときは折り返す。フロア名を上に書く）
-   * opts: { theme, px (1マスのピクセル数), lang, showSize, hideNames, playerView, grid, transparent, margin, titles }
+   * opts: { theme, px (1マスのピクセル数), lang, showSize, hideNames, playerView, grid, transparent, margin, titles, gmBadge (GM用の画像に入れる文字) }
    */
   function renderImage(floors, opts) {
     const theme = THEMES[opts.theme] || THEMES.clean;
@@ -971,8 +971,11 @@
         if (offAspect(cand) < offAspect(layout)) layout = cand;
       }
     }
+    // GM用の画像は上に「GM用」の帯を足して、PL用と取り違えないようにする
+    const badgeFont = Math.min(4, Math.max(1.1, layout.w * 0.025));
+    const badgeH = opts.gmBadge ? badgeFont * 1.6 : 0;
     const totalW = layout.w;
-    const totalH = layout.h;
+    const totalH = layout.h + badgeH;
     const scale = exportScale(totalW, totalH, px);
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(totalW * scale);
@@ -988,7 +991,7 @@
       const row = Math.floor(index / layout.cols);
       if (index % layout.cols === 0) offset = 0;
       c.save();
-      c.setTransform(scale, 0, 0, scale, (offset - f.x) * scale, (row * (fh + gap) - f.y) * scale);
+      c.setTransform(scale, 0, 0, scale, (offset - f.x) * scale, (badgeH + row * (fh + gap) - f.y) * scale);
       const view = { x: f.x, y: f.y, w: f.w, h: f.h };
       drawFloor(c, floor, {
         theme: opts.transparent ? { ...theme, bg: 'transparent' } : theme,
@@ -1005,6 +1008,17 @@
       c.restore();
       offset += f.w + gap;
     });
+    if (badgeH) {
+      c.save();
+      c.setTransform(scale, 0, 0, scale, 0, 0);
+      c.globalAlpha = 0.55;
+      c.font = `900 ${badgeFont}px ${theme.font}`;
+      c.textAlign = 'left';
+      c.textBaseline = 'middle';
+      c.fillStyle = theme.gm;
+      c.fillText(opts.gmBadge, badgeFont * 0.5, badgeH / 2 + badgeFont * 0.1);
+      c.restore();
+    }
     return canvas;
   }
 

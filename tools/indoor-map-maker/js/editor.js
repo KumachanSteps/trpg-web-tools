@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.02';
+  const VERSION = 'v1.03';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -825,8 +825,24 @@
       playerView: app.playerView, editor: true, grid: app.grid, viewRect, ghost
     });
     drawOverlays(c, th);
+    if (!app.playerView) drawGmBadge(c, th);
     els.wrap.style.background = th.bg;
     positionMiniBar();
+  }
+
+  // GM表示中は作業スペースの左上に半透明の「GM用」を出す（PL表示と取り違えないように）
+  function drawGmBadge(c, th) {
+    const strip = els.toolStrip.getBoundingClientRect();
+    const wrap = els.canvas.getBoundingClientRect();
+    const x = Math.max(14, strip.right - wrap.left + 14);
+    c.save();
+    c.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    c.globalAlpha = 0.4;
+    c.font = '900 26px system-ui, sans-serif';
+    c.textBaseline = 'top';
+    c.fillStyle = th.gm;
+    c.fillText(t('badge.gm'), x, 12);
+    c.restore();
   }
 
   function outline(c, r, width, dash) {
@@ -2822,7 +2838,8 @@
     return {
       theme: app.exp.theme || app.project.theme, px, lang: app.lang, showSize: app.project.showSize,
       hideNames: app.project.showNames === false,
-      playerView: app.exp.view === 'pl', grid: app.exp.grid, transparent: app.exp.transparent
+      playerView: app.exp.view === 'pl', grid: app.exp.grid, transparent: app.exp.transparent,
+      gmBadge: app.exp.view === 'pl' ? null : t('badge.gm')
     };
   }
 
