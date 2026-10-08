@@ -14,8 +14,7 @@
     END: 'end',
     SCENARIO: 'scenario',
     DATE: 'date',
-    AUTHOR: 'author',
-    HASHTAG: 'hashtag'
+    AUTHOR: 'author'
   });
 
   const COMMON_STYLE_TARGETS = [
@@ -67,6 +66,10 @@
       GM: 'ɢᴍ',
       'KPC/KP': 'ᴋᴘᴄ/ᴋᴘ',
       SKP: 'ꜱᴋᴘ',
+      KPC: 'ᴋᴘᴄ',
+      'KP/KPC': 'ᴋᴘ/ᴋᴘᴄ',
+      SGM: 'ꜱɢᴍ',
+      DPC: 'ᴅᴘᴄ',
       '作/KP': '作/ᴋᴘ',
       進行: '進行'
     }[role] || String(role || '').toLowerCase();
@@ -129,256 +132,217 @@
     return out;
   }
 
-  function addGMs(parts, data, options = {}) {
-    data.gms.forEach((gm, index) => {
-      if (index > 0 && options.joiner) parts.push(fixed(options.joiner));
-      parts.push(...roleParts(gm, options));
-      if (!options.noLineBreak) parts.push(lineBreak());
-    });
+  // ---- 15種のテンプレート（囲み装飾つき） ----
+  // 日付・タグ・敬称略の注記は入れない。感想は renderParts で囲みの外に付ける。
+
+  const sys = data => part(TARGET_TYPES.SYSTEM, data.system);
+  const scen = data => part(TARGET_TYPES.SCENARIO, data.scenario);
+  const end = data => part(TARGET_TYPES.END, data.result);
+
+  function gmLines(data, { indent = '', separator = '：', small = false } = {}) {
+    const out = [];
+    data.gms.forEach(gm => out.push(fixed(indent), ...roleParts(gm, { small, separator }), lineBreak()));
+    return out;
   }
 
-  function addPlayers(parts, data, options = {}) {
-    const separator = options.separator ?? ' / ';
+  function playerLines(data, { indent = '', slotSep = '：', nameSep = ' / ', withSlot = true } = {}) {
+    const out = [];
     data.players.forEach(player => {
-      const slot = slotParts(player);
-      if (options.arrow) parts.push(fixed(options.arrow));
-      if (slot.length) parts.push(...slot, fixed(options.afterSlot ?? ': '));
-      parts.push(...playerNameParts(player, data, separator), lineBreak());
+      out.push(fixed(indent));
+      const slot = withSlot ? slotParts(player) : [];
+      if (slot.length) out.push(...slot, fixed(slotSep));
+      out.push(...playerNameParts(player, data, nameSep), lineBreak());
     });
+    return out;
   }
 
-  function simpleTitle(data, quote = '「', endQuote = '」') {
-    return [
-      part(TARGET_TYPES.SYSTEM, data.system),
-      lineBreak(),
-      fixed(quote),
-      part(TARGET_TYPES.SCENARIO, data.scenario),
-      fixed(endQuote),
-      blankLine()
-    ];
+  function slotHeaderValue(data) {
+    const shown = data.players.find(shouldShowSlot);
+    const mode = participantHeaderValue(data).replace('/', ' / ');
+    if (!shown) return mode;
+    const prefix = String(shown.slot).replace(/\d+$/, '');
+    return `${prefix} / ${mode}`;
   }
 
-  function classicBuild(data) {
-    const parts = [...simpleTitle(data)];
-    addGMs(parts, data);
-    parts.push(blankLine(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    addPlayers(parts, data);
-    parts.push(blankLine(), part(TARGET_TYPES.END, data.result), blankLine(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
+  // ｜KP ↵ 　名前 のようにラベルと名前を2行にする
+  function labeledGmLines(data, { mark = '｜', indent = '　', small = false } = {}) {
+    const out = [];
+    data.gms.forEach(gm => out.push(fixed(mark), part(TARGET_TYPES.ROLE, small ? smallRole(gm.role) : gm.role), lineBreak(), fixed(indent), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
+    return out;
   }
 
-  function minimalBuild(data) {
-    const parts = [
-      part(TARGET_TYPES.SYSTEM, data.system),
-      lineBreak(),
-      fixed('『'),
-      part(TARGET_TYPES.SCENARIO, data.scenario),
-      fixed('』'),
-      blankLine()
-    ];
-    addGMs(parts, data, { separator: '：' });
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    addPlayers(parts, data);
-    parts.push(blankLine(), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
+  function lineSandwichBuild(data) {
+    const line = '⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·';
+    return lineJoin([
+      sys(data), lineBreak(), fixed('『'), scen(data), fixed('』'), lineBreak(),
+      fixed(line + '\n'), ...gmLines(data),
+      part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak(),
+      ...playerLines(data),
+      fixed(line + '\n'), end(data)
+    ]);
   }
 
-  function frameBuild(data) {
-    const parts = [
-      fixed('✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦\n'),
-      fixed('      '), part(TARGET_TYPES.SYSTEM, data.system), lineBreak(),
-      fixed('   　　'), part(TARGET_TYPES.SCENARIO, data.scenario), blankLine()
-    ];
-    data.gms.forEach(gm => parts.push(fixed('  　'), part(TARGET_TYPES.ROLE, smallRole(gm.role)), fixed('┊'), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
-    parts.push(fixed('  　'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data, 'small-bar')), lineBreak());
-    data.players.forEach(player => {
-      parts.push(fixed('  　'));
-      const slot = slotParts(player);
-      if (slot.length) parts.push(...slot, fixed(' '));
-      parts.push(...playerNameParts(player, data, ' | '), lineBreak());
-    });
-    parts.push(fixed('  　── '), part(TARGET_TYPES.END, data.result), fixed(' ──\n'), part(TARGET_TYPES.DATE, data.date), lineBreak(), fixed('✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦\n'), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
+  function thinRuleBuild(data) {
+    const line = '────────────';
+    return lineJoin([
+      fixed(line + '\n'), sys(data), lineBreak(), fixed('「'), scen(data), fixed('」'), blankLine(),
+      ...gmLines(data),
+      part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak(),
+      ...playerLines(data), lineBreak(),
+      end(data), lineBreak(), fixed(line)
+    ]);
   }
 
-  function asteriskFrameBuild(data) {
-    const border = '✼••┈┈••✼••┈┈••✼';
-    const parts = [fixed(border + '\n    '), part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('　'), part(TARGET_TYPES.SCENARIO, data.scenario), lineBreak(), fixed(border + '\n')];
-    addGMs(parts, data);
-    parts.push(blankLine(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    addPlayers(parts, data);
-    parts.push(blankLine(), part(TARGET_TYPES.END, data.result || 'END'), lineBreak(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
+  function heavyRuleBuild(data) {
+    const line = '━━━╋━━━━╋━━━';
+    return lineJoin([
+      fixed(line + '\n'), sys(data), fixed('『'), scen(data), fixed('』'), lineBreak(),
+      ...gmLines(data), lineBreak(),
+      part(TARGET_TYPES.PARTICIPANT_HEADER, slotHeaderValue(data)), lineBreak(),
+      ...playerLines(data, { slotSep: ' ┊ ' }),
+      fixed(line + '\n'), end(data)
+    ]);
   }
 
-  function fancyBuild(data) {
-    const parts = [fixed('⟡.·*.····························⟡.·*.\n '), part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('　     ◤ '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' ◢\n\n')];
-    data.gms.forEach(gm => parts.push(fixed(' '), part(TARGET_TYPES.ROLE, gm.role), fixed(' '), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
-    parts.push(blankLine(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    data.players.forEach(player => {
-      const slot = slotParts(player);
-      if (slot.length) parts.push(fixed(' '), ...slot, lineBreak());
-      parts.push(fixed(' ┗ '), ...playerNameParts(player, data, ' | '), lineBreak());
-    });
-    parts.push(blankLine(), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function blockBuild(data) {
-    const parts = [fixed('▮     '), part(TARGET_TYPES.SYSTEM, data.system), fixed('     ▮\n\n  『  '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed('  』\n\n')];
-    addGMs(parts, data, { small: true, separator: ' ' });
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data, 'small-slash')), lineBreak());
-    data.players.forEach(player => {
-      parts.push(fixed('   '));
-      const slot = slotParts(player);
-      if (slot.length) parts.push(...slot, fixed(' '));
-      parts.push(...playerNameParts(player, data, '｜'), lineBreak());
-    });
-    parts.push(lineBreak(), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function hoFocusBuild(data) {
-    const parts = [part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('『 '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' 』\n\n')];
-    data.gms.forEach(gm => parts.push(part(TARGET_TYPES.ROLE, gm.role), fixed(' '), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    data.players.forEach(player => {
-      const slot = slotParts(player);
-      if (slot.length) parts.push(...slot, lineBreak(), fixed('　　- '));
-      parts.push(...playerNameParts(player, data), lineBreak());
-    });
-    parts.push(blankLine(), fixed('-　'), part(TARGET_TYPES.END, data.result), fixed('　-\n'), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function kpcPairBuild(data) {
-    const firstGm = data.gms[0] || { name: 'KPC名 | KP名' };
-    const firstPlayer = data.players[0] || { pc: '探索者A', pl: 'PL名A', slot: 'PC/PL' };
-    const parts = [part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('【 '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' 】\n\n| '), part(TARGET_TYPES.PARTICIPANT_HEADER, 'ᴋᴘᴄ・ᴋᴘ'), lineBreak(), fixed('  '), part(TARGET_TYPES.GM_NAME, firstGm.name), lineBreak(), fixed('| '), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data, 'small-dot')), lineBreak(), fixed('  '), ...playerNameParts(firstPlayer, data, ' | '), blankLine(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags)];
-    return lineJoin(parts);
-  }
-
-  function emokloreBuild(data) {
-    const parts = [fixed('✧\n   '), part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('     「 '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' 」\n'), fixed(' 　　    Date. '), part(TARGET_TYPES.DATE, data.date), blankLine()];
-    data.gms.forEach(gm => parts.push(part(TARGET_TYPES.ROLE, gm.role), fixed(' '), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    addPlayers(parts, data, { arrow: '┗ ', afterSlot: ' ', separator: ' | ' });
-    parts.push(blankLine(), fixed('✧ '), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function wideTitleBuild(data) {
-    const parts = [part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('◤　'), part(TARGET_TYPES.SCENARIO, data.scenario), fixed('　◢\n\n')];
-    addGMs(parts, data, { separator: '：' });
-    parts.push(blankLine(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    addPlayers(parts, data);
-    parts.push(blankLine(), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function zigzagBuild(data) {
-    const border = '◢◤◢◤◢◤◢◤◢◤◢';
-    const parts = [fixed(border + '\n　'), part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('　　　'), part(TARGET_TYPES.SCENARIO, data.scenario), blankLine(), fixed(border + '\n')];
-    addGMs(parts, data, { separator: ' ' });
-    parts.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    data.players.forEach(player => {
-      const slot = slotParts(player);
-      if (slot.length) parts.push(...slot, lineBreak(), fixed('  - '));
-      parts.push(...playerNameParts(player, data), lineBreak());
-    });
-    parts.push(blankLine(), fixed('- '), part(TARGET_TYPES.END, data.result), fixed(' -\n'), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function cornerFrameBuild(data) {
-    const parts = [fixed('◤￣￣￣￣￣￣￣￣￣\n '), part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('        '), part(TARGET_TYPES.SCENARIO, data.scenario), blankLine(), fixed('＿＿＿＿＿＿＿＿＿◢\n')];
-    addGMs(parts, data);
-    parts.push(blankLine(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak());
-    data.players.forEach(player => parts.push(fixed(' '), ...playerNameParts(player, data), lineBreak()));
-    parts.push(blankLine(), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function triangleHeadingBuild(data) {
-    const parts = [fixed('▸ '), part(TARGET_TYPES.SYSTEM, data.system), blankLine(), fixed('- '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' -\n\n')];
-    data.gms.forEach(gm => parts.push(fixed('▸ '), part(TARGET_TYPES.ROLE, gm.role), fixed(': '), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
-    parts.push(fixed('▸ '), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), fixed(': '));
-    data.players.forEach((player, index) => {
-      if (index > 0) parts.push(lineBreak(), fixed('               '));
-      const slot = slotParts(player);
-      if (slot.length) parts.push(...slot, fixed(' '));
-      parts.push(...playerNameParts(player, data));
-    });
-    parts.push(blankLine(), fixed('▸ '), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function scenarioClearBuild(data) {
-    const parts = [fixed('⧉ '), part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('.　　'), part(TARGET_TYPES.SCENARIO, data.scenario), lineBreak()];
-    if (data.author) parts.push(fixed('.　　　　'), part(TARGET_TYPES.AUTHOR, data.author), lineBreak());
-    parts.push(lineBreak());
-    data.gms.forEach(gm => parts.push(fixed('｜'), part(TARGET_TYPES.ROLE, smallRole(gm.role)), lineBreak(), fixed('　'), part(TARGET_TYPES.GM_NAME, gm.name), blankLine()));
-    parts.push(fixed('｜'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data, 'small-dot')), lineBreak());
-    data.players.forEach(player => parts.push(fixed('　'), ...playerNameParts(player, data), lineBreak()));
-    parts.push(blankLine(), fixed('　- '), part(TARGET_TYPES.END, data.result || 'scenario clear'), fixed(' -\n'), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
-  }
-
-  function handwrittenTitleBuild(data) {
-    const border = '┈┈┈┈┈┈┈┈┈';
-    const parts = [part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('⌜ '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed(' ⌟\n'), fixed(border + '\n'), fixed('✧'), part(TARGET_TYPES.ROLE, 'KP'), lineBreak()];
-    data.gms.forEach(gm => parts.push(fixed('  ▹'), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
-    parts.push(blankLine(), fixed('✧'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data).replace('/', '')), lineBreak());
-    data.players.forEach(player => {
-      parts.push(fixed('  ▹'));
-      const slot = slotParts(player);
-      if (slot.length) parts.push(...slot, fixed(' '));
-      parts.push(...playerNameParts(player, data, ' / '), lineBreak());
-    });
-    parts.push(blankLine(), fixed('✧'), part(TARGET_TYPES.END, data.result), lineBreak(), fixed(border + 'ᝰ✍︎ ꙳⋆\n'), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
+  function starFrameBuild(data) {
+    const line = '✦   ┈┈┈┈┈┈┈┈┈┈   ✦';
+    return lineJoin([
+      fixed(line + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　　'), scen(data), blankLine(),
+      ...gmLines(data, { indent: '　', separator: '┊' }),
+      fixed('　'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data, 'bar')), lineBreak(),
+      ...playerLines(data, { indent: '　', slotSep: ' ', nameSep: ' | ' }),
+      fixed('　── '), end(data), fixed(' ──\n'), fixed(line)
+    ]);
   }
 
   function doubleLineBuild(data) {
-    const border = '══════════════';
-    const parts = [fixed(border + '\n   '), part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('　'), part(TARGET_TYPES.SCENARIO, data.scenario), lineBreak(), fixed(border + '\n\n')];
-    data.gms.forEach(gm => parts.push(part(TARGET_TYPES.ROLE, smallRole(gm.role)), fixed('：'), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
-    data.players.forEach(player => {
-      const slot = slotParts(player);
-      if (slot.length) parts.push(...slot, lineBreak());
-      parts.push(fixed('　　 '), ...playerNameParts(player, data), lineBreak());
-    });
-    parts.push(blankLine(), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
+    const line = '══════════════';
+    return lineJoin([
+      fixed(line + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　『'), scen(data), fixed('』'), lineBreak(), fixed(line + '\n'),
+      ...gmLines(data),
+      ...playerLines(data), lineBreak(),
+      end(data)
+    ]);
   }
 
-  function ribbonTitleBuild(data) {
-    const parts = [part(TARGET_TYPES.SYSTEM, data.system), lineBreak(), fixed('　‧₊˚ ୨  '), part(TARGET_TYPES.SCENARIO, data.scenario), fixed('  ୧ ˚₊\n\n'), part(TARGET_TYPES.ROLE, 'KP'), fixed('…\n')];
-    data.gms.forEach(gm => parts.push(fixed('　'), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
-    parts.push(blankLine(), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), fixed('…\n'));
-    data.players.forEach(player => parts.push(fixed('　'), ...playerNameParts(player, data), lineBreak()));
-    parts.push(blankLine(), part(TARGET_TYPES.END, data.result), lineBreak(), part(TARGET_TYPES.DATE, data.date), lineBreak(), part(TARGET_TYPES.HASHTAG, data.hashtags));
-    return lineJoin(parts);
+  function cornerBuild(data) {
+    return lineJoin([
+      // 囲みはシステム名とタイトルだけ。参加者は囲みの下に字下げで並べる
+      fixed('◤￣￣￣￣￣￣￣￣￣\n'), fixed('　'), sys(data), lineBreak(), fixed('　　『'), scen(data), fixed('』'), lineBreak(),
+      fixed('＿＿＿＿＿＿＿＿＿◢'), blankLine(),
+      ...gmLines(data, { indent: '　' }),
+      ...playerLines(data, { indent: '　' }), lineBreak(),
+      end(data)
+    ]);
+  }
+
+  function heartLineBuild(data) {
+    const line = 'ෆ・┈・┈・⊹ ・┈・┈・ෆ';
+    return lineJoin([
+      sys(data), lineBreak(), fixed(line + '\n'), fixed('【 '), scen(data), fixed(' 】'), blankLine(),
+      ...labeledGmLines(data),
+      fixed('｜'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data, 'dot')), lineBreak(),
+      ...playerLines(data, { indent: '　', slotSep: ' ' }), lineBreak(),
+      fixed(line + '\n'), end(data)
+    ]);
+  }
+
+  function labelBuild(data) {
+    const out = [fixed('⧉ '), sys(data), lineBreak(), fixed('.　'), scen(data), lineBreak()];
+    if (data.author) out.push(fixed('.　'), part(TARGET_TYPES.AUTHOR, data.author), lineBreak());
+    out.push(lineBreak(), ...labeledGmLines(data),
+      fixed('｜'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data, 'dot')), lineBreak(),
+      ...playerLines(data, { indent: '　', slotSep: ' ' }), lineBreak(),
+      fixed('　- '), end(data), fixed(' -'));
+    return lineJoin(out);
+  }
+
+  function titleBracketBuild(data) {
+    const out = [sys(data), lineBreak(), fixed('◣ '), scen(data), fixed(' ◥'), blankLine()];
+    data.gms.forEach(gm => out.push(fixed('- '), ...roleParts(gm, { separator: ' ' }), lineBreak()));
+    out.push(...playerLines(data, { indent: '- ', slotSep: ' ', nameSep: '　' }), lineBreak(), fixed('➤ '), end(data));
+    return lineJoin(out);
+  }
+
+  function ribbonBuild(data) {
+    const out = [sys(data), lineBreak(), fixed('‧₊˚ ୨ '), scen(data), fixed(' ୧ ˚₊'), blankLine()];
+    data.gms.forEach(gm => out.push(part(TARGET_TYPES.ROLE, gm.role), fixed('…\n　'), part(TARGET_TYPES.GM_NAME, gm.name), lineBreak()));
+    out.push(part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), fixed('…\n'),
+      ...playerLines(data, { indent: '　', slotSep: ' ' }), lineBreak(),
+      fixed('‧₊˚ '), end(data), fixed(' ˚₊'));
+    return lineJoin(out);
+  }
+
+  function moonStarBuild(data) {
+    const line = '─── ･ ｡☆*☽*☆ﾟ.─────';
+    return lineJoin([
+      fixed(line + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　『'), scen(data), fixed('』'), blankLine(),
+      ...gmLines(data, { indent: '　' }),
+      fixed('　'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak(),
+      ...playerLines(data, { indent: '　' }), lineBreak(),
+      fixed('　'), end(data), lineBreak(), fixed(line)
+    ]);
+  }
+
+  function asteriskBuild(data) {
+    const line = '✼••┈┈••✼••┈┈••✼';
+    return lineJoin([
+      fixed(line + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　'), scen(data), lineBreak(), fixed(line + '\n'),
+      ...gmLines(data),
+      part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak(),
+      ...playerLines(data), lineBreak(),
+      end(data)
+    ]);
+  }
+
+  function dotFrameBuild(data) {
+    const line = '⟡.·*.··················⟡.·*.';
+    return lineJoin([
+      fixed(line + '\n'), fixed(' '), sys(data), lineBreak(), fixed('　◤ '), scen(data), fixed(' ◢'), blankLine(),
+      ...gmLines(data, { indent: ' ', separator: ' ' }),
+      fixed(' '), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak(),
+      ...playerLines(data, { indent: ' ┗ ', slotSep: ' ', nameSep: ' | ' }), lineBreak(),
+      fixed(' '), end(data), lineBreak(), fixed(line)
+    ]);
+  }
+
+  function handwrittenBuild(data) {
+    const line = '┈┈┈┈┈┈┈┈┈';
+    return lineJoin([
+      sys(data), lineBreak(), fixed('⌜ '), scen(data), fixed(' ⌟'), lineBreak(), fixed(line + '\n'),
+      ...labeledGmLines(data, { mark: '✧', indent: '　▹' }),
+      fixed('✧'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak(),
+      ...playerLines(data, { indent: '　▹', slotSep: ' ' }), lineBreak(),
+      fixed('✧'), end(data), lineBreak(), fixed(line + 'ᝰ✍︎ ꙳⋆')
+    ]);
+  }
+
+  function blockBuild(data) {
+    return lineJoin([
+      fixed('▮　'), sys(data), fixed('　▮'), blankLine(), fixed('　『 '), scen(data), fixed(' 』'), blankLine(),
+      ...gmLines(data, { separator: ' ' }),
+      part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak(),
+      ...playerLines(data, { indent: '　', slotSep: ' ', nameSep: '｜' }), lineBreak(),
+      fixed('▮ '), end(data)
+    ]);
   }
 
   const REPORT_STYLES = [
-    { id: 'classic', label: 'クラシック：標準・読みやすい', styleTargets: COMMON_STYLE_TARGETS, build: classicBuild },
-    { id: 'minimal', label: 'ミニマル：短文シンプル', styleTargets: COMMON_STYLE_TARGETS, build: minimalBuild },
-    { id: 'frame', label: '✦フレーム：✦ ┈┈┈┈┈┈ ✦', styleTargets: COMMON_STYLE_TARGETS, build: frameBuild },
-    { id: 'asterisk-frame', label: '✼フレーム：✼••┈┈••✼••┈┈••✼', styleTargets: COMMON_STYLE_TARGETS, build: asteriskFrameBuild },
-    { id: 'fancy', label: '⟡フレーム：⟡.·*.·····················⟡.·*.', styleTargets: COMMON_STYLE_TARGETS, build: fancyBuild },
-    { id: 'block', label: '▮ ブロック：▮ システム名 ▮', styleTargets: COMMON_STYLE_TARGETS, build: blockBuild },
-    { id: 'ho-focus', label: 'HO一覧スタイル：HO一覧重視', styleTargets: COMMON_STYLE_TARGETS, build: hoFocusBuild },
-    { id: 'kpc-pair', label: 'KPCタイマン：| ᴋᴘᴄ・ᴋᴘ ＆ | ᴘᴄ・ᴘʟ', styleTargets: COMMON_STYLE_TARGETS, build: kpcPairBuild },
-    { id: 'emoklore', label: '✧上下囲み：✧　　　　　　　　✧', styleTargets: COMMON_STYLE_TARGETS, build: emokloreBuild },
-    { id: 'wide-title', label: '◤ シナリオ名 ◢ ɢᴍ: ᴘʟ/ᴘᴄ', styleTargets: COMMON_STYLE_TARGETS, build: wideTitleBuild },
-    { id: 'zigzag', label: '◢◤◢ シナリオ名 ◢◤◢', styleTargets: COMMON_STYLE_TARGETS, build: zigzagBuild },
-    { id: 'corner-frame', label: '◤￣￣￣ title ＿＿＿◢', styleTargets: COMMON_STYLE_TARGETS, build: cornerFrameBuild },
-    { id: 'triangle-heading', label: '▸ system ▸ ɢᴍ: ▸ ᴘᴄ/ᴘʟ:', styleTargets: COMMON_STYLE_TARGETS, build: triangleHeadingBuild },
-    { id: 'scenario-clear', label: '⧉ system |ɢᴍ |ᴘᴄ・ᴘʟ', styleTargets: COMMON_STYLE_TARGETS, build: scenarioClearBuild },
-    { id: 'handwritten-title', label: '⌜ TITLE ⌟ / ✧𝐊𝐏・✧𝐏𝐋', styleTargets: COMMON_STYLE_TARGETS, build: handwrittenTitleBuild },
-    { id: 'double-line', label: '════════ / ᴋᴘ・ʜᴏ', styleTargets: COMMON_STYLE_TARGETS, build: doubleLineBuild },
-    { id: 'ribbon-title', label: '‧₊˚ ୨ Title ୧ ˚₊ 𝗞𝗣…𝗣𝗖/𝗣𝗟…', styleTargets: COMMON_STYLE_TARGETS, build: ribbonTitleBuild }
+    { id: 'line-sandwich', label: '⟡ ライン挟み：⟡.· ⎯⎯⎯ ⟡.·', build: lineSandwichBuild },
+    { id: 'thin-rule', label: '─ 細罫線囲み：────', build: thinRuleBuild },
+    { id: 'heavy-rule', label: '━╋━ 太罫線：HO ┊ PC / PL', build: heavyRuleBuild },
+    { id: 'star-frame', label: '✦ スター囲み：✦ ┈┈┈ ✦', build: starFrameBuild },
+    { id: 'double-line', label: '═ 二重線タイトル枠：════', build: doubleLineBuild },
+    { id: 'corner', label: '◤ ◢ コーナー囲み：◤￣￣ ＿＿◢', build: cornerBuild },
+    { id: 'heart-line', label: 'ෆ ハートライン：ෆ・┈・┈・ෆ', build: heartLineBuild },
+    { id: 'label', label: '⧉ ｜ ラベル見出し：⧉ ｜KP ｜PC・PL', build: labelBuild },
+    { id: 'title-bracket', label: '◣ ◥ タイトル括り：◣ タイトル ◥ ➤', build: titleBracketBuild },
+    { id: 'ribbon', label: '୨୧ リボン：‧₊˚ ୨ タイトル ୧ ˚₊', build: ribbonBuild },
+    { id: 'moon-star', label: '☽ 月星ライン囲み：─── ･ ｡☆*☽*☆ﾟ.───', build: moonStarBuild },
+    { id: 'asterisk', label: '✼ アスタリスク囲み：✼••┈┈••✼', build: asteriskBuild },
+    { id: 'dot-frame', label: '⟡ ドット囲み：⟡.·*.·····⟡.·*.', build: dotFrameBuild },
+    { id: 'handwritten', label: '⌜ ⌟ 手書き見出し：⌜ タイトル ⌟ ✧ ▹', build: handwrittenBuild },
+    { id: 'block', label: '▮ ▮ ブロック：▮ システム ▮', build: blockBuild }
   ];
 
   const ASCII_ART_COLLECTION = {
@@ -455,11 +419,14 @@
     const style = REPORT_STYLES.find(item => item.id === data.style) || REPORT_STYLES[0];
     const parts = style.build(data);
     const targets = new Set(style.styleTargets || COMMON_STYLE_TARGETS);
-    return parts.map(item => {
+    const body = parts.map(item => {
       if (!item || item.value == null) return '';
       if (targets.has(item.type) && data.styleText) return data.styleText(item.value, data.fontVariant);
       return item.value;
     }).join('').replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
+    // 感想は囲みの外（末尾）に付ける。未入力のときは〔感想〕の目印を置き、プレビュー上で書き換えられるようにする
+    const memo = String(data.memo || '').trim() || String(data.memoPlaceholder || '').trim();
+    return memo ? `${body}\n\n${memo}` : body;
   }
 
   window.ReportTemplate = {

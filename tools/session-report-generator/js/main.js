@@ -7,6 +7,7 @@
   const LIVE_PEEK_COLLAPSED_KEY = 'trpgWebTools.sessionReportGenerator.livePeekCollapsed';
   const mobileQuery = window.matchMedia('(max-width: 920px)');
   const isMobileLayout = () => mobileQuery.matches;
+  const DEFAULT_REPORT_STYLE = 'line-sandwich';
 
   let isResetting = false;
   let lastPreviewSelection = { start: 0, end: 0 };
@@ -34,8 +35,8 @@
     ko: { sansBoldItalic:'𝘼 굵게 + 기울임 (산세리프)', sansBold:'𝗔 굵게 (산세리프)', sansItalic:'𝘈 기울임 (산세리프)', serifBoldItalic:'𝑨 굵게 + 기울임 (세리프)', serifBold:'𝐀 굵게 (세리프)', serifItalic:'𝐴 기울임 (세리프)', smallCaps:'ᴀ 스몰 캡스', typewriter:'𝙰 타자기 (고정폭)', modernSans:'𝖠 모던 (산세리프)', plain:'A 변환 없음' }
   };
   const REPORT_STYLE_LABELS = {
-    en: { classic:'Classic: Standard and Readable', minimal:'Minimal: Short and Simple', frame:'✦ Frame', 'asterisk-frame':'✼ Frame', fancy:'⟡ Decorative Frame', block:'▮ Block', 'ho-focus':'HO List Focus', 'kpc-pair':'KPC One-on-One', emoklore:'✧ Top and Bottom Frame', 'wide-title':'◤ Wide Title ◢', zigzag:'◢◤◢ Zigzag', 'corner-frame':'Corner Frame', 'triangle-heading':'Triangle Heading', 'scenario-clear':'Scenario-focused', 'handwritten-title':'Handwritten Title', 'double-line':'Double Line', 'ribbon-title':'Ribbon Title' },
-    ko: { classic:'클래식: 표준·읽기 쉬움', minimal:'미니멀: 짧고 간결함', frame:'✦ 프레임', 'asterisk-frame':'✼ 프레임', fancy:'⟡ 장식 프레임', block:'▮ 블록', 'ho-focus':'HO 목록 중심', 'kpc-pair':'KPC 타이만', emoklore:'✧ 위아래 프레임', 'wide-title':'◤ 와이드 제목 ◢', zigzag:'◢◤◢ 지그재그', 'corner-frame':'코너 프레임', 'triangle-heading':'삼각형 제목', 'scenario-clear':'시나리오 중심', 'handwritten-title':'손글씨 제목', 'double-line':'이중선', 'ribbon-title':'리본 제목' }
+    en: { 'line-sandwich':'⟡ Line Sandwich: ⟡.· ⎯⎯⎯ ⟡.·', 'thin-rule':'─ Thin Rule Frame: ────', 'heavy-rule':'━╋━ Heavy Rule: HO ┊ PC / PL', 'star-frame':'✦ Star Frame: ✦ ┈┈┈ ✦', 'double-line':'═ Double-Line Title Box: ════', corner:'◤ ◢ Corner Frame: ◤￣￣ ＿＿◢', 'heart-line':'ෆ Heart Line: ෆ・┈・┈・ෆ', label:'⧉ ｜ Label Headings: ⧉ ｜KP ｜PC・PL', 'title-bracket':'◣ ◥ Title Brackets: ◣ Title ◥ ➤', ribbon:'୨୧ Ribbon: ‧₊˚ ୨ Title ୧ ˚₊', 'moon-star':'☽ Moon & Star Line: ─── ･ ｡☆*☽*☆ﾟ.───', asterisk:'✼ Asterisk Frame: ✼••┈┈••✼', 'dot-frame':'⟡ Dotted Frame: ⟡.·*.·····⟡.·*.', handwritten:'⌜ ⌟ Handwritten Heading: ⌜ Title ⌟ ✧ ▹', block:'▮ ▮ Block: ▮ System ▮' },
+    ko: { 'line-sandwich':'⟡ 라인 사이: ⟡.· ⎯⎯⎯ ⟡.·', 'thin-rule':'─ 가는 괘선 테두리: ────', 'heavy-rule':'━╋━ 굵은 괘선: HO ┊ PC / PL', 'star-frame':'✦ 별 테두리: ✦ ┈┈┈ ✦', 'double-line':'═ 이중선 제목 틀: ════', corner:'◤ ◢ 코너 테두리: ◤￣￣ ＿＿◢', 'heart-line':'ෆ 하트 라인: ෆ・┈・┈・ෆ', label:'⧉ ｜ 라벨 제목: ⧉ ｜KP ｜PC・PL', 'title-bracket':'◣ ◥ 제목 괄호: ◣ 제목 ◥ ➤', ribbon:'୨୧ 리본: ‧₊˚ ୨ 제목 ୧ ˚₊', 'moon-star':'☽ 달별 라인 테두리: ─── ･ ｡☆*☽*☆ﾟ.───', asterisk:'✼ 별표 테두리: ✼••┈┈••✼', 'dot-frame':'⟡ 점선 테두리: ⟡.·*.·····⟡.·*.', handwritten:'⌜ ⌟ 손글씨 제목: ⌜ 제목 ⌟ ✧ ▹', block:'▮ ▮ 블록: ▮ 시스템 ▮' }
   };
 
   const FONT_MAPS = {
@@ -308,10 +309,14 @@
         <label data-i18n="dynamic.role">${escapeHtml(t('dynamic.role'))}</label>
         <select class="gm-role">
           <option value="KP">KP</option>
-          <option value="DL">DL</option>
-          <option value="GM">GM</option>
-          <option value="KPC/KP">KPC/KP</option>
           <option value="SKP">SKP</option>
+          <option value="KPC">KPC</option>
+          <option value="KP/KPC">KP/KPC</option>
+          <option value="KPC/KP">KPC/KP</option>
+          <option value="GM">GM</option>
+          <option value="SGM">SGM</option>
+          <option value="DL">DL</option>
+          <option value="DPC">DPC</option>
           <option value="作/KP">作/KP</option>
           <option value="進行">進行</option>
         </select>
@@ -436,7 +441,7 @@
     if (useSample && !players.length) players = [{ slot: 'HO1', ho: '', pc: sampleName(0, 'pc'), pl: sampleName(0, 'pl') }];
 
     return {
-      style: $('reportStyle').value || 'classic',
+      style: $('reportStyle').value || DEFAULT_REPORT_STYLE,
       fontVariant: $('fontVariant').value || 'sansBoldItalic',
       styleText,
       system: getSystemName(),
@@ -444,8 +449,8 @@
       author: addAuthorSuffix($('authorText').value.trim()),
       result: $('resultText').value.trim() || (useSample ? 'END A' : ''),
       date: $('dateText').value.trim() || (useSample ? $('dateText').placeholder || getTodayString() : ''),
-      hashtags: $('hashtagText').value.trim(),
       memo: $('memoText')?.value.trim() || '',
+      memoPlaceholder: t('misc.memoPlaceholder'),
       nameOrder: $('nameInputOrder')?.value || 'pcpl',
       gms,
       players
@@ -808,7 +813,7 @@
     isResetting = true;
     document.querySelectorAll('.input-panel input:not([type="checkbox"])').forEach(input => { input.value = ''; });
     $('systemSelect').value = 'call_of_cthulhu';
-    $('reportStyle').value = 'classic';
+    $('reportStyle').value = DEFAULT_REPORT_STYLE;
     $('fontVariant').value = 'sansBoldItalic';
     document.querySelectorAll('input[name="suffixChoice"]').forEach(input => { input.checked = input.value === 'none'; });
     $('nameInputOrder').value = 'pcpl';
@@ -1127,7 +1132,6 @@
     applyImportedSystem(item.system);
     $('scenarioTitle').value = item.scenario || '';
     $('dateText').value = item.latestDate || (Array.isArray(item.dates) ? item.dates.join(' / ') : '');
-    $('hashtagText').value = formatImportedHashtags(item.hashtags);
     if ($('memoText')) $('memoText').value = item.memo || '';
 
     $('gmContainer').innerHTML = '';
@@ -1158,11 +1162,6 @@
     $('systemSelect').value = matched || 'custom';
     $('customSystemText').value = matched ? '' : name;
     updateCustomSystemInput();
-  }
-
-  function formatImportedHashtags(hashtags) {
-    if (Array.isArray(hashtags)) return hashtags.map(tag => String(tag || '').trim()).filter(Boolean).map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ');
-    return String(hashtags || '').trim();
   }
 
   function inferGmRole(systemName) {

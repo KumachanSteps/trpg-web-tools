@@ -6,7 +6,7 @@
   <title>卓報告ジェネレータ｜TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="css/report_gen_style.css?v=1.73" />
+  <link rel="stylesheet" href="css/report_gen_style.css?v=1.75" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body>
@@ -38,7 +38,7 @@
           </span>
           <span data-i18n="app.title">卓報告ジェネレータ</span>
         </h1>
-        <p class="header-version">v1.73 2026.10.07</p>
+        <p class="header-version">v1.75 2026.10.07</p>
         <p class="site-description">
           <span data-i18n="app.description1">SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
           <span data-i18n="app.description2">シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
@@ -62,7 +62,7 @@
             <div><dt>Cmd / Ctrl + Z</dt><dd data-i18n="shortcuts.undo">プレビューの編集を1つ元に戻します。</dd></div>
             <div><dt>Cmd / Ctrl + Shift + Z</dt><dd data-i18n="shortcuts.redo">元に戻した編集をやり直します。</dd></div>
             <div><dt>Cmd / Ctrl + E</dt><dd data-i18n="shortcuts.focus">プレビュー編集欄へフォーカスします。</dd></div>
-            <div><dt>Cmd + Option + ↑ / ↓</dt><dd data-i18n="shortcuts.style">卓報告サンプルリストを前後に切り替えます。</dd></div>
+            <div><dt>Cmd + Option + ↑ / ↓</dt><dd data-i18n="shortcuts.style">テンプレートを前後に切り替えます。</dd></div>
             <div><dt>Cmd + Option + ← / →</dt><dd data-i18n="shortcuts.font">文字スタイル（フォント）を前後に切り替えます。</dd></div>
             <div><dt>Cmd + Option + R</dt><dd data-i18n="shortcuts.rebuild">手動編集を破棄し、入力内容からプレビューを作り直します。</dd></div>
             <div><dt>?</dt><dd data-i18n="shortcuts.toggle">このショートカットパネルを開閉します。</dd></div>
@@ -92,9 +92,9 @@
       <section class="section basic-section" aria-label="基本情報">
         <div class="grid-2">
           <div class="field-block">
-            <label for="reportStyle" data-i18n="input.reportStyle">卓報告サンプルリスト</label>
+            <label for="reportStyle" data-i18n="input.reportStyle">テンプレート（囲み装飾）</label>
             <select id="reportStyle"></select>
-            <p class="hint" data-i18n="input.reportHint">SNS実例の構造だけを参考にしたテンプレートです。</p>
+            <p class="hint" data-i18n="input.reportHint">名前の先頭の記号が、使っている囲みの形です。</p>
           </div>
 
           <div class="field-block">
@@ -183,21 +183,13 @@
       </section>
 
       <section class="section misc-section" aria-label="補足情報">
-        <div class="grid-2">
-          <div class="field-block">
-            <label for="dateText" data-i18n="misc.date">日付</label>
-            <input id="dateText" placeholder="今日の日付" />
-          </div>
-
-          <div class="field-block">
-            <label for="hashtagText" data-i18n="misc.hashtag">ハッシュタグ</label>
-            <input id="hashtagText" placeholder="例：#卓報告 #クトゥルフ神話TRPG" data-i18n-placeholder="misc.hashtagPlaceholder" />
-          </div>
-        </div>
         <div class="field-block">
-          <label for="memoText" data-i18n="misc.memo">備考 / メモ</label>
-          <textarea id="memoText" placeholder="卓ログトラッカーからのメモや補足" data-i18n-placeholder="misc.memoPlaceholder"></textarea>
+          <label for="memoText" data-i18n="misc.memo">感想・ひとこと</label>
+          <textarea id="memoText" placeholder="〔感想〕" data-i18n-placeholder="misc.memoPlaceholder"></textarea>
+          <p class="hint" data-i18n="misc.memoHint">囲みの外、本文の末尾に入ります。</p>
         </div>
+        <!-- 日付はテンプレートに出さない（卓ログトラッカー連携の受け皿としてだけ残す） -->
+        <input id="dateText" type="hidden" />
       </section>
 
       <section class="section decoration-panel" aria-label="アスキーアートと装飾">
@@ -279,10 +271,10 @@
     <button id="clearAllButton" type="button" class="subtle bottom-action-button" data-i18n="button.clearAll">入力をクリア</button>
   </div>
 
-  <script src="js/i18l.js?v=1.73"></script>
-  <script src="js/language.js?v=1.73"></script>
-  <script src="js/perser.js?v=1.73"></script>
-  <script src="js/template.js?v=1.73"></script>
-  <script src="js/main.js?v=1.73"></script>
+  <script src="js/i18l.js?v=1.75"></script>
+  <script src="js/language.js?v=1.75"></script>
+  <script src="js/perser.js?v=1.75"></script>
+  <script src="js/template.js?v=1.75"></script>
+  <script src="js/main.js?v=1.75"></script>
 </body>
 </html>
