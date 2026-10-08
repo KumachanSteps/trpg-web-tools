@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>卓報告ジェネレータ｜TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="css/report_gen_style.css?v=1.72" />
+  <link rel="stylesheet" href="css/report_gen_style.css?v=1.73" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body>
@@ -38,7 +38,7 @@
           </span>
           <span data-i18n="app.title">卓報告ジェネレータ</span>
         </h1>
-        <p class="header-version">v1.72 2026.10.02</p>
+        <p class="header-version">v1.73 2026.10.07</p>
         <p class="site-description">
           <span data-i18n="app.description1">SNSの卓報告パターンをもとに、複数スタイルのX向け報告文を生成できます。</span>
           <span data-i18n="app.description2">シナリオ名、参加者、END、装飾スタイルを入力して、コピーしやすい卓報告文を作成します。</span>
@@ -48,10 +48,10 @@
         <section id="usagePanel" class="header-help-panel" hidden>
           <h2 data-i18n="usage.title">使い方</h2>
           <ol>
-            <li data-i18n="usage.step1">卓報告サンプルリストから使いたい文面スタイルを選びます。</li>
-            <li data-i18n="usage.step2">システム、シナリオ名、KP / GM / DL、PC / PL、ENDなどを入力します。</li>
-            <li data-i18n="usage.step3">必要に応じて文字スタイルやアスキーアートを選び、右側のプレビューを直接編集します。</li>
-            <li data-i18n="usage.step4">完成したら「コピー」または下部の「𝕏 に投稿」から投稿画面を開けます。</li>
+            <li data-i18n="usage.step1">① 入力：テンプレートを選び、システム、シナリオ名、KP / GM / DL、PC / PL、ENDなどを入力します。</li>
+            <li data-i18n="usage.step2">② 仕上げ：プレビューで文字スタイルや装飾を選び、本文を直接編集します。</li>
+            <li data-i18n="usage.step3">③ 投稿：「コピー」または「𝕏 に投稿」から投稿画面を開きます。</li>
+            <li data-i18n="usage.step4">スマートフォンでは下部のバーで「① 入力」「② 仕上げ」を切り替えます。入力中も上部のライブプレビューで仕上がりを確認できます。</li>
           </ol>
         </section>
         <section id="shortcutPanel" class="header-help-panel" hidden>
@@ -77,6 +77,17 @@
   <main class="main app-shell">
     <section class="panel input-panel" aria-labelledby="inputPanelTitle">
       <h2 id="inputPanelTitle" data-i18n="input.title">入力</h2>
+
+      <div id="livePeek" class="live-peek" aria-label="ライブプレビュー" data-i18n-aria-label="mobile.peek">
+        <div class="live-peek-head">
+          <button id="livePeekToggle" class="live-peek-toggle" type="button" aria-expanded="true" aria-controls="livePeekBody">
+            <span class="live-peek-caret" aria-hidden="true">▾</span><span data-i18n="mobile.peek">ライブプレビュー</span>
+          </button>
+          <span id="livePeekCount" class="live-peek-count count-ok">0 / 280</span>
+          <button type="button" class="live-peek-go" data-go-mode="preview" data-i18n="mobile.goFinish">仕上げへ →</button>
+        </div>
+        <div id="livePeekBody" class="live-peek-body" role="button" tabindex="0" title="タップで仕上げ画面へ" data-i18n-title="mobile.peekTap" data-go-mode="preview"></div>
+      </div>
 
       <section class="section basic-section" aria-label="基本情報">
         <div class="grid-2">
@@ -194,10 +205,20 @@
         <p class="hint" data-i18n="decoration.hint">クリックすると、右側プレビューの編集中カーソル位置に挿入されます。</p>
         <div id="asciiArtContainer" class="ascii-preview-panel"></div>
       </section>
+
+      <div class="input-panel-footer mobile-only">
+        <button id="mobileClearAllButton" type="button" class="subtle" data-i18n="button.clearAll">入力をクリア</button>
+        <button type="button" class="primary" data-go-mode="preview" data-i18n="mobile.nextFinish">② 仕上げへ進む →</button>
+      </div>
     </section>
 
     <section class="panel preview-panel" aria-labelledby="previewPanelTitle">
       <h2 id="previewPanelTitle" data-i18n="preview.title">X風プレビュー / 編集</h2>
+
+      <div class="preview-quickbar mobile-only">
+        <label for="previewStyleSelect" data-i18n="mobile.template">テンプレート</label>
+        <select id="previewStyleSelect" aria-label="テンプレート" data-i18n-aria-label="mobile.template"></select>
+      </div>
 
       <div class="twitter-card">
         <div class="tweet-head">
@@ -217,6 +238,7 @@
 
         <div class="count-line">
           <span id="charCount">0 / 280</span>
+          <span id="dirtyBadge" class="dirty-badge" hidden title="プレビューを直接編集しています。「再生成」で入力内容から作り直せます。" data-i18n="mobile.dirty" data-i18n-title="mobile.dirtyTitle">手動編集あり</span>
           <span id="limitStatus" class="count-ok">OK</span>
         </div>
 
@@ -224,6 +246,7 @@
           <button id="copyButton" type="button" class="primary" title="コピー（Ctrl / ⌘ + Shift + C、または Ctrl / ⌘ + Enter）" data-i18n="button.copy" data-i18n-title="button.copyTitle">コピー</button>
           <button id="undoButton" type="button" title="元に戻す（Ctrl / ⌘ + Z）" data-i18n="button.undo" data-i18n-title="button.undoTitle">元に戻す</button>
           <button id="redoButton" type="button" title="やり直す（Ctrl / ⌘ + Shift + Z）" data-i18n="button.redo" data-i18n-title="button.redoTitle">やり直す</button>
+          <button id="regenerateButton" type="button" title="手動編集を破棄して入力内容から作り直す（Cmd / Ctrl + Option / Alt + R）" data-i18n="button.regenerate" data-i18n-title="button.regenerateTitle">再生成</button>
           <button id="clearPreviewButton" type="button" class="danger" data-i18n="button.delete">消去</button>
         </div>
       </div>
@@ -244,15 +267,22 @@
     </p>
   </section>
 
+  <nav id="mobileFlowBar" class="mobile-flow-bar" aria-label="作成の流れ" data-i18n-aria-label="mobile.flow">
+    <button type="button" class="flow-tab" data-mode="input" aria-pressed="true"><span class="flow-step">①</span><span data-i18n="mobile.tabInput">入力</span></button>
+    <button type="button" class="flow-tab" data-mode="preview" aria-pressed="false"><span class="flow-step">②</span><span data-i18n="mobile.tabFinish">仕上げ</span><span id="flowCount" class="flow-count count-ok">0</span></button>
+    <button id="mobileCopyButton" type="button" class="flow-action" data-i18n="button.copy">コピー</button>
+    <button id="mobilePostButton" type="button" class="flow-action primary"><span class="flow-step">③</span><span data-i18n="mobile.tabPost">𝕏 投稿</span></button>
+  </nav>
+
   <div class="bottom-actions" aria-label="生成操作">
     <button id="generateButton" type="button" class="primary bottom-action-button" title="𝕏 に投稿（Ctrl / ⌘ + Shift + P）" data-i18n="button.post" data-i18n-title="button.postTitle">𝕏 に投稿</button>
     <button id="clearAllButton" type="button" class="subtle bottom-action-button" data-i18n="button.clearAll">入力をクリア</button>
   </div>
 
-  <script src="js/i18l.js?v=1.72"></script>
-  <script src="js/language.js?v=1.72"></script>
-  <script src="js/perser.js"></script>
-  <script src="js/template.js"></script>
-  <script src="js/main.js?v=1.72"></script>
+  <script src="js/i18l.js?v=1.73"></script>
+  <script src="js/language.js?v=1.73"></script>
+  <script src="js/perser.js?v=1.73"></script>
+  <script src="js/template.js?v=1.73"></script>
+  <script src="js/main.js?v=1.73"></script>
 </body>
 </html>

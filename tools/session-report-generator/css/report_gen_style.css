@@ -155,3 +155,107 @@ body{min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Se
 .toast{max-width:92vw;padding:11px 20px;border-radius:999px;background:rgba(15,23,42,.92);color:#fff;font-size:13px;font-weight:800;line-height:1.4;text-align:center;white-space:nowrap;box-shadow:0 12px 30px rgba(15,23,42,.26);opacity:0;transform:translateY(10px);transition:opacity 200ms ease,transform 200ms ease;pointer-events:auto;cursor:default}
 .toast.is-visible{opacity:1;transform:translateY(0)}
 @media (prefers-reduced-motion:reduce){.toast{transition:opacity 120ms ease}}
+
+/* ===== v1.71 スマホ：① 入力 → ② 仕上げ → ③ 投稿 のフロー ===== */
+.mobile-only,.live-peek,.mobile-flow-bar,.ascii-tabs{display:none}
+.dirty-badge{margin-left:auto;margin-right:10px;padding:1px 8px;border-radius:999px;background:#fff7ed;border:1px solid rgba(217,119,6,.28);color:#b45309;font-size:11px;font-weight:800;line-height:1.6}
+.dirty-badge[hidden]{display:none}
+.preview-actions{grid-template-columns:repeat(5,1fr)}
+
+@media(max-width:920px){
+  body{padding:10px 10px calc(84px + env(safe-area-inset-bottom))}
+  .main,.app-shell{grid-template-columns:minmax(0,1fr);gap:12px}
+  .input-panel,.preview-panel{overflow:visible}
+  .panel{padding:14px;border-radius:18px}
+  .panel h2{display:none}
+
+  /* ヘッダーはツール名とヘルプだけに絞る */
+  .site-header{padding:8px 12px 9px;margin-bottom:10px;border-radius:18px}
+  .header-pill,.site-description,.header-version{display:none}
+  .header-top-tags{flex-wrap:nowrap}
+  .header-actions{margin-left:auto;width:auto}
+  .header-action-button{flex:0 0 auto}
+  .header-actions{flex-wrap:nowrap;gap:5px}
+  .portal-link{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .portal-link-wrap{min-width:0;flex:0 1 auto}
+  .language-switcher{height:28px}
+  .language-choice{width:32px;height:28px}
+  .header-action-button{height:28px}
+  .site-title{font-size:20px}
+  .site-title-icon{width:30px;height:30px;border-radius:11px;transform:scale(.85);transform-origin:left center}
+  .header-title-area{padding-right:0}
+
+  /* モード切り替え：片方のパネルだけを表示 */
+  body[data-mode="input"] .preview-panel,
+  body[data-mode="preview"] .input-panel{display:none}
+  .mobile-only{display:block}
+  .bottom-actions{display:none}
+  .tool-footer-note{margin-top:14px}
+
+  /* ① 入力：上部に追従するライブプレビュー */
+  .live-peek{display:block;position:sticky;top:6px;z-index:30;margin:-4px -4px 14px;border:1px solid rgba(29,155,240,.28);border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 10px 26px rgba(15,23,42,.12);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .live-peek-head{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 4px}
+  .live-peek-toggle{display:inline-flex;align-items:center;gap:5px;padding:6px 8px;background:transparent;color:#172033;font-size:13px}
+  .live-peek-toggle:hover{background:#f1f5f9}
+  .live-peek-caret{display:inline-block;color:var(--blue);transition:transform 160ms ease}
+  .live-peek.is-collapsed .live-peek-caret{transform:rotate(-90deg)}
+  .live-peek-count{font-size:12px}
+  .live-peek-go{margin-left:auto;padding:7px 12px;font-size:12.5px}
+  .live-peek-body{max-height:min(26vh,200px);overflow:auto;margin:0 6px 6px;padding:10px 12px;border-radius:11px;background:#f8fafc;border:1px solid var(--line-soft);font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word;color:#0f1419;cursor:pointer;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .live-peek.is-collapsed .live-peek-body{display:none}
+  body.is-typing .live-peek-body{max-height:min(18vh,130px)}
+  .input-panel input,.input-panel select,.input-panel textarea{scroll-margin-top:200px;scroll-margin-bottom:24px}
+  .live-peek.is-collapsed ~ * input,.live-peek.is-collapsed ~ * select,.live-peek.is-collapsed ~ * textarea{scroll-margin-top:70px}
+
+  .input-panel-footer{display:grid;grid-template-columns:auto 1fr;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid #e5edf5}
+  .input-panel-footer button{min-height:44px}
+
+  /* ② 仕上げ */
+  .preview-quickbar{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;margin-bottom:10px}
+  .preview-quickbar label{margin:0;font-size:12.5px;white-space:nowrap}
+  .preview-quickbar select{padding:9px 10px;font-size:14px}
+  .tweet-head{padding:10px 12px 8px;grid-template-columns:36px 1fr auto}
+  .avatar{width:36px;height:36px}
+  .font-toolbar{padding:8px 10px;scrollbar-width:none}
+  .font-toolbar::-webkit-scrollbar{display:none}
+  #tweetPreview{height:auto;min-height:240px;padding:14px 14px 10px;font-size:16px;overflow:hidden}
+  .preview-editor-wrap{grid-template-columns:1fr}
+  .preview-resize-handle{display:none}
+  .count-line{padding:8px 14px;align-items:center}
+  .preview-actions{grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 10px 12px}
+  .preview-actions button{padding:9px 4px;font-size:12.5px;min-height:40px}
+  .preview-actions #copyButton{display:none}
+
+  /* 装飾はプレビュー内のアクセサリーバーとして表示 */
+  .twitter-card .decoration-panel{margin:0;padding:8px 0 10px;border-top:0;border-bottom:1px solid var(--line-soft)}
+  .twitter-card .decoration-panel > label,.twitter-card .decoration-panel > .hint{display:none}
+  .twitter-card .ascii-preview-panel{padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+  .twitter-card .ascii-tabs{display:flex;gap:6px;padding:0 10px 7px;overflow-x:auto;scrollbar-width:none}
+  .twitter-card .ascii-tabs::-webkit-scrollbar{display:none}
+  .ascii-tab{flex:0 0 auto;padding:4px 11px;font-size:11px;letter-spacing:.06em;background:#f1f5f9;color:#526072}
+  .ascii-tab.is-active{background:#172033;color:#fff}
+  .twitter-card .ascii-group{display:none;margin:0}
+  .twitter-card .ascii-group.is-current{display:block}
+  .twitter-card .ascii-group-title{display:none}
+  .twitter-card .ascii-buttons{flex-wrap:nowrap;overflow-x:auto;padding:2px 10px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .twitter-card .ascii-buttons::-webkit-scrollbar{display:none}
+  .twitter-card .ascii-buttons button{flex:0 0 auto;min-height:38px}
+
+  /* 下部の固定バー */
+  .mobile-flow-bar{display:grid;grid-template-columns:1fr 1fr .9fr 1.15fr;gap:6px;position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:40;padding:6px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.95);box-shadow:0 8px 28px rgba(15,20,25,.16);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:transform 180ms ease,opacity 180ms ease}
+  .mobile-flow-bar button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:46px;padding:6px 4px;border-radius:14px;font-size:13.5px;white-space:nowrap}
+  .flow-tab{background:transparent;color:#526072}
+  .flow-tab[aria-pressed="true"]{background:#e8f5fd;color:var(--blue)}
+  .flow-step{font-size:12px;opacity:.8}
+  .flow-count{margin-left:2px;padding:0 6px;border-radius:999px;background:#ecfdf5;font-size:11px;line-height:1.6}
+  .flow-count.count-bad{background:#fef2f2}
+  .flow-action{background:#f1f5f9;color:#172033}
+  .flow-action.primary{background:#0f1419;color:#fff}
+  body.is-typing .mobile-flow-bar{transform:translateY(140%);opacity:0;pointer-events:none}
+
+  .toast-stack{bottom:calc(84px + env(safe-area-inset-bottom))}
+}
+@media(max-width:920px) and (hover:none){
+  #shortcutToggleButton{display:none}
+}
+@media (prefers-reduced-motion:reduce){.mobile-flow-bar,.live-peek-caret{transition:none}}

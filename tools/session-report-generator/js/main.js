@@ -4,6 +4,9 @@
   const $ = id => document.getElementById(id);
   const t = (key, vars = {}) => window.REPORT_GEN_LANGUAGE?.t(key, vars) || key;
   const REPORT_PENDING_IMPORT_KEY = 'trpgWebTools.sessionReportGenerator.pendingImport';
+  const LIVE_PEEK_COLLAPSED_KEY = 'trpgWebTools.sessionReportGenerator.livePeekCollapsed';
+  const mobileQuery = window.matchMedia('(max-width: 920px)');
+  const isMobileLayout = () => mobileQuery.matches;
 
   let isResetting = false;
   let lastPreviewSelection = { start: 0, end: 0 };
@@ -106,8 +109,19 @@
     const styles = window.ReportTemplate?.REPORT_STYLES || [];
     const selected = select.value;
     const lang = window.REPORT_GEN_LANGUAGE?.current || 'ja';
-    select.innerHTML = styles.map(style => `<option value="${escapeHtml(style.id)}">${escapeHtml(REPORT_STYLE_LABELS[lang]?.[style.id] || style.label)}</option>`).join('');
+    const options = styles.map(style => `<option value="${escapeHtml(style.id)}">${escapeHtml(REPORT_STYLE_LABELS[lang]?.[style.id] || style.label)}</option>`).join('');
+    select.innerHTML = options;
     if (styles.some(style => style.id === selected)) select.value = selected;
+    const mirror = $('previewStyleSelect');
+    if (mirror) {
+      mirror.innerHTML = options;
+      mirror.value = select.value;
+    }
+  }
+
+  function syncPreviewStyleSelect() {
+    const mirror = $('previewStyleSelect');
+    if (mirror) mirror.value = $('reportStyle').value;
   }
 
   function populateFontVariants() {
@@ -194,10 +208,30 @@
     if (!container || !collection) return;
 
     container.innerHTML = '';
-    Object.entries(collection).forEach(([groupKey, groupData]) => {
+    const tabs = document.createElement('div');
+    tabs.className = 'ascii-tabs';
+    tabs.setAttribute('role', 'tablist');
+    container.appendChild(tabs);
+
+    Object.entries(collection).forEach(([groupKey, groupData], index) => {
       const group = document.createElement('div');
-      group.className = 'ascii-group';
+      group.className = `ascii-group${index === 0 ? ' is-current' : ''}`;
       group.dataset.group = groupKey;
+
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = `ascii-tab${index === 0 ? ' is-active' : ''}`;
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-selected', String(index === 0));
+      tab.textContent = groupData.tabLabel || groupData.label || groupKey;
+      tab.addEventListener('click', () => {
+        tabs.querySelectorAll('.ascii-tab').forEach(item => {
+          item.classList.toggle('is-active', item === tab);
+          item.setAttribute('aria-selected', String(item === tab));
+        });
+        container.querySelectorAll('.ascii-group').forEach(item => item.classList.toggle('is-current', item === group));
+      });
+      tabs.appendChild(tab);
 
       const title = document.createElement('div');
       title.className = 'ascii-group-title';
@@ -214,7 +248,9 @@
         button.dataset.decoration = item.value;
         if (String(item.value).length > 20) button.classList.add('ascii-chip-line');
         if (String(item.label).length > 10) button.classList.add('ascii-chip-wide');
-        button.addEventListener('click', () => insertDecorationAtPreviewCursor(item.value));
+        // プレビュー編集中にタップしてもキーボードとカーソル位置を維持する
+        button.addEventListener('mousedown', event => event.preventDefault());
+        button.addEventListener('click', () => insertDecorationAtPreviewCursor(item.value, { ownLine: groupKey === 'line' }));
         buttons.appendChild(button);
       });
 
@@ -457,6 +493,7 @@
     preview.value = output;
     lastGeneratedPreview = generated;
     isPreviewDirty = output !== generated;
+    syncPreviewStyleSelect();
     savePreviewSelection();
     updateCount();
     fitPreviewTextBox();
@@ -510,18 +547,32 @@
     };
   }
 
-  function insertDecorationAtPreviewCursor(text) {
+  function insertDecorationAtPreviewCursor(text, { ownLine = false } = {}) {
     const preview = $('tweetPreview');
     if (!preview) return;
     pushHistory();
     const hasFocus = document.activeElement === preview;
     const start = hasFocus ? preview.selectionStart ?? preview.value.length : lastPreviewSelection.start ?? preview.value.length;
     const end = hasFocus ? preview.selectionEnd ?? preview.value.length : lastPreviewSelection.end ?? preview.value.length;
-    preview.value = preview.value.slice(0, start) + text + preview.value.slice(end);
-    const next = start + String(text).length;
-    preview.focus();
-    preview.selectionStart = next;
-    preview.selectionEnd = next;
+    const before = preview.value.slice(0, start);
+    const after = preview.value.slice(end);
+    let insert = String(text);
+    // 罫線は前後の文字とくっつかないよう、必ず独立した1行にする
+    if (ownLine) {
+      if (before && !before.endsWith('\n')) insert = `\n${insert}`;
+      if (after && !after.startsWith('\n')) insert = `${insert}\n`;
+    }
+    preview.value = before + insert + after;
+    const next = start + insert.length;
+    isPreviewDirty = true;
+    // スマホでは未フォーカス時にキーボードを開かない（画面が跳ねるため）
+    if (hasFocus || !isMobileLayout()) {
+      preview.focus({ preventScroll: isMobileLayout() });
+      preview.selectionStart = next;
+      preview.selectionEnd = next;
+    } else {
+      showToast(t(after ? 'mobile.insertedAtCursor' : 'mobile.insertedAtEnd'), 1400);
+    }
     lastPreviewSelection = { start: next, end: next };
     updateCount();
   }
@@ -538,14 +589,17 @@
   async function copyTweet() {
     const preview = $('tweetPreview');
     if (!preview) return;
+    if (!preview.value.trim()) {
+      showToast(t('dynamic.noCopy'));
+      return;
+    }
     try {
       await navigator.clipboard.writeText(preview.value);
-      alert(t('dynamic.copyDone'));
     } catch (e) {
       preview.select();
       document.execCommand('copy');
-      alert(t('dynamic.copyDone'));
     }
+    showToast(t('dynamic.copyDone'));
   }
 
   function postToX() {
@@ -553,7 +607,7 @@
     if (!preview) return;
     const text = preview.value.trim();
     if (!text) {
-      alert(t('dynamic.noPost'));
+      showToast(t('dynamic.noPost'));
       return;
     }
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
@@ -569,10 +623,130 @@
   }
 
   function updateCount() {
-    const count = tweetLength($('tweetPreview').value);
+    const value = $('tweetPreview').value;
+    const count = tweetLength(value);
+    const statusClass = count <= 280 ? 'count-ok' : 'count-bad';
     $('charCount').textContent = `${count} / 280`;
     $('limitStatus').textContent = count <= 280 ? 'OK' : t('dynamic.over', { count: count - 280 });
-    $('limitStatus').className = count <= 280 ? 'count-ok' : 'count-bad';
+    $('limitStatus').className = statusClass;
+    $('dirtyBadge').hidden = !isPreviewDirty;
+
+    $('livePeekBody').textContent = value || t('mobile.peekEmpty');
+    $('livePeekCount').textContent = `${count} / 280`;
+    $('livePeekCount').className = `live-peek-count ${statusClass}`;
+    $('flowCount').textContent = count;
+    $('flowCount').className = `flow-count ${statusClass}`;
+    autosizeMobilePreview();
+  }
+
+  function autosizeMobilePreview() {
+    const text = $('tweetPreview');
+    if (!text || !isMobileLayout() || manualPreviewHeight || document.body.dataset.mode !== 'preview') return;
+    text.style.height = 'auto';
+    text.style.height = `${Math.max(240, text.scrollHeight + 2)}px`;
+  }
+
+  // ---- スマホ：① 入力 / ② 仕上げ の切り替え ----
+  const modeScroll = { input: 0, preview: 0 };
+
+  function setMobileMode(mode, { scroll = true } = {}) {
+    const current = document.body.dataset.mode;
+    if (current && current !== mode) modeScroll[current] = window.scrollY;
+    document.body.dataset.mode = mode;
+    document.querySelectorAll('.flow-tab').forEach(tab => {
+      tab.setAttribute('aria-pressed', String(tab.dataset.mode === mode));
+    });
+    if (!isMobileLayout()) return;
+    autosizeMobilePreview();
+    if (!scroll || current === mode) return;
+    if (mode === 'preview') {
+      const panel = document.querySelector('.preview-panel');
+      window.scrollTo({ top: Math.max(0, panel.getBoundingClientRect().top + window.scrollY - 8) });
+    } else {
+      window.scrollTo({ top: modeScroll.input });
+    }
+  }
+
+  let decorationAnchor = null;
+
+  function placeDecorationPanel() {
+    const panel = document.querySelector('.decoration-panel');
+    if (!panel) return;
+    if (!decorationAnchor) {
+      decorationAnchor = document.createComment('decoration-panel-anchor');
+      panel.before(decorationAnchor);
+    }
+    if (isMobileLayout()) {
+      $('fontToolbar').after(panel);
+    } else if (decorationAnchor.nextSibling !== panel) {
+      decorationAnchor.after(panel);
+    }
+  }
+
+  function handleLayoutChange() {
+    placeDecorationPanel();
+    if (isMobileLayout()) {
+      autosizeMobilePreview();
+    } else {
+      document.body.classList.remove('is-typing');
+      if (!manualPreviewHeight) $('tweetPreview').style.height = '';
+      fitPreviewTextBox();
+    }
+  }
+
+  function setLivePeekCollapsed(collapsed) {
+    $('livePeek').classList.toggle('is-collapsed', collapsed);
+    $('livePeekToggle').setAttribute('aria-expanded', String(!collapsed));
+    try { localStorage.setItem(LIVE_PEEK_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) { /* noop */ }
+  }
+
+  function bindMobileFlow() {
+    document.querySelectorAll('.flow-tab').forEach(tab => {
+      tab.addEventListener('click', () => setMobileMode(tab.dataset.mode));
+    });
+    document.querySelectorAll('[data-go-mode]').forEach(el => {
+      el.addEventListener('click', () => setMobileMode(el.dataset.goMode));
+      el.addEventListener('keydown', event => {
+        if (el.tagName !== 'BUTTON' && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          setMobileMode(el.dataset.goMode);
+        }
+      });
+    });
+    $('mobileCopyButton').addEventListener('click', copyTweet);
+    $('mobilePostButton').addEventListener('click', postToX);
+    $('mobileClearAllButton').addEventListener('click', confirmResetAll);
+
+    $('livePeekToggle').addEventListener('click', () => {
+      setLivePeekCollapsed(!$('livePeek').classList.contains('is-collapsed'));
+    });
+    let collapsed = false;
+    try { collapsed = localStorage.getItem(LIVE_PEEK_COLLAPSED_KEY) === '1'; } catch (e) { /* noop */ }
+    setLivePeekCollapsed(collapsed);
+
+    $('previewStyleSelect').addEventListener('change', event => {
+      pushHistory();
+      $('reportStyle').value = event.target.value;
+      previewSelectedStyle();
+    });
+
+    // 入力中はソフトウェアキーボードの上に下部バーが残らないよう隠す
+    document.addEventListener('focusin', event => {
+      if (isMobileLayout() && isTypingTarget(event.target) && event.target.tagName !== 'SELECT') {
+        document.body.classList.add('is-typing');
+      }
+    });
+    document.addEventListener('focusout', () => {
+      setTimeout(() => {
+        if (!isTypingTarget(document.activeElement) || document.activeElement.tagName === 'SELECT') {
+          document.body.classList.remove('is-typing');
+        }
+      }, 60);
+    });
+
+    mobileQuery.addEventListener('change', handleLayoutChange);
+    setMobileMode('input', { scroll: false });
+    handleLayoutChange();
   }
 
   function fitPreviewTextBox() {
@@ -654,6 +828,12 @@
     renderPreview('');
   }
 
+  function confirmResetAll() {
+    if (!confirm(t('dynamic.confirmClearAll'))) return;
+    resetAll();
+    if (isMobileLayout()) setMobileMode('input');
+  }
+
 
   function closeHeaderPanels() {
     const panels = ['usagePanel', 'shortcutPanel'];
@@ -711,7 +891,11 @@
     pushHistory();
     isPreviewDirty = false;
     renderPreview();
-    $('tweetPreview')?.focus();
+    if (isMobileLayout()) {
+      showToast(t('dynamic.regenerated'), 1600);
+    } else {
+      $('tweetPreview')?.focus();
+    }
   }
 
   function isTypingTarget(el) {
@@ -791,13 +975,17 @@
 
     $('addPlayerButton').addEventListener('click', () => addPlayer());
     $('generateButton').addEventListener('click', postToX);
-    $('clearAllButton').addEventListener('click', resetAll);
+    $('clearAllButton').addEventListener('click', confirmResetAll);
+    $('regenerateButton').addEventListener('click', regeneratePreview);
     $('copyButton').addEventListener('click', copyTweet);
     $('undoButton').addEventListener('click', undoPreview);
     $('redoButton').addEventListener('click', redoPreview);
     $('clearPreviewButton').addEventListener('click', clearPreview);
 
-    $('reportStyle').addEventListener('change', previewSelectedStyle);
+    $('reportStyle').addEventListener('change', () => {
+      syncPreviewStyleSelect();
+      previewSelectedStyle();
+    });
     $('fontVariant').addEventListener('change', () => {
       updateFontToolbarActive();
       previewSelectedStyle();
@@ -1002,6 +1190,7 @@
     updateCustomSystemInput();
     bindPreviewResizer();
     bindEvents();
+    bindMobileFlow();
     renderPreview();
     handlePendingReportImport();
     document.addEventListener('languagechange', () => {
