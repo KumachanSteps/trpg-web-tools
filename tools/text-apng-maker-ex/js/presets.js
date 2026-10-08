@@ -249,7 +249,7 @@
     },
     failure: {
       accent: '#8e96a3', band: '#08090b',
-      patch: { fill: { type: 'gradient', color: '#d5d9df', color2: '#a9b0ba', color3: '#7c8491', dir: 'v' }, glow: { on: false }, subColor: '#8e96a3', inFx: 'fade', inDur: 0.7, outFx: 'sink', outDur: 0.8, outStagger: 0.05 }
+      patch: { fill: { type: 'gradient', color: '#d5d9df', color2: '#a9b0ba', color3: '#7c8491', dir: 'v' }, glow: { on: false }, subColor: '#8e96a3', inFx: 'fade', inDur: 0.4, hold: 2.0, outFx: 'sink', outDur: 0.8, outStagger: 0.05 }
     },
     fumble: {
       accent: '#e3263f', band: '#0e0205',

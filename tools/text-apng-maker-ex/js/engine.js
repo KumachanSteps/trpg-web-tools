@@ -1541,23 +1541,26 @@
   const BLADE_RING = 0.3;
   // 抜刀の段取り。lead：文字が出る（決めの）時刻 / ring：円月を描き始める時刻 / cuts：一閃
   // （t：振り始め / ang：傾き。負は右上がり / rev：右から左へ / off：文字の中心からのずれ（文字の大きさが単位）/
-  //   w：太さの倍率 / dull：鈍い空振り / snap：刃が折れる位置 0〜1）
+  //   snap：刃が折れる位置 0〜1 / miss：文字の右上の角をかすめて外れる。帯の中だけに描き、跡が帯に残る / pre：予兆の線がのび始める時刻 /
+  //   sweep：振り抜く時間）
+  // 失敗は先に帯と文字を出し、そのあとで振って外す
   const BLADE_PLAN = {
     success: { lead: 0.42, cuts: [{ t: 0.28, ang: -0.3 }] },
     special: { lead: 0.6, cuts: [{ t: 0.28, ang: -0.3 }, { t: 0.44, ang: 0.3, rev: true }] },
     critical: { lead: 0.98, ring: 0.6, cuts: [{ t: 0.22, ang: -0.3 }, { t: 0.32, ang: 0.3, rev: true }, { t: 0.42, ang: -0.04 }] },
-    failure: { lead: 0.66, cuts: [{ t: 0.22, ang: -0.12, off: -1.0, w: 0.45, dull: true }] },
+    failure: { lead: 0.12, cuts: [{ t: 0.95, pre: 0.5, ang: 1.25, miss: true, sweep: 0.16 }] },
     fumble: { lead: 0.28, cuts: [{ t: 0.2, ang: -0.3, snap: 0.5 }] }
   };
   // 銃撃：曳光弾が画面の外から着弾点まで飛ぶ時間
   const SHOT_TRACER = 0.07;
   // 銃撃の段取り。lead：文字が出る（決めの）時刻 / lock：照準が定まる時刻 / shots：着弾の時刻 /
-  // miss：弾が逸れる / jam：弾が詰まって照準が砕ける時刻
+  // miss：弾が文字の右の帯に逸れて穴が残る / aim：照準が逸れ始める時刻 / jam：弾が詰まって照準が砕ける時刻
+  // 失敗は先に帯と文字を出し、そのあとで撃って外す
   const SHOT_PLAN = {
     success: { lead: 0.46, lock: 0.26, shots: [0.46] },
     special: { lead: 0.6, lock: 0.26, shots: [0.44, 0.6] },
     critical: { lead: 0.96, lock: 0.42, shots: [0.62, 0.7, 0.78, 0.96] },
-    failure: { lead: 0.8, shots: [0.44], miss: true },
+    failure: { lead: 0.12, aim: 0.7, shots: [1.0], miss: true },
     fumble: { lead: 0.66, jam: 0.42 }
   };
   // 決めの一発より前の着弾点（文字の中心から。文字の大きさが単位）
@@ -1565,6 +1568,23 @@
 
   function rollTier(sfx) {
     return ROLL_TIERS.includes(sfx.tier) ? sfx.tier : 'success';
+  }
+
+  // 失敗で、斬撃・弾が文字を外れる時刻（場面の始めから）
+  function rollMissAt(sfx) {
+    if (sfx.type === 'blade') return BLADE_PLAN.failure.cuts[0].t + BLADE_PLAN.failure.cuts[0].sweep * 0.5;
+    return SHOT_PLAN.failure.shots[0];
+  }
+
+  // 判定カットインの帯の中心と、上下・左右の半分の長さ（開ききったとき）
+  function rollBandRect(page, size, W) {
+    const b = page.box;
+    return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2, hh: (b.y1 - b.y0) / 2 + size * 0.3, half: W * 0.52 };
+  }
+
+  // 失敗の弾が当たる場所：文字の右の帯の上（画面からはみ出さないように寄せる）
+  function shotMissSpot(mb, size, W) {
+    return { x: Math.min(mb.x1 + size * 0.5, W - size * 0.6), y: mb.cy - size * 0.12 };
   }
 
   // 刃の光：x0 から x1（先端）まで細長く光る。ctx は一閃の向きに回してある
@@ -1606,24 +1626,6 @@
     ctx.quadraticCurveTo(mid, -th, x1, 0);
     ctx.quadraticCurveTo(mid, th, x0, 0);
     ctx.fill();
-    ctx.restore();
-  }
-
-  // 4方向に尖ったきらめき
-  function twinkle(ctx, x, y, r, color, alpha) {
-    if (alpha <= 0.002 || r <= 0.3) return;
-    ctx.save();
-    ctx.globalAlpha *= clamp(alpha);
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x, y - r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.quadraticCurveTo(x, y, x, y + r);
-    ctx.quadraticCurveTo(x, y, x - r, y);
-    ctx.quadraticCurveTo(x, y, x, y - r);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(x, y, r * 0.12, 0, TAU); ctx.fill();
     ctx.restore();
   }
 
@@ -1784,8 +1786,11 @@
           bs.y += noise1(t * 40, 19) * size * amp * 0.8 * k * e * e;
         }
       }
-      // 失敗：出たあと少しだけ沈む
-      if (tier === 'failure' && d >= 0) bs.y += size * 0.05 * EASE.outCubic(clamp(d / 1.2));
+      // 失敗：外れたあと少しだけ沈む
+      if (tier === 'failure') {
+        const m = t - (pg.start + rollMissAt(sfx));
+        if (m >= 0) bs.y += size * 0.05 * EASE.outCubic(clamp(m / 0.9));
+      }
       if (sfx.type === 'blade') {
         const cut = BLADE_PLAN[tier].cuts[0];
         if (tier === 'fumble' && d >= 0) {
@@ -3698,10 +3703,10 @@
     // 判定カットインの帯：文字の後ろの暗い帯（左右はぼかす）と上下の細い線。open で中央の細い線から開く
     drawRollBand(ctx, page, size, W, open, alpha, accent, dark) {
       if (open <= 0.001 || alpha <= 0.002) return;
-      const b = page.box;
-      const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
-      const hh = ((b.y1 - b.y0) / 2 + size * 0.3) * (0.04 + 0.96 * open);
-      const half = W * (0.2 + 0.32 * Math.min(1, open * 1.6));
+      const r = rollBandRect(page, size, W);
+      const cx = r.cx, cy = r.cy;
+      const hh = r.hh * (0.04 + 0.96 * open);
+      const half = r.half * (0.2 + 0.32 * Math.min(1, open * 1.6)) / 0.52;
       ctx.save();
       ctx.globalAlpha *= clamp(alpha);
       const g = ctx.createLinearGradient(cx - half, 0, cx + half, 0);
@@ -3724,7 +3729,7 @@
     }
 
     // 抜刀の判定。成功＝一閃 / スペシャル＝十字の二閃 / 決定的成功＝三閃のあと円月が文字を囲み、集中線と金の火花 /
-    // 失敗＝文字の上を鈍く空振り / 致命的失敗＝刃が文字の中央で折れて砕け、文字が斜めに割れる。
+    // 失敗＝帯と文字が出たあと、文字の右上の角をかすめて空を斬り、帯に細い跡が残る / 致命的失敗＝刃が文字の中央で折れて砕け、文字が斜めに割れる。
     // 帯・集中線・円月は文字の後ろ、一閃・閃光・火花・破片は文字の手前に描く
     drawBlade(ctx, pg, page, t, scale, scene, sfx, k, layer) {
       const d = t - pg.start;
@@ -3747,10 +3752,19 @@
       const th = size * 0.085 * k;
       const seed = 700 + pg.index * 11;
       const frame = Math.floor(t * 24);
-      // 一閃の線の中点（文字の中心からのずれを含む）と、進む向き
+      // 一閃の線の中点（文字の中心からのずれを含む）と、進む向き。外れる一閃は、文字の枠から少し離れたところを通す
       const origin = c => {
-        const off = (c.off || 0) * size;
+        const off = c.miss
+          ? -(Math.abs(Math.sin(c.ang)) * (mb.x1 - mb.x0) / 2 + Math.abs(Math.cos(c.ang)) * (mb.y1 - mb.y0) / 2) - size * 0.2
+          : (c.off || 0) * size;
         return { x: cx - Math.sin(c.ang) * off, y: cy + Math.cos(c.ang) * off, a: c.ang + (c.rev ? Math.PI : 0) };
+      };
+      // 一閃の線の半分の長さ。帯の中だけに描く一閃は、帯を斜めに横切る長さにして、振る間ずっと帯の中に見えるようにする
+      const band = rollBandRect(page, size, W);
+      const reachOf = c => {
+        if (!c.miss) return Lh;
+        const oy = origin(c).y;
+        return Math.max(Math.abs(band.cy - band.hh - oy), Math.abs(band.cy + band.hh - oy)) / Math.max(0.2, Math.abs(Math.sin(c.ang))) * 1.1;
       };
       const cuts = plan.cuts.slice();
       // 退場が「斬られて左右へ」なら、切れる瞬間にもう一度、最初の一閃と同じ線を走らせる
@@ -3758,9 +3772,28 @@
         cuts.push({ ...plan.cuts[0], t: katanaCut(pg) - pg.start - BLADE_SWEEP / 2, exit: true });
       }
 
+      // 失敗の一閃は帯の中だけに描く
+      const clipBand = () => {
+        ctx.beginPath();
+        ctx.rect(0, band.cy - band.hh, W, band.hh * 2);
+        ctx.clip();
+      };
+
       if (layer === 'back') {
-        const open = tier === 'failure' ? EASE.outCubic(clamp((d - L) / 0.6)) : EASE.outExpo(clamp((d - L + 0.03) / 0.3));
+        const open = tier === 'failure' ? EASE.outCubic(clamp(d / 0.4)) : EASE.outExpo(clamp((d - L + 0.03) / 0.3));
         this.drawRollBand(ctx, page, size, W, open, fade, accent, dark);
+        // 失敗：空を斬った跡が帯に細く残る
+        const c = cuts[0];
+        const a = d - c.t - (c.sweep || BLADE_SWEEP);
+        if (c.miss && a >= 0) {
+          const o = origin(c);
+          ctx.save();
+          clipBand();
+          ctx.translate(o.x, o.y);
+          ctx.rotate(o.a);
+          bladeLine(ctx, -Lh, Lh, size * 0.008, accent, 0.5 * clamp(a / 0.3) * fade * (1 - out), scale);
+          ctx.restore();
+        }
         if (tier === 'critical') {
           const s = d - L;
           if (s >= 0 && s < 0.6) speedLines(ctx, cx, cy, Math.max(W, H) * 0.3, Math.hypot(W, H) * 0.75, 52, seed, frame, accent, 0.6 * Math.pow(1 - s / 0.6, 1.5) * clamp(k), size * 0.035);
@@ -3769,54 +3802,60 @@
         return;
       }
 
+      ctx.save();
+      if (tier === 'failure') clipBand();
       // 予兆：一閃の通り道に細い線がのび、振る直前に中央できらりと光る
       const c0 = cuts[0];
-      if (d < c0.t + 0.03) {
+      const pre = c0.pre || 0;
+      if (d >= pre && d < c0.t + 0.03) {
         const o = origin(c0);
-        const p = clamp(d / c0.t);
+        const p = clamp((d - pre) / (c0.t - pre));
         ctx.save();
         ctx.translate(o.x, o.y);
         ctx.rotate(o.a);
-        const len = Lh * 0.85 * EASE.outCubic(p);
+        const len = reachOf(c0) * 0.85 * EASE.outCubic(p);
         bladeLine(ctx, -len, len, size * 0.007, accent, 0.45 * p, scale);
         ctx.restore();
         const gl = d - (c0.t - 0.1);
-        if (gl >= 0 && gl < 0.13) twinkle(ctx, o.x, o.y, size * (c0.dull ? 0.22 : 0.4) * Math.sin(Math.PI * gl / 0.13), c0.dull ? accent : '#ffffff', c0.dull ? 0.7 : 1);
+        if (gl >= 0 && gl < 0.13) twinkle(ctx, o.x, o.y, size * (c0.miss ? 0.3 : 0.4) * Math.sin(Math.PI * gl / 0.13), '#ffffff', 1);
       }
 
       cuts.forEach((c, i) => {
         const a = d - c.t;
         if (a < 0) return;
         const o = origin(c);
-        const w = th * (c.w || 1);
-        const alpha = c.dull ? 0.55 : 1;
+        const w = th * (c.miss ? 1.3 : 1);
+        const alpha = 1;
+        const sweep = c.sweep || BLADE_SWEEP;
+        const Lc = reachOf(c);
         const end = c.snap != null ? -Lh + 2 * Lh * c.snap : Lh;
-        const reach = c.snap != null ? BLADE_SWEEP * c.snap : BLADE_SWEEP;
+        const reach = c.snap != null ? sweep * c.snap : sweep;
         ctx.save();
         ctx.translate(o.x, o.y);
         ctx.rotate(o.a);
         if (a < reach) {
-          const head = -Lh + 2 * Lh * (a / BLADE_SWEEP);
-          bladeSliver(ctx, Math.max(-Lh, head - Lh * 1.1), head, w, accent, alpha, scale);
+          const head = -Lc + 2 * Lc * (a / sweep);
+          bladeSliver(ctx, Math.max(-Lc, head - Lc * 1.1), head, w, accent, alpha, scale);
         } else if (c.snap != null) {
           // 折れた刃：届いたところで止まり、光がすぐに消える
           const q = (a - reach) / 0.25;
           if (q < 1) bladeSliver(ctx, Math.max(-Lh, end - Lh * 1.1 * (1 - 0.5 * q)), end, w * (1 - q), accent, 1 - q, scale);
         } else {
-          const q = (a - BLADE_SWEEP) / BLADE_FADE;
+          const q = (a - sweep) / BLADE_FADE;
           if (q < 1) {
-            bladeLine(ctx, -Lh, Lh, w * 0.7 * (1 - q), accent, alpha * (1 - q * q), scale);
-            bladeLine(ctx, -Lh, Lh, size * 0.01, accent, alpha * (1 - q), scale);
+            bladeLine(ctx, -Lc, Lc, w * 0.7 * (1 - q), accent, alpha * (1 - q * q), scale);
+            bladeLine(ctx, -Lc, Lc, size * 0.01, accent, alpha * (1 - q), scale);
           }
         }
-        // 刃が文字の中央を通る瞬間の閃光と、刃の向きに散る火花
-        const f = d - (c.t + BLADE_SWEEP * 0.5);
-        if (!c.dull && c.snap == null && f >= 0 && f < 0.32) {
+        // 刃が文字の中央を通る瞬間の閃光と、刃の向きに散る火花（外れた一閃は何も斬らないので出さない）
+        const f = d - (c.t + sweep * 0.5);
+        if (!c.miss && c.snap == null && f >= 0 && f < 0.32) {
           drawFlash(ctx, 0, 0, W * 0.45, accent, (c.exit ? 0.7 : 0.85) * clamp(k) * Math.pow(1 - f / 0.32, 2), 0.16);
           sparkBurst(ctx, 0, 0, f, 10, seed + i * 5, size * 9, 0, size * 0.3, accent, 0.32, Math.max(1, size * 0.012), 0, 0.5);
         }
         ctx.restore();
       });
+      ctx.restore();
 
       const s = d - L;
       if (tier === 'critical') {
@@ -3975,7 +4014,8 @@
 
     // 銃撃の判定。照準が飛び込んで定まり、撃ち抜いた瞬間に文字が出る。
     // 成功＝一発 / スペシャル＝二連射 / クリティカル＝外側の目盛りと角の照準でロックオンし、三点射のあとトドメの一発、集中線と金の火花 /
-    // 失敗＝照準が定まらず弾が逸れ、照準が沈んで消える / ファンブル＝引き金を引いても弾が出ず、照準が砕けて落ちる。
+    // 失敗＝帯と文字が出たあと、文字に合わせた照準が揺れて右へ逸れ、弾は文字の右の帯に当たって穴が残る /
+    // ファンブル＝引き金を引いても弾が出ず、照準が砕けて落ちる。
     // 帯・照準・衝撃の輪は文字の後ろ、曳光弾・閃光・火花は文字の手前に描く
     drawShot(ctx, pg, page, t, scale, scene, sfx, k, layer) {
       const d = t - pg.start;
@@ -4000,15 +4040,22 @@
       const last = shots.length - 1;
       const lw = Math.max(1, size * 0.016);
       const spot = i => {
-        if (plan.miss) return { x: cx + size * 0.2, y: cy - size * 1.25 };
+        if (plan.miss) return shotMissSpot(mb, size, W);
         if (i === last) return { x: cx, y: cy };
         const p = SHOT_SPOTS[i % SHOT_SPOTS.length];
         return { x: cx + p[0] * size, y: cy + p[1] * size };
       };
 
       if (layer === 'back') {
-        const open = tier === 'failure' ? EASE.outCubic(clamp((d - L) / 0.6)) : EASE.outExpo(clamp((d - L + 0.03) / 0.3));
+        const open = tier === 'failure' ? EASE.outCubic(clamp(d / 0.4)) : EASE.outExpo(clamp((d - L + 0.03) / 0.3));
         this.drawRollBand(ctx, page, size, W, open, fade, accent, dark);
+        if (plan.miss) {
+          // 外れた弾：帯に小さな衝撃の輪と、弾の穴が残る
+          const a = d - shots[0];
+          const p = spot(0);
+          if (a >= 0 && a < 0.35) shockRing(ctx, p.x, p.y, size * (0.1 + 0.55 * EASE.outCubic(a / 0.35)), lw * 1.6 * (1 - a / 0.35), accent, (1 - a / 0.35) * clamp(k));
+          if (a >= 0) drawBulletHole(ctx, p.x, p.y, size, seed + 3, EASE.outCubic(clamp(a / 0.12)), fade * (1 - out), dark);
+        }
         const s = d - L;
         if (tier === 'critical' && s >= 0 && s < 0.6) {
           speedLines(ctx, cx, cy, Math.max(W, H) * 0.3, Math.hypot(W, H) * 0.75, 52, seed, frame, accent, 0.6 * Math.pow(1 - s / 0.6, 1.5) * clamp(k), size * 0.035);
@@ -4029,12 +4076,12 @@
             }
           });
         }
-        this.drawShotReticle(ctx, plan, tier, cx, cy, size, d, t, L, out, fade, accent, seed, lw);
+        this.drawShotReticle(ctx, plan, tier, cx, cy, size, d, t, L, out, fade, accent, seed, lw, plan.miss ? spot(0) : null);
         return;
       }
 
-      // 曳光弾：画面の右下の外から着弾点へ走る。外れた弾は照準のふちをかすめ、そのまま左上の画面の外へ抜ける
-      const over = plan.miss ? 2.6 : 1;
+      // 曳光弾：画面の右下の外から着弾点へ走る
+      const over = 1;
       shots.forEach((ts, i) => {
         const a = d - (ts - SHOT_TRACER);
         if (a < 0 || a > SHOT_TRACER * over + 0.08) return;
@@ -4063,7 +4110,12 @@
         const a = d - ts;
         if (a < 0) return;
         const p = spot(i);
-        if (plan.miss) return;
+        if (plan.miss) {
+          // 外れた弾：帯に当たった小さな閃光と、細かい火花だけ
+          if (a < 0.2) drawFlash(ctx, p.x, p.y, size * 0.9, accent, 0.8 * clamp(k) * Math.pow(1 - a / 0.2, 2));
+          sparkBurst(ctx, p.x, p.y, a, 8, seed + i * 7, size * 5, size * 6, size * 0.16, accent, 0.3, Math.max(1, size * 0.01));
+          return;
+        }
         const big = tier === 'critical' && i === last;
         const fl = big ? 0.5 : 0.26;
         if (a < fl) drawFlash(ctx, p.x, p.y, size * (big ? 3.4 : 1.7), accent, (big ? 1 : 0.9) * clamp(k) * Math.pow(1 - a / fl, 2));
@@ -4100,7 +4152,7 @@
 
     // 銃撃の照準：切れ目の入った輪と4本の目盛り、内側の小さな輪と中心の点。
     // 外から回りながら縮んで定まり、定まった瞬間に目盛りが2回光る。撃ち抜いたあとは薄くなって文字の後ろに残る
-    drawShotReticle(ctx, plan, tier, cx, cy, size, d, t, L, out, fade, accent, seed, lw) {
+    drawShotReticle(ctx, plan, tier, cx, cy, size, d, t, L, out, fade, accent, seed, lw, miss) {
       const z = EASE.outExpo(clamp(d / 0.3));
       const R0 = size * 0.82;
       let R = R0 * lerp(2.5, 1, z);
@@ -4112,10 +4164,15 @@
         if (lk >= 0 && lk < 0.14) R *= 1 - 0.07 * Math.sin(Math.PI * lk / 0.14);
       }
       if (tier === 'failure') {
-        // 定まらずに揺れ続け、撃った反動で跳ねて、外れたあとは沈んで消える
+        // 文字に合わせようとして揺れ、撃つ直前に右へ逸れる。撃った反動で跳ねて、外れたあとは沈んで消える
         const sway = clamp(d / 0.25);
-        ox = noise1(t * 4, 5) * size * 0.55 * sway;
-        oy = noise1(t * 4, 9) * size * 0.3 * sway;
+        ox = noise1(t * 4, 5) * size * 0.3 * sway;
+        oy = noise1(t * 4, 9) * size * 0.18 * sway;
+        if (miss) {
+          const e = EASE.inOutCubic(clamp((d - plan.aim) / Math.max(0.05, plan.shots[0] - 0.04 - plan.aim)));
+          ox = lerp(ox, miss.x - cx, e);
+          oy = lerp(oy, miss.y - cy, e);
+        }
         const kick = d - plan.shots[0];
         if (kick >= 0 && kick < 0.18) { oy -= size * 0.25 * Math.sin(Math.PI * kick / 0.18); }
         const droop = EASE.inCubic(clamp((d - plan.shots[0] - 0.1) / 0.35));
