@@ -58,7 +58,8 @@
       glitch: T('グリッチ', 'Glitch', '글리치'),
       split: T('斬られて左右へ', 'Sliced apart', '베여서 좌우로'),
       burn: T('燃えて消える', 'Burn away', '불타 사라지기'),
-      firefly: T('光の粒になって消える', 'Dissolve into light', '빛의 입자로 사라짐')
+      firefly: T('光の粒になって消える', 'Dissolve into light', '빛의 입자로 사라짐'),
+      blaze: T('炎に包まれて燃え尽きる', 'Burn up in flames', '불길에 휩싸여 타 버림')
     },
     hold: {
       none: T('なし', 'None', '없음'),

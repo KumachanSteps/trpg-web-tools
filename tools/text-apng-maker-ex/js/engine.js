@@ -360,7 +360,11 @@
     // 光の粒になって消える（EX）：左から右へ文字がほどけて、蛍のような光の粒になり、右へ漂いながら消える。
     // 退場の時間のうち、はじめの FIREFLY_SWEEP の割合で文字がほどけ、残りで光の粒が消えていく
     { id: 'firefly', level: 'block', ease: 'linear', dur: 2.6,
-      block(bs, e, p) { bs.mask = { dir: 'burn', p: clamp(p / FIREFLY_SWEEP), out: true, firefly: true }; } }
+      block(bs, e, p) { bs.mask = { dir: 'burn', p: clamp(p / FIREFLY_SWEEP), out: true, firefly: true }; } },
+    // 炎に包まれて燃え尽きる（EX）：左から右へ火が燃え移り、燃え際は焦げて赤く光りながら崩れ、
+    // 文字から炎が立ちのぼって火の粉と煙が昇る。退場の時間のうち、はじめの BLAZE_SWEEP の割合で燃え移り、残りで火が収まる
+    { id: 'blaze', level: 'block', ease: 'linear', dur: 3.0,
+      block(bs) { bs.mask = { blaze: true }; } }
   ];
 
   const HOLD_EFFECTS = [
@@ -1408,6 +1412,9 @@
   const FIREFLY_SWEEP = 0.5;
   const FIREFLY_SOFT = 1.2;
   const FIREFLY_PER_GLYPH = 14;
+  // 「炎に包まれて燃え尽きる」：燃え移り終わるまでの割合 / 炎の色（奥の赤 → 赤 → 橙 → 黄 → 芯の白）
+  const BLAZE_SWEEP = 0.6;
+  const BLAZE = { deep: '#8f1404', red: '#e0400c', orange: '#ff8a1e', yellow: '#ffd25a', white: '#fff4d6' };
   const FLAME_BAND = '#120c0a';
   const SFX_TYPES = Object.keys(SFX_TIMING);
   // 雷：左右から走る電気が中央で出会うまで / 中央の火花が散りきるまで / 退場前の落雷
@@ -2001,6 +2008,21 @@
     return { x: lerp(x0, x1, clamp(p / FIREFLY_SWEEP)), x0, x1, p, soft: s };
   }
 
+  // 「炎に包まれて燃え尽きる」退場の燃え際（文字の層の座標。この位置より左はもう燃え尽きている）
+  function blazeFront(pg, page, t, size) {
+    const bo = pg.blockOut;
+    if (!bo || bo.fx.id !== 'blaze' || t < bo.start) return null;
+    const p = clamp((t - bo.start) / bo.dur);
+    const b = page.box;
+    const x0 = b.x0 - size * 0.6, x1 = b.x1 + size * 0.6;
+    return { x: lerp(x0, x1, clamp(p / BLAZE_SWEEP)), x0, x1, p };
+  }
+
+  // 燃え際のゆらぎ：高さ y での燃え際の位置（まっすぐな線ではなく、ゆっくりうねる）
+  function blazeEdge(front, y, t, size, seed) {
+    return front + (noise1(y / size * 2.2 + t * 0.9, seed) * 0.4 + noise1(y / size * 7 - t * 2.5, seed + 5) * 0.12) * size;
+  }
+
   // 炎の舌：根元が太く、先へ行くほど細く大きくゆらぐ形。下から上へ inner → outer の色で塗り、先は透ける
   function flameTongue(ctx, x, y, w, h, t, seed, inner, outer, alpha) {
     if (alpha <= 0.002 || h <= 1) return;
@@ -2369,8 +2391,110 @@
           ctx.restore();
         }
         this.drawFireflies(ctx, pg, page, t, scale, scene, bs);
+        this.drawBlaze(ctx, pg, page, t, scale, bs);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'front');
       });
+    }
+
+    // 炎に包まれて燃え尽きる：燃え際が通ったところの文字から炎が立ちのぼってしばらく燃え、火の粉が舞い上がり、薄い煙が昇る
+    drawBlaze(ctx, pg, page, t, scale, bs) {
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const bf = blazeFront(pg, page, t, size);
+      if (!bf) return;
+      const bo = pg.blockOut;
+      const end = bo.start + bo.dur;
+      const sweep = bo.dur * BLAZE_SWEEP;
+      const ignite = x => bo.start + sweep * clamp((x - bf.x0) / Math.max(1, bf.x1 - bf.x0));
+      const tail = clamp((end - t) / 0.4);
+      const glyphs = [];
+      for (let i = page.first; i < page.last; i++) {
+        const g = layout.glyphs[i];
+        if (g && !g.blank) glyphs.push([i, g]);
+      }
+      ctx.save();
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      // 煙：燃えたあとから薄く昇って広がる
+      glyphs.forEach(([i, g]) => {
+        for (let j = 0; j < 3; j++) {
+          const x0 = g.cx + bs.x + (rnd(i, j, 51) - 0.5) * g.size * 0.8;
+          const born = ignite(x0) + 0.15 + rnd(i, j, 52) * 0.35;
+          const a = t - born;
+          const life = Math.min(1.3 + rnd(i, j, 53) * 0.6, end - born);
+          if (a < 0 || a >= life) continue;
+          const q = a / life;
+          const x = x0 + size * (0.3 * a + 0.25 * noise1(a * 1.5, i * 7 + j));
+          const y = g.cy + bs.y - size * (0.3 + 0.8 * a);
+          const r = size * (0.25 + 0.6 * q);
+          const sg = ctx.createRadialGradient(x, y, 0, x, y, r);
+          sg.addColorStop(0, `rgba(58, 52, 48, ${0.16 * Math.sin(Math.PI * q)})`);
+          sg.addColorStop(1, 'rgba(58, 52, 48, 0)');
+          ctx.fillStyle = sg;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+        }
+      });
+      // 炎：文字の中に散らした火元が、燃え際が届くと一気に燃え上がって文字を包み、燃え際が過ぎると小さくなって消える
+      const flames = [];
+      glyphs.forEach(([i, g]) => {
+        for (let c = 0; c < 6; c++) {
+          const seed = i * 17 + c * 5;
+          const x = g.cx + bs.x + (rnd(seed, 1, 61) - 0.5) * g.size * 0.85;
+          const y = g.cy + bs.y + g.size * (0.05 + 0.38 * rnd(seed, 2, 61));
+          const a = t - ignite(x) - rnd(seed, 3, 61) * 0.06;
+          if (a < 0) continue;
+          const life = 0.35 + rnd(seed, 4, 61) * 0.25;
+          const I = EASE.outCubic(clamp(a / 0.14)) * Math.exp(-Math.max(0, a - 0.14) / life) * tail;
+          if (I < 0.03) continue;
+          const h = size * (1.1 + 1.0 * rnd(seed, 5, 61)) * I * (0.8 + 0.2 * noise1(t * 7, seed));
+          const w = size * (0.32 + 0.22 * rnd(seed, 6, 61)) * (0.55 + 0.45 * I);
+          flames.push({ x, y, w, h, I, seed });
+        }
+      });
+      flames.sort((p, q) => q.h - p.h);
+      // 燃え際のまわりの熱の光
+      const heat = clamp(bf.p / 0.05) * clamp((BLAZE_SWEEP + 0.1 - bf.p) / 0.15);
+      ctx.globalCompositeOperation = 'lighter';
+      if (heat > 0.01) {
+        const mb = mainBox(layout, page);
+        const hg = ctx.createRadialGradient(bf.x + bs.x, mb.cy + bs.y, 0, bf.x + bs.x, mb.cy + bs.y, size * 1.6);
+        hg.addColorStop(0, colorWithAlpha(BLAZE.orange, 0.22 * heat));
+        hg.addColorStop(1, colorWithAlpha(BLAZE.red, 0));
+        ctx.fillStyle = hg;
+        ctx.fillRect(bf.x + bs.x - size * 1.6, mb.cy + bs.y - size * 1.6, size * 3.2, size * 3.2);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      flames.forEach(f => flameTongue(ctx, f.x, f.y, f.w, f.h, t, f.seed, BLAZE.red, BLAZE.deep, 0.6 * f.I));
+      ctx.globalCompositeOperation = 'lighter';
+      flames.forEach(f => flameTongue(ctx, f.x, f.y, f.w * 0.7, f.h * 0.75, t, f.seed, BLAZE.orange, BLAZE.red, 0.55 * f.I));
+      flames.forEach(f => flameTongue(ctx, f.x, f.y + f.w * 0.1, f.w * 0.36, f.h * 0.42, t, f.seed, BLAZE.white, BLAZE.yellow, 0.5 * f.I));
+      // 火の粉：燃えている文字から舞い上がり、うねりながら昇って、冷えるにつれて白 → 黄 → 橙 → 赤になって消える
+      ctx.lineCap = 'round';
+      glyphs.forEach(([i, g]) => {
+        for (let j = 0; j < 10; j++) {
+          const x0 = g.cx + bs.x + (rnd(i, j, 71) + rnd(i, j, 72) - 1) * g.size * 0.5;
+          const y0 = g.cy + bs.y + (rnd(i, j, 73) + rnd(i, j, 74) - 1) * g.size * 0.5;
+          const born = ignite(x0) + 0.05 + rnd(i, j, 75) * 0.35;
+          const life = Math.min(0.8 + rnd(i, j, 76) * 0.9, end - born);
+          const pos = a => [
+            x0 + size * ((0.25 + 0.5 * rnd(i, j, 77)) * a + 0.3 * noise1(a * 2.5 + rnd(i, j, 78) * 9, i * 31 + j) * Math.min(1, a * 3)),
+            y0 - size * 0.6 - size * (1.0 + 1.4 * rnd(i, j, 79)) * a * (1 - 0.2 * a)
+          ];
+          const a = t - born;
+          if (a < 0 || a >= life || life <= 0.05) continue;
+          const q = a / life;
+          const [x, y] = pos(a);
+          const [px, py] = pos(Math.max(0, a - 0.035));
+          const col = q < 0.3 ? BLAZE.white : q < 0.6 ? BLAZE.yellow : q < 0.8 ? BLAZE.orange : BLAZE.red;
+          const alpha = (0.7 + 0.3 * noise1(t * 20, i * 13 + j)) * (1 - q);
+          const r = size * (0.008 + rnd(i, j, 80) * 0.01);
+          ctx.fillStyle = colorWithAlpha(BLAZE.orange, 0.22 * alpha);
+          ctx.beginPath(); ctx.arc(x, y, r * 4, 0, TAU); ctx.fill();
+          ctx.strokeStyle = colorWithAlpha(col, alpha);
+          ctx.lineWidth = r * 2;
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
+        }
+      });
+      ctx.restore();
     }
 
     // 光の粒になって消える：ほどけ際が通ったところの文字から光の粒が生まれ、またたきながら右上へ漂って消える。
@@ -4475,7 +4599,10 @@
         const ff = fireflyFront(pg, page, t, layout.size);
         if (ff) bs.mask = { ...bs.mask, x: ff.x + bs.x, scale };
       }
-      if (bs.mask) this.applyMask(bs.mask, rect, layout.size * (bs.mask.firefly ? FIREFLY_SOFT : 0.6) * scale);
+      if (bs.mask && bs.mask.blaze) {
+        const bf = blazeFront(pg, page, t, layout.size);
+        if (bf) this.applyBlaze({ x: bf.x + bs.x, scale, t, size: layout.size, seed: 500 + pg.index * 13 }, rect);
+      } else if (bs.mask) this.applyMask(bs.mask, rect, layout.size * (bs.mask.firefly ? FIREFLY_SOFT : 0.6) * scale);
       if (pg.scroll && scene.scrollFade !== false) this.applyEdgeFade(pg.scroll.vertical, cw, ch);
       if (bs.glitch > 0.01) this.applyGlitch(bs.glitch, t, rect, layout.size * scale, pg.index, scene);
     }
@@ -4698,6 +4825,55 @@
       const hw = (box.x1 - box.x0) / 2 * Math.abs(bs.s * bs.sx) + pad;
       const hh = (box.y1 - box.y0) / 2 * Math.abs(bs.s * bs.sy) + pad;
       return { x: (cx - hw) * scale, y: (cy - hh) * scale, w: hw * 2 * scale, h: hh * 2 * scale };
+    }
+
+    // 炎に包まれて燃え尽きる：燃え際の少し先の文字を焦がし、燃え際を赤く光らせてから、燃え際より左を消す
+    applyBlaze(m, rect) {
+      const lctx = this.lctx;
+      const cw = this.layer.width, ch = this.layer.height;
+      const s = m.scale, unit = m.size * s;
+      const fx = m.x * s;
+      const yA = Math.max(0, rect.y - unit), yB = Math.min(ch, rect.y + rect.h + unit);
+      const step = Math.max(2, unit * 0.05);
+      const pts = [];
+      for (let y = yA; y <= yB + step; y += step) {
+        const yy = Math.min(y, yB);
+        pts.push([blazeEdge(m.x, yy / s, m.t, m.size, m.seed) * s, yy]);
+      }
+      const curve = () => {
+        lctx.beginPath();
+        pts.forEach(([x, y], i) => (i ? lctx.lineTo(x, y) : lctx.moveTo(x, y)));
+      };
+      lctx.save();
+      lctx.setTransform(1, 0, 0, 1, 0, 0);
+      lctx.globalCompositeOperation = 'source-atop';
+      // 焦げ：燃え際の先の文字が茶色く暗くなる
+      const g = lctx.createLinearGradient(fx - unit * 0.5, 0, fx + unit * 1.6, 0);
+      g.addColorStop(0, 'rgba(36, 10, 2, 0.92)');
+      g.addColorStop(0.4, 'rgba(70, 22, 4, 0.6)');
+      g.addColorStop(1, 'rgba(70, 22, 4, 0)');
+      lctx.fillStyle = g;
+      lctx.fillRect(fx - unit * 1.2, 0, unit * 2.8, ch);
+      // 燃え際：文字の上だけ、赤 → 橙 → 黄の光る縁
+      const flick = 0.85 + 0.15 * noise1(m.t * 12, m.seed);
+      lctx.lineJoin = 'round';
+      [[0.34, BLAZE.red, 0.85], [0.2, BLAZE.orange, 0.95], [0.08, BLAZE.yellow, 1]].forEach(([w, c, a]) => {
+        lctx.strokeStyle = colorWithAlpha(c, a * flick);
+        lctx.lineWidth = unit * w;
+        curve();
+        lctx.stroke();
+      });
+      // 燃え際より左を消す
+      lctx.globalCompositeOperation = 'destination-out';
+      lctx.fillStyle = '#000';
+      curve();
+      lctx.lineTo(0, yB);
+      lctx.lineTo(0, yA);
+      lctx.closePath();
+      lctx.fill();
+      if (yA > 0) lctx.fillRect(0, 0, Math.max(0, fx - unit), yA);
+      if (yB < ch) lctx.fillRect(0, yB, Math.max(0, fx - unit), ch - yB);
+      lctx.restore();
     }
 
     applyMask(mask, rect, soft) {

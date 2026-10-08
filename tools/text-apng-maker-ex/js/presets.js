@@ -1236,6 +1236,19 @@
         }
       },
       {
+        // EX：「CLIMAX」が現れ、左から右へ火が燃え移って、焦げて赤く光る燃え際とともに炎・火の粉・煙を上げて燃え尽きる
+        id: 'blazeClimax', icon: 'flame', label: T('炎で燃え尽きる', 'Burn Up in Flames', '불길에 타 버림'),
+        text: T('CLIMAX', 'CLIMAX', 'CLIMAX'),
+        patch: {
+          fontId: 'cinzel', weight: 900, fontSize: 130, lineHeight: 1.4, letterSpacing: 0.16, align: 'center',
+          fill: { type: 'gradient', color: '#fff6e6', color2: '#ffd9a0', color3: '#ff9a4a', dir: 'v' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.7, blur: 14, x: 0, y: 3 },
+          glow: { on: true, color: '#ff6a1a', size: 26, strength: 0.8 },
+          bg: { type: 'none' },
+          reveal: 'all', glyphDur: 1.0, inFx: 'fade', hold: 1.6, outFx: 'blaze', outDur: 3.0
+        }
+      },
+      {
         // 全文をぼかしから一度に浮かび上がらせる（ポスターのキャッチコピーのように）
         id: 'allAtOnce', icon: 'textAll', label: T('全文同時表示', 'All at Once', '전문 동시 표시'),
         text: T('真実は、いつも霧の向こうにある。\n――さあ、探索を始めよう。', 'The truth always lies beyond the fog.\n— Now, let the investigation begin.', '진실은 언제나 안개 너머에 있다.\n――자, 탐색을 시작하자.'),
