@@ -1534,7 +1534,8 @@
 
   /* ---------- 判定カットイン（抜刀・銃撃） ---------- */
   // 結果の段階：成功 / スペシャル / 決定的成功（クリティカル）/ 失敗 / 致命的失敗（ファンブル）
-  const ROLL_TIERS = ['success', 'special', 'critical', 'failure', 'fumble'];
+  // 判定の段階。special はCoC6のスペシャルとCoC7のハード成功、extreme はCoC7のイクストリーム成功（極成功）
+  const ROLL_TIERS = ['success', 'special', 'extreme', 'critical', 'failure', 'fumble'];
   // 抜刀：一閃が画面を横切る時間 / 一閃の跡が消えるまで / 円月（決定的成功で文字を囲む刃の軌跡）を描く時間
   const BLADE_SWEEP = 0.12;
   const BLADE_FADE = 0.45;
@@ -1547,6 +1548,7 @@
   const BLADE_PLAN = {
     success: { lead: 0.42, cuts: [{ t: 0.28, ang: -0.3 }] },
     special: { lead: 0.6, cuts: [{ t: 0.28, ang: -0.3 }, { t: 0.44, ang: 0.3, rev: true }] },
+    extreme: { lead: 0.64, cuts: [{ t: 0.24, ang: -0.3 }, { t: 0.36, ang: 0.3, rev: true }, { t: 0.48, ang: -0.04 }] },
     critical: { lead: 0.98, ring: 0.6, cuts: [{ t: 0.22, ang: -0.3 }, { t: 0.32, ang: 0.3, rev: true }, { t: 0.42, ang: -0.04 }] },
     failure: { lead: 0.12, cuts: [{ t: 0.95, pre: 0.5, ang: 1.25, miss: true, sweep: 0.16 }] },
     fumble: { lead: 0.28, cuts: [{ t: 0.2, ang: -0.3, snap: 0.5 }] }
@@ -1559,6 +1561,7 @@
   const SHOT_PLAN = {
     success: { lead: 0.46, lock: 0.26, shots: [0.46] },
     special: { lead: 0.6, lock: 0.26, shots: [0.44, 0.6] },
+    extreme: { lead: 0.74, lock: 0.3, shots: [0.5, 0.6, 0.74] },
     critical: { lead: 0.96, lock: 0.42, shots: [0.62, 0.7, 0.78, 0.96] },
     failure: { lead: 0.12, aim: 0.7, shots: [1.0], miss: true },
     fumble: { lead: 0.66, jam: 0.42 }
@@ -1774,14 +1777,15 @@
       const tier = rollTier(sfx);
       const d = t - pg.textStart;
       const big = tier === 'critical';
-      // 決めの瞬間：白く光って少し大きく叩きつける（決定的成功・致命的失敗は揺れも）
+      const mid = tier === 'extreme';
+      // 決めの瞬間：白く光って少し大きく叩きつける（イクストリーム・決定的成功・致命的失敗は揺れも）
       if (tier !== 'failure' && d >= 0 && d < 0.3) {
         const e = 1 - d / 0.3;
         const shot = sfx.type === 'shot';
-        bs.bright = Math.max(bs.bright, clamp((big ? 1 : tier === 'fumble' ? 0.5 : 0.85) * e * e));
-        bs.s *= 1 + (big ? (shot ? 0.3 : 0.16) : tier === 'fumble' ? 0.04 : (shot ? 0.18 : 0.09)) * k * e * e * e;
-        if (big || tier === 'fumble' || shot) {
-          const amp = big ? 0.06 : 0.03;
+        bs.bright = Math.max(bs.bright, clamp((big ? 1 : mid ? 0.95 : tier === 'fumble' ? 0.5 : 0.85) * e * e));
+        bs.s *= 1 + (big ? (shot ? 0.3 : 0.16) : mid ? (shot ? 0.24 : 0.12) : tier === 'fumble' ? 0.04 : (shot ? 0.18 : 0.09)) * k * e * e * e;
+        if (big || mid || tier === 'fumble' || shot) {
+          const amp = big ? 0.06 : mid ? 0.045 : 0.03;
           bs.x += noise1(t * 40, 7) * size * amp * k * e * e;
           bs.y += noise1(t * 40, 19) * size * amp * 0.8 * k * e * e;
         }
@@ -3728,7 +3732,8 @@
       ctx.restore();
     }
 
-    // 抜刀の判定。成功＝一閃 / スペシャル＝十字の二閃 / 決定的成功＝三閃のあと円月が文字を囲み、集中線と金の火花 /
+    // 抜刀の判定。成功＝一閃 / スペシャル（難成功）＝十字の二閃 / 極成功＝三閃と集中線、火花 /
+    // 決定的成功＝三閃のあと円月が文字を囲み、集中線と金の火花 /
     // 失敗＝帯と文字が出たあと、文字の右上の角をかすめて空を斬り、帯に細い跡が残る / 致命的失敗＝刃が文字の中央で折れて砕け、文字が斜めに割れる。
     // 帯・集中線・円月は文字の後ろ、一閃・閃光・火花・破片は文字の手前に描く
     drawBlade(ctx, pg, page, t, scale, scene, sfx, k, layer) {
@@ -3768,7 +3773,7 @@
       };
       const cuts = plan.cuts.slice();
       // 退場が「斬られて左右へ」なら、切れる瞬間にもう一度、最初の一閃と同じ線を走らせる
-      if (splitOut(pg) && (tier === 'success' || tier === 'special' || tier === 'critical')) {
+      if (splitOut(pg) && tier !== 'failure' && tier !== 'fumble') {
         cuts.push({ ...plan.cuts[0], t: katanaCut(pg) - pg.start - BLADE_SWEEP / 2, exit: true });
       }
 
@@ -3794,10 +3799,11 @@
           bladeLine(ctx, -Lh, Lh, size * 0.008, accent, 0.5 * clamp(a / 0.3) * fade * (1 - out), scale);
           ctx.restore();
         }
-        if (tier === 'critical') {
+        if (tier === 'critical' || tier === 'extreme') {
           const s = d - L;
-          if (s >= 0 && s < 0.6) speedLines(ctx, cx, cy, Math.max(W, H) * 0.3, Math.hypot(W, H) * 0.75, 52, seed, frame, accent, 0.6 * Math.pow(1 - s / 0.6, 1.5) * clamp(k), size * 0.035);
-          this.drawBladeRing(ctx, page, mb, size, d - plan.ring, accent, fade, scale);
+          const big = tier === 'critical';
+          if (s >= 0 && s < 0.6) speedLines(ctx, cx, cy, Math.max(W, H) * 0.3, Math.hypot(W, H) * 0.75, big ? 52 : 40, seed, frame, accent, (big ? 0.6 : 0.45) * Math.pow(1 - s / 0.6, 1.5) * clamp(k), size * 0.035);
+          if (big) this.drawBladeRing(ctx, page, mb, size, d - plan.ring, accent, fade, scale);
         }
         return;
       }
@@ -3863,6 +3869,10 @@
         if (s >= 0 && s < 0.5) drawFlash(ctx, cx, cy, W * 0.42, accent, 0.8 * clamp(k) * Math.pow(1 - s / 0.5, 2));
         sparkBurst(ctx, cx, cy, s, 40, seed + 50, size * 14, size * 9, size * 0.35, accent, 1.0, Math.max(1, size * 0.016));
         this.drawRollTwinkles(ctx, mb, size, s, t, seed, accent, fade * (1 - out));
+      } else if (tier === 'extreme') {
+        // イクストリーム（極成功）：決定的成功より控えめな閃光と火花
+        if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * 0.36, accent, 0.65 * clamp(k) * Math.pow(1 - s / 0.4, 2));
+        sparkBurst(ctx, cx, cy, s, 26, seed + 50, size * 12, size * 8, size * 0.3, accent, 0.8, Math.max(1, size * 0.014));
       } else if (tier === 'fumble') {
         this.drawBladeBreak(ctx, cuts[0], origin(cuts[0]), Lh, d, size, W, accent, seed, scale);
         // 割れ目：文字の割れたところに赤い光が細く残り、ときどき揺らぐ
@@ -4013,7 +4023,8 @@
     }
 
     // 銃撃の判定。照準が飛び込んで定まり、撃ち抜いた瞬間に文字が出る。
-    // 成功＝一発 / スペシャル＝二連射 / クリティカル＝外側の目盛りと角の照準でロックオンし、三点射のあとトドメの一発、集中線と金の火花 /
+    // 成功＝一発 / スペシャル（ハード）＝二連射 / イクストリーム＝外側の目盛りでロックオンして三点射、集中線と火花 /
+    // クリティカル＝外側の目盛りと角の照準でロックオンし、三点射のあとトドメの一発、集中線と金の火花 /
     // 失敗＝帯と文字が出たあと、文字に合わせた照準が揺れて右へ逸れ、弾は文字の右の帯に当たって穴が残る /
     // ファンブル＝引き金を引いても弾が出ず、照準が砕けて落ちる。
     // 帯・照準・衝撃の輪は文字の後ろ、曳光弾・閃光・火花は文字の手前に描く
@@ -4039,6 +4050,8 @@
       const shots = plan.shots || [];
       const last = shots.length - 1;
       const lw = Math.max(1, size * 0.016);
+      // 着弾の強さ：2＝クリティカルのトドメ / 1＝イクストリームの最後の一発 / 0＝そのほか
+      const power = i => (i !== last ? 0 : tier === 'critical' ? 2 : tier === 'extreme' ? 1 : 0);
       const spot = i => {
         if (plan.miss) return shotMissSpot(mb, size, W);
         if (i === last) return { x: cx, y: cy };
@@ -4057,22 +4070,23 @@
           if (a >= 0) drawBulletHole(ctx, p.x, p.y, size, seed + 3, EASE.outCubic(clamp(a / 0.12)), fade * (1 - out), dark);
         }
         const s = d - L;
-        if (tier === 'critical' && s >= 0 && s < 0.6) {
-          speedLines(ctx, cx, cy, Math.max(W, H) * 0.3, Math.hypot(W, H) * 0.75, 52, seed, frame, accent, 0.6 * Math.pow(1 - s / 0.6, 1.5) * clamp(k), size * 0.035);
+        if ((tier === 'critical' || tier === 'extreme') && s >= 0 && s < 0.6) {
+          const big = tier === 'critical';
+          speedLines(ctx, cx, cy, Math.max(W, H) * 0.3, Math.hypot(W, H) * 0.75, big ? 52 : 40, seed, frame, accent, (big ? 0.6 : 0.45) * Math.pow(1 - s / 0.6, 1.5) * clamp(k), size * 0.035);
         }
         // 着弾の衝撃の輪
         if (!plan.miss) {
           shots.forEach((ts, i) => {
-            const big = tier === 'critical' && i === last;
-            const dur = big ? 0.6 : 0.42;
+            const pw = power(i);
+            const dur = [0.42, 0.5, 0.6][pw];
             const a = d - ts;
             if (a < 0 || a > dur) return;
             const q = a / dur;
             const p = spot(i);
-            shockRing(ctx, p.x, p.y, size * (0.2 + (big ? 2.6 : 1.4) * EASE.outCubic(q)), lw * (big ? 3 : 2) * (1 - q), accent, (1 - q) * clamp(k));
-            if (big && a > 0.07) {
+            shockRing(ctx, p.x, p.y, size * (0.2 + [1.4, 2.0, 2.6][pw] * EASE.outCubic(q)), lw * [2, 2.5, 3][pw] * (1 - q), accent, (1 - q) * clamp(k));
+            if (pw > 0 && a > 0.07) {
               const q2 = (a - 0.07) / (dur - 0.07);
-              shockRing(ctx, p.x, p.y, size * (0.2 + 1.8 * EASE.outCubic(q2)), lw * 1.6 * (1 - q2), '#ffffff', (1 - q2) * clamp(k));
+              shockRing(ctx, p.x, p.y, size * (0.2 + (pw > 1 ? 1.8 : 1.4) * EASE.outCubic(q2)), lw * 1.6 * (1 - q2), '#ffffff', (1 - q2) * clamp(k));
             }
           });
         }
@@ -4116,27 +4130,28 @@
           sparkBurst(ctx, p.x, p.y, a, 8, seed + i * 7, size * 5, size * 6, size * 0.16, accent, 0.3, Math.max(1, size * 0.01));
           return;
         }
-        const big = tier === 'critical' && i === last;
-        const fl = big ? 0.5 : 0.26;
-        if (a < fl) drawFlash(ctx, p.x, p.y, size * (big ? 3.4 : 1.7), accent, (big ? 1 : 0.9) * clamp(k) * Math.pow(1 - a / fl, 2));
+        const pw = power(i);
+        const fl = [0.26, 0.38, 0.5][pw];
+        if (a < fl) drawFlash(ctx, p.x, p.y, size * [1.7, 2.5, 3.4][pw], accent, [0.9, 0.95, 1][pw] * clamp(k) * Math.pow(1 - a / fl, 2));
         if (a < 0.1) {
           const q = a / 0.1;
           ctx.save();
           ctx.globalAlpha *= 1 - q;
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = size * (big ? 0.024 : 0.016);
+          ctx.lineWidth = size * [0.016, 0.02, 0.024][pw];
           ctx.lineCap = 'round';
           ctx.beginPath();
           for (let j = 0; j < 10; j++) {
             const ang = (j + rnd(seed + i, j, 41) * 0.5) / 10 * TAU;
-            const r0 = size * 0.2, r1 = size * (big ? 1.1 : 0.6) * (0.6 + 0.4 * rnd(seed + i, j, 43)) * (0.7 + 0.3 * q);
+            const r0 = size * 0.2, r1 = size * [0.6, 0.85, 1.1][pw] * (0.6 + 0.4 * rnd(seed + i, j, 43)) * (0.7 + 0.3 * q);
             ctx.moveTo(p.x + Math.cos(ang) * r0, p.y + Math.sin(ang) * r0);
             ctx.lineTo(p.x + Math.cos(ang) * r1, p.y + Math.sin(ang) * r1);
           }
           ctx.stroke();
           ctx.restore();
         }
-        if (big) sparkBurst(ctx, p.x, p.y, a, 40, seed + 50, size * 14, size * 9, size * 0.35, accent, 1.0, Math.max(1, size * 0.016));
+        if (pw > 1) sparkBurst(ctx, p.x, p.y, a, 40, seed + 50, size * 14, size * 9, size * 0.35, accent, 1.0, Math.max(1, size * 0.016));
+        else if (pw > 0) sparkBurst(ctx, p.x, p.y, a, 24, seed + 50, size * 11, size * 8, size * 0.3, accent, 0.7, Math.max(1, size * 0.014));
         else sparkBurst(ctx, p.x, p.y, a, 9, seed + i * 7, size * 7, size * 6, size * 0.22, accent, 0.35, Math.max(1, size * 0.012));
       });
       if (tier === 'critical') this.drawRollTwinkles(ctx, mb, size, d - L, t, seed, accent, fade * (1 - out));
@@ -4208,8 +4223,8 @@
       ctx.save();
       ctx.globalAlpha *= alpha;
       ctx.lineCap = 'butt';
-      // クリティカル：外側の目盛りの輪（逆回り）と、四隅から閉じる角の照準
-      if (tier === 'critical') {
+      // クリティカル：外側の目盛りの輪（逆回り）と、四隅から閉じる角の照準（イクストリームは目盛りの輪だけ）
+      if (tier === 'critical' || tier === 'extreme') {
         const za = clamp((d - 0.15) / 0.25);
         if (za > 0) {
           ctx.save();
@@ -4221,19 +4236,21 @@
             const a0 = rot2 + i / 16 * TAU;
             ctx.beginPath(); ctx.arc(x, y, R2, a0, a0 + TAU / 16 * 0.55); ctx.stroke();
           }
-          const close = EASE.outBack(clamp((d - 0.2) / Math.max(0.05, plan.lock - 0.2)));
-          const B = R * lerp(2.8, 1.55, close), arm = R * 0.32;
-          ctx.strokeStyle = blink ? '#ffffff' : accent;
-          ctx.lineWidth = lw * 1.6;
-          ctx.lineJoin = 'miter';
-          ctx.beginPath();
-          [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
-            const px = x + sx * B, py = y + sy * B * 0.72;
-            ctx.moveTo(px, py - sy * arm);
-            ctx.lineTo(px, py);
-            ctx.lineTo(px - sx * arm, py);
-          });
-          ctx.stroke();
+          if (tier === 'critical') {
+            const close = EASE.outBack(clamp((d - 0.2) / Math.max(0.05, plan.lock - 0.2)));
+            const B = R * lerp(2.8, 1.55, close), arm = R * 0.32;
+            ctx.strokeStyle = blink ? '#ffffff' : accent;
+            ctx.lineWidth = lw * 1.6;
+            ctx.lineJoin = 'miter';
+            ctx.beginPath();
+            [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+              const px = x + sx * B, py = y + sy * B * 0.72;
+              ctx.moveTo(px, py - sy * arm);
+              ctx.lineTo(px, py);
+              ctx.lineTo(px - sx * arm, py);
+            });
+            ctx.stroke();
+          }
           ctx.restore();
         }
       }

@@ -90,7 +90,7 @@
     spreadHold: 0.5,
     spreadDur: 0.9,
     // EXの演出。type: 'none' / 'lightning' / 'cyber' / 'katana' / 'frame' / 'crest' / 'gunshot'
-    // tier：判定カットイン（'blade' / 'shot'）の結果の段階 'success' / 'special' / 'critical' / 'failure' / 'fumble'
+    // tier：判定カットイン（'blade' / 'shot'）の結果の段階 'success' / 'special' / 'extreme' / 'critical' / 'failure' / 'fumble'
     sfx: { type: 'none', color: '#8fd3ff', color2: '#14040a', power: 1, word: 'WARNING', tier: 'success' }
   };
 
@@ -230,7 +230,8 @@
     deco: diceFrame('#b00000', { color: '#0a0000', opacity: 0.72 }),
     inFx: 'glitch', inDur: 0.8, inStagger: 0, inPower: 1, holdFx: 'glitch', holdPower: 0.7, hold: 1.8, outFx: 'sink', outDur: 0.8, outStagger: 0.05
   };
-  // 判定カットイン（抜刀・銃撃）：段階ごとの色。accent は演出の色、band は帯の色
+  // 判定カットイン（抜刀・銃撃）：段階ごとの色。accent は演出の色、band は帯の色。
+  // 成功は白、スペシャル（CoC7のハード成功）は水色、イクストリーム（極成功）は紫、決定的成功（クリティカル）は金、失敗は灰、致命的失敗（ファンブル）は赤
   const ROLL_LOOK = {
     success: {
       accent: '#dbe9ff', band: '#05070b',
@@ -239,6 +240,13 @@
     special: {
       accent: '#4fd6ff', band: '#03080c',
       patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#d4f6ff', color3: '#4fd6ff', dir: 'v' }, glow: { on: true, color: '#18c8ff', size: 26, strength: 0.9 }, subColor: '#a8ecff' }
+    },
+    extreme: {
+      accent: '#b98cff', band: '#07040d',
+      patch: {
+        fill: { type: 'gradient', color: '#ffffff', color2: '#ece0ff', color3: '#a678ff', dir: 'v' },
+        glow: { on: true, color: '#9358ff', size: 30, strength: 1.0 }, subColor: '#dccbff', hold: 1.9
+      }
     },
     critical: {
       accent: '#ffc83d', band: '#0c0802',
@@ -333,8 +341,10 @@
       { id: 'dice', label: T('判定', 'Dice', '판정'), systems: [
         { id: 'coc6', label: T('CoC6', 'CoC 6e', 'CoC6') },
         { id: 'coc7', label: T('CoC7', 'CoC 7e', 'CoC7') },
-        { id: 'cocBlade', label: T('CoC 抜刀', 'CoC Katana', 'CoC 발도') },
-        { id: 'cocGun', label: T('CoC 銃撃', 'CoC Gunfire', 'CoC 총격') },
+        { id: 'cocBlade', label: T('CoC6 抜刀', 'CoC 6e Katana', 'CoC6 발도') },
+        { id: 'cocGun', label: T('CoC6 銃撃', 'CoC 6e Gunfire', 'CoC6 총격') },
+        { id: 'coc7Blade', label: T('CoC7 抜刀', 'CoC 7e Katana', 'CoC7 발도') },
+        { id: 'coc7Gun', label: T('CoC7 銃撃', 'CoC 7e Gunfire', 'CoC7 총격') },
         { id: 'emoklore', label: T('エモクロア', 'Emoklore', '에모크로아') },
         { id: 'dx', label: T('ダブクロ', 'Double Cross', '더블크로스') }
       ] }
@@ -943,7 +953,7 @@
         text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         patch: DICE_FUMBLE
       },
-      // EX：クトゥルフ神話TRPGの判定結果のカットイン（抜刀・銃撃）。1回再生
+      // EX：クトゥルフ神話TRPGの判定結果のカットイン（抜刀・銃撃）。1回再生。まずCoC6版
       {
         id: 'cocBladeSuccess', group: 'dice', system: 'cocBlade', icon: 'katana', loop: 'once', label: T('成功', 'Success', '성공'),
         text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
@@ -991,6 +1001,68 @@
       },
       {
         id: 'cocGunFumble', group: 'dice', system: 'cocGun', icon: 'crosshair', loop: 'once', label: T('ファンブル', 'Fumble', '펌블'),
+        text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
+        patch: rollPatch('shot', 'fumble', 140)
+      },
+      // CoC7版。抜刀は漢字（難成功・極成功）、銃撃はカタカナ（ハード成功・イクストリーム成功）
+      {
+        id: 'coc7BladeSuccess', group: 'dice', system: 'coc7Blade', icon: 'katana', loop: 'once', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        patch: rollPatch('blade', 'success', 176)
+      },
+      {
+        id: 'coc7BladeHard', group: 'dice', system: 'coc7Blade', icon: 'katana', loop: 'once', label: T('難成功', 'Hard Success', '어려운 성공'),
+        text: T('難成功', 'HARD SUCCESS', '어려운 성공'), subText: T('HARD SUCCESS', '', 'HARD SUCCESS'),
+        patch: rollPatch('blade', 'special', 160)
+      },
+      {
+        id: 'coc7BladeExtreme', group: 'dice', system: 'coc7Blade', icon: 'katana', loop: 'once', label: T('極成功', 'Extreme Success', '극단적 성공'),
+        text: T('極成功', 'EXTREME SUCCESS', '극단적 성공'), subText: T('EXTREME SUCCESS', '', 'EXTREME SUCCESS'),
+        patch: rollPatch('blade', 'extreme', 160)
+      },
+      {
+        id: 'coc7BladeCritical', group: 'dice', system: 'coc7Blade', icon: 'katana', loop: 'once', label: T('決定的成功', 'Critical', '결정적 성공'),
+        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        patch: rollPatch('blade', 'critical', 144)
+      },
+      {
+        id: 'coc7BladeFailure', group: 'dice', system: 'coc7Blade', icon: 'katana', loop: 'once', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        patch: rollPatch('blade', 'failure', 176)
+      },
+      {
+        id: 'coc7BladeFumble', group: 'dice', system: 'coc7Blade', icon: 'katana', loop: 'once', label: T('致命的失敗', 'Fumble', '치명적 실패'),
+        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        patch: rollPatch('blade', 'fumble', 144)
+      },
+      {
+        id: 'coc7GunSuccess', group: 'dice', system: 'coc7Gun', icon: 'crosshair', loop: 'once', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        patch: rollPatch('shot', 'success', 176)
+      },
+      {
+        id: 'coc7GunHard', group: 'dice', system: 'coc7Gun', icon: 'crosshair', loop: 'once', label: T('ハード成功', 'Hard Success', '어려운 성공'),
+        text: T('ハード成功', 'HARD SUCCESS', '어려운 성공'), subText: T('HARD SUCCESS', '', 'HARD SUCCESS'),
+        patch: rollPatch('shot', 'special', 136)
+      },
+      {
+        id: 'coc7GunExtreme', group: 'dice', system: 'coc7Gun', icon: 'crosshair', loop: 'once', label: T('イクストリーム成功', 'Extreme Success', '극단적 성공'),
+        text: T('イクストリーム成功', 'EXTREME SUCCESS', '극단적 성공'), subText: T('EXTREME SUCCESS', '', 'EXTREME SUCCESS'),
+        // 9文字と長いので文字を小さめにし、英語のサブは少し大きくする
+        patch: { ...rollPatch('shot', 'extreme', 104), subSize: 0.3 }
+      },
+      {
+        id: 'coc7GunCritical', group: 'dice', system: 'coc7Gun', icon: 'crosshair', loop: 'once', label: T('クリティカル', 'Critical', '크리티컬'),
+        text: T('クリティカル', 'CRITICAL', '크리티컬'), subText: T('CRITICAL', '', 'CRITICAL'),
+        patch: rollPatch('shot', 'critical', 130)
+      },
+      {
+        id: 'coc7GunFailure', group: 'dice', system: 'coc7Gun', icon: 'crosshair', loop: 'once', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        patch: rollPatch('shot', 'failure', 176)
+      },
+      {
+        id: 'coc7GunFumble', group: 'dice', system: 'coc7Gun', icon: 'crosshair', loop: 'once', label: T('ファンブル', 'Fumble', '펌블'),
         text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         patch: rollPatch('shot', 'fumble', 140)
       },
