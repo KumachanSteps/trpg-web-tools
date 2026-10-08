@@ -90,7 +90,8 @@
     spreadHold: 0.5,
     spreadDur: 0.9,
     // EXの演出。type: 'none' / 'lightning' / 'cyber' / 'katana' / 'frame' / 'crest' / 'gunshot'
-    sfx: { type: 'none', color: '#8fd3ff', color2: '#14040a', power: 1, word: 'WARNING' }
+    // tier：判定カットイン（'blade' / 'shot'）の結果の段階 'success' / 'special' / 'critical' / 'failure' / 'fumble'
+    sfx: { type: 'none', color: '#8fd3ff', color2: '#14040a', power: 1, word: 'WARNING', tier: 'success' }
   };
 
   const T = (ja, en, ko) => ({ ja, en, ko });
@@ -229,6 +230,64 @@
     deco: diceFrame('#b00000', { color: '#0a0000', opacity: 0.72 }),
     inFx: 'glitch', inDur: 0.8, inStagger: 0, inPower: 1, holdFx: 'glitch', holdPower: 0.7, hold: 1.8, outFx: 'sink', outDur: 0.8, outStagger: 0.05
   };
+  // 判定カットイン（抜刀・銃撃）：段階ごとの色。accent は演出の色、band は帯の色
+  const ROLL_LOOK = {
+    success: {
+      accent: '#dbe9ff', band: '#05070b',
+      patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#f2f6fb', color3: '#c9d8ea', dir: 'v' }, glow: { on: true, color: '#9cc4ff', size: 16, strength: 0.45 }, subColor: '#c9d8ea' }
+    },
+    special: {
+      accent: '#4fd6ff', band: '#03080c',
+      patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#d4f6ff', color3: '#4fd6ff', dir: 'v' }, glow: { on: true, color: '#18c8ff', size: 26, strength: 0.9 }, subColor: '#a8ecff' }
+    },
+    critical: {
+      accent: '#ffc83d', band: '#0c0802',
+      patch: {
+        fill: { type: 'gradient', color: '#fffbe8', color2: '#ffe07a', color3: '#ffae00', dir: 'v' }, stroke: { on: true, width: 1.5, color: '#4a2f00' },
+        glow: { on: true, color: '#ffbf1a', size: 40, strength: 1.4 }, subColor: '#ffe39a', holdFx: 'glow', holdPower: 0.8, hold: 2.0
+      }
+    },
+    failure: {
+      accent: '#8e96a3', band: '#08090b',
+      patch: { fill: { type: 'gradient', color: '#d5d9df', color2: '#a9b0ba', color3: '#7c8491', dir: 'v' }, glow: { on: false }, subColor: '#8e96a3', inFx: 'fade', inDur: 0.7, outFx: 'sink', outDur: 0.8, outStagger: 0.05 }
+    },
+    fumble: {
+      accent: '#e3263f', band: '#0e0205',
+      patch: {
+        fill: { type: 'gradient', color: '#ff7a7a', color2: '#d61a2e', color3: '#5c0010', dir: 'v' }, stroke: { on: true, width: 2, color: '#1a0004' },
+        glow: { on: true, color: '#d0001c', size: 28, strength: 0.9 }, subColor: '#ff8a8a', holdFx: 'flicker', holdPower: 0.4, hold: 1.9
+      }
+    }
+  };
+  // 抜刀：装甲明朝に英語のサブ。退場は一閃と同じ向きに斬られて消える（失敗は沈む、致命的失敗は割れた下から落ちる）
+  const BLADE_ROLL = {
+    fontId: 'soukou-mincho', weight: 400, letterSpacing: 0.14,
+    subFontId: 'cinzel', subWeight: 700, subSize: 0.24, subLetterSpacing: 0.6, subGap: 0.42,
+    stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.75, blur: 10, x: 0, y: 3 },
+    subColorOn: true, deco: { type: 'none' },
+    inFx: 'fade', inDur: 0.08, inStagger: 0, subFx: 'fade', subDelay: 0.05,
+    hold: 1.7, outFx: 'split', outDur: 1.0
+  };
+  // 銃撃：太いゴシックに英語のサブ
+  const SHOT_ROLL = {
+    fontId: 'zen-kaku-gothic-new', weight: 900, letterSpacing: 0.1,
+    subFontId: 'oxanium', subWeight: 700, subSize: 0.24, subLetterSpacing: 0.55, subGap: 0.36,
+    stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.75, blur: 10, x: 0, y: 3 },
+    subColorOn: true, deco: { type: 'none' },
+    inFx: 'fade', inDur: 0.06, inStagger: 0, subFx: 'fade', subDelay: 0.05,
+    hold: 1.7, outFx: 'fade', outDur: 0.5
+  };
+  const rollPatch = (kind, tier, fontSize) => {
+    const look = ROLL_LOOK[tier];
+    const base = kind === 'blade' ? BLADE_ROLL : SHOT_ROLL;
+    const patch = { ...base, fontSize, ...look.patch, sfx: { type: kind, tier, color: look.accent, color2: look.band, power: 1 } };
+    if (kind === 'blade' && tier === 'fumble') Object.assign(patch, { outFx: 'fade', outDur: 0.9 });
+    if (kind === 'shot' && tier === 'fumble') Object.assign(patch, { inFx: 'glitch', inDur: 0.45 });
+    return patch;
+  };
+
   // 判定の呼びかけ（共鳴判定・憑依判定など）
   const CHECK_CALL = {
     fontId: 'kaisei-decol', weight: 700, fontSize: 120, letterSpacing: 0.2,
@@ -272,6 +331,8 @@
       { id: 'dice', label: T('判定', 'Dice', '판정'), systems: [
         { id: 'coc6', label: T('CoC6', 'CoC 6e', 'CoC6') },
         { id: 'coc7', label: T('CoC7', 'CoC 7e', 'CoC7') },
+        { id: 'cocBlade', label: T('CoC 抜刀', 'CoC Katana', 'CoC 발도') },
+        { id: 'cocGun', label: T('CoC 銃撃', 'CoC Gunfire', 'CoC 총격') },
         { id: 'emoklore', label: T('エモクロア', 'Emoklore', '에모크로아') },
         { id: 'dx', label: T('ダブクロ', 'Double Cross', '더블크로스') }
       ] }
@@ -879,6 +940,57 @@
         id: 'coc7Fumble', group: 'dice', system: 'coc7', label: T('ファンブル', 'Fumble', '펌블'),
         text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         patch: DICE_FUMBLE
+      },
+      // EX：クトゥルフ神話TRPGの判定結果のカットイン（抜刀・銃撃）。1回再生
+      {
+        id: 'cocBladeSuccess', group: 'dice', system: 'cocBlade', icon: 'katana', loop: 'once', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        patch: rollPatch('blade', 'success', 176)
+      },
+      {
+        id: 'cocBladeSpecial', group: 'dice', system: 'cocBlade', icon: 'katana', loop: 'once', label: T('スペシャル', 'Special', '스페셜'),
+        text: T('スペシャル', 'SPECIAL', '스페셜'), subText: T('SPECIAL', '', 'SPECIAL'),
+        patch: rollPatch('blade', 'special', 144)
+      },
+      {
+        id: 'cocBladeCritical', group: 'dice', system: 'cocBlade', icon: 'katana', loop: 'once', label: T('決定的成功', 'Critical', '결정적 성공'),
+        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        patch: rollPatch('blade', 'critical', 144)
+      },
+      {
+        id: 'cocBladeFailure', group: 'dice', system: 'cocBlade', icon: 'katana', loop: 'once', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        patch: rollPatch('blade', 'failure', 176)
+      },
+      {
+        id: 'cocBladeFumble', group: 'dice', system: 'cocBlade', icon: 'katana', loop: 'once', label: T('致命的失敗', 'Fumble', '치명적 실패'),
+        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        patch: rollPatch('blade', 'fumble', 144)
+      },
+      {
+        id: 'cocGunSuccess', group: 'dice', system: 'cocGun', icon: 'crosshair', loop: 'once', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        patch: rollPatch('shot', 'success', 176)
+      },
+      {
+        id: 'cocGunSpecial', group: 'dice', system: 'cocGun', icon: 'crosshair', loop: 'once', label: T('スペシャル', 'Special', '스페셜'),
+        text: T('スペシャル', 'SPECIAL', '스페셜'), subText: T('SPECIAL', '', 'SPECIAL'),
+        patch: rollPatch('shot', 'special', 140)
+      },
+      {
+        id: 'cocGunCritical', group: 'dice', system: 'cocGun', icon: 'crosshair', loop: 'once', label: T('クリティカル', 'Critical', '크리티컬'),
+        text: T('クリティカル', 'CRITICAL', '크리티컬'), subText: T('CRITICAL', '', 'CRITICAL'),
+        patch: rollPatch('shot', 'critical', 130)
+      },
+      {
+        id: 'cocGunFailure', group: 'dice', system: 'cocGun', icon: 'crosshair', loop: 'once', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        patch: rollPatch('shot', 'failure', 176)
+      },
+      {
+        id: 'cocGunFumble', group: 'dice', system: 'cocGun', icon: 'crosshair', loop: 'once', label: T('ファンブル', 'Fumble', '펌블'),
+        text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
+        patch: rollPatch('shot', 'fumble', 140)
       },
       {
         id: 'emoSingle', group: 'dice', system: 'emoklore', label: T('シングル', 'Single', '싱글'),

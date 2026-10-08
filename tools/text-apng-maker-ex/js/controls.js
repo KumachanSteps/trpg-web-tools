@@ -263,8 +263,19 @@
           { value: 'flame', label: T('炎', 'Flame', '불꽃') },
           { value: 'p5round', label: T('ラウンド表示（赤と黒）', 'Round call (red & black)', '라운드 표시（빨강과 검정）') },
           { value: 'p5round2', label: T('ラウンド表示 Ver2（2本の線）', 'Round call v2 (two lines)', '라운드 표시 Ver2（두 줄의 선）') },
-          { value: 'p5gun', label: T('銃弾（赤と黒）', 'Gunfire (red & black)', '총탄（빨강과 검정）') }
+          { value: 'p5gun', label: T('銃弾（赤と黒）', 'Gunfire (red & black)', '총탄（빨강과 검정）') },
+          { value: 'blade', label: T('抜刀の判定', 'Katana roll', '발도 판정') },
+          { value: 'shot', label: T('銃撃の判定', 'Gunfire roll', '총격 판정') }
         ] },
+        { type: 'chips', bind: 'sfx.tier', when: s => s.sfx.type === 'blade' || s.sfx.type === 'shot', label: T('判定の結果', 'Roll result', '판정 결과'), options: s => [
+          { value: 'success', label: T('成功', 'Success', '성공') },
+          { value: 'special', label: T('スペシャル', 'Special', '스페셜') },
+          { value: 'critical', label: s.sfx.type === 'blade' ? T('決定的成功', 'Critical', '결정적 성공') : T('クリティカル', 'Critical', '크리티컬') },
+          { value: 'failure', label: T('失敗', 'Failure', '실패') },
+          { value: 'fumble', label: s.sfx.type === 'blade' ? T('致命的失敗', 'Fumble', '치명적 실패') : T('ファンブル', 'Fumble', '펌블') }
+        ] },
+        { type: 'note', when: s => s.sfx.type === 'blade', text: T('一閃の通り道に細い線がのび、刀が画面を斬り抜けた瞬間に文字が現れます。成功は一閃、スペシャルは十字の二閃、決定的成功は三閃のあと円月が文字を囲み、集中線と金の火花が散ります。失敗は文字の上を鈍く空振りし、致命的失敗は刃が中央で折れて砕け、文字が斜めに割れます。退場を「斬られて左右へ」にすると、最初の一閃と同じ向きに斬られて消えます', 'A faint line traces the blade’s path, and the text appears the instant the katana cuts across. Success is one slash, Special a cross of two, and Critical three slashes followed by a full circle around the text with speed lines and gold sparks. Failure swings dully above the text; Fumble snaps the blade in the middle, scattering shards and cracking the text diagonally. With the “Sliced apart” exit, the text is cut along the first slash', '일섬이 지나갈 길에 가는 선이 뻗고, 칼이 화면을 베고 지나가는 순간 글자가 나타납니다. 성공은 일섬, 스페셜은 십자의 이섬, 결정적 성공은 삼섬 뒤 원월이 글자를 감싸며 집중선과 금빛 불꽃이 튑니다. 실패는 글자 위를 둔하게 헛베고, 치명적 실패는 칼날이 가운데서 부러져 흩어지며 글자가 비스듬히 갈라집니다. 퇴장을 「베여서 좌우로」로 하면 첫 일섬과 같은 방향으로 베이며 사라집니다') },
+        { type: 'note', when: s => s.sfx.type === 'shot', text: T('照準が回りながら飛び込んで定まり、撃ち抜いた瞬間に文字が現れます。成功は一発、スペシャルは二連射、クリティカルは外側の目盛りと四隅の照準でロックオンして三点射のあとトドメの一発、集中線と金の火花が散ります。失敗は照準が定まらず弾が逸れ、ファンブルは弾が出ずに照準が砕けて落ちます', 'A reticle spins in and locks on, and the text appears the instant the shot hits. Success is one shot, Special a double tap, and Critical locks on with an outer ring and corner brackets, fires a three-round burst and a final shot, with speed lines and gold sparks. Failure never steadies and the shot goes wide; Fumble jams and the reticle shatters and falls', '조준이 돌며 날아와 고정되고, 명중하는 순간 글자가 나타납니다. 성공은 한 발, 스페셜은 2연사, 크리티컬은 바깥 눈금과 네 모서리 조준으로 록온해 3점사 뒤 마무리 한 발, 집중선과 금빛 불꽃이 튑니다. 실패는 조준이 흔들려 탄이 빗나가고, 펌블은 탄이 나가지 않고 조준이 부서져 떨어집니다') },
         { type: 'note', when: s => s.sfx.type === 'flame', text: T('導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯が現れて、文字が1文字ずつ立ち上がります。表示中は下の線から炎が立ちのぼってゆらぎ、火の粉が昇ります。退場を「燃えて消える」にすると、光る燃え際が左から右へ進んで帯も文字も燃え尽きます', 'A fuse-like fire runs left to right along the line under the band; the dark band appears behind it and each character rises up. Flames rise and flicker from the bottom line and embers drift up while shown. With the “Burn away” exit, a glowing edge sweeps left to right and burns away the band and text', '도화선 같은 불이 띠 아래 선을 따라 왼쪽에서 오른쪽으로 달리고, 불이 지나간 자리에 어두운 띠가 나타나며 글자가 한 글자씩 솟아오릅니다. 표시 중에는 아래 선에서 불꽃이 피어올라 일렁이고 불티가 솟아오릅니다. 퇴장을 「불타 사라지기」로 하면 빛나는 경계가 왼쪽에서 오른쪽으로 지나가며 띠와 글자가 타 버립니다') },
         { type: 'note', when: s => s.sfx.type === 'p5round', text: T('画面の奥の一点から、赤と黒の太い線が手前へ伸び、細いすじが飛んできます。文字はその一点の近くから斜めに大きくなりながら飛んできて、黒い札と赤い影の上で止まります。退場では文字も線も手前へ抜けます', 'Thick red and black lines shoot toward the viewer from a vanishing point, with streaks flying past. The text flies in from near that point, growing and tilting, and lands on a black plate with a red shadow. On exit everything rushes past the viewer', '화면 안쪽의 한 점에서 빨강과 검정의 굵은 선이 앞으로 뻗고, 가는 줄기가 날아옵니다. 글자는 그 점 근처에서 비스듬히 커지며 날아와 검은 판과 빨간 그림자 위에 멈춥니다. 퇴장할 때는 글자도 선도 앞으로 빠져나갑니다') },
         { type: 'note', when: s => s.sfx.type === 'p5round2', text: T('画面の奥の一点から、赤と黒の2本の線が斜めに手前へ伸び、その間を文字が奥から飛んできて止まります。表示中は線の上を白い光が手前へ流れ、退場では文字が手前へ抜けて線も消えていきます', 'Two red and black lines extend diagonally toward the viewer from a vanishing point, and the text flies in between them and stops. White light runs along the lines while shown; on exit the text rushes forward and the lines fade away', '화면 안쪽의 한 점에서 빨강과 검정의 두 선이 비스듬히 앞으로 뻗고, 그 사이로 글자가 안쪽에서 날아와 멈춥니다. 표시 중에는 선 위를 하얀 빛이 앞으로 흐르고, 퇴장할 때는 글자가 앞으로 빠지며 선도 사라집니다') },
@@ -285,8 +296,10 @@
             flame: T('炎の芯の色', 'Flame core color', '불꽃 심지 색'),
             p5round: T('黒の色', 'Black color', '검정 색'),
             p5round2: T('黒の色', 'Black color', '검정 색'),
-            p5gun: T('黒の色', 'Black color', '검정 색')
-          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot', 'flame', 'p5round', 'p5round2', 'p5gun'].includes(s.sfx.type) }
+            p5gun: T('黒の色', 'Black color', '검정 색'),
+            blade: T('帯の色', 'Band color', '띠 색'),
+            shot: T('帯の色', 'Band color', '띠 색')
+          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot', 'flame', 'p5round', 'p5round2', 'p5gun', 'blade', 'shot'].includes(s.sfx.type) }
         ] },
         { type: 'text', bind: 'sfx.word', when: s => s.sfx.type === 'cyber', label: T('警告の文字', 'Warning text', '경고 문자'), placeholder: T('WARNING', 'WARNING', 'WARNING') },
         { type: 'range', bind: 'sfx.power', when: s => s.sfx.type !== 'none', label: T('強さ', 'Strength', '강도'), min: 0.2, max: 2, step: 0.05, format: 'x' }
