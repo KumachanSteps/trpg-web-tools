@@ -157,7 +157,16 @@ body{min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Se
 @media (prefers-reduced-motion:reduce){.toast{transition:opacity 120ms ease}}
 
 /* ===== v1.71 スマホ：① 入力 → ② 仕上げ → ③ 投稿 のフロー ===== */
-.mobile-only,.live-peek,.mobile-flow-bar,.ascii-tabs{display:none}
+.mobile-only,.live-peek,.mobile-flow-bar{display:none}
+/* 装飾パネル：PC・スマホともタブで切り替え */
+.ascii-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.ascii-tab{flex:0 0 auto;padding:5px 12px;font-size:12px;letter-spacing:.04em;background:#f1f5f9;color:#526072}
+.ascii-tab:hover{background:#e2e8f0}
+.ascii-tab.is-active{background:#172033;color:#fff}
+.ascii-group{display:none}
+.ascii-group.is-current{display:block}
+.ascii-preview-panel .ascii-group-title{display:none}
+.ascii-group-hint{margin:0 0 8px;color:var(--muted);font-size:11.5px;line-height:1.5}
 .dirty-badge{margin-left:auto;margin-right:10px;padding:1px 8px;border-radius:999px;background:#fff7ed;border:1px solid rgba(217,119,6,.28);color:#b45309;font-size:11px;font-weight:800;line-height:1.6}
 .dirty-badge[hidden]{display:none}
 .preview-actions{grid-template-columns:repeat(5,1fr)}
@@ -232,8 +241,9 @@ body{min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Se
   .twitter-card .ascii-preview-panel{padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
   .twitter-card .ascii-tabs{display:flex;gap:6px;padding:0 10px 7px;overflow-x:auto;scrollbar-width:none}
   .twitter-card .ascii-tabs::-webkit-scrollbar{display:none}
-  .ascii-tab{flex:0 0 auto;padding:4px 11px;font-size:11px;letter-spacing:.06em;background:#f1f5f9;color:#526072}
-  .ascii-tab.is-active{background:#172033;color:#fff}
+  .twitter-card .ascii-tabs{flex-wrap:nowrap;margin-bottom:0}
+  .twitter-card .ascii-tab{padding:4px 11px;font-size:11px}
+  .twitter-card .ascii-group-hint{padding:0 10px;margin-bottom:6px}
   .twitter-card .ascii-group{display:none;margin:0}
   .twitter-card .ascii-group.is-current{display:block}
   .twitter-card .ascii-group-title{display:none}

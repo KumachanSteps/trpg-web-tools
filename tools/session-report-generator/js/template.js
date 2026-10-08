@@ -132,6 +132,23 @@
     return out;
   }
 
+  // テンプレートの囲み線。装飾パネルの「罫線」タブも同じものを使い、長さを揃える
+  const FRAME_LINES = Object.freeze({
+    lineSandwich: '⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·',
+    thinRule: '────────────',
+    heavyRule: '━━━╋━━━━╋━━━',
+    star: '✦   ┈┈┈┈┈┈┈┈┈┈   ✦',
+    doubleLine: '══════════════',
+    cornerTop: '◤￣￣￣￣￣￣￣￣￣',
+    cornerBottom: '＿＿＿＿＿＿＿＿＿◢',
+    heart: 'ෆ・┈・┈・⊹ ・┈・┈・ෆ',
+    moonStar: '─── ･ ｡☆*☽*☆ﾟ.─────',
+    asterisk: '✼••┈┈••✼••┈┈••✼',
+    dotFrame: '⟡.·*.··················⟡.·*.',
+    handwritten: '┈┈┈┈┈┈┈┈┈',
+    handwrittenEnd: '┈┈┈┈┈┈┈┈┈ᝰ✍︎ ꙳⋆'
+  });
+
   // ---- 15種のテンプレート（囲み装飾つき） ----
   // 日付・タグ・敬称略の注記は入れない。感想は renderParts で囲みの外に付ける。
 
@@ -172,7 +189,7 @@
   }
 
   function lineSandwichBuild(data) {
-    const line = '⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·';
+    const line = FRAME_LINES.lineSandwich;
     return lineJoin([
       sys(data), lineBreak(), fixed('『'), scen(data), fixed('』'), lineBreak(),
       fixed(line + '\n'), ...gmLines(data),
@@ -183,7 +200,7 @@
   }
 
   function thinRuleBuild(data) {
-    const line = '────────────';
+    const line = FRAME_LINES.thinRule;
     return lineJoin([
       fixed(line + '\n'), sys(data), lineBreak(), fixed('「'), scen(data), fixed('」'), blankLine(),
       ...gmLines(data),
@@ -194,7 +211,7 @@
   }
 
   function heavyRuleBuild(data) {
-    const line = '━━━╋━━━━╋━━━';
+    const line = FRAME_LINES.heavyRule;
     return lineJoin([
       fixed(line + '\n'), sys(data), fixed('『'), scen(data), fixed('』'), lineBreak(),
       ...gmLines(data), lineBreak(),
@@ -205,7 +222,7 @@
   }
 
   function starFrameBuild(data) {
-    const line = '✦   ┈┈┈┈┈┈┈┈┈┈   ✦';
+    const line = FRAME_LINES.star;
     return lineJoin([
       fixed(line + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　　'), scen(data), blankLine(),
       ...gmLines(data, { indent: '　', separator: '┊' }),
@@ -216,7 +233,7 @@
   }
 
   function doubleLineBuild(data) {
-    const line = '══════════════';
+    const line = FRAME_LINES.doubleLine;
     return lineJoin([
       fixed(line + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　『'), scen(data), fixed('』'), lineBreak(), fixed(line + '\n'),
       ...gmLines(data),
@@ -228,8 +245,8 @@
   function cornerBuild(data) {
     return lineJoin([
       // 囲みはシステム名とタイトルだけ。参加者は囲みの下に字下げで並べる
-      fixed('◤￣￣￣￣￣￣￣￣￣\n'), fixed('　'), sys(data), lineBreak(), fixed('　　『'), scen(data), fixed('』'), lineBreak(),
-      fixed('＿＿＿＿＿＿＿＿＿◢'), blankLine(),
+      fixed(FRAME_LINES.cornerTop + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　　『'), scen(data), fixed('』'), lineBreak(),
+      fixed(FRAME_LINES.cornerBottom), blankLine(),
       ...gmLines(data, { indent: '　' }),
       ...playerLines(data, { indent: '　' }), lineBreak(),
       end(data)
@@ -237,7 +254,7 @@
   }
 
   function heartLineBuild(data) {
-    const line = 'ෆ・┈・┈・⊹ ・┈・┈・ෆ';
+    const line = FRAME_LINES.heart;
     return lineJoin([
       sys(data), lineBreak(), fixed(line + '\n'), fixed('【 '), scen(data), fixed(' 】'), blankLine(),
       ...labeledGmLines(data),
@@ -274,7 +291,7 @@
   }
 
   function moonStarBuild(data) {
-    const line = '─── ･ ｡☆*☽*☆ﾟ.─────';
+    const line = FRAME_LINES.moonStar;
     return lineJoin([
       fixed(line + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　『'), scen(data), fixed('』'), blankLine(),
       ...gmLines(data, { indent: '　' }),
@@ -285,7 +302,7 @@
   }
 
   function asteriskBuild(data) {
-    const line = '✼••┈┈••✼••┈┈••✼';
+    const line = FRAME_LINES.asterisk;
     return lineJoin([
       fixed(line + '\n'), fixed('　'), sys(data), lineBreak(), fixed('　'), scen(data), lineBreak(), fixed(line + '\n'),
       ...gmLines(data),
@@ -296,7 +313,7 @@
   }
 
   function dotFrameBuild(data) {
-    const line = '⟡.·*.··················⟡.·*.';
+    const line = FRAME_LINES.dotFrame;
     return lineJoin([
       fixed(line + '\n'), fixed(' '), sys(data), lineBreak(), fixed('　◤ '), scen(data), fixed(' ◢'), blankLine(),
       ...gmLines(data, { indent: ' ', separator: ' ' }),
@@ -307,13 +324,13 @@
   }
 
   function handwrittenBuild(data) {
-    const line = '┈┈┈┈┈┈┈┈┈';
+    const line = FRAME_LINES.handwritten;
     return lineJoin([
       sys(data), lineBreak(), fixed('⌜ '), scen(data), fixed(' ⌟'), lineBreak(), fixed(line + '\n'),
       ...labeledGmLines(data, { mark: '✧', indent: '　▹' }),
       fixed('✧'), part(TARGET_TYPES.PARTICIPANT_HEADER, participantHeaderValue(data)), lineBreak(),
       ...playerLines(data, { indent: '　▹', slotSep: ' ' }), lineBreak(),
-      fixed('✧'), end(data), lineBreak(), fixed(line + 'ᝰ✍︎ ꙳⋆')
+      fixed('✧'), end(data), lineBreak(), fixed(FRAME_LINES.handwrittenEnd)
     ]);
   }
 
@@ -345,72 +362,68 @@
     { id: 'block', label: '▮ ▮ ブロック：▮ システム ▮', build: blockBuild }
   ];
 
+  // 装飾パネル。mode: line=独立した1行で挿入 / wrap=選択範囲を左右から挟む / 省略=カーソル位置に挿入
+  // 端末によって表示が崩れやすい文字（他言語の結合記号・絵文字化する記号・異体字セレクタ付き）は入れない
   const ASCII_ART_COLLECTION = {
     line: {
-      label: 'LINE',
+      label: '罫線',
+      mode: 'line',
       items: [
-        { label: '✦ ┈┈ ✦', value: '✦   ┈┈┈┈┈┈┈┈┈┈┈┈   ✦' },
-        { label: '⟡ ⎯⎯ ⟡', value: '⟡.· ⎯⎯⎯⎯⎯⎯⎯⎯ ⟡.·' },
-        { label: '──────', value: '──────────────────' },
+        { label: '⟡ ⎯⎯ ⟡', value: FRAME_LINES.lineSandwich },
+        { label: '────', value: FRAME_LINES.thinRule },
+        { label: '━╋━╋━', value: FRAME_LINES.heavyRule },
+        { label: '✦ ┈┈ ✦', value: FRAME_LINES.star },
+        { label: '════', value: FRAME_LINES.doubleLine },
+        { label: '◤￣￣', value: FRAME_LINES.cornerTop },
+        { label: '＿＿◢', value: FRAME_LINES.cornerBottom },
+        { label: 'ෆ・┈・ෆ', value: FRAME_LINES.heart },
+        { label: '─ ☆*☽*☆ ─', value: FRAME_LINES.moonStar },
+        { label: '✼••┈┈••✼', value: FRAME_LINES.asterisk },
+        { label: '⟡.·*.···⟡', value: FRAME_LINES.dotFrame },
+        { label: '┈┈┈┈', value: FRAME_LINES.handwritten },
+        { label: '┈┈ᝰ✍︎', value: FRAME_LINES.handwrittenEnd },
         { label: '─ ⋅ ✩ ⋅ ─', value: '──────── ⋅ ✩ ⋅ ────────' },
         { label: '꒰ঌ ┈┈ ໒꒱', value: '꒰ঌ ┈┈┈┈┈┈┈┈ ໒꒱' },
         { label: '◈ ━━ ◈', value: '◈ ━━━━━━━━━━━━━━ ◈' },
-        { label: '╋━━╋', value: '╋━━━━━━━━━━━━━━╋' },
         { label: '°.✩┈┈✩.°', value: '°.✩┈┈∘*┈୨୧┈*∘┈┈✩.°' },
         { label: '──⋆.˚✧', value: '──⋆.˚✧        ✧⋆.˚──' },
-        { label: '☾ ˖°˖☆ ˖°˖☽', value: 'ᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧ☾ ˖°˖☆ ˖°˖☽ᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧᐧ' },
         { label: '₊˚‿︵୨୧', value: '. ₊˚ ‿︵‿୨୧ · ♡ · ୨୧‿︵‿ ˚₊ .' },
-        { label: 'ෆ┈ꔫ┈ෆ', value: 'ෆ・┈・┈・⊹*:ꔫ:*˖ ࣪⊹ ・┈・┈・ෆ' }
+        { label: '☾ ˖°˖☆ ˖°˖☽', value: 'ᐧᐧᐧᐧᐧ☾ ˖°˖☆ ˖°˖☽ᐧᐧᐧᐧᐧ' }
       ]
     },
-    single: {
-      label: 'SINGLE CHARACTER',
+    bracket: {
+      label: '括弧',
+      mode: 'wrap',
       items: [
-        { label: '❏', value: '❏' },
-        { label: '✦', value: '✦' },
-        { label: '✧', value: '✧' },
-        { label: '┗', value: '┗ ' },
-        { label: '┊', value: '┊' },
-        { label: '▎', value: '▎' },
-        { label: '◤', value: '◤' },
-        { label: '◢', value: '◢' },
-        { label: '◈', value: '◈' },
-        { label: '❖', value: '❖' },
-        { label: '‖', value: '‖' },
-        { label: '▸', value: '▸' },
-        { label: '†', value: '†' },
-        { label: '◎', value: '◎' },
-        { label: '⚪', value: '⚪' },
-        { label: '⚫', value: '⚫' },
-        { label: '▣', value: '▣' },
-        { label: '◻︎', value: '◻︎' },
-        { label: '◼︎', value: '◼︎' },
-        { label: '◬', value: '◬' },
-        { label: '∇', value: '∇' },
-        { label: '∆', value: '∆' },
-        { label: '✯', value: '✯' },
-        { label: '✮', value: '✮' },
-        { label: '⚝', value: '⚝' },
-        { label: '⛦', value: '⛦' },
-        { label: '⋆', value: '⋆' },
-        { label: '≛', value: '≛' }
+        { label: '『 』', open: '『', close: '』' },
+        { label: '「 」', open: '「', close: '」' },
+        { label: '【 】', open: '【 ', close: ' 】' },
+        { label: '〔 〕', open: '〔', close: '〕' },
+        { label: '⌜ ⌟', open: '⌜ ', close: ' ⌟' },
+        { label: '◣ ◥', open: '◣ ', close: ' ◥' },
+        { label: '◤ ◢', open: '◤ ', close: ' ◢' },
+        { label: '୨ ୧', open: '୨ ', close: ' ୧' },
+        { label: '‧₊˚ ୨ ୧ ˚₊', open: '‧₊˚ ୨ ', close: ' ୧ ˚₊' },
+        { label: '▮ ▮', open: '▮　', close: '　▮' },
+        { label: '- -', open: '- ', close: ' -' }
       ]
     },
-    designs: {
-      label: 'DESIGNS',
+    mark: {
+      label: '見出し記号',
+      items: ['▸', '▹', '➤', '┗', '┊', '｜', '⧉', '✧', '✦', '⟡', '◆', '◈', '❖', '❏', '▮', '†', '◎', '⋆', '✼', 'ෆ', '★', '☆']
+        .map(value => ({ label: value, value }))
+    },
+    accent: {
+      label: 'ワンポイント',
       items: [
         { label: '.+:ﾟ+｡.☆', value: '.+:ﾟ+｡.☆' },
         { label: '✧･ﾟ:*', value: '✧･ﾟ: *✧･ﾟ:* 　　 *:･ﾟ✧*:･ﾟ✧' },
         { label: '✦⋆˙₊⟡', value: '✦⋆˙₊⟡' },
-        { label: '⊹₊⋆ ✦', value: '⊹₊⋆ ✦. ݁' },
-        { label: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', value: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ' },
-        { label: '◤￣￣', value: '◤￣￣￣￣￣￣￣￣￣￣￣￣￣￣' },
-        { label: '＿＿◢', value: '＿＿＿＿＿＿＿＿＿＿＿＿＿＿◢' },
-        { label: '˚*ੈ✩‧', value: '˚*ੈ✩‧' },
-        { label: '.𖥔 ˖๋ ⭑', value: '.𖥔 ݁ ˖๋ ࣭ ⭑' },
-        { label: '.⊹˖ᯓ★', value: '.⊹˖ᯓ★. ݁₊' },
-        { label: 'ִ ࣪𖤐₊ ⊹', value: 'ִ ࣪𖤐₊ ⊹' },
-        { label: '✩.*･｡ﾟ', value: '✩.*･｡ﾟ' }
+        { label: '✩.*･｡ﾟ', value: '✩.*･｡ﾟ' },
+        { label: '*:.｡..｡.:*･ﾟ', value: '*:.｡..｡.:*･ﾟ' },
+        { label: '⋆˙⟡', value: '⋆˙⟡' },
+        { label: '☆彡', value: '☆彡' },
+        { label: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ', value: 'Cᵃˡˡ ᵒᶠ Cᵗʰᵘˡʰᵘ' }
       ]
     }
   };

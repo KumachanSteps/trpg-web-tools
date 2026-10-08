@@ -208,23 +208,28 @@
     const collection = window.ReportTemplate?.ASCII_ART_COLLECTION;
     if (!container || !collection) return;
 
+    const currentGroup = container.querySelector('.ascii-group.is-current')?.dataset.group;
+    const keys = Object.keys(collection);
+    const activeKey = keys.includes(currentGroup) ? currentGroup : keys[0];
     container.innerHTML = '';
     const tabs = document.createElement('div');
     tabs.className = 'ascii-tabs';
     tabs.setAttribute('role', 'tablist');
     container.appendChild(tabs);
 
-    Object.entries(collection).forEach(([groupKey, groupData], index) => {
+    Object.entries(collection).forEach(([groupKey, groupData]) => {
+      const isActive = groupKey === activeKey;
+      const label = t(`decoration.tab.${groupKey}`) || groupData.label || groupKey;
       const group = document.createElement('div');
-      group.className = `ascii-group${index === 0 ? ' is-current' : ''}`;
+      group.className = `ascii-group${isActive ? ' is-current' : ''}`;
       group.dataset.group = groupKey;
 
       const tab = document.createElement('button');
       tab.type = 'button';
-      tab.className = `ascii-tab${index === 0 ? ' is-active' : ''}`;
+      tab.className = `ascii-tab${isActive ? ' is-active' : ''}`;
       tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', String(index === 0));
-      tab.textContent = groupData.tabLabel || groupData.label || groupKey;
+      tab.setAttribute('aria-selected', String(isActive));
+      tab.textContent = label;
       tab.addEventListener('click', () => {
         tabs.querySelectorAll('.ascii-tab').forEach(item => {
           item.classList.toggle('is-active', item === tab);
@@ -236,22 +241,33 @@
 
       const title = document.createElement('div');
       title.className = 'ascii-group-title';
-      title.textContent = groupData.label || groupKey.toUpperCase();
+      title.textContent = label;
 
       const buttons = document.createElement('div');
       buttons.className = 'ascii-buttons';
 
+      if (groupData.mode === 'wrap') {
+        const hint = document.createElement('p');
+        hint.className = 'ascii-group-hint';
+        hint.textContent = t('decoration.wrapHint');
+        group.appendChild(hint);
+      }
+
       (groupData.items || []).forEach(item => {
+        const value = groupData.mode === 'wrap' ? `${item.open}${item.close}` : item.value;
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = item.label;
-        button.title = item.value;
-        button.dataset.decoration = item.value;
-        if (String(item.value).length > 20) button.classList.add('ascii-chip-line');
+        button.title = groupData.mode === 'wrap' ? `${item.open}…${item.close}` : value;
+        button.dataset.decoration = value;
+        if (String(value).length > 20) button.classList.add('ascii-chip-line');
         if (String(item.label).length > 10) button.classList.add('ascii-chip-wide');
         // プレビュー編集中にタップしてもキーボードとカーソル位置を維持する
         button.addEventListener('mousedown', event => event.preventDefault());
-        button.addEventListener('click', () => insertDecorationAtPreviewCursor(item.value, { ownLine: groupKey === 'line' }));
+        button.addEventListener('click', () => {
+          if (groupData.mode === 'wrap') wrapPreviewSelection(item.open, item.close);
+          else insertDecorationAtPreviewCursor(value, { ownLine: groupData.mode === 'line' });
+        });
         buttons.appendChild(button);
       });
 
@@ -579,6 +595,29 @@
       showToast(t(after ? 'mobile.insertedAtCursor' : 'mobile.insertedAtEnd'), 1400);
     }
     lastPreviewSelection = { start: next, end: next };
+    updateCount();
+  }
+
+  // 括弧：選択範囲があれば左右から挟み、なければ括弧を入れてカーソルを間に置く
+  function wrapPreviewSelection(open, close) {
+    const preview = $('tweetPreview');
+    if (!preview) return;
+    pushHistory();
+    const hasFocus = document.activeElement === preview;
+    const start = hasFocus ? preview.selectionStart : lastPreviewSelection.start ?? preview.value.length;
+    const end = hasFocus ? preview.selectionEnd : lastPreviewSelection.end ?? preview.value.length;
+    const selected = preview.value.slice(start, end);
+    preview.value = preview.value.slice(0, start) + open + selected + close + preview.value.slice(end);
+    const caretStart = start + open.length;
+    const caretEnd = caretStart + selected.length;
+    isPreviewDirty = true;
+    if (hasFocus || !isMobileLayout()) {
+      preview.focus({ preventScroll: isMobileLayout() });
+      preview.setSelectionRange(caretStart, caretEnd);
+    } else {
+      showToast(t(selected ? 'decoration.wrapped' : 'mobile.insertedAtCursor'), 1400);
+    }
+    lastPreviewSelection = { start: caretStart, end: caretEnd };
     updateCount();
   }
 
@@ -1196,6 +1235,7 @@
       populateReportStyles();
       populateFontVariants();
       renderFontToolbar();
+      renderAsciiArtButtons();
       renderPreview();
     });
   }
