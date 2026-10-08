@@ -1223,6 +1223,19 @@
         }
       },
       {
+        // EX：上の青い版。「ENDING」が現れ、青い光の粒になって右へ消える
+        id: 'fireflyEnding', icon: 'sparkle', label: T('青い光の粒になって消える', 'Dissolve into Blue Light', '푸른 빛의 입자로 사라짐'),
+        text: T('ENDING', 'ENDING', 'ENDING'),
+        patch: {
+          fontId: 'cormorant-garamond', weight: 700, fontSize: 120, lineHeight: 1.4, letterSpacing: 0.22, align: 'center',
+          fill: { type: 'solid', color: '#f2f8ff' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 2 },
+          glow: { on: true, color: '#6fb8ff', size: 24, strength: 0.8 },
+          bg: { type: 'none' },
+          reveal: 'all', glyphDur: 1.2, inFx: 'fade', hold: 1.6, outFx: 'firefly', outDur: 2.6
+        }
+      },
+      {
         // 全文をぼかしから一度に浮かび上がらせる（ポスターのキャッチコピーのように）
         id: 'allAtOnce', icon: 'textAll', label: T('全文同時表示', 'All at Once', '전문 동시 표시'),
         text: T('真実は、いつも霧の向こうにある。\n――さあ、探索を始めよう。', 'The truth always lies beyond the fog.\n— Now, let the investigation begin.', '진실은 언제나 안개 너머에 있다.\n――자, 탐색을 시작하자.'),
