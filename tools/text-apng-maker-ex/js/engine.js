@@ -356,7 +356,11 @@
       } },
     // 燃えて消える：燃え際が左から右へ進み、そこより左が消える（炎の演出があれば燃え際に火が立つ）
     { id: 'burn', level: 'block', ease: 'linear', dur: 1.1,
-      block(bs, e) { bs.mask = { dir: 'burn', p: e, out: true }; } }
+      block(bs, e) { bs.mask = { dir: 'burn', p: e, out: true }; } },
+    // 光の粒になって消える（EX）：左から右へ文字がほどけて、蛍のような光の粒になり、右へ漂いながら消える。
+    // 退場の時間のうち、はじめの FIREFLY_SWEEP の割合で文字がほどけ、残りで光の粒が消えていく
+    { id: 'firefly', level: 'block', ease: 'linear', dur: 2.6,
+      block(bs, e, p) { bs.mask = { dir: 'burn', p: clamp(p / FIREFLY_SWEEP), out: true, firefly: true }; } }
   ];
 
   const HOLD_EFFECTS = [
@@ -1400,6 +1404,10 @@
   const FLAME_RUN = 0.8;
   const FLAME_RISE_LAG = 0.06;
   const BURN_SOFT = 0.6;
+  // 「光の粒になって消える」：文字がほどけ終わるまでの割合 / ほどけ際のぼかし幅（文字の大きさが単位）/ 1文字あたりの光の粒の数
+  const FIREFLY_SWEEP = 0.5;
+  const FIREFLY_SOFT = 1.2;
+  const FIREFLY_PER_GLYPH = 14;
   const FLAME_BAND = '#120c0a';
   const SFX_TYPES = Object.keys(SFX_TIMING);
   // 雷：左右から走る電気が中央で出会うまで / 中央の火花が散りきるまで / 退場前の落雷
@@ -1982,6 +1990,17 @@
     return { x: lerp(b.x0 - pad - s, b.x1 + pad, p), p, soft: s };
   }
 
+  // 「光の粒になって消える」退場のほどけ際（文字の層の座標。この位置より左はもうほどけて消えている）
+  function fireflyFront(pg, page, t, size) {
+    const bo = pg.blockOut;
+    if (!bo || bo.fx.id !== 'firefly' || t < bo.start) return null;
+    const p = clamp((t - bo.start) / bo.dur);
+    const s = size * FIREFLY_SOFT;
+    const b = page.box, pad = size * 0.2;
+    const x0 = b.x0 - pad - s, x1 = b.x1 + pad;
+    return { x: lerp(x0, x1, clamp(p / FIREFLY_SWEEP)), x0, x1, p, soft: s };
+  }
+
   // 炎の舌：根元が太く、先へ行くほど細く大きくゆらぐ形。下から上へ inner → outer の色で塗り、先は透ける
   function flameTongue(ctx, x, y, w, h, t, seed, inner, outer, alpha) {
     if (alpha <= 0.002 || h <= 1) return;
@@ -2349,8 +2368,59 @@
           }
           ctx.restore();
         }
+        this.drawFireflies(ctx, pg, page, t, scale, scene, bs);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'front');
       });
+    }
+
+    // 光の粒になって消える：ほどけ際が通ったところの文字から光の粒が生まれ、またたきながら右上へ漂って消える。
+    // 粒の色は文字の光彩の色（光彩がなければ文字の色）
+    drawFireflies(ctx, pg, page, t, scale, scene, bs) {
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const ff = fireflyFront(pg, page, t, size);
+      if (!ff) return;
+      const bo = pg.blockOut;
+      const end = bo.start + bo.dur;
+      const sweep = bo.dur * FIREFLY_SWEEP;
+      const color = scene.glow && scene.glow.on ? scene.glow.color : (scene.fill && scene.fill.color) || '#fff3b0';
+      const k = clamp(scene.outPower ?? 1, 0, 3);
+      ctx.save();
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = page.first; i < page.last; i++) {
+        const g = layout.glyphs[i];
+        if (!g || g.blank) continue;
+        const n = Math.max(3, Math.round(FIREFLY_PER_GLYPH * k));
+        for (let j = 0; j < n; j++) {
+          // 文字の中心寄りに散らばる生まれる位置。ほどけ際がそこを通った時刻に生まれる
+          const ox = (rnd(i, j, 31) + rnd(i, j, 32) - 1) * g.size * 0.55;
+          const oy = (rnd(i, j, 33) + rnd(i, j, 34) - 1) * g.size * 0.55;
+          const x0 = g.cx + ox + bs.x, y0 = g.cy + oy + bs.y;
+          const born = bo.start + sweep * clamp((x0 - ff.soft * 0.5 - ff.x0) / Math.max(1, ff.x1 - ff.x0)) + rnd(i, j, 35) * 0.12;
+          const a = t - born;
+          const life = Math.min(1.0 + rnd(i, j, 36) * 0.9, end - born);
+          if (a < 0 || a >= life || life <= 0.05) continue;
+          const q = a / life;
+          const vx = size * (0.5 + rnd(i, j, 37) * 1.3);
+          const vy = size * (0.12 + rnd(i, j, 38) * 0.4);
+          const ph = rnd(i, j, 39) * TAU;
+          const x = x0 + vx * a * (1 + 0.5 * a) + Math.sin(a * (2.2 + rnd(i, j, 40) * 2) + ph) * size * 0.06;
+          const y = y0 - vy * a + Math.sin(a * (3 + rnd(i, j, 41) * 3) + ph * 2) * size * 0.08 * Math.min(1, a * 2);
+          // 生まれた瞬間は明るく、そのあとはゆっくりまたたきながら薄れる
+          const tw = 0.55 + 0.45 * Math.sin(a * (6 + rnd(i, j, 42) * 8) + ph);
+          const alpha = clamp(a / 0.06) * (a < 0.15 ? 1 : tw) * (1 - q * q);
+          if (alpha <= 0.01) continue;
+          const r = size * (0.016 + rnd(i, j, 43) * 0.022) * (1 - 0.4 * q);
+          ctx.fillStyle = colorWithAlpha(color, 0.12 * alpha);
+          ctx.beginPath(); ctx.arc(x, y, r * 4.5, 0, TAU); ctx.fill();
+          ctx.fillStyle = colorWithAlpha(color, 0.3 * alpha);
+          ctx.beginPath(); ctx.arc(x, y, r * 2.2, 0, TAU); ctx.fill();
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.95 * alpha})`;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+        }
+      }
+      ctx.restore();
     }
 
     drawSfx(ctx, pg, page, t, scale, scene, layer) {
@@ -4400,7 +4470,12 @@
         const bf = burnFront(pg, page, t, scene, layout.size);
         if (bf) bs.mask = { ...bs.mask, x: bf.x, scale };
       }
-      if (bs.mask) this.applyMask(bs.mask, rect, layout.size * 0.6 * scale);
+      if (bs.mask && bs.mask.firefly) {
+        // 光の粒になって消える：ほどけ際を光の粒が生まれる位置とそろえる
+        const ff = fireflyFront(pg, page, t, layout.size);
+        if (ff) bs.mask = { ...bs.mask, x: ff.x + bs.x, scale };
+      }
+      if (bs.mask) this.applyMask(bs.mask, rect, layout.size * (bs.mask.firefly ? FIREFLY_SOFT : 0.6) * scale);
       if (pg.scroll && scene.scrollFade !== false) this.applyEdgeFade(pg.scroll.vertical, cw, ch);
       if (bs.glitch > 0.01) this.applyGlitch(bs.glitch, t, rect, layout.size * scale, pg.index, scene);
     }

@@ -1210,6 +1210,19 @@
         }
       },
       {
+        // EX：タイトルがふわっと現れ、左から右へ蛍のような光の粒になってほどけ、右へ漂って消える（「Opening」などの見出しに）
+        id: 'fireflyTitle', icon: 'sparkle', label: T('光の粒になって消える', 'Dissolve into Light', '빛의 입자로 사라짐'),
+        text: T('Opening', 'Opening', 'Opening'),
+        patch: {
+          fontId: 'cormorant-garamond', weight: 700, fontSize: 120, lineHeight: 1.4, letterSpacing: 0.16, align: 'center',
+          fill: { type: 'solid', color: '#fffaf0' }, stroke: { on: false }, stroke2: { on: false },
+          shadow: { on: true, color: '#000000', opacity: 0.6, blur: 14, x: 0, y: 2 },
+          glow: { on: true, color: '#ffdf8a', size: 24, strength: 0.75 },
+          bg: { type: 'none' },
+          reveal: 'all', glyphDur: 1.2, inFx: 'fade', hold: 1.6, outFx: 'firefly', outDur: 2.6
+        }
+      },
+      {
         // 全文をぼかしから一度に浮かび上がらせる（ポスターのキャッチコピーのように）
         id: 'allAtOnce', icon: 'textAll', label: T('全文同時表示', 'All at Once', '전문 동시 표시'),
         text: T('真実は、いつも霧の向こうにある。\n――さあ、探索を始めよう。', 'The truth always lies beyond the fog.\n— Now, let the investigation begin.', '진실은 언제나 안개 너머에 있다.\n――자, 탐색을 시작하자.'),

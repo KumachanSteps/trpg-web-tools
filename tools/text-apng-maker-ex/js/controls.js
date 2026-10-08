@@ -57,7 +57,8 @@
       shutter: T('閉じる', 'Fold', '닫기'),
       glitch: T('グリッチ', 'Glitch', '글리치'),
       split: T('斬られて左右へ', 'Sliced apart', '베여서 좌우로'),
-      burn: T('燃えて消える', 'Burn away', '불타 사라지기')
+      burn: T('燃えて消える', 'Burn away', '불타 사라지기'),
+      firefly: T('光の粒になって消える', 'Dissolve into light', '빛의 입자로 사라짐')
     },
     hold: {
       none: T('なし', 'None', '없음'),
