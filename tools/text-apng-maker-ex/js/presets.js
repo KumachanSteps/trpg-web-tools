@@ -285,6 +285,8 @@
     const patch = { ...base, fontSize, ...look.patch, sfx: { type: kind, tier, color: look.accent, color2: look.band, power: 1 } };
     if (kind === 'blade' && tier === 'fumble') Object.assign(patch, { outFx: 'fade', outDur: 0.9 });
     if (kind === 'shot' && tier === 'fumble') Object.assign(patch, { inFx: 'glitch', inDur: 0.45 });
+    // 銃撃の失敗の「失敗」は、抜刀の失敗と同じ装甲明朝にそろえる
+    if (kind === 'shot' && tier === 'failure') Object.assign(patch, { fontId: BLADE_ROLL.fontId, weight: BLADE_ROLL.weight, letterSpacing: BLADE_ROLL.letterSpacing });
     return patch;
   };
 
