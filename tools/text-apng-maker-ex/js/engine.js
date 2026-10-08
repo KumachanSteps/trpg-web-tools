@@ -1579,10 +1579,12 @@
     return SHOT_PLAN.failure.shots[0];
   }
 
-  // 判定カットインの帯の中心と、上下・左右の半分の長さ（開ききったとき）
+  // 判定カットインの帯の中心と、上下・左右の半分の長さ（開ききったとき）。
+  // solid：左右をぼかし始めるまでの半分の長さ。長い文字でも、文字の下は暗いまま読めるようにする
   function rollBandRect(page, size, W) {
     const b = page.box;
-    return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2, hh: (b.y1 - b.y0) / 2 + size * 0.3, half: W * 0.52 };
+    const solid = Math.max(W * 0.26, (b.x1 - b.x0) / 2 + size * 0.5);
+    return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2, hh: (b.y1 - b.y0) / 2 + size * 0.3, half: Math.max(W * 0.52, solid + W * 0.12), solid };
   }
 
   // 失敗の弾が当たる場所：文字の右の帯の上（画面からはみ出さないように寄せる）
@@ -3711,19 +3713,20 @@
       const cx = r.cx, cy = r.cy;
       const hh = r.hh * (0.04 + 0.96 * open);
       const half = r.half * (0.2 + 0.32 * Math.min(1, open * 1.6)) / 0.52;
+      const edge = clamp(0.5 - r.solid / (2 * r.half), 0.05, 0.25);
       ctx.save();
       ctx.globalAlpha *= clamp(alpha);
       const g = ctx.createLinearGradient(cx - half, 0, cx + half, 0);
       g.addColorStop(0, colorWithAlpha(dark, 0));
-      g.addColorStop(0.25, colorWithAlpha(dark, 0.82));
-      g.addColorStop(0.75, colorWithAlpha(dark, 0.82));
+      g.addColorStop(edge, colorWithAlpha(dark, 0.82));
+      g.addColorStop(1 - edge, colorWithAlpha(dark, 0.82));
       g.addColorStop(1, colorWithAlpha(dark, 0));
       ctx.fillStyle = g;
       ctx.fillRect(cx - half, cy - hh, half * 2, hh * 2);
       const lg = ctx.createLinearGradient(cx - half, 0, cx + half, 0);
       lg.addColorStop(0, colorWithAlpha(accent, 0));
-      lg.addColorStop(0.3, colorWithAlpha(accent, 0.9));
-      lg.addColorStop(0.7, colorWithAlpha(accent, 0.9));
+      lg.addColorStop(edge + 0.05, colorWithAlpha(accent, 0.9));
+      lg.addColorStop(0.95 - edge, colorWithAlpha(accent, 0.9));
       lg.addColorStop(1, colorWithAlpha(accent, 0));
       ctx.fillStyle = lg;
       const lw = Math.max(1, size * 0.012);
