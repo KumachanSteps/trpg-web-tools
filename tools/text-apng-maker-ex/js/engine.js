@@ -4000,7 +4000,7 @@
       const last = shots.length - 1;
       const lw = Math.max(1, size * 0.016);
       const spot = i => {
-        if (plan.miss) return { x: cx - size * 1.05, y: cy - size * 0.8 };
+        if (plan.miss) return { x: cx + size * 0.2, y: cy - size * 1.25 };
         if (i === last) return { x: cx, y: cy };
         const p = SHOT_SPOTS[i % SHOT_SPOTS.length];
         return { x: cx + p[0] * size, y: cy + p[1] * size };
@@ -4066,7 +4066,7 @@
         if (plan.miss) return;
         const big = tier === 'critical' && i === last;
         const fl = big ? 0.5 : 0.26;
-        if (a < fl) drawFlash(ctx, p.x, p.y, size * (big ? 4.4 : 1.9), accent, (big ? 1 : 0.9) * clamp(k) * Math.pow(1 - a / fl, 2));
+        if (a < fl) drawFlash(ctx, p.x, p.y, size * (big ? 3.4 : 1.7), accent, (big ? 1 : 0.9) * clamp(k) * Math.pow(1 - a / fl, 2));
         if (a < 0.1) {
           const q = a / 0.1;
           ctx.save();
