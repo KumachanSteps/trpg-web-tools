@@ -2634,7 +2634,7 @@
   }
 
   function selectionSig() {
-    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}${(getObj(s.type, s.id) || {}).gm ? ':G' : ''}${(getObj(s.type, s.id) || {}).clue ? ':C' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}`;
+    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}${(getObj(s.type, s.id) || {}).gm ? ':G' : ''}${(getObj(s.type, s.id) || {}).clue ? ':C' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}|${app.sel.length === 1 && app.sel[0].type === 'room' && (M.CAT[(getObj('room', app.sel[0].id) || {}).cat] || {}).outdoor ? 'out' : ''}`;
   }
 
   function refreshProps() {
