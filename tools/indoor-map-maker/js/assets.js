@@ -1817,6 +1817,281 @@
     normal(c, S);
   }
 
+  /* ---------- 地下への入口 ---------- */
+
+  function stairsDown(c, S, w, h) {
+    // 地下へ下りる階段：奥（下）ほど暗くなり、矢印は下向き
+    box(c, S, 0, 0, w, h, 0);
+    const n = Math.max(2, Math.round(h / 0.5));
+    for (let i = 0; i < n; i++) {
+      c.fillStyle = S.dark;
+      c.globalAlpha = 0.08 + (i / n) * 0.55;
+      c.fillRect(0, (h / n) * i, w, h / n);
+    }
+    c.globalAlpha = 1;
+    thin(c, S);
+    for (let i = 1; i < n; i++) line(c, 0, (h / n) * i, w, (h / n) * i);
+    normal(c, S);
+    c.strokeStyle = S.accentLine;
+    line(c, w / 2, 0.35, w / 2, h - 0.4);
+    c.beginPath();
+    c.moveTo(w / 2 - 0.3, h - 0.85);
+    c.lineTo(w / 2, h - 0.35);
+    c.lineTo(w / 2 + 0.3, h - 0.85);
+    c.stroke();
+    label(c, S, 'B', w / 2, 0.5, 0.42, S.line);
+  }
+
+  function trapdoor(c, S, w, h) {
+    // 床の跳ね上げ戸（床下収納・地下室の入口）：板張りと蝶番、引き手の輪
+    box(c, S, 0, 0, w, h, 0.04, S.wood);
+    thin(c, S);
+    for (let x = w / 4; x < w - 0.01; x += w / 4) line(c, x, 0.08, x, h - 0.08);
+    normal(c, S);
+    c.fillStyle = S.dark;
+    c.fillRect(w * 0.12, 0.02, w * 0.16, 0.14);
+    c.fillRect(w * 0.72, 0.02, w * 0.16, 0.14);
+    c.beginPath();
+    c.arc(w / 2, h * 0.78, Math.min(w, h) * 0.1, 0, TAU);
+    c.stroke();
+  }
+
+  function ladder(c, S, w, h) {
+    // はしご（屋根裏・地下・井戸の中へ）
+    c.save();
+    c.lineWidth = S.lw * 1.4;
+    line(c, w * 0.18, 0.05, w * 0.18, h - 0.05);
+    line(c, w * 0.82, 0.05, w * 0.82, h - 0.05);
+    c.restore();
+    for (let y = 0.3; y < h - 0.1; y += 0.45) line(c, w * 0.18, y, w * 0.82, y);
+  }
+
+  /* ---------- ファンタジー ---------- */
+
+  function throne(c, S, w, h) {
+    // 玉座：高い背もたれ（上）と赤い座面、肘掛け
+    box(c, S, w * 0.08, 0, w * 0.84, h * 0.3, 0.08, S.yellow);
+    box(c, S, w * 0.04, h * 0.26, w * 0.18, h * 0.6, 0.06, S.wood);
+    box(c, S, w * 0.78, h * 0.26, w * 0.18, h * 0.6, 0.06, S.wood);
+    box(c, S, w * 0.22, h * 0.28, w * 0.56, h * 0.56, 0.1, S.red);
+    box(c, S, w * 0.14, h * 0.86, w * 0.72, h * 0.12, 0.03, S.soft);
+    circle(c, S, w * 0.5, h * 0.13, Math.min(w, h) * 0.06, S.red);
+  }
+
+  function weaponRack(c, S, w, h) {
+    // 武器ラック：壁際（上）の木枠に剣・槍・斧
+    box(c, S, 0, 0, w, h * 0.38, 0.04, S.wood);
+    const n = Math.max(3, Math.round(w / 0.7));
+    for (let i = 0; i < n; i++) {
+      const x = (w / n) * (i + 0.5);
+      c.save();
+      c.lineWidth = S.lw * 1.3;
+      line(c, x, h * 0.1, x, h * 0.92);
+      c.restore();
+      if (i % 3 === 0) { c.beginPath(); c.moveTo(x - 0.14, h * 0.82); c.lineTo(x + 0.14, h * 0.82); c.stroke(); }
+      if (i % 3 === 1) { c.beginPath(); c.moveTo(x, h * 0.98); c.lineTo(x - 0.1, h * 0.8); c.lineTo(x + 0.1, h * 0.8); c.closePath(); c.fillStyle = S.dark; c.fill(); }
+      if (i % 3 === 2) { c.beginPath(); c.arc(x + 0.1, h * 0.8, 0.16, -Math.PI / 2, Math.PI / 2); c.fillStyle = S.soft; c.fill(); c.stroke(); }
+    }
+  }
+
+  function armorStand(c, S, w, h) {
+    // 鎧（上から見た肩当てと兜）
+    ellipse(c, S, w / 2, h / 2, w * 0.46, h * 0.3, S.soft);
+    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.22, S.dark);
+    thin(c, S);
+    line(c, w * 0.5, h * 0.32, w * 0.5, h * 0.68);
+    normal(c, S);
+  }
+
+  function chest(c, S, w, h) {
+    // 宝箱：木の箱に金具の帯と錠前（手前が下）
+    box(c, S, 0, 0, w, h, 0.08, S.wood);
+    c.fillStyle = S.yellow;
+    [0.18, 0.82].forEach(k => { c.fillRect(w * k - 0.08, 0, 0.16, h); c.strokeRect(w * k - 0.08, 0, 0.16, h); });
+    thin(c, S);
+    line(c, 0, h * 0.4, w, h * 0.4);
+    normal(c, S);
+    box(c, S, w / 2 - 0.13, h * 0.72, 0.26, h * 0.26, 0.04, S.yellow);
+  }
+
+  function cauldron(c, S, w, h) {
+    // 大釜：黒い鉄の釜に煮える液、下に火
+    const r = Math.min(w, h) / 2;
+    glow(c, w / 2, h / 2, r * 1.05, '120, 220, 120');
+    circle(c, S, w / 2, h / 2, r * 0.9, S.dark);
+    circle(c, S, w / 2, h / 2, r * 0.68, S.green);
+    thin(c, S);
+    circle(c, S, w * 0.42, h * 0.42, r * 0.1, false);
+    circle(c, S, w * 0.6, h * 0.56, r * 0.07, false);
+    normal(c, S);
+  }
+
+  function crystalBall(c, S, w, h) {
+    // 水晶玉：台座と光る球
+    const r = Math.min(w, h) / 2;
+    box(c, S, w / 2 - r * 0.8, h / 2 - r * 0.8, r * 1.6, r * 1.6, r * 0.3, S.wood);
+    glow(c, w / 2, h / 2, r, '170, 140, 255');
+    circle(c, S, w / 2, h / 2, r * 0.55, S.ritualSoft);
+    circle(c, S, w * 0.44, h * 0.44, r * 0.12, S.fill, true);
+  }
+
+  function banner(c, S, w, h) {
+    // 壁掛けの旗・タペストリー（上が壁）
+    box(c, S, 0, 0, w, h * 0.35, 0.03, S.wood);
+    box(c, S, w * 0.08, h * 0.25, w * 0.84, h * 0.7, 0.02, S.red);
+    circle(c, S, w / 2, h * 0.6, Math.min(w, h) * 0.18, S.yellow);
+  }
+
+  function anvil(c, S, w, h) {
+    // 金床：上から見た角と台
+    box(c, S, w * 0.25, h * 0.1, w * 0.5, h * 0.8, 0.05, S.wood);
+    c.beginPath();
+    c.moveTo(0, h * 0.3); c.lineTo(w * 0.78, h * 0.25); c.lineTo(w, h * 0.5); c.lineTo(w * 0.78, h * 0.75); c.lineTo(0, h * 0.7);
+    c.closePath();
+    c.fillStyle = S.dark;
+    c.fill();
+    c.stroke();
+  }
+
+  function forge(c, S, w, h) {
+    // 鍛冶炉：石の炉床に赤い炭
+    box(c, S, 0, 0, w, h, 0.2, S.soft);
+    glow(c, w / 2, h * 0.55, Math.min(w, h) * 0.55, '255, 120, 40');
+    box(c, S, w * 0.2, h * 0.3, w * 0.6, h * 0.5, 0.1, S.dark);
+    circle(c, S, w * 0.4, h * 0.55, 0.12, S.flame, true);
+    circle(c, S, w * 0.6, h * 0.5, 0.1, S.flame, true);
+  }
+
+  function questBoard(c, S, w, h) {
+    // 依頼掲示板：壁際の板に貼られた紙
+    box(c, S, 0, 0, w, h, 0.04, S.wood);
+    const n = Math.max(2, Math.floor(w / 0.6));
+    for (let i = 0; i < n; i++) {
+      const x = (w / n) * i + 0.08;
+      c.save();
+      c.fillStyle = S.fill;
+      c.fillRect(x, h * 0.2, w / n - 0.16, h * 0.6);
+      thin(c, S);
+      c.strokeRect(x, h * 0.2, w / n - 0.16, h * 0.6);
+      c.restore();
+    }
+  }
+
+  function bunkBed(c, S, w, h) {
+    // 二段ベッド：枕が上、手前にはしご
+    box(c, S, 0, 0, w, h, 0.08, S.wood);
+    box(c, S, w * 0.08, h * 0.04, w * 0.84, h * 0.88, 0.06, S.fill);
+    box(c, S, w * 0.16, h * 0.07, w * 0.68, h * 0.14, 0.08, S.soft);
+    thin(c, S);
+    line(c, w * 0.08, h * 0.4, w * 0.92, h * 0.4);
+    line(c, w * 0.92, h * 0.55, w, h * 0.55);
+    line(c, w * 0.92, h * 0.7, w, h * 0.7);
+    line(c, w * 0.92, h * 0.85, w, h * 0.85);
+    normal(c, S);
+  }
+
+  function spikeTrap(c, S, w, h) {
+    // 床の罠：トゲの並んだ枠
+    box(c, S, 0, 0, w, h, 0.05, S.dark);
+    c.fillStyle = S.fill;
+    for (let x = 0.3; x < w - 0.1; x += 0.45) {
+      for (let y = 0.3; y < h - 0.1; y += 0.45) {
+        c.beginPath();
+        c.moveTo(x, y - 0.14); c.lineTo(x + 0.12, y + 0.1); c.lineTo(x - 0.12, y + 0.1);
+        c.closePath(); c.fill(); c.stroke();
+      }
+    }
+  }
+
+  function torch(c, S, w, h) {
+    // 壁の松明（上が壁）
+    glow(c, w / 2, h * 0.6, Math.max(w, h) * 0.9, '255, 160, 60');
+    box(c, S, w * 0.35, 0, w * 0.3, h * 0.5, 0.04, S.wood);
+    circle(c, S, w / 2, h * 0.62, Math.min(w, h) * 0.22, S.flame);
+  }
+
+  function hay(c, S, w, h) {
+    // 干し草の束
+    box(c, S, 0, 0, w, h, 0.2, S.yellow);
+    thin(c, S);
+    for (let x = 0.3; x < w; x += 0.35) line(c, x, 0.15, x - 0.15, h - 0.15);
+    line(c, 0, h * 0.35, w, h * 0.35);
+    line(c, 0, h * 0.65, w, h * 0.65);
+    normal(c, S);
+  }
+
+  function statue(c, S, w, h) {
+    // 石像：四角い台座と人の形
+    box(c, S, 0, 0, w, h, 0.05, S.soft);
+    circle(c, S, w / 2, h * 0.32, Math.min(w, h) * 0.16, S.fill);
+    ellipse(c, S, w / 2, h * 0.62, w * 0.3, h * 0.2, S.fill);
+  }
+
+  function fountain(c, S, w, h) {
+    // 噴水：石の縁、水盤、中央の柱
+    const r = Math.min(w, h) / 2;
+    circle(c, S, w / 2, h / 2, r * 0.97, S.soft);
+    circle(c, S, w / 2, h / 2, r * 0.8, S.water);
+    circle(c, S, w / 2, h / 2, r * 0.32, S.soft);
+    circle(c, S, w / 2, h / 2, r * 0.12, S.water);
+  }
+
+  function gazebo(c, S, w, h) {
+    // 東屋：八角形の屋根と柱
+    const r = Math.min(w, h) / 2;
+    c.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU + Math.PI / 8;
+      const px = w / 2 + Math.cos(a) * r * 0.96, py = h / 2 + Math.sin(a) * r * 0.96;
+      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.closePath();
+    c.fillStyle = S.wood;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU + Math.PI / 8;
+      line(c, w / 2, h / 2, w / 2 + Math.cos(a) * r * 0.96, h / 2 + Math.sin(a) * r * 0.96);
+    }
+    normal(c, S);
+  }
+
+  function hedge(c, S, w, h) {
+    // 生け垣：細長い植え込み
+    box(c, S, 0, 0, w, h, Math.min(w, h) * 0.45, S.green);
+    c.strokeStyle = S.greenLine;
+    thin(c, S);
+    const long = w >= h;
+    for (let k = 0.4; k < (long ? w : h) - 0.2; k += 0.5) {
+      c.beginPath();
+      if (long) c.arc(k, h / 2, Math.min(h * 0.28, 0.22), 0, TAU); else c.arc(w / 2, k, Math.min(w * 0.28, 0.22), 0, TAU);
+      c.stroke();
+    }
+    normal(c, S);
+  }
+
+  function grave(c, S, w, h) {
+    // 墓石：上が墓標、下に土の盛り
+    box(c, S, w * 0.1, 0, w * 0.8, h * 0.32, 0.12, S.soft);
+    box(c, S, w * 0.05, h * 0.36, w * 0.9, h * 0.62, 0.25, S.wood);
+    thin(c, S);
+    line(c, w / 2, h * 0.06, w / 2, h * 0.26);
+    line(c, w * 0.38, h * 0.13, w * 0.62, h * 0.13);
+    normal(c, S);
+  }
+
+  function shed(c, S, w, h) {
+    // 物置：屋根の棟と扉
+    box(c, S, 0, 0, w, h, 0.04, S.soft);
+    thin(c, S);
+    line(c, 0, h / 2, w, h / 2);
+    for (let y = 0.3; y < h; y += 0.3) { line(c, 0, y, w * 0.08, y); }
+    normal(c, S);
+    c.fillStyle = S.dark;
+    c.fillRect(w * 0.3, h - 0.12, w * 0.4, 0.12);
+  }
+
   /* ---------- カタログ ---------- */
 
   const GROUPS = [
@@ -1833,7 +2108,8 @@
     { id: 'outdoor', name: { ja: '屋外', en: 'Outdoor', ko: '옥외' } },
     { id: 'retro', name: { ja: '1920年代・和風', en: '1920s & Japanese', ko: '1920년대·일본풍' } },
     { id: 'sf', name: { ja: 'SF', en: 'Sci-fi', ko: 'SF' } },
-    { id: 'nature', name: { ja: '自然・キャンプ', en: 'Nature & camping', ko: '자연·캠핑' } }
+    { id: 'nature', name: { ja: '自然・キャンプ', en: 'Nature & camping', ko: '자연·캠핑' } },
+    { id: 'fantasy', name: { ja: 'ファンタジー', en: 'Fantasy', ko: '판타지' } }
   ];
 
   const A = (id, group, w, h, draw, name, extra) => ({ id, group, w, h, draw, name, ...(extra || {}) });
@@ -1843,6 +2119,9 @@
     A('stairs_u', 'structure', 5, 5, stairsU, { ja: '折り返し階段', en: 'U-turn stairs', ko: '꺾인 계단' }),
     A('spiral', 'structure', 4, 4, spiral, { ja: '螺旋階段', en: 'Spiral stairs', ko: '나선 계단' }),
     A('elevator', 'structure', 4, 4, elevator, { ja: 'エレベーター', en: 'Elevator', ko: '엘리베이터' }),
+    A('stairs_down', 'structure', 2, 5, stairsDown, { ja: '地下への階段', en: 'Stairs down (basement)', ko: '지하로 가는 계단' }),
+    A('trapdoor', 'structure', 2, 2, trapdoor, { ja: '床の扉（地下・床下へ）', en: 'Trapdoor', ko: '바닥 문(지하로)' }),
+    A('ladder', 'structure', 1.2, 3, ladder, { ja: 'はしご', en: 'Ladder', ko: '사다리' }),
     A('pillar', 'structure', 1, 1, pillar, { ja: '柱', en: 'Pillar', ko: '기둥' }),
     A('fireplace', 'structure', 3, 1.2, fireplace, { ja: '暖炉', en: 'Fireplace', ko: '벽난로' }),
 
@@ -1994,7 +2273,27 @@
     A('log', 'nature', 3, 0.8, logSeat, { ja: '丸太', en: 'Log', ko: '통나무' }),
     A('bones', 'nature', 1.4, 1.2, bones, { ja: '骨', en: 'Bones', ko: '뼈' }, { under: true }),
     A('pit', 'nature', 2.4, 2.4, pit, { ja: '竪穴・落とし穴', en: 'Pit', ko: '구덩이' }),
-    A('boat', 'nature', 2.2, 5, boat, { ja: '小舟', en: 'Rowboat', ko: '작은 배' })
+    A('boat', 'nature', 2.2, 5, boat, { ja: '小舟', en: 'Rowboat', ko: '작은 배' }),
+    A('hedge', 'outdoor', 6, 1, hedge, { ja: '生け垣', en: 'Hedge', ko: '생울타리' }),
+    A('fountain', 'outdoor', 4, 4, fountain, { ja: '噴水', en: 'Fountain', ko: '분수' }),
+    A('gazebo', 'outdoor', 5, 5, gazebo, { ja: '東屋（ガゼボ）', en: 'Gazebo', ko: '정자' }),
+    A('grave', 'outdoor', 1.6, 2.6, grave, { ja: '墓', en: 'Grave', ko: '무덤' }),
+    A('shed', 'outdoor', 4, 3, shed, { ja: '物置', en: 'Shed', ko: '창고(헛간)' }),
+    A('throne', 'fantasy', 2.4, 2.2, throne, { ja: '玉座', en: 'Throne', ko: '왕좌' }),
+    A('weapon_rack', 'fantasy', 3, 1, weaponRack, { ja: '武器ラック', en: 'Weapon rack', ko: '무기 거치대' }),
+    A('armor_stand', 'fantasy', 1.2, 1, armorStand, { ja: '鎧', en: 'Armor stand', ko: '갑옷' }),
+    A('chest', 'fantasy', 1.6, 1, chest, { ja: '宝箱', en: 'Treasure chest', ko: '보물상자' }),
+    A('cauldron', 'fantasy', 1.6, 1.6, cauldron, { ja: '大釜', en: 'Cauldron', ko: '큰 솥' }),
+    A('crystal_ball', 'fantasy', 1, 1, crystalBall, { ja: '水晶玉', en: 'Crystal ball', ko: '수정구' }),
+    A('banner', 'fantasy', 2, 0.6, banner, { ja: '旗・タペストリー', en: 'Banner', ko: '깃발·태피스트리' }),
+    A('anvil', 'fantasy', 1.6, 1, anvil, { ja: '金床', en: 'Anvil', ko: '모루' }),
+    A('forge', 'fantasy', 3, 2, forge, { ja: '鍛冶炉', en: 'Forge', ko: '대장간 화로' }),
+    A('quest_board', 'fantasy', 3, 0.5, questBoard, { ja: '依頼掲示板', en: 'Quest board', ko: '의뢰 게시판' }),
+    A('bunk_bed', 'fantasy', 2, 4, bunkBed, { ja: '二段ベッド', en: 'Bunk bed', ko: '2층 침대' }),
+    A('spike_trap', 'fantasy', 2, 2, spikeTrap, { ja: 'トゲの罠', en: 'Spike trap', ko: '가시 함정' }),
+    A('torch', 'fantasy', 0.8, 0.8, torch, { ja: '壁の松明', en: 'Wall torch', ko: '벽 횃불' }),
+    A('hay', 'fantasy', 2, 1.4, hay, { ja: '干し草', en: 'Hay bale', ko: '건초' }),
+    A('statue', 'fantasy', 1.6, 1.6, statue, { ja: '石像', en: 'Statue', ko: '석상' }),
   ];
 
   const BY_ID = Object.fromEntries(ASSETS.map(a => [a.id, a]));

@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.04';
+  const VERSION = 'v1.05';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -41,7 +41,10 @@
       ['balcony', 'balcony', 12, 3], ['garden', 'garden', 12, 8], ['porch', 'porch', 6, 3]
     ] },
     { id: 'world', name: { ja: '和風・SF・自然', en: 'Japanese, sci-fi, nature', ko: '일본풍·SF·자연' }, items: [
-      ['doma', 'doma', 8, 8], ['deck', 'tech', 8, 6], ['cave', 'cave', 12, 10], ['water', 'water', 8, 6], ['field', 'field', 12, 8]
+      ['doma', 'doma', 8, 8], ['engawa', 'engawa', 12, 3], ['deck', 'tech', 8, 6], ['cave', 'cave', 12, 10], ['water', 'water', 8, 6], ['field', 'field', 12, 8]
+    ] },
+    { id: 'fantasy', name: { ja: 'ファンタジー・防音・外構', en: 'Fantasy, soundproof, grounds', ko: '판타지·방음·외부' }, items: [
+      ['stoneRoom', 'stone', 10, 10], ['dungeonCell', 'stone', 4, 4], ['studio', 'studio', 8, 6], ['building', 'roof', 16, 12]
     ] }
   ];
   const ROOM_PRESETS = {};
@@ -54,7 +57,8 @@
     'kitchen', 'sink', 'stove', 'fridge', 'counter', 'cupboard', 'toilet', 'washbasin', 'bathtub', 'shower', 'washer',
     'office_desk', 'reception', 'locker', 'filing', 'whiteboard', 'copier', 'vending', 'bench',
     'hospital_bed', 'exam_bed', 'med_cabinet', 'morgue', 'lab_bench', 'rack', 'altar', 'garden_bench',
-    'stage', 'dumbbell_rack', 'barber_chair', 'kamado', 'butsudan', 'tokonoma', 'console'
+    'stage', 'dumbbell_rack', 'barber_chair', 'kamado', 'butsudan', 'tokonoma', 'console',
+    'throne', 'weapon_rack', 'chest', 'banner', 'quest_board', 'bunk_bed', 'torch', 'forge'
   ]);
   const SWING_DOORS = new Set(['door', 'door2', 'locked', 'secret', 'broken']);
   const ICONS = {
@@ -637,7 +641,7 @@
     const o = r.o === 'h' ? { o: 'h', x: start, y: r.c } : { o: 'v', x: r.c, y: start };
     const clash = cur().openings.some(op => op.id !== ignoreId && op.o === o.o && Math.abs(lineOf(op) - r.c) < 1e-6
       && startOf(op) < start + size - 1e-6 && start < startOf(op) + op.len - 1e-6);
-    return { ...o, len: size, side: across >= r.c ? 1 : -1, kind, t: (M.WALL[r.kind] || M.WALL.int).t, clash };
+    return { ...o, len: size, side: across >= r.c ? 1 : -1, kind, t: (M.WALL[r.kind] || M.WALL.int).t, clash, run: { a: r.a, b: r.b }, along: clamp(M.snap(along, 0.25), r.a, r.b) };
   }
 
   const dimsFor = (asset, rot) => (rot === 90 || rot === 270 ? { w: asset.h, h: asset.w } : { w: asset.w, h: asset.h });
@@ -1632,9 +1636,12 @@
       }
       if (!g || g.clash) return;
       const o = { id: M.uid('o'), kind: g.kind, o: g.o, x: g.x, y: g.y, len: g.len, side: g.side, hinge: app.armed.hinge || 0 };
-      change(() => addObject('opening', o));
+      const before = snapshot();
+      addObject('opening', o);
+      touchedLight();
       setSelection([{ type: 'opening', id: o.id }]);
-      pointerHover(sx, sy, event);
+      // そのまま壁に沿ってドラッグすると、開口の長さを決められる（壁の一部を削る・大きな窓など）
+      startDrag({ mode: 'openlen', id: o.id, run: g.run, anchor: g.along, sx, sy, before });
       return;
     }
     if (tool === 'place') {
@@ -1747,6 +1754,10 @@
       const merged = d.add ? d.base.concat(found.filter(s => !d.base.some(b => b.type === s.type && b.id === s.id))) : found;
       app.sel = merged;
       renderProps();
+    } else if (d.mode === 'openlen') {
+      if (!d.moved && Math.hypot(sx - d.sx, sy - d.sy) < 8) return;
+      d.moved = true;
+      dragOpeningLength(d, w);
     } else if (d.mode === 'room') {
       if (!d.moved && Math.hypot(sx - d.sx, sy - d.sy) < 4) return;
       d.moved = true;
@@ -1763,6 +1774,24 @@
       eraseAt(w, false);
     }
     requestRender();
+  }
+
+  function dragOpeningLength(d, w) {
+    const o = getObj('opening', d.id);
+    if (!o) return;
+    const at = clamp(M.snap(o.o === 'h' ? w.x : w.y, 0.25), d.run.a, d.run.b);
+    let a = Math.min(d.anchor, at), b = Math.max(d.anchor, at);
+    if (b - a < 0.5) {
+      b = Math.min(a + 0.5, d.run.b);
+      a = b - 0.5;
+    }
+    const line = lineOf(o);
+    const clash = cur().openings.some(op => op.id !== o.id && op.o === o.o && Math.abs(lineOf(op) - line) < 1e-6
+      && startOf(op) < b - 1e-6 && a < startOf(op) + op.len - 1e-6);
+    if (clash) return;
+    if (o.o === 'h') o.x = round2(a); else o.y = round2(a);
+    o.len = round2(b - a);
+    touchedLight();
   }
 
   function dragMove(d, w, event) {
@@ -2605,7 +2634,7 @@
   }
 
   function selectionSig() {
-    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}${(getObj(s.type, s.id) || {}).gm ? ':G' : ''}${(getObj(s.type, s.id) || {}).clue ? ':C' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}`;
+    return `${app.lang}|${app.project.active}|${app.playerView}|${app.sel.map(s => `${s.type}:${s.id}${(getObj(s.type, s.id) || {}).locked ? ':L' : ''}${(getObj(s.type, s.id) || {}).gm ? ':G' : ''}${(getObj(s.type, s.id) || {}).clue ? ':C' : ''}`).join(',')}|${app.sel.length === 1 ? (getObj(app.sel[0].type, app.sel[0].id) || {}).kind || (getObj(app.sel[0].type, app.sel[0].id) || {}).t || '' : ''}|${app.sel.length === 1 && app.sel[0].type === 'room' && (M.CAT[(getObj('room', app.sel[0].id) || {}).cat] || {}).outdoor ? 'out' : ''}`;
   }
 
   function refreshProps() {
@@ -2706,6 +2735,8 @@
     body.appendChild(toggleField(t('props.gmOnly'), () => r.gm, v => { r.gm = v || undefined; if (!v) delete r.gm; }));
     body.appendChild(toggleField(t('props.hideLabel'), () => r.hideLabel, v => { r.hideLabel = v || undefined; if (!v) delete r.hideLabel; }));
     body.appendChild(toggleField(t('props.noWall'), () => r.noWall, v => { r.noWall = v || undefined; if (!v) delete r.noWall; }));
+    const wallKinds = [{ value: '', label: t('props.roomWallAuto') }].concat(M.WALL_KINDS.filter(k => !['rail', 'fence'].includes(k.id)).map(k => ({ value: k.id, label: pick(k.name) })));
+    if (!(M.CAT[r.cat] && M.CAT[r.cat].outdoor)) body.appendChild(selectField(t('props.roomWall'), wallKinds, () => r.wall || '', v => { if (v) r.wall = v; else delete r.wall; }));
     body.appendChild(textField(t('props.note'), () => r.note, v => { r.note = v; }, { multiline: true, placeholder: t('props.notePh') }));
     body.appendChild(h('div', { class: 'props-sep' }));
     body.appendChild(actions([

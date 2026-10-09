@@ -32,7 +32,11 @@
     { id: 'tech', name: { ja: '機関・艦内（SF）', en: 'Tech / ship deck', ko: '기관·함내(SF)' }, pattern: 'panel' },
     { id: 'field', name: { ja: '田畑', en: 'Field', ko: '밭·논' }, outdoor: true, edge: 'none', pattern: 'rows' },
     { id: 'water', name: { ja: '水辺・池・川', en: 'Water', ko: '물가·연못·강' }, outdoor: true, edge: 'none', pattern: 'water' },
-    { id: 'cave', name: { ja: '洞窟・岩場', en: 'Cave', ko: '동굴·바위' }, outdoor: true, edge: 'rock', pattern: 'speckle' }
+    { id: 'cave', name: { ja: '洞窟・岩場', en: 'Cave', ko: '동굴·바위' }, outdoor: true, edge: 'rock', pattern: 'speckle' },
+    { id: 'engawa', name: { ja: '縁側・広縁', en: 'Veranda (engawa)', ko: '툇마루' }, pattern: 'deck' },
+    { id: 'studio', name: { ja: '防音室・スタジオ', en: 'Soundproof room', ko: '방음실·스튜디오' }, pattern: 'acoustic' },
+    { id: 'stone', name: { ja: '石造り（城・迷宮）', en: 'Stone (castle / dungeon)', ko: '석조(성·던전)' }, pattern: 'flag' },
+    { id: 'roof', name: { ja: '建物（屋根）', en: 'Building (roof)', ko: '건물(지붕)' }, pattern: 'roof' }
   ];
   const CAT = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
 
@@ -67,9 +71,12 @@
     { id: 'fence', t: 0.1, name: { ja: '柵・フェンス', en: 'Fence', ko: '울타리' } },
     { id: 'bars', t: 0.14, name: { ja: '鉄格子', en: 'Bars', ko: '쇠창살' } },
     { id: 'broken', t: 0.3, name: { ja: '崩れた壁', en: 'Crumbling wall', ko: '무너진 벽' } },
-    { id: 'rock', t: 0.7, name: { ja: '岩壁', en: 'Rock wall', ko: '암벽' } }
+    { id: 'rock', t: 0.7, name: { ja: '岩壁', en: 'Rock wall', ko: '암벽' } },
+    { id: 'stone', t: 0.6, name: { ja: '石壁（城・迷宮）', en: 'Stone wall (castle)', ko: '석벽(성·던전)' } },
+    { id: 'sound', t: 0.5, name: { ja: '防音壁', en: 'Soundproof wall', ko: '방음벽' } }
   ];
   const WALL = Object.fromEntries(WALL_KINDS.map(w => [w.id, w]));
+  const WALL_BY_ID = WALL;
 
   const snap = (v, step) => Math.round(v / step) * step;
   const clone = value => JSON.parse(JSON.stringify(value));
@@ -129,6 +136,16 @@
     return owner;
   }
 
+  /* 部屋ごとの壁の種類（room.wall）。両側にあれば厚いほう */
+  function roomWall(...rooms) {
+    let best = null;
+    rooms.forEach(r => {
+      if (!r || !r.wall || !WALL_BY_ID[r.wall] || (CAT[r.cat] && CAT[r.cat].outdoor)) return;
+      if (!best || WALL_BY_ID[r.wall].t > WALL_BY_ID[best].t) best = r.wall;
+    });
+    return best;
+  }
+
   function edgeKind(a, b) {
     if (a === b) return null;
     if (a && b) {
@@ -136,13 +153,13 @@
       const ao = CAT[a.cat] && CAT[a.cat].outdoor;
       const bo = CAT[b.cat] && CAT[b.cat].outdoor;
       if (ao && bo) return null;
-      if (ao || bo) return 'ext';
-      return 'int';
+      if (ao || bo) return roomWall(a, b) || 'ext';
+      return roomWall(a, b) || 'int';
     }
     const room = a || b;
     const cat = CAT[room.cat] || {};
     if (cat.outdoor) return cat.edge === 'rail' || cat.edge === 'rock' ? cat.edge : null;
-    return 'ext';
+    return roomWall(room) || 'ext';
   }
 
   /* 区間の引き算（openings で壁を切る）。切れ目の端には「キャップ」を付けない */

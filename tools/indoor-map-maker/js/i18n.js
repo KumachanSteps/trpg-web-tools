@@ -88,7 +88,7 @@
       room: 'ドラッグで部屋を描きます。左の「部屋」で種類を選べます。',
       roomPreset: '「{name}」: ドラッグで好きな大きさに、クリックで標準の大きさ（{size}）で置きます。',
       wall: 'ドラッグで壁を引きます（縦横に吸着・Shiftで斜め）。部屋の外周の壁は自動なので、ここでは間仕切りや塀に使います。',
-      opening: '「{name}」: 壁に近づけるとぴったり付きます。クリックで設置。ドアはカーソルのある側に開きます（Rで吊元を反転）。',
+      opening: '「{name}」: 壁に近づけるとぴったり付きます。クリックで設置、壁に沿ってドラッグで長さを指定（「開口」「壁の穴」で壁の一部を消せます）。ドアはカーソルのある側に開きます（Rで吊元を反転）。',
       place: '「{name}」: クリックで設置（Shiftで続けて設置）。壁の近くでは背中を壁に向けます。Rで回転、Altで吸着なし。',
       text: 'クリックした所に文字を置きます。',
       eraser: 'クリックしたものを消します。ドラッグで家具などを続けて消せます。',
@@ -113,7 +113,7 @@
       stairs: '階段室', closet: 'クローゼット', storage: '倉庫', office: '事務室', meeting: '会議室', lobby: 'ロビー',
       guest: '客室', ward: '病室', exam: '診察室', surgery: '手術室', lab: '研究室', ritual: '儀式の間', sealed: '封鎖区画',
       garage: '車庫', balcony: 'バルコニー', garden: '庭', porch: 'ポーチ', cell: '独房',
-      doma: '土間', field: '畑', water: '池・川', cave: '洞窟', deck: '艦内区画'
+      doma: '土間', field: '畑', water: '池・川', cave: '洞窟', deck: '艦内区画', engawa: '広縁・縁側', stoneRoom: '石造りの部屋', dungeonCell: '牢・小部屋', studio: '防音室', building: '建物（外構図用）'
     },
     props: {
       mapTitle: 'マップ設定',
@@ -148,6 +148,7 @@
       hideLabel: '名前を表示しない',
       lockedNote: 'ロック中は位置と大きさを変えられません。中の家具やドアは編集できます。',
       noWall: '壁を作らない（LDKのゆるい区切りなど）',
+      roomWall: '部屋の壁の種類', roomWallAuto: '自動（外壁・内壁）',
       note: 'GMメモ',
       notePh: '手がかり・判定・イベントなど（画像には出ません）',
       labelReset: 'ラベル位置を戻す',
@@ -335,7 +336,7 @@
       room: 'Drag to draw a room. Pick a room type under Rooms on the left.',
       roomPreset: '"{name}": drag for any size, or click to place it at the standard size ({size}).',
       wall: 'Drag to draw a wall (snaps straight; Shift for diagonal). Room outlines get walls automatically, so use this for partitions and fences.',
-      opening: '"{name}": move near a wall to snap, click to place. Doors swing toward your cursor (R flips the hinge).',
+      opening: '"{name}": move near a wall to snap, click to place, or drag along the wall to set its length (use Opening or Hole to remove part of a wall). Doors swing toward your cursor (R flips the hinge).',
       place: '"{name}": click to place (Shift to keep placing). Near a wall it backs onto the wall. R rotates, Alt turns snapping off.',
       text: 'Click to place a text label.',
       eraser: 'Click something to delete it. Drag to erase furniture in a row.',
@@ -360,7 +361,7 @@
       stairs: 'Stairwell', closet: 'Closet', storage: 'Storage', office: 'Office', meeting: 'Meeting room', lobby: 'Lobby',
       guest: 'Guest room', ward: 'Ward', exam: 'Exam room', surgery: 'Operating room', lab: 'Lab', ritual: 'Ritual chamber', sealed: 'Sealed area',
       garage: 'Garage', balcony: 'Balcony', garden: 'Garden', porch: 'Porch', cell: 'Cell',
-      doma: 'Earthen floor', field: 'Field', water: 'Pond / river', cave: 'Cave', deck: 'Ship section'
+      doma: 'Earthen floor', field: 'Field', water: 'Pond / river', cave: 'Cave', deck: 'Ship section', engawa: 'Veranda (engawa)', stoneRoom: 'Stone chamber', dungeonCell: 'Cell', studio: 'Soundproof room', building: 'Building (site plan)'
     },
     props: {
       mapTitle: 'Map settings',
@@ -395,6 +396,7 @@
       hideLabel: 'Hide the name',
       lockedNote: 'While locked, the position and size stay fixed. Furniture and doors inside can still be edited.',
       noWall: 'No walls (open plan zones)',
+      roomWall: 'Wall type', roomWallAuto: 'Auto (exterior / interior)',
       note: 'GM note',
       notePh: 'Clues, checks, events… (not printed)',
       labelReset: 'Reset label position',
@@ -582,7 +584,7 @@
       room: '드래그해서 방을 그립니다. 왼쪽 「방」에서 종류를 고를 수 있습니다.',
       roomPreset: '「{name}」: 드래그로 원하는 크기, 클릭하면 표준 크기({size})로 놓습니다.',
       wall: '드래그로 벽을 긋습니다(가로·세로로 흡착, Shift로 대각선). 방 외곽의 벽은 자동이므로 칸막이나 담장에 쓰세요.',
-      opening: '「{name}」: 벽에 가까이 가져가면 붙습니다. 클릭으로 설치. 문은 커서 쪽으로 열립니다(R로 경첩 반전).',
+      opening: '「{name}」: 벽에 가까이 가져가면 붙습니다. 클릭으로 설치, 벽을 따라 드래그하면 길이 지정(「개구부」「벽의 구멍」으로 벽 일부를 없앨 수 있음). 문은 커서 쪽으로 열립니다(R로 경첩 반전).',
       place: '「{name}」: 클릭으로 설치(Shift로 계속 설치). 벽 근처에서는 등을 벽에 댑니다. R로 회전, Alt로 흡착 해제.',
       text: '클릭한 곳에 글자를 놓습니다.',
       eraser: '클릭한 것을 지웁니다. 드래그로 가구 등을 연달아 지울 수 있습니다.',
@@ -607,7 +609,7 @@
       stairs: '계단실', closet: '옷장', storage: '창고', office: '사무실', meeting: '회의실', lobby: '로비',
       guest: '객실', ward: '병실', exam: '진찰실', surgery: '수술실', lab: '연구실', ritual: '의식의 방', sealed: '봉쇄 구역',
       garage: '차고', balcony: '발코니', garden: '정원', porch: '포치', cell: '독방',
-      doma: '흙바닥', field: '밭', water: '연못·강', cave: '동굴', deck: '함내 구역'
+      doma: '흙바닥', field: '밭', water: '연못·강', cave: '동굴', deck: '함내 구역', engawa: '툇마루', stoneRoom: '석조 방', dungeonCell: '감옥·작은 방', studio: '방음실', building: '건물(배치도용)'
     },
     props: {
       mapTitle: '지도 설정',
@@ -642,6 +644,7 @@
       hideLabel: '이름 숨기기',
       lockedNote: '잠겨 있는 동안 위치와 크기는 바꿀 수 없습니다. 안의 가구와 문은 편집할 수 있습니다.',
       noWall: '벽 만들지 않기(LDK의 느슨한 구분 등)',
+      roomWall: '방의 벽 종류', roomWallAuto: '자동(외벽·내벽)',
       note: 'GM 메모',
       notePh: '단서·판정·이벤트 등(이미지에는 나오지 않음)',
       labelReset: '라벨 위치 되돌리기',

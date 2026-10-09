@@ -18,7 +18,8 @@
         living: '#fbf1df', bedroom: '#e8f2e1', washitsu: '#eef0d4', kitchen: '#fbe8d6', wet: '#e1eef8', hall: '#f1efea',
         storage: '#e8e4dc', public: '#f7eed9', office: '#ebe8f5', medical: '#dff1ee', special: '#eee2f3', danger: '#f6dedb',
         garage: '#e6e7ea', balcony: '#edf0f3', garden: '#e1efd6', porch: '#ece8e0',
-        doma: '#e7dccb', tech: '#e3e8ee', field: '#ebe3c3', water: '#cde5f6', cave: '#ddd7cd'
+        doma: '#e7dccb', tech: '#e3e8ee', field: '#ebe3c3', water: '#cde5f6', cave: '#ddd7cd',
+        engawa: '#f1e3c8', studio: '#e4e1ee', stone: '#e3e0da', roof: '#d9d4cf'
       },
       patternLine: 'rgba(60, 70, 90, 0.12)',
       furn: {
@@ -67,7 +68,8 @@
         living: '#e9d9b6', bedroom: '#e3dab5', washitsu: '#e6dcae', kitchen: '#ead3ad', wet: '#dcd8c0', hall: '#ebdfc2',
         storage: '#ddd0b0', public: '#e9d6b0', office: '#e0d6bb', medical: '#dcdcc0', special: '#e0cdb8', danger: '#e2c3ad',
         garage: '#dcd2bb', balcony: '#e7dcc0', garden: '#d9dcb2', porch: '#e3d7bb',
-        doma: '#e0cfac', tech: '#dcd6c2', field: '#dfd6a8', water: '#d2d8c8', cave: '#d5c9ae'
+        doma: '#e0cfac', tech: '#dcd6c2', field: '#dfd6a8', water: '#d2d8c8', cave: '#d5c9ae',
+        engawa: '#e6d4ae', studio: '#ddd2bb', stone: '#d8ccb2', roof: '#cdbf9f'
       },
       patternLine: 'rgba(96, 70, 40, 0.14)',
       furn: {
@@ -86,7 +88,8 @@
         living: '#2a2729', bedroom: '#262a28', washitsu: '#2b2a24', kitchen: '#2d2724', wet: '#232830', hall: '#242326',
         storage: '#211f21', public: '#2b2826', office: '#25242b', medical: '#212a2a', special: '#2e2230', danger: '#3a1f1f',
         garage: '#222224', balcony: '#1e1e22', garden: '#1d231c', porch: '#201f22',
-        doma: '#2a2622', tech: '#22262c', field: '#25251a', water: '#1b2530', cave: '#272422'
+        doma: '#2a2622', tech: '#22262c', field: '#25251a', water: '#1b2530', cave: '#272422',
+        engawa: '#2c2722', studio: '#25232b', stone: '#262527', roof: '#2e2b2c'
       },
       patternLine: 'rgba(255,255,255,0.05)',
       furn: {
@@ -217,6 +220,32 @@
           });
         }
       }
+    } else if (p === 'acoustic') {
+      // 防音室：吸音パネル（1m 角、向きを交互に変えた縞）
+      c.beginPath();
+      for (let x = room.x, i = 0; x < room.x + room.w; x += 2, i++) {
+        for (let y = room.y, j = 0; y < room.y + room.h; y += 2, j++) {
+          if ((i + j) % 2) for (let k = 0.4; k < 2; k += 0.4) { c.moveTo(x + k, y + 0.15); c.lineTo(x + k, y + 1.85); }
+          else for (let k = 0.4; k < 2; k += 0.4) { c.moveTo(x + 0.15, y + k); c.lineTo(x + 1.85, y + k); }
+        }
+      }
+      c.stroke();
+    } else if (p === 'flag') {
+      // 城・迷宮の石床：大きさの違う切石を互い違いに
+      let s = (room.x * 73856093) ^ (room.y * 19349663) ^ 0x2545f491;
+      const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+      c.beginPath();
+      for (let y = room.y, row = 0; y < room.y + room.h; y += 1.5, row++) {
+        c.moveTo(room.x, y); c.lineTo(room.x + room.w, y);
+        for (let x = room.x + (row % 2 ? 0.9 : 0.2) + rnd() * 0.6; x < room.x + room.w; x += 1.4 + rnd() * 1.2) { c.moveTo(x, y); c.lineTo(x, y + 1.5); }
+      }
+      c.lineWidth = lw * 1.1;
+      c.stroke();
+    } else if (p === 'roof') {
+      // 外から見た建物：屋根の斜線
+      c.beginPath();
+      for (let k = -room.h; k < room.w; k += 0.8) { c.moveTo(room.x + k, room.y + room.h); c.lineTo(room.x + k + room.h, room.y); }
+      c.stroke();
     } else if (p === 'stone') {
       c.beginPath();
       for (let y = room.y, row = 0; y < room.y + room.h; y += 1, row++) {
@@ -388,6 +417,21 @@
     }
     if (run.o === 'h') c.fillRect(a, run.c - t / 2, b - a, t);
     else c.fillRect(run.c - t / 2, a, t, b - a);
+    if (run.kind === 'sound') {
+      // 防音壁：厚い壁の中に吸音材の波線
+      c.save();
+      c.strokeStyle = theme.bg;
+      c.lineWidth = lw * 0.9;
+      c.beginPath();
+      const amp = t * 0.22;
+      for (let p = a + 0.05, i = 0; p < b - 0.05; p += 0.25, i++) {
+        const q = Math.min(b - 0.05, p + 0.25), d = i % 2 ? amp : -amp;
+        if (run.o === 'h') { if (!i) c.moveTo(p, run.c); c.quadraticCurveTo((p + q) / 2, run.c + d * 2, q, run.c); }
+        else { if (!i) c.moveTo(run.c, p); c.quadraticCurveTo(run.c + d * 2, (p + q) / 2, run.c, q); }
+      }
+      c.stroke();
+      c.restore();
+    }
   }
 
   function drawDiagonalWall(c, w, theme, lw) {
