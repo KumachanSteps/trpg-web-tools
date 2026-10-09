@@ -267,7 +267,12 @@
           { value: 'p5round2', label: T('ラウンド表示 Ver2（2本の線）', 'Round call v2 (two lines)', '라운드 표시 Ver2（두 줄의 선）') },
           { value: 'p5gun', label: T('銃弾（赤と黒）', 'Gunfire (red & black)', '총탄（빨강과 검정）') },
           { value: 'blade', label: T('抜刀の判定', 'Katana roll', '발도 판정') },
-          { value: 'shot', label: T('銃撃の判定', 'Gunfire roll', '총격 판정') }
+          { value: 'shot', label: T('銃撃の判定', 'Gunfire roll', '총격 판정') },
+          { value: 'fireWall', label: T('炎の壁', 'Wall of fire', '불의 벽') },
+          { value: 'fireRun', label: T('走る炎', 'Running fire', '달리는 불길') },
+          { value: 'fireBreath', label: T('火炎ブレス', 'Fire breath', '화염 브레스') },
+          { value: 'fireText', label: T('燃える文字', 'Burning text', '불타는 글자') },
+          { value: 'fireTextSeq', label: T('燃える文字・演出', 'Burning text (sequence)', '불타는 글자·연출') }
         ] },
         { type: 'chips', bind: 'sfx.tier', when: s => s.sfx.type === 'blade' || s.sfx.type === 'shot', label: T('判定の結果', 'Roll result', '판정 결과'), options: s => [
           { value: 'success', label: T('成功', 'Success', '성공') },
@@ -288,9 +293,14 @@
         { type: 'note', when: s => s.sfx.type === 'gunshot', text: T('四隅の照準が定まり、3発の曳光弾が着弾して弾痕が残ってから、斜めの赤い帯が走り込んで文字が出ます。退場では帯も文字と一緒に右へ抜けます', 'Corner brackets lock on, three tracer rounds leave bullet holes, then a slanted red band slides in behind the text. On exit the band wipes out to the right with the text', '네 모서리 조준이 고정되고 세 발의 예광탄이 착탄해 탄흔이 남은 뒤, 비스듬한 빨간 띠가 들어오며 글자가 나타납니다. 퇴장할 때는 띠도 글자와 함께 오른쪽으로 빠집니다') },
         { type: 'note', when: s => s.sfx.type === 'lightning', text: T('左右から電気が横に走って中央で大きな火花が散り、文字が現れます。表示中は文字の上を電気が走り、退場の直前にもう一度落雷します', 'Electricity races in from both sides and bursts into a big spark at the center, bringing the text in. Arcs crackle over it while shown, and a second strike hits right before it fades out', '좌우에서 전기가 가로로 달려와 중앙에서 큰 불꽃이 튀며 글자가 나타납니다. 표시 중에는 글자 위로 전기가 흐르고, 퇴장 직전에 다시 한번 낙뢰가 칩니다') },
         { type: 'note', when: s => s.sfx.type === 'cyber', text: T('画面が暗くなって走査線が流れ、中央に回る照準と警告マーク、左右の表示、「WARNING」が組み上がって点滅します。マークが横一本の線につぶれて暗い帯に開き、文字がグリッチで現れます。表示中は帯の上下に小さく警告の文字が流れ、最後は帯が線に閉じて消えます', 'The image dims with scanlines, and a HUD (rotating reticle, warning sign, side readouts and "WARNING") boots up and blinks. The sign collapses into a single line that opens into a dark band, and the text glitches in. Small warning text scrolls above and below the band, which closes back into a line at the end', '화면이 어두워지며 주사선이 흐르고, 중앙에 회전하는 조준과 경고 마크, 좌우 표시, 「WARNING」이 조립되어 깜박입니다. 마크가 가로 한 줄로 찌그러져 어두운 띠로 열리고, 글자가 글리치로 나타납니다. 표시 중에는 띠 위아래에 작은 경고 문자가 흐르고, 마지막에 띠가 선으로 닫히며 사라집니다') },
+        { type: 'note', when: s => s.sfx.type === 'fireWall', text: T('画面の下で炎の壁が燃え続け、火の粉が舞い上がります。書き出しの長さでちょうど一周するので、「ずっとループ」で継ぎ目なくつながります。強さで炎の高さが変わります', 'A wall of fire keeps burning along the bottom of the image with rising embers. It completes whole cycles over the export length, so “Loop forever” plays seamlessly. Strength changes the flame height', '화면 아래에서 불의 벽이 계속 타오르며 불티가 날아오릅니다. 내보내기 길이에 맞춰 정확히 한 바퀴가 되므로 「계속 반복」으로 이음매 없이 이어집니다. 강도로 불꽃 높이가 바뀝니다') },
+        { type: 'note', when: s => s.sfx.type === 'fireRun', text: T('画面の下を左から右へ炎が燃え広がり、火のついた瞬間に火の粉が弾けます。文字の退場に合わせて、炎も左から順に消えていきます', 'Fire spreads left to right along the bottom of the image, with sparks bursting as it catches. When the text exits, the flames die down from left to right', '화면 아래를 왼쪽에서 오른쪽으로 불길이 번지고, 불이 붙는 순간 불티가 튑니다. 글자가 퇴장할 때 불길도 왼쪽부터 차례로 꺼집니다') },
+        { type: 'note', when: s => s.sfx.type === 'fireBreath', text: T('炎の息が文字の下の地面を走り、右端で爆発して燃え上がります。文字は爆発と同時に現れ、退場では炎の尾が左から抜けていきます', 'A breath of fire races along the ground under the text and explodes at the right edge, flaring up. The text appears with the blast, and on exit the tail of the fire sweeps out from the left', '불의 숨결이 글자 아래 땅을 달려 오른쪽 끝에서 폭발하며 타오릅니다. 글자는 폭발과 함께 나타나고, 퇴장할 때 불길의 꼬리가 왼쪽부터 빠져나갑니다') },
+        { type: 'note', when: s => s.sfx.type === 'fireText', text: T('文字の画そのものが燃えます（文字の色・縁取りの設定は使いません）。暗い熾火の字が左から順に燃え上がり、表示中は炎と火の粉が立ちのぼって、退場で冷えて消えます', 'The strokes of the text themselves burn (text color and outline settings are not used). Dark embers ignite from left to right, flames and sparks rise while shown, and it cools and fades on exit', '글자의 획 자체가 불탑니다 (글자 색·테두리 설정은 쓰지 않습니다). 어두운 잉걸불 글자가 왼쪽부터 차례로 타오르고, 표시 중에는 불꽃과 불티가 피어오르며, 퇴장할 때 식어서 사라집니다') },
+        { type: 'note', when: s => s.sfx.type === 'fireTextSeq', text: T('炎の息が一瞬で走り、文字の右端で爆発します。爆風が右から左へ燃え移り、白と金の縁取りの燃える文字になって手前にも炎が上がります。退場では左から火の粉になって消えます', 'A breath of fire flashes in and explodes at the right edge of the text. The blast catches from right to left, turning the text into burning letters with a white and gold rim and flames in front. On exit it dissolves into sparks from the left', '불의 숨결이 순식간에 달려와 글자 오른쪽 끝에서 폭발합니다. 폭풍이 오른쪽에서 왼쪽으로 옮겨붙어 흰색과 금색 테두리의 불타는 글자가 되고 앞쪽에도 불길이 오릅니다. 퇴장할 때 왼쪽부터 불티가 되어 사라집니다') },
         { type: 'note', when: s => s.sfx.type === 'katana', text: T('文字がそのまま現れたあと、退場の始めに中央を一閃が走って文字が切れます。退場を「斬られて左右へ」にすると、そのあと上半分は右へ・下半分は左へずれて消えます', 'The text appears whole, then a slash crosses the center at the start of the exit and cuts it. With the “Sliced apart” exit, the top half then slides right and the bottom half left as they fade', '글자가 그대로 나타난 뒤, 퇴장이 시작될 때 중앙에 일섬이 지나가며 글자가 베입니다. 퇴장을 「베여서 좌우로」로 하면 그 뒤 위쪽 절반은 오른쪽으로, 아래쪽 절반은 왼쪽으로 어긋나며 사라집니다') },
         { type: 'colors', when: s => s.sfx.type !== 'none', items: [
-          { bind: 'sfx.color', label: T('演出の色', 'Effect color', '연출 색') },
+          { bind: 'sfx.color', label: s => (s.sfx.type.startsWith('fire') ? T('炎の色（色合いだけを使う）', 'Fire color (hue only)', '불꽃 색 (색조만 사용)') : T('演出の色', 'Effect color', '연출 색')) },
           { bind: 'sfx.color2', label: s => ({
             cyber: T('帯の地の色', 'Band color', '띠 바탕색'),
             frame: T('内側の線の色', 'Inner line color', '안쪽 선 색'),
@@ -301,11 +311,22 @@
             p5round2: T('黒の色', 'Black color', '검정 색'),
             p5gun: T('黒の色', 'Black color', '검정 색'),
             blade: T('帯の色', 'Band color', '띠 색'),
-            shot: T('帯の色', 'Band color', '띠 색')
-          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot', 'flame', 'p5round', 'p5round2', 'p5gun', 'blade', 'shot'].includes(s.sfx.type) }
+            shot: T('帯の色', 'Band color', '띠 색'),
+            fireTextSeq: T('縁取りの色', 'Rim color', '테두리 색')
+          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot', 'flame', 'p5round', 'p5round2', 'p5gun', 'blade', 'shot', 'fireTextSeq'].includes(s.sfx.type) }
         ] },
         { type: 'text', bind: 'sfx.word', when: s => s.sfx.type === 'cyber', label: T('警告の文字', 'Warning text', '경고 문자'), placeholder: T('WARNING', 'WARNING', 'WARNING') },
-        { type: 'range', bind: 'sfx.power', when: s => s.sfx.type !== 'none', label: T('強さ', 'Strength', '강도'), min: 0.2, max: 2, step: 0.05, format: 'x' }
+        { type: 'range', bind: 'sfx.power', when: s => s.sfx.type !== 'none', label: s => (s.sfx.type.startsWith('fire') ? T('炎の高さ', 'Flame height', '불꽃 높이') : T('強さ', 'Strength', '강도')), min: 0.2, max: 2, step: 0.05, format: 'x' }
+      ] },
+      { type: 'section', label: T('環境（EX）', 'Environment (EX)', '환경 (EX)'), children: [
+        { type: 'chips', bind: 'env.type', options: [
+          { value: 'none', label: T('なし', 'None', '없음') },
+          { value: 'ash', label: T('灰（灰色）', 'Ash (grey)', '재 (회색)') },
+          { value: 'ashBlack', label: T('灰（黒）', 'Ash (black)', '재 (검정)') }
+        ] },
+        { type: 'note', when: s => s.env.type === 'ash', text: T('焼けた灰のかけらが風に乗って左下から右上へ舞います。奥は小さく霞み、手前ほど大きく、ひらりと裏返るたびに縁が光ります。どのテンプレート・演出とも重ねられ、書き出しの長さでちょうど一周するので「ずっとループ」で継ぎ目なくつながります', 'Burnt flakes of ash drift on the wind from lower left to upper right: small and hazy in the distance, larger up close, with edges catching the light as they flip. Works with any template or effect, and completes whole cycles over the export length so “Loop forever” plays seamlessly', '타 버린 재 조각이 바람을 타고 왼쪽 아래에서 오른쪽 위로 날립니다. 안쪽은 작고 흐릿하게, 앞쪽일수록 크게, 뒤집힐 때마다 가장자리가 빛납니다. 어떤 템플릿·연출과도 겹칠 수 있고, 내보내기 길이에 맞춰 정확히 한 바퀴가 되므로 「계속 반복」으로 이음매 없이 이어집니다') },
+        { type: 'note', when: s => s.env.type === 'ashBlack', text: T('縁取りのない黒い灰のかけらが風に舞います（明るい背景向け）。重いかけらは画面の下7割まで、ごく小さく軽いものだけが上まで昇ります。どのテンプレート・演出とも重ねられ、「ずっとループ」で継ぎ目なくつながります', 'Black flakes of ash without rims drift on the wind (for light backgrounds). Heavier flakes stay in the lower 70%, and only the tiniest rise to the top. Works with any template or effect and loops seamlessly with “Loop forever”', '테두리 없는 검은 재 조각이 바람에 날립니다 (밝은 배경용). 무거운 조각은 화면 아래 7할까지, 아주 작고 가벼운 것만 위까지 올라갑니다. 어떤 템플릿·연출과도 겹칠 수 있고 「계속 반복」으로 이음매 없이 이어집니다') },
+        { type: 'range', bind: 'env.density', when: s => s.env.type !== 'none', label: T('灰の量', 'Amount of ash', '재의 양'), min: 0.2, max: 2, step: 0.05, format: 'x' }
       ] },
       { type: 'section', when: s => !(isTrailer(s) && ['solo', 'spread'].includes(s.reveal)), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears', '한 글자가 나타나는 방식') : T('登場', 'In', '등장')), children: [
         { type: 'effects', phase: 'in' },

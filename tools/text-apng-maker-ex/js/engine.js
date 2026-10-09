@@ -635,6 +635,9 @@
       case 'p5gun': return { l: size * 0.45, r: size * 0.45, t: size * 0.75, b: size * 0.75 };
       case 'blade': return { l: 0, r: 0, t: size * 0.62, b: size * 0.62 };
       case 'shot': return { l: 0, r: 0, t: size * 0.65, b: size * 0.65 };
+      // 燃える文字：炎が字の上へ立ちのぼる分（上に広く空けるので、字は試作と同じく少し下寄りになる）
+      case 'fireText': return { l: size * 0.1, r: size * 0.1, t: size * 0.9, b: size * 0.1 };
+      case 'fireTextSeq': return { l: size * 0.1, r: size * 0.1, t: size * 0.63, b: size * 0.1 };
       default: return { l: 0, r: 0, t: 0, b: 0 };
     }
   }
@@ -1376,10 +1379,26 @@
     p5gun: { lead: 0.7, tail: 0 },
     // 判定カットイン：lead は結果の段階ごとに変わる（sfxTiming）
     blade: { lead: 0.42, tail: 0.25 },
-    shot: { lead: 0.56, tail: 0.25 }
+    shot: { lead: 0.56, tail: 0.25 },
+    // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
+    // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
+    fireWall: { lead: 0, tail: 0 },
+    fireRun: { lead: 0.7, tail: 1.15 },
+    fireBreath: { lead: 0.62, tail: 0.7 },
+    fireText: { lead: 0, tail: 0.35 },
+    fireTextSeq: { lead: 0.22, tail: 0.8 }
   };
   // 文字の後ろに描く演出（装飾枠・剣と盾・銃撃・サイバー・赤と黒の2種）。ほかは文字の上に描く
-  const SFX_BACK = new Set(['frame', 'crest', 'gunshot', 'cyber', 'p5round', 'p5round2', 'p5gun']);
+  const SFX_BACK = new Set(['frame', 'crest', 'gunshot', 'cyber', 'p5round', 'p5round2', 'p5gun', 'fireRun', 'fireBreath']);
+  // 文字の画そのものを炎で描く演出（メインの文字は普通には描かない。サブの文字はそのまま）
+  const SFX_FIRE_TEXT = new Set(['fireText', 'fireTextSeq']);
+  // 炎の色の基準（この色のとき試作どおりの橙。演出の色の色相との差だけ炎の色相を回す）
+  const FIRE_BASE = '#ff7a2a';
+  // 炎の壁の一周（秒）。書き出しの長さを整数個に割って、ループの継ぎ目が出ないようにする
+  const FIRE_WALL_LOOP = 2.5;
+  // 環境の演出（scene.env）。どのテンプレート・演出とも重ねられる。灰は試作どおり6秒で一周を目安に、書き出しの長さを整数個に割る
+  const ENV_TYPES = new Set(['ash', 'ashBlack']);
+  const ASH_LOOP = 6;
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎・一閃・閃光）
   const SFX_BOTH = new Set(['flame', 'blade', 'shot']);
   // 装飾枠：線が角から辺の中央まで伸びる時間
@@ -2059,6 +2078,30 @@
     return `#${((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1)}`;
   }
 
+  // 色の色相（度）と彩度（0〜1）
+  function hexHue(hex) {
+    const v = parseInt(String(hex || '').slice(1, 7), 16);
+    if (!Number.isFinite(v)) return null;
+    const r = ((v >> 16) & 255) / 255, g = ((v >> 8) & 255) / 255, b = (v & 255) / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (d < 1e-6) return { h: 0, s: 0 };
+    let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60;
+    return { h: h < 0 ? h + 360 : h, s: mx > 0 ? d / mx : 0 };
+  }
+
+  // 炎の色相の回転（度）：演出の色の色相と基準の橙との差。灰色に近い色では回さない
+  function fireHue(color) {
+    const c = hexHue(color), base = hexHue(FIRE_BASE);
+    if (!c || c.s < 0.15) return 0;
+    return c.h - base.h;
+  }
+
+  // 書き出しの長さ D を一周 near 秒くらいの整数個に割った長さ（D の終わりが始めにつながる）
+  function loopPeriod(D, near) {
+    return D / Math.max(1, Math.round(D / near));
+  }
+
   // 稲妻の折れ線（中点をずらしていく。同じ seed なら同じ形）
   function boltPoints(x0, y0, x1, y1, seed, depth, rough) {
     let pts = [[x0, y0], [x1, y1]];
@@ -2348,6 +2391,7 @@
       ctx.clearRect(0, 0, cw, ch);
       ctx.restore();
       this.drawBackground(ctx, t, scale);
+      if (sfxOf(scene).type === 'fireWall') this.drawFireWall(ctx, t, scale, scene);
       const size = layout.size;
       timeline.pages.forEach(pg => {
         const page = layout.pages[pg.index];
@@ -2394,6 +2438,7 @@
         this.drawBlaze(ctx, pg, page, t, scale, bs);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'front');
       });
+      this.drawEnv(ctx, t, scale, scene);
     }
 
     // 炎に包まれて燃え尽きる：燃え際が通ったところの文字から炎が立ちのぼってしばらく燃え、火の粉が舞い上がり、薄い煙が昇る
@@ -2549,7 +2594,7 @@
 
     drawSfx(ctx, pg, page, t, scale, scene, layer) {
       const sfx = sfxOf(scene);
-      if (sfx.type === 'none') return;
+      if (sfx.type === 'none' || sfx.type === 'fireWall') return;
       if (!SFX_BOTH.has(sfx.type) && (layer === 'back') !== SFX_BACK.has(sfx.type)) return;
       const { layout } = this.prepared;
       const mb = mainBox(layout, page);
@@ -2567,6 +2612,7 @@
       else if (sfx.type === 'p5gun') this.drawP5Gun(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'blade') this.drawBlade(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'shot') this.drawShot(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type.startsWith('fire')) this.drawFireFx(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, page, t, scale, scene, sfx, k);
     }
@@ -4490,6 +4536,109 @@
       ctx.restore();
     }
 
+    /* ---------- 炎の試作（js/fx-fire.js）と環境の演出（js/fx-ash.js） ---------- */
+
+    // 炎で描くメインの文字の形：ページのメインの文字を、出力のピクセル座標で1文字ずつ描く関数（fill / stroke）
+    fireShape(page, scale, scene) {
+      const { layout } = this.prepared;
+      const list = [];
+      for (let i = page.first; i < page.last; i++) {
+        const g = layout.glyphs[i];
+        if (g.group === 0 && !g.blank) list.push(g);
+      }
+      // 文字・フォント（spriteKey）と、置いた位置・大きさが同じなら作り直さない（炎の下ごしらえは fx-fire.js がこの key で覚える）
+      const key = `${this.spriteKey}|${scale}|${list.map(g => `${g.cx.toFixed(2)},${g.cy.toFixed(2)},${g.size.toFixed(2)}`).join(';')}`;
+      if (page.fireShape && page.fireShape.key === key) return page.fireShape;
+      const fonts = this.fontsFor(scene);
+      const draw = (c, op) => {
+        list.forEach(g => {
+          c.save();
+          c.translate((g.cx + g.ox) * scale, (g.cy + g.oy) * scale);
+          if (g.rot) c.rotate(Math.PI / 2);
+          c.font = fonts.mainFont(g.size * scale);
+          c.textAlign = g.vertical ? 'center' : 'left';
+          c.textBaseline = g.vertical ? 'middle' : 'alphabetic';
+          if (op === 'stroke') c.strokeText(g.ch, 0, 0); else c.fillText(g.ch, 0, 0);
+          c.restore();
+        });
+      };
+      page.fireShape = { key, draw };
+      return page.fireShape;
+    }
+
+    // 炎の壁・灰が一周する長さの元：書き出しのコマ数ぶんの長さ（loopLength。ずっとループで書き出すときに main.js が入れる）か、タイムラインの長さ
+    loopSpan() {
+      return this.loopLength || this.prepared.timeline.duration;
+    }
+
+    // 炎の壁：ページによらず画面の下でずっと燃える（書き出しの長さで継ぎ目なくループ）。文字の後ろに描く
+    drawFireWall(ctx, t, scale, scene) {
+      const Fx = root.TextApngFireFx;
+      if (!Fx) return;
+      const sfx = sfxOf(scene);
+      const k = clamp(sfx.power ?? 1, 0.5, 1.6);
+      const W = Math.round(scene.width * scale), H = Math.round(scene.height * scale);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      Fx.drawFireWall(ctx, W, H, t, { res: 0.67, hue: fireHue(sfx.color), height: 0.5 * k, loop: loopPeriod(this.loopSpan(), FIRE_WALL_LOOP) });
+      ctx.restore();
+    }
+
+    // 走る炎・火炎ブレス・燃える文字：ページの時刻（textStart・holdEnd・outEnd・end）に合わせて試作の時間割を動かす
+    drawFireFx(ctx, pg, page, t, scale, scene, sfx, k) {
+      const Fx = root.TextApngFireFx;
+      if (!Fx) return;
+      const { layout } = this.prepared;
+      const W = Math.round(scene.width * scale), H = Math.round(scene.height * scale);
+      const size = layout.size * scale;
+      const hue = fireHue(sfx.color);
+      const pw = clamp(k, 0.5, 1.6);
+      // ページの始まりからの時刻。退場しないときは、燃え尽きる時刻をずっと先にする
+      const lt = t - pg.start;
+      const hasOut = Number.isFinite(pg.outEnd);
+      const outAt = hasOut ? pg.holdEnd - pg.start : 1e9;
+      const outDur = hasOut ? Math.max(0.05, pg.outEnd - pg.holdEnd) : 1;
+      const endAt = Number.isFinite(pg.end) ? pg.end - pg.start : 1e9;
+      const mb = mainBox(layout, page);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (sfx.type === 'fireRun') {
+        // 左から燃え広がり、文字の退場に合わせて左から消えていく
+        Fx.drawFireWall(ctx, W, H, lt, { res: 0.67, hue, height: 0.5 * pw, run: { start: 0.1, dur: 1.5, out: hasOut ? outAt : undefined, outDur: 0.9, fade: 0.7, end: hasOut ? endAt : undefined } });
+      } else if (sfx.type === 'fireBreath') {
+        // 地面（試作と同じ高さか、文字とサブの少し下）を走って右端で爆発し、燃え上がる。文字の退場で尾が左から抜けていく
+        const ground = clamp((page.box.y1 * scale + size * 0.3) / H, 0.66, 0.92);
+        const run = 0.7;
+        Fx.drawFireBreath(ctx, W, H, lt, { res: 0.67, hue, breath: { start: 0.05, run, hold: Math.max(0, outAt - 0.05 - run), fade: 0.6, ground, up: pw, end: hasOut ? endAt : 0 } });
+      } else if (SFX_FIRE_TEXT.has(sfx.type)) {
+        const shape = this.fireShape(page, scale, scene);
+        const ts = pg.textStart - pg.start;
+        if (sfx.type === 'fireText') {
+          Fx.drawFlamingText(ctx, W, H, lt, { res: 0.67, sizePx: size, shape: shape.draw, shapeKey: shape.key, hue, rise: pw,
+            timeline: { show: ts, ignite: ts + 0.15, out: outAt, outDur } });
+        } else {
+          // 縁取りの色が試作の金のままなら、炎の色相に合わせて回す
+          const lining = /^#ffb43a$/i.test(sfx.color2 || '') ? null : sfx.color2;
+          Fx.drawFlamingBattle(ctx, W, H, lt, { res: 0.67, sizePx: size, shape: shape.draw, shapeKey: shape.key, hue, lining, rise: pw,
+            box: { x0: mb.x0 * scale, x1: mb.x1 * scale, cy: mb.cy * scale },
+            seq: { start: 0.03, boom: ts, sweep: 0.16, dissolve: outAt, dissolveDur: outDur, end: endAt } });
+        }
+      }
+      ctx.restore();
+    }
+
+    // 環境の演出（灰）：画像全体に、文字や演出の上から重ねる。書き出しの長さで継ぎ目なくループ
+    drawEnv(ctx, t, scale, scene) {
+      const env = scene.env || {};
+      const Ash = root.TextApngAshFx;
+      if (!ENV_TYPES.has(env.type) || !Ash) return;
+      const W = Math.round(scene.width * scale), H = Math.round(scene.height * scale);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      Ash.drawAsh(ctx, W, H, t, { loop: loopPeriod(this.loopSpan(), ASH_LOOP), period: ASH_LOOP, density: clamp(env.density ?? 1, 0.1, 3), style: env.type === 'ashBlack' ? 'black' : 'grey' });
+      ctx.restore();
+    }
+
     drawBackground(ctx, t, scale) {
       const { scene, timeline } = this.prepared;
       const bg = scene.bg || {};
@@ -4544,9 +4693,12 @@
       const info = { vertical: layout.vertical, dir: null, size: layout.size };
       const st = this.st;
       const list = [];
+      const fireText = SFX_FIRE_TEXT.has(sfxOf(scene).type);
       for (let i = page.first; i < page.last; i++) {
         const g = layout.glyphs[i];
         if (g.blank || !g.sprite) continue;
+        // 燃える文字：メインの文字は炎の演出が描く
+        if (fireText && g.group === 0) continue;
         info.dir = t >= timeline.outStart[i] ? dirFor(timeline.outFx[i], scene.outDir) : dirFor(timeline.inFx[i], scene.inDir);
         if (!this.glyphState(g, t, scene, info, st)) continue;
         const persp = g.group === 0 && sfxOf(scene).type === 'p5round2' ? { dist: Math.hypot(P5_VP2.x, P5_VP2.y) * layout.size, bcx, bcy } : null;

@@ -1044,6 +1044,7 @@
     if (tpl) {
       fillTemplate(scene(), tpl);
       setExportLoop(P.exportLoop(tpl));
+      setTemplateFps(tpl);
     }
     renderTemplates();
     panel.render(app.tab, els.settingsBody);
@@ -1195,6 +1196,7 @@
   function applyTemplate(tpl) {
     fillTemplate(scene(), tpl);
     setExportLoop(P.exportLoop(tpl));
+    setTemplateFps(tpl);
     renderTemplates();
     view.renderer.invalidateSprites();
     invalidate();
@@ -1356,7 +1358,10 @@
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      const timeAt = i => (i === count - 1 ? duration : Math.min(i / fps, duration));
+      // ずっとループするときは最後のコマを終わりの時刻にしない（終わり＝始めの絵が2コマ続かないように。炎の壁・灰が継ぎ目なくつながる）
+      const timeAt = i => (opts.loop === 'infinite' ? i / fps : (i === count - 1 ? duration : Math.min(i / fps, duration)));
+      // 炎の壁・灰は、書き出すコマ数ぶんの長さでちょうど一周させる
+      if (opts.loop === 'infinite') renderer.loopLength = count / fps;
       const grab = t => {
         renderer.render(ctx, t, { scale: 1 });
         return ctx.getImageData(0, 0, W, H).data;
@@ -1589,6 +1594,14 @@
     els.loopCountWrap.hidden = loop !== 'count';
     syncFileName();
     saveState();
+  }
+
+  // フレームレートを決めているテンプレート（炎の試作など）は、そのフレームレートにする
+  function setTemplateFps(tpl) {
+    if (!tpl || !tpl.fps) return;
+    app.exportOpts.fps = tpl.fps;
+    els.fpsSelect.value = String(tpl.fps);
+    updateInfo();
   }
 
   function bindExportOptions() {

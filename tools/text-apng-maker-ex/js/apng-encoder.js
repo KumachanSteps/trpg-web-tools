@@ -57,10 +57,11 @@
   }
 
   // RGBA(bpp=4) はアダプティブフィルター（最小絶対和）、インデックス(bpp=1)は None。
-  function filterImage(src, width, height, bpp) {
+  // adaptive を指定すると、インデックスにもアダプティブフィルターをかける（炎のような細かな模様では小さくなることがある）
+  function filterImage(src, width, height, bpp, adaptive) {
     const rowBytes = width * bpp;
     const out = new Uint8Array((rowBytes + 1) * height);
-    if (bpp === 1) {
+    if (bpp === 1 && !adaptive) {
       for (let y = 0; y < height; y++) {
         const o = y * (rowBytes + 1);
         out[o] = 0;
@@ -186,7 +187,11 @@
 
     async _encodeRegion(rgba, width, height) {
       const data = this.indexed ? this.quantizer.mapFrame(rgba) : rgba;
-      return deflateZlib(filterImage(data, width, height, this.bpp));
+      if (!this.indexed) return deflateZlib(filterImage(data, width, height, this.bpp));
+      // インデックスは、フィルターなしとアダプティブの両方で圧縮して小さいほうを使う
+      const a = await deflateZlib(filterImage(data, width, height, 1, false));
+      const b = await deflateZlib(filterImage(data, width, height, 1, true));
+      return b.length < a.length ? b : a;
     }
 
     // APNG非対応の環境で表示される静止画（アニメーションには含めない）

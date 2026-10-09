@@ -91,7 +91,9 @@
     spreadDur: 0.9,
     // EXの演出。type: 'none' / 'lightning' / 'cyber' / 'katana' / 'frame' / 'crest' / 'gunshot'
     // tier：判定カットイン（'blade' / 'shot'）の結果の段階 'success' / 'special' / 'extreme' / 'critical' / 'failure' / 'fumble'
-    sfx: { type: 'none', color: '#8fd3ff', color2: '#14040a', power: 1, word: 'WARNING', tier: 'success' }
+    sfx: { type: 'none', color: '#8fd3ff', color2: '#14040a', power: 1, word: 'WARNING', tier: 'success' },
+    // EXの環境の演出（どのテンプレート・演出とも重ねられる）。type: 'none' / 'ash'（灰色の灰）/ 'ashBlack'（黒い灰）、density：量
+    env: { type: 'none', density: 1 }
   };
 
   const T = (ja, en, ko) => ({ ja, en, ko });
@@ -296,6 +298,35 @@
     // 銃撃の失敗の「失敗」は、抜刀の失敗と同じ装甲明朝にそろえる
     if (kind === 'shot' && tier === 'failure') Object.assign(patch, { fontId: BLADE_ROLL.fontId, weight: BLADE_ROLL.weight, letterSpacing: BLADE_ROLL.letterSpacing });
     return patch;
+  };
+
+  // 炎の試作を組み込んだテンプレート：装甲明朝。試作と同じ 960×540（炎は細かい模様が多く、書き出しの目安 5MB に収めるため）
+  const FIRE_SIZE = { width: 960, height: 540, sizePreset: '960x540' };
+  const FIRE_TITLE = {
+    fontId: 'soukou-mincho', weight: 400, fontSize: 132, letterSpacing: 0.16,
+    subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.45,
+    fill: { type: 'gradient', color: '#ffffff', color2: '#fff1dc', color3: '#ffc890', dir: 'v' },
+    stroke: { on: true, width: 2, color: '#2a0800' }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.75, blur: 12, x: 0, y: 3 },
+    glow: { on: true, color: '#ff5a1a', size: 22, strength: 0.6 },
+    subColorOn: true, subColor: '#ffe2c0', deco: { type: 'none' }
+  };
+  // 燃える文字：文字の画そのものが炎になる（色・縁取りの設定は使わない）。試作と同じく画像の高さの3割の大きさ
+  const FIRE_TEXT = {
+    fontId: 'soukou-mincho', weight: 400, fontSize: 162, letterSpacing: 0.06,
+    subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.45,
+    fill: { type: 'solid', color: '#ffffff' }, stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: false }, glow: { on: false }, subColorOn: true, subColor: '#ffe2c0', deco: { type: 'none' }
+  };
+  // 風に舞う灰：シーンの見出し（灰はどのテンプレートにも「環境」から重ねられる）。6秒で一周
+  const ASH_TITLE = {
+    fontId: 'shippori-mincho-b1', weight: 800, fontSize: 128, letterSpacing: 0.3,
+    subFontId: 'cinzel', subWeight: 700, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.5,
+    fill: { type: 'solid', color: '#f2ece4' }, stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.85, blur: 16, x: 0, y: 4 },
+    glow: { on: false }, subColorOn: true, subColor: '#c9bfb3',
+    inFx: 'blurIn', inDur: 1.0, inStagger: 0.12, hold: 3.0, outFx: 'fade', outDur: 1.0, subFx: 'fade', subDelay: -0.3,
+    startDelay: 0.1, endDelay: 0.5
   };
 
   // 判定の呼びかけ（共鳴判定・憑依判定など）
@@ -518,6 +549,58 @@
           subColorOn: true, subColor: '#ffe2c0',
           sfx: { type: 'flame', color: '#ff7a2a', color2: '#ffd9a0', power: 1 },
           inFx: 'rise', inDur: 0.6, inPower: 0.4, hold: 2.0, outFx: 'burn', outDur: 1.3, subFx: 'fade', subDelay: -0.2
+        }
+      },
+      {
+        // EX：文字の画そのものが燃える。左の字から順に燃え上がり、表示中は炎と火の粉が立ちのぼって、最後は冷えて消える
+        id: 'fireText', group: 'combat', icon: 'flame', label: T('燃える文字', 'Burning Text', '불타는 글자'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('', '', ''), size: FIRE_SIZE, fps: 20,
+        patch: {
+          ...FIRE_TEXT,
+          sfx: { type: 'fireText', color: '#ff7a2a', color2: '#ffb43a', power: 1 },
+          inFx: 'fade', inDur: 0.2, hold: 2.1, outFx: 'fade', outDur: 0.6, subFx: 'fade', subDelay: 0.2, startDelay: 0.05, endDelay: 0
+        }
+      },
+      {
+        // EX：火炎ブレスが一瞬で走って字の右端で爆発 → 爆風が右から左へ燃え移り、白と金の縁取りの燃える文字に → 左から火の粉になって消える
+        // （試作より燃えている時間を0.17秒短くして、書き出しの目安 5MB に余裕をもたせる）
+        id: 'fireTextSeq', group: 'combat', icon: 'flame', label: T('燃える文字・演出', 'Burning Text (Sequence)', '불타는 글자·연출'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('', '', ''), size: FIRE_SIZE, fps: 20,
+        patch: {
+          ...FIRE_TEXT,
+          sfx: { type: 'fireTextSeq', color: '#ff7a2a', color2: '#ffb43a', power: 1 },
+          inFx: 'fade', inDur: 0.16, hold: 1.75, outFx: 'fade', outDur: 0.95, subFx: 'fade', subDelay: 0.2, startDelay: 0, endDelay: 0.05
+        }
+      },
+      {
+        // EX：画面の下で炎の壁がずっと燃える（継ぎ目なくループ）。文字は出たまま
+        id: 'fireWall', group: 'combat', icon: 'flame', label: T('炎の壁', 'Wall of Fire', '불의 벽'),
+        text: T('業火', 'INFERNO', '업화'), subText: T('INFERNO', 'HELLFIRE', 'INFERNO'), size: FIRE_SIZE, fps: 20, loop: 'infinite',
+        patch: {
+          ...FIRE_TITLE, fontSize: 150, letterSpacing: 0.3, offsetY: -40,
+          sfx: { type: 'fireWall', color: '#ff7a2a', color2: '#ffd9a0', power: 1 },
+          // 文字は最初のコマから出たまま（退場なし）。炎の壁の一周だけの長さ（2秒。試作の2.5秒では書き出しの目安 5MB を超えるため）にして、継ぎ目なくループさせる
+          inFx: 'fade', inDur: 0, hold: 2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // EX：左から炎が燃え広がり、文字が浮かぶ。退場では炎も左から順に消えていく（試作より燃えている時間を0.3秒短くして、書き出しの目安 5MB に収める）
+        id: 'fireRun', group: 'combat', icon: 'flame', label: T('走る炎', 'Running Fire', '달리는 불길'),
+        text: T('火の海', 'SEA OF FIRE', '불바다'), subText: T('SEA OF FIRE', 'ABLAZE', 'SEA OF FIRE'), size: FIRE_SIZE, fps: 20,
+        patch: {
+          ...FIRE_TITLE, fontSize: 140, letterSpacing: 0.3, offsetY: -40,
+          sfx: { type: 'fireRun', color: '#ff7a2a', color2: '#ffd9a0', power: 1 },
+          inFx: 'fade', inDur: 0.5, hold: 0.75, outFx: 'fade', outDur: 0.6, subFx: 'fade', subDelay: -0.5, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // EX：炎の息が地面を走り、右端で爆発して燃え上がる。文字は爆発と同時に現れ、退場で炎の尾が左から抜けていく
+        id: 'fireBreath', group: 'combat', icon: 'flame', label: T('火炎ブレス', 'Fire Breath', '화염 브레스'),
+        text: T('ドラゴンブレス', 'DRAGON BREATH', '드래곤 브레스'), subText: T('FIRE BREATH', 'FIRE BREATH', 'FIRE BREATH'), size: FIRE_SIZE, fps: 24,
+        patch: {
+          ...FIRE_TITLE, fontSize: 104, letterSpacing: 0.12, offsetY: -70,
+          sfx: { type: 'fireBreath', color: '#ff7a2a', color2: '#ffd9a0', power: 1 },
+          inFx: 'fade', inDur: 0.3, hold: 0.63, outFx: 'fade', outDur: 0.6, subFx: 'fade', subDelay: -0.3, startDelay: 0, endDelay: 0.05
         }
       },
       {
@@ -785,6 +868,23 @@
         }
       },
       // シーン・時間：物語の構成（章・プロローグ・エピローグ・幕間・回想）→ 日付（一日目・一日後・最終日）→ 時刻（翌朝・真夜中・時間経過）
+      {
+        // EX：焼けた灰のかけらが風に乗って左下から右上へ舞う（灰は「環境」として、どのテンプレートにも重ねられる）。6秒で継ぎ目なくループ
+        id: 'ashDrift', group: 'scene', icon: 'wave', label: T('風に舞う灰', 'Drifting Ash', '바람에 날리는 재'), loop: 'infinite',
+        text: T('焦土', 'SCORCHED EARTH', '초토'), subText: T('SCORCHED EARTH', 'AFTER THE FIRE', 'SCORCHED EARTH'),
+        patch: { ...ASH_TITLE, env: { type: 'ash', density: 1 } }
+      },
+      {
+        // EX：上の黒い版。縁取りのない黒いかけら（明るい背景向け）。重いかけらは画面の下7割、ごく小さく軽いものだけが上まで昇る
+        id: 'ashDriftBlack', group: 'scene', icon: 'wave', label: T('風に舞う灰（黒）', 'Drifting Ash (Black)', '바람에 날리는 재 (검정)'), loop: 'infinite',
+        text: T('灰燼', 'ASHES', '잿더미'), subText: T('ASHES', 'NOTHING REMAINS', 'ASHES'),
+        // 明るい背景向けなので、文字は墨色に白いにじみ（暗い背景でも読める）
+        patch: {
+          ...ASH_TITLE, fill: { type: 'solid', color: '#1c1916' },
+          shadow: { on: true, color: '#ffffff', opacity: 0.8, blur: 12, x: 0, y: 0 }, subColor: '#2a2622',
+          env: { type: 'ashBlack', density: 1 }
+        }
+      },
       {
         id: 'chapter', group: 'scene', icon: 'book', label: T('章タイトル', 'Chapter', '장 제목'),
         text: T('第一章', 'CHAPTER I', '제1장'), subText: T('「目覚めの夜」', '“The Night of Awakening”', '「각성의 밤」'),
@@ -1464,12 +1564,17 @@
   // テンプレートはスタイル・動き・文章を初期値から組み立て直す（書き換えた文章を戻すのは呼び出し側）
   function applyTemplate(scene, template, lang) {
     const keep = { width: scene.width, height: scene.height, sizePreset: scene.sizePreset, outEnabled: scene.outEnabled };
+    // 退場の有無を決めていたテンプレート（炎の壁）から切り替えたときは、退場ありに戻す
+    const prev = (TEMPLATES[scene.mode] || []).find(t => t.id === scene.templateId);
+    if (prev && prev.patch && 'outEnabled' in prev.patch) keep.outEnabled = true;
     const fresh = deepMerge(deepMerge(clone(BASE), MODE_DEFAULTS[scene.mode] || {}), template.patch);
     Object.keys(scene).forEach(key => delete scene[key]);
     Object.assign(scene, fresh);
     scene.width = keep.width || fresh.width;
     scene.height = keep.height || fresh.height;
     scene.sizePreset = keep.sizePreset || fresh.sizePreset;
+    // 画像サイズを決めているテンプレート（炎の試作など）は、そのサイズにする
+    if (template.size) Object.assign(scene, template.size);
     scene.templateId = template.id;
     // 退場の有無は利用者の選択なので、テンプレートを切り替えても引き継ぐ
     if (!('outEnabled' in template.patch)) scene.outEnabled = keep.outEnabled !== false;
