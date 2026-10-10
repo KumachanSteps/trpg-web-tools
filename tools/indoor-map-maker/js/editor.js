@@ -45,6 +45,11 @@
     ] },
     { id: 'fantasy', name: { ja: 'ファンタジー・防音・外構', en: 'Fantasy, soundproof, grounds', ko: '판타지·방음·외부' }, items: [
       ['stoneRoom', 'stone', 10, 10], ['dungeonCell', 'stone', 4, 4], ['studio', 'studio', 8, 6], ['building', 'roof', 16, 12]
+    ] },
+    { id: 'industry', name: { ja: '交通・産業・屋上', en: 'Transport, industry, rooftop', ko: '교통·산업·옥상' }, items: [
+      ['factoryFloor', 'industrial', 16, 12], ['steelDeck', 'grate', 8, 6], ['platform', 'platform', 24, 6], ['track', 'track', 24, 5],
+      ['road', 'road', 24, 12], ['rooftop', 'rooftop', 16, 12], ['slab', 'slab', 16, 12], ['yard', 'dirt', 16, 12],
+      ['karesansui', 'gravel', 10, 6], ['shipDeck', 'shipdeck', 20, 8]
     ] }
   ];
   const ROOM_PRESETS = {};

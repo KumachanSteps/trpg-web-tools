@@ -114,7 +114,9 @@
       stairs: '階段室', closet: 'クローゼット', storage: '倉庫', office: '事務室', meeting: '会議室', lobby: 'ロビー',
       guest: '客室', ward: '病室', exam: '診察室', surgery: '手術室', lab: '研究室', ritual: '儀式の間', sealed: '封鎖区画',
       garage: '車庫', balcony: 'バルコニー', garden: '庭', porch: 'ポーチ', cell: '独房',
-      doma: '土間', field: '畑', water: '池・川', cave: '洞窟', deck: '艦内区画', engawa: '広縁・縁側', stoneRoom: '石造りの部屋', dungeonCell: '牢・小部屋', studio: '防音室', building: '建物（外構図用）'
+      doma: '土間', field: '畑', water: '池・川', cave: '洞窟', deck: '艦内区画', engawa: '広縁・縁側', stoneRoom: '石造りの部屋', dungeonCell: '牢・小部屋', studio: '防音室', building: '建物（外構図用）',
+      factoryFloor: '工場・作業場', steelDeck: '鉄板の床・機械室', platform: '駅ホーム', track: '線路', road: '道路・車路', rooftop: '屋上',
+      slab: '工事中の床', yard: '資材置場・土の広場', karesansui: '枯山水', shipDeck: '甲板'
     },
     props: {
       mapTitle: 'マップ設定',
@@ -364,7 +366,9 @@
       stairs: 'Stairwell', closet: 'Closet', storage: 'Storage', office: 'Office', meeting: 'Meeting room', lobby: 'Lobby',
       guest: 'Guest room', ward: 'Ward', exam: 'Exam room', surgery: 'Operating room', lab: 'Lab', ritual: 'Ritual chamber', sealed: 'Sealed area',
       garage: 'Garage', balcony: 'Balcony', garden: 'Garden', porch: 'Porch', cell: 'Cell',
-      doma: 'Earthen floor', field: 'Field', water: 'Pond / river', cave: 'Cave', deck: 'Ship section', engawa: 'Veranda (engawa)', stoneRoom: 'Stone chamber', dungeonCell: 'Cell', studio: 'Soundproof room', building: 'Building (site plan)'
+      doma: 'Earthen floor', field: 'Field', water: 'Pond / river', cave: 'Cave', deck: 'Ship section', engawa: 'Veranda (engawa)', stoneRoom: 'Stone chamber', dungeonCell: 'Cell', studio: 'Soundproof room', building: 'Building (site plan)',
+      factoryFloor: 'Factory floor', steelDeck: 'Steel deck / plant room', platform: 'Platform', track: 'Railway track', road: 'Road / driveway', rooftop: 'Rooftop',
+      slab: 'Unfinished floor', yard: 'Yard / dirt lot', karesansui: 'Dry garden', shipDeck: 'Open deck'
     },
     props: {
       mapTitle: 'Map settings',
@@ -614,7 +618,9 @@
       stairs: '계단실', closet: '옷장', storage: '창고', office: '사무실', meeting: '회의실', lobby: '로비',
       guest: '객실', ward: '병실', exam: '진찰실', surgery: '수술실', lab: '연구실', ritual: '의식의 방', sealed: '봉쇄 구역',
       garage: '차고', balcony: '발코니', garden: '정원', porch: '포치', cell: '독방',
-      doma: '흙바닥', field: '밭', water: '연못·강', cave: '동굴', deck: '함내 구역', engawa: '툇마루', stoneRoom: '석조 방', dungeonCell: '감옥·작은 방', studio: '방음실', building: '건물(배치도용)'
+      doma: '흙바닥', field: '밭', water: '연못·강', cave: '동굴', deck: '함내 구역', engawa: '툇마루', stoneRoom: '석조 방', dungeonCell: '감옥·작은 방', studio: '방음실', building: '건물(배치도용)',
+      factoryFloor: '공장·작업장', steelDeck: '철판 바닥·기계실', platform: '역 승강장', track: '선로', road: '도로·차로', rooftop: '옥상',
+      slab: '공사 중 바닥', yard: '자재장·흙 마당', karesansui: '가레산스이', shipDeck: '갑판'
     },
     props: {
       mapTitle: '지도 설정',
