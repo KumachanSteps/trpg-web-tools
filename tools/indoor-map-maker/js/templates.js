@@ -2737,126 +2737,154 @@
     return [b.f, g.f];
   }
 
+  /* ---------- 交通・乗り物（T1） ---------- */
+
+  /* (T1 のテンプレート関数はここ) */
+
+  /* ---------- 産業・インフラ・屋上・廃工場（T2） ---------- */
+
+  /* (T2 のテンプレート関数はここ) */
+
+  /* ---------- 歴史・和風・宗教・商業（T3） ---------- */
+
+  /* (T3 のテンプレート関数はここ) */
+
+  /* ---------- 研究・文化・軍事（T4） ---------- */
+
+  /* (T4 のテンプレート関数はここ) */
+
   const TEMPLATES = [
-    { id: '1ldk', build: oneLDK, group: 'home',
+    { id: '1ldk', build: oneLDK, group: 'home', tags: ['modern', 'residential', 'indoor'],
       name: T('1LDK アパート', '1LDK apartment', '1LDK 아파트'),
       desc: T('約44㎡。玄関脇に水回り、LDKと個室がバルコニーに面する定番の間取り', 'About 44 m². Wet rooms by the entrance; LDK and bedroom face the balcony.', '약 44㎡. 현관 옆 욕실, LDK와 방이 발코니를 향하는 정석 구조') },
-    { id: '2ldk', build: twoLDK, group: 'home',
+    { id: '2ldk', build: twoLDK, group: 'home', tags: ['modern', 'residential', 'indoor'],
       name: T('2LDK マンション', '2LDK condo', '2LDK 맨션'),
       desc: T('約64㎡の中廊下型。北に洋室2つ、中央に水回り、南に広いLDK', 'About 64 m², center-corridor type: two bedrooms north, wet core in the middle, LDK south.', '약 64㎡ 중복도형. 북쪽 방 2개, 가운데 욕실, 남쪽 LDK') },
-    { id: 'house', build: house, group: 'home',
+    { id: 'house', build: house, group: 'home', tags: ['modern', 'residential', 'outdoor'],
       name: T('一戸建て（2階建て・庭）', 'Two-story house with garden', '단독주택(2층·마당)'),
       desc: T('1Fに玄関ホールと階段・LDK・水回り、2Fに寝室4つ。階段は上下で同じ位置。屋外は庭・ウッドデッキ・駐車場', 'Entry hall, stairs, living and kitchen downstairs; four bedrooms upstairs. Stairs align between floors. Outside: garden, wood deck and parking.', '1층 현관 홀·계단·거실·주방, 2층 침실 4개. 계단 위치가 위아래로 일치. 옥외는 마당·우드 데크·주차장') },
-    { id: 'mansion', build: mansion, group: 'home',
+    { id: 'mansion', build: mansion, group: 'home', tags: ['historic', 'residential', 'outdoor', 'underground', 'hidden', 'large'],
       name: T('洋館（地下1階・2階建て・屋外）', 'Mansion (B1–2F, outside)', '저택(지하1층~2층·옥외)'),
       desc: T('左右対称。大階段の玄関ホール、大広間、書斎・図書室・食堂・厨房、地下にワインセラーと隠し部屋。屋外は車寄せと噴水・薔薇園・温室・一族の墓所', 'Symmetrical plan: grand-stair hall, great hall, study, library, dining, kitchen; wine cellar and a hidden room below. Outside: carriage circle and fountain, rose garden, greenhouse, family graveyard.', '좌우 대칭. 대계단 현관 홀, 대연회장, 서재·도서실·식당, 지하 와인 저장고와 비밀의 방. 옥외는 회차로와 분수·장미 정원·온실·가족 묘지') },
-    { id: 'basement', build: basementHouse, group: 'home',
+    { id: 'basement', build: basementHouse, group: 'home', tags: ['modern', 'residential', 'underground', 'hidden'],
       name: T('地下室のある洋風住宅', 'House with a basement', '지하실이 있는 서양식 주택'),
       desc: T('防音室と窓のない部屋、地下への階段と地下室・ボイラー室。書斎の床の扉からGM用の隠し部屋へ', 'A soundproof music room, a windowless room, stairs down to the cellar and boiler room, and a trapdoor in the study to a GM-only hidden room.', '방음실과 창문 없는 방, 지하 계단과 지하실·보일러실. 서재 바닥 문에서 GM 전용 비밀의 방으로') },
-    { id: 'apartment', build: apartment, group: 'home',
+    { id: 'apartment', build: apartment, group: 'home', tags: ['modern', 'residential', 'outdoor'],
       name: T('アパート（2階建て）', 'Apartment building', '아파트(2층 연립)'),
       desc: T('1K × 8戸の木造アパート。外廊下と鉄骨階段、1Fに駐車場とゴミ置場', 'Eight 1K units on two floors with an open-air walkway, outdoor stairs, parking and a garbage area.', '1K × 8세대 목조 연립. 외부 복도와 철골 계단, 1층 주차장과 쓰레기장') },
-    { id: 'tower', build: tower, group: 'home',
+    { id: 'tower', build: tower, group: 'home', tags: ['modern', 'residential', 'large'],
       name: T('タワーマンション', 'High-rise condo', '타워 맨션'),
       desc: T('1Fはエントランス・コンシェルジュ・ラウンジ・ジムなどの共用部、基準階は内廊下を囲む8戸と中央のコア', 'Lobby floor with concierge, lounge, gym and party room; typical floor with eight units around an inner corridor and central core.', '1층은 엔트런스·컨시어지·라운지·짐 등 공용부, 기준층은 내복도를 둘러싼 8세대와 중앙 코어') },
-    { id: 'hotel', build: hotel, group: 'facility',
+    { id: 'hotel', build: hotel, group: 'lodging', tags: ['modern', 'commercial', 'large'],
       name: T('ホテル（5フロア）', 'Hotel (5 floors)', '호텔(5개 층)'),
       desc: T('1F ロビー・レストラン、2F 宴会場・チャペル、3F ジム・屋内プール・スパ、7F 客室階（14室）、8F スイートとスカイラウンジ', '1F lobby and restaurant, 2F ballroom and chapel, 3F gym, indoor pool and spa, 7F guest floor (14 rooms), 8F suite and sky lounge.', '1층 로비·레스토랑, 2층 연회장·채플, 3층 짐·실내 수영장·스파, 7층 객실층(14실), 8층 스위트와 스카이 라운지') },
-    { id: 'hospital', build: hospital, group: 'facility',
+    { id: 'hospital', build: hospital, group: 'medical', tags: ['modern', 'medical', 'public', 'large'],
       name: T('病院（外来・病棟）', 'Hospital (outpatient & ward)', '병원(외래·병동)'),
       desc: T('1Fは診察室・待合・薬局・霊安室、2Fは4床室と個室が並ぶ病棟とナースステーション', 'Outpatient floor with exam rooms, waiting hall, pharmacy and morgue; ward floor with 4-bed and private rooms around a nurse station.', '1층 진찰실·대기실·약국·영안실, 2층 4인실·1인실 병동과 간호사실') },
-    { id: 'school', build: school, group: 'public',
+    { id: 'school', build: school, group: 'public', tags: ['modern', 'public'],
       name: T('学校（校舎2階建て）', 'School building', '학교(2층 교사)'),
       desc: T('北側廊下・南側教室の片廊下型。1Fに昇降口・職員室・校長室・保健室、2Fに教室・音楽室・理科室', 'Single-loaded corridor with classrooms facing south. Shoe lockers, staff room, principal and nurse on 1F; classrooms, music room and science lab on 2F.', '북쪽 복도·남쪽 교실의 편복도형. 1층 신발장·교무실·교장실·보건실, 2층 교실·음악실·과학실') },
-    { id: 'police', build: police, group: 'public',
+    { id: 'police', build: police, group: 'public', tags: ['modern', 'public'],
       name: T('警察署', 'Police station', '경찰서'),
       desc: T('1Fは交通課・会計課の窓口とロビー、地域課・当直室・車庫。2Fは捜査本部・刑事課・取調室（マジックミラー付き）・留置場', 'Service counters, lobby, patrol room, night duty room and garage on 1F; task force room, detectives, interrogation rooms with a one-way mirror and holding cells on 2F.', '1층 교통과·회계과 창구와 로비, 지역과·당직실·차고. 2층 수사본부·형사과·취조실(매직미러)·유치장') },
-    { id: 'library', build: library, group: 'public',
+    { id: 'library', build: library, group: 'public', tags: ['modern', 'public', 'underground', 'hidden'],
       name: T('図書館（B1・1F）', 'Library (B1–1F)', '도서관(B1~1F)'),
       desc: T('1Fはカウンター・開架・閲覧席・児童コーナー・郷土資料室、B1は閉架書庫と貴重書庫。GM用の禁書庫つき', 'Counter, open stacks, reading area, children\'s corner and local history room on 1F; closed stacks and a rare book vault below, plus a GM-only forbidden archive.', '1층 카운터·개가·열람석·어린이 코너·향토 자료실, B1 폐가 서고와 귀중서고. GM 전용 금서고 포함') },
-    { id: 'university', build: university, group: 'public',
+    { id: 'university', build: university, group: 'public', tags: ['modern', 'public', 'research'], also: ['medical'],
       name: T('大学（講義棟・研究棟）', 'University building', '대학(강의동·연구동)'),
       desc: T('1Fは固定席の大講義室・講義室・学生ラウンジ・教務課、2Fは教授の研究室・実験室・ゼミ室・院生室', 'Tiered lecture hall, classrooms, student lounge and academic office on 1F; faculty offices, lab, seminar room and grad room on 2F.', '1층 고정석 대강의실·강의실·학생 라운지·교무과, 2층 교수 연구실·실험실·세미나실·대학원생실') },
-    { id: 'bar', build: bar, group: 'leisure',
+    { id: 'bar', build: bar, group: 'lodging', tags: ['modern', 'commercial', 'underground'],
       name: T('バー（地下1階）', 'Basement bar', '바(지하 1층)'),
       desc: T('階段を降りた地下のバー。カウンターとバックバー、ボックス席、ビリヤード台、厨房・倉庫・事務所と施錠された VIP ルーム', 'Down a flight of stairs: counter and back bar, booths, pool table, kitchen, storeroom, office and a locked VIP room.', '계단을 내려간 지하 바. 카운터와 백바, 박스석, 당구대, 주방·창고·사무실과 잠긴 VIP룸') },
-    { id: 'livehouse', build: liveHouse, group: 'leisure',
+    { id: 'livehouse', build: liveHouse, group: 'leisure', tags: ['modern', 'leisure', 'underground'],
       name: T('ライブハウス（地下1階）', 'Live music club', '라이브 하우스(지하 1층)'),
       desc: T('受付とロッカー、ステージとスタンディングのホール、PA卓・ドリンクカウンター。楽屋2室・機材倉庫・事務所', 'Reception and lockers, a standing floor facing the stage, PA booth and drink counter; two green rooms, gear storage and an office.', '접수와 로커, 스테이지와 스탠딩 홀, PA 부스·드링크 카운터. 대기실 2개·장비 창고·사무실') },
-    { id: 'theatre', build: theatre, group: 'leisure',
+    { id: 'theatre', build: theatre, group: 'leisure', tags: ['modern', 'leisure', 'large'],
       name: T('劇場・コンサートホール', 'Theatre / concert hall', '극장·콘서트홀'),
       desc: T('舞台と上手・下手の袖、約420席の客席、ホワイエ。楽屋3室と楽屋口、大道具倉庫、客席を見下ろす調整室', 'Stage with wings, about 420 seats, foyer with box office; three dressing rooms, stage door, scene dock and a control booth overlooking the house.', '무대와 좌우 무대 옆, 약 420석 객석, 포이어. 분장실 3개와 무대 출입구, 대도구 창고, 객석을 내려다보는 조정실') },
-    { id: 'haibyoin', build: abandonedHospital, group: 'horror',
+    { id: 'haibyoin', build: abandonedHospital, group: 'horror', tags: ['modern', 'ruins', 'medical', 'underground', 'horror'],
       name: T('廃病院（B1〜2F）', 'Abandoned hospital (B1–2F)', '폐병원(B1~2F)'),
       desc: T('病院を廃墟化。割れた窓・壊れた扉・瓦礫、地下に解剖室・霊安室・封鎖区画', 'The hospital in ruins: broken windows and doors, debris; autopsy room, morgue and a sealed lab below.', '폐허가 된 병원. 깨진 창·부서진 문·잔해, 지하에 해부실·영안실·봉쇄 구역') },
-    { id: 'haioku', build: abandonedHouse, group: 'horror',
+    { id: 'haioku', build: abandonedHouse, group: 'horror', tags: ['modern', 'ruins', 'residential', 'horror'],
       name: T('廃屋（2階建て）', 'Abandoned house', '폐가(2층)'),
       desc: T('一戸建てが荒れ果てた状態。崩れた壁、板でふさいだ窓、残された家具', 'The two-story house after years of neglect: crumbling walls, boarded windows, leftover furniture.', '황폐해진 단독주택. 무너진 벽, 판자로 막은 창, 남겨진 가구') },
-    { id: 'haibiru', build: abandonedBuilding, group: 'horror',
+    { id: 'haibiru', build: abandonedBuilding, group: 'horror', tags: ['modern', 'ruins', 'commercial', 'horror'],
       name: T('廃ビル（雑居ビル）', 'Abandoned building', '폐건물(상가 건물)'),
       desc: T('1Fは店舗跡と管理人室、2Fは事務所跡と社長室。閉ざされたシャッターと止まったEV', 'Vacant shop and janitor room on 1F; abandoned office and president\'s office on 2F; shutters down, elevator dead.', '1층 빈 점포와 관리인실, 2층 사무실 터와 사장실. 닫힌 셔터와 멈춘 EV') },
-    { id: 'crime', build: crimeScene, group: 'horror',
+    { id: 'crime', build: crimeScene, group: 'horror', tags: ['modern', 'residential', 'danger', 'horror'],
       name: T('事件現場（1LDK）', 'Crime scene (1LDK)', '사건 현장(1LDK)'),
       desc: T('1LDKに人型の輪郭・血痕・証拠マーカー。GM用の隠し金庫とメモつき', '1LDK with a body outline, bloodstain and evidence markers, plus a GM-only safe and note.', '1LDK에 사람 윤곽·핏자국·증거 마커. GM 전용 금고와 메모 포함') },
-    { id: 'speakeasy', build: speakeasy, group: '1920s',
+    { id: 'speakeasy', build: speakeasy, group: 'lodging', tags: ['1920s', 'commercial', 'hidden'],
       name: T('もぐり酒場（禁酒法時代）', 'Speakeasy (Prohibition era)', '무허가 술집(금주법 시대)'),
       desc: T('表は理髪店。奥の部屋の「合言葉の扉」の先にバーカウンター・ボックス席・バンドの舞台。事務所・酒蔵・裏路地への隠し扉', 'A barbershop out front; past the password door in the back room, a bar, booths and a band stage. Boss\'s office, liquor store and a hidden exit to the alley.', '겉은 이발소. 안쪽 방의 "암호의 문" 너머에 바 카운터·박스석·밴드 무대. 사무실·술 창고·뒷골목으로 가는 비밀문') },
-    { id: 'detective', build: detectiveOffice, group: '1920s',
+    { id: 'detective', build: detectiveOffice, group: 'commerce', tags: ['1920s', 'commercial', 'residential'],
       name: T('探偵事務所のある雑居ビル', 'Detective agency building', '탐정 사무소가 있는 건물'),
       desc: T('1Fはダイナーと質屋、2Fは待合室・所長室・暗室・資料室の探偵事務所と、探偵の住まい。階段は上下でそろう', 'Diner and pawnshop on 1F; on 2F the agency (waiting room, office, darkroom, records) and the detective\'s flat. Stairs align between floors.', '1층 다이너와 전당포, 2층 탐정 사무소(대기실·소장실·암실·자료실)와 탐정의 집. 계단 위치가 위아래로 일치') },
-    { id: 'spaceship', build: spaceship, group: 'sf',
+    { id: 'spaceship', build: spaceship, group: 'fantasy', tags: ['sf', 'research', 'machinery'],
       name: T('調査船（宇宙船）', 'Survey starship', '조사선(우주선)'),
       desc: T('船尾に動力炉の機関室、船首にブリッジ。中央通路の両側に乗員室・艦長室・研究室・医務室・冷凍睡眠室・食堂、貨物室とエアロック', 'Engine room with the reactor aft, bridge forward. Crew cabins, captain\'s cabin, lab, medbay, cryo bay and mess along the central corridor; cargo bay and airlock.', '선미에 동력로 기관실, 선수에 브리지. 중앙 통로 양쪽에 승무원실·함장실·연구실·의무실·냉동 수면실·식당, 화물실과 에어록') },
-    { id: 'station', build: researchStation, group: 'sf',
+    { id: 'station', build: researchStation, group: 'fantasy', tags: ['sf', 'nearfuture', 'research'], also: ['medical'],
       name: T('月面研究基地', 'Lunar research base', '달 연구 기지'),
       desc: T('中央ハブから4本の通路で居住区・研究室・通信と発電・ローバー車庫とエアロックへ。研究室の奥にGM用の封鎖ラボ', 'A central hub with four tubes to quarters, labs, comms and power, and the rover garage with airlock. A GM-only sealed lab behind the labs.', '중앙 허브에서 4개의 통로로 거주구·연구실·통신과 발전·로버 차고와 에어록. 연구실 안쪽에 GM 전용 봉쇄 실험실') },
-    { id: 'kominka', build: farmhouse, group: 'village',
+    { id: 'kominka', build: farmhouse, group: 'history', tags: ['historic', 'japanese', 'residential', 'outdoor'],
       name: T('古民家（農家）', 'Japanese farmhouse', '일본 고민가(농가)'),
       desc: T('土間とかまど、囲炉裏の間・台所・座敷・仏間の田の字型の母屋と縁側。庭に井戸・蔵・納屋・厠、裏に畑と田んぼ。蔵の奥にGM用の座敷牢', 'Earthen-floor doma with a kamado, four-room tatami layout with an irori hearth and engawa. Well, storehouse, barn and outhouse in the yard, fields behind; a GM-only hidden cell in the storehouse.', '흙바닥 도마와 아궁이, 이로리 방·부엌·객실·불간의 다(田)자형 안채와 툇마루. 마당에 우물·곳간·헛간·뒷간, 밭과 논. 곳간 안쪽에 GM 전용 감옥') },
-    { id: 'ninja', build: ninjaHouse, group: 'village',
+    { id: 'ninja', build: ninjaHouse, group: 'history', tags: ['historic', 'japanese', 'residential', 'hidden'],
       name: T('忍者屋敷', 'Ninja house', '닌자 저택'),
       desc: T('平屋に見える武家屋敷。広縁と庭、仏間のどんでん返しの奥に隠し部屋、納戸の隠し階段から屋根裏、玄関の落とし穴、井戸への抜け道', 'Looks like a one-story samurai house: wide veranda and garden, a rotating wall in the altar room to a hidden room, hidden stairs to the attic, a pit trap at the entrance and a tunnel to the well.', '단층처럼 보이는 무가 저택. 넓은 툇마루와 정원, 불간 회전벽 뒤 숨은 방, 광의 숨은 계단으로 다락, 현관 함정, 우물로 가는 비밀 통로') },
-    { id: 'shrine', build: shrine, group: 'village',
+    { id: 'shrine', build: shrine, group: 'history', tags: ['historic', 'japanese', 'religious', 'outdoor'],
       name: T('山あいの神社', 'Mountain shrine', '산골 신사'),
       desc: T('鳥居から参道、狛犬・灯籠・手水舎を抜けて拝殿・幣殿・本殿へ。神楽殿・宝物殿・社務所と、柵の奥にGM用の禁足地', 'From the torii up the approach past komainu, lanterns and the fountain to the worship hall and sanctuary. Kagura stage, treasure house, shrine office, and a GM-only forbidden grove.', '도리이에서 참배길, 고마이누·석등·데미즈야를 지나 배전·폐전·본전으로. 가구라전·보물전·사무소와 울타리 안쪽의 GM 전용 금족지') },
-    { id: 'cave', build: cave, group: 'nature',
+    { id: 'cave', build: cave, group: 'nature', tags: ['outdoor', 'underground', 'danger'],
       name: T('洞窟', 'Cave', '동굴'),
       desc: T('森の入口から細い通路を抜けて大空洞へ。地底湖のほとり、祭壇の間、獣の巣、下へ続く縦穴', 'From the forest mouth through a narrow passage to the great cavern; an underground lake, an altar chamber, a beast den and a shaft leading down.', '숲의 입구에서 좁은 통로를 지나 대공동으로. 지하 호숫가, 제단의 방, 짐승 굴, 아래로 이어진 수직굴') },
-    { id: 'campsite', build: campsite, group: 'nature',
+    { id: 'campsite', build: campsite, group: 'nature', tags: ['outdoor', 'waterside', 'leisure'],
       name: T('川沿いのキャンプ場', 'Riverside campsite', '강변 캠핑장'),
       desc: T('川と河原、テントサイト、キャンプファイヤー場、バンガロー3棟、炊事場、管理棟と駐車場。崖にはGM用の古い防空壕', 'River and bank, tent sites, campfire circle, three cabins, cooking shelter, office and parking. A GM-only old air-raid shelter in the cliff.', '강과 강가, 텐트 사이트, 캠프파이어장, 방갈로 3동, 취사장, 관리동과 주차장. 절벽에 GM 전용 오래된 방공호') },
-    { id: 'tavern', build: tavern, group: 'fantasy',
+    { id: 'tavern', build: tavern, group: 'fantasy', tags: ['fantasy', 'historic', 'commercial'], also: ['lodging'],
       name: T('冒険者の宿（酒場）', 'Adventurers\' tavern & inn', '모험가의 여관(주점)'),
       desc: T('1Fは依頼掲示板と暖炉のある酒場・厨房・食料庫・主人の部屋、裏庭と厩舎。2Fは客室5つと大部屋・湯浴み場', 'Tavern hall with a quest board and hearth, kitchen, pantry and innkeeper\'s room; back yard and stable. Upstairs: five rooms, a dormitory and a bathhouse.', '1층은 의뢰 게시판과 벽난로가 있는 주점·주방·식료품 창고·주인 방, 뒷마당과 마구간. 2층은 객실 5개와 다인실·목욕간') },
-    { id: 'castle', build: castle, group: 'fantasy',
+    { id: 'castle', build: castle, group: 'fantasy', tags: ['fantasy', 'historic', 'military', 'underground'], also: ['history'],
       name: T('城（地下牢つき）', 'Castle with dungeon', '성(지하 감옥)'),
       desc: T('堀と跳ね橋、城門から中庭へ。玉座の間・礼拝堂・王の私室・大広間・厨房・武器庫・兵舎・厩舎と2つの塔。地下に牢と拷問部屋、GM用の抜け穴', 'Moat and drawbridge, gatehouse to the courtyard; throne room, chapel, royal chamber, great hall, kitchen, armory, barracks, stable and two towers. Cells and a torture chamber below, with a GM-only escape tunnel.', '해자와 도개교, 성문에서 안뜰로. 왕좌의 방·예배당·왕의 침실·대연회장·주방·무기고·병영·마구간과 탑 2개. 지하에 감옥과 고문실, GM 전용 탈출 구멍') },
-    { id: 'dungeon', build: dungeon, group: 'fantasy',
+    { id: 'dungeon', build: dungeon, group: 'fantasy', tags: ['fantasy', 'underground', 'danger'], also: ['horror'],
       name: T('地下迷宮（ダンジョン）', 'Dungeon', '지하 미궁(던전)'),
       desc: T('入口の間から十字路へ。ゴブリンの巣、罠の回廊と崩れた横穴、鍵のかかった宝物庫、主の間。隠し扉の先にGM用の囚われの間', 'From the entry chamber to the crossroads: goblin den, trapped hall with a collapsed tunnel, locked treasure vault and the master\'s lair; a GM-only prisoner\'s cell behind a secret door.', '입구의 방에서 십자로로. 고블린 소굴, 함정 회랑과 무너진 옆굴, 잠긴 보물고, 주인의 방. 비밀문 너머 GM 전용 갇힌 자의 방') },
-    { id: 'wizard', build: wizardTower, group: 'fantasy',
+    { id: 'wizard', build: wizardTower, group: 'fantasy', tags: ['fantasy', 'research'],
       name: T('魔法使いの塔（B1〜3F）', 'Wizard\'s tower (B1–3F)', '마법사의 탑(B1~3F)'),
-      desc: T('螺旋階段はどの階も同じ位置。1F 入口の間・台所・倉庫、2F 書庫と実験室、3F 天文台と寝室。倉庫の床の扉からGM用の封印の間', 'The spiral stair sits in the same place on every floor: entry hall, kitchen and storeroom; library and laboratory; observatory and bedroom. A trapdoor in the storeroom leads to a GM-only sealed vault.', '나선 계단은 모든 층에서 같은 위치. 1층 입구의 방·부엌·창고, 2층 서고와 실험실, 3층 천문대와 침실. 창고 바닥 문에서 GM 전용 봉인의 방') }
+      desc: T('螺旋階段はどの階も同じ位置。1F 入口の間・台所・倉庫、2F 書庫と実験室、3F 天文台と寝室。倉庫の床の扉からGM用の封印の間', 'The spiral stair sits in the same place on every floor: entry hall, kitchen and storeroom; library and laboratory; observatory and bedroom. A trapdoor in the storeroom leads to a GM-only sealed vault.', '나선 계단은 모든 층에서 같은 위치. 1층 입구의 방·부엌·창고, 2층 서고와 실험실, 3층 천문대와 침실. 창고 바닥 문에서 GM 전용 봉인의 방') },
+
+    /* (T1 交通・乗り物 の登録はここ) */
+
+    /* (T2 産業・インフラ・屋上・廃工場 の登録はここ) */
+
+    /* (T3 歴史・宗教・商業 の登録はここ) */
+
+    /* (T4 研究・文化・軍事 の登録はここ) */
+
   ];
 
   const TEMPLATE_GROUPS = [
-    { id: 'home', name: T('住宅', 'Homes', '주택') },
-    { id: 'facility', name: T('宿泊・医療', 'Hotels & hospitals', '숙박·의료') },
-    { id: 'public', name: T('公共・学校', 'Public & schools', '공공·학교') },
-    { id: 'leisure', name: T('娯楽施設', 'Entertainment', '오락 시설') },
-    { id: 'horror', name: T('廃墟・事件', 'Ruins & crime', '폐허·사건') },
-    { id: '1920s', name: T('1920年代', '1920s', '1920년대') },
-    { id: 'sf', name: T('SF', 'Sci-fi', 'SF') },
-    { id: 'village', name: T('村・和風', 'Village', '마을·일본풍') },
-    { id: 'nature', name: T('自然・野外', 'Nature', '자연·야외') },
-    { id: 'fantasy', name: T('ファンタジー', 'Fantasy', '판타지') }
+    { id: 'home', name: T('住宅・邸宅', 'Homes', '주택·저택') },
+    { id: 'lodging', name: T('宿泊・飲食', 'Hotels & dining', '숙박·음식점') },
+    { id: 'medical', name: T('医療・研究', 'Medical & research', '의료·연구') },
+    { id: 'public', name: T('公共・教育', 'Public & schools', '공공·교육') },
+    { id: 'commerce', name: T('商業・業務', 'Shops & offices', '상업·업무') },
+    { id: 'leisure', name: T('娯楽・イベント', 'Entertainment', '오락·이벤트') },
+    { id: 'transport', name: T('交通・乗り物', 'Transport', '교통·탈것') },
+    { id: 'industry', name: T('産業・インフラ', 'Industry', '산업·인프라') },
+    { id: 'military', name: T('軍事・保安', 'Military & security', '군사·보안') },
+    { id: 'history', name: T('歴史・和風・宗教', 'Historic & religious', '역사·일본풍·종교') },
+    { id: 'horror', name: T('廃墟・事件・ホラー', 'Ruins & horror', '폐허·사건·호러') },
+    { id: 'fantasy', name: T('SF・ファンタジー・特殊', 'Sci-fi & fantasy', 'SF·판타지·특수') },
+    { id: 'nature', name: T('自然・野外', 'Nature', '자연·야외') }
   ];
 
   /* ---------- 隠し手がかり（「隠し手がかり入りで読み込む」で足す） ----------
    * [階, 部屋名(日本語), 小物, 説明]。置き場所は部屋の中の空いているところを自動で探す。
    * 手がかりは clue: true になり、「隠し手がかり ON/OFF」で GM/PL表示とは別に隠せる。 */
   const C = (floor, room, t, text) => ({ floor, room, t, text });
-  const SWING = new Set(['door', 'door2', 'locked', 'secret', 'broken']);
+  const SWING = M.SWING_KINDS;
   const CLUES = {
     '1ldk': [
       C('1F', '個室', 'diary', T('破れた日記', 'Torn diary', '찢긴 일기')),
@@ -3098,7 +3126,16 @@
       C('2F', '書庫', 'diary', T('封印についての書物', 'Book on the seal', '봉인에 관한 책')),
       C('2F', '実験室', 'pills', T('光る薬瓶', 'Glowing vial', '빛나는 약병')),
       C('3F', '天文台', 'clue', T('星図に記された日付', 'A date marked on the star chart', '성도에 적힌 날짜'))
-    ]
+    ],
+
+    /* (T1 の手がかりはここ) */
+
+    /* (T2 の手がかりはここ) */
+
+    /* (T3 の手がかりはここ) */
+
+    /* (T4 の手がかりはここ) */
+
   };
 
   // 文字の幅（キャンバスで測る。測れないときは、日本語・韓国語は1文字 ≒ 文字サイズ、英数字は約0.6倍で見積もる）
@@ -3229,5 +3266,15 @@
   }
 
   global.IMM = global.IMM || {};
+  /* テンプレートのタグ：手で付けたタグに、複数フロア・GM専用を自動で足す */
+  TEMPLATES.forEach(tp => {
+    const floors = tp.build();
+    const auto = [];
+    if (floors.length > 1) auto.push('multifloor');
+    if (floors.some(f => f.rooms.some(r => r.gm) || f.items.some(i => i.gm) || f.openings.some(o => o.kind === 'secret'))) auto.push('gm');
+    tp.tags = Array.from(new Set([...(tp.tags || []), ...auto]));
+    tp.floorCount = floors.length;
+  });
+
   Object.assign(global.IMM, { TEMPLATES, TEMPLATE_GROUPS, TEMPLATE_CLUES: CLUES, instantiateTemplate: instantiate });
 })(window);

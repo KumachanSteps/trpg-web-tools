@@ -60,7 +60,7 @@
     'stage', 'dumbbell_rack', 'barber_chair', 'kamado', 'butsudan', 'tokonoma', 'console',
     'throne', 'weapon_rack', 'chest', 'banner', 'quest_board', 'bunk_bed', 'torch', 'forge'
   ]);
-  const SWING_DOORS = new Set(['door', 'door2', 'locked', 'secret', 'broken']);
+  const SWING_DOORS = M.SWING_KINDS;
   const ICONS = {
     rotate: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7" /><path d="M20 4v5h-5" /></svg>',
     lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9.5" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>',
@@ -131,7 +131,10 @@
     libTab: 'rooms',
     libGroup: 'all',
     libQuery: '',
+    libTag: '',
     tplGroup: 'home',
+    tplQuery: '',
+    tplTag: '',
     undo: [],
     redo: [],
     rev: 0,
@@ -2438,14 +2441,45 @@
     body.appendChild(h('div', { class: 'lib-grid' }, M.WALL_KINDS.map(w => wallCard(w.id))));
   }
 
+  /* 検索語に合うか。空白で区切った語がすべて名前・ID・タグのどれかに入っていれば合う。「#」で始まる語はタグだけを見る */
+  function tagNames(id) {
+    const tag = M.TAG[id];
+    return tag ? [id, ...['ja', 'en', 'ko'].map(l => String(tag.name[l] || ''))] : [id];
+  }
+  function queryMatches(query, id, name, tags) {
+    const words = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return true;
+    const names = ['ja', 'en', 'ko'].map(l => String((name && name[l]) || '').toLowerCase());
+    const tagText = (tags || []).flatMap(tagNames).map(x => x.toLowerCase());
+    return words.every(w => {
+      if (w.startsWith('#')) { const k = w.slice(1); return !k || tagText.some(x => x.includes(k)); }
+      return id.toLowerCase().includes(w) || names.some(n => n.includes(w)) || tagText.some(x => x.includes(w));
+    });
+  }
   function assetMatches(asset, query) {
-    if (!query) return true;
-    const q = query.toLowerCase();
-    return asset.id.includes(q) || ['ja', 'en', 'ko'].some(l => String(asset.name[l] || '').toLowerCase().includes(q));
+    return queryMatches(query, asset.id, asset.name, asset.tags);
+  }
+
+  /* タグで絞り込むメニュー（軸ごとに見出し）。items に出てくるタグだけを並べる */
+  function tagSelect(items, value, label, onChange) {
+    const used = new Set(items.flatMap(x => x.tags || []));
+    const select = h('select', { class: 'select-input tag-select', 'aria-label': label });
+    select.appendChild(h('option', { value: '' }, label));
+    M.TAG_AXES.forEach(axis => {
+      const tags = M.TAGS.filter(tg => tg.axis === axis.id && used.has(tg.id));
+      if (!tags.length) return;
+      const group = h('optgroup', { label: pick(axis.name) });
+      tags.forEach(tg => group.appendChild(h('option', { value: tg.id }, `#${pick(tg.name)}`)));
+      select.appendChild(group);
+    });
+    select.value = used.has(value) ? value : '';
+    select.addEventListener('change', () => onChange(select.value));
+    return select;
   }
 
   function renderFurnitureLibrary(body) {
     const search = h('input', { class: 'text-input', type: 'search', value: app.libQuery, placeholder: t('lib.search'), 'aria-label': t('lib.search') });
+    const tagMenu = tagSelect(M.ASSETS, app.libTag, t('lib.tagAll'), v => { app.libTag = v; fill(); });
     const groups = h('div', { class: 'lib-groups', role: 'group' });
     const results = h('div');
     const chip = (id, label) => h('button', {
@@ -2460,7 +2494,7 @@
       let any = false;
       M.ASSET_GROUPS.forEach(g => {
         if (!q && app.libGroup !== 'all' && app.libGroup !== g.id) return;
-        const assets = M.ASSETS.filter(a => a.group === g.id && assetMatches(a, q));
+        const assets = M.ASSETS.filter(a => a.group === g.id && assetMatches(a, q) && (!app.libTag || a.tags.includes(app.libTag)));
         if (!assets.length) return;
         any = true;
         results.appendChild(h('p', { class: 'lib-section' }, pick(g.name)));
@@ -2472,7 +2506,7 @@
       syncLibraryActive();
     };
     search.addEventListener('input', () => { app.libQuery = search.value; fill(); });
-    body.appendChild(h('div', { class: 'lib-search' }, search, groups));
+    body.appendChild(h('div', { class: 'lib-search' }, h('div', { class: 'lib-search-row' }, search, tagMenu), groups));
     body.appendChild(results);
     fill();
   }
@@ -2480,7 +2514,7 @@
   function assetCard(asset) {
     const canvas = h('canvas', { class: 'lib-icon', width: 46, height: 46 });
     const card = h('button', {
-      type: 'button', class: 'lib-card', draggable: 'true', dataset: { asset: asset.id }, title: pick(asset.name),
+      type: 'button', class: 'lib-card', draggable: 'true', dataset: { asset: asset.id }, title: [pick(asset.name), asset.tags.map(id => `#${pick(M.TAG[id].name)}`).join(' ')].filter(Boolean).join('\n'),
       onclick: () => {
         if (app.tool === 'place' && app.armed && app.armed.t === asset.id) setTool('select');
         else setTool('place', { kind: 'item', t: asset.id, rot: 0, manual: false });
@@ -2849,27 +2883,53 @@
     return url;
   }
 
+  function templateInGroup(tp, group) {
+    return group === 'all' || tp.group === group || (tp.also || []).includes(group);
+  }
+
   function renderTemplates() {
     els.tplGroups.innerHTML = '';
-    M.TEMPLATE_GROUPS.forEach(g => {
-      els.tplGroups.appendChild(h('button', {
-        type: 'button', class: `chip${app.tplGroup === g.id ? ' is-active' : ''}`,
-        onclick: () => { app.tplGroup = g.id; renderTemplates(); }
-      }, pick(g.name)));
-    });
+    const chip = (id, label) => h('button', {
+      type: 'button', class: `chip${app.tplGroup === id ? ' is-active' : ''}`,
+      onclick: () => { app.tplGroup = id; renderTemplates(); }
+    }, label);
+    els.tplGroups.appendChild(chip('all', t('lib.all')));
+    M.TEMPLATE_GROUPS.forEach(g => els.tplGroups.appendChild(chip(g.id, pick(g.name))));
+    // 検索とタグの絞り込み（一度作ったら入力中は作り直さない）
+    if (!els.tplFilter) {
+      const search = h('input', { class: 'text-input', type: 'search', placeholder: t('tpl.search'), 'aria-label': t('tpl.search') });
+      search.addEventListener('input', () => { app.tplQuery = search.value; fillTemplateGrid(); });
+      els.tplSearch = search;
+      els.tplFilter = h('div', { class: 'tpl-filter' }, search);
+      els.tplGroups.before(els.tplFilter);
+    }
+    els.tplSearch.placeholder = t('tpl.search');
+    els.tplSearch.setAttribute('aria-label', t('tpl.search'));
+    if (els.tplTagMenu) els.tplTagMenu.remove();
+    els.tplTagMenu = tagSelect(M.TEMPLATES, app.tplTag, t('lib.tagAll'), v => { app.tplTag = v; fillTemplateGrid(); });
+    els.tplFilter.appendChild(els.tplTagMenu);
+    fillTemplateGrid();
+  }
+
+  function fillTemplateGrid() {
     els.tplGrid.innerHTML = '';
-    M.TEMPLATES.filter(tp => tp.group === app.tplGroup).forEach(tp => {
+    const q = app.tplQuery.trim();
+    const list = M.TEMPLATES.filter(tp => (q || templateInGroup(tp, app.tplGroup))
+      && (!app.tplTag || tp.tags.includes(app.tplTag))
+      && queryMatches(q, tp.id, tp.name, tp.tags));
+    list.forEach(tp => {
       const img = h('img', { alt: '' });
-      const floors = tp.build().length;
       els.tplGrid.appendChild(h('button', { type: 'button', class: 'tpl-card', onclick: () => loadTemplate(tp.id) },
         h('span', { class: 'tpl-thumb' }, img),
         h('span', { class: 'tpl-name' }, pick(tp.name)),
-        h('span', { class: 'tpl-meta' }, t('tpl.floors', { n: floors })),
-        h('span', { class: 'tpl-desc' }, pick(tp.desc))
+        h('span', { class: 'tpl-meta' }, t('tpl.floors', { n: tp.floorCount })),
+        h('span', { class: 'tpl-desc' }, pick(tp.desc)),
+        h('span', { class: 'tpl-tags' }, tp.tags.filter(id => M.TAG[id]).map(id => h('span', { class: 'tpl-tag' }, `#${pick(M.TAG[id].name)}`)))
       ));
       requestAnimationFrame(() => { img.src = templateThumb(tp.id); });
     });
-    if (app.tplGroup === 'home') {
+    if (!list.length) els.tplGrid.appendChild(h('p', { class: 'lib-note' }, t('lib.noResult')));
+    if (app.tplGroup === 'home' && !q && !app.tplTag) {
       els.tplGrid.appendChild(h('button', { type: 'button', class: 'tpl-card', onclick: newMap },
         h('span', { class: 'tpl-thumb is-blank' }, '+'),
         h('span', { class: 'tpl-name' }, t('tpl.blank')),
