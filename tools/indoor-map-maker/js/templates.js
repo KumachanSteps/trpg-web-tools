@@ -2752,6 +2752,611 @@
   /* ---------- 研究・文化・軍事（T4） ---------- */
 
   /* (T4 のテンプレート関数はここ) */
+  /* 参考にした定石:
+   *  - 研究所: 中廊下型。北側に階段・EV・トイレのコアとサーバー室・倉庫、南側に玄関ホールと受付・監視室・事務室。
+   *    上階に実験室（ドラフトチャンバーは壁際、実験台は島型、出入口は2か所）・細胞培養室・試料保管室・飼育室（窓なし）と研究員室。
+   *    地下の秘密区画は清浄側（前室→更衣室→エアロックと除染シャワー）を通ってから汚染側の隔離区画へ入る。
+   *    隔離室は通路側をガラスにして見張り、地下設備室（発電機・ボイラー・ポンプ）へは倉庫の奥の別の階段から
+   */
+
+  /* ---------- 研究所／秘密研究施設（B1・1F・2F） ---------- */
+
+  // 階段・EV・トイレのコアと中廊下（どの階も同じ位置）
+  function labCore(b) {
+    b.room(N.stairs, 'hall', 22, 0, 6, 13, { hideLabel: true })
+      .room(N.evHall, 'hall', 28, 0, 8, 13, { ly: 2.6 })
+      .room(T('男子トイレ', 'Men\'s restroom', '남자 화장실'), 'wet', 36, 0, 4, 13, { hideLabel: true })
+      .room(T('女子トイレ', 'Women\'s restroom', '여자 화장실'), 'wet', 40, 0, 4, 13, { hideLabel: true })
+      .room(N.corridor, 'hall', 0, 13, 56, 4, { hideLabel: true })
+      .dh(23, 13, 4, 1, 0, 'open').dh(29, 13, 6, 1, 0, 'open')
+      .dh(36.25, 13, 1.5, -1, 0).dh(42.25, 13, 1.5, -1, 1)
+      .item('stairs_u', 22.5, 0.5, 0, { size: [5, 9] })
+      .item('elevator', 28.4, 0.2, 0, { size: [3.4, 4] }).item('elevator', 32.2, 0.2, 0, { size: [3.4, 4] })
+      .item('toilet', 36.5, 0.2).item('toilet', 38.5, 0.2).wall(38, 0, 38, 2.4, 'thin').item('washbasin', 36, 7, 270)
+      .item('toilet', 40.5, 0.2).item('toilet', 42.5, 0.2).wall(42, 0, 42, 2.4, 'thin').item('washbasin', 42.9, 7, 90)
+      .item('extinguisher', 20.6, 13.1).item('hydrant', 34, 16.6, 180)
+      .wh(23.5, 0, 3).wh(37.25, 0, 1.5).wh(41.25, 0, 1.5)
+      .wv(0, 14.25, 1.5).wv(56, 14.25, 1.5);
+  }
+
+  function lab() {
+    const g = makeFloor('1F');
+    labCore(g);
+    g.room(N.storeroom, 'storage', 0, 0, 10, 13, { lx: 2 })
+      .room(T('地下への階段', 'Stairs down', '지하 계단'), 'hall', 0, 0, 4, 9, { hideLabel: true, note: T('「機械室」とだけ書かれた鉄扉。鍵は監視室のキーボックス', 'A steel door marked only "Machine room". The key is in the monitoring room key box.', '"기계실"이라고만 적힌 철문. 열쇠는 감시실 키박스에 있다') })
+      .room(T('サーバー室', 'Server room', '서버실'), 'tech', 10, 0, 12, 13, { ly: 3.4 })
+      .room(T('会議室', 'Meeting room', '회의실'), 'office', 44, 0, 12, 13, { ly: -3.6 })
+      .room(N.office, 'office', 0, 17, 14, 15, { ly: 2.2 })
+      .room(T('監視室', 'Monitoring room', '감시실'), 'office', 14, 17, 8, 15, { ly: 4.6 })
+      .room(T('エントランスホール', 'Entrance hall', '엔트런스 홀'), 'public', 22, 17, 14, 15, { ly: 2 })
+      .room(T('応接室', 'Reception room', '응접실'), 'living', 36, 17, 8, 15, { ly: -4 })
+      .room(T('研究室1', 'Research room 1', '연구실1'), 'office', 44, 17, 12, 15, { ly: 1.6 })
+      .room(T('前庭', 'Forecourt', '앞마당'), 'porch', 24, 32, 10, 4, { hideLabel: true });
+    g.dh(7.25, 13, 1.5, -1, 1)                   // 倉庫
+      .dh(0.25, 9, 1.5, 1, 0, 'locked')          // 地下への階段（施錠）
+      .dh(18.25, 13, 1.5, -1, 1, 'steel')        // サーバー室
+      .dh(45, 13, 1.5, -1, 0)                    // 会議室
+      .dh(1, 17, 1.5, 1, 0).dh(11, 17, 1.5, 1, 1)
+      .dh(19.75, 17, 1.5, 1, 1)                  // 監視室（廊下から）
+      .dv(22, 28.5, 1.5, -1, 1)                  // 監視室（ホールから）
+      .dh(26, 17, 6, 1, 0, 'open')
+      .dh(27.5, 32, 3, 1, 0, 'auto')             // 玄関
+      .dh(37.25, 17, 1.5, 1, 0).dh(45, 17, 1.5, 1, 0)
+      .wh(6, 0, 2).wh(47, 0, 3).wh(51.5, 0, 3).wv(56, 4, 3)
+      .wv(0, 20, 3).wv(0, 26, 3)
+      .wh(2, 32, 3).wh(8.5, 32, 3).wh(17, 32, 2)
+      .wh(22.5, 32, 3.5, 'window2').wh(32, 32, 3.5, 'window2')
+      .wh(38.5, 32, 3).wh(46, 32, 3).wh(51, 32, 3).wv(56, 20, 3).wv(56, 26, 3);
+    // 倉庫と地下への階段
+    g.item('stairs', 0.8, 0.6, 0, { size: [2.4, 7] })
+      .item('supply_shelf', 4.5, 0.1).item('supply_shelf', 9, 0.6, 90).item('supply_shelf', 9, 4, 90)
+      .item('cardboard', 4.8, 2.6).item('cardboard', 6.2, 2.6).item('cardboard', 5.4, 3.8).item('hand_cart', 6.6, 6.4)
+      .item('cabinet', 4, 12, 180);
+    // サーバー室：ラックは背中合わせの2列
+    [11, 12.4, 13.8, 15.2, 16.6, 18].forEach(x => g.item('rack', x, 1.2).item('rack', x, 5.6, 180));
+    g.item('vent_unit', 19.8, 0.3).item('dist_board', 10.05, 9, 270).item('desk', 20.8, 8.4, 90).item('chair', 19.7, 9.1, 270)
+      .item('extinguisher', 16.8, 12.2).item('card_reader', 20, 13.1);
+    g.item('meeting6', 45.6, 4.6).item('meeting6', 50.4, 4.6).item('whiteboard', 44.05, 5, 270).item('plant', 54.6, 0.3).item('cabinet', 51, 12, 180);
+    // 事務室
+    g.item('filing', 4, 17.1).item('filing', 5.1, 17.1).item('filing', 6.2, 17.1).item('copier', 7.6, 17.1)
+      .item('desk_island', 1.5, 20).item('desk_island', 7.5, 20)
+      .item('office_desk', 5.8, 26.4).item('chair', 6.5, 27.9, 180)
+      .item('cabinet', 1, 31, 180).item('cabinet', 10, 31, 180);
+    // 監視室：モニター壁と操作卓、記録装置
+    g.item('monitor_wall', 14.05, 19.4, 270).item('console', 15.2, 20.6, 270).item('chair', 16.8, 21.4, 90).item('chair', 16.8, 23.2, 90)
+      .item('desk', 20.8, 21.4, 90).item('chair', 19.7, 22.1, 270).item('rack', 14.2, 26.4).item('locker', 14.2, 31, 180)
+      .item('cabinet', 19, 31.2, 180, { size: [2.4, 0.8] });
+    // エントランスホール
+    g.item('reception', 23.6, 21.5, 270).item('chair', 22.3, 22.6, 270).item('chair', 22.3, 24.6, 270)
+      .item('ticket_gate', 27, 19.2, 0, { size: [4, 2] })
+      .item('bench', 31.2, 25.4).item('bench', 31.2, 27.8).item('plant', 34.5, 30.5).item('plant', 25.6, 30.5)
+      .item('cctv', 35.2, 17.2);
+    // 応接室
+    g.item('sofa3', 36.2, 23, 270).item('lowtable', 38.6, 24.1, 90).item('armchair', 40.6, 23.2, 90).item('armchair', 40.6, 25.4, 90)
+      .item('cabinet', 43, 19.5, 90).item('plant', 42.6, 30.5).item('painting', 36, 18.8, 270);
+    // 研究室1
+    g.item('desk_island', 45.5, 20).item('desk_island', 50.8, 20)
+      .item('table', 47, 27.4).item('chair', 47.4, 26.3).item('chair', 48.8, 26.3).item('chair', 47.4, 29.1, 180).item('chair', 48.8, 29.1, 180)
+      .item('bookshelf', 55.2, 25.5, 90).item('whiteboard', 44.05, 26, 270).item('plant', 54.6, 30.6);
+
+    const u = makeFloor('2F');
+    labCore(u);
+    u.room(T('試料保管室', 'Sample store', '시료 보관실'), 'storage', 0, 0, 10, 13, { ly: 2.6 })
+      .room(T('細胞培養室', 'Cell culture lab', '세포 배양실'), 'medical', 10, 0, 12, 13, { ly: 2.4 })
+      .room(T('所長室', 'Director\'s office', '소장실'), 'office', 44, 0, 12, 13, { lx: 2.6, ly: 0.6 })
+      .room(T('実験室A', 'Laboratory A', '실험실A'), 'medical', 0, 17, 20, 15, { ly: 0.5 })
+      .room(T('飼育室', 'Animal room', '사육실'), 'medical', 20, 17, 10, 15)
+      .room(T('休憩室', 'Break room', '휴게실'), 'living', 30, 17, 8, 15, { ly: 2.6 })
+      .room(T('研究員室', 'Researchers\' office', '연구원실'), 'office', 38, 17, 18, 15, { ly: 1.4 });
+    u.dh(7.25, 13, 1.5, -1, 1, 'locked').dh(18.25, 13, 1.5, -1, 1).dh(45, 13, 1.5, -1, 0)
+      .dh(1, 17, 1.5, 1, 0).dh(16.5, 17, 1.5, 1, 1)
+      .dh(21, 17, 1.5, 1, 0).dh(31, 17, 1.5, 1, 0)
+      .dh(39, 17, 1.5, 1, 0).dh(53.5, 17, 1.5, 1, 1)
+      .wh(48.5, 0, 3.5, 'window2').wv(56, 8, 3)
+      .wv(0, 20, 3).wv(0, 26, 3).wh(2, 32, 3).wh(8.5, 32, 3).wh(15, 32, 3)
+      .wh(32.5, 32, 3).wh(40.5, 32, 3).wh(46, 32, 3).wh(51.5, 32, 3).wv(56, 20, 3).wv(56, 26, 3);
+    // 試料保管室：超低温フリーザーが並ぶ
+    [0.2, 1.9, 3.6, 5.3].forEach(x => u.item('freezer', x, 0.1));
+    u.item('freezer', 0.1, 2.6, 270).item('freezer', 0.1, 4.4, 270).item('fridge', 7.4, 0.1)
+      .item('supply_shelf', 9, 2, 90).item('supply_shelf', 9, 5.4, 90).item('cabinet', 3, 12, 180);
+    // 細胞培養室：安全キャビネット・顕微鏡・インキュベーター
+    u.item('fume_hood', 10.4, 0.1).item('fume_hood', 13.6, 0.1).item('microscope', 17.2, 0.3).item('microscope', 18.4, 0.3).item('freezer', 20.3, 0.1)
+      .item('lab_bench', 11.5, 5.4).item('stool', 12.1, 4.4).item('stool', 14.1, 4.4).item('stool', 12.1, 7.1, 180).item('stool', 14.1, 7.1, 180)
+      .item('sink', 20.7, 4, 90).item('fridge', 10.1, 11.5).item('fridge', 11.6, 11.5);
+    // 所長室
+    u.item('armchair', 50.4, 0.5).item('desk', 49.6, 2.6, 180, { size: [3.2, 1.4] })
+      .item('sofa3', 45, 5).item('lowtable', 46.1, 7).item('sofa2', 45.6, 8.4, 180)
+      .item('bookshelf', 55.2, 0.5, 90).item('bookshelf', 55.2, 3.6, 90).item('safe', 54.6, 11.6).item('plant', 44.3, 0.3);
+    // 実験室A：壁際にドラフトチャンバー、島型の実験台
+    u.item('fume_hood', 3.5, 17.1).item('fume_hood', 6.8, 17.1).item('fume_hood', 10.1, 17.1).item('extinguisher', 15.6, 17.2);
+    [[3, 21.6], [10, 21.6], [3, 26.6], [10, 26.6]].forEach(([x, y]) => u.item('lab_bench', x, y)
+      .item('stool', x + 0.6, y - 0.95).item('stool', x + 2.6, y - 0.95).item('stool', x + 0.6, y + 1.75, 180).item('stool', x + 2.6, y + 1.75, 180));
+    u.item('sink', 18.7, 21.4, 90).item('med_cabinet', 19, 24.6, 90).item('shower', 17.9, 29.9);
+    // 飼育室
+    u.item('cage', 20.3, 20.4).item('cage', 20.3, 24.4).item('cage', 26.7, 20.4).item('cage', 26.7, 24.4)
+      .item('sink', 24, 30.6, 180).item('supply_shelf', 20.3, 30.9, 180, { size: [2.6, 1] });
+    // 休憩室
+    u.item('dining4', 31, 22).item('vending', 36.6, 19.2, 90).item('fridge', 36.6, 21.6)
+      .item('sink', 30, 26.6, 270).item('sofa2', 31.4, 29.9, 180).item('plant', 36.6, 30.6);
+    // 研究員室
+    u.item('desk_island', 39.5, 20).item('desk_island', 45, 20).item('desk_island', 50.5, 20)
+      .item('meeting6', 45, 26.6).item('whiteboard', 38.05, 26.4, 270).item('copier', 54.4, 30.6).item('bookshelf', 55.2, 26.4, 90);
+
+    const d = makeFloor('B1');
+    d.room(T('地下設備室', 'Plant room', '지하 설비실'), 'garage', 0, 0, 18, 13, { lx: 2, ly: 1.4 })
+      .room(T('制御室', 'Control room', '제어실'), 'office', 18, 0, 10, 13, { ly: 4.4 })
+      .room(N.evHall, 'hall', 28, 0, 8, 13, { ly: 2.6, note: T('EVはカードキーをかざしたときだけ地下へ降りる', 'The elevator only goes down here when a key card is swiped', 'EV는 카드키를 댔을 때만 지하로 내려간다') })
+      .room(T('前室', 'Checkpoint', '전실'), 'office', 36, 0, 10, 13, { ly: -3.4 })
+      .room(T('更衣室', 'Changing room', '탈의실'), 'office', 46, 0, 10, 7, { ly: 1.6 })
+      .room(T('エアロック', 'Airlock', '에어록'), 'danger', 46, 7, 10, 6, { lx: -2.6, ly: 1.2 })
+      .room(T('隔離区画', 'Isolation ward', '격리 구역'), 'medical', 0, 13, 56, 4)
+      .room(T('封鎖区画', 'Sealed section', '봉쇄 구역'), 'danger', 0, 17, 10, 12, { gm: true, plName: '', note: T('逃げ出した「被験体0号」が潜む。封印扉は内側から歪んでいる', 'Where "Subject Zero" hides after its escape. The sealed door is bent from the inside.', '탈출한 "피험체 0호"가 숨어 있다. 봉인문은 안쪽에서 휘어 있다') })
+      .room(T('隔離室1', 'Isolation 1', '격리실1'), 'medical', 10, 17, 7, 12, { noWall: true, ly: -3.2 })
+      .room(T('隔離室2', 'Isolation 2', '격리실2'), 'medical', 17, 17, 7, 12, { noWall: true, ly: -3.2 })
+      .room(T('隔離室3', 'Isolation 3', '격리실3'), 'medical', 24, 17, 7, 12, { noWall: true, ly: -3.2 })
+      .room(T('標本室', 'Specimen room', '표본실'), 'medical', 31, 17, 12, 12, { ly: 4.4 })
+      .room(T('実験室', 'Laboratory', '실험실'), 'medical', 43, 17, 13, 12, { lx: -2.6, ly: -3.6 });
+    // 隔離室：房の間は壁、通路側はガラス
+    d.wall(10, 17, 10, 29).wall(17, 17, 17, 29).wall(24, 17, 24, 29).wall(31, 17, 31, 29).wall(10, 17, 31, 17, 'glass');
+    d.dv(18, 9, 1.5, 1, 0, 'secret')            // 設備室 → 制御室（制御盤の裏）
+      .dv(28, 9, 1.5, -1, 0)                    // 制御室
+      .dv(36, 9, 1.5, 1, 0, 'steel')            // 前室（カードキー）
+      .dv(46, 2.5, 1.5, 1, 0)                   // 更衣室
+      .dh(47, 7, 1.5, 1, 0, 'steel')            // エアロック（清浄側）
+      .dh(53, 13, 1.5, 1, 1, 'steel')           // エアロック（汚染側）
+      .dh(3, 17, 2, 1, 0, 'sealed')             // 封鎖区画
+      .dh(11, 17, 1.5, 1, 0, 'steel').dh(18, 17, 1.5, 1, 0, 'steel').dh(25, 17, 1.5, 1, 0, 'broken')
+      .dh(32, 17, 1.5, 1, 0).dh(44.5, 17, 1.5, 1, 0);
+    // 地下設備室
+    d.item('stairs', 0.8, 0.6, 0, { size: [2.4, 7] })
+      .item('em_generator', 4.6, 0.4).item('em_generator', 9.4, 0.4).item('boiler', 14.6, 0.3)
+      .item('pipe', 4.6, 3.2).item('vent_unit', 14.8, 4.6).item('control_panel', 17.2, 5.6, 90)
+      .item('ind_tank', 4.4, 9.6).item('pump', 8.6, 11.4).item('pump', 11, 11.4).item('drum', 14.6, 11.6).item('drum', 16, 11.6)
+      .item('dist_board', 4.4, 5.4).item('valve', 10.6, 3.8);
+    // 制御室：隔離区画のカメラ映像
+    d.item('monitor_wall', 20, 0.1).item('console', 19.4, 1.8).item('console', 23.2, 1.8)
+      .item('chair', 20.7, 3.5, 180).item('chair', 24.5, 3.5, 180)
+      .item('table', 21.6, 7.2).item('chair', 22, 6.1).item('chair', 23.4, 6.1).item('rack', 26.5, 4.6).item('filing', 18.2, 11.6);
+    d.item('elevator', 32.2, 0.2, 0, { size: [3.4, 4] }).item('card_reader', 35.6, 8.3, 90).item('cctv', 28.2, 4.6);
+    // 前室：警備員の受付
+    d.item('reception', 40, 4.6, 0, { size: [4, 1.2] }).item('chair', 41.5, 3.3).item('locker', 37.2, 12, 180)
+      .item('bench', 37, 0.2, 0, { size: [3, 1] }).item('cctv', 45.2, 12.2).item('alarm', 45.3, 0.1);
+    // 更衣室・エアロック
+    d.item('locker', 48.2, 0.1).item('locker', 51.2, 0.1).item('locker', 55, 1, 90, { size: [4, 1] }).item('bench', 49, 3.4, 0, { size: [4, 0.8] })
+      .item('decon_shower', 51, 8.8).item('alarm', 46.2, 12.5).item('danger', 54.4, 7.8);
+    // 隔離区画（通路）
+    d.item('cctv', 0.2, 13.2).item('cctv', 55.2, 13.2).item('alarm', 28.2, 16.5).item('drag_marks', 4.6, 14.3, 90);
+    // 封鎖区画（GM）
+    d.item('flesh', 6.4, 19.4, 0, { gm: true }).item('black_stain', 3.4, 25.6, 0, { gm: true }).item('pod', 0.6, 26.4, 0, { gm: true })
+      .item('chains', 0.1, 19.4, 270, { gm: true }).item('bones', 1.6, 19.6, 0, { gm: true });
+    // 隔離室
+    [10, 17, 24].forEach(x => d.item('hospital_bed', x + 0.4, 24.6, 180).item('toilet', x + 5.6, 27.2, 180).item('washbasin', x + 5.9, 23.6, 90).item('cctv', x + 0.2, 17.3));
+    d.item('iv_stand', 13, 24.4).item('npc_lying', 20.4, 20.6, 0, { gm: true }).item('glass', 24.3, 19.6).item('blood', 27, 21.4);
+    // 標本室：人型の培養ポット
+    [32.6, 35, 37.4, 39.8].forEach(x => d.item('pod', x, 20.4).item('pod', x, 24.2));
+    d.item('control_panel', 42.2, 18.4, 90).item('freezer', 31.4, 27.5, 180).item('freezer', 33.2, 27.5, 180);
+    // 実験室
+    d.item('op_table', 48, 21).item('iv_stand', 51.4, 21.3).item('med_cabinet', 43, 19.6, 270)
+      .item('fume_hood', 54.8, 18.4, 90).item('freezer', 54.6, 22.2, 90).item('cage', 52.8, 25.8)
+      .item('lab_bench', 44.4, 27.3, 180).item('microscope', 49.2, 27.8).item('blood', 48.8, 25.6);
+    return [d.f, g.f, u.f];
+  }
+
+  /* ---------- 博物館／美術館（B1 収蔵庫・1F・2F） ---------- */
+  // 来館者はエントランスから左右の展示室と大階段へ。北側のバックヤードは通路でつなぎ、搬入口→荷解き室→荷物用EV→燻蒸室→収蔵庫
+
+  // 職員階段・荷物用EVとバックヤード通路（どの階も同じ位置）
+  function museumBack(b) {
+    b.room(T('職員階段', 'Staff stairs', '직원 계단'), 'hall', 22, 0, 6, 10, { hideLabel: true })
+      .room(T('荷物用EV', 'Freight elevator', '화물용 EV'), 'hall', 28, 0, 6, 10, { hideLabel: true })
+      .room(T('バックヤード通路', 'Back corridor', '백야드 통로'), 'hall', 0, 10, 42, 4, { hideLabel: true })
+      .dh(23, 10, 4, 1, 0, 'open').dh(29, 10, 4, 1, 0, 'open')
+      .item('stairs_u', 22.5, 0.5, 0, { size: [5, 8] }).item('elevator', 28.5, 0.3, 0, { size: [5, 6], label: T('荷物用', 'Freight', '화물용') })
+      .item('extinguisher', 21.2, 13.3).item('cctv', 41.2, 10.2);
+  }
+
+  // 来館者用の大階段・EV・トイレ（1F・2F 同じ位置）。エントランス／ロビーの中に置く
+  function museumCore(b) {
+    b.room(N.toilet, 'wet', 36, 14, 6, 8, { hideLabel: true })
+      .dh(37.25, 22, 1.5, -1, 0)
+      .item('elevator', 22.6, 14.2).item('stairs_u', 28, 14.4, 0, { size: [8, 10] })
+      .item('toilet', 36.5, 14.2).item('toilet', 38.5, 14.2).item('toilet', 40.5, 14.2)
+      .wall(38, 14, 38, 16.4, 'thin').wall(40, 14, 40, 16.4, 'thin')
+      .item('washbasin', 40.9, 18.4, 90);
+  }
+
+  function museum() {
+    const g = makeFloor('1F');
+    museumBack(g);
+    g.room(T('警備室', 'Security room', '경비실'), 'office', 0, 0, 10, 10, { ly: 2.6 })
+      .room(T('学芸員室', 'Curators\' office', '학예사실'), 'office', 10, 0, 12, 10, { ly: 3.2 })
+      .room(T('荷解き室', 'Unpacking room', '짐 푸는 방'), 'storage', 34, 0, 8, 10, { ly: 1.4 })
+      .room(T('搬入口', 'Loading bay', '반입구'), 'garage', 42, 0, 22, 14, { lx: 6, ly: 1.8 })
+      .room(T('展示室1（自然史）', 'Gallery 1 (Natural history)', '전시실1(자연사)'), 'public', 0, 14, 22, 26, { ly: 10.2 })
+      .room(T('エントランス', 'Entrance hall', '엔트런스'), 'hall', 22, 14, 20, 26, { ly: 3.6 })
+      .room(T('ショップ', 'Shop', '숍'), 'public', 35, 34, 7, 6, { ly: -0.2 })
+      .room(T('展示室2（考古）', 'Gallery 2 (Archaeology)', '전시실2(고고)'), 'public', 42, 14, 22, 26, { ly: 10.2 })
+      .room(T('前庭', 'Forecourt', '앞마당'), 'porch', 27, 40, 10, 4, { hideLabel: true });
+    museumCore(g);
+    g.dv(0, 11.25, 1.5, 1, 0, 'steel')           // 通用口
+      .dh(7.5, 10, 1.5, -1, 1)                   // 警備室
+      .dh(11, 10, 1.5, -1, 0)                    // 学芸員室
+      .dh(35.5, 10, 3, -1, 0, 'door2')           // 荷解き室
+      .dv(42, 3, 3, 1, 0, 'door2')               // 荷解き室 ↔ 搬入口
+      .dv(42, 10.5, 3, 1, 0, 'door2')            // 通路 ↔ 搬入口
+      .dv(64, 1.5, 6, 1, 0, 'shutter')           // トラックの搬入シャッター
+      .dh(44, 0, 1.5, 1, 0, 'steel')
+      .dh(16, 14, 3, 1, 0, 'door2')              // 通路 ↔ 展示室1（作品の出し入れ）
+      .dv(22, 30, 5, -1, 0, 'open')              // エントランス ↔ 展示室1
+      .dv(42, 24, 5, 1, 0, 'open')               // エントランス ↔ 展示室2
+      .dv(35, 35, 4, -1, 0, 'open')              // ショップ
+      .dh(30.5, 40, 3, 1, 0, 'auto')             // 正面玄関
+      .wv(0, 2.5, 2).wh(12, 0, 3).wh(17, 0, 3).wh(24, 0, 2)
+      .wh(22.75, 40, 3.5, 'window2').wh(26.5, 40, 3.5, 'window2').wh(37, 40, 3.5, 'window2');
+    // 警備室：モニター壁と通用口の見張り
+    g.item('radio', 0.2, 0.2).item('monitor_wall', 2.4, 0.1).item('console', 2.8, 1.6).item('chair', 3.6, 3.2, 180).item('chair', 5.2, 3.2, 180)
+      .item('locker', 9, 3.4, 90).item('cabinet', 0.1, 5, 270, { size: [2, 0.6] }).item('table', 3.4, 6.2, 0, { size: [2.4, 1.4] }).item('chair', 4.1, 7.7, 180);
+    // 学芸員室
+    g.item('desk_island', 10.8, 0.6).item('desk_island', 16.2, 0.6)
+      .item('bookshelf', 13.4, 9.2, 180).item('bookshelf', 16.6, 9.2, 180).item('cabinet', 21, 6, 90)
+      .item('table', 10.6, 6.4, 0, { size: [2.4, 1.4] });
+    // 荷解き室・搬入口
+    g.item('big_crate', 34.3, 0.3).item('workbench', 37.6, 0.2).item('pallet', 34.4, 4.4).item('crate', 38.6, 3.4).item('hand_cart', 40.3, 7.4)
+      .item('truck', 46.5, 2.5, 90).item('forklift', 45, 9.4, 90).item('pallet_stack', 52, 10.8).item('pallet', 54.6, 10.8)
+      .item('cone', 62.8, 9).item('cone', 62.8, 10.4).item('cctv', 63.2, 0.2);
+    // 展示室1：恐竜の骨格標本を中央に、壁際に展示ケース
+    g.item('skeleton', 5, 23).item('rope_barrier', 5, 21.6).item('rope_barrier', 13, 21.6).item('rope_barrier', 5, 29.6).item('rope_barrier', 13, 29.6);
+    [1, 4, 7, 10, 13].forEach(x => g.item('display_case', x, 14.2));
+    [18, 22, 26, 30, 34].forEach(y => g.item('display_case', 0.2, y, 270));
+    [4, 8, 12, 16].forEach(x => g.item('display_case', x, 38.2, 180));
+    g.item('tank', 19.4, 16.6).item('pedestal', 19.6, 22).item('pedestal', 19.6, 25.4).item('bench', 9, 33).item('cctv', 21.2, 39.2);
+    // エントランス
+    g.item('reception', 24, 27.4).item('chair', 25, 26.2).item('chair', 27, 26.2)
+      .item('locker', 22.1, 36.2, 270).item('bench', 37, 30).item('plant', 40.6, 22.6).item('plant', 22.4, 22.6).item('cctv', 41.2, 39.2)
+      .item('register', 38.8, 34.2).item('store_shelf', 36.6, 37.6);
+    // 展示室2：中央に石棺、壁際に展示ケースと台座
+    g.item('sarcophagus', 51.8, 24.4).item('rope_barrier', 50.2, 24.4, 90).item('rope_barrier', 55.4, 24.4, 90);
+    [44, 47.4, 50.8, 54.2, 57.6].forEach(x => g.item('display_case', x, 14.2));
+    [17, 21, 25, 29, 33].forEach(y => g.item('display_case', 62.2, y, 90));
+    [45, 49, 53, 57].forEach(x => g.item('display_case', x, 38.2, 180));
+    g.item('display_case', 42.2, 31.6, 270).item('display_case', 42.2, 35, 270)
+      .item('pedestal', 46, 20).item('pedestal', 46, 31.6).item('pedestal', 58.4, 20).item('pedestal', 58.4, 31.6)
+      .item('stele', 52, 19.6).item('statue', 52.2, 32).item('bench', 51, 35.4, 0, { size: [3.4, 1] });
+
+    const u = makeFloor('2F');
+    museumBack(u);
+    u.room(T('館長室', 'Director\'s office', '관장실'), 'office', 0, 0, 10, 10, { ly: 2.4 })
+      .room(T('資料室', 'Archive', '자료실'), 'storage', 10, 0, 12, 10, { ly: 3.2 })
+      .room(T('写真室', 'Photo studio', '사진실'), 'office', 34, 0, 8, 10, { ly: -2.6 })
+      .room(T('修復室', 'Conservation studio', '수복실'), 'medical', 42, 0, 22, 14, { ly: 1.4 })
+      .room(T('企画展示室', 'Special exhibition', '기획 전시실'), 'public', 0, 14, 22, 26, { ly: 5.6, note: T('特別展「海の底から来たもの」開催中。目玉の石碑は寄贈者不明', 'Special exhibition "What Came from the Deep". The star stele was donated anonymously.', '특별전 "바다 밑에서 온 것" 개최 중. 메인 석비는 기증자 불명') })
+      .room(T('ロビー', 'Lobby', '로비'), 'hall', 22, 14, 20, 26, { lx: -3, ly: 3 })
+      .room(T('カフェ', 'Café', '카페'), 'kitchen', 32, 31, 10, 9, { lx: 1.6, ly: -2.6 })
+      .room(T('展示室3（美術）', 'Gallery 3 (Fine art)', '전시실3(미술)'), 'public', 42, 14, 22, 26, { ly: 9.4 });
+    museumCore(u);
+    u.wall(4, 27, 22, 27, 'thin');               // 企画展示室の順路の仕切り
+    u.dh(7.5, 10, 1.5, -1, 1).dh(11, 10, 1.5, -1, 0).dh(36, 10, 1.5, -1, 0)
+      .dv(42, 10.5, 3, 1, 0, 'door2')            // 修復室
+      .dv(22, 33, 5, -1, 0, 'open')              // 企画展示室（入口）
+      .dv(22, 19.5, 4, -1, 0, 'open')            // 企画展示室（出口）
+      .dv(42, 24, 5, 1, 0, 'open')               // 展示室3
+      .dh(33, 31, 8, -1, 0, 'open').dv(32, 32, 7, -1, 0, 'open')   // カフェ
+      .wh(0.5, 0, 2.5).wh(24, 0, 2).wh(46, 0, 3).wh(52, 0, 3).wh(58, 0, 3)
+      .wh(23, 40, 3.5, 'window2').wh(27, 40, 3.5, 'window2').wh(33, 40, 3.5, 'window2').wh(37.5, 40, 3.5, 'window2');
+    // 館長室
+    u.item('armchair', 3.6, 0.4).item('desk', 2.8, 2.4, 180, { size: [3.2, 1.4] })
+      .item('lowtable', 0.8, 6).item('sofa2', 0.3, 7.6, 180).item('bookshelf', 9.2, 0.4, 90).item('bookshelf', 9.2, 3.6, 90).item('safe', 0.2, 3.4);
+    // 資料室
+    u.item('bookstack', 13, 1).item('bookstack', 17.4, 1).item('bookstack', 13, 4.2).item('bookstack', 17.4, 4.2)
+      .item('bookshelf', 10.05, 0.5, 270).item('bookshelf', 10.05, 3.7, 270).item('table', 13.6, 7.2).item('filing', 20.8, 8.6);
+    // 写真室
+    u.item('partition', 35.4, 0.3).item('table', 36.6, 3.4).item('lamp', 34.4, 4.4).item('lamp', 40.6, 4.4).item('camera', 37.7, 6.2).item('cabinet', 41, 6.2, 90, { size: [2.4, 1] });
+    // 修復室
+    u.item('workbench', 44.6, 3.6).item('workbench', 50.4, 3.6).item('workbench', 56.2, 3.6)
+      .item('fume_hood', 62.8, 1, 90).item('sink', 62.7, 5, 90).item('cabinet', 63, 8.4, 90)
+      .item('painting', 46, 9.4).item('statue', 52, 9).item('table', 55.4, 9).item('microscope', 59.6, 9.4);
+    // 企画展示室：仕切りで一筆書きの順路
+    [3, 7, 11, 15].forEach(x => u.item('display_case', x, 38.2, 180));
+    [6, 10, 14].forEach(x => u.item('display_case', x, 27.3).item('display_case', x, 25.1, 180));
+    [2, 6, 10, 14].forEach(x => u.item('painting', x, 14.05));
+    u.item('pedestal', 6, 32.6).item('pedestal', 15, 32.6).item('display_case', 0.2, 15.6, 270).item('display_case', 0.2, 35, 270)
+      .item('stele', 9.5, 20).item('rope_barrier', 8.5, 18.8).item('rope_barrier', 8.5, 22);
+    // ロビー・カフェ
+    u.item('bench', 24, 27).item('bench', 24, 30).item('plant', 22.4, 38.6)
+      .item('counter', 40.8, 32.4, 90).item('dining_round', 33, 32).item('dining_round', 33, 36.4).item('dining_round', 37, 36.4);
+    // 展示室3：壁に絵画、中央にベンチと彫刻
+    [44, 48.5, 53, 57.5].forEach(x => u.item('painting', x, 14.05));
+    [17, 21.5, 26, 30.5, 35].forEach(y => u.item('painting', 63.65, y, 90));
+    [45, 49.5, 54, 58.5].forEach(x => u.item('painting', x, 39.65, 180));
+    [16, 32, 35.5].forEach(y => u.item('painting', 42.05, y, 270));
+    u.item('bench', 49, 26.5).item('bench', 55, 26.5).item('pedestal', 47, 20).item('pedestal', 58, 20).item('pedestal', 47, 32.6).item('pedestal', 58, 32.6)
+      .item('partition', 51, 20.6).item('partition', 51, 32.8).item('cctv', 63.2, 14.2);
+
+    const d = makeFloor('B1');
+    museumBack(d);
+    d.room(T('機械室', 'Machine room', '기계실'), 'garage', 0, 0, 22, 10, { ly: 2.4 })
+      .room(T('燻蒸室', 'Fumigation room', '훈증실'), 'danger', 34, 0, 8, 10, { ly: 1.4 })
+      .room(T('特別収蔵庫', 'Special vault', '특별 수장고'), 'special', 42, 0, 10, 14, { ly: 4.6, gm: true, plName: '', note: T('台帳に載っていない収蔵品。封印の札を貼った石棺と、夜ごと増える引っかき傷', 'Holdings that appear in no register: a sarcophagus covered in seals, and scratch marks that multiply every night', '대장에 없는 수장품. 봉인 부적을 붙인 석관과 밤마다 늘어나는 긁힌 자국') })
+      .room(T('収蔵庫1（美術）', 'Storage vault 1 (Art)', '수장고1(미술)'), 'storage', 0, 14, 20, 18, { ly: 2 })
+      .room(T('収蔵庫2（考古・自然史）', 'Vault 2 (Archaeology)', '수장고2(고고·자연사)'), 'storage', 20, 14, 22, 18, { ly: -0.9 });
+    d.dh(19, 10, 1.5, -1, 1)                     // 機械室
+      .dh(36, 10, 2, -1, 0, 'steel')             // 燻蒸室（気密扉）
+      .dv(42, 10.5, 2, 1, 0, 'sealed')           // 特別収蔵庫
+      .dh(3, 14, 5, 1, 0, 'big2')                // 収蔵庫1
+      .dh(30, 14, 5, 1, 0, 'big2');              // 収蔵庫2
+    d.item('boiler', 0.4, 0.4).item('pump', 4, 0.4).item('pump', 6.4, 0.4).item('vent_unit', 9.2, 0.3).item('vent_unit', 11.6, 0.3)
+      .item('duct', 14, 0.2).item('dist_board', 21.4, 2, 90).item('em_generator', 0.4, 7.4).item('control_panel', 6, 9.1, 180)
+      .item('card_reader', 8.4, 13.6).item('card_reader', 35.4, 13.6);
+    d.item('big_crate', 35, 0.4).item('crate', 38.6, 0.4).item('drum', 40.6, 0.3).item('drum', 40.6, 1.7).item('pallet', 35, 4.4)
+      .item('control_panel', 41.2, 5.6, 90).item('danger', 38.8, 4.6);
+    // 特別収蔵庫（GM）
+    d.item('magic_circle', 44, 3.6, 0, { gm: true }).item('sarcophagus', 45.3, 3.9, 0, { gm: true }).item('stele', 49.8, 0.2, 0, { gm: true })
+      .item('candle', 43, 3.4, 0, { gm: true }).item('candle', 49.4, 3.4, 0, { gm: true }).item('candle', 43, 8.4, 0, { gm: true }).item('candle', 49.4, 8.4, 0, { gm: true })
+      .item('chains', 42.2, 0.2, 0, { gm: true }).item('crate', 50.2, 11.8, 0, { gm: true }).item('black_stain', 48.6, 9.4, 0, { gm: true });
+    // 収蔵庫1：絵画ラックと梱包した作品
+    [18.4, 22.4, 26.4].forEach(y => d.item('cabinet', 1.5, y, 0, { size: [6, 1.2] }).item('cabinet', 10.5, y, 0, { size: [6, 1.2] }));
+    d.item('statue', 18, 17.4).item('big_crate', 16.6, 29.2).item('pedestal', 1, 29.8).item('display_case', 4, 30.2).item('crate', 10, 30);
+    // 収蔵庫2：大型ラックと標本
+    d.item('pallet_rack', 21, 18.5).item('pallet_rack', 33, 18.5).item('pallet_rack', 21, 23.5).item('pallet_rack', 33, 23.5)
+      .item('sarcophagus', 21, 28.8, 90).item('cabinet', 27, 30.8, 180).item('cabinet', 30.2, 30.8, 180).item('tank', 38.6, 28.6).item('statue', 35.4, 29.6);
+    return [d.f, g.f, u.f];
+  }
+
+  /* ---------- 地下シェルター／防空壕（B1・屋外） ---------- */
+  // 入口の階段→防爆扉→除染室→隔壁の先に中央通路。北に通信室・居住区・トイレ、南に備蓄庫・食堂・医務室。
+  // 発電・換気の機械区画は隔壁で分け、入口と反対の端に非常口（はしごで地上のハッチへ）
+
+  function shelter() {
+    const d = makeFloor('B1');
+    d.room(T('入口', 'Entrance', '입구'), 'industrial', 0, 9, 8, 12, { lx: 0.4 })
+      .room(T('除染室', 'Decon room', '제염실'), 'danger', 8, 11, 7, 8, { ly: -2 })
+      .room(T('通路', 'Corridor', '통로'), 'industrial', 15, 13, 35, 4, { hideLabel: true })
+      .room(T('通信室', 'Comms room', '통신실'), 'office', 15, 0, 10, 13, { ly: 2.6 })
+      .room(T('居住区', 'Living quarters', '거주구'), 'bedroom', 25, 0, 18, 13, { ly: -1.2 })
+      .room(T('トイレ・シャワー', 'WC & showers', '화장실·샤워'), 'wet', 43, 0, 7, 13, { ly: 2.6 })
+      .room(T('備蓄庫', 'Supply store', '비축고'), 'storage', 15, 17, 12, 13, { ly: -1.1 })
+      .room(T('食堂', 'Mess', '식당'), 'kitchen', 27, 17, 14, 13, { ly: -0.8 })
+      .room(T('医務室', 'Infirmary', '의무실'), 'medical', 41, 17, 9, 13, { lx: -1.6 })
+      .room(T('発電室', 'Generator room', '발전실'), 'garage', 50, 0, 12, 13, { ly: 1.4 })
+      .room(T('機械区画通路', 'Plant corridor', '기계 구획 통로'), 'industrial', 50, 13, 12, 4, { hideLabel: true })
+      .room(T('換気・浄水室', 'Air & water plant', '환기·정수실'), 'garage', 50, 17, 12, 13, { ly: -1.6 })
+      .room(T('非常口', 'Emergency exit', '비상구'), 'industrial', 62, 12, 8, 6, { lx: -1.2 })
+      .room(T('防空壕跡', 'Old air-raid tunnel', '옛 방공호'), 'cave', 20, 30, 16, 5, { gm: true, plName: '', note: T('戦時中の防空壕の跡。シェルターを造るときに見つかり、壁でふさがれた。奥の土砂の向こうから物音がする', 'A wartime air-raid tunnel found while building the shelter and walled off. Something scratches beyond the collapse at the far end.', '전쟁 때의 방공호 터. 셸터를 지을 때 발견되어 벽으로 막혔다. 안쪽 토사 너머에서 소리가 난다') });
+    d.dv(8, 14, 2, -1, 0, 'steel')              // 防爆扉（外側へ開く）
+      .dv(15, 14, 1.5, 1, 0, 'steel')           // 隔壁（除染室 → 通路）
+      .dh(22, 13, 1.5, -1, 1)                   // 通信室
+      .dh(26, 13, 1.5, -1, 0).dh(40, 13, 1.5, -1, 1)   // 居住区
+      .dh(44, 13, 1.5, -1, 0)                   // トイレ・シャワー
+      .dh(16, 17, 1.5, 1, 0)                    // 備蓄庫
+      .dh(30.5, 17, 1.5, 1, 0).dh(37, 17, 1.5, 1, 1)   // 食堂
+      .dh(42, 17, 1.5, 1, 0)                    // 医務室
+      .dv(50, 14, 2, 1, 0, 'steel')             // 隔壁（機械区画）
+      .dh(51, 13, 1.5, -1, 0)                   // 発電室
+      .dh(51, 17, 1.5, 1, 0)                    // 換気・浄水室
+      .dv(62, 14, 2, 1, 0, 'steel')             // 非常口
+      .dh(24, 30, 1.5, 1, 0, 'secret');         // 防空壕跡（備蓄庫の棚の裏）
+    d.text(T('防爆扉', 'Blast door', '방폭문'), 5.8, 13.2, { size: 0.5, bold: true });
+    // 入口・除染室
+    d.item('stairs', 0.6, 11, 0, { size: [2.4, 8] }).item('sandbags', 3.6, 19.6).item('extinguisher', 7.2, 9.3).item('cctv', 0.2, 20.2).item('alarm', 4.2, 9.1)
+      .item('locker', 8.6, 11.1).item('drum', 13.6, 11.2).item('decon_shower', 10.6, 14).item('bench', 9.6, 17.9, 0, { size: [4, 0.8] });
+    // 通信室
+    d.item('radio', 15.4, 0.2).item('radio', 17.6, 0.2).item('console', 20.6, 0.2)
+      .item('chair', 15.9, 1.4, 180).item('chair', 18.1, 1.4, 180).item('chair', 21.9, 1.8, 180)
+      .item('monitor_wall', 15.05, 4.2, 270).item('table', 18.2, 6.2, 0, { size: [3.4, 2] }).item('chair', 19.4, 8.4, 180).item('rack', 23.4, 4.6);
+    // 居住区：二段ベッドを並べる
+    [25.4, 27.9, 30.4, 32.9, 35.4, 37.9, 40.4].forEach(x => d.item('bunk_bed', x, 0.2));
+    [25.4, 27.9, 30.4, 35.4, 37.9, 40.4].forEach(x => d.item('bunk_bed', x, 6.4, 180));
+    // トイレ・シャワー
+    [43.5, 45.5, 47.5].forEach(x => d.item('toilet', x, 0.2));
+    d.wall(45, 0, 45, 2.4, 'thin').wall(47, 0, 47, 2.4, 'thin').wall(49, 0, 49, 2.4, 'thin')
+      .item('washbasin', 48.9, 4, 90).item('washbasin', 48.9, 5.8, 90).item('shower', 46.2, 11.1).item('shower', 48.1, 11.1);
+    // 備蓄庫
+    [20.2, 23.4, 26.6].forEach(y => d.item('supply_shelf', 16.2, y).item('supply_shelf', 19.4, y));
+    d.item('drum', 23.6, 18.4).item('drum', 25, 18.4).item('drum', 23.6, 19.8).item('drum', 25, 19.8)
+      .item('cardboard', 23.4, 22.4).item('cardboard', 24.8, 22.4).item('crate', 23.6, 25.6).item('supply_shelf', 22.6, 28.9, 180, { size: [1.2, 1] });
+    // 食堂
+    [19.8, 24.2].forEach(y => [28, 34.6].forEach(x => d.item('table', x, y, 0, { size: [5.6, 1.4] })
+      .item('bench', x, y - 0.9, 0, { size: [5.6, 0.8] }).item('bench', x, y + 1.5, 0, { size: [5.6, 0.8] })));
+    d.item('kitchen', 28, 28.7, 180).item('stove', 33.2, 28.7, 180).item('sink', 35.4, 28.7, 180).item('fridge', 37.6, 28.6).item('fridge', 39.2, 28.6);
+    // 医務室
+    d.item('hospital_bed', 47.6, 18.8).item('hospital_bed', 47.6, 24.2).item('iv_stand', 46.6, 23.4).item('curtain', 45.4, 23.6, 0, { size: [4.4, 0.3] })
+      .item('med_cabinet', 41, 21.4, 270).item('desk', 42.2, 28.6, 180).item('chair', 43, 27.5).item('exam_bed', 41.2, 25.2, 90, { size: [1.2, 3] });
+    // 発電室
+    d.item('em_generator', 51, 0.6).item('em_generator', 56.5, 0.6).item('dist_board', 50.05, 4.4, 270).item('control_panel', 50.05, 7.6, 270)
+      .item('drum', 60.6, 4.4).item('drum', 60.6, 5.8).item('drum', 60.6, 7.2).item('ind_tank', 58.6, 9.6).item('extinguisher', 54.6, 12.2);
+    // 換気・浄水室
+    d.item('vent_unit', 55, 17.3).item('vent_unit', 57.4, 17.3).item('duct', 55, 19.6, 0, { size: [6, 0.8] })
+      .item('big_tank', 56.4, 24.4).item('pump', 50.4, 27.8).item('pump', 52.8, 27.8).item('valve', 54.8, 28.4).item('pipe', 50.2, 25.4, 0, { size: [5.6, 0.4] });
+    // 機械区画通路・非常口
+    d.item('alarm', 61.2, 13.1).item('ladder', 68.4, 13.5).item('flashlight', 63.2, 16.8).item('cctv', 62.2, 12.2);
+    // 通路
+    d.item('extinguisher', 33.6, 13.1).item('cctv', 15.2, 16.2).item('hydrant', 44.6, 16.6, 180);
+    // 防空壕跡（GM）
+    d.item('crate', 21, 30.6, 0, { gm: true }).item('bones', 27, 31.6, 0, { gm: true }).item('candle', 29.6, 30.4, 0, { gm: true })
+      .item('stele', 30.4, 33.6, 0, { gm: true }).item('debris', 33, 30.6, 0, { gm: true, size: [3, 4] });
+
+    // 地上：林の中の柵で囲った空き地。入口棟の階段・非常口のハッチ・換気塔・アンテナは地下の部屋の真上
+    const o = makeFloor(OUTSIDE);
+    o.room(T('入口棟', 'Entrance hut', '입구동'), 'industrial', 0, 9, 8, 12, { lx: 0.6, ly: 3.4 })
+      .room(T('林道', 'Forest road', '임도'), 'dirt', -12, 3, 4, 6, { hideLabel: true })
+      .room(T('構内の道', 'Access road', '구내 도로'), 'dirt', -8, 3, 16, 6, { lx: -2.4, ly: 1.4 })
+      .room(T('点検路', 'Service path', '점검로'), 'dirt', 8, 6, 46, 2, { hideLabel: true })
+      .room(T('点検路', 'Service path', '점검로'), 'dirt', 52, 8, 2, 13, { hideLabel: true });
+    fillYard(o, -12, -4, 72, 37, T('空き地', 'Clearing', '공터'));
+    o.wall(-8, -1, 62, -1, 'fence').wall(-8, -1, -8, 3, 'fence').wall(-8, 9, -8, 34, 'fence')
+      .wall(62, -1, 62, 34, 'fence').wall(-8, 34, 62, 34, 'fence');
+    o.dh(4, 9, 2, -1, 0, 'steel')               // 入口棟の扉
+      .dv(-8, 3, 6, 1, 0, 'gate');               // 柵の門
+    o.item('stairs', 0.6, 11, 0, { size: [2.4, 8] }).item('shed', 10, 10.4).item('streetlight', 8.4, 3.4).item('cone', 6.6, 7.6)
+      .item('antenna', 19, 3.6).item('vent', 56, 4.4).item('vent_unit', 54, 22).item('vent_unit', 57, 22)
+      .item('hatch', 68, 14).item('bush', 66, 11.4).item('bush', 70.2, 16.6).item('bush', 66.2, 16.8)
+      .item('pit', 33.6, 31.2, 0, { gm: true, label: T('旧防空壕の口', 'Old tunnel mouth', '옛 방공호 입구') })
+      .item('bush', 31.2, 30.6).item('bush', 36.4, 30.2).item('rock', 28.6, 31.8)
+      .item('tree', 26, 12).item('tree', 40, 12).item('tree', 42, 25).item('tree', 18, 26).item('bush', 12, 30).item('bush', 46, 18).item('bush', 4, 27);
+    // 柵の外は林
+    [-12, -6, 0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66].forEach((x, i) => o.item('tree', x + (i % 2) * 0.8, -4).item('tree', x + ((i + 1) % 2) * 0.8, 34));
+    [10, 16, 22, 28].forEach(y => o.item('tree', -11.6, y));
+    [0, 6, 20, 26, 31].forEach((y, i) => o.item('tree', 63 + (i % 2) * 5, y));
+    o.item('tree', 68.4, 9.4).item('tree', 63.4, 13.6).item('tree', 68.6, 19.2);
+    o.text(T('関係者以外立入禁止', 'Authorized personnel only', '관계자 외 출입금지'), -2.4, 1.2, { size: 0.5, bold: true });
+    return [d.f, o.f];
+  }
+
+  /* ---------- 軍事基地／地下司令部（1F 基地・B1 司令部） ---------- */
+  // 外柵と正門・衛兵所。北に格納庫（ヘリ）・車両区画・本部棟、南にヘリポート・武器庫・兵舎。
+  // 本部棟の階段とEVで地下司令部へ。保安ゲートの先の通路に通信室・司令官室・司令室・居住区・発電室
+
+  // 本部棟と地下司令部で共通の階段・EVの位置
+  const BASE_STAIRS = [74.5, 2.5], BASE_EV = [80.2, 2.2];
+
+  function militaryBase() {
+    const g = makeFloor('1F');
+    // 建物
+    g.room(T('格納庫', 'Hangar', '격납고'), 'industrial', 2, 2, 30, 28, { ly: 12 })
+      .room(T('車両区画', 'Vehicle bay', '차량 구역'), 'garage', 34, 2, 28, 22, { ly: 8.6 })
+      .room(N.office, 'office', 64, 2, 10, 11, { ly: 2.4 })
+      .room(N.stairs, 'hall', 74, 2, 6, 11, { hideLabel: true })
+      .room(N.evHall, 'hall', 80, 2, 4, 11, { hideLabel: true })
+      .room(T('会議室', 'Meeting room', '회의실'), 'office', 84, 2, 10, 11, { ly: 3 })
+      .room(T('当直室', 'Duty office', '당직실'), 'office', 64, 13, 8, 11, { ly: -1.4 })
+      .room(T('本部棟 玄関', 'HQ lobby', '본부동 현관'), 'hall', 72, 13, 14, 11, { ly: 2.4 })
+      .room(N.toilet, 'wet', 86, 13, 4, 11, { hideLabel: true })
+      .room(N.storeroom, 'storage', 90, 13, 4, 11, { hideLabel: true })
+      .room(T('受け渡し口', 'Issue counter', '불출구'), 'industrial', 46, 40, 12, 4)
+      .room(T('武器庫', 'Armory', '무기고'), 'industrial', 46, 44, 12, 8, { ly: -1.4 })
+      .room(T('衛兵所', 'Guard post', '위병소'), 'office', 38, 58, 6, 6, { ly: -1.6 })
+      .room(T('居室1', 'Squad room 1', '거실1'), 'bedroom', 64, 36, 12, 11, { ly: 1.6 })
+      .room(T('居室2', 'Squad room 2', '거실2'), 'bedroom', 76, 36, 12, 11, { ly: 1.6 })
+      .room(T('班長室', 'Sergeant\'s room', '반장실'), 'bedroom', 88, 36, 6, 11, { ly: 2.4 })
+      .room(T('兵舎 廊下', 'Barracks hall', '병사 복도'), 'hall', 64, 47, 30, 4, { hideLabel: true })
+      .room(T('娯楽室', 'Day room', '오락실'), 'living', 64, 51, 12, 11, { ly: -0.6 })
+      .room(T('洗面・浴室', 'Washroom', '세면·욕실'), 'wet', 76, 51, 8, 11, { ly: -0.4 })
+      .room(N.toilet, 'wet', 84, 51, 4, 11, { hideLabel: true })
+      .room(N.storeroom, 'storage', 88, 51, 6, 11, { ly: 2.6 })
+      // 屋外
+      .room(T('ヘリポート', 'Helipad', '헬리포트'), 'porch', 4, 36, 22, 22, { ly: 8.6 })
+      .room(T('道路', 'Road', '도로'), 'road', 0, 64, 96, 6, { lx: 20 });
+    fillYard(g, 0, 0, 96, 64, T('構内', 'Base grounds', '기지 구내'), 'road');
+    // 外柵と正門
+    g.wall(0, 0, 96, 0, 'fence').wall(0, 0, 0, 64, 'fence').wall(96, 0, 96, 64, 'fence')
+      .wall(0, 64, 30, 64, 'fence').wall(44, 64, 96, 64, 'fence');
+    g.dh(30, 64, 4, -1, 0, 'gate').dh(34, 64, 4, -1, 1, 'gate')         // 正門
+      .dv(38, 58.75, 1.5, -1, 0)                // 衛兵所
+      .dh(4, 30, 24, 1, 0, 'shutter')           // 格納庫の大扉
+      .dv(32, 27, 1.5, 1, 1)                    // 格納庫の通用口
+      .dh(35.5, 24, 8, 1, 0, 'shutter').dh(44.5, 24, 8, 1, 0, 'shutter').dh(53.5, 24, 8, 1, 0, 'shutter')
+      .dv(34, 20, 1.5, -1, 0)                   // 車両区画の通用口
+      .dh(77.5, 24, 3, 1, 0, 'door2')           // 本部棟の玄関
+      .dh(72.25, 13, 1.5, -1, 0)                // 事務室
+      .dh(75, 13, 4, 1, 0, 'open').dh(80.5, 13, 3, 1, 0, 'open')
+      .dh(84.25, 13, 1.5, -1, 1)                // 会議室
+      .dh(91.25, 13, 1.5, 1, 0)                 // 倉庫（会議室から）
+      .dv(72, 20, 1.5, -1, 1)                   // 当直室
+      .dv(86, 21.5, 1.5, 1, 1)                  // トイレ
+      .dh(51.25, 40, 1.5, -1, 0, 'steel')       // 武器庫
+      .dh(51, 44, 2, 1, 0, 'gate')              // 武器庫の格子扉
+      .dv(64, 47.5, 3, -1, 0, 'door2')          // 兵舎の入口
+      .dv(94, 48.25, 1.5, 1, 0)                 // 兵舎の裏口
+      .dh(74, 47, 1.5, -1, 1).dh(78, 47, 1.5, -1, 0).dh(89, 47, 1.5, -1, 0)
+      .dh(74, 51, 1.5, 1, 1).dh(80, 51, 1.5, 1, 0).dh(84.25, 51, 1.5, 1, 0).dh(91, 51, 1.5, 1, 0)
+      .wh(66, 2, 3).wh(86, 2, 3).wh(90, 2, 3).wv(94, 6, 3).wh(66, 24, 3).wv(64, 17, 3)
+      .wh(73, 24, 3).wh(82.5, 24, 3).wh(87, 24, 1.5)
+      .wh(66, 36, 3).wh(71, 36, 3).wh(78, 36, 3).wh(83, 36, 3).wh(89.5, 36, 3)
+      .wh(66, 62, 3).wh(71, 62, 3).wh(79, 62, 2).wh(90, 62, 2).wv(94, 40, 3).wv(94, 55, 3)
+      .wv(38, 61, 2).wh(40, 58, 2).wv(44, 60, 2)
+      .wv(2, 10, 3).wv(2, 18, 3).wh(10, 2, 4).wh(20, 2, 4);
+    // 格納庫：ヘリコプターと整備用品
+    g.item('helicopter', 6, 4).item('tool_shelf', 2.05, 6, 270).item('tool_shelf', 2.05, 14, 270).item('tool_shelf', 2.05, 22, 270)
+      .item('workbench', 30.3, 6, 90).item('drum', 29.6, 2.3).item('drum', 30.8, 2.3).item('generator', 3, 26.6).item('cone', 29, 26.4).item('tools', 30.4, 11);
+    // 車両区画：戦車1両とトラック2台
+    g.item('tank_mil', 36, 3.4).item('truck', 46, 3).item('truck', 54.5, 3)
+      .item('tool_shelf', 34.05, 4, 270).item('drum', 34.3, 16.4).item('drum', 34.3, 17.8).item('workbench', 60.3, 4, 90).item('tools', 52.2, 20);
+    // 本部棟
+    g.item('stairs_u', ...BASE_STAIRS, 0, { size: [5, 9] }).item('elevator', ...BASE_EV, 0, { size: [3.6, 4] }).item('card_reader', 83.5, 6.4, 90)
+      .item('office_desk', 65, 4, 180).item('office_desk', 65, 5.4).item('office_desk', 67.6, 4, 180).item('office_desk', 67.6, 5.4)
+      .item('filing', 72.8, 2.2).item('copier', 64.2, 11.6).item('whiteboard', 73.55, 6.6, 90)
+      .item('meeting6', 86.6, 5).item('whiteboard', 84.05, 5, 270).item('banner', 92.6, 2.1, 0, { size: [1.4, 0.4] })
+      .item('desk', 64.2, 14, 270).item('chair', 65.5, 14.7, 90).item('radio', 64.2, 16.8, 270).item('bed_single', 64.2, 19.6, 90).item('locker', 65.4, 23, 180, { size: [3, 0.9] })
+      .item('reception', 81, 16, 90, { size: [4, 1.2] }).item('chair', 82.4, 17.4, 90).item('bench', 72.1, 15.4, 90, { size: [3.6, 0.9] }).item('plant', 72.3, 22.6).item('cctv', 85.3, 23.3)
+      .item('toilet', 86.5, 13.2).item('toilet', 88.5, 13.2).wall(88, 13, 88, 15.4, 'thin').item('washbasin', 88.9, 19, 90)
+      .item('supply_shelf', 93, 15.6, 90).item('supply_shelf', 93, 19, 90);
+    // 武器庫：受け渡しカウンターと鉄格子の奥の銃架
+    g.item('counter', 46.4, 41.2, 0, { size: [3.6, 1.2] }).item('chair', 47.6, 42.6, 180).item('cctv', 57.2, 40.2)
+      .item('gun_rack', 46.05, 45, 270).item('gun_rack', 46.05, 48.4, 270).item('gun_rack', 57.15, 45, 90).item('gun_rack', 57.15, 48.4, 90)
+      .item('gun_rack', 47.5, 51.15, 180).item('gun_rack', 51, 51.15, 180).item('gun_rack', 54.5, 51.15, 180)
+      .item('crate', 49.6, 48.4).item('crate', 51.4, 48.4).item('safe', 55.2, 41)
+      .item('sandbags', 46.6, 38.4).item('sandbags', 53.6, 38.4);
+    // 衛兵所と正門
+    g.item('desk', 38.2, 60.6, 270).item('chair', 39.6, 61.2, 90).item('radio', 41.8, 58.2).item('locker', 43, 60.6, 90, { size: [3, 1] })
+      .item('barricade', 30.4, 55).item('barricade', 34.6, 52.4).item('sandbags', 25.6, 62.4).item('streetlight', 24.2, 62.8);
+    // 兵舎
+    [64.4, 66.8, 69.2, 71.6, 76.4, 78.8, 81.2, 83.6].forEach(x => g.item('bunk_bed', x, 36.2));
+    g.item('locker', 64.4, 45.8, 180).item('locker', 67.6, 45.8, 180).item('locker', 79.6, 45.8, 180).item('locker', 82.8, 45.8, 180)
+      .item('bed_single', 91.8, 36.2).item('desk', 88.2, 36.4, 270).item('locker', 88.2, 43, 270, { size: [2.4, 0.9] })
+      .item('tv', 64.05, 53, 270).item('sofa3', 66.4, 52.4, 270).item('dining4', 69.6, 56.6).item('vending', 74.6, 56, 90).item('table', 70, 52.6, 0, { size: [2.4, 1.4] })
+      .item('shower', 76.2, 60.1).item('shower', 78.1, 60.1).item('shower', 80, 60.1).item('shower', 81.9, 60.1)
+      .item('washbasin', 76, 53, 270).item('washbasin', 76, 55, 270).item('washer', 82.6, 51.2)
+      .item('toilet', 84.5, 60.2, 180).item('toilet', 86.5, 60.2, 180).wall(86, 59.6, 86, 62, 'thin')
+      .item('supply_shelf', 88.2, 58.6, 270).item('supply_shelf', 93, 58.6, 90).item('crate', 90.2, 59.8)
+      .item('extinguisher', 93.2, 47.2);
+    // 屋外：ヘリポート・燃料・照明
+    g.text('H', 15, 47, { size: 7, bold: true })
+      .item('big_tank', 4.2, 58.8).item('big_tank', 10, 58.8).item('drum', 15.6, 61.6).item('drum', 17, 61.6).item('sandbags', 15.4, 59.4)
+      .item('streetlight', 30.4, 31).item('streetlight', 62.6, 31).item('streetlight', 44, 54).item('streetlight', 94.4, 26)
+      .item('suv', 87, 25.4).item('antenna', 61.8, 26.2).item('cone', 27.6, 34.2).item('cone', 27.6, 57.2);
+
+    // 地下司令部（本部棟の真下）
+    const d = makeFloor('B1');
+    d.room(T('通信室', 'Comms room', '통신실'), 'office', 56, 2, 16, 11, { ly: 2.6 })
+      .room(T('保安ゲート', 'Security gate', '보안 게이트'), 'hall', 72, 2, 16, 11, { lx: 4.6, ly: 1.8 })
+      .room(T('司令官室', 'Commander\'s office', '사령관실'), 'office', 88, 2, 10, 11, { ly: 2.6 })
+      .room(T('回収物保管庫', 'Recovered-object vault', '회수물 보관고'), 'danger', 98, 2, 8, 11, { gm: true, plName: '', note: T('作戦中に回収した「それ」を保管する。記録の上では存在しない部屋', 'Holds "it", recovered during an operation. On paper the room does not exist.', '작전 중 회수한 "그것"을 보관한다. 기록상으로는 존재하지 않는 방') })
+      .room(N.corridor, 'hall', 56, 13, 42, 4, { hideLabel: true })
+      .room(T('発電・換気室', 'Generator & air plant', '발전·환기실'), 'garage', 56, 17, 8, 10, { lx: 1, ly: -1 })
+      .room(T('作戦会議室', 'Briefing room', '작전 회의실'), 'office', 56, 27, 8, 10, { ly: 3.2 })
+      .room(T('司令室', 'Command room', '사령실'), 'tech', 64, 17, 24, 16, { lx: -7.6, ly: -6 })
+      .room(T('居住区', 'Quarters', '거주구'), 'bedroom', 88, 17, 10, 12, { lx: -1.6, ly: 1.4 })
+      .room(T('トイレ・シャワー', 'WC & showers', '화장실·샤워'), 'wet', 88, 29, 10, 8, { ly: -0.6 });
+    d.dh(81, 13, 2, 1, 0, 'steel')              // 保安ゲート → 通路
+      .dh(69, 13, 1.5, -1, 1)                   // 通信室
+      .dh(89, 13, 1.5, -1, 0)                   // 司令官室
+      .dv(98, 8, 1.5, 1, 0, 'secret')           // 回収物保管庫（本棚のあいだ）
+      .dh(60.5, 17, 1.5, 1, 1, 'steel')         // 発電・換気室
+      .dv(64, 31.5, 1.5, -1, 1)                 // 作戦会議室（司令室から）
+      .dh(74.5, 17, 3, 1, 0, 'door2')           // 司令室
+      .dh(89, 17, 1.5, 1, 0)                    // 居住区
+      .dh(95, 29, 1.5, 1, 1);                   // トイレ・シャワー
+    // 通信室
+    d.item('radio', 56.4, 2.2).item('radio', 58.6, 2.2).item('radio', 60.8, 2.2).item('console', 63.4, 2.2)
+      .item('chair', 56.9, 3.4, 180).item('chair', 59.1, 3.4, 180).item('chair', 61.3, 3.4, 180).item('chair', 64.7, 3.8, 180)
+      .item('rack', 70.4, 2.2).item('rack', 70.4, 4.4).item('table', 58, 8, 0, { size: [3.4, 1.6] }).item('chair', 59.2, 9.8, 180).item('filing', 56.2, 11.6);
+    // 保安ゲート（階段・EVを降りたところ）
+    d.item('stairs_u', ...BASE_STAIRS, 0, { size: [5, 9] }).item('elevator', ...BASE_EV, 0, { size: [3.6, 4] })
+      .item('reception', 85.6, 3, 90, { size: [4, 1.2] }).item('chair', 84.4, 3.6, 270).item('card_reader', 83.3, 12.6)
+      .item('locker', 85, 12, 180).item('cctv', 72.2, 2.2).item('npc_soldier', 81.2, 9.8, 0, { gm: true });
+    // 司令官室
+    d.item('armchair', 92.2, 2.3).item('desk', 91.4, 4.3, 180, { size: [3.4, 1.4] }).item('bookshelf', 97.15, 4.8, 90).item('bookshelf', 97.15, 9.7, 90).item('safe', 96.6, 2.4)
+      .item('sofa2', 88.2, 7.6, 270).item('lowtable', 90.2, 8.2, 90).item('banner', 88.2, 2.1, 0, { size: [1.6, 0.4] });
+    // 回収物保管庫（GM）
+    d.item('cage', 101.6, 2.4, 0, { gm: true }).item('tank', 98.6, 9.6, 0, { gm: true, size: [2, 2] }).item('cursed_item', 99.4, 3.4, 0, { gm: true })
+      .item('chains', 104.8, 6, 90, { gm: true }).item('filing', 104.8, 11.6, 0, { gm: true }).item('black_stain', 101.4, 8.6, 0, { gm: true });
+    // 発電・換気室
+    d.item('em_generator', 56.2, 18.2, 90).item('vent_unit', 59, 24.6).item('dist_board', 63.35, 19.4, 90).item('drum', 61.6, 24.8).item('drum', 62.8, 23.4);
+    // 作戦会議室
+    d.item('meeting6', 57.6, 29.6, 90).item('monitor_wall', 56.05, 28.6, 270, { size: [5, 0.6] }).item('chair', 62.2, 28.4, 90);
+    // 司令室：中央に作戦卓、南の壁にモニター、操作卓は2列でモニターを向く
+    d.item('ops_table', 73.5, 19.2).item('desk', 83, 18, 0, { size: [3.6, 1.2] }).item('chair', 84.3, 19.3, 180);
+    [66, 70, 74, 78, 82].forEach(x => d.item('console', x, 25).item('chair', x + 1.3, 23.8));
+    [68, 72, 76, 80].forEach(x => d.item('console', x, 28.6).item('chair', x + 1.3, 27.4));
+    [67, 73, 79].forEach(x => d.item('monitor_wall', x, 32.35, 180));
+    // 居住区・トイレ
+    [17.4, 19.8, 22.2, 24.6].forEach(y => d.item('bunk_bed', 93.8, y, 90));
+    d.item('locker', 88.05, 20.4, 270).item('locker', 88.05, 24, 270).item('table', 90, 26.6, 0, { size: [2.4, 1.4] })
+      .item('toilet', 88.5, 35.2, 180).item('toilet', 90.5, 35.2, 180).wall(90, 34.6, 90, 37, 'thin').wall(92, 34.6, 92, 37, 'thin')
+      .item('shower', 92.4, 35.1).item('shower', 94.3, 35.1).item('washbasin', 88, 30.2, 270).item('washbasin', 96.9, 31, 90);
+    d.item('cctv', 56.2, 16.2).item('alarm', 71.4, 13.1).item('extinguisher', 87.2, 13.1);
+    return [d.f, g.f];
+  }
 
   const TEMPLATES = [
     { id: '1ldk', build: oneLDK, group: 'home', tags: ['modern', 'residential', 'indoor'],
@@ -2861,6 +3466,18 @@
     /* (T3 歴史・宗教・商業 の登録はここ) */
 
     /* (T4 研究・文化・軍事 の登録はここ) */
+    { id: 'lab', build: lab, group: 'medical', tags: ['modern', 'research', 'medical', 'underground', 'hidden', 'danger'],
+      name: T('研究所／秘密研究施設', 'Research institute / secret lab', '연구소／비밀 연구 시설'),
+      desc: T('1Fは受付・監視室・サーバー室・倉庫、2Fは実験室・細胞培養室・試料保管室・飼育室・所長室。カードキーのEVで降りる地下には前室・エアロックと除染シャワー・ガラス張りの隔離室・培養ポットの標本室と地下設備室、封印扉の奥にGM用の封鎖区画', 'Reception, monitoring room, server room and storage on 1F; labs, cell culture, sample store, animal room and director\'s office on 2F. A key-card elevator leads down to a checkpoint, airlock with decon shower, glass-fronted isolation cells, a specimen room of pods and the plant room, with a GM-only sealed section behind a sealed door.', '1층 접수·감시실·서버실·창고, 2층 실험실·세포 배양실·시료 보관실·사육실·소장실. 카드키 EV로 내려가는 지하에 전실·에어록과 제염 샤워·유리벽 격리실·배양 포드 표본실과 지하 설비실, 봉인문 너머 GM 전용 봉쇄 구역') },
+    { id: 'museum', build: museum, group: 'public', tags: ['modern', 'public', 'leisure', 'underground', 'hidden', 'large'],
+      name: T('博物館／美術館', 'Museum / art gallery', '박물관／미술관'),
+      desc: T('1Fはエントランスと恐竜の骨格の自然史展示室・石棺の考古展示室、警備室・学芸員室と搬入口。2Fは企画展示室・美術展示室・カフェ・修復室。B1は燻蒸室と収蔵庫、封印扉の奥にGM用の特別収蔵庫', 'Entrance hall, a natural history gallery with a dinosaur skeleton and an archaeology gallery with a sarcophagus, security room, curators\' office and loading bay on 1F; special exhibition, fine art gallery, café and conservation studio on 2F; fumigation room and storage vaults in B1, with a GM-only special vault behind a sealed door.', '1층 엔트런스와 공룡 골격의 자연사 전시실·석관의 고고 전시실, 경비실·학예사실과 반입구. 2층 기획 전시실·미술 전시실·카페·수복실. B1 훈증실과 수장고, 봉인문 너머 GM 전용 특별 수장고') },
+    { id: 'military', build: militaryBase, group: 'military', tags: ['modern', 'military', 'outdoor', 'underground', 'large', 'hidden'],
+      name: T('軍事基地／地下司令部', 'Military base / underground command', '군사 기지／지하 사령부'),
+      desc: T('外柵と正門・衛兵所、ヘリコプターの格納庫、戦車とトラックの車両区画、本部棟、ヘリポート、格子扉の奥の武器庫、兵舎。本部棟の階段とEVで地下司令部へ降りると、保安ゲート・通信室・作戦卓とモニター壁の司令室・作戦会議室・居住区・発電室。司令官室の本棚のあいだの隠し扉からGM用の回収物保管庫', 'Perimeter fence, main gate and guard post, a helicopter hangar, a vehicle bay with a tank and trucks, HQ building, helipad, an armory behind a grille gate and barracks. Stairs and an elevator in the HQ lead down to the underground command: security gate, comms room, command room with an ops table and monitor wall, briefing room, quarters and generator room, plus a GM-only vault through a hidden door between the commander\'s bookcases.', '외곽 울타리와 정문·위병소, 헬기 격납고, 전차와 트럭의 차량 구역, 본부동, 헬리포트, 격자문 안쪽의 무기고, 병사. 본부동 계단과 EV로 지하 사령부에 내려가면 보안 게이트·통신실·작전 테이블과 모니터 벽의 사령실·작전 회의실·거주구·발전실. 사령관실 책장 사이의 비밀문 너머에 GM 전용 회수물 보관고') },
+    { id: 'shelter', build: shelter, group: 'military', tags: ['modern', 'military', 'underground', 'outdoor', 'hidden'],
+      name: T('地下シェルター／防空壕', 'Underground shelter', '지하 셸터／방공호'),
+      desc: T('地上の入口棟から階段で降り、防爆扉と除染室を抜けて隔壁の中へ。通信室・二段ベッドの居住区・食堂・備蓄庫・医務室、隔壁の先に発電室と換気・浄水室、はしごで地上のハッチへ出る非常口。備蓄庫の棚の裏にGM用の古い防空壕跡', 'Down the stairs from the entrance hut, through the blast door and decon room into the bulkheaded shelter: comms room, bunk-bed quarters, mess, supply store and infirmary; generator and air/water plant past another bulkhead, and an emergency exit with a ladder up to a hatch. A GM-only wartime tunnel behind the supply shelves.', '지상 입구동에서 계단으로 내려가 방폭문과 제염실을 지나 격벽 안으로. 통신실·2층 침대 거주구·식당·비축고·의무실, 격벽 너머 발전실과 환기·정수실, 사다리로 지상 해치에 나가는 비상구. 비축고 선반 뒤에 GM 전용 옛 방공호') },
 
   ];
 
@@ -3135,6 +3752,34 @@
     /* (T3 の手がかりはここ) */
 
     /* (T4 の手がかりはここ) */
+    lab: [
+      C('1F', '監視室', 'file_folder', T('存在しないB1のカメラ記録', 'Camera log for a B1 that "doesn\'t exist"', '존재하지 않는 B1의 카메라 기록')),
+      C('2F', '所長室', 'key', T('B1のカードキー', 'Key card marked B1', 'B1 카드키')),
+      C('2F', '飼育室', 'memo', T('数の合わない飼育記録', 'Animal log that doesn\'t add up', '수가 맞지 않는 사육 기록')),
+      C('B1', '制御室', 'recorder', T('最後の録音', 'The last recording', '마지막 녹음')),
+      C('B1', '標本室', 'photo', T('被験者の顔写真', 'Photos of the test subjects', '피험자 얼굴 사진'))
+    ],
+    museum: [
+      C('1F', '警備室', 'file_folder', T('閉館後の入館記録', 'After-hours entry log', '폐관 후 출입 기록')),
+      C('1F', '学芸員室', 'diary', T('学芸員の研究ノート', 'A curator\'s research notes', '학예사의 연구 노트')),
+      C('2F', '企画展示室', 'memo', T('寄贈者不明の展示札', 'Exhibit label: donor unknown', '기증자 불명의 전시 라벨')),
+      C('2F', '館長室', 'key', T('特別収蔵庫の鍵', 'Key to the special vault', '특별 수장고 열쇠')),
+      C('B1', '収蔵庫2（考古・自然史）', 'photo', T('台帳と違う収蔵品の写真', 'Photo that doesn\'t match the register', '대장과 다른 수장품 사진'))
+    ],
+    shelter: [
+      C('B1', '通信室', 'recorder', T('途切れた最後の交信', 'The last transmission, cut off', '끊긴 마지막 교신')),
+      C('B1', '居住区', 'diary', T('避難者の日記', 'An evacuee\'s diary', '피난자의 일기')),
+      C('B1', '備蓄庫', 'memo', T('合わない在庫表', 'Inventory that doesn\'t add up', '맞지 않는 재고표')),
+      C('B1', '医務室', 'pills', T('鎮静剤の空き瓶', 'Empty sedative bottle', '빈 진정제 병')),
+      C('B1', '発電室', 'key', T('非常口の鍵', 'Emergency exit key', '비상구 열쇠'))
+    ],
+    military: [
+      C('1F', '当直室', 'file_folder', T('書き換えられた当直日誌', 'Altered duty log', '고쳐 쓴 당직 일지')),
+      C('1F', '武器庫', 'casings', T('数の合わない弾薬', 'Ammunition count is off', '수가 맞지 않는 탄약')),
+      C('1F', '居室1', 'photo', T('隊員の家族写真と走り書き', 'A soldier\'s family photo and scrawl', '대원의 가족사진과 낙서')),
+      C('B1', '通信室', 'recorder', T('暗号化された最後の通信', 'The last encrypted transmission', '암호화된 마지막 통신')),
+      C('B1', '司令官室', 'key', T('保管庫のカードキー', 'Vault key card', '보관고 카드키'))
+    ],
 
   };
 
