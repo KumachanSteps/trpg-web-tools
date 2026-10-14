@@ -2109,6 +2109,1279 @@
   /* ---------- PACK A: 構造・損傷 / 設備・インフラ / オフィス・商業の追加 ---------- */
 
   /* (PACK A の描画関数はここ) */
+  /* PACK A の関数名は pa で始める（同じファイルのほかのパックと名前がぶつからないように） */
+
+  // 家具の地色が半透明のテーマ（ブループリント）なら、そのテーマを返す（壁を消した所に背景色を使うため）
+  function paSeeThrough(S) {
+    if (!/^rgba/.test(String(S.fill))) return null;
+    return Object.values((global.IMM && global.IMM.THEMES) || {}).find(t => t.wall === S.wall && t.bg && t.bg !== 'transparent') || null;
+  }
+
+  // 壁を消した所・ヒビの芯の色：家具の地色（半透明のテーマでは背景色）
+  function paGap(S) {
+    const th = paSeeThrough(S);
+    return th ? th.bg : S.fill;
+  }
+
+  // いまのパスを床の色で塗る（半透明のテーマは背景色に床の薄い色を重ねる）
+  function paFillGap(c, S) {
+    const th = paSeeThrough(S);
+    c.fillStyle = th ? th.bg : S.fill;
+    c.fill();
+    if (th && th.defaultFill) {
+      c.fillStyle = th.defaultFill;
+      c.fill();
+    }
+  }
+
+  // 壁に重ねる素材は、ライブラリのカード（item に t がない）でだけ下に壁を描いて見本にする
+  function paWallSample(c, S, w, h, item) {
+    if (item && item.t) return;
+    c.fillStyle = S.wall;
+    c.fillRect(0, h / 2 - 0.16, w, 0.32);
+  }
+
+  function paPath(c, pts) {
+    c.beginPath();
+    pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+  }
+
+  // ヒビ：床の上は濃い線。壁の帯（m から ±0.18）の中だけ濃い縁取りに明るい芯を通す（暗い壁の上でも見える）
+  function paCrack(c, S, pts, m, k = 1) {
+    c.save();
+    c.lineJoin = 'miter';
+    c.strokeStyle = S.line;
+    paPath(c, pts);
+    c.lineWidth = S.lw * 1.1 * k;
+    c.stroke();
+    const xs = pts.map(p => p[0]);
+    c.beginPath();
+    c.rect(Math.min(...xs) - 1, m - 0.18, Math.max(...xs) - Math.min(...xs) + 2, 0.36);
+    c.clip();
+    paPath(c, pts);
+    c.lineWidth = S.lw * 2.2 * k;
+    c.stroke();
+    c.strokeStyle = paGap(S);
+    c.lineWidth = S.lw * 0.9 * k;
+    c.stroke();
+    c.restore();
+  }
+
+  // 細いヒビ（壁ぎわの床・しっくい）
+  function paHair(c, S, pts) {
+    c.save();
+    c.strokeStyle = S.line;
+    c.lineWidth = S.lw * 0.7;
+    paPath(c, pts);
+    c.stroke();
+    c.restore();
+  }
+
+  // 瓦礫のかけら1つ
+  function paChunk(c, S, x, y, r, rnd, fill) {
+    c.beginPath();
+    const k = 4 + Math.floor(rnd() * 3);
+    for (let j = 0; j < k; j++) {
+      const a = (j / k) * TAU + rnd() * 0.6;
+      const d = r * (0.6 + rnd() * 0.5);
+      if (j === 0) c.moveTo(x + Math.cos(a) * d, y + Math.sin(a) * d);
+      else c.lineTo(x + Math.cos(a) * d, y + Math.sin(a) * d);
+    }
+    c.closePath();
+    c.fillStyle = fill;
+    c.fill();
+    c.stroke();
+  }
+
+  // 瓦礫：壁の線（y = m）の近くほど多く大きく散らす
+  function paRubble(c, S, x0, x1, m, spread, n, seed, size = 1) {
+    const rnd = rand(seed);
+    c.save();
+    thin(c, S);
+    for (let i = 0; i < n; i++) {
+      const x = x0 + rnd() * (x1 - x0);
+      const dy = (rnd() + rnd() - 1) * spread;
+      const r = (0.05 + rnd() * 0.12) * size * (1 - (Math.abs(dy) / spread) * 0.5);
+      paChunk(c, S, x, m + dy, r, rnd, i % 5 === 0 ? S.wall : i % 2 ? S.dark : S.soft);
+    }
+    c.restore();
+  }
+
+  // 床のグレーチング（鉄骨の踊り場など）：細い格子
+  function paGrid(c, S, x, y, w, h, step = 0.25) {
+    c.save();
+    c.beginPath();
+    c.rect(x, y, w, h);
+    c.clip();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.45);
+    c.beginPath();
+    for (let u = x + step; u < x + w - 1e-6; u += step) { c.moveTo(u, y); c.lineTo(u, y + h); }
+    for (let v = y + step; v < y + h - 1e-6; v += step) { c.moveTo(x, v); c.lineTo(x + w, v); }
+    c.stroke();
+    c.restore();
+  }
+
+  // 手すり：細い線に四角い支柱を等間隔に
+  function paRail(c, S, x1, y1, x2, y2, step = 1.5) {
+    c.save();
+    c.lineWidth = S.lw * 0.9;
+    line(c, x1, y1, x2, y2);
+    const n = Math.max(1, Math.round(Math.hypot(x2 - x1, y2 - y1) / step));
+    const s = 0.14;
+    c.fillStyle = S.line;
+    for (let i = 0; i <= n; i++) {
+      const x = x1 + ((x2 - x1) * i) / n, y = y1 + ((y2 - y1) * i) / n;
+      c.fillRect(x - s / 2, y - s / 2, s, s);
+    }
+    c.restore();
+  }
+
+  // 上り方向の矢印（最初の点が上り口の丸、最後の点が矢じり）。既存の階段と同じ形
+  function paUpArrow(c, S, pts) {
+    c.save();
+    normal(c, S);
+    c.strokeStyle = S.accentLine;
+    paPath(c, pts);
+    c.stroke();
+    const [x1, y1] = pts[pts.length - 2], [x2, y2] = pts[pts.length - 1];
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    c.beginPath();
+    c.moveTo(x2 + Math.cos(a + 2.55) * 0.54, y2 + Math.sin(a + 2.55) * 0.54);
+    c.lineTo(x2, y2);
+    c.lineTo(x2 + Math.cos(a - 2.55) * 0.54, y2 + Math.sin(a - 2.55) * 0.54);
+    c.stroke();
+    c.beginPath();
+    c.arc(pts[0][0], pts[0][1], 0.1, 0, TAU);
+    c.fillStyle = S.accentLine;
+    c.fill();
+    c.restore();
+  }
+
+  // ファン：丸いグリルと4枚の羽根、中心の軸
+  function paFan(c, S, cx, cy, r) {
+    circle(c, S, cx, cy, r, S.fill);
+    c.save();
+    thin(c, S, 0.7);
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * TAU + 0.4;
+      c.beginPath();
+      c.ellipse(cx + Math.cos(a) * r * 0.48, cy + Math.sin(a) * r * 0.48, r * 0.42, r * 0.2, a + 0.5, 0, TAU);
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+    }
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.5);
+    circle(c, S, cx, cy, r * 0.72, false);
+    line(c, cx - r, cy, cx + r, cy);
+    line(c, cx, cy - r, cx, cy + r);
+    c.restore();
+    circle(c, S, cx, cy, r * 0.17, S.dark);
+  }
+
+  // 計器：丸い文字盤と目盛り、針
+  function paMeter(c, S, cx, cy, r) {
+    circle(c, S, cx, cy, r, S.fill);
+    c.save();
+    thin(c, S, 0.6);
+    c.beginPath();
+    c.arc(cx, cy, r * 0.68, Math.PI * 1.1, Math.PI * 1.9);
+    c.stroke();
+    c.lineWidth = S.lw * 0.9;
+    line(c, cx, cy, cx + r * 0.5, cy - r * 0.55);
+    c.restore();
+  }
+
+  // 稲妻の印（電気）
+  function paBolt(c, S, cx, cy, s, fill) {
+    c.beginPath();
+    c.moveTo(cx + s * 0.2, cy - s);
+    c.lineTo(cx - s * 0.5, cy + s * 0.15);
+    c.lineTo(cx - s * 0.02, cy + s * 0.15);
+    c.lineTo(cx - s * 0.22, cy + s);
+    c.lineTo(cx + s * 0.5, cy - s * 0.18);
+    c.lineTo(cx + s * 0.02, cy - s * 0.18);
+    c.closePath();
+    c.fillStyle = fill || S.yellow;
+    c.fill();
+    c.stroke();
+  }
+
+  // 炎の印
+  function paFlame(c, S, cx, cy, s) {
+    c.beginPath();
+    c.moveTo(cx, cy - s);
+    c.bezierCurveTo(cx + s * 0.75, cy - s * 0.2, cx + s * 0.6, cy + s * 0.75, cx, cy + s * 0.75);
+    c.bezierCurveTo(cx - s * 0.6, cy + s * 0.75, cx - s * 0.75, cy - s * 0.2, cx, cy - s);
+    c.closePath();
+    c.fillStyle = S.flame;
+    c.fill();
+    c.stroke();
+  }
+
+  // 鉄格子のふた（グレーチング）：暗い穴の上に、短い向きに渡した明るい鉄の棒
+  function paGrate(c, S, x, y, w, h) {
+    box(c, S, x, y, w, h, 0.02, S.dark);
+    c.save();
+    c.beginPath();
+    c.rect(x, y, w, h);
+    c.clip();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.9);
+    const along = w >= h;
+    const len = along ? w : h;
+    for (let u = 0.1; u < len - 0.05; u += 0.11) {
+      if (along) line(c, x + u, y + 0.04, x + u, y + h - 0.04);
+      else line(c, x + 0.04, y + u, x + w - 0.04, y + u);
+    }
+    c.restore();
+    rr(c, x, y, w, h, 0.02);
+    c.stroke();
+  }
+
+  /* ---- 構造・損傷 ---- */
+
+  function paCrackWall(c, S, w, h, item) {
+    // ヒビの入った壁（壁の線に重ねる）：壁に沿って走るヒビと、壁を横切って床へ伸びるヒビ
+    paWallSample(c, S, w, h, item);
+    const m = h / 2, X = f => w * f;
+    paCrack(c, S, [[X(0.05), m - 0.01], [X(0.15), m + 0.05], [X(0.26), m - 0.03], [X(0.35), m + 0.02], [X(0.47), m - 0.05], [X(0.58), m + 0.03], [X(0.7), m - 0.02], [X(0.81), m + 0.05], [X(0.94), m]], m);
+    paCrack(c, S, [[X(0.3), m - 0.34], [X(0.33), m - 0.16], [X(0.29), m + 0.02], [X(0.34), m + 0.2], [X(0.31), m + 0.34]], m);
+    paCrack(c, S, [[X(0.67), m - 0.3], [X(0.63), m - 0.1], [X(0.68), m + 0.08], [X(0.64), m + 0.31]], m, 0.85);
+    paHair(c, S, [[X(0.33), m - 0.16], [X(0.4), m - 0.25], [X(0.45), m - 0.33]]);
+    paHair(c, S, [[X(0.34), m + 0.2], [X(0.24), m + 0.27], [X(0.2), m + 0.35]]);
+    paHair(c, S, [[X(0.68), m + 0.08], [X(0.75), m + 0.2], [X(0.8), m + 0.3]]);
+    paHair(c, S, [[X(0.63), m - 0.1], [X(0.55), m - 0.22]]);
+    // はがれ落ちたかけら
+    const rnd = rand(41);
+    thin(c, S);
+    [[0.17, -0.3], [0.49, 0.3], [0.87, -0.27], [0.76, 0.33]].forEach(([fx, dy]) => paChunk(c, S, X(fx), m + dy, 0.05, rnd, S.dark));
+    normal(c, S);
+  }
+
+  function paCollapseWall(c, S, w, h, item) {
+    // 崩れた壁（壁の線に重ねる）：壁がなくなった所を床の色で塗り、両側に瓦礫が崩れ落ちる
+    paWallSample(c, S, w, h, item);
+    const m = h / 2, a = Math.min(0.5, w * 0.16), b = w - a, end = 0.22;
+    const rnd = rand(61);
+    // 抜けた所：両端は壁の厚み（外壁まで）を切るギザギザ、真ん中は少しふくらむ
+    const k = 10, e = 5;
+    const half = i => end + 0.12 * Math.sin((Math.PI * i) / k) + rnd() * 0.03;
+    c.beginPath();
+    for (let i = 0; i <= k; i++) {
+      const x = a + 0.1 + ((b - a - 0.2) * i) / k, y = m - half(i);
+      if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+    }
+    for (let j = 1; j < e; j++) c.lineTo(b - (j % 2 ? 0.22 : 0) - rnd() * 0.08, m - end + (end * 2 * j) / e);
+    for (let i = k; i >= 0; i--) c.lineTo(a + 0.1 + ((b - a - 0.2) * i) / k, m + half(i));
+    for (let j = e - 1; j > 0; j--) c.lineTo(a + (j % 2 ? 0.22 : 0) + rnd() * 0.08, m - end + (end * 2 * j) / e);
+    c.closePath();
+    paFillGap(c, S);
+    paRubble(c, S, a - 0.1, b + 0.1, m, h / 2 - 0.12, Math.round(w * 9), 71, 1.1);
+  }
+
+  function paWallHole(c, S, w, h, item) {
+    // 壁の穴（壁の線に重ねる）：突き破った小さな穴と、まわりのかけら
+    paWallSample(c, S, w, h, item);
+    const cx = w / 2, m = h / 2, rnd = rand(83);
+    const k = 14;
+    c.beginPath();
+    for (let i = 0; i < k; i++) {
+      const a = (i / k) * TAU;
+      const f = 0.76 + rnd() * 0.3;
+      const px = cx + Math.cos(a) * w * 0.26 * f, py = m + Math.sin(a) * 0.25 * f;
+      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.closePath();
+    paFillGap(c, S);
+    // 穴の縁から壁に沿って走る短いヒビ
+    paCrack(c, S, [[cx + w * 0.22, m + 0.02], [cx + w * 0.3, m - 0.04], [cx + w * 0.37, m + 0.03], [cx + w * 0.44, m - 0.02]], m, 0.8);
+    paCrack(c, S, [[cx - w * 0.22, m - 0.02], [cx - w * 0.29, m + 0.04], [cx - w * 0.36, m - 0.01]], m, 0.8);
+    paRubble(c, S, cx - w * 0.3, cx + w * 0.3, m, h / 2 - 0.08, 11, 97, 0.9);
+  }
+
+  function paFireEscape(c, S, w, h) {
+    // 非常階段（屋外の鉄骨）：上が建物側の階の踊り場、奥に折り返しの踊り場（どちらもグレーチング）、外周に手すり
+    const L1 = 1.5, L2 = 1.4, mid = w / 2;
+    box(c, S, 0, 0, w, h, 0);
+    paGrid(c, S, 0, 0, w, L1);
+    paGrid(c, S, 0, h - L2, w, L2);
+    thin(c, S);
+    line(c, 0, L1, w, L1);
+    line(c, 0, h - L2, w, h - L2);
+    const n = Math.max(2, Math.round((h - L1 - L2) / 0.5));
+    for (let i = 1; i < n; i++) {
+      const y = L1 + ((h - L1 - L2) / n) * i;
+      line(c, 0.2, y, mid - 0.08, y);
+      line(c, mid + 0.08, y, w - 0.2, y);
+    }
+    normal(c, S);
+    // 2本の階段の間の手すり
+    rr(c, mid - 0.08, L1, 0.16, h - L1 - L2, 0);
+    c.stroke();
+    // 外周の手すり（建物側を除く3辺）
+    paRail(c, S, 0.12, 0.1, 0.12, h - 0.12);
+    paRail(c, S, w - 0.12, 0.1, w - 0.12, h - 0.12);
+    paRail(c, S, 0.12, h - 0.12, w - 0.12, h - 0.12);
+    paUpArrow(c, S, [[mid / 2, L1 + 0.35], [mid / 2, h - L2 / 2], [mid + mid / 2, h - L2 / 2], [mid + mid / 2, L1 + 0.3]]);
+  }
+
+  function paExtStairs(c, S, w, h) {
+    // 外階段：上が建物側の踊り場（グレーチング）、両側に支柱つきの手すり
+    const L = 1.2;
+    box(c, S, 0, 0, w, h, 0);
+    paGrid(c, S, 0, 0, w, L);
+    thin(c, S);
+    line(c, 0, L, w, L);
+    const n = Math.max(2, Math.round((h - L) / 0.5));
+    for (let i = 1; i < n; i++) line(c, 0.2, L + ((h - L) / n) * i, w - 0.2, L + ((h - L) / n) * i);
+    normal(c, S);
+    paRail(c, S, 0.12, 0.1, 0.12, h - 0.1);
+    paRail(c, S, w - 0.12, 0.1, w - 0.12, h - 0.1);
+    paUpArrow(c, S, [[w / 2, h - 0.35], [w / 2, 0.4]]);
+  }
+
+  function paTempStairs(c, S, w, h) {
+    // 仮設階段：両側の単管とクランプ、すきまのある鉄の踏み板、上に足場板の踊り場
+    const L = 1;
+    box(c, S, 0.12, 0, w - 0.24, L, 0, S.wood);
+    thin(c, S);
+    for (let i = 1; i < 3; i++) line(c, 0.12 + ((w - 0.24) * i) / 3, 0.03, 0.12 + ((w - 0.24) * i) / 3, L - 0.03);
+    normal(c, S);
+    const n = Math.max(2, Math.round((h - L) / 0.5));
+    const step = (h - L) / n;
+    for (let i = 0; i < n; i++) box(c, S, 0.22, L + step * i + 0.08, w - 0.44, step - 0.16, 0.02, S.soft);
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    line(c, 0.12, 0, 0.12, h);
+    line(c, w - 0.12, 0, w - 0.12, h);
+    c.restore();
+    for (let y = 0.2; y < h; y += 1.2) {
+      circle(c, S, 0.12, y, 0.09, S.fill);
+      circle(c, S, w - 0.12, y, 0.09, S.fill);
+    }
+    paUpArrow(c, S, [[w / 2, h - 0.35], [w / 2, 0.4]]);
+  }
+
+  function paHandrail(c, S, w, h) {
+    // 手すり：2本線の手すり（壁の「手すり」と同じ）に丸い支柱
+    const m = h / 2;
+    c.save();
+    thin(c, S, 0.9);
+    line(c, 0.05, m - 0.05, w - 0.05, m - 0.05);
+    line(c, 0.05, m + 0.05, w - 0.05, m + 0.05);
+    c.restore();
+    const n = Math.max(1, Math.round((w - 0.3) / 1.2));
+    thin(c, S);
+    for (let i = 0; i <= n; i++) circle(c, S, 0.15 + ((w - 0.3) * i) / n, m, 0.085, S.dark);
+    normal(c, S);
+  }
+
+  function paFenceItem(c, S, w, h) {
+    // フェンス：金網（ひし形の網目）と四角い支柱
+    const m = h / 2, t = 0.08;
+    c.save();
+    c.beginPath();
+    c.rect(0, m - t, w, t * 2);
+    c.clip();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.5);
+    c.beginPath();
+    for (let x = -0.2; x < w + 0.2; x += 0.14) {
+      c.moveTo(x - t, m - t); c.lineTo(x + t, m + t);
+      c.moveTo(x + t, m - t); c.lineTo(x - t, m + t);
+    }
+    c.stroke();
+    c.restore();
+    thin(c, S, 0.8);
+    line(c, 0.05, m - t, w - 0.05, m - t);
+    line(c, 0.05, m + t, w - 0.05, m + t);
+    normal(c, S);
+    const n = Math.max(1, Math.round((w - 0.3) / 1));
+    c.fillStyle = S.line;
+    for (let i = 0; i <= n; i++) {
+      const x = 0.12 + ((w - 0.24) * i) / n;
+      c.fillRect(x - 0.08, m - 0.08, 0.16, 0.16);
+    }
+  }
+
+  function paGuardrail(c, S, w, h) {
+    // ガードレール：奥に支柱、手前に波形のレール、両端は巻き込む
+    const n = Math.max(2, Math.round((w - 1) / 1.6));
+    for (let i = 0; i <= n; i++) {
+      const x = 0.5 + ((w - 1) * i) / n;
+      box(c, S, x - 0.1, h * 0.12, 0.2, h * 0.42, 0.02, S.dark);
+    }
+    const y = h * 0.45, bh = h * 0.34;
+    box(c, S, 0.25, y, w - 0.5, bh, 0.04);
+    thin(c, S);
+    line(c, 0.3, y + bh * 0.36, w - 0.3, y + bh * 0.36);
+    line(c, 0.3, y + bh * 0.64, w - 0.3, y + bh * 0.64);
+    normal(c, S);
+    c.save();
+    c.lineWidth = S.lw * 1.6;
+    c.beginPath();
+    c.arc(0.25, y, bh, Math.PI / 2, Math.PI * 1.15);
+    c.stroke();
+    c.beginPath();
+    c.arc(w - 0.25, y, bh, Math.PI / 2, -Math.PI * 0.15, true);
+    c.stroke();
+    c.restore();
+  }
+
+  function paScaffold(c, S, w, h) {
+    // 足場：単管の枠と支柱（丸）、間に足場板
+    const bays = Math.max(1, Math.round((w - 0.4) / 1.8));
+    const xs = [];
+    for (let i = 0; i <= bays; i++) xs.push(0.2 + ((w - 0.4) * i) / bays);
+    const y1 = 0.2, y2 = h - 0.2;
+    const pn = 3, ph = (y2 - y1 - 0.2) / pn;
+    for (let k = 0; k < pn; k++) {
+      for (let i = 0; i < bays; i++) box(c, S, xs[i] + 0.05, y1 + 0.1 + ph * k + 0.02, xs[i + 1] - xs[i] - 0.1, ph - 0.04, 0.02, S.wood);
+    }
+    c.save();
+    c.lineWidth = S.lw * 1.7;
+    line(c, xs[0], y1, xs[bays], y1);
+    line(c, xs[0], y2, xs[bays], y2);
+    xs.forEach(x => line(c, x, y1, x, y2));
+    c.restore();
+    xs.forEach(x => {
+      circle(c, S, x, y1, 0.13, S.dark);
+      circle(c, S, x, y2, 0.13, S.dark);
+    });
+  }
+
+  function paBarricade(c, S, w, h) {
+    // 工事用バリケード：両端の脚と、しま模様の横板
+    [0.12, w - 0.42].forEach(x => box(c, S, x, 0.03, 0.3, h - 0.06, 0.04, S.soft));
+    const y = h / 2 - 0.13, bh = 0.26;
+    rr(c, 0.05, y, w - 0.1, bh, 0.04);
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.save();
+    c.clip();
+    c.fillStyle = S.line;
+    for (let x = -bh; x < w + bh; x += 0.4) {
+      c.beginPath();
+      c.moveTo(x, y + bh); c.lineTo(x + bh, y); c.lineTo(x + bh + 0.18, y); c.lineTo(x + 0.18, y + bh);
+      c.closePath();
+      c.fill();
+    }
+    c.restore();
+    rr(c, 0.05, y, w - 0.1, bh, 0.04);
+    c.stroke();
+  }
+
+  function paVent(c, S, w, h) {
+    // 換気口：枠と羽根板（ガラリ）、四隅のねじ
+    box(c, S, 0.05, 0.05, w - 0.1, h - 0.1, 0.04, S.soft);
+    box(c, S, 0.17, 0.17, w - 0.34, h - 0.34, 0.02, S.dark);
+    const n = Math.max(3, Math.round((h - 0.34) / 0.16));
+    const sh = (h - 0.34) / n;
+    thin(c, S);
+    for (let i = 0; i < n; i++) box(c, S, 0.2, 0.17 + sh * i + 0.02, w - 0.4, sh * 0.55, 0.01);
+    normal(c, S);
+    c.fillStyle = S.line;
+    [[0.11, 0.11], [w - 0.11, 0.11], [0.11, h - 0.11], [w - 0.11, h - 0.11]].forEach(([x, y]) => {
+      c.beginPath(); c.arc(x, y, 0.03, 0, TAU); c.fill();
+    });
+  }
+
+  function paDuct(c, S, w, h) {
+    // ダクト：角型の風道、つなぎ目のフランジ、一点鎖の中心線
+    box(c, S, 0, h * 0.15, w, h * 0.7, 0.03, S.soft);
+    c.save();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.6);
+    c.setLineDash([S.lw * 6, S.lw * 2, S.lw, S.lw * 2]);
+    line(c, 0.3, h / 2, w - 0.3, h / 2);
+    c.restore();
+    const n = Math.max(1, Math.round(w / 2));
+    for (let i = 0; i <= n; i++) {
+      const x = Math.min(w - 0.07, Math.max(0.07, (w / n) * i));
+      box(c, S, x - 0.07, h * 0.06, 0.14, h * 0.88, 0.02);
+    }
+  }
+
+  function paManhole(c, S, w, h) {
+    // マンホール：枠と、すべり止めの格子模様のふた、ふたを開ける穴
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+    circle(c, S, cx, cy, r * 0.97, S.soft);
+    circle(c, S, cx, cy, r * 0.8, S.fill);
+    c.save();
+    c.beginPath();
+    c.arc(cx, cy, r * 0.8, 0, TAU);
+    c.clip();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.55);
+    c.beginPath();
+    for (let k = -2 * r; k < 2 * r; k += 0.17) {
+      c.moveTo(cx + k - r, cy - r); c.lineTo(cx + k + r, cy + r);
+      c.moveTo(cx + k + r, cy - r); c.lineTo(cx + k - r, cy + r);
+    }
+    c.stroke();
+    c.restore();
+    thin(c, S);
+    circle(c, S, cx, cy, r * 0.8, false);
+    circle(c, S, cx, cy, r * 0.36, S.fill);
+    normal(c, S);
+    box(c, S, cx - r * 0.66, cy - 0.04, r * 0.2, 0.08, 0.03, S.dark);
+    box(c, S, cx + r * 0.46, cy - 0.04, r * 0.2, 0.08, 0.03, S.dark);
+  }
+
+  function paGutter(c, S, w, h) {
+    // 排水溝（U字溝）：コンクリートの縁と暗い溝、ところどころにグレーチングのふた
+    box(c, S, 0, 0, w, h, 0.02, S.soft);
+    const y = h * 0.24, ch = h * 0.52;
+    box(c, S, 0, y, w, ch, 0, S.dark);
+    const n = Math.max(1, Math.round(w / 2.4));
+    for (let i = 0; i < n; i++) {
+      const x = (w / n) * (i + 0.5) - 0.5;
+      paGrate(c, S, x, y - 0.06, 1, ch + 0.12);
+    }
+  }
+
+  function paGrating(c, S, w, h) {
+    // グレーチング：溝・ピットの上の鉄格子のふた
+    paGrate(c, S, 0, 0, w, h);
+    thin(c, S);
+    rr(c, 0.08, 0.08, w - 0.16, h - 0.16, 0.01);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function paSandbags(c, S, w, h) {
+    // 土嚢：2列に互い違いに積んだ袋（口を縛った端の線つき）
+    const rowH = h / 2;
+    const bag = (x, y, bw) => {
+      box(c, S, x + 0.02, y + 0.03, bw - 0.04, rowH - 0.06, rowH * 0.42, S.wood);
+      thin(c, S);
+      line(c, x + bw - 0.17, y + rowH * 0.25, x + bw - 0.17, y + rowH * 0.75);
+      normal(c, S);
+    };
+    const n = Math.max(1, Math.round(w));
+    const bw = w / n;
+    for (let i = 0; i < n; i++) bag(bw * i, 0, bw);
+    bag(0, rowH, bw / 2);
+    for (let i = 0; i < n - 1; i++) bag(bw / 2 + bw * i, rowH, bw);
+    bag(w - bw / 2, rowH, bw / 2);
+  }
+
+  /* ---- 設備・インフラ ---- */
+
+  function paBreaker(c, S, w, h) {
+    // ブレーカー：壁付けの箱に、大きな主スイッチと小さなスイッチの列
+    box(c, S, w * 0.04, 0, w * 0.92, h * 0.9, 0.03, S.soft);
+    box(c, S, w * 0.1, h * 0.2, w * 0.18, h * 0.52, 0.02, S.dark);
+    thin(c, S);
+    for (let i = 0; i < 4; i++) {
+      const x = w * (0.38 + i * 0.14);
+      box(c, S, x, h * 0.24, w * 0.09, h * 0.44, 0.01);
+      c.fillStyle = S.line;
+      c.fillRect(x, h * 0.24, w * 0.09, h * 0.2);
+    }
+    normal(c, S);
+  }
+
+  function paDistBoard(c, S, w, h) {
+    // 配電盤：メーター（左）とブレーカーの列、扉の合わせ目
+    box(c, S, 0, 0, w, h * 0.88, 0.03, S.soft);
+    paMeter(c, S, w * 0.17, h * 0.44, h * 0.27);
+    thin(c, S);
+    line(c, w * 0.35, h * 0.06, w * 0.35, h * 0.82);
+    const n = Math.max(3, Math.round((w * 0.56) / 0.15));
+    for (let i = 0; i < n; i++) {
+      const x = w * 0.4 + ((w * 0.56) * i) / n + 0.02;
+      box(c, S, x, h * 0.18, 0.09, h * 0.5, 0.01);
+      c.fillStyle = S.line;
+      c.fillRect(x, h * 0.18, 0.09, h * 0.22);
+    }
+    normal(c, S);
+  }
+
+  function paControlPanel(c, S, w, h) {
+    // 制御盤：計器・表示灯（赤・緑・黄）・押しボタン・小さな画面の並ぶ盤
+    box(c, S, 0, 0, w, h * 0.86, 0.04, S.soft);
+    const fh = h * 0.86;
+    paMeter(c, S, w * 0.14, fh * 0.48, fh * 0.3);
+    paMeter(c, S, w * 0.33, fh * 0.48, fh * 0.3);
+    thin(c, S);
+    [S.red, S.green, S.yellow].forEach((col, i) => circle(c, S, w * (0.5 + i * 0.08), fh * 0.3, fh * 0.1, col));
+    for (let i = 0; i < 3; i++) box(c, S, w * (0.5 + i * 0.08) - fh * 0.08, fh * 0.6, fh * 0.16, fh * 0.16, 0.01, S.dark);
+    box(c, S, w * 0.74, fh * 0.18, w * 0.2, fh * 0.42, 0.02, S.dark);
+    c.save();
+    c.strokeStyle = S.fill;
+    line(c, w * 0.76, fh * 0.48, w * 0.8, fh * 0.34);
+    line(c, w * 0.8, fh * 0.34, w * 0.85, fh * 0.44);
+    line(c, w * 0.85, fh * 0.44, w * 0.92, fh * 0.28);
+    c.restore();
+    circle(c, S, w * 0.84, fh * 0.78, fh * 0.09, S.fill);
+    line(c, w * 0.84, fh * 0.78, w * 0.84 + fh * 0.07, fh * 0.72);
+    normal(c, S);
+  }
+
+  function paServiceEntrance(c, S, w, h) {
+    // 電気の引込み口：壁を抜けてくる2本の電線管と、電力量計の箱
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    line(c, w * 0.32, 0, w * 0.32, h * 0.32);
+    line(c, w * 0.68, 0, w * 0.68, h * 0.32);
+    c.restore();
+    box(c, S, w * 0.12, h * 0.3, w * 0.76, h * 0.66, 0.04, S.soft);
+    paMeter(c, S, w * 0.4, h * 0.63, Math.min(w, h) * 0.24);
+    paBolt(c, S, w * 0.74, h * 0.63, h * 0.2);
+  }
+
+  function paCableRack(c, S, w, h) {
+    // 電線設備（ケーブルラック）：はしご形の受け台に、束ねた電線
+    c.save();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.7);
+    for (let x = 0.15; x < w - 0.05; x += 0.3) line(c, x, h * 0.1, x, h * 0.9);
+    c.restore();
+    line(c, 0, h * 0.1, w, h * 0.1);
+    line(c, 0, h * 0.9, w, h * 0.9);
+    c.save();
+    c.lineWidth = S.lw * 1.3;
+    [0.34, 0.46, 0.58, 0.7].forEach((f, k) => {
+      c.strokeStyle = k % 2 ? S.dark : S.line;
+      c.beginPath();
+      for (let x = 0; x <= w + 1e-6; x += 0.1) {
+        const y = h * f + Math.sin(x * 1.3 + k * 1.7) * h * 0.035;
+        if (x === 0) c.moveTo(x, y); else c.lineTo(x, y);
+      }
+      c.stroke();
+    });
+    c.restore();
+    thin(c, S);
+    for (let x = 0.75; x < w - 0.3; x += 1.5) box(c, S, x - 0.04, h * 0.27, 0.08, h * 0.5, 0.02, S.fill);
+    normal(c, S);
+  }
+
+  function paPipe(c, S, w, h) {
+    // パイプ：管と継手、両端のフランジ
+    const r = h * 0.35;
+    box(c, S, 0.05, h / 2 - r, w - 0.1, r * 2, r, S.soft);
+    c.save();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.55);
+    line(c, 0.2, h / 2 - r * 0.4, w - 0.2, h / 2 - r * 0.4);
+    c.restore();
+    const n = Math.max(1, Math.round(w / 2));
+    for (let i = 0; i <= n; i++) {
+      const x = Math.min(w - 0.07, Math.max(0.07, (w / n) * i));
+      box(c, S, x - 0.07, h * 0.06, 0.14, h * 0.88, 0.02);
+    }
+  }
+
+  function paPipeBig(c, S, w, h) {
+    // 太い工業用パイプ：下の架台、ボルト留めのフランジ、筒の陰影線
+    const sn = Math.max(1, Math.round(w / 4));
+    for (let i = 0; i < sn; i++) {
+      const x = (w / sn) * (i + 0.5);
+      box(c, S, x - 0.3, 0, 0.6, h, 0.02, S.dark);
+    }
+    const r = h * 0.36;
+    box(c, S, 0, h / 2 - r, w, r * 2, r * 0.5, S.soft);
+    c.save();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.6);
+    line(c, 0.3, h / 2 - r * 0.55, w - 0.3, h / 2 - r * 0.55);
+    line(c, 0.3, h / 2 + r * 0.62, w - 0.3, h / 2 + r * 0.62);
+    c.restore();
+    const fl = [0.13];
+    for (let i = 1; i < sn; i++) fl.push((w / sn) * i);
+    fl.push(w - 0.13);
+    fl.forEach(x => {
+      box(c, S, x - 0.12, h * 0.05, 0.24, h * 0.9, 0.03, S.fill);
+      c.fillStyle = S.line;
+      [0.2, 0.5, 0.8].forEach(f => { c.beginPath(); c.arc(x, h * (0.05 + 0.9 * f), 0.035, 0, TAU); c.fill(); });
+    });
+  }
+
+  function paWaterPipe(c, S, w, h) {
+    // 水道管：水色の管、受け口の継手、流れの向きの印
+    const r = h * 0.32;
+    box(c, S, 0, h / 2 - r, w, r * 2, r, S.water);
+    const n = Math.max(1, Math.round(w / 2));
+    for (let i = 1; i < n; i++) box(c, S, (w / n) * i - 0.06, h * 0.08, 0.2, h * 0.84, 0.04, S.water);
+    thin(c, S, 0.9);
+    for (let i = 0; i < n; i++) {
+      const x = (w / n) * (i + 0.5);
+      c.beginPath();
+      c.moveTo(x - 0.1, h / 2 - r * 0.6);
+      c.lineTo(x + 0.08, h / 2);
+      c.lineTo(x - 0.1, h / 2 + r * 0.6);
+      c.stroke();
+    }
+    normal(c, S);
+  }
+
+  function paValve(c, S, w, h) {
+    // バルブ：管の途中の弁と、上から見たハンドル（輪と4本のスポーク）
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+    box(c, S, 0, cy - r * 0.2, w, r * 0.4, 0.02, S.soft);
+    box(c, S, r * 0.12, cy - r * 0.36, r * 0.16, r * 0.72, 0.02);
+    box(c, S, w - r * 0.28, cy - r * 0.36, r * 0.16, r * 0.72, 0.02);
+    circle(c, S, cx, cy, r * 0.42, S.soft);
+    thin(c, S);
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * TAU + Math.PI / 4;
+      line(c, cx + Math.cos(a) * r * 0.16, cy + Math.sin(a) * r * 0.16, cx + Math.cos(a) * r * 0.82, cy + Math.sin(a) * r * 0.82);
+    }
+    c.lineWidth = S.lw * 1.6;
+    circle(c, S, cx, cy, r * 0.82, false);
+    normal(c, S);
+    circle(c, S, cx, cy, r * 0.16, S.dark);
+  }
+
+  function paPump(c, S, w, h) {
+    // ポンプ：台座にモーター（冷却のひれ）と渦巻きのケーシング、吸込み（右）と吐出し（奥）の管
+    box(c, S, 0.02, h * 0.1, w - 0.04, h * 0.8, 0.04, S.soft);
+    box(c, S, w * 0.06, h * 0.26, w * 0.46, h * 0.48, 0.1);
+    thin(c, S);
+    for (let x = w * 0.1; x < w * 0.5; x += 0.08) line(c, x, h * 0.3, x, h * 0.7);
+    normal(c, S);
+    box(c, S, w * 0.52, h * 0.39, w * 0.07, h * 0.22, 0.02, S.dark);
+    const cx = w * 0.77, cy = h * 0.54, r = h * 0.3;
+    box(c, S, cx - 0.09, 0, 0.18, cy, 0.02, S.soft);
+    box(c, S, cx, cy - 0.09, w - cx, 0.18, 0.02, S.soft);
+    circle(c, S, cx, cy, r, S.fill);
+    thin(c, S);
+    c.beginPath();
+    for (let t = 0; t <= TAU * 0.95; t += 0.15) {
+      const rad = r * (0.2 + (0.62 * t) / TAU);
+      const px = cx + Math.cos(t) * rad, py = cy + Math.sin(t) * rad;
+      if (t === 0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.stroke();
+    normal(c, S);
+    circle(c, S, cx, cy, r * 0.14, S.dark);
+  }
+
+  function paBoiler(c, S, w, h) {
+    // ボイラー：横置きの胴（つなぎ目の線）、奥に煙突、手前にバーナー（炎）と圧力計
+    box(c, S, w * 0.06, h * 0.12, w * 0.88, h * 0.66, h * 0.3, S.soft);
+    thin(c, S);
+    [0.36, 0.52, 0.68].forEach(f => line(c, w * f, h * 0.13, w * f, h * 0.77));
+    normal(c, S);
+    circle(c, S, w * 0.8, h * 0.17, h * 0.13, S.dark);
+    circle(c, S, w * 0.8, h * 0.17, h * 0.06, S.fill);
+    paMeter(c, S, w * 0.22, h * 0.45, h * 0.11);
+    box(c, S, w * 0.36, h * 0.72, w * 0.28, h * 0.25, 0.05);
+    paFlame(c, S, w * 0.5, h * 0.85, h * 0.09);
+  }
+
+  function paBigTank(c, S, w, h) {
+    // 大型タンク：円い屋根の放射状の継ぎ目、中央の通気口、屋根の点検口、外周のらせん階段
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2;
+    const r = R * 0.86;
+    const a0 = 0.12 * Math.PI, a1 = 0.72 * Math.PI;
+    c.beginPath();
+    c.arc(cx, cy, R * 0.99, a0, a1);
+    c.arc(cx, cy, r, a1, a0, true);
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    for (let a = a0 + 0.07; a < a1; a += 0.07) line(c, cx + Math.cos(a) * r, cy + Math.sin(a) * r, cx + Math.cos(a) * R * 0.99, cy + Math.sin(a) * R * 0.99);
+    normal(c, S);
+    circle(c, S, cx, cy, r, S.soft);
+    c.save();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.6);
+    circle(c, S, cx, cy, r * 0.92, false);
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * TAU;
+      line(c, cx + Math.cos(a) * r * 0.2, cy + Math.sin(a) * r * 0.2, cx + Math.cos(a) * r * 0.92, cy + Math.sin(a) * r * 0.92);
+    }
+    c.restore();
+    circle(c, S, cx, cy, r * 0.2, S.fill);
+    circle(c, S, cx, cy, r * 0.08, S.dark);
+    circle(c, S, cx + r * 0.52, cy - r * 0.42, r * 0.12, S.fill);
+    thin(c, S);
+    circle(c, S, cx + r * 0.52, cy - r * 0.42, r * 0.06, false);
+    normal(c, S);
+  }
+
+  function paGenerator(c, S, w, h) {
+    // 非常用発電機：箱形の囲いに、ラジエーターのファン（左）、排気筒、吸気のガラリ、操作盤（稲妻の印）
+    box(c, S, 0.04, h * 0.06, w - 0.08, h * 0.88, 0.08, S.soft);
+    paFan(c, S, h * 0.52, h / 2, h * 0.34);
+    circle(c, S, w * 0.5, h * 0.3, h * 0.11, S.dark);
+    circle(c, S, w * 0.5, h * 0.3, h * 0.05, S.fill);
+    thin(c, S);
+    for (let y = h * 0.56; y < h * 0.84; y += 0.12) line(c, w * 0.4, y, w * 0.62, y);
+    normal(c, S);
+    box(c, S, w * 0.7, h * 0.22, w * 0.22, h * 0.56, 0.04);
+    paBolt(c, S, w * 0.81, h * 0.5, h * 0.18);
+  }
+
+  function paAcUnit(c, S, w, h) {
+    // 室外機：ファンの丸いグリル（左）と熱交換器のひれ（右）
+    box(c, S, 0.02, 0.04, w - 0.04, h - 0.08, 0.05, S.soft);
+    paFan(c, S, h * 0.5 + 0.1, h / 2, h * 0.38);
+    thin(c, S);
+    for (let x = w * 0.62; x < w - 0.1; x += 0.08) line(c, x, h * 0.2, x, h * 0.8);
+    normal(c, S);
+  }
+
+  function paWaterTower(c, S, w, h) {
+    // 給水塔（高架水槽）：鉄骨の架台（四隅の脚と梁）にパネル式の水槽、点検口、前にはしご
+    const m = 0.3;
+    thin(c, S);
+    rr(c, m, m, w - m * 2, h - m * 2, 0);
+    c.stroke();
+    dashed(c, S, true);
+    line(c, m, m, w - m, h - m);
+    line(c, w - m, m, m, h - m);
+    dashed(c, S, false);
+    normal(c, S);
+    [[m, m], [w - m, m], [m, h - m], [w - m, h - m]].forEach(([x, y]) => box(c, S, x - 0.15, y - 0.15, 0.3, 0.3, 0.02, S.dark));
+    const tx = 0.6, ty = 0.5, tw = w - 1.2, th = h - 1.3;
+    box(c, S, tx, ty, tw, th, 0.06, S.soft);
+    c.save();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.6);
+    for (let i = 1; i < 4; i++) {
+      line(c, tx + (tw / 4) * i, ty, tx + (tw / 4) * i, ty + th);
+      line(c, tx, ty + (th / 4) * i, tx + tw, ty + (th / 4) * i);
+    }
+    c.restore();
+    circle(c, S, tx + tw * 0.7, ty + th * 0.32, 0.3, S.fill);
+    thin(c, S);
+    circle(c, S, tx + tw * 0.7, ty + th * 0.32, 0.2, false);
+    normal(c, S);
+    const lx = w / 2;
+    line(c, lx - 0.25, ty + th, lx - 0.25, h - 0.04);
+    line(c, lx + 0.25, ty + th, lx + 0.25, h - 0.04);
+    thin(c, S);
+    for (let y = ty + th + 0.15; y < h - 0.05; y += 0.18) line(c, lx - 0.25, y, lx + 0.25, y);
+    normal(c, S);
+  }
+
+  function paVentUnit(c, S, w, h) {
+    // 換気設備（屋上のベンチレーター）：四角い台の上に、羽根が渦を巻く丸い頭
+    box(c, S, 0.08, 0.08, w - 0.16, h - 0.16, 0.08, S.soft);
+    c.fillStyle = S.line;
+    [[0.22, 0.22], [w - 0.22, 0.22], [0.22, h - 0.22], [w - 0.22, h - 0.22]].forEach(([x, y]) => {
+      c.beginPath(); c.arc(x, y, 0.04, 0, TAU); c.fill();
+    });
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) * 0.38;
+    circle(c, S, cx, cy, r, S.fill);
+    thin(c, S);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU;
+      c.beginPath();
+      c.moveTo(cx + Math.cos(a) * r * 0.24, cy + Math.sin(a) * r * 0.24);
+      c.quadraticCurveTo(cx + Math.cos(a + 0.5) * r * 0.75, cy + Math.sin(a + 0.5) * r * 0.75, cx + Math.cos(a + 0.75) * r, cy + Math.sin(a + 0.75) * r);
+      c.stroke();
+    }
+    normal(c, S);
+    circle(c, S, cx, cy, r * 0.24, S.dark);
+  }
+
+  function paAntenna(c, S, w, h) {
+    // アンテナ（パラボラ）：皿と、焦点の受信部を支える腕、手前の台座
+    box(c, S, w * 0.38, h * 0.74, w * 0.24, h * 0.22, 0.03, S.dark);
+    const cx = w / 2, cy = h * 0.42, rx = w * 0.44, ry = h * 0.36;
+    ellipse(c, S, cx, cy, rx, ry, S.soft);
+    thin(c, S);
+    ellipse(c, S, cx, cy, rx * 0.64, ry * 0.64, false);
+    ellipse(c, S, cx, cy, rx * 0.28, ry * 0.28, false);
+    normal(c, S);
+    c.save();
+    c.lineWidth = S.lw * 1.3;
+    line(c, cx, cy + ry, cx, cy + ry * 0.05);
+    c.restore();
+    box(c, S, cx - w * 0.06, cy - h * 0.07, w * 0.12, h * 0.12, 0.02, S.dark);
+  }
+
+  function paExtinguisher(c, S, w, h) {
+    // 消火器：赤い筒（上から見た円）、レバー、ホースとノズル
+    const cx = w * 0.4, cy = h * 0.45, r = Math.min(w, h) * 0.34;
+    circle(c, S, cx, cy, r, S.red);
+    box(c, S, cx - r * 0.14, cy - r * 1.05, r * 0.28, r * 0.85, 0.01, S.dark);
+    circle(c, S, cx, cy, r * 0.32, S.fill);
+    c.save();
+    c.lineWidth = S.lw * 1.3;
+    c.beginPath();
+    c.moveTo(cx + r * 0.4, cy + r * 0.1);
+    c.quadraticCurveTo(w * 0.98, h * 0.5, w * 0.82, h * 0.9);
+    c.stroke();
+    c.restore();
+    circle(c, S, w * 0.82, h * 0.9, r * 0.16, S.dark);
+  }
+
+  function paHydrant(c, S, w, h) {
+    // 消火栓（ホースの格納箱）：赤い箱に巻いたホースのリールとノズル、右に表示灯
+    box(c, S, 0.02, 0, w - 0.04, h * 0.9, 0.03, S.red);
+    const cx = w * 0.36, cy = h * 0.45, r = h * 0.36;
+    circle(c, S, cx, cy, r, S.fill);
+    thin(c, S);
+    circle(c, S, cx, cy, r * 0.62, false);
+    circle(c, S, cx, cy, r * 0.25, S.dark);
+    normal(c, S);
+    c.save();
+    c.strokeStyle = S.fill;
+    c.lineWidth = S.lw * 1.4;
+    line(c, cx + r, cy, w * 0.62, cy);
+    c.restore();
+    circle(c, S, w * 0.8, cy, h * 0.17, S.fill);
+    circle(c, S, w * 0.8, cy, h * 0.08, S.red);
+  }
+
+  function paCctv(c, S, w, h) {
+    // 防犯カメラ：壁の台座から斜め下を向いたカメラと、写す範囲（破線の扇）
+    const s = Math.min(w, h);
+    c.save();
+    c.translate(w * 0.28, h * 0.08);
+    c.rotate(0.82);
+    c.beginPath();
+    c.moveTo(s * 0.6, -s * 0.07);
+    c.lineTo(s * 0.86, -s * 0.2);
+    c.lineTo(s * 0.86, s * 0.2);
+    c.lineTo(s * 0.6, s * 0.07);
+    c.closePath();
+    c.fillStyle = S.soft;
+    c.fill();
+    thin(c, S);
+    dashed(c, S, true);
+    c.stroke();
+    dashed(c, S, false);
+    normal(c, S);
+    box(c, S, s * 0.04, -s * 0.15, s * 0.5, s * 0.3, s * 0.07);
+    box(c, S, s * 0.52, -s * 0.11, s * 0.1, s * 0.22, s * 0.02, S.dark);
+    thin(c, S);
+    line(c, s * 0.12, -s * 0.15, s * 0.12, s * 0.15);
+    normal(c, S);
+    c.restore();
+    box(c, S, w * 0.12, 0, w * 0.32, h * 0.12, 0.02, S.dark);
+  }
+
+  function paCardReader(c, S, w, h) {
+    // カードリーダー：壁の小箱、カードを通す溝、ランプ
+    box(c, S, w * 0.06, 0, w * 0.88, h * 0.82, 0.03, S.dark);
+    c.save();
+    c.strokeStyle = S.fill;
+    c.lineWidth = S.lw * 1.2;
+    line(c, w * 0.2, h * 0.44, w * 0.62, h * 0.44);
+    c.restore();
+    thin(c, S);
+    circle(c, S, w * 0.8, h * 0.42, h * 0.11, S.green);
+    normal(c, S);
+  }
+
+  function paAlarm(c, S, w, h) {
+    // 警報装置（非常ベル）：壁付けの赤いベルと、鳴っている音の弧
+    box(c, S, w * 0.25, 0, w * 0.5, h * 0.14, 0.02, S.dark);
+    const cx = w / 2, cy = h * 0.52, r = h * 0.36;
+    circle(c, S, cx, cy, r, S.red);
+    thin(c, S);
+    circle(c, S, cx, cy, r * 0.55, false);
+    circle(c, S, cx, cy, r * 0.2, S.dark);
+    [1.3, 1.75].forEach(k => {
+      c.beginPath(); c.arc(cx, cy, r * k, -0.55, 0.55); c.stroke();
+      c.beginPath(); c.arc(cx, cy, r * k, Math.PI - 0.55, Math.PI + 0.55); c.stroke();
+    });
+    normal(c, S);
+  }
+
+  function paSluice(c, S, w, h) {
+    // 水門：両岸のコンクリートの門柱、間に下りる鉄の扉（補強の筋）、開け閉めのハンドル
+    const pw = Math.min(0.8, w * 0.14);
+    c.save();
+    c.strokeStyle = S.blue;
+    thin(c, S, 0.7);
+    [h * 0.16, h * 0.84].forEach(y => {
+      const pts = [];
+      for (let x = pw + 0.1; x <= w - pw - 0.1; x += 0.05) pts.push([x, y + Math.sin(x * 7) * 0.035]);
+      paPath(c, pts);
+      c.stroke();
+    });
+    c.restore();
+    box(c, S, pw - 0.06, h * 0.38, w - pw * 2 + 0.12, h * 0.24, 0, S.dark);
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.8);
+    for (let x = pw + 0.4; x < w - pw - 0.1; x += 0.5) line(c, x, h * 0.4, x, h * 0.6);
+    c.restore();
+    [0, w - pw].forEach(x => {
+      box(c, S, x, 0, pw, h, 0.02, S.soft);
+      c.save();
+      c.beginPath();
+      c.rect(x, 0, pw, h);
+      c.clip();
+      c.strokeStyle = S.softLine;
+      thin(c, S, 0.5);
+      for (let k = -h; k < pw; k += 0.16) line(c, x + k, h, x + k + h, 0);
+      c.restore();
+    });
+    const cx = pw / 2, cy = h / 2, r = Math.min(pw, h) * 0.34;
+    circle(c, S, cx, cy, r, S.fill);
+    thin(c, S);
+    for (let i = 0; i < 3; i++) {
+      const a = (i / 3) * TAU;
+      line(c, cx, cy, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+    normal(c, S);
+    circle(c, S, cx, cy, r * 0.25, S.dark);
+  }
+
+  /* ---- オフィス・商業 ---- */
+
+  function paStoreShelf(c, S, w, h) {
+    // 商品棚（ゴンドラ）：真ん中の背板を挟んで、両側の通路に向けて商品が並ぶ
+    box(c, S, 0, 0, w, h, 0.03, S.soft);
+    const r = rand(Math.round(w * 13 + h * 7));
+    thin(c, S);
+    [0, 1].forEach(side => {
+      let x = 0.08;
+      while (x < w - 0.12) {
+        const pw = Math.min(0.16 + r() * 0.22, w - 0.08 - x);
+        const d = h * (0.26 + r() * 0.12);
+        rr(c, x, side ? h - 0.07 - d : 0.07, pw, d, 0.02);
+        c.fillStyle = S.fill;
+        c.fill();
+        c.stroke();
+        x += pw + 0.03;
+      }
+    });
+    normal(c, S);
+    line(c, 0, h / 2, w, h / 2);
+    const n = Math.max(1, Math.round(w / 1.3));
+    for (let i = 1; i < n; i++) line(c, (w / n) * i, 0, (w / n) * i, h);
+  }
+
+  function paRegister(c, S, w, h) {
+    // レジカウンター：ベルトコンベア（左）、スキャナー、レジ（画面とお金の引き出し）
+    box(c, S, 0, 0, w, h, 0.05);
+    const bx = 0.12, by = h * 0.2, bw = w * 0.42, bh = h * 0.6;
+    box(c, S, bx, by, bw, bh, 0.06, S.dark);
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.6);
+    for (let x = bx + 0.15; x < bx + bw - 0.05; x += 0.15) line(c, x, by + 0.05, x, by + bh - 0.05);
+    c.restore();
+    box(c, S, w * 0.52, h * 0.28, w * 0.1, h * 0.44, 0.02, S.water);
+    thin(c, S);
+    line(c, w * 0.52, h * 0.28, w * 0.62, h * 0.72);
+    line(c, w * 0.62, h * 0.28, w * 0.52, h * 0.72);
+    normal(c, S);
+    box(c, S, w * 0.68, h * 0.08, w * 0.26, h * 0.26, 0.03, S.dark);
+    box(c, S, w * 0.66, h * 0.42, w * 0.3, h * 0.48, 0.03, S.soft);
+    thin(c, S);
+    for (let i = 1; i < 4; i++) line(c, w * (0.66 + 0.075 * i), h * 0.42, w * (0.66 + 0.075 * i), h * 0.9);
+    line(c, w * 0.66, h * 0.66, w * 0.96, h * 0.66);
+    normal(c, S);
+  }
+
+  function paFridgeCase(c, S, w, h) {
+    // 冷蔵ショーケース：ガラス扉の並び（取っ手）越しに、冷えた商品の段が見える
+    box(c, S, 0, 0, w, h, 0.03, S.soft);
+    const iy = 0.1, ih = h - 0.32;
+    box(c, S, 0.1, iy, w - 0.2, ih, 0, S.water);
+    thin(c, S);
+    const r = rand(Math.round(w * 17));
+    [iy + 0.06, iy + ih / 2 + 0.03].forEach(y => {
+      let x = 0.16;
+      while (x < w - 0.2) {
+        const pw = Math.min(0.12 + r() * 0.12, w - 0.16 - x);
+        rr(c, x, y, pw, ih / 2 - 0.1, 0.03);
+        c.fillStyle = S.fill;
+        c.fill();
+        c.stroke();
+        x += pw + 0.05;
+      }
+    });
+    normal(c, S);
+    line(c, 0.1, h - 0.22, w - 0.1, h - 0.22);
+    const n = Math.max(1, Math.round(w / 1));
+    const dw = (w - 0.2) / n;
+    for (let i = 1; i < n; i++) line(c, 0.1 + dw * i, iy, 0.1 + dw * i, h - 0.04);
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    for (let i = 0; i < n; i++) line(c, 0.1 + dw * (i + 1) - 0.16, h - 0.12, 0.1 + dw * (i + 1) - 0.4, h - 0.12);
+    c.restore();
+  }
+
+  function paAtm(c, S, w, h) {
+    // ATM：画面・テンキー・カードの差し込み口・お札の出口
+    box(c, S, 0.04, 0, w - 0.08, h - 0.04, 0.06, S.soft);
+    box(c, S, w * 0.12, h * 0.1, w * 0.5, h * 0.4, 0.03, S.blue);
+    c.fillStyle = S.line;
+    for (let j = 0; j < 3; j++) {
+      for (let i = 0; i < 3; i++) c.fillRect(w * (0.18 + i * 0.13), h * (0.58 + j * 0.1), w * 0.08, h * 0.06);
+    }
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    line(c, w * 0.72, h * 0.22, w * 0.88, h * 0.22);
+    c.restore();
+    box(c, S, w * 0.68, h * 0.6, w * 0.24, h * 0.12, 0.02, S.dark);
+  }
+
+  function paDeskIsland(c, S, w, h) {
+    // 島型デスク（4席）：背中合わせの机2組、真ん中に低い仕切り、外側に机を向いた椅子
+    const cy = h / 2, dh = Math.min(1.4, h * 0.28), dw = w / 2 - 0.1;
+    const ch = Math.min(1.1, cy - dh + 0.15);
+    [w * 0.25, w * 0.75].forEach(cx => {
+      chair(c, S, cx - 0.45, cy - dh - ch + 0.15, 0.9, ch);
+      c.save();
+      c.translate(cx, cy + dh + ch - 0.15);
+      c.rotate(Math.PI);
+      chair(c, S, -0.45, 0, 0.9, ch);
+      c.restore();
+    });
+    [[0.1, cy - dh], [w / 2, cy - dh], [0.1, cy], [w / 2, cy]].forEach(([x, y], i) => {
+      box(c, S, x, y, dw, dh, 0.04);
+      const top = i < 2;
+      box(c, S, x + dw * 0.25, top ? y + dh - 0.32 : y + 0.18, dw * 0.5, 0.14, 0.02, S.dark);
+      thin(c, S);
+      rr(c, x + dw * 0.3, top ? y + 0.25 : y + dh - 0.43, dw * 0.4, 0.18, 0.02);
+      c.stroke();
+      normal(c, S);
+    });
+    box(c, S, 0.2, cy - 0.06, w - 0.4, 0.12, 0.03, S.dark);
+  }
+
+  function paPartition(c, S, w, h) {
+    // パーティション：パネルの列と継ぎ目の支柱、両端の脚
+    [0.06, w - 0.18].forEach(x => box(c, S, x, 0.01, 0.12, h - 0.02, 0.03, S.dark));
+    box(c, S, 0.02, h * 0.3, w - 0.04, h * 0.4, 0.03, S.soft);
+    const n = Math.max(1, Math.round(w / 1.4));
+    for (let i = 1; i < n; i++) box(c, S, (w / n) * i - 0.06, h * 0.2, 0.12, h * 0.6, 0.02, S.fill);
+  }
+
+  function paMonitorWall(c, S, w, h) {
+    // モニター壁：壁の取り付け枠に大きな画面が並ぶ（グラフ・地図・映像）
+    box(c, S, 0.08, 0.02, w - 0.16, h * 0.16, 0.02, S.dark);
+    const n = Math.max(2, Math.round(w / 1.5));
+    const sw = (w - 0.16) / n;
+    for (let i = 0; i < n; i++) {
+      const x = 0.08 + sw * i;
+      box(c, S, x + 0.03, h * 0.14, sw - 0.06, h * 0.66, 0.03, S.soft);
+      const sx = x + 0.12, sy = h * 0.24, sww = sw - 0.24, shh = h * 0.46;
+      box(c, S, sx, sy, sww, shh, 0.01, S.dark);
+      c.save();
+      c.strokeStyle = S.fill;
+      thin(c, S, 0.7);
+      if (i % 3 === 0) {
+        paPath(c, [[sx + 0.08, sy + shh * 0.75], [sx + sww * 0.3, sy + shh * 0.4], [sx + sww * 0.5, sy + shh * 0.6], [sx + sww * 0.75, sy + shh * 0.25], [sx + sww - 0.08, sy + shh * 0.45]]);
+        c.stroke();
+      } else if (i % 3 === 1) {
+        for (let k = 1; k < 4; k++) line(c, sx + (sww / 4) * k, sy + 0.04, sx + (sww / 4) * k, sy + shh - 0.04);
+        line(c, sx + 0.04, sy + shh / 2, sx + sww - 0.04, sy + shh / 2);
+      } else {
+        circle(c, S, sx + sww / 2, sy + shh / 2, shh * 0.32, false);
+        line(c, sx + sww / 2, sy + shh / 2, sx + sww / 2 + shh * 0.3, sy + shh * 0.3);
+      }
+      c.restore();
+    }
+  }
+
+  function paOpsTable(c, S, w, h) {
+    // 作戦卓：大きな卓の上に方眼の地図、等高線と川、駒と進路の矢印
+    box(c, S, 0, 0, w, h, 0.12, S.wood);
+    const x0 = 0.3, y0 = 0.3, mw = w - 0.6, mh = h - 0.6;
+    box(c, S, x0, y0, mw, mh, 0.03);
+    c.save();
+    c.beginPath();
+    c.rect(x0, y0, mw, mh);
+    c.clip();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.5);
+    for (let x = x0 + 0.5; x < x0 + mw; x += 0.5) line(c, x, y0, x, y0 + mh);
+    for (let y = y0 + 0.5; y < y0 + mh; y += 0.5) line(c, x0, y, x0 + mw, y);
+    c.strokeStyle = S.dark;
+    thin(c, S, 0.7);
+    [0.7, 0.45].forEach(k => {
+      c.beginPath();
+      c.ellipse(x0 + mw * 0.72, y0 + mh * 0.34, mw * 0.2 * k, mh * 0.24 * k, -0.4, 0, TAU);
+      c.stroke();
+    });
+    c.strokeStyle = S.blue;
+    c.lineWidth = S.lw * 1.2;
+    c.beginPath();
+    c.moveTo(x0, y0 + mh * 0.62);
+    c.bezierCurveTo(x0 + mw * 0.3, y0 + mh * 0.45, x0 + mw * 0.45, y0 + mh * 0.95, x0 + mw, y0 + mh * 0.78);
+    c.stroke();
+    c.restore();
+    const blueAt = [x0 + mw * 0.2, y0 + mh * 0.3], redAt = [x0 + mw * 0.68, y0 + mh * 0.62];
+    c.save();
+    thin(c, S, 0.9);
+    dashed(c, S, true);
+    line(c, blueAt[0] + 0.2, blueAt[1] + 0.1, redAt[0] - 0.3, redAt[1] - 0.12);
+    dashed(c, S, false);
+    c.beginPath();
+    c.moveTo(redAt[0] - 0.55, redAt[1] - 0.12); c.lineTo(redAt[0] - 0.3, redAt[1] - 0.12); c.lineTo(redAt[0] - 0.46, redAt[1] - 0.32);
+    c.stroke();
+    c.restore();
+    box(c, S, blueAt[0] - 0.14, blueAt[1] - 0.1, 0.28, 0.2, 0.02, S.blue);
+    box(c, S, blueAt[0] - 0.44, blueAt[1] + 0.3, 0.28, 0.2, 0.02, S.blue);
+    [[redAt[0], redAt[1]], [redAt[0] + 0.45, redAt[1] - 0.35]].forEach(([x, y]) => {
+      c.beginPath();
+      c.moveTo(x, y - 0.15); c.lineTo(x + 0.15, y + 0.12); c.lineTo(x - 0.15, y + 0.12);
+      c.closePath();
+      c.fillStyle = S.red;
+      c.fill();
+      c.stroke();
+    });
+  }
+
+  function paRadio(c, S, w, h) {
+    // 通信機：つまみと計器、スピーカーのついた本体、右に受話器、左上にアンテナ
+    c.save();
+    c.lineWidth = S.lw * 1.3;
+    line(c, w * 0.1, h * 0.22, w * 0.02, h * 0.03);
+    c.restore();
+    box(c, S, 0.05, h * 0.15, w * 0.72, h * 0.75, 0.06, S.soft);
+    circle(c, S, w * 0.1, h * 0.22, h * 0.05, S.dark);
+    [0.2, 0.38].forEach(f => {
+      circle(c, S, w * f, h * 0.6, h * 0.14, S.fill);
+      line(c, w * f, h * 0.6, w * f, h * 0.48);
+    });
+    box(c, S, w * 0.47, h * 0.26, w * 0.24, h * 0.24, 0.02);
+    thin(c, S);
+    line(c, w * 0.59, h * 0.48, w * 0.64, h * 0.32);
+    for (let y = h * 0.62; y < h * 0.82; y += h * 0.07) line(c, w * 0.49, y, w * 0.69, y);
+    c.beginPath();
+    c.moveTo(w * 0.77, h * 0.7);
+    for (let k = 0; k < 4; k++) c.quadraticCurveTo(w * (0.79 + k * 0.012), h * (0.8 + (k % 2 ? 0.04 : -0.04)), w * (0.8 + k * 0.012), h * 0.78);
+    c.stroke();
+    normal(c, S);
+    box(c, S, w * 0.82, h * 0.2, w * 0.1, h * 0.6, 0.04, S.dark);
+    box(c, S, w * 0.8, h * 0.1, w * 0.14, h * 0.2, 0.05, S.dark);
+    box(c, S, w * 0.8, h * 0.7, w * 0.14, h * 0.2, 0.05, S.dark);
+  }
+
+  // 小銃を横から見た形（銃口が右）。x, y は左上、L は長さ、H は銃床の高さ
+  function paRifle(c, S, x, y, L, H) {
+    const P = [[0, 0.12], [0.3, 0.3], [0.8, 0.3], [0.8, 0.38], [1, 0.38], [1, 0.5], [0.8, 0.5], [0.8, 0.58], [0.55, 0.58],
+      [0.54, 1], [0.48, 1], [0.47, 0.62], [0.41, 0.62], [0.38, 0.92], [0.33, 0.92], [0.31, 0.64], [0, 0.92]];
+    paPath(c, P.map(([u, v]) => [x + L * u, y + H * v]));
+    c.closePath();
+    c.fillStyle = S.dark;
+    c.fill();
+    c.stroke();
+  }
+
+  function paGunRack(c, S, w, h) {
+    // 銃架：壁の板と2本の腕木に、横向きの小銃を2丁かけ、南京錠で留める
+    box(c, S, 0, 0, w, h * 0.16, 0.03, S.wood);
+    [0.2, 0.8].forEach(f => box(c, S, w * f - 0.07, h * 0.1, 0.14, h * 0.86, 0.03, S.wood));
+    const L = w - 0.3, H = h * 0.34;
+    paRifle(c, S, 0.15, h * 0.2, L, H);
+    paRifle(c, S, 0.15, h * 0.58, L, H);
+    const lx = w * 0.8;
+    thin(c, S);
+    c.beginPath();
+    c.arc(lx, h * 0.8, 0.06, Math.PI, 0);
+    c.stroke();
+    normal(c, S);
+    box(c, S, lx - 0.08, h * 0.8, 0.16, 0.13, 0.02, S.yellow);
+  }
 
   /* ---------- PACK B: 鉄道 / 道路・車両 / 船舶 / 医療・文化施設の追加 ---------- */
 
@@ -2327,58 +3600,58 @@
     A('hay', 'fantasy', 2, 1.4, hay, { ja: '干し草', en: 'Hay bale', ko: '건초' }),
     A('statue', 'fantasy', 1.6, 1.6, statue, { ja: '石像', en: 'Statue', ko: '석상' }),
     /* ===== PACK A: 構造・損傷 / 設備・インフラ / オフィス・商業の追加 ===== */
-    A('crack_wall', 'structure', 3, 0.8, todo('ヒビ'), { ja: 'ヒビの入った壁（重ねる）', en: 'Cracked wall (overlay)', ko: '금 간 벽(겹치기)' }, { overWall: true, tags: ['damaged', 'ruins'] }),
-    A('collapse_wall', 'structure', 3, 1.6, todo('崩落'), { ja: '崩れた壁（重ねる）', en: 'Collapsed wall (overlay)', ko: '무너진 벽(겹치기)' }, { overWall: true, tags: ['damaged', 'ruins', 'danger'] }),
-    A('wall_hole', 'structure', 2, 1, todo('穴'), { ja: '壁の穴（重ねる）', en: 'Hole in wall (overlay)', ko: '벽 구멍(겹치기)' }, { overWall: true, tags: ['damaged', 'ruins'] }),
-    A('fire_escape', 'structure', 5, 6, todo('非常'), { ja: '非常階段（屋外の鉄骨）', en: 'Fire escape stairs', ko: '비상계단(옥외 철골)' }, { vertical: true, tags: ['outdoor'] }),
-    A('ext_stairs', 'structure', 2.4, 6, todo('外階段'), { ja: '外階段', en: 'Outdoor stairs', ko: '외부 계단' }, { vertical: true, tags: ['outdoor'] }),
-    A('temp_stairs', 'structure', 2, 5, todo('仮設'), { ja: '仮設階段', en: 'Temporary stairs', ko: '가설 계단' }, { vertical: true, tags: ['industrial'] }),
-    A('handrail', 'structure', 4, 0.3, todo('手すり'), { ja: '手すり', en: 'Handrail', ko: '난간' }),
-    A('fence_item', 'structure', 4, 0.3, todo('柵'), { ja: 'フェンス', en: 'Fence', ko: '펜스' }, { tags: ['outdoor'] }),
-    A('guardrail', 'structure', 6, 0.6, todo('GR'), { ja: 'ガードレール', en: 'Guardrail', ko: '가드레일' }, { tags: ['outdoor', 'transport'] }),
-    A('scaffold', 'structure', 6, 2, todo('足場'), { ja: '足場', en: 'Scaffolding', ko: '비계' }, { tags: ['industrial', 'danger'] }),
-    A('barricade', 'structure', 3, 0.7, todo('柵'), { ja: '工事用バリケード', en: 'Construction barricade', ko: '공사용 바리케이드' }, { tags: ['industrial'] }),
-    A('vent', 'structure', 1, 1, todo('換'), { ja: '換気口', en: 'Air vent', ko: '환기구' }),
-    A('duct', 'structure', 6, 1, todo('ダクト'), { ja: 'ダクト', en: 'Duct', ko: '덕트' }, { tags: ['industrial'] }),
-    A('manhole', 'structure', 1.4, 1.4, todo('MH'), { ja: 'マンホール', en: 'Manhole', ko: '맨홀' }, { under: true, tags: ['outdoor', 'underground'] }),
-    A('gutter', 'structure', 6, 0.6, todo('溝'), { ja: '排水溝', en: 'Drainage ditch', ko: '배수로' }, { under: true, tags: ['outdoor'] }),
-    A('grating', 'structure', 2, 1, todo('格子'), { ja: 'グレーチング', en: 'Grating', ko: '그레이팅' }, { under: true, tags: ['outdoor'] }),
-    A('sandbags', 'structure', 4, 1.2, todo('土嚢'), { ja: '土嚢', en: 'Sandbags', ko: '모래주머니' }, { tags: ['military', 'outdoor'] }),
+    A('crack_wall', 'structure', 3, 0.8, paCrackWall, { ja: 'ヒビの入った壁（重ねる）', en: 'Cracked wall (overlay)', ko: '금 간 벽(겹치기)' }, { overWall: true, tags: ['damaged', 'ruins'] }),
+    A('collapse_wall', 'structure', 3, 1.6, paCollapseWall, { ja: '崩れた壁（重ねる）', en: 'Collapsed wall (overlay)', ko: '무너진 벽(겹치기)' }, { overWall: true, tags: ['damaged', 'ruins', 'danger'] }),
+    A('wall_hole', 'structure', 2, 1, paWallHole, { ja: '壁の穴（重ねる）', en: 'Hole in wall (overlay)', ko: '벽 구멍(겹치기)' }, { overWall: true, tags: ['damaged', 'ruins'] }),
+    A('fire_escape', 'structure', 5, 6, paFireEscape, { ja: '非常階段（屋外の鉄骨）', en: 'Fire escape stairs', ko: '비상계단(옥외 철골)' }, { vertical: true, tags: ['outdoor'] }),
+    A('ext_stairs', 'structure', 2.4, 6, paExtStairs, { ja: '外階段', en: 'Outdoor stairs', ko: '외부 계단' }, { vertical: true, tags: ['outdoor'] }),
+    A('temp_stairs', 'structure', 2, 5, paTempStairs, { ja: '仮設階段', en: 'Temporary stairs', ko: '가설 계단' }, { vertical: true, tags: ['industrial'] }),
+    A('handrail', 'structure', 4, 0.3, paHandrail, { ja: '手すり', en: 'Handrail', ko: '난간' }),
+    A('fence_item', 'structure', 4, 0.3, paFenceItem, { ja: 'フェンス', en: 'Fence', ko: '펜스' }, { tags: ['outdoor'] }),
+    A('guardrail', 'structure', 6, 0.6, paGuardrail, { ja: 'ガードレール', en: 'Guardrail', ko: '가드레일' }, { tags: ['outdoor', 'transport'] }),
+    A('scaffold', 'structure', 6, 2, paScaffold, { ja: '足場', en: 'Scaffolding', ko: '비계' }, { tags: ['industrial', 'danger'] }),
+    A('barricade', 'structure', 3, 0.7, paBarricade, { ja: '工事用バリケード', en: 'Construction barricade', ko: '공사용 바리케이드' }, { tags: ['industrial'] }),
+    A('vent', 'structure', 1, 1, paVent, { ja: '換気口', en: 'Air vent', ko: '환기구' }),
+    A('duct', 'structure', 6, 1, paDuct, { ja: 'ダクト', en: 'Duct', ko: '덕트' }, { tags: ['industrial'] }),
+    A('manhole', 'structure', 1.4, 1.4, paManhole, { ja: 'マンホール', en: 'Manhole', ko: '맨홀' }, { under: true, tags: ['outdoor', 'underground'] }),
+    A('gutter', 'structure', 6, 0.6, paGutter, { ja: '排水溝', en: 'Drainage ditch', ko: '배수로' }, { under: true, tags: ['outdoor'] }),
+    A('grating', 'structure', 2, 1, paGrating, { ja: 'グレーチング', en: 'Grating', ko: '그레이팅' }, { under: true, tags: ['outdoor'] }),
+    A('sandbags', 'structure', 4, 1.2, paSandbags, { ja: '土嚢', en: 'Sandbags', ko: '모래주머니' }, { tags: ['military', 'outdoor'] }),
 
-    A('breaker', 'infra', 1, 0.4, todo('B'), { ja: 'ブレーカー', en: 'Breaker box', ko: '차단기' }),
-    A('dist_board', 'infra', 2, 0.6, todo('配電'), { ja: '配電盤', en: 'Distribution board', ko: '배전반' }),
-    A('control_panel', 'infra', 2.4, 0.8, todo('制御'), { ja: '制御盤', en: 'Control panel', ko: '제어반' }),
-    A('service_entrance', 'infra', 1, 0.6, todo('引込'), { ja: '電気の引込み口', en: 'Power inlet', ko: '전기 인입구' }),
-    A('cable_rack', 'infra', 6, 0.6, todo('電線'), { ja: '電線設備（ケーブルラック）', en: 'Cable tray', ko: '전선 설비(케이블 트레이)' }),
-    A('pipe', 'infra', 6, 0.4, todo('管'), { ja: 'パイプ', en: 'Pipe', ko: '파이프' }),
-    A('pipe_big', 'infra', 8, 1.2, todo('太管'), { ja: '太い工業用パイプ', en: 'Large industrial pipe', ko: '대형 공업용 파이프' }),
-    A('water_pipe', 'infra', 6, 0.5, todo('水管'), { ja: '水道管', en: 'Water main', ko: '수도관' }),
-    A('valve', 'infra', 0.8, 0.8, todo('V'), { ja: 'バルブ', en: 'Valve', ko: '밸브' }),
-    A('pump', 'infra', 2, 1.4, todo('P'), { ja: 'ポンプ', en: 'Pump', ko: '펌프' }),
-    A('boiler', 'infra', 3, 2.4, todo('ボイラ'), { ja: 'ボイラー', en: 'Boiler', ko: '보일러' }),
-    A('big_tank', 'infra', 5, 5, todo('タンク'), { ja: '大型タンク', en: 'Large tank', ko: '대형 탱크' }),
-    A('em_generator', 'infra', 4, 2, todo('発電'), { ja: '非常用発電機', en: 'Emergency generator', ko: '비상 발전기' }),
-    A('ac_unit', 'infra', 1.8, 0.8, todo('室外'), { ja: '室外機', en: 'AC outdoor unit', ko: '실외기' }, { tags: ['outdoor', 'rooftop'] }),
-    A('water_tower', 'infra', 4, 4, todo('給水'), { ja: '給水塔（高架水槽）', en: 'Water tower', ko: '급수탑(고가 수조)' }, { tags: ['outdoor', 'rooftop'] }),
-    A('vent_unit', 'infra', 2, 2, todo('換気'), { ja: '換気設備', en: 'Ventilation unit', ko: '환기 설비' }, { tags: ['rooftop'] }),
-    A('antenna', 'infra', 2, 2, todo('ANT'), { ja: 'アンテナ', en: 'Antenna', ko: '안테나' }, { tags: ['outdoor', 'rooftop'] }),
-    A('extinguisher', 'infra', 0.6, 0.6, todo('消'), { ja: '消火器', en: 'Fire extinguisher', ko: '소화기' }),
-    A('hydrant', 'infra', 1.2, 0.4, todo('消火栓'), { ja: '消火栓', en: 'Fire hose cabinet', ko: '소화전' }),
-    A('cctv', 'infra', 0.6, 0.6, todo('CAM'), { ja: '防犯カメラ', en: 'Security camera', ko: '방범 카메라' }),
-    A('card_reader', 'infra', 0.5, 0.3, todo('ID'), { ja: 'カードリーダー', en: 'Card reader', ko: '카드 리더기' }),
-    A('alarm', 'infra', 0.6, 0.4, todo('!'), { ja: '警報装置', en: 'Alarm', ko: '경보기' }),
-    A('sluice', 'infra', 6, 1, todo('水門'), { ja: '水門', en: 'Sluice gate', ko: '수문' }, { tags: ['waterside', 'underground'] }),
+    A('breaker', 'infra', 1, 0.4, paBreaker, { ja: 'ブレーカー', en: 'Breaker box', ko: '차단기' }),
+    A('dist_board', 'infra', 2, 0.6, paDistBoard, { ja: '配電盤', en: 'Distribution board', ko: '배전반' }),
+    A('control_panel', 'infra', 2.4, 0.8, paControlPanel, { ja: '制御盤', en: 'Control panel', ko: '제어반' }),
+    A('service_entrance', 'infra', 1, 0.6, paServiceEntrance, { ja: '電気の引込み口', en: 'Power inlet', ko: '전기 인입구' }),
+    A('cable_rack', 'infra', 6, 0.6, paCableRack, { ja: '電線設備（ケーブルラック）', en: 'Cable tray', ko: '전선 설비(케이블 트레이)' }),
+    A('pipe', 'infra', 6, 0.4, paPipe, { ja: 'パイプ', en: 'Pipe', ko: '파이프' }),
+    A('pipe_big', 'infra', 8, 1.2, paPipeBig, { ja: '太い工業用パイプ', en: 'Large industrial pipe', ko: '대형 공업용 파이프' }),
+    A('water_pipe', 'infra', 6, 0.5, paWaterPipe, { ja: '水道管', en: 'Water main', ko: '수도관' }),
+    A('valve', 'infra', 0.8, 0.8, paValve, { ja: 'バルブ', en: 'Valve', ko: '밸브' }),
+    A('pump', 'infra', 2, 1.4, paPump, { ja: 'ポンプ', en: 'Pump', ko: '펌프' }),
+    A('boiler', 'infra', 3, 2.4, paBoiler, { ja: 'ボイラー', en: 'Boiler', ko: '보일러' }),
+    A('big_tank', 'infra', 5, 5, paBigTank, { ja: '大型タンク', en: 'Large tank', ko: '대형 탱크' }),
+    A('em_generator', 'infra', 4, 2, paGenerator, { ja: '非常用発電機', en: 'Emergency generator', ko: '비상 발전기' }),
+    A('ac_unit', 'infra', 1.8, 0.8, paAcUnit, { ja: '室外機', en: 'AC outdoor unit', ko: '실외기' }, { tags: ['outdoor', 'rooftop'] }),
+    A('water_tower', 'infra', 4, 4, paWaterTower, { ja: '給水塔（高架水槽）', en: 'Water tower', ko: '급수탑(고가 수조)' }, { tags: ['outdoor', 'rooftop'] }),
+    A('vent_unit', 'infra', 2, 2, paVentUnit, { ja: '換気設備', en: 'Ventilation unit', ko: '환기 설비' }, { tags: ['rooftop'] }),
+    A('antenna', 'infra', 2, 2, paAntenna, { ja: 'アンテナ', en: 'Antenna', ko: '안테나' }, { tags: ['outdoor', 'rooftop'] }),
+    A('extinguisher', 'infra', 0.6, 0.6, paExtinguisher, { ja: '消火器', en: 'Fire extinguisher', ko: '소화기' }),
+    A('hydrant', 'infra', 1.2, 0.4, paHydrant, { ja: '消火栓', en: 'Fire hose cabinet', ko: '소화전' }),
+    A('cctv', 'infra', 0.6, 0.6, paCctv, { ja: '防犯カメラ', en: 'Security camera', ko: '방범 카메라' }),
+    A('card_reader', 'infra', 0.5, 0.3, paCardReader, { ja: 'カードリーダー', en: 'Card reader', ko: '카드 리더기' }),
+    A('alarm', 'infra', 0.6, 0.4, paAlarm, { ja: '警報装置', en: 'Alarm', ko: '경보기' }),
+    A('sluice', 'infra', 6, 1, paSluice, { ja: '水門', en: 'Sluice gate', ko: '수문' }, { tags: ['waterside', 'underground'] }),
 
-    A('store_shelf', 'office', 4, 1.6, todo('商品棚'), { ja: '商品棚（ゴンドラ）', en: 'Store shelf', ko: '진열대' }, { tags: ['commercial'] }),
-    A('register', 'office', 3, 1.4, todo('レジ'), { ja: 'レジカウンター', en: 'Checkout counter', ko: '계산대' }, { tags: ['commercial'] }),
-    A('fridge_case', 'office', 4, 1.2, todo('冷蔵'), { ja: '冷蔵ショーケース', en: 'Refrigerated case', ko: '냉장 쇼케이스' }, { tags: ['commercial'] }),
-    A('atm', 'office', 1.4, 1, todo('ATM'), { ja: 'ATM', en: 'ATM', ko: 'ATM' }, { tags: ['commercial'] }),
-    A('desk_island', 'office', 5, 5, todo('島'), { ja: '島型デスク（4席）', en: 'Desk cluster (4)', ko: '섬형 책상(4석)' }),
-    A('partition', 'office', 4, 0.3, todo('仕切'), { ja: 'パーティション', en: 'Office partition', ko: '파티션' }),
-    A('monitor_wall', 'office', 6, 0.6, todo('モニタ'), { ja: 'モニター壁', en: 'Monitor wall', ko: '모니터 벽' }),
-    A('ops_table', 'office', 5, 3.6, todo('作戦'), { ja: '作戦卓', en: 'Operations table', ko: '작전 테이블' }, { tags: ['military'] }),
-    A('radio', 'office', 2, 1, todo('通信'), { ja: '通信機', en: 'Radio set', ko: '무전기' }, { tags: ['military'] }),
-    A('gun_rack', 'office', 3, 0.8, todo('銃架'), { ja: '銃架', en: 'Gun rack', ko: '총기 거치대' }, { tags: ['military'] }),
+    A('store_shelf', 'office', 4, 1.6, paStoreShelf, { ja: '商品棚（ゴンドラ）', en: 'Store shelf', ko: '진열대' }, { tags: ['commercial'] }),
+    A('register', 'office', 3, 1.4, paRegister, { ja: 'レジカウンター', en: 'Checkout counter', ko: '계산대' }, { tags: ['commercial'] }),
+    A('fridge_case', 'office', 4, 1.2, paFridgeCase, { ja: '冷蔵ショーケース', en: 'Refrigerated case', ko: '냉장 쇼케이스' }, { tags: ['commercial'] }),
+    A('atm', 'office', 1.4, 1, paAtm, { ja: 'ATM', en: 'ATM', ko: 'ATM' }, { tags: ['commercial'] }),
+    A('desk_island', 'office', 5, 5, paDeskIsland, { ja: '島型デスク（4席）', en: 'Desk cluster (4)', ko: '섬형 책상(4석)' }),
+    A('partition', 'office', 4, 0.3, paPartition, { ja: 'パーティション', en: 'Office partition', ko: '파티션' }),
+    A('monitor_wall', 'office', 6, 0.6, paMonitorWall, { ja: 'モニター壁', en: 'Monitor wall', ko: '모니터 벽' }),
+    A('ops_table', 'office', 5, 3.6, paOpsTable, { ja: '作戦卓', en: 'Operations table', ko: '작전 테이블' }, { tags: ['military'] }),
+    A('radio', 'office', 2, 1, paRadio, { ja: '通信機', en: 'Radio set', ko: '무전기' }, { tags: ['military'] }),
+    A('gun_rack', 'office', 3, 0.8, paGunRack, { ja: '銃架', en: 'Gun rack', ko: '총기 거치대' }, { tags: ['military'] }),
     /* ===== /PACK A ===== */
 
     /* ===== PACK B: 鉄道 / 道路・車両 / 船舶 / 医療・文化施設の追加 ===== */
