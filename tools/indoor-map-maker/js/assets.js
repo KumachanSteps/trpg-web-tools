@@ -2121,6 +2121,1985 @@
   /* ---------- PACK D: 探索・事件 / ホラー・オカルト / NPC・敵 ---------- */
 
   /* (PACK D の描画関数はここ) */
+  /* 共通の小道具：先細りの帯・曲線・不規則形・トゲの輪・縁取りつきの太線 */
+
+  // 中心線 pts に沿って太さ w0 → w1 に細くなる帯（触手・尾・爪・引きずり跡）。w0 に関数を渡すと点ごとの太さ
+  function taperPath(c, pts, w0, w1) {
+    const n = pts.length, L = [], R = [];
+    for (let i = 0; i < n; i++) {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      const nx = -(b[1] - a[1]) / len, ny = (b[0] - a[0]) / len;
+      const hw = (typeof w0 === 'function' ? w0(i) : w0 + (w1 - w0) * (i / (n - 1))) / 2;
+      L.push([pts[i][0] + nx * hw, pts[i][1] + ny * hw]);
+      R.push([pts[i][0] - nx * hw, pts[i][1] - ny * hw]);
+    }
+    c.beginPath();
+    L.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
+    for (let i = n - 1; i >= 0; i--) c.lineTo(R[i][0], R[i][1]);
+    c.closePath();
+  }
+
+  // 3次ベジェ曲線を n 区間の点列にする
+  function bezPts(p0, p1, p2, p3, n = 16) {
+    const out = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, u = 1 - t;
+      out.push([
+        u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0],
+        u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]
+      ]);
+    }
+    return out;
+  }
+
+  // なめらかな不規則形（染み・肉塊・穴）。seed が同じなら同じ形
+  function softBlob(c, cx, cy, rx, ry, seed, k = 10, jag = 0.3) {
+    const r = rand(seed);
+    const pts = [];
+    for (let i = 0; i < k; i++) {
+      const a = (i / k) * TAU + (r() - 0.5) * 0.3;
+      const f = 1 - jag + r() * jag;
+      pts.push([cx + Math.cos(a) * rx * f, cy + Math.sin(a) * ry * f]);
+    }
+    const mid = i => [(pts[i % k][0] + pts[(i + 1) % k][0]) / 2, (pts[i % k][1] + pts[(i + 1) % k][1]) / 2];
+    c.beginPath();
+    c.moveTo(mid(0)[0], mid(0)[1]);
+    for (let i = 1; i <= k; i++) {
+      const p = pts[i % k], m = mid(i);
+      c.quadraticCurveTo(p[0], p[1], m[0], m[1]);
+    }
+    c.closePath();
+  }
+
+  // ギザギザの輪・星形
+  function spikePath(c, cx, cy, rOut, rIn, n, rot = 0) {
+    c.beginPath();
+    for (let i = 0; i < n * 2; i++) {
+      const a = rot - Math.PI / 2 + (i / (n * 2)) * TAU;
+      const rad = i % 2 ? rIn : rOut;
+      if (i === 0) c.moveTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+      else c.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+    }
+    c.closePath();
+  }
+
+  function polyPath(c, pts) {
+    c.beginPath();
+    pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
+    c.closePath();
+  }
+
+  // 縁取りつきの太い線（紐・杖・持ち手・手足）。path() で道筋を作る
+  function cord(c, S, path, width, fill) {
+    c.save();
+    path();
+    c.lineWidth = width + S.lw * 1.5;
+    c.strokeStyle = S.line;
+    c.stroke();
+    c.lineWidth = width;
+    c.strokeStyle = fill;
+    c.stroke();
+    c.restore();
+  }
+
+  // 光の輪なしの小さなろうそく（モノクロでも読めるように）
+  function wickAt(c, S, x, y, r) {
+    circle(c, S, x, y, r, S.fill);
+    circle(c, S, x, y, r * 0.42, S.flame, true);
+  }
+
+  /* ---------- 探索・事件 ---------- */
+
+  function flashlight(c, S, w, h) {
+    // 懐中電灯：持ち手（左）と広がった頭、右へ広がる光
+    const cy = h / 2;
+    c.save();
+    c.beginPath();
+    c.moveTo(w * 0.64, cy - h * 0.2);
+    c.lineTo(w, cy - h * 0.5);
+    c.lineTo(w, cy + h * 0.5);
+    c.lineTo(w * 0.64, cy + h * 0.2);
+    c.closePath();
+    c.globalAlpha = 0.55;
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.globalAlpha = 1;
+    thin(c, S);
+    c.setLineDash([S.lw * 1.6, S.lw * 1.4]);
+    line(c, w * 0.66, cy - h * 0.22, w, cy - h * 0.5);
+    line(c, w * 0.66, cy + h * 0.22, w, cy + h * 0.5);
+    line(c, w * 0.7, cy, w, cy);
+    c.restore();
+    box(c, S, w * 0.03, cy - h * 0.16, w * 0.45, h * 0.32, h * 0.1, S.dark);
+    polyPath(c, [[w * 0.46, cy - h * 0.18], [w * 0.64, cy - h * 0.32], [w * 0.64, cy + h * 0.32], [w * 0.46, cy + h * 0.18]]);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    c.fillStyle = S.fill;
+    c.fillRect(w * 0.2, cy - h * 0.07, w * 0.1, h * 0.14);
+  }
+
+  function toolSet(c, S, w, h) {
+    // 工具：スパナとドライバー（上）、ハンマー（下）
+    const wy = h * 0.24, jr = h * 0.15;
+    box(c, S, w * 0.1, wy - h * 0.055, w * 0.34, h * 0.11, h * 0.05, S.soft);
+    c.beginPath();
+    c.arc(w * 0.09, wy, jr, Math.PI + 0.75, Math.PI - 0.75);
+    c.lineTo(w * 0.09 - jr * 0.25, wy + jr * 0.36);
+    c.lineTo(w * 0.09 - jr * 0.25, wy - jr * 0.36);
+    c.closePath();
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    circle(c, S, w * 0.46, wy, jr * 0.85, S.soft);
+    circle(c, S, w * 0.46, wy, jr * 0.38, S.fill);
+    // ドライバー
+    c.save();
+    c.lineWidth = S.lw * 1.4;
+    line(c, w * 0.76, wy, w * 0.95, wy);
+    c.restore();
+    box(c, S, w * 0.58, wy - h * 0.09, w * 0.19, h * 0.18, h * 0.07, S.red);
+    // ハンマー
+    box(c, S, w * 0.05, h * 0.64, w * 0.66, h * 0.13, h * 0.05, S.wood);
+    box(c, S, w * 0.7, h * 0.46, w * 0.13, h * 0.5, 0.02, S.dark);
+    c.save();
+    c.fillStyle = S.fill;
+    thin(c, S);
+    polyPath(c, [[w * 0.83, h * 0.5], [w * 0.92, h * 0.47], [w * 0.88, h * 0.62], [w * 0.83, h * 0.62]]);
+    c.fill();
+    c.stroke();
+    c.restore();
+  }
+
+  function bagItem(c, S, w, h) {
+    // 鞄：ファスナーのついた胴と、奥に倒れた持ち手
+    box(c, S, w * 0.04, h * 0.22, w * 0.92, h * 0.72, h * 0.22, S.wood);
+    c.save();
+    thin(c, S);
+    line(c, w * 0.14, h * 0.24, w * 0.14, h * 0.92);
+    line(c, w * 0.86, h * 0.24, w * 0.86, h * 0.92);
+    c.setLineDash([S.lw * 0.8, S.lw * 0.8]);
+    line(c, w * 0.16, h * 0.6, w * 0.84, h * 0.6);
+    c.restore();
+    box(c, S, w * 0.7, h * 0.56, w * 0.07, h * 0.12, 0.01, S.dark);
+    cord(c, S, () => {
+      c.beginPath();
+      c.moveTo(w * 0.33, h * 0.6);
+      c.bezierCurveTo(w * 0.33, h * 0.02, w * 0.67, h * 0.02, w * 0.67, h * 0.6);
+    }, h * 0.07, S.dark);
+    box(c, S, w * 0.29, h * 0.52, w * 0.08, h * 0.14, 0.01, S.soft);
+    box(c, S, w * 0.63, h * 0.52, w * 0.08, h * 0.14, 0.01, S.soft);
+  }
+
+  function wallet(c, S, w, h) {
+    // 財布：のぞくカードとステッチ、留め具
+    c.save();
+    thin(c, S);
+    c.fillStyle = S.fill;
+    c.fillRect(w * 0.14, h * 0.03, w * 0.42, h * 0.4);
+    c.strokeRect(w * 0.14, h * 0.03, w * 0.42, h * 0.4);
+    c.restore();
+    box(c, S, w * 0.04, h * 0.18, w * 0.92, h * 0.78, h * 0.14, S.dark);
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.55);
+    c.setLineDash([S.lw * 1.1, S.lw * 0.9]);
+    rr(c, w * 0.12, h * 0.31, w * 0.76, h * 0.52, h * 0.06);
+    c.stroke();
+    c.restore();
+    circle(c, S, w * 0.8, h * 0.57, h * 0.09, S.soft);
+  }
+
+  function papers(c, S, w, h) {
+    // 書類の束：ずれて重なった紙、いちばん上に文字とクリップ
+    [[0.17, 0.05, 0.03], [-0.11, -0.04, 0.01], [0.02, 0, -0.01]].forEach(([a, dx, dy], i) => {
+      c.save();
+      c.translate(w / 2 + dx * w, h / 2 + dy * h);
+      c.rotate(a);
+      box(c, S, -w * 0.36, -h * 0.42, w * 0.72, h * 0.84, 0.01, S.fill);
+      if (i === 2) {
+        thin(c, S, 0.55);
+        c.strokeStyle = S.softLine;
+        c.lineWidth = S.lw * 1.1;
+        line(c, -w * 0.2, -h * 0.25, w * 0.1, -h * 0.25);
+        thin(c, S, 0.55);
+        for (let k = 0; k < 4; k++) line(c, -w * 0.24, -h * 0.08 + k * h * 0.12, w * (k === 3 ? 0.02 : 0.24), -h * 0.08 + k * h * 0.12);
+        c.strokeStyle = S.line;
+        thin(c, S, 0.8);
+        rr(c, -w * 0.3, -h * 0.5, w * 0.08, h * 0.24, w * 0.04);
+        c.stroke();
+      }
+      c.restore();
+    });
+  }
+
+  function fileFolder(c, S, w, h) {
+    // ファイル：タブつきの背板、のぞく書類、表紙のラベル
+    polyPath(c, [[w * 0.06, h * 0.96], [w * 0.06, h * 0.1], [w * 0.1, h * 0.03], [w * 0.42, h * 0.03], [w * 0.46, h * 0.1], [w * 0.94, h * 0.1], [w * 0.94, h * 0.96]]);
+    c.fillStyle = S.wood;
+    c.fill();
+    c.stroke();
+    c.save();
+    thin(c, S);
+    box(c, S, w * 0.14, h * 0.15, w * 0.74, h * 0.5, 0, S.fill);
+    c.strokeStyle = S.softLine;
+    line(c, w * 0.24, h * 0.22, w * 0.72, h * 0.22);
+    line(c, w * 0.24, h * 0.29, w * 0.6, h * 0.29);
+    c.restore();
+    box(c, S, w * 0.06, h * 0.35, w * 0.88, h * 0.61, 0.02, S.wood);
+    c.save();
+    thin(c, S);
+    box(c, S, w * 0.22, h * 0.5, w * 0.56, h * 0.15, 0, S.fill);
+    c.restore();
+  }
+
+  function laptop(c, S, w, h) {
+    // ノートPC：奥に開いた画面、手前にキーボードとタッチパッド
+    box(c, S, w * 0.06, h * 0.03, w * 0.88, h * 0.3, 0.03, S.dark);
+    box(c, S, w * 0.11, h * 0.07, w * 0.78, h * 0.21, 0.01, S.water);
+    box(c, S, w * 0.03, h * 0.33, w * 0.94, h * 0.63, 0.05, S.soft);
+    c.save();
+    thin(c, S);
+    box(c, S, w * 0.11, h * 0.39, w * 0.78, h * 0.3, 0.01, S.fill);
+    c.strokeStyle = S.softLine;
+    for (let k = 1; k < 4; k++) line(c, w * 0.11, h * (0.39 + k * 0.075), w * 0.89, h * (0.39 + k * 0.075));
+    for (let k = 1; k < 9; k++) line(c, w * (0.11 + k * 0.0867), h * 0.39, w * (0.11 + k * 0.0867), h * 0.615);
+    c.strokeStyle = S.line;
+    box(c, S, w * 0.38, h * 0.74, w * 0.24, h * 0.17, 0.02, S.fill);
+    c.restore();
+  }
+
+  function recorder(c, S, w, h) {
+    // 録音機（カセット式）：奥の操作ボタン、スピーカー、リールの見える窓
+    c.save();
+    thin(c, S);
+    for (let k = 0; k < 4; k++) box(c, S, w * (0.46 + k * 0.12), h * 0.02, w * 0.1, h * 0.16, 0.01, k === 0 ? S.red : S.fill);
+    c.restore();
+    box(c, S, w * 0.03, h * 0.12, w * 0.94, h * 0.84, h * 0.12, S.soft);
+    c.save();
+    thin(c, S);
+    for (let k = 0; k < 4; k++) line(c, w * 0.11, h * (0.32 + k * 0.14), w * 0.36, h * (0.32 + k * 0.14));
+    box(c, S, w * 0.44, h * 0.3, w * 0.48, h * 0.5, h * 0.06, S.fill);
+    c.restore();
+    circle(c, S, w * 0.57, h * 0.55, h * 0.12, S.dark);
+    circle(c, S, w * 0.79, h * 0.55, h * 0.12, S.dark);
+  }
+
+  function cameraItem(c, S, w, h) {
+    // カメラ（レンズを上に向けて置いた形）：ファインダー、大きなレンズ、フラッシュ
+    box(c, S, w * 0.34, h * 0.02, w * 0.32, h * 0.26, 0.03, S.dark);
+    box(c, S, w * 0.03, h * 0.18, w * 0.94, h * 0.78, h * 0.12, S.dark);
+    c.save();
+    thin(c, S);
+    box(c, S, w * 0.1, h * 0.07, w * 0.15, h * 0.12, 0.02, S.soft);
+    c.restore();
+    circle(c, S, w * 0.5, h * 0.58, h * 0.32, S.soft);
+    circle(c, S, w * 0.5, h * 0.58, h * 0.2, S.water);
+    c.save();
+    thin(c, S);
+    circle(c, S, w * 0.5, h * 0.58, h * 0.09, false);
+    c.restore();
+    box(c, S, w * 0.75, h * 0.28, w * 0.15, h * 0.14, 0.02, S.fill);
+  }
+
+  function casings(c, S, w, h) {
+    // 使用済みの薬莢：散らばった小さな筒（口の側に線）
+    const sz = Math.min(w, h) / 0.8;
+    [[0.22, 0.22, 0.5], [0.6, 0.16, 2.2], [0.84, 0.4, 1.2], [0.38, 0.48, 3.0], [0.64, 0.66, 0.2], [0.2, 0.78, 2.6], [0.86, 0.84, 1.8]].forEach(([x, y, a]) => {
+      c.save();
+      c.translate(x * w, y * h);
+      c.rotate(a);
+      c.scale(sz, sz);
+      thin(c, S, 0.7 / sz);
+      box(c, S, -0.1, -0.042, 0.2, 0.084, 0.03, S.yellow);
+      c.fillStyle = S.dark;
+      c.fillRect(0.05, -0.042, 0.05, 0.084);
+      c.strokeRect(0.05, -0.042, 0.05, 0.084);
+      c.restore();
+    });
+  }
+
+  function bulletHoles(c, S, w, h) {
+    // 弾痕（壁に重ねる）：壁の線は長辺に沿って y = h/2 を通る想定。
+    // 欠けた跡・穴・放射状のヒビ。ヒビは明るい縁取りつきで、壁の上でも床の上でも見える
+    const r = rand(61);
+    const k0 = Math.min(w / 1.2, h / 0.8);
+    [[0.18, 0.46, 1], [0.42, 0.36, 0.8], [0.6, 0.58, 1.1], [0.85, 0.43, 0.9]].forEach(([x, y, k]) => {
+      const cx = x * w, cy = y * h, s = 0.1 * k * k0;
+      // 長さのそろわない細いヒビ（1本だけ長い）
+      const cracks = [];
+      const a0 = r() * TAU;
+      for (let i = 0; i < 4; i++) {
+        const a = a0 + (i / 4) * TAU + (r() - 0.5) * 0.9;
+        const len = s * (i === 0 ? 2.6 : 1.3 + r() * 0.7);
+        const kink = (r() - 0.5) * 0.5;
+        cracks.push([
+          [cx + Math.cos(a) * s * 0.7, cy + Math.sin(a) * s * 0.7],
+          [cx + Math.cos(a + kink) * len * 0.6, cy + Math.sin(a + kink) * len * 0.6],
+          [cx + Math.cos(a - kink * 0.3) * len, cy + Math.sin(a - kink * 0.3) * len]
+        ]);
+      }
+      const strokeCracks = () => cracks.forEach(p => {
+        c.beginPath();
+        p.forEach((q, j) => (j ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])));
+        c.stroke();
+      });
+      c.save();
+      c.strokeStyle = S.fill;
+      c.lineWidth = S.lw * 1.7;
+      strokeCracks();
+      c.strokeStyle = S.line;
+      c.lineWidth = S.lw * 0.6;
+      strokeCracks();
+      c.restore();
+      // 欠けた跡と穴
+      const chip = [];
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * TAU + r() * 0.4;
+        const rad = s * (0.75 + r() * 0.4);
+        chip.push([cx + Math.cos(a) * rad, cy + Math.sin(a) * rad]);
+      }
+      polyPath(c, chip);
+      c.fillStyle = S.soft;
+      c.fill();
+      c.save();
+      thin(c, S);
+      c.stroke();
+      c.restore();
+      circle(c, S, cx, cy, s * 0.45, S.line, true);
+    });
+  }
+
+  function burn(c, S, w, h) {
+    // 焼け跡：外へ舌のように伸びた煤、焦げた中心、炭のひび割れ、灰の粒
+    const cx = w / 2, cy = h / 2, k = Math.min(w / 3, h / 2.4);
+    const r = rand(74);
+    c.save();
+    softBlob(c, cx, cy, w * 0.49, h * 0.48, 71, 22, 0.42);
+    c.globalAlpha = 0.3;
+    c.fillStyle = S.dark;
+    c.fill();
+    c.globalAlpha = 1;
+    thin(c, S, 0.6);
+    c.strokeStyle = S.softLine;
+    c.stroke();
+    softBlob(c, cx + w * 0.02, cy - h * 0.02, w * 0.35, h * 0.33, 72, 15, 0.35);
+    c.globalAlpha = 0.55;
+    c.fillStyle = S.dark;
+    c.fill();
+    softBlob(c, cx - w * 0.02, cy + h * 0.02, w * 0.2, h * 0.2, 73, 11, 0.32);
+    c.globalAlpha = 0.8;
+    c.fillStyle = S.line;
+    c.fill();
+    c.globalAlpha = 1;
+    // 炭のひび（亀甲状）
+    c.strokeStyle = S.fill;
+    c.lineWidth = S.lw * 0.7;
+    const crack = pts => { c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(cx + p[0] * w, cy + p[1] * h) : c.moveTo(cx + p[0] * w, cy + p[1] * h))); c.stroke(); };
+    crack([[-0.14, -0.04], [-0.06, -0.06], [0.0, -0.13]]);
+    crack([[-0.06, -0.06], [-0.02, 0.04], [0.09, 0.05], [0.13, -0.02]]);
+    crack([[-0.02, 0.04], [-0.08, 0.12]]);
+    crack([[0.09, 0.05], [0.07, 0.14]]);
+    // 灰の粒
+    c.fillStyle = S.dark;
+    for (let i = 0; i < 14; i++) {
+      const a = r() * TAU, d = 0.36 + r() * 0.14;
+      c.beginPath();
+      c.arc(cx + Math.cos(a) * w * d, cy + Math.sin(a) * h * d, (0.03 + r() * 0.04) * k, 0, TAU);
+      c.fill();
+    }
+    c.restore();
+  }
+
+  function dragMarks(c, S, w, h) {
+    // 引きずった跡：手前（下）の血だまりから奥へ、ところどころ途切れ、薄く細くなる2本の筋
+    const r = rand(85);
+    c.save();
+    c.fillStyle = S.blood;
+    softBlob(c, w * 0.5, h * 0.9, w * 0.38, h * 0.075, 84, 11, 0.3);
+    c.fill();
+    [[0.33, [0.46, 0.5], [0.73, 0.76]], [0.66, [0.55, 0.6], [0.83, 0.85]]].forEach(([fx, g1, g2], j) => {
+      const N = 48, pts = [], wid = [];
+      for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        pts.push([w * fx + Math.sin(t * 5 + j * 2) * w * 0.045, h * (0.88 - t * 0.83)]);
+        wid.push(w * 0.16 * (1 - t * 0.6) * (0.8 + r() * 0.35));
+      }
+      // 途切れた所で分ける
+      const runs = [];
+      let cur = [];
+      pts.forEach((p, i) => {
+        const t = i / N;
+        if ((t > g1[0] && t < g1[1]) || (t > g2[0] && t < g2[1])) {
+          if (cur.length > 1) runs.push(cur);
+          cur = [];
+        } else cur.push(i);
+      });
+      if (cur.length > 1) runs.push(cur);
+      runs.forEach(run => {
+        const rp = run.map(i => pts[i]);
+        taperPath(c, rp, k => wid[run[k]]);
+        c.globalAlpha = 1 - (run[0] / N) * 0.55;
+        c.fill();
+        // 筋の中のかすれ
+        c.save();
+        c.strokeStyle = S.blood;
+        c.lineWidth = S.lw * 0.5;
+        [-0.3, 0.05, 0.32].forEach(o => {
+          c.beginPath();
+          rp.forEach((p, k) => (k ? c.lineTo(p[0] + o * wid[run[k]], p[1]) : c.moveTo(p[0] + o * wid[run[k]], p[1])));
+          c.stroke();
+        });
+        c.restore();
+      });
+    });
+    c.restore();
+  }
+
+  function fingerprint(c, S, w, h) {
+    // 指紋マーカー：黄色い三角の札に、白い丸と指紋の渦
+    polyPath(c, [[w * 0.04, h * 0.94], [w / 2, h * 0.05], [w * 0.96, h * 0.94]]);
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.stroke();
+    const cx = w / 2, cy = h * 0.66, r = Math.min(w, h) * 0.22;
+    c.save();
+    thin(c, S);
+    ellipse(c, S, cx, cy, r * 0.92, r, S.fill);
+    thin(c, S, 0.55);
+    for (let i = 1; i <= 3; i++) {
+      c.beginPath();
+      c.ellipse(cx, cy + r * 0.06, r * 0.25 * i, r * 0.28 * i, 0, Math.PI * 0.82, Math.PI * 2.18);
+      c.stroke();
+    }
+    c.beginPath();
+    c.moveTo(cx, cy + r * 0.06);
+    c.lineTo(cx, cy + r * 0.3);
+    c.stroke();
+    c.restore();
+  }
+
+  function brokenFurniture(c, S, w, h) {
+    // 壊れた家具：割れた天板（ギザギザの断面）、倒れた椅子、飛び散った木片
+    const P = pts => pts.map(([x, y]) => [x * w / 2.4, y * h / 1.6]);
+    // 天板の左右
+    polyPath(c, P([[0.06, 0.24], [0.82, 0.1], [0.92, 0.36], [0.84, 0.5], [0.98, 0.7], [0.86, 0.88], [0.96, 1.1], [0.16, 1.36]]));
+    c.fillStyle = S.wood;
+    c.fill();
+    c.stroke();
+    polyPath(c, P([[1.06, 0.26], [1.56, 0.42], [1.42, 1.5], [1.0, 1.34], [1.1, 1.14], [0.98, 0.92], [1.1, 0.72], [1.0, 0.5]]));
+    c.fill();
+    c.stroke();
+    c.save();
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    [[0.2, 0.44, 0.76, 0.32], [0.24, 0.74, 0.8, 0.66], [0.28, 1.04, 0.82, 0.98], [1.12, 0.6, 1.46, 0.72], [1.1, 1.0, 1.4, 1.12]].forEach(([a, b, d, e]) => {
+      const [p, q] = P([[a, b], [d, e]]);
+      line(c, p[0], p[1], q[0], q[1]);
+    });
+    c.restore();
+    // 倒れた椅子（横向き。前脚が突き出す）
+    c.save();
+    c.translate(w * 1.98 / 2.4, h * 0.62 / 1.6);
+    c.rotate(1.9);
+    [-1, 1].forEach(d => cord(c, S, () => {
+      c.beginPath();
+      c.moveTo(d * 0.22, 0.2);
+      c.lineTo(d * 0.25, 0.5);
+    }, 0.06, S.wood));
+    chair(c, S, -0.34, -0.36, 0.68, 0.72);
+    c.restore();
+    // 折れた脚
+    c.save();
+    c.translate(w * 1.8 / 2.4, h * 1.32 / 1.6);
+    c.rotate(-0.3);
+    box(c, S, -0.36, -0.05, 0.62, 0.1, 0.02, S.wood);
+    polyPath(c, [[0.26, -0.05], [0.36, -0.02], [0.3, 0.0], [0.38, 0.03], [0.26, 0.05]]);
+    c.fillStyle = S.wood;
+    c.fill();
+    c.stroke();
+    c.restore();
+    // 木片（割れ目のまわりと手前に）
+    c.save();
+    thin(c, S, 0.7);
+    [[1.0, 0.18, 0.4], [0.62, 0.02, 2.6], [1.62, 0.24, 1.1], [0.5, 1.48, 0.2], [1.16, 1.5, 2.2], [1.7, 1.08, 0.7], [0.3, 1.5, 1.6]].forEach(([x, y, a]) => {
+      const [p] = P([[x, y]]);
+      const len = 0.1;
+      polyPath(c, [[p[0] + Math.cos(a) * len, p[1] + Math.sin(a) * len], [p[0] + Math.cos(a + 1.7) * 0.035, p[1] + Math.sin(a + 1.7) * 0.035], [p[0] - Math.cos(a) * len, p[1] - Math.sin(a) * len]]);
+      c.fillStyle = S.wood;
+      c.fill();
+      c.stroke();
+    });
+    c.restore();
+  }
+
+  /* ---------- ホラー・オカルト ---------- */
+
+  function pod(c, S, w, h) {
+    // 培養ポット（人型）：壁側（上）に配管、ボルト留めの枠、液の中に浮かぶ人影
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    box(c, S, cx - s * 0.3, 0, s * 0.1, s * 0.2, 0.02, S.soft);
+    box(c, S, cx + s * 0.2, 0, s * 0.1, s * 0.2, 0.02, S.soft);
+    circle(c, S, cx, cy, s * 0.47, S.soft);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU + Math.PI / 8;
+      circle(c, S, cx + Math.cos(a) * s * 0.425, cy + Math.sin(a) * s * 0.425, s * 0.022, S.dark, true);
+    }
+    circle(c, S, cx, cy, s * 0.37, S.water);
+    c.save();
+    c.beginPath();
+    c.arc(cx, cy, s * 0.37, 0, TAU);
+    c.clip();
+    thin(c, S, 0.8);
+    c.strokeStyle = S.softLine;
+    line(c, cx - s * 0.05, cy - s * 0.37, cx - s * 0.025, cy - s * 0.05);
+    line(c, cx + s * 0.05, cy - s * 0.37, cx + s * 0.025, cy - s * 0.05);
+    c.strokeStyle = S.line;
+    [-1, 1].forEach(d => {
+      taperPath(c, bezPts([cx + d * s * 0.15, cy + s * 0.02], [cx + d * s * 0.22, cy + s * 0.06], [cx + d * s * 0.25, cy + s * 0.14], [cx + d * s * 0.27, cy + s * 0.24], 8), s * 0.075, s * 0.05);
+      c.fillStyle = S.dark;
+      c.fill();
+      c.stroke();
+    });
+    ellipse(c, S, cx, cy + s * 0.02, s * 0.19, s * 0.085, S.dark);
+    circle(c, S, cx, cy + s * 0.025, s * 0.075, S.dark);
+    circle(c, S, cx + s * 0.22, cy - s * 0.15, s * 0.025, false);
+    circle(c, S, cx + s * 0.16, cy - s * 0.23, s * 0.018, false);
+    circle(c, S, cx - s * 0.2, cy - s * 0.2, s * 0.02, false);
+    c.restore();
+    c.save();
+    c.strokeStyle = S.fill;
+    c.lineWidth = S.lw * 1.5;
+    c.beginPath();
+    c.arc(cx, cy, s * 0.31, Math.PI * 1.08, Math.PI * 1.38);
+    c.stroke();
+    c.restore();
+    box(c, S, cx - s * 0.11, cy + s * 0.385, s * 0.22, s * 0.075, 0.02, S.dark);
+    c.fillStyle = S.blue;
+    c.fillRect(cx - s * 0.06, cy + s * 0.405, s * 0.05, s * 0.035);
+  }
+
+  function sarcophagus(c, S, w, h) {
+    // 石棺：面取りした石の蓋に横たわる像（頭が上）、胸の前で組んだ手と剣、四隅の飾り
+    const m = Math.min(w, h) * 0.07, m2 = Math.min(w, h) * 0.17;
+    box(c, S, 0, 0, w, h, 0.06, S.soft);
+    box(c, S, m, m, w - m * 2, h - m * 2, 0.04, S.soft);
+    c.save();
+    thin(c, S);
+    rr(c, m2, m2, w - m2 * 2, h - m2 * 2, 0.03);
+    c.stroke();
+    line(c, m, m, m2, m2);
+    line(c, w - m, m, w - m2, m2);
+    line(c, m, h - m, m2, h - m2);
+    line(c, w - m, h - m, w - m2, h - m2);
+    [[m2, m2], [w - m2, m2], [m2, h - m2], [w - m2, h - m2]].forEach(([x, y]) => {
+      circle(c, S, x + (x < w / 2 ? 1 : -1) * 0.16, y + (y < h / 2 ? 1 : -1) * 0.16, 0.08, S.fill);
+    });
+    c.restore();
+    const cx = w / 2;
+    c.beginPath();
+    c.moveTo(cx - w * 0.21, h * 0.25);
+    c.quadraticCurveTo(cx - w * 0.25, h * 0.31, cx - w * 0.2, h * 0.45);
+    c.lineTo(cx - w * 0.13, h * 0.83);
+    c.quadraticCurveTo(cx, h * 0.87, cx + w * 0.13, h * 0.83);
+    c.lineTo(cx + w * 0.2, h * 0.45);
+    c.quadraticCurveTo(cx + w * 0.25, h * 0.31, cx + w * 0.21, h * 0.25);
+    c.quadraticCurveTo(cx, h * 0.21, cx - w * 0.21, h * 0.25);
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    circle(c, S, cx, h * 0.17, w * 0.11, S.fill);
+    c.save();
+    thin(c, S);
+    line(c, cx, h * 0.33, cx, h * 0.76);
+    line(c, cx - w * 0.08, h * 0.41, cx + w * 0.08, h * 0.41);
+    ellipse(c, S, cx - w * 0.045, h * 0.35, w * 0.05, h * 0.022, S.fill);
+    ellipse(c, S, cx + w * 0.045, h * 0.35, w * 0.05, h * 0.022, S.fill);
+    c.strokeStyle = S.softLine;
+    line(c, cx - w * 0.12, h * 0.5, cx - w * 0.08, h * 0.79);
+    line(c, cx + w * 0.12, h * 0.5, cx + w * 0.08, h * 0.79);
+    c.restore();
+  }
+
+  function ritualTable(c, S, w, h) {
+    // 儀式台：卓に描かれた印と中央の杯、四隅のろうそく、奥に開いた本、手前に短剣
+    const s = Math.min(w, h);
+    box(c, S, 0, 0, w, h, 0.06, S.wood);
+    const cx = w / 2, cy = h * 0.55, r = s * 0.3;
+    c.save();
+    c.strokeStyle = S.ritual;
+    circle(c, S, cx, cy, r, false);
+    thin(c, S, 0.8);
+    circle(c, S, cx, cy, r * 0.84, false);
+    for (let k = 0; k < 2; k++) {
+      c.beginPath();
+      for (let i = 0; i < 3; i++) {
+        const a = -Math.PI / 2 + k * Math.PI + (i * TAU) / 3;
+        if (i === 0) c.moveTo(cx + Math.cos(a) * r * 0.84, cy + Math.sin(a) * r * 0.84);
+        else c.lineTo(cx + Math.cos(a) * r * 0.84, cy + Math.sin(a) * r * 0.84);
+      }
+      c.closePath();
+      c.stroke();
+    }
+    c.restore();
+    circle(c, S, cx, cy, r * 0.24, S.soft);
+    circle(c, S, cx, cy, r * 0.14, S.blood, true);
+    // 本
+    c.save();
+    thin(c, S);
+    box(c, S, cx - s * 0.36, h * 0.05, s * 0.35, h * 0.17, 0.01, S.fill);
+    box(c, S, cx + s * 0.01, h * 0.05, s * 0.35, h * 0.17, 0.01, S.fill);
+    c.strokeStyle = S.softLine;
+    for (let k = 0; k < 3; k++) {
+      line(c, cx - s * 0.3, h * (0.09 + k * 0.035), cx - s * 0.06, h * (0.09 + k * 0.035));
+      line(c, cx + s * 0.06, h * (0.09 + k * 0.035), cx + s * 0.3, h * (0.09 + k * 0.035));
+    }
+    c.restore();
+    // 短剣
+    const dy = h * 0.9;
+    polyPath(c, [[cx - s * 0.08, dy - s * 0.035], [cx + s * 0.32, dy], [cx - s * 0.08, dy + s * 0.035]]);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    box(c, S, cx - s * 0.3, dy - s * 0.03, s * 0.2, s * 0.06, s * 0.02, S.dark);
+    line(c, cx - s * 0.09, dy - s * 0.07, cx - s * 0.09, dy + s * 0.07);
+    [[0.08, 0.14], [0.92, 0.14], [0.08, 0.86], [0.92, 0.86]].forEach(([x, y]) => wickAt(c, S, w * x, h * y, s * 0.07));
+  }
+
+  function chains(c, S, w, h) {
+    // 鎖：壁（上）の金具から床をはう鎖と、先の手枷
+    const ax = Math.min(w * 0.08, 0.26);
+    box(c, S, ax - 0.13, 0, 0.26, h * 0.16, 0.02, S.dark);
+    const end = [w - 0.32, h * 0.5];
+    const path = bezPts([ax, h * 0.28], [w * 0.3, h * 0.95], [w * 0.6, h * 0.05], end, 80);
+    const cum = [0];
+    for (let i = 1; i < path.length; i++) cum.push(cum[i - 1] + Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]));
+    const total = cum[cum.length - 1];
+    const at = d => {
+      let i = 1;
+      while (i < cum.length - 1 && cum[i] < d) i++;
+      const p = path[i - 1], q = path[i];
+      return { x: (p[0] + q[0]) / 2, y: (p[1] + q[1]) / 2, a: Math.atan2(q[1] - p[1], q[0] - p[0]) };
+    };
+    const step = 0.16, n = Math.floor(total / step);
+    const links = [];
+    for (let i = 0; i < n; i++) links.push({ ...at(step * (i + 0.5)), flat: i % 2 === 0 });
+    links.filter(l => !l.flat).forEach(l => {
+      c.save();
+      c.translate(l.x, l.y);
+      c.rotate(l.a);
+      box(c, S, -0.11, -0.025, 0.22, 0.05, 0.025, S.dark);
+      c.restore();
+    });
+    links.filter(l => l.flat).forEach(l => {
+      c.save();
+      c.translate(l.x, l.y);
+      c.rotate(l.a);
+      ellipse(c, S, 0, 0, 0.11, 0.065, S.soft);
+      thin(c, S);
+      ellipse(c, S, 0, 0, 0.055, 0.02, S.dark);
+      c.restore();
+    });
+    // 壁の輪
+    c.save();
+    c.lineWidth = S.lw * 1.4;
+    circle(c, S, ax, h * 0.22, 0.07, false);
+    c.restore();
+    // 手枷（開いた輪と蝶番）
+    const [mx, my] = end;
+    const ro = 0.17, ri = 0.1;
+    c.beginPath();
+    c.arc(mx + 0.12, my, ro, 0, TAU);
+    c.arc(mx + 0.12, my, ri, 0, TAU, true);
+    c.fillStyle = S.soft;
+    c.fill('evenodd');
+    c.stroke();
+    box(c, S, mx - 0.07, my - 0.04, 0.08, 0.08, 0.01, S.dark);
+    box(c, S, mx + 0.24, my - 0.05, 0.08, 0.1, 0.01, S.dark);
+  }
+
+  // 読めない文字（石碑・呪物）。kind で形を変える
+  function glyph(c, x, y, s, kind) {
+    c.beginPath();
+    const P = pts => pts.forEach(([dx, dy, move]) => (move ? c.moveTo(x + dx * s, y + dy * s) : c.lineTo(x + dx * s, y + dy * s)));
+    switch (kind % 7) {
+      case 0: // 点のある丸
+        c.arc(x, y, s * 0.4, 0, TAU);
+        c.moveTo(x + s * 0.08, y);
+        c.arc(x, y, s * 0.08, 0, TAU);
+        break;
+      case 1: // 三角
+        P([[0, -0.45, 1], [0.42, 0.4], [-0.42, 0.4], [0, -0.45]]);
+        break;
+      case 2: // ジグザグ
+        P([[-0.4, -0.3, 1], [-0.1, 0.35], [0.12, -0.35], [0.4, 0.3]]);
+        break;
+      case 3: // かぎのある十字
+        P([[0, -0.45, 1], [0, 0.45], [-0.35, 0.2, 1], [-0.35, -0.1], [0.35, -0.1]]);
+        break;
+      case 4: // 目のような形
+        c.moveTo(x - s * 0.45, y);
+        c.quadraticCurveTo(x, y - s * 0.5, x + s * 0.45, y);
+        c.quadraticCurveTo(x, y + s * 0.5, x - s * 0.45, y);
+        c.moveTo(x + s * 0.1, y);
+        c.arc(x, y, s * 0.1, 0, TAU);
+        break;
+      case 5: // 枝のある縦棒
+        P([[-0.15, -0.45, 1], [-0.15, 0.45], [-0.15, -0.2, 1], [0.3, -0.4], [-0.15, 0.1, 1], [0.3, 0.3]]);
+        break;
+      default: // 欠けた輪
+        c.arc(x, y, s * 0.35, Math.PI * 0.2, Math.PI * 1.7);
+        c.lineTo(x, y);
+    }
+    c.stroke();
+  }
+
+  function stele(c, S, w, h) {
+    // 奇妙な石碑：台座の上の石板。表（手前）に読めない文字の列と、走るヒビ
+    box(c, S, 0, h * 0.08, w, h * 0.88, 0.04, S.dark);
+    box(c, S, w * 0.07, h * 0.2, w * 0.86, h * 0.62, 0.08, S.soft);
+    c.save();
+    c.strokeStyle = S.ritual;
+    thin(c, S, 0.8);
+    const gs = Math.min(w / 9, h * 0.22);
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 7; col++) {
+        glyph(c, w * (0.18 + col * 0.107), h * (0.38 + row * 0.26), gs, row * 3 + col * 5 + (col % 2));
+      }
+    }
+    c.strokeStyle = S.line;
+    thin(c, S, 0.7);
+    c.beginPath();
+    c.moveTo(w * 0.72, h * 0.2);
+    c.lineTo(w * 0.69, h * 0.36);
+    c.lineTo(w * 0.74, h * 0.5);
+    c.lineTo(w * 0.7, h * 0.66);
+    c.stroke();
+    c.restore();
+  }
+
+  function totem(c, S, w, h) {
+    // トーテム（上から見た柱の頭）：土台の石、左右に広げた翼と先の羽根飾り、手前にくちばし
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    softBlob(c, cx, cy + s * 0.02, s * 0.3, s * 0.3, 151, 9, 0.16);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    c.save();
+    thin(c, S);
+    line(c, cx - s * 0.2, cy + s * 0.18, cx - s * 0.1, cy + s * 0.12);
+    line(c, cx + s * 0.16, cy - s * 0.22, cx + s * 0.22, cy - s * 0.14);
+    c.restore();
+    [-1, 1].forEach(d => {
+      [[0.43, -0.29], [0.47, -0.17]].forEach(([fx, fy]) => {
+        c.save();
+        c.translate(cx + d * s * fx, cy + s * fy);
+        c.rotate(d * 0.5);
+        ellipse(c, S, 0, 0, s * 0.03, s * 0.065, S.red);
+        c.restore();
+      });
+    });
+    [-1, 1].forEach(d => {
+      const X = f => cx + d * s * f;
+      polyPath(c, [[X(0.12), cy - s * 0.1], [X(0.47), cy - s * 0.24], [X(0.42), cy - s * 0.13], [X(0.46), cy - s * 0.08], [X(0.37), cy - s * 0.01], [X(0.4), cy + s * 0.05], [X(0.28), cy + s * 0.06], [X(0.27), cy + s * 0.12], [X(0.12), cy + s * 0.1]]);
+      c.fillStyle = S.wood;
+      c.fill();
+      c.stroke();
+      c.save();
+      thin(c, S);
+      line(c, X(0.2), cy - s * 0.06, X(0.42), cy - s * 0.13);
+      line(c, X(0.2), cy, X(0.37), cy - s * 0.01);
+      line(c, X(0.2), cy + s * 0.06, X(0.28), cy + s * 0.06);
+      c.restore();
+    });
+    circle(c, S, cx, cy, s * 0.17, S.wood);
+    c.save();
+    thin(c, S);
+    circle(c, S, cx, cy, s * 0.11, S.dark);
+    c.strokeStyle = S.fill;
+    c.beginPath();
+    c.arc(cx, cy, s * 0.06, 0, Math.PI * 1.5);
+    c.stroke();
+    c.restore();
+    polyPath(c, [[cx - s * 0.07, cy + s * 0.13], [cx + s * 0.07, cy + s * 0.13], [cx, cy + s * 0.33]]);
+    c.fillStyle = S.dark;
+    c.fill();
+    c.stroke();
+  }
+
+  function offering(c, S, w, h) {
+    // 供物：敷物の上に、奥にろうそく2本と盛った飯、手前に果物の皿・香炉・杯
+    const s = Math.min(w, h);
+    box(c, S, w * 0.02, h * 0.04, w * 0.96, h * 0.92, 0.04, S.rug);
+    wickAt(c, S, w * 0.12, h * 0.24, s * 0.12);
+    wickAt(c, S, w * 0.88, h * 0.24, s * 0.12);
+    circle(c, S, w * 0.5, h * 0.3, s * 0.19, S.soft);
+    circle(c, S, w * 0.5, h * 0.3, s * 0.13, S.fill);
+    c.save();
+    c.fillStyle = S.softLine;
+    [[-0.04, -0.03], [0.04, -0.02], [0, 0.04], [-0.05, 0.04], [0.05, 0.05], [0, -0.07]].forEach(([dx, dy]) => {
+      c.beginPath();
+      c.arc(w * 0.5 + dx * s, h * 0.3 + dy * s, s * 0.012, 0, TAU);
+      c.fill();
+    });
+    c.restore();
+    circle(c, S, w * 0.24, h * 0.68, s * 0.22, S.soft);
+    circle(c, S, w * 0.19, h * 0.63, s * 0.08, S.red);
+    circle(c, S, w * 0.3, h * 0.62, s * 0.08, S.yellow);
+    circle(c, S, w * 0.24, h * 0.76, s * 0.08, S.green);
+    circle(c, S, w * 0.5, h * 0.72, s * 0.09, S.dark);
+    c.save();
+    thin(c, S);
+    line(c, w * 0.48, h * 0.72, w * 0.46, h * 0.56);
+    line(c, w * 0.5, h * 0.72, w * 0.5, h * 0.55);
+    line(c, w * 0.52, h * 0.72, w * 0.54, h * 0.56);
+    c.restore();
+    circle(c, S, w * 0.76, h * 0.7, s * 0.12, S.fill);
+    circle(c, S, w * 0.76, h * 0.7, s * 0.07, S.water);
+  }
+
+  function cursedItem(c, S, w, h) {
+    // 呪物：札を×に貼って封じた小箱と、まわりの淀んだ気配（点線の輪）
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    c.save();
+    c.strokeStyle = S.ritual;
+    thin(c, S, 0.8);
+    c.setLineDash([S.lw * 1.2, S.lw * 1.4]);
+    circle(c, S, cx, cy, s * 0.47, false);
+    c.restore();
+    box(c, S, cx - s * 0.3, cy - s * 0.3, s * 0.6, s * 0.6, s * 0.04, S.dark);
+    c.save();
+    thin(c, S);
+    rr(c, cx - s * 0.24, cy - s * 0.24, s * 0.48, s * 0.48, s * 0.02);
+    c.stroke();
+    c.restore();
+    [-0.62, 0.62].forEach(a => {
+      c.save();
+      c.translate(cx, cy);
+      c.rotate(a);
+      thin(c, S);
+      box(c, S, -s * 0.075, -s * 0.38, s * 0.15, s * 0.76, 0.01, S.fill);
+      c.strokeStyle = S.red;
+      c.beginPath();
+      c.moveTo(0, -s * 0.31);
+      for (let i = 1; i <= 6; i++) c.lineTo((i % 2 ? 1 : -1) * s * 0.035, -s * 0.31 + i * s * 0.07);
+      c.stroke();
+      c.restore();
+    });
+    circle(c, S, cx, cy, s * 0.06, S.red);
+  }
+
+  function flesh(c, S, w, h) {
+    // 肉塊：まわりのぬめり、盛り上がったこぶ、浮き出た血管
+    const cx = w / 2, cy = h / 2;
+    c.save();
+    softBlob(c, cx, cy, w * 0.5, h * 0.5, 91, 12, 0.22);
+    c.globalAlpha = 0.35;
+    c.fillStyle = S.blood;
+    c.fill();
+    c.restore();
+    const lump = (x, y, rx, ry, seed) => {
+      softBlob(c, x, y, rx, ry, seed, 9, 0.22);
+      c.fillStyle = S.fill;
+      c.fill();
+      c.save();
+      c.globalAlpha = 0.38;
+      c.fillStyle = S.red;
+      c.fill();
+      c.restore();
+      c.stroke();
+    };
+    lump(cx + w * 0.2, cy - h * 0.2, w * 0.17, h * 0.17, 92);
+    lump(cx - w * 0.25, cy + h * 0.13, w * 0.15, h * 0.18, 93);
+    lump(cx + w * 0.22, cy + h * 0.22, w * 0.12, h * 0.12, 96);
+    lump(cx - w * 0.02, cy - h * 0.01, w * 0.33, h * 0.35, 94);
+    // 血管
+    c.save();
+    c.strokeStyle = S.blood;
+    const k = Math.min(w, h);
+    const vein = (x, y, a, len, depth) => {
+      const x2 = x + Math.cos(a) * len, y2 = y + Math.sin(a) * len;
+      c.lineWidth = S.lw * (0.5 + depth * 0.35);
+      c.beginPath();
+      c.moveTo(x, y);
+      c.quadraticCurveTo(x + Math.cos(a + 0.5) * len * 0.5, y + Math.sin(a + 0.5) * len * 0.5, x2, y2);
+      c.stroke();
+      if (depth > 0) {
+        vein(x2, y2, a - 0.55, len * 0.62, depth - 1);
+        vein(x2, y2, a + 0.5, len * 0.55, depth - 1);
+      }
+    };
+    [0.3, 1.6, 2.7, 3.9, 5.1].forEach(a => vein(cx - w * 0.02, cy, a, k * 0.13, 2));
+    c.restore();
+    // こぶ・しわ
+    c.save();
+    thin(c, S);
+    [[0.12, -0.12, 0.05], [-0.1, 0.1, 0.04], [0.06, 0.14, 0.035]].forEach(([dx, dy, r]) => {
+      circle(c, S, cx + dx * w, cy + dy * h, r * k, S.red);
+    });
+    c.beginPath();
+    c.arc(cx - w * 0.1, cy - h * 0.12, k * 0.12, Math.PI * 0.9, Math.PI * 1.5);
+    c.moveTo(cx + w * 0.18, cy + h * 0.02);
+    c.arc(cx + w * 0.1, cy + h * 0.02, k * 0.08, 0, Math.PI * 0.7);
+    c.stroke();
+    c.restore();
+  }
+
+  function blackStain(c, S, w, h) {
+    // 黒い染み：にじんだ外縁、タールのような中心、四方へ垂れた筋と飛び散り、つや
+    const cx = w / 2, cy = h / 2, k = Math.min(w, h);
+    const r = rand(101);
+    c.save();
+    c.fillStyle = S.wall;
+    softBlob(c, cx, cy, w * 0.46, h * 0.44, 102, 14, 0.3);
+    c.globalAlpha = 0.16;
+    c.fill();
+    c.globalAlpha = 0.85;
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * TAU + r() * 0.6;
+      const d0 = 0.2, d1 = 0.36 + r() * 0.1;
+      const bend = (r() - 0.5) * 0.5;
+      const pts = bezPts(
+        [cx + Math.cos(a) * w * d0, cy + Math.sin(a) * h * d0],
+        [cx + Math.cos(a) * w * (d0 + d1) / 2, cy + Math.sin(a) * h * (d0 + d1) / 2],
+        [cx + Math.cos(a + bend) * w * d1 * 0.9, cy + Math.sin(a + bend) * h * d1 * 0.9],
+        [cx + Math.cos(a + bend) * w * d1, cy + Math.sin(a + bend) * h * d1], 10);
+      taperPath(c, pts, k * 0.14, k * 0.02);
+      c.fill();
+      c.beginPath();
+      c.arc(pts[pts.length - 1][0], pts[pts.length - 1][1], k * 0.025, 0, TAU);
+      c.fill();
+    }
+    softBlob(c, cx, cy, w * 0.3, h * 0.29, 103, 12, 0.32);
+    c.fill();
+    for (let i = 0; i < 10; i++) {
+      const a = r() * TAU, d = 0.38 + r() * 0.1;
+      c.beginPath();
+      c.arc(cx + Math.cos(a) * w * d, cy + Math.sin(a) * h * d, k * (0.012 + r() * 0.022), 0, TAU);
+      c.fill();
+    }
+    c.globalAlpha = 0.45;
+    c.fillStyle = S.fill;
+    c.beginPath();
+    c.ellipse(cx - w * 0.08, cy - h * 0.09, k * 0.12, k * 0.04, -0.4, 0, TAU);
+    c.fill();
+    c.beginPath();
+    c.ellipse(cx + w * 0.07, cy + h * 0.06, k * 0.05, k * 0.02, -0.4, 0, TAU);
+    c.fill();
+    c.restore();
+  }
+
+  function tendrils(c, S, w, h) {
+    // 蔓・触手状の侵食（壁に重ねる）：壁の線は長辺に沿って y = h/2 を通る想定。
+    // 壁の裂け目から壁に沿って左右へ、床（主に手前）へはい出す
+    const P = (x, y) => [x * w / 4, y * h / 3];
+    const k = Math.min(w / 4, h / 3);
+    const tentacle = (p0, p1, p2, p3, wid, curl) => {
+      const pts = bezPts(P(...p0), P(...p1), P(...p2), P(...p3), 18);
+      const a = pts.length - 1;
+      let ang = Math.atan2(pts[a][1] - pts[a - 1][1], pts[a][0] - pts[a - 1][0]);
+      const rad = wid * k * 0.55;
+      let [x, y] = pts[a];
+      for (let i = 1; i <= 8; i++) {
+        ang += curl * 0.45;
+        x += Math.cos(ang) * rad * 0.42;
+        y += Math.sin(ang) * rad * 0.42;
+        pts.push([x, y]);
+      }
+      taperPath(c, pts, wid * k, wid * k * 0.12);
+      c.fillStyle = S.ritualSoft;
+      c.fill();
+      c.save();
+      c.strokeStyle = S.ritual;
+      c.stroke();
+      // 吸盤
+      thin(c, S, 0.7);
+      for (let i = 2; i < 13; i += 2) {
+        const p = pts[i], q = pts[i + 1];
+        const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+        const nx = -(q[1] - p[1]) / len, ny = (q[0] - p[0]) / len;
+        const ww = wid * k * (1 - (i / (pts.length - 1)) * 0.88) / 2;
+        c.beginPath();
+        c.arc(p[0] + nx * ww * 0.4 * curl, p[1] + ny * ww * 0.4 * curl, ww * 0.32, 0, TAU);
+        c.stroke();
+      }
+      c.restore();
+    };
+    // 細い蔓（壁に沿って）
+    c.save();
+    c.strokeStyle = S.ritual;
+    thin(c, S, 0.9);
+    [[[2, 1.5], [1.4, 1.2], [0.8, 1.9], [0.1, 1.35]], [[2, 1.5], [2.7, 1.85], [3.3, 1.1], [3.95, 1.6]], [[2, 1.5], [1.7, 0.9], [1.2, 0.6], [1.0, 0.1]]].forEach(([a, b, d, e]) => {
+      c.beginPath();
+      bezPts(P(...a), P(...b), P(...d), P(...e), 16).forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
+      c.stroke();
+    });
+    c.restore();
+    // 奥（壁の向こう側）へ伸びる短いもの
+    tentacle([1.95, 1.4], [1.7, 1.0], [1.4, 0.8], [1.45, 0.35], 0.2, 1);
+    tentacle([2.1, 1.4], [2.4, 1.0], [2.7, 0.9], [2.95, 0.5], 0.18, -1);
+    // 壁の裂け目
+    softBlob(c, w / 2, h / 2, 0.45 * k, 0.26 * k, 121, 9, 0.3);
+    c.fillStyle = S.ritual;
+    c.fill();
+    c.save();
+    c.strokeStyle = S.ritualSoft;
+    c.lineWidth = S.lw * 1.6;
+    c.stroke();
+    c.restore();
+    // 壁に沿って左右へ
+    tentacle([1.8, 1.5], [1.3, 1.25], [0.8, 1.8], [0.35, 1.45], 0.26, -1);
+    tentacle([2.2, 1.5], [2.7, 1.75], [3.1, 1.2], [3.6, 1.55], 0.26, 1);
+    // 床（手前）へ
+    tentacle([1.9, 1.6], [1.5, 2.1], [0.9, 2.1], [0.8, 2.7], 0.24, 1);
+    tentacle([2.05, 1.65], [2.1, 2.2], [2.5, 2.3], [2.25, 2.85], 0.22, -1);
+    tentacle([2.2, 1.6], [2.8, 1.95], [3.3, 2.0], [3.45, 2.6], 0.2, 1);
+  }
+
+  function abyss(c, S, w, h) {
+    // 異常な穴：崩れた縁、内へ行くほど濃くなる幾重もの闇、渦の筋、縁から走るヒビ
+    const cx = w / 2, cy = h / 2, s = Math.min(w, h);
+    const r = rand(131);
+    c.save();
+    thin(c, S, 0.6);
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * TAU + r() * 0.5, kink = (r() - 0.5) * 0.12;
+      c.beginPath();
+      c.moveTo(cx + Math.cos(a) * s * 0.42, cy + Math.sin(a) * s * 0.42);
+      c.lineTo(cx + Math.cos(a + kink) * s * 0.46, cy + Math.sin(a + kink) * s * 0.46);
+      c.lineTo(cx + Math.cos(a - kink * 0.5) * s * 0.5, cy + Math.sin(a - kink * 0.5) * s * 0.5);
+      c.stroke();
+    }
+    c.restore();
+    softBlob(c, cx, cy, s * 0.46, s * 0.46, 132, 18, 0.14);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    [[0.4, S.dark, 0.35], [0.33, S.dark, 0.7], [0.26, S.wall, 0.5], [0.19, S.wall, 0.72], [0.12, S.wall, 0.95]].forEach(([rad, col, alpha], i) => {
+      softBlob(c, cx + (i % 2 ? 0.01 : -0.01) * s, cy + (i % 2 ? -0.01 : 0.01) * s, s * rad, s * rad * 0.96, 133 + i, 14, 0.16);
+      c.save();
+      c.globalAlpha = alpha;
+      c.fillStyle = col;
+      c.fill();
+      c.globalAlpha = 1;
+      thin(c, S, 0.6);
+      c.stroke();
+      c.restore();
+    });
+    // 渦の筋
+    c.save();
+    c.strokeStyle = S.fill;
+    c.globalAlpha = 0.6;
+    thin(c, S, 0.7);
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * TAU;
+      c.beginPath();
+      c.arc(cx, cy, s * (0.08 + i * 0.035), a, a + 1.6);
+      c.stroke();
+    }
+    c.restore();
+    // 縁の瓦礫
+    c.save();
+    thin(c, S, 0.8);
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * TAU + r() * 0.4, d = s * (0.43 + r() * 0.03), z = s * (0.022 + r() * 0.018);
+      c.save();
+      c.translate(cx + Math.cos(a) * d - z, cy + Math.sin(a) * d - z * 0.8);
+      blob(c, z * 2, z * 1.6, 191 + i, 6, 0.3);
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+      c.restore();
+    }
+    c.restore();
+  }
+
+  /* ---------- NPC・敵 ---------- */
+  // 人の駒：上から見た台座・肩・頭。正面（顔の側）は下（y = h）。役割は帽子・服・持ち物で表す（顔は描かない）
+
+  // 肩の形（後ろが丸く、両腕の先が少し前に出る）。arms = false なら腕なしの胴
+  function npcShoulderPath(c, cx, cy, W, D, arms = true) {
+    c.beginPath();
+    if (!arms) {
+      rr(c, cx - W, cy - D, W * 2, D * 2, D * 0.95);
+      return;
+    }
+    c.moveTo(cx - W, cy + D * 0.25);
+    c.quadraticCurveTo(cx - W, cy - D, cx - W * 0.45, cy - D);
+    c.lineTo(cx + W * 0.45, cy - D);
+    c.quadraticCurveTo(cx + W, cy - D, cx + W, cy + D * 0.25);
+    c.quadraticCurveTo(cx + W, cy + D * 1.05, cx + W * 0.72, cy + D * 0.95);
+    c.quadraticCurveTo(cx, cy + D * 1.25, cx - W * 0.72, cy + D * 0.95);
+    c.quadraticCurveTo(cx - W, cy + D * 1.05, cx - W, cy + D * 0.25);
+    c.closePath();
+  }
+
+  function npcShoulders(c, S, cx, cy, W, D, fill, arms = true) {
+    npcShoulderPath(c, cx, cy, W, D, arms);
+    c.fillStyle = fill;
+    c.fill();
+    c.stroke();
+    if (!arms) return;
+    // 腕の境目
+    c.save();
+    thin(c, S, 0.6);
+    [-1, 1].forEach(d => {
+      c.beginPath();
+      c.moveTo(cx + d * W * 0.64, cy - D * 0.6);
+      c.quadraticCurveTo(cx + d * W * 0.58, cy + D * 0.2, cx + d * W * 0.7, cy + D * 0.9);
+      c.stroke();
+    });
+    c.restore();
+  }
+
+  // 駒の台座：細い輪と正面（下）の印
+  function npcBase(c, S, cx, cy, s) {
+    circle(c, S, cx, cy, s * 0.47, S.soft, true);
+    c.save();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.8);
+    circle(c, S, cx, cy, s * 0.47, false);
+    c.restore();
+    polyPath(c, [[cx - s * 0.08, cy + s * 0.375], [cx + s * 0.08, cy + s * 0.375], [cx, cy + s * 0.46]]);
+    c.fillStyle = S.line;
+    c.fill();
+  }
+
+  // 台座と肩を描き、頭の位置を返す
+  function npcBody(c, S, w, h, o = {}) {
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    const k = o.child ? 0.84 : 1;
+    npcBase(c, S, cx, cy, s);
+    const W = s * (o.rx || 0.37) * k, D = s * (o.ry || 0.15) * k, by = cy - s * 0.03;
+    npcShoulders(c, S, cx, by, W, D, o.body || S.fill);
+    return { s, cx, cy, by, W, D, hx: cx, hy: cy + s * (o.hy || 0.02), hr: s * 0.15 * (o.child ? 1.1 : 1) };
+  }
+
+  // 頭（上から見ると髪。前の縁にだけ肌がのぞく）
+  function npcHead(c, S, x, y, r, style) {
+    circle(c, S, x, y, r, S.fill);
+    c.save();
+    c.beginPath();
+    c.arc(x, y, r, 0, TAU);
+    c.clip();
+    if (style === 'grey') {
+      c.strokeStyle = S.softLine;
+      c.lineWidth = r * 0.7;
+      c.beginPath();
+      c.arc(x, y + r * 0.1, r, Math.PI * 1.02, Math.PI * 1.98);
+      c.stroke();
+    } else {
+      c.fillStyle = S.dark;
+      c.beginPath();
+      c.ellipse(x, y - r * 0.32, r * 1.08, r, 0, 0, TAU);
+      c.fill();
+    }
+    c.restore();
+    c.beginPath();
+    c.arc(x, y, r, 0, TAU);
+    c.stroke();
+  }
+
+  // 白衣の襟（V字）
+  function npcLapels(c, S, g) {
+    c.save();
+    thin(c, S);
+    line(c, g.hx - g.hr * 0.75, g.hy + g.hr * 0.7, g.cx - g.s * 0.02, g.by + g.D * 1.1);
+    line(c, g.hx + g.hr * 0.75, g.hy + g.hr * 0.7, g.cx + g.s * 0.02, g.by + g.D * 1.1);
+    c.restore();
+  }
+
+  // つばのある制帽（警官・駅員・警備員）
+  function npcCap(c, S, g, crown, visor) {
+    ellipse(c, S, g.hx, g.hy + g.hr * 0.9, g.hr * 0.95, g.hr * 0.5, visor);
+    circle(c, S, g.hx, g.hy - g.hr * 0.05, g.hr * 1.22, crown);
+  }
+
+  function npcHand(c, S, x, y, r) { circle(c, S, x, y, r, S.fill); }
+
+  function npcMan(c, S, w, h) {
+    const g = npcBody(c, S, w, h);
+    npcHead(c, S, g.hx, g.hy, g.hr);
+  }
+
+  function npcWoman(c, S, w, h) {
+    // 背中へ流れる長い髪
+    const g = npcBody(c, S, w, h, { rx: 0.33 });
+    ellipse(c, S, g.hx, g.hy - g.hr * 0.95, g.hr * 0.95, g.hr * 1.25, S.dark);
+    npcHead(c, S, g.hx, g.hy, g.hr);
+  }
+
+  function npcChild(c, S, w, h) {
+    // 小さな体に大きめの頭、背中にランドセル
+    const g = npcBody(c, S, w, h, { child: true });
+    const s = g.s;
+    box(c, S, g.cx - s * 0.17, g.by - s * 0.27, s * 0.34, s * 0.2, s * 0.05, S.red);
+    c.save();
+    thin(c, S);
+    line(c, g.cx - s * 0.17, g.by - s * 0.16, g.cx + s * 0.17, g.by - s * 0.16);
+    c.restore();
+    npcHead(c, S, g.hx, g.hy, g.hr);
+  }
+
+  function npcElder(c, S, w, h) {
+    // 少し前かがみ、白髪、手に杖
+    const g = npcBody(c, S, w, h, { ry: 0.19, hy: 0.05 });
+    const x = g.cx + g.s * 0.29, y = g.cy + g.s * 0.2, r = g.s * 0.06;
+    cord(c, S, () => {
+      c.beginPath();
+      c.arc(x, y, r, Math.PI, TAU);
+      c.lineTo(x + r, y + g.s * 0.17);
+    }, g.s * 0.035, S.wood);
+    npcHand(c, S, x - r * 0.4, y - r * 0.6, g.s * 0.045);
+    npcHead(c, S, g.hx, g.hy, g.hr, 'grey');
+  }
+
+  function npcPolice(c, S, w, h) {
+    // 制帽と星の帽章
+    const g = npcBody(c, S, w, h, { body: S.blue });
+    npcCap(c, S, g, S.blue, S.dark);
+    c.save();
+    thin(c, S);
+    circle(c, S, g.hx, g.hy - g.hr * 0.05, g.hr * 0.9, false);
+    spikePath(c, g.hx, g.hy + g.hr * 0.55, g.hr * 0.45, g.hr * 0.2, 5);
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.stroke();
+    c.restore();
+  }
+
+  function npcSoldier(c, S, w, h) {
+    // ヘルメットと、体の前に斜めに持った小銃
+    const g = npcBody(c, S, w, h, { body: S.green });
+    const s = g.s;
+    c.save();
+    c.translate(g.cx + s * 0.02, g.cy + s * 0.24);
+    c.rotate(0.38);
+    box(c, S, -s * 0.36, -s * 0.04, s * 0.18, s * 0.08, s * 0.02, S.dark);
+    box(c, S, -s * 0.2, -s * 0.03, s * 0.36, s * 0.06, s * 0.01, S.dark);
+    box(c, S, -s * 0.06, s * 0.02, s * 0.06, s * 0.08, 0.005, S.dark);
+    c.lineWidth = S.lw * 1.3;
+    line(c, s * 0.16, 0, s * 0.36, 0);
+    c.restore();
+    npcHand(c, S, g.cx - s * 0.13, g.cy + s * 0.15, s * 0.045);
+    npcHand(c, S, g.cx + s * 0.15, g.cy + s * 0.27, s * 0.045);
+    circle(c, S, g.hx, g.hy, g.hr * 1.32, S.green);
+    c.save();
+    thin(c, S);
+    circle(c, S, g.hx, g.hy, g.hr * 1.05, false);
+    [[-0.5, -0.4], [0.45, -0.2], [-0.1, 0.5], [0.3, 0.55]].forEach(([dx, dy]) => circle(c, S, g.hx + dx * g.hr, g.hy + dy * g.hr, g.hr * 0.2, S.dark, true));
+    c.restore();
+  }
+
+  function npcDoctor(c, S, w, h) {
+    // 白衣・首にかけた聴診器・肩の赤十字
+    const g = npcBody(c, S, w, h, { body: S.fill });
+    npcLapels(c, S, g);
+    const s = g.s;
+    c.save();
+    c.fillStyle = S.red;
+    const bx = g.cx - s * 0.24, by = g.cy - s * 0.04, b = s * 0.03;
+    c.fillRect(bx - b, by - b * 3, b * 2, b * 6);
+    c.fillRect(bx - b * 3, by - b, b * 6, b * 2);
+    c.restore();
+    c.save();
+    c.strokeStyle = S.line;
+    c.lineWidth = S.lw * 1.2;
+    c.beginPath();
+    c.arc(g.hx, g.hy, g.hr * 1.3, Math.PI * 0.2, Math.PI * 0.8, true);
+    c.stroke();
+    line(c, g.hx + Math.cos(Math.PI * 0.2) * g.hr * 1.3, g.hy + Math.sin(Math.PI * 0.2) * g.hr * 1.3, g.cx + s * 0.12, g.cy + s * 0.25);
+    c.restore();
+    circle(c, S, g.cx + s * 0.12, g.cy + s * 0.27, s * 0.04, S.soft);
+    npcHead(c, S, g.hx, g.hy, g.hr);
+  }
+
+  function npcNurse(c, S, w, h) {
+    // 後ろでまとめた髪と、十字のついたナースキャップ
+    const g = npcBody(c, S, w, h, { body: S.water, rx: 0.33 });
+    circle(c, S, g.hx, g.hy - g.hr * 1.05, g.hr * 0.45, S.dark);
+    npcHead(c, S, g.hx, g.hy, g.hr);
+    box(c, S, g.hx - g.hr * 0.85, g.hy - g.hr * 0.65, g.hr * 1.7, g.hr * 0.9, g.hr * 0.15, S.fill);
+    c.save();
+    c.fillStyle = S.red;
+    const b = g.hr * 0.11;
+    c.fillRect(g.hx - b, g.hy - g.hr * 0.2 - b * 3, b * 2, b * 6);
+    c.fillRect(g.hx - b * 3, g.hy - g.hr * 0.2 - b, b * 6, b * 2);
+    c.restore();
+  }
+
+  function npcScientist(c, S, w, h) {
+    // 白衣と、体の前に持ったクリップボード
+    const g = npcBody(c, S, w, h, { body: S.fill });
+    npcLapels(c, S, g);
+    const s = g.s;
+    c.save();
+    c.translate(g.cx + s * 0.04, g.cy + s * 0.26);
+    c.rotate(-0.15);
+    box(c, S, -s * 0.12, -s * 0.12, s * 0.24, s * 0.22, s * 0.02, S.wood);
+    thin(c, S);
+    box(c, S, -s * 0.09, -s * 0.08, s * 0.18, s * 0.16, 0, S.fill);
+    c.strokeStyle = S.softLine;
+    for (let i = 0; i < 3; i++) line(c, -s * 0.06, -s * 0.04 + i * s * 0.04, s * 0.06, -s * 0.04 + i * s * 0.04);
+    c.restore();
+    box(c, S, g.cx - s * 0.02, g.cy + s * 0.11, s * 0.1, s * 0.04, 0.01, S.dark);
+    npcHand(c, S, g.cx - s * 0.1, g.cy + s * 0.29, s * 0.04);
+    npcHand(c, S, g.cx + s * 0.17, g.cy + s * 0.24, s * 0.04);
+    npcHead(c, S, g.hx, g.hy, g.hr);
+  }
+
+  function npcWorker(c, S, w, h) {
+    // 反射ベストの帯と、つばと稜線のあるヘルメット
+    const g = npcBody(c, S, w, h, { body: S.blue });
+    const s = g.s;
+    c.save();
+    npcShoulderPath(c, g.cx, g.by, g.W, g.D);
+    c.clip();
+    c.fillStyle = S.yellow;
+    thin(c, S);
+    [-1, 1].forEach(d => {
+      c.fillRect(g.cx + d * s * 0.17 - s * 0.035, g.by - s * 0.2, s * 0.07, s * 0.4);
+      c.strokeRect(g.cx + d * s * 0.17 - s * 0.035, g.by - s * 0.2, s * 0.07, s * 0.4);
+    });
+    c.restore();
+    ellipse(c, S, g.hx, g.hy + g.hr * 0.2, g.hr * 1.35, g.hr * 1.5, S.yellow);
+    circle(c, S, g.hx, g.hy, g.hr * 1.02, S.yellow);
+    c.save();
+    c.lineWidth = S.lw * 1.2;
+    line(c, g.hx, g.hy - g.hr * 1.0, g.hx, g.hy + g.hr * 1.0);
+    thin(c, S);
+    line(c, g.hx - g.hr * 0.45, g.hy - g.hr * 0.85, g.hx - g.hr * 0.45, g.hy + g.hr * 0.85);
+    line(c, g.hx + g.hr * 0.45, g.hy - g.hr * 0.85, g.hx + g.hr * 0.45, g.hy + g.hr * 0.85);
+    c.restore();
+  }
+
+  function npcStation(c, S, w, h) {
+    // 明るいシャツ、帯の入った制帽、首から下げた笛
+    const g = npcBody(c, S, w, h, { body: S.water });
+    const s = g.s;
+    c.save();
+    thin(c, S);
+    c.beginPath();
+    c.moveTo(g.hx - g.hr * 0.3, g.hy + g.hr * 0.9);
+    c.quadraticCurveTo(g.cx + s * 0.08, g.cy + s * 0.2, g.cx + s * 0.13, g.cy + s * 0.27);
+    c.stroke();
+    c.restore();
+    box(c, S, g.cx + s * 0.1, g.cy + s * 0.25, s * 0.12, s * 0.06, s * 0.02, S.yellow);
+    npcCap(c, S, g, S.blue, S.dark);
+    c.save();
+    c.lineWidth = g.hr * 0.28;
+    c.strokeStyle = S.red;
+    c.beginPath();
+    c.arc(g.hx, g.hy - g.hr * 0.05, g.hr * 1.05, 0, TAU);
+    c.stroke();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.6);
+    c.beginPath();
+    c.arc(g.hx, g.hy - g.hr * 0.05, g.hr * 0.9, 0, TAU);
+    c.stroke();
+    c.restore();
+  }
+
+  function npcSailor(c, S, w, h) {
+    // 背中のセーラー襟と、白い丸い水兵帽
+    const g = npcBody(c, S, w, h, { body: S.fill });
+    const s = g.s;
+    polyPath(c, [[g.cx - s * 0.25, g.by + s * 0.02], [g.cx - s * 0.23, g.by - s * 0.27], [g.cx + s * 0.23, g.by - s * 0.27], [g.cx + s * 0.25, g.by + s * 0.02], [g.cx, g.by + s * 0.1]]);
+    c.fillStyle = S.blue;
+    c.fill();
+    c.stroke();
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.7);
+    polyPath(c, [[g.cx - s * 0.21, g.by - s * 0.01], [g.cx - s * 0.195, g.by - s * 0.23], [g.cx + s * 0.195, g.by - s * 0.23], [g.cx + s * 0.21, g.by - s * 0.01]]);
+    c.stroke();
+    c.restore();
+    c.save();
+    c.strokeStyle = S.blue;
+    c.lineWidth = S.lw * 1.4;
+    line(c, g.hx - g.hr * 0.3, g.hy - g.hr * 1.1, g.hx - g.hr * 0.5, g.hy - g.hr * 1.8);
+    line(c, g.hx + g.hr * 0.3, g.hy - g.hr * 1.1, g.hx + g.hr * 0.5, g.hy - g.hr * 1.8);
+    c.restore();
+    circle(c, S, g.hx, g.hy, g.hr * 1.22, S.fill);
+    c.save();
+    thin(c, S);
+    circle(c, S, g.hx, g.hy, g.hr * 0.85, S.soft);
+    c.restore();
+  }
+
+  function npcGuard(c, S, w, h) {
+    // 制帽と盾形の記章、腰の警棒
+    const g = npcBody(c, S, w, h, { body: S.dark });
+    const s = g.s;
+    cord(c, S, () => {
+      c.beginPath();
+      c.moveTo(g.cx + s * 0.31, g.cy + s * 0.02);
+      c.lineTo(g.cx + s * 0.36, g.cy + s * 0.34);
+    }, s * 0.045, S.line);
+    npcHand(c, S, g.cx + s * 0.31, g.cy + s * 0.06, s * 0.045);
+    npcCap(c, S, g, S.dark, S.line);
+    c.save();
+    thin(c, S);
+    const bx = g.hx, by = g.hy + g.hr * 0.45, b = g.hr * 0.35;
+    polyPath(c, [[bx - b, by - b * 0.8], [bx + b, by - b * 0.8], [bx + b, by], [bx, by + b], [bx - b, by]]);
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.stroke();
+    c.restore();
+  }
+
+  function npcRobed(c, S, w, h) {
+    // すそが広がったローブと、後ろへとがったフード（顔の部分は影）
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    npcBase(c, S, cx, cy, s);
+    softBlob(c, cx, cy + s * 0.01, s * 0.4, s * 0.3, 141, 12, 0.08);
+    c.fillStyle = S.dark;
+    c.fill();
+    c.stroke();
+    c.save();
+    thin(c, S);
+    c.strokeStyle = S.fill;
+    [[-0.3, 0.12], [-0.18, 0.24], [0.18, 0.24], [0.3, 0.12]].forEach(([dx, dy]) => line(c, cx + dx * s * 0.5, cy + dy * s * 0.4, cx + dx * s, cy + dy * s));
+    c.restore();
+    const hx = cx, hy = cy + s * 0.02, hr = s * 0.15;
+    c.beginPath();
+    c.moveTo(hx - hr * 1.15, hy + hr * 0.45);
+    c.quadraticCurveTo(hx - hr * 1.25, hy - hr * 1.1, hx, hy - hr * 2.1);
+    c.quadraticCurveTo(hx + hr * 1.25, hy - hr * 1.1, hx + hr * 1.15, hy + hr * 0.45);
+    c.quadraticCurveTo(hx, hy + hr * 1.1, hx - hr * 1.15, hy + hr * 0.45);
+    c.closePath();
+    c.fillStyle = S.dark;
+    c.fill();
+    c.stroke();
+    ellipse(c, S, hx, hy + hr * 0.45, hr * 0.7, hr * 0.42, S.line);
+    c.save();
+    c.strokeStyle = S.ritual;
+    thin(c, S, 0.9);
+    c.beginPath();
+    c.moveTo(hx, hy - hr * 2.0);
+    c.lineTo(hx, hy - hr * 0.3);
+    c.stroke();
+    c.restore();
+  }
+
+  function npcStanding(c, S, w, h) {
+    // 立っている人物：台座なし。体の横に下ろした腕と、前にのぞく両足
+    const s = Math.min(w, h), cx = w / 2, by = h / 2 - s * 0.05;
+    ellipse(c, S, cx - s * 0.1, by + s * 0.28, s * 0.065, s * 0.11, S.dark);
+    ellipse(c, S, cx + s * 0.1, by + s * 0.28, s * 0.065, s * 0.11, S.dark);
+    npcShoulders(c, S, cx, by, s * 0.37, s * 0.15, S.fill);
+    npcHand(c, S, cx - s * 0.33, by + s * 0.17, s * 0.05);
+    npcHand(c, S, cx + s * 0.33, by + s * 0.17, s * 0.05);
+    npcHead(c, S, cx, by + s * 0.05, s * 0.15);
+  }
+
+  // 座った人物（椅子の上）。椅子の外形 (x, y, cw, ch) を受け取り、肩の位置を返す
+  function npcSeated(c, S, x, y, cw, ch, s, armsBack) {
+    const cx = x + cw / 2, sy = y + ch * 0.36, W = s * 0.36, D = s * 0.15;
+    chair(c, S, x, y, cw, ch);
+    // 太もも・足先
+    [-1, 1].forEach(d => {
+      box(c, S, cx + d * s * 0.13 - s * 0.075, sy, s * 0.15, ch * 0.62, s * 0.06, S.dark);
+      ellipse(c, S, cx + d * s * 0.13, y + ch + s * 0.12, s * 0.06, s * 0.1, S.dark);
+    });
+    if (armsBack) {
+      npcShoulders(c, S, cx, sy, W * 0.86, D, S.fill, false);
+      return { cx, sy };
+    }
+    // ひざの上に置いた前腕と手
+    [-1, 1].forEach(d => cord(c, S, () => {
+      c.beginPath();
+      c.moveTo(cx + d * W * 0.85, sy + D * 0.7);
+      c.lineTo(cx + d * s * 0.17, sy + s * 0.33);
+    }, s * 0.09, S.fill));
+    npcShoulders(c, S, cx, sy, W, D, S.fill);
+    npcHand(c, S, cx - s * 0.16, sy + s * 0.35, s * 0.05);
+    npcHand(c, S, cx + s * 0.16, sy + s * 0.35, s * 0.05);
+    return { cx, sy };
+  }
+
+  function npcSitting(c, S, w, h) {
+    const s = Math.min(w, h);
+    const p = npcSeated(c, S, w * 0.08, h * 0.03, w * 0.84, h * 0.66, s, false);
+    npcHead(c, S, p.cx, p.sy + s * 0.02, s * 0.15);
+  }
+
+  function npcBound(c, S, w, h) {
+    // 拘束された人物：椅子の背の後ろで縛られた手、胸と脚に巻いた縄
+    const s = Math.min(w, h) * 0.75;
+    const cw = w * 0.62, ch = h * 0.62, x = (w - cw) / 2, y = h * 0.04;
+    const cx = w / 2;
+    // 後ろへ回した腕
+    [-1, 1].forEach(d => cord(c, S, () => {
+      c.beginPath();
+      c.moveTo(cx + d * s * 0.33, y + ch * 0.38);
+      c.quadraticCurveTo(cx + d * s * 0.42, y + ch * 0.05, cx + d * s * 0.06, y + ch * 0.0);
+    }, s * 0.1, S.fill));
+    const p = npcSeated(c, S, x, y, cw, ch, s, true);
+    // 縄
+    const rope = (pts) => cord(c, S, () => {
+      c.beginPath();
+      pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])));
+    }, s * 0.05, S.wood);
+    rope([[x - s * 0.02, p.sy + s * 0.04], [x + cw + s * 0.02, p.sy + s * 0.04]]);
+    rope([[x - s * 0.02, p.sy + s * 0.13], [x + cw + s * 0.02, p.sy + s * 0.13]]);
+    rope([[cx - s * 0.27, y + ch * 0.78], [cx + s * 0.27, y + ch * 0.78]]);
+    circle(c, S, cx, y + ch * 0.02, s * 0.08, S.fill);
+    rope([[cx - s * 0.1, y - s * 0.02], [cx + s * 0.1, y + s * 0.06]]);
+    rope([[cx - s * 0.1, y + s * 0.06], [cx + s * 0.1, y - s * 0.02]]);
+    // ほどけた縄の端
+    c.save();
+    c.strokeStyle = S.line;
+    thin(c, S);
+    c.beginPath();
+    c.moveTo(x + cw + s * 0.02, p.sy + s * 0.08);
+    c.quadraticCurveTo(x + cw + s * 0.2, p.sy + s * 0.2, x + cw + s * 0.12, p.sy + s * 0.42);
+    c.stroke();
+    c.restore();
+    npcHead(c, S, p.cx, p.sy + s * 0.02, s * 0.15);
+  }
+
+  function npcLying(c, S, w, h) {
+    // 倒れている人物（上から見た全身）：頭が上、片腕を投げ出し、片膝を曲げた形
+    const P = (x, y) => [x * w / 1.6, y * h / 3.6];
+    const k = Math.min(w / 1.6, h / 3.6);
+    const limb = (pts, wid, fill) => cord(c, S, () => {
+      c.beginPath();
+      pts.forEach((q, i) => { const [x, y] = P(...q); if (i) c.lineTo(x, y); else c.moveTo(x, y); });
+    }, wid * k, fill);
+    limb([[0.66, 1.95], [0.52, 2.7], [0.36, 3.35]], 0.24, S.dark);
+    limb([[0.94, 1.95], [1.28, 2.55], [1.06, 3.2]], 0.24, S.dark);
+    ellipse(c, S, ...P(0.33, 3.43), 0.09 * k, 0.15 * k, S.dark);
+    ellipse(c, S, ...P(1.04, 3.3), 0.09 * k, 0.15 * k, S.dark);
+    limb([[0.42, 0.85], [0.18, 0.5], [0.26, 0.15]], 0.17, S.fill);
+    limb([[1.18, 0.88], [1.36, 1.38], [1.4, 1.85]], 0.17, S.fill);
+    npcHand(c, S, ...P(0.26, 0.12), 0.08 * k);
+    npcHand(c, S, ...P(1.4, 1.9), 0.08 * k);
+    box(c, S, ...P(0.5, 1.6), 0.6 * k, 0.5 * k, 0.12 * k, S.dark);
+    c.beginPath();
+    const [ax, ay] = P(0.36, 0.78);
+    c.moveTo(ax, ay);
+    c.quadraticCurveTo(...P(0.8, 0.64), ...P(1.24, 0.8));
+    c.quadraticCurveTo(...P(1.26, 1.3), ...P(1.1, 1.8));
+    c.lineTo(...P(0.5, 1.8));
+    c.quadraticCurveTo(...P(0.34, 1.3), ax, ay);
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    npcHead(c, S, ...P(0.78, 0.42), 0.23 * k);
+  }
+
+  // 敵の印：赤いギザギザの輪
+  function enemyAura(c, S, cx, cy, r, n) {
+    spikePath(c, cx, cy, r, r * 0.88, n);
+    c.save();
+    c.globalAlpha = 0.2;
+    c.fillStyle = S.red;
+    c.fill();
+    c.globalAlpha = 1;
+    c.strokeStyle = S.red;
+    c.stroke();
+    c.restore();
+  }
+
+  // かぎ爪：点 (x, y) から向き a へ n 本。bend で曲がる向き
+  function claws(c, S, x, y, a, len, n, spread, bend) {
+    for (let i = 0; i < n; i++) {
+      const b = a + (n > 1 ? (i / (n - 1) - 0.5) * spread : 0);
+      const pts = bezPts([x, y], [x + Math.cos(b) * len * 0.5, y + Math.sin(b) * len * 0.5],
+        [x + Math.cos(b + bend * 0.25) * len * 0.85, y + Math.sin(b + bend * 0.25) * len * 0.85],
+        [x + Math.cos(b + bend * 0.5) * len, y + Math.sin(b + bend * 0.5) * len], 6);
+      taperPath(c, pts, len * 0.3, len * 0.02);
+      c.fillStyle = S.wall;
+      c.fill();
+      c.save();
+      thin(c, S, 0.8);
+      c.stroke();
+      c.restore();
+    }
+  }
+
+  // 暗い体の部位（先細りの帯）
+  function darkLimb(c, S, pts, w0, w1) {
+    taperPath(c, pts, w0, w1);
+    c.fillStyle = S.wall;
+    c.fill();
+    c.stroke();
+  }
+
+  function enemyHumanoid(c, S, w, h) {
+    // 人型の敵：赤いギザギザの輪、暗い肩と頭、肩のトゲ、かぎ爪の手（人の駒と同じ形を暗く）
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2, by = cy - s * 0.03;
+    enemyAura(c, S, cx, cy, s * 0.49, 16);
+    [-1, 1].forEach(d => claws(c, S, cx + d * s * 0.3, by + s * 0.13, Math.PI / 2 - d * 0.3, s * 0.16, 3, 0.7, -d));
+    [-1, 1].forEach(d => darkLimb(c, S, [[cx + d * s * 0.18, by - s * 0.06], [cx + d * s * 0.25, by - s * 0.18], [cx + d * s * 0.29, by - s * 0.29]], s * 0.09, s * 0.01));
+    npcShoulderPath(c, cx, by, s * 0.37, s * 0.15);
+    c.fillStyle = S.wall;
+    c.fill();
+    c.stroke();
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.6);
+    [-1, 1].forEach(d => {
+      c.beginPath();
+      c.moveTo(cx + d * s * 0.24, by - s * 0.09);
+      c.quadraticCurveTo(cx + d * s * 0.21, by + s * 0.03, cx + d * s * 0.26, by + s * 0.13);
+      c.stroke();
+    });
+    c.restore();
+    // 後ろへとがった頭
+    polyPath(c, [[cx - s * 0.1, by - s * 0.02], [cx, by - s * 0.2], [cx + s * 0.1, by - s * 0.02]]);
+    c.fillStyle = S.wall;
+    c.fill();
+    c.stroke();
+    circle(c, S, cx, by + s * 0.05, s * 0.15, S.wall);
+  }
+
+  function monsterSmall(c, S, w, h) {
+    // 小型モンスター：トゲだらけの丸い体、短い尾、前の2本のかぎ爪
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    enemyAura(c, S, cx, cy, s * 0.48, 12);
+    darkLimb(c, S, bezPts([cx, cy - s * 0.18], [cx + s * 0.04, cy - s * 0.32], [cx + s * 0.18, cy - s * 0.3], [cx + s * 0.22, cy - s * 0.42], 8), s * 0.1, s * 0.01);
+    claws(c, S, cx - s * 0.17, cy + s * 0.18, Math.PI * 0.6, s * 0.17, 3, 0.8, 1);
+    claws(c, S, cx + s * 0.17, cy + s * 0.18, Math.PI * 0.4, s * 0.17, 3, 0.8, -1);
+    spikePath(c, cx, cy, s * 0.34, s * 0.24, 11, 0.15);
+    c.fillStyle = S.wall;
+    c.fill();
+    c.stroke();
+    // 毛並み（放射状の短い線）
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.6);
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * TAU + 0.4;
+      line(c, cx + Math.cos(a) * s * 0.08, cy + Math.sin(a) * s * 0.08, cx + Math.cos(a) * s * 0.17, cy + Math.sin(a) * s * 0.17);
+    }
+    c.restore();
+  }
+
+  // 獣型の敵（モンスター・大型・強大な敵で共用）。lv が上がるほど角・トゲ・爪が増え、翼がつく
+  function beast(lv) {
+    return (c, S, w, h) => {
+      const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+      enemyAura(c, S, cx, cy, s * 0.49, 14 + lv * 6);
+      if (lv >= 3) {
+        c.save();
+        c.strokeStyle = S.red;
+        thin(c, S, 0.8);
+        c.setLineDash([S.lw * 2, S.lw * 2]);
+        circle(c, S, cx, cy, s * 0.4, false);
+        c.restore();
+      }
+      const nClaw = lv >= 2 ? 4 : 3;
+      // 翼
+      if (lv >= 3) {
+        [-1, 1].forEach(d => {
+          const X = f => cx + d * s * f;
+          c.beginPath();
+          c.moveTo(X(0.08), cy - s * 0.06);
+          c.quadraticCurveTo(X(0.3), cy - s * 0.36, X(0.47), cy - s * 0.3);
+          c.quadraticCurveTo(X(0.42), cy - s * 0.18, X(0.44), cy - s * 0.06);
+          c.quadraticCurveTo(X(0.36), cy - s * 0.08, X(0.36), cy + s * 0.02);
+          c.quadraticCurveTo(X(0.28), cy - s * 0.02, X(0.25), cy + s * 0.08);
+          c.quadraticCurveTo(X(0.18), cy + s * 0.02, X(0.1), cy + s * 0.1);
+          c.closePath();
+          c.fillStyle = S.wall;
+          c.fill();
+          c.stroke();
+          c.save();
+          c.strokeStyle = S.fill;
+          thin(c, S, 0.7);
+          line(c, X(0.1), cy - s * 0.05, X(0.47), cy - s * 0.3);
+          line(c, X(0.1), cy - s * 0.04, X(0.44), cy - s * 0.06);
+          line(c, X(0.1), cy - s * 0.03, X(0.36), cy + s * 0.02);
+          line(c, X(0.1), cy - s * 0.02, X(0.25), cy + s * 0.08);
+          c.restore();
+        });
+      }
+      // 尾
+      const tail = bezPts([cx, cy - s * 0.2], [cx - s * 0.04, cy - s * 0.32], [cx + s * 0.12, cy - s * 0.36], [cx + s * 0.18, cy - s * 0.45], 14);
+      darkLimb(c, S, tail, s * 0.1, s * 0.02);
+      if (lv >= 2) {
+        const [tx, ty] = tail[tail.length - 1];
+        spikePath(c, tx, ty, s * 0.05, s * 0.025, 6);
+        c.fillStyle = S.wall;
+        c.fill();
+        c.stroke();
+      }
+      // 後ろ足・前足とかぎ爪
+      [-1, 1].forEach(d => {
+        darkLimb(c, S, bezPts([cx + d * s * 0.1, cy - s * 0.14], [cx + d * s * 0.2, cy - s * 0.14], [cx + d * s * 0.26, cy - s * 0.2], [cx + d * s * 0.3, cy - s * 0.26], 8), s * 0.1, s * 0.06);
+        claws(c, S, cx + d * s * 0.3, cy - s * 0.26, -Math.PI / 2 + d * 0.9, s * 0.08, nClaw, 0.9, d);
+        darkLimb(c, S, bezPts([cx + d * s * 0.1, cy + s * 0.08], [cx + d * s * 0.2, cy + s * 0.1], [cx + d * s * 0.26, cy + s * 0.16], [cx + d * s * 0.3, cy + s * 0.24], 8), s * 0.1, s * 0.06);
+        claws(c, S, cx + d * s * 0.3, cy + s * 0.24, Math.PI / 2 - d * 0.6, s * (0.08 + lv * 0.01), nClaw, 0.9, -d);
+      });
+      // 胴（大きいものは脇腹にもトゲ）
+      if (lv >= 2) {
+        for (let i = 0; i < 4; i++) {
+          [-1, 1].forEach(d => {
+            const y = cy - s * 0.18 + i * s * 0.1, x = cx + d * s * (0.15 - Math.abs(i - 1.5) * 0.012);
+            polyPath(c, [[x, y - s * 0.03], [x + d * s * 0.07, y - s * 0.05], [x, y + s * 0.03]]);
+            c.fillStyle = S.wall;
+            c.fill();
+            c.stroke();
+          });
+        }
+      }
+      softBlob(c, cx, cy - s * 0.03, s * 0.17, s * 0.25, 150 + lv, 12, 0.12);
+      c.fillStyle = S.wall;
+      c.fill();
+      c.stroke();
+      // 背筋のうろこ（明るい山形）
+      c.save();
+      c.strokeStyle = S.fill;
+      thin(c, S, 0.8);
+      const nSp = 3 + lv;
+      for (let i = 0; i < nSp; i++) {
+        const y = cy - s * 0.2 + (i / (nSp - 1)) * s * 0.32;
+        const z = s * (0.035 + lv * 0.006);
+        c.beginPath();
+        c.moveTo(cx - z, y + z * 0.6);
+        c.lineTo(cx, y - z * 0.4);
+        c.lineTo(cx + z, y + z * 0.6);
+        c.stroke();
+      }
+      c.restore();
+      // 頭と角
+      const hy = cy + s * 0.24;
+      const nHorn = lv >= 3 ? 3 : lv >= 2 ? 2 : 1;
+      for (let j = 0; j < nHorn; j++) {
+        [-1, 1].forEach(d => {
+          const off = j * 0.035;
+          darkLimb(c, S, bezPts([cx + d * s * (0.05 + off), hy - s * 0.02 - off * s], [cx + d * s * (0.12 + off), hy - s * 0.04 - off * s], [cx + d * s * (0.16 + off), hy - s * 0.1 - off * s], [cx + d * s * (0.15 + off * 1.5), hy - s * (0.16 + lv * 0.02) - off * s * 1.5], 8), s * 0.05, s * 0.005);
+        });
+      }
+      softBlob(c, cx, hy, s * 0.1, s * 0.09, 160 + lv, 9, 0.12);
+      c.fillStyle = S.wall;
+      c.fill();
+      c.stroke();
+      c.save();
+      c.strokeStyle = S.fill;
+      thin(c, S, 0.7);
+      line(c, cx, hy - s * 0.07, cx, hy + s * 0.02);
+      c.restore();
+    };
+  }
+
+  function monsterHuge(c, S, w, h) {
+    // 超大型の敵：放射状にのびる触手と、トゲの冠に囲まれた巨大な塊
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    enemyAura(c, S, cx, cy, s * 0.49, 40);
+    c.save();
+    c.strokeStyle = S.red;
+    thin(c, S, 0.8);
+    c.setLineDash([S.lw * 2.5, S.lw * 2.5]);
+    circle(c, S, cx, cy, s * 0.43, false);
+    c.restore();
+    const n = 9;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU + 0.2;
+      const curl = i % 2 ? 1 : -1;
+      const pts = bezPts(
+        [cx + Math.cos(a) * s * 0.16, cy + Math.sin(a) * s * 0.16],
+        [cx + Math.cos(a + 0.25 * curl) * s * 0.28, cy + Math.sin(a + 0.25 * curl) * s * 0.28],
+        [cx + Math.cos(a - 0.2 * curl) * s * 0.36, cy + Math.sin(a - 0.2 * curl) * s * 0.36],
+        [cx + Math.cos(a + 0.05 * curl) * s * 0.43, cy + Math.sin(a + 0.05 * curl) * s * 0.43], 18);
+      let ang = Math.atan2(pts[18][1] - pts[17][1], pts[18][0] - pts[17][0]);
+      let [x, y] = pts[18];
+      for (let j = 1; j <= 7; j++) {
+        ang += curl * 0.5;
+        x += Math.cos(ang) * s * 0.012;
+        y += Math.sin(ang) * s * 0.012;
+        pts.push([x, y]);
+      }
+      darkLimb(c, S, pts, s * 0.09, s * 0.008);
+      c.save();
+      c.fillStyle = S.fill;
+      for (let j = 3; j < 16; j += 3) {
+        const ww = s * 0.09 * (1 - j / pts.length);
+        circle(c, S, pts[j][0], pts[j][1], ww * 0.18, S.fill, true);
+      }
+      c.restore();
+    }
+    // 角のようなトゲ
+    for (let i = 0; i < n; i++) {
+      const a = ((i + 0.5) / n) * TAU + 0.2;
+      darkLimb(c, S, bezPts([cx + Math.cos(a) * s * 0.2, cy + Math.sin(a) * s * 0.2], [cx + Math.cos(a) * s * 0.25, cy + Math.sin(a) * s * 0.25], [cx + Math.cos(a + 0.1) * s * 0.28, cy + Math.sin(a + 0.1) * s * 0.28], [cx + Math.cos(a + 0.18) * s * 0.31, cy + Math.sin(a + 0.18) * s * 0.31], 8), s * 0.05, s * 0.004);
+    }
+    spikePath(c, cx, cy, s * 0.25, s * 0.2, 22, 0.1);
+    c.fillStyle = S.wall;
+    c.fill();
+    c.stroke();
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.8);
+    circle(c, S, cx, cy, s * 0.165, false);
+    circle(c, S, cx, cy, s * 0.11, false);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU;
+      line(c, cx + Math.cos(a) * s * 0.11, cy + Math.sin(a) * s * 0.11, cx + Math.cos(a + 0.12) * s * 0.165, cy + Math.sin(a + 0.12) * s * 0.165);
+    }
+    spikePath(c, cx, cy, s * 0.06, s * 0.03, 8);
+    c.stroke();
+    c.restore();
+  }
+
+  // 犬（上から見た形。頭が手前＝下）。big は立ち耳で鼻先が長い
+  function dogShape(big) {
+    return (c, S, w, h) => {
+      const X = f => f * w, Y = f => f * h;
+      bandFill(c, S, bezPts([X(0.5), Y(0.26)], [X(0.52), Y(0.15)], [X(0.68), Y(0.12)], [X(big ? 0.6 : 0.66), Y(0.02)], 10), w * 0.13, w * 0.04, S.wood);
+      [[0.2, 0.3], [0.8, 0.3], [0.22, 0.63], [0.78, 0.63]].forEach(([x, y]) => ellipse(c, S, X(x), Y(y), w * 0.09, h * 0.05, S.wood));
+      ellipse(c, S, X(0.5), Y(0.46), w * 0.31, h * 0.25, S.wood);
+      if (big) {
+        c.save();
+        c.globalAlpha = 0.85;
+        softBlob(c, X(0.5), Y(0.42), w * 0.2, h * 0.17, 171, 9, 0.15);
+        c.fillStyle = S.dark;
+        c.fill();
+        c.restore();
+      }
+      c.save();
+      thin(c, S);
+      c.strokeStyle = S.softLine;
+      line(c, X(0.5), Y(0.26), X(0.5), Y(0.62));
+      c.restore();
+      if (big) {
+        [-1, 1].forEach(d => {
+          polyPath(c, [[X(0.5 + d * 0.08), Y(0.7)], [X(0.5 + d * 0.3), Y(0.64)], [X(0.5 + d * 0.2), Y(0.78)]]);
+          c.fillStyle = S.dark;
+          c.fill();
+          c.stroke();
+        });
+      } else {
+        ellipse(c, S, X(0.29), Y(0.75), w * 0.09, h * 0.075, S.dark);
+        ellipse(c, S, X(0.71), Y(0.75), w * 0.09, h * 0.075, S.dark);
+      }
+      circle(c, S, X(0.5), Y(0.76), w * 0.2, S.wood);
+      box(c, S, X(0.5) - w * 0.1, Y(0.8), w * 0.2, h * (big ? 0.15 : 0.12), w * 0.08, S.wood);
+      ellipse(c, S, X(0.5), Y(big ? 0.94 : 0.91), w * 0.055, h * 0.022, S.line);
+    };
+  }
+
+  // 尾など（先細りの帯を任意の色で）
+  function bandFill(c, S, pts, w0, w1, fill) {
+    taperPath(c, pts, w0, w1);
+    c.fillStyle = fill;
+    c.fill();
+    c.stroke();
+  }
+
+  function cat(c, S, w, h) {
+    // 猫：細い体、とがった耳、長く曲がった尾。頭が手前＝下
+    const X = f => f * w, Y = f => f * h;
+    bandFill(c, S, bezPts([X(0.5), Y(0.3)], [X(0.95), Y(0.24)], [X(0.92), Y(0.02)], [X(0.4), Y(0.04)], 14), w * 0.14, w * 0.07, S.dark);
+    [[0.24, 0.62], [0.76, 0.62], [0.26, 0.32], [0.74, 0.32]].forEach(([x, y]) => ellipse(c, S, X(x), Y(y), w * 0.08, h * 0.04, S.dark));
+    ellipse(c, S, X(0.5), Y(0.47), w * 0.27, h * 0.22, S.dark);
+    [-1, 1].forEach(d => {
+      polyPath(c, [[X(0.5 + d * 0.06), Y(0.7)], [X(0.5 + d * 0.32), Y(0.65)], [X(0.5 + d * 0.22), Y(0.8)]]);
+      c.fillStyle = S.dark;
+      c.fill();
+      c.stroke();
+    });
+    circle(c, S, X(0.5), Y(0.79), w * 0.22, S.dark);
+    ellipse(c, S, X(0.5), Y(0.9), w * 0.09, h * 0.035, S.soft);
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.6);
+    [0.38, 0.46, 0.54].forEach(y => {
+      c.beginPath();
+      c.moveTo(X(0.3), Y(y));
+      c.quadraticCurveTo(X(0.5), Y(y - 0.03), X(0.7), Y(y));
+      c.stroke();
+    });
+    c.restore();
+  }
+
+  function bird(c, S, w, h) {
+    // 鳥：翼を広げた形。頭とくちばしが手前＝下、尾羽が奥
+    const X = f => f * w, Y = f => f * h;
+    polyPath(c, [[X(0.44), Y(0.42)], [X(0.56), Y(0.42)], [X(0.64), Y(0.08)], [X(0.36), Y(0.08)]]);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    [-1, 1].forEach(d => {
+      const x = f => X(0.5 + d * f);
+      c.beginPath();
+      c.moveTo(x(0.06), Y(0.62));
+      c.quadraticCurveTo(x(0.3), Y(0.62), x(0.48), Y(0.48));
+      c.lineTo(x(0.42), Y(0.4));
+      c.lineTo(x(0.38), Y(0.44));
+      c.lineTo(x(0.32), Y(0.36));
+      c.lineTo(x(0.26), Y(0.42));
+      c.lineTo(x(0.18), Y(0.36));
+      c.lineTo(x(0.12), Y(0.43));
+      c.lineTo(x(0.06), Y(0.42));
+      c.closePath();
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+      c.save();
+      thin(c, S);
+      line(c, x(0.1), Y(0.55), x(0.36), Y(0.5));
+      c.restore();
+    });
+    ellipse(c, S, X(0.5), Y(0.52), w * 0.1, h * 0.2, S.soft);
+    circle(c, S, X(0.5), Y(0.74), w * 0.09, S.soft);
+    polyPath(c, [[X(0.46), Y(0.8)], [X(0.54), Y(0.8)], [X(0.5), Y(0.93)]]);
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.stroke();
+  }
+
+  function wildAnimal(c, S, w, h) {
+    // 野生動物（熊）：毛羽立った大きな胴と肩の盛り上がり、丸い耳、爪のある足。頭が手前＝下
+    const X = f => f * w, Y = f => f * h;
+    // 毛羽立った輪郭（細かいギザギザの楕円）
+    const fur = (cx, cy, rx, ry, n) => {
+      c.beginPath();
+      for (let i = 0; i < n * 2; i++) {
+        const a = (i / (n * 2)) * TAU, f = i % 2 ? 0.94 : 1;
+        if (i === 0) c.moveTo(cx + Math.cos(a) * rx * f, cy + Math.sin(a) * ry * f);
+        else c.lineTo(cx + Math.cos(a) * rx * f, cy + Math.sin(a) * ry * f);
+      }
+      c.closePath();
+      c.fillStyle = S.dark;
+      c.fill();
+      c.stroke();
+    };
+    // 足と爪（前足は前へ、後ろ足は後ろへ）
+    [[0.2, 0.2, -1], [0.8, 0.2, -1], [0.24, 0.7, 1], [0.76, 0.7, 1]].forEach(([x, y, fy]) => {
+      c.save();
+      thin(c, S);
+      for (let j = -1; j <= 1; j++) line(c, X(x + j * 0.045), Y(y + fy * 0.04), X(x + j * 0.055), Y(y + fy * 0.065));
+      c.restore();
+      ellipse(c, S, X(x), Y(y), w * 0.1, h * 0.05, S.dark);
+    });
+    circle(c, S, X(0.5), Y(0.11), w * 0.06, S.dark);
+    fur(X(0.5), Y(0.44), w * 0.4, h * 0.31, 30);
+    // 肩の盛り上がり
+    c.save();
+    c.strokeStyle = S.fill;
+    thin(c, S, 0.6);
+    c.beginPath();
+    c.ellipse(X(0.5), Y(0.66), w * 0.3, h * 0.08, 0, Math.PI * 1.15, Math.PI * 1.85);
+    c.stroke();
+    c.restore();
+    circle(c, S, X(0.31), Y(0.71), w * 0.09, S.dark);
+    circle(c, S, X(0.69), Y(0.71), w * 0.09, S.dark);
+    c.save();
+    thin(c, S);
+    circle(c, S, X(0.31), Y(0.71), w * 0.045, S.soft);
+    circle(c, S, X(0.69), Y(0.71), w * 0.045, S.soft);
+    c.restore();
+    fur(X(0.5), Y(0.79), w * 0.25, h * 0.105, 16);
+    // 鼻づらと鼻（先端の幅広い鼻）
+    box(c, S, X(0.5) - w * 0.1, Y(0.84), w * 0.2, h * 0.11, w * 0.09, S.dark);
+    ellipse(c, S, X(0.5), Y(0.935), w * 0.075, h * 0.018, S.line);
+  }
 
   /* ---------- カタログ ---------- */
 
@@ -2494,64 +4473,64 @@
     /* ===== /PACK C ===== */
 
     /* ===== PACK D: 探索・事件 / ホラー・オカルト / NPC・敵 ===== */
-    A('flashlight', 'investigation', 0.8, 0.4, todo('灯'), { ja: '懐中電灯', en: 'Flashlight', ko: '손전등' }),
-    A('tools', 'investigation', 1.2, 0.6, todo('工具'), { ja: '工具', en: 'Tools', ko: '공구' }),
-    A('bag', 'investigation', 1.2, 0.8, todo('鞄'), { ja: '鞄', en: 'Bag', ko: '가방' }),
-    A('wallet', 'investigation', 0.6, 0.4, todo('財布'), { ja: '財布', en: 'Wallet', ko: '지갑' }),
-    A('papers', 'investigation', 0.9, 0.7, todo('書類'), { ja: '書類の束', en: 'Stack of papers', ko: '서류 뭉치' }),
-    A('file_folder', 'investigation', 0.8, 1, todo('ファイル'), { ja: 'ファイル', en: 'File folder', ko: '파일' }),
-    A('laptop', 'investigation', 1.2, 0.9, todo('PC'), { ja: 'ノートPC', en: 'Laptop', ko: '노트북' }),
-    A('recorder', 'investigation', 0.6, 0.4, todo('録音'), { ja: '録音機', en: 'Recorder', ko: '녹음기' }),
-    A('camera', 'investigation', 0.7, 0.5, todo('カメラ'), { ja: 'カメラ', en: 'Camera', ko: '카메라' }),
-    A('casings', 'investigation', 0.8, 0.8, todo('薬莢'), { ja: '使用済みの薬莢', en: 'Spent casings', ko: '사용한 탄피' }, { under: true, tags: ['danger'] }),
-    A('bullet_holes', 'investigation', 1.2, 0.8, todo('弾痕'), { ja: '弾痕（壁に重ねる）', en: 'Bullet holes (overlay)', ko: '탄흔(벽에 겹치기)' }, { overWall: true, tags: ['damaged', 'danger'] }),
-    A('burn', 'investigation', 3, 2.4, todo('焼跡'), { ja: '焼け跡', en: 'Scorch marks', ko: '불탄 자국' }, { under: true, tags: ['damaged'] }),
-    A('drag_marks', 'investigation', 1.4, 4, todo('引跡'), { ja: '引きずった跡', en: 'Drag marks', ko: '끌린 자국' }, { under: true }),
-    A('fingerprint', 'investigation', 0.8, 0.8, todo('指紋'), { ja: '指紋マーカー', en: 'Fingerprint marker', ko: '지문 마커' }),
-    A('broken_furniture', 'investigation', 2.4, 1.6, todo('破損'), { ja: '壊れた家具', en: 'Broken furniture', ko: '부서진 가구' }, { tags: ['damaged', 'ruins'] }),
+    A('flashlight', 'investigation', 0.8, 0.4, flashlight, { ja: '懐中電灯', en: 'Flashlight', ko: '손전등' }),
+    A('tools', 'investigation', 1.2, 0.6, toolSet, { ja: '工具', en: 'Tools', ko: '공구' }),
+    A('bag', 'investigation', 1.2, 0.8, bagItem, { ja: '鞄', en: 'Bag', ko: '가방' }),
+    A('wallet', 'investigation', 0.6, 0.4, wallet, { ja: '財布', en: 'Wallet', ko: '지갑' }),
+    A('papers', 'investigation', 0.9, 0.7, papers, { ja: '書類の束', en: 'Stack of papers', ko: '서류 뭉치' }),
+    A('file_folder', 'investigation', 0.8, 1, fileFolder, { ja: 'ファイル', en: 'File folder', ko: '파일' }),
+    A('laptop', 'investigation', 1.2, 0.9, laptop, { ja: 'ノートPC', en: 'Laptop', ko: '노트북' }),
+    A('recorder', 'investigation', 0.6, 0.4, recorder, { ja: '録音機', en: 'Recorder', ko: '녹음기' }),
+    A('camera', 'investigation', 0.7, 0.5, cameraItem, { ja: 'カメラ', en: 'Camera', ko: '카메라' }),
+    A('casings', 'investigation', 0.8, 0.8, casings, { ja: '使用済みの薬莢', en: 'Spent casings', ko: '사용한 탄피' }, { under: true, tags: ['danger'] }),
+    A('bullet_holes', 'investigation', 1.2, 0.8, bulletHoles, { ja: '弾痕（壁に重ねる）', en: 'Bullet holes (overlay)', ko: '탄흔(벽에 겹치기)' }, { overWall: true, tags: ['damaged', 'danger'] }),
+    A('burn', 'investigation', 3, 2.4, burn, { ja: '焼け跡', en: 'Scorch marks', ko: '불탄 자국' }, { under: true, tags: ['damaged'] }),
+    A('drag_marks', 'investigation', 1.4, 4, dragMarks, { ja: '引きずった跡', en: 'Drag marks', ko: '끌린 자국' }, { under: true }),
+    A('fingerprint', 'investigation', 0.8, 0.8, fingerprint, { ja: '指紋マーカー', en: 'Fingerprint marker', ko: '지문 마커' }),
+    A('broken_furniture', 'investigation', 2.4, 1.6, brokenFurniture, { ja: '壊れた家具', en: 'Broken furniture', ko: '부서진 가구' }, { tags: ['damaged', 'ruins'] }),
 
-    A('pod', 'occult', 1.8, 1.8, todo('ポッド'), { ja: '培養ポット（人型）', en: 'Stasis pod (humanoid)', ko: '배양 포드(인간형)' }, { tags: ['research', 'sf'] }),
-    A('sarcophagus', 'occult', 2.4, 4.4, todo('石棺'), { ja: '石棺', en: 'Stone sarcophagus', ko: '석관' }, { tags: ['historic', 'religious'] }),
-    A('ritual_table', 'occult', 3, 2, todo('儀式'), { ja: '儀式台', en: 'Ritual table', ko: '의식대' }),
-    A('chains', 'occult', 3, 0.6, todo('鎖'), { ja: '鎖', en: 'Chains', ko: '쇠사슬' }),
-    A('stele', 'occult', 2, 1, todo('石碑'), { ja: '奇妙な石碑', en: 'Strange stele', ko: '기묘한 비석' }),
-    A('totem', 'occult', 1.4, 1.4, todo('トーテム'), { ja: 'トーテム', en: 'Totem', ko: '토템' }),
-    A('offering', 'occult', 1.4, 1, todo('供物'), { ja: '供物', en: 'Offerings', ko: '공물' }, { tags: ['religious'] }),
-    A('cursed_item', 'occult', 0.8, 0.8, todo('呪'), { ja: '呪物', en: 'Cursed object', ko: '저주받은 물건' }, { tags: ['danger'] }),
-    A('flesh', 'occult', 2.4, 2, todo('肉塊'), { ja: '肉塊・異形物', en: 'Flesh mass', ko: '살덩이·이형체' }, { tags: ['danger'] }),
-    A('black_stain', 'occult', 3, 2.4, todo('染み'), { ja: '黒い染み', en: 'Black stain', ko: '검은 얼룩' }, { under: true }),
-    A('tendrils', 'occult', 4, 3, todo('触手'), { ja: '蔓・触手状の侵食（壁に重ねる）', en: 'Creeping tendrils (overlay)', ko: '덩굴·촉수 침식(벽에 겹치기)' }, { overWall: true, tags: ['danger'] }),
-    A('abyss', 'occult', 3, 3, todo('穴'), { ja: '異常な穴', en: 'Unnatural pit', ko: '이상한 구멍' }, { tags: ['danger'] }),
+    A('pod', 'occult', 1.8, 1.8, pod, { ja: '培養ポット（人型）', en: 'Stasis pod (humanoid)', ko: '배양 포드(인간형)' }, { tags: ['research', 'sf'] }),
+    A('sarcophagus', 'occult', 2.4, 4.4, sarcophagus, { ja: '石棺', en: 'Stone sarcophagus', ko: '석관' }, { tags: ['historic', 'religious'] }),
+    A('ritual_table', 'occult', 3, 2, ritualTable, { ja: '儀式台', en: 'Ritual table', ko: '의식대' }),
+    A('chains', 'occult', 3, 0.6, chains, { ja: '鎖', en: 'Chains', ko: '쇠사슬' }),
+    A('stele', 'occult', 2, 1, stele, { ja: '奇妙な石碑', en: 'Strange stele', ko: '기묘한 비석' }),
+    A('totem', 'occult', 1.4, 1.4, totem, { ja: 'トーテム', en: 'Totem', ko: '토템' }),
+    A('offering', 'occult', 1.4, 1, offering, { ja: '供物', en: 'Offerings', ko: '공물' }, { tags: ['religious'] }),
+    A('cursed_item', 'occult', 0.8, 0.8, cursedItem, { ja: '呪物', en: 'Cursed object', ko: '저주받은 물건' }, { tags: ['danger'] }),
+    A('flesh', 'occult', 2.4, 2, flesh, { ja: '肉塊・異形物', en: 'Flesh mass', ko: '살덩이·이형체' }, { tags: ['danger'] }),
+    A('black_stain', 'occult', 3, 2.4, blackStain, { ja: '黒い染み', en: 'Black stain', ko: '검은 얼룩' }, { under: true }),
+    A('tendrils', 'occult', 4, 3, tendrils, { ja: '蔓・触手状の侵食（壁に重ねる）', en: 'Creeping tendrils (overlay)', ko: '덩굴·촉수 침식(벽에 겹치기)' }, { overWall: true, tags: ['danger'] }),
+    A('abyss', 'occult', 3, 3, abyss, { ja: '異常な穴', en: 'Unnatural pit', ko: '이상한 구멍' }, { tags: ['danger'] }),
 
-    A('npc_man', 'npc', 1.2, 1.2, todo('男'), { ja: '一般男性', en: 'Man', ko: '일반 남성' }),
-    A('npc_woman', 'npc', 1.2, 1.2, todo('女'), { ja: '一般女性', en: 'Woman', ko: '일반 여성' }),
-    A('npc_child', 'npc', 1, 1, todo('子'), { ja: '子供', en: 'Child', ko: '아이' }),
-    A('npc_elder', 'npc', 1.2, 1.2, todo('老'), { ja: '老人', en: 'Elderly person', ko: '노인' }),
-    A('npc_police', 'npc', 1.2, 1.2, todo('警'), { ja: '警官', en: 'Police officer', ko: '경찰관' }, { tags: ['public'] }),
-    A('npc_soldier', 'npc', 1.2, 1.2, todo('兵'), { ja: '兵士', en: 'Soldier', ko: '병사' }, { tags: ['military'] }),
-    A('npc_doctor', 'npc', 1.2, 1.2, todo('医'), { ja: '医師', en: 'Doctor', ko: '의사' }, { tags: ['medical'] }),
-    A('npc_nurse', 'npc', 1.2, 1.2, todo('看'), { ja: '看護師', en: 'Nurse', ko: '간호사' }, { tags: ['medical'] }),
-    A('npc_scientist', 'npc', 1.2, 1.2, todo('研'), { ja: '研究員', en: 'Researcher', ko: '연구원' }, { tags: ['research'] }),
-    A('npc_worker', 'npc', 1.2, 1.2, todo('作'), { ja: '作業員', en: 'Worker', ko: '작업원' }, { tags: ['industrial'] }),
-    A('npc_station', 'npc', 1.2, 1.2, todo('駅'), { ja: '駅員', en: 'Station staff', ko: '역무원' }, { tags: ['railway'] }),
-    A('npc_sailor', 'npc', 1.2, 1.2, todo('船'), { ja: '船員', en: 'Sailor', ko: '선원' }, { tags: ['ship'] }),
-    A('npc_guard', 'npc', 1.2, 1.2, todo('警備'), { ja: '警備員', en: 'Security guard', ko: '경비원' }),
-    A('npc_robed', 'npc', 1.2, 1.2, todo('ローブ'), { ja: 'ローブ姿', en: 'Robed figure', ko: '로브 차림' }, { tags: ['religious'] }),
-    A('npc_standing', 'npc', 1.2, 1.2, todo('立'), { ja: '立っている人物', en: 'Standing figure', ko: '서 있는 인물' }),
-    A('npc_sitting', 'npc', 1.2, 1.6, todo('座'), { ja: '座っている人物', en: 'Seated figure', ko: '앉아 있는 인물' }),
-    A('npc_lying', 'npc', 1.6, 3.6, todo('倒'), { ja: '倒れている人物', en: 'Fallen figure', ko: '쓰러진 인물' }),
-    A('npc_bound', 'npc', 1.6, 1.6, todo('縛'), { ja: '拘束された人物', en: 'Restrained figure', ko: '구속된 인물' }),
-    A('enemy_humanoid', 'npc', 1.2, 1.2, todo('敵'), { ja: '人型の敵', en: 'Humanoid enemy', ko: '인간형 적' }, { tags: ['danger'] }),
-    A('monster_small', 'npc', 1, 1, todo('小'), { ja: '小型モンスター', en: 'Small monster', ko: '소형 몬스터' }, { tags: ['danger'] }),
-    A('monster', 'npc', 2, 2, todo('M'), { ja: 'モンスター', en: 'Monster', ko: '몬스터' }, { tags: ['danger'] }),
-    A('monster_large', 'npc', 4, 4, todo('大'), { ja: '大型モンスター', en: 'Large monster', ko: '대형 몬스터' }, { tags: ['danger'] }),
-    A('monster_boss', 'npc', 6, 6, todo('強'), { ja: '強大な敵', en: 'Powerful foe', ko: '강대한 적' }, { tags: ['danger'] }),
-    A('monster_huge', 'npc', 10, 10, todo('超'), { ja: '超大型の敵', en: 'Colossal foe', ko: '초대형 적' }, { tags: ['danger'] }),
-    A('dog', 'npc', 1, 1.8, todo('犬'), { ja: '犬', en: 'Dog', ko: '개' }),
-    A('dog_big', 'npc', 1.2, 2.4, todo('大犬'), { ja: '大型犬', en: 'Large dog', ko: '대형견' }),
-    A('cat', 'npc', 0.6, 1.1, todo('猫'), { ja: '猫', en: 'Cat', ko: '고양이' }),
-    A('bird', 'npc', 0.8, 0.8, todo('鳥'), { ja: '鳥', en: 'Bird', ko: '새' }),
-    A('wild_animal', 'npc', 2, 3.4, todo('獣'), { ja: '野生動物', en: 'Wild animal', ko: '야생동물' }, { tags: ['outdoor'] }),
+    A('npc_man', 'npc', 1.2, 1.2, npcMan, { ja: '一般男性', en: 'Man', ko: '일반 남성' }),
+    A('npc_woman', 'npc', 1.2, 1.2, npcWoman, { ja: '一般女性', en: 'Woman', ko: '일반 여성' }),
+    A('npc_child', 'npc', 1, 1, npcChild, { ja: '子供', en: 'Child', ko: '아이' }),
+    A('npc_elder', 'npc', 1.2, 1.2, npcElder, { ja: '老人', en: 'Elderly person', ko: '노인' }),
+    A('npc_police', 'npc', 1.2, 1.2, npcPolice, { ja: '警官', en: 'Police officer', ko: '경찰관' }, { tags: ['public'] }),
+    A('npc_soldier', 'npc', 1.2, 1.2, npcSoldier, { ja: '兵士', en: 'Soldier', ko: '병사' }, { tags: ['military'] }),
+    A('npc_doctor', 'npc', 1.2, 1.2, npcDoctor, { ja: '医師', en: 'Doctor', ko: '의사' }, { tags: ['medical'] }),
+    A('npc_nurse', 'npc', 1.2, 1.2, npcNurse, { ja: '看護師', en: 'Nurse', ko: '간호사' }, { tags: ['medical'] }),
+    A('npc_scientist', 'npc', 1.2, 1.2, npcScientist, { ja: '研究員', en: 'Researcher', ko: '연구원' }, { tags: ['research'] }),
+    A('npc_worker', 'npc', 1.2, 1.2, npcWorker, { ja: '作業員', en: 'Worker', ko: '작업원' }, { tags: ['industrial'] }),
+    A('npc_station', 'npc', 1.2, 1.2, npcStation, { ja: '駅員', en: 'Station staff', ko: '역무원' }, { tags: ['railway'] }),
+    A('npc_sailor', 'npc', 1.2, 1.2, npcSailor, { ja: '船員', en: 'Sailor', ko: '선원' }, { tags: ['ship'] }),
+    A('npc_guard', 'npc', 1.2, 1.2, npcGuard, { ja: '警備員', en: 'Security guard', ko: '경비원' }),
+    A('npc_robed', 'npc', 1.2, 1.2, npcRobed, { ja: 'ローブ姿', en: 'Robed figure', ko: '로브 차림' }, { tags: ['religious'] }),
+    A('npc_standing', 'npc', 1.2, 1.2, npcStanding, { ja: '立っている人物', en: 'Standing figure', ko: '서 있는 인물' }),
+    A('npc_sitting', 'npc', 1.2, 1.6, npcSitting, { ja: '座っている人物', en: 'Seated figure', ko: '앉아 있는 인물' }),
+    A('npc_lying', 'npc', 1.6, 3.6, npcLying, { ja: '倒れている人物', en: 'Fallen figure', ko: '쓰러진 인물' }),
+    A('npc_bound', 'npc', 1.6, 1.6, npcBound, { ja: '拘束された人物', en: 'Restrained figure', ko: '구속된 인물' }),
+    A('enemy_humanoid', 'npc', 1.2, 1.2, enemyHumanoid, { ja: '人型の敵', en: 'Humanoid enemy', ko: '인간형 적' }, { tags: ['danger'] }),
+    A('monster_small', 'npc', 1, 1, monsterSmall, { ja: '小型モンスター', en: 'Small monster', ko: '소형 몬스터' }, { tags: ['danger'] }),
+    A('monster', 'npc', 2, 2, beast(1), { ja: 'モンスター', en: 'Monster', ko: '몬스터' }, { tags: ['danger'] }),
+    A('monster_large', 'npc', 4, 4, beast(2), { ja: '大型モンスター', en: 'Large monster', ko: '대형 몬스터' }, { tags: ['danger'] }),
+    A('monster_boss', 'npc', 6, 6, beast(3), { ja: '強大な敵', en: 'Powerful foe', ko: '강대한 적' }, { tags: ['danger'] }),
+    A('monster_huge', 'npc', 10, 10, monsterHuge, { ja: '超大型の敵', en: 'Colossal foe', ko: '초대형 적' }, { tags: ['danger'] }),
+    A('dog', 'npc', 1, 1.8, dogShape(false), { ja: '犬', en: 'Dog', ko: '개' }),
+    A('dog_big', 'npc', 1.2, 2.4, dogShape(true), { ja: '大型犬', en: 'Large dog', ko: '대형견' }),
+    A('cat', 'npc', 0.6, 1.1, cat, { ja: '猫', en: 'Cat', ko: '고양이' }),
+    A('bird', 'npc', 0.8, 0.8, bird, { ja: '鳥', en: 'Bird', ko: '새' }),
+    A('wild_animal', 'npc', 2, 3.4, wildAnimal, { ja: '野生動物', en: 'Wild animal', ko: '야생동물' }, { tags: ['outdoor'] }),
     /* ===== /PACK D ===== */
   ];
 
