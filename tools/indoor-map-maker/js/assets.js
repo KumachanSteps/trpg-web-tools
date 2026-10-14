@@ -2114,6 +2114,1668 @@
 
   /* (PACK B の描画関数はここ) */
 
+  // 決まった大きさ（bw×bh）で描いた絵を、置いた大きさに合わせて縮める（線の太さは保つ）
+  function fitScaled(c, S, w, h, bw, bh, fn) {
+    const k = Math.min(w / bw, h / bh);
+    c.save();
+    c.translate((w - bw * k) / 2, (h - bh * k) / 2);
+    c.scale(k, k);
+    const T = Object.assign({}, S, { lw: S.lw / k });
+    c.lineWidth = T.lw;
+    fn(T);
+    c.restore();
+  }
+
+  // 縁取りつきの太い線（今のパスに引く）。骨・錨・ロープなど
+  function strokeOutlined(c, S, t, fill) {
+    c.save();
+    c.lineWidth = t;
+    c.strokeStyle = S.line;
+    c.stroke();
+    c.lineWidth = Math.max(t - S.lw * 1.6, t * 0.35);
+    c.strokeStyle = fill;
+    c.stroke();
+    c.restore();
+  }
+
+  // 注意の斜めじま（黄と黒）
+  function cautionStripes(c, S, x, y, w, h, step) {
+    const s = step || 0.3;
+    c.save();
+    c.beginPath();
+    c.rect(x, y, w, h);
+    c.clip();
+    c.fillStyle = S.yellow;
+    c.fillRect(x, y, w, h);
+    c.fillStyle = S.line;
+    for (let k = x - h; k < x + w + h; k += s * 2) {
+      c.beginPath();
+      c.moveTo(k, y + h);
+      c.lineTo(k + h, y);
+      c.lineTo(k + h + s, y);
+      c.lineTo(k + s, y + h);
+      c.closePath();
+      c.fill();
+    }
+    c.restore();
+  }
+
+  // 線路の中心線（点列）を左右にずらす
+  function trackOffset(pts, d) {
+    return pts.map((p, i) => {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+      return [p[0] - (dy / len) * d, p[1] + (dx / len) * d];
+    });
+  }
+
+  function trackPath(c, pts) {
+    c.beginPath();
+    pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
+    c.stroke();
+  }
+
+  // 2本のレール（g は中心からレールまで）。端は切りそろえて、つなげて置けるように
+  function trackRails(c, S, pts, g) {
+    c.save();
+    c.lineWidth = S.lw * 2.2;
+    c.lineCap = 'butt';
+    trackPath(c, trackOffset(pts, -g));
+    trackPath(c, trackOffset(pts, g));
+    c.restore();
+  }
+
+  function trackSleeper(c, S, x0, x1, y) {
+    thin(c, S);
+    box(c, S, x0, y - 0.2, x1 - x0, 0.4, 0.03, S.wood);
+    normal(c, S);
+  }
+
+  // 履帯（クローラー）：長い辺に沿って横じま
+  function crawlerTrack(c, S, x, y, w, h) {
+    box(c, S, x, y, w, h, Math.min(w, h) * 0.3, S.dark);
+    thin(c, S);
+    for (let k = y + 0.3; k < y + h - 0.2; k += 0.4) line(c, x + 0.08, k, x + w - 0.08, k);
+    rr(c, x + w * 0.3, y + 0.4, w * 0.4, h - 0.8, w * 0.15);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+  }
+
+  function sideMirrors(c, S, y, w) {
+    c.fillStyle = S.line;
+    c.fillRect(0, y, 0.12, 0.25);
+    c.fillRect(w - 0.12, y, 0.12, 0.25);
+  }
+
+  // 屋根の警光灯。cols は区画ごとの色（モノクロでも帯の形で読めるように）
+  function roofLightBar(c, S, x, y, w, h, cols) {
+    const n = cols.length;
+    c.save();
+    rr(c, x, y, w, h, h / 2);
+    c.clip();
+    cols.forEach((col, i) => { c.fillStyle = col; c.fillRect(x + (w * i) / n, y, w / n + 0.01, h); });
+    thin(c, S);
+    c.strokeStyle = S.fill;
+    for (let i = 1; i < n; i++) line(c, x + (w * i) / n, y, x + (w * i) / n, y + h);
+    c.restore();
+    rr(c, x, y, w, h, h / 2);
+    c.stroke();
+  }
+
+  /* 鉄道 */
+
+  function railTrack(c, S, w, h) {
+    // 線路：枕木の上に2本のレール（長い辺の向きに走る）。上下につなげて置ける
+    const cx = w / 2, g = Math.min(1.15, w * 0.29), half = Math.min(1.9, w * 0.48);
+    const n = Math.max(1, Math.round(h / 1.2));
+    for (let i = 0; i < n; i++) trackSleeper(c, S, cx - half, cx + half, (h / n) * (i + 0.5));
+    trackRails(c, S, [[cx, 0], [cx, h]], g);
+  }
+
+  function sleeperBed(c, S, w, h) {
+    // 枕木だけ（レールを外した線路）。レールの跡にタイプレート
+    const cx = w / 2, g = Math.min(1.15, w * 0.29), half = Math.min(1.9, w * 0.48);
+    const n = Math.max(1, Math.round(h / 1.2));
+    for (let i = 0; i < n; i++) {
+      const y = (h / n) * (i + 0.5);
+      trackSleeper(c, S, cx - half, cx + half, y);
+      [cx - g, cx + g].forEach(x => box(c, S, x - 0.17, y - 0.14, 0.34, 0.28, 0.02, S.dark));
+    }
+  }
+
+  function railSwitch(c, S, w, h) {
+    // ポイント：下から来た線路が、上で左（直進）と右（分岐）に分かれる
+    const xl = w * 0.25, xr = w * 0.75, g = Math.min(1.15, w * 0.144), half = Math.min(1.9, w * 0.24);
+    const yt = h * 0.84, ye = h * 0.16, m = (yt - ye) / 2;
+    const pts = [];
+    for (let i = 0; i <= 32; i++) {
+      const t = i / 32, u = 1 - t;
+      pts.push([(u * u * u + 3 * u * u * t) * xl + (3 * u * t * t + t * t * t) * xr,
+        u * u * u * yt + 3 * u * u * t * (yt - m) + 3 * u * t * t * (ye + m) + t * t * t * ye]);
+    }
+    pts.push([xr, 0]);
+    const xAt = y => {
+      if (y >= yt) return xl;
+      for (let i = 1; i < pts.length; i++) {
+        if (pts[i][1] <= y) {
+          const a = pts[i - 1], b = pts[i];
+          return a[0] + ((b[0] - a[0]) * (a[1] - y)) / ((a[1] - b[1]) || 1);
+        }
+      }
+      return xr;
+    };
+    // 枕木（分かれる所は長い枕木でまとめる）
+    const n = Math.max(2, Math.round(h / 1.2));
+    for (let i = 0; i < n; i++) {
+      const y = (h / n) * (i + 0.5), xd = xAt(y);
+      if (xd - xl < half * 2) trackSleeper(c, S, xl - half, xd + half, y);
+      else { trackSleeper(c, S, xl - half, xl + half, y); trackSleeper(c, S, xd - half, xd + half, y); }
+    }
+    trackRails(c, S, [[xl, 0], [xl, h]], g);
+    trackRails(c, S, pts, g);
+    // 交差部の脱線防止レール（ガードレール）
+    const fi = trackOffset(pts, -g).findIndex(p => p[0] >= xl + g);
+    if (fi > 0) {
+      const yf = pts[fi][1];
+      c.save();
+      c.lineWidth = S.lw * 1.4;
+      c.lineCap = 'butt';
+      line(c, xl - g + 0.3, yf - 1.2, xl - g + 0.3, yf + 1.2);
+      trackPath(c, trackOffset(pts, g - 0.3).slice(Math.max(0, fi - 3), fi + 4));
+      c.restore();
+    }
+    // 転てつ機（ポイントを切り替える機械）と、先端レールを動かすロッド
+    thin(c, S);
+    line(c, xl - g, yt + 0.55, xl + half + 0.35, yt + 0.55);
+    normal(c, S);
+    box(c, S, xl + half + 0.3, yt + 0.2, 1.1, 0.75, 0.06, S.dark);
+  }
+
+  function bufferStop(c, S, w, h) {
+    // 車止め：下から来た線路の終わり。しま模様の横はりと緩衝器が下（列車側）を向く
+    const cx = w / 2, g = Math.min(1.15, w * 0.29), half = Math.min(1.9, w * 0.48);
+    trackSleeper(c, S, cx - half, cx + half, h - 0.35);
+    trackSleeper(c, S, cx - half, cx + half, 0.45);
+    trackRails(c, S, [[cx, 0.15], [cx, h]], g);
+    c.save();
+    c.lineWidth = S.lw * 1.6;
+    line(c, cx - half + 0.1, h * 0.5, cx - g, 0.15);
+    line(c, cx + half - 0.1, h * 0.5, cx + g, 0.15);
+    c.restore();
+    const by = h * 0.38, bh = Math.min(0.5, h * 0.24);
+    cautionStripes(c, S, cx - half, by, half * 2, bh, 0.28);
+    c.strokeRect(cx - half, by, half * 2, bh);
+    [-g, g].forEach(dx => box(c, S, cx + dx - 0.3, by + bh, 0.6, 0.28, 0.08, S.dark));
+    circle(c, S, cx, by * 0.5, 0.17, S.red);
+  }
+
+  function platformEdge(c, S, w, h) {
+    // ホームの端：点字ブロックの帯（内方線つき）と縁石。下の辺（y=h）が線路への段差
+    c.fillStyle = S.soft;
+    c.fillRect(0, 0, w, h);
+    const t0 = h * 0.08, t1 = h * 0.58, bs = t1 - t0;
+    const n = Math.max(1, Math.round(w / bs)), bw = w / n;
+    c.fillStyle = S.yellow;
+    c.fillRect(0, t0, w, bs);
+    thin(c, S, 0.5);
+    c.strokeStyle = S.softLine;
+    for (let i = 1; i < n; i++) line(c, bw * i, t0, bw * i, t1);
+    c.fillStyle = S.dark;
+    for (let i = 0; i < n; i++) {
+      for (let a = 0; a < 3; a++) {
+        for (let b = 0; b < 3; b++) {
+          c.beginPath();
+          c.arc(bw * (i + (a + 0.5) / 3), t0 + bs * (b + 0.5) / 3, bs * 0.1, 0, TAU);
+          c.fill();
+        }
+      }
+    }
+    c.strokeStyle = S.line;
+    normal(c, S);
+    line(c, 0, t1, w, t1);
+    c.lineWidth = Math.min(S.lw * 1.8, h * 0.08);
+    line(c, 0, t0, w, t0);
+    // 縁石と段差
+    thin(c, S, 0.5);
+    line(c, 0, h * 0.74, w, h * 0.74);
+    c.strokeStyle = S.softLine;
+    for (let x = 0.25; x < w; x += 0.5) line(c, x, h * 0.78, x, h * 0.9);
+    c.strokeStyle = S.line;
+    const edge = Math.min(S.lw * 2.4, h * 0.14);
+    c.lineWidth = edge;
+    line(c, 0, h - edge / 2, w, h - edge / 2);
+    normal(c, S);
+  }
+
+  function ticketGates(c, S, w, h) {
+    // 自動改札：本体の間が通路。両端に読み取り部、真ん中に開け閉めする扉
+    const n = Math.max(1, Math.round((w - 0.5) / 1.8));
+    const cw = Math.min(0.5, w / (n * 3 + 1)), lane = (w - cw * (n + 1)) / n;
+    const y0 = 0.12, y1 = h - 0.12, fl = lane * 0.34;
+    for (let i = 0; i <= n; i++) {
+      const x = i * (cw + lane);
+      if (i > 0) box(c, S, x - fl, h / 2 - 0.09, fl, 0.18, 0.05, S.dark);
+      if (i < n) box(c, S, x + cw, h / 2 - 0.09, fl, 0.18, 0.05, S.dark);
+      box(c, S, x, y0, cw, y1 - y0, cw * 0.35, S.soft);
+      thin(c, S);
+      box(c, S, x + cw * 0.18, y0 + 0.2, cw * 0.64, 0.42, 0.06, S.blue);
+      box(c, S, x + cw * 0.18, y1 - 0.62, cw * 0.64, 0.42, 0.06, S.blue);
+      normal(c, S);
+    }
+    c.save();
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    for (let i = 0; i < n; i++) {
+      const x = i * (cw + lane) + cw + lane / 2;
+      [h * 0.24, h * 0.8].forEach(y => {
+        c.beginPath();
+        c.moveTo(x - 0.25, y + 0.14);
+        c.lineTo(x, y - 0.12);
+        c.lineTo(x + 0.25, y + 0.14);
+        c.stroke();
+      });
+    }
+    c.restore();
+  }
+
+  function ticketMachine(c, S, w, h) {
+    // 券売機：手前（下）の斜めのパネルに画面、硬貨の投入口、券の出口
+    box(c, S, 0, 0, w, h, 0.05, S.soft);
+    thin(c, S);
+    line(c, 0.08, h * 0.22, w - 0.08, h * 0.22);
+    normal(c, S);
+    box(c, S, 0.08, h * 0.36, w - 0.16, h * 0.58, 0.04, S.fill);
+    box(c, S, 0.17, h * 0.45, w * 0.5, h * 0.4, 0.03, S.blue);
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    line(c, w * 0.78, h * 0.47, w * 0.78, h * 0.62);
+    c.restore();
+    box(c, S, w * 0.69, h * 0.71, w * 0.19, h * 0.13, 0.02, S.dark);
+  }
+
+  function stationBench(c, S, w, h) {
+    // 駅のベンチ：はりの上に1人ずつの座面が並ぶ（背もたれが上）
+    thin(c, S);
+    box(c, S, 0.05, h * 0.42, w - 0.1, h * 0.16, 0.03, S.dark);
+    normal(c, S);
+    const n = Math.max(1, Math.round(w));
+    const s = w / n;
+    for (let i = 0; i < n; i++) {
+      const x = s * i + 0.06;
+      box(c, S, x, 0.04, s - 0.12, h - 0.1, Math.min(s, h) * 0.28);
+      thin(c, S);
+      rr(c, x + 0.08, h * 0.36, s - 0.28, h * 0.5, Math.min(s, h) * 0.18);
+      c.stroke();
+      normal(c, S);
+    }
+  }
+
+  function stationSign(c, S, w, h) {
+    // 駅名標：2本の柱に渡した板（真上から見た厚み）。両端に前後の駅への矢印
+    const r = Math.min(0.17, h * 0.34);
+    box(c, S, 0.04, h * 0.27, w - 0.08, h * 0.46, 0.03, S.fill);
+    c.fillStyle = S.line;
+    [[0.2, -1], [w - 0.2, 1]].forEach(([x, d]) => {
+      c.beginPath();
+      c.moveTo(x + d * 0.1, h / 2);
+      c.lineTo(x - d * 0.06, h * 0.36);
+      c.lineTo(x - d * 0.06, h * 0.64);
+      c.closePath();
+      c.fill();
+    });
+    thin(c, S);
+    line(c, w * 0.3, h / 2, w * 0.7, h / 2);
+    normal(c, S);
+    [w * 0.2, w * 0.8].forEach(x => circle(c, S, x, h / 2, r, S.dark));
+  }
+
+  function stationKiosk(c, S, w, h) {
+    // 駅の売店：奥に飲み物の棚、両側に雑誌棚、手前に新聞を並べたカウンターとレジ
+    box(c, S, 0, 0, w, h, 0.06, S.soft);
+    box(c, S, 0.1, 0.1, w - 0.2, 0.55, 0.03, S.fill);
+    const n = Math.max(3, Math.floor((w - 0.3) / 0.3));
+    thin(c, S);
+    for (let i = 0; i < n; i++) circle(c, S, 0.25 + ((w - 0.5) * i) / (n - 1), 0.375, 0.1, i % 3 === 1 ? S.water : S.fill);
+    normal(c, S);
+    [0.1, w - 0.55].forEach(x => {
+      box(c, S, x, 0.8, 0.45, h - 0.9, 0.03, S.fill);
+      thin(c, S);
+      for (let y = 1.05; y < h - 0.2; y += 0.25) line(c, x + 0.06, y, x + 0.39, y - 0.08);
+      normal(c, S);
+    });
+    box(c, S, 0.65, h - 0.75, w - 1.3, 0.65, 0.04, S.wood);
+    thin(c, S);
+    for (let i = 0; i < 3; i++) {
+      c.save();
+      c.translate(0.98 + i * 0.36, h - 0.42);
+      c.rotate(-0.18 + i * 0.12);
+      box(c, S, -0.16, -0.22, 0.32, 0.42, 0.01, S.fill);
+      line(c, -0.1, -0.12, 0.1, -0.12);
+      c.restore();
+    }
+    normal(c, S);
+    box(c, S, w - 1.25, h - 0.66, 0.46, 0.42, 0.04, S.dark);
+    circle(c, S, w / 2, h * 0.47, 0.22, S.fill);
+  }
+
+  function trainCar(c, S, w, h) {
+    // 電車の車両：両側に乗降ドア、壁沿いにロングシート、両端に連結器と貫通路（幌）
+    const cx = w / 2, e = 0.45, y0 = e, y1 = h - e;
+    box(c, S, cx - 0.3, 0, 0.6, 0.25, 0.04, S.dark);
+    box(c, S, cx - 0.3, h - 0.25, 0.6, 0.25, 0.04, S.dark);
+    [0.14, h - e - 0.08].forEach(y => {
+      box(c, S, cx - 1, y, 2, e - 0.06, 0.06, S.soft);
+      thin(c, S);
+      line(c, cx - 1, y + (e - 0.06) / 2, cx + 1, y + (e - 0.06) / 2);
+      normal(c, S);
+    });
+    c.save();
+    c.lineWidth = S.lw * 1.3;
+    box(c, S, 0.15, y0, w - 0.3, y1 - y0, 0.5);
+    c.restore();
+    thin(c, S);
+    rr(c, 0.45, y0 + 0.3, w - 0.9, y1 - y0 - 0.6, 0.25);
+    c.stroke();
+    normal(c, S);
+    // ドアの位置
+    const L = y1 - y0, nd = Math.max(1, Math.round(L / 10)), dl = Math.min(2.6, (L / nd) * 0.32);
+    const doors = [];
+    for (let i = 0; i < nd; i++) doors.push(y0 + (L * (i + 0.5)) / nd);
+    // ロングシートと窓
+    const edges = [y0 + 0.45];
+    doors.forEach(d => edges.push(d - dl / 2 - 0.25, d + dl / 2 + 0.25));
+    edges.push(y1 - 0.45);
+    for (let i = 0; i < edges.length; i += 2) {
+      const a = edges[i], b = edges[i + 1];
+      if (b - a < 0.8) continue;
+      box(c, S, 0.5, a, 0.9, b - a, 0.15, S.soft);
+      box(c, S, w - 1.4, a, 0.9, b - a, 0.15, S.soft);
+      thin(c, S);
+      line(c, 0.76, a + 0.12, 0.76, b - 0.12);
+      line(c, w - 0.76, a + 0.12, w - 0.76, b - 0.12);
+      line(c, 0.3, a + 0.2, 0.3, b - 0.2);
+      line(c, w - 0.3, a + 0.2, w - 0.3, b - 0.2);
+      // つり革
+      c.strokeStyle = S.softLine;
+      for (let y = a + 0.45; y < b - 0.3; y += 0.9) {
+        circle(c, S, 1.78, y, 0.1, false);
+        circle(c, S, w - 1.78, y, 0.1, false);
+      }
+      c.strokeStyle = S.line;
+      normal(c, S);
+    }
+    // 乗降ドア（両開き）と、ドア横の手すり棒、貫通扉
+    doors.forEach(d => {
+      [d - dl / 2 - 0.2, d + dl / 2 + 0.2].forEach(y => {
+        circle(c, S, 1.55, y, 0.09, S.dark);
+        circle(c, S, w - 1.55, y, 0.09, S.dark);
+      });
+      [0.15, w - 0.45].forEach(x => {
+        box(c, S, x, d - dl / 2, 0.3, dl, 0, S.dark);
+        thin(c, S);
+        line(c, x, d, x + 0.3, d);
+        normal(c, S);
+      });
+    });
+    box(c, S, cx - 0.6, y0, 1.2, 0.3, 0, S.dark);
+    box(c, S, cx - 0.6, y1 - 0.3, 1.2, 0.3, 0, S.dark);
+  }
+
+  function locomotive(c, S, w, h) {
+    // ディーゼル機関車：前（上）に短いボンネットと運転台、後ろに長いボンネット。台車は車体の下（破線）
+    const cx = w / 2;
+    box(c, S, cx - 0.35, 0, 0.7, 0.4, 0.05, S.dark);
+    box(c, S, cx - 0.35, h - 0.4, 0.7, 0.4, 0.05, S.dark);
+    box(c, S, 0.3, 0.3, w - 0.6, 0.5, 0.05, S.soft);
+    box(c, S, 0.3, h - 0.8, w - 0.6, 0.5, 0.05, S.soft);
+    box(c, S, 0.15, 0.75, w - 0.3, h - 1.5, 0.12, S.soft);
+    // 台車（3軸×2）
+    c.save();
+    thin(c, S);
+    dashed(c, S, true);
+    const bl = Math.min(7.5, h * 0.24);
+    [h * 0.1, h * 0.9 - bl].forEach(y => {
+      rr(c, 0.3, y, w - 0.6, bl, 0.2);
+      c.stroke();
+      for (let k = 1; k <= 3; k++) line(c, 0.3, y + (bl * k) / 4, w - 0.3, y + (bl * k) / 4);
+    });
+    dashed(c, S, false);
+    c.restore();
+    // 手すり
+    thin(c, S);
+    line(c, 0.32, 1.0, 0.32, h - 1.0);
+    line(c, w - 0.32, 1.0, w - 0.32, h - 1.0);
+    normal(c, S);
+    // 短いボンネットと前照灯
+    const cabY = Math.min(5.2, h * 0.17), cabH = Math.min(4.2, h * 0.13);
+    box(c, S, 1.3, 1.0, w - 2.6, cabY - 0.9, 0.35);
+    circle(c, S, cx, 1.4, 0.24, S.yellow);
+    // 運転台
+    c.save();
+    c.lineWidth = S.lw * 1.2;
+    box(c, S, 0.5, cabY, w - 1.0, cabH, 0.2);
+    c.restore();
+    thin(c, S);
+    box(c, S, 0.75, cabY + 0.14, w - 1.5, 0.32, 0.05, S.water);
+    box(c, S, 0.58, cabY + 0.75, 0.16, cabH - 1.2, 0, S.water);
+    box(c, S, w - 0.74, cabY + 0.75, 0.16, cabH - 1.2, 0, S.water);
+    rr(c, 1.0, cabY + 0.75, w - 2.0, cabH - 1.2, 0.12);
+    c.stroke();
+    normal(c, S);
+    // 長いボンネット：排気筒、放熱グリル、ファン
+    const hy = cabY + cabH, hb = h - 1.0;
+    box(c, S, 1.0, hy, w - 2.0, hb - hy, 0.3);
+    box(c, S, cx - 0.4, hy + 1.1, 0.8, 0.5, 0.1, S.dark);
+    const gy = hy + 2.4, gh = Math.max(1, (hb - hy) * 0.22);
+    thin(c, S);
+    rr(c, 1.4, gy, w - 2.8, gh, 0.05);
+    c.stroke();
+    for (let y = gy + 0.3; y < gy + gh - 0.1; y += 0.3) line(c, 1.5, y, w - 1.5, y);
+    normal(c, S);
+    const fr = Math.min(1.0, (w - 2.0) / 2 - 0.3);
+    [hb - 1.5, hb - 1.5 - fr * 2.4].forEach(y => {
+      circle(c, S, cx, y, fr, S.soft);
+      thin(c, S);
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * TAU;
+        line(c, cx + Math.cos(a) * fr * 0.22, y + Math.sin(a) * fr * 0.22, cx + Math.cos(a) * fr * 0.92, y + Math.sin(a) * fr * 0.92);
+      }
+      normal(c, S);
+      circle(c, S, cx, y, fr * 0.22, S.dark);
+    });
+  }
+
+  /* 道路・車両（前が上） */
+
+  function suvCar(c, S, w, h) {
+    // ワゴン・SUV：角ばった車体、長い屋根にルーフレール、後ろの窓は車体の端
+    box(c, S, 0.1, 0, w - 0.2, h, Math.min(w, h) * 0.15);
+    thin(c, S);
+    line(c, w * 0.3, h * 0.04, w * 0.33, h * 0.21);
+    line(c, w * 0.7, h * 0.04, w * 0.67, h * 0.21);
+    rr(c, 0.45, h * 0.22, w - 0.9, h * 0.11, 0.14);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    rr(c, 0.4, h * 0.34, w - 0.8, h * 0.51, 0.1);
+    c.stroke();
+    rr(c, 0.5, h * 0.87, w - 1, h * 0.07, 0.08);
+    c.fill();
+    c.stroke();
+    normal(c, S);
+    c.save();
+    c.lineWidth = S.lw * 1.5;
+    line(c, 0.68, h * 0.37, 0.68, h * 0.82);
+    line(c, w - 0.68, h * 0.37, w - 0.68, h * 0.82);
+    c.restore();
+    sideMirrors(c, S, h * 0.24, w);
+  }
+
+  function deliveryVan(c, S, w, h) {
+    // バン（ワンボックス）：短い鼻先、長く平らな屋根に補強のすじ、後ろは観音扉
+    box(c, S, 0.1, 0, w - 0.2, h, 0.55);
+    thin(c, S);
+    rr(c, 0.4, h * 0.05, w - 0.8, h * 0.1, 0.18);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    rr(c, 0.35, h * 0.18, w - 0.7, h * 0.79, 0.08);
+    c.stroke();
+    c.strokeStyle = S.softLine;
+    for (let y = h * 0.29; y < h * 0.94; y += h * 0.09) line(c, 0.5, y, w - 0.5, y);
+    c.strokeStyle = S.line;
+    line(c, w / 2, h * 0.975, w / 2, h);
+    line(c, w - 0.22, h * 0.3, w - 0.22, h * 0.56);
+    normal(c, S);
+    sideMirrors(c, S, h * 0.07, w);
+  }
+
+  function boxTruck(c, S, w, h) {
+    // トラック：前に運転台、後ろに箱形の荷台
+    const ch = Math.min(3.3, h * 0.22), by = ch + 0.3;
+    box(c, S, w / 2 - 0.9, ch - 0.3, 1.8, 0.7, 0, S.dark);
+    box(c, S, 0.35, 0, w - 0.7, ch, 0.5);
+    thin(c, S);
+    rr(c, 0.6, 0.3, w - 1.2, ch * 0.18, 0.12);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    rr(c, 0.6, ch * 0.34, w - 1.2, ch * 0.56, 0.1);
+    c.stroke();
+    line(c, 0.12, 0.85, 0.35, 0.85);
+    line(c, w - 0.12, 0.85, w - 0.35, 0.85);
+    normal(c, S);
+    c.fillStyle = S.line;
+    c.fillRect(0, 0.55, 0.14, 0.6);
+    c.fillRect(w - 0.14, 0.55, 0.14, 0.6);
+    // 荷台
+    box(c, S, 0.12, by, w - 0.24, h - by - 0.05, 0.06);
+    thin(c, S);
+    rr(c, 0.32, by + 0.2, w - 0.64, h - by - 0.45, 0.03);
+    c.stroke();
+    c.strokeStyle = S.softLine;
+    for (let y = by + 1.2; y < h - 0.5; y += 1.2) line(c, 0.32, y, w - 0.32, y);
+    normal(c, S);
+  }
+
+  function policeCar(c, S, w, h) {
+    // パトカー：白黒の塗り分け（ボンネットとトランクが黒）と屋根の警光灯
+    const r = Math.min(w, h) * 0.22;
+    box(c, S, 0.1, 0, w - 0.2, h, r);
+    c.save();
+    rr(c, 0.1, 0, w - 0.2, h, r);
+    c.clip();
+    c.fillStyle = S.dark;
+    c.fillRect(0, 0, w, h * 0.28);
+    c.fillRect(0, h * 0.81, w, h * 0.19);
+    c.restore();
+    rr(c, 0.1, 0, w - 0.2, h, r);
+    c.stroke();
+    thin(c, S);
+    rr(c, 0.45, h * 0.28, w - 0.9, h * 0.12, 0.15);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    rr(c, 0.5, h * 0.72, w - 1, h * 0.09, 0.12);
+    c.fill();
+    c.stroke();
+    rr(c, 0.4, h * 0.42, w - 0.8, h * 0.28, 0.1);
+    c.stroke();
+    normal(c, S);
+    roofLightBar(c, S, 0.55, h * 0.445, w - 1.1, 0.5, [S.red, S.red, S.red, S.blue, S.blue, S.blue]);
+    sideMirrors(c, S, h * 0.3, w);
+  }
+
+  function ambulance(c, S, w, h) {
+    // 救急車：高い屋根の箱に大きな十字、両側の赤い帯、前に赤色灯
+    const cx = w / 2;
+    box(c, S, 0.1, 0, w - 0.2, h, 0.6);
+    thin(c, S);
+    rr(c, 0.45, h * 0.06, w - 0.9, h * 0.09, 0.15);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    [0.14, w - 0.32].forEach(x => box(c, S, x, h * 0.3, 0.18, h * 0.64, 0, S.red));
+    normal(c, S);
+    box(c, S, 0.34, h * 0.25, w - 0.68, h * 0.72, 0.15);
+    roofLightBar(c, S, 0.6, h * 0.185, w - 1.2, 0.42, [S.red, S.fill, S.red, S.fill, S.red]);
+    // 十字
+    const cy = h * 0.55, a = Math.min(1.1, w * 0.26), t = a * 0.4;
+    c.beginPath();
+    c.moveTo(cx - t, cy - a);
+    c.lineTo(cx + t, cy - a);
+    c.lineTo(cx + t, cy - t);
+    c.lineTo(cx + a, cy - t);
+    c.lineTo(cx + a, cy + t);
+    c.lineTo(cx + t, cy + t);
+    c.lineTo(cx + t, cy + a);
+    c.lineTo(cx - t, cy + a);
+    c.lineTo(cx - t, cy + t);
+    c.lineTo(cx - a, cy + t);
+    c.lineTo(cx - a, cy - t);
+    c.lineTo(cx - t, cy - t);
+    c.closePath();
+    c.fillStyle = S.red;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    box(c, S, cx - 0.7, h * 0.82, 1.4, 0.75, 0.08, S.soft);
+    line(c, cx, h * 0.975, cx, h);
+    normal(c, S);
+    sideMirrors(c, S, h * 0.08, w);
+  }
+
+  function fireEngine(c, S, w, h) {
+    // 消防車：赤い運転台と警光灯、屋根にはしご、側面の赤い収納庫、ホースリール
+    const cx = w / 2, ch = Math.min(3.6, h * 0.22);
+    box(c, S, 0.15, ch + 0.2, w - 0.3, h - ch - 0.3, 0.1, S.soft);
+    [0.15, w - 0.6].forEach(x => {
+      box(c, S, x, ch + 0.2, 0.45, h - ch - 0.3, 0.05, S.red);
+      thin(c, S);
+      for (let y = ch + 2.4; y < h - 0.5; y += 2.2) line(c, x, y, x + 0.45, y);
+      normal(c, S);
+    });
+    // 運転台
+    box(c, S, 0.25, 0, w - 0.5, ch, 0.5, S.red);
+    thin(c, S);
+    rr(c, 0.5, 0.25, w - 1, 0.5, 0.12);
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+    roofLightBar(c, S, 0.55, 0.88, w - 1.1, 0.4, [S.fill, S.red, S.red, S.red, S.red, S.fill]);
+    sideMirrors(c, S, 0.55, w);
+    // ターンテーブルとはしご
+    const tr = Math.min(1.4, w * 0.28);
+    circle(c, S, cx, h - 2.4, tr, S.fill);
+    thin(c, S);
+    circle(c, S, cx, h - 2.4, tr * 0.75, false);
+    normal(c, S);
+    box(c, S, cx - 0.8, 1.45, 1.6, h - 2.4 - 1.45 + 0.7, 0.05);
+    thin(c, S);
+    for (let y = 1.75; y < h - 1.8; y += 0.5) line(c, cx - 0.8, y, cx + 0.8, y);
+    normal(c, S);
+    c.save();
+    c.lineWidth = S.lw * 1.7;
+    line(c, cx - 0.62, 1.45, cx - 0.62, h - 1.7);
+    line(c, cx + 0.62, 1.45, cx + 0.62, h - 1.7);
+    c.restore();
+    // ホースリール
+    [1.05, w - 1.05].forEach(x => {
+      circle(c, S, x, h * 0.45, 0.45, S.fill);
+      thin(c, S);
+      circle(c, S, x, h * 0.45, 0.3, false);
+      normal(c, S);
+      circle(c, S, x, h * 0.45, 0.13, S.dark);
+    });
+  }
+
+  function excavator(c, S, w, h) {
+    // ショベルカー：左右の履帯、旋回する上部（運転席は左前）、前（上）にブームとバケット
+    fitScaled(c, S, w, h, 6, 12, S => {
+      crawlerTrack(c, S, 0, 4.4, 1.5, 7.3);
+      crawlerTrack(c, S, 4.5, 4.4, 1.5, 7.3);
+      box(c, S, 0.55, 5.0, 4.9, 6.7, 0.4);
+      box(c, S, 0.55, 10.0, 4.9, 1.7, 0.8, S.soft);
+      thin(c, S);
+      rr(c, 3.1, 7.7, 2.1, 2.1, 0.08);
+      c.stroke();
+      for (let y = 8.0; y < 9.7; y += 0.3) line(c, 3.25, y, 5.05, y);
+      normal(c, S);
+      // 運転席
+      box(c, S, 0.75, 5.2, 2.0, 2.8, 0.2);
+      thin(c, S);
+      box(c, S, 0.92, 5.35, 1.66, 0.6, 0.08, S.water);
+      rr(c, 1.0, 6.2, 1.5, 1.55, 0.08);
+      c.stroke();
+      normal(c, S);
+      // ブーム
+      c.beginPath();
+      c.moveTo(3.0, 7.9);
+      c.lineTo(4.2, 7.9);
+      c.lineTo(4.05, 1.7);
+      c.lineTo(3.15, 1.7);
+      c.closePath();
+      c.fillStyle = S.yellow;
+      c.fill();
+      c.stroke();
+      thin(c, S);
+      box(c, S, 3.45, 3.0, 0.3, 4.2, 0.1, S.soft);
+      normal(c, S);
+      // バケット
+      for (let i = 0; i < 5; i++) {
+        const x = 2.55 + i * 0.52;
+        c.beginPath();
+        c.moveTo(x, 0.4);
+        c.lineTo(x + 0.13, 0.04);
+        c.lineTo(x + 0.26, 0.4);
+        c.closePath();
+        c.fillStyle = S.dark;
+        c.fill();
+        c.stroke();
+      }
+      c.beginPath();
+      c.moveTo(2.6, 1.8);
+      c.lineTo(4.6, 1.8);
+      c.lineTo(4.85, 0.38);
+      c.lineTo(2.35, 0.38);
+      c.closePath();
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+      thin(c, S);
+      line(c, 2.5, 1.2, 4.7, 1.2);
+      normal(c, S);
+      circle(c, S, 3.6, 1.8, 0.24, S.dark);
+    });
+  }
+
+  function bulldozer(c, S, w, h) {
+    // ブルドーザー：前（上）に幅の広い排土板、左右の履帯、エンジンと運転席、後ろにリッパー
+    fitScaled(c, S, w, h, 7, 10, S => {
+      const cx = 3.5;
+      [0.02, 6.63].forEach(x => box(c, S, x, 1.1, 0.35, 4.0, 0.05, S.dark));
+      crawlerTrack(c, S, 0.4, 2.2, 1.6, 7.4);
+      crawlerTrack(c, S, 5.0, 2.2, 1.6, 7.4);
+      // 排土板
+      c.beginPath();
+      c.moveTo(0, 0.45);
+      c.quadraticCurveTo(cx, -0.05, 7, 0.45);
+      c.lineTo(7, 1.4);
+      c.quadraticCurveTo(cx, 0.95, 0, 1.4);
+      c.closePath();
+      c.fillStyle = S.soft;
+      c.fill();
+      c.save();
+      c.lineWidth = S.lw * 1.4;
+      c.stroke();
+      c.restore();
+      thin(c, S);
+      c.beginPath();
+      c.moveTo(0.15, 0.85);
+      c.quadraticCurveTo(cx, 0.4, 6.85, 0.85);
+      c.stroke();
+      normal(c, S);
+      // エンジン
+      box(c, S, 2.2, 1.6, 2.6, 4.3, 0.2, S.yellow);
+      thin(c, S);
+      for (let y = 1.85; y < 2.7; y += 0.2) line(c, 2.4, y, 4.6, y);
+      circle(c, S, cx - 0.65, 3.6, 0.26, S.fill);
+      normal(c, S);
+      circle(c, S, cx + 0.65, 3.7, 0.24, S.dark);
+      // 運転席
+      box(c, S, 1.9, 5.7, 3.2, 3.1, 0.15);
+      thin(c, S);
+      rr(c, 2.2, 6.0, 2.6, 2.5, 0.08);
+      c.stroke();
+      normal(c, S);
+      c.fillStyle = S.line;
+      [[1.9, 5.7], [4.85, 5.7], [1.9, 8.55], [4.85, 8.55]].forEach(([x, y]) => c.fillRect(x, y, 0.25, 0.25));
+      // リッパー
+      box(c, S, 2.3, 9.0, 2.4, 0.45, 0.05, S.dark);
+      box(c, S, cx - 0.2, 9.4, 0.4, 0.58, 0.05, S.dark);
+    });
+  }
+
+  function craneTruck(c, S, w, h) {
+    // クレーン車：多軸の車体、左前に運転席、旋回台と操作室、たたんだ伸縮ブームが前へ
+    fitScaled(c, S, w, h, 5.6, 20, S => {
+      const cx = 2.8;
+      [4.0, 5.9, 13.6, 15.5].forEach(y => {
+        box(c, S, 0.05, y, 0.55, 1.4, 0.12, S.dark);
+        box(c, S, 5.0, y, 0.55, 1.4, 0.12, S.dark);
+      });
+      box(c, S, 0.4, 0.15, 4.8, 19.7, 0.35, S.soft);
+      // 運転席
+      box(c, S, 0.5, 0.25, 2.0, 3.1, 0.4);
+      thin(c, S);
+      box(c, S, 0.7, 0.45, 1.6, 0.5, 0.1, S.water);
+      rr(c, 0.75, 1.2, 1.5, 1.9, 0.1);
+      c.stroke();
+      normal(c, S);
+      // アウトリガー（格納）
+      [6.9, 17.4].forEach(y => {
+        thin(c, S);
+        box(c, S, 0.4, y, 4.8, 0.9, 0.04, S.fill);
+        normal(c, S);
+        box(c, S, 0.25, y + 0.1, 0.4, 0.7, 0.05, S.dark);
+        box(c, S, 4.95, y + 0.1, 0.4, 0.7, 0.05, S.dark);
+      });
+      // 旋回台・操作室・カウンターウェイト
+      circle(c, S, cx, 12.2, 2.0, S.fill);
+      thin(c, S);
+      circle(c, S, cx, 12.2, 1.7, false);
+      normal(c, S);
+      box(c, S, 1.1, 14.0, 3.4, 1.7, 0.3, S.dark);
+      box(c, S, 0.7, 10.2, 1.5, 2.6, 0.2);
+      thin(c, S);
+      box(c, S, 0.85, 10.35, 1.2, 0.45, 0.08, S.water);
+      normal(c, S);
+      // 伸縮ブーム（根元→先端で細くなる）
+      [[2.6, 1.8, 8.0, 5.7], [2.7, 1.6, 4.3, 3.8], [2.8, 1.4, 1.1, 3.3]].forEach(([x, bw, y, bh]) => box(c, S, x, y, bw, bh, 0.06, S.yellow));
+      thin(c, S);
+      [8.5, 4.8, 1.6].forEach(y => line(c, 2.8, y, 4.2, y));
+      normal(c, S);
+      box(c, S, 2.75, 0.4, 1.5, 0.8, 0.2, S.soft);
+      box(c, S, 3.25, 0.05, 0.5, 0.45, 0.08, S.dark);
+    });
+  }
+
+  function forklift(c, S, w, h) {
+    // フォークリフト：前（上）に2本の爪とマスト、運転席の頭上ガード、後ろにカウンターウェイト
+    fitScaled(c, S, w, h, 2.4, 5, S => {
+      const cx = 1.2;
+      box(c, S, 0.45, 0, 0.28, 2.0, 0.03, S.dark);
+      box(c, S, 1.67, 0, 0.28, 2.0, 0.03, S.dark);
+      box(c, S, 0.25, 1.72, 1.9, 0.22, 0.02, S.soft);
+      box(c, S, 0.2, 1.94, 2.0, 0.36, 0.04, S.dark);
+      box(c, S, 0, 2.35, 0.32, 0.85, 0.08, S.dark);
+      box(c, S, 2.08, 2.35, 0.32, 0.85, 0.08, S.dark);
+      box(c, S, 0.04, 3.95, 0.22, 0.6, 0.06, S.dark);
+      box(c, S, 2.14, 3.95, 0.22, 0.6, 0.06, S.dark);
+      box(c, S, 0.22, 2.3, 1.96, 2.7, 0.25, S.yellow);
+      box(c, S, cx - 0.42, 3.3, 0.84, 0.7, 0.15, S.soft);
+      thin(c, S);
+      circle(c, S, cx, 2.8, 0.22, false);
+      normal(c, S);
+      box(c, S, 0.22, 4.05, 1.96, 0.95, 0.35, S.dark);
+      // 頭上ガード（格子）
+      c.save();
+      c.lineWidth = S.lw * 1.2;
+      rr(c, 0.38, 2.45, 1.64, 1.75, 0.06);
+      c.stroke();
+      thin(c, S);
+      for (let y = 2.8; y < 4.15; y += 0.35) line(c, 0.38, y, 2.02, y);
+      c.restore();
+    });
+  }
+
+  function battleTank(c, S, w, h) {
+    // 戦車：左右の履帯、車体、砲塔と前（上）へ向いた主砲
+    fitScaled(c, S, w, h, 7, 14, S => {
+      const cx = 3.5;
+      crawlerTrack(c, S, 0, 0.9, 1.5, 12.6);
+      crawlerTrack(c, S, 5.5, 0.9, 1.5, 12.6);
+      c.beginPath();
+      c.moveTo(1.6, 1.4);
+      c.lineTo(5.4, 1.4);
+      c.lineTo(5.85, 2.8);
+      c.lineTo(5.85, 13.2);
+      c.lineTo(1.15, 13.2);
+      c.lineTo(1.15, 2.8);
+      c.closePath();
+      c.fillStyle = S.soft;
+      c.fill();
+      c.save();
+      c.lineWidth = S.lw * 1.2;
+      c.stroke();
+      c.restore();
+      thin(c, S);
+      line(c, 1.15, 2.8, 5.85, 2.8);
+      rr(c, 1.8, 10.4, 3.4, 2.3, 0.05);
+      c.stroke();
+      for (let y = 10.7; y < 12.6; y += 0.3) line(c, 1.9, y, 5.1, y);
+      normal(c, S);
+      // 主砲
+      box(c, S, cx - 0.17, 0.2, 0.34, 4.6, 0.05);
+      box(c, S, cx - 0.3, 1.9, 0.6, 1.1, 0.15, S.soft);
+      box(c, S, cx - 0.26, 0, 0.52, 0.5, 0.06, S.dark);
+      // 砲塔
+      c.beginPath();
+      c.moveTo(cx - 1.3, 4.4);
+      c.lineTo(cx + 1.3, 4.4);
+      c.lineTo(cx + 2.2, 5.8);
+      c.lineTo(cx + 2.2, 8.8);
+      c.lineTo(cx + 1.5, 10.0);
+      c.lineTo(cx - 1.5, 10.0);
+      c.lineTo(cx - 2.2, 8.8);
+      c.lineTo(cx - 2.2, 5.8);
+      c.closePath();
+      c.fillStyle = S.fill;
+      c.fill();
+      c.save();
+      c.lineWidth = S.lw * 1.3;
+      c.stroke();
+      c.restore();
+      box(c, S, cx - 0.6, 4.05, 1.2, 0.75, 0.1, S.dark);
+      circle(c, S, cx + 0.9, 7.7, 0.5, S.soft);
+      circle(c, S, cx - 0.95, 8.1, 0.42, S.soft);
+      thin(c, S);
+      line(c, cx + 0.55, 7.7, cx + 1.25, 7.7);
+      normal(c, S);
+      box(c, S, cx - 1.6, 6.0, 0.5, 0.3, 0.04, S.dark);
+    });
+  }
+
+  function lightAircraft(c, S, w, h) {
+    // 小型機（低翼）：翼幅が横、機首（プロペラ）が上
+    fitScaled(c, S, w, h, 24, 22, S => {
+      const cx = 12;
+      // 主翼
+      c.beginPath();
+      c.moveTo(1.0, 6.6);
+      c.lineTo(23.0, 6.6);
+      c.quadraticCurveTo(23.9, 6.7, 23.9, 7.6);
+      c.lineTo(23.9, 9.0);
+      c.quadraticCurveTo(23.9, 9.9, 23.0, 9.9);
+      c.lineTo(1.0, 9.9);
+      c.quadraticCurveTo(0.1, 9.9, 0.1, 9.0);
+      c.lineTo(0.1, 7.6);
+      c.quadraticCurveTo(0.1, 6.7, 1.0, 6.6);
+      c.closePath();
+      c.fillStyle = S.fill;
+      c.fill();
+      c.stroke();
+      thin(c, S);
+      [[1.3, 5.2], [17.5, 5.2], [7.0, 3.6], [13.4, 3.6]].forEach(([x, len]) => { c.strokeRect(x, 9.05, len, 0.85); });
+      normal(c, S);
+      circle(c, S, 0.6, 8.25, 0.25, S.red);
+      circle(c, S, 23.4, 8.25, 0.25, S.green);
+      // 水平尾翼と昇降舵
+      box(c, S, cx - 4.8, 18.3, 9.6, 2.3, 0.7);
+      thin(c, S);
+      line(c, cx - 4.4, 19.8, cx + 4.4, 19.8);
+      normal(c, S);
+      // 胴体
+      c.beginPath();
+      c.moveTo(cx, 1.0);
+      c.bezierCurveTo(cx + 1.0, 1.0, cx + 1.35, 2.2, cx + 1.35, 3.6);
+      c.lineTo(cx + 1.35, 9.8);
+      c.bezierCurveTo(cx + 1.35, 14, cx + 0.6, 18.5, cx + 0.4, 21.2);
+      c.lineTo(cx - 0.4, 21.2);
+      c.bezierCurveTo(cx - 0.6, 18.5, cx - 1.35, 14, cx - 1.35, 9.8);
+      c.lineTo(cx - 1.35, 3.6);
+      c.bezierCurveTo(cx - 1.35, 2.2, cx - 1.0, 1.0, cx, 1.0);
+      c.closePath();
+      c.fillStyle = S.fill;
+      c.fill();
+      c.stroke();
+      thin(c, S);
+      line(c, cx - 1.3, 3.6, cx + 1.3, 3.6);
+      rr(c, cx - 1.0, 4.3, 2.0, 3.8, 0.8);
+      c.fillStyle = S.water;
+      c.fill();
+      c.stroke();
+      line(c, cx - 0.95, 5.5, cx + 0.95, 5.5);
+      normal(c, S);
+      box(c, S, cx - 0.2, 16.6, 0.4, 4.8, 0.2, S.soft);
+      // プロペラとスピナー
+      box(c, S, cx - 3.0, 0.55, 6.0, 0.32, 0.16, S.dark);
+      ellipse(c, S, cx, 1.0, 0.5, 0.65, S.dark);
+    });
+  }
+
+  function helicopter(c, S, w, h) {
+    // ヘリコプター：回転翼（4枚）とその回る範囲（破線）、胴体、尾部とテールローター
+    fitScaled(c, S, w, h, 22, 22, S => {
+      const cx = 11, cy = 10.6, R = 10.4;
+      c.save();
+      thin(c, S);
+      dashed(c, S, true);
+      c.strokeStyle = S.softLine;
+      circle(c, S, cx, cy, R, false);
+      c.restore();
+      // スキッド
+      thin(c, S);
+      [cx - 2.1, cx + 2.1].forEach(x => box(c, S, x - 0.16, 7.0, 0.32, 8.4, 0.16, S.soft));
+      line(c, cx - 2.1, 8.8, cx + 2.1, 8.8);
+      line(c, cx - 2.1, 13.4, cx + 2.1, 13.4);
+      normal(c, S);
+      // テールブームと安定板
+      c.beginPath();
+      c.moveTo(cx - 0.75, 14.2);
+      c.lineTo(cx - 0.28, 21.4);
+      c.lineTo(cx + 0.28, 21.4);
+      c.lineTo(cx + 0.75, 14.2);
+      c.closePath();
+      c.fillStyle = S.fill;
+      c.fill();
+      c.stroke();
+      box(c, S, cx - 1.7, 18.4, 3.4, 0.6, 0.25);
+      c.save();
+      c.lineWidth = S.lw * 2.4;
+      line(c, cx + 0.6, 19.7, cx + 0.6, 21.9);
+      c.restore();
+      circle(c, S, cx + 0.6, 20.8, 0.2, S.dark);
+      // 胴体
+      c.beginPath();
+      c.moveTo(cx, 4.6);
+      c.bezierCurveTo(cx + 1.6, 4.6, cx + 1.9, 6.6, cx + 1.9, 8.6);
+      c.bezierCurveTo(cx + 1.9, 12.2, cx + 1.2, 14.8, cx + 0.75, 15.2);
+      c.lineTo(cx - 0.75, 15.2);
+      c.bezierCurveTo(cx - 1.2, 14.8, cx - 1.9, 12.2, cx - 1.9, 8.6);
+      c.bezierCurveTo(cx - 1.9, 6.6, cx - 1.6, 4.6, cx, 4.6);
+      c.closePath();
+      c.fillStyle = S.fill;
+      c.fill();
+      c.stroke();
+      // 操縦席の窓
+      thin(c, S);
+      c.beginPath();
+      c.moveTo(cx, 4.85);
+      c.bezierCurveTo(cx + 1.4, 4.85, cx + 1.65, 6.5, cx + 1.6, 7.6);
+      c.lineTo(cx - 1.6, 7.6);
+      c.bezierCurveTo(cx - 1.65, 6.5, cx - 1.4, 4.85, cx, 4.85);
+      c.closePath();
+      c.fillStyle = S.water;
+      c.fill();
+      c.stroke();
+      line(c, cx, 4.9, cx, 7.6);
+      normal(c, S);
+      box(c, S, cx - 1.0, 9.4, 2.0, 3.6, 0.5, S.soft);
+      // 主回転翼
+      for (let k = 0; k < 4; k++) {
+        c.save();
+        c.translate(cx, cy);
+        c.rotate(Math.PI / 4 + (k * Math.PI) / 2);
+        box(c, S, 0.3, -0.28, R - 0.6, 0.56, 0.22, S.soft);
+        c.restore();
+      }
+      circle(c, S, cx, cy, 0.6, S.dark);
+    });
+  }
+
+  /* 船舶 */
+
+  function lifeboat(c, S, w, h) {
+    // 救命艇（密閉型）：船首が上、屋根にハッチと操縦窓、前後に吊り下げフック
+    const cx = w / 2;
+    const hull = d => {
+      c.beginPath();
+      c.moveTo(cx, d + 0.05);
+      c.quadraticCurveTo(w - d, h * 0.1 + d, w - d, h * 0.38);
+      c.lineTo(w - d, h * 0.8);
+      c.quadraticCurveTo(w - d, h - d, cx, h - d);
+      c.quadraticCurveTo(d, h - d, d, h * 0.8);
+      c.lineTo(d, h * 0.38);
+      c.quadraticCurveTo(d, h * 0.1 + d, cx, d + 0.05);
+      c.closePath();
+    };
+    hull(0.05);
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.save();
+    c.lineWidth = S.lw * 1.2;
+    c.stroke();
+    c.restore();
+    thin(c, S);
+    hull(0.3);
+    c.stroke();
+    normal(c, S);
+    box(c, S, 0.6, h * 0.2, w - 1.2, h * 0.68, Math.min(1.0, w * 0.25));
+    thin(c, S);
+    for (let y = h * 0.36; y < h * 0.7; y += h * 0.085) {
+      box(c, S, 0.74, y, 0.2, h * 0.05, 0.06, S.water);
+      box(c, S, w - 0.94, y, 0.2, h * 0.05, 0.06, S.water);
+    }
+    normal(c, S);
+    [h * 0.29, h * 0.79].forEach(y => {
+      circle(c, S, cx, y, Math.min(0.42, w * 0.11), S.soft);
+      thin(c, S);
+      line(c, cx - 0.22, y, cx + 0.22, y);
+      normal(c, S);
+    });
+    box(c, S, cx - 0.55, h * 0.56, 1.1, 0.9, 0.35, S.water);
+    circle(c, S, cx, h * 0.12, 0.16, S.dark);
+    circle(c, S, cx, h * 0.93, 0.16, S.dark);
+  }
+
+  function liferaftCanister(c, S, w, h) {
+    // 救命いかだ：架台に載った円筒形のコンテナ、固定ベルトと自動離脱装置
+    box(c, S, 0.04, 0.14, w - 0.08, h - 0.28, 0.04, S.soft);
+    const r = (w - 0.5) / 2;
+    box(c, S, 0.25, 0.26, w - 0.5, h - 0.52, r * 0.7);
+    thin(c, S);
+    line(c, 0.25, h / 2 - 0.05, w - 0.25, h / 2 - 0.05);
+    line(c, 0.25, h / 2 + 0.05, w - 0.25, h / 2 + 0.05);
+    c.strokeStyle = S.softLine;
+    line(c, 0.25 + r * 0.45, 0.45, 0.25 + r * 0.45, h - 0.45);
+    c.strokeStyle = S.line;
+    normal(c, S);
+    [h * 0.3, h * 0.7].forEach(y => box(c, S, 0.04, y - 0.06, w - 0.08, 0.12, 0, S.dark));
+    thin(c, S);
+    line(c, w / 2, 0.22, w / 2, h * 0.3);
+    normal(c, S);
+    box(c, S, w / 2 - 0.2, 0.02, 0.4, 0.22, 0.04, S.dark);
+  }
+
+  function shipAnchor(c, S, w, h) {
+    // 錨：輪・ストック・軸・爪（床や甲板に寝かせた形）
+    fitScaled(c, S, w, h, 2, 2.4, S => {
+      const cx = 1, cy = 1.3, r = 0.78, a0 = 0.18;
+      c.beginPath();
+      c.arc(cx, cy, r, a0, Math.PI - a0);
+      strokeOutlined(c, S, 0.2, S.dark);
+      [[1, a0], [-1, Math.PI - a0]].forEach(([s, a]) => {
+        const ex = cx + Math.cos(a) * r, ey = cy + Math.sin(a) * r;
+        c.beginPath();
+        c.moveTo(ex + s * 0.2, ey - 0.46);
+        c.lineTo(ex + s * 0.2, ey + 0.1);
+        c.lineTo(ex - s * 0.18, ey + 0.02);
+        c.closePath();
+        c.fillStyle = S.dark;
+        c.fill();
+        c.stroke();
+      });
+      box(c, S, cx - 0.1, 0.48, 0.2, 1.6, 0.06, S.dark);
+      box(c, S, cx - 0.7, 0.62, 1.4, 0.16, 0.08, S.dark);
+      c.beginPath();
+      c.arc(cx, 0.3, 0.19, 0, TAU);
+      strokeOutlined(c, S, 0.1, S.dark);
+      circle(c, S, cx, 2.08, 0.14, S.dark);
+    });
+  }
+
+  function mooringBitt(c, S, w, h) {
+    // 係船ビット：台座に2本の柱（頭がつば状に広がる）
+    box(c, S, 0.03, h * 0.12, w - 0.06, h * 0.76, Math.min(w, h) * 0.2, S.soft);
+    const r = Math.min(w * 0.22, h * 0.3);
+    [w * 0.28, w * 0.72].forEach(x => {
+      circle(c, S, x, h / 2, r, S.fill);
+      circle(c, S, x, h / 2, r * 0.62, S.dark);
+    });
+  }
+
+  function shipWheel(c, S, w, h) {
+    // 操舵輪：8本のスポークと握り
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU, ca = Math.cos(a), sa = Math.sin(a);
+      c.beginPath();
+      c.moveTo(cx, cy);
+      c.lineTo(cx + ca * R * 0.66, cy + sa * R * 0.66);
+      strokeOutlined(c, S, R * 0.09, S.wood);
+      c.beginPath();
+      c.moveTo(cx + ca * R * 0.66, cy + sa * R * 0.66);
+      c.lineTo(cx + ca * R * 0.86, cy + sa * R * 0.86);
+      strokeOutlined(c, S, R * 0.15, S.wood);
+    }
+    c.beginPath();
+    c.arc(cx, cy, R * 0.6, 0, TAU);
+    strokeOutlined(c, S, R * 0.14, S.wood);
+    circle(c, S, cx, cy, R * 0.2, S.wood);
+    circle(c, S, cx, cy, R * 0.07, S.dark);
+  }
+
+  function radarConsole(c, S, w, h) {
+    // レーダー卓：丸い画面に距離の輪と掃引、手前に操作盤
+    box(c, S, 0, 0, w, h, 0.12, S.soft);
+    const cx = w / 2, cy = h * 0.42, r = Math.min(w, h) * 0.3;
+    circle(c, S, cx, cy, r + 0.08, S.dark);
+    circle(c, S, cx, cy, r, S.green);
+    c.save();
+    c.beginPath();
+    c.arc(cx, cy, r, 0, TAU);
+    c.clip();
+    c.globalAlpha = 0.45;
+    c.fillStyle = S.greenLine;
+    c.beginPath();
+    c.moveTo(cx, cy);
+    c.arc(cx, cy, r, -Math.PI * 0.5, -Math.PI * 0.18);
+    c.closePath();
+    c.fill();
+    c.globalAlpha = 1;
+    thin(c, S, 0.5);
+    c.strokeStyle = S.greenLine;
+    circle(c, S, cx, cy, r * 0.33, false);
+    circle(c, S, cx, cy, r * 0.66, false);
+    line(c, cx - r, cy, cx + r, cy);
+    line(c, cx, cy - r, cx, cy + r);
+    c.fillStyle = S.greenLine;
+    [[0.4, -0.3], [-0.5, 0.2], [0.15, 0.55]].forEach(([dx, dy]) => {
+      c.beginPath();
+      c.arc(cx + dx * r, cy + dy * r, r * 0.08, 0, TAU);
+      c.fill();
+    });
+    c.restore();
+    const py = cy + r + 0.14;
+    box(c, S, 0.15, py, w - 0.3, h - py - 0.08, 0.04, S.fill);
+    c.fillStyle = S.line;
+    for (let x = 0.32; x < w - 0.6; x += 0.2) {
+      c.beginPath();
+      c.arc(x, py + (h - py - 0.08) / 2, 0.04, 0, TAU);
+      c.fill();
+    }
+    thin(c, S);
+    circle(c, S, w - 0.38, py + (h - py - 0.08) / 2, 0.09, S.dark);
+    normal(c, S);
+  }
+
+  function chartTable(c, S, w, h) {
+    // 海図卓：広げた海図（陸地・針路・方位盤）とディバイダー
+    box(c, S, 0, 0, w, h, 0.04, S.wood);
+    thin(c, S);
+    line(c, 0.08, h - 0.14, w - 0.08, h - 0.14);
+    c.save();
+    c.translate(w / 2, h * 0.45);
+    c.rotate(-0.04);
+    const cw = w * 0.82, chh = h * 0.7;
+    box(c, S, -cw / 2, -chh / 2, cw, chh, 0.01, S.fill);
+    c.beginPath();
+    c.moveTo(-cw / 2, -chh / 2);
+    c.lineTo(-cw * 0.08, -chh / 2);
+    c.bezierCurveTo(-cw * 0.14, -chh * 0.2, -cw * 0.32, -chh * 0.12, -cw * 0.3, chh * 0.12);
+    c.bezierCurveTo(-cw * 0.28, chh * 0.3, -cw * 0.42, chh * 0.32, -cw / 2, chh * 0.26);
+    c.closePath();
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    dashed(c, S, true);
+    line(c, -cw * 0.2, chh * 0.34, cw * 0.36, -chh * 0.3);
+    dashed(c, S, false);
+    const rx = cw * 0.3, ry = chh * 0.2, rr2 = chh * 0.17;
+    circle(c, S, rx, ry, rr2, false);
+    line(c, rx, ry - rr2 * 1.25, rx, ry + rr2 * 1.25);
+    line(c, rx - rr2 * 1.25, ry, rx + rr2 * 1.25, ry);
+    c.restore();
+    // ディバイダー
+    c.save();
+    c.lineWidth = S.lw * 1.2;
+    line(c, w * 0.56, h * 0.18, w * 0.48, h * 0.62);
+    line(c, w * 0.56, h * 0.18, w * 0.62, h * 0.6);
+    c.restore();
+    circle(c, S, w * 0.56, h * 0.18, 0.06, S.dark);
+    normal(c, S);
+  }
+
+  function marineEngine(c, S, w, h) {
+    // 船舶エンジン：大型ディーゼル。シリンダーヘッドが縦に並び、上に過給機、下にはずみ車
+    fitScaled(c, S, w, h, 6, 10, S => {
+      box(c, S, 0.3, 1.3, 5.4, 7.6, 0.25, S.soft);
+      // 給気管（左）
+      box(c, S, 0.55, 1.7, 0.7, 6.8, 0.15, S.fill);
+      thin(c, S);
+      for (let y = 2.0; y < 8.4; y += 0.35) line(c, 0.65, y, 1.15, y);
+      normal(c, S);
+      box(c, S, 0.7, 0.55, 2.5, 0.4, 0.2, S.fill);
+      // シリンダーブロックとヘッド×6
+      box(c, S, 1.45, 1.5, 3.1, 7.2, 0.12, S.fill);
+      for (let i = 0; i < 6; i++) {
+        const y = 1.65 + i * 1.16;
+        box(c, S, 1.65, y, 2.3, 1.0, 0.1, S.soft);
+        thin(c, S);
+        circle(c, S, 2.8, y + 0.5, 0.24, S.fill);
+        normal(c, S);
+        c.fillStyle = S.line;
+        [[1.85, y + 0.2], [3.75, y + 0.2], [1.85, y + 0.8], [3.75, y + 0.8]].forEach(([x, yy]) => {
+          c.beginPath();
+          c.arc(x, yy, 0.06, 0, TAU);
+          c.fill();
+        });
+        c.save();
+        c.lineWidth = S.lw * 2.4;
+        line(c, 3.95, y + 0.5, 4.7, y + 0.5);
+        c.restore();
+      }
+      // 排気管（右）と過給機
+      box(c, S, 4.65, 1.6, 0.75, 7.0, 0.3, S.dark);
+      c.save();
+      c.lineWidth = S.lw * 3;
+      line(c, 5.0, 1.65, 4.3, 0.9);
+      c.restore();
+      circle(c, S, 3.75, 0.75, 0.68, S.fill);
+      thin(c, S);
+      circle(c, S, 3.75, 0.75, 0.38, false);
+      normal(c, S);
+      circle(c, S, 3.75, 0.75, 0.12, S.dark);
+      // はずみ車
+      box(c, S, 0.8, 8.95, 4.4, 0.9, 0.2, S.dark);
+      thin(c, S);
+      for (let x = 1.05; x < 5.0; x += 0.25) line(c, x, 9.05, x, 9.75);
+      normal(c, S);
+    });
+  }
+
+  function cargoHatch(c, S, w, h) {
+    // 船のハッチ：甲板から立ち上がった縁（コーミング）、ふた、締め金具と蝶番
+    box(c, S, 0, 0, w, h, 0.08, S.soft);
+    const m = Math.min(w, h) * 0.1;
+    box(c, S, m, m, w - m * 2, h - m * 2, 0.05, S.fill);
+    thin(c, S);
+    line(c, w * 0.36, m, w * 0.36, h - m);
+    line(c, w * 0.64, m, w * 0.64, h - m);
+    c.beginPath();
+    c.arc(w / 2, h - m - 0.32, 0.14, 0, TAU);
+    c.stroke();
+    normal(c, S);
+    [0.25, 0.5, 0.75].forEach(k => {
+      box(c, S, w * k - 0.16, h - m - 0.08, 0.32, 0.16, 0.03, S.dark);
+      box(c, S, m - 0.08, h * k - 0.16, 0.16, 0.32, 0.03, S.dark);
+      box(c, S, w - m - 0.08, h * k - 0.16, 0.16, 0.32, 0.03, S.dark);
+    });
+    [0.25, 0.75].forEach(k => box(c, S, w * k - 0.25, m - 0.13, 0.5, 0.26, 0.03, S.dark));
+  }
+
+  /* 医療・研究 */
+
+  function fumeHood(c, S, w, h) {
+    // ドラフトチャンバー：奥に排気ダクト、中に作業台、手前（下）にガラスのサッシ
+    box(c, S, 0, 0, w, h, 0.03, S.soft);
+    box(c, S, 0.2, 0.2, w - 0.4, h - 0.48, 0.02, S.fill);
+    thin(c, S);
+    dashed(c, S, true);
+    line(c, 0.3, 0.34, w - 0.3, 0.34);
+    dashed(c, S, false);
+    circle(c, S, w * 0.3, h * 0.58, 0.15, S.water);
+    rr(c, w * 0.3 - 0.05, h * 0.58 - 0.3, 0.1, 0.18, 0.02);
+    c.stroke();
+    box(c, S, w * 0.6, h * 0.46, 0.26, 0.26, 0.03, S.water);
+    normal(c, S);
+    box(c, S, 0.1, h - 0.27, w - 0.2, 0.17, 0.02, S.water);
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    line(c, w * 0.35, h - 0.185, w * 0.65, h - 0.185);
+    c.restore();
+    circle(c, S, w / 2, 0.2, 0.17, S.fill);
+    thin(c, S);
+    line(c, w / 2 - 0.1, 0.1, w / 2 + 0.1, 0.3);
+    line(c, w / 2 + 0.1, 0.1, w / 2 - 0.1, 0.3);
+    normal(c, S);
+  }
+
+  function microscope(c, S, w, h) {
+    // 顕微鏡：台座とステージ、左右のピントつまみ、奥の支柱から手前（下）へ広がる鏡筒と2本の接眼レンズ
+    box(c, S, w * 0.2, h * 0.04, w * 0.6, h * 0.9, Math.min(w, h) * 0.14, S.soft);
+    box(c, S, w * 0.08, h * 0.36, w * 0.84, h * 0.24, 0.03, S.fill);
+    box(c, S, w * 0.04, h * 0.1, w * 0.16, h * 0.18, 0.03, S.dark);
+    box(c, S, w * 0.8, h * 0.1, w * 0.16, h * 0.18, 0.03, S.dark);
+    c.beginPath();
+    c.moveTo(w * 0.37, h * 0.05);
+    c.lineTo(w * 0.63, h * 0.05);
+    c.lineTo(w * 0.7, h * 0.62);
+    c.lineTo(w * 0.3, h * 0.62);
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    [0.38, 0.62].forEach(x => box(c, S, w * (x - 0.09), h * 0.62, w * 0.18, h * 0.3, w * 0.05, S.dark));
+  }
+
+  function labFreezer(c, S, w, h) {
+    // 超低温フリーザー：厚い箱と扉、表示パネル、雪の結晶の印
+    box(c, S, 0, 0, w, h, 0.06, S.soft);
+    box(c, S, 0.12, 0.12, w - 0.24, h - 0.36, 0.05, S.fill);
+    box(c, S, w - 0.62, 0.2, 0.42, 0.18, 0.03, S.blue);
+    c.save();
+    c.lineWidth = S.lw * 2.4;
+    line(c, w * 0.3, h - 0.12, w * 0.7, h - 0.12);
+    c.restore();
+    const cx = w * 0.42, cy = h * 0.5, r = Math.min(w, h) * 0.24;
+    c.save();
+    c.strokeStyle = S.blue;
+    thin(c, S, 0.9);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * TAU - Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a);
+      line(c, cx, cy, cx + ca * r, cy + sa * r);
+      const bx = cx + ca * r * 0.6, by = cy + sa * r * 0.6;
+      [0.7, -0.7].forEach(d => line(c, bx, by, bx + Math.cos(a + d) * r * 0.32, by + Math.sin(a + d) * r * 0.32));
+    }
+    c.restore();
+  }
+
+  function deconShower(c, S, w, h) {
+    // 除染シャワー：しま模様で囲んだ床の排水格子、真ん中に大きなシャワーヘッド、引き手
+    cautionStripes(c, S, 0, 0, w, h, 0.22);
+    rr(c, 0, 0, w, h, 0);
+    c.stroke();
+    const m = Math.min(w, h) * 0.12;
+    box(c, S, m, m, w - m * 2, h - m * 2, 0.02, S.fill);
+    thin(c, S, 0.5);
+    c.strokeStyle = S.softLine;
+    for (let x = m + 0.2; x < w - m - 0.05; x += 0.2) line(c, x, m + 0.05, x, h - m - 0.05);
+    c.strokeStyle = S.line;
+    normal(c, S);
+    const r = Math.min(w, h) * 0.22;
+    circle(c, S, w / 2, h / 2, r, S.water);
+    c.fillStyle = S.line;
+    for (let i = 0; i <= 8; i++) {
+      const a = (i / 8) * TAU, d = i === 8 ? 0 : r * 0.6;
+      c.beginPath();
+      c.arc(w / 2 + Math.cos(a) * d, h / 2 + Math.sin(a) * d, r * 0.09, 0, TAU);
+      c.fill();
+    }
+    thin(c, S);
+    line(c, w / 2 + r * 0.72, h / 2 + r * 0.72, w * 0.76, h * 0.74);
+    normal(c, S);
+    c.beginPath();
+    c.moveTo(w * 0.76, h * 0.72);
+    c.lineTo(w * 0.85, h * 0.86);
+    c.lineTo(w * 0.67, h * 0.86);
+    c.closePath();
+    c.fillStyle = S.green;
+    c.fill();
+    c.stroke();
+  }
+
+  /* 文化施設 */
+
+  function museumCase(c, S, w, h) {
+    // 展示ケース：台の上のガラスケースと、中の展示品（壺）
+    box(c, S, 0, 0, w, h, 0.04, S.soft);
+    box(c, S, 0.14, 0.14, w - 0.28, h - 0.28, 0.02, S.water);
+    thin(c, S);
+    box(c, S, w / 2 - 0.5, h / 2 - 0.42, 1.0, 0.84, 0.04, S.fill);
+    normal(c, S);
+    circle(c, S, w / 2, h / 2, Math.min(0.32, h * 0.2), S.wood);
+    thin(c, S);
+    circle(c, S, w / 2, h / 2, Math.min(0.18, h * 0.11), S.fill);
+    circle(c, S, w / 2, h / 2, Math.min(0.09, h * 0.055), S.dark);
+    c.strokeStyle = S.softLine;
+    line(c, 0.3, 0.6, 0.6, 0.3);
+    line(c, 0.3, 0.9, 0.9, 0.3);
+    line(c, w - 0.3, h - 0.6, w - 0.6, h - 0.3);
+    c.strokeStyle = S.line;
+    normal(c, S);
+  }
+
+  function framedPainting(c, S, w, h) {
+    // 額縁の絵：壁（上）に掛けた細い額。角は留め（斜めの継ぎ目）
+    const d = Math.min(h * 0.85, 0.28), k = d * 0.42;
+    c.save();
+    c.lineWidth = S.lw * 1.2;
+    box(c, S, 0, 0, w, d, 0.01, S.wood);
+    c.restore();
+    thin(c, S);
+    rr(c, k, k * 0.7, w - k * 2, d - k * 1.4, 0);
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    line(c, 0, 0, k, k * 0.7);
+    line(c, 0, d, k, d - k * 0.7);
+    line(c, w, 0, w - k, k * 0.7);
+    line(c, w, d, w - k, d - k * 0.7);
+    normal(c, S);
+  }
+
+  function sculpturePedestal(c, S, w, h) {
+    // 展示台と彫刻：面取りした台座（四隅の斜線）の上に胸像（顔は手前）
+    const m = Math.min(w, h) * 0.04, k = Math.min(w, h) * 0.15;
+    box(c, S, m, m, w - m * 2, h - m * 2, 0.02, S.soft);
+    box(c, S, k, k, w - k * 2, h - k * 2, 0.02, S.fill);
+    thin(c, S);
+    line(c, m, m, k, k);
+    line(c, w - m, m, w - k, k);
+    line(c, m, h - m, k, h - k);
+    line(c, w - m, h - m, w - k, h - k);
+    normal(c, S);
+    box(c, S, w * 0.38, h - k * 0.8, w * 0.24, k * 0.42, 0.02, S.dark);
+    // 胸像：横に広い肩、頭、手前に鼻
+    const r = Math.min(w, h) * 0.13, hy = h * 0.45;
+    ellipse(c, S, w / 2, h * 0.53, w * 0.27, h * 0.12, S.soft);
+    circle(c, S, w / 2, hy, r, S.fill);
+    c.beginPath();
+    c.moveTo(w / 2 - r * 0.28, hy + r * 0.86);
+    c.lineTo(w / 2, hy + r * 1.4);
+    c.lineTo(w / 2 + r * 0.28, hy + r * 0.86);
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    c.beginPath();
+    c.arc(w / 2, hy, r * 0.62, Math.PI * 1.1, Math.PI * 1.9);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function ropeBarrier(c, S, w, h) {
+    // ロープパーティション：支柱のあいだにたるんだロープ
+    const r = Math.min(h / 2, 0.2), n = Math.max(1, Math.round(w / 4));
+    const xs = [];
+    for (let i = 0; i <= n; i++) xs.push(r + ((w - r * 2) * i) / n);
+    for (let i = 0; i < n; i++) {
+      c.beginPath();
+      c.moveTo(xs[i], h / 2);
+      c.quadraticCurveTo((xs[i] + xs[i + 1]) / 2, h / 2 + h * 0.55, xs[i + 1], h / 2);
+      strokeOutlined(c, S, Math.min(0.13, h * 0.32), S.red);
+    }
+    xs.forEach(x => {
+      circle(c, S, x, h / 2, r, S.soft);
+      circle(c, S, x, h / 2, r * 0.5, S.yellow);
+    });
+  }
+
+  function dinoSkeleton(c, S, w, h) {
+    // 恐竜の骨格標本（真上から）：低い展示台の上に、頭（右）・背骨と肋骨・左右に開いた脚・尾
+    fitScaled(c, S, w, h, 12, 6, S => {
+      const bone = (pts, t) => {
+        c.beginPath();
+        pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+        strokeOutlined(c, S, t, S.fill);
+      };
+      box(c, S, 0.05, 0.05, 11.9, 5.9, 0.25, S.soft);
+      [1, -1].forEach(s => {
+        const Y = y => 3 + s * (y - 3);
+        // 脚と足の指
+        bone([[5.5, Y(2.7)], [6.1, Y(1.4)]], 0.26);
+        bone([[6.1, Y(1.4)], [5.3, Y(0.78)]], 0.2);
+        bone([[5.3, Y(0.78)], [5.75, Y(0.52)]], 0.15);
+        [[6.3, Y(0.3)], [6.4, Y(0.55)], [6.25, Y(0.8)]].forEach(p => bone([[5.75, Y(0.52)], p], 0.08));
+        circle(c, S, 6.1, Y(1.4), 0.15, S.fill);
+        // 腕
+        bone([[8.1, Y(2.75)], [8.35, Y(2.25)], [8.72, Y(2.18)]], 0.09);
+        // 肋骨
+        for (let x = 6.0; x <= 8.05; x += 0.4) {
+          const a = 1.5 - Math.abs(x - 6.9) * 0.35;
+          c.beginPath();
+          c.moveTo(x, Y(2.88));
+          c.quadraticCurveTo(x + 0.45, Y(3 - a * 0.85), x - 0.15, Y(3 - a));
+          strokeOutlined(c, S, 0.09, S.fill);
+        }
+      });
+      // 骨盤
+      ellipse(c, S, 5.35, 3, 1.05, 0.55, S.fill);
+      thin(c, S);
+      ellipse(c, S, 5.35, 3, 0.62, 0.28, false);
+      normal(c, S);
+      // 背骨（尾の先から首まで）
+      const sp = [];
+      for (let i = 0; i <= 12; i++) {
+        const t = i / 12, u = 1 - t;
+        sp.push([u * u * 0.35 + 2 * u * t * 2.6 + t * t * 5, u * u * 3.45 + 2 * u * t * 2.85 + t * t * 3]);
+      }
+      for (let x = 5.5; x <= 8.3; x += 0.4) sp.push([x, 3]);
+      sp.push([8.9, 2.99], [9.6, 2.96]);
+      c.beginPath();
+      sp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+      strokeOutlined(c, S, 0.16, S.fill);
+      thin(c, S);
+      for (let i = 1; i < sp.length - 1; i++) {
+        const [x, y] = sp[i], a = sp[i - 1], b = sp[i + 1];
+        const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+        const l = 0.1 + 0.22 * Math.min(1, x / 6);
+        line(c, x + (dy / len) * l, y - (dx / len) * l, x - (dy / len) * l, y + (dx / len) * l);
+      }
+      normal(c, S);
+      // 頭骨
+      c.beginPath();
+      c.moveTo(9.5, 3);
+      c.quadraticCurveTo(9.55, 2.2, 10.3, 2.22);
+      c.lineTo(11.45, 2.55);
+      c.quadraticCurveTo(11.95, 3, 11.45, 3.45);
+      c.lineTo(10.3, 3.78);
+      c.quadraticCurveTo(9.55, 3.8, 9.5, 3);
+      c.closePath();
+      c.fillStyle = S.fill;
+      c.fill();
+      c.stroke();
+      [[10.05, 2.58, 0.2], [10.05, 3.42, 0.2], [10.8, 2.7, 0.14], [10.8, 3.3, 0.14]].forEach(([x, y, r]) => ellipse(c, S, x, y, r, r * 0.75, S.dark));
+      c.fillStyle = S.line;
+      [2.86, 3.14].forEach(y => { c.beginPath(); c.arc(11.55, y, 0.05, 0, TAU); c.fill(); });
+    });
+  }
+
+  function pipeOrgan(c, S, w, h) {
+    // パイプオルガン：壁際（上）のケースに並ぶパイプ（真上から見た円）、手前に鍵盤の演奏台と椅子
+    const ch = h * 0.58;
+    box(c, S, 0, 0, w, ch, 0.03, S.wood);
+    const n = Math.max(5, Math.round(w / 0.36)), p = w / n;
+    thin(c, S);
+    for (let i = 0; i < n; i++) {
+      const x = p * (i + 0.5), k = 1 - Math.abs(x - w / 2) / (w / 2);
+      circle(c, S, x, ch * 0.34, Math.min(p * 0.46, 0.09 + 0.08 * k), S.fill);
+    }
+    for (let i = 1; i < n; i++) {
+      const x = p * i, k = 1 - Math.abs(x - w / 2) / (w / 2);
+      circle(c, S, x, ch * 0.74, Math.min(p * 0.36, 0.06 + 0.04 * k), S.fill);
+    }
+    normal(c, S);
+    // 演奏台（2段の鍵盤と音栓）
+    const cy = ch - 0.06, cdh = h * 0.27;
+    box(c, S, w * 0.24, cy, w * 0.52, cdh, 0.04, S.dark);
+    thin(c, S);
+    [0.18, 0.55].forEach(f => {
+      const ky = cy + cdh * f;
+      box(c, S, w * 0.3, ky, w * 0.4, cdh * 0.28, 0.01, S.fill);
+      for (let x = w * 0.3 + 0.08; x < w * 0.7 - 0.02; x += 0.08) line(c, x, ky, x, ky + cdh * 0.16);
+    });
+    [w * 0.265, w * 0.735].forEach(x => { for (let j = 0; j < 3; j++) circle(c, S, x, cy + cdh * (0.22 + j * 0.28), 0.05, S.fill); });
+    normal(c, S);
+    box(c, S, w * 0.32, h * 0.87, w * 0.36, h * 0.11, 0.04, S.wood);
+  }
+
+  function baptismalFont(c, S, w, h) {
+    // 洗礼盤：八角形の石の台に丸い水盤
+    const cx = w / 2, cy = h / 2, r = (Math.min(w, h) / 2) * 0.96;
+    const oct = rad => {
+      c.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * TAU + Math.PI / 8;
+        if (i) c.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad); else c.moveTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+      }
+      c.closePath();
+    };
+    oct(r);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.save();
+    c.lineWidth = S.lw * 1.2;
+    c.stroke();
+    c.restore();
+    thin(c, S);
+    oct(r * 0.8);
+    c.stroke();
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU + Math.PI / 8;
+      line(c, cx + Math.cos(a) * r * 0.8, cy + Math.sin(a) * r * 0.8, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+    normal(c, S);
+    circle(c, S, cx, cy, r * 0.6, S.water);
+    thin(c, S);
+    c.beginPath();
+    c.arc(cx - r * 0.08, cy - r * 0.08, r * 0.3, Math.PI * 1.1, Math.PI * 1.7);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function confessional(c, S, w, h) {
+    // 告解室：中央が司祭の室、左右がひざまずく室。仕切りに格子窓、左右の入口はカーテン、中央は扉
+    c.save();
+    c.lineWidth = S.lw * 1.2;
+    box(c, S, 0, 0, w, h, 0.03, S.wood);
+    c.restore();
+    const a = w * 0.3, b = w * 0.7, gy = h * 0.22, gh = h * 0.46;
+    box(c, S, a + 0.15, 0.15, b - a - 0.3, 0.55, 0.06, S.soft);
+    box(c, S, a - 0.4, gy, 0.26, gh, 0.04, S.soft);
+    box(c, S, b + 0.14, gy, 0.26, gh, 0.04, S.soft);
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    line(c, a, 0, a, h);
+    line(c, b, 0, b, h);
+    c.restore();
+    // 格子窓
+    [a, b].forEach(x => {
+      box(c, S, x - 0.09, gy, 0.18, gh, 0, S.fill);
+      c.save();
+      c.beginPath();
+      c.rect(x - 0.09, gy, 0.18, gh);
+      c.clip();
+      thin(c, S, 0.5);
+      for (let y = gy - 0.2; y < gy + gh + 0.2; y += 0.12) {
+        line(c, x - 0.09, y, x + 0.09, y + 0.18);
+        line(c, x + 0.09, y, x - 0.09, y + 0.18);
+      }
+      c.restore();
+    });
+    // 入口
+    thin(c, S, 0.8);
+    [[0.1, a - 0.1], [b + 0.1, w - 0.1]].forEach(([x0, x1]) => {
+      c.beginPath();
+      for (let x = x0; x <= x1 + 1e-6; x += 0.04) {
+        const y = h - 0.14 + Math.sin((x - x0) * 18) * 0.05;
+        if (x === x0) c.moveTo(x, y); else c.lineTo(x, y);
+      }
+      c.stroke();
+    });
+    normal(c, S);
+    c.save();
+    c.lineWidth = S.lw * 1.6;
+    line(c, a + 0.08, h - 0.1, b - 0.08, h - 0.1);
+    c.restore();
+    circle(c, S, b - 0.25, h - 0.26, 0.05, S.line, true);
+  }
+
   /* ---------- PACK C: 物流・工業 / 屋外・道路 / 和風屋敷・庭園・寺院 ---------- */
 
   /* (PACK C の描画関数はここ) */
@@ -2382,56 +4044,56 @@
     /* ===== /PACK A ===== */
 
     /* ===== PACK B: 鉄道 / 道路・車両 / 船舶 / 医療・文化施設の追加 ===== */
-    A('rail_track', 'vehicle', 4, 12, todo('線路'), { ja: '線路', en: 'Railway track', ko: '선로' }, { under: true, tags: ['railway'] }),
-    A('sleepers', 'vehicle', 4, 8, todo('枕木'), { ja: '枕木', en: 'Sleepers', ko: '침목' }, { under: true, tags: ['railway'] }),
-    A('rail_switch', 'vehicle', 8, 16, todo('分岐'), { ja: 'ポイント（分岐器）', en: 'Railway switch', ko: '선로 전환기' }, { under: true, tags: ['railway'] }),
-    A('buffer_stop', 'vehicle', 4, 2, todo('車止'), { ja: '車止め（線路の終端）', en: 'Buffer stop', ko: '차막이' }, { tags: ['railway'] }),
-    A('platform_edge', 'vehicle', 12, 1, todo('点字'), { ja: '駅ホーム端（点字ブロック）', en: 'Platform edge', ko: '승강장 끝(점자 블록)' }, { under: true, tags: ['railway', 'public'] }),
-    A('ticket_gate', 'vehicle', 6, 3, todo('改札'), { ja: '改札', en: 'Ticket gates', ko: '개찰구' }, { tags: ['railway', 'public', 'indoor'] }),
-    A('ticket_machine', 'vehicle', 1.6, 1, todo('券'), { ja: '券売機', en: 'Ticket machine', ko: '매표기' }, { tags: ['railway', 'public', 'indoor'] }),
-    A('station_bench', 'vehicle', 4, 1, todo('ベンチ'), { ja: '駅のベンチ', en: 'Station bench', ko: '역 벤치' }, { tags: ['railway', 'public'] }),
-    A('station_sign', 'vehicle', 3, 0.5, todo('駅名'), { ja: '駅名標', en: 'Station name sign', ko: '역명판' }, { tags: ['railway', 'public'] }),
-    A('kiosk', 'vehicle', 4, 2.4, todo('売店'), { ja: '駅の売店', en: 'Station kiosk', ko: '역 매점' }, { tags: ['railway', 'commercial'] }),
-    A('train_car', 'vehicle', 6, 40, todo('電車'), { ja: '電車・客車', en: 'Train car', ko: '전철·객차' }, { tags: ['railway'] }),
-    A('locomotive', 'vehicle', 6, 32, todo('機関車'), { ja: '機関車', en: 'Locomotive', ko: '기관차' }, { tags: ['railway'] }),
+    A('rail_track', 'vehicle', 4, 12, railTrack, { ja: '線路', en: 'Railway track', ko: '선로' }, { under: true, tags: ['railway'] }),
+    A('sleepers', 'vehicle', 4, 8, sleeperBed, { ja: '枕木', en: 'Sleepers', ko: '침목' }, { under: true, tags: ['railway'] }),
+    A('rail_switch', 'vehicle', 8, 16, railSwitch, { ja: 'ポイント（分岐器）', en: 'Railway switch', ko: '선로 전환기' }, { under: true, tags: ['railway'] }),
+    A('buffer_stop', 'vehicle', 4, 2, bufferStop, { ja: '車止め（線路の終端）', en: 'Buffer stop', ko: '차막이' }, { tags: ['railway'] }),
+    A('platform_edge', 'vehicle', 12, 1, platformEdge, { ja: '駅ホーム端（点字ブロック）', en: 'Platform edge', ko: '승강장 끝(점자 블록)' }, { under: true, tags: ['railway', 'public'] }),
+    A('ticket_gate', 'vehicle', 6, 3, ticketGates, { ja: '改札', en: 'Ticket gates', ko: '개찰구' }, { tags: ['railway', 'public', 'indoor'] }),
+    A('ticket_machine', 'vehicle', 1.6, 1, ticketMachine, { ja: '券売機', en: 'Ticket machine', ko: '매표기' }, { tags: ['railway', 'public', 'indoor'] }),
+    A('station_bench', 'vehicle', 4, 1, stationBench, { ja: '駅のベンチ', en: 'Station bench', ko: '역 벤치' }, { tags: ['railway', 'public'] }),
+    A('station_sign', 'vehicle', 3, 0.5, stationSign, { ja: '駅名標', en: 'Station name sign', ko: '역명판' }, { tags: ['railway', 'public'] }),
+    A('kiosk', 'vehicle', 4, 2.4, stationKiosk, { ja: '駅の売店', en: 'Station kiosk', ko: '역 매점' }, { tags: ['railway', 'commercial'] }),
+    A('train_car', 'vehicle', 6, 40, trainCar, { ja: '電車・客車', en: 'Train car', ko: '전철·객차' }, { tags: ['railway'] }),
+    A('locomotive', 'vehicle', 6, 32, locomotive, { ja: '機関車', en: 'Locomotive', ko: '기관차' }, { tags: ['railway'] }),
 
-    A('suv', 'vehicle', 4.2, 9.6, todo('SUV'), { ja: 'ワゴン・SUV', en: 'SUV / wagon', ko: '왜건·SUV' }),
-    A('van', 'vehicle', 4, 9.4, todo('バン'), { ja: 'バン', en: 'Van', ko: '밴' }),
-    A('truck', 'vehicle', 5, 16, todo('トラック'), { ja: 'トラック', en: 'Truck', ko: '트럭' }, { tags: ['industrial'] }),
-    A('police_car', 'vehicle', 4, 9.4, todo('警察'), { ja: 'パトカー', en: 'Police car', ko: '경찰차' }, { tags: ['public'] }),
-    A('ambulance', 'vehicle', 4.4, 11, todo('救急'), { ja: '救急車', en: 'Ambulance', ko: '구급차' }, { tags: ['medical', 'public'] }),
-    A('fire_truck', 'vehicle', 5, 17, todo('消防'), { ja: '消防車', en: 'Fire engine', ko: '소방차' }, { tags: ['public'] }),
-    A('excavator', 'vehicle', 6, 12, todo('重機'), { ja: 'ショベルカー', en: 'Excavator', ko: '굴착기' }, { tags: ['industrial'] }),
-    A('bulldozer', 'vehicle', 7, 10, todo('ブル'), { ja: 'ブルドーザー', en: 'Bulldozer', ko: '불도저' }, { tags: ['industrial'] }),
-    A('crane_truck', 'vehicle', 5.6, 20, todo('クレーン'), { ja: 'クレーン車', en: 'Crane truck', ko: '크레인차' }, { tags: ['industrial'] }),
-    A('forklift', 'vehicle', 2.4, 5, todo('FL'), { ja: 'フォークリフト', en: 'Forklift', ko: '지게차' }, { tags: ['industrial', 'indoor'] }),
-    A('tank_mil', 'vehicle', 7, 14, todo('戦車'), { ja: '戦車', en: 'Tank', ko: '전차' }, { tags: ['military'] }),
-    A('airplane', 'vehicle', 24, 22, todo('飛行機'), { ja: '飛行機（小型機）', en: 'Airplane (light)', ko: '비행기(소형기)' }),
-    A('helicopter', 'vehicle', 22, 22, todo('ヘリ'), { ja: 'ヘリコプター', en: 'Helicopter', ko: '헬리콥터' }),
+    A('suv', 'vehicle', 4.2, 9.6, suvCar, { ja: 'ワゴン・SUV', en: 'SUV / wagon', ko: '왜건·SUV' }),
+    A('van', 'vehicle', 4, 9.4, deliveryVan, { ja: 'バン', en: 'Van', ko: '밴' }),
+    A('truck', 'vehicle', 5, 16, boxTruck, { ja: 'トラック', en: 'Truck', ko: '트럭' }, { tags: ['industrial'] }),
+    A('police_car', 'vehicle', 4, 9.4, policeCar, { ja: 'パトカー', en: 'Police car', ko: '경찰차' }, { tags: ['public'] }),
+    A('ambulance', 'vehicle', 4.4, 11, ambulance, { ja: '救急車', en: 'Ambulance', ko: '구급차' }, { tags: ['medical', 'public'] }),
+    A('fire_truck', 'vehicle', 5, 17, fireEngine, { ja: '消防車', en: 'Fire engine', ko: '소방차' }, { tags: ['public'] }),
+    A('excavator', 'vehicle', 6, 12, excavator, { ja: 'ショベルカー', en: 'Excavator', ko: '굴착기' }, { tags: ['industrial'] }),
+    A('bulldozer', 'vehicle', 7, 10, bulldozer, { ja: 'ブルドーザー', en: 'Bulldozer', ko: '불도저' }, { tags: ['industrial'] }),
+    A('crane_truck', 'vehicle', 5.6, 20, craneTruck, { ja: 'クレーン車', en: 'Crane truck', ko: '크레인차' }, { tags: ['industrial'] }),
+    A('forklift', 'vehicle', 2.4, 5, forklift, { ja: 'フォークリフト', en: 'Forklift', ko: '지게차' }, { tags: ['industrial', 'indoor'] }),
+    A('tank_mil', 'vehicle', 7, 14, battleTank, { ja: '戦車', en: 'Tank', ko: '전차' }, { tags: ['military'] }),
+    A('airplane', 'vehicle', 24, 22, lightAircraft, { ja: '飛行機（小型機）', en: 'Airplane (light)', ko: '비행기(소형기)' }),
+    A('helicopter', 'vehicle', 22, 22, helicopter, { ja: 'ヘリコプター', en: 'Helicopter', ko: '헬리콥터' }),
 
-    A('lifeboat', 'vehicle', 4, 12, todo('救命艇'), { ja: '救命艇', en: 'Lifeboat', ko: '구명정' }, { tags: ['ship', 'waterside'] }),
-    A('liferaft', 'vehicle', 1.6, 2.4, todo('いかだ'), { ja: '救命いかだ（コンテナ）', en: 'Life raft canister', ko: '구명뗏목(컨테이너)' }, { tags: ['ship'] }),
-    A('anchor', 'vehicle', 2, 2.4, todo('錨'), { ja: '錨', en: 'Anchor', ko: '닻' }, { tags: ['ship'] }),
-    A('bollard', 'vehicle', 1.2, 1, todo('ビット'), { ja: '係船設備（ビット）', en: 'Mooring bitt', ko: '계선주(비트)' }, { tags: ['ship', 'waterside'] }),
-    A('helm', 'vehicle', 1.6, 1.6, todo('舵'), { ja: '操舵輪', en: 'Ship\'s wheel', ko: '조타륜' }, { tags: ['ship', 'indoor'] }),
-    A('radar', 'vehicle', 2, 1.6, todo('レーダ'), { ja: 'レーダー卓', en: 'Radar console', ko: '레이더 콘솔' }, { tags: ['ship', 'indoor'] }),
-    A('chart_table', 'vehicle', 2.4, 1.6, todo('海図'), { ja: '海図卓', en: 'Chart table', ko: '해도대' }, { tags: ['ship', 'indoor'] }),
-    A('ship_engine', 'vehicle', 6, 10, todo('機関'), { ja: '船舶エンジン', en: 'Marine engine', ko: '선박 엔진' }, { tags: ['ship', 'indoor', 'industrial'] }),
-    A('ship_hatch', 'vehicle', 2.4, 2.4, todo('ハッチ'), { ja: '船舶用ハッチ', en: 'Cargo hatch', ko: '선박 해치' }, { tags: ['ship'] }),
+    A('lifeboat', 'vehicle', 4, 12, lifeboat, { ja: '救命艇', en: 'Lifeboat', ko: '구명정' }, { tags: ['ship', 'waterside'] }),
+    A('liferaft', 'vehicle', 1.6, 2.4, liferaftCanister, { ja: '救命いかだ（コンテナ）', en: 'Life raft canister', ko: '구명뗏목(컨테이너)' }, { tags: ['ship'] }),
+    A('anchor', 'vehicle', 2, 2.4, shipAnchor, { ja: '錨', en: 'Anchor', ko: '닻' }, { tags: ['ship'] }),
+    A('bollard', 'vehicle', 1.2, 1, mooringBitt, { ja: '係船設備（ビット）', en: 'Mooring bitt', ko: '계선주(비트)' }, { tags: ['ship', 'waterside'] }),
+    A('helm', 'vehicle', 1.6, 1.6, shipWheel, { ja: '操舵輪', en: 'Ship\'s wheel', ko: '조타륜' }, { tags: ['ship', 'indoor'] }),
+    A('radar', 'vehicle', 2, 1.6, radarConsole, { ja: 'レーダー卓', en: 'Radar console', ko: '레이더 콘솔' }, { tags: ['ship', 'indoor'] }),
+    A('chart_table', 'vehicle', 2.4, 1.6, chartTable, { ja: '海図卓', en: 'Chart table', ko: '해도대' }, { tags: ['ship', 'indoor'] }),
+    A('ship_engine', 'vehicle', 6, 10, marineEngine, { ja: '船舶エンジン', en: 'Marine engine', ko: '선박 엔진' }, { tags: ['ship', 'indoor', 'industrial'] }),
+    A('ship_hatch', 'vehicle', 2.4, 2.4, cargoHatch, { ja: '船舶用ハッチ', en: 'Cargo hatch', ko: '선박 해치' }, { tags: ['ship'] }),
 
-    A('fume_hood', 'medical', 3, 1.2, todo('ドラフト'), { ja: 'ドラフトチャンバー', en: 'Fume hood', ko: '흄 후드' }),
-    A('microscope', 'medical', 1, 1, todo('顕'), { ja: '顕微鏡', en: 'Microscope', ko: '현미경' }),
-    A('freezer', 'medical', 1.6, 1.4, todo('冷凍'), { ja: '超低温フリーザー', en: 'Lab freezer', ko: '초저온 냉동고' }),
-    A('decon_shower', 'medical', 2, 2, todo('除染'), { ja: '除染シャワー', en: 'Decontamination shower', ko: '제염 샤워' }),
+    A('fume_hood', 'medical', 3, 1.2, fumeHood, { ja: 'ドラフトチャンバー', en: 'Fume hood', ko: '흄 후드' }),
+    A('microscope', 'medical', 1, 1, microscope, { ja: '顕微鏡', en: 'Microscope', ko: '현미경' }),
+    A('freezer', 'medical', 1.6, 1.4, labFreezer, { ja: '超低温フリーザー', en: 'Lab freezer', ko: '초저온 냉동고' }),
+    A('decon_shower', 'medical', 2, 2, deconShower, { ja: '除染シャワー', en: 'Decontamination shower', ko: '제염 샤워' }),
 
-    A('display_case', 'culture', 2.4, 1.6, todo('展示'), { ja: '展示ケース', en: 'Display case', ko: '전시 케이스' }),
-    A('painting', 'culture', 3, 0.3, todo('絵'), { ja: '額縁の絵（壁に掛ける）', en: 'Framed painting', ko: '액자 그림' }),
-    A('pedestal', 'culture', 1.6, 1.6, todo('台'), { ja: '展示台・彫刻', en: 'Pedestal & sculpture', ko: '전시대·조각' }),
-    A('rope_barrier', 'culture', 4, 0.4, todo('ロープ'), { ja: 'ロープパーティション', en: 'Rope barrier', ko: '로프 차단봉' }),
-    A('skeleton', 'culture', 12, 6, todo('骨格'), { ja: '恐竜の骨格標本', en: 'Dinosaur skeleton', ko: '공룡 골격 표본' }),
-    A('organ', 'culture', 4, 1.6, todo('オルガン'), { ja: 'パイプオルガン', en: 'Pipe organ', ko: '파이프 오르간' }, { tags: ['religious'] }),
-    A('font', 'culture', 1.4, 1.4, todo('洗礼'), { ja: '洗礼盤', en: 'Baptismal font', ko: '세례반' }, { tags: ['religious'] }),
-    A('confessional', 'culture', 3, 2.4, todo('告解'), { ja: '告解室', en: 'Confessional', ko: '고해실' }, { tags: ['religious'] }),
+    A('display_case', 'culture', 2.4, 1.6, museumCase, { ja: '展示ケース', en: 'Display case', ko: '전시 케이스' }),
+    A('painting', 'culture', 3, 0.3, framedPainting, { ja: '額縁の絵（壁に掛ける）', en: 'Framed painting', ko: '액자 그림' }),
+    A('pedestal', 'culture', 1.6, 1.6, sculpturePedestal, { ja: '展示台・彫刻', en: 'Pedestal & sculpture', ko: '전시대·조각' }),
+    A('rope_barrier', 'culture', 4, 0.4, ropeBarrier, { ja: 'ロープパーティション', en: 'Rope barrier', ko: '로프 차단봉' }),
+    A('skeleton', 'culture', 12, 6, dinoSkeleton, { ja: '恐竜の骨格標本', en: 'Dinosaur skeleton', ko: '공룡 골격 표본' }),
+    A('organ', 'culture', 4, 1.6, pipeOrgan, { ja: 'パイプオルガン', en: 'Pipe organ', ko: '파이프 오르간' }, { tags: ['religious'] }),
+    A('font', 'culture', 1.4, 1.4, baptismalFont, { ja: '洗礼盤', en: 'Baptismal font', ko: '세례반' }, { tags: ['religious'] }),
+    A('confessional', 'culture', 3, 2.4, confessional, { ja: '告解室', en: 'Confessional', ko: '고해실' }, { tags: ['religious'] }),
     /* ===== /PACK B ===== */
 
     /* ===== PACK C: 物流・工業 / 屋外・道路 / 和風屋敷・庭園・寺院 ===== */
