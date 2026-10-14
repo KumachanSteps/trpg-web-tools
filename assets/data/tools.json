@@ -625,8 +625,8 @@
     "devHref": "./tools/indoor-map-maker/",
     "devStage": "testing",
     "devNote": {
-      "ja": "室内の見取り図エディター。テンプレート33種（1LDK・洋館と庭・ホテル・学校・警察署・図書館・劇場・廃病院・もぐり酒場・宇宙船・古民家・忍者屋敷・神社・洞窟・城・地下迷宮・魔法使いの塔など）、ドア・窓・家具の配置、GM/PL別のPNG書き出し。クローズドテスト用。",
-      "en": "Indoor floor-plan editor with 33 templates (apartments, mansion grounds, hotel, school, police station, library, theatre, abandoned hospital, speakeasy, starship, Japanese farmhouse, ninja house, shrine, cave, castle, dungeon, wizard's tower and more), doors, windows and furniture, and separate GM/player PNG export. Closed test."
+      "ja": "室内の見取り図エディター。テンプレート55種・13分類（住宅・ホテル・病院・学校・駅・地下鉄・駐車場・客船・工場・下水道・軍事基地・武家屋敷・寺院・教会・廃墟・宇宙船・城・地下迷宮など）と素材約370種・17分類、タグ検索、ドア・窓・家具の配置、GM/PL別のPNG書き出し。クローズドテスト用。",
+      "en": "Indoor floor-plan editor with 55 templates in 13 categories (homes, hotel, hospital, school, train and subway stations, car parks, passenger ship, factory, sewer, military base, samurai residence, temple, church, ruins, starship, castle, dungeon and more), about 370 assets in 17 categories, tag search, doors, windows and furniture, and separate GM/player PNG export. Closed test."
     },
     "name": {
       "ja": "TRPG室内図メーカー",
