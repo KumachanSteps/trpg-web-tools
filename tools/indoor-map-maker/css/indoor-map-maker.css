@@ -104,11 +104,11 @@ h1, h2, h3, p { margin-top: 0; }
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  /* 説明文はボタン列の下まで使い、1行に収めてヘッダーを低くする */
+  /* 説明文はボタン列の下まで使い、版表記と同じ行に並べてヘッダーを低くする */
   grid-template-areas: "title actions" "lead lead";
   column-gap: 1rem;
   row-gap: 0;
-  padding: 22px 26px 30px;
+  padding: 22px 26px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(235, 244, 255, 0.74));
@@ -141,6 +141,7 @@ h1 {
   font-size: 0.93rem;
   line-height: 1.6;
   font-feature-settings: "palt";
+  padding-right: 11em;
 }
 
 .header-actions {
@@ -238,9 +239,14 @@ body.is-dark .theme-toggle-track { background: linear-gradient(135deg, rgba(30, 
 body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e8f0; color: #334155; }
 
 .version-engrave {
-  position: absolute;
-  right: 26px;
-  bottom: 10px;
+  /* 説明文と同じ行の右端に重ね、説明文の右側に版表記ぶんの余白をとる */
+  grid-row: 2;
+  grid-column: 1 / -1;
+  justify-self: end;
+  align-self: end;
+  /* 説明文の最終行と同じ高さ（line-height 1.6 × 0.93rem）に縦中央をそろえる */
+  line-height: calc(0.93rem * 1.6);
+  white-space: nowrap;
   color: var(--muted);
   font-size: 0.76rem;
   letter-spacing: 0.06em;
@@ -1238,7 +1244,8 @@ body.is-dark .clue-toggle.is-on .clue-state { color: #1b1206; }
   .app-shell { padding: 10px; gap: 10px; }
   .app-header { grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "lead" "actions"; row-gap: 10px; padding: 16px 16px 28px; }
   .header-actions { justify-content: flex-start; }
-  .version-engrave { right: 16px; }
+  .lead { padding-right: 0; }
+  .version-engrave { position: absolute; right: 16px; bottom: 6px; }
   .editor { grid-template-columns: minmax(0, 1fr); }
   .editor > .canvas-panel { order: -1; height: 72vh; min-height: 440px; }
   .editor > .library-panel { height: 380px; }
