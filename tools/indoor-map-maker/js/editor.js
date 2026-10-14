@@ -67,7 +67,8 @@
     'breaker', 'dist_board', 'control_panel', 'service_entrance', 'hydrant', 'extinguisher', 'cctv', 'card_reader', 'alarm',
     'fridge_case', 'atm', 'monitor_wall', 'gun_rack', 'radio', 'ac_unit', 'boiler', 'fire_escape', 'ext_stairs',
     'ticket_machine', 'station_bench', 'kiosk', 'fume_hood', 'freezer', 'radar', 'chart_table', 'organ', 'painting', 'confessional',
-    'tool_shelf', 'supply_shelf', 'workbench', 'machine_tool', 'pallet_rack', 'katanakake', 'buddha_altar', 'byobu', 'engawa_deck'
+    'tool_shelf', 'supply_shelf', 'workbench', 'machine_tool', 'pallet_rack', 'katanakake', 'buddha_altar', 'byobu', 'engawa_deck',
+    'pod', 'chains', 'offering', 'stele'
   ]);
   const SWING_DOORS = M.SWING_KINDS;
   const ICONS = {
@@ -678,12 +679,41 @@
     return { ...rect, x: bestX ? bestX.x : rect.x, y: bestY ? bestY.y : rect.y };
   }
 
+  // 壁に重ねる素材（ヒビ・崩落・弾痕など）：長い辺の中心線を近くの壁の線に重ねる。orient なら壁の向きに回す
+  function onWall(rect, orient) {
+    const horiz = rect.w >= rect.h;
+    let best = null;
+    wallLines().forEach(r => {
+      if (!orient && (r.o === 'h') !== horiz) return;
+      const len = Math.max(rect.w, rect.h);
+      const depth = Math.min(rect.w, rect.h);
+      const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+      const along = r.o === 'h' ? cx : cy, across = r.o === 'h' ? cy : cx;
+      const d = Math.abs(across - r.c);
+      if (d > depth / 2 + 1 || along < r.a - len / 2 || along > r.b + len / 2) return;
+      if (!best || d < best.d) best = { d, r, len, depth, along };
+    });
+    if (!best) return null;
+    const { r, len, depth, along } = best;
+    const start = clamp(M.snap(along - len / 2, 0.25), Math.min(r.a, r.b - len), Math.max(r.a, r.b - len));
+    return r.o === 'h' ? { x: start, y: r.c - depth / 2, w: len, h: depth, o: 'h' } : { x: r.c - depth / 2, y: start, w: depth, h: len, o: 'v' };
+  }
+
   function itemGhost(wx, wy, armed, free) {
     const asset = M.ASSET[armed.t];
     let rot = armed.rot || 0;
     let d = dimsFor(asset, rot);
     let rect = { x: M.snap(wx - d.w / 2, 0.25), y: M.snap(wy - d.h / 2, 0.25), w: d.w, h: d.h };
     if (free) return { t: armed.t, rot, ...rect };
+    if (asset.overWall) {
+      const g = onWall(rect, !armed.manual);
+      if (g) {
+        // 素材は横長（w ≥ h）で描いてあるので、縦の壁なら 90° 回す
+        if (!armed.manual) rot = g.o === 'h' ? 0 : 90;
+        return { t: armed.t, rot, x: g.x, y: g.y, w: g.w, h: g.h };
+      }
+      return { t: armed.t, rot, ...rect };
+    }
     if (ORIENT.has(armed.t)) {
       const depth = asset.h;
       let best = null;
@@ -1825,7 +1855,8 @@
     if (d.entries.length === 1 && d.entries[0].type === 'item' && !event.altKey) {
       const e = d.entries[0];
       const o = getObj('item', e.id);
-      const r = magnet({ x: e.orig.x + dx, y: e.orig.y + dy, w: o.w, h: o.h });
+      const moved = { x: e.orig.x + dx, y: e.orig.y + dy, w: o.w, h: o.h };
+      const r = (M.ASSET[o.t] && M.ASSET[o.t].overWall && onWall(moved, false)) || magnet(moved);
       o.x = round2(r.x); o.y = round2(r.y);
       touchedLight();
       return;
