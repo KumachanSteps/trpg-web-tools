@@ -98,7 +98,8 @@
       rooms: '部屋',
       openings: 'ドア・窓',
       furniture: '家具・小物',
-      search: '家具を検索',
+      search: '家具・素材を検索（#タグでも探せます）',
+      tagAll: 'タグで絞り込む',
       all: 'すべて',
       doors: 'ドア',
       windows: '窓',
@@ -113,7 +114,9 @@
       stairs: '階段室', closet: 'クローゼット', storage: '倉庫', office: '事務室', meeting: '会議室', lobby: 'ロビー',
       guest: '客室', ward: '病室', exam: '診察室', surgery: '手術室', lab: '研究室', ritual: '儀式の間', sealed: '封鎖区画',
       garage: '車庫', balcony: 'バルコニー', garden: '庭', porch: 'ポーチ', cell: '独房',
-      doma: '土間', field: '畑', water: '池・川', cave: '洞窟', deck: '艦内区画', engawa: '広縁・縁側', stoneRoom: '石造りの部屋', dungeonCell: '牢・小部屋', studio: '防音室', building: '建物（外構図用）'
+      doma: '土間', field: '畑', water: '池・川', cave: '洞窟', deck: '艦内区画', engawa: '広縁・縁側', stoneRoom: '石造りの部屋', dungeonCell: '牢・小部屋', studio: '防音室', building: '建物（外構図用）',
+      factoryFloor: '工場・作業場', steelDeck: '鉄板の床・機械室', platform: '駅ホーム', track: '線路', road: '道路・車路', rooftop: '屋上',
+      slab: '工事中の床', yard: '資材置場・土の広場', karesansui: '枯山水', shipDeck: '甲板'
     },
     props: {
       mapTitle: 'マップ設定',
@@ -189,6 +192,7 @@
       structureOnly: '家具なし（間取りだけ）で読み込む',
       clues: '隠し手がかり入りで読み込む',
       floors: '{n}フロア',
+      search: 'テンプレートを検索（#タグでも探せます）',
       replaceNote: '今のマップは置き換わります（「元に戻す」で戻せます）。',
       blank: '白紙から始める',
       blankDesc: '部屋も家具もない状態から作ります。'
@@ -346,7 +350,8 @@
       rooms: 'Rooms',
       openings: 'Doors & windows',
       furniture: 'Furniture',
-      search: 'Search furniture',
+      search: 'Search items (or #tag)',
+      tagAll: 'Filter by tag',
       all: 'All',
       doors: 'Doors',
       windows: 'Windows',
@@ -361,7 +366,9 @@
       stairs: 'Stairwell', closet: 'Closet', storage: 'Storage', office: 'Office', meeting: 'Meeting room', lobby: 'Lobby',
       guest: 'Guest room', ward: 'Ward', exam: 'Exam room', surgery: 'Operating room', lab: 'Lab', ritual: 'Ritual chamber', sealed: 'Sealed area',
       garage: 'Garage', balcony: 'Balcony', garden: 'Garden', porch: 'Porch', cell: 'Cell',
-      doma: 'Earthen floor', field: 'Field', water: 'Pond / river', cave: 'Cave', deck: 'Ship section', engawa: 'Veranda (engawa)', stoneRoom: 'Stone chamber', dungeonCell: 'Cell', studio: 'Soundproof room', building: 'Building (site plan)'
+      doma: 'Earthen floor', field: 'Field', water: 'Pond / river', cave: 'Cave', deck: 'Ship section', engawa: 'Veranda (engawa)', stoneRoom: 'Stone chamber', dungeonCell: 'Cell', studio: 'Soundproof room', building: 'Building (site plan)',
+      factoryFloor: 'Factory floor', steelDeck: 'Steel deck / plant room', platform: 'Platform', track: 'Railway track', road: 'Road / driveway', rooftop: 'Rooftop',
+      slab: 'Unfinished floor', yard: 'Yard / dirt lot', karesansui: 'Dry garden', shipDeck: 'Open deck'
     },
     props: {
       mapTitle: 'Map settings',
@@ -437,6 +444,7 @@
       structureOnly: 'Load the layout only (no furniture)',
       clues: 'Load with hidden clues',
       floors: '{n} floors',
+      search: 'Search templates (or #tag)',
       replaceNote: 'This replaces the current map (Undo brings it back).',
       blank: 'Blank map',
       blankDesc: 'Start with no rooms or furniture.'
@@ -594,7 +602,8 @@
       rooms: '방',
       openings: '문·창문',
       furniture: '가구·소품',
-      search: '가구 검색',
+      search: '가구·소품 검색(#태그도 가능)',
+      tagAll: '태그로 좁히기',
       all: '전체',
       doors: '문',
       windows: '창문',
@@ -609,7 +618,9 @@
       stairs: '계단실', closet: '옷장', storage: '창고', office: '사무실', meeting: '회의실', lobby: '로비',
       guest: '객실', ward: '병실', exam: '진찰실', surgery: '수술실', lab: '연구실', ritual: '의식의 방', sealed: '봉쇄 구역',
       garage: '차고', balcony: '발코니', garden: '정원', porch: '포치', cell: '독방',
-      doma: '흙바닥', field: '밭', water: '연못·강', cave: '동굴', deck: '함내 구역', engawa: '툇마루', stoneRoom: '석조 방', dungeonCell: '감옥·작은 방', studio: '방음실', building: '건물(배치도용)'
+      doma: '흙바닥', field: '밭', water: '연못·강', cave: '동굴', deck: '함내 구역', engawa: '툇마루', stoneRoom: '석조 방', dungeonCell: '감옥·작은 방', studio: '방음실', building: '건물(배치도용)',
+      factoryFloor: '공장·작업장', steelDeck: '철판 바닥·기계실', platform: '역 승강장', track: '선로', road: '도로·차로', rooftop: '옥상',
+      slab: '공사 중 바닥', yard: '자재장·흙 마당', karesansui: '가레산스이', shipDeck: '갑판'
     },
     props: {
       mapTitle: '지도 설정',
@@ -685,6 +696,7 @@
       structureOnly: '가구 없이(구조만) 불러오기',
       clues: '숨은 단서 포함으로 불러오기',
       floors: '{n}개 층',
+      search: '템플릿 검색(#태그도 가능)',
       replaceNote: '지금 지도는 바뀝니다(「실행 취소」로 되돌릴 수 있습니다).',
       blank: '빈 지도에서 시작',
       blankDesc: '방도 가구도 없는 상태에서 만듭니다.'

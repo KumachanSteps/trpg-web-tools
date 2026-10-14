@@ -36,24 +36,39 @@
     { id: 'engawa', name: { ja: '縁側・広縁', en: 'Veranda (engawa)', ko: '툇마루' }, pattern: 'deck' },
     { id: 'studio', name: { ja: '防音室・スタジオ', en: 'Soundproof room', ko: '방음실·스튜디오' }, pattern: 'acoustic' },
     { id: 'stone', name: { ja: '石造り（城・迷宮）', en: 'Stone (castle / dungeon)', ko: '석조(성·던전)' }, pattern: 'flag' },
-    { id: 'roof', name: { ja: '建物（屋根）', en: 'Building (roof)', ko: '건물(지붕)' }, pattern: 'roof' }
+    { id: 'roof', name: { ja: '建物（屋根）', en: 'Building (roof)', ko: '건물(지붕)' }, pattern: 'roof' },
+    { id: 'industrial', name: { ja: '工場・コンクリート床', en: 'Industrial / concrete', ko: '공장·콘크리트 바닥' }, pattern: 'concrete' },
+    { id: 'grate', name: { ja: '鉄板・グレーチング床', en: 'Steel deck / grating', ko: '철판·그레이팅 바닥' }, pattern: 'grate' },
+    { id: 'platform', name: { ja: '駅ホーム', en: 'Station platform', ko: '역 승강장' }, outdoor: true, edge: 'none', pattern: 'tile' },
+    { id: 'track', name: { ja: '線路・軌道', en: 'Railway track bed', ko: '선로·궤도' }, outdoor: true, edge: 'none', pattern: 'ballast' },
+    { id: 'road', name: { ja: '道路・車路', en: 'Road / driveway', ko: '도로·차로' }, outdoor: true, edge: 'none', pattern: 'asphalt' },
+    { id: 'rooftop', name: { ja: '屋上', en: 'Rooftop', ko: '옥상' }, outdoor: true, edge: 'rail', pattern: 'concrete' },
+    { id: 'slab', name: { ja: '工事中の床（壁なし）', en: 'Unfinished slab', ko: '공사 중 바닥(벽 없음)' }, outdoor: true, edge: 'none', pattern: 'unfinished' },
+    { id: 'dirt', name: { ja: '土・砂利（屋外）', en: 'Dirt / gravel yard', ko: '흙·자갈(옥외)' }, outdoor: true, edge: 'none', pattern: 'speckle' },
+    { id: 'gravel', name: { ja: '白砂・枯山水', en: 'Raked gravel', ko: '흰 모래·가레산스이' }, outdoor: true, edge: 'none', pattern: 'raked' },
+    { id: 'shipdeck', name: { ja: '甲板（屋外）', en: 'Ship deck (open)', ko: '갑판(옥외)' }, outdoor: true, edge: 'rail', pattern: 'deck' }
   ];
   const CAT = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
 
   /* ドア・窓の種類 */
   const OPENINGS = [
-    { id: 'door', group: 'door', len: 1.5, name: { ja: '片開きドア', en: 'Door', ko: '여닫이문' } },
-    { id: 'door2', group: 'door', len: 3, name: { ja: '両開きドア', en: 'Double door', ko: '양여닫이문' } },
+    { id: 'door', group: 'door', len: 1.5, swing: 1, name: { ja: '片開きドア', en: 'Door', ko: '여닫이문' } },
+    { id: 'door2', group: 'door', len: 3, swing: 2, name: { ja: '両開きドア', en: 'Double door', ko: '양여닫이문' } },
     { id: 'sliding', group: 'door', len: 1.5, name: { ja: '引き戸', en: 'Sliding door', ko: '미닫이문' } },
     { id: 'sliding2', group: 'door', len: 3, name: { ja: '引違い戸・ふすま', en: 'Double sliding / fusuma', ko: '미서기문·후스마' } },
     { id: 'folding', group: 'door', len: 2, name: { ja: '折れ戸・クローゼット扉', en: 'Folding door', ko: '접이문' } },
     { id: 'auto', group: 'door', len: 3, name: { ja: '自動ドア', en: 'Automatic door', ko: '자동문' } },
     { id: 'shutter', group: 'door', len: 5, name: { ja: 'シャッター', en: 'Shutter', ko: '셔터' } },
     { id: 'open', group: 'door', len: 2, name: { ja: '開口（壁なし）', en: 'Opening (no wall)', ko: '개구부(벽 없음)' } },
-    { id: 'locked', group: 'door', len: 1.5, name: { ja: '施錠されたドア', en: 'Locked door', ko: '잠긴 문' } },
-    { id: 'secret', group: 'door', len: 1.5, gm: true, name: { ja: '隠し扉（GMのみ）', en: 'Secret door (GM)', ko: '비밀문(GM 전용)' } },
-    { id: 'broken', group: 'door', len: 1.5, name: { ja: '壊れたドア', en: 'Broken door', ko: '부서진 문' } },
+    { id: 'locked', group: 'door', len: 1.5, swing: 1, name: { ja: '施錠されたドア', en: 'Locked door', ko: '잠긴 문' } },
+    { id: 'secret', group: 'door', len: 1.5, swing: 1, gm: true, name: { ja: '隠し扉（GMのみ）', en: 'Secret door (GM)', ko: '비밀문(GM 전용)' } },
+    { id: 'broken', group: 'door', len: 1.5, swing: 1, name: { ja: '壊れたドア', en: 'Broken door', ko: '부서진 문' } },
     { id: 'hole', group: 'door', len: 2, name: { ja: '壁の穴・崩落', en: 'Hole in wall', ko: '벽의 구멍·붕괴' } },
+    { id: 'steel', group: 'door', len: 1.5, swing: 1, name: { ja: '鉄扉', en: 'Steel door', ko: '철문' } },
+    { id: 'firedoor', group: 'door', len: 2, swing: 1, name: { ja: '防火扉', en: 'Fire door', ko: '방화문' } },
+    { id: 'gate', group: 'door', len: 2, swing: 1, name: { ja: '格子扉', en: 'Grille gate', ko: '격자문' } },
+    { id: 'big2', group: 'door', len: 5, swing: 2, name: { ja: '大型両開き扉', en: 'Large double door', ko: '대형 양여닫이문' } },
+    { id: 'sealed', group: 'door', len: 2, name: { ja: '封印扉', en: 'Sealed door', ko: '봉인된 문' } },
     { id: 'window', group: 'window', len: 2, name: { ja: '窓', en: 'Window', ko: '창문' } },
     { id: 'window2', group: 'window', len: 3.5, name: { ja: '掃き出し窓・大きな窓', en: 'Large / patio window', ko: '큰 창·전면창' } },
     { id: 'barred', group: 'window', len: 2, name: { ja: '鉄格子の窓', en: 'Barred window', ko: '쇠창살 창문' } },
@@ -61,6 +76,8 @@
     { id: 'brokenwin', group: 'window', len: 2, name: { ja: '割れた窓', en: 'Broken window', ko: '깨진 창문' } }
   ];
   const OPEN = Object.fromEntries(OPENINGS.map(o => [o.id, o]));
+  /* 開き戸（扉の軌跡が床に出る）。swing: 1 = 片開き / 2 = 両開き */
+  const SWING_KINDS = new Set(OPENINGS.filter(o => o.swing).map(o => o.id));
 
   const WALL_KINDS = [
     { id: 'ext', t: 0.34, name: { ja: '外壁（厚い）', en: 'Exterior (thick)', ko: '외벽(두꺼움)' } },
@@ -77,6 +94,54 @@
   ];
   const WALL = Object.fromEntries(WALL_KINDS.map(w => [w.id, w]));
   const WALL_BY_ID = WALL;
+
+  /* タグ（素材・テンプレートの検索と絞り込み用）。axis は絞り込みメニューの見出し */
+  const TAG_AXES = [
+    { id: 'era', name: { ja: '時代', en: 'Era', ko: '시대' } },
+    { id: 'env', name: { ja: '環境', en: 'Setting', ko: '환경' } },
+    { id: 'use', name: { ja: '用途', en: 'Use', ko: '용도' } },
+    { id: 'state', name: { ja: '状態', en: 'State', ko: '상태' } },
+    { id: 'theme', name: { ja: 'そのほか', en: 'Other', ko: '기타' } }
+  ];
+  const TAGS = [
+    { id: 'modern', axis: 'era', name: { ja: '現代', en: 'Modern', ko: '현대' } },
+    { id: '1920s', axis: 'era', name: { ja: '1920年代', en: '1920s', ko: '1920년대' } },
+    { id: 'historic', axis: 'era', name: { ja: '歴史', en: 'Historic', ko: '역사' } },
+    { id: 'nearfuture', axis: 'era', name: { ja: '近未来', en: 'Near future', ko: '근미래' } },
+    { id: 'sf', axis: 'era', name: { ja: 'SF', en: 'Sci-fi', ko: 'SF' } },
+    { id: 'fantasy', axis: 'era', name: { ja: 'ファンタジー', en: 'Fantasy', ko: '판타지' } },
+    { id: 'indoor', axis: 'env', name: { ja: '屋内', en: 'Indoor', ko: '실내' } },
+    { id: 'outdoor', axis: 'env', name: { ja: '屋外', en: 'Outdoor', ko: '옥외' } },
+    { id: 'underground', axis: 'env', name: { ja: '地下', en: 'Underground', ko: '지하' } },
+    { id: 'rooftop', axis: 'env', name: { ja: '屋上', en: 'Rooftop', ko: '옥상' } },
+    { id: 'waterside', axis: 'env', name: { ja: '水辺', en: 'Waterside', ko: '물가' } },
+    { id: 'ruins', axis: 'env', name: { ja: '廃墟', en: 'Ruins', ko: '폐허' } },
+    { id: 'residential', axis: 'use', name: { ja: '住宅', en: 'Residential', ko: '주택' } },
+    { id: 'public', axis: 'use', name: { ja: '公共', en: 'Public', ko: '공공' } },
+    { id: 'commercial', axis: 'use', name: { ja: '商業', en: 'Commercial', ko: '상업' } },
+    { id: 'research', axis: 'use', name: { ja: '研究', en: 'Research', ko: '연구' } },
+    { id: 'medical', axis: 'use', name: { ja: '医療', en: 'Medical', ko: '의료' } },
+    { id: 'transport', axis: 'use', name: { ja: '交通', en: 'Transport', ko: '교통' } },
+    { id: 'industrial', axis: 'use', name: { ja: '工業', en: 'Industrial', ko: '공업' } },
+    { id: 'military', axis: 'use', name: { ja: '軍事', en: 'Military', ko: '군사' } },
+    { id: 'religious', axis: 'use', name: { ja: '宗教', en: 'Religious', ko: '종교' } },
+    { id: 'leisure', axis: 'use', name: { ja: '娯楽', en: 'Leisure', ko: '오락' } },
+    { id: 'normal', axis: 'state', name: { ja: '通常', en: 'Normal', ko: '통상' } },
+    { id: 'damaged', axis: 'state', name: { ja: '破損', en: 'Damaged', ko: '파손' } },
+    { id: 'hidden', axis: 'state', name: { ja: '隠し', en: 'Hidden', ko: '숨김' } },
+    { id: 'danger', axis: 'state', name: { ja: '危険', en: 'Danger', ko: '위험' } },
+    { id: 'gm', axis: 'state', name: { ja: 'GM専用', en: 'GM only', ko: 'GM 전용' } },
+    { id: 'japanese', axis: 'theme', name: { ja: '和風', en: 'Japanese', ko: '일본풍' } },
+    { id: 'garden', axis: 'theme', name: { ja: '日本庭園', en: 'Japanese garden', ko: '일본 정원' } },
+    { id: 'railway', axis: 'theme', name: { ja: '鉄道', en: 'Railway', ko: '철도' } },
+    { id: 'ship', axis: 'theme', name: { ja: '船', en: 'Ship', ko: '배' } },
+    { id: 'onwater', axis: 'theme', name: { ja: '水上', en: 'On the water', ko: '수상' } },
+    { id: 'multifloor', axis: 'theme', name: { ja: '複数フロア', en: 'Multi-floor', ko: '여러 층' } },
+    { id: 'machinery', axis: 'theme', name: { ja: '機械設備', en: 'Machinery', ko: '기계 설비' } },
+    { id: 'large', axis: 'theme', name: { ja: '大型施設', en: 'Large facility', ko: '대형 시설' } },
+    { id: 'horror', axis: 'theme', name: { ja: 'ホラー', en: 'Horror', ko: '호러' } }
+  ];
+  const TAG = Object.fromEntries(TAGS.map(t => [t.id, t]));
 
   const snap = (v, step) => Math.round(v / step) * step;
   const clone = value => JSON.parse(JSON.stringify(value));
@@ -286,8 +351,9 @@
 
   /* 開口が壁からはみ出して描かれる距離（開き戸の軌跡など）。長い開口や引き戸で余白が広がりすぎないように */
   function openingReach(o) {
-    if (['door', 'locked', 'broken', 'secret'].includes(o.kind)) return o.len;
-    if (o.kind === 'door2') return o.len / 2;
+    const info = OPEN[o.kind] || {};
+    if (info.swing === 1) return o.len;
+    if (info.swing === 2) return o.len / 2;
     if (o.kind === 'auto') return o.len * 0.35;
     if (o.kind === 'folding') return o.len * 0.42;
     if (o.kind === 'hole') return 1;
@@ -339,7 +405,7 @@
 
   global.IMM = global.IMM || {};
   Object.assign(global.IMM, {
-    CELL_M, TATAMI_M2, CATEGORIES, CAT, OPENINGS, OPEN, WALL_KINDS, WALL,
+    CELL_M, TATAMI_M2, CATEGORIES, CAT, OPENINGS, OPEN, SWING_KINDS, WALL_KINDS, WALL, TAG_AXES, TAGS, TAG,
     uid, snap, clone, emptyFloor, emptyProject, visibleFloor, computeWalls,
     itemLocalSize, rectsOverlap, rectContains, openingRect, floorBounds, roomArea, sizeText, pick
   });

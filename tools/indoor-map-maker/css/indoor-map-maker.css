@@ -751,6 +751,9 @@ body.is-dark .toast-action:hover { color: #ffffff; }
 
 .lib-search { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .lib-search .text-input { min-height: 32px; padding: 5px 10px; font-size: 0.82rem; }
+.lib-search-row { display: flex; gap: 6px; }
+.lib-search-row .text-input { flex: 1 1 auto; min-width: 0; }
+.tag-select { flex: 0 1 auto; width: auto; min-width: 0; max-width: 46%; min-height: 32px; padding: 4px 8px; font-size: 0.78rem; }
 .lib-groups { display: flex; flex-wrap: wrap; gap: 4px; }
 .lib-groups .chip { padding: 2px 8px; font-size: 0.7rem; }
 
@@ -1148,6 +1151,11 @@ body.is-dark .clue-toggle.is-on .clue-state { color: #1b1206; }
 .modal-head-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-right: 40px; }
 
 .tpl-groups { display: flex; flex-wrap: wrap; gap: 5px; }
+.tpl-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+.tpl-filter .text-input { flex: 1 1 240px; min-width: 0; min-height: 34px; padding: 5px 10px; font-size: 0.84rem; }
+.tpl-filter .tag-select { max-width: none; min-height: 34px; }
+.tpl-tags { display: flex; flex-wrap: wrap; gap: 3px 6px; margin: 2px 2px 0; }
+.tpl-tag { color: var(--muted); font-size: 0.66rem; font-weight: 700; }
 
 .tpl-grid {
   display: grid;

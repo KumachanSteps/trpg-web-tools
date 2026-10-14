@@ -19,7 +19,9 @@
         storage: '#e8e4dc', public: '#f7eed9', office: '#ebe8f5', medical: '#dff1ee', special: '#eee2f3', danger: '#f6dedb',
         garage: '#e6e7ea', balcony: '#edf0f3', garden: '#e1efd6', porch: '#ece8e0',
         doma: '#e7dccb', tech: '#e3e8ee', field: '#ebe3c3', water: '#cde5f6', cave: '#ddd7cd',
-        engawa: '#f1e3c8', studio: '#e4e1ee', stone: '#e3e0da', roof: '#d9d4cf'
+        engawa: '#f1e3c8', studio: '#e4e1ee', stone: '#e3e0da', roof: '#d9d4cf',
+        industrial: '#e4e4e1', grate: '#dde1e6', platform: '#efece4', track: '#d8d3ca', road: '#d5d7db', rooftop: '#e9eaec',
+        slab: '#e6e2da', dirt: '#e5d9c4', gravel: '#f2f0ea', shipdeck: '#eadcc2'
       },
       patternLine: 'rgba(60, 70, 90, 0.12)',
       furn: {
@@ -69,7 +71,9 @@
         storage: '#ddd0b0', public: '#e9d6b0', office: '#e0d6bb', medical: '#dcdcc0', special: '#e0cdb8', danger: '#e2c3ad',
         garage: '#dcd2bb', balcony: '#e7dcc0', garden: '#d9dcb2', porch: '#e3d7bb',
         doma: '#e0cfac', tech: '#dcd6c2', field: '#dfd6a8', water: '#d2d8c8', cave: '#d5c9ae',
-        engawa: '#e6d4ae', studio: '#ddd2bb', stone: '#d8ccb2', roof: '#cdbf9f'
+        engawa: '#e6d4ae', studio: '#ddd2bb', stone: '#d8ccb2', roof: '#cdbf9f',
+        industrial: '#dbd0b6', grate: '#d6cdb6', platform: '#e4d8bc', track: '#d3c6a8', road: '#d0c5ab', rooftop: '#ddd2b8',
+        slab: '#ddd1b5', dirt: '#dccdaa', gravel: '#e9dfc5', shipdeck: '#e0cfa8'
       },
       patternLine: 'rgba(96, 70, 40, 0.14)',
       furn: {
@@ -89,7 +93,9 @@
         storage: '#211f21', public: '#2b2826', office: '#25242b', medical: '#212a2a', special: '#2e2230', danger: '#3a1f1f',
         garage: '#222224', balcony: '#1e1e22', garden: '#1d231c', porch: '#201f22',
         doma: '#2a2622', tech: '#22262c', field: '#25251a', water: '#1b2530', cave: '#272422',
-        engawa: '#2c2722', studio: '#25232b', stone: '#262527', roof: '#2e2b2c'
+        engawa: '#2c2722', studio: '#25232b', stone: '#262527', roof: '#2e2b2c',
+        industrial: '#232325', grate: '#202328', platform: '#252427', track: '#232120', road: '#1f2023', rooftop: '#222326',
+        slab: '#262422', dirt: '#26231f', gravel: '#2a2a28', shipdeck: '#2a2520'
       },
       patternLine: 'rgba(255,255,255,0.05)',
       furn: {
@@ -245,6 +251,56 @@
       // 外から見た建物：屋根の斜線
       c.beginPath();
       for (let k = -room.h; k < room.w; k += 0.8) { c.moveTo(room.x + k, room.y + room.h); c.lineTo(room.x + k + room.h, room.y); }
+      c.stroke();
+    } else if (p === 'concrete') {
+      // コンクリート：2m ごとの目地と小さな気泡
+      c.beginPath();
+      for (let x = room.x + 4; x < room.x + room.w; x += 4) { c.moveTo(x, room.y); c.lineTo(x, room.y + room.h); }
+      for (let y = room.y + 4; y < room.y + room.h; y += 4) { c.moveTo(room.x, y); c.lineTo(room.x + room.w, y); }
+      c.stroke();
+      let s = (room.x * 73856093) ^ (room.y * 19349663) ^ 0x1b873593;
+      const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+      c.fillStyle = theme.patternLine;
+      const count = Math.floor(room.w * room.h * 0.12);
+      for (let i = 0; i < count; i++) { c.beginPath(); c.arc(room.x + rnd() * room.w, room.y + rnd() * room.h, 0.035, 0, TAU); c.fill(); }
+    } else if (p === 'grate') {
+      // 鉄板・グレーチング：細かい格子
+      c.beginPath();
+      for (let x = room.x + 0.5; x < room.x + room.w; x += 0.5) { c.moveTo(x, room.y); c.lineTo(x, room.y + room.h); }
+      for (let y = room.y + 0.25; y < room.y + room.h; y += 0.25) { c.moveTo(room.x, y); c.lineTo(room.x + room.w, y); }
+      c.lineWidth = lw * 0.6;
+      c.stroke();
+    } else if (p === 'ballast') {
+      // 線路の砕石
+      let s = (room.x * 73856093) ^ (room.y * 19349663) ^ 0x68e31da4;
+      const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+      c.fillStyle = theme.patternLine;
+      const count = Math.floor(room.w * room.h * 1.6);
+      for (let i = 0; i < count; i++) {
+        const x = room.x + rnd() * room.w, y = room.y + rnd() * room.h, r = 0.04 + rnd() * 0.05;
+        c.fillRect(x - r, y - r, r * 2, r * 1.6);
+      }
+    } else if (p === 'asphalt') {
+      // アスファルト：まばらな粒
+      let s = (room.x * 73856093) ^ (room.y * 19349663) ^ 0x7feb352d;
+      const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+      c.fillStyle = theme.patternLine;
+      const count = Math.floor(room.w * room.h * 0.35);
+      for (let i = 0; i < count; i++) { c.beginPath(); c.arc(room.x + rnd() * room.w, room.y + rnd() * room.h, 0.03, 0, TAU); c.fill(); }
+    } else if (p === 'unfinished') {
+      // 工事中の床：鉄筋の格子を破線で
+      c.setLineDash([lw * 4, lw * 3]);
+      c.beginPath();
+      for (let x = room.x + 1; x < room.x + room.w; x += 1) { c.moveTo(x, room.y); c.lineTo(x, room.y + room.h); }
+      for (let y = room.y + 1; y < room.y + room.h; y += 1) { c.moveTo(room.x, y); c.lineTo(room.x + room.w, y); }
+      c.stroke();
+      c.setLineDash([]);
+    } else if (p === 'raked') {
+      // 枯山水：熊手で引いた砂紋
+      c.beginPath();
+      if (room.w >= room.h) for (let y = room.y + 0.35; y < room.y + room.h; y += 0.35) { c.moveTo(room.x, y); c.lineTo(room.x + room.w, y); }
+      else for (let x = room.x + 0.35; x < room.x + room.w; x += 0.35) { c.moveTo(x, room.y); c.lineTo(x, room.y + room.h); }
+      c.lineWidth = lw * 0.7;
       c.stroke();
     } else if (p === 'stone') {
       c.beginPath();
@@ -639,7 +695,43 @@
       return;
     }
     const start = o.o === 'h' ? o.x : o.y;
-    if (kind === 'door' || kind === 'locked' || kind === 'broken') {
+    if (kind === 'sealed') {
+      drawSealed(c, o, t, theme, lw);
+      c.restore();
+      return;
+    }
+    if (kind === 'steel' || kind === 'firedoor' || kind === 'gate') {
+      swingDoor(c, o, !o.hinge, len, start, theme, lw, false);
+      withLocal(c, o, () => {
+        // 扉の枠（鉄扉・防火扉は太い枠、格子扉は格子）
+        c.strokeStyle = theme.door;
+        if (kind === 'gate') {
+          c.lineWidth = lw * 0.9;
+          c.beginPath();
+          for (let u = 0.15; u < len; u += 0.25) { c.moveTo(u, -t * 0.45); c.lineTo(u, t * 0.45); }
+          c.stroke();
+        } else {
+          c.lineWidth = lw * 1.4;
+          c.strokeRect(0.02, -t * 0.4, len - 0.04, t * 0.8);
+          if (kind === 'firedoor') {
+            c.fillStyle = theme.furn.red;
+            c.font = `800 ${Math.min(0.32, t * 1.2)}px ${theme.font}`;
+            c.textAlign = 'center';
+            c.textBaseline = 'middle';
+            const s = o.side || 1;
+            c.fillText('FD', len / 2, -s * (t / 2 + 0.22));
+          }
+        }
+      });
+    } else if (kind === 'big2') {
+      swingDoor(c, o, true, len / 2, start, theme, lw, false);
+      swingDoor(c, o, false, len / 2, start + len / 2, theme, lw, false);
+      withLocal(c, o, () => {
+        c.strokeStyle = theme.door;
+        c.lineWidth = lw * 1.4;
+        c.strokeRect(0.02, -t * 0.4, len - 0.04, t * 0.8);
+      });
+    } else if (kind === 'door' || kind === 'locked' || kind === 'broken') {
       swingDoor(c, o, !o.hinge, len, start, theme, lw, kind === 'broken');
       if (kind === 'locked') {
         const cx = o.o === 'h' ? o.x + len / 2 : o.x;
@@ -710,6 +802,34 @@
       });
     }
     c.restore();
+  }
+
+  /* 封印扉：閉じた扉に×の鎖と札を貼る */
+  function drawSealed(c, o, t, theme, lw) {
+    withLocal(c, o, () => {
+      const len = o.len;
+      const h = Math.max(t, 0.3);
+      c.fillStyle = theme.furn.soft;
+      c.strokeStyle = theme.door;
+      c.lineWidth = lw * 1.3;
+      c.fillRect(0, -h / 2, len, h);
+      c.strokeRect(0, -h / 2, len, h);
+      c.strokeStyle = theme.furn.ritual;
+      c.lineWidth = lw * 1.2;
+      c.beginPath();
+      c.moveTo(0, -h * 0.9); c.lineTo(len, h * 0.9);
+      c.moveTo(0, h * 0.9); c.lineTo(len, -h * 0.9);
+      c.stroke();
+      // 札
+      c.fillStyle = theme.furn.fill;
+      c.strokeStyle = theme.furn.ritual;
+      c.lineWidth = lw * 0.7;
+      [len * 0.25, len * 0.75].forEach(u => {
+        c.fillRect(u - 0.1, -h * 0.75, 0.2, h * 1.5);
+        c.strokeRect(u - 0.1, -h * 0.75, 0.2, h * 1.5);
+        c.beginPath(); c.moveTo(u, -h * 0.5); c.lineTo(u, h * 0.5); c.stroke();
+      });
+    });
   }
 
   /* 壁の穴：両端をギザギザに崩し、まわりに瓦礫を散らす */
@@ -1007,14 +1127,16 @@
       c.globalAlpha = 0.14;
       g.runs.forEach(run => drawRun(c, run, { ...theme, wall: theme.gm, rail: theme.gm }, lw, false));
       ghost.items.forEach(item => {
-        if (item.t === 'stairs' || item.t === 'stairs_u' || item.t === 'spiral' || item.t === 'elevator') drawItem(c, item, theme, lw, { editor: false });
+        if (M.ASSET[item.t] && M.ASSET[item.t].vertical) drawItem(c, item, theme, lw, { editor: false });
       });
       c.restore();
     }
 
     // 敷物・血痕などの下に敷くもの → 家具
-    const under = floor.items.filter(i => M.ASSET[i.t] && M.ASSET[i.t].under);
-    const over = floor.items.filter(i => !(M.ASSET[i.t] && M.ASSET[i.t].under));
+    const layer = i => (M.ASSET[i.t] && (M.ASSET[i.t].under ? 'under' : M.ASSET[i.t].overWall ? 'wall' : '')) || '';
+    const under = floor.items.filter(i => layer(i) === 'under');
+    const over = floor.items.filter(i => layer(i) === '');
+    const onWall = floor.items.filter(i => layer(i) === 'wall');
     if (!opts.hideItems) {
       under.forEach(item => drawItem(c, item, theme, lw, opts));
       over.forEach(item => drawItem(c, item, theme, lw, opts));
@@ -1030,6 +1152,9 @@
       const t = (M.WALL[walls.openingKind.get(o.id)] || M.WALL.int).t;
       drawOpening(c, o, t, theme, lw, opts);
     });
+
+    // 壁に重ねる素材（ヒビ・崩落・弾痕・侵食など）は壁の上に描く
+    if (!opts.hideItems) onWall.forEach(item => drawItem(c, item, theme, lw, opts));
 
     // GM専用の部屋はGM表示で斜線
     if (!opts.playerView) {
