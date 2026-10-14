@@ -2748,6 +2748,583 @@
   /* ---------- 歴史・和風・宗教・商業（T3） ---------- */
 
   /* (T3 のテンプレート関数はここ) */
+  /* T3 で参考にした定石:
+   *  - 武家屋敷: 通りに面した長屋門（中間部屋・物置）から前庭の延段を折れて式台のある玄関へ。玄関の間→次の間→座敷と奥へ進み、
+   *    座敷は床の間を備えて南の庭園に縁側で面する。台所（土間とかまど）・茶の間・寝間・仏間・納戸は西と北、蔵は裏の勝手庭。
+   *    床の間の脇に武者隠し、縁側の突き当たりに客用の厠。庭は池泉（石橋・飛び石・灯籠・松）と書院前の枯山水、竹垣と中門の奥の露地に茶室（躙口・水屋）
+   *  - 寺院: 山門（仁王像）→参道（灯籠・手水舎・常香炉）→本堂の一直線。本堂は外陣・内陣（須弥壇と本尊）・余間と回り縁。
+   *    庫裏は渡り廊下で本堂とつながり、玄関・寺務所・台所・住職の居室・客間。鐘楼は山門の脇、墓地は本堂の横、客間の前に枯山水
+   *  - 教会: 正面（図では下）の拝廊から身廊（中央通路と側廊、柱、会衆席、告解室）を進み、内陣の祭壇へ。内陣の両脇に聖具室と事務室、
+   *    正面の脇に鐘楼（螺旋階段で鐘室とオルガン席へ）、内陣の下に地下納骨堂
+   *  - オフィスビル: センターコア（両端の階段で二方向避難・EV2基・トイレ）を全階同じ位置に置く。1F は風除室とロビー・セキュリティゲート・
+   *    防災センター・通用口・荷捌き場、基準階はコアを囲むオープンオフィスと会議室・休憩室・サーバー室、役員階は秘書室の奥に社長室、屋上は塔屋と設備
+   *  - コンビニ: 角の自動ドアの脇にレジ、正面の窓沿いに雑誌棚、中央にゴンドラ、奥の壁に飲料の冷蔵ケース（裏はウォークイン冷蔵庫）。
+   *    レジの奥に事務スペース、バックヤードと搬入口は側面の通路側、前面に駐車場と車止め
+   */
+
+  /* ---------- 歴史：武家屋敷と日本庭園（長屋門・式台玄関・座敷・書院・蔵、池泉と露地の茶室） ---------- */
+
+  function buke() {
+    const b = makeFloor('1F');
+    b.room(T('通り', 'Street', '거리'), 'road', 0, 0, 64, 5)
+      .room(T('中間部屋', 'Servants\' room', '하인 방'), 'washitsu', 18, 5, 6, 6)
+      .room(T('長屋門', 'Gatehouse', '나가야몬'), 'doma', 24, 5, 5, 6)
+      .room(T('物置', 'Shed', '헛간'), 'storage', 29, 5, 5, 6)
+      .room(T('延段', 'Stone path', '돌길'), 'porch', 24, 11, 5, 6, { hideLabel: true })
+      .room(T('延段', 'Stone path', '돌길'), 'porch', 29, 14, 10, 3, { hideLabel: true })
+      .room(T('玄関', 'Entrance', '현관'), 'doma', 34, 17, 5, 3)
+      .room(T('式台', 'Shikidai', '시키다이'), 'engawa', 34, 20, 5, 2)
+      .room(T('土間', 'Doma (earthen floor)', '흙바닥(도마)'), 'doma', 6, 22, 8, 12)
+      .room(T('台所', 'Kitchen', '부엌'), 'kitchen', 14, 22, 7, 8, { ly: -2.6 })
+      .room(T('寝間', 'Bedroom', '침실'), 'washitsu', 21, 22, 7, 8)
+      .room(T('仏間', 'Altar room', '불간'), 'washitsu', 28, 22, 5, 8)
+      .room(T('玄関の間', 'Reception room', '현관방'), 'washitsu', 33, 22, 7, 8)
+      .room(T('武者隠し', 'Guard closet', '무사 은신처'), 'danger', 40, 22, 2, 8, { gm: true, plName: '', note: T('座敷の床の間の脇、隠し戸の奥。護衛が息をひそめた小部屋で、座敷の話し声が筒抜けになる', 'Behind a hidden door beside the alcove: a closet where guards waited, hearing every word in the zashiki', '도코노마 옆 숨은 문 뒤. 호위가 숨어 있던 작은 방으로, 자시키의 대화가 다 들린다') })
+      .room(T('納戸', 'Storeroom', '광'), 'storage', 42, 22, 6, 8)
+      .room(T('風呂', 'Bath', '목욕간'), 'wet', 6, 34, 4, 5)
+      .room(T('厠', 'Toilet', '변소'), 'wet', 10, 34, 4, 5)
+      .room(T('茶の間', 'Family room', '거실(차노마)'), 'washitsu', 14, 30, 7, 9, { ly: -2.6 })
+      .room(T('書院', 'Shoin (study)', '서원'), 'washitsu', 21, 30, 9, 9)
+      .room(T('次の間', 'Anteroom', '옆방'), 'washitsu', 30, 30, 8, 9)
+      .room(T('座敷', 'Zashiki (guest hall)', '객실(자시키)'), 'washitsu', 38, 30, 10, 9, { ly: 2.6 })
+      .room(T('縁側', 'Engawa', '툇마루'), 'engawa', 14, 39, 36, 2)
+      .room(T('縁側', 'Engawa', '툇마루'), 'engawa', 48, 30, 2, 9, { hideLabel: true })
+      .room(T('厠', 'Toilet', '변소'), 'wet', 48, 26, 3, 4, { hideLabel: true })
+      .room(T('蔵', 'Kura (storehouse)', '곳간(쿠라)'), 'storage', 1, 8, 7, 10, { wall: 'stone' })
+      .room(T('庭園', 'Garden', '정원'), 'garden', 0, 41, 50, 17, { lx: -8.5, ly: -1 })
+      .room(T('枯山水', 'Dry garden', '가레산스이'), 'gravel', 20, 42, 9, 6, { ly: -1.8 })
+      .room(T('池', 'Pond', '연못'), 'water', 33, 44, 13, 5, { lx: 2 })
+      .room(T('池', 'Pond', '연못'), 'water', 30, 46, 3, 5, { hideLabel: true })
+      .room(T('池', 'Pond', '연못'), 'water', 40, 49, 4, 3, { hideLabel: true })
+      .room(T('露地', 'Tea garden (roji)', '로지(다정)'), 'garden', 50, 43, 14, 15, { ly: -5.5 })
+      .room(T('茶室', 'Tea room', '다실'), 'washitsu', 54, 47, 6, 6, { ly: -2.2 })
+      .room(T('水屋', 'Mizuya', '미즈야'), 'kitchen', 60, 47, 3, 6);
+    fillYard(b, 0, 5, 64, 58, T('庭', 'Grounds', '마당'));
+    // 屋敷を囲む土塀（長屋門の外壁と通用門で切れる）
+    b.wall(0, 5, 18, 5, 'ext').wall(34, 5, 64, 5, 'ext').wall(0, 5, 0, 58, 'ext').wall(64, 5, 64, 58, 'ext').wall(0, 58, 64, 58, 'ext');
+    b.dh(24, 5, 5, 1, 0, 'big2')                   // 長屋門の門扉
+      .dh(24, 11, 5, 1, 0, 'open')
+      .dv(24, 7.5, 1.5, -1, 0, 'sliding')          // 中間部屋
+      .dv(29, 7.5, 1.5, 1, 0, 'sliding')           // 物置
+      .dh(12.25, 5, 1.5, 1, 0)                     // 通用門（勝手庭へ）
+      .dh(35, 17, 3, 1, 0, 'sliding2')             // 玄関の引き戸
+      .dh(34, 20, 5, 1, 0, 'open')                 // 玄関 ↔ 式台
+      .dh(34.5, 22, 4, 1, 0, 'sliding2')           // 式台 ↔ 玄関の間
+      .dh(9, 22, 3, 1, 0, 'sliding2')              // 内玄関（土間の大戸）
+      .dv(14, 23, 6, 1, 0, 'open')                 // 上がり框（土間 ↔ 台所）
+      .dh(7.25, 34, 1.5, 1, 0, 'sliding').dh(11.25, 34, 1.5, 1, 0, 'sliding')   // 風呂・厠
+      .dh(15.5, 30, 3, 1, 0, 'sliding2')           // 台所 ↔ 茶の間
+      .dv(21, 24.5, 3, 1, 0, 'sliding2')           // 台所 ↔ 寝間
+      .dv(28, 24.5, 3, 1, 0, 'sliding2')           // 寝間 ↔ 仏間
+      .dv(33, 24.5, 3, 1, 0, 'sliding2')           // 仏間 ↔ 玄関の間
+      .dh(23.5, 30, 3, 1, 0, 'sliding2')           // 寝間 ↔ 書院
+      .dh(34.5, 30, 3, 1, 0, 'sliding2')           // 玄関の間 ↔ 次の間
+      .dv(21, 33, 3, 1, 0, 'sliding2')             // 茶の間 ↔ 書院
+      .dv(30, 32, 3, 1, 0, 'sliding2')             // 書院 ↔ 次の間
+      .dv(38, 34.5, 4, 1, 0, 'sliding2')           // 次の間 ↔ 座敷
+      .dh(43.5, 30, 3, 1, 0, 'sliding2')           // 座敷 ↔ 納戸（帳台構え）
+      .dh(40.25, 30, 1.5, -1, 0, 'secret')         // 武者隠しの隠し戸
+      .dv(42, 26, 1.5, -1, 0, 'sliding')           // 武者隠し ↔ 納戸
+      .dh(15, 39, 5, 1, 0, 'sliding2').dh(22, 39, 7, 1, 0, 'sliding2').dh(31, 39, 6, 1, 0, 'sliding2').dh(39, 39, 8, 1, 0, 'sliding2')   // 障子
+      .dv(48, 31, 7, 1, 0, 'sliding2')             // 座敷 ↔ 東の縁側
+      .dh(48, 39, 2, 1, 0, 'open')                 // 縁側の曲がり角
+      .dh(48.25, 30, 1.5, -1, 0, 'sliding')        // 客用の厠
+      .dh(15, 41, 6, 1, 0, 'sliding2').dh(22.5, 41, 6, 1, 0, 'sliding2').dh(30, 41, 6, 1, 0, 'sliding2').dh(37.5, 41, 6, 1, 0, 'sliding2').dh(44.5, 41, 4, 1, 0, 'sliding2')   // 縁側の雨戸・ガラス戸
+      .dv(50, 31, 7, 1, 0, 'sliding2')
+      .dv(8, 14, 1.5, 1, 0, 'locked')              // 蔵の扉
+      .dv(54, 50.5, 1.5, 1, 0, 'sliding')          // 躙口
+      .dh(55.5, 47, 3, 1, 0, 'sliding2')           // 貴人口
+      .dv(60, 49.5, 1.5, 1, 0, 'sliding')          // 茶道口
+      .dh(60.75, 47, 1.5, 1, 0, 'sliding')         // 水屋の勝手口
+      .wh(19.5, 5, 2, 'barred').wh(30.5, 11, 2)
+      .wh(6.5, 22, 2).wh(14.5, 22, 2).wh(23.5, 22, 2.5).wh(45.5, 22, 2, 'barred')
+      .wv(6, 35.5, 2).wh(11, 39, 1.5).wv(51, 27, 2)
+      .wh(3.5, 8, 2, 'barred')
+      .wv(54, 48, 1.5).wv(63, 50.5, 1.5);
+    // 長屋門・前庭・勝手庭
+    b.item('futon', 18.3, 8.7, 90).item('andon', 22.9, 5.5).item('chest', 18.4, 5.4)
+      .item('crate', 32.1, 5.4).item('crate', 32.1, 7.2).item('barrel', 30.2, 9.6).item('log', 29.6, 5.3, 0, { size: [2.2, 0.8] })
+      .item('bamboo_fence', 16.75, 11, 90, { size: [4, 0.5] }).item('bamboo_fence', 16.75, 17.4, 90, { size: [4.6, 0.5] })
+      .item('well', 10.2, 13.2).item('log', 2.2, 19.4, 0, { size: [3, 0.8] }).item('tree', 11.6, 7.8, 0, { size: [2.6, 2.6] })
+      .item('pine', 33.6, 11.2, 0, { size: [3.6, 3.6] }).item('lantern', 21.6, 13.2).item('garden_rock', 40, 18.4, 0, { size: [1.4, 1] })
+      .item('bush', 30.6, 18.6).item('bush', 41.6, 15.6).item('tree', 45, 7).item('pine', 52, 13, 0, { size: [4.4, 4.4] })
+      .item('hokora', 61.8, 5.6).item('bamboo', 60.6, 8.6).item('bamboo', 60.6, 12.2).item('bamboo', 60.8, 16)
+      .item('tree', 55.6, 24.6).item('bush', 51.6, 22.4);
+    // 母屋
+    b.item('kamado', 6.05, 23.2, 270).item('sink', 6.05, 27, 270).item('barrel', 6.2, 29.5).item('barrel', 6.2, 30.9)
+      .item('log', 12.9, 30.5, 90, { size: [3, 0.8] }).item('crate', 12.2, 22.3)
+      .item('irori', 16.5, 25.5).item('cupboard', 17.5, 22.05)
+      .item('futon', 22, 23).item('futon', 24.5, 23).item('dresser', 21.2, 29.05, 180).item('andon', 26.9, 22.3)
+      .item('butsudan', 29.6, 22.05).item('zabuton', 30, 23.6).item('andon', 28.2, 28.9)
+      .item('byobu', 35, 24, 0, { size: [3, 0.6] }).item('katanakake', 33.05, 27.7, 270).item('andon', 39.1, 29.1)
+      .item('knife', 40.8, 24, 90, { label: T('刀', 'Sword', '칼') }).item('candle', 40.6, 22.4)
+      .item('chest', 42.3, 22.4).item('chest', 44, 23.6).item('cabinet', 47.05, 23, 90, { size: [3, 0.9] })
+      .item('bathtub', 8.2, 35.6).item('toilet', 11.5, 37.2, 180)
+      .item('cupboard', 14.05, 31, 270, { size: [2.4, 0.8] }).item('zataku', 15.6, 35).item('zabuton', 16.5, 33.7).item('zabuton', 18.7, 35.4).item('zabuton', 14.3, 35.4).item('andon', 19.9, 37.1)
+      .item('desk', 21.2, 30.05, 0, { size: [2, 1] }).item('zabuton', 21.6, 31.3).item('bookshelf', 27.3, 30.05, 0, { size: [2.4, 0.8] })
+      .item('katanakake', 29.15, 35.6, 90).item('andon', 21.3, 37.1)
+      .item('zabuton', 31.2, 36.8).item('zabuton', 32.8, 36.8).item('andon', 30.3, 30.3)
+      .item('tokonoma', 38.05, 30.1, 270).item('zataku', 42.6, 32.6).item('zabuton', 43.5, 31.3).item('zabuton', 43.5, 34.7).item('andon', 47.1, 30.1)
+      .item('toilet', 49, 26.2);
+    // 蔵
+    b.item('ladder', 1.5, 8.5, 0, { size: [1.2, 2.6] }).item('chest', 3.4, 8.5).item('chest', 5.6, 8.5)
+      .item('cabinet', 1.4, 11.5, 270, { size: [3, 0.9] }).item('crate', 1.5, 15.7).item('crate', 3.4, 15.7)
+      .item('trapdoor', 5.4, 14.8, 0, { gm: true, size: [1.4, 1.4], label: T('床下の隠し穴', 'Hidden pit', '마루 밑 구멍') });
+    // 庭園：書院前の枯山水、座敷前の池と石橋、築山
+    b.item('garden_rock', 24.8, 41.15, 0, { size: [1.4, 0.8] }).item('garden_rock', 42.5, 41.15, 0, { size: [1.4, 0.8] })
+      .item('moss', 20.6, 43.8, 0, { size: [3, 2.2] }).item('garden_rock', 21, 44.2).item('garden_rock', 25.5, 45.4, 0, { size: [1.4, 1.1] }).item('garden_rock', 27, 43.6, 0, { size: [1.2, 0.9] })
+      .item('stone_bridge', 36, 43, 0, { size: [2, 7] })
+      .item('stepping', 38.2, 42.2, 90).item('stepping', 36.2, 50.4)
+      .item('garden_rock', 31, 44.4, 0, { size: [1.6, 1.2] }).item('garden_rock', 46.2, 47.6, 0, { size: [1.4, 1.1] }).item('garden_rock', 39, 50.6, 0, { size: [1.2, 1] })
+      .item('shishiodoshi', 44.4, 52.4).item('lantern', 46.4, 43.4)
+      .item('pine', 2, 43, 0, { size: [4.4, 4.4] }).item('moss', 6, 49, 0, { size: [6, 4] }).item('garden_rock', 7, 50, 0, { size: [2, 1.6] }).item('pine', 9.5, 48.5, 0, { size: [3.6, 3.6] })
+      .item('lantern', 13, 44).item('bush', 16, 52).item('bush', 18, 54.5)
+      .item('pine', 30, 52.4, 0, { size: [4, 4] }).item('lantern', 38.6, 55.6).item('moss', 41, 54, 0, { size: [5, 3] }).item('tree', 46, 54.6)
+      .item('tree', 1, 54.6).item('bamboo', 24, 54.6);
+    // 外露地（腰掛待合）から中門、内露地（つくばい・踏石）から躙口へ
+    b.item('stepping', 50.4, 36.4, 90).item('stepping', 52.2, 38)
+      .item('garden_bench', 55.4, 39.4).item('lantern', 58.8, 39.4).item('pine', 59.6, 32.8, 0, { size: [4, 4] })
+      .item('bamboo_fence', 50, 42.6, 0, { size: [2, 0.5] }).item('bamboo_fence', 54, 42.6).item('bamboo_fence', 60, 42.6, 0, { size: [4, 0.5] })
+      .item('bamboo_fence', 49.6, 43.1, 90).item('bamboo_fence', 49.6, 49.1, 90).item('bamboo_fence', 49.6, 55.1, 90, { size: [2.9, 0.5] })
+      .item('stepping', 52.2, 43.3, 0, { size: [1.6, 4.2] }).item('tsukubai', 51, 48).item('garden_rock', 52.6, 50.7, 0, { size: [1.2, 1] }).item('lantern', 51, 52.8)
+      .item('moss', 55, 54, 0, { size: [4, 3] }).item('pine', 59.8, 54, 0, { size: [3.6, 3.6] })
+      .item('tokonoma', 55, 51.95, 180, { size: [3, 1] }).item('irori', 57.3, 49.2, 0, { size: [1.2, 1.2] })
+      .item('zabuton', 57.3, 50.6).item('zabuton', 55, 48.3).item('zabuton', 55, 49.7)
+      .item('cupboard', 62.15, 48.1, 90, { size: [2.2, 0.8] }).item('sink', 61.65, 50.6, 90);
+    b.text(T('中門', 'Middle gate', '중문'), 51, 42.1, { size: 0.45 })
+      .text(T('勝手庭', 'Service yard', '뒷마당'), 13, 19.6, { size: 0.6, bold: true })
+      .text(T('前庭', 'Front court', '앞뜰'), 46, 18.6, { size: 0.7, bold: true });
+    return [b.f];
+  }
+
+  /* ---------- 歴史：寺院（山門・参道・本堂・庫裏・鐘楼・墓地・庭園） ---------- */
+
+  function temple() {
+    const b = makeFloor('1F');
+    b.room(T('内陣', 'Inner sanctum', '내진'), 'special', 25, 4, 12, 9, { ly: 2.6 })
+      .room(T('余間', 'Side chamber', '여간'), 'washitsu', 20, 4, 5, 9)
+      .room(T('余間', 'Side chamber', '여간'), 'washitsu', 37, 7, 5, 6)
+      .room(T('秘仏の間', 'Hidden buddha room', '비불의 방'), 'special', 37, 4, 5, 3, { gm: true, plName: '', note: T('須弥壇の脇の隠し戸の奥。一度も開帳されたことのない秘仏が祀られている', 'Behind a hidden door beside the altar: a secret buddha that has never been shown to anyone', '수미단 옆 숨은 문 뒤. 한 번도 공개된 적 없는 비불이 모셔져 있다') })
+      .room(T('外陣', 'Worship hall', '외진'), 'washitsu', 20, 13, 22, 9, { ly: 1.6 })
+      .room(T('回り縁', 'Veranda', '회랑 마루'), 'balcony', 18, 22, 26, 2, { lx: -8 })
+      .room(T('回り縁', 'Veranda', '회랑 마루'), 'balcony', 18, 4, 2, 18, { hideLabel: true })
+      .room(T('回り縁', 'Veranda', '회랑 마루'), 'balcony', 42, 4, 2, 18, { hideLabel: true })
+      .room(T('渡り廊下', 'Covered walkway', '연결 복도'), 'balcony', 44, 10, 3, 3, { hideLabel: true })
+      .room(T('台所', 'Kitchen', '부엌'), 'kitchen', 47, 4, 8, 6)
+      .room(N.bath, 'wet', 55, 4, 4, 6)
+      .room(T('便所', 'WC', '화장실'), 'wet', 59, 4, 4, 6)
+      .room(N.corridor, 'hall', 47, 10, 16, 2, { hideLabel: true })
+      .room(T('居間', 'Living room', '거실'), 'washitsu', 47, 12, 6, 7, { ly: -2 })
+      .room(T('寺務所', 'Temple office', '사무소'), 'office', 47, 19, 6, 6, { ly: 2 })
+      .room(T('玄関', 'Entrance', '현관'), 'doma', 47, 25, 6, 5)
+      .room(N.corridor, 'hall', 53, 12, 2, 18, { hideLabel: true })
+      .room(T('住職の部屋', 'Head priest\'s room', '주지 방'), 'washitsu', 55, 12, 8, 9, { ly: -1 })
+      .room(T('客間', 'Guest room', '객실'), 'washitsu', 55, 21, 8, 9, { ly: -2.8 })
+      .room(T('縁側', 'Engawa', '툇마루'), 'engawa', 55, 30, 8, 2, { hideLabel: true })
+      .room(T('墓地', 'Graveyard', '묘지'), 'garden', 0, 0, 16, 32, { ly: 6.2 })
+      .room(T('鐘楼', 'Bell tower', '종루'), 'porch', 4, 36, 8, 8, { ly: 3.2 })
+      .room(T('参道', 'Approach', '참배길'), 'porch', 29, 24, 4, 22, { ly: 6 })
+      .room(T('山門', 'Mountain gate', '산문'), 'doma', 25, 46, 12, 6)
+      .room(T('庭園', 'Garden', '정원'), 'garden', 53, 32, 13, 14, { ly: 5.4 })
+      .room(T('枯山水', 'Dry garden', '가레산스이'), 'gravel', 55, 33, 9, 8, { ly: 2.8 })
+      .room(T('門前の道', 'Temple street', '절 앞길'), 'road', 0, 52, 66, 4);
+    fillYard(b, 0, 0, 66, 52, T('境内', 'Temple grounds', '경내'));
+    // 築地塀・墓地の柵・回り縁の高欄・山門の格子
+    b.wall(0, 0, 66, 0, 'ext').wall(0, 0, 0, 52, 'ext').wall(66, 0, 66, 52, 'ext').wall(0, 52, 25, 52, 'ext').wall(37, 52, 66, 52, 'ext')
+      .wall(16, 0, 16, 25, 'fence').wall(16, 29, 16, 32, 'fence').wall(0, 32, 16, 32, 'fence')
+      .wall(18, 4, 18, 24, 'rail').wall(18, 4, 20, 4, 'rail').wall(42, 4, 44, 4, 'rail').wall(44, 4, 44, 10, 'rail').wall(44, 13, 44, 24, 'rail')
+      .wall(18, 24, 29, 24, 'rail').wall(33, 24, 44, 24, 'rail').wall(44, 10, 47, 10, 'rail').wall(44, 13, 47, 13, 'rail')
+      .wall(25, 13.6, 29.5, 13.6, 'rail').wall(32.5, 13.6, 37, 13.6, 'rail')                 // 内陣の結界
+      .wall(29, 46.5, 29, 51.5, 'bars').wall(33, 46.5, 33, 51.5, 'bars');                   // 仁王像の格子
+    b.dh(29, 52, 4, -1, 0, 'big2')                 // 山門の扉
+      .dh(29, 46, 4, 1, 0, 'open')
+      .dh(21, 22, 4, 1, 0, 'sliding2').dh(29, 22, 4, 1, 0, 'sliding2').dh(37, 22, 4, 1, 0, 'sliding2')   // 本堂の正面の戸
+      .dv(20, 16, 3, 1, 0, 'sliding2').dv(42, 16, 3, 1, 0, 'sliding2')
+      .dh(25, 13, 12, 1, 0, 'open')               // 外陣 ↔ 内陣
+      .dh(21, 13, 3, 1, 0, 'sliding2').dh(38, 13, 3, 1, 0, 'sliding2')
+      .dv(25, 8, 1.5, 1, 0, 'sliding').dv(37, 9, 1.5, -1, 0, 'sliding')
+      .dv(37, 4.75, 1.5, 1, 0, 'secret')           // 秘仏の間
+      .dv(47, 10.25, 1.5, 1, 0, 'sliding')         // 渡り廊下 → 庫裏
+      .dh(49, 10, 3, -1, 0, 'sliding2').dh(56, 10, 1.5, -1, 0, 'sliding').dh(60, 10, 1.5, -1, 0)
+      .dh(52, 4, 1.5, -1, 0, 'sliding')            // 台所の勝手口
+      .dh(53, 12, 2, 1, 0, 'open')
+      .dh(48.5, 12, 3, 1, 0, 'sliding2')           // 居間
+      .dh(48, 25, 3, 1, 0, 'sliding2')             // 寺務所の受付（玄関から）
+      .dv(53, 21, 1.5, 1, 0, 'sliding')
+      .dh(48.5, 30, 3, 1, 0, 'sliding2')           // 庫裏の玄関
+      .dv(53, 26, 3, 1, 0, 'open')                 // 上がり框
+      .dv(55, 15, 3, 1, 0, 'sliding2').dv(55, 24, 3, 1, 0, 'sliding2')
+      .dh(56, 30, 6, 1, 0, 'sliding2').dh(56, 32, 6, 1, 0, 'sliding2')
+      .wh(48, 4, 3).wh(56.5, 4, 1.5).wv(63, 6, 1.5).wv(63, 14, 3).wv(47, 15, 2).wv(47, 21, 2)
+      .wh(26, 4, 2).wh(34, 4, 2).wh(21.5, 4, 2);
+    // 本堂
+    b.item('buddha_altar', 28.5, 4.4, 0, { size: [5, 3] }).item('candle', 27.2, 5.4).item('candle', 34, 5.4)
+      .item('offering', 30.3, 7.8).item('lowtable', 30.2, 9.2, 0, { size: [1.6, 1] })
+      .item('butsudan', 21.3, 4.4, 0, { size: [2.4, 1.2] }).item('cabinet', 20.4, 7, 270, { size: [3, 0.8] })
+      .item('cabinet', 38.5, 7.3, 0, { size: [3, 0.8] }).item('chest', 40.1, 10.4)
+      .item('idol', 39, 5, 0, { label: T('秘仏', 'Secret buddha', '비불') }).item('candle', 40.8, 4.3)
+      .item('saisen', 29.8, 22.95);
+    [24, 26, 28, 33, 35, 37].forEach(x => b.item('zabuton', x - 0.6, 15.6).item('zabuton', x - 0.6, 17.8));
+    b.item('candle', 20.4, 13.4).item('candle', 40.8, 13.4);
+    // 参道・鐘楼・山門・境内
+    b.item('cauldron', 30.2, 26.4, 0, { label: T('常香炉', 'Incense burner', '상향로') })
+      .item('lantern', 27.4, 30).item('lantern', 33.4, 30).item('lantern', 27.4, 40).item('lantern', 33.4, 40)
+      .item('temizuya', 35.6, 35.6)
+      .item('pillar', 4.2, 36.2, 0, { size: [0.6, 0.6] }).item('pillar', 11.2, 36.2, 0, { size: [0.6, 0.6] })
+      .item('pillar', 4.2, 43.2, 0, { size: [0.6, 0.6] }).item('pillar', 11.2, 43.2, 0, { size: [0.6, 0.6] })
+      .item('bonsho', 6.5, 38.4).item('log', 6.9, 37.1, 0, { size: [2.2, 0.5] })
+      .item('statue', 26, 48, 0, { size: [2, 2], label: T('仁王像', 'Nio guardian', '인왕상') }).item('statue', 34, 48, 0, { size: [2, 2], label: T('仁王像', 'Nio guardian', '인왕상') })
+      .item('tree', 37.6, 26.6, 0, { size: [5, 5] }).item('pine', 19.6, 27, 0, { size: [4, 4] }).item('pine', 14, 45.6, 0, { size: [4, 4] })
+      .item('tree', 43, 41, 0, { size: [3.4, 3.4] }).item('garden_bench', 37.4, 32.4).item('bush', 23.2, 43).item('bush', 39, 46.4).item('tree', 0.8, 46.6)
+      .item('well', 44.6, 1.2, 0, { size: [1.8, 1.8] }).item('tree', 62.4, 0.6)
+      .item('stele', 38.4, 49.6, 0, { size: [1, 2], label: T('寺号標', 'Temple name pillar', '사호 표석') });
+    // 庫裏
+    b.item('kitchen', 47.1, 4.05).item('fridge', 53.6, 4.05).item('dining4', 48.6, 5.8, 90).item('cupboard', 54.05, 6, 90)
+      .item('bathtub', 55.5, 4.3, 90).item('toilet', 61.6, 4.3).item('washbasin', 61.85, 6.2, 90)
+      .item('zataku', 48.6, 15).item('zabuton', 47.3, 15.4).item('zabuton', 51.8, 15.4).item('tv', 48.5, 18.05, 180)
+      .item('office_desk', 48, 20.3).item('chair', 48.7, 21.8).item('filing', 47.05, 23.2).item('safe', 51.6, 19.2)
+      .item('cabinet', 47.05, 26.5, 90, { size: [2.6, 0.6] })
+      .item('desk', 61.95, 13.2, 90, { size: [2.2, 1] }).item('zabuton', 60.6, 13.7).item('bookshelf', 56.5, 12.05).item('futon', 57, 18.6, 90).item('andon', 55.4, 12.4)
+      .item('tokonoma', 61.55, 21.2, 90).item('zataku', 57.5, 25).item('zabuton', 58.4, 23.7).item('zabuton', 58.4, 27.1).item('zabuton', 56.2, 25.4).item('zabuton', 60.7, 25.4);
+    // 墓地：区画ごとの墓石（和型の角石）の列、水場・六地蔵・無縁塚、奥にGM用の古井戸
+    [0.8, 3.8, 6.8, 9.8, 12.8].forEach(x => [1.2, 5.6, 10, 14.4].forEach(y => {
+      b.wall(x, y + 2.4, x, y, 'rail').wall(x, y, x + 2.2, y, 'rail').wall(x + 2.2, y, x + 2.2, y + 2.4, 'rail')
+        .item('pillar', x + 0.65, y + 0.35, 0, { size: [0.9, 0.9] });
+    }));
+    b.item('sink', 12.6, 21.2, 0, { size: [2, 1.2], label: T('水場', 'Water stand', '물터') })
+      .item('stele', 1.4, 21.4, 0, { label: T('無縁塚', 'Mound of the unclaimed', '무연고 무덤') })
+      .item('tree', 5.6, 23, 0, { size: [3.4, 3.4] })
+      .item('well', 1.2, 27.4, 0, { gm: true, size: [1.8, 1.8], label: T('古井戸', 'Old well', '오래된 우물') });
+    [3, 4.4, 5.8, 7.2, 8.6, 10].forEach(x => b.item('statue', x, 30.4, 0, { size: [1, 1] }));
+    // 庭園：客間の前の枯山水と竹垣
+    b.item('garden_rock', 57, 34.6, 0, { size: [2, 1.6] }).item('garden_rock', 59.2, 35.2, 0, { size: [1.2, 1] }).item('garden_rock', 61.6, 37.6, 0, { size: [1.6, 1.2] })
+      .item('moss', 56.4, 34, 0, { size: [4.2, 3] }).item('moss', 60.8, 37, 0, { size: [3, 2.2] })
+      .item('pine', 61.6, 41.6, 0, { size: [4, 4] }).item('lantern', 54.6, 42.6).item('bush', 58, 43.6)
+      .item('bamboo_fence', 52.6, 32.2, 90).item('bamboo_fence', 52.6, 38.2, 90, { size: [5.6, 0.5] })
+      .item('bamboo_fence', 55, 45.6, 0, { size: [11, 0.5] });
+    b.f.rooms.find(r => r.name.ja === '墓地').note = T('奥の古井戸は封じられているはずだが、夜になると蓋がずれている', 'The old well at the back is supposed to be sealed, yet every night its lid has been moved', '안쪽의 오래된 우물은 봉인되어 있어야 하지만 밤마다 뚜껑이 어긋나 있다');
+    return [b.f];
+  }
+
+  /* ---------- 歴史：教会（B1 地下納骨堂・1F 身廊と内陣・2F オルガン席と鐘室） ---------- */
+
+  // 鐘楼の螺旋階段と、内陣の脇の納骨堂への階段（上下階で同じ位置）
+  const CHURCH_TOWER = [28.6, 40.6];
+  const CHURCH_CRYPT_STAIRS = [25, 9.3];
+
+  function church() {
+    const g = makeFloor('1F');
+    g.room(T('身廊', 'Nave', '신랑'), 'public', 4, 14, 22, 26)
+      .room(T('内陣', 'Chancel', '내진'), 'special', 8, 2, 14, 12, { ly: 2.4 })
+      .room(N.office, 'office', 0, 6, 8, 8, { ly: 1.6 })
+      .room(T('聖具室', 'Sacristy', '제의실'), 'office', 22, 2, 8, 7, { ly: 0.6 })
+      .room(T('階段室', 'Stairwell', '계단실'), 'hall', 22, 9, 8, 5, { lx: -2.4, ly: 1.2 })
+      .room(T('拝廊', 'Narthex', '배랑'), 'hall', 4, 40, 22, 5, { lx: 4.5 })
+      .room(T('鐘楼', 'Bell tower', '종탑'), 'hall', 26, 38, 7, 7, { ly: -2.8 })
+      .room(T('前庭', 'Forecourt', '앞마당'), 'porch', 6, 45, 18, 4, { lx: 5.5 })
+      .room(T('墓地', 'Churchyard', '교회 묘지'), 'garden', 28, 14, 10, 23, { ly: 1.5 });
+    fillYard(g, 0, 0, 39, 50, T('敷地', 'Church grounds', '교회 부지'));
+    g.wall(28, 14, 38, 14, 'fence').wall(38, 14, 38, 37, 'fence').wall(28, 37, 38, 37, 'fence').wall(28, 14, 28, 37, 'fence')
+      .wall(8, 13, 13.5, 13, 'rail').wall(16.5, 13, 22, 13, 'rail');           // 聖体拝領台
+    g.dh(12.5, 45, 5, 1, 0, 'big2')                 // 正面の大扉
+      .dh(13.5, 40, 3, -1, 0, 'door2').dh(6, 40, 1.5, -1, 0).dh(22.5, 40, 1.5, -1, 1)   // 拝廊 ↔ 身廊
+      .dv(26, 42, 1.5, -1, 0)                      // 鐘楼
+      .dh(8, 14, 14, 1, 0, 'open')                 // 身廊 ↔ 内陣
+      .dh(5, 14, 1.5, -1, 0)                       // 事務室
+      .dh(23.5, 14, 1.5, -1, 1)                    // 階段室
+      .dv(22, 4, 1.5, 1, 0)                        // 内陣 ↔ 聖具室
+      .dh(23, 9, 1.5, 1, 0)                        // 聖具室 ↔ 階段室
+      .dv(0, 8, 1.5, -1, 0).dv(30, 3.5, 1.5, 1, 0)  // 事務室・聖具室の勝手口
+      .dv(28, 24.5, 2, -1, 0, 'gate')              // 墓地の門
+      .wv(4, 16.5, 2).wv(4, 26, 2).wv(4, 35, 2).wv(26, 16.5, 2).wv(26, 21, 2).wv(26, 26, 2).wv(26, 31, 2).wv(26, 35.5, 2)
+      .wv(8, 3, 2).wh(13.5, 2, 3).wh(1, 6, 2.5).wv(0, 11, 2).wh(26.5, 2, 2).wv(30, 6, 2)
+      .wh(6, 45, 3).wh(21, 45, 3).wv(4, 42, 2).wv(33, 41, 2).wh(28.5, 38, 2);
+    g.item('altar', 13, 4.2, 0, { size: [4, 1.6] }).item('statue', 14.4, 2.3, 0, { size: [1.2, 1.2], label: T('十字架', 'Crucifix', '십자가') })
+      .item('candle', 11.8, 4.6).item('candle', 17.4, 4.6).item('cabinet', 19.2, 2.2, 0, { size: [1.6, 0.8], label: T('聖櫃', 'Tabernacle', '감실') })
+      .item('rug', 10.5, 3.6, 0, { size: [9, 5] }).item('lectern', 9.2, 9.6)
+      .item('chair', 20.6, 5.6, 270).item('chair', 20.6, 6.8, 270).item('chair', 20.6, 8, 270)
+      .item('font', 9.4, 42.3).item('cabinet', 18.5, 40.15, 0, { size: [3, 0.6] }).item('bench', 4.2, 43.9, 0, { size: [3, 0.9] });
+    for (let y = 19; y <= 37; y += 2) g.item('pew', 8.6, y, 180, { size: [5.4, 1.2] }).item('pew', 16, y, 180, { size: [5.4, 1.2] });
+    [16, 20, 24, 28, 32, 36].forEach(y => g.item('pillar', 7.2, y, 0, { size: [0.8, 0.8] }).item('pillar', 22, y, 0, { size: [0.8, 0.8] }));
+    g.item('confessional', 4.05, 20.5, 90).item('confessional', 4.05, 29.5, 90).item('candle', 23.6, 15).item('plant', 4.4, 15);
+    g.item('office_desk', 1.2, 7.4).item('chair', 1.9, 8.9, 180).item('bookshelf', 4.6, 6.05).item('filing', 6.75, 7.4, 90).item('filing', 6.75, 8.8, 90).item('safe', 6.7, 11.2)
+      .item('wardrobe', 23.6, 2.05, 0, { size: [3, 1] }).item('counter', 24.6, 6.8, 0, { size: [3, 1] }).item('safe', 28.6, 2.1).item('washbasin', 22.1, 6.6, 90)
+      .item('stairs', CHURCH_CRYPT_STAIRS[0], CHURCH_CRYPT_STAIRS[1], 90)
+      .item('spiral', CHURCH_TOWER[0], CHURCH_TOWER[1]);
+    for (const [x, y] of [[29.4, 15.2], [32, 15.2], [34.6, 15.2], [29.4, 19.4], [32, 19.4], [34.6, 19.4], [29.4, 29], [32, 29], [34.6, 29], [29.4, 33.2], [32, 33.2], [34.6, 33.2]]) g.item('grave', x, y);
+    g.item('tree', 34.6, 22.6, 0, { size: [2.8, 2.8] }).item('statue', 30.6, 22.6, 0, { size: [1.4, 1.4], label: T('天使像', 'Angel statue', '천사상') })
+      .item('statue', 7, 45.6, 0, { size: [1.4, 1.4], label: T('聖母像', 'Madonna', '성모상') }).item('streetlight', 22.4, 47.6)
+      .item('tree', 0.4, 29).item('tree', 0.6, 44.6, 0, { size: [2.6, 2.6] }).item('tree', 34.6, 45.4, 0, { size: [3, 3] }).item('bush', 2, 2).item('bush', 33, 2.4);
+
+    const u = makeFloor('2F');
+    u.room(T('オルガン席', 'Organ loft', '오르간석'), 'public', 4, 36, 22, 9, { ly: 1.4 })
+      .room(T('鐘室', 'Belfry', '종실'), 'stone', 26, 38, 7, 7, { ly: -2.8 });
+    u.wall(4, 36.15, 26, 36.15, 'rail');               // 身廊を見下ろす手すり
+    u.dh(4, 36, 22, 1, 0, 'open')
+      .dv(26, 42, 1.5, -1, 0)
+      .wh(6, 45, 3).wh(12.5, 45, 5, 'window2').wh(21, 45, 3).wv(4, 41, 2)
+      .wv(33, 40, 2.5, 'boarded').wh(29, 45, 2.5, 'boarded').wh(29.5, 38, 2.5, 'boarded');
+    u.item('organ', 13, 43.35, 180).item('bench', 14, 42.2, 0, { size: [2, 0.6] })
+      .item('pew', 6, 37.6, 180, { size: [5.4, 1.2] }).item('pew', 6, 39.6, 180, { size: [5.4, 1.2] })
+      .item('pew', 18.6, 37.6, 180, { size: [5.4, 1.2] }).item('pew', 18.6, 39.6, 180, { size: [5.4, 1.2] })
+      .item('lectern', 14.1, 37.4, 180).item('cabinet', 4.1, 42.3, 270, { size: [2.4, 0.8] }).item('piano_up', 21, 43.6, 180)
+      .item('bonsho', 26.3, 38.3, 0, { size: [2.4, 2.4], label: T('鐘', 'Bell', '종') })
+      .item('spiral', CHURCH_TOWER[0], CHURCH_TOWER[1]);
+    u.text(T('↑ 身廊の吹き抜け', '↑ Open to the nave', '↑ 신랑 위 트인 공간'), 15, 35.2, { size: 0.5 });
+
+    const c = makeFloor('B1');
+    c.room(T('地下納骨堂', 'Crypt', '지하 납골당'), 'stone', 8, 2, 14, 12, { wall: 'stone', ly: 1 })
+      .room(T('納骨棚の部屋', 'Ossuary niches', '납골함 방'), 'stone', 22, 2, 8, 7, { wall: 'stone', ly: 0.8 })
+      .room(T('階段室', 'Stairwell', '계단실'), 'hall', 22, 9, 8, 5, { wall: 'stone', lx: -2.4, ly: 1.2 })
+      .room(T('封印された墓室', 'Sealed tomb', '봉인된 묘실'), 'danger', 0, 2, 8, 12, { wall: 'stone', ly: -0.6, gm: true, plName: '', note: T('初代司祭の墓と伝わる。封印の内側から、床を引っかいた跡が扉まで続いている', 'Said to be the founding priest\'s tomb. Scratch marks run across the floor from inside, up to the sealed door', '초대 사제의 무덤이라고 전해진다. 봉인 안쪽에서 문까지 바닥을 긁은 자국이 이어진다') });
+    c.dv(22, 10.5, 2, -1, 0, 'gate')                // 納骨堂の格子扉
+      .dh(23, 9, 1.5, -1, 0, 'gate')                // 納骨棚の部屋
+      .dv(8, 11, 2, 1, 0, 'sealed');                // 封印扉
+    c.item('altar', 8.05, 4.4, 270, { size: [3, 1.4] }).item('candle', 8.5, 2.6).item('candle', 8.5, 8)
+      .item('sarcophagus', 11.4, 2.4).item('sarcophagus', 14.6, 2.4).item('sarcophagus', 17.8, 2.4)
+      .item('sarcophagus', 11.4, 9.2).item('sarcophagus', 14.6, 9.2).item('pillar', 18.6, 9.6, 0, { size: [0.8, 0.8] }).item('pillar', 18.6, 12.6, 0, { size: [0.8, 0.8] })
+      .item('cabinet', 22.7, 2.05, 0, { size: [6.6, 0.8], label: T('納骨棚', 'Niches', '납골함') }).item('cabinet', 29.15, 2.9, 90, { size: [5.5, 0.8] })
+      .item('cabinet', 22.05, 3, 270, { size: [4, 0.8] }).item('bones', 25, 5.2).item('candle', 27.6, 7.6)
+      .item('stairs', CHURCH_CRYPT_STAIRS[0], CHURCH_CRYPT_STAIRS[1], 90)
+      .item('coffin', 3.1, 2.6).item('magic_circle', 1.5, 8.4, 0, { size: [5, 5] }).item('chains', 0.4, 3, 90, { size: [3, 0.6] })
+      .item('idol', 3.6, 8.6).item('drag_marks', 5.4, 11.2, 90, { size: [1.4, 2.4] });
+    return [c.f, g.f, u.f];
+  }
+
+  /* ---------- 商業：オフィスビル（1F ロビー・2F オフィス・3F 役員・屋上、センターコア） ---------- */
+
+  // コア：両端の階段（二方向避難）・EV2基・トイレ。全階で同じ位置。2F 以上の階段は南の廊下へ防火扉
+  function officeCore(b, upper) {
+    b.room(N.stairs, 'hall', 12, 11, 5, 10, { hideLabel: true })
+      .room(N.evHall, 'hall', 17, 11, 10, 10, { ly: 2 })
+      .room(T('男子トイレ', 'Men\'s WC', '남자 화장실'), 'wet', 27, 11, 4, 5)
+      .room(T('女子トイレ', 'Women\'s WC', '여자 화장실'), 'wet', 27, 16, 4, 5)
+      .room(N.stairs, 'hall', 31, 11, 5, 10, { hideLabel: true });
+    b.dh(18, 21, 8, 1, 0, 'open')
+      .dv(27, 12, 1.5, 1, 0).dv(27, 18.5, 1.5, 1, 1);
+    if (upper) b.dh(13, 21, 2, -1, 0, 'firedoor').dh(33, 21, 2, -1, 1, 'firedoor');
+    b.item('stairs_u', 12, 11.3).item('stairs_u', 31, 11.3)
+      .item('elevator', 17.5, 11.1).item('elevator', 21.5, 11.1).item('plant', 25.9, 13.8, 0, { size: [1, 1] })
+      .item('toilet', 29.35, 11.2, 90).item('toilet', 29.35, 12.6, 90).item('washbasin', 27.3, 14.75, 180)
+      .item('toilet', 29.35, 18.2, 90).item('toilet', 29.35, 19.6, 90).item('washbasin', 27.3, 16.15);
+  }
+
+  // 役員室（12 × 8）。窓を背に机、手前に応接セット。入口は廊下側の端
+  function execOffice(b, x0, name, doorRight) {
+    b.room(name, 'office', x0, 0, 12, 8, { ly: 0.7 })
+      .dh(doorRight ? x0 + 9.5 : x0 + 1, 8, 1.5, -1, doorRight ? 1 : 0)
+      .wh(x0 + 4, 0, 4, 'window2');
+    b.item('office_desk', x0 + 4.4, 2.1, 0, { size: [3.2, 1.4] }).item('chair', x0 + 5.5, 0.9)
+      .item('sofa2', doorRight ? x0 + 0.8 : x0 + 7.6, 5.7, 180).item('lowtable', doorRight ? x0 + 1.3 : x0 + 8.1, 4.3)
+      .item('bookshelf', doorRight ? x0 + 11.15 : x0 + 0.05, 0.5, doorRight ? 90 : 270)
+      .item('plant', doorRight ? x0 + 10.6 : x0 + 0.4, 4.6, 0, { size: [1, 1] });
+  }
+
+  function officeBuilding() {
+    const g = makeFloor('1F');
+    officeCore(g, false);
+    g.room(N.storeroom, 'storage', 0, 0, 12, 11)
+      .room(T('電気室', 'Electrical room', '전기실'), 'garage', 12, 0, 12, 11)
+      .room(T('荷捌き場', 'Loading bay', '하역장'), 'garage', 24, 0, 24, 11, { lx: 5 })
+      .room(T('通用口', 'Staff entrance', '직원 출입구'), 'hall', 0, 11, 12, 10, { ly: -1.6 })
+      .room(T('防災センター', 'Security office', '방재 센터'), 'office', 0, 21, 12, 11, { ly: 1.2 })
+      .room(T('サービス通路', 'Service corridor', '서비스 통로'), 'hall', 36, 11, 3, 10, { hideLabel: true })
+      .room(T('応接室', 'Visitor room', '응접실'), 'office', 39, 11, 9, 10, { ly: 3 })
+      .room(T('ロビー', 'Lobby', '로비'), 'public', 12, 21, 36, 11, { lx: 9, ly: -2.6 })
+      .room(T('風除室', 'Vestibule', '바람막이실'), 'hall', 18, 28, 8, 4)
+      .room(T('歩道', 'Sidewalk', '보도'), 'porch', 0, 32, 48, 3, { hideLabel: true });
+    g.dh(20.5, 32, 3, 1, 0, 'auto').dh(20.5, 28, 3, 1, 0, 'auto')   // 正面入口（風除室）
+      .dv(0, 15, 1.5, -1, 0)                       // 通用口
+      .dh(3, 11, 1.5, -1, 0)                       // 倉庫
+      .dh(9, 21, 1.5, 1, 0)                        // 防災センター（通用口から）
+      .dv(12, 23, 1.5, -1, 0)                      // 防災センター（ロビーから）
+      .dv(12, 18.2, 2, 1, 0, 'firedoor')           // 階段（通用口から）
+      .dv(36, 18.2, 2, -1, 0, 'firedoor')          // 階段（サービス通路から）
+      .dh(36.5, 11, 2, -1, 0, 'steel')             // 荷捌き場 → サービス通路
+      .dh(36.5, 21, 2, 1, 0)                       // サービス通路 → ロビー
+      .dh(43, 21, 1.5, -1, 0)                      // 応接室
+      .dv(24, 7, 1.5, -1, 0, 'steel')              // 電気室
+      .dh(30, 0, 6, -1, 0, 'shutter')              // 荷捌き場のシャッター
+      .wv(0, 24, 3).wh(3, 32, 3)
+      .wh(13.5, 32, 3, 'window2').wh(28, 32, 4, 'window2').wh(33.5, 32, 4, 'window2').wh(39, 32, 4, 'window2').wh(44, 32, 3, 'window2')
+      .wv(48, 23, 3, 'window2').wv(48, 27.5, 3, 'window2').wv(48, 14, 3).wh(5, 0, 2);
+    g.item('ticket_gate', 19, 23.4, 0, { label: T('セキュリティゲート', 'Security gates', '보안 게이트') })
+      .item('reception', 28, 24.6).item('chair', 30, 23.3).item('cctv', 26.6, 28.3)
+      .item('locker', 12.1, 26.5, 90, { size: [3, 0.6], label: T('郵便受け', 'Mailboxes', '우편함') })
+      .item('rug', 19, 28.8, 0, { size: [6, 2.4] })
+      .item('sofa3', 39.5, 24, 0).item('lowtable', 40.6, 26.1).item('sofa3', 39.5, 27.6, 180).item('plant', 46.6, 21.4).item('plant', 46.6, 30.4).item('plant', 12.6, 30.4)
+      .item('console', 3, 22.8, 0, { label: T('防災盤', 'Fire control panel', '방재반') }).item('monitor_wall', 2.6, 21.05).item('chair', 3.6, 24.4, 180).item('chair', 5.4, 24.4, 180)
+      .item('cabinet', 11.15, 26, 90, { size: [1.6, 0.8], label: T('キーボックス', 'Key box', '열쇠함') })
+      .item('locker', 0.05, 27.5, 270, { size: [3, 1] }).item('bed_single', 7.6, 29.8, 90).item('table', 4, 27.6, 0, { size: [2.4, 1.2] })
+      .item('card_reader', 0.4, 14.5).item('locker', 5.5, 11.1, 0, { size: [3, 0.8] }).item('bench', 5.5, 20, 0, { size: [3, 0.8] }).item('extinguisher', 11.2, 11.3)
+      .item('supply_shelf', 0.3, 0.2, 0, { size: [4.4, 1] }).item('supply_shelf', 7, 0.2, 0, { size: [4.6, 1] }).item('supply_shelf', 0.2, 2.6, 270, { size: [5, 1] })
+      .item('cardboard', 5, 5).item('cardboard', 6.4, 5).item('cardboard', 5.6, 6.1).item('cardboard', 9.4, 3.2).item('hand_cart', 9.6, 6.4)
+      .item('dist_board', 13, 0.1).item('dist_board', 15.4, 0.1).item('dist_board', 17.8, 0.1).item('control_panel', 20.4, 0.1)
+      .item('em_generator', 13.2, 6.4).item('ind_tank', 19, 7.4, 0, { label: T('受水槽', 'Water tank', '저수조') }).item('pump', 19.4, 3.4)
+      .item('van', 31, 0.8).item('pallet', 25, 1).item('pallet_stack', 27.6, 1).item('hand_cart', 38, 3.4).item('cardboard', 41, 1.2).item('cardboard', 42.4, 1.2)
+      .item('pallet_stack', 45, 1).item('cctv', 47.2, 0.3).item('cone', 25.6, 8.6)
+      .item('whiteboard', 40.5, 11.05).item('meeting6', 41.5, 14).item('plant', 46.6, 19.4)
+      .item('bush', 1, 32.6).item('bush', 44.6, 32.6).item('bollard_post', 18.6, 33.4).item('bollard_post', 25.6, 33.4)
+      .item('streetlight', 8, 33.4).item('streetlight', 38, 33.4);
+
+    const o = makeFloor('2F');
+    officeCore(o, true);
+    o.room(T('オープンオフィス', 'Open-plan office', '오픈 오피스'), 'office', 0, 0, 36, 11, { ly: 3.4 })
+      .room(T('オープンオフィス', 'Open-plan office', '오픈 오피스'), 'office', 0, 11, 12, 21, { hideLabel: true })
+      .room(N.corridor, 'hall', 12, 21, 36, 3, { hideLabel: true })
+      .room(T('休憩室', 'Break room', '휴게실'), 'living', 12, 24, 10, 8, { ly: 2.6 })
+      .room(T('会議室A', 'Meeting room A', '회의실A'), 'office', 22, 24, 8, 8, { ly: 2.6 })
+      .room(T('会議室B', 'Meeting room B', '회의실B'), 'office', 30, 24, 8, 8, { ly: 2.6 })
+      .room(N.storeroom, 'storage', 38, 24, 10, 8)
+      .room(T('サーバー室', 'Server room', '서버실'), 'tech', 36, 0, 12, 9, { ly: 0.3 })
+      .room(T('大会議室', 'Conference room', '대회의실'), 'office', 36, 9, 12, 12, { ly: 3.2 });
+    o.dh(0, 11, 12, 1, 0, 'open').dv(12, 21, 3, 1, 0, 'open')
+      .dh(15, 24, 1.5, 1, 0).dv(12, 29, 1.5, 1, 0)   // 休憩室
+      .dh(23.5, 24, 1.5, 1, 0).dh(31.5, 24, 1.5, 1, 0).dh(40, 24, 1.5, 1, 0)
+      .dh(41, 21, 3, -1, 0, 'door2')               // 大会議室
+      .dv(36, 4, 1.5, 1, 0, 'locked')              // サーバー室（カードキー）
+      .wh(1.5, 0, 4, 'window2').wh(7.5, 0, 4, 'window2').wh(13.5, 0, 4, 'window2').wh(19.5, 0, 4, 'window2').wh(25.5, 0, 4, 'window2').wh(31, 0, 3)
+      .wv(0, 2, 4, 'window2').wv(0, 8, 4, 'window2').wv(0, 14, 4, 'window2').wv(0, 20, 4, 'window2').wv(0, 26, 4, 'window2')
+      .wh(2, 32, 4, 'window2').wh(7, 32, 3).wh(14, 32, 4, 'window2').wh(24, 32, 4, 'window2').wh(32, 32, 4, 'window2').wh(42, 32, 2)
+      .wv(48, 12, 3, 'window2').wv(48, 16.5, 3, 'window2').wv(48, 21.75, 1.5);
+    [1.5, 7.5, 13.5, 19.5, 25.5].forEach(x => o.item('desk_island', x, 1.2));
+    o.item('office_desk', 31.4, 2.4).item('chair', 32.1, 1.1).item('filing', 34.6, 0.2).item('filing', 34.6, 1.5).item('copier', 34.4, 7.8)
+      .item('whiteboard', 31, 10.4, 180).item('partition', 30.8, 1.4, 90, { size: [4, 0.3] })
+      .item('desk_island', 1.2, 12.4).item('desk_island', 1.2, 18.4).item('locker', 10.9, 12.3, 90, { size: [4, 1] })
+      .item('plant', 0.4, 30.6).item('copier', 9.6, 30.6).item('card_reader', 35.4, 3.5);
+    roundTable(o, 7, 26.5);
+    o.item('fridge', 12.2, 24.3).item('counter', 17.2, 24.05, 0, { label: T('給湯', 'Pantry', '탕비') }).item('dining4', 14.5, 27.2, 90).item('sofa2', 18.2, 27.4, 90).item('vending', 20, 30.5, 180)
+      .item('meeting6', 23.6, 26.2).item('whiteboard', 29.55, 26, 90)
+      .item('meeting6', 31.6, 26.2).item('whiteboard', 37.55, 26.2, 90)
+      .item('supply_shelf', 42.5, 24.1, 0, { size: [5, 1] }).item('supply_shelf', 46.9, 26, 90, { size: [5, 1] }).item('supply_shelf', 38.3, 30.9, 0, { size: [5, 1] })
+      .item('cardboard', 40.5, 27.6).item('cardboard', 41.9, 27.6).item('cardboard', 43.4, 28.6).item('filing', 44.6, 30.8)
+      .item('rack', 38.2, 1).item('rack', 39.9, 1).item('rack', 41.6, 1).item('rack', 43.3, 1)
+      .item('rack', 38.2, 5.2).item('rack', 39.9, 5.2).item('rack', 41.6, 5.2).item('rack', 43.3, 5.2)
+      .item('vent_unit', 45.6, 0.4, 0, { label: T('空調機', 'Air handler', '공조기') }).item('dist_board', 45.4, 8.3, 0, { size: [2.4, 0.6] }).item('extinguisher', 37, 0.3)
+      .item('monitor_wall', 39, 9.05).item('meeting6', 38.5, 13.2, 0, { size: [8, 3.6] }).item('plant', 46.6, 19.4);
+
+    const x3 = makeFloor('3F');
+    officeCore(x3, true);
+    execOffice(x3, 0, T('役員室A', 'Executive office A', '임원실A'), true);
+    execOffice(x3, 12, T('役員室B', 'Executive office B', '임원실B'), false);
+    execOffice(x3, 24, T('役員室C', 'Executive office C', '임원실C'), false);
+    x3.room(N.corridor, 'hall', 0, 8, 36, 3, { hideLabel: true })
+      .room(N.corridor, 'hall', 9, 11, 3, 10, { hideLabel: true })
+      .room(N.corridor, 'hall', 9, 21, 39, 3, { hideLabel: true })
+      .room(T('社長室', 'President\'s office', '사장실'), 'office', 36, 0, 9, 13, { ly: 1.4 })
+      .room(T('隠し部屋', 'Hidden room', '비밀의 방'), 'danger', 45, 0, 3, 13, { gm: true, plName: '', note: T('社長室の書棚の脇の隠し戸の奥。裏帳簿を収めた金庫と、見知らぬ神を祀る小さな祭壇がある', 'Behind a hidden panel beside the bookshelves in the president\'s office: a safe of off-book ledgers and a small altar to an unknown god', '사장실 책장 옆 숨은 문 뒤. 비자금 장부를 넣은 금고와 정체 모를 신을 모신 작은 제단') })
+      .room(T('秘書室', 'Secretary\'s office', '비서실'), 'office', 36, 13, 12, 8, { ly: 1.6 })
+      .room(T('役員会議室', 'Boardroom', '임원 회의실'), 'office', 0, 11, 9, 21)
+      .room(T('給湯室', 'Pantry', '탕비실'), 'kitchen', 9, 24, 5, 8, { ly: 1.6 })
+      .room(T('応接室', 'Reception room', '응접실'), 'living', 14, 24, 11, 8, { ly: 3 })
+      .room(T('役員ラウンジ', 'Executive lounge', '임원 라운지'), 'living', 25, 24, 11, 8, { lx: -2.6, ly: 1.4 })
+      .room(T('書庫', 'Archive', '서고'), 'storage', 36, 24, 12, 8, { ly: 2.6 });
+    x3.dh(9, 11, 3, 1, 0, 'open').dh(9, 21, 3, 1, 0, 'open')
+      .dh(39, 13, 3, -1, 0, 'door2')               // 秘書室 → 社長室
+      .dv(45, 9.4, 1.5, 1, 1, 'secret')            // 隠し部屋
+      .dh(37.5, 21, 1.5, -1, 0)                    // 秘書室
+      .dv(9, 14, 3, -1, 0, 'door2')                // 役員会議室
+      .dh(10, 24, 1.5, 1, 0).dh(15.5, 24, 1.5, 1, 0).dh(27, 24, 3, 1, 0, 'door2').dh(41, 24, 1.5, 1, 0)
+      .wh(38.5, 0, 4, 'window2').wv(48, 15.5, 3, 'window2').wv(0, 8.75, 1.5).wv(48, 21.75, 1.5)
+      .wv(0, 13, 4, 'window2').wv(0, 19, 4, 'window2').wv(0, 25, 4, 'window2')
+      .wh(10.5, 32, 2).wh(17, 32, 4, 'window2').wh(27, 32, 6, 'window2').wh(42, 32, 2);
+    x3.item('office_desk', 39, 2.4, 0, { size: [3.4, 1.6] }).item('chair', 40.2, 1.1).item('safe', 36.4, 0.4)
+      .item('bookshelf', 44.15, 0.5, 90, { size: [8, 0.8] }).item('painting', 36.05, 4, 270)
+      .item('sofa3', 37.2, 9.4, 180, { size: [3.6, 1.6] }).item('lowtable', 37.9, 8).item('armchair', 41.2, 7.6, 90, { size: [1.6, 1.6] }).item('plant', 43.4, 11.6, 0, { size: [1, 1] })
+      .item('cabinet', 47.15, 0.5, 90, { size: [4, 0.8] }).item('safe', 45.4, 0.4).item('altar', 46.5, 5, 90, { size: [3, 1.4] }).item('candle', 45.4, 6.4).item('idol', 46.8, 8.6, 0, { size: [0.8, 0.8] })
+      .item('office_desk', 37, 15.4).item('chair', 37.7, 16.9, 180).item('office_desk', 40.6, 15.4).item('chair', 41.3, 16.9, 180)
+      .item('filing', 44.6, 13.2).item('filing', 45.7, 13.2).item('sofa2', 46.1, 16.2, 90).item('plant', 36.3, 19.8, 0, { size: [1, 1] })
+      .item('meeting6', 2.7, 15, 90, { size: [12, 3.6] }).item('monitor_wall', 1.5, 31.3, 180, { size: [5, 0.6] }).item('cabinet', 0.2, 11.2, 0, { size: [3, 0.8] }).item('plant', 7.4, 30.4, 0, { size: [1, 1] })
+      .item('sink', 9.05, 27, 270).item('cupboard', 13.05, 26, 90).item('fridge', 12.5, 30.5).item('counter', 9.05, 29.4, 270, { size: [2.4, 1] })
+      .item('sofa3', 17.6, 25.6).item('lowtable', 18.7, 27.6).item('sofa3', 17.6, 29, 180).item('armchair', 15.2, 27.4, 270).item('armchair', 22.6, 27.4, 90).item('plant', 23.8, 24.4, 0, { size: [1, 1] })
+      .item('sofaL', 29.6, 27.4).item('counter', 31.6, 24.3).item('stool', 32, 25.8).item('stool', 33.4, 25.8).item('stool', 34.8, 25.8).item('cupboard', 25.1, 26.5, 270, { size: [3, 0.9] })
+      .item('bookstack', 38, 26.4, 0, { size: [8, 1.4] }).item('bookstack', 38, 29.4, 0, { size: [8, 1.4] }).item('filing', 46.7, 30.6).item('filing', 46.7, 25.2);
+
+    const r = makeFloor('屋上');
+    r.room(N.stairs, 'hall', 12, 11, 5, 10, { hideLabel: true })
+      .room(T('EV機械室', 'Elevator machine room', 'EV 기계실'), 'garage', 17, 11, 14, 10, { ly: 2.2 })
+      .room(N.stairs, 'hall', 31, 11, 5, 10, { hideLabel: true });
+    fillYard(r, 0, 0, 48, 32, T('屋上', 'Rooftop', '옥상'), 'rooftop');
+    r.dv(12, 18.2, 2, -1, 0, 'steel').dv(36, 18.2, 2, 1, 0, 'steel').dh(22.25, 21, 1.5, 1, 0, 'steel');
+    r.item('stairs_u', 12, 11.3).item('stairs_u', 31, 11.3)
+      .item('machine_tool', 18, 11.6, 0, { label: T('巻上機', 'Hoist', '권상기') }).item('machine_tool', 22, 11.6, 0, { label: T('巻上機', 'Hoist', '권상기') })
+      .item('control_panel', 27.5, 11.1).item('dist_board', 28, 20.25)
+      .item('water_tower', 2, 2).item('vent_unit', 8, 2.6).item('antenna', 44.4, 27.4).item('em_generator', 2, 27.2).item('bench', 4.6, 14.6, 0, { size: [3, 0.8] });
+    [38, 40.4, 42.8, 45.2].forEach(x => r.item('ac_unit', x, 2).item('ac_unit', x, 4.4).item('ac_unit', x, 6.8));
+    r.text(T('屋上', 'Rooftop', '옥상'), 24, 27, { size: 0.9, bold: true });
+    return [g.f, o.f, x3.f, r.f];
+  }
+
+  // コンビニ：南に駐車場と道路、東の車路から搬入。冷蔵ケースは裏のウォークイン冷蔵庫から補充
+  function konbini() {
+    const b = makeFloor('1F');
+    b.room(T('トイレ', 'Restroom', '화장실'), 'wet', 0, 0, 5, 7, { ly: 1.4 })
+      .room(T('ウォークイン冷蔵庫', 'Walk-in cooler', '워크인 냉장고'), 'storage', 5, 0, 14, 7, { ly: 1.2 })
+      .room(T('バックヤード', 'Backroom', '백야드'), 'industrial', 19, 0, 11, 7, { ly: -1.3 })
+      .room(T('搬入口', 'Delivery entrance', '반입구'), 'industrial', 30, 0, 6, 7, { ly: 0.6 })
+      .room(T('売場', 'Sales floor', '매장'), 'public', 0, 7, 26, 17, { lx: 1, ly: 1.2 })
+      .room(T('事務スペース', 'Staff office', '사무 공간'), 'office', 26, 7, 10, 7, { lx: 0.6, ly: 0.4 })
+      .room(T('レジ', 'Checkout', '계산대'), 'office', 26, 14, 10, 10, { lx: 0.8, ly: 0.6 })
+      .room(T('店先', 'Storefront', '가게 앞'), 'porch', 0, 24, 36, 3, { hideLabel: true })
+      .room(T('搬入車路', 'Delivery lane', '반입 차로'), 'road', 36, 0, 8, 27, { hideLabel: true })
+      .room(T('駐車場', 'Parking lot', '주차장'), 'road', 0, 27, 44, 17, { ly: 3 })
+      .room(T('歩道', 'Sidewalk', '보도'), 'porch', 0, 44, 44, 2, { hideLabel: true })
+      .room(T('道路', 'Road', '도로'), 'road', 0, 46, 44, 6, { ly: 0.4 });
+    b.dh(21, 24, 3, 1, 0, 'auto')                 // 正面の自動ドア
+      .dh(1, 7, 1.5, -1, 0)                        // トイレ
+      .dh(20, 7, 1.5, -1, 0)                       // 売場 → バックヤード
+      .dv(19, 1.5, 2, 1, 0, 'steel')               // ウォークイン冷蔵庫
+      .dv(30, 1, 5, 1, 0, 'open')                  // バックヤード ↔ 搬入口
+      .dv(36, 2, 3, 1, 0, 'door2')                 // 搬入口（車路へ）
+      .dh(27.5, 7, 1.5, 1, 0)                      // バックヤード → 事務スペース
+      .dh(33.5, 14, 1.5, -1, 1)                    // 事務スペース → レジ
+      .dv(26, 15, 9, 1, 0, 'open')                 // レジカウンター（端に通路）
+      .wh(1, 24, 4, 'window2').wh(6, 24, 4, 'window2').wh(11, 24, 4, 'window2').wh(16, 24, 4, 'window2')
+      .wh(27.5, 24, 4, 'window2').wh(32, 24, 3, 'window2').wv(36, 9, 3);
+    // 冷蔵ケース（裏から補充）と冷蔵庫内の棚
+    [5.2, 9.2, 13.2].forEach(x => b.item('fridge_case', x, 7.05, 0, { label: T('ドリンク', 'Drinks', '음료') }));
+    [5.6, 7.6, 9.6, 11.6, 13.6].forEach(x => b.item('rack', x, 0.3));
+    b.item('cardboard', 6, 5).item('cardboard', 10.4, 4.9).item('hand_cart', 16, 3)
+      .item('toilet', 3.4, 0.3).item('washbasin', 0.05, 2.2, 270);
+    // 売場：壁際の冷蔵ケース・中央のゴンドラ・窓際の雑誌棚
+    b.item('fridge_case', 0.05, 9, 90, { label: T('弁当', 'Bento', '도시락') }).item('fridge_case', 0.05, 13.2, 90, { label: T('惣菜', 'Deli', '반찬') })
+      .item('freezer', 0.1, 17.6, 0, { size: [1.2, 3], label: T('アイス', 'Ice cream', '아이스크림') })
+      .item('store_shelf', 5, 10.2, 90).item('store_shelf', 5, 14.2, 90)
+      .item('store_shelf', 9.6, 10.2, 90).item('store_shelf', 9.6, 14.2, 90)
+      .item('store_shelf', 14.2, 10.2, 90).item('store_shelf', 14.2, 14.2, 90)
+      .item('store_shelf', 18.8, 10.2, 90, { label: T('日用品', 'Sundries', '생활용품') }).item('store_shelf', 18.8, 14.2, 90)
+      .item('bookshelf', 1.2, 23.1, 0, { size: [12, 0.8], label: T('雑誌棚', 'Magazine rack', '잡지 진열대') })
+      .item('copier', 14.2, 22.7, 0, { label: T('コピー機', 'Copier', '복사기') }).item('atm', 16.4, 22.95)
+      .item('rug', 20.5, 22.3, 0, { size: [4, 1.5] }).item('cctv', 0.3, 7.3).item('cctv', 25.3, 23.3);
+    // レジ：カウンター、背後にタバコ棚とコーヒー・ホットスナック
+    b.item('register', 26.2, 15, 90).item('register', 26.2, 18.2, 90)
+      .item('counter', 26.2, 21.2, 90, { size: [1.6, 1.4], label: T('ホットスナック', 'Hot snacks', '핫스낵') })
+      .item('supply_shelf', 34.95, 15.2, 90, { size: [6, 1], label: T('タバコ棚', 'Cigarette shelf', '담배 진열장') })
+      .item('counter', 28, 14.1, 0, { size: [3.6, 1], label: T('コーヒー', 'Coffee', '커피') })
+      .item('npc_station', 28.6, 17.2, 270, { label: T('店員', 'Clerk', '점원') });
+    // 事務スペース
+    b.item('monitor_wall', 31.6, 7.05, 0, { size: [4, 0.5], label: T('防犯モニター', 'CCTV monitors', '방범 모니터') })
+      .item('office_desk', 31.8, 8.3).item('chair', 32.5, 9.9, 180)
+      .item('locker', 26.05, 8.8, 270, { size: [3, 1], label: T('ロッカー', 'Lockers', '사물함') })
+      .item('safe', 26.4, 12.3).item('filing', 34.9, 11.4);
+    // バックヤード（床下点検口はGM用）
+    b.item('supply_shelf', 21.8, 0.2, 0, { size: [4, 1] }).item('supply_shelf', 26.2, 0.2, 0, { size: [3.6, 1] })
+      .item('sink', 28.6, 2.6, 90, { label: T('掃除用シンク', 'Mop sink', '청소용 싱크') })
+      .item('cardboard', 27.4, 5.2).item('crate', 25.6, 4.6, 0, { label: T('ゴミ', 'Trash', '쓰레기') })
+      .item('trapdoor', 22.4, 3, 0, { gm: true, label: T('床下点検口', 'Floor hatch', '바닥 점검구') });
+    b.item('pallet', 31, 0.4).item('pallet_stack', 33.6, 0.4).item('hand_cart', 31.4, 4.2).item('cardboard', 33.8, 4.8);
+    // 屋外
+    b.item('crate', 12, 24.5, 0, { size: [1.4, 1.4], label: T('ゴミ箱', 'Bins', '쓰레기통') }).item('crate', 13.6, 24.5, 0, { size: [1.4, 1.4], label: T('ゴミ箱', 'Bins', '쓰레기통') })
+      .item('vending', 1, 24.6).item('vending', 3.2, 24.6).item('bollard_post', 25.6, 25.6)
+      .item('ac_unit', 36.15, 19, 90).item('ac_unit', 36.15, 21.2, 90).item('cone', 42.4, 22)
+      .item('truck', 38, 1);
+    [1, 6, 11, 16, 21, 26, 31].forEach(x => b.item('parking_stall', x, 27));
+    b.item('car', 1.5, 27.5).item('car', 11.5, 27.5).item('car', 26.5, 27.5)
+      .item('road_arrow', 18, 39, 90).item('road_sign', 42.4, 42.6, 0, { label: T('店舗看板', 'Store sign', '간판') })
+      .item('streetlight', 6, 44.5).item('utility_pole', 30, 44.5)
+      .item('road_arrow', 8, 46.5, 90).item('road_arrow', 32, 49.5, 270);
+    return [b.f];
+  }
 
   /* ---------- 研究・文化・軍事（T4） ---------- */
 
@@ -2859,6 +3436,21 @@
     /* (T2 産業・インフラ・屋上・廃工場 の登録はここ) */
 
     /* (T3 歴史・宗教・商業 の登録はここ) */
+    { id: 'buke', build: buke, group: 'history', tags: ['historic', 'japanese', 'residential', 'outdoor', 'garden', 'hidden'], also: ['home'],
+      name: T('武家屋敷と日本庭園', 'Samurai residence & garden', '무가 저택과 일본 정원'),
+      desc: T('長屋門から式台のある玄関へ。玄関の間・次の間・床の間つきの座敷・書院・寝間・仏間、土間の台所・茶の間・納戸と縁側、勝手庭に蔵。池と石橋・枯山水の庭園、竹垣の奥の露地に茶室と水屋。座敷の脇にGM用の武者隠し', 'Through the gatehouse to an entrance with a shikidai step: reception room, anteroom, zashiki with alcove, study, bedroom, altar room, earthen-floor kitchen, family room, storeroom and engawa; a storehouse in the service yard. A pond garden with a stone bridge, a dry garden, and a tea room with its prep room beyond a bamboo fence. A GM-only guard closet beside the zashiki.', '나가야몬에서 시키다이가 있는 현관으로. 현관방·옆방·도코노마가 있는 자시키·서원·침실·불간, 흙바닥 부엌·거실·광과 툇마루, 뒷마당에 곳간. 연못과 돌다리·가레산스이 정원, 대나무 울타리 너머 로지에 다실과 미즈야. 자시키 옆에 GM 전용 무사 은신처') },
+    { id: 'temple', build: temple, group: 'history', tags: ['historic', 'japanese', 'religious', 'outdoor', 'garden', 'hidden'],
+      name: T('寺院', 'Buddhist temple', '절(사원)'),
+      desc: T('仁王像の山門から灯籠と手水舎の参道を抜けて本堂（外陣・内陣の須弥壇・余間と回り縁）へ。渡り廊下の先に庫裏（玄関・寺務所・台所・住職の部屋・客間）、鐘楼、墓地と水場、客間の前の枯山水。GM用の秘仏の間と墓地の古井戸', 'Through the Nio gate and up the lantern-lined approach past the purification fountain to the main hall (worship hall, inner sanctum with the altar, side chambers, veranda). A covered walkway to the priests\' quarters (entrance, temple office, kitchen, head priest\'s room, guest room); bell tower, graveyard and a dry garden. A GM-only hidden buddha room and an old well in the graveyard.', '인왕상 산문에서 석등과 데미즈야의 참배길을 지나 본당(외진·수미단의 내진·여간과 회랑 마루)으로. 연결 복도 너머 고리(현관·사무소·부엌·주지 방·객실), 종루, 묘지와 물터, 객실 앞 가레산스이. GM 전용 비불의 방과 묘지의 오래된 우물') },
+    { id: 'church', build: church, group: 'history', tags: ['historic', 'religious', 'underground', 'outdoor', 'hidden', 'horror'],
+      name: T('教会（地下納骨堂つき）', 'Church with crypt', '교회(지하 납골당)'),
+      desc: T('拝廊から柱の並ぶ身廊（会衆席・告解室）を進み、内陣の祭壇へ。聖具室・事務室、鐘楼の螺旋階段で2Fのオルガン席と鐘室、教会墓地。階段室からB1の地下納骨堂と納骨棚、奥にGM用の封印された墓室', 'From the narthex up the pillared nave (pews, confessionals) to the altar in the chancel. Sacristy, parish office, a spiral stair in the bell tower to the organ loft and belfry, and a churchyard. Stairs down to the crypt and ossuary, with a GM-only sealed tomb beyond.', '배랑에서 기둥이 늘어선 신랑(신자석·고해실)을 지나 내진의 제단으로. 제의실·사무실, 종탑의 나선 계단으로 2층 오르간석과 종실, 교회 묘지. 계단실에서 지하 납골당과 납골함, 안쪽에 GM 전용 봉인된 묘실') },
+    { id: 'office', build: officeBuilding, group: 'commerce', tags: ['modern', 'commercial', 'rooftop', 'hidden'],
+      name: T('オフィスビル（3階建て・屋上）', 'Office building (3 floors & roof)', '오피스 빌딩(3층·옥상)'),
+      desc: T('センターコア（両端の階段・EV2基・トイレ）は全階同じ位置。1F 風除室とロビー・セキュリティゲート・受付・防災センター・通用口・荷捌き場、2F オープンオフィス・会議室・休憩室・サーバー室・倉庫、3F 役員室・社長室と秘書室・役員会議室・応接室、屋上に塔屋と設備。社長室の奥にGM用の隠し部屋', 'A center core (two stairs, two elevators, restrooms) in the same place on every floor. 1F: vestibule, lobby with security gates and reception, security office, staff entrance, loading bay. 2F: open-plan office, meeting rooms, break room, server room, storage. 3F: executive offices, president\'s office behind the secretary, boardroom, reception room. Rooftop with stair and machine housings. A GM-only hidden room behind the president\'s office.', '센터 코어(양 끝 계단·EV 2대·화장실)는 모든 층에서 같은 위치. 1층 바람막이실과 로비·보안 게이트·접수·방재 센터·직원 출입구·하역장, 2층 오픈 오피스·회의실·휴게실·서버실·창고, 3층 임원실·비서실 안쪽의 사장실·임원 회의실·응접실, 옥상에 계단실과 설비. 사장실 안쪽에 GM 전용 비밀의 방') },
+    { id: 'konbini', build: konbini, group: 'commerce', tags: ['modern', 'commercial', 'outdoor', 'hidden'],
+      name: T('コンビニ（小型店舗）', 'Convenience store', '편의점'),
+      desc: T('自動ドアから売場へ。冷蔵ケース・弁当棚・ゴンドラ・雑誌棚・ATM、レジカウンターとタバコ棚。裏にウォークイン冷蔵庫・バックヤード・事務スペース（防犯モニター・金庫）・搬入口。前面に駐車場、横に搬入車路。バックヤードにGM用の床下点検口', 'Through the automatic doors onto the sales floor: refrigerated cases, bento shelves, gondolas, a magazine rack and an ATM, then the checkout counter with the cigarette shelf. Behind: a walk-in cooler, backroom, staff office (CCTV monitors, safe) and delivery entrance. A parking lot out front and a delivery lane at the side. A GM-only floor hatch in the backroom.', '자동문을 지나 매장으로. 냉장 쇼케이스·도시락 진열대·곤돌라·잡지 진열대·ATM, 계산대와 담배 진열장. 뒤쪽에 워크인 냉장고·백야드·사무 공간(방범 모니터·금고)·반입구. 앞에 주차장, 옆에 반입 차로. 백야드에 GM 전용 바닥 점검구') },
 
     /* (T4 研究・文化・軍事 の登録はここ) */
 
@@ -3133,6 +3725,41 @@
     /* (T2 の手がかりはここ) */
 
     /* (T3 の手がかりはここ) */
+    buke: [
+      C('1F', '書院', 'diary', T('当主の日記', 'The master\'s diary', '당주의 일기')),
+      C('1F', '蔵', 'key', T('長持の鍵', 'Key to the chest', '궤짝 열쇠')),
+      C('1F', '仏間', 'papers', T('塗りつぶされた家系図', 'Family tree with names blacked out', '이름이 지워진 가계도')),
+      C('1F', '次の間', 'cursed_item', T('割れた茶碗', 'Cracked tea bowl', '깨진 찻사발')),
+      C('1F', '寝間', 'memo', T('奉公人の書き置き', 'A servant\'s note', '하인의 쪽지'))
+    ],
+    temple: [
+      C('1F', '寺務所', 'file_folder', T('古い過去帳', 'Death register', '오래된 과거장')),
+      C('1F', '住職の部屋', 'diary', T('住職の日記', 'Head priest\'s diary', '주지의 일기')),
+      C('1F', '墓地', 'clue', T('掘り返された土', 'Freshly dug earth', '파헤친 흙')),
+      C('1F', '内陣', 'key', T('秘仏の厨子の鍵', 'Key to the hidden shrine', '비불 감실 열쇠')),
+      C('1F', '鐘楼', 'memo', T('鐘に貼られた古い札', 'Bell talisman', '종에 붙은 오래된 부적'))
+    ],
+    church: [
+      C('1F', '事務室', 'file_folder', T('洗礼台帳', 'Baptismal register', '세례 대장')),
+      C('1F', '聖具室', 'key', T('納骨堂の格子扉の鍵', 'Key to the crypt gate', '납골당 격자문 열쇠')),
+      C('1F', '身廊', 'diary', T('置き忘れの祈祷書', 'Forgotten prayer book', '두고 간 기도서')),
+      C('2F', 'オルガン席', 'papers', T('書き込みのある楽譜', 'Annotated sheet music', '메모가 적힌 악보')),
+      C('B1', '地下納骨堂', 'clue', T('動かされた石棺の蓋', 'A sarcophagus lid moved aside', '밀려난 석관 뚜껑'))
+    ],
+    office: [
+      C('1F', '防災センター', 'laptop', T('消された監視カメラの記録', 'Erased security camera footage', '지워진 CCTV 기록')),
+      C('2F', 'サーバー室', 'papers', T('不審なアクセスログ', 'Suspicious access log', '수상한 접속 기록')),
+      C('2F', '休憩室', 'phone', T('置き忘れのスマホ', 'Forgotten smartphone', '두고 간 스마트폰')),
+      C('3F', '秘書室', 'key', T('社長室の合鍵', 'Spare key to the president\'s office', '사장실 여벌 열쇠')),
+      C('3F', '社長室', 'diary', T('社長の手帳', 'The president\'s planner', '사장의 수첩'))
+    ],
+    konbini: [
+      C('1F', '事務スペース', 'laptop', T('深夜の防犯カメラ映像', 'Late-night CCTV footage', '심야 CCTV 영상')),
+      C('1F', 'レジ', 'papers', T('不自然なレシートの束', 'A bundle of odd receipts', '수상한 영수증 뭉치')),
+      C('1F', 'バックヤード', 'memo', T('夜勤の引き継ぎメモ', 'Night-shift memo', '야간 근무 인수인계 메모')),
+      C('1F', 'ウォークイン冷蔵庫', 'clue', T('血痕つきの段ボール', 'Bloodstained box', '핏자국 묻은 상자')),
+      C('1F', '駐車場', 'key', T('落ちていた車の鍵', 'A dropped car key', '떨어져 있던 자동차 열쇠'))
+    ],
 
     /* (T4 の手がかりはここ) */
 
