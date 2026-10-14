@@ -63,7 +63,11 @@
     'office_desk', 'reception', 'locker', 'filing', 'whiteboard', 'copier', 'vending', 'bench',
     'hospital_bed', 'exam_bed', 'med_cabinet', 'morgue', 'lab_bench', 'rack', 'altar', 'garden_bench',
     'stage', 'dumbbell_rack', 'barber_chair', 'kamado', 'butsudan', 'tokonoma', 'console',
-    'throne', 'weapon_rack', 'chest', 'banner', 'quest_board', 'bunk_bed', 'torch', 'forge'
+    'throne', 'weapon_rack', 'chest', 'banner', 'quest_board', 'bunk_bed', 'torch', 'forge',
+    'breaker', 'dist_board', 'control_panel', 'service_entrance', 'hydrant', 'extinguisher', 'cctv', 'card_reader', 'alarm',
+    'fridge_case', 'atm', 'monitor_wall', 'gun_rack', 'radio', 'ac_unit', 'boiler', 'fire_escape', 'ext_stairs',
+    'ticket_machine', 'station_bench', 'kiosk', 'fume_hood', 'freezer', 'radar', 'chart_table', 'organ', 'painting', 'confessional',
+    'tool_shelf', 'supply_shelf', 'workbench', 'machine_tool', 'pallet_rack', 'katanakake', 'buddha_altar', 'byobu', 'engawa_deck'
   ]);
   const SWING_DOORS = M.SWING_KINDS;
   const ICONS = {
