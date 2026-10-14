@@ -2741,6 +2741,786 @@
 
   /* (T1 のテンプレート関数はここ) */
 
+  /* 交通・乗り物のテンプレートで参考にした定石:
+   *  - 鉄道駅（地上駅）: 駅舎側に単式ホーム、跨線橋で島式ホームへ渡る「2面3線」。駅前広場→コンコース→改札→ホーム、
+   *    駅員室は改札の脇で券売機の裏から補充する。線路の中心間は約3.5〜4m、ホームの端に点字ブロックと柵
+   *  - 地下鉄駅: B1に改札階（改札・駅事務室・券売機・機械室・電気室）と出入口への地下通路、B2に島式ホームと両側の線路。
+   *    階段・エスカレーター・EVは上下階で同じ位置、ホームの端に非常通路と非常階段、ポンプ室・換気機械室
+   *  - 立体駐車場（自走式）: 1Fに入口と出口のゲート（発券機・精算機）と管理室、6mの車路の両側に幅2.5m×奥行5mの区画。
+   *    スロープは階ごとに端が入れ替わり、車は左側通行。階段とEVは全階同じ位置、最上階は屋上駐車場
+   *  - 地下駐車場: 広場の下に2層。道路からのスロープは1車線を信号で交互通行、柱の間隔8mに3台ずつ、車路6m。
+   *    管理室・電気室・機械室（換気）・排水ポンプ室・受水槽室・消火設備室、階段とEVから離して非常階段
+   *  - 船舶（客船）: 下甲板の船尾寄りに機関室と操舵機室、中央に船員区画、船首寄りに貨物庫と錨鎖庫。
+   *    客室甲板は中廊下の両側に船室、舷側に乗船口。遊歩甲板は屋根付きの遊歩道で囲み、最上層の前端に操舵室と
+   *    ウイング、後ろに救命艇。船体の外形と階段室は甲板ごとにそろえる
+   *  - 高架橋: 複線（線路の中心間約4m、左側通行）の両側に点検通路とケーブルトラフ、架線柱。橋脚は約10mおきの
+   *    2本柱、橋の下は倉庫・道路・駐車場に使われ、点検用の階段は柵と施錠された扉で囲う */
+
+  /* 線路（レール）を横向きに敷く。y は線路の上端、長さ len ごとに区切る */
+  function trRailsH(b, x0, x1, y, len) {
+    for (let x = x0; x < x1; x += len) b.item('rail_track', x, y, 90, { size: [4, Math.min(len, x1 - x)] });
+  }
+
+  /* ホームの端の点字ブロック（横向き）。down: true でホームの下の端（線路が下側） */
+  function trEdgeH(b, x0, x1, y, down) {
+    for (let x = x0; x < x1; x += 16) b.item('platform_edge', x, y, down ? 180 : 0, { size: [Math.min(16, x1 - x), 1] });
+  }
+
+  /* ---------- 交通：鉄道駅（地上駅・2面3線、跨線橋） ---------- */
+
+  function railStation() {
+    const g = makeFloor('1F');
+    g.room(T('3番線', 'Track 3', '3번선'), 'track', 0, 2, 72, 7, { lx: -32 })
+      .room(T('2・3番線ホーム', 'Platform 2/3', '2·3번선 승강장'), 'platform', 4, 9, 64, 14, { lx: -24, ly: -4.5 })
+      .room(T('2番線', 'Track 2', '2번선'), 'track', 0, 23, 72, 7, { lx: -32 })
+      .room(T('1番線', 'Track 1', '1번선'), 'track', 0, 30, 72, 7, { lx: -32 })
+      .room(T('1番線ホーム', 'Platform 1', '1번선 승강장'), 'platform', 4, 37, 64, 10, { lx: -22, ly: -1.5 })
+      .room(T('ホーム待合室', 'Platform shelter', '승강장 대합실'), 'public', 12, 13, 12, 6, { wall: 'glass', ly: -1.6 })
+      // 駅舎
+      .room(T('駅員室', 'Station office', '역무실'), 'office', 8, 47, 12, 10, { ly: 1 })
+      .room(T('休憩室', 'Staff rest room', '휴게실'), 'washitsu', 8, 57, 6, 8, { ly: -2 })
+      .room(T('遺失物保管庫', 'Lost and found', '유실물 보관소'), 'storage', 14, 57, 6, 8, { ly: 1.4 })
+      .room(T('改札内', 'Paid area', '개찰구 안'), 'public', 20, 47, 16, 7, { ly: -1.6 })
+      .room(T('コンコース', 'Concourse', '콘코스'), 'public', 20, 54, 16, 11, { lx: 2, ly: 1.5 })
+      .room(T('信号機器室', 'Signal equipment room', '신호 기기실'), 'garage', 36, 47, 10, 7)
+      .room(T('旧手荷物室', 'Old baggage room', '옛 수하물실'), 'storage', 46, 47, 10, 7, { gm: true, plName: '', note: T('引き取り手のないトランクが何十年も置かれている。内側から引っかいた跡', 'Unclaimed trunks left for decades. Scratches on the inside of one lid', '찾아가지 않은 트렁크가 수십 년째 놓여 있다. 하나에는 안쪽에서 긁은 자국') })
+      .room(T('待合室', 'Waiting room', '대합실'), 'public', 36, 54, 10, 11, { ly: 1 })
+      .room(N.toilet, 'wet', 46, 54, 10, 11, { ly: 1 })
+      // 駅の外
+      .room(T('関係者駐車場', 'Staff parking', '관계자 주차장'), 'road', 0, 47, 8, 18, { hideLabel: true })
+      .room(T('駐車場', 'Parking', '주차장'), 'road', 56, 47, 16, 18, { ly: -5 })
+      .room(T('駅前広場', 'Station square', '역 앞 광장'), 'porch', 0, 65, 72, 5, { lx: -26 })
+      .room(T('ロータリー', 'Bus & taxi loop', '로터리'), 'road', 0, 70, 72, 7, { lx: 22 });
+    fillYard(g, 0, 0, 72, 77, T('線路脇', 'Trackside', '선로변'), 'dirt');
+    // 柵（線路の外側・ホームの端・ホームの裏）
+    g.wall(0, 0, 72, 0, 'fence')
+      .wall(4, 9, 4, 23, 'fence').wall(68, 9, 68, 23, 'fence').wall(4, 37, 4, 47, 'fence').wall(68, 37, 68, 47, 'fence')
+      .wall(0, 47, 8, 47, 'fence').wall(56, 47, 72, 47, 'fence')
+      // ホームの階段の手すり
+      .wall(34, 14, 54, 14, 'rail').wall(34, 18, 54, 18, 'rail').wall(34, 43, 54, 43, 'rail');
+    g.dh(21, 47, 12, -1, 0, 'open')                 // 改札内 ↔ 1番線ホーム
+      .dh(21, 54, 14, 1, 0, 'open')                  // 改札（改札機の脇に幅広の通路）
+      .dh(26, 65, 4, -1, 0, 'auto')                  // 駅の入口
+      .dh(15.5, 47, 1.5, -1, 1)                      // 駅員室 → ホーム（駅員用）
+      .dv(20, 48, 1.5, 1, 0)                         // 駅員室 → 改札内
+      .dv(8, 55, 1.5, -1, 1)                         // 駅員室 → 関係者駐車場
+      .dh(10, 57, 1.5, 1, 0, 'sliding')              // 休憩室
+      .dh(17.5, 57, 1.5, 1, 1)                       // 遺失物保管庫
+      .dv(36, 51.5, 1.5, 1, 1, 'steel')              // 信号機器室
+      .dv(56, 49.5, 1.5, 1, 0, 'locked')             // 旧手荷物室（外から）
+      .dv(36, 60.5, 2, 1, 0, 'sliding')              // 待合室
+      .dv(46, 62.5, 1.5, 1, 1)                       // トイレ
+      .dh(17, 13, 2, -1, 0, 'sliding').dh(17, 19, 2, 1, 0, 'sliding')   // ホーム待合室
+      .wh(11, 47, 3).wh(9, 65, 3).wv(8, 59, 2)
+      .wh(21, 65, 4, 'window2').wh(31, 65, 4, 'window2')
+      .wh(37.5, 65, 3, 'window2').wh(41.5, 65, 3, 'window2')
+      .wv(56, 56.5, 2).wv(56, 60.5, 2);
+    // 線路と列車（3番線に1両の普通列車が停車中）
+    trRailsH(g, 0, 72, 3.5, 24);
+    trRailsH(g, 0, 72, 24.5, 24);
+    trRailsH(g, 0, 72, 31.5, 24);
+    g.item('train_car', 14, 2.5, 90);
+    trEdgeH(g, 4, 68, 9);
+    trEdgeH(g, 4, 68, 22, true);
+    trEdgeH(g, 4, 68, 37);
+    // 跨線橋への階段とEV（2Fと同じ位置）
+    g.item('stairs', 34, 14, 90, { size: [4, 20] }).item('elevator', 63, 14, 90)
+      .item('stairs', 34, 43, 90, { size: [4, 20] }).item('elevator', 63, 43, 90);
+    // 島式ホーム
+    g.item('bench', 12.3, 13.2, 0, { size: [4.5, 1] }).item('bench', 12.3, 17.8, 180, { size: [4.5, 1] })
+      .item('bench', 19.2, 13.2, 0, { size: [4.5, 1] }).item('bench', 19.2, 17.8, 180, { size: [4.5, 1] })
+      .item('station_bench', 26, 15.5).item('station_bench', 5.6, 15.5)
+      .item('station_sign', 30.5, 15.75).item('vending', 4.4, 11.6, 270, { size: [2, 1.4] })
+      .item('extinguisher', 57.4, 15.7).item('cctv', 34.6, 10.4);
+    // 1番線ホーム
+    g.item('station_bench', 5, 45.8).item('station_bench', 57.2, 45.8)
+      .item('station_sign', 24, 40.8).item('vending', 66.4, 38.6, 90, { size: [2, 1.4] }).item('cctv', 20.8, 46.2);
+    // 駅員室
+    g.item('monitor_wall', 8, 48.2, 270, { size: [5, 0.6] }).item('desk_island', 10.6, 49.2, 0, { size: [4.6, 4.6] })
+      .item('counter', 18.8, 52.6, 90, { size: [4.2, 1.2] }).item('safe', 8.2, 53.6).item('radio', 12, 47.1, 0, { size: [1.6, 0.8] })
+      .item('locker', 13.5, 56, 180, { size: [3.6, 0.9] }).item('filing', 17.6, 47.1);
+    g.item('futon', 8.3, 60.6).item('zataku', 10.8, 61.2, 0, { size: [2.4, 1.8] }).item('tv', 11.2, 64.1, 180, { size: [2.4, 0.8] });
+    g.item('supply_shelf', 19, 59.2, 90, { size: [5, 0.9] }).item('cardboard', 14.4, 63.8).item('cardboard', 15.7, 63.8);
+    // 改札・券売機・売店
+    g.item('ticket_gate', 23, 51).item('ticket_gate', 29, 51)
+      .item('ticket_machine', 35, 47.5, 90, { label: T('精算機', 'Fare adj.', '정산기') })
+      .item('ticket_machine', 20, 57.6, 270).item('ticket_machine', 20, 59.3, 270).item('ticket_machine', 20, 61, 270)
+      .item('kiosk', 33.6, 55, 90).item('atm', 32.2, 63.9, 180).item('plant', 21.2, 63.6);
+    g.item('rack', 37, 47.3).item('rack', 38.6, 47.3).item('rack', 40.2, 47.3).item('control_panel', 43.4, 47.1, 0, { size: [2.4, 0.8] })
+      .item('dist_board', 44.2, 52.9, 180, { size: [1.6, 0.6] });
+    g.item('chest', 47, 47.4).item('big_crate', 52.6, 47.4).item('crate', 47.2, 51.8).item('crate', 49, 52.2, 0, { size: [1.3, 1.3] })
+      .item('drag_marks', 50.6, 49.2, 90, { size: [1.2, 3.4] }).item('cursed_item', 53.6, 51.2);
+    g.item('bench', 36.4, 55.4, 0, { size: [5, 1] }).item('bench', 36.4, 59.2, 0, { size: [5, 1] })
+      .item('bench', 44.6, 55.4, 90, { size: [5, 1] }).item('vending', 42, 63.4, 180, { size: [2, 1.4] }).item('plant', 44.6, 63.6);
+    g.item('toilet', 47.2, 54.2).item('toilet', 49.4, 54.2).item('toilet', 51.6, 54.2).item('toilet', 53.8, 54.2)
+      .item('washbasin', 54.8, 58, 90, { size: [1.6, 1.1] }).item('washbasin', 54.8, 60.2, 90, { size: [1.6, 1.1] });
+    // 駐車場・駅前
+    g.item('car', 1.6, 48.6)
+      .item('parking_stall', 56.5, 54.5).item('parking_stall', 61.5, 54.5).item('parking_stall', 66.5, 54.5)
+      .item('car', 57, 55, 0).item('suv', 66.9, 54.7, 0)
+      .item('car', 12, 71.5, 90).item('car', 37, 71.5, 90).item('road_sign', 52, 68.6, 0, { label: T('バス', 'Bus', '버스') })
+      .item('streetlight', 6, 68.6).item('streetlight', 44, 68.6).item('garden_bench', 54, 65.3)
+      .item('bush', 2, 65.4).item('bush', 62, 65.4).item('tree', 66, 66.2, 0, { size: [2.6, 2.6] })
+      .item('crosswalk', 24, 70.5, 90, { size: [6, 8] }).item('utility_pole', 70.4, 68.6);
+    g.text(T('← 上り（市街方面）', '← To the city', '← 상행(시내 방면)'), 10, 1, { size: 0.6 })
+      .text(T('下り（山側方面） →', 'To the mountains →', '하행(산 방면) →'), 62, 1, { size: 0.6 });
+
+    const u = makeFloor('2F');
+    u.room(T('跨線橋', 'Footbridge', '과선교'), 'hall', 56, 12, 6, 35)
+      .room(N.stairs, 'hall', 34, 14, 22, 4, { hideLabel: true })
+      .room(N.stairs, 'hall', 34, 43, 22, 4, { hideLabel: true })
+      .room(T('EV', 'EV', 'EV'), 'hall', 62, 13, 5, 5, { hideLabel: true, noWall: true })
+      .room(T('EV', 'EV', 'EV'), 'hall', 62, 42, 5, 5, { hideLabel: true, noWall: true });
+    u.dv(56, 14, 4, 1, 0, 'open').dv(56, 43, 4, 1, 0, 'open')
+      .wh(57.5, 12, 3)
+      .wv(56, 20, 3).wv(56, 25.5, 3).wv(56, 31, 3).wv(56, 36.5, 3)
+      .wv(62, 20, 3).wv(62, 25.5, 3).wv(62, 31, 3).wv(62, 36.5, 3);
+    u.item('stairs', 34, 14, 90, { size: [4, 20] }).item('elevator', 63, 14, 90)
+      .item('stairs', 34, 43, 90, { size: [4, 20] }).item('elevator', 63, 43, 90)
+      .item('cctv', 56.3, 12.3).item('bench', 61, 28, 90, { size: [3, 0.8] });
+    u.text(T('2・3番線', 'Platforms 2/3', '2·3번선'), 59, 19.6, { size: 0.55 })
+      .text(T('1番線・改札', 'Platform 1 / gates', '1번선·개찰구'), 59, 41.4, { size: 0.55 });
+    return [g.f, u.f];
+  }
+
+  /* ---------- 交通：地下鉄駅（B2 島式ホーム・B1 改札階・地上の出入口） ---------- */
+
+  // 階段・エスカレーター・EV・柱（B1とB2で同じ位置）
+  function subwayCore(b) {
+    const es = T('エスカレーター', 'Escalator', '에스컬레이터');
+    b.item('stairs', 22, 11, 270, { size: [4, 14] }).item('stairs', 22, 15.5, 270, { size: [3, 14], label: es })
+      .item('stairs', 50, 11, 270, { size: [4, 14] }).item('stairs', 50, 15.5, 270, { size: [3, 14], label: es })
+      .item('elevator', 41, 13, 90)
+      .item('stairs_u', 82, 8, 0, { size: [5.6, 6] });
+    [13, 39, 47, 70].forEach(x => b.item('pillar', x - 0.4, 9.4, 0, { size: [0.8, 0.8] }).item('pillar', x - 0.4, 19.3, 0, { size: [0.8, 0.8] }));
+    // 階段・エスカレーターの手すり
+    [22, 50].forEach(x => b.wall(x, 11, x + 14, 11, 'rail').wall(x, 18.5, x + 14, 18.5, 'rail'));
+  }
+
+  function subway() {
+    const p = makeFloor('B2');
+    p.room(T('1番線', 'Track 1', '1번선'), 'track', 0, 0, 88, 7, { lx: -39 })
+      .room(T('1・2番線ホーム', 'Platform 1/2', '1·2번선 승강장'), 'platform', 10, 7, 66, 16, { lx: -18, ly: -5.6 })
+      .room(T('2番線', 'Track 2', '2번선'), 'track', 0, 23, 88, 7, { lx: -39 })
+      .room(T('排水ポンプ室', 'Drainage pump room', '배수 펌프실'), 'garage', 0, 7, 10, 8)
+      .room(T('旧連絡通路', 'Old connecting tunnel', '옛 연결 통로'), 'stone', 0, 15, 10, 8, { wall: 'stone', gm: true, plName: '', note: T('戦前に計画され放棄された旧線のホームへ続く通路。封印扉の向こうで、ときどき電車の音がする', 'Leads to the platform of a line abandoned before the war. Beyond the sealed door, a train is sometimes heard', '전쟁 전에 계획되었다가 버려진 옛 노선의 승강장으로 이어진다. 봉인된 문 너머에서 가끔 열차 소리가 난다') })
+      .room(T('非常通路', 'Emergency passage', '비상 통로'), 'hall', 76, 7, 4, 16, { ly: 3 })
+      .room(T('非常階段', 'Emergency stairs', '비상계단'), 'hall', 80, 7, 8, 8, { hideLabel: true })
+      .room(T('換気機械室', 'Ventilation room', '환기 기계실'), 'garage', 80, 15, 8, 8, { ly: 1.8 });
+    p.wall(0, 0, 88, 0, 'ext').wall(0, 30, 88, 30, 'ext')
+      .wall(22, 11, 22, 18.5, 'rail').wall(50, 11, 50, 18.5, 'rail');
+    p.dv(10, 8.5, 1.5, -1, 0, 'steel')                // 排水ポンプ室
+      .dh(4, 15, 1.5, 1, 0, 'secret')                  // ポンプ室 → 旧連絡通路
+      .dv(0, 18, 2, 1, 0, 'sealed')                    // 旧線への封印扉
+      .dv(76, 14, 2, 1, 0, 'firedoor')                 // ホーム → 非常通路
+      .dh(77.5, 7, 1.5, -1, 0, 'steel').dh(77.5, 23, 1.5, 1, 0, 'steel')   // 線路への保守用扉
+      .dv(80, 8.5, 1.5, 1, 1, 'steel')                 // 非常階段
+      .dv(80, 19.5, 1.5, 1, 1, 'steel');               // 換気機械室
+    trRailsH(p, 0, 88, 1.5, 22);
+    trRailsH(p, 0, 88, 24.5, 22);
+    trEdgeH(p, 10, 76, 7);
+    trEdgeH(p, 10, 76, 22, true);
+    subwayCore(p);
+    p.item('train_car', 11, 23.5, 90, { size: [6, 32] }).item('train_car', 43.5, 23.5, 90, { size: [6, 32] })
+      .item('station_bench', 11, 14.5).item('station_bench', 65.5, 14.5)
+      .item('station_sign', 29, 0.1).item('station_sign', 57, 0.1).item('station_sign', 29, 29.5, 180).item('station_sign', 57, 29.5, 180)
+      .item('vending', 74.6, 9, 90, { size: [2, 1.4] }).item('extinguisher', 37, 16.2).item('alarm', 46.6, 10.4).item('alarm', 46.6, 18.6)
+      .item('cctv', 20.6, 10.2).item('cctv', 48.6, 10.2).item('hydrant', 75.5, 18.4, 90, { size: [1.2, 0.4] })
+      .item('pump', 0.3, 7.4).item('pump', 2.6, 7.4).item('control_panel', 7, 7.2, 0, { size: [2.4, 0.8] }).item('pipe', 0.2, 13.8, 0, { size: [5, 0.4] }).item('puddle', 5, 10.4)
+      .item('debris', 1, 19.8, 0, { size: [3, 2.4], gm: true }).item('station_sign', 5.4, 15.8, 0, { gm: true, label: T('旧駅名標', 'Old sign', '옛 역명판') })
+      .item('bones', 6.8, 20.2, 0, { gm: true }).item('candle', 3.4, 17).item('footprints', 4.6, 17.6, 90, { gm: true, size: [1, 3] })
+      .item('cable_rack', 76.2, 17.6, 90, { size: [4, 0.5] }).item('extinguisher', 79.2, 21.9)
+      .item('vent_unit', 82, 15.6).item('vent_unit', 85.6, 15.6).item('duct', 81, 21.6, 0, { size: [6.6, 1] });
+    p.text(T('← 都心方面', '← Downtown', '← 도심 방면'), 82, 3.5, { size: 0.6 })
+      .text(T('郊外方面 →', 'To the suburbs →', '교외 방면 →'), 82, 26.5, { size: 0.6 });
+
+    const c = makeFloor('B1');
+    c.room(T('コンコース', 'Concourse', '콘코스'), 'public', 0, 0, 18, 30, { ly: 3 })
+      .room(T('出入口A', 'Exit A', 'A 출입구'), 'hall', 0, -8, 18, 8, { ly: 2.2 })
+      .room(T('EVホール', 'Elevator hall', '엘리베이터 홀'), 'hall', 18, -8, 8, 8, { hideLabel: true })
+      .room(T('改札内コンコース', 'Paid concourse', '개찰구 안 콘코스'), 'public', 18, 8, 58, 14, { lx: -4, ly: -5.5 })
+      .room(T('電気室', 'Electrical room', '전기실'), 'garage', 18, 0, 16, 8)
+      .room(T('空調機械室', 'Air handling room', '공조 기계실'), 'garage', 34, 0, 20, 8)
+      .room(T('信号通信機器室', 'Signal & comms room', '신호 통신 기기실'), 'garage', 54, 0, 16, 8)
+      .room(T('倉庫', 'Storeroom', '창고'), 'storage', 70, 0, 18, 8)
+      .room(T('非常階段', 'Emergency stairs', '비상계단'), 'hall', 76, 8, 12, 8, { lx: -3 })
+      .room(T('換気機械室', 'Ventilation room', '환기 기계실'), 'garage', 76, 16, 12, 14)
+      .room(T('駅事務室', 'Station office', '역무실'), 'office', 18, 22, 14, 8, { ly: 1.5 })
+      .room(T('駅員休憩室', 'Staff rest room', '역무원 휴게실'), 'bedroom', 32, 22, 8, 8, { ly: 1.6 })
+      .room(N.toilet, 'wet', 40, 22, 12, 8, { ly: 1.6 })
+      .room(T('清掃用具庫', 'Janitor closet', '청소 도구실'), 'storage', 52, 22, 8, 8, { ly: 1.6 })
+      .room(T('清掃員控室', 'Cleaners\' room', '청소원 대기실'), 'office', 60, 22, 8, 8, { ly: 1.6 })
+      .room(T('消火ポンプ室', 'Fire pump room', '소화 펌프실'), 'garage', 68, 22, 8, 8, { ly: 1.6 })
+      .room(T('地下通路', 'Underground passage', '지하 통로'), 'hall', -20, 22, 20, 6)
+      .room(T('出入口B', 'Exit B', 'B 출입구'), 'hall', -20, 28, 18, 10, { ly: -2.6 });
+    c.dh(1, 0, 16, 1, 0, 'open')                      // 出入口A ↔ コンコース
+      .dv(18, -7, 6, 1, 0, 'open')                     // 出入口A ↔ EVホール
+      .dv(18, 8, 14, 1, 0, 'open')                     // 改札（改札機の脇に幅広の通路）
+      .dh(23, 22, 1.5, 1, 0)                           // 駅事務室（改札内から）
+      .dv(18, 28, 1.5, -1, 1)                          // 駅事務室（コンコースから）
+      .dv(32, 26, 1.5, 1, 0)                           // 駅員休憩室
+      .dh(45, 22, 1.5, 1, 0).dh(55, 22, 1.5, 1, 0).dh(63, 22, 1.5, 1, 0).dh(71, 22, 1.5, 1, 1, 'steel')
+      .dh(26, 8, 1.5, -1, 0, 'steel').dh(43, 8, 1.5, -1, 0, 'steel').dh(61, 8, 1.5, -1, 0, 'steel').dh(72, 8, 1.5, -1, 0)
+      .dv(76, 11.5, 2, 1, 0, 'firedoor')               // 非常階段
+      .dv(76, 18, 1.5, 1, 0, 'steel')                  // 換気機械室
+      .dv(0, 22.5, 5, -1, 0, 'open')                   // コンコース ↔ 地下通路
+      .dh(-19, 28, 8, 1, 0, 'open')                    // 地下通路 ↔ 出入口B
+      .dv(-20, 23, 4, -1, 0, 'shutter');               // 百貨店の地下へ（夜間は閉鎖）
+    subwayCore(c);
+    c.wall(36, 11, 36, 18.5, 'rail').wall(64, 11, 64, 18.5, 'rail')
+      .wall(1, -3, 13, -3, 'rail').wall(-18, 33, -6, 33, 'rail');
+    // 出入口の階段（地上と同じ位置）と地上へのEV
+    c.item('stairs', 1, -7, 90, { size: [4, 12] }).item('elevator', 21.5, -7, 90)
+      .item('stairs', -18, 33, 90, { size: [4, 12] });
+    c.item('ticket_gate', 18, 10, 90).item('ticket_gate', 18, 16, 90)
+      .item('ticket_machine', 21.6, 8.1, 0, { label: T('精算機', 'Fare adj.', '정산기') })
+      .item('kiosk', 64.5, 8.1).item('vending', 37, 20.6, 180, { size: [2, 1.4] }).item('cctv', 21.4, 21.2)
+      .item('ticket_machine', 17, 22.3, 90).item('ticket_machine', 17, 23.95, 90).item('ticket_machine', 17, 25.6, 90)
+      .item('atm', 0, 10.4, 270).item('locker', 0, 13.5, 270, { size: [5, 1] })
+      .item('plant', 0.2, 28.6).item('vending', 6.4, 28.6, 180, { size: [2, 1.4] }).item('station_sign', 7.5, 0.2, 0, { label: T('路線図', 'Route map', '노선도') })
+      .item('cctv', 0.2, -7.8).item('road_sign', 14.2, -1.4, 0, { label: T('A出口', 'Exit A', 'A출구') });
+    c.item('office_desk', 18.5, 24.4, 270, { size: [2.4, 1.4] }).item('office_desk', 21.6, 26.8).item('monitor_wall', 24.4, 22.2, 0, { size: [5, 0.6] })
+      .item('safe', 30.6, 28.6).item('locker', 26.4, 29.1, 180, { size: [3.6, 0.9] }).item('radio', 30, 22.2, 0, { size: [1.6, 0.8] }).item('control_panel', 22.8, 29.2, 180, { size: [2.4, 0.8] });
+    c.item('bunk_bed', 35.8, 22.2, 90).item('locker', 32.2, 29.1, 180, { size: [3, 0.9] }).item('table', 36, 26.6, 0, { size: [2.4, 1.4] }).item('chair', 36.7, 28.1, 180);
+    c.item('toilet', 46.6, 28.4, 180).item('toilet', 48.4, 28.4, 180).item('toilet', 50.4, 28.4, 180)
+      .item('washbasin', 40.2, 26, 270, { size: [1.6, 1.1] }).item('washbasin', 40.2, 28, 270, { size: [1.6, 1.1] });
+    c.item('supply_shelf', 52.2, 29.1, 180).item('hand_cart', 58.4, 25.2).item('cardboard', 56.6, 28.8)
+      .item('table', 62.4, 26.4, 0, { size: [2.4, 1.4] }).item('chair', 63, 25.3).item('locker', 60.2, 29.1, 180, { size: [3, 0.9] })
+      .item('pump', 68.4, 28.4).item('pump', 71, 28.4).item('valve', 74.6, 28.8)
+      .item('dist_board', 18.4, 0.2, 0, { size: [2, 0.6] }).item('control_panel', 21, 0.2).item('control_panel', 24, 0.2).item('cable_rack', 28, 0.2, 0, { size: [5.6, 0.6] }).item('breaker', 32.6, 6.9, 180)
+      .item('vent_unit', 35, 0.4).item('vent_unit', 38, 0.4).item('vent_unit', 49, 0.4).item('duct', 41, 0.6, 0, { size: [7, 1] })
+      .item('rack', 54.5, 0.3).item('rack', 56.1, 0.3).item('rack', 57.7, 0.3).item('rack', 66, 0.3).item('control_panel', 59.6, 0.2)
+      .item('supply_shelf', 75, 0.2).item('supply_shelf', 78.4, 0.2).item('cardboard', 84, 0.4).item('cardboard', 84, 1.6).item('pallet', 81.8, 4.6)
+      .item('extinguisher', 77, 14.9).item('supply_shelf', 76.2, 8.2, 270, { size: [3, 0.8] })
+      .item('vent_unit', 82, 20).item('vent_unit', 85.4, 20).item('em_generator', 80, 27.2).item('duct', 77, 16.2, 0, { size: [6, 1] });
+    c.item('painting', -16, 22.1, 0, { label: T('ポスター', 'Posters', '포스터') }).item('painting', -9, 22.1, 0, { label: T('ポスター', 'Posters', '포스터') })
+      .item('npc_sitting', -6, 26.2, 180).item('cctv', -19.8, 22.2).item('cctv', -19.8, 28.2)
+      .item('road_sign', -3.6, 36.4, 0, { label: T('B出口', 'Exit B', 'B출구') });
+    c.text(T('← 百貨店 地下（夜間閉鎖）', '← Department store (closed at night)', '← 백화점 지하(야간 폐쇄)'), -10, 23.4, { size: 0.5 });
+
+    const s = makeFloor(T('地上', 'Street level', '지상'));
+    s.room(T('オフィスビル', 'Office tower', '오피스 빌딩'), 'roof', -20, -16, 40, 6)
+      .room(T('商業ビル', 'Shopping building', '상업 빌딩'), 'roof', 20, -16, 36, 6)
+      .room(T('マンション', 'Apartments', '맨션'), 'roof', 56, -16, 32, 6)
+      .room(T('歩道', 'Sidewalk', '보도'), 'porch', -20, -10, 108, 10, { hideLabel: true })
+      .room(T('中央通り', 'Main street', '중앙로'), 'road', -20, 0, 108, 30, { lx: 20, ly: -11 })
+      .room(T('歩道', 'Sidewalk', '보도'), 'porch', -20, 30, 108, 10, { hideLabel: true })
+      .room(T('百貨店', 'Department store', '백화점'), 'roof', -20, 40, 56, 6)
+      .room(T('ホテル', 'Hotel', '호텔'), 'roof', 36, 40, 52, 6)
+      .room(T('出入口A', 'Exit A', 'A 출입구'), 'hall', 0, -8, 15, 6, { hideLabel: true })
+      .room(T('エレベーター', 'Elevator', '엘리베이터'), 'hall', 18, -8, 8, 6, { hideLabel: true })
+      .room(T('出入口B', 'Exit B', 'B 출입구'), 'hall', -19, 32, 15, 6, { hideLabel: true });
+    s.dv(15, -7, 4, 1, 0, 'shutter')                  // 出入口A（終電後はシャッター）
+      .dv(18, -6.5, 3, -1, 0, 'auto')                   // エレベーター
+      .dv(-4, 33, 4, 1, 0, 'shutter')                   // 出入口B
+      .dh(-2, -10, 3, -1, 0, 'auto').dh(36, -10, 3, -1, 0, 'auto').dh(70, -10, 2, -1, 0, 'door2')
+      .dh(4, 40, 4, 1, 0, 'auto').dh(58, 40, 3, 1, 0, 'auto')
+      .wh(-14, -10, 6, 'window2').wh(8, -10, 6, 'window2').wh(24, -10, 6, 'window2').wh(44, -10, 6, 'window2').wh(60, -10, 4).wh(78, -10, 4)
+      .wh(-14, 40, 8, 'window2').wh(16, 40, 8, 'window2').wh(44, 40, 6, 'window2').wh(70, 40, 6, 'window2');
+    s.item('stairs', 1, -7, 90, { size: [4, 12] }).item('elevator', 21.5, -7, 90).item('stairs', -18, 33, 90, { size: [4, 12] })
+      .item('road_sign', 15.4, -9.6, 0, { label: T('地下鉄', 'Metro', '지하철') }).item('road_sign', -3.4, 38.6, 0, { label: T('地下鉄', 'Metro', '지하철') })
+      .item('vent_unit', 79, 33, 0, { size: [6, 4], label: T('換気塔', 'Vent shaft', '환기탑') })
+      .item('crosswalk', 28, 0, 0, { size: [8, 30] })
+      .item('traffic_light', 26.6, -1, 0).item('traffic_light', 36.2, 30.2, 180)
+      .item('road_sign', 52, 30.6, 0, { label: T('バス停', 'Bus stop', '버스 정류장') }).item('bench', 54, 37.8, 0, { size: [3, 0.9] })
+      .item('car', 6, 2.5, 90).item('van', 60, 9, 90).item('car', 44, 16.5, 270).item('truck', -12, 23, 270, { size: [4.6, 16] }).item('car', 64, 23.5, 270)
+      .item('road_arrow', 40, 3, 90).item('road_arrow', 12, 10.5, 90).item('road_arrow', 50, 17, 270).item('road_arrow', 14, 25, 270)
+      .item('manhole', 46, 11).item('manhole', 10, 19)
+      .item('streetlight', -16, -1.2).item('streetlight', 30, -1.2).item('streetlight', 74, -1.2)
+      .item('streetlight', -10, 30.2).item('streetlight', 30, 30.2).item('streetlight', 70, 30.2)
+      .item('tree', 4, 34.2, 0, { size: [2.2, 2.2] }).item('tree', 20, 34.2, 0, { size: [2.2, 2.2] }).item('tree', 44, 34.2, 0, { size: [2.2, 2.2] }).item('tree', 64, 34.2, 0, { size: [2.2, 2.2] })
+      .item('guardrail', -12, 0.1, 0, { size: [8, 0.5] }).item('guardrail', 44, 0.1, 0, { size: [10, 0.5] });
+    s.wall(-20, 15, 28, 15, 'rail').wall(36, 15, 88, 15, 'rail');
+    return [p.f, c.f, s.f];
+  }
+
+  /* ---------- 交通：立体駐車場（自走式・1F〜屋上） ---------- */
+
+  // 区画に車を置く。pattern は 1 = 車あり、0 = 空き。rot 0 = 北の列、180 = 南の列、90 = 横向き
+  function trParkCars(b, slots, pattern, seed) {
+    const kinds = ['car', 'suv', 'car', 'van', 'car'];
+    slots.forEach(([x, y, rot], i) => {
+      if (pattern[i] !== '1') return;
+      const t = kinds[(i + seed) % kinds.length];
+      const a = M.ASSET[t];
+      if (rot === 90) b.item(t, x + (10 - a.h) / 2, y + (5 - a.w) / 2, 90);
+      else b.item(t, x + (5 - a.w) / 2, y + (10 - a.h) / 2, rot);
+    });
+  }
+
+  // 各階に共通：階段・EV（全階同じ位置）、車路、北10台・南8台の区画、柱
+  function towerParkDeck(b, cat, north, south, seed) {
+    b.room(N.stairs, 'hall', 52, 0, 6, 10, { hideLabel: true })
+      .room(N.evHall, 'hall', 58, 0, 6, 10, { hideLabel: true })
+      .room(T('車路', 'Driving aisle', '차로'), cat, 0, 10, 64, 12, { lx: -24, ly: 0.2 });
+    b.dh(53, 10, 1.5, 1, 0, 'steel').dh(59.5, 10, 3, 1, 0, 'auto');
+    b.item('stairs_u', 52.5, 0.5, 0, { size: [5, 8] }).item('elevator', 59, 0.5).item('extinguisher', 57.2, 9.2);
+    const nSlots = [], sSlots = [];
+    for (let i = 0; i < 10; i++) { b.item('parking_stall', 1 + i * 5, 0); nSlots.push([1 + i * 5, 0, 0]); }
+    for (let i = 0; i < 8; i++) { b.item('parking_stall', 12 + i * 5, 22, 180); sSlots.push([12 + i * 5, 22, 180]); }
+    trParkCars(b, nSlots, north, seed);
+    trParkCars(b, sSlots, south, seed + 2);
+    [15.5, 30.5, 45.5].forEach(x => b.item('pillar', x, 0).item('pillar', x, 9));
+    [11.5, 26.5, 41.5].forEach(x => b.item('pillar', x, 22).item('pillar', x, 31));
+    // 左側通行：北側を東へ、南側を西へ
+    b.item('road_arrow', 22, 10.6, 90).item('road_arrow', 36, 17.4, 270);
+  }
+
+  // スロープ。open = 'w' / 'e'（この階につながる端）。手すりで区切る
+  function towerParkRamp(b, y, name, open) {
+    b.room(name, 'road', 12, y, 40, 6, { lx: open === 'w' ? -10 : 10 });
+    b.wall(open === 'w' ? 52 : 12, y, open === 'w' ? 52 : 12, y + 6, 'rail');
+    b.item('road_arrow', open === 'w' ? 32 : 26, y + 1, open === 'w' ? 90 : 270);
+  }
+
+  function parkingTower() {
+    const g = makeFloor('1F');
+    towerParkDeck(g, 'road', '1101101011', '01101110', 0);
+    towerParkRamp(g, 32, T('スロープ（2Fへ）', 'Ramp (to 2F)', '경사로(2층으로)'), 'w');
+    g.room(T('倉庫', 'Storeroom', '창고'), 'storage', 12, 38, 18, 6, { lx: -3 })
+      .room(T('旧ポンプ室', 'Old pump room', '옛 펌프실'), 'garage', 30, 38, 22, 6, { gm: true, plName: '', note: T('使われなくなったポンプ室。床の点検口の下に、誰かが寝泊まりしていた跡がある', 'A disused pump room. Below the floor hatch, signs that someone has been living there', '쓰이지 않게 된 펌프실. 바닥 점검구 아래에 누군가 지낸 흔적이 있다') })
+      .room(T('管理室', 'Attendant booth', '관리실'), 'office', 56, 22, 8, 8, { ly: 1.4 })
+      .room(T('歩道', 'Sidewalk', '보도'), 'porch', 64, -4, 4, 52, { hideLabel: true })
+      .room(T('道路', 'Street', '도로'), 'road', 68, -4, 10, 52, { ly: 14 });
+    fillYard(g, 0, 0, 64, 44, T('駐車場', 'Parking', '주차장'), 'road');
+    g.wall(0, 0, 52, 0, 'fence').wall(0, 0, 0, 44, 'fence').wall(0, 44, 12, 44, 'fence').wall(52, 44, 64, 44, 'fence').wall(64, 30, 64, 44, 'fence')
+      .wall(12, 32, 52, 32, 'rail');
+    g.dv(12, 40, 1.5, -1, 1)                           // 倉庫
+      .dv(52, 40, 1.5, 1, 0, 'locked')                 // 旧ポンプ室
+      .dv(56, 25.5, 1.5, -1, 0)                        // 管理室
+      .dv(64, 5.5, 1.5, 1, 0)                          // EVホール → 歩道（歩行者の出入口）
+      .wh(58.5, 22, 3).wv(64, 23.5, 2).wv(64, 26.5, 2);
+    // 入口と出口：発券機・精算機・ゲート
+    g.item('guardrail', 57.5, 15.7, 0, { size: [6, 0.6] })
+      .item('ticket_machine', 61.4, 14.6, 180, { label: T('精算機', 'Pay', '정산기') })
+      .item('ticket_machine', 58, 16.3, 0, { label: T('発券機', 'Ticket', '발권기') })
+      .item('handrail', 63.4, 10.2, 90, { size: [5.4, 0.3] }).item('handrail', 57, 16.4, 90, { size: [5.4, 0.3] })
+      .item('road_arrow', 54, 10.8, 90).item('road_arrow', 60.4, 17.6, 270)
+      .item('parking_stall', 53, 33, 90).item('road_sign', 62.6, 38.6, 0, { label: T('車いす', 'Accessible', '휠체어') })
+      .item('office_desk', 58.4, 27.6, 180).item('chair', 59.1, 26.4).item('monitor_wall', 63.3, 22.6, 90, { size: [3.6, 0.6] }).item('safe', 56.3, 22.3).item('cctv', 63.2, 9.2)
+      .item('cardboard', 26.6, 38.3).item('cardboard', 27.8, 38.3).item('supply_shelf', 13, 43, 180, { size: [6, 0.9] }).item('cone', 20.6, 39.6).item('cone', 21.5, 39.6)
+      .item('pump', 31, 38.4, 0, { gm: true }).item('pipe', 33.4, 38.4, 0, { size: [8, 0.4], gm: true }).item('trapdoor', 44, 40, 0, { gm: true, size: [1.6, 1.6] })
+      .item('bag', 47, 42.4, 0, { gm: true }).item('black_stain', 38, 40.6, 0, { size: [3, 2], gm: true })
+      .item('road_sign', 64.4, 9, 0, { label: T('P 空', 'P Vacant', 'P 빈자리') }).item('streetlight', 66.6, 30).item('vending', 64.3, 1.2, 90, { size: [2, 1.4] })
+      .item('car', 70.5, 2, 180).item('car', 73.5, 30, 0);
+    g.text(T('出口', 'OUT', '출구'), 60.6, 12.4, { size: 0.55 }).text(T('入口', 'IN', '입구'), 61, 20.6, { size: 0.55 });
+
+    const f2 = makeFloor('2F');
+    towerParkDeck(f2, 'rooftop', '0111011010', '11011011', 1);
+    towerParkRamp(f2, 32, T('スロープ（1Fへ）', 'Ramp (to 1F)', '경사로(1층으로)'), 'e');
+    towerParkRamp(f2, 38, T('スロープ（3Fへ）', 'Ramp (to 3F)', '경사로(3층으로)'), 'e');
+    fillYard(f2, 0, 0, 64, 44, T('駐車場', 'Parking', '주차장'), 'rooftop');
+    f2.wall(12, 32, 52, 32, 'rail').wall(12, 38, 52, 38, 'rail').wall(12, 44, 52, 44, 'rail');
+    f2.item('parking_stall', 1, 33, 180).item('parking_stall', 6, 33, 180);
+    trParkCars(f2, [[1, 33, 180], [6, 33, 180]], '10', 3);
+
+    const f3 = makeFloor('3F');
+    towerParkDeck(f3, 'rooftop', '0010010100', '01000110', 2);
+    towerParkRamp(f3, 32, T('スロープ（屋上へ）', 'Ramp (to roof)', '경사로(옥상으로)'), 'w');
+    towerParkRamp(f3, 38, T('スロープ（2Fへ）', 'Ramp (to 2F)', '경사로(2층으로)'), 'w');
+    fillYard(f3, 0, 0, 64, 44, T('駐車場', 'Parking', '주차장'), 'rooftop');
+    f3.wall(12, 32, 52, 32, 'rail').wall(12, 38, 52, 38, 'rail').wall(12, 44, 52, 44, 'rail');
+    f3.item('parking_stall', 53, 33, 180).item('parking_stall', 58, 33, 180);
+    trParkCars(f3, [[53, 33, 180], [58, 33, 180]], '01', 1);
+    f3.item('cone', 30, 13).item('cone', 31.2, 13).item('tape', 26, 14.5, 0, { size: [6, 0.35] });
+
+    const r = makeFloor(T('屋上', 'Roof', '옥상'));
+    towerParkDeck(r, 'rooftop', '0000100001', '00010000', 3);
+    towerParkRamp(r, 32, T('スロープ（3Fへ）', 'Ramp (to 3F)', '경사로(3층으로)'), 'e');
+    r.room(T('屋上駐車場', 'Rooftop parking', '옥상 주차장'), 'rooftop', 0, 32, 12, 12, { hideLabel: true });
+    fillYard(r, 0, 0, 64, 44, T('屋上駐車場', 'Rooftop parking', '옥상 주차장'), 'rooftop');
+    r.wall(12, 32, 52, 32, 'rail').wall(12, 38, 52, 38, 'rail');
+    r.item('parking_stall', 1, 33, 180).item('parking_stall', 6, 33, 180);
+    trParkCars(r, [[1, 33, 180], [6, 33, 180]], '01', 4);
+    // スロープ上の屋上は設備置き場
+    r.item('streetlight', 15.5, 21).item('streetlight', 30.5, 21).item('streetlight', 45.5, 21).item('streetlight', 1, 29).item('streetlight', 62, 29)
+      .item('antenna', 14, 40.6).item('vent_unit', 44, 40.6).item('vent_unit', 47, 40.6).item('ac_unit', 18, 43, 180).item('ac_unit', 20.2, 43, 180).item('vent_unit', 61.4, 41.4);
+    r.text(T('屋上駐車場', 'Rooftop parking', '옥상 주차장'), 32, 41, { size: 0.6 });
+    return [g.f, f2.f, f3.f, r.f];
+  }
+
+  /* ---------- 交通：地下駐車場（B2・B1・地上の出入口） ---------- */
+
+  // B1・B2 共通：階段・EV・非常階段・駐車区画・柱・車路の矢印。pats = [北, 中央北, 中央南, 南] の駐車パターン
+  function ugParkCore(b, pats, seed) {
+    b.room(T('駐車場', 'Car park', '주차장'), 'industrial', 0, 0, 84, 64, { lx: -12, ly: -16 })
+      .room(N.stairs, 'hall', 0, 0, 6, 10, { hideLabel: true })
+      .room(N.evHall, 'hall', 6, 0, 6, 10, { hideLabel: true })
+      .room(T('非常階段', 'Emergency stairs', '비상계단'), 'hall', 0, 54, 6, 10, { hideLabel: true });
+    b.dh(1, 10, 1.5, -1, 0, 'steel').dh(7.5, 10, 3, 1, 0, 'auto').dh(1.5, 54, 2, 1, 0, 'firedoor');
+    b.item('stairs_u', 0.5, 0.5, 0, { size: [5, 8] }).item('elevator', 7, 0.5).item('stairs_u', 0.5, 56, 180, { size: [5, 8] });
+    // 柱スパン 8m（16マス）に 3 台ずつ。区画は幅 2.4m・奥行 5m
+    [[0, 0], [22, 180], [32, 0], [54, 180]].forEach(([y, rot], r) => {
+      const slots = [];
+      [12, 28, 44].forEach(L => { for (let j = 0; j < 3; j++) slots.push([L + 0.8 + j * 4.8, y, rot]); });
+      slots.forEach(([x]) => b.item('parking_stall', x, y, rot, { size: [4.8, 10] }));
+      trParkCars(b, slots, pats[r], seed + r);
+    });
+    const col = { size: [1.2, 1.2] };
+    [27.4, 43.4].forEach(x => b.item('pillar', x, 8.8, 0, col).item('pillar', x, 54, 0, col));
+    [11.4, 27.4, 43.4, 59.4].forEach(x => b.item('pillar', x, 22, 0, col).item('pillar', x, 40.8, 0, col));
+    // 左側通行の車路
+    b.item('road_arrow', 20, 11, 90).item('road_arrow', 46, 11, 90).item('road_arrow', 30, 19, 270).item('road_arrow', 54, 19, 270)
+      .item('road_arrow', 22, 43, 90).item('road_arrow', 40, 51, 270)
+      .item('road_arrow', 1.5, 36, 0).item('road_arrow', 8.5, 28, 180).item('road_arrow', 61.5, 34, 0).item('road_arrow', 68.5, 28, 180);
+    b.item('hydrant', 0, 30, 90, { size: [1.2, 0.4] }).item('extinguisher', 0.1, 32).item('hydrant', 27.6, 55.4, 0, { size: [1.2, 0.4] })
+      .item('cctv', 12.3, 10.3).item('cctv', 59.1, 21.2).item('cctv', 0.2, 52.8).item('alarm', 5.4, 10.2);
+  }
+
+  function parkingUnderground() {
+    const b2 = makeFloor('B2');
+    ugParkCore(b2, ['000110010', '100010000', '000001101', '010000011'], 3);
+    b2.room(T('排水ポンプ室', 'Drainage pump room', '배수 펌프실'), 'garage', 60, 0, 12, 10, { ly: -0.8 })
+      .room(T('受水槽室', 'Water tank room', '수수조실'), 'garage', 72, 0, 12, 22, { ly: 3.6 })
+      .room(T('消火設備室', 'Fire suppression room', '소화 설비실'), 'garage', 6, 54, 6, 10, { hideLabel: true })
+      .room(T('スロープ（B1へ）', 'Ramp (to B1)', '경사로(B1로)'), 'road', 72, 22, 6, 42, { hideLabel: true })
+      .room(T('封鎖区画', 'Sealed void', '봉쇄 구역'), 'garage', 78, 22, 6, 42, { gm: true, plName: '', ly: -6, note: T('地上へのスロープの真下にある点検用の空間。図面上は埋め戻したことになっているが、受水槽室の奥の扉から入れる。誰かがここに人を閉じ込めていた', 'The inspection void under the street ramp. The drawings say it was filled in, but a door at the back of the water tank room still opens. Someone has been keeping a person here', '지상 경사로 바로 아래의 점검용 공간. 도면상으로는 메웠다고 되어 있지만 수수조실 안쪽 문으로 들어갈 수 있다. 누군가 여기에 사람을 가둬 두고 있었다') });
+    b2.wall(72, 64, 78, 64, 'ext');
+    b2.dh(62, 10, 1.5, 1, 0, 'steel')                  // 排水ポンプ室
+      .dv(72, 15, 1.5, 1, 0, 'steel')                  // 受水槽室
+      .dh(80, 22, 1.5, -1, 0, 'locked')                // 受水槽室 → 封鎖区画
+      .dh(8, 54, 1.5, -1, 0, 'steel')                  // 消火設備室
+      .dv(72, 54, 10, 1, 0, 'open');                   // スロープの下端
+    b2.item('pump', 60.4, 0.3).item('pump', 63, 0.3).item('pit', 68.6, 0.6, 0, { size: [2.4, 2.4] }).item('pipe', 65.4, 0.3, 0, { size: [3, 0.4] })
+      .item('control_panel', 60.2, 6.4, 90, { size: [2.4, 0.8] }).item('valve', 69.6, 4.2).item('puddle', 64, 7.6)
+      .item('big_tank', 72.6, 0.6).item('big_tank', 78.4, 0.6).item('pump', 80.6, 8.4).item('pipe', 77, 6.4, 90, { size: [5, 0.4] })
+      .item('control_panel', 81, 18.8, 180, { size: [2.4, 0.8] }).item('valve', 76, 18.6)
+      .item('ind_tank', 8.6, 60.6).item('control_panel', 6.2, 58, 90, { size: [2.4, 0.8] }).item('valve', 7, 62.8).item('pipe', 8.6, 55.6, 0, { size: [3, 0.4] })
+      .item('gutter', 72, 52.6, 0, { size: [6, 0.6] }).item('road_arrow', 74, 36, 0).item('traffic_light', 76.4, 46, 90)
+      .item('manhole', 50, 46).item('puddle', 36, 13)
+      .item('drag_marks', 80.3, 25, 0, { gm: true }).item('cardboard', 82.4, 32).item('cardboard', 82.4, 33.2).item('blood', 79.6, 44, 0, { gm: true })
+      .item('npc_bound', 80, 53, 0, { gm: true }).item('chains', 78.6, 56, 0, { gm: true }).item('bag', 82.2, 60.8, 0, { gm: true }).item('flashlight', 79, 61.6);
+    b2.text(T('B1へ ↑', 'B1 ↑', 'B1로 ↑'), 75, 30, { size: 0.55 }).text(T('B2', 'B2', 'B2'), 30, 47.6, { size: 1 });
+
+    const b1 = makeFloor('B1');
+    ugParkCore(b1, ['101101110', '011011101', '110100110', '010011011'], 0);
+    b1.room(T('管理室', 'Management office', '관리실'), 'office', 60, 0, 12, 10, { ly: 1 })
+      .room(T('電気室', 'Electrical room', '전기실'), 'garage', 72, 0, 12, 10, { ly: 2.2 })
+      .room(T('倉庫', 'Storeroom', '창고'), 'storage', 6, 54, 6, 10, { hideLabel: true })
+      .room(T('機械室', 'Machine room', '기계실'), 'garage', 60, 54, 12, 10, { ly: -0.6 })
+      .room(T('スロープ（B2へ）', 'Ramp (to B2)', '경사로(B2로)'), 'road', 72, 22, 6, 42, { hideLabel: true })
+      .room(T('スロープ（地上へ）', 'Ramp (to street)', '경사로(지상으로)'), 'road', 78, 22, 6, 42, { hideLabel: true });
+    b1.wall(78, 22, 78, 64, 'ext').wall(84, 22, 84, 64, 'ext').wall(72, 64, 78, 64, 'ext');
+    b1.dh(62, 10, 1.5, 1, 0)                          // 管理室
+      .dv(72, 6, 1.5, 1, 1, 'steel')                   // 管理室 → 電気室
+      .dh(8, 54, 1.5, -1, 0)                           // 倉庫
+      .dh(65, 54, 1.5, -1, 0, 'steel')                 // 機械室
+      .dh(72, 22, 6, -1, 0, 'open').dh(78, 22, 6, -1, 0, 'open');
+    // 管理室：防犯カメラのモニター・台帳・鍵箱
+    b1.item('monitor_wall', 62.5, 0.2, 0, { size: [6, 0.6] }).item('office_desk', 63.8, 2).item('chair', 64.5, 3.6, 180)
+      .item('locker', 60.2, 5.6, 90, { size: [3, 1] }).item('filing', 69.6, 0.3).item('safe', 70.6, 8.6).item('desk', 66.8, 7.4, 180, { size: [2.4, 1.2] })
+      .item('dist_board', 74.4, 0.2).item('dist_board', 77, 0.2).item('breaker', 79.6, 0.2).item('control_panel', 75, 8.8, 180, { size: [3, 1] })
+      .item('cable_rack', 83.2, 1, 90, { size: [6, 0.6] }).item('control_panel', 79.6, 8.8, 180, { size: [3, 1] })
+      .item('supply_shelf', 10.9, 57.4, 90, { size: [3, 1] }).item('cone', 6.4, 61).item('cone', 6.4, 62.2).item('barricade', 8, 62.8, 0, { size: [3, 0.7] })
+      .item('vent_unit', 60.6, 60.6, 0, { size: [2.6, 2.6] }).item('vent_unit', 63.6, 60.6, 0, { size: [2.6, 2.6] }).item('duct', 60.6, 56.4, 0, { size: [6, 1] })
+      .item('em_generator', 67.4, 61.4).item('control_panel', 69.2, 55.2, 90, { size: [2.4, 0.8] })
+      .item('road_arrow', 74, 32, 180).item('road_arrow', 80, 32, 0).item('traffic_light', 77, 24, 90).item('traffic_light', 82.8, 24, 90)
+      .item('road_sign', 70.6, 11.2, 0, { label: T('出口', 'Exit', '출구') }).item('cone', 40, 13.4).item('puddle', 20, 45);
+    b1.text(T('B2へ ↓', 'B2 ↓', 'B2로 ↓'), 75, 46, { size: 0.55 }).text(T('地上へ ↓', 'Street ↓', '지상 ↓'), 81, 46, { size: 0.55 })
+      .text(T('B1', 'B1', 'B1'), 30, 47.6, { size: 1 });
+
+    const g = makeFloor(T('地上', 'Street level', '지상'));
+    g.room(T('出入口', 'Entrance', '출입구'), 'hall', 0, 0, 12, 10, { wall: 'glass', ly: 3.8 })
+      .room(T('非常口', 'Emergency exit', '비상구'), 'hall', 0, 54, 6, 10, { hideLabel: true })
+      .room(T('スロープ（B1へ）', 'Ramp (to B1)', '경사로(B1로)'), 'road', 78, 34, 6, 30, { hideLabel: true })
+      .room(T('出入口ゲート', 'Car gate', '차량 게이트'), 'road', 72, 64, 12, 8, { hideLabel: true })
+      .room(T('植え込み', 'Planting', '화단'), 'garden', 16, 16, 20, 10, { hideLabel: true })
+      .room(T('植え込み', 'Planting', '화단'), 'garden', 44, 16, 20, 10, { hideLabel: true })
+      .room(T('植え込み', 'Planting', '화단'), 'garden', 16, 38, 20, 10, { hideLabel: true })
+      .room(T('植え込み', 'Planting', '화단'), 'garden', 44, 38, 20, 10, { hideLabel: true })
+      .room(T('歩道', 'Sidewalk', '보도'), 'porch', 0, 72, 84, 4, { hideLabel: true })
+      .room(T('道路', 'Street', '도로'), 'road', 0, 76, 84, 10, { lx: -30, ly: 2.4 });
+    fillYard(g, 0, 0, 84, 72, T('広場', 'Plaza', '광장'), 'porch');
+    g.wall(12, 0, 84, 0, 'fence').wall(0, 10, 0, 54, 'fence').wall(0, 64, 0, 72, 'fence').wall(84, 0, 84, 72, 'fence')
+      .wall(78, 34, 78, 64, 'rail').wall(78, 34, 84, 34, 'rail').wall(72, 64, 78, 64, 'rail').wall(72, 64, 72, 72, 'rail');
+    g.dh(6, 10, 3, 1, 0, 'auto')                       // 出入口（階段・EV）
+      .dh(1.5, 54, 2, -1, 0, 'firedoor');              // 非常口
+    g.item('stairs_u', 0.5, 0.5, 0, { size: [5, 8] }).item('elevator', 7, 0.5).item('stairs_u', 0.5, 56, 180, { size: [5, 8] })
+      // ゲート：入る車は西側、出る車は東側（左側通行）
+      .item('guardrail', 77.6, 67, 90, { size: [4, 0.8] })
+      .item('ticket_machine', 76.6, 67.6, 90, { label: T('発券機', 'Ticket', '발권기') })
+      .item('ticket_machine', 78.4, 68.8, 270, { label: T('精算機', 'Pay', '정산기') })
+      .item('handrail', 72.2, 66.4, 0, { size: [5.4, 0.3] }).item('handrail', 78.4, 71.2, 0, { size: [5.4, 0.3] })
+      .item('traffic_light', 82.6, 62, 0).item('road_arrow', 80, 44, 0).item('cctv', 83.2, 64.3)
+      .item('road_sign', 70.4, 70.6, 0, { label: T('P 地下駐車場', 'P Car park', 'P 지하 주차장') })
+      .item('bollard_post', 70.6, 72.4).item('bollard_post', 1, 72.4).item('bollard_post', 13, 10.6)
+      .item('vent_unit', 63, 56.6, 0, { size: [4, 4] })
+      .item('manhole', 79, 5).item('manhole', 64, 4)
+      .item('tree', 18, 17.5).item('tree', 30, 21).item('tree', 47, 17.5).item('tree', 59, 21).item('tree', 22, 41.5).item('tree', 52, 39.5)
+      .item('bush', 33, 40).item('bush', 46, 45.6).item('bush', 17, 24)
+      .item('garden_bench', 22, 13.4).item('garden_bench', 50, 13.4).item('garden_bench', 22, 49.4, 180).item('garden_bench', 50, 49.4, 180)
+      .item('streetlight', 14, 30).item('streetlight', 66, 30).item('streetlight', 40, 60)
+      .item('fountain', 38, 30).item('garden_bench', 33.6, 30.5, 90).item('garden_bench', 45.4, 30.5, 270)
+      .item('vending', 12.4, 0.2).item('vending', 14.6, 0.2).item('kiosk', 66, 0.4).item('hedge', 22, 0.2).item('hedge', 40, 0.2)
+      .item('car', 10, 76.6, 90).item('van', 52, 81.4, 270).item('utility_pole', 30, 72.6);
+    g.text(T('↑ B1', '↑ B1', '↑ B1'), 81, 52, { size: 0.6 }).text(T('地下駐車場 入口', 'Car park entrance', '지하 주차장 입구'), 66, 68, { size: 0.55 });
+    return [b2.f, b1.f, g.f];
+  }
+
+  /* ---------- 交通：客船（下甲板・客室甲板・遊歩甲板・ブリッジ甲板。船首は東） ---------- */
+
+  // 通路沿いの2人部屋。north = 通路の北側（ドアは南の壁）。bunk = 2段ベッドとロッカー
+  function shipCabin(b, x, w, north, bunk) {
+    const top = north ? 0.3 : 19.7, rot = north ? 0 : 180;
+    b.item(bunk ? 'bunk_bed' : 'bed_single', x + 0.3, top, rot);
+    if (bunk) b.item('locker', x + w - 1.3, north ? 0.3 : 20.7, north ? 90 : 270, { size: [3, 1] });
+    else b.item('bed_single', x + w - 2.3, top, rot);
+    b.item('desk', x + w - 2.7, north ? 8.6 : 14.2, north ? 180 : 0, { size: [2.4, 1.2] });
+    b.dh(x + 1, north ? 10 : 14, 1.5, north ? -1 : 1, 0)
+      .wh(x + w / 2 - 1, north ? 0 : 24, 2);   // 丸窓
+  }
+
+  // 乗員用階段（全甲板で同じ位置）と客用階段（客室甲板から上）
+  function shipStairs(b, crewY0, passenger) {
+    b.room(T('乗員用階段', 'Crew stairs', '승무원 계단'), 'hall', 50, crewY0, 6, 10 - crewY0, { hideLabel: true })
+      .dh(52, 10, 1.5, -1, 0)
+      .item('stairs_u', 50.5, 4.5, 0, { size: [5, 4] });
+    if (crewY0 === 0) b.item('locker', 51.5, 0.3, 0, { size: [3, 1] });
+    if (passenger) b.item('stairs_u', 23, 10, 270, { size: [5, 5] });
+  }
+
+  function ship() {
+    const NOTE_HOLD = T('木箱の陰の隠し扉の奥。乗客名簿にない誰かが、ここに身を潜めて航海している', 'Behind a secret door hidden by crates. Someone who is not on the passenger list is riding out the voyage here', '나무 상자 뒤에 숨겨진 비밀문 안쪽. 승객 명단에 없는 누군가가 여기 숨어서 항해하고 있다');
+
+    // 下甲板：操舵機室・機関室・船員区画・貨物庫・錨鎖庫
+    const d1 = makeFloor(T('下甲板', 'Lower deck', '하갑판'));
+    d1.room(T('操舵機室', 'Steering gear room', '조타기실'), 'garage', 0, 0, 8, 24, { ly: -6 })
+      .room(T('機関室', 'Engine room', '기관실'), 'industrial', 8, 0, 26, 24)
+      .room(T('機関制御室', 'Engine control room', '기관 제어실'), 'office', 26, 0, 8, 8, { wall: 'glass', ly: 1.4 })
+      .room(T('船員通路', 'Crew corridor', '선원 통로'), 'hall', 34, 10, 36, 4, { hideLabel: true })
+      .room(T('船員食堂', 'Crew mess', '선원 식당'), 'public', 34, 0, 10, 10, { ly: 2.4 })
+      .room(T('厨房', 'Galley', '주방'), 'kitchen', 44, 0, 6, 10)
+      .room(T('船員室A', 'Crew cabin A', '선원실 A'), 'bedroom', 56, 0, 7, 10)
+      .room(T('船員室B', 'Crew cabin B', '선원실 B'), 'bedroom', 63, 0, 7, 10)
+      .room(T('船員室C', 'Crew cabin C', '선원실 C'), 'bedroom', 34, 14, 7, 10)
+      .room(T('船員室D', 'Crew cabin D', '선원실 D'), 'bedroom', 41, 14, 7, 10)
+      .room(T('シャワー室', 'Showers', '샤워실'), 'wet', 48, 14, 6, 10)
+      .room(T('糧食庫', 'Provision store', '식량 창고'), 'storage', 54, 14, 8, 10)
+      .room(T('甲板部倉庫', 'Deck stores', '갑판부 창고'), 'storage', 62, 14, 8, 10)
+      .room(T('貨物庫', 'Cargo hold', '화물창'), 'industrial', 70, 0, 14, 24)
+      .room(T('隠し区画', 'Hidden compartment', '숨겨진 구획'), 'storage', 70, 18, 5, 6, { gm: true, plName: '', hideLabel: true, note: NOTE_HOLD })
+      .room(T('錨鎖庫', 'Chain locker', '닻줄 창고'), 'garage', 84, 3, 8, 18, { ly: -4 });
+    shipStairs(d1, 0, false);
+    [[56, true], [63, true], [34, false], [41, false]].forEach(([x, n]) => shipCabin(d1, x, 7, n, true));
+    d1.dv(8, 11, 1.5, 1, 0, 'steel')                  // 操舵機室 → 機関室
+      .dv(34, 11, 1.5, -1, 0, 'steel')                 // 船員通路 → 機関室
+      .dh(28, 8, 1.5, 1, 0)                            // 機関制御室
+      .dh(36, 10, 1.5, -1, 0).dv(44, 6, 1.5, -1, 0).dh(46, 10, 1.5, -1, 0)   // 食堂・厨房
+      .dh(50, 14, 1.5, 1, 0).dh(56, 14, 1.5, 1, 0).dh(64, 14, 1.5, 1, 0)
+      .dv(70, 11, 2, 1, 0, 'steel')                    // 貨物庫（水密扉）
+      .dh(72, 18, 1.5, -1, 0, 'secret')                // 隠し区画
+      .dv(84, 11, 1.5, 1, 0, 'steel')                  // 錨鎖庫
+      .wh(38, 0, 2);
+    d1.item('machine_tool', 2.6, 10.8, 0, { label: T('舵取機', 'Steering gear', '조타기') }).item('ind_tank', 4.6, 0.4).item('pump', 0.4, 18).item('control_panel', 4.6, 23, 180, { size: [2.4, 0.8] })
+      .item('ship_engine', 11, 2.6, 90).item('ship_engine', 11, 15.4, 90).item('pipe', 8.2, 5.4, 0, { size: [2.8, 0.4] }).item('pipe', 8.2, 18.2, 0, { size: [2.8, 0.4] })
+      .item('generator', 23, 9.4).item('generator', 23, 13.4).item('ind_tank', 28, 16.4).item('workbench', 27, 22.2).item('tool_shelf', 33, 15, 90, { size: [3, 1] })
+      .item('dist_board', 8.4, 0.2).item('extinguisher', 9, 23.2)
+      .item('console', 27, 0.3).item('chair', 28.3, 2, 180).item('dist_board', 31, 0.2).item('filing', 32.8, 6.6)
+      .item('dining6', 36.6, 2.6).item('tv', 40.4, 0.2)
+      .item('kitchen', 44.5, 0.2).item('fridge', 48.4, 6)
+      .item('shower', 48.2, 22).item('shower', 50.2, 22).item('toilet', 52.8, 22.2, 180).item('washbasin', 52.2, 14.2).item('washer', 48.2, 18)
+      .item('supply_shelf', 54.3, 22.8, 180).item('supply_shelf', 57.5, 22.8, 180).item('freezer', 60.2, 18).item('crate', 54.4, 18.6)
+      .item('tool_shelf', 62.3, 22.8, 180).item('drum', 66, 22.4).item('drum', 67.4, 22.4).item('chains', 66.4, 17)
+      .item('pallet_stack', 71, 0.6).item('pallet_stack', 73.4, 0.6).item('big_crate', 76, 0.6).item('big_crate', 79.4, 0.6).item('crate', 82.4, 0.6).item('crate', 82.4, 3.2)
+      .item('pallet', 76.6, 21.6).item('big_crate', 79.2, 21.4).item('drum', 82.6, 20.4).item('drum', 82.6, 22.6).item('hand_cart', 82.4, 13.6)
+      .item('crate', 70.3, 18.3, 0, { gm: true }).item('npc_lying', 73, 20, 0, { gm: true }).item('bag', 70.5, 22.4, 0, { gm: true })
+      .item('chains', 88, 4, 90).item('chains', 88, 16, 90).item('pit', 87, 10.8);
+
+    // 客室甲板：2等船室・エントランスホール（乗船口）・1等室・特等室・前甲板
+    const d2 = makeFloor(T('客室甲板', 'Cabin deck', '객실 갑판'));
+    const fore = T('前甲板', 'Foredeck', '앞갑판');
+    d2.room(T('後部甲板', 'Aft deck', '후부 갑판'), 'shipdeck', 0, 0, 8, 24, { ly: -8 })
+      .room(T('2等船室', 'Second-class room', '2등 선실'), 'washitsu', 8, 0, 14, 24, { ly: -2 })
+      .room(T('エントランスホール', 'Entrance hall', '엔트런스 홀'), 'public', 22, 0, 12, 24, { ly: -8.6 })
+      .room(T('客室通路', 'Cabin corridor', '객실 통로'), 'hall', 34, 10, 36, 4, { hideLabel: true })
+      .room(T('1等室A', 'First class A', '1등실 A'), 'bedroom', 34, 0, 6, 10)
+      .room(T('1等室B', 'First class B', '1등실 B'), 'bedroom', 40, 0, 6, 10)
+      .room(T('リネン室', 'Linen room', '린넨실'), 'storage', 46, 0, 4, 10, { hideLabel: true })
+      .room(T('1等室C', 'First class C', '1등실 C'), 'bedroom', 56, 0, 6, 10)
+      .room(T('1等室D', 'First class D', '1등실 D'), 'bedroom', 62, 0, 8, 10)
+      .room(T('売店', 'Shop', '매점'), 'public', 34, 14, 8, 10)
+      .room(N.toilet, 'wet', 42, 14, 6, 10)
+      .room(T('1等室E', 'First class E', '1등실 E'), 'bedroom', 48, 14, 8, 10)
+      .room(T('特等室', 'Suite', '특등실'), 'bedroom', 56, 14, 14, 10)
+      .room(fore, 'shipdeck', 70, 0, 14, 24, { ly: 6 })
+      .room(fore, 'shipdeck', 84, 1, 4, 22, { hideLabel: true })
+      .room(fore, 'shipdeck', 88, 3, 4, 18, { hideLabel: true })
+      .room(fore, 'shipdeck', 92, 6, 4, 12, { hideLabel: true });
+    shipStairs(d2, 0, true);
+    [[34, 6, true], [40, 6, true], [56, 6, true], [62, 8, true], [48, 8, false]].forEach(([x, w, n]) => shipCabin(d2, x, w, n, false));
+    d2.dv(8, 11, 2, -1, 0, 'steel')                   // 2等船室 → 後部甲板
+      .dv(22, 3, 3, 1, 0, 'sliding2').dv(22, 18, 3, 1, 0, 'sliding2')
+      .dh(29, 0, 3, 1, 0, 'door2').dh(29, 24, 3, -1, 0, 'door2')   // 乗船口（両舷）
+      .dv(34, 10, 4, 1, 0, 'open')
+      .dh(47, 10, 1.5, -1, 0)                          // リネン室
+      .dh(36, 14, 1.5, 1, 0).dh(43, 14, 1.5, 1, 0).dh(57, 14, 1.5, 1, 0)
+      .dv(70, 11, 2, 1, 0, 'steel')                    // 前甲板へ
+      .wh(10, 0, 2).wh(16, 0, 2).wh(10, 24, 2).wh(16, 24, 2)
+      .wh(59, 24, 3.5, 'window2').wv(70, 17, 3.5, 'window2').wv(70, 4, 2);
+    d2.item('futon', 10, 2).item('futon', 13, 2).item('futon', 16, 2).item('futon', 10, 18, 180).item('futon', 13, 18, 180)
+      .item('zataku', 12, 10.6).item('zataku', 16.6, 10.6).item('locker', 8.3, 2, 90, { size: [3, 1] }).item('tv', 20.8, 9.4, 90)
+      .item('reception', 23.2, 20.4, 180, { label: T('案内所', 'Information', '안내소') }).item('chair', 24.6, 22.4)
+      .item('vending', 32.4, 3, 90).item('bench', 31.4, 16, 90).item('plant', 22.4, 7.6).item('whiteboard', 33.4, 17, 90, { size: [3, 0.4] })
+      .item('supply_shelf', 46.3, 1, 90)
+      .item('store_shelf', 34.4, 22.2, 180).item('register', 38.6, 16).item('fridge_case', 40.6, 18, 270)
+      .item('toilet', 44.4, 22.2, 180).item('toilet', 46.4, 22.2, 180).item('washbasin', 46.7, 15, 90)
+      .item('bed_double', 64.6, 19.7, 180).item('nightstand', 63.5, 22.8).item('nightstand', 67.6, 22.8).item('sofa2', 56.3, 18, 270)
+      .item('lowtable', 58.8, 18.5, 90).item('wardrobe', 60, 14.2).item('desk', 68.6, 15, 90, { size: [2.4, 1.2] })
+      .item('bollard', 0.6, 0.6).item('bollard', 0.6, 22.4).item('bollard', 5.8, 0.6).item('bollard', 5.8, 22.4).item('liferaft', 0.4, 6).item('liferaft', 0.4, 15.6)
+      .item('ship_hatch', 75, 9, 0, { size: [6, 6] }).item('ext_stairs', 71, 0.4).item('ext_stairs', 71, 17.6, 180)
+      .item('anchor', 85, 1.4).item('anchor', 85, 20.2).item('machine_tool', 88.4, 10.8, 0, { label: T('揚錨機', 'Windlass', '양묘기') })
+      .item('bollard', 71.4, 7.4).item('bollard', 71.4, 15.6).item('bollard', 82.2, 0.4).item('bollard', 82.2, 22.6);
+
+    // 遊歩甲板：ラウンジ・パーティーホール・展望ラウンジ。周りは屋根付きの遊歩道
+    const d3 = makeFloor(T('遊歩甲板', 'Promenade deck', '유보 갑판'));
+    const prom = T('遊歩甲板', 'Promenade', '유보 갑판');
+    d3.room(prom, 'shipdeck', 0, 0, 10, 24)
+      .room(prom, 'shipdeck', 10, 0, 58, 4, { hideLabel: true })
+      .room(prom, 'shipdeck', 10, 20, 58, 4, { hideLabel: true })
+      .room(prom, 'shipdeck', 68, 0, 6, 24, { hideLabel: true })
+      .room(T('ラウンジ', 'Lounge', '라운지'), 'public', 10, 4, 12, 16)
+      .room(T('ロビー', 'Lobby', '로비'), 'hall', 22, 4, 8, 16, { ly: -5.4 })
+      .room(T('パーティーホール', 'Party hall', '파티 홀'), 'public', 30, 4, 16, 16, { ly: 2 })
+      .room(T('パントリー', 'Pantry', '팬트리'), 'kitchen', 46, 4, 4, 16, { hideLabel: true })
+      .room(T('乗員通路', 'Crew passage', '승무원 통로'), 'hall', 50, 10, 6, 10, { hideLabel: true })
+      .room(T('展望ラウンジ', 'Observation lounge', '전망 라운지'), 'public', 56, 4, 12, 16);
+    shipStairs(d3, 4, true);
+    d3.dv(10, 11, 2, -1, 0, 'steel').dv(22, 6, 2, 1, 0)   // ラウンジ
+      .dh(26, 4, 1.5, -1, 0, 'steel').dh(26, 20, 1.5, 1, 0, 'steel')   // ロビー → 遊歩道
+      .dv(30, 15.5, 3, 1, 0, 'door2')                  // パーティーホール
+      .dv(46, 15, 1.5, -1, 0)                          // パントリー → ホール
+      .dv(50, 16, 1.5, -1, 0).dh(53, 20, 1.5, 1, 0, 'steel')   // 乗員通路
+      .dv(68, 11, 2, 1, 0, 'steel').dh(64, 4, 1.5, -1, 0, 'steel')   // 展望ラウンジ
+      .wv(10, 5, 3.5, 'window2').wv(10, 15, 3.5, 'window2').wh(17, 4, 3.5, 'window2').wh(17, 20, 3.5, 'window2')
+      .wh(31, 20, 3.5, 'window2').wh(41, 20, 3.5, 'window2').wh(36, 4, 3.5, 'window2')
+      .wv(68, 5, 3.5, 'window2').wv(68, 15.5, 3.5, 'window2').wh(58, 4, 3.5, 'window2').wh(58, 20, 3.5, 'window2');
+    d3.item('sofa3', 12, 4.3).item('lowtable', 13.1, 6.8).item('armchair', 11.8, 8.6, 180).item('armchair', 14.4, 8.6, 180)
+      .item('sofa3', 12, 17.9, 180).item('lowtable', 13.1, 15.8).item('armchair', 11.8, 13.2).item('armchair', 14.4, 13.2)
+      .item('counter', 20.4, 9, 270).item('stool', 19, 9.4).item('stool', 19, 11.4)
+      .item('plant', 28.6, 4.4).item('bench', 23, 16.8)
+      .item('stage', 34, 4.2, 0, { size: [8, 3] }).item('banquet_round', 31.6, 8.6, 0, { size: [4.6, 4.6] }).item('banquet_round', 39.4, 8.6, 0, { size: [4.6, 4.6] })
+      .item('banquet_round', 35.4, 14.6, 0, { size: [4.6, 4.6] }).item('piano', 42.6, 4.2).item('speaker', 32.4, 4.4)
+      .item('counter', 48.6, 4.4, 90).item('fridge', 48.4, 9).item('sink', 48.5, 11, 90).item('cupboard', 46.1, 5, 270).item('hand_cart', 54, 12)
+      .item('sofa3', 60, 5.4, 270).item('lowtable', 62.6, 6.5, 90).item('sofa3', 60, 14, 270).item('lowtable', 62.6, 15.1, 90)
+      .item('pedestal', 65.8, 7.8, 0, { label: T('双眼鏡', 'Binoculars', '쌍안경') }).item('plant', 66.6, 18.6)
+      .item('deck_chair', 1, 4).item('deck_chair', 3, 4).item('deck_chair', 1, 16.4).item('deck_chair', 3, 16.4)
+      .item('liferaft', 14, 0.3, 90).item('liferaft', 36, 0.3, 90).item('liferaft', 14, 22.1, 90).item('liferaft', 36, 22.1, 90).item('bench', 40, 0.2)
+      .item('ext_stairs', 71, 0.4).item('ext_stairs', 71, 17.6, 180);
+    d3.text(T('パントリー', 'Pantry', '팬트리'), 48, 14, { size: 0.45 });
+
+    // ブリッジ甲板：操舵室・船長室・無線室。後ろ半分はサンデッキと救命艇
+    const d4 = makeFloor(T('ブリッジ甲板', 'Bridge deck', '브리지 갑판'));
+    d4.room(T('サンデッキ', 'Sun deck', '선 데크'), 'shipdeck', 10, 0, 30, 24, { lx: -9 })
+      .room(T('左舷ウイング', 'Port wing', '좌현 윙'), 'shipdeck', 40, 0, 28, 4, { hideLabel: true })
+      .room(T('右舷ウイング', 'Starboard wing', '우현 윙'), 'shipdeck', 40, 20, 28, 4, { hideLabel: true })
+      .room(T('階段室', 'Stair house', '계단실'), 'hall', 22, 9, 8, 7, { hideLabel: true })
+      .room(T('操舵室', 'Wheelhouse', '조타실'), 'office', 56, 4, 12, 16, { ly: 2.6 })
+      .room(T('通路', 'Passage', '통로'), 'hall', 40, 10, 16, 4, { hideLabel: true })
+      .room(T('無線室', 'Radio room', '무선실'), 'office', 40, 4, 4, 6, { ly: 0.8 })
+      .room(T('航海士室', 'Officer\'s cabin', '항해사실'), 'bedroom', 44, 4, 6, 6, { ly: 1.6 })
+      .room(T('機関長室', 'Chief engineer', '기관장실'), 'bedroom', 40, 14, 6, 6, { ly: -1.4 })
+      .room(T('船長室', 'Captain\'s cabin', '선장실'), 'bedroom', 46, 14, 10, 6, { ly: -1.4 });
+    shipStairs(d4, 4, true);
+    d4.dv(30, 11.5, 2, 1, 0, 'steel')                 // 階段室
+      .dv(40, 11, 2, -1, 0, 'steel')                   // 通路 → サンデッキ
+      .dv(56, 11, 1.5, 1, 0)                           // 操舵室
+      .dh(60, 4, 1.5, -1, 0, 'steel').dh(60, 20, 1.5, 1, 0, 'steel')   // ウイング
+      .dh(41.5, 10, 1.5, -1, 0).dh(46, 10, 1.5, -1, 0).dh(42, 14, 1.5, 1, 0).dh(48, 14, 1.5, 1, 0)
+      .wv(68, 4.5, 3.5, 'window2').wv(68, 10.25, 3.5, 'window2').wv(68, 16, 3.5, 'window2').wh(63, 4, 3.5, 'window2').wh(63, 20, 3.5, 'window2')
+      .wh(46, 4, 2).wh(42, 20, 2).wh(50, 20, 2);
+    d4.item('console', 66.4, 7, 90, { size: [10, 1.4] }).item('helm', 63.4, 11.2).item('radar', 63.4, 7.2, 90).item('pilot_seat', 61.2, 11.2, 270)
+      .item('chart_table', 57.2, 17.6).item('radio', 57.2, 4.4)
+      .item('radio', 40.3, 4.3).item('control_panel', 43, 4.4, 90, { size: [2.4, 0.8] })
+      .item('bed_single', 44.4, 4.4, 90).item('desk', 47.4, 7, 0, { size: [2.4, 1.2] })
+      .item('bed_single', 41.6, 17.6, 90).item('dresser', 43.8, 14.2)
+      .item('bed_single', 51.6, 17.6, 90).item('desk', 46.4, 18.6, 180, { size: [2.4, 1.2] }).item('chair', 47.1, 17.5).item('wardrobe', 52.6, 14.2)
+      .item('safe', 50, 18.6)
+      .item('lifeboat', 12, 0.2, 90).item('lifeboat', 26, 0.2, 90).item('lifeboat', 12, 19.8, 90).item('lifeboat', 26, 19.8, 90)
+      .item('deck_chair', 12, 6).item('deck_chair', 14, 6).item('deck_chair', 12, 14.4).item('deck_chair', 14, 14.4)
+      .item('bench', 33, 6.4).item('vent_unit', 36, 15.6).item('antenna', 53, 0.6)
+      .item('liferaft', 64.6, 0.3, 90).item('liferaft', 64.6, 22.1, 90);
+    return [d1.f, d2.f, d3.f, d4.f];
+  }
+
+  /* ---------- 交通：鉄道の高架橋（橋下と高架上） ---------- */
+
+  function viaduct() {
+    // 橋下：橋脚は 10m おき。スパンごとに資材倉庫・市道・月極駐車場・野営地
+    const u = makeFloor(T('橋下', 'Under the viaduct', '고가 아래'));
+    const walk = T('歩道', 'Sidewalk', '보도'), side = T('側道', 'Frontage road', '측도');
+    const canal = T('用水路', 'Irrigation canal', '용수로'), bank = T('土手', 'Embankment', '둑');
+    u.room(walk, 'porch', 0, -12, 30, 4, { hideLabel: true })
+      .room(walk, 'porch', 46, -12, 50, 4, { hideLabel: true })
+      .room(side, 'road', 0, -8, 30, 8, { lx: -8 })
+      .room(side, 'road', 46, -8, 50, 8, { hideLabel: true })
+      .room(T('市道', 'Crossing road', '시도'), 'road', 30, -12, 16, 52, { ly: 4 })
+      .room(T('資材倉庫', 'Materials depot', '자재 창고'), 'garage', 10, 0, 16, 22, { ly: -1.5 })
+      .room(T('月極駐車場', 'Monthly parking', '월정액 주차장'), 'road', 49, 0, 18, 12, { hideLabel: true })
+      .room(T('野営地', 'Encampment', '야영지'), 'dirt', 69, 0, 18, 22, { lx: -1, ly: 4 })
+      .room(T('ブルーシート小屋', 'Tarp shack', '블루시트 오두막'), 'garage', 80, 12, 6, 7, { wall: 'thin', gm: true, plName: '', note: T('ブルーシートで囲った小屋。住人は毎晩2時13分に頭上を通る「時刻表にない列車」の記録を壁一面に貼っている。最後のメモは「今夜は止まる」', 'A shack walled with blue tarps. Its occupant has covered the walls with records of an unscheduled train that crosses overhead every night at 2:13. The last note reads: "Tonight it stops."', '블루시트로 둘러싼 오두막. 주인은 매일 밤 2시 13분에 머리 위를 지나는 "시각표에 없는 열차"의 기록을 벽 가득 붙여 두었다. 마지막 메모는 "오늘 밤은 멈춘다"') })
+      .room(T('点検階段', 'Inspection stairs', '점검 계단'), 'gravel', 73, 22, 6, 9, { hideLabel: true })
+      .room(canal, 'water', 0, 34, 30, 3, { lx: -9 })
+      .room(canal, 'water', 46, 34, 50, 3, { hideLabel: true })
+      .room(bank, 'dirt', 0, 37, 30, 3, { hideLabel: true })
+      .room(bank, 'dirt', 46, 37, 50, 3, { hideLabel: true });
+    fillYard(u, 0, 0, 96, 22, T('高架下', 'Under the viaduct', '고가 아래'), 'dirt');
+    fillYard(u, 0, 22, 96, 34, T('草地', 'Grass', '풀밭'), 'garden');
+    u.text(T('高架下', 'Under the viaduct', '고가 아래'), 4.5, 11, { size: 0.6 }).text(T('高架下', 'Under the viaduct', '고가 아래'), 92, 11, { size: 0.6 });
+    // 柵：野営地の目隠しの柵（破れ目あり）、駐車場の奥、点検階段の囲い、用水路
+    u.wall(69, 0, 87, 0, 'fence').wall(49, 12, 67, 12, 'fence')
+      .wall(73, 22, 79, 22, 'fence').wall(73, 22, 73, 31, 'fence').wall(79, 22, 79, 31, 'fence').wall(73, 31, 79, 31, 'fence')
+      .wall(0, 34, 30, 34, 'fence').wall(46, 34, 96, 34, 'fence').wall(30, 34, 30, 37, 'rail').wall(46, 34, 46, 37, 'rail');
+    u.dh(12, 0, 5, -1, 0, 'shutter').dh(21, 0, 1.5, -1, 0, 'steel')   // 資材倉庫
+      .wh(14, 22, 2).wh(20, 22, 2)
+      .dh(84.5, 0, 2, 1, 0, 'hole')                    // 柵の破れ目
+      .dh(81, 12, 1.5, -1, 0, 'sliding')               // 小屋
+      .dh(74, 31, 2, 1, 0, 'locked');                  // 点検階段の施錠された扉
+    [7, 27, 47, 67, 87].forEach(x => u.item('pillar', x, 1, 0, { size: [2, 2] }).item('pillar', x, 19, 0, { size: [2, 2] }));
+    u.item('fire_escape', 73.5, 23.4, 0, { size: [5, 6] })
+      // 資材倉庫
+      .item('pallet_rack', 10.4, 19.4, 180, { size: [8, 2.2] }).item('building_materials', 17, 10).item('material_pile', 21.6, 16.6)
+      .item('scaffold', 11, 7, 0, { size: [6, 2] }).item('forklift', 23.2, 2).item('cone', 11, 2.4).item('cone', 12, 2.4).item('barricade', 18.6, 3, 0, { size: [3, 0.7] })
+      .item('tool_shelf', 10.2, 12, 90, { size: [3, 1] }).item('drum', 24.4, 20.4)
+      // 市道・側道
+      .item('road_arrow', 32, 8, 0).item('road_arrow', 42, 12, 180).item('road_arrow', 32, 24, 0).item('road_arrow', 42, -6, 180)
+      .item('road_sign', 30.2, -1.4, 0, { label: T('高さ 3.8m', 'Clear 3.8 m', '높이 3.8m') }).item('road_sign', 44.8, 22.4, 0, { label: T('高さ 3.8m', 'Clear 3.8 m', '높이 3.8m') })
+      .item('puddle', 37, 14).item('manhole', 38, 28)
+      .item('road_arrow', 10, -7.4, 90).item('road_arrow', 60, -3, 270).item('van', 72, -4.4, 270)
+      .item('utility_pole', 20, -11.6).item('utility_pole', 60, -11.6).item('utility_pole', 90, -11.6).item('streetlight', 50, -11.6)
+      // 月極駐車場
+      .item('parking_stall', 50.5, 0.6, 180).item('parking_stall', 55.5, 0.6, 180).item('parking_stall', 60.5, 0.6, 180)
+      .item('road_sign', 66, 10.6, 0, { label: T('月極', 'Monthly', '월정액') });
+    trParkCars(u, [[50.5, 0.6, 180], [55.5, 0.6, 180], [60.5, 0.6, 180]], '101', 1);
+    // 野営地
+    u.item('tent', 70.4, 2.4).item('tent', 70.4, 14.6).item('campfire', 76.8, 9.4).item('log', 76, 7.6).item('log', 76, 11.8)
+      .item('drum', 79.6, 4).item('cardboard', 75.6, 2.4).item('cardboard', 76.9, 2.4).item('broken_furniture', 75, 18.6).item('bush', 85, 2.6).item('bush', 85, 6)
+      .item('futon', 80.4, 14.6, 0, { gm: true }).item('photo', 83.4, 12.4, 0, { gm: true }).item('photo', 84.6, 12.4, 0, { gm: true })
+      .item('papers', 83.6, 16.6, 0, { gm: true }).item('recorder', 84.8, 17.8, 0, { gm: true }).item('candle', 84.8, 13.8, 0, { gm: true })
+      // 草地・土手
+      .item('bush', 4, 25).item('bush', 14, 28).item('bush', 58, 24).item('bush', 90, 29).item('tree', 2, 29.6).item('tree', 88, 23.4)
+      .item('debris', 52, 27).item('puddle', 64, 28);
+
+    // 高架上：複線と両側の点検通路
+    const d = makeFloor(T('高架上', 'On the viaduct', '고가 위'));
+    const path = T('点検通路', 'Inspection walkway', '점검 통로');
+    d.room(path, 'rooftop', 0, 0, 96, 3, { lx: -38 })
+      .room(T('下り線', 'Down line', '하행선'), 'track', 0, 3, 96, 8, { lx: -40 })
+      .room(T('上り線', 'Up line', '상행선'), 'track', 0, 11, 96, 8, { lx: -40 })
+      .room(path, 'rooftop', 0, 19, 96, 3, { hideLabel: true })
+      .room(T('点検階段', 'Inspection stairs', '점검 계단'), 'rooftop', 73, 22, 6, 9, { hideLabel: true });
+    d.wall(73, 22, 79, 22, 'rail').dh(74.5, 22, 2, -1, 0, 'gate');
+    trRailsH(d, 0, 96, 5, 24);
+    trRailsH(d, 0, 96, 13, 24);
+    for (let x = 0; x < 96; x += 12) d.item('cable_rack', x, 2.3, 0, { size: [12, 0.6] }).item('cable_rack', x, 19.1, 0, { size: [12, 0.6] });
+    d.item('fire_escape', 73.5, 23.4, 0, { size: [5, 6] })
+      .item('utility_pole', 17.5, 0.4).item('utility_pole', 57.5, 0.4).item('utility_pole', 37.5, 20.6).item('utility_pole', 89.5, 20.6)
+      .item('traffic_light', 88, 1.2, 0, { label: T('信号', 'Signal', '신호') }).item('traffic_light', 6, 20.2, 180, { label: T('信号', 'Signal', '신호') })
+      .item('tools', 44, 0.8).item('cone', 60.6, 20.6).item('cone', 61.6, 20.6)
+      .item('footprints', 80.6, 20.4, 90, { gm: true, size: [1, 3] });
+    d.text(T('郊外方面 →', 'Suburbs →', '교외 방면 →'), 86, 4.4, { size: 0.6 }).text(T('← 都心方面', '← Downtown', '← 도심 방면'), 86, 12.4, { size: 0.6 });
+    return [u.f, d.f];
+  }
+
   /* ---------- 産業・インフラ・屋上・廃工場（T2） ---------- */
 
   /* (T2 のテンプレート関数はここ) */
@@ -2855,6 +3635,24 @@
       desc: T('螺旋階段はどの階も同じ位置。1F 入口の間・台所・倉庫、2F 書庫と実験室、3F 天文台と寝室。倉庫の床の扉からGM用の封印の間', 'The spiral stair sits in the same place on every floor: entry hall, kitchen and storeroom; library and laboratory; observatory and bedroom. A trapdoor in the storeroom leads to a GM-only sealed vault.', '나선 계단은 모든 층에서 같은 위치. 1층 입구의 방·부엌·창고, 2층 서고와 실험실, 3층 천문대와 침실. 창고 바닥 문에서 GM 전용 봉인의 방') },
 
     /* (T1 交通・乗り物 の登録はここ) */
+    { id: 'railstation', build: railStation, group: 'transport', tags: ['modern', 'public', 'transport', 'railway', 'outdoor', 'large'],
+      name: T('鉄道駅（地上駅）', 'Railway station', '철도역(지상역)'),
+      desc: T('駅前広場から駅舎のコンコース・券売機・改札へ。駅員室と遺失物保管庫、待合室。単式の1番線ホームから跨線橋（2F）で島式の2・3番線ホームへ。GM用の旧手荷物室つき', 'From the station square into the concourse with ticket machines and gates; station office, lost and found, waiting room. Platform 1 by the building, a footbridge (2F) to the island platform for tracks 2 and 3. A GM-only old baggage room.', '역 앞 광장에서 역사 콘코스·매표기·개찰구로. 역무실과 유실물 보관소, 대합실. 1번선 승강장에서 과선교(2F)를 건너 2·3번선 섬식 승강장으로. GM 전용 옛 수하물실 포함') },
+    { id: 'subway', build: subway, group: 'transport', tags: ['modern', 'public', 'transport', 'railway', 'underground', 'hidden', 'large'],
+      name: T('地下鉄駅（B2・B1・地上）', 'Subway station', '지하철역(B2·B1·지상)'),
+      desc: T('地上の出入口A・BとEVから、B1の改札階（券売機・改札・駅事務室・機械室・百貨店への地下通路）へ。B2は島式ホームと両側の線路、階段・エスカレーター・EVは上下でそろう。ホームの端に非常通路と非常階段、ポンプ室の奥にGM用の旧連絡通路', 'Exits A and B and an elevator on the street lead down to the B1 ticket hall (machines, gates, station office, plant rooms, a passage to the department store). B2 has an island platform between two tracks; stairs, escalators and the elevator line up between levels. Emergency passage and stairs at the platform end, and a GM-only old tunnel behind the pump room.', '지상의 A·B 출입구와 엘리베이터에서 B1 개찰층(매표기·개찰구·역무실·기계실·백화점 지하 통로)으로. B2는 섬식 승강장과 양쪽 선로, 계단·에스컬레이터·EV는 위아래로 일치. 승강장 끝에 비상 통로와 비상계단, 펌프실 안쪽에 GM 전용 옛 연결 통로') },
+    { id: 'parking_tower', build: parkingTower, group: 'transport', tags: ['modern', 'transport', 'commercial', 'outdoor', 'rooftop'],
+      name: T('立体駐車場（1F〜屋上）', 'Multi-storey car park', '입체 주차장(1층~옥상)'),
+      desc: T('1Fに入口と出口のゲート・発券機・精算機・管理室。各階は車路の両側に駐車区画、上り下りのスロープは階ごとに端が入れ替わる。階段とEVは全階同じ位置、最上階は屋上駐車場。スロープ下にGM用の旧ポンプ室', 'Entry and exit gates with ticket and pay machines and an attendant booth on 1F. Each deck has stalls on both sides of the aisle; the ramps switch ends floor by floor. Stairs and elevator stack on every floor, with rooftop parking on top. A GM-only old pump room under the ramp.', '1층에 입구·출구 게이트와 발권기·정산기·관리실. 각 층은 차로 양쪽에 주차 구획, 오르내리는 경사로는 층마다 끝이 바뀐다. 계단과 EV는 모든 층에서 같은 위치, 꼭대기는 옥상 주차장. 경사로 아래에 GM 전용 옛 펌프실') },
+    { id: 'parking_ug', build: parkingUnderground, group: 'transport', tags: ['modern', 'transport', 'commercial', 'underground', 'hidden', 'large'],
+      name: T('地下駐車場（B2・B1・地上）', 'Underground car park', '지하 주차장(B2·B1·지상)'),
+      desc: T('地上の広場の下に2層の駐車場。柱スパンごとに3台ずつの区画、階段・EV・非常階段は上下でそろう。B1に管理室・電気室・機械室。地上へのスロープとB2へのスロープは1車線を信号で交互通行、地上の入口に発券機と精算機のゲート。B2に排水ポンプ室・受水槽室・消火設備室、スロープの下にGM用の封鎖区画', 'Two parking levels under a public plaza. Three stalls per column bay; stairs, elevator and emergency stairs line up between levels. B1 holds the management office, electrical room and machine room. The street ramp and the B2 ramp are single lanes run by traffic lights, with a ticket and pay gate at street level. B2 has the drainage pump room, water tank room and fire suppression room, and a GM-only sealed void under the ramp.', '지상 광장 아래의 2층 주차장. 기둥 스팬마다 3대씩의 구획, 계단·EV·비상계단은 위아래로 일치. B1에 관리실·전기실·기계실. 지상 경사로와 B2 경사로는 1차선을 신호로 교대 통행, 지상 입구에 발권기와 정산기 게이트. B2에 배수 펌프실·수수조실·소화 설비실, 경사로 아래에 GM 전용 봉쇄 구역') },
+    { id: 'ship', build: ship, group: 'transport', tags: ['modern', 'transport', 'ship', 'onwater', 'machinery', 'large'],
+      name: T('客船（4甲板）', 'Passenger ship (4 decks)', '여객선(4갑판)'),
+      desc: T('全長48mほどの客船。船首は右（東）。下甲板に機関室・操舵機室・船員区画・貨物庫、客室甲板に乗船口のあるエントランスホールと2等船室・1等室・特等室・前甲板、遊歩甲板にラウンジとパーティーホールと展望ラウンジ、ブリッジ甲板に操舵室・船長室・無線室と救命艇。乗員用階段は全甲板、客用階段は客室甲板から上で同じ位置。貨物庫の奥にGM用の隠し区画', 'A passenger ship about 48 m long, bow to the right (east). The lower deck has the engine room, steering gear, crew quarters and cargo hold. The cabin deck has the boarding hall, second-class room, first-class cabins, suite and foredeck. The promenade deck has the lounge, party hall and observation lounge; the bridge deck has the wheelhouse, captain\'s cabin, radio room and lifeboats. Crew stairs run through every deck and passenger stairs from the cabin deck up. A GM-only hidden compartment in the cargo hold.', '전장 약 48m의 여객선. 선수는 오른쪽(동쪽). 하갑판에 기관실·조타기실·선원 구역·화물창, 객실 갑판에 승선구가 있는 엔트런스 홀과 2등 선실·1등실·특등실·앞갑판, 유보 갑판에 라운지·파티 홀·전망 라운지, 브리지 갑판에 조타실·선장실·무선실과 구명정. 승무원 계단은 모든 갑판, 승객 계단은 객실 갑판부터 위로 같은 위치. 화물창 안쪽에 GM 전용 숨겨진 구획') },
+    { id: 'viaduct', build: viaduct, group: 'transport', tags: ['modern', 'transport', 'railway', 'outdoor', 'hidden'],
+      name: T('鉄道の高架橋（橋下・高架上）', 'Railway viaduct', '철도 고가교(아래·위)'),
+      desc: T('複線の高架橋を10mおきの橋脚ごとに区切った区間。橋下には資材倉庫・くぐる市道・月極駐車場と、柵の破れ目の奥の野営地。高架上は上下線と両側の点検通路で、施錠された点検階段が地上と結ぶ。野営地の奥にGM用のブルーシート小屋', 'A stretch of double-track viaduct with piers every 10 m. Under it: a materials depot, a road passing beneath, monthly parking, and an encampment behind a torn fence. On top: both tracks and inspection walkways, reached by a locked inspection stair. A GM-only tarp shack at the back of the encampment.', '10m 간격의 교각으로 나뉜 복선 고가교 구간. 아래에는 자재 창고·지나가는 시도·월정액 주차장, 찢어진 울타리 안쪽의 야영지. 위에는 상하행선과 양쪽 점검 통로, 잠긴 점검 계단이 지상과 연결된다. 야영지 안쪽에 GM 전용 블루시트 오두막') },
 
     /* (T2 産業・インフラ・屋上・廃工場 の登録はここ) */
 
@@ -3129,6 +3927,44 @@
     ],
 
     /* (T1 の手がかりはここ) */
+    railstation: [
+      C('1F', '駅員室', 'file_folder', T('改札の通過記録', 'Ticket gate logs', '개찰구 통과 기록')),
+      C('1F', '遺失物保管庫', 'bag', T('持ち主の現れない鞄', 'An unclaimed bag', '주인이 나타나지 않는 가방')),
+      C('1F', '待合室', 'diary', T('ベンチに忘れられた手帳', 'Notebook left on a bench', '벤치에 두고 간 수첩')),
+      C('1F', '2・3番線ホーム', 'phone', T('線路際に落ちた携帯電話', 'Phone dropped by the edge', '선로 가에 떨어진 휴대전화')),
+      C('2F', '跨線橋', 'photo', T('窓に貼られた尋ね人の写真', 'Missing-person photo on the window', '창에 붙은 실종자 사진'))
+    ],
+    subway: [
+      C('B1', '駅事務室', 'file_folder', T('防犯カメラの記録票', 'CCTV log sheet', 'CCTV 기록표')),
+      C('B1', '地下通路', 'memo', T('壁に貼られた古い掲示', 'Old notice on the wall', '벽에 붙은 오래된 게시물')),
+      C('B2', '1・2番線ホーム', 'camera', T('ベンチの下のカメラ', 'Camera under a bench', '벤치 아래의 카메라')),
+      C('B2', '排水ポンプ室', 'key', T('旧連絡通路の鍵', 'Key to the old tunnel', '옛 연결 통로 열쇠'))
+    ],
+    parking_tower: [
+      C('1F', '管理室', 'file_folder', T('入出庫の記録', 'Entry and exit log', '입출고 기록')),
+      C('2F', '車路', 'wallet', T('落ちていた財布', 'A dropped wallet', '떨어져 있던 지갑')),
+      C('3F', '車路', 'bag', T('柱の陰の紙袋', 'Paper bag by a pillar', '기둥 옆의 종이봉투')),
+      C('屋上', '車路', 'phone', T('手すりのそばの携帯電話', 'Phone by the railing', '난간 옆의 휴대전화'))
+    ],
+    parking_ug: [
+      C('B1', '管理室', 'file_folder', T('防犯カメラの録画記録', 'CCTV recording log', 'CCTV 녹화 기록')),
+      C('B1', '駐車場', 'wallet', T('区画に落ちた財布', 'Wallet dropped in a bay', '구획에 떨어진 지갑')),
+      C('B2', '駐車場', 'key', T('札の付いた古い鍵', 'Old key with a tag', '꼬리표 달린 낡은 열쇠')),
+      C('B2', '排水ポンプ室', 'recorder', T('録音が残ったレコーダー', 'Recorder with a message', '녹음이 남은 녹음기'))
+    ],
+    ship: [
+      C('ブリッジ甲板', '操舵室', 'papers', T('航海日誌の破られたページ', 'Torn-out log book pages', '찢겨 나간 항해일지')),
+      C('ブリッジ甲板', '船長室', 'key', T('貨物庫の合鍵', 'Spare cargo hold key', '화물창 여벌 열쇠')),
+      C('遊歩甲板', 'パーティーホール', 'photo', T('パーティーの集合写真', 'Group photo from the party', '파티 단체 사진')),
+      C('客室甲板', '特等室', 'diary', T('乗客の日記', 'A passenger\'s diary', '승객의 일기')),
+      C('下甲板', '貨物庫', 'clue', T('木箱をずらした跡', 'Marks of moved crates', '나무 상자를 옮긴 흔적'))
+    ],
+    viaduct: [
+      C('橋下', '野営地', 'bag', T('置き去りのリュック', 'Abandoned backpack', '버려진 배낭')),
+      C('橋下', '資材倉庫', 'papers', T('点検作業の日報', 'Inspection reports', '점검 작업 일보')),
+      C('橋下', '月極駐車場', 'key', T('点検階段の鍵', 'Inspection stair key', '점검 계단 열쇠')),
+      C('高架上', '点検通路', 'flashlight', T('点いたままの懐中電灯', 'A flashlight left on', '켜진 채 놓인 손전등'))
+    ],
 
     /* (T2 の手がかりはここ) */
 
