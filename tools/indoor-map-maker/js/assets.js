@@ -3391,6 +3391,1598 @@
 
   /* (PACK C の描画関数はここ) */
 
+  // なめらかな閉曲線：となり合う点の中点を2次曲線でつなぐ
+  function smoothOutline(c, pts) {
+    const n = pts.length;
+    const mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+    const m0 = mid(pts[n - 1], pts[0]);
+    c.beginPath();
+    c.moveTo(m0[0], m0[1]);
+    for (let i = 0; i < n; i++) {
+      const m = mid(pts[i], pts[(i + 1) % n]);
+      c.quadraticCurveTo(pts[i][0], pts[i][1], m[0], m[1]);
+    }
+    c.closePath();
+  }
+
+  // 楕円に沿って半径をゆらした点列（池・水たまり・苔・飛び石）。seed が同じなら同じ形
+  function wobblyRing(cx, cy, rx, ry, k, jag, seed) {
+    const r = rand(seed);
+    const pts = [];
+    for (let i = 0; i < k; i++) {
+      const a = (i / k) * TAU;
+      const f = 1 - jag * r();
+      pts.push([cx + Math.cos(a) * rx * f, cy + Math.sin(a) * ry * f]);
+    }
+    return pts;
+  }
+
+  // 点列を外にふくらむ弧でつなぐ（松の葉の塊・苔の縁）。append なら今のパスに足す
+  function scallopOutline(c, pts, bulge, append) {
+    const n = pts.length;
+    let cx = 0, cy = 0;
+    pts.forEach(p => { cx += p[0] / n; cy += p[1] / n; });
+    if (!append) c.beginPath();
+    c.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 0; i < n; i++) {
+      const p = pts[i], q = pts[(i + 1) % n];
+      const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+      const d = Math.hypot(mx - cx, my - cy) || 1;
+      const len = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      c.quadraticCurveTo(mx + ((mx - cx) / d) * len * bulge, my + ((my - cy) / d) * len * bulge, q[0], q[1]);
+    }
+    c.closePath();
+  }
+
+  // 縁取りつきの太い線（竹・パイプ・刀の鞘）。path は beginPath から線の形を作る関数
+  function outlinedRod(c, S, path, t, fill) {
+    c.save();
+    c.lineCap = 'round';
+    c.strokeStyle = S.line;
+    c.lineWidth = t;
+    path();
+    c.stroke();
+    c.strokeStyle = fill || S.fill;
+    c.lineWidth = Math.max(t - S.lw * 1.6, t * 0.35);
+    path();
+    c.stroke();
+    c.restore();
+  }
+
+  // 路面の白線：白く塗って細く縁取る（暗いスタイルでも線が見えるように）
+  function roadPaint(c, S, x, y, w, h) {
+    c.save();
+    c.fillStyle = S.fill;
+    c.fillRect(x, y, w, h);
+    c.lineWidth = S.lw * 0.5;
+    c.strokeStyle = S.line;
+    c.strokeRect(x, y, w, h);
+    c.restore();
+  }
+
+  // アスファルト：薄い灰色（「道路・車路」の床とほぼ同じ）にまばらな粒
+  function asphaltSurface(c, S, w, h, seed) {
+    c.save();
+    c.fillStyle = S.soft;
+    c.fillRect(0, 0, w, h);
+    c.globalAlpha = 0.25;
+    c.fillStyle = S.dark;
+    c.fillRect(0, 0, w, h);
+    c.globalAlpha = 0.6;
+    c.fillStyle = S.softLine;
+    const r = rand(seed);
+    const n = Math.floor(w * h * 0.5);
+    for (let i = 0; i < n; i++) {
+      c.beginPath();
+      c.arc(r() * w, r() * h, 0.03 + r() * 0.03, 0, TAU);
+      c.fill();
+    }
+    c.restore();
+  }
+
+  // 工具の小さな絵：スパナ・金づち（ang はラジアン）
+  function wrenchAt(c, S, x, y, len, ang) {
+    c.save();
+    c.translate(x, y);
+    c.rotate(ang);
+    c.lineWidth = Math.max(S.lw * 1.5, len * 0.12);
+    line(c, -len * 0.3, 0, len * 0.28, 0);
+    c.lineWidth = S.lw;
+    c.beginPath();
+    c.arc(len * 0.38, 0, len * 0.12, 0.8, TAU - 0.8);
+    c.stroke();
+    c.beginPath();
+    c.arc(-len * 0.4, 0, len * 0.09, 0, TAU);
+    c.stroke();
+    c.restore();
+  }
+
+  function hammerAt(c, S, x, y, len, ang) {
+    c.save();
+    c.translate(x, y);
+    c.rotate(ang);
+    c.lineWidth = Math.max(S.lw * 1.4, len * 0.1);
+    line(c, -len / 2, 0, len * 0.3, 0);
+    c.lineWidth = S.lw;
+    rr(c, len * 0.3, -len * 0.22, len * 0.16, len * 0.44, 0.02);
+    c.fillStyle = S.dark;
+    c.fill();
+    c.stroke();
+    c.restore();
+  }
+
+  /* 物流・工業 */
+
+  function woodPallet(c, S, w, h) {
+    // パレット：3本の桁の上に天板を並べる（すき間から桁が見える）
+    const bh = Math.min(h * 0.17, 0.4);
+    thin(c, S, 0.8);
+    [0, (h - bh) / 2, h - bh].forEach(y => box(c, S, 0, y, w, bh, 0, S.dark));
+    const n = Math.max(3, Math.round(w / 0.33));
+    const bw = w / (n + 0.6 * (n - 1));
+    for (let i = 0; i < n; i++) box(c, S, i * bw * 1.6, 0, bw, h, 0, S.wood);
+    normal(c, S);
+  }
+
+  function palletStack(c, S, w, h) {
+    // 積んだパレット：下の段の縁が少しずつずれて見える
+    const s = Math.min(w, h) * 0.045;
+    thin(c, S, 0.8);
+    for (let k = 3; k >= 1; k--) box(c, S, s * k, s * k, w - s * 3, h - s * 3, 0, k === 1 ? S.dark : S.wood);
+    normal(c, S);
+    woodPallet(c, S, w - s * 3, h - s * 3);
+  }
+
+  function cardboardBox(c, S, w, h) {
+    // ダンボール箱：ふたの合わせ目にガムテープ
+    box(c, S, 0, 0, w, h, 0.03, S.wood);
+    const long = w >= h;
+    const t = Math.min(w, h) * 0.22;
+    thin(c, S);
+    c.fillStyle = S.soft;
+    if (long) { c.fillRect(0, h / 2 - t / 2, w, t); c.strokeRect(0, h / 2 - t / 2, w, t); }
+    else { c.fillRect(w / 2 - t / 2, 0, t, h); c.strokeRect(w / 2 - t / 2, 0, t, h); }
+    c.strokeStyle = S.softLine;
+    if (long) line(c, 0.06, h / 2, w - 0.06, h / 2);
+    else line(c, w / 2, 0.06, w / 2, h - 0.06);
+    normal(c, S);
+  }
+
+  function bigCrate(c, S, w, h) {
+    // 大型木箱：板張りの上に枠板と筋かい
+    box(c, S, 0, 0, w, h, 0, S.wood);
+    const f = Math.min(w, h) * 0.11;
+    const iw = w - f * 2, ih = h - f * 2;
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    const n = Math.max(2, Math.round(ih / 0.4));
+    for (let i = 1; i < n; i++) line(c, f, f + (ih / n) * i, w - f, f + (ih / n) * i);
+    c.strokeStyle = S.line;
+    rr(c, f, f, iw, ih, 0);
+    c.stroke();
+    const bx = f * 1.2, by = (bx * ih) / iw;
+    c.beginPath();
+    c.moveTo(f, f);
+    c.lineTo(f + bx, f);
+    c.lineTo(w - f, h - f - by);
+    c.lineTo(w - f, h - f);
+    c.lineTo(w - f - bx, h - f);
+    c.lineTo(f, f + by);
+    c.closePath();
+    c.fillStyle = S.wood;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+  }
+
+  function shippingContainer(c, S, w, h) {
+    // 20フィートコンテナ：長い辺は波板、屋根にも波、四隅に金具。下の端が扉
+    box(c, S, 0, 0, w, h, 0.04, S.soft);
+    const e = Math.min(w * 0.07, 0.35);
+    const cs = e * 1.2;
+    const door = Math.min(h * 0.045, 0.5);
+    // 波の間隔は線の太さに合わせて広げる（小さく表示したとき黒くつぶれないように）
+    const rib = Math.max(0.3, S.lw * 3), zig = Math.max(0.15, S.lw * 1.6);
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    for (let y = cs + rib; y < h - door - 0.1; y += rib) line(c, e, y, w - e, y);
+    c.strokeStyle = S.line;
+    line(c, e, cs, e, h - door);
+    line(c, w - e, cs, w - e, h - door);
+    // 側面の波板
+    [[0, e], [w, w - e]].forEach(([x0, x1]) => {
+      c.beginPath();
+      let k = 0;
+      for (let y = cs; y <= h - door + 0.001; y += zig, k++) {
+        const x = k % 2 ? x1 : x0;
+        if (k === 0) c.moveTo(x0, y); else c.lineTo(x, y);
+      }
+      c.stroke();
+    });
+    // 扉の端：2枚扉の合わせ目とロック棒
+    rr(c, 0, h - door, w, door, 0);
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    line(c, w / 2, h - door, w / 2, h);
+    c.fillStyle = S.line;
+    [0.2, 0.38, 0.62, 0.8].forEach(px => { c.beginPath(); c.arc(w * px, h - door / 2, door * 0.18, 0, TAU); c.fill(); });
+    line(c, 0, cs * 0.6, w, cs * 0.6);
+    // 四隅の金具
+    [[0, 0], [w - cs, 0], [0, h - cs], [w - cs, h - cs]].forEach(([x, y]) => box(c, S, x, y, cs, cs, 0.02, S.dark));
+    normal(c, S);
+    c.lineWidth = S.lw * 2;
+    line(c, 0, h, w, h);
+    normal(c, S);
+  }
+
+  function oilDrum(c, S, w, h) {
+    // ドラム缶：ふちの巻き締め、ふたの段、大小2つの口金
+    const cx = w / 2, cy = h / 2, r = (Math.min(w, h) / 2) * 0.94;
+    circle(c, S, cx, cy, r, S.soft);
+    thin(c, S);
+    circle(c, S, cx, cy, r * 0.86, false);
+    c.strokeStyle = S.softLine;
+    circle(c, S, cx, cy, r * 0.55, false);
+    c.strokeStyle = S.line;
+    circle(c, S, cx - r * 0.42, cy - r * 0.38, r * 0.16, S.dark);
+    circle(c, S, cx + r * 0.5, cy + r * 0.3, r * 0.1, S.dark);
+    normal(c, S);
+  }
+
+  function handCart(c, S, w, h) {
+    // 台車：平たい荷台（四隅にゴムのバンパー）、両脇にのぞくキャスター、上の端にU字の取っ手
+    const top = Math.min(h * 0.16, 0.34);
+    const m = Math.min(w * 0.12, 0.18);
+    const y0 = top, y1 = h - 0.02;
+    const ww = m * 0.75, wl = Math.min(h * 0.14, 0.28);
+    thin(c, S);
+    [y0 + 0.12, y1 - 0.12 - wl].forEach(y => {
+      box(c, S, 0.01, y, ww + 0.04, wl, 0.04, S.dark);
+      box(c, S, w - ww - 0.05, y, ww + 0.04, wl, 0.04, S.dark);
+    });
+    normal(c, S);
+    box(c, S, m, y0, w - m * 2, y1 - y0, 0.02, S.soft);
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    for (let y = y0 + 0.22; y < y1 - 0.12; y += 0.16) line(c, m + 0.12, y, w - m - 0.12, y);
+    c.strokeStyle = S.line;
+    const b = Math.min(0.16, w * 0.12);
+    [[m, y0], [w - m - b, y0], [m, y1 - b], [w - m - b, y1 - b]].forEach(([x, y]) => box(c, S, x, y, b, b, 0.02, S.dark));
+    normal(c, S);
+    const hy = top * 0.3;
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    c.beginPath();
+    c.moveTo(m + b / 2, y0 + 0.02);
+    c.lineTo(m + b / 2, hy + 0.1);
+    c.quadraticCurveTo(m + b / 2, hy, m + b / 2 + 0.1, hy);
+    c.lineTo(w - m - b / 2 - 0.1, hy);
+    c.quadraticCurveTo(w - m - b / 2, hy, w - m - b / 2, hy + 0.1);
+    c.lineTo(w - m - b / 2, y0 + 0.02);
+    c.stroke();
+    c.restore();
+  }
+
+  function toolShelf(c, S, w, h) {
+    // 工具棚：上が壁側。棚板に工具箱・部品箱・工具
+    box(c, S, 0, 0, w, h, 0, S.soft);
+    const u = Math.min(0.14, h * 0.16);
+    const n = Math.max(1, Math.round(w / 1.5));
+    const bw = w / n;
+    thin(c, S);
+    for (let i = 0; i <= n; i++) {
+      const x = Math.min(w - u, Math.max(0, bw * i - u / 2));
+      box(c, S, x, 0, u, u, 0, S.dark);
+      box(c, S, x, h - u, u, u, 0, S.dark);
+    }
+    for (let i = 0; i < n; i++) {
+      const x0 = bw * i;
+      if (i % 2 === 0) {
+        box(c, S, x0 + bw * 0.1, h * 0.24, bw * 0.48, h * 0.5, 0.04, S.red);
+        c.strokeStyle = S.fill;
+        line(c, x0 + bw * 0.2, h * 0.49, x0 + bw * 0.48, h * 0.49);
+        c.strokeStyle = S.line;
+        wrenchAt(c, S, x0 + bw * 0.78, h * 0.5, Math.min(bw * 0.34, h * 0.62), -Math.PI / 2);
+      } else {
+        for (let k = 0; k < 3; k++) {
+          box(c, S, x0 + bw * (0.08 + k * 0.2), h * 0.26, bw * 0.16, h * 0.46, 0.02, S.fill);
+          line(c, x0 + bw * (0.11 + k * 0.2), h * 0.62, x0 + bw * (0.21 + k * 0.2), h * 0.62);
+        }
+        hammerAt(c, S, x0 + bw * 0.8, h * 0.5, Math.min(bw * 0.3, h * 0.6), -Math.PI / 2);
+      }
+    }
+    normal(c, S);
+  }
+
+  function latheMachine(c, S, w, h) {
+    // 工作機械（旋盤）：上が壁側。左に主軸台とチャック、右に心押し台、中央に刃物台、手前に操作盤とハンドル
+    box(c, S, 0, h * 0.04, w, h * 0.84, 0.06, S.soft);
+    thin(c, S);
+    box(c, S, w * 0.08, h * 0.28, w * 0.88, h * 0.34, 0.02, S.fill);
+    c.strokeStyle = S.softLine;
+    line(c, w * 0.3, h * 0.33, w * 0.95, h * 0.33);
+    line(c, w * 0.3, h * 0.57, w * 0.95, h * 0.57);
+    c.strokeStyle = S.line;
+    normal(c, S);
+    box(c, S, w * 0.03, h * 0.08, w * 0.25, h * 0.64, 0.05, S.dark);
+    thin(c, S);
+    box(c, S, w * 0.28, h * 0.27, w * 0.06, h * 0.36, 0.02, S.fill);
+    box(c, S, w * 0.34, h * 0.41, w * 0.44, h * 0.08, 0.01, S.soft);
+    box(c, S, w * 0.79, h * 0.31, w * 0.14, h * 0.28, 0.03, S.soft);
+    line(c, w * 0.79, h * 0.45, w * 0.74, h * 0.45);
+    normal(c, S);
+    box(c, S, w * 0.46, h * 0.2, w * 0.18, h * 0.6, 0.03, S.fill);
+    thin(c, S);
+    box(c, S, w * 0.51, h * 0.36, w * 0.08, h * 0.12, 0.01, S.dark);
+    // 送りハンドル（往復台の手前）
+    [0.5, 0.6].forEach(px => {
+      const r = Math.min(w, h) * 0.055;
+      circle(c, S, w * px, h * 0.8 + r, r, S.fill);
+      line(c, w * px - r, h * 0.8 + r, w * px + r, h * 0.8 + r);
+    });
+    box(c, S, w * 0.05, h * 0.74, w * 0.2, h * 0.2, 0.03, S.fill);
+    circle(c, S, w * 0.1, h * 0.84, Math.min(w, h) * 0.035, S.red);
+    circle(c, S, w * 0.17, h * 0.84, Math.min(w, h) * 0.025, S.line);
+    circle(c, S, w * 0.22, h * 0.84, Math.min(w, h) * 0.025, S.line);
+    normal(c, S);
+  }
+
+  function portableGenerator(c, S, w, h) {
+    // 可搬型発電機：パイプフレームの中に燃料タンクと操作パネル
+    rr(c, 0.04, 0.04, w - 0.08, h - 0.08, Math.min(w, h) * 0.18);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    c.stroke();
+    c.restore();
+    box(c, S, w * 0.14, h * 0.16, w * 0.72, h * 0.68, 0.06, S.fill);
+    box(c, S, w * 0.18, h * 0.22, w * 0.42, h * 0.56, Math.min(w, h) * 0.12, S.yellow);
+    circle(c, S, w * 0.3, h * 0.38, Math.min(w, h) * 0.08, S.dark);
+    thin(c, S);
+    box(c, S, w * 0.65, h * 0.22, w * 0.16, h * 0.56, 0.02, S.soft);
+    [0.36, 0.62].forEach(py => circle(c, S, w * 0.73, h * py, Math.min(w, h) * 0.05, S.fill));
+    line(c, 0.04, h / 2, w * 0.14, h / 2);
+    line(c, w * 0.86, h / 2, w - 0.04, h / 2);
+    normal(c, S);
+  }
+
+  function industrialTank(c, S, w, h) {
+    // 工業用タンク：丸い屋根、マンホール、はしご、右に配管
+    const cx = w / 2, cy = h / 2, r = (Math.min(w, h) / 2) * 0.86;
+    thin(c, S);
+    box(c, S, cx + r * 0.8, cy - r * 0.1, w - cx - r * 0.8, r * 0.2, 0, S.soft);
+    line(c, w - 0.08, cy - r * 0.14, w - 0.08, cy + r * 0.14);
+    normal(c, S);
+    circle(c, S, cx, cy, r, S.soft);
+    thin(c, S);
+    circle(c, S, cx, cy, r * 0.9, false);
+    c.strokeStyle = S.softLine;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU + Math.PI / 8;
+      line(c, cx + Math.cos(a) * r * 0.3, cy + Math.sin(a) * r * 0.3, cx + Math.cos(a) * r * 0.9, cy + Math.sin(a) * r * 0.9);
+    }
+    c.strokeStyle = S.line;
+    circle(c, S, cx, cy, r * 0.3, S.fill);
+    circle(c, S, cx, cy, r * 0.08, S.dark);
+    const mx = cx - r * 0.42, my = cy + r * 0.4;
+    circle(c, S, mx, my, r * 0.2, S.fill);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * TAU;
+      c.beginPath();
+      c.arc(mx + Math.cos(a) * r * 0.15, my + Math.sin(a) * r * 0.15, r * 0.02, 0, TAU);
+      c.fillStyle = S.line;
+      c.fill();
+    }
+    // はしごと手すり
+    const lx = cx - r * 0.12, ly = cy - r - 0.05;
+    line(c, lx, ly, lx, ly + r * 0.5);
+    line(c, lx + r * 0.24, ly, lx + r * 0.24, ly + r * 0.5);
+    for (let k = 1; k < 4; k++) line(c, lx, ly + r * 0.125 * k, lx + r * 0.24, ly + r * 0.125 * k);
+    c.beginPath();
+    c.arc(cx, cy, r * 0.96, -Math.PI * 0.9, -Math.PI * 0.62);
+    c.stroke();
+    c.beginPath();
+    c.arc(cx, cy, r * 0.96, -Math.PI * 0.38, -Math.PI * 0.1);
+    c.stroke();
+    normal(c, S);
+  }
+
+  function conveyorBelt(c, S, w, h) {
+    // ベルトコンベア：長い辺に沿って流れる。両端にドラム、ベルトの下にローラー
+    if (h > w) {
+      c.save();
+      c.translate(w, 0);
+      c.rotate(Math.PI / 2);
+      conveyorBelt(c, S, h, w);
+      c.restore();
+      return;
+    }
+    const rail = h * 0.14;
+    const drum = Math.min(0.6, w * 0.08);
+    thin(c, S);
+    box(c, S, 0, 0, w, rail, 0.02, S.dark);
+    box(c, S, 0, h - rail, w, rail, 0.02, S.dark);
+    normal(c, S);
+    box(c, S, drum * 0.5, rail, w - drum, h - rail * 2, 0, S.soft);
+    thin(c, S);
+    for (let x = drum + 0.25; x < w - drum; x += 0.5) {
+      c.strokeStyle = S.softLine;
+      line(c, x, rail, x, h - rail);
+      c.fillStyle = S.fill;
+      [rail / 2, h - rail / 2].forEach(y => { c.beginPath(); c.arc(x, y, rail * 0.22, 0, TAU); c.fill(); });
+    }
+    c.strokeStyle = S.line;
+    [0, w - drum].forEach(x => {
+      box(c, S, x, rail * 0.5, drum, h - rail, drum * 0.45, S.fill);
+      line(c, x + drum / 2, rail * 0.5, x + drum / 2, h - rail * 0.5);
+    });
+    normal(c, S);
+    for (let x = drum + 0.9; x < w - drum - 0.4; x += 1.6) {
+      c.beginPath();
+      c.moveTo(x, h * 0.36);
+      c.lineTo(x + 0.28, h / 2);
+      c.lineTo(x, h * 0.64);
+      c.stroke();
+    }
+  }
+
+  function workbenchVise(c, S, w, h) {
+    // 作業台：上が壁側。厚い天板、奥に工具、手前左に万力（あごが手前にはみ出す）
+    const d = h - Math.min(0.3, h * 0.2);
+    box(c, S, 0, 0, w, d, 0.04, S.wood);
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    for (let y = d / 4; y < d - 0.1; y += d / 4) line(c, 0.05, y, w - 0.05, y);
+    c.strokeStyle = S.line;
+    hammerAt(c, S, w * 0.6, d * 0.3, Math.min(0.9, d * 0.6), 0.15);
+    wrenchAt(c, S, w * 0.82, d * 0.36, Math.min(0.8, d * 0.5), -0.3);
+    box(c, S, w * 0.62, d * 0.62, w * 0.12, d * 0.24, 0.02, S.fill);
+    normal(c, S);
+    // 万力：天板の縁をはさんで2枚のあご（あいだに案内の棒）、奥に金床、手前にねじと玉つきの柄
+    const vw = Math.min(0.6, w * 0.16), vx = Math.min(0.45, w * 0.1), vc = vx + vw / 2;
+    const jy = d - 0.04;
+    thin(c, S);
+    box(c, S, vc - vw * 0.28, jy - 0.4, vw * 0.56, 0.26, 0.02, S.soft);
+    line(c, vc - vw * 0.2, jy - 0.06, vc - vw * 0.2, jy + 0.12);
+    line(c, vc + vw * 0.2, jy - 0.06, vc + vw * 0.2, jy + 0.12);
+    normal(c, S);
+    box(c, S, vx, jy - 0.14, vw, 0.12, 0.01, S.dark);
+    box(c, S, vx, jy + 0.1, vw, 0.12, 0.01, S.dark);
+    thin(c, S);
+    line(c, vc, jy + 0.22, vc, h - 0.05);
+    line(c, vc - vw * 0.45, h - 0.05, vc + vw * 0.45, h - 0.05);
+    circle(c, S, vc - vw * 0.45, h - 0.05, 0.035, S.line);
+    circle(c, S, vc + vw * 0.45, h - 0.05, 0.035, S.line);
+    normal(c, S);
+  }
+
+  function materialPile(c, S, w, h) {
+    // 資材の山：角材・パイプの束・セメント袋・ブロックを積み上げたもの
+    const s = Math.min(w / 4, h / 3);
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    dashed(c, S, true);
+    smoothOutline(c, wobblyRing(w / 2, h / 2, w * 0.49, h * 0.48, 11, 0.12, 41));
+    c.stroke();
+    dashed(c, S, false);
+    c.strokeStyle = S.line;
+    // 角材
+    [[-0.1, 0], [0.04, 0.3], [-0.05, 0.6], [0.08, 0.9]].forEach(([a, dy]) => {
+      c.save();
+      c.translate(w * 0.36, h * 0.18 + dy * s);
+      c.rotate(a);
+      box(c, S, -w * 0.28, -0.13 * s, w * 0.56, 0.26 * s, 0, S.wood);
+      c.restore();
+    });
+    // パイプの束
+    [[0.78, 0.2], [0.88, 0.22], [0.83, 0.33], [0.73, 0.32], [0.93, 0.35], [0.78, 0.44], [0.88, 0.46]].forEach(([px, py]) => {
+      circle(c, S, w * px, h * py, 0.21 * s, S.soft);
+      circle(c, S, w * px, h * py, 0.1 * s, S.fill);
+    });
+    // セメント袋
+    [[0.18, 0.74, 0.2], [0.42, 0.78, -0.15], [0.3, 0.6, 0.05]].forEach(([px, py, a]) => {
+      c.save();
+      c.translate(w * px, h * py);
+      c.rotate(a);
+      box(c, S, -0.45 * s, -0.3 * s, 0.9 * s, 0.6 * s, 0.18 * s, S.fill);
+      line(c, -0.3 * s, -0.12 * s, 0.3 * s, -0.12 * s);
+      c.restore();
+    });
+    // ブロック
+    [[0.66, 0.68], [0.8, 0.7], [0.73, 0.84]].forEach(([px, py]) => box(c, S, w * px - 0.3 * s, h * py - 0.18 * s, 0.6 * s, 0.36 * s, 0.02, S.soft));
+    normal(c, S);
+  }
+
+  function buildingMaterials(c, S, w, h) {
+    // 建築資材：まくら木の上に、H形鋼（上）と材木（下）を並べる
+    const n = Math.max(2, Math.round(w / 3));
+    thin(c, S);
+    for (let i = 0; i <= n; i++) {
+      const x = Math.min(w - 0.3, Math.max(0, (w / n) * i - 0.15));
+      box(c, S, x, 0, 0.3, h, 0.02, S.dark);
+    }
+    normal(c, S);
+    const bh = h * 0.2;
+    [h * 0.06, h * 0.06 + bh * 1.12].forEach((y, k) => {
+      const x0 = k ? 0.4 : 0.15, x1 = w - (k ? 0.1 : 0.5);
+      box(c, S, x0, y, x1 - x0, bh, 0, S.soft);
+      thin(c, S);
+      line(c, x0, y + bh * 0.22, x1, y + bh * 0.22);
+      line(c, x0, y + bh * 0.78, x1, y + bh * 0.78);
+      normal(c, S);
+    });
+    const ly = h * 0.55, lh = (h * 0.4) / 4;
+    for (let k = 0; k < 4; k++) {
+      const x0 = [0.2, 0.5, 0.1, 0.35][k], x1 = w - [0.3, 0.15, 0.6, 0.2][k];
+      box(c, S, x0, ly + lh * k, x1 - x0, lh, 0, S.wood);
+      thin(c, S);
+      c.strokeStyle = S.softLine;
+      line(c, x0 + 0.4 + k * 0.5, ly + lh * (k + 0.5), x0 + 2.2 + k * 0.5, ly + lh * (k + 0.5));
+      c.strokeStyle = S.line;
+      normal(c, S);
+    }
+  }
+
+  function palletRack(c, S, w, h) {
+    // 大型ラック：上が壁側。支柱と前後のはり、各間口にパレットと荷
+    const n = Math.max(1, Math.round(w / 2.7));
+    const bw = w / n;
+    const u = Math.min(0.24, h * 0.11);
+    for (let i = 0; i < n; i++) {
+      const x0 = bw * i;
+      thin(c, S);
+      box(c, S, x0 + 0.2, u * 0.6, bw - 0.4, h - u * 1.2, 0, S.wood);
+      c.strokeStyle = S.softLine;
+      for (let x = x0 + 0.45; x < x0 + bw - 0.3; x += 0.35) line(c, x, u * 0.6, x, h - u * 0.6);
+      c.strokeStyle = S.line;
+      normal(c, S);
+      const lx = x0 + 0.38, ly = u * 1.3, lw = bw - 0.76, lh = h - u * 2.6;
+      box(c, S, lx, ly, lw, lh, 0.03, S.fill);
+      thin(c, S);
+      if (i % 3 === 2) {
+        // ストレッチフィルムで巻いた荷
+        c.save();
+        rr(c, lx, ly, lw, lh, 0.03);
+        c.clip();
+        c.strokeStyle = S.softLine;
+        for (let k = -lh; k < lw; k += 0.3) line(c, lx + k, ly + lh, lx + k + lh, ly);
+        c.restore();
+      } else {
+        const cols = i % 3 === 0 ? 2 : 3;
+        for (let k = 1; k < cols; k++) line(c, lx + (lw / cols) * k, ly, lx + (lw / cols) * k, ly + lh);
+        line(c, lx, ly + lh / 2, lx + lw, ly + lh / 2);
+      }
+      normal(c, S);
+    }
+    c.save();
+    c.lineWidth = S.lw * 1.6;
+    line(c, 0, u / 2, w, u / 2);
+    line(c, 0, h - u / 2, w, h - u / 2);
+    c.restore();
+    thin(c, S);
+    for (let i = 0; i <= n; i++) {
+      const x = Math.min(w - u, Math.max(0, bw * i - u / 2));
+      box(c, S, x, 0, u, u, 0, S.dark);
+      box(c, S, x, h - u, u, u, 0, S.dark);
+    }
+    normal(c, S);
+  }
+
+  function supplyShelf(c, S, w, h) {
+    // 備蓄棚：上が壁側。水のボトル、缶詰、救急箱
+    box(c, S, 0, 0, w, h, 0, S.soft);
+    const u = Math.min(0.14, h * 0.16);
+    thin(c, S);
+    [[0, 0], [w - u, 0], [0, h - u], [w - u, h - u]].forEach(([x, y]) => box(c, S, x, y, u, u, 0, S.dark));
+    const rb = Math.min(0.15, h * 0.16);
+    for (let x = 0.3; x < w * 0.5; x += rb * 2.3) {
+      [h * 0.3, h * 0.7].forEach(y => {
+        circle(c, S, x, y, rb, S.water);
+        circle(c, S, x, y, rb * 0.42, S.blue);
+      });
+    }
+    const rc = Math.min(0.1, h * 0.11);
+    for (let x = w * 0.53; x < w * 0.76; x += rc * 2.3) {
+      [h * 0.27, h * 0.5, h * 0.73].forEach(y => {
+        circle(c, S, x, y, rc, S.fill);
+        circle(c, S, x, y, rc * 0.6, false);
+      });
+    }
+    const bx = w * 0.79, bwid = w - u - 0.08 - bx;
+    box(c, S, bx, h * 0.2, bwid, h * 0.6, 0.03, S.fill);
+    normal(c, S);
+    c.fillStyle = S.red;
+    const ccx = bx + bwid / 2, ccy = h / 2, a = Math.min(bwid, h * 0.6) * 0.32, t = a * 0.36;
+    c.fillRect(ccx - a, ccy - t, a * 2, t * 2);
+    c.fillRect(ccx - t, ccy - a, t * 2, a * 2);
+  }
+
+  /* 屋外・道路 */
+
+  function roadLanes(c, S, w, h) {
+    // 2車線の道路（縦向き）：アスファルト、両端の外側線、中央の破線
+    asphaltSurface(c, S, w, h, Math.round(w * 17 + h * 3));
+    const edge = w * 0.04, lw = w * 0.025;
+    roadPaint(c, S, edge, 0, lw, h);
+    roadPaint(c, S, w - edge - lw, 0, lw, h);
+    const n = Math.max(1, Math.round(h / 6));
+    const p = h / n;
+    for (let i = 0; i < n; i++) roadPaint(c, S, w / 2 - lw / 2, p * i + p / 4, lw, p / 2);
+    thin(c, S);
+    line(c, 0, 0, 0, h);
+    line(c, w, 0, w, h);
+    normal(c, S);
+  }
+
+  function crosswalkStripes(c, S, w, h) {
+    // 横断歩道：横に走る道路を渡る縞（縞は道路と同じ向き）
+    asphaltSurface(c, S, w, h, Math.round(w * 7 + h * 11));
+    const n = Math.max(1, Math.round(h / 2));
+    const p = h / n;
+    for (let i = 0; i < n; i++) roadPaint(c, S, 0.15, p * i + p / 4, w - 0.3, p / 2);
+  }
+
+  function parkingStall(c, S, w, h) {
+    // 駐車区画：両側と奥の白線、下が開いている。奥に車止め
+    const t = 0.15;
+    roadPaint(c, S, 0, 0, t, h);
+    roadPaint(c, S, w - t, 0, t, h);
+    roadPaint(c, S, t, 0, w - t * 2, t);
+    thin(c, S);
+    [[0.18, 0.42], [0.58, 0.82]].forEach(([a, b]) => box(c, S, w * a, Math.min(1.2, h * 0.12), w * (b - a), 0.28, 0.06, S.soft));
+    normal(c, S);
+  }
+
+  function roadArrow(c, S, w, h) {
+    // 路面の矢印（上向き）
+    const head = Math.min(h * 0.42, w * 0.9);
+    c.beginPath();
+    c.moveTo(w / 2, 0);
+    c.lineTo(w, head);
+    c.lineTo(w * 0.66, head);
+    c.lineTo(w * 0.66, h);
+    c.lineTo(w * 0.34, h);
+    c.lineTo(w * 0.34, head);
+    c.lineTo(0, head);
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.save();
+    c.lineWidth = S.lw * 0.6;
+    c.stroke();
+    c.restore();
+  }
+
+  function roadSign(c, S, w, h) {
+    // 道路標識（上から）：支柱と、少し傾けて見た丸い標識板（進入禁止：赤地に白い横棒）
+    const cx = w / 2;
+    thin(c, S);
+    circle(c, S, cx, h * 0.76, Math.min(w, h) * 0.09, S.dark);
+    normal(c, S);
+    c.save();
+    c.lineWidth = S.lw * 1.6;
+    line(c, cx, h * 0.76, cx, h * 0.6);
+    c.restore();
+    ellipse(c, S, cx, h * 0.38, w * 0.44, h * 0.3, S.fill);
+    thin(c, S);
+    ellipse(c, S, cx, h * 0.38, w * 0.37, h * 0.24, S.red);
+    rr(c, cx - w * 0.25, h * 0.38 - h * 0.055, w * 0.5, h * 0.11, 0.01);
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    normal(c, S);
+  }
+
+  function trafficSignal(c, S, w, h) {
+    // 信号機（上から）：支柱と腕、横長の灯器に3つのフード
+    const hy = h * 0.42, hh = h * 0.34;
+    c.save();
+    c.lineWidth = S.lw * 1.6;
+    line(c, w / 2, h * 0.12, w / 2, hy);
+    c.restore();
+    circle(c, S, w / 2, h * 0.12, Math.min(w, h) * 0.1, S.dark);
+    box(c, S, 0.04, hy, w - 0.08, hh, hh * 0.3, S.dark);
+    const fills = [S.green, S.yellow, S.red];
+    [0.22, 0.5, 0.78].forEach((px, i) => {
+      thin(c, S);
+      rr(c, w * px - w * 0.11, hy + hh * 0.7, w * 0.22, h * 0.2, 0.04);
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+      circle(c, S, w * px, hy + hh / 2, Math.min(w * 0.1, hh * 0.38), fills[i]);
+      normal(c, S);
+    });
+  }
+
+  function trafficCone(c, S, w, h) {
+    // カラーコーン：四角い台、円錐、反射帯
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+    thin(c, S);
+    box(c, S, 0.04, 0.04, w - 0.08, h - 0.08, r * 0.25, S.soft);
+    normal(c, S);
+    circle(c, S, cx, cy, r * 0.72, S.flame);
+    thin(c, S);
+    circle(c, S, cx, cy, r * 0.5, S.fill);
+    circle(c, S, cx, cy, r * 0.32, S.flame);
+    circle(c, S, cx, cy, r * 0.12, S.dark);
+    normal(c, S);
+  }
+
+  function bollardPost(c, S, w, h) {
+    // 車止めのポール：台座、ポール、反射帯、頭
+    const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    circle(c, S, cx, cy, r * 0.95, false);
+    c.strokeStyle = S.line;
+    normal(c, S);
+    circle(c, S, cx, cy, r * 0.7, S.fill);
+    thin(c, S);
+    circle(c, S, cx, cy, r * 0.5, S.yellow);
+    circle(c, S, cx, cy, r * 0.25, S.dark);
+    normal(c, S);
+  }
+
+  function streetLamp(c, S, w, h) {
+    // 街灯：上が支柱、腕の先に灯具。破線の輪は照らす範囲
+    const cx = w / 2, ly = h * 0.6, s = Math.min(w, h);
+    thin(c, S);
+    dashed(c, S, true);
+    c.beginPath();
+    c.arc(cx, ly, s * 0.38, 0, TAU);
+    c.stroke();
+    dashed(c, S, false);
+    normal(c, S);
+    c.save();
+    c.lineWidth = S.lw * 1.8;
+    line(c, cx, h * 0.14, cx, ly);
+    c.restore();
+    circle(c, S, cx, h * 0.14, s * 0.1, S.dark);
+    ellipse(c, S, cx, ly, s * 0.13, s * 0.2, S.yellow);
+    thin(c, S);
+    line(c, cx, ly - s * 0.12, cx, ly + s * 0.12);
+    normal(c, S);
+  }
+
+  function utilityPole(c, S, w, h) {
+    // 電柱：横の腕木、碍子、上下へ伸びる電線
+    const cx = w / 2, cy = h / 2;
+    thin(c, S);
+    [0.12, 0.88].forEach(px => line(c, w * px, 0, w * px, h));
+    normal(c, S);
+    box(c, S, 0.02, cy - h * 0.07, w - 0.04, h * 0.14, 0.02, S.dark);
+    thin(c, S);
+    [0.12, 0.88].forEach(px => circle(c, S, w * px, cy, Math.min(w, h) * 0.06, S.fill));
+    normal(c, S);
+    circle(c, S, cx, cy, Math.min(w, h) * 0.24, S.soft);
+    thin(c, S);
+    circle(c, S, cx, cy, Math.min(w, h) * 0.12, false);
+    normal(c, S);
+  }
+
+  function puddleWater(c, S, w, h) {
+    // 水たまり：不規則な水面と小さな波紋
+    const pts = wobblyRing(w * 0.46, h / 2, w * 0.42, h * 0.44, 10, 0.35, Math.round(w * 19 + h * 7));
+    smoothOutline(c, pts);
+    c.fillStyle = S.water;
+    c.fill();
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    c.stroke();
+    circle(c, S, w * 0.9, h * 0.3, Math.min(w, h) * 0.06, S.water);
+    circle(c, S, w * 0.86, h * 0.72, Math.min(w, h) * 0.04, S.water);
+    c.strokeStyle = S.line;
+    thin(c, S, 0.5);
+    [[0.3, 0.42, 0.22], [0.52, 0.6, 0.18], [0.38, 0.7, 0.12]].forEach(([px, py, l]) => {
+      c.beginPath();
+      c.moveTo(w * px, h * py);
+      c.quadraticCurveTo(w * (px + l / 2), h * py - 0.1, w * (px + l), h * py);
+      c.stroke();
+    });
+    normal(c, S);
+  }
+
+  function cliffEdge(c, S, w, h) {
+    // 崖：太い線が崖の縁。下へ向かうけばで落ち込み、下に落ちた石
+    const r = rand(Math.round(w * 31 + h * 7));
+    const n = Math.max(4, Math.round(w / 0.45));
+    const top = h * 0.24;
+    const pts = [];
+    for (let i = 0; i <= n; i++) pts.push([(w / n) * i, i === 0 || i === n ? top : top + (r() - 0.5) * h * 0.16]);
+    c.beginPath();
+    c.moveTo(0, top);
+    pts.forEach(p => c.lineTo(p[0], p[1]));
+    c.lineTo(w, h * 0.8);
+    for (let i = n; i >= 0; i--) c.lineTo((w / n) * i, h * 0.78 + (r() - 0.5) * h * 0.12);
+    c.closePath();
+    c.fillStyle = S.soft;
+    c.fill();
+    // けば：崖の縁から下へ細くなる楔（長短を交互に）
+    c.fillStyle = S.line;
+    for (let i = 0; i < n; i++) {
+      const [x0, y0] = pts[i], [x1, y1] = pts[i + 1];
+      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+      const len = h * (i % 2 ? 0.22 : 0.42) * (0.8 + r() * 0.4);
+      const k = i % 2 ? 0.14 : 0.2;
+      c.beginPath();
+      c.moveTo(mx - (x1 - x0) * k, my - (y1 - y0) * k);
+      c.lineTo(mx + (x1 - x0) * k, my + (y1 - y0) * k);
+      c.lineTo(mx + (r() - 0.5) * 0.1, my + len);
+      c.closePath();
+      c.fill();
+    }
+    thin(c, S);
+    for (let i = 0; i < Math.round(w * 0.9); i++) {
+      const x = 0.3 + r() * (w - 0.6), y = h * 0.82 + r() * h * 0.12, s = 0.1 + r() * 0.14;
+      c.save();
+      c.translate(x - s * 1.3, y - s);
+      blob(c, s * 2.6, s * 2, 5 + i * 3, 6, 0.3);
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+      c.restore();
+    }
+    c.lineWidth = S.lw * 2;
+    c.beginPath();
+    pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
+    c.stroke();
+    normal(c, S);
+  }
+
+  function landslideDebris(c, S, w, h) {
+    // 土砂：流れ下った土（下へ向かう筋）と岩
+    const r = rand(Math.round(w * 23 + h * 5));
+    smoothOutline(c, wobblyRing(w / 2, h / 2, w * 0.49, h * 0.48, 12, 0.3, Math.round(w * 11 + h * 13)));
+    c.fillStyle = S.wood;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    c.strokeStyle = S.softLine;
+    for (let i = 0; i < 6; i++) {
+      const x = w * (0.2 + i * 0.12);
+      c.beginPath();
+      c.moveTo(x, h * 0.15);
+      c.quadraticCurveTo(x + (r() - 0.5) * 0.6, h * 0.5, x + (r() - 0.5) * 0.5, h * 0.85);
+      c.stroke();
+    }
+    c.fillStyle = S.softLine;
+    for (let i = 0; i < w * h * 3; i++) {
+      c.beginPath();
+      c.arc(w * (0.12 + r() * 0.76), h * (0.12 + r() * 0.76), 0.03, 0, TAU);
+      c.fill();
+    }
+    c.strokeStyle = S.line;
+    for (let i = 0; i < 7; i++) {
+      const cx = w * (0.18 + r() * 0.64), cy = h * (0.2 + r() * 0.6);
+      const s = Math.min(w, h) * (0.06 + r() * 0.1);
+      c.beginPath();
+      const k = 5 + Math.floor(r() * 2);
+      for (let j = 0; j < k; j++) {
+        const a = (j / k) * TAU + r() * 0.4;
+        const rad = s * (0.7 + r() * 0.4);
+        if (j === 0) c.moveTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+        else c.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+      }
+      c.closePath();
+      c.fillStyle = i % 3 === 0 ? S.dark : S.soft;
+      c.fill();
+      c.stroke();
+    }
+    normal(c, S);
+  }
+
+  function siteHoarding(c, S, w, h) {
+    // 工事の仮囲い：鋼板を並べた壁と、裏（上）の支えのパイプ
+    thin(c, S);
+    line(c, 0.1, h * 0.14, w - 0.1, h * 0.14);
+    for (let x = 0.5; x < w; x += 2) circle(c, S, x, h * 0.14, h * 0.12, S.dark);
+    normal(c, S);
+    box(c, S, 0, h * 0.34, w, h * 0.6, 0, S.soft);
+    thin(c, S);
+    const n = Math.max(1, Math.round(w / 1.1));
+    for (let i = 1; i < n; i++) line(c, (w / n) * i, h * 0.34, (w / n) * i, h * 0.94);
+    normal(c, S);
+  }
+
+  /* 和風屋敷 */
+
+  // 引違いの2枚の戸（障子・襖）。leaf(x, y, w, h, meetRight) で1枚ずつ描く
+  function slidingPair(w, h, leaf) {
+    const L = w * 0.53, d = h / 2;
+    leaf(0, 0, L, d, true);
+    leaf(w - L, d, L, d, false);
+  }
+
+  function shojiScreen(c, S, w, h) {
+    // 障子：木の枠と細い組子
+    slidingPair(w, h, (x, y, lw, lh) => {
+      thin(c, S, 0.8);
+      box(c, S, x, y, lw, lh, 0, S.wood);
+      c.fillStyle = S.fill;
+      c.fillRect(x + 0.08, y + lh * 0.25, lw - 0.16, lh * 0.5);
+      thin(c, S, 0.5);
+      const n = Math.max(2, Math.round((lw - 0.16) / 0.26));
+      for (let i = 1; i < n; i++) line(c, x + 0.08 + ((lw - 0.16) / n) * i, y + lh * 0.12, x + 0.08 + ((lw - 0.16) / n) * i, y + lh * 0.88);
+      normal(c, S);
+    });
+  }
+
+  function fusumaPanel(c, S, w, h) {
+    // 襖：縁のある板戸と丸い引手
+    slidingPair(w, h, (x, y, lw, lh, meetRight) => {
+      thin(c, S, 0.8);
+      box(c, S, x, y, lw, lh, 0, S.dark);
+      c.fillStyle = S.rug;
+      c.fillRect(x + 0.06, y + lh * 0.2, lw - 0.12, lh * 0.6);
+      normal(c, S);
+      const hx = meetRight ? x + lw - 0.28 : x + 0.28;
+      circle(c, S, hx, y + lh / 2, Math.max(lh * 0.32, 0.04), S.fill);
+    });
+  }
+
+  function byobuScreen(c, S, w, h) {
+    // 屏風：ジグザグに立てた6枚のパネル（金地）
+    const n = 6, t = Math.min(0.1, h * 0.12);
+    const xs = [], ys = [];
+    for (let i = 0; i <= n; i++) { xs.push(0.08 + ((w - 0.16) / n) * i); ys.push(i % 2 ? h * 0.78 : h * 0.22); }
+    for (let i = 0; i < n; i++) {
+      const dx = xs[i + 1] - xs[i], dy = ys[i + 1] - ys[i], L = Math.hypot(dx, dy);
+      const nx = (-dy / L) * t / 2, ny = (dx / L) * t / 2;
+      c.beginPath();
+      c.moveTo(xs[i] + nx, ys[i] + ny);
+      c.lineTo(xs[i + 1] + nx, ys[i + 1] + ny);
+      c.lineTo(xs[i + 1] - nx, ys[i + 1] - ny);
+      c.lineTo(xs[i] - nx, ys[i] - ny);
+      c.closePath();
+      c.fillStyle = S.yellow;
+      c.fill();
+      c.stroke();
+    }
+    thin(c, S);
+    for (let i = 0; i <= n; i++) circle(c, S, xs[i], ys[i], t * 0.6, S.dark);
+    normal(c, S);
+  }
+
+  function engawaBoards(c, S, w, h) {
+    // 縁側の板敷き：長い辺に沿った板、手前（下）に縁框
+    const k = Math.min(0.32, h * 0.16);
+    c.fillStyle = S.wood;
+    c.fillRect(0, 0, w, h);
+    thin(c, S, 0.5);
+    c.strokeStyle = S.softLine;
+    const n = Math.max(2, Math.round((h - k) / 0.4));
+    const bh = (h - k) / n;
+    for (let i = 1; i < n; i++) line(c, 0, bh * i, w, bh * i);
+    for (let i = 0; i < n; i++) {
+      for (let x = 1.1 + ((i * 1.7) % 3); x < w - 0.2; x += 3.2) line(c, x, bh * i, x, bh * (i + 1));
+    }
+    c.strokeStyle = S.line;
+    thin(c, S);
+    c.strokeRect(0, 0, w, h);
+    line(c, 0, h - k, w, h - k);
+    normal(c, S);
+  }
+
+  function tatamiMat(c, S, w, h) {
+    // 畳：い草の目と、長い辺の畳縁
+    const long = h >= w;
+    c.fillStyle = S.fill;
+    c.fillRect(0, 0, w, h);
+    c.save();
+    c.globalAlpha = 0.45;
+    c.fillStyle = S.green;
+    c.fillRect(0, 0, w, h);
+    c.restore();
+    thin(c, S, 0.4);
+    c.strokeStyle = S.softLine;
+    if (long) for (let x = 0.3; x < w - 0.2; x += 0.24) line(c, x, 0.05, x, h - 0.05);
+    else for (let y = 0.3; y < h - 0.2; y += 0.24) line(c, 0.05, y, w - 0.05, y);
+    const t = Math.min(w, h) * 0.07;
+    c.fillStyle = S.dark;
+    if (long) { c.fillRect(0, 0, t, h); c.fillRect(w - t, 0, t, h); }
+    else { c.fillRect(0, 0, w, t); c.fillRect(0, h - t, w, t); }
+    c.strokeStyle = S.line;
+    thin(c, S);
+    c.strokeRect(0, 0, w, h);
+    normal(c, S);
+  }
+
+  function zatakuTable(c, S, w, h) {
+    // 座卓：角の丸い木の天板と木目
+    box(c, S, 0, 0, w, h, Math.min(w, h) * 0.08, S.wood);
+    thin(c, S);
+    rr(c, 0.12, 0.12, w - 0.24, h - 0.24, Math.min(w, h) * 0.05);
+    c.stroke();
+    c.strokeStyle = S.softLine;
+    [0.35, 0.52, 0.68].forEach((py, i) => {
+      c.beginPath();
+      c.moveTo(w * 0.15, h * py);
+      c.bezierCurveTo(w * 0.4, h * py - 0.15 * (i - 1), w * 0.6, h * py + 0.15, w * 0.85, h * py);
+      c.stroke();
+    });
+    normal(c, S);
+  }
+
+  function zabutonCushion(c, S, w, h) {
+    // 座布団：ふくらんだ四角、真ん中のとじ糸、四隅の房
+    const m = Math.min(w, h) * 0.1, b = Math.min(w, h) * 0.05;
+    c.beginPath();
+    c.moveTo(m, m);
+    c.quadraticCurveTo(w / 2, m - b, w - m, m);
+    c.quadraticCurveTo(w - m + b, h / 2, w - m, h - m);
+    c.quadraticCurveTo(w / 2, h - m + b, m, h - m);
+    c.quadraticCurveTo(m - b, h / 2, m, m);
+    c.closePath();
+    c.fillStyle = S.ritualSoft;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    [[m, m, -1, -1], [w - m, m, 1, -1], [m, h - m, -1, 1], [w - m, h - m, 1, 1]].forEach(([x, y, sx, sy]) => {
+      line(c, x, y, x + sx * m * 0.7, y + sy * m * 0.4);
+      line(c, x, y, x + sx * m * 0.4, y + sy * m * 0.7);
+    });
+    const s = Math.min(w, h) * 0.07;
+    line(c, w / 2, h / 2, w / 2, h / 2 - s);
+    line(c, w / 2, h / 2, w / 2 - s * 0.87, h / 2 + s / 2);
+    line(c, w / 2, h / 2, w / 2 + s * 0.87, h / 2 + s / 2);
+    normal(c, S);
+  }
+
+  function katanaRack(c, S, w, h) {
+    // 刀掛け：上が壁側。両端の台に大小の刀を横に掛ける
+    const pw = Math.min(0.26, w * 0.13);
+    box(c, S, 0.04, 0, w - 0.08, h * 0.16, 0.02, S.wood);
+    box(c, S, 0.04, 0, pw, h, 0.04, S.wood);
+    box(c, S, w - 0.04 - pw, 0, pw, h, 0.04, S.wood);
+    const t = Math.min(0.13, h * 0.17);
+    [[h * 0.42, 0.08, 0.95], [h * 0.74, 0.2, 0.8]].forEach(([y, a, b]) => {
+      const x0 = w * a, x1 = w * b, xs = x0 + (x1 - x0) * 0.27;
+      outlinedRod(c, S, () => { c.beginPath(); c.moveTo(xs, y); c.quadraticCurveTo((xs + x1) / 2, y - t * 1.2, x1, y - t * 0.3); }, t, S.dark);
+      outlinedRod(c, S, () => { c.beginPath(); c.moveTo(x0, y + t * 0.15); c.lineTo(xs - t * 0.3, y); }, t * 0.9, S.fill);
+      thin(c, S);
+      ellipse(c, S, xs - t * 0.15, y, t * 0.3, t * 0.85, S.yellow);
+      normal(c, S);
+    });
+  }
+
+  function andonLamp(c, S, w, h) {
+    // 行灯：木の枠に紙を張った四角い灯り。中に油皿の火
+    box(c, S, 0.04, 0.04, w - 0.08, h - 0.08, 0.02, S.wood);
+    thin(c, S);
+    box(c, S, w * 0.16, h * 0.16, w * 0.68, h * 0.68, 0.01, S.yellow);
+    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.16, S.fill);
+    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.07, S.flame);
+    c.fillStyle = S.line;
+    [[0.04, 0.04], [w - 0.16, 0.04], [0.04, h - 0.16], [w - 0.16, h - 0.16]].forEach(([x, y]) => c.fillRect(x, y, 0.12, 0.12));
+    normal(c, S);
+  }
+
+  /* 和風庭園 */
+
+  function gardenPond(c, S, w, h) {
+    // 池：入り江のある自然な形の水面と水の線。岸のところどころに石を組む
+    const r = rand(Math.round(w * 41 + h * 3));
+    const shape = [[0.1, 0.45], [0.15, 0.22], [0.34, 0.1], [0.5, 0.2], [0.66, 0.08], [0.87, 0.15], [0.95, 0.38], [0.86, 0.56],
+      [0.93, 0.8], [0.76, 0.93], [0.56, 0.88], [0.44, 0.68], [0.28, 0.88], [0.08, 0.78]];
+    const pts = shape.map(([px, py]) => [w * (px + (r() - 0.5) * 0.03), h * (py + (r() - 0.5) * 0.03)]);
+    smoothOutline(c, pts);
+    c.fillStyle = S.water;
+    c.fill();
+    thin(c, S, 0.7);
+    c.stroke();
+    c.save();
+    c.clip();
+    c.strokeStyle = S.softLine;
+    thin(c, S, 0.5);
+    for (let y = h * 0.28, row = 0; y < h * 0.85; y += h * 0.14, row++) {
+      for (let x = w * 0.18 + (row % 2) * 0.9; x < w * 0.85; x += 2) {
+        c.beginPath();
+        c.moveTo(x, y);
+        c.quadraticCurveTo(x + 0.3, y - 0.14, x + 0.6, y);
+        c.quadraticCurveTo(x + 0.9, y + 0.14, x + 1.2, y);
+        c.stroke();
+      }
+    }
+    c.restore();
+    // 岸の石：曲線の上の点を拾い、何個かずつまとめて置く（あいだは土の岸）
+    const n = pts.length;
+    const mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+    const on = [];
+    for (let i = 0; i < n; i++) {
+      const a = mid(pts[(i + n - 1) % n], pts[i]), b = mid(pts[i], pts[(i + 1) % n]);
+      on.push(a, [a[0] * 0.25 + pts[i][0] * 0.5 + b[0] * 0.25, a[1] * 0.25 + pts[i][1] * 0.5 + b[1] * 0.25]);
+    }
+    const s = Math.min(w, h) * 0.06;
+    let put = true, run = 4;
+    thin(c, S, 0.8);
+    on.forEach((p, i) => {
+      if (run-- <= 0) { put = !put; run = put ? 3 + Math.floor(r() * 3) : 2 + Math.floor(r() * 3); }
+      if (!put) return;
+      const sz = s * (0.6 + r() * 0.9);
+      smoothOutline(c, wobblyRing(p[0], p[1], sz * 1.25, sz, 7, 0.3, i * 7 + 3));
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+    });
+    normal(c, S);
+  }
+
+  function stoneBridge(c, S, w, h) {
+    // 石橋：一枚の石の板。両端は据え石に乗り、まん中の両脇に水の流れ
+    const r = rand(Math.round(w * 5 + h * 17));
+    thin(c, S, 0.5);
+    c.strokeStyle = S.softLine;
+    [0.4, 0.6].forEach(py => [0.08, 0.92].forEach(px => {
+      c.beginPath();
+      c.moveTo(w * px, h * py - 0.3);
+      c.quadraticCurveTo(w * px + 0.1, h * py - 0.15, w * px, h * py);
+      c.quadraticCurveTo(w * px - 0.1, h * py + 0.15, w * px, h * py + 0.3);
+      c.stroke();
+    }));
+    c.strokeStyle = S.line;
+    thin(c, S, 0.8);
+    [0.065, 0.935].forEach((py, i) => {
+      smoothOutline(c, wobblyRing(w / 2, h * py, w * 0.47, Math.min(h * 0.065, w * 0.2), 9, 0.2, 11 + i * 5));
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+    });
+    normal(c, S);
+    box(c, S, w * 0.22, h * 0.05, w * 0.56, h * 0.9, 0.05, S.soft);
+    c.fillStyle = S.softLine;
+    for (let i = 0; i < w * h * 4; i++) {
+      c.beginPath();
+      c.arc(w * (0.27 + r() * 0.46), h * (0.08 + r() * 0.84), 0.025, 0, TAU);
+      c.fill();
+    }
+    thin(c, S);
+    line(c, w * 0.22, h * 0.12, w * 0.78, h * 0.12);
+    line(c, w * 0.22, h * 0.88, w * 0.78, h * 0.88);
+    normal(c, S);
+  }
+
+  function drumBridge(c, S, w, h) {
+    // 木橋（太鼓橋）：反った橋板（両端ほど板が詰まって見える）と朱の欄干、擬宝珠
+    const rw = Math.min(0.28, w * 0.12);
+    c.fillStyle = S.wood;
+    c.fillRect(rw, 0, w - rw * 2, h);
+    thin(c, S);
+    c.strokeRect(rw, 0, w - rw * 2, h);
+    const n = Math.max(6, Math.round(h / 0.3));
+    const tm = 1.0;
+    for (let i = 1; i < n; i++) {
+      const th = -tm + (2 * tm * i) / n;
+      const y = h / 2 + (h / 2) * (Math.sin(th) / Math.sin(tm));
+      line(c, rw, y, w - rw, y);
+    }
+    normal(c, S);
+    [0, w - rw].forEach(x => box(c, S, x, 0, rw, h, rw * 0.4, S.red));
+    const posts = Math.max(2, Math.round(h / 2));
+    for (let i = 0; i <= posts; i++) {
+      const y = Math.min(h - rw * 0.7, Math.max(rw * 0.7, (h / posts) * i));
+      [rw / 2, w - rw / 2].forEach(x => {
+        circle(c, S, x, y, rw * 0.7, S.red);
+        thin(c, S);
+        circle(c, S, x, y, rw * 0.32, S.yellow);
+        normal(c, S);
+      });
+    }
+  }
+
+  function steppingStones(c, S, w, h) {
+    // 飛び石：長い辺に沿って左右に少しずつずらした平たい石
+    const long = h >= w;
+    const L = long ? h : w, A = long ? w : h;
+    const n = Math.max(2, Math.round(L / 1.05));
+    const p = L / n;
+    thin(c, S, 0.8);
+    for (let i = 0; i < n; i++) {
+      const along = p * (i + 0.5), off = A / 2 + (i % 2 ? 1 : -1) * A * 0.14;
+      const rx = Math.min(p * 0.44, A * 0.34) * (0.9 + (i % 3) * 0.06), ry = rx * (0.82 + (i % 2) * 0.1);
+      const pts = wobblyRing(long ? off : along, long ? along : off, long ? ry : rx, long ? rx : ry, 8, 0.22, 17 + i * 13);
+      smoothOutline(c, pts);
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+    }
+    normal(c, S);
+  }
+
+  function gardenRock(c, S, w, h) {
+    // 庭石：角ばった石と面の線、まわりに砂紋の輪
+    thin(c, S, 0.5);
+    c.strokeStyle = S.softLine;
+    smoothOutline(c, wobblyRing(w / 2, h / 2, w * 0.49, h * 0.48, 9, 0.08, 5));
+    c.stroke();
+    c.strokeStyle = S.line;
+    normal(c, S);
+    c.save();
+    c.translate(w * 0.14, h * 0.14);
+    const rw = w * 0.72, rh = h * 0.72, seed = Math.round(w * 29 + h * 31);
+    blob(c, rw, rh, seed, 8, 0.3);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.save();
+    c.clip();
+    // 影になる面（右下）と稜線
+    c.beginPath();
+    c.moveTo(rw * 0.45, rh * 0.4);
+    c.lineTo(rw * 1.1, rh * 0.5);
+    c.lineTo(rw * 1.1, rh * 1.1);
+    c.lineTo(rw * 0.3, rh * 1.1);
+    c.closePath();
+    c.globalAlpha = 0.45;
+    c.fillStyle = S.dark;
+    c.fill();
+    c.globalAlpha = 1;
+    thin(c, S);
+    line(c, rw * 0.45, rh * 0.4, rw * 0.15, rh * 0.1);
+    line(c, rw * 0.45, rh * 0.4, rw * 0.3, rh * 1.1);
+    line(c, rw * 0.45, rh * 0.4, rw * 1.1, rh * 0.5);
+    c.restore();
+    blob(c, rw, rh, seed, 8, 0.3);
+    c.stroke();
+    c.restore();
+  }
+
+  function bambooFence(c, S, w, h) {
+    // 竹垣（四つ目垣）：縦の竹（丸）を前後交互に並べ、節のある横の竹と柱を縄で結ぶ
+    const long = w >= h;
+    if (!long) {
+      c.save();
+      c.translate(w, 0);
+      c.rotate(Math.PI / 2);
+      bambooFence(c, S, h, w);
+      c.restore();
+      return;
+    }
+    const cr = Math.min(0.09, h * 0.18);
+    thin(c, S, 0.8);
+    let k = 0;
+    for (let x = 0.32; x < w - 0.15; x += 0.36, k++) circle(c, S, x, h / 2 + (k % 2 ? 1 : -1) * h * 0.2, cr, S.wood);
+    normal(c, S);
+    box(c, S, 0.04, h * 0.39, w - 0.08, h * 0.22, h * 0.11, S.wood);
+    thin(c, S, 0.5);
+    for (let x = 0.55; x < w - 0.15; x += 0.72) line(c, x, h * 0.39, x, h * 0.61);
+    normal(c, S);
+    const posts = Math.max(1, Math.round(w / 2));
+    for (let i = 0; i <= posts; i++) {
+      const x = Math.min(w - h * 0.3, Math.max(h * 0.3, (w / posts) * i));
+      circle(c, S, x, h / 2, h * 0.28, S.wood);
+      c.fillStyle = S.line;
+      c.fillRect(x - h * 0.05, h * 0.34, h * 0.1, h * 0.32);
+    }
+  }
+
+  function pineTree(c, S, w, h) {
+    // 松：幹から伸びた枝の先に、雲のように刈りこんだ葉の塊
+    const pads = [[0.24, 0.3, 0.17], [0.76, 0.24, 0.15], [0.2, 0.74, 0.15], [0.74, 0.74, 0.19], [0.5, 0.48, 0.2]];
+    const tx = w * 0.46, ty = h * 0.55;
+    const padPts = pads.map(([px, py, pr], i) => wobblyRing(w * px, h * py, Math.min(w, h) * pr * 1.25, Math.min(w, h) * pr, 7, 0.18, 31 + i * 7));
+    // 枝は葉の塊のあいだだけに見せる（半透明のスタイルでも葉の上に透けない）
+    c.save();
+    padPts.forEach(pts => {
+      c.beginPath();
+      c.rect(0, 0, w, h);
+      scallopOutline(c, pts, 0.32, true);
+      c.clip('evenodd');
+    });
+    c.lineWidth = Math.min(w, h) * 0.05;
+    c.strokeStyle = S.line;
+    pads.slice(0, 4).forEach(([px, py]) => {
+      c.beginPath();
+      c.moveTo(tx, ty);
+      c.quadraticCurveTo((tx + w * px) / 2 + 0.2, (ty + h * py) / 2 - 0.2, w * px, h * py);
+      c.stroke();
+    });
+    c.restore();
+    pads.forEach(([px, py, pr], i) => {
+      const cx = w * px, cy = h * py, rx = Math.min(w, h) * pr * 1.25, ry = Math.min(w, h) * pr;
+      const pts = padPts[i];
+      c.save();
+      c.fillStyle = S.green;
+      c.strokeStyle = S.greenLine;
+      thin(c, S);
+      scallopOutline(c, pts, 0.32);
+      c.fill();
+      c.stroke();
+      c.clip();
+      // 葉の重なり：うろこのような弧
+      thin(c, S, 0.5);
+      const step = Math.max(rx, ry) * 0.5;
+      for (let yy = cy - ry * 0.7, row = 0; yy < cy + ry * 0.8; yy += step * 0.55, row++) {
+        for (let xx = cx - rx + (row % 2) * step * 0.5; xx < cx + rx; xx += step) {
+          c.beginPath();
+          c.arc(xx, yy, step * 0.5, 0.15 * Math.PI, 0.85 * Math.PI);
+          c.stroke();
+        }
+      }
+      c.restore();
+    });
+    circle(c, S, tx, ty + h * 0.12, Math.min(w, h) * 0.04, S.wood);
+  }
+
+  function bambooGrove(c, S, w, h) {
+    // 竹：寄り集まった稈（丸）と、枝先に3〜4枚ずつ扇のように付いた細い葉
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2;
+    const r = rand(Math.round(w * 7 + h * 3));
+    const leaf = (x, y, a, len) => {
+      c.save();
+      c.translate(x, y);
+      c.rotate(a);
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.quadraticCurveTo(len * 0.45, -len * 0.15, len, 0);
+      c.quadraticCurveTo(len * 0.45, len * 0.15, 0, 0);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      c.restore();
+    };
+    c.save();
+    c.fillStyle = S.green;
+    c.strokeStyle = S.greenLine;
+    thin(c, S, 0.5);
+    const sprays = 14;
+    for (let i = 0; i < sprays; i++) {
+      const a = (i / sprays) * TAU + (r() - 0.5) * 0.5;
+      const d = R * (0.3 + r() * 0.42);
+      const sx = cx + Math.cos(a) * d, sy = cy + Math.sin(a) * d;
+      const ta = a + (r() - 0.5) * 1.2;
+      line(c, cx + Math.cos(a) * R * 0.15, cy + Math.sin(a) * R * 0.15, sx, sy);
+      const m = 3 + Math.floor(r() * 2);
+      for (let j = 0; j < m; j++) leaf(sx, sy, ta + (j - (m - 1) / 2) * 0.45, R * (0.26 + r() * 0.12));
+    }
+    c.restore();
+    const culms = [[0, 0], [0.2, -0.1], [-0.16, -0.14], [-0.08, 0.18], [0.14, 0.16], [0.06, -0.26], [-0.27, 0.06], [0.3, 0.05], [-0.2, 0.28]];
+    thin(c, S);
+    culms.forEach(([dx, dy], i) => {
+      const cr = R * (0.065 + (i % 3) * 0.012);
+      c.save();
+      c.strokeStyle = S.greenLine;
+      circle(c, S, cx + dx * R, cy + dy * R, cr, S.green);
+      c.fillStyle = S.greenLine;
+      c.beginPath();
+      c.arc(cx + dx * R, cy + dy * R, cr * 0.35, 0, TAU);
+      c.fill();
+      c.restore();
+    });
+    normal(c, S);
+  }
+
+  function mossPatch(c, S, w, h) {
+    // 苔：やわらかい輪郭の緑と、点々
+    const pts = wobblyRing(w / 2, h / 2, w * 0.46, h * 0.44, 16, 0.25, Math.round(w * 13 + h * 17));
+    c.save();
+    scallopOutline(c, pts, 0.28);
+    c.globalAlpha = 0.7;
+    c.fillStyle = S.green;
+    c.fill();
+    c.globalAlpha = 1;
+    c.strokeStyle = S.greenLine;
+    thin(c, S, 0.6);
+    c.stroke();
+    c.clip();
+    const r = rand(Math.round(w * 3 + h * 5));
+    c.fillStyle = S.greenLine;
+    for (let i = 0; i < w * h * 3; i++) {
+      c.beginPath();
+      c.arc(r() * w, r() * h, 0.03 + r() * 0.025, 0, TAU);
+      c.fill();
+    }
+    thin(c, S, 0.5);
+    for (let i = 0; i < w * h * 0.5; i++) {
+      const x = r() * w, y = r() * h;
+      c.beginPath();
+      c.arc(x, y, 0.09, Math.PI, TAU);
+      c.stroke();
+    }
+    c.restore();
+  }
+
+  function tsukubaiBasin(c, S, w, h) {
+    // つくばい：竹の筧から水が落ちる石の鉢と柄杓、前石と左右の役石
+    const s = Math.min(w, h);
+    thin(c, S, 0.5);
+    c.strokeStyle = S.softLine;
+    dashed(c, S, true);
+    smoothOutline(c, wobblyRing(w / 2, h * 0.55, w * 0.46, h * 0.42, 9, 0.1, 3));
+    c.stroke();
+    dashed(c, S, false);
+    c.strokeStyle = S.line;
+    thin(c, S, 0.8);
+    [[0.04, 0.5, 0.26, 0.22, 3], [0.7, 0.46, 0.26, 0.24, 8], [0.28, 0.78, 0.44, 0.2, 13]].forEach(([x, y, bw, bh, sd]) => {
+      c.save();
+      c.translate(w * x, h * y);
+      blob(c, w * bw, h * bh, sd, 7, 0.22);
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+      c.restore();
+    });
+    normal(c, S);
+    outlinedRod(c, S, () => { c.beginPath(); c.moveTo(w / 2, 0.04); c.lineTo(w / 2, h * 0.3); }, s * 0.08, S.green);
+    circle(c, S, w / 2, h * 0.45, s * 0.24, S.soft);
+    thin(c, S);
+    circle(c, S, w / 2, h * 0.45, s * 0.14, S.water);
+    line(c, w * 0.28, h * 0.39, w * 0.6, h * 0.39);
+    circle(c, S, w * 0.64, h * 0.39, s * 0.04, S.wood);
+    normal(c, S);
+  }
+
+  function shishiOdoshi(c, S, w, h) {
+    // 鹿威し：筧から水を受けて傾く竹筒、支えの柱、筒が打つ石
+    thin(c, S, 0.8);
+    smoothOutline(c, wobblyRing(w * 0.18, h * 0.62, w * 0.16, h * 0.3, 8, 0.2, 9));
+    c.fillStyle = S.water;
+    c.fill();
+    c.stroke();
+    c.save();
+    c.translate(w * 0.76, h * 0.22);
+    blob(c, w * 0.22, h * 0.6, 21, 7, 0.22);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.stroke();
+    c.restore();
+    normal(c, S);
+    const s = Math.min(w, h);
+    outlinedRod(c, S, () => { c.beginPath(); c.moveTo(w * 0.04, 0.04); c.lineTo(w * 0.04, h * 0.2); c.lineTo(w * 0.16, h * 0.34); }, s * 0.1, S.green);
+    const ty = h * 0.52, tt = s * 0.26;
+    c.beginPath();
+    c.moveTo(w * 0.14, ty - tt / 2);
+    c.lineTo(w * 0.86, ty - tt / 2);
+    c.quadraticCurveTo(w * 0.88, ty, w * 0.86, ty + tt / 2);
+    c.lineTo(w * 0.24, ty + tt / 2);
+    c.closePath();
+    c.fillStyle = S.green;
+    c.fill();
+    c.stroke();
+    thin(c, S);
+    [0.42, 0.66].forEach(px => line(c, w * px, ty - tt / 2, w * px, ty + tt / 2));
+    ellipse(c, S, w * 0.19, ty, tt * 0.14, tt * 0.44, S.dark);
+    normal(c, S);
+    [ty - tt / 2 - s * 0.22, ty + tt / 2 + s * 0.04].forEach(y => box(c, S, w * 0.5, y, w * 0.07, s * 0.18, 0.02, S.wood));
+    thin(c, S);
+    line(c, w * 0.535, ty - tt / 2 - s * 0.04, w * 0.535, ty + tt / 2 + s * 0.04);
+    normal(c, S);
+  }
+
+  function teaHouse(c, S, w, h) {
+    // 茶室（外から）：寄棟の屋根、下の辺ににじり口と踏み石
+    const m = Math.min(w, h) * 0.03, eb = h * 0.8;
+    const rw = w - m * 2, rd = eb - m;
+    box(c, S, m, m, rw, rd, 0.04, S.wood);
+    thin(c, S, 0.5);
+    c.strokeStyle = S.softLine;
+    for (let k = 0.35; k < Math.min(rw, rd) / 2 - 0.2; k += 0.35) {
+      c.strokeRect(m + k, m + k, rw - k * 2, rd - k * 2);
+    }
+    c.strokeStyle = S.line;
+    thin(c, S);
+    const cx = w / 2, cy = m + rd / 2;
+    const half = Math.max(0, (rw - rd) / 2);
+    const rx0 = cx - half, rx1 = cx + half;
+    line(c, m, m, rx0, cy);
+    line(c, m, eb, rx0, cy);
+    line(c, w - m, m, rx1, cy);
+    line(c, w - m, eb, rx1, cy);
+    c.lineWidth = S.lw * 1.8;
+    line(c, rx0, cy, rx1, cy);
+    normal(c, S);
+    const nx = w * 0.26, nw = Math.min(1.4, w * 0.22);
+    box(c, S, nx, eb, nw, h * 0.04, 0.01, S.dark);
+    thin(c, S, 0.8);
+    [[nx + nw / 2, eb + h * 0.1, 0.5, 0.3], [nx + nw * 1.3, eb + h * 0.155, 0.36, 0.24]].forEach(([x, y, sw, sh], i) => {
+      smoothOutline(c, wobblyRing(x, y, sw, sh, 8, 0.2, 7 + i * 11));
+      c.fillStyle = S.soft;
+      c.fill();
+      c.stroke();
+    });
+    normal(c, S);
+  }
+
+  /* 寺院 */
+
+  function shumidan(c, S, w, h) {
+    // 須弥壇：段のある壇に、光背を負い蓮台に座る本尊。手前に燭台・香炉・供物
+    box(c, S, 0, 0, w, h, 0.04, S.wood);
+    thin(c, S);
+    rr(c, w * 0.04, h * 0.04, w * 0.92, h * 0.86, 0.03);
+    c.stroke();
+    normal(c, S);
+    const cx = w / 2, s = Math.min(w, h);
+    c.beginPath();
+    c.moveTo(cx, h * 0.04);
+    c.bezierCurveTo(cx + s * 0.42, h * 0.1, cx + s * 0.4, h * 0.56, cx, h * 0.58);
+    c.bezierCurveTo(cx - s * 0.4, h * 0.56, cx - s * 0.42, h * 0.1, cx, h * 0.04);
+    c.closePath();
+    c.fillStyle = S.yellow;
+    c.fill();
+    c.stroke();
+    const pr = s * 0.26;
+    c.beginPath();
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU, a2 = ((i + 0.5) / 12) * TAU;
+      const x1 = cx + Math.cos(a) * pr, y1 = h * 0.5 + Math.sin(a) * pr * 0.8;
+      if (i === 0) c.moveTo(x1, y1);
+      c.quadraticCurveTo(cx + Math.cos(a2) * pr * 1.25, h * 0.5 + Math.sin(a2) * pr * 1.0, cx + Math.cos(a + TAU / 12) * pr, h * 0.5 + Math.sin(a + TAU / 12) * pr * 0.8);
+    }
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    // 坐像（上から）：組んだ脚、肩、頭（まん中に肉髻）、膝の上の手
+    ellipse(c, S, cx, h * 0.56, s * 0.21, s * 0.09, S.yellow);
+    ellipse(c, S, cx, h * 0.45, s * 0.15, s * 0.095, S.yellow);
+    circle(c, S, cx, h * 0.41, s * 0.075, S.yellow);
+    thin(c, S);
+    circle(c, S, cx, h * 0.41, s * 0.03, false);
+    ellipse(c, S, cx, h * 0.555, s * 0.055, s * 0.03, S.yellow);
+    normal(c, S);
+    // 燭台
+    [0.12, 0.88].forEach(px => {
+      circle(c, S, w * px, h * 0.72, s * 0.08, S.fill);
+      circle(c, S, w * px, h * 0.72, s * 0.035, S.flame);
+    });
+    // 香炉
+    circle(c, S, cx, h * 0.8, s * 0.09, S.dark);
+    thin(c, S);
+    circle(c, S, cx, h * 0.8, s * 0.05, S.soft);
+    // 供物と花
+    [0.3, 0.7].forEach(px => {
+      circle(c, S, w * px, h * 0.76, s * 0.08, S.fill);
+      circle(c, S, w * px, h * 0.76, s * 0.045, S.soft);
+    });
+    [0.24, 0.76].forEach(px => {
+      c.save();
+      c.fillStyle = S.green;
+      c.strokeStyle = S.greenLine;
+      [-0.6, 0, 0.6].forEach(a => {
+        c.save();
+        c.translate(w * px, h * 0.3);
+        c.rotate(a);
+        c.beginPath();
+        c.ellipse(0, -s * 0.07, s * 0.03, s * 0.07, 0, 0, TAU);
+        c.fill();
+        c.stroke();
+        c.restore();
+      });
+      c.restore();
+      circle(c, S, w * px, h * 0.3, s * 0.035, S.fill);
+    });
+    normal(c, S);
+  }
+
+  function bellTower(c, S, w, h) {
+    // 鐘楼（上から）：屋根の輪郭（破線）、四隅の柱、梵鐘と撞木
+    const s = Math.min(w, h);
+    thin(c, S);
+    dashed(c, S, true);
+    rr(c, 0.04, 0.04, w - 0.08, h - 0.08, 0.04);
+    c.stroke();
+    line(c, 0.04, 0.04, w * 0.36, h / 2);
+    line(c, 0.04, h - 0.04, w * 0.36, h / 2);
+    line(c, w - 0.04, 0.04, w * 0.64, h / 2);
+    line(c, w - 0.04, h - 0.04, w * 0.64, h / 2);
+    line(c, w * 0.36, h / 2, w * 0.64, h / 2);
+    dashed(c, S, false);
+    normal(c, S);
+    const p = s * 0.1;
+    [[0.16, 0.16], [0.84, 0.16], [0.16, 0.84], [0.84, 0.84]].forEach(([px, py]) => box(c, S, w * px - p / 2, h * py - p / 2, p, p, 0.01, S.wood));
+    const br = s * 0.22;
+    box(c, S, w * 0.04, h * 0.6 - s * 0.05, w * 0.36 - br * 0.5, s * 0.1, s * 0.05, S.wood);
+    thin(c, S);
+    [0.12, 0.3].forEach(px => line(c, w * px, h * 0.6 - s * 0.05, w * px, h * 0.6 - s * 0.14));
+    normal(c, S);
+    circle(c, S, w / 2, h / 2, br, S.dark);
+    thin(c, S);
+    circle(c, S, w / 2, h / 2, br * 0.72, false);
+    circle(c, S, w / 2, h / 2, br * 0.3, S.soft);
+    normal(c, S);
+  }
+
   /* ---------- PACK D: 探索・事件 / ホラー・オカルト / NPC・敵 ---------- */
 
   /* (PACK D の描画関数はここ) */
@@ -3708,62 +5300,62 @@
     /* ===== /PACK B ===== */
 
     /* ===== PACK C: 物流・工業 / 屋外・道路 / 和風屋敷・庭園・寺院 ===== */
-    A('pallet', 'industry', 2.2, 2.2, todo('PL'), { ja: 'パレット', en: 'Pallet', ko: '팔레트' }),
-    A('pallet_stack', 'industry', 2.2, 2.2, todo('PL積'), { ja: '木製パレット積み', en: 'Stacked pallets', ko: '쌓인 팔레트' }),
-    A('cardboard', 'industry', 1.2, 0.9, todo('箱'), { ja: 'ダンボール箱', en: 'Cardboard box', ko: '골판지 상자' }),
-    A('big_crate', 'industry', 3, 2.4, todo('木箱'), { ja: '大型木箱', en: 'Large wooden crate', ko: '대형 나무 상자' }),
-    A('container', 'industry', 5, 12, todo('コンテナ'), { ja: '貨物コンテナ', en: 'Shipping container', ko: '화물 컨테이너' }, { tags: ['transport'] }),
-    A('drum', 'industry', 1.2, 1.2, todo('ドラム'), { ja: 'ドラム缶', en: 'Oil drum', ko: '드럼통' }),
-    A('hand_cart', 'industry', 1.4, 2, todo('台車'), { ja: '台車', en: 'Hand cart', ko: '대차(손수레)' }),
-    A('tool_shelf', 'industry', 3, 1, todo('工具棚'), { ja: '工具棚', en: 'Tool shelf', ko: '공구 선반' }),
-    A('machine_tool', 'industry', 3, 2.4, todo('機械'), { ja: '工作機械', en: 'Machine tool', ko: '공작 기계' }, { tags: ['machinery'] }),
-    A('generator', 'industry', 1.6, 1.2, todo('発電'), { ja: '発電機（可搬型）', en: 'Portable generator', ko: '발전기(이동식)' }),
-    A('ind_tank', 'industry', 3, 3, todo('タンク'), { ja: '工業用タンク', en: 'Industrial tank', ko: '공업용 탱크' }),
-    A('conveyor', 'industry', 10, 2, todo('コンベア'), { ja: 'ベルトコンベア', en: 'Conveyor belt', ko: '벨트 컨베이어' }, { tags: ['machinery'] }),
-    A('workbench', 'industry', 4, 1.6, todo('作業台'), { ja: '作業台', en: 'Workbench', ko: '작업대' }),
-    A('material_pile', 'industry', 4, 3, todo('資材'), { ja: '資材の山', en: 'Pile of materials', ko: '자재 더미' }),
-    A('building_materials', 'industry', 8, 2, todo('鉄骨'), { ja: '建築資材（鉄骨・木材）', en: 'Building materials', ko: '건축 자재(철골·목재)' }),
-    A('pallet_rack', 'industry', 8, 2.2, todo('ラック'), { ja: '大型ラック', en: 'Pallet rack', ko: '대형 랙' }),
-    A('supply_shelf', 'industry', 3, 1, todo('備蓄'), { ja: '備蓄棚', en: 'Supply shelf', ko: '비축 선반' }),
+    A('pallet', 'industry', 2.2, 2.2, woodPallet, { ja: 'パレット', en: 'Pallet', ko: '팔레트' }),
+    A('pallet_stack', 'industry', 2.2, 2.2, palletStack, { ja: '木製パレット積み', en: 'Stacked pallets', ko: '쌓인 팔레트' }),
+    A('cardboard', 'industry', 1.2, 0.9, cardboardBox, { ja: 'ダンボール箱', en: 'Cardboard box', ko: '골판지 상자' }),
+    A('big_crate', 'industry', 3, 2.4, bigCrate, { ja: '大型木箱', en: 'Large wooden crate', ko: '대형 나무 상자' }),
+    A('container', 'industry', 5, 12, shippingContainer, { ja: '貨物コンテナ', en: 'Shipping container', ko: '화물 컨테이너' }, { tags: ['transport'] }),
+    A('drum', 'industry', 1.2, 1.2, oilDrum, { ja: 'ドラム缶', en: 'Oil drum', ko: '드럼통' }),
+    A('hand_cart', 'industry', 1.4, 2, handCart, { ja: '台車', en: 'Hand cart', ko: '대차(손수레)' }),
+    A('tool_shelf', 'industry', 3, 1, toolShelf, { ja: '工具棚', en: 'Tool shelf', ko: '공구 선반' }),
+    A('machine_tool', 'industry', 3, 2.4, latheMachine, { ja: '工作機械', en: 'Machine tool', ko: '공작 기계' }, { tags: ['machinery'] }),
+    A('generator', 'industry', 1.6, 1.2, portableGenerator, { ja: '発電機（可搬型）', en: 'Portable generator', ko: '발전기(이동식)' }),
+    A('ind_tank', 'industry', 3, 3, industrialTank, { ja: '工業用タンク', en: 'Industrial tank', ko: '공업용 탱크' }),
+    A('conveyor', 'industry', 10, 2, conveyorBelt, { ja: 'ベルトコンベア', en: 'Conveyor belt', ko: '벨트 컨베이어' }, { tags: ['machinery'] }),
+    A('workbench', 'industry', 4, 1.6, workbenchVise, { ja: '作業台', en: 'Workbench', ko: '작업대' }),
+    A('material_pile', 'industry', 4, 3, materialPile, { ja: '資材の山', en: 'Pile of materials', ko: '자재 더미' }),
+    A('building_materials', 'industry', 8, 2, buildingMaterials, { ja: '建築資材（鉄骨・木材）', en: 'Building materials', ko: '건축 자재(철골·목재)' }),
+    A('pallet_rack', 'industry', 8, 2.2, palletRack, { ja: '大型ラック', en: 'Pallet rack', ko: '대형 랙' }),
+    A('supply_shelf', 'industry', 3, 1, supplyShelf, { ja: '備蓄棚', en: 'Supply shelf', ko: '비축 선반' }),
 
-    A('road', 'outdoor', 12, 12, todo('道路'), { ja: '道路（2車線）', en: 'Road (2 lanes)', ko: '도로(2차선)' }, { under: true, tags: ['transport'] }),
-    A('crosswalk', 'outdoor', 8, 6, todo('横断'), { ja: '横断歩道', en: 'Crosswalk', ko: '횡단보도' }, { under: true, tags: ['transport'] }),
-    A('parking_stall', 'outdoor', 5, 10, todo('P'), { ja: '駐車区画', en: 'Parking space', ko: '주차 구획' }, { under: true, tags: ['transport'] }),
-    A('road_arrow', 'outdoor', 2, 4, todo('↑'), { ja: '路面の矢印', en: 'Road arrow', ko: '노면 화살표' }, { under: true, tags: ['transport'] }),
-    A('road_sign', 'outdoor', 1, 1, todo('標識'), { ja: '道路標識', en: 'Road sign', ko: '도로 표지판' }, { tags: ['transport'] }),
-    A('traffic_light', 'outdoor', 1.2, 0.8, todo('信号'), { ja: '信号機', en: 'Traffic light', ko: '신호등' }, { tags: ['transport'] }),
-    A('cone', 'outdoor', 0.8, 0.8, todo('コーン'), { ja: 'カラーコーン', en: 'Traffic cone', ko: '라바콘' }),
-    A('bollard_post', 'outdoor', 0.6, 0.6, todo('ポール'), { ja: '車止め（ポール）', en: 'Bollard', ko: '볼라드' }),
-    A('streetlight', 'outdoor', 1, 1, todo('街灯'), { ja: '街灯', en: 'Street lamp', ko: '가로등' }),
-    A('utility_pole', 'outdoor', 1, 1, todo('電柱'), { ja: '電柱', en: 'Utility pole', ko: '전봇대' }),
-    A('puddle', 'outdoor', 2.4, 1.6, todo('水'), { ja: '水たまり', en: 'Puddle', ko: '물웅덩이' }, { under: true, tags: ['ruins'] }),
-    A('cliff', 'outdoor', 8, 3, todo('崖'), { ja: '崖', en: 'Cliff edge', ko: '절벽' }, { tags: ['danger'] }),
-    A('landslide', 'outdoor', 4, 3, todo('土砂'), { ja: '土砂', en: 'Landslide debris', ko: '토사' }, { tags: ['damaged', 'danger'] }),
-    A('site_fence', 'outdoor', 6, 0.4, todo('仮囲'), { ja: '工事柵（仮囲い）', en: 'Construction hoarding', ko: '공사 가림막' }, { tags: ['industrial'] }),
+    A('road', 'outdoor', 12, 12, roadLanes, { ja: '道路（2車線）', en: 'Road (2 lanes)', ko: '도로(2차선)' }, { under: true, tags: ['transport'] }),
+    A('crosswalk', 'outdoor', 8, 6, crosswalkStripes, { ja: '横断歩道', en: 'Crosswalk', ko: '횡단보도' }, { under: true, tags: ['transport'] }),
+    A('parking_stall', 'outdoor', 5, 10, parkingStall, { ja: '駐車区画', en: 'Parking space', ko: '주차 구획' }, { under: true, tags: ['transport'] }),
+    A('road_arrow', 'outdoor', 2, 4, roadArrow, { ja: '路面の矢印', en: 'Road arrow', ko: '노면 화살표' }, { under: true, tags: ['transport'] }),
+    A('road_sign', 'outdoor', 1, 1, roadSign, { ja: '道路標識', en: 'Road sign', ko: '도로 표지판' }, { tags: ['transport'] }),
+    A('traffic_light', 'outdoor', 1.2, 0.8, trafficSignal, { ja: '信号機', en: 'Traffic light', ko: '신호등' }, { tags: ['transport'] }),
+    A('cone', 'outdoor', 0.8, 0.8, trafficCone, { ja: 'カラーコーン', en: 'Traffic cone', ko: '라바콘' }),
+    A('bollard_post', 'outdoor', 0.6, 0.6, bollardPost, { ja: '車止め（ポール）', en: 'Bollard', ko: '볼라드' }),
+    A('streetlight', 'outdoor', 1, 1, streetLamp, { ja: '街灯', en: 'Street lamp', ko: '가로등' }),
+    A('utility_pole', 'outdoor', 1, 1, utilityPole, { ja: '電柱', en: 'Utility pole', ko: '전봇대' }),
+    A('puddle', 'outdoor', 2.4, 1.6, puddleWater, { ja: '水たまり', en: 'Puddle', ko: '물웅덩이' }, { under: true, tags: ['ruins'] }),
+    A('cliff', 'outdoor', 8, 3, cliffEdge, { ja: '崖', en: 'Cliff edge', ko: '절벽' }, { tags: ['danger'] }),
+    A('landslide', 'outdoor', 4, 3, landslideDebris, { ja: '土砂', en: 'Landslide debris', ko: '토사' }, { tags: ['damaged', 'danger'] }),
+    A('site_fence', 'outdoor', 6, 0.4, siteHoarding, { ja: '工事柵（仮囲い）', en: 'Construction hoarding', ko: '공사 가림막' }, { tags: ['industrial'] }),
 
-    A('shoji', 'japanese', 3, 0.3, todo('障子'), { ja: '障子', en: 'Shoji screen', ko: '쇼지(장지문)' }, { tags: ['japanese', 'indoor'] }),
-    A('fusuma', 'japanese', 3, 0.3, todo('襖'), { ja: '襖', en: 'Fusuma panel', ko: '후스마(맹장지)' }, { tags: ['japanese', 'indoor'] }),
-    A('byobu', 'japanese', 4, 1, todo('屏風'), { ja: '屏風', en: 'Folding screen', ko: '병풍' }, { tags: ['japanese', 'indoor'] }),
-    A('engawa_deck', 'japanese', 6, 2, todo('縁側'), { ja: '縁側（板敷き）', en: 'Engawa boards', ko: '툇마루(마루)' }, { under: true, tags: ['japanese'] }),
-    A('tatami', 'japanese', 1.8, 3.6, todo('畳'), { ja: '畳', en: 'Tatami mat', ko: '다다미' }, { under: true, tags: ['japanese', 'indoor'] }),
-    A('zataku', 'japanese', 3, 2, todo('座卓'), { ja: '座卓', en: 'Low table (zataku)', ko: '좌탁' }, { tags: ['japanese', 'indoor'] }),
-    A('zabuton', 'japanese', 1.2, 1.2, todo('座'), { ja: '座布団', en: 'Floor cushion', ko: '방석' }, { tags: ['japanese', 'indoor'] }),
-    A('katanakake', 'japanese', 2, 0.8, todo('刀'), { ja: '刀掛け', en: 'Sword rack', ko: '칼걸이' }, { tags: ['japanese', 'indoor'] }),
-    A('andon', 'japanese', 0.8, 0.8, todo('行灯'), { ja: '行灯', en: 'Paper lantern (andon)', ko: '안돈(종이 등)' }, { tags: ['japanese', 'indoor'] }),
-    A('pond', 'japanese', 8, 6, todo('池'), { ja: '池', en: 'Garden pond', ko: '연못' }, { under: true, tags: ['japanese', 'outdoor', 'waterside', 'garden'] }),
-    A('stone_bridge', 'japanese', 2, 5, todo('石橋'), { ja: '石橋', en: 'Stone bridge', ko: '돌다리' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('wood_bridge', 'japanese', 2.4, 6, todo('木橋'), { ja: '木橋（太鼓橋）', en: 'Wooden bridge', ko: '나무다리' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('stepping', 'japanese', 1.6, 5, todo('飛石'), { ja: '飛び石', en: 'Stepping stones', ko: '징검돌' }, { under: true, tags: ['japanese', 'outdoor', 'garden'] }),
-    A('garden_rock', 'japanese', 1.8, 1.4, todo('庭石'), { ja: '庭石', en: 'Garden rock', ko: '정원석' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('bamboo_fence', 'japanese', 6, 0.5, todo('竹垣'), { ja: '竹垣', en: 'Bamboo fence', ko: '대나무 울타리' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('pine', 'japanese', 4, 4, todo('松'), { ja: '松', en: 'Pine tree', ko: '소나무' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('bamboo', 'japanese', 3, 3, todo('竹'), { ja: '竹', en: 'Bamboo', ko: '대나무' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('moss', 'japanese', 4, 3, todo('苔'), { ja: '苔', en: 'Moss patch', ko: '이끼' }, { under: true, tags: ['japanese', 'outdoor', 'garden'] }),
-    A('tsukubai', 'japanese', 1.6, 1.6, todo('蹲'), { ja: 'つくばい', en: 'Stone basin (tsukubai)', ko: '쓰쿠바이(돌 물그릇)' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('shishiodoshi', 'japanese', 2.4, 1, todo('鹿威'), { ja: '鹿威し', en: 'Deer scarer (shishi-odoshi)', ko: '시시오도시' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('tea_house', 'japanese', 6, 6, todo('茶室'), { ja: '茶室（建物を外から）', en: 'Tea house (exterior)', ko: '다실(건물 외관)' }, { tags: ['japanese', 'outdoor', 'garden'] }),
-    A('buddha_altar', 'japanese', 4, 2.4, todo('仏像'), { ja: '須弥壇・本尊', en: 'Temple altar & statue', ko: '수미단·본존' }, { tags: ['japanese', 'religious', 'indoor'] }),
-    A('bonsho', 'japanese', 3, 3, todo('梵鐘'), { ja: '梵鐘（鐘楼）', en: 'Temple bell', ko: '범종(종루)' }, { tags: ['japanese', 'religious', 'outdoor'] }),
+    A('shoji', 'japanese', 3, 0.3, shojiScreen, { ja: '障子', en: 'Shoji screen', ko: '쇼지(장지문)' }, { tags: ['japanese', 'indoor'] }),
+    A('fusuma', 'japanese', 3, 0.3, fusumaPanel, { ja: '襖', en: 'Fusuma panel', ko: '후스마(맹장지)' }, { tags: ['japanese', 'indoor'] }),
+    A('byobu', 'japanese', 4, 1, byobuScreen, { ja: '屏風', en: 'Folding screen', ko: '병풍' }, { tags: ['japanese', 'indoor'] }),
+    A('engawa_deck', 'japanese', 6, 2, engawaBoards, { ja: '縁側（板敷き）', en: 'Engawa boards', ko: '툇마루(마루)' }, { under: true, tags: ['japanese'] }),
+    A('tatami', 'japanese', 1.8, 3.6, tatamiMat, { ja: '畳', en: 'Tatami mat', ko: '다다미' }, { under: true, tags: ['japanese', 'indoor'] }),
+    A('zataku', 'japanese', 3, 2, zatakuTable, { ja: '座卓', en: 'Low table (zataku)', ko: '좌탁' }, { tags: ['japanese', 'indoor'] }),
+    A('zabuton', 'japanese', 1.2, 1.2, zabutonCushion, { ja: '座布団', en: 'Floor cushion', ko: '방석' }, { tags: ['japanese', 'indoor'] }),
+    A('katanakake', 'japanese', 2, 0.8, katanaRack, { ja: '刀掛け', en: 'Sword rack', ko: '칼걸이' }, { tags: ['japanese', 'indoor'] }),
+    A('andon', 'japanese', 0.8, 0.8, andonLamp, { ja: '行灯', en: 'Paper lantern (andon)', ko: '안돈(종이 등)' }, { tags: ['japanese', 'indoor'] }),
+    A('pond', 'japanese', 8, 6, gardenPond, { ja: '池', en: 'Garden pond', ko: '연못' }, { under: true, tags: ['japanese', 'outdoor', 'waterside', 'garden'] }),
+    A('stone_bridge', 'japanese', 2, 5, stoneBridge, { ja: '石橋', en: 'Stone bridge', ko: '돌다리' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('wood_bridge', 'japanese', 2.4, 6, drumBridge, { ja: '木橋（太鼓橋）', en: 'Wooden bridge', ko: '나무다리' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('stepping', 'japanese', 1.6, 5, steppingStones, { ja: '飛び石', en: 'Stepping stones', ko: '징검돌' }, { under: true, tags: ['japanese', 'outdoor', 'garden'] }),
+    A('garden_rock', 'japanese', 1.8, 1.4, gardenRock, { ja: '庭石', en: 'Garden rock', ko: '정원석' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('bamboo_fence', 'japanese', 6, 0.5, bambooFence, { ja: '竹垣', en: 'Bamboo fence', ko: '대나무 울타리' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('pine', 'japanese', 4, 4, pineTree, { ja: '松', en: 'Pine tree', ko: '소나무' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('bamboo', 'japanese', 3, 3, bambooGrove, { ja: '竹', en: 'Bamboo', ko: '대나무' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('moss', 'japanese', 4, 3, mossPatch, { ja: '苔', en: 'Moss patch', ko: '이끼' }, { under: true, tags: ['japanese', 'outdoor', 'garden'] }),
+    A('tsukubai', 'japanese', 1.6, 1.6, tsukubaiBasin, { ja: 'つくばい', en: 'Stone basin (tsukubai)', ko: '쓰쿠바이(돌 물그릇)' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('shishiodoshi', 'japanese', 2.4, 1, shishiOdoshi, { ja: '鹿威し', en: 'Deer scarer (shishi-odoshi)', ko: '시시오도시' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('tea_house', 'japanese', 6, 6, teaHouse, { ja: '茶室（建物を外から）', en: 'Tea house (exterior)', ko: '다실(건물 외관)' }, { tags: ['japanese', 'outdoor', 'garden'] }),
+    A('buddha_altar', 'japanese', 4, 2.4, shumidan, { ja: '須弥壇・本尊', en: 'Temple altar & statue', ko: '수미단·본존' }, { tags: ['japanese', 'religious', 'indoor'] }),
+    A('bonsho', 'japanese', 3, 3, bellTower, { ja: '梵鐘（鐘楼）', en: 'Temple bell', ko: '범종(종루)' }, { tags: ['japanese', 'religious', 'outdoor'] }),
     /* ===== /PACK C ===== */
 
     /* ===== PACK D: 探索・事件 / ホラー・オカルト / NPC・敵 ===== */
