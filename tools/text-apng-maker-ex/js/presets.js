@@ -387,10 +387,10 @@
       patch: { fill: { type: 'gradient', color: '#e4e1ee', color2: '#bfbad2', color3: '#9a95b3', dir: 'v' }, stroke: { on: true, width: 1.5, color: '#2e2a44' }, glow: { on: false }, subColor: '#c4bfd8', inFx: 'fade', inDur: 0.3 }
     },
     fumble: {
-      accent: '#8a7fb0', band: '#2a2440',
+      accent: '#9a6cf0', band: '#0e0718',
       patch: {
-        fill: { type: 'gradient', color: '#e6dcff', color2: '#b8a8e0', color3: '#7a68a8', dir: 'v' }, stroke: { on: true, width: 2, color: '#0e0a1c' },
-        glow: { on: true, color: '#4a2a88', size: 26, strength: 0.9 }, subColor: '#b8aad8', inFx: 'fade', inDur: 0.35
+        fill: { type: 'gradient', color: '#ffffff', color2: '#e4d8ff', color3: '#a890f0', dir: 'v' }, stroke: { on: true, width: 2, color: '#0a0414' },
+        glow: { on: true, color: '#8a3cff', size: 30, strength: 1.1 }, subColor: '#cbb8f5', inFx: 'fade', inDur: 0.35
       }
     }
   };
@@ -1348,8 +1348,8 @@
         patch: dreamPatch('special', 144)
       },
       {
-        id: 'cocDreamCritical', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('決定的成功', 'Critical', '결정적 성공'),
-        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        id: 'cocDreamCritical', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('クリティカル', 'Critical', '크리티컬'),
+        text: T('クリティカル', 'CRITICAL', '크리티컬'), subText: T('CRITICAL', '', 'CRITICAL'),
         size: FIRE_SIZE, fps: 20,
         patch: dreamPatch('critical', 144)
       },
@@ -1360,8 +1360,8 @@
         patch: dreamPatch('failure', 176)
       },
       {
-        id: 'cocDreamFumble', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('致命的失敗', 'Fumble', '치명적 실패'),
-        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        id: 'cocDreamFumble', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('ファンブル', 'Fumble', '펌블'),
+        text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         size: FIRE_SIZE, fps: 20,
         patch: dreamPatch('fumble', 144)
       },
@@ -1372,20 +1372,20 @@
         patch: dreamPatch('success', 176)
       },
       {
-        id: 'coc7DreamHard', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('難成功', 'Hard Success', '어려운 성공'),
-        text: T('難成功', 'HARD SUCCESS', '어려운 성공'), subText: T('HARD SUCCESS', '', 'HARD SUCCESS'),
+        id: 'coc7DreamHard', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('ハード成功', 'Hard Success', '하드 성공'),
+        text: T('ハード成功', 'HARD SUCCESS', '하드 성공'), subText: T('HARD SUCCESS', '', 'HARD SUCCESS'),
         size: FIRE_SIZE, fps: 20,
         patch: dreamPatch('special', 160)
       },
       {
-        id: 'coc7DreamExtreme', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('極成功', 'Extreme Success', '극단적 성공'),
-        text: T('極成功', 'EXTREME SUCCESS', '극단적 성공'), subText: T('EXTREME SUCCESS', '', 'EXTREME SUCCESS'),
+        id: 'coc7DreamExtreme', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('イクストリーム成功', 'Extreme Success', '익스트림 성공'),
+        text: T('イクストリーム成功', 'EXTREME SUCCESS', '익스트림 성공'), subText: T('EXTREME SUCCESS', '', 'EXTREME SUCCESS'),
         size: FIRE_SIZE, fps: 20,
         patch: dreamPatch('extreme', 160)
       },
       {
-        id: 'coc7DreamCritical', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('決定的成功', 'Critical', '결정적 성공'),
-        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        id: 'coc7DreamCritical', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('クリティカル', 'Critical', '크리티컬'),
+        text: T('クリティカル', 'CRITICAL', '크리티컬'), subText: T('CRITICAL', '', 'CRITICAL'),
         size: FIRE_SIZE, fps: 20,
         patch: dreamPatch('critical', 144)
       },
@@ -1396,8 +1396,8 @@
         patch: dreamPatch('failure', 176)
       },
       {
-        id: 'coc7DreamFumble', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('致命的失敗', 'Fumble', '치명적 실패'),
-        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        id: 'coc7DreamFumble', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('ファンブル', 'Fumble', '펌블'),
+        text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         size: FIRE_SIZE, fps: 20,
         patch: dreamPatch('fumble', 144)
       },

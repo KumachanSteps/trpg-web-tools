@@ -1,5 +1,5 @@
 /*
- * 文字画像APNGメーカーEX — 魔法・夢の演出の部品（光る星の流れ・虹・雲とミスト・蝶・夢の帯）
+ * 文字画像APNGメーカーEX — 魔法・夢の演出の部品（光る星の流れ・虹の五線・雲とミスト・蝶・夢の帯）
  * 判定カットイン「夢」（engine.js の drawDream）から使う。ctx はレイアウトの座標（engine が拡大率をかけてある）。
  * きらめきの十字や光の玉は fx-star.js（TextApngStarFx）を使う。どの関数も時刻を引数で受け取り、同じ時刻なら同じ絵になる。
  */
@@ -144,67 +144,58 @@
   }
 
   /*
-   * 虹の弧。中心 (cx, topY + R)、いちばん外側の頂点が topY。p（0〜1）で左から右へ描かれていく。
-   * o = { alpha, sat（0 = 虹色、1 = 灰色）, double（外にもう1本）, drip（0〜1 で滴るように下へ流れる）, seed }
+   * 虹の五線：五線譜のように、虹色の平行な線が左から右へ、ゆるやかなS字を描いて流れる（「しゃらら〜ん」）。
+   * p（0〜1）で左から右へ描かれていき、先頭は光る。線の間隔は左が狭く右が広い。
+   * o = { x0, x1, cy, A（波の高さ）, g（線の間隔）, n（本数）, w（線の太さ）, cycles（波の数）, phase, alpha, seed, size }
    */
-  function rainbow(ctx, cx, topY, R, bw, p, o = {}) {
+  function rainbowStaff(ctx, o, p) {
     const S = F();
     const al = o.alpha ?? 1;
-    if (al <= 0.004 || p <= 0.002) return;
-    const cyA = topY + R;
-    const sat = o.sat ?? 0;
-    const a0 = Math.PI, a1 = Math.PI + Math.PI * clamp(p);
-    const arcs = (R0, w0, cols, k) => {
-      for (let i = 0; i < 7; i++) {
-        const r = R0 - i * w0 - w0 / 2;
-        const c = desat(cols[i], sat);
-        const lg = ctx.createLinearGradient(cx - R0, 0, cx + R0, 0);
-        lg.addColorStop(0, S.rgba(c, 0));
-        lg.addColorStop(0.1, S.rgba(c, 0.55 * al * k));
-        lg.addColorStop(0.5, S.rgba(c, 0.7 * al * k));
-        lg.addColorStop(0.9, S.rgba(c, 0.55 * al * k));
-        lg.addColorStop(1, S.rgba(c, 0));
-        ctx.lineCap = 'butt';
-        ctx.strokeStyle = lg;
-        ctx.globalAlpha = 0.28;
-        ctx.lineWidth = w0 * 2.3;
-        ctx.beginPath(); ctx.arc(cx, cyA, r, a0, a1); ctx.stroke();
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = w0 + 0.8;
-        ctx.beginPath(); ctx.arc(cx, cyA, r, a0, a1); ctx.stroke();
-      }
-    };
+    if (al <= 0.004 || p <= 0.004) return;
+    const n = o.n ?? 6;
+    const span = o.x1 - o.x0;
+    const xh = o.x0 + span * clamp(p);
+    const u = x => (x - o.x0) / span;
+    const yc = x => o.cy + o.A * Math.sin(TAU * o.cycles * u(x) + o.phase);
+    const gap = x => o.g * (0.7 + 0.6 * smooth(clamp(u(x))));
+    const M = Math.max(10, Math.round((xh - o.x0) / 10));
+    const colOf = i => RAINBOW[n >= 7 ? i : Math.round(i * 6 / (n - 1))];
     ctx.save();
-    arcs(R, bw, RAINBOW, 1);
-    if (o.double) arcs(R + bw * 9, bw * 0.8, RAINBOW.slice().reverse(), 0.45);
-    ctx.restore();
-    // 滴る色（灰色へにじむ）
-    const drip = o.drip ?? 0;
-    if (drip > 0.01) {
-      ctx.save();
-      ctx.lineCap = 'round';
-      for (let i = 0; i < 7; i++) {
-        const r = R - i * bw - bw / 2;
-        const c = desat(RAINBOW[i], sat);
-        for (let m = 0; m < 3; m++) {
-          const ang = Math.PI * (0.16 + 0.68 * rnd(o.seed || 1, i * 7 + m, 5));
-          if (Math.PI + ang > a1) continue;
-          const x = cx + Math.cos(Math.PI + ang) * r, y = cyA + Math.sin(Math.PI + ang) * r;
-          const len = drip * bw * (3 + 9 * rnd(o.seed || 1, i * 7 + m, 6));
-          const g = ctx.createLinearGradient(0, y, 0, y + len);
-          g.addColorStop(0, S.rgba(c, 0.5 * al));
-          g.addColorStop(1, S.rgba(c, 0));
-          ctx.strokeStyle = g;
-          ctx.lineWidth = bw * (0.35 + 0.25 * rnd(o.seed || 1, i * 7 + m, 7));
-          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + len); ctx.stroke();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const g0 = ctx.createLinearGradient(o.x0, 0, xh, 0);
+    for (let pass = 0; pass < 3; pass++) {
+      for (let i = 0; i < n; i++) {
+        const c = colOf(i);
+        const k = i - (n - 1) / 2;
+        ctx.beginPath();
+        for (let m = 0; m <= M; m++) {
+          const x = o.x0 + (xh - o.x0) * m / M;
+          const y = yc(x) + k * gap(x);
+          if (m) ctx.lineTo(x, y); else ctx.moveTo(x, y);
         }
+        const a = pass === 0 ? 0.2 : pass === 1 ? 0.85 : 0.4;
+        const col = pass === 2 ? '#ffffff' : c;
+        const lg = ctx.createLinearGradient(o.x0, 0, Math.max(xh, o.x0 + 1), 0);
+        lg.addColorStop(0, S.rgba(col, 0));
+        lg.addColorStop(Math.min(0.5, 0.12 * span / Math.max(1, xh - o.x0)), S.rgba(col, a * al));
+        lg.addColorStop(1, S.rgba(col, a * al));
+        ctx.strokeStyle = lg;
+        ctx.lineWidth = pass === 0 ? o.w * 2.8 : pass === 1 ? o.w : o.w * 0.3;
+        ctx.stroke();
       }
-      ctx.restore();
     }
-    // 描かれていく先端のきらめき
+    ctx.restore();
     if (p < 0.995) {
-      const rm = R - bw * 3.5;
-      S.glint(ctx, cx + Math.cos(a1) * rm, cyA + Math.sin(a1) * rm, bw * 5, '#ffffff', 0.9 * al, 0.2);
+      // 先頭の光と、尾にこぼれる小さなきらめき
+      for (let i = 0; i < n; i++) S.softDot(ctx, xh, yc(xh) + (i - (n - 1) / 2) * gap(xh), o.w * 1.8, colOf(i), 0.8 * al);
+      S.glint(ctx, xh, yc(xh), o.size * 0.3, '#ffffff', 0.95 * al, 0.2);
+      for (let m = 1; m <= 6; m++) {
+        const x = xh - o.size * (0.25 + 0.3 * m) * (0.7 + 0.6 * rnd(o.seed || 1, m, 8));
+        if (x < o.x0) continue;
+        const y = yc(x) + (rnd(o.seed || 1, m, 9) * 2 - 1) * (n * gap(x) * 0.7);
+        S.glint(ctx, x, y, o.size * (0.1 - 0.012 * m), SPARK[m % SPARK.length], 0.85 * al * (1 - m / 7), m);
+      }
     }
   }
 
@@ -305,50 +296,6 @@
     ctx.restore();
   }
 
-  // 値ノイズ（ほどけ方のむら）
-  function vnoise(x, y, seed) {
-    const xi = Math.floor(x), yi = Math.floor(y);
-    const fx = smooth(x - xi), fy = smooth(y - yi);
-    const a = rnd(xi, yi, seed), b = rnd(xi + 1, yi, seed), c = rnd(xi, yi + 1, seed), d = rnd(xi + 1, yi + 1, seed);
-    return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
-  }
-
-  /*
-   * ほどけて消えていく蝶。小さな画に蝶を描き、ノイズのしきい値で画素を抜いていく（羽の端から先に粉になる）。
-   * q（0〜1）がほどけ具合。scale は出力の拡大率。抜けた分は灰紫の粉になって漂う
-   */
-  function butterflyDissolve(ctx, x, y, s, o, q, scale, seed) {
-    const S = F();
-    const D = Math.ceil(s * 2.7 * scale);
-    if (D < 8) return;
-    const c = makeCanvas(D, D);
-    const x2 = c.getContext('2d');
-    x2.setTransform(1, 0, 0, 1, 0, 0);
-    x2.translate(D / 2, D / 2);
-    // 蝶そのもの（光の玉は描かない）
-    butterfly(x2, 0, 0, s * scale, { ...o, glow: 0, alpha: 1 });
-    let img;
-    try { img = x2.getImageData(0, 0, D, D); } catch (e) { return; }
-    const d = img.data;
-    const cell = Math.max(3, s * scale * 0.09);
-    for (let py = 0; py < D; py++) {
-      for (let px = 0; px < D; px++) {
-        const i = (py * D + px) * 4;
-        if (d[i + 3] === 0) continue;
-        const dx = (px - D / 2) / (s * scale), dy = (py - D / 2) / (s * scale);
-        const far = clamp(Math.hypot(dx, dy * 0.8) / 1.1);
-        const n = vnoise(px / cell, py / cell, seed) * 0.7 + 0.3 * far;
-        const k = clamp((n - (q * 1.5 - 0.35)) * 5);
-        d[i + 3] = d[i + 3] * k;
-      }
-    }
-    x2.putImageData(img, 0, 0);
-    ctx.save();
-    ctx.globalAlpha = (o.alpha ?? 1);
-    ctx.drawImage(c, x - D / 2 / scale, y - D / 2 / scale, D / scale, D / scale);
-    ctx.restore();
-  }
-
   /*
    * 夢の帯：ほんのり透ける夕暮れ色の帯（左右はぼかす）。上下に虹色の細い光の線、中に小さなきらめき。open で中央の細い線から開く
    * r は engine の rollBandRect
@@ -364,7 +311,7 @@
     ctx.save();
     ctx.globalAlpha *= clamp(alpha);
     const g = ctx.createLinearGradient(cx - half, 0, cx + half, 0);
-    const base = tier === 'fumble' ? 0.86 : tier === 'failure' ? 0.8 : 0.7;
+    const base = tier === 'fumble' ? 0.94 : tier === 'failure' ? 0.8 : 0.7;
     g.addColorStop(0, S.rgba(tint, 0));
     g.addColorStop(edge, S.rgba(tint, base));
     g.addColorStop(1 - edge, S.rgba(tint, base));
@@ -383,9 +330,9 @@
     ctx.restore();
     // 上下の虹色の線
     const lg = ctx.createLinearGradient(cx - half, 0, cx + half, 0);
-    const cols = dull ? [desat('#ffb3d9', 0.7), desat('#c9b3ff', 0.7), desat('#a9e6ff', 0.7), desat('#ffe6a3', 0.7)] : ['#ffb3d9', '#c9b3ff', '#a9e6ff', '#b8f5d8', '#ffe6a3'];
+    const cols = tier === 'fumble' ? ['#8a4ce0', '#5a2fa8', '#a070f0', '#3a1c78'] : dull ? [desat('#ffb3d9', 0.7), desat('#c9b3ff', 0.7), desat('#a9e6ff', 0.7), desat('#ffe6a3', 0.7)] : ['#ffb3d9', '#c9b3ff', '#a9e6ff', '#b8f5d8', '#ffe6a3'];
     lg.addColorStop(0, S.rgba(cols[0], 0));
-    cols.forEach((c, i) => lg.addColorStop(edge + 0.04 + (1 - 2 * edge - 0.08) * i / (cols.length - 1), S.rgba(c, dull ? 0.5 : 0.85)));
+    cols.forEach((c, i) => lg.addColorStop(edge + 0.04 + (1 - 2 * edge - 0.08) * i / (cols.length - 1), S.rgba(c, tier === 'fumble' ? 0.8 : dull ? 0.5 : 0.85)));
     lg.addColorStop(1, S.rgba(cols[cols.length - 1], 0));
     ctx.fillStyle = lg;
     const lw = Math.max(1.5, size * 0.011);
@@ -393,7 +340,7 @@
     ctx.fillRect(cx - half, cy + hh, half * 2, lw);
     // 帯の中の小さなきらめき
     if (open > 0.3) {
-      const dim = tier === 'failure' ? 0.45 : tier === 'fumble' ? 0.25 : 1;
+      const dim = tier === 'failure' ? 0.45 : tier === 'fumble' ? 0 : 1;
       for (let i = 0; i < 40; i++) {
         const u = rnd(seed, i, 71) * 2 - 1;
         const x = cx + u * half * 0.95, y = cy + (rnd(seed, i, 72) * 2 - 1) * hh * 0.88;
@@ -408,5 +355,5 @@
     ctx.restore();
   }
 
-  root.TextApngDreamFx = { puff, star5, sweepStar, rainbow, mistBank, butterfly, butterflyDissolve, dreamBand, RAINBOW, SPARK, WINGS, desat };
+  root.TextApngDreamFx = { puff, star5, sweepStar, rainbowStaff, mistBank, butterfly, dreamBand, RAINBOW, SPARK, WINGS, desat };
 })(typeof window !== 'undefined' ? window : globalThis);

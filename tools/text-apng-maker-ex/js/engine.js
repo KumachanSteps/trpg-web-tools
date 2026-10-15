@@ -1640,14 +1640,14 @@
   };
   // 夢（魔法と夢）の段取り。lead：文字が出る（光る星が文字の真ん中を通る）時刻 /
   // sweep：左から右へ流れる光る星の数（先頭の1つは大きい）/ mist：雲とミストのリボンの数 / fly：蝶の数 /
-  // rainbow：虹（arc：1本 / double：二重）/ burst：決めの瞬間に散るきらめき / glints：表示中のきらめき / tail：退場のあと演出が残る時間
+  // rainbow：虹の五線（arc：1本 / double：二本の重ね）/ burst：決めの瞬間に散るきらめき / glints：表示中のきらめき / tail：退場のあと演出が残る時間
   const DREAM_PLAN = {
     success: { lead: 0.5, sweep: 6, mist: 1, fly: 0, rainbow: null, burst: 12, glints: 5 },
     special: { lead: 0.55, sweep: 9, mist: 2, fly: 2, rainbow: null, burst: 16, glints: 7 },
     extreme: { lead: 0.62, sweep: 9, mist: 2, fly: 4, rainbow: 'arc', burst: 22, glints: 8 },
-    critical: { lead: 0.72, sweep: 11, mist: 3, fly: 6, rainbow: 'double', burst: 26, glints: 8 },
+    critical: { lead: 0.72, sweep: 9, mist: 3, fly: 5, rainbow: 'double', burst: 20, glints: 7 },
     failure: { lead: 0.3, sweep: 3, mist: 2, fly: 1, rainbow: null, burst: 0, glints: 0 },
-    fumble: { lead: 0.55, tail: 0.35, sweep: 0, mist: 3, fly: 1, rainbow: 'arc', burst: 0, glints: 0 }
+    fumble: { lead: 0.55, tail: 0.35, sweep: 2, mist: 3, fly: 0, rainbow: null, burst: 0, glints: 0 }
   };
   // 夢の判定のまたたき・ミストの動きを変える回数（1秒あたり。書き出しを軽くする）
   const DREAM_FPS = 8;
@@ -4712,7 +4712,7 @@
       const glow = scene.glow && scene.glow.on ? scene.glow.color : (scene.fill && scene.fill.color) || '#fff3b0';
       let mode = 'rise', colors = [glow, '#ffffff', glow];
       if (dream && tier === 'failure') { mode = 'dust'; colors = ['#b9b4cf', '#9a95b3', '#d4d0e2']; }
-      else if (dream && tier === 'fumble') { mode = 'mist'; colors = ['#3c3452', '#4d4468', '#2c2640']; }
+      else if (dream && tier === 'fumble') { mode = 'mist'; colors = ['#0c0618', '#1c0e34', '#2a1450']; }
       else if (dream) colors = [sfx.color || '#ffd6f0', '#ffffff', '#c4f5ff', '#d6ccff', '#fff0b8'];
       else if (star && tier === 'failure') { mode = 'dust'; colors = ['#9ea3b8', '#80859a', '#c3c6d4']; }
       else if (star && tier === 'fumble') { mode = 'spiral'; colors = ['#efe3ff', '#ffb070', '#c07bff']; }
@@ -4812,7 +4812,7 @@
           const y = y0 - size * (0.12 + 0.2 * rnd(i, 4, 91)) * a;
           const r = size * (0.1 + 0.1 * rnd(i, 5, 91)) * (0.7 + 0.8 * q);
           const D = root.TextApngDreamFx;
-          D.puff(ctx, x, y, r, r * 0.7, st.colors[i % 3], 0.5 * Math.sin(Math.PI * Math.min(1, q * 1.15)) * clamp(a / 0.08));
+          D.puff(ctx, x, y, r, r * 0.7, st.colors[i % 3], 0.8 * Math.sin(Math.PI * Math.min(1, q * 1.15)) * clamp(a / 0.08));
           return;
         }
         if (st.mode === 'dust') {
@@ -5128,25 +5128,22 @@
       const fail = tier === 'failure', fum = tier === 'fumble';
       const textW = mb.x1 - mb.x0;
       const PASTEL = [accent, '#ffd6f0', '#d6ccff', '#c4f5ff', '#fff0b8'];
-      const MIST = fail ? ['#b9b4cf', '#9a95b3', '#d4d0e2'] : fum ? ['#3d3556', '#4b4268', '#2d2744'] : ['#ffdcee', '#dcd2ff', '#d0f0ff', '#ffffff'];
+      const MIST = fail ? ['#b9b4cf', '#9a95b3', '#d4d0e2'] : fum ? ['#0a0414', '#160a28', '#241040'] : ['#ffdcee', '#dcd2ff', '#d0f0ff', '#ffffff'];
 
       if (layer === 'back') {
         const open = fum ? EASE.outCubic(clamp((d - 0.05) / 0.5)) : EASE.outCubic(clamp(d / 0.4));
         D.dreamBand(ctx, band, size, open, fade, accent, tint, tq, seed, tier);
-        // 虹：左から右へ描かれる。致命的失敗では途中から灰色ににじんで滴る
+        // 虹の五線：五線譜のように、虹色の平行な線が左から右へゆるやかなS字を描いて流れる（文字の後ろを通り、帯の外にもはみ出す）
         if (plan.rainbow) {
-          const dbl = plan.rainbow === 'double';
-          const R = W * (dbl ? 0.33 : 0.4);
-          const h = hh * (dbl ? 1.55 : 1.8);
-          const flat = h / R;
-          const b0 = fum ? 0.12 : tier === 'critical' ? 0.08 : 0.14;
-          const p = EASE.outCubic(clamp((d - b0) / (fum ? 0.7 : 0.6)));
-          const rs = fum ? clamp((d - 0.55) / 0.9) : 0;
-          ctx.save();
-          ctx.translate(band.cx, band.cy + hh * 0.95);
-          ctx.scale(1, flat);
-          D.rainbow(ctx, 0, -R, R, R * (dbl ? 0.032 : 0.04), p, { alpha: fade * (fum ? 0.85 : 1) * (1 - 0.4 * out), sat: rs, drip: fum ? clamp((d - 0.7) / 1.0) : 0, double: dbl, seed });
-          ctx.restore();
+          const crit = plan.rainbow === 'double';
+          const ra = fade * (1 - 0.45 * out);
+          const base = { x0: -W * 0.06, x1: W * 1.06, cy: band.cy, size, seed, cycles: 1.25 };
+          D.rainbowStaff(ctx, { ...base, A: hh * 0.55, g: hh * (crit ? 0.12 : 0.14), n: crit ? 7 : 6, w: size * (crit ? 0.036 : 0.046), phase: -0.6, alpha: ra },
+            EASE.outCubic(clamp((d - (crit ? 0.08 : 0.12)) / 0.8)));
+          if (crit) {
+            D.rainbowStaff(ctx, { ...base, A: hh * 0.5, g: hh * 0.095, n: 5, w: size * 0.026, phase: -0.6 + Math.PI * 0.8, alpha: ra * 0.75 },
+              EASE.outCubic(clamp((d - 0.24) / 0.8)));
+          }
         }
         // 雲とミストのリボン
         const mistA = (fail ? 0.3 : fum ? 0.55 : 0.4) * fade * clamp(d / 0.4);
@@ -5167,10 +5164,11 @@
               const x = xs + (xe - xs) * c;
               const y = band.cy + (rnd(seed, i + side * 20, 23) - 0.5) * hh * 1.7 + Math.sin(tq * 1.3 + i) * size * 0.04;
               const r = size * (0.5 + 0.5 * rnd(seed, i, 24));
-              D.puff(ctx, x, y, r, r * 0.62, MIST[(i + side) % 3], (fum ? 0.6 : 0.3) * fade * clamp(c * 2.5) * (1 - 0.7 * out));
+              D.puff(ctx, x, y, r * (fum ? 1.25 : 1), r * (fum ? 0.8 : 0.62), MIST[(i + side) % 3], (fum ? 0.85 : 0.3) * fade * clamp(c * 2.5) * (1 - 0.7 * out));
             }
           }
         }
+        if (fum) this.drawNightmare(ctx, d, tq, band, size, W, hh, mb, seed, fade, out);
         // 左から右へ流れる光る星（先頭の1つが大きい）
         const x0 = -size * 0.5;
         for (let i = 0; i < plan.sweep; i++) {
@@ -5197,7 +5195,7 @@
           const total = (W + size) / v + (hero ? 0.5 : 0.35);
           if (d - t0 > total + 0.2) continue;
           D.sweepStar(ctx, { x0, v, t0, y: x => yBase + off + amp * Math.sin((x - cx) * fq + ph), r, seed: seed + i * 5, alpha: fade * dim,
-            color: fail ? D.desat(PASTEL[(i + 1) % 5], 0.45) : fum ? D.desat(PASTEL[(i + 2) % 5], 0.6) : hero ? accent : PASTEL[i % 5] === accent ? '#ffffff' : PASTEL[i % 5],
+            color: fail ? D.desat(PASTEL[(i + 1) % 5], 0.45) : fum ? (i ? '#8a5cd8' : '#b79aff') : hero ? accent : PASTEL[i % 5] === accent ? '#ffffff' : PASTEL[i % 5],
             trail: hero ? 0.5 : 0.32, until, dieT: 0.35, xEnd: W + size }, d);
         }
         return;
@@ -5212,24 +5210,6 @@
         const fr = 2.4 + 0.8 * rnd(seed, i, 32);
         const ph = rnd(seed, i, 33) * TAU;
         const flap = tt => Math.pow(0.5 + 0.5 * Math.sin(tt * TAU * fr + ph), 0.7);
-        if (fum) {
-          // 文字の左上に舞い降り、羽ばたきが弱まり、色がくすみ、ほどけて粉になる
-          const bx = mb.x0 - size * 0.7, by = band.cy - hh * 0.22 + Math.sin(d * 2) * size * 0.04;
-          const q = clamp((d - 0.7) / 1.0);
-          const sat = clamp((d - 0.3) / 0.8);
-          const o = { flap: 0.45 + 0.55 * flap(d) * (1 - 0.6 * clamp((d - 0.5) / 0.8)), ang: -0.25, c1: D.desat(wing[0], 0.2 + 0.5 * sat), c2: D.desat(wing[1], 0.2 + 0.5 * sat), alpha: fade * clamp((d - 0.2) / 0.3) * (1 - 0.6 * out), glow: 0.5 * (1 - q) };
-          if (q <= 0.001) D.butterfly(ctx, bx, by, bs * 1.15, o);
-          else {
-            D.butterflyDissolve(ctx, bx, by, bs * 1.15, o, q, scale, seed);
-            for (let m = 0; m < 16; m++) {
-              const a0 = q * 1.0 - 0.05 - 0.4 * rnd(seed, m, 34);
-              if (a0 <= 0 || a0 >= 0.9) continue;
-              const px = bx + (rnd(seed, m, 35) - 0.5) * bs * 1.8 + a0 * size * 0.5, py = by + (rnd(seed, m, 36) - 0.5) * bs * 1.2 - a0 * size * 0.6;
-              S.softDot(ctx, px, py, size * 0.03 * (1.2 - a0), m % 2 ? '#8a7fa8' : '#5a4f78', 0.7 * (1 - a0 / 0.9) * fade);
-            }
-          }
-          continue;
-        }
         let u0, dur, laneY, wob;
         if (fail) {
           // 左から舞い込み、文字の近くでためらってから、上へ遠ざかる
@@ -5263,16 +5243,16 @@
 
       if (fail || fum) {
         // 文字が出る瞬間の冷たい光（致命的失敗は暗い紫の揺らぎ）
-        if (fum && s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * 0.35, '#5a3a98', 0.35 * Math.pow(1 - s / 0.4, 2));
         if (fum) {
-          // 手前にも暗い雲が少し流れる（文字の読みやすさのため薄く、下寄り）
+          if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * 0.35, '#5a22b8', 0.4 * Math.pow(1 - s / 0.4, 2));
+          // 手前にも黒紫の雲が少し流れる（文字の読みやすさのため薄く、帯の下寄り）
           const c = EASE.outCubic(clamp((d - 0.4) / 0.9));
           for (let i = 0; i < 5; i++) {
-            const x = (i < 3 ? mb.x0 - size * 0.2 - size * (0.4 + 0.5 * rnd(seed, i, 51)) * c * 0 : mb.x1) + (rnd(seed, i, 52) - 0.5) * size * 1.5;
+            const x = (i < 3 ? mb.x0 : mb.x1) + (rnd(seed, i, 52) - 0.5) * size * 1.5;
             const r = size * (0.45 + 0.3 * rnd(seed, i, 53));
-            D.puff(ctx, x, band.cy + hh * (0.55 + 0.3 * rnd(seed, i, 54)) + Math.sin(tq * 1.1 + i) * size * 0.03, r, r * 0.5, MIST[i % 3], 0.4 * fade * c * (1 - 0.7 * out));
+            D.puff(ctx, x, band.cy + hh * (0.55 + 0.3 * rnd(seed, i, 54)) + Math.sin(tq * 1.1 + i) * size * 0.03, r, r * 0.5, MIST[i % 3], 0.55 * fade * c * (1 - 0.7 * out));
           }
-        }
+        } else if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * 0.3, '#ffffff', 0.25 * Math.pow(1 - s / 0.4, 2));
         return;
       }
       if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * (tier === 'critical' ? 0.42 : 0.36), accent, (tier === 'critical' ? 0.8 : 0.5) * clamp(k) * Math.pow(1 - s / 0.4, 2), tier === 'critical' ? 0.55 : 0.4);
@@ -5306,6 +5286,61 @@
         const r = size * (0.12 + 0.12 * rnd(seed, i, 64)) * Math.pow(Math.sin(Math.PI * ph), 2);
         S.glint(ctx, x, y, r, PASTEL[(i + 1) % 5], ga, rnd(seed, i, 65) * 0.4);
       }
+    }
+
+    // 悪夢（夢の致命的失敗）：きらめく星が淡い紫の光からまたたいて消え、黒い粒になって落ちる。帯の両端から黒紫の煙のひびが伸びる
+    drawNightmare(ctx, d, tq, band, size, W, hh, mb, seed, fade, out) {
+      const S = root.TextApngStarFx;
+      // 消えていく星
+      for (let i = 0; i < 18; i++) {
+        const t0 = 0.1 + 0.9 * rnd(seed, i, 61);
+        const life = 0.5 + 0.35 * rnd(seed, i, 62);
+        const a = d - t0;
+        if (a < 0) continue;
+        const x = band.cx + (rnd(seed, i, 63) * 2 - 1) * W * 0.46;
+        const y = band.cy + (rnd(seed, i, 64) * 2 - 1) * hh * 0.8;
+        const r = size * (0.05 + 0.06 * rnd(seed, i, 65));
+        if (a < life) {
+          const blink = a > life * 0.6 ? (Math.floor(a * 18) % 2 ? 0.25 : 1) : 1;
+          const al = Math.min(1, a / 0.12) * blink * (1 - 0.6 * clamp((a - life * 0.6) / (life * 0.4)));
+          S.glint(ctx, x, y, r * (1 - 0.5 * clamp((a - life * 0.5) / (life * 0.5))), i % 3 ? '#b79aff' : '#e6dcff', 0.85 * al * fade);
+        } else {
+          // 黒い粒になって落ちる
+          const q = (a - life) / 0.8;
+          if (q >= 1) continue;
+          S.softDot(ctx, x + (rnd(seed, i, 66) - 0.5) * size * 0.2 * q, y + size * 0.45 * q * q, r * 0.7, '#05020c', 0.75 * (1 - q) * fade);
+        }
+      }
+      // 黒紫の煙のひび：帯の左右の端から文字へ向かって伸びる
+      const c = EASE.outCubic(clamp((d - 0.2) / 1.0));
+      if (c <= 0.01) return;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      for (let i = 0; i < 6; i++) {
+        const side = i % 2;
+        const y0 = band.cy + (rnd(seed, i, 71) * 2 - 1) * hh * 0.75;
+        const dir = side ? -1 : 1;
+        const x0 = side ? W * 1.02 : -W * 0.02;
+        const len = W * (0.22 + 0.16 * rnd(seed, i, 72)) * c;
+        const N = 14;
+        ctx.beginPath();
+        for (let m = 0; m <= N; m++) {
+          const q = m / N;
+          const x = x0 + dir * len * q;
+          const y = y0 + (rnd(seed, i * 31 + Math.floor(m / 2), 73) - 0.5) * size * 0.28 * q + Math.sin(tq * 1.5 + i + q * 6) * size * 0.03;
+          if (m) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+        }
+        const g = ctx.createLinearGradient(x0, 0, x0 + dir * len, 0);
+        g.addColorStop(0, S.rgba('#7a3cd8', 0.55 * fade * (1 - 0.7 * out)));
+        g.addColorStop(1, S.rgba('#7a3cd8', 0));
+        ctx.strokeStyle = g; ctx.lineWidth = size * 0.05; ctx.stroke();
+        const g2 = ctx.createLinearGradient(x0, 0, x0 + dir * len, 0);
+        g2.addColorStop(0, S.rgba('#05020c', 0.9 * fade * (1 - 0.7 * out)));
+        g2.addColorStop(1, S.rgba('#05020c', 0));
+        ctx.strokeStyle = g2; ctx.lineWidth = size * 0.016; ctx.stroke();
+      }
+      ctx.restore();
     }
 
     /* ---------- 炎の試作（js/fx-fire.js）と環境の演出（js/fx-ash.js） ---------- */
