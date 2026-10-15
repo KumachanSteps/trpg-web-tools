@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.06';
+  const VERSION = 'v1.07';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -337,6 +337,14 @@
 
   /* ================= データの読み込み・保存 ================= */
 
+  // コマ用の方眼の大きさ（マス数。1マス = 0.5m）
+  const TOKEN_GRID_SIZES = [1, 2, 3, 4, 6];
+  // 方眼のオン/オフ。オフにするときは今の大きさを覚えておき、オンに戻すとその大きさで描く
+  function setTokenGrid(on) {
+    const p = app.project;
+    if (p.tokenGrid > 0) app.tokenGridLast = p.tokenGrid;
+    p.tokenGrid = on ? (app.tokenGridLast || 2) : 0;
+  }
   const num = (v, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
   const list = v => (Array.isArray(v) ? v : []);
 
@@ -346,6 +354,7 @@
     out.theme = M.THEMES[p.theme] ? p.theme : 'clean';
     out.showSize = ['none', 'jo', 'm2', 'm'].includes(p.showSize) ? p.showSize : 'none';
     out.showNames = p.showNames !== false;
+    out.tokenGrid = TOKEN_GRID_SIZES.includes(Number(p.tokenGrid)) ? Number(p.tokenGrid) : 0;
     out.floors = p.floors.filter(f => f && typeof f === 'object').map(f => ({
       id: String(f.id || M.uid('f')),
       name: String(f.name == null ? '' : f.name),
@@ -883,7 +892,7 @@
     const ghost = app.ghost && app.project.active > 0 ? app.project.floors[app.project.active - 1] : null;
     M.drawFloor(c, cur(), {
       theme: th, zoom: z, lang: app.lang, showSize: app.project.showSize, hideNames: app.project.showNames === false,
-      playerView: app.playerView, hideClues: !app.showClues, editor: true, grid: app.grid, viewRect, ghost
+      playerView: app.playerView, hideClues: !app.showClues, editor: true, grid: app.grid, tokenGrid: app.project.tokenGrid || 0, viewRect, ghost
     });
     drawOverlays(c, th);
     if (!app.playerView) drawGmBadge(c, th);
@@ -2769,6 +2778,9 @@
     body.appendChild(toggleField(t('props.showNames'), () => p.showNames !== false, v => { p.showNames = v; }));
     body.appendChild(selectField(t('props.sizeLabel'), ['none', 'jo', 'm2', 'm'].map(v => ({ value: v, label: t(`props.sizeModes.${v}`) })), () => p.showSize, v => { p.showSize = v; }));
     body.appendChild(prefToggle(t('props.grid'), () => app.grid, v => { app.grid = v; }));
+    body.appendChild(toggleField(t('props.tokenGrid'), () => p.tokenGrid > 0, setTokenGrid));
+    body.appendChild(selectField(t('props.tokenGridSize'), TOKEN_GRID_SIZES.map(v => ({ value: String(v), label: t('props.tokenGridSizes', { m: v / 2, n: v }) })),
+      () => String(p.tokenGrid || app.tokenGridLast || 2), v => { app.tokenGridLast = Number(v); if (p.tokenGrid > 0) p.tokenGrid = Number(v); }));
     body.appendChild(prefToggle(t('props.ghost'), () => app.ghost, v => { app.ghost = v; }));
     body.appendChild(h('div', { class: 'props-sep' }));
     const f = cur();
@@ -3038,7 +3050,7 @@
     return {
       theme: app.exp.theme || app.project.theme, px, lang: app.lang, showSize: app.project.showSize,
       hideNames: app.project.showNames === false,
-      playerView: app.exp.view === 'pl', hideClues: app.exp.clues === 'hide', grid: app.exp.grid, transparent: app.exp.transparent,
+      playerView: app.exp.view === 'pl', hideClues: app.exp.clues === 'hide', grid: app.exp.grid, tokenGrid: app.project.tokenGrid || 0, transparent: app.exp.transparent,
       gmBadge: app.exp.view === 'pl' ? null : t('badge.gm')
     };
   }
@@ -3074,6 +3086,12 @@
       return h('label', { class: 'toggle-inline' }, h('span', { class: 'switch' }, input, h('span', { class: 'switch-track', 'aria-hidden': 'true' })), h('span', null, label));
     };
     box.appendChild(toggle(t('exp.grid'), 'grid'));
+    // コマ用の方眼はマップ設定と同じ値（ここで切り替えるとマップにも反映）
+    const tgInput = h('input', { type: 'checkbox', class: 'switch-input' });
+    tgInput.checked = app.project.tokenGrid > 0;
+    tgInput.addEventListener('change', () => { change(() => setTokenGrid(tgInput.checked)); renderExport(); });
+    box.appendChild(h('label', { class: 'toggle-inline' }, h('span', { class: 'switch' }, tgInput, h('span', { class: 'switch-track', 'aria-hidden': 'true' })), h('span', null, t('exp.tokenGrid'))));
+    const tgNote = app.project.tokenGrid > 0 ? box.appendChild(h('p', { class: 'field-note' })) : null;
     box.appendChild(toggle(t('exp.transparent'), 'transparent'));
     const info = h('p', { class: 'export-info' });
     box.appendChild(info);
@@ -3096,6 +3114,8 @@
     const k = M.exportScale(cw, ch, app.exp.px);
     const w = Math.round(cw * k), hh = Math.round(ch * k);
     const note = k < app.exp.px ? ` · ${t('exp.tooLarge')}` : '';
+    // 縮小されたときは方眼1つのピクセル数も実際の値で出す
+    if (tgNote) tgNote.textContent = t('exp.tokenGridNote', { m: app.project.tokenGrid / 2, px: Math.round(app.project.tokenGrid * k * 100) / 100 });
     info.textContent = `${t('exp.info', { w, h: hh })}${app.exp.range === 'each' && multi ? ` × ${app.project.floors.length}` : ''}${note}`;
     const img = h('img', { alt: '' });
     img.src = canvas.toDataURL('image/png');

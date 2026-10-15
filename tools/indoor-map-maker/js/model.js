@@ -151,7 +151,7 @@
   }
 
   function emptyProject(name) {
-    return { app: 'indoor-map-maker', v: 1, name: name || '', theme: 'clean', showSize: 'none', showNames: true, floors: [emptyFloor('1F')], active: 0 };
+    return { app: 'indoor-map-maker', v: 1, name: name || '', theme: 'clean', showSize: 'none', showNames: true, tokenGrid: 0, floors: [emptyFloor('1F')], active: 0 };
   }
 
   /* プレイヤー版では GM 専用のものを除く */
