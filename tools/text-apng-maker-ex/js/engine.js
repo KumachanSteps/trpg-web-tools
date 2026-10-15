@@ -654,6 +654,7 @@
       case 'dream': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'vampire': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'fang': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
+      case 'fangFx': return { l: 0, r: 0, t: 0, b: 0 };
       // 燃える文字：炎が字の上へ立ちのぼる分（上に広く空けるので、字は試作と同じく少し下寄りになる）
       case 'fireText': return { l: size * 0.1, r: size * 0.1, t: size * 0.9, b: size * 0.1 };
       case 'fireTextSeq': return { l: size * 0.1, r: size * 0.1, t: size * 0.63, b: size * 0.1 };
@@ -1404,6 +1405,8 @@
     vampire: { lead: 0.5, tail: 0.2 },
     // 牙の戦闘開始：牙が上下から迫って噛み合う時刻（FANG_CLAP）に文字が叩きつけられる
     fang: { lead: 0.58, tail: 0 },
+    // 牙の戦闘演出：文字・帯のない、噛みつく牙だけの演出（画面の中央で噛む。戦闘シーンに重ねる用）
+    fangFx: { lead: 0, tail: 0 },
     // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
     // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
     fireWall: { lead: 0, tail: 0 },
@@ -1425,7 +1428,7 @@
   const ASH_LOOP = 6;
   const SMOKE_LOOP = 6;
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎・一閃・閃光）
-  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream', 'vampire', 'fang']);
+  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream', 'vampire', 'fang', 'fangFx']);
   // 牙の戦闘開始：牙が噛み合う時刻（場面の始めから）
   const FANG_CLAP = 0.56;
   // 装飾枠：線が角から辺の中央まで伸びる時間
@@ -2594,6 +2597,8 @@
         const page = layout.pages[pg.index];
         if (t < pg.start) return;
         if (Number.isFinite(pg.end) && t > pg.end) return;
+        // 文字のない牙の戦闘演出：文字は描かず、牙の演出だけを描く
+        if (sfxOf(scene).type === 'fangFx') { this.drawSfx(ctx, pg, page, t, scale, scene, 'back'); this.drawSfx(ctx, pg, page, t, scale, scene, 'front'); return; }
         if (!page.visibleCount) return;
         const bs = this.blockState(pg, t, scene, size);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'back');
@@ -2814,7 +2819,7 @@
       else if (sfx.type === 'star') this.drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'dream') this.drawDream(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'vampire') this.drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer);
-      else if (sfx.type === 'fang') this.drawFang(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'fang' || sfx.type === 'fangFx') this.drawFang(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type.startsWith('fire')) this.drawFireFx(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, page, t, scale, scene, sfx, k);
@@ -5685,21 +5690,24 @@
       const size = layout.size;
       const W = scene.width, H = scene.height;
       const fill = sfx.color || '#f7f3ea';
-      const rim = sfx.color2 || '#6a665c';
+      const rim = sfx.color2 || '#4d493f';
       const b = page.box;
-      const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+      // 文字のない牙だけの演出（fangFx）は画面の中央で噛む
+      const bare = sfx.type === 'fangFx';
+      const cx = bare ? W / 2 : (b.x0 + b.x1) / 2, cy = bare ? H / 2 : (b.y0 + b.y1) / 2;
       const clap = FANG_CLAP;
       const sc = d - clap;
       const out = outProgress(pg, t);
       // 帯の色は牙の色を深く沈めた色（白はほぼ黒、赤は黒ずんだ赤、黒は黒）
       const dark = S.mix(fill, '#050507', 0.9);
       const lum = (() => { const c = S.mix(fill, '#000000', 0); const m = /#?([0-9a-f]{6})/i.exec(String(c)); if (!m) return 1; const n = parseInt(m[1], 16); return (((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255; })();
-      const SS = Math.min(size * 1.15, W * 0.14);
+      const SS = bare ? Math.min(H * 0.25, W * 0.14) : Math.min(size * 1.15, W * 0.14);
+      const ringW = bare ? SS * 0.075 : size * 0.07;
       if (layer === 'back') {
         // 帯：噛み合ったあとで上下に開く。退場では左から文字と一緒に右へ抜ける
         const open = EASE.outCubic(clamp((sc - 0.04) / 0.36));
         const bOut = EASE.inOutCubic(clamp((out - 0.1) / 0.9));
-        if (open > 0.001 && bOut < 1) {
+        if (!bare && open > 0.001 && bOut < 1) {
           const hh = ((b.y1 - b.y0) / 2 + size * 0.3) * open;
           const left = lerp(0, W, bOut);
           ctx.save();
@@ -5726,7 +5734,7 @@
           ctx.translate(noise1(d * 40, 3) * sh, noise1(d * 40, 9) * sh);
         }
         const closedGap = SS * 1.0;
-        const away = SS * 1.9;
+        const away = SS * 2.3;
         let topY, botY, ta = 1;
         if (sc < 0) {
           const e1 = Math.pow(clamp(d / clap), 2.3);
@@ -5739,7 +5747,7 @@
           ta = 1 - EASE.inQuad(clamp((sc - 0.35) / 0.35));
         }
         if (ta > 0.01) {
-          const o = { alpha: ta, fill, rim, shadow: '#000000', rimW: lum < 0.3 ? 0.016 : 0.02 };
+          const o = { alpha: ta, fill, rim, shadow: '#000000', rimW: lum < 0.3 ? 0.018 : lum > 0.8 ? 0.032 : 0.022, shadowA: lum > 0.8 ? 0.9 : 0.6 };
           V.teethRow(ctx, cx, topY, SS, 1, o);
           V.teethRow(ctx, cx, botY, SS, -1, { ...o, lower: true });
         }
@@ -5751,11 +5759,15 @@
         const flashCol = lum < 0.3 ? rim : fill;
         drawFlash(ctx, cx, cy, W * 0.38, flashCol, 0.75 * clamp(k) * Math.pow(1 - sc / 0.2, 2), 0.45);
       }
-      if (sc >= 0 && sc < 0.5) {
-        const q = sc / 0.5;
+      if (sc >= 0 && sc < 0.55) {
+        const q = sc / 0.55;
         const ringCol = lum < 0.3 ? rim : fill;
-        shockRing(ctx, cx, cy, size * (0.5 + 4.2 * EASE.outCubic(q)), size * 0.05 * (1 - q), ringCol, 0.75 * (1 - q) * clamp(k));
-        shockRing(ctx, cx, cy, size * (0.3 + 2.8 * EASE.outCubic(q)), size * 0.02 * (1 - q), ringCol, 0.5 * (1 - q) * clamp(k));
+        const R1 = (bare ? SS * 0.5 : size * 0.5) + (bare ? SS * 4.2 : size * 4.2) * EASE.outCubic(q);
+        const R2 = (bare ? SS * 0.3 : size * 0.3) + (bare ? SS * 2.8 : size * 2.8) * EASE.outCubic(q);
+        // 明るい背景でも見えるよう、色の輪の下に暗い輪を敷く
+        if (lum > 0.3) { shockRing(ctx, cx, cy, R1, ringW * (1 - q) * 1.9, '#000000', 0.3 * (1 - q)); shockRing(ctx, cx, cy, R2, ringW * 0.5 * (1 - q) * 1.9, '#000000', 0.22 * (1 - q)); }
+        shockRing(ctx, cx, cy, R1, ringW * (1 - q), ringCol, 0.95 * (1 - q) * clamp(k));
+        shockRing(ctx, cx, cy, R2, ringW * 0.5 * (1 - q), ringCol, 0.7 * (1 - q) * clamp(k));
       }
     }
 

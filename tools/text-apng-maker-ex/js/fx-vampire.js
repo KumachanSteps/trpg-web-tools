@@ -183,8 +183,8 @@
     const list = o.lower ? TEETH_LOWER : TEETH;
     ctx.save();
     ctx.globalAlpha *= alpha;
-    ctx.shadowColor = Sx.rgba(o.shadow || '#1a0208', 0.55);
-    ctx.shadowBlur = S * 0.05;
+    ctx.shadowColor = Sx.rgba(o.shadow || '#1a0208', o.shadowA ?? 0.55);
+    ctx.shadowBlur = S * (o.shadowA > 0.7 ? 0.08 : 0.05);
     ctx.fillStyle = o.fill || '#ffffff';
     const paths = [];
     list.forEach(([dx, len, w, bend, off]) => {

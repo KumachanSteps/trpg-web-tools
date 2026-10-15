@@ -533,7 +533,8 @@
   // メッセージのテンプレートの分類（テンプレート一覧の上のタブ）。systems があれば、その下にシステムの段を出す
   const TEMPLATE_GROUPS = {
     message: [
-      { id: 'combat', label: T('戦闘', 'Combat', '전투') },
+      { id: 'combat', label: T('戦闘開始', 'Battle Start', '전투 개시') },
+      { id: 'battlefx', label: T('戦闘演出', 'Battle Effects', '전투 연출') },
       { id: 'investigation', label: T('探索・事件', 'Investigation', '탐색·사건') },
       { id: 'gm', label: T('GM', 'GM', 'GM') },
       { id: 'scene', label: T('シーン・時間', 'Scene & Time', '장면·시간') },
@@ -557,7 +558,7 @@
 
   // 書き出しのループの初期値（テンプレートを選ぶと、この値になる）。ふだんは「1回再生」。
   // 画面に出したままにすることが多いGMの案内と判定の結果は「ずっとループ」。テンプレートに loop があればそれを使う
-  const LOOP_BY_GROUP = { gm: 'infinite', dice: 'infinite' };
+  const LOOP_BY_GROUP = { gm: 'infinite', dice: 'infinite', battlefx: 'infinite' };
 
   const TEMPLATES = {
     message: [
@@ -712,7 +713,7 @@
         // EX：骨の白い牙が上下から迫って噛み合い、衝撃で「戦闘開始」が叩きつけられる。あごが開いて去り、最後は帯ごと右へ抜ける
         id: 'battleFangWhite', group: 'combat', icon: 'fang', label: T('牙の戦闘開始（白）', 'Fang Battle Start (White)', '송곳니 전투 개시（흰색）'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'FANG', 'BATTLE START'),
-        patch: fangPatch('#f7f3ea', '#6a665c', '#ece6d6')
+        patch: fangPatch('#f7f3ea', '#4d493f', '#ece6d6')
       },
       {
         // EX：深紅の牙（暗い縁取り）が噛み合って「戦闘開始」が叩きつけられる
@@ -725,6 +726,36 @@
         id: 'battleFangBlack', group: 'combat', icon: 'fang', label: T('牙の戦闘開始（黒）', 'Fang Battle Start (Black)', '송곳니 전투 개시（검정）'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'FANG', 'BATTLE START'),
         patch: fangPatch('#0b0b0e', '#c9ced9', '#d9dde6')
+      },
+      {
+        // 戦闘演出：骨の白い牙。文字も帯もなく、牙が噛みつくだけ（透明な背景。戦闘シーンに重ねる用。2秒でループ。血は出ない）
+        id: 'fangFxWhite', group: 'battlefx', icon: 'fang', label: T('牙の戦闘演出（白）', 'Fang Battle Effect (White)', '송곳니 전투 연출（흰색）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'infinite',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'fangFx', color: '#f7f3ea', color2: '#4d493f', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：深紅の牙。文字も帯もなく、牙が噛みつくだけ（透明な背景。戦闘シーンに重ねる用。2秒でループ。血は出ない）
+        id: 'fangFxRed', group: 'battlefx', icon: 'fang', label: T('牙の戦闘演出（赤）', 'Fang Battle Effect (Red)', '송곳니 전투 연출（빨강）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'infinite',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'fangFx', color: '#c4121f', color2: '#4a050c', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：漆黒の牙。文字も帯もなく、牙が噛みつくだけ（透明な背景。戦闘シーンに重ねる用。2秒でループ。血は出ない）
+        id: 'fangFxBlack', group: 'battlefx', icon: 'fang', label: T('牙の戦闘演出（黒）', 'Fang Battle Effect (Black)', '송곳니 전투 연출（검정）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'infinite',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'fangFx', color: '#0b0b0e', color2: '#c9ced9', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
       },
       {
         // EX：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と「戦闘開始」が立ち上がる。最後は左から右へ燃えて消える
