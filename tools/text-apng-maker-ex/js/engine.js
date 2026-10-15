@@ -5794,9 +5794,12 @@
       const mode = lum < 0.25 ? 'black' : lum > 0.8 ? 'white' : 'red';
       const under = mode === 'white' ? 'rgba(10,14,26,0.85)' : mode === 'black' ? 'rgba(232,238,250,0.85)' : colorWithAlpha(glow, 0.8);
       const sgn = sfx.dir === 'down' ? -1 : 1;
-      const SWEEP = 0.1, FADE = 0.6, T0 = 0.12;
+      const SWEEP = 0.17, FADE = 0.75, T0 = 0.12;
+      const isX = sfx.cuts === 'x';
       const cuts = [{ t: T0, ang: -0.62 * sgn, rev: false }];
-      if (sfx.cuts === 'x') cuts.push({ t: T0 + 0.12, ang: 0.62 * sgn, rev: false });
+      // X：2本目は最初の一閃の0.12秒後に、向きを左右対称にして中央で交差させる
+      if (isX) cuts.push({ t: T0 + 0.12, ang: 0.62 * sgn, rev: false });
+      const lastEnd = cuts[cuts.length - 1].t + SWEEP;
       const Lc = Math.hypot(W, H) * 0.4;
       const th = H * 0.06 * clamp(k, 0.3, 2);
       const seed = 5200 + pg.index * 13;
@@ -5838,7 +5841,7 @@
       const centre = mode === 'red' ? '#fff0f3' : mode === 'black' ? '#2a2d36' : '#ffffff';
       let sh = 0;
       cuts.forEach(c => { const a = d - c.t - SWEEP * 0.5; if (a >= 0) sh += Math.exp(-a * 18); });
-      const amp = H * 0.007 * Math.min(1.5, sh) * clamp(k, 0, 2);
+      const amp = H * (isX ? 0.01 : 0.007) * Math.min(1.5, sh) * clamp(k, 0, 2);
       ctx.save();
       ctx.translate(noise1(d * 50, 3) * amp, noise1(d * 50, 9) * amp);
       cuts.forEach((c, i) => {
@@ -5847,10 +5850,13 @@
         ctx.save();
         ctx.translate(W / 2, H / 2);
         ctx.rotate(c.ang);
-        const q = (a - SWEEP) / FADE;
+        // 2本あるときは、残像は2本目が振り終わってから一緒に薄れる
+        const q = (d - lastEnd) / FADE;
         if (a < SWEEP) {
           const head = -Lc + 2 * Lc * EASE.outQuad(a / SWEEP);
           const x0 = Math.max(-Lc, head - Lc * 1.1);
+          // 動きのぶれ：幅の広いうすい光を刃の進む道に引く（刃の頭が短いしずくに見えないように）
+          streak(-Lc, head, th * 2.4, glow, 0.28, glow);
           if (mode !== 'red') streak(x0, head, th * 1.35, under, 0.9, under);
           streak(x0, head, th, body, 1, glow);
         } else if (q < 1) {
@@ -5865,10 +5871,10 @@
         if (f >= 0 && f < 0.34) {
           drawFlash(ctx, 0, 0, W * 0.45, glow, 0.85 * clamp(k) * Math.pow(1 - f / 0.34, 2), 0.16);
           ctx.save();
-          ctx.shadowColor = under; ctx.shadowBlur = 5 * scale;
+          ctx.shadowColor = under; ctx.shadowBlur = 8 * scale;
           ctx.lineCap = 'round';
-          ctx.lineWidth = Math.max(1.5, H * 0.004);
-          for (let r = 0; r < 18; r++) {
+          ctx.lineWidth = Math.max(2, H * 0.0065);
+          for (let r = 0; r < 26; r++) {
             const life = 0.28 * (0.55 + 0.45 * rnd(seed + i, r, 3));
             if (f > life) continue;
             const u = (rnd(seed + i, r, 1) * 2 - 1) * Lc * 0.8;
@@ -5877,7 +5883,7 @@
             const v = H * (0.5 + 0.9 * rnd(seed + i, r, 6));
             const dist = v * (1 - Math.exp(-6 * f)) / 6;
             const px = u + Math.cos(ang) * dist, py = Math.sin(ang) * dist;
-            const l = H * 0.05 * (1 - f / life) * (0.5 + rnd(seed + i, r, 7));
+            const l = H * 0.085 * (1 - f / life) * (0.55 + rnd(seed + i, r, 7));
             ctx.globalAlpha = clamp(1 - f / life);
             ctx.strokeStyle = mode === 'red' ? (r % 2 ? '#ff8a96' : '#fff0f3') : mode === 'black' ? '#07080b' : '#ffffff';
             ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - Math.cos(ang) * l, py - Math.sin(ang) * l); ctx.stroke();
@@ -5886,6 +5892,31 @@
         }
         ctx.restore();
       });
+      // X：2本目が決まる瞬間、交差点に星形の強い閃光（細い光の筋が8方向へのびる）
+      if (isX) {
+        const g = d - (cuts[1].t + SWEEP * 0.5);
+        if (g >= 0 && g < 0.4) {
+          const e = Math.pow(1 - g / 0.4, 1.6);
+          const R = H * (0.3 + 0.12 * EASE.outCubic(g / 0.4));
+          const rayCol = mode === 'red' ? '#fff0f3' : mode === 'black' ? '#07080b' : '#ffffff';
+          drawFlash(ctx, W / 2, H / 2, W * 0.28, glow, 0.9 * clamp(k) * e);
+          ctx.save();
+          ctx.translate(W / 2, H / 2);
+          ctx.shadowColor = under; ctx.shadowBlur = 10 * scale;
+          ctx.fillStyle = rayCol;
+          ctx.globalAlpha *= clamp(e);
+          for (let r = 0; r < 8; r++) {
+            const a = r * Math.PI / 4 + 0.1 * g;
+            const len = R * (r % 2 ? 0.55 : 1);
+            const wd = H * (r % 2 ? 0.008 : 0.014);
+            ctx.save();
+            ctx.rotate(a);
+            ctx.beginPath(); ctx.moveTo(0, -wd); ctx.lineTo(len, 0); ctx.lineTo(0, wd); ctx.closePath(); ctx.fill();
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+      }
       ctx.restore();
     }
 

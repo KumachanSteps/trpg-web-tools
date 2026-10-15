@@ -818,6 +818,36 @@
         }
       },
       {
+        // 戦闘演出：白く光るXの二閃。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。1本目のあと0.12秒で左右対称の2本目が交差し、交差点に星形の閃光
+        id: 'katanaXWhite', group: 'battlefx', icon: 'katana', label: T('抜刀の一閃・X（白）', 'Katana X-Slash (White)', '발도의 일섬·X（흰색）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'katanaFx', color: '#cfe6ff', color2: '#ffffff', dir: 'up', cuts: 'x', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 1.9, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：黒いXの二閃（淡い光の縁）。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。1本目のあと0.12秒で左右対称の2本目が交差し、交差点に星形の閃光
+        id: 'katanaXBlack', group: 'battlefx', icon: 'katana', label: T('抜刀の一閃・X（黒）', 'Katana X-Slash (Black)', '발도의 일섬·X（검정）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'katanaFx', color: '#e6ecf8', color2: '#07080b', dir: 'up', cuts: 'x', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 1.9, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：深紅のXの二閃。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。1本目のあと0.12秒で左右対称の2本目が交差し、交差点に星形の閃光
+        id: 'katanaXRed', group: 'battlefx', icon: 'katana', label: T('抜刀の一閃・X（赤）', 'Katana X-Slash (Red)', '발도의 일섬·X（빨강）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'katanaFx', color: '#ff2a40', color2: '#d4182a', dir: 'up', cuts: 'x', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 1.9, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
         // EX：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と「戦闘開始」が立ち上がる。最後は左から右へ燃えて消える
         id: 'battleFlame', group: 'combat', icon: 'flame', label: T('炎の戦闘開始', 'Flame Battle Start', '불꽃의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'IGNITE', 'BATTLE START'),
