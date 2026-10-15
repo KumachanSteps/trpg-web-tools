@@ -294,7 +294,8 @@
   const ROLL_TIME = {
     blade: { success: [1.0, 0.75], special: [1.0, 0.75], extreme: [1.0, 0.75], critical: [1.0, 0.75], failure: [1.05, 0.6], fumble: [1.0, 0.6] },
     shot: { success: [1.0, 0.4], special: [1.0, 0.4], extreme: [1.0, 0.4], critical: [1.0, 0.45], failure: [1.05, 0.6], fumble: [1.0, 0.45] },
-    star: { success: [0.9, 1.1], special: [0.85, 1.1], extreme: [0.85, 1.05], critical: [0.8, 0.95], failure: [1.0, 1.0], fumble: [0.75, 1.0] }
+    star: { success: [0.9, 1.1], special: [0.85, 1.1], extreme: [0.85, 1.05], critical: [0.8, 0.95], failure: [1.0, 1.0], fumble: [0.75, 1.0] },
+    dream: { success: [0.9, 1.05], special: [0.85, 1.05], extreme: [0.8, 1.0], critical: [0.75, 0.95], failure: [0.9, 1.0], fumble: [0.7, 0.9] }
   };
   const rollTime = (kind, tier) => {
     const [hold, outDur] = ROLL_TIME[kind][tier];
@@ -357,6 +358,54 @@
   const starPatch = (tier, fontSize) => {
     const look = STAR_LOOK[tier];
     return { ...STAR_ROLL, fontSize, ...look.patch, ...rollTime('star', tier), sfx: { type: 'star', tier, color: look.accent, color2: look.band, power: 1 } };
+  };
+
+  // 夢（魔法と夢）：パステルの夢景色。桃・ラベンダー・ミント・水色・金の淡い光。星の判定の深い藍とは逆に、淡く透ける帯に光る文字。
+  // 文字は丸みのある明朝（しっぽり明朝B1）にパステルのグラデーションと柔らかい光彩。退場は「星屑になって消える」（失敗は灰色の粉、致命的失敗は灰紫のミストにほどける）
+  const DREAM_LOOK = {
+    success: {
+      accent: '#ffd6f0', band: '#a58ae0',
+      patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#ffe3f4', color3: '#ffb8e0', dir: 'v' }, stroke: { on: true, width: 1.5, color: '#6a4a9c' }, glow: { on: true, color: '#ff9fd8', size: 24, strength: 0.7 }, subColor: '#fff0fa' }
+    },
+    special: {
+      accent: '#c4f5ff', band: '#7fa6e6',
+      patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#dcf6ff', color3: '#a8d8ff', dir: 'v' }, stroke: { on: true, width: 1.5, color: '#3a5a9c' }, glow: { on: true, color: '#7fd4ff', size: 26, strength: 0.8 }, subColor: '#e8fbff' }
+    },
+    extreme: {
+      accent: '#e4d0ff', band: '#9a84e0',
+      patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#f0e0ff', color3: '#c9a8ff', dir: 'v' }, stroke: { on: true, width: 1.5, color: '#4a3490' }, glow: { on: true, color: '#c394ff', size: 30, strength: 0.9 }, subColor: '#f6ecff', hold: 1.9 }
+    },
+    critical: {
+      accent: '#fff0b8', band: '#c08ad8',
+      patch: {
+        fill: { type: 'gradient', color: '#fffdf0', color2: '#ffeab0', color3: '#ffbfe0', dir: 'v' }, stroke: { on: true, width: 2, color: '#6a3a8a' },
+        glow: { on: true, color: '#ffd27a', size: 40, strength: 1.2 }, subColor: '#fff4cc', hold: 2.0, outDur: 1.8
+      }
+    },
+    failure: {
+      accent: '#b9b4cf', band: '#7d7a96',
+      patch: { fill: { type: 'gradient', color: '#e4e1ee', color2: '#bfbad2', color3: '#9a95b3', dir: 'v' }, stroke: { on: true, width: 1.5, color: '#2e2a44' }, glow: { on: false }, subColor: '#c4bfd8', inFx: 'fade', inDur: 0.3 }
+    },
+    fumble: {
+      accent: '#8a7fb0', band: '#2a2440',
+      patch: {
+        fill: { type: 'gradient', color: '#e6dcff', color2: '#b8a8e0', color3: '#7a68a8', dir: 'v' }, stroke: { on: true, width: 2, color: '#0e0a1c' },
+        glow: { on: true, color: '#4a2a88', size: 26, strength: 0.9 }, subColor: '#b8aad8', inFx: 'fade', inDur: 0.35
+      }
+    }
+  };
+  const DREAM_ROLL = {
+    fontId: 'shippori-mincho-b1', weight: 800, letterSpacing: 0.16,
+    subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.42,
+    stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#2a1a4a', opacity: 0.55, blur: 12, x: 0, y: 3 },
+    subColorOn: true, deco: { type: 'none' },
+    inFx: 'fade', inDur: 0.2, inStagger: 0, subFx: 'fade', subDelay: 0.05,
+    hold: 1.7, outFx: 'stardust', outDur: 2.0
+  };
+  const dreamPatch = (tier, fontSize) => {
+    const look = DREAM_LOOK[tier];
+    return { ...DREAM_ROLL, fontSize: Math.round(fontSize * 0.75), ...look.patch, ...rollTime('dream', tier), sfx: { type: 'dream', tier, color: look.accent, color2: look.band, power: 1 } };
   };
 
   // 炎の試作を組み込んだテンプレート：装甲明朝。試作と同じ 960×540（炎は細かい模様が多く、書き出しの目安 5MB に収めるため）
@@ -437,6 +486,8 @@
         { id: 'coc7Gun', label: T('CoC7 銃撃', 'CoC 7e Gunfire', 'CoC7 총격') },
         { id: 'cocStar', label: T('CoC6 星', 'CoC 6e Stars', 'CoC6 별') },
         { id: 'coc7Star', label: T('CoC7 星', 'CoC 7e Stars', 'CoC7 별') },
+        { id: 'cocDream', label: T('CoC6 夢', 'CoC 6e Dreams', 'CoC6 꿈') },
+        { id: 'coc7Dream', label: T('CoC7 夢', 'CoC 7e Dreams', 'CoC7 꿈') },
         { id: 'emoklore', label: T('エモクロア', 'Emoklore', '에모크로아') },
         { id: 'dx', label: T('ダブクロ', 'Double Cross', '더블크로스') }
       ] }
@@ -1282,6 +1333,73 @@
         id: 'coc7StarFumble', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('致命的失敗', 'Fumble', '치명적 실패'),
         text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
         patch: starPatch('fumble', 144)
+      },
+      // 夢（魔法と夢）の判定。CoC6版とCoC7版（CoC7版は抜刀・星と同じ漢字の段階名）
+      {
+        id: 'cocDreamSuccess', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('success', 176)
+      },
+      {
+        id: 'cocDreamSpecial', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('スペシャル', 'Special', '스페셜'),
+        text: T('スペシャル', 'SPECIAL', '스페셜'), subText: T('SPECIAL', '', 'SPECIAL'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('special', 144)
+      },
+      {
+        id: 'cocDreamCritical', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('決定的成功', 'Critical', '결정적 성공'),
+        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('critical', 144)
+      },
+      {
+        id: 'cocDreamFailure', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('failure', 176)
+      },
+      {
+        id: 'cocDreamFumble', group: 'dice', system: 'cocDream', icon: 'butterfly', label: T('致命的失敗', 'Fumble', '치명적 실패'),
+        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('fumble', 144)
+      },
+      {
+        id: 'coc7DreamSuccess', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('success', 176)
+      },
+      {
+        id: 'coc7DreamHard', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('難成功', 'Hard Success', '어려운 성공'),
+        text: T('難成功', 'HARD SUCCESS', '어려운 성공'), subText: T('HARD SUCCESS', '', 'HARD SUCCESS'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('special', 160)
+      },
+      {
+        id: 'coc7DreamExtreme', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('極成功', 'Extreme Success', '극단적 성공'),
+        text: T('極成功', 'EXTREME SUCCESS', '극단적 성공'), subText: T('EXTREME SUCCESS', '', 'EXTREME SUCCESS'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('extreme', 160)
+      },
+      {
+        id: 'coc7DreamCritical', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('決定的成功', 'Critical', '결정적 성공'),
+        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('critical', 144)
+      },
+      {
+        id: 'coc7DreamFailure', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('failure', 176)
+      },
+      {
+        id: 'coc7DreamFumble', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('致命的失敗', 'Fumble', '치명적 실패'),
+        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        size: FIRE_SIZE, fps: 20,
+        patch: dreamPatch('fumble', 144)
       },
       {
         id: 'emoSingle', group: 'dice', system: 'emoklore', label: T('シングル', 'Single', '싱글'),
