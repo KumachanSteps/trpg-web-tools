@@ -1388,9 +1388,9 @@
     p5round2: { lead: 0.3, tail: 0.3 },
     p5gun: { lead: 0.7, tail: 0 },
     // 判定カットイン：lead は結果の段階ごとに変わる（sfxTiming）
-    blade: { lead: 0.42, tail: 0.25 },
-    shot: { lead: 0.56, tail: 0.25 },
-    star: { lead: 0.5, tail: 0.3 },
+    blade: { lead: 0.42, tail: 0.2 },
+    shot: { lead: 0.56, tail: 0.2 },
+    star: { lead: 0.45, tail: 0.2 },
     // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
     // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
     fireWall: { lead: 0, tail: 0 },
@@ -1603,8 +1603,8 @@
     success: { lead: 0.42, cuts: [{ t: 0.28, ang: -0.3 }] },
     special: { lead: 0.6, cuts: [{ t: 0.28, ang: -0.3 }, { t: 0.44, ang: 0.3, rev: true }] },
     extreme: { lead: 0.64, cuts: [{ t: 0.24, ang: -0.3 }, { t: 0.36, ang: 0.3, rev: true }, { t: 0.48, ang: -0.04 }] },
-    critical: { lead: 0.98, ring: 0.6, cuts: [{ t: 0.22, ang: -0.3 }, { t: 0.32, ang: 0.3, rev: true }, { t: 0.42, ang: -0.04 }] },
-    failure: { lead: 0.12, cuts: [{ t: 0.95, pre: 0.5, ang: 1.25, miss: true, sweep: 0.16 }] },
+    critical: { lead: 0.84, ring: 0.51, cuts: [{ t: 0.19, ang: -0.3 }, { t: 0.27, ang: 0.3, rev: true }, { t: 0.36, ang: -0.04 }] },
+    failure: { lead: 0.12, cuts: [{ t: 0.72, pre: 0.38, ang: 1.25, miss: true, sweep: 0.16 }] },
     fumble: { lead: 0.28, cuts: [{ t: 0.2, ang: -0.3, snap: 0.5 }] }
   };
   // 銃撃：曳光弾が画面の外から着弾点まで飛ぶ時間
@@ -1617,7 +1617,7 @@
     special: { lead: 0.6, lock: 0.26, shots: [0.44, 0.6] },
     extreme: { lead: 0.74, lock: 0.3, shots: [0.5, 0.6, 0.74] },
     critical: { lead: 0.96, lock: 0.42, shots: [0.62, 0.7, 0.78, 0.96] },
-    failure: { lead: 0.12, aim: 0.7, shots: [1.0], miss: true },
+    failure: { lead: 0.12, aim: 0.5, shots: [0.78], miss: true },
     fumble: { lead: 0.66, jam: 0.42 }
   };
   // 決めの一発より前の着弾点（文字の中心から。文字の大きさが単位）
@@ -1628,13 +1628,13 @@
   // stars：星座（at：つなぎ始める時刻 / dur：つなぎ終わるまで / n：星の数 / closed：文字を一周する）/
   // shower：流星群の数（決定的成功）/ fizzle：失敗の流れ星が失速する時刻 / tail：退場のあと演出が残る時間
   const STAR_PLAN = {
-    success: { lead: 0.5, meteors: [], burst: 10, glints: 4 },
-    special: { lead: 0.62, meteors: [{ tp: 0.4, off: -1.3, w: 0.7 }, { tp: 0.52, off: 1.2, w: 0.6 }], burst: 16, glints: 6 },
-    extreme: { lead: 0.74, meteors: [{ tp: 0.34, off: -1.5, w: 0.6 }, { tp: 0.46, off: 1.4, w: 0.7 }, { tp: 0.58, off: -0.7, w: 0.55 }], burst: 22, glints: 7,
-      stars: { at: 0.62, dur: 0.75, n: 7, closed: false } },
-    critical: { lead: 1.0, meteors: [], shower: 12, burst: 30, glints: 10, stars: { at: 0.9, dur: 0.85, n: 10, closed: true } },
-    failure: { lead: 0.12, fizzle: 1.0, glints: 0 },
-    fumble: { lead: 0.85, tail: 0.75, glints: 0 }
+    success: { lead: 0.45, meteors: [], burst: 10, glints: 4 },
+    special: { lead: 0.55, meteors: [{ tp: 0.35, off: -1.3, w: 0.7 }, { tp: 0.46, off: 1.2, w: 0.6 }], burst: 16, glints: 6 },
+    extreme: { lead: 0.64, meteors: [{ tp: 0.3, off: -1.5, w: 0.6 }, { tp: 0.4, off: 1.4, w: 0.7 }, { tp: 0.5, off: -0.7, w: 0.55 }], burst: 22, glints: 7,
+      stars: { at: 0.52, dur: 0.6, n: 7, closed: false } },
+    critical: { lead: 0.75, meteors: [], shower: 12, showerSpan: 0.55, burst: 30, glints: 10, stars: { at: 0.68, dur: 0.6, n: 10, closed: true } },
+    failure: { lead: 0.12, fizzle: 0.75, glints: 0 },
+    fumble: { lead: 0.6, tail: 0.35, glints: 0 }
   };
   // 星の判定の流れ星：傾き（右下へ）/ 速さ（画面の幅が単位、1秒あたり）
   const STAR_ANG = 0.42;
@@ -4732,7 +4732,7 @@
           const H = st.hole;
           const dx = x0 - H.x, dy = y0 - H.y;
           const r0 = Math.hypot(dx, dy), th0 = Math.atan2(dy, dx);
-          const T = Math.min(0.7 + 0.8 * clamp(r0 / (size * 4)) + 0.35 * rnd(i, 2, 91), st.end + 0.2 - born);
+          const T = Math.min(0.55 + 0.6 * clamp(r0 / (size * 4)) + 0.25 * rnd(i, 2, 91), st.end + 0.05 - born);
           if (T <= 0.05 || a >= T) return;
           const pos = q => {
             const rr = r0 * (1 - EASE.inQuad(q));
@@ -4754,7 +4754,7 @@
           return;
         }
         if (st.mode === 'dust') {
-          const life = Math.min(0.7 + 0.7 * rnd(i, 2, 91), st.end + 0.25 - born);
+          const life = Math.min(0.6 + 0.5 * rnd(i, 2, 91), st.end + 0.1 - born);
           if (life <= 0.05 || a >= life) return;
           const q = a / life;
           const x = x0 + (rnd(i, 3, 91) - 0.5) * size * 0.35 * a;
@@ -4764,7 +4764,7 @@
           S.softDot(ctx, x, y, r * 2.6, st.colors[i % 3], al);
           return;
         }
-        const life = Math.min(0.8 + 0.9 * rnd(i, 2, 91), st.end + 0.3 - born);
+        const life = Math.min(0.7 + 0.7 * rnd(i, 2, 91), st.end + 0.12 - born);
         if (life <= 0.05 || a >= life) return;
         const q = a / life;
         const ang = -Math.PI / 2 + (rnd(i, 3, 91) - 0.3) * 1.7;
@@ -4886,7 +4886,7 @@
           if (plan.shower) {
             for (let i = 0; i < plan.shower; i++) {
               const off = (rnd(seed, i, 81) * 2 - 1) * 2.4;
-              meteors.push(mk(0.12 + 0.72 * i / plan.shower + 0.05 * rnd(seed, i, 82), off, 0.45 + 0.35 * rnd(seed, i, 83), { color: pastel[i % 4] === '#ffffff' ? accent : pastel[i % 4], sparks: 3 }));
+              meteors.push(mk(0.1 + plan.showerSpan * i / plan.shower + 0.04 * rnd(seed, i, 82), off, 0.45 + 0.35 * rnd(seed, i, 83), { color: pastel[i % 4] === '#ffffff' ? accent : pastel[i % 4], sparks: 3 }));
             }
           }
           meteors.push(mk(L, -0.2, tier === 'critical' ? 1.4 : 1.1, { big: true, sparks: 18 }));
@@ -4923,8 +4923,8 @@
       if (tier === 'fumble') {
         // 最後：つぶれたブラックホールの名残が一瞬光る
         if (hasOut) {
-          const g = t - (pg.outEnd + 0.12);
-          if (g >= 0 && g < 0.4) S.glint(ctx, cx, cy, size * 0.7 * Math.sin(Math.PI * g / 0.4), '#c07bff', 0.9, 0.3);
+          const g = t - (pg.outEnd + 0.02);
+          if (g >= 0 && g < 0.28) S.glint(ctx, cx, cy, size * 0.7 * Math.sin(Math.PI * g / 0.28), '#c07bff', 0.9, 0.3);
         }
         if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * 0.35, '#7a2bd9', 0.5 * Math.pow(1 - s / 0.4, 2));
         return;
@@ -4986,10 +4986,10 @@
       const S = root.TextApngStarFx;
       const R = size * STAR_HOLE_R;
       const hasOut = Number.isFinite(pg.outEnd);
-      const form = clamp((d - 0.25) / 0.6);
-      const collapse = hasOut ? clamp((t - (pg.outEnd - 0.3)) / 0.6) : 0;
+      const form = clamp((d - 0.15) / 0.42);
+      const collapse = hasOut ? clamp((t - (pg.outEnd - 0.35)) / 0.45) : 0;
       // はじまり：中央に紫の光の点が灯り、ふくらんでから黒く反転する
-      if (d < 0.6) S.glint(ctx, cx, cy, size * 0.9 * Math.sin(Math.PI * clamp(d / 0.6)), '#c07bff', 1, d * 2);
+      if (d < 0.42) S.glint(ctx, cx, cy, size * 0.9 * Math.sin(Math.PI * clamp(d / 0.42)), '#c07bff', 1, d * 3);
       // 吸い込まれる星（またたきと同じく、1秒に STAR_TWINKLE_FPS 回だけ動かす）
       const P = 1.5, holdEndD = pg.holdEnd - pg.start;
       // 星は帯の中に収まるように、平たい楕円を描いて落ちる
@@ -4999,7 +4999,7 @@
         const kk = Math.floor((dq - 0.2 - o) / P);
         if (kk < 0) continue;
         const ts = 0.2 + o + kk * P;
-        if (ts > holdEndD + 0.6) continue;
+        if (ts > holdEndD) continue;
         const a = dq - ts, T = 1.2 + 0.5 * rnd(seed + kk, i, 42);
         if (a > T) continue;
         const r0 = R * 1.8 + (W * 0.42 - R * 1.8) * rnd(seed + kk, i, 43);
@@ -5012,7 +5012,7 @@
         const q = a / T;
         const [x, y, rr] = pos(q);
         const [px, py] = pos(Math.max(0, q - 0.035));
-        const al = clamp(a / 0.2) * clamp(rr / R - 0.6) * fade;
+        const al = clamp(a / 0.2) * clamp(rr / R - 0.6) * fade * (1 - collapse);
         if (al <= 0.01) continue;
         const col = q < 0.5 ? '#ffffff' : '#ffb070';
         ctx.lineCap = 'round';
