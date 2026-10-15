@@ -652,6 +652,7 @@
       case 'shot': return { l: 0, r: 0, t: size * 0.65, b: size * 0.65 };
       case 'star': return { l: 0, r: 0, t: size * 0.65, b: size * 0.65 };
       case 'dream': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
+      case 'vampire': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       // 燃える文字：炎が字の上へ立ちのぼる分（上に広く空けるので、字は試作と同じく少し下寄りになる）
       case 'fireText': return { l: size * 0.1, r: size * 0.1, t: size * 0.9, b: size * 0.1 };
       case 'fireTextSeq': return { l: size * 0.1, r: size * 0.1, t: size * 0.63, b: size * 0.1 };
@@ -1399,6 +1400,7 @@
     shot: { lead: 0.56, tail: 0.2 },
     star: { lead: 0.45, tail: 0.2 },
     dream: { lead: 0.5, tail: 0.2 },
+    vampire: { lead: 0.5, tail: 0.2 },
     // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
     // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
     fireWall: { lead: 0, tail: 0 },
@@ -1420,7 +1422,7 @@
   const ASH_LOOP = 6;
   const SMOKE_LOOP = 6;
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎・一閃・閃光）
-  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream']);
+  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream', 'vampire']);
   // 装飾枠：線が角から辺の中央まで伸びる時間
   const FRAME_DRAW = 0.55;
   // 剣と盾：剣が飛び込んで止まるまで / 盾の輪郭を引く時間 / 帯が左右に開き始める時刻と開く時間
@@ -1680,6 +1682,17 @@
     failure: { lead: 0.3, sweep: 3, mist: 2, fly: 1, rainbow: null, burst: 0, glints: 0 },
     fumble: { lead: 0.55, tail: 0.35, sweep: 2, mist: 3, fly: 0, rainbow: null, burst: 0, glints: 0 }
   };
+  // ヴァンパイアの段取り。lead：文字が出る時刻（成功系はコウモリの群れが文字の真ん中を通る / 失敗系は牙が噛み合ってから）/
+  // bats：コウモリの数 / moon：赤い月の大きさ（文字の高さが単位、0で出さない）/ mist：赤い霧のリボン / flare：決めの血の閃光 / burst：散る火の粉の数 /
+  // clap：失敗系で牙が噛み合う時刻 / tail：退場のあと演出が残る時間
+  const VAMPIRE_PLAN = {
+    success: { lead: 0.5, bats: 22, moon: 0, mist: 0, flare: 0, burst: 8 },
+    special: { lead: 0.55, bats: 34, moon: 1.25, mist: 2, flare: 0, burst: 12 },
+    extreme: { lead: 0.62, bats: 46, moon: 1.5, mist: 2, flare: 0.6, burst: 18 },
+    critical: { lead: 0.7, bats: 70, moon: 1.85, mist: 3, flare: 1, burst: 28 },
+    failure: { lead: 0.55, clap: 0.4, bats: 0, moon: 0, mist: 0, flare: 0, burst: 0 },
+    fumble: { lead: 0.7, clap: 0.42, tail: 0.35, bats: 0, moon: 0, mist: 0, flare: 0, burst: 0 }
+  };
   // 夢の判定のまたたき・ミストの動きを変える回数（1秒あたり。書き出しを軽くする）
   const DREAM_FPS = 8;
   // 星の判定の流れ星：傾き（右下へ）/ 速さ（画面の幅が単位、1秒あたり）
@@ -1698,6 +1711,7 @@
 
   // 判定カットインの帯の中心と、上下・左右の半分の長さ（開ききったとき）。
   // solid：左右をぼかし始めるまでの半分の長さ。長い文字でも、文字の下は暗いまま読めるようにする
+  const hh0 = band => band.hh;
   function rollBandRect(page, size, W) {
     const b = page.box;
     const solid = Math.max(W * 0.26, (b.x1 - b.x0) / 2 + size * 0.5);
@@ -1827,6 +1841,7 @@
     if (sfx.type === 'shot') return { lead: SHOT_PLAN[rollTier(sfx)].lead, tail: SFX_TIMING.shot.tail };
     if (sfx.type === 'star') { const pl = STAR_PLAN[rollTier(sfx)]; return { lead: pl.lead, tail: pl.tail ?? SFX_TIMING.star.tail }; }
     if (sfx.type === 'dream') { const pl = DREAM_PLAN[rollTier(sfx)]; return { lead: pl.lead, tail: pl.tail ?? SFX_TIMING.dream.tail }; }
+    if (sfx.type === 'vampire') { const pl = VAMPIRE_PLAN[rollTier(sfx)]; return { lead: pl.lead, tail: pl.tail ?? SFX_TIMING.vampire.tail }; }
     return SFX_TIMING[sfx.type];
   }
 
@@ -1959,6 +1974,29 @@
         const big = tier === 'critical' ? 1 : tier === 'extreme' ? 0.8 : tier === 'special' ? 0.6 : 0.45;
         bs.bright = Math.max(bs.bright, clamp((0.55 + 0.45 * big) * e * e));
         bs.s *= 1 + 0.08 * big * k * e * e * e;
+      }
+    } else if (sfx.type === 'vampire') {
+      const tier = rollTier(sfx);
+      const d = t - pg.textStart;
+      if (tier === 'fumble') {
+        // 噛み砕かれた衝撃のあとに現れる：震えて、血に染まったように少し沈む
+        const sh = d >= 0 && d < 0.5 ? Math.pow(1 - d / 0.5, 2) : 0;
+        bs.x += noise1(t * 34, 7) * size * 0.035 * k * sh;
+        bs.y += noise1(t * 34, 19) * size * 0.025 * k * sh;
+        if (d >= 0.3) {
+          const w = clamp((t - pg.textStart - 0.3) / 0.6);
+          bs.r += 0.012 * k * Math.sin(t * 2.1) * w;
+          bs.y += size * 0.03 * w;
+        }
+      } else if (tier === 'failure') {
+        if (d >= 0) bs.y += size * 0.035 * EASE.outCubic(clamp(d / 0.8));
+        if (d >= 0 && d < 0.25) bs.x += noise1(t * 30, 5) * size * 0.015 * (1 - d / 0.25);
+      } else if (d >= 0 && d < 0.5) {
+        // コウモリが抜けた瞬間：赤く光って、ふわりと少しだけ大きく
+        const e = 1 - d / 0.5;
+        const big = tier === 'critical' ? 1 : tier === 'extreme' ? 0.8 : tier === 'special' ? 0.6 : 0.45;
+        bs.bright = Math.max(bs.bright, clamp((0.4 + 0.4 * big) * e * e));
+        bs.s *= 1 + 0.07 * big * k * e * e * e;
       }
     } else if (sfx.type === 'dream') {
       const tier = rollTier(sfx);
@@ -2760,6 +2798,7 @@
       else if (sfx.type === 'shot') this.drawShot(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'star') this.drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'dream') this.drawDream(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'vampire') this.drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type.startsWith('fire')) this.drawFireFx(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, page, t, scale, scene, sfx, k);
@@ -4867,11 +4906,14 @@
       const size = layout.size;
       const sfx = sfxOf(scene);
       const dream = sfx.type === 'dream';
+      const vamp = sfx.type === 'vampire';
       const star = sfx.type === 'star' || dream;
-      const tier = star ? rollTier(sfx) : 'success';
+      const tier = star || vamp ? rollTier(sfx) : 'success';
       const glow = scene.glow && scene.glow.on ? scene.glow.color : (scene.fill && scene.fill.color) || '#fff3b0';
       let mode = 'rise', colors = [glow, '#ffffff', glow];
-      if (dream && tier === 'failure') { mode = 'dust'; colors = ['#b9b4cf', '#9a95b3', '#d4d0e2']; }
+      if (vamp && (tier === 'failure' || tier === 'fumble')) { mode = 'dust'; colors = tier === 'fumble' ? ['#a01428', '#6a0a1a', '#d03048'] : ['#8a8090', '#6a5060', '#b09aa4']; }
+      else if (vamp) colors = [sfx.color || '#d0203c', '#ff5a68', '#f2e8d8', '#a0142a'];
+      else if (dream && tier === 'failure') { mode = 'dust'; colors = ['#b9b4cf', '#9a95b3', '#d4d0e2']; }
       else if (dream && tier === 'fumble') { mode = 'mist'; colors = ['#0c0618', '#1c0e34', '#2a1450']; }
       else if (dream) colors = [sfx.color || '#ffd6f0', '#ffffff', '#c4f5ff', '#d6ccff', '#fff0b8'];
       else if (star && tier === 'failure') { mode = 'dust'; colors = ['#9ea3b8', '#80859a', '#c3c6d4']; }
@@ -4887,7 +4929,7 @@
         if (mode === 'dust') return bo.start + sweep * (0.75 * rnd(i, 1, 91) + 0.25 * clamp((p.y - b.y0) / Math.max(1, b.y1 - b.y0)));
         return bo.start + sweep * (0.6 * clamp((p.x - b.x0) / Math.max(1, b.x1 - b.x0)) + 0.4 * rnd(i, 1, 91));
       };
-      return { start: bo.start, end: bo.start + bo.dur, mode, colors, hole, born, size, dream, pts: this.stardustPoints(page, scene) };
+      return { start: bo.start, end: bo.start + bo.dur, mode, colors, hole, born, size, dream, vamp, pts: this.stardustPoints(page, scene) };
     }
 
     // 粒が生まれたところの文字を、やわらかい丸で消していく（文字が粒にほどける）
@@ -4998,7 +5040,8 @@
         if (al <= 0.01) return;
         const col = st.colors[i % st.colors.length];
         const r = size * (0.009 + 0.012 * rnd(i, 5, 91)) * (1 - 0.3 * q) * (1 + 0.6 * fresh);
-        if (st.dream && i % 13 === 0) root.TextApngDreamFx.star5(ctx, x, y, r * 2.6, col, al * (0.6 + 0.4 * tw), a * 2 + i);
+        if (st.vamp && i % 14 === 0) root.TextApngVampireFx.bat(ctx, x, y, size * 0.075 * (1 - 0.4 * q) * (0.8 + 0.4 * tw), { flap: tw, alpha: al, ang: -0.2 });
+        else if (st.dream && i % 13 === 0) root.TextApngDreamFx.star5(ctx, x, y, r * 2.6, col, al * (0.6 + 0.4 * tw), a * 2 + i);
         else if (i % 9 === 0) S.glint(ctx, x, y, r * 7 * (0.55 + 0.45 * tw), col, al);
         else {
           S.softDot(ctx, x, y, r * 4, col, 0.55 * al);
@@ -5445,6 +5488,192 @@
         const ph = ((tq + rnd(seed, i, 63) * 1.4) % 1.4) / 1.4;
         const r = size * (0.12 + 0.12 * rnd(seed, i, 64)) * Math.pow(Math.sin(Math.PI * ph), 2);
         S.glint(ctx, x, y, r, PASTEL[(i + 1) % 5], ga, rnd(seed, i, 65) * 0.4);
+      }
+    }
+
+    // ヴァンパイアの判定。成功系：深紅と黒の帯が開き、たくさんのコウモリが画面を横切って文字の真ん中へ群がり、散っていくあとに文字が現れる
+    // （スペシャル＝群れが増えて赤い月と霧 / クリティカル＝大群・満月・血の閃光が文字の着地に弾ける）。
+    // 失敗＝上下から牙が迫って噛み合い（ガチッ）、血の滴が飛び散ってから、色あせた暗い文字が現れる /
+    // ファンブル＝牙が叩きつけるように噛み合い、画面いっぱいに血しぶきが広がって垂れ、ひび割れた血まみれの文字が暗く現れる。
+    // 帯・月・霧・牙・血しぶきは文字の後ろ、手前のコウモリ・閃光・したたり・ひびは文字の手前に描く。退場は「星屑になって消える」と組み合わせる
+    drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer) {
+      const V = root.TextApngVampireFx, S = root.TextApngStarFx;
+      if (!V || !S) return;
+      const d = t - pg.start;
+      if (d < 0) return;
+      const tier = rollTier(sfx);
+      const plan = VAMPIRE_PLAN[tier];
+      const tail = plan.tail ?? SFX_TIMING.vampire.tail;
+      const hasOut = Number.isFinite(pg.outEnd);
+      if (hasOut && t > pg.outEnd + tail) return;
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const W = scene.width, H = scene.height;
+      const accent = sfx.color || '#d0203c';
+      const tint = sfx.color2 || '#1a0309';
+      const mb = mainBox(layout, page);
+      const cx = mb.cx, cy = mb.cy;
+      const L = pg.textStart - pg.start;
+      const s = d - L;
+      const out = outProgress(pg, t);
+      const fadeAt = hasOut ? pg.holdEnd + 0.4 * (pg.outEnd - pg.holdEnd) : Infinity;
+      const fade = hasOut ? 1 - EASE.inQuad(clamp((t - fadeAt) / Math.max(0.05, pg.outEnd + tail - fadeAt))) : 1;
+      const band = rollBandRect(page, size, W);
+      const hh = band.hh;
+      const seed = 1700 + pg.index * 13;
+      const fail = tier === 'failure', fum = tier === 'fumble';
+      const textW = mb.x1 - mb.x0;
+      const mq = Math.floor(t * 8) / 8;
+
+      // コウモリの群れ：四方から文字の真ん中をかすめて飛び、通り抜けて画面の外へ散る。i%3==0 は文字の奥、ほかは手前
+      const flock = front => {
+        const n = plan.bats;
+        const ext = Math.hypot(W, H) * 0.55 + size;
+        for (let i = 0; i < n; i++) {
+          const isFront = i % 3 !== 0;
+          if (isFront !== front) continue;
+          const R = q => rnd(seed, i, q);
+          const th = (R(1) < 0.62 ? 0 : Math.PI) + (R(2) - 0.5) * 2.0 - 0.18;
+          const dx = Math.cos(th), dy = Math.sin(th);
+          const tc = Math.max(0.3, L * (0.78 + 0.45 * R(4)));
+          const v = Math.max(W * (1.1 + 0.9 * R(5)), ext / tc * 1.03);
+          const along = v * (d - tc);
+          if (Math.abs(along) > ext * 1.1) continue;
+          const lat = (R(3) * 2 - 1) * hh * 1.5 + Math.sin(d * TAU * (0.9 + 0.8 * R(6)) + R(7) * TAU) * size * 0.22;
+          const x = cx + dx * along - dy * lat, y = cy + dy * along + dx * lat;
+          const near = Math.exp(-Math.pow((d - tc) / 0.22, 2));
+          const sz = size * (isFront ? 0.24 + 0.24 * R(8) : 0.15 + 0.1 * R(8)) * (1 + 0.45 * near);
+          const flap = 0.5 + 0.5 * Math.sin(d * TAU * (5.5 + 2 * R(9)) + R(10) * TAU);
+          V.bat(ctx, x, y, sz, { flap, ang: Math.atan2(dy, Math.abs(dx)) * 0.35 + 0.15 * Math.sin(d * 6 + i), dir: dx >= 0 ? 1 : -1, alpha: fade, rim: accent });
+        }
+      };
+
+      if (layer === 'back') {
+        if (fail || fum) {
+          this.drawVampireBite(ctx, d, band, size, W, H, mb, seed, fade, out, fum, plan, accent, tint, V, S);
+          return;
+        }
+        // 赤い霧、赤い月、帯、奥のコウモリ
+        const open = EASE.outCubic(clamp(d / 0.4));
+        for (let j = 0; j < plan.mist; j++) {
+          const lanes = [0.7, -0.75, 0.05];
+          const y = band.cy + lanes[j] * hh;
+          for (let m = 0; m < 7; m++) {
+            const x = ((m / 7 + 0.07 * j + mq * (0.05 + 0.03 * j) * (j % 2 ? -1 : 1)) % 1 + 1) % 1 * (W * 1.3) - W * 0.15;
+            V.puff(ctx, x, y + Math.sin(mq * 1.3 + m + j) * size * 0.06, size * (0.7 + 0.4 * rnd(seed, m + j * 9, 21)), size * 0.32, m % 2 ? '#7a0a1e' : '#b01830', 0.3 * fade * clamp(d / 0.5) * (j === 2 ? 0.7 : 1));
+          }
+        }
+        if (plan.moon > 0) {
+          const e = EASE.outCubic(clamp(d / 0.5));
+          const r = size * plan.moon * (0.85 + 0.15 * e);
+          V.moon(ctx, cx, cy - hh * 0.15 - (1 - e) * size * 0.5, r, (tier === 'critical' ? 0.95 : 0.8) * e * fade * (1 - 0.25 * out), { color: tier === 'critical' ? '#ff2e40' : '#d8283c', pulse: 0.5 + 0.5 * Math.sin(mq * 3), seed });
+        }
+        V.band(ctx, band, size, open, fade * (plan.moon > 0 ? 0.72 : 1), accent, tint, tier);
+        flock(false);
+        return;
+      }
+
+      // 手前：コウモリ、着地の光、散る火の粉
+      flock(true);
+      if (fail || fum) {
+        this.drawVampireFront(ctx, d, s, mb, size, textW, seed, fade, out, fum, plan, V);
+        return;
+      }
+      if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * (tier === 'critical' ? 0.4 : 0.3), accent, (tier === 'critical' ? 0.7 : 0.4) * clamp(k) * Math.pow(1 - s / 0.4, 2), 0.45);
+      if (plan.flare > 0 && s >= 0 && s < 0.6) {
+        V.flare(ctx, cx, cy, size * 1.6 * plan.flare, s / 0.6, '#ff2a3c', seed);
+        shockRing(ctx, cx, cy, size * (0.4 + 3 * EASE.outCubic(s / 0.6)), size * 0.035 * (1 - s / 0.6), '#ff9aa6', 0.5 * (1 - s / 0.6));
+      }
+      for (let i = 0; i < plan.burst && s >= 0; i++) {
+        const life = 0.7 + 0.5 * rnd(seed, i, 91);
+        if (s > life) continue;
+        const q = s / life;
+        const x0 = cx + (rnd(seed, i, 92) - 0.5) * textW * 0.8, y0 = cy + (rnd(seed, i, 93) - 0.5) * size * 0.5;
+        const a = Math.atan2(y0 - cy + (rnd(seed, i, 94) - 0.5) * size * 0.4, x0 - cx + (rnd(seed, i, 95) - 0.5) * size);
+        const v = size * (1.6 + 3.2 * rnd(seed, i, 96));
+        const dist = v * (1 - Math.exp(-3 * s)) / 3;
+        const x = x0 + Math.cos(a) * dist, y = y0 + Math.sin(a) * dist - size * 0.3 * s * s;
+        const al = (1 - q * q) * fade * (0.6 + 0.4 * Math.sin(s * 14 + i));
+        const col = i % 3 === 0 ? '#ffd9d0' : i % 3 === 1 ? '#ff3a48' : '#c0182e';
+        if (i % 5 === 0) V.bat(ctx, x, y, size * 0.09 * (1 - 0.4 * q), { flap: 0.5 + 0.5 * Math.sin(s * 30 + i), alpha: al, rim: accent });
+        else S.softDot(ctx, x, y, size * (0.035 + 0.03 * rnd(seed, i, 97)), col, al);
+      }
+    }
+
+    // ヴァンパイアの失敗系（奥）：牙のあごが上下から迫り、clap の時刻にガチッと噛み合う。その衝撃で血が飛び散り、あごは開いて去る
+    drawVampireBite(ctx, d, band, size, W, H, mb, seed, fade, out, fum, plan, accent, tint, V, S) {
+      const cx = mb.cx, cy = mb.cy;
+      const clap = plan.clap;
+      const sc = d - clap;
+      const fw = size * (fum ? 0.36 : 0.3), len = size * (fum ? 1.25 : 0.95);
+      // 帯は噛み合ったあとで開く
+      V.band(ctx, band, size, EASE.outCubic(clamp((d - clap - 0.05) / 0.4)), fade, accent, tint, fum ? 'fumble' : 'failure');
+      ctx.save();
+      if (sc >= 0) {
+        const sh = Math.exp(-sc * 9) * size * (fum ? 0.08 : 0.05);
+        ctx.translate(noise1(d * 40, 3) * sh, noise1(d * 40, 9) * sh);
+      }
+      // 画面の暗がり：噛み合う直前から、周りがすぼまるように暗くなる
+      const closeU = clamp(d / clap);
+      const jawA = sc < 0 ? 1 : 1 - EASE.inQuad(clamp((sc - 0.05) / (fum ? 0.7 : 0.5)));
+      if (jawA > 0.01) {
+        let top, bot;
+        if (sc < 0) {
+          const e = Math.pow(closeU, 2.4);
+          top = -len * 1.3 + (cy + len * 1.3) * e;
+          bot = H + len * 1.3 - (H + len * 1.3 - cy) * e;
+        } else {
+          // 閉じきったまま一拍おき、跳ね上がるように開いて去る
+          const u2 = EASE.outCubic(clamp((sc - 0.12) / (fum ? 0.6 : 0.4)));
+          top = cy - (cy + len * 1.3) * u2;
+          bot = cy + (H + len * 1.3 - cy) * u2;
+        }
+        const blood = sc >= 0 ? clamp(sc / 0.12) : 0;
+        const topX = fum ? [-5, -2, 2, 5] : [-2, 2], botX = fum ? [-3.5, -0.9, 0.9, 3.5] : [-0.9, 0.9];
+        V.jaw(ctx, W, H, top, 1, { size, len, w: fw, fangs: topX.map(m => cx + m * fw), small: 14, alpha: jawA * fade, seed, blood, dark: '#0c0207', gum: '#5a0818' });
+        V.jaw(ctx, W, H, bot, -1, { size, len, w: fw, fangs: botX.map(m => cx + m * fw), small: 14, alpha: jawA * fade, seed: seed + 3, blood, dark: '#0c0207', gum: '#5a0818' });
+      }
+      if (sc >= 0) {
+        // 衝撃：白い閃光と赤い衝撃輪
+        if (sc < 0.18) drawFlash(ctx, cx, cy, W * (fum ? 0.6 : 0.4), '#ff7080', (fum ? 0.7 : 0.5) * Math.pow(1 - sc / 0.18, 2), 0.5);
+        shockRing(ctx, cx, cy, size * (0.3 + 3.4 * EASE.outCubic(clamp(sc / 0.5))), size * 0.04 * (1 - clamp(sc / 0.5)), '#ff4258', 0.6 * (1 - clamp(sc / 0.5)) * fade);
+        const sp = EASE.outCubic(clamp(sc / (fum ? 0.45 : 0.35)));
+        const fa = fade * (1 - 0.35 * out);
+        if (fum) {
+          // 画面いっぱいの血しぶき：大きな3つと小さな数個。あとからしたたりが伸びる
+          const spots = [[cx, cy, 1.5, 1], [cx - W * 0.3, cy + hh0(band) * 0.4, 1.0, 2], [cx + W * 0.31, cy - hh0(band) * 0.3, 1.15, 3], [cx - W * 0.1, cy - H * 0.3, 0.8, 4], [cx + W * 0.14, cy + H * 0.3, 0.9, 5], [cx - W * 0.4, cy - H * 0.25, 0.7, 6], [cx + W * 0.42, cy + H * 0.2, 0.7, 7]];
+          spots.forEach(([x, y, r, id], i) => {
+            V.splat(ctx, x, y, size * r, clamp(sc / (0.3 + 0.05 * i) ), { seed: seed + id * 11, alpha: fa, streaks: id === 1 ? 24 : 14 });
+            const dl = size * (0.5 + 1.5 * rnd(seed, id, 51)) * EASE.outCubic(clamp((sc - 0.25 - 0.1 * id) / 1.3));
+            for (let j = 0; j < 2; j++) {
+              V.drip(ctx, x + (j ? 1 : -1) * size * r * (0.25 + 0.3 * rnd(seed, id * 3 + j, 52)), y + size * r * 0.35, dl * (j ? 0.6 : 1), size * 0.05, fa);
+            }
+          });
+          V.drops(ctx, cx, cy, sc, 46, { seed, v: size * 8.5, g: size * 9, r: size * 0.05, life: 1.0, alpha: fa });
+        } else {
+          V.splat(ctx, cx, cy, size * 0.62, sp, { seed: seed + 11, alpha: fa, streaks: 14 });
+          V.drops(ctx, cx, cy, sc, 16, { seed, v: size * 6.5, g: size * 9, r: size * 0.04, life: 0.9, alpha: fa });
+          const dl = size * 0.7 * EASE.outCubic(clamp((sc - 0.3) / 1.2));
+          V.drip(ctx, cx - size * 0.3, cy + size * 0.2, dl, size * 0.04, fa);
+          V.drip(ctx, cx + size * 0.38, cy + size * 0.2, dl * 0.7, size * 0.035, fa);
+        }
+      }
+      ctx.restore();
+    }
+
+    // ヴァンパイアの失敗系（手前）：文字が出る瞬間の暗い血の光。ファンブルは文字にひびが走り、文字の下から血がしたたる
+    drawVampireFront(ctx, d, s, mb, size, textW, seed, fade, out, fum, plan, V) {
+      const cx = mb.cx, cy = mb.cy;
+      if (s >= 0 && s < 0.35) drawFlash(ctx, cx, cy, size * 4, fum ? '#c0182e' : '#7a1020', (fum ? 0.4 : 0.25) * Math.pow(1 - s / 0.35, 2), 0.5);
+      const a = fade * (1 - 0.5 * out);
+      if (fum && s >= 0) {
+        V.cracks(ctx, cx - textW * 0.08, cy, textW * 0.62, EASE.outCubic(clamp(s / 0.3)), seed, 0.9 * a, size * 0.012);
+      }
+      const n = fum ? 8 : 3;
+      for (let i = 0; i < n && s >= 0; i++) {
+        const x = mb.x0 + textW * (0.06 + 0.88 * (i + rnd(seed, i, 61) * 0.7) / n);
+        const len = size * (fum ? 0.3 + 0.7 * rnd(seed, i, 62) : 0.2 + 0.35 * rnd(seed, i, 62)) * EASE.outCubic(clamp((s - 0.1 - 0.25 * rnd(seed, i, 63)) / 1.0));
+        V.drip(ctx, x, mb.y1 - size * 0.12, len, size * (fum ? 0.045 : 0.035), a);
       }
     }
 

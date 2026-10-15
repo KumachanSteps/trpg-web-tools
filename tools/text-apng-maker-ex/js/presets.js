@@ -295,7 +295,8 @@
     blade: { success: [1.0, 0.75], special: [1.0, 0.75], extreme: [1.0, 0.75], critical: [1.0, 0.75], failure: [1.05, 0.6], fumble: [1.0, 0.6] },
     shot: { success: [1.0, 0.4], special: [1.0, 0.4], extreme: [1.0, 0.4], critical: [1.0, 0.45], failure: [1.05, 0.6], fumble: [1.0, 0.45] },
     star: { success: [0.9, 1.1], special: [0.85, 1.1], extreme: [0.85, 1.05], critical: [0.8, 0.95], failure: [1.0, 1.0], fumble: [0.75, 1.0] },
-    dream: { success: [0.9, 1.05], special: [0.85, 1.05], extreme: [0.8, 1.0], critical: [0.75, 0.95], failure: [0.9, 1.0], fumble: [0.7, 0.9] }
+    dream: { success: [0.9, 1.05], special: [0.85, 1.05], extreme: [0.8, 1.0], critical: [0.75, 0.95], failure: [0.9, 1.0], fumble: [0.7, 0.9] },
+    vampire: { success: [0.9, 1.0], special: [0.85, 1.0], extreme: [0.8, 0.95], critical: [0.75, 0.9], failure: [0.85, 0.85], fumble: [0.6, 0.8] }
   };
   const rollTime = (kind, tier) => {
     const [hold, outDur] = ROLL_TIME[kind][tier];
@@ -408,6 +409,54 @@
     return { ...DREAM_ROLL, fontSize: Math.round(fontSize * 0.75), ...look.patch, ...rollTime('dream', tier), sfx: { type: 'dream', tier, color: look.accent, color2: look.band, power: 1 } };
   };
 
+  // ヴァンパイア：深紅・黒・骨の白、月明かりのほのかな青白さ。文字はゴシックな明朝（開成特太明朝）に骨色のグラデーションと紅の光彩。
+  // 帯はほぼ黒の深い紅。失敗は色あせた暗い文字、ファンブルは血に染まった暗い文字。退場は「星屑になって消える」（成功系は紅の火の粉と小さなコウモリ、失敗系は血の粉）
+  const VAMPIRE_LOOK = {
+    success: {
+      accent: '#d0203c', band: '#14030a',
+      patch: { fill: { type: 'gradient', color: '#fffaf0', color2: '#f0e4d2', color3: '#d9b8b0', dir: 'v' }, stroke: { on: true, width: 2, color: '#2a030c' }, glow: { on: true, color: '#c0182e', size: 22, strength: 0.7 }, subColor: '#f0dcd2' }
+    },
+    special: {
+      accent: '#e02a44', band: '#16030c',
+      patch: { fill: { type: 'gradient', color: '#fffaf2', color2: '#f6e6d6', color3: '#e0b4b0', dir: 'v' }, stroke: { on: true, width: 2, color: '#2a030c' }, glow: { on: true, color: '#d81c36', size: 26, strength: 0.85 }, subColor: '#f6e0d6' }
+    },
+    extreme: {
+      accent: '#e8304a', band: '#16030c',
+      patch: { fill: { type: 'gradient', color: '#fffaf2', color2: '#f8e4d6', color3: '#e4aaa8', dir: 'v' }, stroke: { on: true, width: 2, color: '#2a030c' }, glow: { on: true, color: '#e8203c', size: 30, strength: 0.95 }, subColor: '#f8e0d6', hold: 1.9 }
+    },
+    critical: {
+      accent: '#ff3048', band: '#1a030c',
+      patch: {
+        fill: { type: 'gradient', color: '#ffffff', color2: '#ffe8dc', color3: '#ffb0a8', dir: 'v' }, stroke: { on: true, width: 2.5, color: '#3a0410' },
+        glow: { on: true, color: '#ff2038', size: 38, strength: 1.2 }, subColor: '#ffe6dc', hold: 2.0, outDur: 1.8
+      }
+    },
+    failure: {
+      accent: '#7a2234', band: '#0c0206',
+      patch: { fill: { type: 'gradient', color: '#cfc6c2', color2: '#aaa0a0', color3: '#847a82', dir: 'v' }, stroke: { on: true, width: 1.5, color: '#1a0208' }, glow: { on: false }, subColor: '#a89ea2', inFx: 'fade', inDur: 0.3 }
+    },
+    fumble: {
+      accent: '#9a1428', band: '#080104',
+      patch: {
+        fill: { type: 'gradient', color: '#e8cfc8', color2: '#b8706c', color3: '#7a1824', dir: 'v' }, stroke: { on: true, width: 2.5, color: '#120106' },
+        glow: { on: true, color: '#8a0a1c', size: 26, strength: 1.0 }, subColor: '#c89a96', inFx: 'fade', inDur: 0.35
+      }
+    }
+  };
+  const VAMPIRE_ROLL = {
+    fontId: 'kaisei-tokumin', weight: 800, letterSpacing: 0.16,
+    subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.42,
+    stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#1a0208', opacity: 0.7, blur: 12, x: 0, y: 3 },
+    subColorOn: true, deco: { type: 'none' },
+    inFx: 'fade', inDur: 0.2, inStagger: 0, subFx: 'fade', subDelay: 0.05,
+    hold: 1.7, outFx: 'stardust', outDur: 2.0
+  };
+  const vampirePatch = (tier, fontSize) => {
+    const look = VAMPIRE_LOOK[tier];
+    return { ...VAMPIRE_ROLL, fontSize: Math.round(fontSize * 0.75), ...look.patch, ...rollTime('vampire', tier), sfx: { type: 'vampire', tier, color: look.accent, color2: look.band, power: 1 } };
+  };
+
   // 炎の試作を組み込んだテンプレート：装甲明朝。試作と同じ 960×540（炎は細かい模様が多く、書き出しの目安 5MB に収めるため）
   const FIRE_SIZE = { width: 960, height: 540, sizePreset: '960x540' };
   const FIRE_TITLE = {
@@ -487,6 +536,7 @@
         { id: 'cocStar', label: T('CoC6 星', 'CoC 6e Stars', 'CoC6 별') },
         { id: 'coc7Star', label: T('CoC7 星', 'CoC 7e Stars', 'CoC7 별') },
         { id: 'cocDream', label: T('CoC6 夢', 'CoC 6e Dreams', 'CoC6 꿈') },
+        { id: 'cocVampire', label: T('CoC6 ヴァンパイア', 'CoC 6e Vampire', 'CoC6 뱀파이어') },
         { id: 'coc7Dream', label: T('CoC7 夢', 'CoC 7e Dreams', 'CoC7 꿈') },
         { id: 'emoklore', label: T('エモクロア', 'Emoklore', '에모크로아') },
         { id: 'dx', label: T('ダブクロ', 'Double Cross', '더블크로스') }
@@ -1385,6 +1435,37 @@
         text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         size: FIRE_SIZE, fps: 20,
         patch: dreamPatch('fumble', 144)
+      },
+      // ヴァンパイアの判定（CoC6版。CoC7版は段階名を漢字にして同じ演出を使う予定）
+      {
+        id: 'cocVampireSuccess', group: 'dice', system: 'cocVampire', icon: 'bat', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        size: FIRE_SIZE, fps: 20,
+        patch: vampirePatch('success', 176)
+      },
+      {
+        id: 'cocVampireSpecial', group: 'dice', system: 'cocVampire', icon: 'bat', label: T('スペシャル', 'Special', '스페셜'),
+        text: T('スペシャル', 'SPECIAL', '스페셜'), subText: T('SPECIAL', '', 'SPECIAL'),
+        size: FIRE_SIZE, fps: 20,
+        patch: vampirePatch('special', 144)
+      },
+      {
+        id: 'cocVampireCritical', group: 'dice', system: 'cocVampire', icon: 'bat', label: T('クリティカル', 'Critical', '크리티컬'),
+        text: T('クリティカル', 'CRITICAL', '크리티컬'), subText: T('CRITICAL', '', 'CRITICAL'),
+        size: FIRE_SIZE, fps: 20,
+        patch: vampirePatch('critical', 144)
+      },
+      {
+        id: 'cocVampireFailure', group: 'dice', system: 'cocVampire', icon: 'bat', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        size: FIRE_SIZE, fps: 20,
+        patch: vampirePatch('failure', 176)
+      },
+      {
+        id: 'cocVampireFumble', group: 'dice', system: 'cocVampire', icon: 'bat', label: T('ファンブル', 'Fumble', '펌블'),
+        text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
+        size: FIRE_SIZE, fps: 20,
+        patch: vampirePatch('fumble', 144)
       },
       {
         id: 'coc7DreamSuccess', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('成功', 'Success', '성공'),
