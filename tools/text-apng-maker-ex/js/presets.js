@@ -788,6 +788,36 @@
         }
       },
       {
+        // 戦闘演出：白く光る斜めの一閃と閃光。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。抜刀の一閃と同じ見た目
+        id: 'katanaFxWhite', group: 'battlefx', icon: 'katana', label: T('抜刀の一閃（白）', 'Katana Slash (White)', '발도의 일섬（흰색）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'katanaFx', color: '#cfe6ff', color2: '#ffffff', dir: 'up', cuts: 'one', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 1.6, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：黒い斜めの一閃（淡い光の縁）と閃光。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。抜刀の一閃と同じ見た目
+        id: 'katanaFxBlack', group: 'battlefx', icon: 'katana', label: T('抜刀の一閃（黒）', 'Katana Slash (Black)', '발도의 일섬（검정）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'katanaFx', color: '#e6ecf8', color2: '#07080b', dir: 'up', cuts: 'one', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 1.6, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：深紅の斜めの一閃（中心は白に近い桃色）と赤い閃光。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。抜刀の一閃と同じ見た目
+        id: 'katanaFxRed', group: 'battlefx', icon: 'katana', label: T('抜刀の一閃（赤）', 'Katana Slash (Red)', '발도의 일섬（빨강）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'katanaFx', color: '#ff2a40', color2: '#d4182a', dir: 'up', cuts: 'one', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 1.6, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
         // EX：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と「戦闘開始」が立ち上がる。最後は左から右へ燃えて消える
         id: 'battleFlame', group: 'combat', icon: 'flame', label: T('炎の戦闘開始', 'Flame Battle Start', '불꽃의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'IGNITE', 'BATTLE START'),

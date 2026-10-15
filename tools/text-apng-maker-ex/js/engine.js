@@ -656,6 +656,7 @@
       case 'fang': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'fangFx': return { l: 0, r: 0, t: 0, b: 0 };
       case 'clawMark': return { l: 0, r: 0, t: 0, b: 0 };
+      case 'katanaFx': return { l: 0, r: 0, t: 0, b: 0 };
       // 燃える文字：炎が字の上へ立ちのぼる分（上に広く空けるので、字は試作と同じく少し下寄りになる）
       case 'fireText': return { l: size * 0.1, r: size * 0.1, t: size * 0.9, b: size * 0.1 };
       case 'fireTextSeq': return { l: size * 0.1, r: size * 0.1, t: size * 0.63, b: size * 0.1 };
@@ -1410,6 +1411,8 @@
     fangFx: { lead: 0, tail: 0 },
     // 爪痕：文字のない、4本の爪痕が右上から左下へ引っかかれる演出（戦闘演出）
     clawMark: { lead: 0, tail: 0 },
+    // 抜刀の一閃：文字のない、斜めの一閃と閃光だけの演出（戦闘演出）
+    katanaFx: { lead: 0, tail: 0 },
     // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
     // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
     fireWall: { lead: 0, tail: 0 },
@@ -2601,7 +2604,7 @@
         if (t < pg.start) return;
         if (Number.isFinite(pg.end) && t > pg.end) return;
         // 文字のない牙の戦闘演出：文字は描かず、牙の演出だけを描く
-        if (sfxOf(scene).type === 'fangFx' || sfxOf(scene).type === 'clawMark') { this.drawSfx(ctx, pg, page, t, scale, scene, 'back'); this.drawSfx(ctx, pg, page, t, scale, scene, 'front'); return; }
+        if (sfxOf(scene).type === 'fangFx' || sfxOf(scene).type === 'clawMark' || sfxOf(scene).type === 'katanaFx') { this.drawSfx(ctx, pg, page, t, scale, scene, 'back'); this.drawSfx(ctx, pg, page, t, scale, scene, 'front'); return; }
         if (!page.visibleCount) return;
         const bs = this.blockState(pg, t, scene, size);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'back');
@@ -2822,6 +2825,7 @@
       else if (sfx.type === 'star') this.drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'dream') this.drawDream(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'vampire') this.drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'katanaFx') this.drawKatanaFx(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'clawMark') this.drawClawMark(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'fang' || sfx.type === 'fangFx') this.drawFang(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type.startsWith('fire')) this.drawFireFx(ctx, pg, page, t, scale, scene, sfx, k);
@@ -5773,6 +5777,116 @@
         shockRing(ctx, cx, cy, R1, ringW * (1 - q), ringCol, 0.95 * (1 - q) * clamp(k));
         shockRing(ctx, cx, cy, R2, ringW * 0.5 * (1 - q), ringCol, 0.7 * (1 - q) * clamp(k));
       }
+    }
+
+    // 抜刀の一閃（戦闘演出）：文字も帯もない、斜めの一閃だけ。先の光る刃のすじがごく速く画面を横切り、斬った瞬間の閃光と火花、
+    // 細くなって消えていく残像の線。小さな揺れは描いたものだけに（透明な背景に重ねる用）。既存の抜刀の一閃（bladeSliver / bladeLine / drawFlash）と同じ見た目。
+    // sfx.dir：'up'（左下から右上へ。抜刀の向き）/ 'down'（左上から右下）、sfx.cuts：'one'（1本）/ 'x'（Xの2本）
+    drawKatanaFx(ctx, pg, page, t, scale, scene, sfx, k) {
+      const d = t - pg.start;
+      if (d < 0) return;
+      const W = scene.width, H = scene.height;
+      const glow = sfx.color || '#cfe6ff';
+      const core = sfx.color2 || '#ffffff';
+      const m = /#?([0-9a-f]{6})/i.exec(core);
+      const n6 = m ? parseInt(m[1], 16) : 0xffffff;
+      const lum = (((n6 >> 16) & 255) * 0.3 + ((n6 >> 8) & 255) * 0.59 + (n6 & 255) * 0.11) / 255;
+      const mode = lum < 0.25 ? 'black' : lum > 0.8 ? 'white' : 'red';
+      const under = mode === 'white' ? 'rgba(10,14,26,0.85)' : mode === 'black' ? 'rgba(232,238,250,0.85)' : colorWithAlpha(glow, 0.8);
+      const sgn = sfx.dir === 'down' ? -1 : 1;
+      const SWEEP = 0.1, FADE = 0.6, T0 = 0.12;
+      const cuts = [{ t: T0, ang: -0.62 * sgn, rev: false }];
+      if (sfx.cuts === 'x') cuts.push({ t: T0 + 0.12, ang: 0.62 * sgn, rev: false });
+      const Lc = Math.hypot(W, H) * 0.4;
+      const th = H * 0.06 * clamp(k, 0.3, 2);
+      const seed = 5200 + pg.index * 13;
+      // 刃のすじ：先端に向かって明るくなり、後ろは消える。まわりに色のにじみ
+      const streak = (x0, x1, w, col, alpha, shadow) => {
+        if (alpha <= 0.002 || x1 - x0 <= 0.5 || w <= 0.05) return;
+        ctx.save();
+        ctx.globalAlpha *= clamp(alpha);
+        ctx.shadowColor = shadow;
+        ctx.shadowBlur = Math.max(2, w * 1.2) * scale;
+        const g = ctx.createLinearGradient(x0, 0, x1, 0);
+        g.addColorStop(0, colorWithAlpha(col, 0));
+        g.addColorStop(0.6, colorWithAlpha(col, 0.85));
+        g.addColorStop(1, col);
+        ctx.fillStyle = g;
+        const neck = x1 - (x1 - x0) * 0.12;
+        ctx.beginPath();
+        ctx.moveTo(x0, 0); ctx.quadraticCurveTo(neck, -w, x1, 0); ctx.quadraticCurveTo(neck, w, x0, 0);
+        ctx.fill();
+        ctx.restore();
+      };
+      // 残像の線：中央がいちばん太く、両端は細く消える
+      const line = (x0, x1, w, col, alpha, shadow) => {
+        if (alpha <= 0.002 || w <= 0.05) return;
+        ctx.save();
+        ctx.globalAlpha *= clamp(alpha);
+        ctx.shadowColor = shadow;
+        ctx.shadowBlur = Math.max(2, w * 2.5) * scale;
+        const g = ctx.createLinearGradient(x0, 0, x1, 0);
+        g.addColorStop(0, colorWithAlpha(col, 0)); g.addColorStop(0.5, col); g.addColorStop(1, colorWithAlpha(col, 0));
+        ctx.fillStyle = g;
+        const mid = (x0 + x1) / 2;
+        ctx.beginPath();
+        ctx.moveTo(x0, 0); ctx.quadraticCurveTo(mid, -w, x1, 0); ctx.quadraticCurveTo(mid, w, x0, 0);
+        ctx.fill();
+        ctx.restore();
+      };
+      const body = mode === 'red' ? core : core;
+      const centre = mode === 'red' ? '#fff0f3' : mode === 'black' ? '#2a2d36' : '#ffffff';
+      let sh = 0;
+      cuts.forEach(c => { const a = d - c.t - SWEEP * 0.5; if (a >= 0) sh += Math.exp(-a * 18); });
+      const amp = H * 0.007 * Math.min(1.5, sh) * clamp(k, 0, 2);
+      ctx.save();
+      ctx.translate(noise1(d * 50, 3) * amp, noise1(d * 50, 9) * amp);
+      cuts.forEach((c, i) => {
+        const a = d - c.t;
+        if (a < 0) return;
+        ctx.save();
+        ctx.translate(W / 2, H / 2);
+        ctx.rotate(c.ang);
+        const q = (a - SWEEP) / FADE;
+        if (a < SWEEP) {
+          const head = -Lc + 2 * Lc * EASE.outQuad(a / SWEEP);
+          const x0 = Math.max(-Lc, head - Lc * 1.1);
+          if (mode !== 'red') streak(x0, head, th * 1.35, under, 0.9, under);
+          streak(x0, head, th, body, 1, glow);
+        } else if (q < 1) {
+          // 残像：細くなりながら、光（影）だけが少し長く残る
+          const w = th * 0.7 * (1 - q) * (1 - q * 0.3);
+          if (mode !== 'red') line(-Lc, Lc, w * 1.4, under, 0.8 * (1 - q * q), under);
+          line(-Lc, Lc, w, body, 1 - q * q, glow);
+          line(-Lc, Lc, H * 0.011 * (1 - q), centre, 1 - q, glow);
+        }
+        // 斬った瞬間：閃光（刃の向きに細長く）と、刃の向きに沿って飛ぶ火花
+        const f = a - SWEEP * 0.5;
+        if (f >= 0 && f < 0.34) {
+          drawFlash(ctx, 0, 0, W * 0.45, glow, 0.85 * clamp(k) * Math.pow(1 - f / 0.34, 2), 0.16);
+          ctx.save();
+          ctx.shadowColor = under; ctx.shadowBlur = 5 * scale;
+          ctx.lineCap = 'round';
+          ctx.lineWidth = Math.max(1.5, H * 0.004);
+          for (let r = 0; r < 18; r++) {
+            const life = 0.28 * (0.55 + 0.45 * rnd(seed + i, r, 3));
+            if (f > life) continue;
+            const u = (rnd(seed + i, r, 1) * 2 - 1) * Lc * 0.8;
+            const side = (rnd(seed + i, r, 2) < 0.5 ? -1 : 1);
+            const ang = (rnd(seed + i, r, 4) * 0.7 + 0.15) * side + (rnd(seed + i, r, 5) < 0.5 ? 0 : Math.PI);
+            const v = H * (0.5 + 0.9 * rnd(seed + i, r, 6));
+            const dist = v * (1 - Math.exp(-6 * f)) / 6;
+            const px = u + Math.cos(ang) * dist, py = Math.sin(ang) * dist;
+            const l = H * 0.05 * (1 - f / life) * (0.5 + rnd(seed + i, r, 7));
+            ctx.globalAlpha = clamp(1 - f / life);
+            ctx.strokeStyle = mode === 'red' ? (r % 2 ? '#ff8a96' : '#fff0f3') : mode === 'black' ? '#07080b' : '#ffffff';
+            ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - Math.cos(ang) * l, py - Math.sin(ang) * l); ctx.stroke();
+          }
+          ctx.restore();
+        }
+        ctx.restore();
+      });
+      ctx.restore();
     }
 
     // 爪痕（戦闘演出）：4本の爪痕が右上から左下へ、1本ずつ素早く引っかかれる。曲がった長い刃のような形で、先は針、後ろは長い尾。
