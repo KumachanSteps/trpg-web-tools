@@ -185,12 +185,24 @@
     ctx.globalAlpha *= alpha;
     ctx.shadowColor = Sx.rgba(o.shadow || '#1a0208', 0.55);
     ctx.shadowBlur = S * 0.05;
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = o.fill || '#ffffff';
+    const paths = [];
     list.forEach(([dx, len, w, bend, off]) => {
       [-1, 1].forEach(side => {
-        ctx.fill(toothPath(cx + side * dx * S, y + dir * off * S, len * S, w * S, bend * S, dir, side));
+        const tp = toothPath(cx + side * dx * S, y + dir * off * S, len * S, w * S, bend * S, dir, side);
+        paths.push(tp);
+        ctx.fill(tp);
       });
     });
+    // 縁取り（牙の戦闘開始の赤・黒・白用）：影を切ってから細い線で縁だけを描く
+    if (o.rim) {
+      ctx.shadowColor = 'rgba(0,0,0,0)';
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = o.rim;
+      ctx.lineWidth = S * (o.rimW ?? 0.022);
+      ctx.lineJoin = 'round';
+      paths.forEach(tp => ctx.stroke(tp));
+    }
     ctx.restore();
   }
 

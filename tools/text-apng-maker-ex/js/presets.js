@@ -443,6 +443,17 @@
       }
     }
   };
+  const FANG_BATTLE = {
+    fontId: 'soukou-mincho', weight: 400, fontSize: 112, letterSpacing: 0.3,
+    subFontId: 'soukou-mincho', subWeight: 400, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.5,
+    fill: { type: 'solid', color: '#ffffff' },
+    stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#000000', opacity: 0.8, blur: 8, x: 0, y: 3 },
+    glow: { on: false }, deco: { type: 'none' },
+    subColorOn: true, subColor: '#ece6d6',
+    inFx: 'fade', inDur: 0.12, inStagger: 0, hold: 1.7, outFx: 'wipe', outDir: 'lr', outDur: 0.45, subFx: 'fade', subDelay: 0.05
+  };
+  const fangPatch = (color, rim, subColor) => ({ ...FANG_BATTLE, subColor, sfx: { type: 'fang', color, color2: rim, power: 1 } });
   const VAMPIRE_ROLL = {
     fontId: 'soukou-mincho', weight: 400, letterSpacing: 0.24,
     subFontId: 'soukou-mincho', subWeight: 400, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.45,
@@ -696,6 +707,24 @@
           sfx: { type: 'p5gun', color: '#e8112d', color2: '#0b0b0e', power: 1 },
           inFx: 'pop', inDur: 0.4, hold: 1.8, outFx: 'fade', outDur: 0.4, subFx: 'fade', subDelay: -0.1
         }
+      },
+      {
+        // EX：骨の白い牙が上下から迫って噛み合い、衝撃で「戦闘開始」が叩きつけられる。あごが開いて去り、最後は帯ごと右へ抜ける
+        id: 'battleFangWhite', group: 'combat', icon: 'fang', label: T('牙の戦闘開始（白）', 'Fang Battle Start (White)', '송곳니 전투 개시（흰색）'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'FANG', 'BATTLE START'),
+        patch: fangPatch('#f7f3ea', '#6a665c', '#ece6d6')
+      },
+      {
+        // EX：深紅の牙（暗い縁取り）が噛み合って「戦闘開始」が叩きつけられる
+        id: 'battleFangRed', group: 'combat', icon: 'fang', label: T('牙の戦闘開始（赤）', 'Fang Battle Start (Red)', '송곳니 전투 개시（빨강）'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'FANG', 'BATTLE START'),
+        patch: fangPatch('#c4121f', '#4a050c', '#ffb3ba')
+      },
+      {
+        // EX：漆黒の牙（淡い細い縁取り）が噛み合って「戦闘開始」が叩きつけられる。暗い背景でも縁で見える
+        id: 'battleFangBlack', group: 'combat', icon: 'fang', label: T('牙の戦闘開始（黒）', 'Fang Battle Start (Black)', '송곳니 전투 개시（검정）'),
+        text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'FANG', 'BATTLE START'),
+        patch: fangPatch('#0b0b0e', '#c9ced9', '#d9dde6')
       },
       {
         // EX：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と「戦闘開始」が立ち上がる。最後は左から右へ燃えて消える

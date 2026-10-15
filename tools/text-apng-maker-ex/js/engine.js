@@ -653,6 +653,7 @@
       case 'star': return { l: 0, r: 0, t: size * 0.65, b: size * 0.65 };
       case 'dream': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'vampire': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
+      case 'fang': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       // 燃える文字：炎が字の上へ立ちのぼる分（上に広く空けるので、字は試作と同じく少し下寄りになる）
       case 'fireText': return { l: size * 0.1, r: size * 0.1, t: size * 0.9, b: size * 0.1 };
       case 'fireTextSeq': return { l: size * 0.1, r: size * 0.1, t: size * 0.63, b: size * 0.1 };
@@ -1401,6 +1402,8 @@
     star: { lead: 0.45, tail: 0.2 },
     dream: { lead: 0.5, tail: 0.2 },
     vampire: { lead: 0.5, tail: 0.2 },
+    // 牙の戦闘開始：牙が上下から迫って噛み合う時刻（FANG_CLAP）に文字が叩きつけられる
+    fang: { lead: 0.58, tail: 0 },
     // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
     // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
     fireWall: { lead: 0, tail: 0 },
@@ -1422,7 +1425,9 @@
   const ASH_LOOP = 6;
   const SMOKE_LOOP = 6;
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎・一閃・閃光）
-  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream', 'vampire']);
+  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream', 'vampire', 'fang']);
+  // 牙の戦闘開始：牙が噛み合う時刻（場面の始めから）
+  const FANG_CLAP = 0.56;
   // 装飾枠：線が角から辺の中央まで伸びる時間
   const FRAME_DRAW = 0.55;
   // 剣と盾：剣が飛び込んで止まるまで / 盾の輪郭を引く時間 / 帯が左右に開き始める時刻と開く時間
@@ -1974,6 +1979,16 @@
         const big = tier === 'critical' ? 1 : tier === 'extreme' ? 0.8 : tier === 'special' ? 0.6 : 0.45;
         bs.bright = Math.max(bs.bright, clamp((0.55 + 0.45 * big) * e * e));
         bs.s *= 1 + 0.08 * big * k * e * e * e;
+      }
+    } else if (sfx.type === 'fang') {
+      // 噛み合った衝撃で文字が叩きつけられる：白く光って少し大きく、震えて収まる
+      const d = t - pg.textStart;
+      if (d >= 0 && d < 0.45) {
+        const e = 1 - d / 0.45;
+        bs.bright = Math.max(bs.bright, clamp(0.7 * e * e * e));
+        bs.s *= 1 + 0.07 * k * e * e * e;
+        bs.x += noise1(t * 42, 7) * size * 0.03 * k * e * e;
+        bs.y += noise1(t * 42, 19) * size * 0.022 * k * e * e;
       }
     } else if (sfx.type === 'vampire') {
       const tier = rollTier(sfx);
@@ -2799,6 +2814,7 @@
       else if (sfx.type === 'star') this.drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'dream') this.drawDream(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'vampire') this.drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'fang') this.drawFang(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type.startsWith('fire')) this.drawFireFx(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, page, t, scale, scene, sfx, k);
@@ -5653,6 +5669,93 @@
       if (s >= 0 && s < 0.35) drawFlash(ctx, cx, cy, size * 4, fum ? '#c0182e' : '#7a1020', (fum ? 0.3 : 0.2) * Math.pow(1 - s / 0.35, 2), 0.5);
       if (fum && s >= 0) {
         V.cracks(ctx, cx - textW * 0.08, cy, textW * 0.45, EASE.outCubic(clamp(s / 0.3)), seed, 0.55 * fade * (1 - 0.5 * out), size * 0.01);
+      }
+    }
+
+    // 牙の戦闘開始：暗い帯の上下から牙の列がだんだん速く迫って噛み合い（重い揺れ・閃光・衝撃波）、文字が叩きつけられる。
+    // 噛み合ったまま一拍おいて、あごが開いて上下へ去り、帯が開いて文字が残る。退場は帯が文字と一緒に右へ抜ける（血は出さない）
+    drawFang(ctx, pg, page, t, scale, scene, sfx, k, layer) {
+      const V = root.TextApngVampireFx, S = root.TextApngStarFx;
+      if (!V || !S) return;
+      const d = t - pg.start;
+      if (d < 0) return;
+      const hasOut = Number.isFinite(pg.outEnd);
+      if (hasOut && t > pg.outEnd + 0.05) return;
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const W = scene.width, H = scene.height;
+      const fill = sfx.color || '#f7f3ea';
+      const rim = sfx.color2 || '#6a665c';
+      const b = page.box;
+      const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+      const clap = FANG_CLAP;
+      const sc = d - clap;
+      const out = outProgress(pg, t);
+      // 帯の色は牙の色を深く沈めた色（白はほぼ黒、赤は黒ずんだ赤、黒は黒）
+      const dark = S.mix(fill, '#050507', 0.9);
+      const lum = (() => { const c = S.mix(fill, '#000000', 0); const m = /#?([0-9a-f]{6})/i.exec(String(c)); if (!m) return 1; const n = parseInt(m[1], 16); return (((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255; })();
+      const SS = Math.min(size * 1.15, W * 0.14);
+      if (layer === 'back') {
+        // 帯：噛み合ったあとで上下に開く。退場では左から文字と一緒に右へ抜ける
+        const open = EASE.outCubic(clamp((sc - 0.04) / 0.36));
+        const bOut = EASE.inOutCubic(clamp((out - 0.1) / 0.9));
+        if (open > 0.001 && bOut < 1) {
+          const hh = ((b.y1 - b.y0) / 2 + size * 0.3) * open;
+          const left = lerp(0, W, bOut);
+          ctx.save();
+          ctx.beginPath(); ctx.rect(left, 0, W - left, H); ctx.clip();
+          const g = ctx.createLinearGradient(0, 0, W, 0);
+          g.addColorStop(0, colorWithAlpha(dark, 0)); g.addColorStop(0.1, colorWithAlpha(dark, 0.86));
+          g.addColorStop(0.9, colorWithAlpha(dark, 0.86)); g.addColorStop(1, colorWithAlpha(dark, 0));
+          ctx.fillStyle = g;
+          ctx.fillRect(0, cy - hh, W, hh * 2);
+          // 縁の細い線（黒でも暗い背景で見えるよう、縁の色）
+          const g2 = ctx.createLinearGradient(0, 0, W, 0);
+          g2.addColorStop(0, colorWithAlpha(rim, 0)); g2.addColorStop(0.18, colorWithAlpha(rim, 0.85));
+          g2.addColorStop(0.82, colorWithAlpha(rim, 0.85)); g2.addColorStop(1, colorWithAlpha(rim, 0));
+          ctx.fillStyle = g2;
+          const lw = Math.max(1.5, size * 0.014);
+          ctx.fillRect(0, cy - hh - lw / 2, W, lw);
+          ctx.fillRect(0, cy + hh - lw / 2, W, lw);
+          ctx.restore();
+        }
+        // 牙：閉じる（だんだん速く）→ 噛み合ったまま一拍 → 開いて上下へ去る。噛んだ瞬間に全体が重く揺れる
+        ctx.save();
+        if (sc >= 0) {
+          const sh = Math.exp(-sc * 10) * size * 0.05 * clamp(k, 0, 2);
+          ctx.translate(noise1(d * 40, 3) * sh, noise1(d * 40, 9) * sh);
+        }
+        const closedGap = SS * 1.0;
+        const away = SS * 1.9;
+        let topY, botY, ta = 1;
+        if (sc < 0) {
+          const e1 = Math.pow(clamp(d / clap), 2.3);
+          topY = -away + (cy - closedGap + away) * e1;
+          botY = H + away - (H + away - (cy + closedGap)) * e1;
+        } else {
+          const u2 = EASE.outCubic(clamp((sc - 0.12) / 0.5));
+          topY = cy - closedGap - (cy - closedGap + away) * u2;
+          botY = cy + closedGap + (H + away - cy - closedGap) * u2;
+          ta = 1 - EASE.inQuad(clamp((sc - 0.35) / 0.35));
+        }
+        if (ta > 0.01) {
+          const o = { alpha: ta, fill, rim, shadow: '#000000', rimW: lum < 0.3 ? 0.016 : 0.02 };
+          V.teethRow(ctx, cx, topY, SS, 1, o);
+          V.teethRow(ctx, cx, botY, SS, -1, { ...o, lower: true });
+        }
+        ctx.restore();
+        return;
+      }
+      // 手前：噛んだ瞬間の閃光と衝撃波
+      if (sc >= 0 && sc < 0.2) {
+        const flashCol = lum < 0.3 ? rim : fill;
+        drawFlash(ctx, cx, cy, W * 0.38, flashCol, 0.75 * clamp(k) * Math.pow(1 - sc / 0.2, 2), 0.45);
+      }
+      if (sc >= 0 && sc < 0.5) {
+        const q = sc / 0.5;
+        const ringCol = lum < 0.3 ? rim : fill;
+        shockRing(ctx, cx, cy, size * (0.5 + 4.2 * EASE.outCubic(q)), size * 0.05 * (1 - q), ringCol, 0.75 * (1 - q) * clamp(k));
+        shockRing(ctx, cx, cy, size * (0.3 + 2.8 * EASE.outCubic(q)), size * 0.02 * (1 - q), ringCol, 0.5 * (1 - q) * clamp(k));
       }
     }
 
