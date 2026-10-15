@@ -438,7 +438,7 @@
     fumble: {
       accent: '#9a1428', band: '#080104',
       patch: {
-        fill: { type: 'gradient', color: '#e8cfc8', color2: '#b8706c', color3: '#7a1824', dir: 'v' }, stroke: { on: true, width: 2.5, color: '#120106' },
+        fill: { type: 'gradient', color: '#fff4ee', color2: '#f2d4cc', color3: '#d9a6a0', dir: 'v' }, stroke: { on: true, width: 2.5, color: '#120106' },
         glow: { on: true, color: '#8a0a1c', size: 26, strength: 1.0 }, subColor: '#c89a96', inFx: 'fade', inDur: 0.35
       }
     }

@@ -4912,7 +4912,7 @@
       const glow = scene.glow && scene.glow.on ? scene.glow.color : (scene.fill && scene.fill.color) || '#fff3b0';
       let mode = 'rise', colors = [glow, '#ffffff', glow];
       if (vamp && (tier === 'failure' || tier === 'fumble')) { mode = 'dust'; colors = tier === 'fumble' ? ['#a01428', '#6a0a1a', '#d03048'] : ['#8a8090', '#6a5060', '#b09aa4']; }
-      else if (vamp) colors = [sfx.color || '#d0203c', '#ff5a68', '#f2e8d8', '#a0142a'];
+      else if (vamp) colors = ['#ff2a40', '#d0142c', '#ff5a68', '#9a0c20'];
       else if (dream && tier === 'failure') { mode = 'dust'; colors = ['#b9b4cf', '#9a95b3', '#d4d0e2']; }
       else if (dream && tier === 'fumble') { mode = 'mist'; colors = ['#0c0618', '#1c0e34', '#2a1450']; }
       else if (dream) colors = [sfx.color || '#ffd6f0', '#ffffff', '#c4f5ff', '#d6ccff', '#fff0b8'];
@@ -5042,7 +5042,12 @@
         const r = size * (0.009 + 0.012 * rnd(i, 5, 91)) * (1 - 0.3 * q) * (1 + 0.6 * fresh);
         if (st.vamp && i % 14 === 0) root.TextApngVampireFx.bat(ctx, x, y, size * 0.075 * (1 - 0.4 * q) * (0.8 + 0.4 * tw), { flap: tw, alpha: al, ang: -0.2 });
         else if (st.dream && i % 13 === 0) root.TextApngDreamFx.star5(ctx, x, y, r * 2.6, col, al * (0.6 + 0.4 * tw), a * 2 + i);
-        else if (i % 9 === 0) S.glint(ctx, x, y, r * 7 * (0.55 + 0.45 * tw), col, al);
+        else if (st.vamp) {
+          // 赤い粒：外側は紅、芯は明るい赤。ときどき暗い紅のかけら（明るい背景でも暗い背景でも見える）
+          if (i % 6 === 0) { ctx.fillStyle = `rgba(74, 5, 16, ${(0.85 * al).toFixed(3)})`; ctx.beginPath(); ctx.arc(x, y, r * 1.6, 0, TAU); ctx.fill(); }
+          else if (i % 9 === 0) S.glint(ctx, x, y, r * 6 * (0.55 + 0.45 * tw), col, al);
+          else { S.softDot(ctx, x, y, r * 3.6, col, 0.75 * al); S.softDot(ctx, x, y, r * 1.5, '#ff8a92', al); }
+        } else if (i % 9 === 0) S.glint(ctx, x, y, r * 7 * (0.55 + 0.45 * tw), col, al);
         else {
           S.softDot(ctx, x, y, r * 4, col, 0.55 * al);
           S.softDot(ctx, x, y, r * 1.3, '#ffffff', al);
@@ -5606,7 +5611,7 @@
       const cx = mb.cx, cy = mb.cy;
       const clap = plan.clap;
       const sc = d - clap;
-      const SS = size * (fum ? 1.5 : 1.3);
+      const SS = size * (fum ? 1.5 : 1.3) * 0.88;
       const fa = fade * (1 - 0.3 * out);
       // 帯は噛み合ったあとで開く
       V.band(ctx, band, size, EASE.outCubic(clamp((d - clap - 0.05) / 0.4)), fade, accent, tint, fum ? 'fumble' : 'failure');
@@ -5616,15 +5621,13 @@
         ctx.translate(noise1(d * 40, 3) * sh, noise1(d * 40, 9) * sh);
       }
       if (sc >= 0) {
-        // 噛んだ点から広がる血の塊
-        const dur = fum ? 0.8 : 0.7;
-        const p = clamp((sc - 0.03) / dur);
-        if (fum) V.bloodMass(ctx, cx, cy, W * 0.6, H * 0.64, p, { seed: seed + 5, alpha: fa, specks: 34, spikes: 8, grain: 0.022 });
-        else V.bloodMass(ctx, cx, cy, size * 2.7, size * 1.35, p, { seed: seed + 5, alpha: fa, specks: 18, spikes: 5 });
+        // 噛んだ点に叩きつけた血の飛沫（はじめの0.14秒でいっぺんに広がり、そのあとは落ち着いて垂れる）
+        if (fum) V.splatter(ctx, cx, cy, size * 1.5, sc, { seed: seed + 5, alpha: fa, reach: 1.2, streaks: 44, drops: 130, drips: 6 });
+        else V.splatter(ctx, cx, cy, size * 0.95, sc, { seed: seed + 5, alpha: fa, reach: 1.0, streaks: 28, drops: 64, drips: 4 });
         if (sc < 0.16) drawFlash(ctx, cx, cy, W * (fum ? 0.5 : 0.35), '#ff6a7a', (fum ? 0.55 : 0.4) * Math.pow(1 - sc / 0.16, 2), 0.5);
       }
       // 牙：閉じる（だんだん速く）→ 噛み合ったまま一拍 → はじかれるように開いて去る
-      const closedGap = SS * 0.95;
+      const closedGap = SS * 1.0;
       const away = SS * 1.75;
       let topY, botY, ta = 1;
       if (sc < 0) {

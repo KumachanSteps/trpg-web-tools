@@ -148,26 +148,34 @@
    * 色は骨の白で、根もとから先へごくわずかに陰る。見やすさのため、歯のまわりにごく淡い暗紅の影を落とす
    */
   const TEETH = [
-    // [中心からの距離(S), 長さ(S), 根もとの太さ(S), 先の反り(S、内向き)]
-    [0.2, 1.0, 0.25, 0.0], [0.55, 0.84, 0.23, 0.02], [0.87, 0.68, 0.2, 0.04],
-    [1.24, 1.58, 0.38, 0.34],
-    [1.6, 0.6, 0.17, 0.07], [1.8, 0.46, 0.15, 0.06], [1.97, 0.34, 0.12, 0.05]
+    // [中心からの距離(S), 長さ(S), 根もとの太さ(S), 先の反り(S、内向き), 縁から下へずらす量(S)]
+    // 中央の長い歯が2本、そのわきに短い歯が2本、大きく反った牙、外側の小さな歯が3本。外の小さな歯は少し低い位置から生える
+    [0.26, 1.0, 0.4, 0.0, 0], [0.7, 0.95, 0.38, 0.05, 0],
+    [1.08, 1.9, 0.5, 0.46, 0.05],
+    [1.62, 0.78, 0.2, 0.12, 0.3], [1.8, 0.64, 0.19, 0.1, 0.4], [1.95, 0.5, 0.17, 0.08, 0.5]
   ];
   const TEETH_LOWER = [
-    [0.375, 1.0, 0.25, 0.0], [0.71, 0.84, 0.23, 0.02], [1.04, 0.68, 0.2, 0.04],
-    [1.42, 1.58, 0.38, 0.34],
-    [1.78, 0.6, 0.17, 0.07], [1.97, 0.46, 0.15, 0.06], [2.12, 0.34, 0.12, 0.05]
+    [0.26, 0.85, 0.4, 0.0, 0], [0.7, 0.8, 0.38, 0.05, 0],
+    [1.62, 1.55, 0.5, 0.42, 0.05],
+    [2.1, 0.66, 0.2, 0.12, 0.3], [2.28, 0.54, 0.19, 0.1, 0.4], [2.43, 0.42, 0.17, 0.08, 0.5]
   ];
+  // 反った刃のような歯：ふくらんだ葉の形。根もとは丸く、外側は長い弧、内側はゆるくへこみ、先は中央側へ曲がった針のようにとがる
   function toothPath(x, y, len, w, bend, dir, side) {
-    // x 根もとの中心、side：+1 右側 / −1 左側（先は中央側へ反る）。両側とも葉のようにふくらんで先でとがる
     const p = new Path2D();
     const tx = x - side * bend, ty = y + dir * len;
-    p.moveTo(x - w / 2, y);
-    p.bezierCurveTo(x - w * 0.55 - side * bend * 0.1, y + dir * len * 0.4, tx - w * 0.1, y + dir * len * 0.82, tx, ty);
-    p.bezierCurveTo(tx + w * 0.1, y + dir * len * 0.82, x + w * 0.55 - side * bend * 0.1, y + dir * len * 0.4, x + w / 2, y);
+    const top = y - dir * w * 0.12;
+    p.moveTo(x, top);
+    p.bezierCurveTo(x + side * w * 0.7, top + dir * w * 0.02, x + side * w * 0.62, y + dir * len * 0.5, tx + side * w * 0.14, y + dir * len * 0.86);
+    p.quadraticCurveTo(tx + side * w * 0.04, y + dir * len * 0.96, tx, ty);
+    p.bezierCurveTo(tx - side * w * 0.02, y + dir * len * 0.74, x - side * w * 0.5 - side * bend * 0.2, y + dir * len * 0.5, x - side * w * 0.5, y + dir * len * 0.14);
+    p.bezierCurveTo(x - side * w * 0.52, top + dir * w * 0.1, x - side * w * 0.3, top, x, top);
     p.closePath();
     return p;
   }
+  /*
+   * 牙の列（歯ぐき・あごの線は描かない。ベタ塗りの白い歯だけ）。(cx, y) が列の中心と縁、dir＝+1 で下向き（上あご）、−1 で上向き（下あご）。
+   * 下あごは大きな牙を外へずらして、上の牙が内側を通るように噛み合わせる。色は純白のベタ、見やすさのため歯のまわりにごく淡い暗い影だけを落とす
+   */
   function teethRow(ctx, cx, y, S, dir, o = {}) {
     const alpha = clamp(o.alpha ?? 1);
     if (alpha <= 0.01 || S <= 1) return;
@@ -175,94 +183,207 @@
     const list = o.lower ? TEETH_LOWER : TEETH;
     ctx.save();
     ctx.globalAlpha *= alpha;
-    ctx.shadowColor = Sx.rgba(o.shadow || '#1a0208', 0.8);
-    ctx.shadowBlur = S * 0.07;
-    list.forEach(([dx, len, w0, bend]) => {
-      const w = w0 * 0.9;
+    ctx.shadowColor = Sx.rgba(o.shadow || '#1a0208', 0.55);
+    ctx.shadowBlur = S * 0.05;
+    ctx.fillStyle = '#ffffff';
+    list.forEach(([dx, len, w, bend, off]) => {
       [-1, 1].forEach(side => {
-        const x = cx + side * dx * S;
-        const path = toothPath(x, y - dir * S * 0.03, len * S, w * S, bend * S, dir, side);
-        const g = ctx.createLinearGradient(0, y, 0, y + dir * len * S);
-        g.addColorStop(0, '#fffdf8');
-        g.addColorStop(0.55, '#f4ede0');
-        g.addColorStop(1, '#d8cdb8');
-        ctx.fillStyle = g;
-        ctx.fill(path);
+        ctx.fill(toothPath(cx + side * dx * S, y + dir * off * S, len * S, w * S, bend * S, dir, side));
       });
     });
     ctx.restore();
   }
 
   /*
-   * 広がる血：中心 (x,y) から、ひとつながりの塊としてにじむように広がる（大きな血だまり・絵の具のしみ）。
-   * rx, ry は広がりきったときの半径、p（0〜1）で広がる（外へ向かってゆっくり止まる）。ふちは角度ごとのノイズで不ぞろいに波打ち、
-   * ところどころ短い突起が出る。中心ほど暗く、ふち近くはやや明るい紅。つやの淡い光が数か所。
-   * ふちのすぐ外にだけ、ごく細かな点（specks）が散る。飛び散る滴や垂れは描かない
+   * 血の飛沫（噛んだ点に叩きつけた血）：暗い紅の濃い塊が中心にあり、そこから放射状に細く尖った筋（先に玉がつくものも）が走り、
+   * 大小さまざまな丸い滴が周りへ飛び散る。縁には明るい透けた薄い塗れ（にじみ）、塊には濃淡の層とつや、下の縁からは先に玉のついた垂れが伸びる。
+   * tt は当たってからの秒数。はじめの 0.14 秒でいっぺんに広がり、そのあとはゆっくり落ち着いて垂れが伸びる。R は塊の半径、reach で飛び散る距離を変える
    */
-  function bloodMass(ctx, x, y, rx, ry, p, o = {}) {
-    if (p <= 0.001 || rx <= 1) return;
+  let splatBuf = null;
+  function splatter(ctx, x, y, R, tt, o = {}) {
+    const alpha = clamp(o.alpha ?? 1);
+    if (tt <= 0 || R <= 2 || alpha <= 0.005) return;
+    // 薄れるときは、いったん別の紙に描いてからまとめて薄める（層ごとに薄めると、重なりの縞が透けて見える）
+    if (alpha < 0.995 && ctx.canvas) {
+      const cv = ctx.canvas;
+      if (!splatBuf || splatBuf.width !== cv.width || splatBuf.height !== cv.height) splatBuf = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(cv.width, cv.height) : Object.assign(document.createElement('canvas'), { width: cv.width, height: cv.height });
+      const bx = splatBuf.getContext('2d');
+      bx.setTransform(1, 0, 0, 1, 0, 0);
+      bx.clearRect(0, 0, splatBuf.width, splatBuf.height);
+      bx.setTransform(ctx.getTransform());
+      splatterInner(bx, x, y, R, tt, o);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha *= alpha;
+      ctx.drawImage(splatBuf, 0, 0);
+      ctx.restore();
+      return;
+    }
+    splatterInner(ctx, x, y, R, tt, o);
+  }
+  function splatterInner(ctx, x, y, R, tt, o) {
     const S = F();
     const seed = o.seed || 1;
-    const alpha = clamp(o.alpha ?? 1);
-    if (alpha <= 0.005) return;
-    const e = 1 - Math.pow(1 - clamp(p), 2.6);
-    ctx.save();
-    ctx.globalAlpha *= alpha;
-    const n = 120;
-    const ph = [rnd(seed, 1, 1) * TAU, rnd(seed, 2, 1) * TAU, rnd(seed, 3, 1) * TAU, rnd(seed, 4, 1) * TAU];
-    const spikes = [];
-    for (let q = 0; q < (o.spikes ?? 9); q++) spikes.push([rnd(seed, 10 + q, 1) * TAU, 0.07 + 0.16 * rnd(seed, 30 + q, 1), 0.02 + 0.03 * rnd(seed, 50 + q, 1)]);
-    // 広がるにつれて、ふちの凹凸が先に決まる（形は同じで大きさだけ育つ）
-    const edge = a => {
-      let m = 0.72 + 0.14 * Math.sin(a * 2 + ph[0]) + 0.1 * Math.sin(a * 3 + ph[1]) + 0.07 * Math.sin(a * 5 + ph[2]) + 0.045 * Math.sin(a * 9 + ph[3]) + 0.03 * Math.sin(a * 13 + ph[1] * 2) + 0.02 * Math.sin(a * 23 + ph[0] * 2);
-      spikes.forEach(([sa, h, wd]) => { const da = Math.atan2(Math.sin(a - sa), Math.cos(a - sa)); m += h * Math.exp(-da * da / wd); });
+    const alpha = 1;
+    const reach = o.reach ?? 1;
+    const burst = 1 - Math.pow(1 - clamp(tt / 0.14), 3);
+    const settle = 1 - Math.exp(-tt * 3.5);
+    const rr = R * (0.3 + 0.7 * burst) * (1 + 0.07 * settle);
+    const NS = o.streaks ?? 32;
+    const streaks = [];
+    for (let i = 0; i < NS; i++) {
+      const u = rnd(seed, i, 1);
+      const long = i < NS * 0.35;
+      streaks.push({
+        a: rnd(seed, i, 2) * TAU,
+        len: R * (long ? 2.0 + 1.5 * rnd(seed, i, 3) : 1.05 + 0.9 * rnd(seed, i, 3)) * reach,
+        w: R * (long ? 0.05 + 0.05 * rnd(seed, i, 4) : 0.07 + 0.09 * rnd(seed, i, 4)),
+        curl: (rnd(seed, i, 5) - 0.5) * 0.7,
+        bulb: u < 0.22,
+        delay: 0.03 * rnd(seed, i, 6)
+      });
+    }
+    const ph = [rnd(seed, 200, 1) * TAU, rnd(seed, 201, 1) * TAU, rnd(seed, 202, 1) * TAU];
+    const radial = (a, k) => {
+      let m = 0.84 + 0.1 * Math.sin(2 * a + ph[0] + k) + 0.07 * Math.sin(3 * a + ph[1] + k * 2) + 0.06 * Math.sin(5 * a + ph[2] + k * 3) + 0.05 * Math.sin(9 * a + ph[0] + k * 5) + 0.035 * Math.sin(17 * a + k * 7) + 0.02 * Math.sin(29 * a + k);
+      streaks.forEach(s => { const da = Math.atan2(Math.sin(a - s.a), Math.cos(a - s.a)); m += 0.1 * Math.exp(-da * da / 0.06); });
       return m;
     };
-    const pts = [];
-    for (let i = 0; i < n; i++) {
-      const a = i / n * TAU;
-      const m = edge(a) * (1 + 0.02 * Math.sin(a * 41 + seed));
-      pts.push([x + Math.cos(a) * rx * e * m, y + Math.sin(a) * ry * e * m]);
-    }
-    const path = new Path2D();
-    for (let i = 0; i < n; i++) {
-      const p0 = pts[i], p1 = pts[(i + 1) % n];
-      const mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2;
-      if (i === 0) path.moveTo(mx, my); else path.quadraticCurveTo(p0[0], p0[1], mx, my);
-    }
-    path.quadraticCurveTo(pts[0][0], pts[0][1], (pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2);
-    path.closePath();
-    // 本体：中心が暗く、ふちへ向けて紅が明るくなり、最後のふちはまた少し暗く
+    const corePath = (scale, k, ox, oy) => {
+      const p = new Path2D();
+      const n = 72, pts = [];
+      for (let i = 0; i < n; i++) { const a = i / n * TAU; const m = radial(a, k) * scale; pts.push([x + ox + Math.cos(a) * rr * m, y + oy + Math.sin(a) * rr * m * 0.92]); }
+      for (let i = 0; i < n; i++) {
+        const p0 = pts[i], p1 = pts[(i + 1) % n], mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2;
+        if (i === 0) p.moveTo(mx, my); else p.quadraticCurveTo(p0[0], p0[1], mx, my);
+      }
+      p.closePath();
+      return p;
+    };
     ctx.save();
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry) * Math.max(0.15, e) * 1.25);
-    grad.addColorStop(0, S.rgba('#2a030b', 1));
-    grad.addColorStop(0.35, S.rgba('#4a0612', 1));
-    grad.addColorStop(0.7, S.rgba(o.mid || '#7c0c1e', 1));
-    grad.addColorStop(0.92, S.rgba('#98122a', 1));
-    grad.addColorStop(1, S.rgba('#5a0816', 1));
-    ctx.fillStyle = grad;
-    ctx.fill(path);
-    ctx.strokeStyle = S.rgba('#3a040c', 0.85);
-    ctx.lineWidth = Math.max(1, Math.min(rx, ry) * 0.012);
-    ctx.stroke(path);
-    // つや：本体の中に、淡い明るい筋とにじみ
-    ctx.clip(path);
-    grain(ctx, o.grain ?? 0.04);
-    for (let q = 0; q < 3; q++) {
-      const a = rnd(seed, 70 + q, 1) * TAU, d = (0.15 + 0.4 * rnd(seed, 80 + q, 1)) * e;
-      puff(ctx, x + Math.cos(a) * rx * d, y + Math.sin(a) * ry * d, rx * (0.16 + 0.12 * rnd(seed, 90 + q, 1)) * e, rx * (0.05 + 0.04 * rnd(seed, 94 + q, 1)) * e, '#ff7a86', 0.1);
+    ctx.globalAlpha *= alpha;
+    // 縁の明るい透けた塗れ（にじみ）と、その下の暗い染み
+    if (burst > 0.3) {
+      for (let q = 0; q < 7; q++) {
+        const a = rnd(seed, 300 + q, 1) * TAU, d = rr * (0.85 + 0.55 * rnd(seed, 310 + q, 1));
+        const sx = x + Math.cos(a) * d, sy = y + Math.sin(a) * d;
+        const L = R * (0.35 + 0.4 * rnd(seed, 320 + q, 1)), Wd = L * (0.4 + 0.25 * rnd(seed, 330 + q, 1));
+        ctx.save();
+        ctx.translate(sx, sy); ctx.rotate(a);
+        ctx.fillStyle = S.rgba('#7a0a16', 0.3 * burst);
+        ctx.beginPath(); ctx.ellipse(0, 0, L, Wd, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = S.rgba('#ff7a84', 0.2 * burst);
+        ctx.beginPath(); ctx.ellipse(L * 0.1, 0, L * 0.78, Wd * 0.7, 0, 0, TAU); ctx.fill();
+        ctx.restore();
+      }
     }
+    // 垂れ：下の縁から、先に玉をつけてゆっくり伸びる（塊の下にもぐらせる）
+    const ND = o.drips ?? 4;
+    for (let i = 0; i < ND; i++) {
+      const dl = R * (0.55 + 1.0 * rnd(seed, 400 + i, 1)) * (1 - Math.pow(1 - clamp((tt - 0.22 - 0.12 * rnd(seed, 410 + i, 1)) / 1.5), 2.5));
+      drip(ctx, x + (rnd(seed, 420 + i, 1) - 0.5) * rr * 1.5, y + rr * 0.55, dl + rr * 0.3, R * (0.05 + 0.035 * rnd(seed, 430 + i, 1)), 1);
+    }
+    // 筋：根もとは太く、先は細く尖る。暗い下地 → 本色 → 細い明るい芯の3層。ときどき先に玉
+    const tipOf = s => Math.min(1, Math.max(0, (tt - s.delay) / (0.14 + 0.05 * (s.w / R))));
+    [[1.35, '#3a0510', 0.95], [1.0, '#b00e1c', 1], [0.34, '#f04450', 0.55]].forEach(([wm, col, al], pass) => {
+      streaks.forEach(s => {
+        const k = 1 - Math.pow(1 - tipOf(s), 3);
+        if (k <= 0.01) return;
+        const r0 = rr * 0.5, r1 = r0 + s.len * k;
+        const ca = Math.cos(s.a), sa = Math.sin(s.a), px = -sa, py = ca;
+        const w = s.w * wm * (1 - 0.2 * settle);
+        // 中心線は少しうねり、幅は根もとから先へ急に細くなる（細い触手のように）
+        const NP = 9, L = [], Rg = [];
+        let tx = 0, ty = 0;
+        for (let n = 0; n <= NP; n++) {
+          const q = n / NP;
+          const rad = r0 + (r1 - r0) * q;
+          const lat = s.curl * rad * 0.16 * Math.sin(Math.PI * q) + (rnd(seed, 1000 + n, 1) - 0.5) * 0 + Math.sin(q * 5 + s.a * 3) * w * 0.35 * q;
+          const hw = w * Math.pow(1 - q, 1.7) + (q < 1 ? w * 0.03 : 0);
+          const cx2 = x + ca * rad + px * lat, cy2 = y + sa * rad + py * lat;
+          L.push([cx2 + px * hw, cy2 + py * hw]); Rg.push([cx2 - px * hw, cy2 - py * hw]);
+          tx = cx2; ty = cy2;
+        }
+        ctx.fillStyle = S.rgba(col, al);
+        ctx.beginPath();
+        ctx.moveTo(L[0][0], L[0][1]);
+        for (let n = 1; n <= NP; n++) ctx.lineTo(L[n][0], L[n][1]);
+        for (let n = NP; n >= 0; n--) ctx.lineTo(Rg[n][0], Rg[n][1]);
+        ctx.closePath(); ctx.fill();
+        if (s.bulb && pass < 2) {
+          ctx.beginPath(); ctx.arc(tx - ca * w * 0.2, ty - sa * w * 0.2, w * (pass ? 0.38 : 0.5), 0, TAU); ctx.fill();
+        }
+      });
+    });
+    // 塊：外はやや鮮やかな赤、内へ向かって暗い紅、中心はほぼ黒い赤（にじませて重ねるので、段差でなく濃淡に見える）
+    const layers = [[1.14, '#2a0208', 0, 0, 0.9, 0], [1.0, '#b30f1d', 1, 0, 1, 0.03], [0.84, '#8a0b18', 2, -0.02, 1, 0.05], [0.62, '#5a0712', 3, 0.02, 1, 0.06], [0.36, '#2e0309', 4, 0.03, 1, 0.07]];
+    layers.forEach(([sc, col, k, off, al, bl]) => {
+      ctx.save();
+      if (bl) ctx.filter = `blur(${(R * bl).toFixed(1)}px)`;
+      ctx.fillStyle = S.rgba(col, al);
+      ctx.fill(corePath(sc, k * 1.3, off * rr, off * rr * 1.2));
+      ctx.restore();
+    });
+    // つやと筋の質感（塊の中だけ）
+    ctx.save();
+    ctx.clip(corePath(1.0, 1, 0, 0));
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 46; i++) {
+      const a = rnd(seed, 500 + i, 1) * TAU, r1 = rr * (0.25 + 0.2 * rnd(seed, 520 + i, 1)), r2 = rr * (0.7 + 0.3 * rnd(seed, 540 + i, 1));
+      ctx.strokeStyle = i % 3 ? S.rgba('#2a0208', 0.2) : S.rgba('#ff6a72', 0.14);
+      ctx.lineWidth = Math.max(0.8, R * 0.012 * (0.5 + rnd(seed, 560 + i, 1)));
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); ctx.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2); ctx.stroke();
+    }
+    for (let q = 0; q < 9; q++) {
+      const a = rnd(seed, 650 + q, 1) * TAU, d = rr * 0.75 * Math.sqrt(rnd(seed, 660 + q, 1));
+      puff(ctx, x + Math.cos(a) * d, y + Math.sin(a) * d, rr * (0.12 + 0.18 * rnd(seed, 670 + q, 1)), rr * (0.08 + 0.1 * rnd(seed, 680 + q, 1)), q % 2 ? '#d01a28' : '#1a0106', 0.3);
+    }
+    puff(ctx, x - rr * 0.3, y - rr * 0.34, rr * 0.34, rr * 0.16, '#ff8890', 0.3);
+    ctx.strokeStyle = S.rgba('#ffd6d6', 0.55);
+    for (let i = 0; i < 4; i++) {
+      const a0 = (rnd(seed, 600 + i, 1) * 0.9 + 3.4), rad = rr * (0.3 + 0.35 * rnd(seed, 610 + i, 1));
+      ctx.lineWidth = Math.max(1, R * (0.016 + 0.014 * rnd(seed, 620 + i, 1)));
+      ctx.beginPath(); ctx.arc(x, y, rad, a0, a0 + 0.35 + 0.3 * rnd(seed, 630 + i, 1)); ctx.stroke();
+    }
+    if (o.grain) grain(ctx, o.grain);
     ctx.restore();
-    // ふちの外に、ごく細かな点
-    const specks = o.specks ?? 22;
-    for (let i = 0; i < specks; i++) {
-      const a = rnd(seed, 100 + i, 1) * TAU;
-      const m = edge(a);
-      const dist = m * (1.04 + 0.22 * rnd(seed, 130 + i, 1) * rnd(seed, 160 + i, 1) * 2) * e;
-      const r = Math.min(rx, ry) * (0.006 + 0.016 * rnd(seed, 190 + i, 1) * rnd(seed, 220 + i, 1)) * (0.4 + 0.6 * e);
-      if (p < 0.45 + 0.4 * rnd(seed, 250 + i, 1)) continue;
-      ctx.fillStyle = S.rgba(i % 3 ? '#7c0c1e' : '#98122a', 0.95);
-      ctx.beginPath(); ctx.arc(x + Math.cos(a) * rx * dist, y + Math.sin(a) * ry * dist, Math.max(0.8, r), 0, TAU); ctx.fill();
+    // 筋の先の細かい飛沫（筋が伸びた先に、ごく小さな点が並んで飛ぶ）
+    streaks.forEach((s, si) => {
+      if (si >= NS * 0.35) return;
+      const k = 1 - Math.pow(1 - tipOf(s), 3);
+      if (k < 0.9) return;
+      for (let q = 0; q < 4; q++) {
+        const rd = s.len * (1.04 + 0.12 * q * (0.6 + rnd(seed, 900 + si * 7 + q, 1)));
+        ctx.fillStyle = S.rgba('#a80f1c', 0.9);
+        ctx.beginPath(); ctx.arc(x + Math.cos(s.a + s.curl * 0.1) * rd, y + Math.sin(s.a + s.curl * 0.1) * rd, Math.max(0.8, R * (0.018 - 0.003 * q)), 0, TAU); ctx.fill();
+      }
+    });
+    // 滴：さまざまな大きさの丸。大きいものは飛んでいる間、飛ぶ向きに細長く、ツヤの白い光つき
+    const ND2 = o.drops ?? 90;
+    for (let i = 0; i < ND2; i++) {
+      const u = rnd(seed, 700 + i, 1);
+      const a = rnd(seed, 720 + i, 1) < 0.55 ? streaks[Math.floor(rnd(seed, 740 + i, 1) * NS)].a + (rnd(seed, 760 + i, 1) - 0.5) * 0.3 : rnd(seed, 780 + i, 1) * TAU;
+      const d0 = R * (1.25 + 2.7 * Math.pow(rnd(seed, 800 + i, 1), 0.9)) * reach;
+      const tapp = d0 / (R * 20);
+      if (tt < tapp) continue;
+      const k = clamp((tt - tapp) / 0.12);
+      const dist = d0 * (0.8 + 0.2 * (1 - Math.pow(1 - k, 3)));
+      const r = u < 0.06 ? R * (0.1 + 0.07 * rnd(seed, 820 + i, 1)) : u < 0.3 ? R * (0.045 + 0.04 * rnd(seed, 820 + i, 1)) : R * (0.012 + 0.022 * rnd(seed, 820 + i, 1));
+      const sag = R * 0.45 * Math.pow(Math.max(0, tt - tapp - 0.1), 2) * (0.4 + rnd(seed, 840 + i, 1));
+      const dx = x + Math.cos(a) * dist, dy = y + Math.sin(a) * dist + sag;
+      const st = 1 + 1.4 * (1 - k);
+      if (r < 1.3) { ctx.fillStyle = S.rgba('#a80f1c', 0.95); ctx.beginPath(); ctx.arc(dx, dy, Math.max(0.7, r), 0, TAU); ctx.fill(); continue; }
+      ctx.save();
+      ctx.translate(dx, dy); ctx.rotate(a); ctx.scale(st, 1 / Math.sqrt(st));
+      const g = ctx.createRadialGradient(-r * 0.25, -r * 0.3, r * 0.1, 0, 0, r);
+      g.addColorStop(0, '#ff4a54'); g.addColorStop(0.5, '#c01420'); g.addColorStop(1, '#4a0610');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+      if (r > 2.5) {
+        ctx.fillStyle = S.rgba('#fff0f0', 0.85);
+        ctx.beginPath(); ctx.ellipse(-r * 0.3, -r * 0.35, r * 0.28, r * 0.16, -0.6, 0, TAU); ctx.fill();
+      }
+      ctx.restore();
     }
     ctx.restore();
   }
@@ -389,5 +510,5 @@
     ctx.restore();
   }
 
-  root.TextApngVampireFx = { puff, bat, moon, teethRow, bloodMass, drip, cracks, flare, band, BLOOD, BONE };
+  root.TextApngVampireFx = { puff, bat, moon, teethRow, splatter, drip, cracks, flare, band, BLOOD, BONE };
 })(typeof window !== 'undefined' ? window : globalThis);
