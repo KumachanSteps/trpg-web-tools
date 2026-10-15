@@ -5775,8 +5775,9 @@
       }
     }
 
-    // 爪痕（戦闘演出）：4本の爪痕が右上から左下へ、1本ずつ素早く引っかかれる。先と後ろが針のようにとがり、縁はちぎれたようにざらつく。
-    // 引っかくたびに小さな揺れと白い閃光、進行方向へ飛ぶ欠片。しばらく残って、ゆっくり薄れて消える（1回再生）。sfx.dir === 'lr' で左右反転（左上から右下）
+    // 爪痕（戦闘演出）：4本の爪痕が右上から左下へ、1本ずつ素早く引っかかれる。曲がった長い刃のような形で、先は針、後ろは長い尾。
+    // 絵の具のかすれのように、筋（刷毛目）・小さな穴・ちぎれた縁・縁の外へ散る細かい粒でできている（輪郭線やとげの形は使わない）。
+    // 形は1回だけ画素ごとに作って、引っかく順に頭から尾へ（荒い縁で）現し、最後は縁の粒と細い筋から先に崩れて消える。sfx.dir === 'lr' で左右反転
     drawClawMark(ctx, pg, page, t, scale, scene, sfx, k) {
       const d = t - pg.start;
       if (d < 0) return;
@@ -5785,152 +5786,190 @@
       const rim = sfx.color2 || '#4d493f';
       const m = /#?([0-9a-f]{6})/i.exec(fill);
       const n6 = m ? parseInt(m[1], 16) : 0xffffff;
-      const lum = (((n6 >> 16) & 255) * 0.3 + ((n6 >> 8) & 255) * 0.59 + (n6 & 255) * 0.11) / 255;
-      const L = H * 0.86;
-      const ang = 133 * Math.PI / 180;
-      const ux = Math.cos(ang), uy = Math.sin(ang), nx = -uy, ny = ux;
-      const gap = W * 0.088;
-      // [長さ, 中心からの横のずれ, 始まりの位置のずれ, 太さ]（真ん中の2本が長く、外側が短い）
-      const defs = [[0.74, -1.5, 0.12, 0.88], [0.98, -0.5, -0.01, 1.12], [0.92, 0.5, -0.04, 1.06], [0.66, 1.5, -0.14, 0.84]];
-      const HOLD = 0.62, FADE = 1.2, SWEEP = 0.16, STAG = 0.065, T0 = 0.1;
-      const fade = clamp((d - HOLD - T0 - 3 * STAG - SWEEP) / FADE);
-      const al = 1 - EASE.inOutCubic(fade);
-      if (al <= 0.003) return;
-      const seedBase = 4100 + pg.index * 7;
-      // 引っかく順：右上にあるものから
-      const cxs = defs.map((df, i) => (nx * df[1] * gap + ux * (df[2] * L)) * -0.7071 + (ny * df[1] * gap + uy * (df[2] * L)) * 0.7071);
-      const order = defs.map((_, i) => i).sort((a, b) => cxs[a] - cxs[b]);
-      const startOf = i => T0 + order.indexOf(i) * STAG;
+      const cr = (n6 >> 16) & 255, cg = (n6 >> 8) & 255, cb = n6 & 255;
+      const SWEEP = 0.17, STAG = 0.065, T0 = 0.1, HOLD = 0.62, FADE = 1.05;
+      const claw = this.clawMasks(W, H, 4100 + pg.index * 7);
+      const tEnd = T0 + 3 * STAG + SWEEP + HOLD;
+      const fadeP = clamp((d - tEnd) / FADE);
+      if (fadeP >= 1) return;
+      const startOf = i => T0 + claw.order.indexOf(i) * STAG;
       const flip = sfx.dir === 'lr' ? -1 : 1;
-      // 揺れ：引っかいた瞬間ごとに小さく
       let sh = 0;
       for (let i = 0; i < 4; i++) { const a = d - startOf(i); if (a >= 0) sh += Math.exp(-a * 16); }
-      const amp = H * 0.008 * Math.min(1.5, sh) * clamp(k, 0, 2);
+      const amp = H * 0.007 * Math.min(1.5, sh) * clamp(k, 0, 2);
       ctx.save();
       ctx.translate(W / 2, H / 2);
       ctx.scale(flip, 1);
       ctx.translate(noise1(d * 45, 3) * amp, noise1(d * 45, 9) * amp);
-      ctx.globalAlpha *= al;
-      const lw = Math.max(2, H * 0.0042);
-      const NP = 96;
-      const norm = 0.2428;
-      const prof = s => Math.pow(Math.max(s, 0), 0.85) * Math.pow(Math.max(1 - s, 0), 1.25) / norm;
-      const smooth = x => x * x * (3 - 2 * x);
-      defs.forEach(([lenK, po, a0k, wk], i) => {
-        const seed = seedBase + i * 31;
-        const len = L * lenK;
-        const a0 = L * a0k - len / 2;
+      ctx.shadowColor = colorWithAlpha(rim, 0.95);
+      claw.strokes.forEach((st, i) => {
         const t0 = startOf(i);
         const p = clamp((d - t0) / SWEEP);
         if (p <= 0) return;
-        const pe = EASE.outQuad(p);
-        const wmax = H * 0.042 * wk * (1 - 0.25 * fade);
-        // 中心線（わずかに弓なり。外側ほど少し扇のように開く）
-        const centre = s => {
-          const al2 = a0 + len * s;
-          const off = po * gap + (po * 0.05) * len * (s - 0.5) + len * 0.045 * Math.sin(Math.PI * s);
-          return [ux * al2 + nx * off, uy * al2 + ny * off, al2, off];
-        };
-        const edge = (s, sg) => {
-          let w = wmax * prof(s);
-          const brk = (s < 0.15 || s > 0.8) && noise1(s * 23, seed + 3) > 0.5 ? 0.22 : 1;
-          w *= brk;
-          const rough = 1 + 0.4 * noise1(s * 8 + sg * 3, seed + sg * 7) + 0.2 * noise1(s * 29 + sg, seed + 11 + sg) + (rnd(seed, Math.floor(s * NP), sg + 5) - 0.5) * 0.34;
-          return Math.max(0, w * rough);
-        };
-        const pts = (sg) => {
-          const arr = [];
-          for (let j = 0; j <= NP; j++) {
-            const s = j / NP * pe;
-            const [x, y] = centre(s);
-            const head = smooth(clamp((pe - s) / 0.05));
-            const w = edge(s, sg) * (pe < 1 ? head : 1);
-            arr.push([x + nx * sg * w, y + ny * sg * w]);
+        const rev = EASE.outQuad(p) * 1.16;
+        const fl = (d - t0 - SWEEP) / 0.15;
+        const flash = fl >= 0 && fl < 1 ? 0.7 * (1 - fl) : 0;
+        const key = Math.round(rev * 200) + '|' + Math.round(fadeP * 300) + '|' + Math.round(flash * 50) + '|' + n6;
+        if (st.key !== key) {
+          st.key = key;
+          const { A, S, F, R, w, h, id } = st;
+          const out = id.data;
+          const fr = flash, rr = cr + (255 - cr) * fr, gg = cg + (255 - cg) * fr, bb = cb + (255 - cb) * fr;
+          for (let q = 0, n = w * h; q < n; q++) {
+            const a0 = A[q];
+            let a = 0;
+            if (a0) {
+              const rv = clamp((rev - S[q]) / 0.035);
+              if (rv > 0) {
+                // 薄れ方：縁の粒と細い筋（F が大きい）から先に、本体は最後に、ばらつきをつけて崩れる
+                const life = 0.08 + 0.62 * (1 - F[q] / 255) + 0.3 * (R[q] / 255);
+                const lv = fadeP <= 0 ? 1 : clamp((life - fadeP) / 0.1);
+                a = a0 * rv * lv;
+              }
+            }
+            const o = q * 4;
+            out[o] = rr; out[o + 1] = gg; out[o + 2] = bb; out[o + 3] = a;
           }
-          return arr;
-        };
-        const A = pts(1), B = pts(-1);
-        const path = new Path2D();
-        path.moveTo(A[0][0], A[0][1]);
-        A.forEach(q => path.lineTo(q[0], q[1]));
-        for (let j = B.length - 1; j >= 0; j--) path.lineTo(B[j][0], B[j][1]);
-        path.closePath();
-        // ささくれ：縁から後ろへ流れる細い棘
-        for (let r = 0; r < 12; r++) {
-          const s = 0.06 + 0.86 * rnd(seed, r, 41);
-          if (s > pe - 0.03) continue;
-          const sg = rnd(seed, r, 42) < 0.5 ? 1 : -1;
-          const [x, y] = centre(s);
-          const w = edge(s, sg);
-          const hh = wmax * (0.25 + 0.55 * rnd(seed, r, 43)) * (0.4 + prof(s));
-          const bx = x + nx * sg * w * 0.8, by = y + ny * sg * w * 0.8;
-          const l2 = len * (0.015 + 0.035 * rnd(seed, r, 44));
-          path.moveTo(bx - ux * l2 * 0.3, by - uy * l2 * 0.3);
-          path.lineTo(bx + nx * sg * hh + ux * l2 * 0.9, by + ny * sg * hh + uy * l2 * 0.9);
-          path.lineTo(bx + ux * l2 * 1.6, by + uy * l2 * 1.6);
-          path.closePath();
+          st.cx.putImageData(id, 0, 0);
         }
-        // 先と後ろの欠片：ちぎれて飛んだ小さなかけら
-        if (p >= 1) {
-          for (let r = 0; r < 6; r++) {
-            const end = r < 3 ? 1.03 + 0.1 * rnd(seed, r, 51) : -0.02 - 0.08 * rnd(seed, r, 51);
-            const [x, y] = centre(end);
-            const lat = (rnd(seed, r, 52) - 0.5) * wmax * 1.6;
-            const sz = wmax * (0.12 + 0.3 * rnd(seed, r, 53));
-            const px = x + nx * lat, py = y + ny * lat;
-            const th = rnd(seed, r, 54) * TAU;
-            path.moveTo(px + Math.cos(th) * sz * 1.6, py + Math.sin(th) * sz * 1.6);
-            path.lineTo(px + Math.cos(th + 2.3) * sz, py + Math.sin(th + 2.3) * sz);
-            path.lineTo(px + Math.cos(th + 4.1) * sz * 0.7, py + Math.sin(th + 4.1) * sz * 0.7);
-            path.closePath();
-          }
-        }
-        ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.6)';
-        ctx.shadowBlur = H * 0.012;
-        ctx.shadowOffsetY = H * 0.004;
-        ctx.fillStyle = fill;
-        ctx.fill(path);
-        ctx.shadowColor = 'rgba(0,0,0,0)';
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = rim;
-        ctx.lineWidth = lw * (lum > 0.8 ? 1.5 : lum < 0.3 ? 0.7 : 1);
-        ctx.lineJoin = 'round';
-        ctx.stroke(path);
-        // 引っかいた直後の白い閃光（爪痕の形のまま）
-        const q = (d - t0 - SWEEP) / 0.14;
-        if (q >= 0 && q < 1) { ctx.globalAlpha *= 0.7 * (1 - q); ctx.fillStyle = '#ffffff'; ctx.fill(path); }
-        ctx.restore();
-        // 先端の光
-        if (p < 1) { const [hx, hy] = centre(pe); drawFlash(ctx, hx, hy, H * 0.16, lum < 0.3 ? rim : fill, 0.5 * clamp(k), 0.8); }
-        // 飛び散る欠片：進行方向（左下）へ、減速しながら
+        // 読みやすさのため、やわらかい影（黒は淡い光）を2段重ねる：まわりの広いぼかし＋ふちの近くの濃いぼかし
+        ctx.shadowBlur = H * 0.016 * scale;
+        ctx.drawImage(st.cv, st.x0, st.y0);
+        ctx.shadowBlur = H * 0.005 * scale;
+        ctx.drawImage(st.cv, st.x0, st.y0);
+      });
+      ctx.shadowColor = 'rgba(0,0,0,0)';
+      ctx.shadowBlur = 0;
+      // 引っかく先端の光と、進行方向へ飛ぶ細かい粒
+      const seedBase = 4100 + pg.index * 7;
+      claw.strokes.forEach((st, i) => {
+        const t0 = startOf(i);
         const dt = d - t0;
-        for (let r = 0; r < 12; r++) {
-          const s = 0.1 + 0.8 * rnd(seed, r, 61);
-          const born = SWEEP * s;
-          const life = 0.35 + 0.3 * rnd(seed, r, 62);
-          const a = dt - born;
+        if (dt < 0 || dt > 1.0) return;
+        const p = clamp(dt / SWEEP);
+        if (p < 1) { const [hx, hy] = claw.centre(i, EASE.outQuad(p)); drawFlash(ctx, hx, hy, H * 0.15, rim, 0.4 * clamp(k), 0.8); }
+        const seed = seedBase + i * 31;
+        ctx.fillStyle = fill;
+        for (let r = 0; r < 34; r++) {
+          const sc = 0.08 + 0.85 * rnd(seed, r, 61);
+          const a = dt - SWEEP * sc;
+          const life = 0.3 + 0.35 * rnd(seed, r, 62);
           if (a < 0 || a > life) continue;
-          const [x, y] = centre(s);
-          const v = H * (0.7 + 1.1 * rnd(seed, r, 63));
+          const [x, y] = claw.centre(i, sc);
+          const v = H * (0.5 + 1.0 * rnd(seed, r, 63));
           const dist = v * (1 - Math.exp(-5 * a)) / 5;
-          const spread = (rnd(seed, r, 64) - 0.5) * 0.9;
-          const dx = ux * Math.cos(spread) - uy * Math.sin(spread), dy = uy * Math.cos(spread) + ux * Math.sin(spread);
-          const fx = x + dx * dist, fy = y + dy * dist;
-          const sz = H * (0.006 + 0.016 * rnd(seed, r, 65)) * (1 - 0.6 * a / life);
-          const th = rnd(seed, r, 66) * TAU + a * 9;
-          ctx.save();
-          ctx.globalAlpha *= 1 - (a / life) * (a / life);
-          ctx.fillStyle = fill; ctx.strokeStyle = rim; ctx.lineWidth = lw * 0.6;
+          const sp = (rnd(seed, r, 64) - 0.5) * 0.8;
+          const dx = claw.ux * Math.cos(sp) - claw.uy * Math.sin(sp), dy = claw.uy * Math.cos(sp) + claw.ux * Math.sin(sp);
+          const lat = (rnd(seed, r, 66) - 0.5) * claw.wmaxOf(i) * 1.4;
+          const rad = Math.max(0.7, H * (0.0012 + 0.0032 * rnd(seed, r, 65) * rnd(seed, r, 67)) * 1.0 * (1 - 0.5 * a / life));
+          ctx.globalAlpha = (1 - (a / life) * (a / life)) * (1 - fadeP);
           ctx.beginPath();
-          ctx.moveTo(fx + Math.cos(th) * sz * 1.8, fy + Math.sin(th) * sz * 1.8);
-          ctx.lineTo(fx + Math.cos(th + 2.4) * sz, fy + Math.sin(th + 2.4) * sz);
-          ctx.lineTo(fx + Math.cos(th + 4.2) * sz * 0.8, fy + Math.sin(th + 4.2) * sz * 0.8);
-          ctx.closePath(); ctx.fill(); ctx.stroke();
-          ctx.restore();
+          ctx.arc(x + dx * dist + claw.nx * lat, y + dy * dist + claw.ny * lat, rad, 0, TAU);
+          ctx.fill();
         }
       });
       ctx.restore();
+    }
+
+    // 爪痕の形（画素ごとのマスク）を、画面の大きさごとに1回だけ作る。座標は画面の中心が原点
+    clawMasks(W, H, seedBase) {
+      const key = W + 'x' + H + ':' + seedBase;
+      if (this._claw && this._claw.key === key) return this._claw;
+      const L = H * 0.78;
+      const ang = 133 * Math.PI / 180;
+      const ux = Math.cos(ang), uy = Math.sin(ang), nx = -uy, ny = ux;
+      const gap = W * 0.1;
+      // [長さ, 横の位置, 頭の位置のずれ(L), 太さ]：反りの内側（左上）から。尾はほぼそろい、頭は右上へ段々にずれる
+      const defs = [[0.82, 1.5, 0.18, 0.9], [0.93, 0.5, 0.07, 1.08], [1.0, -0.5, 0.0, 1.12], [0.95, -1.5, 0.1, 1.0]];
+      const prof = s => (s <= 0 || s >= 1) ? 0 : Math.pow(s, 0.85) * Math.pow(1 - s, 1.25) / 0.2428;
+      const smoothS = x => x * x * (3 - 2 * x);
+      const vn = (x, y, sd) => {
+        const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+        const uu = smoothS(xf), vv = smoothS(yf);
+        const a = rnd(xi, yi, sd), b = rnd(xi + 1, yi, sd), c = rnd(xi, yi + 1, sd), e = rnd(xi + 1, yi + 1, sd);
+        return (a + (b - a) * uu + (c - a) * vv + (a - b - c + e) * uu * vv) * 2 - 1;
+      };
+      const geo = defs.map(([lk, po, hk, wk]) => {
+        const len = L * lk;
+        const a0 = -0.5 * L + hk * L;
+        return { len, a0, po, wmax: len * 0.057 * wk, bow: len * 0.13 };
+      });
+      const cOff = (g, s) => g.po * gap + g.po * 0.05 * g.len * (s - 0.5) + g.bow * Math.sin(Math.PI * Math.pow(Math.min(1, Math.max(0, s)), 0.85));
+      const centre = (i, s) => { const g = geo[i]; const a = g.a0 + g.len * s, off = cOff(g, s); return [ux * a + nx * off, uy * a + ny * off]; };
+      const heads = geo.map((g, i) => { const [x, y] = centre(i, 0); return -0.7071 * x + 0.7071 * y; });
+      const order = geo.map((_, i) => i).sort((a, b) => heads[a] - heads[b]);
+      const strokes = geo.map((g, i) => {
+        const seed = seedBase + i * 31;
+        // 範囲
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        for (let j = 0; j <= 24; j++) { const [x, y] = centre(i, j / 24); x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+        const mg = g.wmax * 3.3 + g.len * 0.06;
+        x0 = Math.floor(Math.max(x0 - mg, -W / 2)); y0 = Math.floor(Math.max(y0 - mg, -H / 2));
+        x1 = Math.ceil(Math.min(x1 + mg, W / 2)); y1 = Math.ceil(Math.min(y1 + mg, H / 2));
+        const w = x1 - x0, h = y1 - y0;
+        const A = new Uint8Array(w * h), S = new Float32Array(w * h).fill(9), F = new Uint8Array(w * h), R = new Uint8Array(w * h);
+        for (let iy = 0; iy < h; iy++) {
+          for (let ix = 0; ix < w; ix++) {
+            const X = x0 + ix + 0.5, Y = y0 + iy + 0.5;
+            const a = X * ux + Y * uy, b = X * nx + Y * ny;
+            const sP = (a - g.a0) / g.len;
+            if (sP < -0.02 || sP > 1.02) continue;
+            const sc = Math.min(1, Math.max(0, sP));
+            const off = b - cOff(g, sP);
+            const hw = Math.max(g.wmax * prof(sc), 0.9);
+            const r = Math.abs(off) / hw;
+            if (r > 2.4) continue;
+            const q = iy * w + ix;
+            // 縁：筋に沿って長くのびた雑音で、縁がほつれ、刷毛目のように伸び縮みする
+            const n1 = vn(a * 0.016, b * 0.28, seed + 1), n2 = vn(a * 0.05, b * 0.75, seed + 2);
+            const thr = 0.92 + 0.62 * n1 + 0.34 * n2 + (rnd(ix, iy, seed + 9) - 0.5) * 0.16;
+            if (r >= thr) continue;
+            // 穴・かすれ・割れ
+            const h1 = vn(a * 0.03, b * 0.42, seed + 3) * 0.6 + vn(a * 0.12, b * 1.3, seed + 4) * 0.4;
+            const deep = 1 - Math.min(1, r * 1.25);
+            if (h1 > 0.36 + 0.5 * deep) continue;
+            const tt = vn(a * 0.011, b * 1.15, seed + 5);
+            if (Math.abs(tt) < 0.022 && r > 0.12) continue;
+            const bk = vn(a * 0.013 + b * 0.02 + 0.55 * vn(b * 0.12, a * 0.02, seed + 7), 3.7, seed + 6);
+            if (bk < -0.62) continue;
+            if (rnd(ix, iy, seed + 12) < 0.012 && r > 0.1) continue;
+            const aa = Math.min(1, (thr - r) * hw / 1.3);
+            A[q] = Math.round(255 * Math.max(0, aa));
+            F[q] = Math.round(255 * Math.min(1, Math.max(0, (r - 0.45) / 0.75)));
+            R[q] = Math.floor(rnd(ix, iy, seed + 13) * 255);
+            S[q] = sP + n1 * 0.03 + (rnd(ix, iy, seed + 14) - 0.5) * 0.02;
+          }
+        }
+        // 縁の外へ散る細かい粒：筋の方向（尾の側）へ流れるように、縁から離れるほどまばらに
+        const NS = 230;
+        for (let r = 0; r < NS; r++) {
+          const sc = Math.min(1, 0.03 + 0.8 * Math.pow(rnd(seed, r, 71), 1.15));
+          const hw = Math.max(g.wmax * prof(sc), 2);
+          const sg = rnd(seed, r, 72) < 0.5 ? 1 : -1;
+          const lat = hw * (0.95 + -Math.log(1 - rnd(seed, r, 73) * 0.999) * 0.55);
+          const along = (rnd(seed, r, 74) - 0.3) * g.len * 0.14;
+          const a = g.a0 + g.len * sc + along;
+          const off = cOff(g, sc) + sg * lat;
+          const X = ux * a + nx * off, Y = uy * a + ny * off;
+          const rad = 0.55 + 1.6 * Math.pow(rnd(seed, r, 75), 2.4);
+          const cx0 = Math.round(X - x0), cy0 = Math.round(Y - y0);
+          const rr = Math.ceil(rad);
+          for (let dy = -rr; dy <= rr; dy++) for (let dx = -rr; dx <= rr; dx++) {
+            const px = cx0 + dx, py = cy0 + dy;
+            if (px < 0 || py < 0 || px >= w || py >= h) continue;
+            const dd = Math.sqrt(dx * dx + dy * dy);
+            if (dd > rad + 0.4) continue;
+            const q = py * w + px;
+            const av = Math.round(255 * Math.min(1, rad + 0.5 - dd));
+            if (av > A[q]) { A[q] = av; F[q] = 255; R[q] = Math.floor(rnd(r, q, seed + 15) * 255); S[q] = Math.min(sc, 1) + (rnd(r, 1, seed) - 0.5) * 0.04; }
+          }
+        }
+        const cv = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h });
+        const cx = cv.getContext('2d');
+        return { x0, y0, w, h, A, S, F, R, cv, cx, id: cx.createImageData(w, h), key: '' };
+      });
+      this._claw = { key, strokes, order, ux, uy, nx, ny, centre, wmaxOf: i => geo[i].wmax };
+      return this._claw;
     }
 
     // 悪夢（夢の致命的失敗）：きらめく星が淡い紫の光からまたたいて消え、黒い粒になって落ちる。帯の両端から黒紫の煙のひびが伸びる
