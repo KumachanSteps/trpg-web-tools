@@ -655,6 +655,7 @@
       case 'vampire': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'fang': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'fangFx': return { l: 0, r: 0, t: 0, b: 0 };
+      case 'clawMark': return { l: 0, r: 0, t: 0, b: 0 };
       // 燃える文字：炎が字の上へ立ちのぼる分（上に広く空けるので、字は試作と同じく少し下寄りになる）
       case 'fireText': return { l: size * 0.1, r: size * 0.1, t: size * 0.9, b: size * 0.1 };
       case 'fireTextSeq': return { l: size * 0.1, r: size * 0.1, t: size * 0.63, b: size * 0.1 };
@@ -1407,6 +1408,8 @@
     fang: { lead: 0.58, tail: 0 },
     // 牙の戦闘演出：文字・帯のない、噛みつく牙だけの演出（画面の中央で噛む。戦闘シーンに重ねる用）
     fangFx: { lead: 0, tail: 0 },
+    // 爪痕：文字のない、4本の爪痕が右上から左下へ引っかかれる演出（戦闘演出）
+    clawMark: { lead: 0, tail: 0 },
     // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
     // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
     fireWall: { lead: 0, tail: 0 },
@@ -2598,7 +2601,7 @@
         if (t < pg.start) return;
         if (Number.isFinite(pg.end) && t > pg.end) return;
         // 文字のない牙の戦闘演出：文字は描かず、牙の演出だけを描く
-        if (sfxOf(scene).type === 'fangFx') { this.drawSfx(ctx, pg, page, t, scale, scene, 'back'); this.drawSfx(ctx, pg, page, t, scale, scene, 'front'); return; }
+        if (sfxOf(scene).type === 'fangFx' || sfxOf(scene).type === 'clawMark') { this.drawSfx(ctx, pg, page, t, scale, scene, 'back'); this.drawSfx(ctx, pg, page, t, scale, scene, 'front'); return; }
         if (!page.visibleCount) return;
         const bs = this.blockState(pg, t, scene, size);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'back');
@@ -2819,6 +2822,7 @@
       else if (sfx.type === 'star') this.drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'dream') this.drawDream(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'vampire') this.drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'clawMark') this.drawClawMark(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'fang' || sfx.type === 'fangFx') this.drawFang(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type.startsWith('fire')) this.drawFireFx(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
@@ -5769,6 +5773,164 @@
         shockRing(ctx, cx, cy, R1, ringW * (1 - q), ringCol, 0.95 * (1 - q) * clamp(k));
         shockRing(ctx, cx, cy, R2, ringW * 0.5 * (1 - q), ringCol, 0.7 * (1 - q) * clamp(k));
       }
+    }
+
+    // 爪痕（戦闘演出）：4本の爪痕が右上から左下へ、1本ずつ素早く引っかかれる。先と後ろが針のようにとがり、縁はちぎれたようにざらつく。
+    // 引っかくたびに小さな揺れと白い閃光、進行方向へ飛ぶ欠片。しばらく残って、ゆっくり薄れて消える（1回再生）。sfx.dir === 'lr' で左右反転（左上から右下）
+    drawClawMark(ctx, pg, page, t, scale, scene, sfx, k) {
+      const d = t - pg.start;
+      if (d < 0) return;
+      const W = scene.width, H = scene.height;
+      const fill = sfx.color || '#f7f3ea';
+      const rim = sfx.color2 || '#4d493f';
+      const m = /#?([0-9a-f]{6})/i.exec(fill);
+      const n6 = m ? parseInt(m[1], 16) : 0xffffff;
+      const lum = (((n6 >> 16) & 255) * 0.3 + ((n6 >> 8) & 255) * 0.59 + (n6 & 255) * 0.11) / 255;
+      const L = H * 0.86;
+      const ang = 133 * Math.PI / 180;
+      const ux = Math.cos(ang), uy = Math.sin(ang), nx = -uy, ny = ux;
+      const gap = W * 0.088;
+      // [長さ, 中心からの横のずれ, 始まりの位置のずれ, 太さ]（真ん中の2本が長く、外側が短い）
+      const defs = [[0.74, -1.5, 0.12, 0.88], [0.98, -0.5, -0.01, 1.12], [0.92, 0.5, -0.04, 1.06], [0.66, 1.5, -0.14, 0.84]];
+      const HOLD = 0.62, FADE = 1.2, SWEEP = 0.16, STAG = 0.065, T0 = 0.1;
+      const fade = clamp((d - HOLD - T0 - 3 * STAG - SWEEP) / FADE);
+      const al = 1 - EASE.inOutCubic(fade);
+      if (al <= 0.003) return;
+      const seedBase = 4100 + pg.index * 7;
+      // 引っかく順：右上にあるものから
+      const cxs = defs.map((df, i) => (nx * df[1] * gap + ux * (df[2] * L)) * -0.7071 + (ny * df[1] * gap + uy * (df[2] * L)) * 0.7071);
+      const order = defs.map((_, i) => i).sort((a, b) => cxs[a] - cxs[b]);
+      const startOf = i => T0 + order.indexOf(i) * STAG;
+      const flip = sfx.dir === 'lr' ? -1 : 1;
+      // 揺れ：引っかいた瞬間ごとに小さく
+      let sh = 0;
+      for (let i = 0; i < 4; i++) { const a = d - startOf(i); if (a >= 0) sh += Math.exp(-a * 16); }
+      const amp = H * 0.008 * Math.min(1.5, sh) * clamp(k, 0, 2);
+      ctx.save();
+      ctx.translate(W / 2, H / 2);
+      ctx.scale(flip, 1);
+      ctx.translate(noise1(d * 45, 3) * amp, noise1(d * 45, 9) * amp);
+      ctx.globalAlpha *= al;
+      const lw = Math.max(2, H * 0.0042);
+      const NP = 96;
+      const norm = 0.2428;
+      const prof = s => Math.pow(Math.max(s, 0), 0.85) * Math.pow(Math.max(1 - s, 0), 1.25) / norm;
+      const smooth = x => x * x * (3 - 2 * x);
+      defs.forEach(([lenK, po, a0k, wk], i) => {
+        const seed = seedBase + i * 31;
+        const len = L * lenK;
+        const a0 = L * a0k - len / 2;
+        const t0 = startOf(i);
+        const p = clamp((d - t0) / SWEEP);
+        if (p <= 0) return;
+        const pe = EASE.outQuad(p);
+        const wmax = H * 0.042 * wk * (1 - 0.25 * fade);
+        // 中心線（わずかに弓なり。外側ほど少し扇のように開く）
+        const centre = s => {
+          const al2 = a0 + len * s;
+          const off = po * gap + (po * 0.05) * len * (s - 0.5) + len * 0.045 * Math.sin(Math.PI * s);
+          return [ux * al2 + nx * off, uy * al2 + ny * off, al2, off];
+        };
+        const edge = (s, sg) => {
+          let w = wmax * prof(s);
+          const brk = (s < 0.15 || s > 0.8) && noise1(s * 23, seed + 3) > 0.5 ? 0.22 : 1;
+          w *= brk;
+          const rough = 1 + 0.4 * noise1(s * 8 + sg * 3, seed + sg * 7) + 0.2 * noise1(s * 29 + sg, seed + 11 + sg) + (rnd(seed, Math.floor(s * NP), sg + 5) - 0.5) * 0.34;
+          return Math.max(0, w * rough);
+        };
+        const pts = (sg) => {
+          const arr = [];
+          for (let j = 0; j <= NP; j++) {
+            const s = j / NP * pe;
+            const [x, y] = centre(s);
+            const head = smooth(clamp((pe - s) / 0.05));
+            const w = edge(s, sg) * (pe < 1 ? head : 1);
+            arr.push([x + nx * sg * w, y + ny * sg * w]);
+          }
+          return arr;
+        };
+        const A = pts(1), B = pts(-1);
+        const path = new Path2D();
+        path.moveTo(A[0][0], A[0][1]);
+        A.forEach(q => path.lineTo(q[0], q[1]));
+        for (let j = B.length - 1; j >= 0; j--) path.lineTo(B[j][0], B[j][1]);
+        path.closePath();
+        // ささくれ：縁から後ろへ流れる細い棘
+        for (let r = 0; r < 12; r++) {
+          const s = 0.06 + 0.86 * rnd(seed, r, 41);
+          if (s > pe - 0.03) continue;
+          const sg = rnd(seed, r, 42) < 0.5 ? 1 : -1;
+          const [x, y] = centre(s);
+          const w = edge(s, sg);
+          const hh = wmax * (0.25 + 0.55 * rnd(seed, r, 43)) * (0.4 + prof(s));
+          const bx = x + nx * sg * w * 0.8, by = y + ny * sg * w * 0.8;
+          const l2 = len * (0.015 + 0.035 * rnd(seed, r, 44));
+          path.moveTo(bx - ux * l2 * 0.3, by - uy * l2 * 0.3);
+          path.lineTo(bx + nx * sg * hh + ux * l2 * 0.9, by + ny * sg * hh + uy * l2 * 0.9);
+          path.lineTo(bx + ux * l2 * 1.6, by + uy * l2 * 1.6);
+          path.closePath();
+        }
+        // 先と後ろの欠片：ちぎれて飛んだ小さなかけら
+        if (p >= 1) {
+          for (let r = 0; r < 6; r++) {
+            const end = r < 3 ? 1.03 + 0.1 * rnd(seed, r, 51) : -0.02 - 0.08 * rnd(seed, r, 51);
+            const [x, y] = centre(end);
+            const lat = (rnd(seed, r, 52) - 0.5) * wmax * 1.6;
+            const sz = wmax * (0.12 + 0.3 * rnd(seed, r, 53));
+            const px = x + nx * lat, py = y + ny * lat;
+            const th = rnd(seed, r, 54) * TAU;
+            path.moveTo(px + Math.cos(th) * sz * 1.6, py + Math.sin(th) * sz * 1.6);
+            path.lineTo(px + Math.cos(th + 2.3) * sz, py + Math.sin(th + 2.3) * sz);
+            path.lineTo(px + Math.cos(th + 4.1) * sz * 0.7, py + Math.sin(th + 4.1) * sz * 0.7);
+            path.closePath();
+          }
+        }
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = H * 0.012;
+        ctx.shadowOffsetY = H * 0.004;
+        ctx.fillStyle = fill;
+        ctx.fill(path);
+        ctx.shadowColor = 'rgba(0,0,0,0)';
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = rim;
+        ctx.lineWidth = lw * (lum > 0.8 ? 1.5 : lum < 0.3 ? 0.7 : 1);
+        ctx.lineJoin = 'round';
+        ctx.stroke(path);
+        // 引っかいた直後の白い閃光（爪痕の形のまま）
+        const q = (d - t0 - SWEEP) / 0.14;
+        if (q >= 0 && q < 1) { ctx.globalAlpha *= 0.7 * (1 - q); ctx.fillStyle = '#ffffff'; ctx.fill(path); }
+        ctx.restore();
+        // 先端の光
+        if (p < 1) { const [hx, hy] = centre(pe); drawFlash(ctx, hx, hy, H * 0.16, lum < 0.3 ? rim : fill, 0.5 * clamp(k), 0.8); }
+        // 飛び散る欠片：進行方向（左下）へ、減速しながら
+        const dt = d - t0;
+        for (let r = 0; r < 12; r++) {
+          const s = 0.1 + 0.8 * rnd(seed, r, 61);
+          const born = SWEEP * s;
+          const life = 0.35 + 0.3 * rnd(seed, r, 62);
+          const a = dt - born;
+          if (a < 0 || a > life) continue;
+          const [x, y] = centre(s);
+          const v = H * (0.7 + 1.1 * rnd(seed, r, 63));
+          const dist = v * (1 - Math.exp(-5 * a)) / 5;
+          const spread = (rnd(seed, r, 64) - 0.5) * 0.9;
+          const dx = ux * Math.cos(spread) - uy * Math.sin(spread), dy = uy * Math.cos(spread) + ux * Math.sin(spread);
+          const fx = x + dx * dist, fy = y + dy * dist;
+          const sz = H * (0.006 + 0.016 * rnd(seed, r, 65)) * (1 - 0.6 * a / life);
+          const th = rnd(seed, r, 66) * TAU + a * 9;
+          ctx.save();
+          ctx.globalAlpha *= 1 - (a / life) * (a / life);
+          ctx.fillStyle = fill; ctx.strokeStyle = rim; ctx.lineWidth = lw * 0.6;
+          ctx.beginPath();
+          ctx.moveTo(fx + Math.cos(th) * sz * 1.8, fy + Math.sin(th) * sz * 1.8);
+          ctx.lineTo(fx + Math.cos(th + 2.4) * sz, fy + Math.sin(th + 2.4) * sz);
+          ctx.lineTo(fx + Math.cos(th + 4.2) * sz * 0.8, fy + Math.sin(th + 4.2) * sz * 0.8);
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.restore();
+        }
+      });
+      ctx.restore();
     }
 
     // 悪夢（夢の致命的失敗）：きらめく星が淡い紫の光からまたたいて消え、黒い粒になって落ちる。帯の両端から黒紫の煙のひびが伸びる

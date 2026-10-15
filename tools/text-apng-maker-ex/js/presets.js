@@ -758,6 +758,36 @@
         }
       },
       {
+        // 戦闘演出：4本の爪痕が右上から左下へ引っかかれ、しばらく残ってゆっくり消える。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生。血は出ない）
+        id: 'clawMarkWhite', group: 'battlefx', icon: 'claw', label: T('爪痕（白）', 'Claw Mark (White)', '발톱 자국（흰색）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'clawMark', color: '#f7f3ea', color2: '#4d493f', dir: 'rl', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 2.2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：4本の爪痕が右上から左下へ引っかかれ、しばらく残ってゆっくり消える。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生。血は出ない）
+        id: 'clawMarkRed', group: 'battlefx', icon: 'claw', label: T('爪痕（赤）', 'Claw Mark (Red)', '발톱 자국（빨강）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'clawMark', color: '#c4121f', color2: '#4a050c', dir: 'rl', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 2.2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：4本の爪痕が右上から左下へ引っかかれ、しばらく残ってゆっくり消える。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生。血は出ない）
+        id: 'clawMarkBlack', group: 'battlefx', icon: 'claw', label: T('爪痕（黒）', 'Claw Mark (Black)', '발톱 자국（검정）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'clawMark', color: '#0b0b0e', color2: '#c9ced9', dir: 'rl', power: 1 },
+          inFx: 'fade', inDur: 0, hold: 2.2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
         // EX：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と「戦闘開始」が立ち上がる。最後は左から右へ燃えて消える
         id: 'battleFlame', group: 'combat', icon: 'flame', label: T('炎の戦闘開始', 'Flame Battle Start', '불꽃의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'IGNITE', 'BATTLE START'),

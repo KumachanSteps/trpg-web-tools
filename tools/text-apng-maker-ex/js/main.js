@@ -1328,7 +1328,7 @@
   const yieldToUi = () => new Promise(resolve => setTimeout(resolve, 0));
 
   function hasVisibleText(s) {
-    if (s.sfx && s.sfx.type === 'fangFx') return true; // 文字のない牙の戦闘演出
+    if (s.sfx && (s.sfx.type === 'fangFx' || s.sfx.type === 'clawMark')) return true; // 文字のない牙の戦闘演出
     return Boolean(String(s.text || '').trim() || (s.mode !== 'trailer' && String(s.subText || '').trim()));
   }
 
