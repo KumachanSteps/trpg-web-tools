@@ -339,6 +339,12 @@
 
   // コマ用の方眼の大きさ（マス数。1マス = 0.5m）
   const TOKEN_GRID_SIZES = [1, 2, 3, 4, 6];
+  // 方眼のオン/オフ。オフにするときは今の大きさを覚えておき、オンに戻すとその大きさで描く
+  function setTokenGrid(on) {
+    const p = app.project;
+    if (p.tokenGrid > 0) app.tokenGridLast = p.tokenGrid;
+    p.tokenGrid = on ? (app.tokenGridLast || 2) : 0;
+  }
   const num = (v, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
   const list = v => (Array.isArray(v) ? v : []);
 
@@ -2772,7 +2778,7 @@
     body.appendChild(toggleField(t('props.showNames'), () => p.showNames !== false, v => { p.showNames = v; }));
     body.appendChild(selectField(t('props.sizeLabel'), ['none', 'jo', 'm2', 'm'].map(v => ({ value: v, label: t(`props.sizeModes.${v}`) })), () => p.showSize, v => { p.showSize = v; }));
     body.appendChild(prefToggle(t('props.grid'), () => app.grid, v => { app.grid = v; }));
-    body.appendChild(toggleField(t('props.tokenGrid'), () => p.tokenGrid > 0, v => { p.tokenGrid = v ? (app.tokenGridLast || 2) : 0; }));
+    body.appendChild(toggleField(t('props.tokenGrid'), () => p.tokenGrid > 0, setTokenGrid));
     body.appendChild(selectField(t('props.tokenGridSize'), TOKEN_GRID_SIZES.map(v => ({ value: String(v), label: t('props.tokenGridSizes', { m: v / 2, n: v }) })),
       () => String(p.tokenGrid || app.tokenGridLast || 2), v => { app.tokenGridLast = Number(v); if (p.tokenGrid > 0) p.tokenGrid = Number(v); }));
     body.appendChild(prefToggle(t('props.ghost'), () => app.ghost, v => { app.ghost = v; }));
@@ -3083,7 +3089,7 @@
     // コマ用の方眼はマップ設定と同じ値（ここで切り替えるとマップにも反映）
     const tgInput = h('input', { type: 'checkbox', class: 'switch-input' });
     tgInput.checked = app.project.tokenGrid > 0;
-    tgInput.addEventListener('change', () => { change(() => { app.project.tokenGrid = tgInput.checked ? (app.tokenGridLast || 2) : 0; }); renderExport(); });
+    tgInput.addEventListener('change', () => { change(() => setTokenGrid(tgInput.checked)); renderExport(); });
     box.appendChild(h('label', { class: 'toggle-inline' }, h('span', { class: 'switch' }, tgInput, h('span', { class: 'switch-track', 'aria-hidden': 'true' })), h('span', null, t('exp.tokenGrid'))));
     const tgNote = app.project.tokenGrid > 0 ? box.appendChild(h('p', { class: 'field-note' })) : null;
     box.appendChild(toggle(t('exp.transparent'), 'transparent'));
