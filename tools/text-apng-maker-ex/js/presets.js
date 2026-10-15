@@ -998,6 +998,27 @@
         }
       },
       {
+        // EX：地面の3か所から黒煙がもくもくと立ちのぼり、風で右へなびく（煙は「環境」として文字の奥に敷かれ、どのテンプレートにも重ねられる）
+        id: 'smokeRise', group: 'scene', icon: 'wave', label: T('立ちのぼる黒煙', 'Rising Black Smoke', '피어오르는 검은 연기'), loop: 'infinite',
+        text: T('焦土', 'SCORCHED EARTH', '초토'), subText: T('SCORCHED EARTH', 'AFTER THE FIRE', 'SCORCHED EARTH'),
+        size: FIRE_SIZE, fps: 12,
+        patch: { ...ASH_TITLE, env: { type: 'smoke', density: 1 } }
+      },
+      {
+        // EX：一行の文が現れ、左下から右上へ焦げて崩れ、灰褐色の灰のかけらになって風に流れて消える
+        id: 'ashTextGrey', group: 'scene', icon: 'wave', label: T('文字が灰になって消える', 'Text Crumbles to Ash', '글자가 재가 되어 사라짐'),
+        text: T('それは、とおいとおい昔の物語', 'A tale from long, long ago', '그것은 아주 먼 옛날의 이야기'), subText: T('', '', ''),
+        size: FIRE_SIZE, fps: 20,
+        patch: { ...ASH_TITLE, fontSize: 56, letterSpacing: 0.2, subSize: 0.2, inFx: 'fade', inDur: 0.9, inStagger: 0.08, hold: 1.4, outFx: 'ashtext', outDur: 4.0, startDelay: 0.2, endDelay: 0.2 }
+      },
+      {
+        // EX：上の黒い版。黒い灰のかけらになって流れる（暗い背景では目立たず、明るい背景向け）
+        id: 'ashTextBlack', group: 'scene', icon: 'wave', label: T('文字が黒い灰になって消える', 'Text Crumbles to Black Ash', '글자가 검은 재가 되어 사라짐'),
+        text: T('それは、とおいとおい昔の物語', 'A tale from long, long ago', '그것은 아주 먼 옛날의 이야기'), subText: T('', '', ''),
+        size: FIRE_SIZE, fps: 20,
+        patch: { ...ASH_TITLE, fontSize: 56, letterSpacing: 0.2, subSize: 0.2, inFx: 'fade', inDur: 0.9, inStagger: 0.08, hold: 1.4, outFx: 'ashtextBlack', outDur: 4.0, startDelay: 0.2, endDelay: 0.2 }
+      },
+      {
         id: 'chapter', group: 'scene', icon: 'book', label: T('章タイトル', 'Chapter', '장 제목'),
         text: T('第一章', 'CHAPTER I', '제1장'), subText: T('「目覚めの夜」', '“The Night of Awakening”', '「각성의 밤」'),
         patch: CHAPTER_PATCH

@@ -370,6 +370,12 @@
         bs.a *= 1 - EASE.inOutCubic(clamp((p - STARDUST_SWEEP * 0.45) / (STARDUST_SWEEP * 0.75)));
         if (p < 0.12) bs.bright = Math.max(bs.bright, 0.35 * Math.sin(Math.PI * p / 0.12));
       } },
+    // 文字が灰になって消える（EX）：左下から右上へ前線が渡り、通ったところの文字は焦げて崩れ、灰のかけらになって風に流れて消える。
+    // ashtext は灰褐色の灰、ashtextBlack は黒い灰。退場の時間のうち、はじめの ASHTEXT_SWEEP の割合で前線が文字を渡る
+    { id: 'ashtext', level: 'block', ease: 'linear', dur: 4.0,
+      block(bs, e, p) { bs.mask = { ashtext: true, p, black: false }; } },
+    { id: 'ashtextBlack', level: 'block', ease: 'linear', dur: 4.0,
+      block(bs, e, p) { bs.mask = { ashtext: true, p, black: true }; } },
     // 炎に包まれて燃え尽きる（EX）：左から右へ火が燃え移り、燃え際は焦げて赤く光りながら崩れ、
     // 文字から炎が立ちのぼって火の粉と煙が昇る。退場の時間のうち、はじめの BLAZE_SWEEP の割合で燃え移り、残りで火が収まる
     { id: 'blaze', level: 'block', ease: 'linear', dur: 3.0,
@@ -1410,8 +1416,9 @@
   // 炎の壁の一周（秒）。書き出しの長さを整数個に割って、ループの継ぎ目が出ないようにする
   const FIRE_WALL_LOOP = 2.5;
   // 環境の演出（scene.env）。どのテンプレート・演出とも重ねられる。灰は試作どおり6秒で一周を目安に、書き出しの長さを整数個に割る
-  const ENV_TYPES = new Set(['ash', 'ashBlack']);
+  const ENV_TYPES = new Set(['ash', 'ashBlack', 'smoke']);
   const ASH_LOOP = 6;
+  const SMOKE_LOOP = 6;
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎・一閃・閃光）
   const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream']);
   // 装飾枠：線が角から辺の中央まで伸びる時間
@@ -1448,6 +1455,30 @@
   const STARDUST_SWEEP = 0.55;
   // 「星屑になって消える」で粒1つが文字を消す丸の半径 / 星の判定のブラックホールの芯の半径（文字の大きさが単位）
   const STARDUST_HOLE = 0.055;
+  const ASHTEXT_SWEEP = 0.42;       // 灰になって消える：前線が文字を渡る時間の割合（残りはかけらが風に流れて消える）
+  const ASHTEXT_BAND = 0.5;         // 崩れる直前に焦げて灰の色になっていく秒数
+  const ASHTEXT_SLANT = 0.35;       // 前線の傾き（左下が先）
+  const ASHTEXT_COLORS = { grey: [178, 166, 148], black: [16, 14, 12] };
+  const vnoise2 = (x, y, seed) => {
+    const ix = Math.floor(x), iy = Math.floor(y);
+    let fx = x - ix, fy = y - iy;
+    fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
+    const a = rnd(ix, iy, seed), b = rnd(ix + 1, iy, seed), c = rnd(ix, iy + 1, seed), d = rnd(ix + 1, iy + 1, seed);
+    return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
+  };
+  const fbm2 = (x, y, seed) => (vnoise2(x, y, seed) + 0.5 * vnoise2(x * 2.1, y * 2.1, seed + 1) + 0.25 * vnoise2(x * 4.3, y * 4.3, seed + 2)) / 1.75;
+  const ashShapes = {};
+  function ashShape(j) {
+    if (ashShapes[j]) return ashShapes[j];
+    const nv = 7 + Math.floor(rnd(j, 1, 61) * 6), stretch = 1 + 0.7 * rnd(j, 2, 61), pts = [];
+    for (let k = 0; k < nv; k++) {
+      const a = (k + 0.35 * (rnd(j, 10 + k, 61) - 0.5)) / nv * TAU;
+      let r = 0.55 + 0.45 * rnd(j, 30 + k, 61);
+      if (rnd(j, 50 + k, 61) < 0.22) r *= 0.5;
+      pts.push(Math.cos(a) * r * stretch, Math.sin(a) * r);
+    }
+    return (ashShapes[j] = pts);
+  }
   const STAR_HOLE_R = 0.9;
   // 星の判定のまたたきを変える回数（1秒あたり）
   const STAR_TWINKLE_FPS = 8;
@@ -2503,6 +2534,7 @@
       ctx.clearRect(0, 0, cw, ch);
       ctx.restore();
       this.drawBackground(ctx, t, scale);
+      this.drawEnv(ctx, t, scale, scene, 'behind');
       if (sfxOf(scene).type === 'fireWall') this.drawFireWall(ctx, t, scale, scene);
       const size = layout.size;
       timeline.pages.forEach(pg => {
@@ -2548,10 +2580,11 @@
         }
         this.drawFireflies(ctx, pg, page, t, scale, scene, bs);
         this.drawStardust(ctx, pg, page, t, scale, scene, bs);
+        this.drawAshText(ctx, pg, page, t, scale, scene, bs);
         this.drawBlaze(ctx, pg, page, t, scale, bs);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'front');
       });
-      this.drawEnv(ctx, t, scale, scene);
+      this.drawEnv(ctx, t, scale, scene, 'front');
     }
 
     // 炎に包まれて燃え尽きる：燃え際が通ったところの文字から炎が立ちのぼってしばらく燃え、火の粉が舞い上がり、薄い煙が昇る
@@ -4654,7 +4687,7 @@
     /* ---------- 星（夢と星空）の判定と「星屑になって消える」 ---------- */
 
     // 星屑の粒が生まれる場所：ページの文字（メインとサブ）の画を粗く描いて、塗られたところから選ぶ（レイアウトの座標）
-    stardustPoints(page, scene) {
+    stardustPoints(page, scene, cap = 520, density = 2.4) {
       const { layout } = this.prepared;
       const size = layout.size;
       const list = [];
@@ -4662,8 +4695,9 @@
         const g = layout.glyphs[i];
         if (g && !g.blank) list.push(g);
       }
-      const key = `${this.spriteKey}|${list.map(g => `${g.cx.toFixed(1)},${g.cy.toFixed(1)},${g.size.toFixed(1)}`).join(';')}`;
-      if (page.stardust && page.stardust.key === key) return page.stardust.pts;
+      const key = `${this.spriteKey}|${cap}|${density}|${list.map(g => `${g.cx.toFixed(1)},${g.cy.toFixed(1)},${g.size.toFixed(1)}`).join(';')}`;
+      const cacheName = cap === 520 && density === 2.4 ? 'stardust' : 'stardustAlt';
+      if (page[cacheName] && page[cacheName].key === key) return page[cacheName].pts;
       const b = page.box, pad = size * 0.3;
       const res = clamp(40 / Math.max(1, size), 0.08, 0.6);
       const w = Math.max(1, Math.ceil((b.x1 - b.x0 + pad * 2) * res)), h = Math.max(1, Math.ceil((b.y1 - b.y0 + pad * 2) * res));
@@ -4688,15 +4722,141 @@
       }
       const re = size * STARDUST_HOLE;
       const n = cands.length / 2;
-      const want = clamp(Math.round(2.4 * n / (res * res * Math.PI * re * re)), 100, 520);
+      const want = clamp(Math.round(density * n / (res * res * Math.PI * re * re)), 100, cap);
       const keep = Math.min(1, want / Math.max(1, n));
       const pts = [];
       for (let j = 0; j < cands.length; j += 2) {
         if (rnd(cands[j], cands[j + 1], 97) >= keep) continue;
         pts.push({ x: b.x0 - pad + (cands[j] + rnd(j, 1, 98)) / res, y: b.y0 - pad + (cands[j + 1] + rnd(j, 2, 98)) / res });
       }
-      page.stardust = { key, pts };
+      page[cacheName] = { key, pts };
       return pts;
+    }
+
+    /* ---------- 文字が灰になって消える ---------- */
+
+    // 退場の状態。崩れる時刻は、前線（左下が先）＋大きなうねり＋細かい粒で決まる（レイアウトの座標。fieldT が秒）
+    ashTextState(pg, page, t) {
+      const bo = pg.blockOut;
+      if (!bo || (bo.fx.id !== 'ashtext' && bo.fx.id !== 'ashtextBlack') || t < bo.start) return null;
+      const size = this.prepared.layout.size;
+      const b = page.box;
+      const bw = Math.max(1, b.x1 - b.x0), bh = Math.max(1, b.y1 - b.y0);
+      const span = bw + ASHTEXT_SLANT * bh;
+      const sweep = bo.dur * ASHTEXT_SWEEP;
+      const seed = 7 + pg.index * 3;
+      const rs = size * 0.35;
+      const fieldT = (x, y) => {
+        const uu = clamp((x - b.x0 + ASHTEXT_SLANT * (b.y1 - y)) / span, 0, 1);
+        const n = fbm2(x / rs, y / rs, seed) - 0.5;
+        const g = vnoise2(x / (size * 0.04), y / (size * 0.04), seed + 9) - 0.5;
+        return bo.start + sweep * clamp(0.14 + 0.72 * uu + 0.3 * n, 0, 1) + 0.12 * g;
+      };
+      return { start: bo.start, end: bo.start + bo.dur, black: bo.fx.id === 'ashtextBlack', ash: ASHTEXT_COLORS[bo.fx.id === 'ashtextBlack' ? 'black' : 'grey'], fieldT, size, seed };
+    }
+
+    // 崩れる時刻のまだら（1画素ごと）。ページの文字の枠のまわりを、書き出し倍率の画素で数えて持っておく
+    ashTextField(page, st, scale) {
+      const b = page.box, pad = st.size * 0.6;
+      const key = `${this.spriteKey}|${scale}|${b.x0.toFixed(1)},${b.y0.toFixed(1)},${b.x1.toFixed(1)},${b.y1.toFixed(1)}|${st.start.toFixed(3)}|${st.end.toFixed(3)}|${st.seed}`;
+      if (page.ashField && page.ashField.key === key) return page.ashField;
+      const lx0 = Math.floor((b.x0 - pad) * scale), ly0 = Math.floor((b.y0 - pad) * scale);
+      const w = Math.ceil((b.x1 + pad) * scale) - lx0, h = Math.ceil((b.y1 + pad) * scale) - ly0;
+      const T = new Float32Array(w * h);
+      for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) T[py * w + px] = st.fieldT((lx0 + px + 0.5) / scale, (ly0 + py + 0.5) / scale);
+      return (page.ashField = { key, lx0, ly0, w, h, T });
+    }
+
+    // 前線が通ったところの文字を、焦げて灰の色になりながら消していく
+    applyAshText(pg, page, t, bs, scale, scene) {
+      const st = this.ashTextState(pg, page, t);
+      if (!st) return;
+      const F = this.ashTextField(page, st, scale);
+      const lctx = this.lctx;
+      const cw = this.layer.width, ch = this.layer.height;
+      const ox = Math.round(bs.x * scale), oy = Math.round(bs.y * scale);
+      const rx0 = Math.max(0, F.lx0 + ox), ry0 = Math.max(0, F.ly0 + oy);
+      const rx1 = Math.min(cw, F.lx0 + ox + F.w), ry1 = Math.min(ch, F.ly0 + oy + F.h);
+      if (rx1 <= rx0 || ry1 <= ry0) return;
+      let img;
+      try { img = lctx.getImageData(rx0, ry0, rx1 - rx0, ry1 - ry0); } catch (err) { return; }
+      const d = img.data, w = rx1 - rx0, h = ry1 - ry0;
+      const [ar, ag, ab] = st.ash;
+      const band = ASHTEXT_BAND;
+      for (let py = 0; py < h; py++) {
+        const fi = (ry0 + py - oy - F.ly0) * F.w + (rx0 - ox - F.lx0);
+        for (let px = 0; px < w; px++) {
+          const i4 = (py * w + px) * 4;
+          if (!d[i4 + 3]) continue;
+          const dt = t - F.T[fi + px];
+          if (dt >= 0) { d[i4 + 3] = 0; continue; }
+          if (dt < -band) continue;
+          const ch2 = Math.pow(clamp((dt + band) / band), 1.6);
+          d[i4] += (ar - d[i4]) * ch2; d[i4 + 1] += (ag - d[i4 + 1]) * ch2; d[i4 + 2] += (ab - d[i4 + 2]) * ch2;
+        }
+      }
+      lctx.putImageData(img, rx0, ry0);
+    }
+
+    // 灰のかけら：崩れた場所から飛び立ち、風で右上へ。重いものは一度少し沈んでから運ばれ、ひらひら回りながら細かく崩れて消える
+    drawAshText(ctx, pg, page, t, scale, scene, bs) {
+      const st = this.ashTextState(pg, page, t);
+      if (!st) return;
+      const pts = this.stardustPoints(page, scene, 1500, 5);
+      const k = clamp(scene.outPower ?? 1, 0.3, 2);
+      const H = scene.height, u = st.size / 60;
+      const [ar, ag, ab] = st.ash;
+      ctx.save();
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      for (let j = 0; j < pts.length; j++) {
+        const p = pts[j];
+        const R = q => rnd(j, q, 77);
+        const kind = R(0) < 0.15 ? 'dust' : 'flake';
+        const r0 = R(1);
+        const sz = u * (kind === 'dust' ? 0.8 + 0.7 * R(2) : r0 < 0.85 ? 1.8 + 2.4 * R(2) : 4.2 + 3.8 * R(2)) * 1.25;
+        const T0 = st.fieldT(p.x, p.y) + 0.04 + 0.1 * R(5);
+        let a = t - T0;
+        if (a <= 0) continue;
+        let life = 2.2 * (0.6 + 0.6 * R(1)) * (kind === 'dust' ? 0.8 : 1);
+        life = Math.min(life, st.end - T0);
+        if (life <= 0.05 || a >= life) continue;
+        const light = clamp(1 - sz / (8 * u * 1.25));
+        const tau = 0.45 + 0.4 * (1 - light);
+        const ramp = a - tau * (1 - Math.exp(-a / tau));
+        const vx = H * k * (0.22 + 0.2 * R(2)) * (0.7 + 0.5 * light);
+        const vy = H * k * (0.12 + 0.14 * R(3)) * (0.4 + 0.9 * light);
+        const sag = u * (6 + 14 * R(4)) * (1 - light) * (1 - Math.exp(-a / 0.35)) * Math.exp(-a / 1.2);
+        const fl = u * (3 + 9 * R(5)) * Math.sin(TAU * ((0.5 + 0.9 * R(6)) * a + R(7)));
+        const x = p.x + bs.x + vx * ramp + fl * 0.4, y = p.y + bs.y - vy * ramp + sag + fl;
+        const f = a / life;
+        const alpha = (1 - EASE.inOutCubic(clamp((f - 0.45) / 0.55))) * (0.75 + 0.25 * R(8));
+        const s = sz * (1 - 0.45 * f);
+        const lv = 0.55 + 0.9 * R(9);
+        const col = l => `${Math.min(255, ar * lv + l) | 0},${Math.min(255, ag * lv + l * 0.96) | 0},${Math.min(255, ab * lv + l * 0.92) | 0}`;
+        if (kind === 'dust') {
+          const len = (vx * 0.012 + u) * clamp(a / 0.3);
+          ctx.strokeStyle = `rgba(${col(0)},${(alpha * 0.8).toFixed(3)})`;
+          ctx.lineWidth = s * 1.6; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(x - len, y + len * vy / vx); ctx.lineTo(x, y); ctx.stroke();
+          continue;
+        }
+        const rot = TAU * (R(10) + (R(11) - 0.5) * 1.6 * a);
+        const flip = TAU * (R(12) + (0.4 + 1.4 * R(13)) * a);
+        const fy = Math.max(0.3, Math.abs(Math.cos(flip)));
+        const lum = (ar > 100 ? 26 : 16) * Math.pow(Math.max(0, Math.sin(flip)), 3);
+        const sp = ashShape(j % 64);
+        ctx.save();
+        ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s * fy);
+        ctx.beginPath(); ctx.moveTo(sp[0], sp[1]);
+        for (let q = 2; q < sp.length; q += 2) ctx.lineTo(sp[q], sp[q + 1]);
+        ctx.closePath();
+        ctx.restore();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = `rgb(${col(lum)})`;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
     }
 
     // 「星屑になって消える」の時間と、粒の動き方（rise：漂って昇る / dust：鈍い粉になって落ちる / spiral：ブラックホールへ渦を巻いて落ちる）
@@ -5434,15 +5594,28 @@
       ctx.restore();
     }
 
-    // 環境の演出（灰）：画像全体に、文字や演出の上から重ねる。書き出しの長さで継ぎ目なくループ
-    drawEnv(ctx, t, scale, scene) {
+    // 環境の演出：灰は文字や演出の上から重ね、黒煙は背景のすぐ上（文字の奥）に敷く。書き出しの長さで継ぎ目なくループ
+    drawEnv(ctx, t, scale, scene, layer) {
       const env = scene.env || {};
-      const Ash = root.TextApngAshFx;
-      if (!ENV_TYPES.has(env.type) || !Ash) return;
+      if (!ENV_TYPES.has(env.type)) return;
+      const isSmoke = env.type === 'smoke';
+      if ((layer === 'behind') !== isSmoke) return;
       const W = Math.round(scene.width * scale), H = Math.round(scene.height * scale);
+      const density = clamp(env.density ?? 1, 0.1, 3);
+      if (isSmoke) {
+        const Smoke = root.TextApngSmokeFx;
+        if (!Smoke) return;
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        Smoke.drawSmoke(ctx, W, H, t, { loop: loopPeriod(this.loopSpan(), SMOKE_LOOP), soft: true, res: 0.5, plumes: [0.3], puffs: Math.round(85 * density), size: 1.6, opacity: 1 });
+        ctx.restore();
+        return;
+      }
+      const Ash = root.TextApngAshFx;
+      if (!Ash) return;
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      Ash.drawAsh(ctx, W, H, t, { loop: loopPeriod(this.loopSpan(), ASH_LOOP), period: ASH_LOOP, density: clamp(env.density ?? 1, 0.1, 3), style: env.type === 'ashBlack' ? 'black' : 'grey' });
+      Ash.drawAsh(ctx, W, H, t, { loop: loopPeriod(this.loopSpan(), ASH_LOOP), period: ASH_LOOP, density, style: env.type === 'ashBlack' ? 'black' : 'grey' });
       ctx.restore();
     }
 
@@ -5560,6 +5733,8 @@
       }
       if (bs.mask && bs.mask.stardust) {
         this.applyStardust(pg, page, t, bs, scale, scene);
+      } else if (bs.mask && bs.mask.ashtext) {
+        this.applyAshText(pg, page, t, bs, scale, scene);
       } else if (bs.mask && bs.mask.blaze) {
         const bf = blazeFront(pg, page, t, layout.size);
         if (bf) this.applyBlaze({ x: bf.x + bs.x, scale, t, size: layout.size, seed: 500 + pg.index * 13 }, rect);

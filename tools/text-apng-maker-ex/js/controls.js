@@ -59,6 +59,8 @@
       split: T('斬られて左右へ', 'Sliced apart', '베여서 좌우로'),
       burn: T('燃えて消える', 'Burn away', '불타 사라지기'),
       firefly: T('光の粒になって消える', 'Dissolve into light', '빛의 입자로 사라짐'),
+      ashtext: T('灰になって消える（灰褐色）', 'Crumble to ash (grey-brown)', '재가 되어 사라짐 (회갈색)'),
+      ashtextBlack: T('灰になって消える（黒）', 'Crumble to ash (black)', '재가 되어 사라짐 (검정)'),
       stardust: T('星屑になって消える', 'Dissolve into stardust', '별가루가 되어 사라짐'),
       blaze: T('炎に包まれて燃え尽きる', 'Burn up in flames', '불길에 휩싸여 타 버림')
     },
@@ -329,11 +331,13 @@
         { type: 'chips', bind: 'env.type', options: [
           { value: 'none', label: T('なし', 'None', '없음') },
           { value: 'ash', label: T('灰（灰色）', 'Ash (grey)', '재 (회색)') },
-          { value: 'ashBlack', label: T('灰（黒）', 'Ash (black)', '재 (검정)') }
+          { value: 'ashBlack', label: T('灰（黒）', 'Ash (black)', '재 (검정)') },
+          { value: 'smoke', label: T('黒煙', 'Black smoke', '검은 연기') }
         ] },
         { type: 'note', when: s => s.env.type === 'ash', text: T('焼けた灰のかけらが風に乗って左下から右上へ舞います。奥は小さく霞み、手前ほど大きく、ひらりと裏返るたびに縁が光ります。どのテンプレート・演出とも重ねられ、書き出しの長さでちょうど一周するので「ずっとループ」で継ぎ目なくつながります', 'Burnt flakes of ash drift on the wind from lower left to upper right: small and hazy in the distance, larger up close, with edges catching the light as they flip. Works with any template or effect, and completes whole cycles over the export length so “Loop forever” plays seamlessly', '타 버린 재 조각이 바람을 타고 왼쪽 아래에서 오른쪽 위로 날립니다. 안쪽은 작고 흐릿하게, 앞쪽일수록 크게, 뒤집힐 때마다 가장자리가 빛납니다. 어떤 템플릿·연출과도 겹칠 수 있고, 내보내기 길이에 맞춰 정확히 한 바퀴가 되므로 「계속 반복」으로 이음매 없이 이어집니다') },
         { type: 'note', when: s => s.env.type === 'ashBlack', text: T('縁取りのない黒い灰のかけらが風に舞います（明るい背景向け）。重いかけらは画面の下7割まで、ごく小さく軽いものだけが上まで昇ります。どのテンプレート・演出とも重ねられ、「ずっとループ」で継ぎ目なくつながります', 'Black flakes of ash without rims drift on the wind (for light backgrounds). Heavier flakes stay in the lower 70%, and only the tiniest rise to the top. Works with any template or effect and loops seamlessly with “Loop forever”', '테두리 없는 검은 재 조각이 바람에 날립니다 (밝은 배경용). 무거운 조각은 화면 아래 7할까지, 아주 작고 가벼운 것만 위까지 올라갑니다. 어떤 템플릿·연출과도 겹칠 수 있고 「계속 반복」으로 이음매 없이 이어집니다') },
-        { type: 'range', bind: 'env.density', when: s => s.env.type !== 'none', label: T('灰の量', 'Amount of ash', '재의 양'), min: 0.2, max: 2, step: 0.05, format: 'x' }
+        { type: 'note', when: s => s.env.type === 'smoke', text: T('地面の左寄りから、一本の黒煙の柱が風にたなびき、うねりながら立ちのぼります。文字の奥（背景のすぐ上）に敷くので、文字は隠れません。どのテンプレート・演出とも重ねられ、「ずっとループ」で継ぎ目なくつながります', 'A single column of billowing black smoke rises from the lower left and sways with the wind. It is laid just above the background, behind the text, so the text stays readable. Works with any template or effect and loops seamlessly with “Loop forever”', '땅 왼쪽에서 한 줄기 검은 연기 기둥이 바람에 휘날리며 구불구불 피어오릅니다. 글자 뒤(배경 바로 위)에 깔리므로 글자는 가려지지 않습니다. 어떤 템플릿·연출과도 겹칠 수 있고 「계속 반복」으로 이음매 없이 이어집니다') },
+        { type: 'range', bind: 'env.density', when: s => s.env.type !== 'none', label: s => (s.env.type === 'smoke' ? T('煙の量', 'Amount of smoke', '연기의 양') : T('灰の量', 'Amount of ash', '재의 양')), min: 0.2, max: 2, step: 0.05, format: 'x' }
       ] },
       { type: 'section', when: s => !(isTrailer(s) && ['solo', 'spread'].includes(s.reveal)), label: s => (isTrailer(s) ? T('1文字の現れ方', 'How each character appears', '한 글자가 나타나는 방식') : T('登場', 'In', '등장')), children: [
         { type: 'effects', phase: 'in' },
