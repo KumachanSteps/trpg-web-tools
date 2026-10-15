@@ -5875,29 +5875,60 @@
       ctx.restore();
     }
 
-    // 弾痕（戦闘演出）：ガラスに開いた弾痕ひとつ。ほぼ黒い丸い穴に、細く明るく光る縁（くっきりした縁＋内側のやわらかい光の輪）。
-    // そのまわりに、割れたガラスの破片（細い明るい縁と、ごくうすい白い面。穴の近くほど明るく、遠いほど薄い。2つの帯で、穴に近いほど放射状のくさび、外は細い破片）、
-    // 破片をつなぐ輪の割れ目、穴から放射状に走る細く先細りのひび（長いものは破片の帯の3倍ほど）、先へいくほど消える光の筋、ごく控えめな白い光。
-    // 順序：穴がぽんと出る（1.25→1.0倍）と細い輪が広がる → ひびと光の筋が穴から素早くのび、破片が内側から外側へ順に出る → 2秒ほど残る → 破片・ひび・筋、光、穴の順に消える。
-    // sfx：x・y（画面の位置の割合。既定は中央）/ size（穴の直径、画面の高さの割合。既定 0.095）/ cracks（'few'・'mid'・'many'。'3'・'4' も使える）/ seed（形のちがい。同じ seed なら同じ形）/ color（縁・ひび・破片の色）/ color2（穴の色）
+    // 弾痕（戦闘演出）：弾痕のパターンを選べる構造。sfx.pattern：'glass'（ガラスの弾痕 = 'bullet-glass'。いまはこれだけ。あとで生き物向けの 'flesh' などを足せる）。
+    // sfx.count（'1'・'2'・'3'：発数）で配置を決め、sfx.holes（[{ x, y, size, seed, t }]。画面の割合・穴の大きさ（高さに対する割合）・形のseed・当たる時刻）で好きな配置にもできる。
+    // 全部の穴は最後の1発が当たってから約2秒そのまま残り、いっしょに消える。
     drawBulletMark(ctx, pg, page, t, scale, scene, sfx, k) {
       const d = t - pg.start;
+      if (d < 0) return;
+      const holes = this.bulletLayout(sfx);
+      const last = holes.reduce((m, h) => Math.max(m, h.t), 0);
+      const fs = last + 0.2 + 2.0;   // 最後の1発が決まってから約2秒残して消え始める
+      const fade = {
+        A: 1 - EASE.inOutCubic(clamp((d - fs) / 0.35)),        // 破片・ひび・光の筋
+        G: 1 - EASE.inOutCubic(clamp((d - fs - 0.1) / 0.35)),  // 光
+        H: 1 - EASE.inOutCubic(clamp((d - fs - 0.2) / 0.35))   // 穴
+      };
+      if (fade.H <= 0.003) return;
+      holes.forEach(h => {
+        const a = d - h.t;
+        if (a < 0) return;
+        // パターン：いまは 'glass' だけ（ほかの名前もガラスにする）
+        this.drawBulletGlass(ctx, scene, sfx, h, a, fade, scale, k);
+      });
+    }
+
+    // 弾痕の配置：発数ごとの既定の配置（画面の割合）。穴は画面の中に十分収め、長いひびだけが枠から出てもよい
+    bulletLayout(sfx) {
+      if (Array.isArray(sfx.holes) && sfx.holes.length) {
+        return sfx.holes.map((h, i) => ({ x: Number(h.x ?? 0.5), y: Number(h.y ?? 0.5), size: Number(h.size) > 0 ? Number(h.size) : 0.095, seed: parseInt(h.seed, 10) || (i + 1), t: Number.isFinite(Number(h.t)) ? Number(h.t) : 0.12 + i * 0.14 }));
+      }
+      const n = Math.min(3, Math.max(1, parseInt(sfx.count, 10) || 1));
+      const baseSize = Number(sfx.size) > 0 ? Number(sfx.size) : 0.095;
+      const baseSeed = parseInt(sfx.seed, 10) || 1;
+      const px = Number.isFinite(Number(sfx.x)) && sfx.x !== '' && sfx.x !== undefined ? Number(sfx.x) : 0.5;
+      const py = Number.isFinite(Number(sfx.y)) && sfx.y !== '' && sfx.y !== undefined ? Number(sfx.y) : 0.5;
+      // [中心からのずれ x, y（画面の割合）, 穴の大きさの割合]
+      const spots = {
+        1: [[0, 0, 1]],
+        2: [[-0.07, 0.07, 1], [0.15, -0.08, 0.85]],           // 左下の大きい穴のあと、右上の小さい穴（参考画像のように）
+        3: [[-0.14, -0.14, 1], [0.14, -0.02, 0.85], [-0.05, 0.2, 0.92]]
+      }[n];
+      return spots.map(([dx, dy, rel], i) => ({ x: px + dx, y: py + dy, size: baseSize * rel, seed: baseSeed + i, t: 0.12 + i * 0.14 }));
+    }
+
+    // ガラスの弾痕（'bullet-glass'）：穴の芯（黒い穴と光る縁）・放射状のひび・ガラスだけの層（光・光の筋・破片・輪の割れ目）に分けてある。
+    // ガラスだけの層は glassFx で切り替えられ、別のパターン（生き物向けなど）ではこの層を減らしたり置き換えたりできる
+    drawBulletGlass(ctx, scene, sfx, shot, a, fade, scale, k) {
       const W = scene.width, H = scene.height;
-      const T0 = 0.12, SETTLE = 0.2, HOLD = 2.0;
-      const a = d - T0;
-      if (a < 0) return;
-      const fs = T0 + SETTLE + HOLD;
-      const fA = 1 - EASE.inOutCubic(clamp((d - fs) / 0.35));
-      const fG = 1 - EASE.inOutCubic(clamp((d - fs - 0.1) / 0.35));
-      const fH = 1 - EASE.inOutCubic(clamp((d - fs - 0.2) / 0.35));
-      if (fH <= 0.003) return;
-      const seed = 100 + (parseInt(sfx.seed, 10) || 1) * 37;
+      const fA = fade.A, fG = fade.G, fH = fade.H;
+      const glassFx = (sfx.pattern || 'glass') === 'glass';
+      const seed = 100 + shot.seed * 37;
       const amt = { few: 0, 3: 0, mid: 1, 4: 1, many: 2 }[String(sfx.cracks)] ?? 1;
       const nRad = [8, 10, 12][amt], nShard = [24, 32, 40][amt], nRay = [4, 5, 6][amt];
-      const D = H * (Number(sfx.size) > 0 ? Number(sfx.size) : 0.095);
+      const D = H * shot.size;
       const r = D / 2;
-      const num = (v, def) => (v !== undefined && v !== '' && Number.isFinite(Number(v))) ? Number(v) : def;
-      const cx = W * num(sfx.x, 0.5), cy = H * num(sfx.y, 0.5);
+      const cx = W * shot.x, cy = H * shot.y;
       const rimCol = sfx.color || '#f6f6f2';
       const holeCol = sfx.color2 || '#07080b';
       const m = /#?([0-9a-f]{6})/i.exec(rimCol);
@@ -5912,8 +5943,8 @@
       ctx.save();
       ctx.translate(cx, cy);
 
-      // 1) 穴のうしろのやわらかい白い光（控えめ）
-      {
+      // 1) 穴のうしろのやわらかい白い光（控えめ）【ガラスの層】
+      if (glassFx) {
         const ga = 0.32 * fG * clamp(a / 0.1);
         const g = ctx.createRadialGradient(0, 0, r * 0.9, 0, 0, r * 4.2);
         g.addColorStop(0, rgba(ga * 1.4)); g.addColorStop(0.3, rgba(ga * 0.55)); g.addColorStop(1, rgba(0));
@@ -5922,7 +5953,7 @@
       }
       // 2) 光の筋：先へいくほど消える細いくさび
       const rayBase = R(1, 2) * TAU;
-      for (let q = 0; q < nRay; q++) {
+      for (let q = 0; glassFx && q < nRay; q++) {
         const th = rayBase + q * TAU / nRay + (R(q, 3) - 0.5) * 0.5;
         const L = r * (4 + 4.5 * R(q, 4)) * lead;
         if (L < r * 1.2) continue;
@@ -5938,7 +5969,7 @@
       }
       // 3) 破片：2つの帯。内側ほど放射状のくさび、外側は細い破片。内側から外側へ順に出る
       const shards = [];
-      for (let z = 0; z < 2; z++) {
+      for (let z = 0; glassFx && z < 2; z++) {
         const n = z === 0 ? Math.round(nShard * 0.5) : nShard - Math.round(nShard * 0.5);
         for (let q = 0; q < n; q++) {
           const id = z * 100 + q;
@@ -5972,7 +6003,7 @@
       });
       // 4) 輪の割れ目：放射状のひびをつなぐ細い弧
       const ringT = clamp((a - 0.1) / 0.1);
-      if (ringT > 0) {
+      if (glassFx && ringT > 0) {
         for (let q = 0; q < 4; q++) {
           const rad = r * (1.7 + 1.7 * R(q, 20));
           const th0 = base + R(q, 21) * TAU, span = (0.5 + 0.6 * R(q, 22)) * ringT;

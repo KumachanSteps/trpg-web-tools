@@ -848,13 +848,33 @@
         }
       },
       {
-        // 戦闘演出：弾痕（単発）。割れたガラスの弾痕（黒い穴・光る縁・破片・放射状のひび）。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。形・位置・大きさ・ひびの数は sfx の seed・x・y・size・cracks で変えられる（あとでバリエーションを足す土台）
-        id: 'bulletMarkSingle', group: 'battlefx', icon: 'crosshair', label: T('弾痕（単発）', 'Bullet Mark (Single)', '탄흔（단발）'),
+        // 戦闘演出：ガラスの弾痕（単発）。黒い穴・光る縁・破片・放射状のひび。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。パターン 'glass'（= 'bullet-glass'）。配置は sfx.count（発数）か sfx.holes で変えられる
+        id: 'bulletGlassSingle', group: 'battlefx', icon: 'crosshair', label: T('弾痕・ガラス（単発）', 'Bullet Hole – Glass (Single)', '탄흔·유리（단발）'),
         text: T('', '', ''), subText: T('', '', ''), loop: 'once',
         patch: {
           ...FANG_BATTLE, fontSize: 112,
-          sfx: { type: 'bulletMark', color: '#f6f6f2', color2: '#07080b', cracks: 'mid', seed: '1', size: 0.095, x: 0.5, y: 0.5, power: 1 },
+          sfx: { type: 'bulletMark', pattern: 'glass', count: '1', color: '#f6f6f2', color2: '#07080b', cracks: 'mid', seed: '1', size: 0.095, power: 1 },
           inFx: 'fade', inDur: 0, hold: 3.0, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：ガラスの弾痕（2連）。左下の大きい穴のあと0.14秒で右上の少し小さい穴。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。パターン 'glass'（= 'bullet-glass'）。配置は sfx.count（発数）か sfx.holes で変えられる
+        id: 'bulletGlassDouble', group: 'battlefx', icon: 'crosshair', label: T('弾痕・ガラス（2連）', 'Bullet Hole – Glass (Double)', '탄흔·유리（2연발）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'bulletMark', pattern: 'glass', count: '2', color: '#f6f6f2', color2: '#07080b', cracks: 'mid', seed: '1', size: 0.095, power: 1 },
+          inFx: 'fade', inDur: 0, hold: 3.2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：ガラスの弾痕（3連）。左上・右・下の3つの穴が0.14秒ずつずれて当たる。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。パターン 'glass'（= 'bullet-glass'）。配置は sfx.count（発数）か sfx.holes で変えられる
+        id: 'bulletGlassTriple', group: 'battlefx', icon: 'crosshair', label: T('弾痕・ガラス（3連）', 'Bullet Hole – Glass (Triple)', '탄흔·유리（3연발）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'bulletMark', pattern: 'glass', count: '3', color: '#f6f6f2', color2: '#07080b', cracks: 'mid', seed: '1', size: 0.095, power: 1 },
+          inFx: 'fade', inDur: 0, hold: 3.4, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
         }
       },
       {
