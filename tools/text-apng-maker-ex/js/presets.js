@@ -300,6 +300,54 @@
     return patch;
   };
 
+  // 星（夢と星空）：しっぽり明朝B1に Cinzel のサブ。深い藍の帯に淡い金の星明かり、水色・桃色の差し色。
+  // 退場は「星屑になって消える」（失敗は鈍い粉になって落ち、致命的失敗はブラックホールに吸い込まれる）
+  const STAR_LOOK = {
+    success: {
+      accent: '#ffe6a3', band: '#0b0a26',
+      patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#fff6d8', color3: '#ffd98a', dir: 'v' }, glow: { on: true, color: '#ffcf6b', size: 22, strength: 0.6 }, subColor: '#ffeec2' }
+    },
+    special: {
+      accent: '#a8ecff', band: '#081028',
+      patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#e4f8ff', color3: '#8fdcff', dir: 'v' }, glow: { on: true, color: '#58c8ff', size: 26, strength: 0.8 }, subColor: '#c9f2ff' }
+    },
+    extreme: {
+      accent: '#f2b8ff', band: '#140a2c',
+      patch: { fill: { type: 'gradient', color: '#ffffff', color2: '#fae6ff', color3: '#e0a0ff', dir: 'v' }, glow: { on: true, color: '#c56cff', size: 30, strength: 0.9 }, subColor: '#f5d8ff', hold: 1.9 }
+    },
+    critical: {
+      accent: '#ffd45e', band: '#100a24',
+      patch: {
+        fill: { type: 'gradient', color: '#fffbea', color2: '#ffe796', color3: '#ffb52e', dir: 'v' }, stroke: { on: true, width: 1.5, color: '#3a2600' },
+        glow: { on: true, color: '#ffc23a', size: 40, strength: 1.3 }, subColor: '#ffe7a8', hold: 2.0, outDur: 1.8
+      }
+    },
+    failure: {
+      accent: '#9ea3bd', band: '#0a0b16',
+      patch: { fill: { type: 'gradient', color: '#d6d9e4', color2: '#aeb3c4', color3: '#80869a', dir: 'v' }, glow: { on: false }, subColor: '#9ea3bd', inFx: 'fade', inDur: 0.4, hold: 2.0, outDur: 1.6 }
+    },
+    fumble: {
+      accent: '#c07bff', band: '#05030b',
+      patch: {
+        fill: { type: 'gradient', color: '#ffffff', color2: '#e6d4ff', color3: '#a77bf0', dir: 'v' }, stroke: { on: true, width: 2, color: '#12001f' },
+        glow: { on: true, color: '#6a22d0', size: 30, strength: 1.0 }, subColor: '#d9c2ff', hold: 2.0, outDur: 2.0
+      }
+    }
+  };
+  const STAR_ROLL = {
+    fontId: 'shippori-mincho-b1', weight: 800, letterSpacing: 0.16,
+    subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.42,
+    stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#07041a', opacity: 0.8, blur: 12, x: 0, y: 3 },
+    subColorOn: true, deco: { type: 'none' },
+    inFx: 'fade', inDur: 0.25, inStagger: 0, subFx: 'fade', subDelay: 0.05,
+    hold: 1.7, outFx: 'stardust', outDur: 2.0
+  };
+  const starPatch = (tier, fontSize) => {
+    const look = STAR_LOOK[tier];
+    return { ...STAR_ROLL, fontSize, ...look.patch, sfx: { type: 'star', tier, color: look.accent, color2: look.band, power: 1 } };
+  };
+
   // 炎の試作を組み込んだテンプレート：装甲明朝。試作と同じ 960×540（炎は細かい模様が多く、書き出しの目安 5MB に収めるため）
   const FIRE_SIZE = { width: 960, height: 540, sizePreset: '960x540' };
   const FIRE_TITLE = {
@@ -376,6 +424,8 @@
         { id: 'cocGun', label: T('CoC6 銃撃', 'CoC 6e Gunfire', 'CoC6 총격') },
         { id: 'coc7Blade', label: T('CoC7 抜刀', 'CoC 7e Katana', 'CoC7 발도') },
         { id: 'coc7Gun', label: T('CoC7 銃撃', 'CoC 7e Gunfire', 'CoC7 총격') },
+        { id: 'cocStar', label: T('CoC6 星', 'CoC 6e Stars', 'CoC6 별') },
+        { id: 'coc7Star', label: T('CoC7 星', 'CoC 7e Stars', 'CoC7 별') },
         { id: 'emoklore', label: T('エモクロア', 'Emoklore', '에모크로아') },
         { id: 'dx', label: T('ダブクロ', 'Double Cross', '더블크로스') }
       ] }
@@ -1165,6 +1215,62 @@
         id: 'coc7GunFumble', group: 'dice', system: 'coc7Gun', icon: 'crosshair', loop: 'once', label: T('ファンブル', 'Fumble', '펌블'),
         text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         patch: rollPatch('shot', 'fumble', 140)
+      },
+      // 星（夢と星空）の判定。CoC6版とCoC7版（CoC7版は抜刀と同じ漢字の段階名）
+      {
+        id: 'cocStarSuccess', group: 'dice', system: 'cocStar', icon: 'shootingStar', loop: 'once', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        patch: starPatch('success', 176)
+      },
+      {
+        id: 'cocStarSpecial', group: 'dice', system: 'cocStar', icon: 'shootingStar', loop: 'once', label: T('スペシャル', 'Special', '스페셜'),
+        text: T('スペシャル', 'SPECIAL', '스페셜'), subText: T('SPECIAL', '', 'SPECIAL'),
+        patch: starPatch('special', 144)
+      },
+      {
+        id: 'cocStarCritical', group: 'dice', system: 'cocStar', icon: 'shootingStar', loop: 'once', label: T('決定的成功', 'Critical', '결정적 성공'),
+        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        patch: starPatch('critical', 144)
+      },
+      {
+        id: 'cocStarFailure', group: 'dice', system: 'cocStar', icon: 'shootingStar', loop: 'once', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        patch: starPatch('failure', 176)
+      },
+      {
+        id: 'cocStarFumble', group: 'dice', system: 'cocStar', icon: 'shootingStar', loop: 'once', label: T('致命的失敗', 'Fumble', '치명적 실패'),
+        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        patch: starPatch('fumble', 144)
+      },
+      {
+        id: 'coc7StarSuccess', group: 'dice', system: 'coc7Star', icon: 'shootingStar', loop: 'once', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        patch: starPatch('success', 176)
+      },
+      {
+        id: 'coc7StarHard', group: 'dice', system: 'coc7Star', icon: 'shootingStar', loop: 'once', label: T('難成功', 'Hard Success', '어려운 성공'),
+        text: T('難成功', 'HARD SUCCESS', '어려운 성공'), subText: T('HARD SUCCESS', '', 'HARD SUCCESS'),
+        patch: starPatch('special', 160)
+      },
+      {
+        id: 'coc7StarExtreme', group: 'dice', system: 'coc7Star', icon: 'shootingStar', loop: 'once', label: T('極成功', 'Extreme Success', '극단적 성공'),
+        text: T('極成功', 'EXTREME SUCCESS', '극단적 성공'), subText: T('EXTREME SUCCESS', '', 'EXTREME SUCCESS'),
+        patch: starPatch('extreme', 160)
+      },
+      {
+        id: 'coc7StarCritical', group: 'dice', system: 'coc7Star', icon: 'shootingStar', loop: 'once', label: T('決定的成功', 'Critical', '결정적 성공'),
+        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        patch: starPatch('critical', 144)
+      },
+      {
+        id: 'coc7StarFailure', group: 'dice', system: 'coc7Star', icon: 'shootingStar', loop: 'once', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        patch: starPatch('failure', 176)
+      },
+      {
+        id: 'coc7StarFumble', group: 'dice', system: 'coc7Star', icon: 'shootingStar', loop: 'once', label: T('致命的失敗', 'Fumble', '치명적 실패'),
+        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        patch: starPatch('fumble', 144)
       },
       {
         id: 'emoSingle', group: 'dice', system: 'emoklore', label: T('シングル', 'Single', '싱글'),
