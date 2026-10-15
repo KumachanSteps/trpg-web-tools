@@ -28,7 +28,8 @@
       '5. 選んだものは右のパネルで名前・大きさ・向き・色を変えられます。部屋を動かすと中の家具やドアも一緒に動きます（Altキーを押しながらで部屋だけ）。',
       '6. 「GM専用」にした家具・隠し扉は、PL表示と PL用の書き出しには出ません。GM専用の部屋は壁の枠だけが見え、中は灰色で伏せられます（中の家具なども隠れます）。選んだときに出る目のボタンで切り替えられます。部屋ごとにPL向けの別名もつけられます。',
       '7. 「隠し手がかり」にした家具・文字（虫めがねの印）は、キャンバス右上の「隠し手がかり ON/OFF」で表示を切り替えられます。GM/PL表示とは別なので、PLに部屋の中は見せつつ、手がかりだけ伏せておけます。テンプレートは「隠し手がかり入りで読み込む」で、手がかりを置いた版になります。',
-      '8. 「画像を書き出す」でPNGを保存します。1マス = 0.5m。ココフォリアなどのマップ画像にそのまま使えます。'
+      '8. 「画像を書き出す」でPNGを保存します。1マス = 0.5m。ココフォリアなどのマップ画像にそのまま使えます。',
+      '9. コマを置いて動かすときは、何も選んでいない状態の右パネル（マップ設定）で「コマ用の方眼を表示」をオンにし、方眼の大きさを選びます。書き出した画像にも方眼が入ります。'
     ],
     helpNotes: [
       '作業内容はこのブラウザに自動で保存されます。別の端末で続きを作るときは「保存」でファイル（.trpgmap.json）に書き出し、「開く」で読み込んでください。',
@@ -127,6 +128,9 @@
       sizeLabel: '部屋の広さの表示',
       sizeModes: { none: '表示しない', jo: '帖（畳）', m2: '㎡', m: '寸法（m）' },
       grid: 'グリッドを表示',
+      tokenGrid: 'コマ用の方眼を表示',
+      tokenGridSize: '方眼の大きさ',
+      tokenGridSizes: '{m}m（{n}マス）',
       ghost: '下の階をうっすら表示',
       mapTip: '部屋・家具をクリックすると、ここで名前や大きさを変えられます。',
       stats: '{rooms}部屋・家具{items}個・ドア/窓{openings}個',
@@ -214,6 +218,8 @@
       px: '1マスの大きさ',
       pxNote: '1マス = 0.5m。ココフォリアなどで使うときは、マップのマス目に合わせて選んでください。',
       grid: 'グリッドを描く',
+      tokenGrid: 'コマ用の方眼を描く',
+      tokenGridNote: '方眼1つ = {m}m = {px}px。ココフォリアなどでは、マップのマス目の大きさをこの値に合わせてください（画像の左上から方眼が始まります）。',
       transparent: '背景を透明にする',
       download: 'PNGを保存',
       copy: 'クリップボードにコピー',
@@ -280,7 +286,8 @@
       '5. Edit the name, size, direction and color of the selection in the right panel. Moving a room also moves the furniture and doors inside it (hold Alt to move the room alone).',
       '6. Furniture and secret doors marked GM only are hidden in Player view and in player exports. A GM-only room shows only its walls, with the inside grayed out and its contents hidden. Toggle it with the eye button that appears when you select something. Rooms can also have a separate player-facing name.',
       '7. Furniture and text marked as a hidden clue (magnifier mark) can be shown or hidden with the Hidden clues ON/OFF button at the top right of the canvas. It works separately from the GM/Player view, so players can see inside a room while the clues stay hidden. Turn on "Load with hidden clues" in Templates to get a version with clues placed.',
-      '8. Export saves a PNG. One cell is 0.5 m, so the image works directly as a map in VTTs such as CCFOLIA.'
+      '8. Export saves a PNG. One cell is 0.5 m, so the image works directly as a map in VTTs such as CCFOLIA.',
+      '9. To place and move tokens, turn on "Show token grid" in Map settings (the right panel when nothing is selected) and pick a grid square size. The grid is also drawn on exported images.'
     ],
     helpNotes: [
       'Your work is saved automatically in this browser. To continue on another device, use Save to download a .trpgmap.json file and Open to load it.',
@@ -379,6 +386,9 @@
       sizeLabel: 'Room size labels',
       sizeModes: { none: 'Hidden', jo: 'Tatami (jo)', m2: 'm²', m: 'Dimensions (m)' },
       grid: 'Show grid',
+      tokenGrid: 'Show token grid',
+      tokenGridSize: 'Grid square size',
+      tokenGridSizes: '{m} m ({n} cells)',
       ghost: 'Show the floor below faintly',
       mapTip: 'Click a room or furniture to change its name and size here.',
       stats: '{rooms} rooms · {items} items · {openings} doors/windows',
@@ -466,6 +476,8 @@
       px: 'Pixels per cell',
       pxNote: 'One cell is 0.5 m. For VTTs such as CCFOLIA, match the map\'s grid size.',
       grid: 'Draw the grid',
+      tokenGrid: 'Draw the token grid',
+      tokenGridNote: 'One grid square = {m} m = {px} px. In a VTT such as CCFOLIA, set the map grid to this size (the grid starts at the image\'s top-left corner).',
       transparent: 'Transparent background',
       download: 'Save PNG',
       copy: 'Copy to clipboard',
@@ -532,7 +544,8 @@
       '5. 선택한 것은 오른쪽 패널에서 이름·크기·방향·색을 바꿀 수 있습니다. 방을 옮기면 안의 가구와 문도 함께 움직입니다(Alt를 누르면 방만).',
       '6. 「GM 전용」으로 한 가구·비밀문은 PL 보기와 PL용 이미지에 나오지 않습니다. GM 전용 방은 벽 테두리만 보이고 안은 회색으로 가려집니다(안의 가구 등도 숨겨집니다). 선택하면 나오는 눈 버튼으로 바꿀 수 있습니다. 방마다 PL에게 보일 이름을 따로 붙일 수도 있습니다.',
       '7. 「숨은 단서」로 지정한 가구·문자(돋보기 표시)는 캔버스 오른쪽 위의 「숨은 단서 ON/OFF」로 표시를 바꿀 수 있습니다. GM/PL 보기와 별개라서, PL에게 방 안은 보여 주면서 단서만 감춰 둘 수 있습니다. 템플릿은 「숨은 단서 포함으로 불러오기」를 켜면 단서를 배치한 버전이 됩니다.',
-      '8. 「이미지 내보내기」로 PNG를 저장합니다. 1칸 = 0.5m. 코코포리아 등의 맵 이미지로 바로 쓸 수 있습니다.'
+      '8. 「이미지 내보내기」로 PNG를 저장합니다. 1칸 = 0.5m. 코코포리아 등의 맵 이미지로 바로 쓸 수 있습니다.',
+      '9. 말을 놓고 움직일 때는, 아무것도 선택하지 않은 상태의 오른쪽 패널(맵 설정)에서 「말 이동용 격자 표시」를 켜고 격자 크기를 고르세요. 내보낸 이미지에도 격자가 들어갑니다.'
     ],
     helpNotes: [
       '작업 내용은 이 브라우저에 자동 저장됩니다. 다른 기기에서 이어서 만들 때는 「저장」으로 파일(.trpgmap.json)을 내려받고 「열기」로 불러오세요.',
@@ -631,6 +644,9 @@
       sizeLabel: '방 넓이 표시',
       sizeModes: { none: '표시 안 함', jo: '첩(다다미)', m2: '㎡', m: '치수(m)' },
       grid: '그리드 표시',
+      tokenGrid: '말 이동용 격자 표시',
+      tokenGridSize: '격자 크기',
+      tokenGridSizes: '{m}m ({n}칸)',
       ghost: '아래층을 흐리게 표시',
       mapTip: '방이나 가구를 클릭하면 여기서 이름과 크기를 바꿀 수 있습니다.',
       stats: '방 {rooms}개 · 가구 {items}개 · 문/창문 {openings}개',
@@ -718,6 +734,8 @@
       px: '1칸의 크기',
       pxNote: '1칸 = 0.5m. 코코포리아 등에서 쓸 때는 맵의 칸 크기에 맞춰 고르세요.',
       grid: '그리드 그리기',
+      tokenGrid: '말 이동용 격자 그리기',
+      tokenGridNote: '격자 1칸 = {m}m = {px}px. 코코포리아 등에서는 맵의 칸 크기를 이 값에 맞추세요(이미지 왼쪽 위에서 격자가 시작됩니다).',
       transparent: '배경 투명',
       download: 'PNG 저장',
       copy: '클립보드에 복사',

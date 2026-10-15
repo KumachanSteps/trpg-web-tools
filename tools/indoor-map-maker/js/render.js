@@ -1086,8 +1086,26 @@
     c.stroke();
   }
 
+  /*
+   * コマを置いて動かすための方眼。size マスごとに、家具・壁の上（部屋名の下）に線を引く。
+   * 線は原点 (0,0) から size マスおきなので、書き出しの範囲も size の倍数にそろえる。
+   */
+  function drawTokenGrid(c, rect, theme, zoom, size) {
+    const x0 = Math.floor(rect.x / size) * size, x1 = rect.x + rect.w;
+    const y0 = Math.floor(rect.y / size) * size, y1 = rect.y + rect.h;
+    c.save();
+    c.strokeStyle = theme.tokenGrid || theme.wall;
+    c.globalAlpha = theme.tokenGrid ? 1 : 0.4;
+    c.lineWidth = Math.max(1.25 / zoom, 0.04);
+    c.beginPath();
+    for (let x = x0; x <= x1 + 1e-6; x += size) { c.moveTo(x, rect.y); c.lineTo(x, y1); }
+    for (let y = y0; y <= y1 + 1e-6; y += size) { c.moveTo(rect.x, y); c.lineTo(x1, y); }
+    c.stroke();
+    c.restore();
+  }
+
   /**
-   * floor: フロアデータ / opts: { theme, zoom, lang, showSize, hideNames, playerView, hideClues, editor, grid, viewRect, ghost }
+   * floor: フロアデータ / opts: { theme, zoom, lang, showSize, hideNames, playerView, hideClues, editor, grid, tokenGrid (方眼のマス数), viewRect, ghost }
    * ctx は「1単位 = 1マス」に変換済みであること。
    */
   function drawFloor(c, floorIn, opts) {
@@ -1173,6 +1191,9 @@
       });
     }
 
+    // コマ用の方眼（部屋名・文字は方眼の上に描いて読めるようにする）
+    if (opts.tokenGrid > 0 && opts.viewRect) drawTokenGrid(c, opts.viewRect, theme, opts.zoom, opts.tokenGrid);
+
     // ラベル
     if (!opts.hideLabels) {
       floor.rooms.forEach(room => { if (!room.masked) drawRoomLabel(c, room, theme, opts); });
@@ -1210,7 +1231,7 @@
 
   /**
    * floors を 1枚の画像に描く（複数なら横に並べ、長くなりすぎるときは折り返す。フロア名を上に書く）
-   * opts: { theme, px (1マスのピクセル数), lang, showSize, hideNames, playerView, hideClues, grid, transparent, margin, titles, gmBadge (GM用の画像に入れる文字) }
+   * opts: { theme, px (1マスのピクセル数), lang, showSize, hideNames, playerView, hideClues, grid, tokenGrid (コマ用の方眼のマス数), transparent, margin, titles, gmBadge (GM用の画像に入れる文字) }
    */
   function renderImage(floors, opts) {
     const theme = THEMES[opts.theme] || THEMES.clean;
@@ -1219,12 +1240,17 @@
     const boxes = floors.map(f => M.floorBounds(M.visibleFloor(f, opts.playerView, opts.hideClues)) || { x: 0, y: 0, w: 10, h: 8 });
     // 複数フロアは同じ基準位置で重なるように、全フロア共通の範囲を使う
     const common = floors.length > 1 ? exportBounds(floors, opts.playerView, opts.hideClues) : null;
-    const titleH = floors.length > 1 || opts.titles ? 2 : 0;
+    // コマ用の方眼があるときは、画像の端・フロア名の帯・フロアの間をすべて方眼の倍数にして、画像の左上から方眼が始まるようにする
+    const tg = opts.tokenGrid > 0 ? opts.tokenGrid : 0;
+    const up = v => (tg ? Math.ceil(v / tg - 1e-9) * tg : v);
+    const down = v => (tg ? Math.floor(v / tg + 1e-9) * tg : v);
+    const titleH = up(floors.length > 1 || opts.titles ? 2 : 0);
     const frames = boxes.map(b => {
       const bb = common || b;
-      return { x: bb.x - margin, y: bb.y - margin - titleH, w: bb.w + margin * 2, h: bb.h + margin * 2 + titleH };
+      const x = down(bb.x - margin), y = down(bb.y - margin);
+      return { x, y: y - titleH, w: up(bb.x + bb.w + margin) - x, h: up(bb.y + bb.h + margin) - y + titleH };
     });
-    const gap = floors.length > 1 ? 1 : 0;
+    const gap = floors.length > 1 ? (tg || 1) : 0;
     // 横一列が極端に長くなるとき（細長い校舎や階数の多い建物）は、4:3 に近くなる列数で折り返す
     const fh = Math.max(...frames.map(f => f.h));
     const sizeFor = cols => {
@@ -1241,7 +1267,7 @@
     }
     // GM用の画像は上に「GM用」の帯を足して、PL用と取り違えないようにする
     const badgeFont = Math.min(4, Math.max(1.1, layout.w * 0.025));
-    const badgeH = opts.gmBadge ? badgeFont * 1.6 : 0;
+    const badgeH = opts.gmBadge ? up(badgeFont * 1.6) : 0;
     const totalW = layout.w;
     const totalH = layout.h + badgeH;
     const scale = exportScale(totalW, totalH, px);
@@ -1264,7 +1290,7 @@
       drawFloor(c, floor, {
         theme: opts.transparent ? { ...theme, bg: 'transparent' } : theme,
         zoom: scale, lang: opts.lang, showSize: opts.showSize, hideNames: opts.hideNames, playerView: opts.playerView, hideClues: opts.hideClues,
-        editor: false, grid: opts.grid, viewRect: view, background: false
+        editor: false, grid: opts.grid, tokenGrid: tg, viewRect: { ...view, y: view.y + titleH, h: view.h - titleH }, background: false
       });
       if (titleH) {
         c.font = `800 1.1px ${theme.font}`;
