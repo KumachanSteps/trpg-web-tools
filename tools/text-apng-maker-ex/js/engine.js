@@ -5600,80 +5600,56 @@
       }
     }
 
-    // ヴァンパイアの失敗系（奥）：牙のあごが上下から迫り、clap の時刻にガチッと噛み合う。その衝撃で血が飛び散り、あごは開いて去る
+    // ヴァンパイアの失敗系（奥）：白い牙の列（上あごと下あご）が上下から迫って噛み合い、clap の時刻に小さく揺れる。
+    // 噛んだ点から血がひとつながりの塊としてにじむように広がり（失敗は文字の奥にほどよく、ファンブルは画面いっぱいに）、牙は去る
     drawVampireBite(ctx, d, band, size, W, H, mb, seed, fade, out, fum, plan, accent, tint, V, S) {
       const cx = mb.cx, cy = mb.cy;
       const clap = plan.clap;
       const sc = d - clap;
-      const fw = size * (fum ? 0.36 : 0.3), len = size * (fum ? 1.25 : 0.95);
+      const SS = size * (fum ? 1.5 : 1.3);
+      const fa = fade * (1 - 0.3 * out);
       // 帯は噛み合ったあとで開く
       V.band(ctx, band, size, EASE.outCubic(clamp((d - clap - 0.05) / 0.4)), fade, accent, tint, fum ? 'fumble' : 'failure');
       ctx.save();
       if (sc >= 0) {
-        const sh = Math.exp(-sc * 9) * size * (fum ? 0.08 : 0.05);
+        const sh = Math.exp(-sc * 11) * size * (fum ? 0.05 : 0.035);
         ctx.translate(noise1(d * 40, 3) * sh, noise1(d * 40, 9) * sh);
       }
-      // 画面の暗がり：噛み合う直前から、周りがすぼまるように暗くなる
-      const closeU = clamp(d / clap);
-      const jawA = sc < 0 ? 1 : 1 - EASE.inQuad(clamp((sc - 0.05) / (fum ? 0.7 : 0.5)));
-      if (jawA > 0.01) {
-        let top, bot;
-        if (sc < 0) {
-          const e = Math.pow(closeU, 2.4);
-          top = -len * 1.3 + (cy + len * 1.3) * e;
-          bot = H + len * 1.3 - (H + len * 1.3 - cy) * e;
-        } else {
-          // 閉じきったまま一拍おき、跳ね上がるように開いて去る
-          const u2 = EASE.outCubic(clamp((sc - 0.12) / (fum ? 0.6 : 0.4)));
-          top = cy - (cy + len * 1.3) * u2;
-          bot = cy + (H + len * 1.3 - cy) * u2;
-        }
-        const blood = sc >= 0 ? clamp(sc / 0.12) : 0;
-        const topX = fum ? [-5, -2, 2, 5] : [-2, 2], botX = fum ? [-3.5, -0.9, 0.9, 3.5] : [-0.9, 0.9];
-        V.jaw(ctx, W, H, top, 1, { size, len, w: fw, fangs: topX.map(m => cx + m * fw), small: 14, alpha: jawA * fade, seed, blood, dark: '#0c0207', gum: '#5a0818' });
-        V.jaw(ctx, W, H, bot, -1, { size, len, w: fw, fangs: botX.map(m => cx + m * fw), small: 14, alpha: jawA * fade, seed: seed + 3, blood, dark: '#0c0207', gum: '#5a0818' });
-      }
       if (sc >= 0) {
-        // 衝撃：白い閃光と赤い衝撃輪
-        if (sc < 0.18) drawFlash(ctx, cx, cy, W * (fum ? 0.6 : 0.4), '#ff7080', (fum ? 0.7 : 0.5) * Math.pow(1 - sc / 0.18, 2), 0.5);
-        shockRing(ctx, cx, cy, size * (0.3 + 3.4 * EASE.outCubic(clamp(sc / 0.5))), size * 0.04 * (1 - clamp(sc / 0.5)), '#ff4258', 0.6 * (1 - clamp(sc / 0.5)) * fade);
-        const sp = EASE.outCubic(clamp(sc / (fum ? 0.45 : 0.35)));
-        const fa = fade * (1 - 0.35 * out);
-        if (fum) {
-          // 画面いっぱいの血しぶき：大きな3つと小さな数個。あとからしたたりが伸びる
-          const spots = [[cx, cy, 1.5, 1], [cx - W * 0.3, cy + hh0(band) * 0.4, 1.0, 2], [cx + W * 0.31, cy - hh0(band) * 0.3, 1.15, 3], [cx - W * 0.1, cy - H * 0.3, 0.8, 4], [cx + W * 0.14, cy + H * 0.3, 0.9, 5], [cx - W * 0.4, cy - H * 0.25, 0.7, 6], [cx + W * 0.42, cy + H * 0.2, 0.7, 7]];
-          spots.forEach(([x, y, r, id], i) => {
-            V.splat(ctx, x, y, size * r, clamp(sc / (0.3 + 0.05 * i) ), { seed: seed + id * 11, alpha: fa, streaks: id === 1 ? 24 : 14 });
-            const dl = size * (0.5 + 1.5 * rnd(seed, id, 51)) * EASE.outCubic(clamp((sc - 0.25 - 0.1 * id) / 1.3));
-            for (let j = 0; j < 2; j++) {
-              V.drip(ctx, x + (j ? 1 : -1) * size * r * (0.25 + 0.3 * rnd(seed, id * 3 + j, 52)), y + size * r * 0.35, dl * (j ? 0.6 : 1), size * 0.05, fa);
-            }
-          });
-          V.drops(ctx, cx, cy, sc, 46, { seed, v: size * 8.5, g: size * 9, r: size * 0.05, life: 1.0, alpha: fa });
-        } else {
-          V.splat(ctx, cx, cy, size * 0.62, sp, { seed: seed + 11, alpha: fa, streaks: 14 });
-          V.drops(ctx, cx, cy, sc, 16, { seed, v: size * 6.5, g: size * 9, r: size * 0.04, life: 0.9, alpha: fa });
-          const dl = size * 0.7 * EASE.outCubic(clamp((sc - 0.3) / 1.2));
-          V.drip(ctx, cx - size * 0.3, cy + size * 0.2, dl, size * 0.04, fa);
-          V.drip(ctx, cx + size * 0.38, cy + size * 0.2, dl * 0.7, size * 0.035, fa);
-        }
+        // 噛んだ点から広がる血の塊
+        const dur = fum ? 0.8 : 0.7;
+        const p = clamp((sc - 0.03) / dur);
+        if (fum) V.bloodMass(ctx, cx, cy, W * 0.6, H * 0.64, p, { seed: seed + 5, alpha: fa, specks: 34, spikes: 8, grain: 0.022 });
+        else V.bloodMass(ctx, cx, cy, size * 2.7, size * 1.35, p, { seed: seed + 5, alpha: fa, specks: 18, spikes: 5 });
+        if (sc < 0.16) drawFlash(ctx, cx, cy, W * (fum ? 0.5 : 0.35), '#ff6a7a', (fum ? 0.55 : 0.4) * Math.pow(1 - sc / 0.16, 2), 0.5);
+      }
+      // 牙：閉じる（だんだん速く）→ 噛み合ったまま一拍 → はじかれるように開いて去る
+      const closedGap = SS * 0.95;
+      const away = SS * 1.75;
+      let topY, botY, ta = 1;
+      if (sc < 0) {
+        const e1 = Math.pow(clamp(d / clap), 2.4);
+        topY = -away + (cy - closedGap + away) * e1;
+        botY = H + away - (H + away - (cy + closedGap)) * e1;
+      } else {
+        const u2 = EASE.outCubic(clamp((sc - 0.1) / 0.45));
+        topY = cy - closedGap - (cy - closedGap + away) * u2;
+        botY = cy + closedGap + (H + away - cy - closedGap) * u2;
+        ta = 1 - EASE.inQuad(clamp((sc - 0.15) / 0.4));
+      }
+      if (ta > 0.01) {
+        V.teethRow(ctx, cx, topY, SS, 1, { alpha: ta * fade, shadow: '#1a0208' });
+        V.teethRow(ctx, cx, botY, SS, -1, { alpha: ta * fade, lower: true, shadow: '#1a0208' });
       }
       ctx.restore();
     }
 
-    // ヴァンパイアの失敗系（手前）：文字が出る瞬間の暗い血の光。ファンブルは文字にひびが走り、文字の下から血がしたたる
+    // ヴァンパイアの失敗系（手前）：文字が出る瞬間の暗い血の光。ファンブルは文字に細いひびが走る
     drawVampireFront(ctx, d, s, mb, size, textW, seed, fade, out, fum, plan, V) {
       const cx = mb.cx, cy = mb.cy;
-      if (s >= 0 && s < 0.35) drawFlash(ctx, cx, cy, size * 4, fum ? '#c0182e' : '#7a1020', (fum ? 0.4 : 0.25) * Math.pow(1 - s / 0.35, 2), 0.5);
-      const a = fade * (1 - 0.5 * out);
+      if (s >= 0 && s < 0.35) drawFlash(ctx, cx, cy, size * 4, fum ? '#c0182e' : '#7a1020', (fum ? 0.3 : 0.2) * Math.pow(1 - s / 0.35, 2), 0.5);
       if (fum && s >= 0) {
-        V.cracks(ctx, cx - textW * 0.08, cy, textW * 0.62, EASE.outCubic(clamp(s / 0.3)), seed, 0.9 * a, size * 0.012);
-      }
-      const n = fum ? 8 : 3;
-      for (let i = 0; i < n && s >= 0; i++) {
-        const x = mb.x0 + textW * (0.06 + 0.88 * (i + rnd(seed, i, 61) * 0.7) / n);
-        const len = size * (fum ? 0.3 + 0.7 * rnd(seed, i, 62) : 0.2 + 0.35 * rnd(seed, i, 62)) * EASE.outCubic(clamp((s - 0.1 - 0.25 * rnd(seed, i, 63)) / 1.0));
-        V.drip(ctx, x, mb.y1 - size * 0.12, len, size * (fum ? 0.045 : 0.035), a);
+        V.cracks(ctx, cx - textW * 0.08, cy, textW * 0.45, EASE.outCubic(clamp(s / 0.3)), seed, 0.55 * fade * (1 - 0.5 * out), size * 0.01);
       }
     }
 

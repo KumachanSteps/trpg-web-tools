@@ -409,7 +409,7 @@
     return { ...DREAM_ROLL, fontSize: Math.round(fontSize * 0.75), ...look.patch, ...rollTime('dream', tier), sfx: { type: 'dream', tier, color: look.accent, color2: look.band, power: 1 } };
   };
 
-  // ヴァンパイア：深紅・黒・骨の白、月明かりのほのかな青白さ。文字はゴシックな明朝（開成特太明朝）に骨色のグラデーションと紅の光彩。
+  // ヴァンパイア：深紅・黒・骨の白、月明かりのほのかな青白さ。文字は端正な明朝（装甲明朝。本体に同梱）に骨色のグラデーションと紅の光彩。
   // 帯はほぼ黒の深い紅。失敗は色あせた暗い文字、ファンブルは血に染まった暗い文字。退場は「星屑になって消える」（成功系は紅の火の粉と小さなコウモリ、失敗系は血の粉）
   const VAMPIRE_LOOK = {
     success: {
@@ -444,8 +444,8 @@
     }
   };
   const VAMPIRE_ROLL = {
-    fontId: 'kaisei-tokumin', weight: 800, letterSpacing: 0.16,
-    subFontId: 'cinzel', subWeight: 700, subSize: 0.22, subLetterSpacing: 0.6, subGap: 0.42,
+    fontId: 'soukou-mincho', weight: 400, letterSpacing: 0.24,
+    subFontId: 'soukou-mincho', subWeight: 400, subSize: 0.2, subLetterSpacing: 0.6, subGap: 0.45,
     stroke: { on: false }, stroke2: { on: false },
     shadow: { on: true, color: '#1a0208', opacity: 0.7, blur: 12, x: 0, y: 3 },
     subColorOn: true, deco: { type: 'none' },
