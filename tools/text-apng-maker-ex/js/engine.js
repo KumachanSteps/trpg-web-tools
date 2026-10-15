@@ -5779,9 +5779,9 @@
       }
     }
 
-    // 抜刀の一閃（戦闘演出）：文字も帯もない、斜めの一閃だけ。先の光る刃のすじがごく速く画面を横切り、斬った瞬間の閃光と火花、
-    // 細くなって消えていく残像の線。小さな揺れは描いたものだけに（透明な背景に重ねる用）。既存の抜刀の一閃（bladeSliver / bladeLine / drawFlash）と同じ見た目。
-    // sfx.dir：'up'（左下から右上へ。抜刀の向き）/ 'down'（左上から右下）、sfx.cuts：'one'（1本）/ 'x'（Xの2本）
+    // 抜刀の一閃（戦闘演出）：文字も帯もない、斜めの一閃だけ。細くとがった光の線がごく速く（約0.1秒）画面を斜めに走り、
+    // 斬った瞬間に線に沿った細長いやわらかい光がひらめき、細い残像の線がすぐに消える。火花や放射状の光は使わない（アニメの一閃のように簡素に）。
+    // sfx.dir：'up'（左下から右上へ。抜刀の向き）/ 'down'（左上から右下）、sfx.cuts：'one'（1本）/ 'x'（Xの2本。2本目が0.12秒後に左右対称に交差し、交差点がやわらかく光る）
     drawKatanaFx(ctx, pg, page, t, scale, scene, sfx, k) {
       const d = t - pg.start;
       if (d < 0) return;
@@ -5792,130 +5792,81 @@
       const n6 = m ? parseInt(m[1], 16) : 0xffffff;
       const lum = (((n6 >> 16) & 255) * 0.3 + ((n6 >> 8) & 255) * 0.59 + (n6 & 255) * 0.11) / 255;
       const mode = lum < 0.25 ? 'black' : lum > 0.8 ? 'white' : 'red';
-      const under = mode === 'white' ? 'rgba(10,14,26,0.85)' : mode === 'black' ? 'rgba(232,238,250,0.85)' : colorWithAlpha(glow, 0.8);
+      // 読みやすさのための細い縁（白：暗い影 / 黒：淡い光の縁 / 赤：なし）
+      const under = mode === 'white' ? 'rgba(10,14,26,0.6)' : mode === 'black' ? 'rgba(232,238,250,0.8)' : null;
       const sgn = sfx.dir === 'down' ? -1 : 1;
-      const SWEEP = 0.17, FADE = 0.75, T0 = 0.12;
+      const SWEEP = 0.1, FADE = 0.55, T0 = 0.12;
       const isX = sfx.cuts === 'x';
-      const cuts = [{ t: T0, ang: -0.62 * sgn, rev: false }];
-      // X：2本目は最初の一閃の0.12秒後に、向きを左右対称にして中央で交差させる
-      if (isX) cuts.push({ t: T0 + 0.12, ang: 0.62 * sgn, rev: false });
+      const cuts = [{ t: T0, ang: -0.62 * sgn }];
+      if (isX) cuts.push({ t: T0 + 0.12, ang: 0.62 * sgn });
       const lastEnd = cuts[cuts.length - 1].t + SWEEP;
       const Lc = Math.hypot(W, H) * 0.4;
-      const th = H * 0.06 * clamp(k, 0.3, 2);
-      const seed = 5200 + pg.index * 13;
-      // 刃のすじ：先端に向かって明るくなり、後ろは消える。まわりに色のにじみ
-      const streak = (x0, x1, w, col, alpha, shadow) => {
+      const th = H * 0.026 * clamp(k, 0.3, 2);
+      // 両端がとがった細い線。x0 から x1 へ、先（x1）にいくほど明るい
+      const blade = (x0, x1, w, col, alpha, shadow, blur) => {
         if (alpha <= 0.002 || x1 - x0 <= 0.5 || w <= 0.05) return;
         ctx.save();
         ctx.globalAlpha *= clamp(alpha);
-        ctx.shadowColor = shadow;
-        ctx.shadowBlur = Math.max(2, w * 1.2) * scale;
+        if (shadow) { ctx.shadowColor = shadow; ctx.shadowBlur = blur * scale; }
         const g = ctx.createLinearGradient(x0, 0, x1, 0);
         g.addColorStop(0, colorWithAlpha(col, 0));
-        g.addColorStop(0.6, colorWithAlpha(col, 0.85));
+        g.addColorStop(0.7, colorWithAlpha(col, 0.9));
         g.addColorStop(1, col);
         ctx.fillStyle = g;
-        const neck = x1 - (x1 - x0) * 0.12;
-        ctx.beginPath();
-        ctx.moveTo(x0, 0); ctx.quadraticCurveTo(neck, -w, x1, 0); ctx.quadraticCurveTo(neck, w, x0, 0);
-        ctx.fill();
-        ctx.restore();
-      };
-      // 残像の線：中央がいちばん太く、両端は細く消える
-      const line = (x0, x1, w, col, alpha, shadow) => {
-        if (alpha <= 0.002 || w <= 0.05) return;
-        ctx.save();
-        ctx.globalAlpha *= clamp(alpha);
-        ctx.shadowColor = shadow;
-        ctx.shadowBlur = Math.max(2, w * 2.5) * scale;
-        const g = ctx.createLinearGradient(x0, 0, x1, 0);
-        g.addColorStop(0, colorWithAlpha(col, 0)); g.addColorStop(0.5, col); g.addColorStop(1, colorWithAlpha(col, 0));
-        ctx.fillStyle = g;
-        const mid = (x0 + x1) / 2;
+        const mid = x0 + (x1 - x0) * 0.78;
         ctx.beginPath();
         ctx.moveTo(x0, 0); ctx.quadraticCurveTo(mid, -w, x1, 0); ctx.quadraticCurveTo(mid, w, x0, 0);
         ctx.fill();
         ctx.restore();
       };
-      const body = mode === 'red' ? core : core;
+      // 残像：中央がいちばん太く、両端が細く消える線
+      const line = (w, col, alpha, shadow, blur) => {
+        if (alpha <= 0.002 || w <= 0.05) return;
+        ctx.save();
+        ctx.globalAlpha *= clamp(alpha);
+        if (shadow) { ctx.shadowColor = shadow; ctx.shadowBlur = blur * scale; }
+        const g = ctx.createLinearGradient(-Lc, 0, Lc, 0);
+        g.addColorStop(0, colorWithAlpha(col, 0)); g.addColorStop(0.5, col); g.addColorStop(1, colorWithAlpha(col, 0));
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(-Lc, 0); ctx.quadraticCurveTo(0, -w, Lc, 0); ctx.quadraticCurveTo(0, w, -Lc, 0);
+        ctx.fill();
+        ctx.restore();
+      };
       const centre = mode === 'red' ? '#fff0f3' : mode === 'black' ? '#2a2d36' : '#ffffff';
       let sh = 0;
-      cuts.forEach(c => { const a = d - c.t - SWEEP * 0.5; if (a >= 0) sh += Math.exp(-a * 18); });
-      const amp = H * (isX ? 0.01 : 0.007) * Math.min(1.5, sh) * clamp(k, 0, 2);
+      cuts.forEach(c => { const a = d - c.t - SWEEP * 0.5; if (a >= 0) sh += Math.exp(-a * 20); });
+      const amp = H * 0.004 * Math.min(1.5, sh) * clamp(k, 0, 2);
       ctx.save();
       ctx.translate(noise1(d * 50, 3) * amp, noise1(d * 50, 9) * amp);
-      cuts.forEach((c, i) => {
+      // 2本あるときは、残像は2本目が振り終わってからいっしょに薄れる
+      const q = (d - lastEnd) / FADE;
+      cuts.forEach(c => {
         const a = d - c.t;
         if (a < 0) return;
         ctx.save();
         ctx.translate(W / 2, H / 2);
         ctx.rotate(c.ang);
-        // 2本あるときは、残像は2本目が振り終わってから一緒に薄れる
-        const q = (d - lastEnd) / FADE;
         if (a < SWEEP) {
           const head = -Lc + 2 * Lc * EASE.outQuad(a / SWEEP);
-          const x0 = Math.max(-Lc, head - Lc * 1.1);
-          // 動きのぶれ：幅の広いうすい光を刃の進む道に引く（刃の頭が短いしずくに見えないように）
-          streak(-Lc, head, th * 2.4, glow, 0.28, glow);
-          if (mode !== 'red') streak(x0, head, th * 1.35, under, 0.9, under);
-          streak(x0, head, th, body, 1, glow);
+          const x0 = Math.max(-Lc, head - Lc * 1.2);
+          if (under) blade(x0, head, th * 1.3, under, 0.9, null, 0);
+          blade(x0, head, th, core, 1, glow, th * 0.8);
         } else if (q < 1) {
-          // 残像：細くなりながら、光（影）だけが少し長く残る
-          const w = th * 0.7 * (1 - q) * (1 - q * 0.3);
-          if (mode !== 'red') line(-Lc, Lc, w * 1.4, under, 0.8 * (1 - q * q), under);
-          line(-Lc, Lc, w, body, 1 - q * q, glow);
-          line(-Lc, Lc, H * 0.011 * (1 - q), centre, 1 - q, glow);
+          const f = 1 - q;
+          if (under) line(th * 1.0 * f, under, 0.8 * f, null, 0);
+          line(th * 0.7 * f, core, f * f, glow, th * 0.7);
+          line(H * 0.005 * f, centre, f, null, 0);
         }
-        // 斬った瞬間：閃光（刃の向きに細長く）と、刃の向きに沿って飛ぶ火花
-        const f = a - SWEEP * 0.5;
-        if (f >= 0 && f < 0.34) {
-          drawFlash(ctx, 0, 0, W * 0.45, glow, 0.85 * clamp(k) * Math.pow(1 - f / 0.34, 2), 0.16);
-          ctx.save();
-          ctx.shadowColor = under; ctx.shadowBlur = 8 * scale;
-          ctx.lineCap = 'round';
-          ctx.lineWidth = Math.max(2, H * 0.0065);
-          for (let r = 0; r < 26; r++) {
-            const life = 0.28 * (0.55 + 0.45 * rnd(seed + i, r, 3));
-            if (f > life) continue;
-            const u = (rnd(seed + i, r, 1) * 2 - 1) * Lc * 0.8;
-            const side = (rnd(seed + i, r, 2) < 0.5 ? -1 : 1);
-            const ang = (rnd(seed + i, r, 4) * 0.7 + 0.15) * side + (rnd(seed + i, r, 5) < 0.5 ? 0 : Math.PI);
-            const v = H * (0.5 + 0.9 * rnd(seed + i, r, 6));
-            const dist = v * (1 - Math.exp(-6 * f)) / 6;
-            const px = u + Math.cos(ang) * dist, py = Math.sin(ang) * dist;
-            const l = H * 0.085 * (1 - f / life) * (0.55 + rnd(seed + i, r, 7));
-            ctx.globalAlpha = clamp(1 - f / life);
-            ctx.strokeStyle = mode === 'red' ? (r % 2 ? '#ff8a96' : '#fff0f3') : mode === 'black' ? '#07080b' : '#ffffff';
-            ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - Math.cos(ang) * l, py - Math.sin(ang) * l); ctx.stroke();
-          }
-          ctx.restore();
-        }
+        // 斬った瞬間：線に沿った細長いやわらかい光（ひらめいてすぐ消える）
+        const fl = a - SWEEP * 0.5;
+        if (fl >= 0 && fl < 0.26) drawFlash(ctx, 0, 0, W * 0.42, glow, 0.5 * clamp(k) * Math.pow(1 - fl / 0.26, 2), 0.07);
         ctx.restore();
       });
-      // X：2本目が決まる瞬間、交差点に星形の強い閃光（細い光の筋が8方向へのびる）
+      // X：2本目が決まる瞬間、交差点がやわらかく光るだけ
       if (isX) {
         const g = d - (cuts[1].t + SWEEP * 0.5);
-        if (g >= 0 && g < 0.4) {
-          const e = Math.pow(1 - g / 0.4, 1.6);
-          const R = H * (0.3 + 0.12 * EASE.outCubic(g / 0.4));
-          const rayCol = mode === 'red' ? '#fff0f3' : mode === 'black' ? '#07080b' : '#ffffff';
-          drawFlash(ctx, W / 2, H / 2, W * 0.28, glow, 0.9 * clamp(k) * e);
-          ctx.save();
-          ctx.translate(W / 2, H / 2);
-          ctx.shadowColor = under; ctx.shadowBlur = 10 * scale;
-          ctx.fillStyle = rayCol;
-          ctx.globalAlpha *= clamp(e);
-          for (let r = 0; r < 8; r++) {
-            const a = r * Math.PI / 4 + 0.1 * g;
-            const len = R * (r % 2 ? 0.55 : 1);
-            const wd = H * (r % 2 ? 0.008 : 0.014);
-            ctx.save();
-            ctx.rotate(a);
-            ctx.beginPath(); ctx.moveTo(0, -wd); ctx.lineTo(len, 0); ctx.lineTo(0, wd); ctx.closePath(); ctx.fill();
-            ctx.restore();
-          }
-          ctx.restore();
-        }
+        if (g >= 0 && g < 0.28) drawFlash(ctx, W / 2, H / 2, H * 0.26, glow, 0.6 * clamp(k) * Math.pow(1 - g / 0.28, 2));
       }
       ctx.restore();
     }
