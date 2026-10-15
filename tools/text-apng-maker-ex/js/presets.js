@@ -848,6 +848,16 @@
         }
       },
       {
+        // 戦闘演出：弾痕（単発）。黒い穴・白い縁・3〜4本の細いひび。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。形・位置・大きさ・ひびの数は sfx の seed・x・y・size・cracks で変えられる（あとでバリエーションを足す土台）
+        id: 'bulletMarkSingle', group: 'battlefx', icon: 'crosshair', label: T('弾痕（単発）', 'Bullet Mark (Single)', '탄흔（단발）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'bulletMark', color: '#f6f6f2', color2: '#07080b', cracks: '4', seed: '1', size: 0.075, x: 0.5, y: 0.5, power: 1 },
+          inFx: 'fade', inDur: 0, hold: 2.0, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
         // EX：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と「戦闘開始」が立ち上がる。最後は左から右へ燃えて消える
         id: 'battleFlame', group: 'combat', icon: 'flame', label: T('炎の戦闘開始', 'Flame Battle Start', '불꽃의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'IGNITE', 'BATTLE START'),

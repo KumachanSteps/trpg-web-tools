@@ -657,6 +657,7 @@
       case 'fangFx': return { l: 0, r: 0, t: 0, b: 0 };
       case 'clawMark': return { l: 0, r: 0, t: 0, b: 0 };
       case 'katanaFx': return { l: 0, r: 0, t: 0, b: 0 };
+      case 'bulletMark': return { l: 0, r: 0, t: 0, b: 0 };
       // 燃える文字：炎が字の上へ立ちのぼる分（上に広く空けるので、字は試作と同じく少し下寄りになる）
       case 'fireText': return { l: size * 0.1, r: size * 0.1, t: size * 0.9, b: size * 0.1 };
       case 'fireTextSeq': return { l: size * 0.1, r: size * 0.1, t: size * 0.63, b: size * 0.1 };
@@ -1413,6 +1414,8 @@
     clawMark: { lead: 0, tail: 0 },
     // 抜刀の一閃：文字のない、斜めの一閃と閃光だけの演出（戦闘演出）
     katanaFx: { lead: 0, tail: 0 },
+    // 弾痕：文字のない、1つの弾痕（黒い穴・白い縁・細いひび）だけの演出（戦闘演出）
+    bulletMark: { lead: 0, tail: 0 },
     // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
     // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
     fireWall: { lead: 0, tail: 0 },
@@ -2604,7 +2607,7 @@
         if (t < pg.start) return;
         if (Number.isFinite(pg.end) && t > pg.end) return;
         // 文字のない牙の戦闘演出：文字は描かず、牙の演出だけを描く
-        if (sfxOf(scene).type === 'fangFx' || sfxOf(scene).type === 'clawMark' || sfxOf(scene).type === 'katanaFx') { this.drawSfx(ctx, pg, page, t, scale, scene, 'back'); this.drawSfx(ctx, pg, page, t, scale, scene, 'front'); return; }
+        if (sfxOf(scene).type === 'fangFx' || sfxOf(scene).type === 'clawMark' || sfxOf(scene).type === 'katanaFx' || sfxOf(scene).type === 'bulletMark') { this.drawSfx(ctx, pg, page, t, scale, scene, 'back'); this.drawSfx(ctx, pg, page, t, scale, scene, 'front'); return; }
         if (!page.visibleCount) return;
         const bs = this.blockState(pg, t, scene, size);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'back');
@@ -2825,6 +2828,7 @@
       else if (sfx.type === 'star') this.drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'dream') this.drawDream(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'vampire') this.drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'bulletMark') this.drawBulletMark(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'katanaFx') this.drawKatanaFx(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'clawMark') this.drawClawMark(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'fang' || sfx.type === 'fangFx') this.drawFang(ctx, pg, page, t, scale, scene, sfx, k, layer);
@@ -5868,6 +5872,145 @@
         const g = d - (cuts[1].t + SWEEP * 0.5);
         if (g >= 0 && g < 0.28) drawFlash(ctx, W / 2, H / 2, H * 0.26, glow, 0.6 * clamp(k) * Math.pow(1 - g / 0.28, 2));
       }
+      ctx.restore();
+    }
+
+    // 弾痕（戦闘演出）：1つの弾痕。ほんの少しいびつな丸い黒い穴と、細く白い欠けのある縁、そこから放射状にのびる3〜4本の細いひび（小さな枝分かれつき）。
+    // 当たった瞬間に穴が出て（ぽんと縮む）、ごく短い細い輪が広がり、ひびが穴から素早くのびる。そのまま残って、ひび → 穴の順に消える。火花や大きな光は使わない。
+    // sfx：x・y（画面の位置の割合。既定は中央）/ size（穴の直径、画面の高さの割合。既定 0.08）/ cracks（'3'・'4'）/ seed（形のちがい）/ color（縁とひびの色）/ color2（穴の色）。
+    // あとで複数の弾痕・位置・大きさ・跳弾などを足せるよう、形は seed と位置・大きさだけで決まる
+    drawBulletMark(ctx, pg, page, t, scale, scene, sfx, k) {
+      const d = t - pg.start;
+      const W = scene.width, H = scene.height;
+      const T0 = 0.12, GROW = 0.12, HOLD = 1.0, FADE = 0.45;
+      const a = d - T0;
+      if (a < 0) return;
+      const fadeStart = T0 + GROW + 0.06 + HOLD;
+      const aC = 1 - EASE.inOutCubic(clamp((d - fadeStart) / FADE));
+      const aH = 1 - EASE.inOutCubic(clamp((d - fadeStart - 0.12) / FADE));
+      if (aH <= 0.003) return;
+      const seed = 100 + (parseInt(sfx.seed, 10) || 1) * 37;
+      const n = String(sfx.cracks) === '3' ? 3 : 4;
+      const D = H * (Number(sfx.size) > 0 ? Number(sfx.size) : 0.075);
+      const r = D / 2;
+      const cx = W * (Number.isFinite(Number(sfx.x)) && sfx.x !== undefined && sfx.x !== '' ? Number(sfx.x) : 0.5);
+      const cy = H * (Number.isFinite(Number(sfx.y)) && sfx.y !== undefined && sfx.y !== '' ? Number(sfx.y) : 0.5);
+      const rimCol = sfx.color || '#f6f6f2';
+      const holeCol = sfx.color2 || '#07080b';
+      const under = 'rgba(0,0,0,0.55)';
+      const R = (i, q) => rnd(seed, i, q);
+      const rimW = Math.max(1.8, r * 0.095);
+      ctx.save();
+      ctx.translate(cx, cy);
+      // 1) ひび：穴の縁から外へ、先端を先頭にのびる細い先細りの帯。ところどころ折れ曲がり、短い枝が分かれる
+      const ribbon = (pts, w0, p, alpha) => {
+        // 長さの累計
+        const cum = [0];
+        for (let j = 1; j < pts.length; j++) cum.push(cum[j - 1] + Math.hypot(pts[j][0] - pts[j - 1][0], pts[j][1] - pts[j - 1][1]));
+        const total = cum[cum.length - 1];
+        const reach = total * p;
+        const L = [], Rr = [];
+        for (let j = 0; j < pts.length; j++) {
+          if (cum[j] > reach && j > 0) {
+            // 先端：途中の点
+            const u = (reach - cum[j - 1]) / Math.max(1e-6, cum[j] - cum[j - 1]);
+            pts = pts.slice(0, j).concat([[pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * u, pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * u]]);
+            cum.length = j; cum.push(reach);
+            break;
+          }
+        }
+        if (pts.length < 2) return;
+        for (let j = 0; j < pts.length; j++) {
+          const pa = pts[Math.max(0, j - 1)], pb = pts[Math.min(pts.length - 1, j + 1)];
+          const tx = pb[0] - pa[0], ty = pb[1] - pa[1], tl = Math.hypot(tx, ty) || 1;
+          const sN = cum[j] / total;
+          const w = w0 * Math.pow(Math.max(0, 1 - sN), 0.9) * (p < 1 ? Math.min(1, (reach - cum[j]) / (total * 0.12) + 0.02) : 1);
+          L.push([pts[j][0] - ty / tl * w, pts[j][1] + tx / tl * w]);
+          Rr.push([pts[j][0] + ty / tl * w, pts[j][1] - tx / tl * w]);
+        }
+        ctx.beginPath();
+        ctx.moveTo(L[0][0], L[0][1]);
+        L.forEach(q => ctx.lineTo(q[0], q[1]));
+        for (let j = Rr.length - 1; j >= 0; j--) ctx.lineTo(Rr[j][0], Rr[j][1]);
+        ctx.closePath();
+        ctx.save();
+        ctx.globalAlpha *= clamp(alpha);
+        ctx.strokeStyle = under; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.fillStyle = rimCol;
+        ctx.fill();
+        ctx.restore();
+      };
+      const walk = (x, y, ang, len, K, kink, i0) => {
+        const pts = [[x, y]];
+        let an = ang;
+        for (let j = 1; j <= K; j++) {
+          an += (R(i0 + j, 11) - 0.5) * kink + (j === Math.ceil(K / 2) ? (R(i0, 12) < 0.5 ? -1 : 1) * kink * 0.7 : 0);
+          x += Math.cos(an) * len / K; y += Math.sin(an) * len / K;
+          pts.push([x, y]);
+        }
+        return pts;
+      };
+      const base = R(0, 1) * TAU;
+      const fr = [0.9, 0.12, 0.62, 0.36];
+      for (let i = 0; i < n; i++) {
+        const ang = base + i * TAU / n + (R(i, 2) - 0.5) * 0.5;
+        const len = D * (1.0 + 0.95 * ((fr[(i + Math.floor(R(1, 3) * 4)) % 4] + R(i, 4) * 0.15) % 1));
+        const st = a - i * 0.012;
+        if (st < 0) continue;
+        const p = EASE.outExpo(clamp(st / GROW));
+        const x0 = Math.cos(ang) * r * 0.92, y0 = Math.sin(ang) * r * 0.92;
+        const pts = walk(x0, y0, ang, len, 8, 0.34, i * 20);
+        const w0 = Math.max(1.1, r * 0.085);
+        ribbon(pts, w0, p, aC);
+        // 枝：長い2本めごとに、途中から細い枝が1本分かれる
+        if (i % 2 === 0 || n === 3) {
+          const fk = 3 + (i % 2);
+          const KK = 8;
+          const f = pts[fk];
+          const pf = clamp((p - fk / KK) / (1 - fk / KK));
+          if (pf > 0) {
+            const side = R(i, 5) < 0.5 ? -1 : 1;
+            const fang = Math.atan2(pts[fk + 1][1] - pts[fk][1], pts[fk + 1][0] - pts[fk][0]) + side * (0.55 + 0.3 * R(i, 6));
+            ribbon(walk(f[0], f[1], fang, len * 0.42, 4, 0.3, i * 20 + 9), w0 * 0.65, pf, aC);
+          }
+        }
+      }
+      // 2) 当たった瞬間の細い輪（ひとつだけ、すぐ消える）
+      if (a < 0.14) {
+        const q = a / 0.14;
+        ctx.save();
+        ctx.globalAlpha *= 0.85 * (1 - q) * clamp(k, 0, 1.5);
+        const rr = r * (1.3 + 3.4 * EASE.outCubic(q));
+        ctx.lineWidth = Math.max(1.5, r * 0.09) + 2.2; ctx.strokeStyle = under;
+        ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
+        ctx.lineWidth = Math.max(1.5, r * 0.09); ctx.strokeStyle = rimCol;
+        ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
+        ctx.restore();
+      }
+      // 3) 穴：いびつな丸。縁は細く白く、ところどころ欠ける。出た瞬間に 1.25 倍からぽんと 1.0 へ
+      const pop = 1 + 0.25 * (1 - EASE.outQuad(clamp(a / 0.125)));
+      ctx.scale(pop, pop);
+      const NP = 30;
+      const hole = new Path2D();
+      for (let j = 0; j < NP; j++) {
+        const th = j / NP * TAU;
+        let rad = r * (1 + 0.09 * noise1(j * 0.55 + R(0, 7) * 9, seed) + (R(j, 8) - 0.5) * 0.06);
+        if (R(j, 9) < 0.1) rad *= R(j, 10) < 0.5 ? 1.2 : 0.84;
+        const px = Math.cos(th) * rad, py = Math.sin(th) * rad;
+        if (j) hole.lineTo(px, py); else hole.moveTo(px, py);
+      }
+      hole.closePath();
+      ctx.save();
+      ctx.globalAlpha *= clamp(aH);
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = under; ctx.lineWidth = rimW + 2.4;
+      ctx.stroke(hole);
+      ctx.fillStyle = holeCol;
+      ctx.fill(hole);
+      ctx.strokeStyle = rimCol; ctx.lineWidth = rimW;
+      ctx.stroke(hole);
+      ctx.restore();
       ctx.restore();
     }
 
