@@ -361,6 +361,15 @@
     // 退場の時間のうち、はじめの FIREFLY_SWEEP の割合で文字がほどけ、残りで光の粒が消えていく
     { id: 'firefly', level: 'block', ease: 'linear', dur: 2.6,
       block(bs, e, p) { bs.mask = { dir: 'burn', p: clamp(p / FIREFLY_SWEEP), out: true, firefly: true }; } },
+    // 星屑になって消える（EX）：文字が細かな粒にほどけ、粒はまたたきながら漂って消える（星の判定では、失敗は鈍い粉になって落ち、
+    // 致命的失敗はブラックホールへ渦を巻いて吸い込まれる）。退場の時間のうち、はじめの STARDUST_SWEEP の割合で粒が生まれる
+    { id: 'stardust', level: 'block', ease: 'linear', dur: 2.0,
+      block(bs, e, p) {
+        bs.mask = { stardust: true, p };
+        // 粒が抜けたあとに残ったところは、ほどけ終わるころまでに薄れて消える
+        bs.a *= 1 - EASE.inOutCubic(clamp((p - STARDUST_SWEEP * 0.45) / (STARDUST_SWEEP * 0.75)));
+        if (p < 0.12) bs.bright = Math.max(bs.bright, 0.35 * Math.sin(Math.PI * p / 0.12));
+      } },
     // 炎に包まれて燃え尽きる（EX）：左から右へ火が燃え移り、燃え際は焦げて赤く光りながら崩れ、
     // 文字から炎が立ちのぼって火の粉と煙が昇る。退場の時間のうち、はじめの BLAZE_SWEEP の割合で燃え移り、残りで火が収まる
     { id: 'blaze', level: 'block', ease: 'linear', dur: 3.0,
@@ -635,6 +644,7 @@
       case 'p5gun': return { l: size * 0.45, r: size * 0.45, t: size * 0.75, b: size * 0.75 };
       case 'blade': return { l: 0, r: 0, t: size * 0.62, b: size * 0.62 };
       case 'shot': return { l: 0, r: 0, t: size * 0.65, b: size * 0.65 };
+      case 'star': return { l: 0, r: 0, t: size * 0.65, b: size * 0.65 };
       // 燃える文字：炎が字の上へ立ちのぼる分（上に広く空けるので、字は試作と同じく少し下寄りになる）
       case 'fireText': return { l: size * 0.1, r: size * 0.1, t: size * 0.9, b: size * 0.1 };
       case 'fireTextSeq': return { l: size * 0.1, r: size * 0.1, t: size * 0.63, b: size * 0.1 };
@@ -1380,6 +1390,7 @@
     // 判定カットイン：lead は結果の段階ごとに変わる（sfxTiming）
     blade: { lead: 0.42, tail: 0.25 },
     shot: { lead: 0.56, tail: 0.25 },
+    star: { lead: 0.5, tail: 0.3 },
     // 炎の試作（js/fx-fire.js）：炎の壁（画面の下でずっと燃える）/ 走る炎（左から燃え広がって消える）/ 火炎ブレス（地面を走って右端で爆発）/
     // 燃える文字（文字の画そのものが燃える）/ 燃える文字・演出（ブレス → 爆発 → 右から燃え移る → 左から火の粉になって消える）
     fireWall: { lead: 0, tail: 0 },
@@ -1400,7 +1411,7 @@
   const ENV_TYPES = new Set(['ash', 'ashBlack']);
   const ASH_LOOP = 6;
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎・一閃・閃光）
-  const SFX_BOTH = new Set(['flame', 'blade', 'shot']);
+  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star']);
   // 装飾枠：線が角から辺の中央まで伸びる時間
   const FRAME_DRAW = 0.55;
   // 剣と盾：剣が飛び込んで止まるまで / 盾の輪郭を引く時間 / 帯が左右に開き始める時刻と開く時間
@@ -1431,6 +1442,15 @@
   const FIREFLY_SWEEP = 0.5;
   const FIREFLY_SOFT = 1.2;
   const FIREFLY_PER_GLYPH = 14;
+  // 「星屑になって消える」：粒が生まれ終わるまでの割合
+  const STARDUST_SWEEP = 0.55;
+  // 「星屑になって消える」で粒1つが文字を消す丸の半径 / 星の判定のブラックホールの芯の半径（文字の大きさが単位）
+  const STARDUST_HOLE = 0.055;
+  const STAR_HOLE_R = 0.9;
+  // 星の判定のまたたきを変える回数（1秒あたり）
+  const STAR_TWINKLE_FPS = 8;
+  // 決定的成功の光の筋が消えるまで
+  const STAR_RAYS = 0.6;
   // 「炎に包まれて燃え尽きる」：燃え移り終わるまでの割合 / 炎の色（奥の赤 → 赤 → 橙 → 黄 → 芯の白）
   const BLAZE_SWEEP = 0.6;
   const BLAZE = { deep: '#8f1404', red: '#e0400c', orange: '#ff8a1e', yellow: '#ffd25a', white: '#fff4d6' };
@@ -1602,6 +1622,23 @@
   };
   // 決めの一発より前の着弾点（文字の中心から。文字の大きさが単位）
   const SHOT_SPOTS = [[0.16, -0.12], [-0.14, 0.1], [0.04, 0.16]];
+  // 星（夢と星空）の段取り。lead：文字が出る（決めの）時刻。流れ星はこの時刻に文字の中心の近くを通る /
+  // meteors：ほかの流れ星（tp：通る時刻 / off：通り道のずれ。文字の大きさが単位 / w：太さの倍率）/
+  // burst：決めの瞬間に散るきらめきの数 / glints：表示中に文字のまわりで瞬くきらめきの数 /
+  // stars：星座（at：つなぎ始める時刻 / dur：つなぎ終わるまで / n：星の数 / closed：文字を一周する）/
+  // shower：流星群の数（決定的成功）/ fizzle：失敗の流れ星が失速する時刻 / tail：退場のあと演出が残る時間
+  const STAR_PLAN = {
+    success: { lead: 0.5, meteors: [], burst: 10, glints: 4 },
+    special: { lead: 0.62, meteors: [{ tp: 0.4, off: -1.3, w: 0.7 }, { tp: 0.52, off: 1.2, w: 0.6 }], burst: 16, glints: 6 },
+    extreme: { lead: 0.74, meteors: [{ tp: 0.34, off: -1.5, w: 0.6 }, { tp: 0.46, off: 1.4, w: 0.7 }, { tp: 0.58, off: -0.7, w: 0.55 }], burst: 22, glints: 7,
+      stars: { at: 0.62, dur: 0.75, n: 7, closed: false } },
+    critical: { lead: 1.0, meteors: [], shower: 12, burst: 30, glints: 10, stars: { at: 0.9, dur: 0.85, n: 10, closed: true } },
+    failure: { lead: 0.12, fizzle: 1.0, glints: 0 },
+    fumble: { lead: 0.85, tail: 0.75, glints: 0 }
+  };
+  // 星の判定の流れ星：傾き（右下へ）/ 速さ（画面の幅が単位、1秒あたり）
+  const STAR_ANG = 0.42;
+  const STAR_SPEED = 2.6;
 
   function rollTier(sfx) {
     return ROLL_TIERS.includes(sfx.tier) ? sfx.tier : 'success';
@@ -1742,6 +1779,7 @@
     const sfx = sfxOf(scene);
     if (sfx.type === 'blade') return { lead: BLADE_PLAN[rollTier(sfx)].lead, tail: SFX_TIMING.blade.tail };
     if (sfx.type === 'shot') return { lead: SHOT_PLAN[rollTier(sfx)].lead, tail: SFX_TIMING.shot.tail };
+    if (sfx.type === 'star') { const pl = STAR_PLAN[rollTier(sfx)]; return { lead: pl.lead, tail: pl.tail ?? SFX_TIMING.star.tail }; }
     return SFX_TIMING[sfx.type];
   }
 
@@ -1844,6 +1882,36 @@
           // 「斬られて左右へ」は最初の一閃と同じ向きに切れる
           bs.splitAngle = cut.ang;
         }
+      }
+    } else if (sfx.type === 'star') {
+      const tier = rollTier(sfx);
+      const d = t - pg.textStart;
+      if (tier === 'fumble') {
+        // 引き寄せられて現れる：少し大きいところから縮んで止まり、震える。表示中は重力でゆっくり揺らぐ
+        if (d >= 0 && d < 0.45) {
+          const e = 1 - d / 0.45;
+          bs.s *= 1 + 0.1 * k * e * e;
+          bs.bright = Math.max(bs.bright, 0.4 * e * e);
+          bs.x += noise1(t * 36, 7) * size * 0.035 * k * e;
+          bs.y += noise1(t * 36, 19) * size * 0.025 * k * e;
+        }
+        if (d >= 0.45) {
+          // 揺らぎは1秒に STAR_TWINKLE_FPS 回だけ変える（書き出しを軽くする）
+          const tq = Math.floor(t * STAR_TWINKLE_FPS) / STAR_TWINKLE_FPS;
+          const w = clamp((tq - pg.textStart - 0.45) / 0.6);
+          bs.r += 0.012 * k * Math.sin(tq * 2.1) * w;
+          bs.s *= 1 + 0.012 * k * Math.sin(tq * 3.3 + 1) * w;
+        }
+      } else if (tier === 'failure') {
+        // 流れ星が届かずに消えたあと、少しだけ沈んで暗くなる
+        const m = t - (pg.start + STAR_PLAN.failure.fizzle);
+        if (m >= 0) bs.y += size * 0.04 * EASE.outCubic(clamp(m / 0.9));
+      } else if (d >= 0 && d < 0.5) {
+        // 星が通った瞬間：白く光って、ふわりと少しだけ大きく
+        const e = 1 - d / 0.5;
+        const big = tier === 'critical' ? 1 : tier === 'extreme' ? 0.8 : tier === 'special' ? 0.6 : 0.45;
+        bs.bright = Math.max(bs.bright, clamp((0.55 + 0.45 * big) * e * e));
+        bs.s *= 1 + 0.08 * big * k * e * e * e;
       }
     } else if (sfx.type === 'cyber') {
       const c = (t - pg.start) % CYBER_BURST;
@@ -2435,6 +2503,7 @@
           ctx.restore();
         }
         this.drawFireflies(ctx, pg, page, t, scale, scene, bs);
+        this.drawStardust(ctx, pg, page, t, scale, scene, bs);
         this.drawBlaze(ctx, pg, page, t, scale, bs);
         this.drawSfx(ctx, pg, page, t, scale, scene, 'front');
       });
@@ -2612,6 +2681,7 @@
       else if (sfx.type === 'p5gun') this.drawP5Gun(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'blade') this.drawBlade(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'shot') this.drawShot(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'star') this.drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type.startsWith('fire')) this.drawFireFx(ctx, pg, page, t, scale, scene, sfx, k);
       ctx.restore();
       if (sfx.type === 'cyber') this.drawCyber(ctx, pg, page, t, scale, scene, sfx, k);
@@ -4536,6 +4606,428 @@
       ctx.restore();
     }
 
+    /* ---------- 星（夢と星空）の判定と「星屑になって消える」 ---------- */
+
+    // 星屑の粒が生まれる場所：ページの文字（メインとサブ）の画を粗く描いて、塗られたところから選ぶ（レイアウトの座標）
+    stardustPoints(page, scene) {
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const list = [];
+      for (let i = page.first; i < page.last; i++) {
+        const g = layout.glyphs[i];
+        if (g && !g.blank) list.push(g);
+      }
+      const key = `${this.spriteKey}|${list.map(g => `${g.cx.toFixed(1)},${g.cy.toFixed(1)},${g.size.toFixed(1)}`).join(';')}`;
+      if (page.stardust && page.stardust.key === key) return page.stardust.pts;
+      const b = page.box, pad = size * 0.3;
+      const res = clamp(40 / Math.max(1, size), 0.08, 0.6);
+      const w = Math.max(1, Math.ceil((b.x1 - b.x0 + pad * 2) * res)), h = Math.max(1, Math.ceil((b.y1 - b.y0 + pad * 2) * res));
+      const c = makeCanvas(w, h);
+      const x = c.getContext('2d');
+      const fonts = this.fontsFor(scene);
+      list.forEach(g => {
+        x.setTransform(res, 0, 0, res, (pad - b.x0) * res, (pad - b.y0) * res);
+        x.translate(g.cx + g.ox, g.cy + g.oy);
+        if (g.rot) x.rotate(Math.PI / 2);
+        x.font = (g.group === 1 ? fonts.subFont : fonts.mainFont)(g.size);
+        x.textAlign = g.vertical ? 'center' : 'left';
+        x.textBaseline = g.vertical ? 'middle' : 'alphabetic';
+        x.fillStyle = '#fff';
+        x.fillText(g.ch, 0, 0);
+      });
+      let data = null;
+      try { data = x.getImageData(0, 0, w, h).data; } catch (e) { data = null; }
+      const cands = [];
+      if (data) {
+        for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) if (data[(py * w + px) * 4 + 3] > 100) cands.push(px, py);
+      }
+      const re = size * STARDUST_HOLE;
+      const n = cands.length / 2;
+      const want = clamp(Math.round(2.4 * n / (res * res * Math.PI * re * re)), 100, 520);
+      const keep = Math.min(1, want / Math.max(1, n));
+      const pts = [];
+      for (let j = 0; j < cands.length; j += 2) {
+        if (rnd(cands[j], cands[j + 1], 97) >= keep) continue;
+        pts.push({ x: b.x0 - pad + (cands[j] + rnd(j, 1, 98)) / res, y: b.y0 - pad + (cands[j + 1] + rnd(j, 2, 98)) / res });
+      }
+      page.stardust = { key, pts };
+      return pts;
+    }
+
+    // 「星屑になって消える」の時間と、粒の動き方（rise：漂って昇る / dust：鈍い粉になって落ちる / spiral：ブラックホールへ渦を巻いて落ちる）
+    stardustState(pg, page, t, scene) {
+      const bo = pg.blockOut;
+      if (!bo || bo.fx.id !== 'stardust' || t < bo.start) return null;
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const sfx = sfxOf(scene);
+      const star = sfx.type === 'star';
+      const tier = star ? rollTier(sfx) : 'success';
+      const glow = scene.glow && scene.glow.on ? scene.glow.color : (scene.fill && scene.fill.color) || '#fff3b0';
+      let mode = 'rise', colors = [glow, '#ffffff', glow];
+      if (star && tier === 'failure') { mode = 'dust'; colors = ['#9ea3b8', '#80859a', '#c3c6d4']; }
+      else if (star && tier === 'fumble') { mode = 'spiral'; colors = ['#efe3ff', '#ffb070', '#c07bff']; }
+      else if (star) colors = [sfx.color || '#ffe9a8', '#ffffff', '#bfefff', '#ffc9ec'];
+      const mb = mainBox(layout, page);
+      const b = page.box;
+      const sweep = bo.dur * STARDUST_SWEEP;
+      const hole = { x: mb.cx, y: mb.cy, R: size * STAR_HOLE_R };
+      const maxD = Math.max(1, Math.hypot(b.x1 - b.x0, b.y1 - b.y0) / 2);
+      const born = (p, i) => {
+        if (mode === 'spiral') return bo.start + sweep * (0.3 * rnd(i, 1, 91) + 0.7 * clamp(Math.hypot(p.x - hole.x, p.y - hole.y) / maxD));
+        if (mode === 'dust') return bo.start + sweep * (0.75 * rnd(i, 1, 91) + 0.25 * clamp((p.y - b.y0) / Math.max(1, b.y1 - b.y0)));
+        return bo.start + sweep * (0.6 * clamp((p.x - b.x0) / Math.max(1, b.x1 - b.x0)) + 0.4 * rnd(i, 1, 91));
+      };
+      return { start: bo.start, end: bo.start + bo.dur, mode, colors, hole, born, size, pts: this.stardustPoints(page, scene) };
+    }
+
+    // 粒が生まれたところの文字を、やわらかい丸で消していく（文字が粒にほどける）
+    applyStardust(pg, page, t, bs, scale, scene) {
+      const st = this.stardustState(pg, page, t, scene);
+      if (!st) return;
+      if (!this.starDisc) {
+        const c = makeCanvas(32, 32);
+        const x = c.getContext('2d');
+        const g = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+        g.addColorStop(0, 'rgba(0,0,0,1)');
+        g.addColorStop(0.5, 'rgba(0,0,0,1)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        x.fillStyle = g;
+        x.fillRect(0, 0, 32, 32);
+        this.starDisc = c;
+      }
+      const lctx = this.lctx;
+      const re = st.size * STARDUST_HOLE * scale;
+      lctx.save();
+      lctx.setTransform(1, 0, 0, 1, 0, 0);
+      lctx.globalCompositeOperation = 'destination-out';
+      st.pts.forEach((p, i) => {
+        const a = t - st.born(p, i);
+        if (a < 0) return;
+        const k = clamp(a / 0.12);
+        const r = re * (0.55 + 0.45 * k);
+        lctx.globalAlpha = k;
+        lctx.drawImage(this.starDisc, (p.x + bs.x) * scale - r, (p.y + bs.y) * scale - r, r * 2, r * 2);
+      });
+      lctx.restore();
+    }
+
+    // 星屑の粒：生まれた瞬間は白く明るく、そのあとは色づいてまたたきながら漂う（ときどき十字のきらめき）
+    drawStardust(ctx, pg, page, t, scale, scene, bs) {
+      const st = this.stardustState(pg, page, t, scene);
+      const S = root.TextApngStarFx;
+      if (!st || !S) return;
+      const size = st.size;
+      const k = clamp(scene.outPower ?? 1, 0.3, 2);
+      ctx.save();
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      st.pts.forEach((p, i) => {
+        const born = st.born(p, i);
+        const a = t - born;
+        if (a < 0) return;
+        const x0 = p.x + bs.x, y0 = p.y + bs.y;
+        const ph = rnd(i, 9, 91) * TAU;
+        const tw = 0.5 + 0.5 * Math.sin(a * (7 + 8 * rnd(i, 10, 91)) + ph);
+        if (st.mode === 'spiral') {
+          const H = st.hole;
+          const dx = x0 - H.x, dy = y0 - H.y;
+          const r0 = Math.hypot(dx, dy), th0 = Math.atan2(dy, dx);
+          const T = Math.min(0.7 + 0.8 * clamp(r0 / (size * 4)) + 0.35 * rnd(i, 2, 91), st.end + 0.2 - born);
+          if (T <= 0.05 || a >= T) return;
+          const pos = q => {
+            const rr = r0 * (1 - EASE.inQuad(q));
+            const th = th0 + 0.7 * q + 3.4 * q * q * q;
+            return [H.x + Math.cos(th) * rr, H.y + Math.sin(th) * rr * (1 - 0.5 * EASE.inQuad(q)), rr];
+          };
+          const q = a / T;
+          const [x, y, rr] = pos(q);
+          const [px, py] = pos(Math.max(0, q - 0.035));
+          const col = S.mix(st.colors[0], q < 0.55 ? st.colors[1] : st.colors[2], clamp(q * 1.6));
+          const al = clamp(a / 0.08) * (1 - EASE.inCubic(q)) * clamp(rr / (H.R * 0.5));
+          if (al <= 0.01) return;
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = S.rgba(col, 0.7 * al);
+          ctx.lineWidth = size * (0.006 + 0.006 * rnd(i, 3, 91)) * (1 + q);
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
+          S.softDot(ctx, x, y, size * 0.018, col, al);
+          if (i % 11 === 0) S.glint(ctx, x, y, size * 0.09 * (0.6 + 0.4 * tw), col, al * 0.8);
+          return;
+        }
+        if (st.mode === 'dust') {
+          const life = Math.min(0.7 + 0.7 * rnd(i, 2, 91), st.end + 0.25 - born);
+          if (life <= 0.05 || a >= life) return;
+          const q = a / life;
+          const x = x0 + (rnd(i, 3, 91) - 0.5) * size * 0.35 * a;
+          const y = y0 + size * 0.1 * a + size * 0.4 * a * a;
+          const al = 0.75 * (1 - q) * (0.8 + 0.2 * tw);
+          const r = size * (0.007 + 0.006 * rnd(i, 4, 91));
+          S.softDot(ctx, x, y, r * 2.6, st.colors[i % 3], al);
+          return;
+        }
+        const life = Math.min(0.8 + 0.9 * rnd(i, 2, 91), st.end + 0.3 - born);
+        if (life <= 0.05 || a >= life) return;
+        const q = a / life;
+        const ang = -Math.PI / 2 + (rnd(i, 3, 91) - 0.3) * 1.7;
+        const v = size * (0.25 + 0.75 * rnd(i, 4, 91)) * k;
+        const x = x0 + Math.cos(ang) * v * a * (1 - 0.3 * a) + Math.sin(a * 3 + ph) * size * 0.05 * a;
+        const y = y0 + Math.sin(ang) * v * a * (1 - 0.3 * a) - size * 0.12 * a * a;
+        const fresh = 1 - clamp(a / 0.15);
+        const al = (fresh > 0 ? 1 : 0.4 + 0.6 * tw) * (1 - q * q);
+        if (al <= 0.01) return;
+        const col = st.colors[i % st.colors.length];
+        const r = size * (0.009 + 0.012 * rnd(i, 5, 91)) * (1 - 0.3 * q) * (1 + 0.6 * fresh);
+        if (i % 9 === 0) S.glint(ctx, x, y, r * 7 * (0.55 + 0.45 * tw), col, al);
+        else {
+          S.softDot(ctx, x, y, r * 4, col, 0.55 * al);
+          S.softDot(ctx, x, y, r * 1.3, '#ffffff', al);
+        }
+      });
+      ctx.restore();
+    }
+
+    // 星の判定の帯：深い藍の夜空の帯（左右はぼかす）に小さな星がまたたき、上下に淡い光の線。open で中央の細い線から開く
+    drawStarBand(ctx, r, size, open, alpha, accent, dark, t, seed, tier) {
+      const S = root.TextApngStarFx;
+      if (open <= 0.001 || alpha <= 0.002) return;
+      const cx = r.cx, cy = r.cy;
+      const hh = r.hh * (0.04 + 0.96 * open);
+      const half = r.half * (0.2 + 0.32 * Math.min(1, open * 1.6)) / 0.52;
+      const edge = clamp(0.5 - r.solid / (2 * r.half), 0.05, 0.25);
+      ctx.save();
+      ctx.globalAlpha *= clamp(alpha);
+      const g = ctx.createLinearGradient(cx - half, 0, cx + half, 0);
+      g.addColorStop(0, colorWithAlpha(dark, 0));
+      g.addColorStop(edge, colorWithAlpha(dark, 0.86));
+      g.addColorStop(1 - edge, colorWithAlpha(dark, 0.86));
+      g.addColorStop(1, colorWithAlpha(dark, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(cx - half, cy - hh, half * 2, hh * 2);
+      const lg = ctx.createLinearGradient(cx - half, 0, cx + half, 0);
+      lg.addColorStop(0, colorWithAlpha(accent, 0));
+      lg.addColorStop(edge + 0.08, colorWithAlpha(accent, 0.55));
+      lg.addColorStop(0.5, colorWithAlpha(accent, 0.8));
+      lg.addColorStop(0.92 - edge, colorWithAlpha(accent, 0.55));
+      lg.addColorStop(1, colorWithAlpha(accent, 0));
+      ctx.fillStyle = lg;
+      const lw = Math.max(1, size * 0.008);
+      ctx.fillRect(cx - half, cy - hh - lw, half * 2, lw);
+      ctx.fillRect(cx - half, cy + hh, half * 2, lw);
+      // 帯の中の星（致命的失敗はブラックホールに吸い込まれる星を別に描く）
+      if (S && tier !== 'fumble' && open > 0.3) {
+        const dim = tier === 'failure' ? 0.45 : 1;
+        for (let i = 0; i < 48; i++) {
+          const u = rnd(seed, i, 71) * 2 - 1;
+          const x = cx + u * half * 0.95, y = cy + (rnd(seed, i, 72) * 2 - 1) * hh * 0.88;
+          const side = clamp((1 - Math.abs(u)) / 0.25);
+          const tw = 0.5 + 0.5 * Math.sin(t * (2 + 3 * rnd(seed, i, 73)) + rnd(seed, i, 74) * TAU);
+          const al = (0.25 + 0.6 * tw) * dim * side * clamp((open - 0.3) / 0.5);
+          if (i % 8 === 0) S.glint(ctx, x, y, size * (0.05 + 0.04 * tw), i % 16 ? '#bfefff' : accent, al);
+          else S.softDot(ctx, x, y, size * (0.012 + 0.012 * rnd(seed, i, 75)), '#ffffff', al);
+        }
+      }
+      ctx.restore();
+    }
+
+    // 星（夢と星空）の判定。成功＝流れ星が文字を通り抜けて文字が現れ、きらめきが散る / スペシャル（ハード）＝流れ星が3つ /
+    // 極成功（イクストリーム）＝流れ星が4つと、文字のまわりに星座がつながる / 決定的成功＝流星群のあと大きな星の光が弾け、星座が文字を一周する /
+    // 失敗＝帯と文字が出たあと、流れ星が文字に届かずに失速して消える / 致命的失敗＝ブラックホールが生まれ、星を吸い込む。
+    // 帯・流れ星・星座・ブラックホールは文字の後ろ、決めの光ときらめきは文字の手前に描く。退場は「星屑になって消える」と組み合わせる
+    drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer) {
+      const S = root.TextApngStarFx;
+      if (!S) return;
+      const d = t - pg.start;
+      if (d < 0) return;
+      const tier = rollTier(sfx);
+      const plan = STAR_PLAN[tier];
+      const tail = plan.tail ?? SFX_TIMING.star.tail;
+      const hasOut = Number.isFinite(pg.outEnd);
+      if (hasOut && t > pg.outEnd + tail) return;
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const W = scene.width, H = scene.height;
+      const accent = sfx.color || '#ffe9a8';
+      const dark = sfx.color2 || '#0b0a24';
+      const mb = mainBox(layout, page);
+      const cx = mb.cx, cy = mb.cy;
+      const L = pg.textStart - pg.start;
+      const s = d - L;
+      const out = outProgress(pg, t);
+      const fadeAt = hasOut ? pg.holdEnd + 0.4 * (pg.outEnd - pg.holdEnd) : Infinity;
+      // 帯は粒が漂う間は暗いまま残り、最後に急いで消える（明るい背景でも粒が見えるように）
+      const fade = hasOut ? 1 - EASE.inQuad(clamp((t - fadeAt) / Math.max(0.05, pg.outEnd + tail - fadeAt))) : 1;
+      const band = rollBandRect(page, size, W);
+      const seed = 900 + pg.index * 13;
+      const textW = mb.x1 - mb.x0;
+      const ux = Math.cos(STAR_ANG), uy = Math.sin(STAR_ANG);
+      const speed = W * STAR_SPEED;
+      const pastel = ['#ffffff', accent, '#bfefff', '#ffc9ec'];
+      // またたき・円盤の回転は1秒に12回だけ変える（表示中のコマが2枚ずつ同じになり、書き出しが軽くなる）
+      const tq = Math.floor(t * STAR_TWINKLE_FPS) / STAR_TWINKLE_FPS;
+      // 流れ星：tp に文字の中心から off（文字の大きさが単位）だけ横にずれた点を通る
+      const mk = (tp, off, w, extra = {}) => ({
+        tp, x: cx - uy * off * size, y: cy + ux * off * size, ang: STAR_ANG, speed, len: size * 3.4 * Math.sqrt(w), w: size * 0.024 * w,
+        color: accent, seed: seed + Math.round(tp * 100) + Math.round(off * 10), alpha: fade, ...extra
+      });
+
+      if (layer === 'back') {
+        const open = tier === 'failure' ? EASE.outCubic(clamp(d / 0.4))
+          : tier === 'fumble' ? EASE.outCubic(clamp((d - 0.05) / 0.5))
+            : EASE.outExpo(clamp((d - L + 0.16) / 0.38));
+        this.drawStarBand(ctx, band, size, open, fade, accent, dark, tq, seed, tier);
+        if (tier === 'fumble') { this.drawStarHole(ctx, pg, t, d, L, size, W, cx, cy, band, seed, fade, tq - pg.start); return; }
+        const meteors = [];
+        if (tier === 'failure') {
+          // 文字の左上を目指して飛んでくるが、文字の手前で失速する
+          const sp = W * 1.3;
+          meteors.push({ tp: plan.fizzle + 0.04, x: mb.x0 - size * 0.55, y: mb.y0 + size * 0.05, ang: STAR_ANG, speed: sp, len: size * 3, w: size * 0.022, pre: 1.0,
+            fizzle: plan.fizzle, color: '#d4d8ea', seed: seed + 5, sparks: 8, alpha: fade });
+        } else {
+          (plan.meteors || []).forEach(m => meteors.push(mk(m.tp, m.off, m.w)));
+          if (plan.shower) {
+            for (let i = 0; i < plan.shower; i++) {
+              const off = (rnd(seed, i, 81) * 2 - 1) * 2.4;
+              meteors.push(mk(0.12 + 0.72 * i / plan.shower + 0.05 * rnd(seed, i, 82), off, 0.45 + 0.35 * rnd(seed, i, 83), { color: pastel[i % 4] === '#ffffff' ? accent : pastel[i % 4], sparks: 3 }));
+            }
+          }
+          meteors.push(mk(L, -0.2, tier === 'critical' ? 1.4 : 1.1, { big: true, sparks: 18 }));
+        }
+        meteors.forEach(m => S.meteor(ctx, m, d));
+        if (plan.stars) {
+          const st = plan.stars;
+          const p = EASE.inOutCubic(clamp((d - st.at) / st.dur));
+          if (p > 0) S.constellation(ctx, this.starPoints(page, mb, band, size, st, seed), p, tq, accent, fade * (1 - 0.5 * out), st.closed, Math.max(1, size * 0.007));
+        }
+        if (tier === 'critical' && s >= 0 && s < STAR_RAYS) {
+          // 決めの瞬間の光の筋（ゆっくり回りながら薄れる）
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(s * 0.25);
+          const ra = 0.6 * Math.pow(1 - s / STAR_RAYS, 1.5) * clamp(k);
+          for (let i = 0; i < 16; i++) {
+            const a = i / 16 * TAU + rnd(seed, i, 85) * 0.2;
+            const len = size * (1.8 + 2.2 * rnd(seed, i, 86)) * EASE.outCubic(clamp(s / 0.2));
+            const w = size * (0.02 + 0.025 * rnd(seed, i, 87));
+            ctx.fillStyle = S.rgba(i % 2 ? accent : '#ffffff', ra);
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a - Math.PI / 2) * w, Math.sin(a - Math.PI / 2) * w);
+            ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
+            ctx.lineTo(Math.cos(a + Math.PI / 2) * w, Math.sin(a + Math.PI / 2) * w);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+        return;
+      }
+
+      // 手前：決めの光、散るきらめき、表示中のきらめき
+      if (tier === 'fumble') {
+        // 最後：つぶれたブラックホールの名残が一瞬光る
+        if (hasOut) {
+          const g = t - (pg.outEnd + 0.12);
+          if (g >= 0 && g < 0.4) S.glint(ctx, cx, cy, size * 0.7 * Math.sin(Math.PI * g / 0.4), '#c07bff', 0.9, 0.3);
+        }
+        if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * 0.35, '#7a2bd9', 0.5 * Math.pow(1 - s / 0.4, 2));
+        return;
+      }
+      if (tier === 'failure') return;
+      if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * (tier === 'critical' ? 0.42 : 0.36), accent, (tier === 'critical' ? 0.85 : 0.55) * clamp(k) * Math.pow(1 - s / 0.4, 2), tier === 'critical' ? 0.55 : 0.4);
+      if (tier === 'critical' && s >= 0 && s < 0.7) {
+        const r = size * 2.6 * EASE.outCubic(clamp(s / 0.12)) * (1 - s / 0.7);
+        S.glint(ctx, cx, cy, r, accent, 1, 0.12 + s * 0.3);
+      }
+      // 散るきらめき
+      const nB = plan.burst || 0;
+      for (let i = 0; i < nB && s >= 0; i++) {
+        const life = 0.65 + 0.5 * rnd(seed, i, 91);
+        if (s > life) continue;
+        const q = s / life;
+        const x0 = cx + (rnd(seed, i, 92) - 0.5) * textW * 0.8, y0 = cy + (rnd(seed, i, 93) - 0.5) * size * 0.5;
+        const a = Math.atan2(y0 - cy + (rnd(seed, i, 94) - 0.5) * size * 0.4, x0 - cx + (rnd(seed, i, 95) - 0.5) * size) ;
+        const v = size * (2 + 4 * rnd(seed, i, 96)) * (tier === 'critical' ? 1.4 : 1);
+        const dist = v * (1 - Math.exp(-3 * s)) / 3;
+        const x = x0 + Math.cos(a) * dist, y = y0 + Math.sin(a) * dist - size * 0.2 * s * s;
+        const tw = 0.6 + 0.4 * Math.sin(s * (10 + 8 * rnd(seed, i, 97)) + i);
+        const col = pastel[i % 4] === '#ffffff' ? accent : pastel[i % 4];
+        const al = (1 - q * q) * tw * fade;
+        if (i % 3 === 0) S.glint(ctx, x, y, size * (0.12 + 0.12 * rnd(seed, i, 98)) * (1 - 0.5 * q), col, al);
+        else S.softDot(ctx, x, y, size * 0.05, col, al);
+      }
+      // 表示中のきらめき
+      const nG = plan.glints || 0;
+      const ga = fade * (1 - out) * clamp((s - 0.3) / 0.3);
+      for (let i = 0; i < nG && ga > 0.003; i++) {
+        const x = cx + (rnd(seed, i, 61) - 0.5) * (textW + size * 1.8);
+        const y = band.cy + (rnd(seed, i, 62) - 0.5) * band.hh * 1.8;
+        const ph = ((tq + rnd(seed, i, 63) * 1.4) % 1.4) / 1.4;
+        const r = size * (0.12 + 0.12 * rnd(seed, i, 64)) * Math.pow(Math.sin(Math.PI * ph), 2);
+        S.glint(ctx, x, y, r, pastel[(i + 1) % 4] === '#ffffff' ? accent : pastel[(i + 1) % 4], ga, rnd(seed, i, 65) * 0.4);
+      }
+    }
+
+    // 星座の星の位置：文字のまわりの楕円の上（帯の中）に並べる。閉じた星座は一周、開いた星座は左から上を通って右へ
+    starPoints(page, mb, band, size, st, seed) {
+      const key = `${mb.x0},${mb.x1},${band.cy},${band.hh},${st.n}`;
+      if (page.starPts && page.starPts.key === key) return page.starPts.pts;
+      const rx = (mb.x1 - mb.x0) / 2 + size * 0.9, ry = band.hh * 0.8;
+      const pts = [];
+      for (let i = 0; i < st.n; i++) {
+        const a = st.closed ? Math.PI + i / st.n * TAU + (rnd(seed, i, 51) - 0.5) * 0.25
+          : Math.PI * 0.9 + i / (st.n - 1) * Math.PI * 1.2 + (rnd(seed, i, 51) - 0.5) * 0.2;
+        const m = 0.88 + 0.22 * rnd(seed, i, 52);
+        pts.push({ x: band.cx + Math.cos(a) * rx * m, y: band.cy + Math.sin(a) * ry * m, r: size * (i % 3 === 0 ? 0.2 : 0.12 + 0.05 * rnd(seed, i, 53)) });
+      }
+      page.starPts = { key, pts };
+      return pts;
+    }
+
+    // 致命的失敗のブラックホール：光の点が反転して黒い芯が生まれ、降着円盤が回りだし、帯の星が渦を巻いて吸い込まれる。
+    // 文字が出る瞬間に紫の衝撃の輪。退場の終わりに芯がつぶれて消える
+    drawStarHole(ctx, pg, t, d, L, size, W, cx, cy, band, seed, fade, dq) {
+      const S = root.TextApngStarFx;
+      const R = size * STAR_HOLE_R;
+      const hasOut = Number.isFinite(pg.outEnd);
+      const form = clamp((d - 0.25) / 0.6);
+      const collapse = hasOut ? clamp((t - (pg.outEnd - 0.3)) / 0.6) : 0;
+      // はじまり：中央に紫の光の点が灯り、ふくらんでから黒く反転する
+      if (d < 0.6) S.glint(ctx, cx, cy, size * 0.9 * Math.sin(Math.PI * clamp(d / 0.6)), '#c07bff', 1, d * 2);
+      // 吸い込まれる星（またたきと同じく、1秒に STAR_TWINKLE_FPS 回だけ動かす）
+      const P = 1.5, holdEndD = pg.holdEnd - pg.start;
+      // 星は帯の中に収まるように、平たい楕円を描いて落ちる
+      const flat = clamp(band.hh * 0.95 / (W * 0.42), 0.15, 0.6);
+      for (let i = 0; i < 32; i++) {
+        const o = rnd(seed, i, 41) * P;
+        const kk = Math.floor((dq - 0.2 - o) / P);
+        if (kk < 0) continue;
+        const ts = 0.2 + o + kk * P;
+        if (ts > holdEndD + 0.6) continue;
+        const a = dq - ts, T = 1.2 + 0.5 * rnd(seed + kk, i, 42);
+        if (a > T) continue;
+        const r0 = R * 1.8 + (W * 0.42 - R * 1.8) * rnd(seed + kk, i, 43);
+        const th0 = rnd(seed + kk, i, 44) * TAU;
+        const pos = q => {
+          const rr = r0 * (1 - EASE.inQuad(q));
+          const th = th0 + 0.5 * q + 3 * q * q * q;
+          return [cx + Math.cos(th) * rr, cy + Math.sin(th) * rr * flat, rr];
+        };
+        const q = a / T;
+        const [x, y, rr] = pos(q);
+        const [px, py] = pos(Math.max(0, q - 0.035));
+        const al = clamp(a / 0.2) * clamp(rr / R - 0.6) * fade;
+        if (al <= 0.01) continue;
+        const col = q < 0.5 ? '#ffffff' : '#ffb070';
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = S.rgba(col, 0.6 * al);
+        ctx.lineWidth = size * 0.01;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
+        S.softDot(ctx, x, y, size * 0.045, col, al);
+        if (i % 5 === 0) S.glint(ctx, x, y, size * 0.1, '#e9d6ff', al * (1 - q));
+      }
+      S.blackHole(ctx, cx, cy, R, { t: dq, form, collapse, alpha: 1, part: 'back' });
+      S.blackHole(ctx, cx, cy, R, { t: dq, form, collapse, alpha: 1, part: 'front' });
+      const s = d - L;
+      if (s >= 0 && s < 0.7) shockRing(ctx, cx, cy, R * (1.1 + 4 * EASE.outCubic(s / 0.7)), size * 0.05 * (1 - s / 0.7), '#b06cff', 0.8 * (1 - s / 0.7));
+    }
+
     /* ---------- 炎の試作（js/fx-fire.js）と環境の演出（js/fx-ash.js） ---------- */
 
     // 炎で描くメインの文字の形：ページのメインの文字を、出力のピクセル座標で1文字ずつ描く関数（fill / stroke）
@@ -4751,7 +5243,9 @@
         const ff = fireflyFront(pg, page, t, layout.size);
         if (ff) bs.mask = { ...bs.mask, x: ff.x + bs.x, scale };
       }
-      if (bs.mask && bs.mask.blaze) {
+      if (bs.mask && bs.mask.stardust) {
+        this.applyStardust(pg, page, t, bs, scale, scene);
+      } else if (bs.mask && bs.mask.blaze) {
         const bf = blazeFront(pg, page, t, layout.size);
         if (bf) this.applyBlaze({ x: bf.x + bs.x, scale, t, size: layout.size, seed: 500 + pg.index * 13 }, rect);
       } else if (bs.mask) this.applyMask(bs.mask, rect, layout.size * (bs.mask.firefly ? FIREFLY_SOFT : 0.6) * scale);
