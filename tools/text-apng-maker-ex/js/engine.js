@@ -5893,8 +5893,9 @@
       holes.forEach(h => {
         const a = d - h.t;
         if (a < 0) return;
-        // パターン：いまは 'glass' だけ（ほかの名前もガラスにする）
-        this.drawBulletGlass(ctx, scene, sfx, h, a, fade, scale, k);
+        // パターン：'glass'（既定）と 'crack'（実線のひび）
+        if (sfx.pattern === 'crack') this.drawBulletCrack(ctx, scene, sfx, h, a, fade, scale, k);
+        else this.drawBulletGlass(ctx, scene, sfx, h, a, fade, scale, k);
       });
     }
 
@@ -6114,6 +6115,161 @@
       ctx.shadowColor = 'rgba(0,0,0,0)'; ctx.shadowBlur = 0;
       ctx.save(); ctx.scale(0.9, 0.9); ctx.fillStyle = holeCol; ctx.fill(hole); ctx.restore();
       ctx.restore();
+      ctx.restore();
+    }
+
+    // ひび割れの弾痕（'bullet-crack'：壁・床・木・コンクリートなど硬い面向け）：ガラスの層（破片・半透明・光の筋・光のにじみ）は使わず、
+    // ほぼ黒い穴に細い白い縁、そこから放射状に走る「くっきりした実線のひび」だけで作る。ひびは先端が先頭になってのび、枝分かれと短い横のひびが付く。
+    // 形は seed ごとに決まる（乱数のみ）。sfx.cracks で本数（少・中・多）が変わる
+    drawBulletCrack(ctx, scene, sfx, shot, a, fade, scale, k) {
+      const W = scene.width, H = scene.height;
+      const fA = fade.A, fH = fade.H;
+      const seed = 500 + shot.seed * 53;
+      const amt = { few: 0, 3: 0, mid: 1, 4: 1, many: 2 }[String(sfx.cracks)] ?? 1;
+      const nRad = [8, 9, 10][amt];
+      const r = H * shot.size / 2;
+      const px1 = H / 720;                       // 1280×720 を基準にした1ピクセルの太さ
+      const rimCol = sfx.color || '#f6f6f2';
+      const holeCol = sfx.color2 || '#07080b';
+      const m = /#?([0-9a-f]{6})/i.exec(rimCol);
+      const n6 = m ? parseInt(m[1], 16) : 0xffffff;
+      const lineCol = `rgb(${(n6 >> 16) & 255}, ${(n6 >> 8) & 255}, ${n6 & 255})`;
+      const under = 'rgba(0,0,0,0.6)';
+      const R = (i, q) => rnd(seed, i, q);
+      const GROW = 0.15;
+      const outC = EASE.outCubic;
+      // --- 形を作る（時刻に依存しない）---
+      const rbase = R(2, 30) * TAU;
+      const cracks = [];
+      for (let q = 0; q < nRad; q++) {
+        const th = rbase + q * TAU / nRad + (R(q, 31) - 0.5) * 0.45;
+        const long = q === 1 || q === Math.floor(nRad / 2) + 1 || (nRad >= 10 && q === nRad - 2);
+        const len = r * (long ? 5.6 + 1.5 * R(q, 32) : 2.4 + 1.7 * R(q, 32));
+        const N = long ? 12 : 8;
+        let an = th, x = Math.cos(th) * r * 0.97, y = Math.sin(th) * r * 0.97;
+        const pts = [[x, y]];
+        for (let j = 1; j <= N; j++) {
+          an += (R(q * 17 + j, 33) - 0.5) * 0.16 + (R(q * 17 + j, 34) > 0.8 ? (R(q * 17 + j, 35) - 0.5) * 0.9 : 0);   // ところどころ折れる
+          const st = len / N * (0.75 + 0.5 * R(q * 17 + j, 36));
+          x += Math.cos(an) * st; y += Math.sin(an) * st;
+          pts.push([x, y]);
+        }
+        const c = { th, long, pts, cum: [0], delay: q * 0.012, w0: (long ? 2.4 : 2.0) * px1, kids: [] };
+        for (let j = 1; j < pts.length; j++) c.cum.push(c.cum[j - 1] + Math.hypot(pts[j][0] - pts[j - 1][0], pts[j][1] - pts[j - 1][1]));
+        c.total = c.cum[c.cum.length - 1];
+        // 枝：鋭い角度で分かれる短いひび（長いひびは2本、ほかは4本に1本ほど）
+        const nb = long ? 2 : (R(q, 40) > 0.62 ? 1 : 0);
+        for (let b = 0; b < nb; b++) {
+          const j = Math.round(N * (0.3 + 0.4 * R(q * 5 + b, 41))), pa = pts[j - 1], pb = pts[j];
+          const dir = Math.atan2(pb[1] - pa[1], pb[0] - pa[0]) + (b % 2 ? -1 : 1) * (0.4 + 0.35 * R(q * 5 + b, 42)) * (R(q, 43) > 0.5 ? 1 : -1);
+          const bl = c.total * (0.2 + 0.2 * R(q * 5 + b, 44));
+          const bp = [[pb[0], pb[1]]];
+          let bx = pb[0], by = pb[1], ba = dir;
+          for (let i = 1; i <= 4; i++) { ba += (R(q * 31 + b * 7 + i, 45) - 0.5) * 0.3; bx += Math.cos(ba) * bl / 4; by += Math.sin(ba) * bl / 4; bp.push([bx, by]); }
+          const cum = [0];
+          for (let i = 1; i < bp.length; i++) cum.push(cum[i - 1] + Math.hypot(bp[i][0] - bp[i - 1][0], bp[i][1] - bp[i - 1][1]));
+          c.kids.push({ pts: bp, cum, total: cum[cum.length - 1], f: c.cum[j] / c.total, w0: 1.3 * px1 });
+        }
+        cracks.push(c);
+      }
+      // 隣り合うひびをつなぐ短い横のひび（2〜3本）
+      const links = [];
+      const nLink = amt === 0 ? 2 : 3;
+      for (let i = 0; i < nLink; i++) {
+        const q = Math.floor((i + 0.2 + 0.5 * R(i, 50)) * nRad / nLink) % nRad, q2 = (q + 1) % nRad;
+        const fa = 0.28 + 0.12 * R(i, 51), fb = fa + (R(i, 52) - 0.5) * 0.1;
+        const at = (c, f) => { const t = f * c.total; let j = 1; while (j < c.cum.length - 1 && c.cum[j] < t) j++; const u = (t - c.cum[j - 1]) / Math.max(1e-6, c.cum[j] - c.cum[j - 1]); return [c.pts[j - 1][0] + (c.pts[j][0] - c.pts[j - 1][0]) * u, c.pts[j - 1][1] + (c.pts[j][1] - c.pts[j - 1][1]) * u]; };
+        const A = at(cracks[q], fa), B = at(cracks[q2], fb);
+        const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, dx = B[0] - A[0], dy = B[1] - A[1], dl = Math.hypot(dx, dy) || 1;
+        const off = (R(i, 53) - 0.5) * dl * 0.35;
+        const pts = [A, [A[0] + dx * 0.35 - dy / dl * off * 0.5, A[1] + dy * 0.35 + dx / dl * off * 0.5], [mx - dy / dl * off, my + dx / dl * off], [A[0] + dx * 0.7 + dy / dl * off * 0.4, A[1] + dy * 0.7 - dx / dl * off * 0.4], B];
+        const cum = [0];
+        for (let j = 1; j < pts.length; j++) cum.push(cum[j - 1] + Math.hypot(pts[j][0] - pts[j - 1][0], pts[j][1] - pts[j - 1][1]));
+        links.push({ pts, cum, total: cum[cum.length - 1], q, q2, fa, fb, w0: 0.9 * px1 });
+      }
+      // --- 描く ---
+      // 先端が先頭になってのびる、根もとが太く先が尖る実線のひび（硬い輪郭。ぼかしなし）
+      const ribbon = (c, p, w0) => {
+        const pts = c.pts, cum = c.cum, total = c.total, reach = total * p;
+        if (p <= 0) return;
+        let P = pts;
+        for (let j = 1; j < pts.length; j++) {
+          if (cum[j] > reach) {
+            const u = (reach - cum[j - 1]) / Math.max(1e-6, cum[j] - cum[j - 1]);
+            P = pts.slice(0, j).concat([[pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * u, pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * u]]);
+            break;
+          }
+        }
+        if (P.length < 2) return;
+        const Lp = [], Rp = [];
+        let acc = 0;
+        for (let j = 0; j < P.length; j++) {
+          if (j) acc += Math.hypot(P[j][0] - P[j - 1][0], P[j][1] - P[j - 1][1]);
+          const pa = P[Math.max(0, j - 1)], pb = P[Math.min(P.length - 1, j + 1)];
+          const tx = pb[0] - pa[0], ty = pb[1] - pa[1], tl = Math.hypot(tx, ty) || 1;
+          const w = w0 * Math.max(0, 1 - acc / total) * (p < 1 ? Math.min(1, (reach - acc) / (total * 0.12) + 0.03) : 1);
+          Lp.push([P[j][0] - ty / tl * w, P[j][1] + tx / tl * w]); Rp.push([P[j][0] + ty / tl * w, P[j][1] - tx / tl * w]);
+        }
+        ctx.beginPath();
+        ctx.moveTo(Lp[0][0], Lp[0][1]);
+        Lp.forEach(q => ctx.lineTo(q[0], q[1]));
+        for (let j = Rp.length - 1; j >= 0; j--) ctx.lineTo(Rp[j][0], Rp[j][1]);
+        ctx.closePath();
+        ctx.globalAlpha = fA;
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = under; ctx.lineWidth = 2.4 * px1; ctx.stroke();   // 明るい背景でも読める細い暗い下敷き
+        ctx.fillStyle = lineCol; ctx.fill();
+        ctx.globalAlpha = 1;
+      };
+      ctx.save();
+      ctx.translate(shot.x * W, shot.y * H);
+      const prog = [];
+      cracks.forEach((c, q) => {
+        const u = clamp((a - c.delay) / GROW);
+        prog.push({ u, st: c.delay });
+        ribbon(c, outC(u), c.w0);
+        // 枝は親の先端がそこを通った少しあとから出る
+        c.kids.forEach(kd => {
+          const uf = 1 - Math.pow(1 - clamp(kd.f), 1 / 3);
+          const kt = c.delay + uf * GROW + 0.012;
+          ribbon(kd, outC(clamp((a - kt) / 0.1)), kd.w0);
+        });
+      });
+      links.forEach(l => {
+        const uf = (f) => 1 - Math.pow(1 - clamp(f), 1 / 3);
+        const lt = Math.max(cracks[l.q].delay + uf(l.fa) * GROW, cracks[l.q2].delay + uf(l.fb) * GROW) + 0.02;
+        ribbon(l, outC(clamp((a - lt) / 0.08)), l.w0 * 1.6);
+      });
+      // 当たった瞬間の細い輪（実線）
+      if (a < 0.14) {
+        const q = a / 0.14;
+        ctx.globalAlpha = 0.85 * (1 - q) * clamp(k, 0, 1.5);
+        const rr = r * (1.3 + 2.4 * EASE.outCubic(q));
+        ctx.lineWidth = 1.6 * px1 + 1.6; ctx.strokeStyle = under;
+        ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
+        ctx.lineWidth = 1.6 * px1; ctx.strokeStyle = lineCol;
+        ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      // 穴：ほぼ黒い少しいびつな丸に、細くくっきりした白い縁だけ（光のにじみなし）
+      const pop = 1 + 0.25 * (1 - EASE.outQuad(clamp(a / 0.125)));
+      ctx.scale(pop, pop);
+      const NP = 40;
+      const hole = new Path2D();
+      for (let j = 0; j < NP; j++) {
+        const th = j / NP * TAU;
+        const rad = r * (1 + 0.07 * noise1(j * 0.7 + R(0, 7) * 9, seed) + (R(j, 8) - 0.5) * 0.06);
+        const x = Math.cos(th) * rad, y = Math.sin(th) * rad;
+        if (j) hole.lineTo(x, y); else hole.moveTo(x, y);
+      }
+      hole.closePath();
+      ctx.globalAlpha = clamp(fH);
+      ctx.lineJoin = 'round';
+      ctx.fillStyle = holeCol; ctx.fill(hole);
+      ctx.strokeStyle = under; ctx.lineWidth = 1.8 * px1 + 1.8; ctx.stroke(hole);
+      ctx.strokeStyle = lineCol; ctx.lineWidth = 1.8 * px1; ctx.stroke(hole);
+      ctx.fillStyle = holeCol; ctx.save(); ctx.scale(0.93, 0.93); ctx.fill(hole); ctx.restore();
+      ctx.globalAlpha = 1;
       ctx.restore();
     }
 

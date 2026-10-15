@@ -878,6 +878,36 @@
         }
       },
       {
+        // 戦闘演出：ひび割れの弾痕（単発）。ほぼ黒い穴に細い白い縁、そこから走る実線のひび（枝分かれと短い横のひび付き）。ガラスの破片・光は使わない。壁・床・木・コンクリート向け（透明な背景。戦闘シーンに重ねる用。1回再生）。パターン 'crack'
+        id: 'bulletCrackSingle', group: 'battlefx', icon: 'crosshair', label: T('弾痕・ひび（単発）', 'Bullet Hole – Crack (Single)', '탄흔·균열（단발）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'bulletMark', pattern: 'crack', count: '1', color: '#f6f6f2', color2: '#07080b', cracks: 'mid', seed: '1', size: 0.095, power: 1 },
+          inFx: 'fade', inDur: 0, hold: 3.0, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：ひび割れの弾痕（2連）。ほぼ黒い穴に細い白い縁、そこから走る実線のひび（枝分かれと短い横のひび付き）。ガラスの破片・光は使わない。壁・床・木・コンクリート向け（透明な背景。戦闘シーンに重ねる用。1回再生）。パターン 'crack'
+        id: 'bulletCrackDouble', group: 'battlefx', icon: 'crosshair', label: T('弾痕・ひび（2連）', 'Bullet Hole – Crack (Double)', '탄흔·균열（2연발）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'bulletMark', pattern: 'crack', count: '2', color: '#f6f6f2', color2: '#07080b', cracks: 'mid', seed: '1', size: 0.095, power: 1 },
+          inFx: 'fade', inDur: 0, hold: 3.2, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
+        // 戦闘演出：ひび割れの弾痕（3連）。ほぼ黒い穴に細い白い縁、そこから走る実線のひび（枝分かれと短い横のひび付き）。ガラスの破片・光は使わない。壁・床・木・コンクリート向け（透明な背景。戦闘シーンに重ねる用。1回再生）。パターン 'crack'
+        id: 'bulletCrackTriple', group: 'battlefx', icon: 'crosshair', label: T('弾痕・ひび（3連）', 'Bullet Hole – Crack (Triple)', '탄흔·균열（3연발）'),
+        text: T('', '', ''), subText: T('', '', ''), loop: 'once',
+        patch: {
+          ...FANG_BATTLE, fontSize: 112,
+          sfx: { type: 'bulletMark', pattern: 'crack', count: '3', color: '#f6f6f2', color2: '#07080b', cracks: 'mid', seed: '1', size: 0.095, power: 1 },
+          inFx: 'fade', inDur: 0, hold: 3.4, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+        }
+      },
+      {
         // EX：導火線のような火が帯の下の線を左から右へ走り、燃えたところから暗い帯と「戦闘開始」が立ち上がる。最後は左から右へ燃えて消える
         id: 'battleFlame', group: 'combat', icon: 'flame', label: T('炎の戦闘開始', 'Flame Battle Start', '불꽃의 전투 개시'),
         text: T('戦闘開始', 'BATTLE START', '전투 개시'), subText: T('BATTLE START', 'IGNITE', 'BATTLE START'),
