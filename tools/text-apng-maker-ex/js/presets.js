@@ -848,33 +848,33 @@
         }
       },
       {
-        // 戦闘演出：右上から左下へ斬り下ろす太い実線の一閃と、左下の終点の衝撃（星形の閃光・細い放射線・細い輪）。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。'zangeki-slash_hard'
+        // 戦闘演出：右上から左下へ引かれる長い実線の一閃と、左下の終点の大きな衝撃（星形の閃光・放射線・輪・速度線・揺れ）。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。'zangeki-slash_hard'
         id: 'zangekiSlashHardWhite', group: 'battlefx', icon: 'katana', label: T('斬撃・ハード（白）', 'Zangeki Slash – Hard (White)', '참격·하드（흰색）'),
         text: T('', '', ''), subText: T('', '', ''), loop: 'once',
         patch: {
           ...FANG_BATTLE, fontSize: 112,
           sfx: { type: 'zangekiHard', color: '#cfe6ff', color2: '#ffffff', dir: 'dl', power: 1 },
-          inFx: 'fade', inDur: 0, hold: 1.5, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+          inFx: 'fade', inDur: 0, hold: 1.7, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
         }
       },
       {
-        // 戦闘演出：右上から左下へ斬り下ろす太い実線の一閃と、左下の終点の衝撃（星形の閃光・細い放射線・細い輪）。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。'zangeki-slash_hard'
+        // 戦闘演出：右上から左下へ引かれる長い実線の一閃と、左下の終点の大きな衝撃（星形の閃光・放射線・輪・速度線・揺れ）。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。'zangeki-slash_hard'
         id: 'zangekiSlashHardBlack', group: 'battlefx', icon: 'katana', label: T('斬撃・ハード（黒）', 'Zangeki Slash – Hard (Black)', '참격·하드（검정）'),
         text: T('', '', ''), subText: T('', '', ''), loop: 'once',
         patch: {
           ...FANG_BATTLE, fontSize: 112,
           sfx: { type: 'zangekiHard', color: '#e6ecf8', color2: '#07080b', dir: 'dl', power: 1 },
-          inFx: 'fade', inDur: 0, hold: 1.5, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+          inFx: 'fade', inDur: 0, hold: 1.7, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
         }
       },
       {
-        // 戦闘演出：右上から左下へ斬り下ろす太い実線の一閃と、左下の終点の衝撃（星形の閃光・細い放射線・細い輪）。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。'zangeki-slash_hard'
+        // 戦闘演出：右上から左下へ引かれる長い実線の一閃と、左下の終点の大きな衝撃（星形の閃光・放射線・輪・速度線・揺れ）。文字も帯もなし（透明な背景。戦闘シーンに重ねる用。1回再生）。'zangeki-slash_hard'
         id: 'zangekiSlashHardRed', group: 'battlefx', icon: 'katana', label: T('斬撃・ハード（赤）', 'Zangeki Slash – Hard (Red)', '참격·하드（빨강）'),
         text: T('', '', ''), subText: T('', '', ''), loop: 'once',
         patch: {
           ...FANG_BATTLE, fontSize: 112,
           sfx: { type: 'zangekiHard', color: '#ff2a40', color2: '#d4182a', dir: 'dl', power: 1 },
-          inFx: 'fade', inDur: 0, hold: 1.5, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
+          inFx: 'fade', inDur: 0, hold: 1.7, outEnabled: false, outFx: 'fade', subFx: 'same', subDelay: 0, startDelay: 0, endDelay: 0
         }
       },
       {

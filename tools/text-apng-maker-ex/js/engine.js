@@ -5878,10 +5878,9 @@
       ctx.restore();
     }
 
-    // 斬撃・ハード（戦闘演出 'zangeki-slash_hard'）：文字も帯もない、右上から左下へ斬り下ろす太めの一閃と、左下の終点に出る衝撃。
-    // 抜刀の一閃と同じ簡素な言葉づかいだが、ぼかしやグラデーションのない「くっきりした実線の刃」（両端がとがる）で、太さは約2倍。
-    // 約0.1秒で振り切ると、終点で短い衝撃（コンパクトな星形の閃光・細い放射線・細い輪・ごく小さな揺れ）が出て、線は細くなりながら約0.6秒までに消える。火花や破片は使わない。
-    // sfx.dir：'dl'（右上から左下へ。既定）/ 'dr'（左上から右下へ。左右反転）。sfx.color：輪の色、sfx.color2：刃と衝撃の色
+    // 斬撃・ハード（戦闘演出 'zangeki-slash_hard'）：文字も帯もない、劇的な一閃。右上の画面の外から左下の終点まで、約0.25秒でまっすぐな実線がひと筆で引かれ（先端がとがり、中ほどから先がいちばん太い）、
+    // 少し留まってから、尾から先へ向かってスパッと消える。先端が着いた瞬間、左下で大きな衝撃（鋭い星形の閃光・長く細い放射線・白い芯の閃光・2本の細い輪・太い放射状の速度線・短く強い揺れ・ごく薄い全画面の閃光）。
+    // ぼかしや光のにじみはなく、くっきりした実線だけで描く（火花や破片なし）。sfx.dir：'dl'（右上から左下へ。既定）/ 'dr'（左右反転）。sfx.color：輪の色、sfx.color2：線と衝撃の色
     drawZangekiHard(ctx, pg, page, t, scale, scene, sfx, k) {
       const d = t - pg.start;
       if (d < 0) return;
@@ -5894,104 +5893,132 @@
       const mode = lum < 0.25 ? 'black' : lum > 0.8 ? 'white' : 'red';
       const under = mode === 'white' ? 'rgba(10,14,26,0.7)' : mode === 'black' ? 'rgba(232,238,250,0.85)' : 'rgba(40,0,8,0.55)';
       const fillCol = mode === 'black' ? '#07080b' : core;
-      const ringC = mode === 'white' ? '#ffffff' : mode === 'black' ? '#07080b' : core;
+      const ringC = mode === 'white' ? ringCol : mode === 'black' ? '#07080b' : core;
+      const discCol = mode === 'red' ? '#fff0f3' : mode === 'black' ? '#07080b' : '#ffffff';
+      const flashCol = mode === 'black' ? '7, 8, 11' : mode === 'red' ? '255, 42, 64' : '255, 255, 255';
       const px1 = H / 720;
       const kk = clamp(k, 0.3, 2);
-      const SWEEP = 0.1, T0 = 0.12;
+      const T0 = 0.08, TR = 0.25, HOLD = 0.2, WIPE = 0.3;
       const Ltot = Math.hypot(W, H) * 0.85;
-      const th = H * 0.048 * kk;                       // 刃のいちばん太いところ（約34px）
-      const ang = Math.PI - 0.513;                      // 振り下ろす向き（右上から左下）
-      const ux = Math.cos(ang), uy = Math.sin(ang);
-      const Ex = W * 0.17, Ey = H * 0.78;               // 衝撃の点（左下。画面の中に十分収める）
+      const th = H * 0.056 * kk;                         // いちばん太いところ（約40px）
+      const ang = Math.PI - 0.513;                        // 振り下ろす向き（右上から左下）
+      const ex = W * 0.19, ey = H * 0.76;                 // 衝撃の点（左下。画面の中に十分収める）
       const a = d - T0;
       if (a < 0) return;
-      const ar = a - SWEEP;                              // 振り切ってからの時間
+      const ia = a - TR;                                  // 先端が着いてからの時間
       ctx.save();
       if (sfx.dir === 'dr') { ctx.translate(W, 0); ctx.scale(-1, 1); }
-      // ごく小さな揺れ（衝撃の瞬間だけ）
-      const sh = ar >= 0 ? Math.exp(-ar * 22) : 0;
-      const amp = H * 0.006 * sh * clamp(k, 0, 2);
-      ctx.translate(noise1(d * 55, 3) * amp, noise1(d * 55, 9) * amp);
+      // 全画面のごく薄い閃光（着いた瞬間の2コマ）
+      if (ia >= 0 && ia < 0.085) {
+        ctx.fillStyle = `rgba(${flashCol}, ${(0.16 * clamp(k, 0, 1.5) * (ia < 0.04 ? 1 : 0.6)).toFixed(3)})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+      // 短く強い揺れ（約0.15秒で収まる）
+      const amp = ia >= 0 ? 5.5 * px1 * Math.pow(clamp(1 - ia / 0.17), 1.2) * clamp(k, 0, 2) : 0;
+      ctx.translate(noise1(d * 60, 3) * amp, noise1(d * 60, 9) * amp);
       ctx.lineJoin = 'round';
-      // 両端がとがった実線の刃（グラデーションなし）：x0 が尾、x1 が先
-      const blade = (x0, x1, w, col, alpha) => {
-        if (alpha <= 0.003 || x1 - x0 <= 0.5 || w <= 0.1) return;
-        const mid = x0 + (x1 - x0) * 0.8;
-        ctx.save();
-        ctx.globalAlpha *= clamp(alpha);
+      const poly = (pts, col, lw, al) => {
+        ctx.globalAlpha = clamp(al);
         ctx.beginPath();
-        ctx.moveTo(x0, 0); ctx.quadraticCurveTo(mid, -w, x1, 0); ctx.quadraticCurveTo(mid, w, x0, 0);
+        pts.forEach(([x, y], i) => { if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
         ctx.closePath();
-        ctx.strokeStyle = under; ctx.lineWidth = 2.6 * px1; ctx.stroke();
+        if (lw) { ctx.strokeStyle = under; ctx.lineWidth = lw; ctx.stroke(); }
         ctx.fillStyle = col; ctx.fill();
-        ctx.restore();
+        ctx.globalAlpha = 1;
       };
-      // 刃（原点＝衝撃の点、+x が斬る向き）
+      // --- 実線の一閃（原点＝衝撃の点、+x が斬る向き）---
       ctx.save();
-      ctx.translate(Ex, Ey); ctx.rotate(ang);
-      if (a < SWEEP) {
-        const head = -Ltot + Ltot * EASE.outQuad(a / SWEEP);
-        blade(Math.max(-Ltot, head - Ltot * 0.9), head, th, fillCol, 1);
-        if (mode === 'red') blade(Math.max(-Ltot, head - Ltot * 0.9), head, th * 0.1, '#fff0f3', 1);
-      } else {
-        // 振り切ったあと：少し留まってから、細く硬い線になりながら消える
-        const sq = EASE.outCubic(clamp((ar - 0.06) / 0.3));
-        const al = 1 - clamp((ar - 0.14) / 0.24);
-        blade(-Ltot * 0.9, 0, th * (1 - 0.72 * sq), fillCol, al);
-        if (mode === 'red') blade(-Ltot * 0.9, 0, th * 0.1 * (1 - 0.5 * sq), '#fff0f3', al);
+      ctx.translate(ex, ey); ctx.rotate(ang);
+      let x1 = 0, x0 = -Ltot, wk = 1, al = 1;
+      if (a < TR) { const p = a / TR; x1 = -Ltot + Ltot * (1 - Math.pow(1 - p, 1.6)); }
+      else {
+        const wq = (ia - HOLD) / WIPE;
+        if (wq >= 1) { x1 = x0 = 0; al = 0; }
+        else if (wq > 0) { x0 = -Ltot + Ltot * Math.pow(wq, 1.25); wk = 1 - 0.4 * wq; al = 1 - clamp((wq - 0.85) / 0.15); }
+      }
+      if (al > 0.003 && x1 - x0 > 1) {
+        const N = 56, bow = H * 0.014;
+        const top = [], bot = [], midl = [];
+        for (let i = 0; i <= N; i++) {
+          const x = x0 + (x1 - x0) * i / N, u = clamp((x + Ltot) / Ltot);
+          const prof = Math.pow(Math.sin(Math.PI / 2 * Math.min(1, u / 0.55)), 1.15);
+          const ht = Math.pow(clamp((x1 - x) / (Ltot * 0.1)), 0.8);
+          const tt = a >= TR + HOLD ? Math.pow(clamp((x - x0) / (Ltot * 0.07)), 0.9) : 1;
+          const w = th * wk * Math.max(prof, 0.03) * ht * tt, yc = -bow * Math.sin(Math.PI * u);
+          top.push([x, yc - w / 2]); bot.push([x, yc + w / 2]);
+          midl.push([x, yc, w]);
+        }
+        poly(top.concat(bot.reverse()), fillCol, 2.6 * px1, al);
+        if (mode === 'red') {
+          const t2 = midl.map(([x, y, w]) => [x, y - w * 0.06]).concat(midl.slice().reverse().map(([x, y, w]) => [x, y + w * 0.06]));
+          poly(t2, '#fff0f3', 0, al);
+        }
       }
       ctx.restore();
-      // 衝撃：終点で、星形の閃光・細い放射線・細い輪
-      if (ar >= 0) {
+      // --- 大きな衝撃（終点）---
+      if (ia >= 0) {
         ctx.save();
-        ctx.translate(Ex, Ey);
-        const R = H * 0.058 * kk;
-        // 細い輪（約0.15秒）
-        const rq = ar / 0.15;
-        if (rq < 1) {
-          const rr = R * 0.5 + H * 0.09 * EASE.outCubic(rq);
-          const al = (1 - rq) * clamp(k, 0, 1.5);
-          ctx.globalAlpha = clamp(al);
+        ctx.translate(ex, ey);
+        const grow = EASE.outExpo(clamp(ia / 0.07));
+        const decayOut = clamp((ia - 0.28) / 0.34);           // 外側から内側へ縮んで消える
+        const aStar = 1 - EASE.inOutCubic(clamp((ia - 0.34) / 0.3));
+        const ray = (th0, r0, r1, hw, col, alpha) => {
+          const c = Math.cos(th0), s = Math.sin(th0);
+          poly([[c * r0 - s * hw, s * r0 + c * hw], [c * r1, s * r1], [c * r0 + s * hw, s * r0 - c * hw]], col, 2.2 * px1, alpha);
+        };
+        // 細い輪2本（速いものとゆっくりなもの）
+        [[0.2, 0.17, 5.5], [0.45, 0.125, 3.2]].forEach(([dur, rad, wd], i) => {
+          const q = ia / dur;
+          if (q >= 1) return;
+          const rr = H * rad * kk * (i ? EASE.outQuad(q) : EASE.outExpo(q)) + H * 0.02;
+          ctx.globalAlpha = clamp((1 - q) * 1.2 * clamp(k, 0, 1.5));
           ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU);
-          ctx.strokeStyle = under; ctx.lineWidth = (3.2 * (1 - rq) + 1.2) * px1 + 2 * px1; ctx.stroke();
-          ctx.strokeStyle = mode === 'white' ? ringCol : ringC; ctx.lineWidth = (3.2 * (1 - rq) + 1.2) * px1; ctx.stroke();
+          const lw = (wd * (1 - q) + 1) * px1;
+          ctx.strokeStyle = under; ctx.lineWidth = lw + 2.2 * px1; ctx.stroke();
+          ctx.strokeStyle = ringC; ctx.lineWidth = lw; ctx.stroke();
           ctx.globalAlpha = 1;
-        }
-        // 放射線：斬った向きを中心に扇形に細い先細りの線（前に長く、うしろに短い）
-        const rays = [[-75, 0.45], [-48, 0.78], [-24, 0.95], [0, 1], [24, 0.9], [48, 0.75], [75, 0.45], [180, 0.4]];
-        const rq2 = ar / 0.3;
-        if (rq2 < 1) {
-          const grow = EASE.outExpo(clamp(ar / 0.07));
-          const fade = 1 - EASE.inOutCubic(clamp((ar - 0.1) / 0.2));
+        });
+        // 太い放射状の速度線：外へ飛び出して縮む
+        [[8, 1], [-22, 0.85], [42, 0.9], [-58, 0.75], [150, 0.7], [-148, 0.65]].forEach(([deg, len], i) => {
+          const q = ia / 0.42;
+          if (q >= 1) return;
+          const th0 = ang + deg * Math.PI / 180 + (rnd(11, i, 1) - 0.5) * 0.1;
+          const r0 = H * (0.075 + 0.1 * EASE.outExpo(clamp(ia / 0.18))) * kk;
+          const r1 = r0 + H * 0.075 * len * kk * (1 - EASE.inQuad(q));
+          ray(th0, r0, r1, H * 0.0095 * (1 - q * 0.6), fillCol, 1 - EASE.inQuad(q));
+        });
+        // 長く細い放射線：長短を交互に。前（斬った向き）に長く、まわりに扇状。外側から縮んで消える
+        const rays = [[0, 1], [18, 0.5], [-18, 0.5], [38, 0.85], [-38, 0.85], [62, 0.45], [-62, 0.45], [90, 0.7], [-90, 0.7], [125, 0.4], [-125, 0.4], [180, 0.6]];
+        const Rs = H * 0.1 * kk;
+        if (aStar > 0.003) {
           rays.forEach(([deg, len], i) => {
-            const th0 = ang + deg * Math.PI / 180 + (rnd(7, i, 1) - 0.5) * 0.12;
-            const r0 = R * 0.95 + H * 0.012 * grow;
-            const r1 = r0 + H * 0.1 * kk * len * (0.9 + 0.2 * rnd(7, i, 2)) * grow;
-            const hw = H * 0.0075 * (0.6 + 0.4 * len) * fade;
-            const c = Math.cos(th0), s = Math.sin(th0);
-            ctx.globalAlpha = clamp(fade);
-            ctx.beginPath();
-            ctx.moveTo(c * r0 - s * hw, s * r0 + c * hw); ctx.lineTo(c * r1, s * r1); ctx.lineTo(c * r0 + s * hw, s * r0 - c * hw);
-            ctx.closePath();
-            ctx.strokeStyle = under; ctx.lineWidth = 2 * px1; ctx.stroke();
-            ctx.fillStyle = fillCol; ctx.fill();
-            ctx.globalAlpha = 1;
+            const th0 = ang + deg * Math.PI / 180 + (rnd(7, i, 1) - 0.5) * 0.1;
+            const r0 = Rs * 0.7;
+            const lenNow = H * 0.205 * kk * len * grow * (1 - 0.75 * EASE.inQuad(decayOut) * (1 - 0.3 * len));
+            ray(th0, r0, r0 + lenNow, H * 0.0095 * (0.5 + 0.5 * len), fillCol, aStar);
           });
-        }
-        // 短く硬い閃光：コンパクトな星形
-        const fq = ar / 0.14;
-        if (fq < 1) {
-          const sz = R * (0.6 + 0.4 * EASE.outCubic(Math.min(1, fq * 2.5))) * (1 - 0.6 * EASE.inQuad(clamp((fq - 0.5) / 0.5)));
+          // 鋭い星形：10点、長短を交互に
+          const sc = grow * (1 - 0.5 * EASE.inQuad(decayOut));
           ctx.beginPath();
-          for (let j = 0; j < 16; j++) {
-            const rad = j % 2 ? sz * 0.3 : sz * (j % 4 === 0 ? 1.15 : 0.8);
-            const an = ang + j * Math.PI / 8;
+          for (let j = 0; j < 20; j++) {
+            const rad = j % 2 ? Rs * 0.33 * sc : Rs * (j % 4 === 0 ? 1 : 0.62) * sc;
+            const an = ang + j * Math.PI / 10;
             if (j) ctx.lineTo(Math.cos(an) * rad, Math.sin(an) * rad); else ctx.moveTo(Math.cos(an) * rad, Math.sin(an) * rad);
           }
           ctx.closePath();
-          ctx.globalAlpha = clamp(1 - EASE.inQuad(clamp((fq - 0.6) / 0.4)));
-          ctx.strokeStyle = under; ctx.lineWidth = 2.2 * px1; ctx.stroke();
-          ctx.fillStyle = mode === 'red' ? '#fff0f3' : fillCol; ctx.fill();
+          ctx.globalAlpha = clamp(aStar);
+          ctx.strokeStyle = under; ctx.lineWidth = 2.6 * px1; ctx.stroke();
+          ctx.fillStyle = fillCol; ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        // 白い芯の閃光：不透明な円がすぐに縮み、いちばん最後に消える
+        const rc = H * (0.03 + 0.055 * Math.exp(-ia * 13)) * kk * (1 - 0.35 * clamp((ia - 0.5) / 0.4));
+        const ac = 1 - EASE.inOutCubic(clamp((ia - 0.5) / 0.45));
+        if (ac > 0.003) {
+          ctx.globalAlpha = clamp(ac);
+          ctx.beginPath(); ctx.arc(0, 0, rc, 0, TAU);
+          ctx.strokeStyle = under; ctx.lineWidth = 2.4 * px1; ctx.stroke();
+          ctx.fillStyle = discCol; ctx.fill();
           ctx.globalAlpha = 1;
         }
         ctx.restore();
