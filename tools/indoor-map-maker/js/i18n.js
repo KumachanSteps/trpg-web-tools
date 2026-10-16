@@ -16,6 +16,30 @@
     langGroup: '言語切替',
     help: '使い方',
     shortcuts: 'ショートカット',
+    rulesBtn: '利用ルール',
+    // 作成した見取り図の利用ルール。文言を変えるときは3言語とも合わせて直す
+    rules: {
+      intro: '本ツールで作成した見取り図（書き出した画像・マップデータ）は、無料でご利用いただけます。個人でのTRPGセッションや、自作のシナリオ・ゲームなどの創作に、申請・報告なしで使えます。',
+      allowTitle: '自由に使えること',
+      allow: [
+        '個人・身内でのTRPGセッション、セッションの準備・進行での使用',
+        '自作のシナリオ・ゲーム・小説などの創作物での使用（シナリオ本文、ココフォリアのルームデータ、配布ZIPへの収録を含む）',
+        '書き出した画像の加工（色・大きさ・切り抜き・書き込み・合成など）'
+      ],
+      denyTitle: 'ご遠慮いただくこと',
+      deny: [
+        '書き出した画像そのものを、マップ素材として二次配布・販売すること（素材集・素材パックへの収録を含む）',
+        '本ツールで作った画像の自作発言、および本ツールそのものの無断複製・再配布・転載'
+      ],
+      note: '※作品の一部として同梱すること、セッションの参加者に共有することは自由です。',
+      creditTitle: 'クレジット',
+      creditLead: '個人利用の範囲を超えて使う場合（配信・動画、シナリオやゲームの頒布・販売、Webでの公開など）は、以下のクレジットだけ記載をお願いします。',
+      credit: 'TRPG室内図メーカー / くま。TRPG WEBツール観測所',
+      creditWhere: '作品の説明・奥付、動画・配信の概要欄、Readme、配布ページなど、見た人が確認できる場所で構いません。個人的なセッションや身内での使用では不要です。',
+      copy: 'コピー',
+      copied: 'クレジットをコピーしました',
+      copyFailed: 'コピーできませんでした。文字を選択してコピーしてください'
+    },
     shortcutTitle: 'ショートカット一覧',
     themeLight: 'ライトモード（クリックでナイトモード）',
     themeDark: 'ナイトモード（クリックでライトモード）',
@@ -34,7 +58,7 @@
     helpNotes: [
       '作業内容はこのブラウザに自動で保存されます。別の端末で続きを作るときは「保存」でファイル（.trpgmap.json）に書き出し、「開く」で読み込んでください。',
       'テンプレートの部屋名は、読み込んだときの言語で入ります。',
-      '作成した見取り図は、セッション・配信・シナリオ配布などに自由に使えます。'
+      '作成した見取り図は無料で使えます。個人利用の範囲を超えるとき（配信・頒布・販売など）はクレジットの記載をお願いします。詳しくはヘッダーの「利用ルール」をご覧ください。'
     ],
     shortcutRows: [
       ['V', '選択ツール'],
@@ -228,6 +252,7 @@
       info: '{w}×{h}px',
       tooLarge: '画像が大きいため、自動で縮小しています。',
       saved: 'PNGを保存しました',
+      creditNote: '配信・頒布・販売など、個人利用の範囲を超えて使うときはクレジットの記載をお願いします。<button class="link-button" type="button" data-copy-credit>クレジットをコピー</button><button class="link-button" type="button" data-open-rules>利用ルール</button>',
       empty: 'この階には何もありません'
     },
     msg: {
@@ -255,7 +280,7 @@
     footer: {
       title: '利用上の注意',
       note1: '本ツールは、開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> による個人制作の非公式TRPG支援ツールです。作成したマップはすべてブラウザ内で処理され、サーバーには送信されません。',
-      note2: '作成した見取り図は、TRPGセッション・配信・動画・シナリオ配布などに自由に使えます（申請・報告は不要です）。テンプレートは実在の建物を再現したものではありません。',
+      note2: '作成した見取り図は、<button class="link-button" type="button" data-open-rules>利用ルール</button>の範囲で無料で使えます。個人利用の範囲を超えるときは、クレジットの記載をお願いします。テンプレートは実在の建物を再現したものではありません。',
       note3: '不具合報告や要望は、Xの <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 宛のDMにてお送りください。ただし、すべての報告や要望に返信・対応できるとは限りません。'
     }
   };
@@ -274,6 +299,29 @@
     langGroup: 'Language',
     help: 'How to use',
     shortcuts: 'Shortcuts',
+    rulesBtn: 'Usage rules',
+    rules: {
+      intro: 'Floor plans you make with this tool (exported images and map data) are free to use. You can use them in your own TRPG sessions and in your own scenarios, games and other creative work, with no need to ask or report.',
+      allowTitle: 'Free to use',
+      allow: [
+        'Personal TRPG sessions and games with friends, including preparing and running sessions',
+        'Your own scenarios, games, novels and other creative work (including scenario text, CCFOLIA room data and distributed ZIP files)',
+        'Editing exported images (colors, size, cropping, drawing on them, compositing and so on)'
+      ],
+      denyTitle: 'Please do not',
+      deny: [
+        'Redistribute or sell the exported images themselves as map assets (including in asset collections or packs)',
+        'Claim images made with this tool as your own work, or copy, redistribute or repost the tool itself without permission'
+      ],
+      note: 'Including a map as part of your work, or sharing it with your players, is fine.',
+      creditTitle: 'Credit',
+      creditLead: 'If your use goes beyond personal use (streams and videos, distributing or selling scenarios or games, publishing on the web and so on), please just include the credit below.',
+      credit: 'TRPG室内図メーカー / くま。TRPG WEBツール観測所',
+      creditWhere: 'Anywhere viewers can see it is fine: the description or colophon of your work, a video or stream description, a Readme, or the download page. It is not needed for personal sessions or games with friends.',
+      copy: 'Copy',
+      copied: 'Copied the credit',
+      copyFailed: 'Could not copy. Please select the text and copy it.'
+    },
     shortcutTitle: 'Keyboard shortcuts',
     themeLight: 'Light mode (click for night mode)',
     themeDark: 'Night mode (click for light mode)',
@@ -292,7 +340,7 @@
     helpNotes: [
       'Your work is saved automatically in this browser. To continue on another device, use Save to download a .trpgmap.json file and Open to load it.',
       'Template room names use the language that was active when you loaded the template.',
-      'Maps you make are free to use in sessions, streams and published scenarios.'
+      'Maps you make are free to use. If your use goes beyond personal use (streams, distribution, sales), please include the credit. See Usage rules in the header for details.'
     ],
     shortcutRows: [
       ['V', 'Select tool'],
@@ -486,6 +534,7 @@
       info: '{w}×{h}px',
       tooLarge: 'The image was scaled down because it is very large.',
       saved: 'Saved the PNG',
+      creditNote: 'If your use goes beyond personal use, such as streams, distribution or sales, please include the credit. <button class="link-button" type="button" data-copy-credit>Copy credit</button><button class="link-button" type="button" data-open-rules>Usage rules</button>',
       empty: 'This floor is empty'
     },
     msg: {
@@ -513,7 +562,7 @@
     footer: {
       title: 'Notes',
       note1: 'This is an unofficial, personal TRPG support tool made by <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a>. Maps are processed entirely in your browser and are never sent to a server.',
-      note2: 'Floor plans you make are free to use in TRPG sessions, streams, videos and published scenarios, with no need to ask or report. The templates do not reproduce real buildings.',
+      note2: 'Floor plans you make are free to use within the <button class="link-button" type="button" data-open-rules>usage rules</button>. If your use goes beyond personal use, please include the credit. The templates do not reproduce real buildings.',
       note3: 'Send bug reports and requests by DM to <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> on X. Not every report or request can be answered.'
     }
   };
@@ -532,6 +581,29 @@
     langGroup: '언어 전환',
     help: '사용법',
     shortcuts: '단축키',
+    rulesBtn: '이용 규칙',
+    rules: {
+      intro: '이 툴로 만든 평면도(내보낸 이미지·맵 데이터)는 무료로 이용할 수 있습니다. 개인 TRPG 세션이나 직접 만든 시나리오·게임 등의 창작에 신청·보고 없이 사용할 수 있습니다.',
+      allowTitle: '자유롭게 할 수 있는 것',
+      allow: [
+        '개인·지인끼리의 TRPG 세션, 세션 준비·진행에서의 사용',
+        '직접 만든 시나리오·게임·소설 등 창작물에서의 사용(시나리오 본문, 코코포리아 룸 데이터, 배포 ZIP 수록 포함)',
+        '내보낸 이미지의 가공(색·크기·잘라내기·덧그리기·합성 등)'
+      ],
+      denyTitle: '삼가 주세요',
+      deny: [
+        '내보낸 이미지 자체를 맵 소재로 재배포·판매하는 것(소재집·소재 팩 수록 포함)',
+        '이 툴로 만든 이미지를 직접 만들었다고 하는 것, 이 툴 자체의 무단 복제·재배포·전재'
+      ],
+      note: '※작품의 일부로 함께 넣거나 세션 참가자에게 공유하는 것은 자유입니다.',
+      creditTitle: '크레디트',
+      creditLead: '개인 이용의 범위를 넘어 사용할 때(방송·동영상, 시나리오나 게임의 배포·판매, 웹 공개 등)는 아래 크레디트만 기재해 주세요.',
+      credit: 'TRPG室内図メーカー / くま。TRPG WEBツール観測所',
+      creditWhere: '작품 설명·판권 면, 동영상·방송 설명란, Readme, 배포 페이지 등 보는 사람이 확인할 수 있는 곳이면 됩니다. 개인 세션이나 지인끼리의 사용에는 필요 없습니다.',
+      copy: '복사',
+      copied: '크레디트를 복사했습니다',
+      copyFailed: '복사하지 못했습니다. 글자를 선택해 복사해 주세요'
+    },
     shortcutTitle: '단축키 목록',
     themeLight: '라이트 모드 (클릭하면 나이트 모드)',
     themeDark: '나이트 모드 (클릭하면 라이트 모드)',
@@ -550,7 +622,7 @@
     helpNotes: [
       '작업 내용은 이 브라우저에 자동 저장됩니다. 다른 기기에서 이어서 만들 때는 「저장」으로 파일(.trpgmap.json)을 내려받고 「열기」로 불러오세요.',
       '템플릿의 방 이름은 불러올 때의 언어로 들어갑니다.',
-      '만든 평면도는 세션·방송·시나리오 배포 등에 자유롭게 쓸 수 있습니다.'
+      '만든 평면도는 무료로 쓸 수 있습니다. 개인 이용의 범위를 넘을 때(방송·배포·판매 등)는 크레디트를 기재해 주세요. 자세한 내용은 헤더의 「이용 규칙」을 확인해 주세요.'
     ],
     shortcutRows: [
       ['V', '선택 도구'],
@@ -744,6 +816,7 @@
       info: '{w}×{h}px',
       tooLarge: '이미지가 커서 자동으로 축소했습니다.',
       saved: 'PNG를 저장했습니다',
+      creditNote: '방송·배포·판매 등 개인 이용의 범위를 넘어 사용할 때는 크레디트를 기재해 주세요. <button class="link-button" type="button" data-copy-credit>크레디트 복사</button><button class="link-button" type="button" data-open-rules>이용 규칙</button>',
       empty: '이 층에는 아무것도 없습니다'
     },
     msg: {
@@ -771,7 +844,7 @@
     footer: {
       title: '이용 시 주의',
       note1: '이 툴은 개발자 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a>가 개인적으로 만든 비공식 TRPG 지원 툴입니다. 만든 지도는 모두 브라우저 안에서 처리되며 서버로 전송되지 않습니다.',
-      note2: '만든 평면도는 TRPG 세션·방송·동영상·시나리오 배포 등에 자유롭게 쓸 수 있습니다(신청·보고 불필요). 템플릿은 실제 건물을 재현한 것이 아닙니다.',
+      note2: '만든 평면도는 <button class="link-button" type="button" data-open-rules>이용 규칙</button>의 범위에서 무료로 쓸 수 있습니다. 개인 이용의 범위를 넘을 때는 크레디트를 기재해 주세요. 템플릿은 실제 건물을 재현한 것이 아닙니다.',
       note3: '버그 제보와 요청은 X의 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 앞으로 DM을 보내 주세요. 모든 제보와 요청에 답변·대응할 수 있는 것은 아닙니다.'
     }
   };
