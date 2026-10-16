@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.07';
+  const VERSION = 'v1.08';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -86,6 +86,9 @@
     shareLink: $('xShareLink'),
     helpBtn: $('helpBtn'),
     shortcutBtn: $('shortcutBtn'),
+    rulesBtn: $('rulesBtn'),
+    rulesDrawer: $('rulesDrawer'),
+    rulesBody: $('rulesBody'),
     themeBtn: $('themeBtn'),
     helpDrawer: $('helpDrawer'),
     shortcutDrawer: $('shortcutDrawer'),
@@ -222,6 +225,7 @@
     d.helpItems.forEach(text => els.helpList.appendChild(h('p', null, text)));
     els.helpNotes.innerHTML = '';
     d.helpNotes.forEach(text => els.helpNotes.appendChild(h('p', null, text)));
+    renderRules(d.rules);
     els.shortcutGrid.innerHTML = '';
     d.shortcutRows.forEach(([keys, text]) => {
       const box = h('div');
@@ -3093,6 +3097,9 @@
     box.appendChild(h('label', { class: 'toggle-inline' }, h('span', { class: 'switch' }, tgInput, h('span', { class: 'switch-track', 'aria-hidden': 'true' })), h('span', null, t('exp.tokenGrid'))));
     const tgNote = app.project.tokenGrid > 0 ? box.appendChild(h('p', { class: 'field-note' })) : null;
     box.appendChild(toggle(t('exp.transparent'), 'transparent'));
+    const credit = h('p', { class: 'field-note export-credit' });
+    credit.innerHTML = t('exp.creditNote');
+    box.appendChild(credit);
     const info = h('p', { class: 'export-info' });
     box.appendChild(info);
     const actionsRow = h('div', { class: 'export-actions' },
@@ -3164,8 +3171,34 @@
 
   /* ================= ドロワー・モーダル ================= */
 
+  // 利用ルール：自由に使えること・ご遠慮いただくことを並べ、クレジットはその場でコピーできるようにする
+  function renderRules(r) {
+    const body = els.rulesBody;
+    body.innerHTML = '';
+    body.appendChild(h('p', { class: 'rules-intro' }, r.intro));
+    const grid = h('div', { class: 'rules-grid' });
+    [['allow', r.allowTitle, r.allow, '○'], ['deny', r.denyTitle, r.deny, '×']].forEach(([kind, title, items, mark]) => {
+      grid.appendChild(h('section', { class: `rules-card is-${kind}` }, h('h3', null, title),
+        h('ul', null, ...items.map(text => h('li', null, h('span', { class: 'rules-mark' }, mark), h('span', null, text))))));
+    });
+    body.appendChild(grid);
+    body.appendChild(h('p', { class: 'rules-note' }, r.note));
+    body.appendChild(h('section', { class: 'rules-credit' },
+      h('h3', null, r.creditTitle), h('p', null, r.creditLead),
+      h('div', { class: 'rules-credit-line' }, h('code', null, r.credit), h('button', { type: 'button', class: 'ghost-button rules-copy', 'data-copy-credit': '' }, r.copy)),
+      h('p', { class: 'rules-where' }, r.creditWhere)));
+  }
+
+  function copyCredit() {
+    const r = dict().rules;
+    const fail = () => toast(r.copyFailed, 'warning', 4200);
+    if (!navigator.clipboard || !navigator.clipboard.writeText) { fail(); return; }
+    navigator.clipboard.writeText(r.credit).then(() => toast(r.copied, 'success', 2200), fail);
+  }
+
+
   function drawerPairs() {
-    return [[els.helpDrawer, els.helpBtn], [els.shortcutDrawer, els.shortcutBtn]];
+    return [[els.helpDrawer, els.helpBtn], [els.rulesDrawer, els.rulesBtn], [els.shortcutDrawer, els.shortcutBtn]];
   }
 
   function toggleDrawer(drawer) {
@@ -3203,6 +3236,17 @@
     }));
     els.helpBtn.addEventListener('click', () => toggleDrawer(els.helpDrawer));
     els.shortcutBtn.addEventListener('click', () => toggleDrawer(els.shortcutDrawer));
+    els.rulesBtn.addEventListener('click', () => toggleDrawer(els.rulesDrawer));
+    // フッター・書き出しの「利用ルール」「クレジットをコピー」
+    document.addEventListener('click', event => {
+      const target = event.target.closest('[data-open-rules], [data-copy-credit]');
+      if (!target) return;
+      event.preventDefault();
+      if (target.hasAttribute('data-copy-credit')) { copyCredit(); return; }
+      closeModals();
+      if (els.rulesDrawer.hidden) toggleDrawer(els.rulesDrawer);
+      els.rulesDrawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     document.querySelectorAll('[data-close-drawer]').forEach(btn => btn.addEventListener('click', closeDrawers));
     document.querySelectorAll('[data-close-modal]').forEach(btn => btn.addEventListener('click', closeModals));
     [els.tplModal, els.expModal].forEach(modal => modal.addEventListener('mousedown', event => { if (event.target === modal) closeModals(); }));

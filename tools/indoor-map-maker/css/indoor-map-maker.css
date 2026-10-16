@@ -334,6 +334,41 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 .shortcut-grid b { color: var(--muted); }
 
 
+/* ---------- 利用ルール ---------- */
+
+.rules-body { display: grid; gap: 10px; font-size: 0.84rem; line-height: 1.65; }
+.rules-body p { margin: 0; }
+.rules-intro { font-weight: 700; }
+.rules-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rules-card { padding: 10px 13px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel-soft); }
+.rules-card h3 { margin: 0 0 6px; font-size: 0.86rem; }
+.rules-card ul { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.rules-card li { display: grid; grid-template-columns: 1.3em minmax(0, 1fr); }
+.rules-mark { font-weight: 900; }
+.rules-card.is-allow h3, .rules-card.is-allow .rules-mark { color: var(--ok); }
+.rules-card.is-deny h3, .rules-card.is-deny .rules-mark { color: var(--danger); }
+.rules-note, .rules-where { color: var(--muted); }
+.rules-credit { padding: 10px 13px; border: 1px solid color-mix(in srgb, var(--blue) 30%, var(--line)); border-radius: 13px; background: var(--blue-soft); }
+.rules-credit h3 { margin: 0 0 4px; color: var(--blue-deep); font-size: 0.86rem; }
+body.is-dark .rules-credit h3 { color: var(--blue); }
+.rules-credit-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 7px 0; }
+.rules-credit-line code { padding: 5px 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--field); font-family: inherit; font-weight: 800; user-select: all; }
+.rules-copy { min-height: 1.9rem; padding: 0.25rem 0.8rem; font-size: 0.78rem; }
+.rules-where { font-size: 0.8rem; }
+
+/* フッター・書き出しの文中にある「利用ルール」「クレジットをコピー」 */
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.link-button:hover { text-decoration: underline; }
+.export-credit .link-button { margin-left: 0.6em; }
+
 /* ---------- フィールド ---------- */
 
 .control-section {
@@ -1246,6 +1281,7 @@ body.is-dark .clue-toggle.is-on .clue-state { color: #1b1206; }
   .header-actions { justify-content: flex-start; }
   .lead { padding-right: 0; }
   .version-engrave { position: absolute; right: 16px; bottom: 6px; }
+  .rules-grid { grid-template-columns: 1fr; }
   .editor { grid-template-columns: minmax(0, 1fr); }
   .editor > .canvas-panel { order: -1; height: 72vh; min-height: 440px; }
   .editor > .library-panel { height: 380px; }
