@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.08';
+  const VERSION = 'v1.09';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';

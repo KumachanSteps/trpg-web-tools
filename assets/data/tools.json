@@ -1,5 +1,43 @@
 [
   {
+    "id": "indoor-map-maker",
+    "icon": "🏠",
+    "status": "available",
+    "category": "scenarioPrep",
+    "badges": [
+      "preSession",
+      "duringSession",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "シナリオ準備",
+      "見取り図",
+      "間取り",
+      "マップ",
+      "方眼",
+      "テンプレート"
+    ],
+    "href": "./tools/indoor-map-maker/",
+    "devHref": "./tools/indoor-map-maker/",
+    "devStage": "testing",
+    "devNote": {
+      "ja": "室内の見取り図エディター。テンプレート55種・13分類と素材約370種・17分類、タグ検索、コマ用の方眼、GM/PL別のPNG書き出し。画面は日本語・英語・韓国語に対応。",
+      "en": "Indoor floor-plan editor with 55 templates in 13 categories, about 370 assets in 17 categories, tag search, a token grid, and separate GM/player PNG export. UI in Japanese, English, and Korean.",
+      "ko": "실내 평면도 편집기. 템플릿 55종·13분류, 소재 약 370종·17분류, 태그 검색, 말 이동용 격자, GM/PL별 PNG 내보내기. 일본어·영어·한국어 UI를 지원합니다."
+    },
+    "name": {
+      "ja": "TRPG室内図メーカー",
+      "en": "TRPG Indoor Map Maker",
+      "ko": "TRPG 실내 지도 메이커"
+    },
+    "description": {
+      "ja": "探索シーンで使う室内の見取り図を、55種のテンプレートから作成できます。コマ用の方眼つきで、PL用・GM用の画像を書き出せます。",
+      "en": "Make indoor floor plans for investigation scenes from 55 templates, and export player and GM images with an optional token grid.",
+      "ko": "조사 장면에 쓸 실내 평면도를 55종의 템플릿으로 만들고, 말 이동용 격자와 함께 플레이어용·GM용 이미지를 내보낼 수 있습니다."
+    },
+    "preview": "./assets/img/previews/indoor-map-maker.png"
+  },
+  {
     "id": "text-apng-maker",
     "icon": "🔤",
     "status": "available",
@@ -604,41 +642,6 @@
       "en": "A concept for managing session dates, prep tasks, player reminders, and material checks.",
       "ko": "세션 일정, 준비 작업, 플레이어 연락, 소재 확인을 한곳에서 관리하는 세션 준비 캘린더 구상입니다."
     }
-  },
-  {
-    "id": "indoor-map-maker",
-    "icon": "🏠",
-    "status": "idea",
-    "category": "scenarioPrep",
-    "badges": [
-      "preSession",
-      "duringSession",
-      "gmSupport"
-    ],
-    "legacyKeywords": [
-      "シナリオ準備",
-      "見取り図",
-      "間取り",
-      "マップ"
-    ],
-    "href": "",
-    "devHref": "./tools/indoor-map-maker/",
-    "devStage": "testing",
-    "devNote": {
-      "ja": "室内の見取り図エディター。テンプレート55種・13分類（住宅・ホテル・病院・学校・駅・地下鉄・駐車場・客船・工場・下水道・軍事基地・武家屋敷・寺院・教会・廃墟・宇宙船・城・地下迷宮など）と素材約370種・17分類、タグ検索、ドア・窓・家具の配置、GM/PL別のPNG書き出し。クローズドテスト用。",
-      "en": "Indoor floor-plan editor with 55 templates in 13 categories (homes, hotel, hospital, school, train and subway stations, car parks, passenger ship, factory, sewer, military base, samurai residence, temple, church, ruins, starship, castle, dungeon and more), about 370 assets in 17 categories, tag search, doors, windows and furniture, and separate GM/player PNG export. Closed test."
-    },
-    "name": {
-      "ja": "TRPG室内図メーカー",
-      "en": "TRPG Indoor Map Maker",
-      "ko": "TRPG 실내 지도 메이커"
-    },
-    "description": {
-      "ja": "探索シーンで使う室内の見取り図を作成します。テンプレートから始めて部屋・ドア・窓・家具を置き、PL用とGM用の画像を書き出せます。",
-      "en": "Make indoor floor plans for investigation scenes. Start from a template, place rooms, doors, windows and furniture, and export player and GM images.",
-      "ko": "조사 장면에 사용할 실내 평면도를 만듭니다. 템플릿에서 시작해 방, 문, 창문, 가구를 배치하고 플레이어용·GM용 이미지를 내보낼 수 있습니다."
-    },
-    "preview": "./assets/img/previews/indoor-map-maker.png"
   },
   {
     "id": "house-rule-table",

@@ -2548,7 +2548,7 @@
       .item('weapon_rack', 47, 14.8, 90).item('weapon_rack', 47, 18.4, 90).item('armor_stand', 42.4, 20.6).item('armor_stand', 44.2, 20.6).item('crate', 38.8, 18.4)
       .item('bunk_bed', 44, 23.4, 90).item('bunk_bed', 44, 26.6, 90).item('bunk_bed', 44, 29.8, 90).item('bunk_bed', 44, 33, 90)
       .item('table', 38.8, 29.6, 90).item('stool', 41, 30.2).item('stool', 41, 31.8).item('chest', 41.6, 23.4, 90, { size: [1.6, 1] })
-      .item('spiral', 43.6, 39.6).item('crate', 37, 42.2)
+      .item('spiral', 43.6, 39.6, 0, { label: T('塔の上へ', 'Up the tower', '탑 위로') }).item('crate', 37, 42.2)
       .item('stairs_down', 1, 37.5).item('crate', 8.6, 42).item('torch', 5.6, 36.05)
       .item('table', 14, 39).item('stool', 14.6, 41).item('stool', 16, 41).item('weapon_rack', 16.6, 36.05, 0, { size: [3, 1] })
       .item('torch', 21, 36.05).item('torch', 26.2, 36.05)
