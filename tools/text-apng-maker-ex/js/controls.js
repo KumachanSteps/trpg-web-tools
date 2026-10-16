@@ -275,6 +275,7 @@
           { value: 'dream', label: T('夢の判定', 'Dream roll', '꿈 판정') },
           { value: 'vampire', label: T('ヴァンパイアの判定', 'Vampire roll', '뱀파이어 판정') },
           { value: 'bulletMark', label: T('弾痕（ガラス・ひび／文字なし）', 'Bullet hole – glass / crack (no text)', '탄흔（유리·균열／글자 없음）') },
+          { value: 'zangekiHard', label: T('斬撃・ハード（文字なし）', 'Zangeki slash – hard (no text)', '참격·하드（글자 없음）') },
           { value: 'katanaFx', label: T('抜刀の一閃（文字なし）', 'Katana slash (no text)', '발도의 일섬（글자 없음）') },
           { value: 'clawMark', label: T('爪痕（文字なし）', 'Claw mark (no text)', '발톱 자국（글자 없음）') },
           { value: 'fangFx', label: T('牙の戦闘演出（文字なし）', 'Fang battle effect (no text)', '송곳니 전투 연출（글자 없음）') },
@@ -310,6 +311,11 @@
         { type: 'chips', bind: 'sfx.seed', when: s => s.sfx.type === 'bulletMark', label: T('形', 'Shape', '모양'), options: [
           { value: '1', label: T('A', 'A', 'A') }, { value: '2', label: T('B', 'B', 'B') },
           { value: '3', label: T('C', 'C', 'C') }, { value: '4', label: T('D', 'D', 'D') }
+        ] },
+        { type: 'note', when: s => s.sfx.type === 'zangekiHard', text: T('文字も帯もない、右上から左下へ斬り下ろす太い一閃だけの演出です（背景は透明。戦闘シーンに重ねる用）。抜刀の一閃より太く、ぼかしのないくっきりした実線の刃が約0.1秒で画面を斜めに走り、左下の終点で短い衝撃（星形の閃光、細い放射線、細い輪、ごく小さな揺れ）が出て、線は細くなりながら約0.6秒までに消えます（1回再生）。向きは左右反転できます。演出の色が衝撃の輪の色、色2が刃と衝撃の色です', 'Text-free: a single heavy slash cutting from the upper right to the lower left (transparent background, to lay over a fighting scene). Thicker than the katana slash, a crisp solid blade with no blur sweeps across in about 0.1 s, and at the lower-left end point a short impact fires (a compact star flash, thin radiating lines, a thin ring and a tiny shake); the line thins and is gone by about 0.6 s (plays once). The direction can be mirrored. Color is the impact ring color, Color 2 is the blade and impact color', '글자도 띠도 없이 오른쪽 위에서 왼쪽 아래로 내리긋는 굵은 일섬만 나오는 연출입니다 (배경은 투명, 전투 장면 위에 겹치는 용도). 발도의 일섬보다 굵고 번짐 없는 또렷한 실선 칼날이 약 0.1초에 화면을 비스듬히 가르고, 왼쪽 아래 끝점에서 짧은 충격(별 모양 섬광, 가는 방사선, 가는 고리, 아주 작은 흔들림)이 일며, 선은 가늘어지면서 약 0.6초까지 사라집니다 (1회 재생). 방향은 좌우 반전할 수 있습니다. 연출 색은 충격 고리의 색, 색 2는 칼날과 충격의 색입니다') },
+        { type: 'chips', bind: 'sfx.dir', when: s => s.sfx.type === 'zangekiHard', label: T('斬る向き', 'Direction', '베는 방향'), options: [
+          { value: 'dl', label: T('右上から左下', 'Upper right to lower left', '오른쪽 위에서 왼쪽 아래로') },
+          { value: 'dr', label: T('左上から右下', 'Upper left to lower right', '왼쪽 위에서 오른쪽 아래로') }
         ] },
         { type: 'note', when: s => s.sfx.type === 'katanaFx', text: T('文字も帯もない、斜めの一閃だけの演出です（背景は透明。戦闘シーンに重ねる用）。細くとがった光の線がごく速く画面を斜めに走り、斬った瞬間に線に沿ってやわらかい光がひらめいて、細い残像がすぐに消えます（1回再生）。「斬る数」をXの2本にすると、0.12秒後に左右対称の2本目が中央で交差し、交差点がやわらかく光って、2本の残像がいっしょに消えます。演出の色が光のにじみ、色2が線の色です（白・黒・赤は同名のテンプレートから選べます）', 'Just one diagonal slash, with no text or band (transparent background, to lay over a fighting scene). A thin, sharply tapered line of light snaps across the screen, a soft glow flashes along it at the cut, and a thin afterimage quickly fades (plays once). With Slashes set to X, a mirrored second slash crosses the first 0.12 s later at the centre, the crossing glows softly, and both afterimages fade together. Color is the glow and Color 2 is the line color (white, black and red are available as templates of the same name)', '글자도 띠도 없이 비스듬한 일섬만 나오는 연출입니다 (배경은 투명, 전투 장면 위에 겹치는 용도). 가늘고 뾰족한 빛의 선이 아주 빠르게 화면을 비스듬히 가로지르고, 벤 순간 선을 따라 부드러운 빛이 번쩍이며, 가는 잔상이 곧 사라집니다 (1회 재생). 베는 횟수를 X자 2회로 하면 0.12초 뒤 좌우 대칭의 두 번째 일섬이 중앙에서 교차하고, 교차점이 부드럽게 빛나며 두 잔상이 함께 사라집니다. 연출 색이 빛 번짐, 색 2가 선 색입니다 (흰색·검정·빨강은 같은 이름의 템플릿에서 고를 수 있습니다)') },
         { type: 'chips', bind: 'sfx.dir', when: s => s.sfx.type === 'katanaFx', label: T('斬る向き', 'Direction', '베는 방향'), options: [
@@ -361,11 +367,12 @@
             vampire: T('帯の色', 'Band color', '띠 색'),
             bulletMark: T('穴の色', 'Hole color', '구멍 색'),
             katanaFx: T('線の色', 'Line color', '선 색'),
+            zangekiHard: T('輪の色', 'Ring color', '고리 색'),
             clawMark: T('縁取りの色', 'Rim color', '테두리 색'),
             fangFx: T('牙の縁取りの色', 'Fang rim color', '송곳니 테두리 색'),
             fang: T('牙の縁取りの色', 'Fang rim color', '송곳니 테두리 색'),
             fireTextSeq: T('縁取りの色', 'Rim color', '테두리 색')
-          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot', 'flame', 'p5round', 'p5round2', 'p5gun', 'blade', 'shot', 'star', 'dream', 'vampire', 'fang', 'fangFx', 'clawMark', 'katanaFx', 'bulletMark', 'fireTextSeq'].includes(s.sfx.type) }
+          }[s.sfx.type] || T('色2', 'Color 2', '색 2')), when: s => ['cyber', 'frame', 'crest', 'gunshot', 'flame', 'p5round', 'p5round2', 'p5gun', 'blade', 'shot', 'star', 'dream', 'vampire', 'fang', 'fangFx', 'clawMark', 'katanaFx', 'bulletMark', 'zangekiHard', 'fireTextSeq'].includes(s.sfx.type) }
         ] },
         { type: 'text', bind: 'sfx.word', when: s => s.sfx.type === 'cyber', label: T('警告の文字', 'Warning text', '경고 문자'), placeholder: T('WARNING', 'WARNING', 'WARNING') },
         { type: 'range', bind: 'sfx.power', when: s => s.sfx.type !== 'none', label: s => (s.sfx.type.startsWith('fire') ? T('炎の高さ', 'Flame height', '불꽃 높이') : T('強さ', 'Strength', '강도')), min: 0.2, max: 2, step: 0.05, format: 'x' }
