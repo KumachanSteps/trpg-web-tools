@@ -373,6 +373,30 @@
       c.restore();
       return;
     }
+    if (run.kind === 'cracked') {
+      // ひびの入った壁：壁の帯に、背景色のギザギザした割れ目を入れる
+      let s = Math.floor(run.a * 97 + run.c * 53) >>> 0;
+      const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+      c.save();
+      c.fillStyle = theme.wall;
+      if (run.o === 'h') c.fillRect(a, run.c - t / 2, b - a, t); else c.fillRect(run.c - t / 2, a, t, b - a);
+      c.strokeStyle = theme.bg;
+      c.lineWidth = Math.max(lw * 0.9, t * 0.12);
+      c.lineJoin = 'miter';
+      for (let p = a + 0.4 + rnd() * 0.5; p < b - 0.3; p += 1.1 + rnd() * 0.9) {
+        // 壁の端から端へ、ジグザグに割れ目を走らせる
+        const pts = [[0, -0.5], [0.22, 0.2], [0.1, 0.5], [0.34, -0.1]];
+        c.beginPath();
+        pts.forEach(([along, across], i) => {
+          const x = p + along, y = run.c + across * t;
+          if (run.o === 'h') (i ? c.lineTo(x, y) : c.moveTo(x, y));
+          else (i ? c.lineTo(y, x) : c.moveTo(y, x));
+        });
+        c.stroke();
+      }
+      c.restore();
+      return;
+    }
     if (run.kind === 'bars') {
       // 鉄格子：細い横木に丸い格子を等間隔に並べる
       c.save();
@@ -620,6 +644,17 @@
           c.moveTo(0, -t * 0.12); c.lineTo(len * 0.56, -t * 0.12);
           c.moveTo(len * 0.44, t * 0.12); c.lineTo(len, t * 0.12);
           c.stroke();
+        } else if (kind === 'platewin') {
+          // 鉄板でふさいだ窓：窓いっぱいに鉄板を当て、四隅にボルトを打つ
+          c.fillStyle = theme.rail;
+          c.strokeStyle = theme.wall;
+          c.lineWidth = lw * 0.8;
+          c.fillRect(-0.05, -t * 0.7, len + 0.1, t * 1.4);
+          c.strokeRect(-0.05, -t * 0.7, len + 0.1, t * 1.4);
+          c.fillStyle = theme.wall;
+          [[0.16, -t * 0.45], [len - 0.16, -t * 0.45], [0.16, t * 0.45], [len - 0.16, t * 0.45]].forEach(([x, y]) => {
+            c.beginPath(); c.arc(x, y, Math.max(lw * 0.9, t * 0.08), 0, Math.PI * 2); c.fill();
+          });
         } else if (kind === 'brokenwin') {
           c.beginPath();
           c.moveTo(0, 0);
@@ -695,6 +730,30 @@
       return;
     }
     const start = o.o === 'h' ? o.x : o.y;
+    if (kind === 'revolve') {
+      // 回転式ドア：円形のケースに十字の羽根（扉）。点線は回転の軌跡
+      withLocal(c, o, () => {
+        const r = len / 2;
+        c.fillStyle = theme.bg === 'transparent' ? '#ffffff' : theme.bg;
+        c.strokeStyle = theme.door;
+        c.lineWidth = lw * 0.9;
+        c.beginPath(); c.arc(r, 0, r, 0, Math.PI * 2); c.fill(); c.stroke();
+        c.lineWidth = lw * 1.4;
+        c.beginPath();
+        c.moveTo(r, 0); c.lineTo(len, 0);
+        c.moveTo(r, 0); c.lineTo(r, -r * 0.92);
+        c.moveTo(r, 0); c.lineTo(0, 0);
+        c.moveTo(r, 0); c.lineTo(r, r * 0.92);
+        c.stroke();
+        c.strokeStyle = theme.arc;
+        c.lineWidth = lw * 0.6;
+        c.setLineDash([lw * 2, lw * 2]);
+        c.beginPath(); c.arc(r, 0, r, 0, Math.PI / 2); c.stroke();
+        c.setLineDash([]);
+      });
+      c.restore();
+      return;
+    }
     if (kind === 'sealed') {
       drawSealed(c, o, t, theme, lw);
       c.restore();
