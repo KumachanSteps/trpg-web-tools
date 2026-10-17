@@ -4579,6 +4579,71 @@
   }
 
   // コンビニ：南に駐車場と道路、東の車路から搬入。冷蔵ケースは裏のウォークイン冷蔵庫から補充
+  function familyRestaurant() {
+    // 1Fは客席と厨房・レジ・トイレ・キッズスペース、外観は別フロア（敷地と駐車場）
+    const b = makeFloor('1F');
+    b.room(T('厨房', 'Kitchen', '주방'), 'kitchen', 0, 0, 12, 12, { lx: 0.5, ly: 0.8 })
+      .room(T('食品庫', 'Food store', '식품 창고'), 'storage', 12, 0, 6, 6, { ly: 0.8 })
+      .room(T('男子トイレ', 'Men\'s restroom', '남자 화장실'), 'wet', 18, 0, 5, 6, { ly: 1 })
+      .room(T('女子トイレ', 'Women\'s restroom', '여자 화장실'), 'wet', 23, 0, 5, 6, { ly: 1 })
+      .room(T('キッズスペース', 'Kids corner', '키즈 공간'), 'public', 28, 0, 12, 6, { ly: 1 })
+      .room(T('客席', 'Dining hall', '객석'), 'public', 12, 6, 28, 18, { ly: 6.5 })
+      .room(T('レジ・待合', 'Checkout & waiting area', '계산대·대기 공간'), 'public', 0, 12, 12, 12, { lx: 0.4, ly: 4.8 })
+      .room(T('玄関ポーチ', 'Entrance porch', '현관 포치'), 'porch', 4, 24, 8, 2, { hideLabel: true });
+    b.dh(5, 24, 3, 1, 0, 'auto')                  // 正面の自動ドア
+      .dv(12, 17, 4, 1, 0, 'open')                // レジ・待合 ↔ 客席
+      .dv(12, 6, 6, 1, 0, 'open')                 // 厨房の受け渡し口
+      .dh(4, 12, 2, 1, 0, 'steel')                // 厨房 → レジ（従業員用）
+      .dh(14, 6, 1.5, -1, 0)                      // 食品庫
+      .dh(19, 6, 1.5, 1, 0)                       // 男子トイレ
+      .dh(24, 6, 1.5, 1, 0)                       // 女子トイレ
+      .dh(33, 6, 3, 1, 0, 'open')                 // キッズスペース ↔ 客席
+      .wh(33, 0, 3, 'window2').wh(36, 0, 3, 'window2')
+      .wh(14, 24, 4, 'window2').wh(22, 24, 4, 'window2').wh(30, 24, 4, 'window2')
+      .wv(40, 8, 4, 'window2').wv(40, 14, 4, 'window2').wv(0, 14, 4, 'window');
+    // 厨房：調理台・コンロ・シンク・冷蔵庫
+    b.item('stove', 0.3, 0.3).item('sink', 2.8, 0.3).item('counter', 5, 0.3, 0, { size: [4, 1.2] })
+      .item('fridge', 9.8, 0.3).item('fridge', 9.8, 2).item('counter', 0.3, 5.6, 0, { size: [4, 1.2] })
+      .item('stove', 5, 5.8).item('counter', 0.3, 9.4, 0, { size: [4, 1.2], label: T('配膳', 'Serving', '배식') })
+      .item('npc_worker', 6.6, 9.8, 0, { label: T('調理', 'Cook', '요리사') });
+    // 食品庫・トイレ・キッズ
+    b.item('supply_shelf', 12.3, 0.3, 0, { size: [4, 1], label: T('乾物', 'Dry goods', '건조식품') })
+      .item('cardboard', 13, 3.5).item('hand_cart', 16, 3.6)
+      .item('toilet', 18.6, 0.3).item('washbasin', 21.5, 0.3, 0)
+      .item('toilet', 23.6, 0.3).item('washbasin', 26.5, 0.3, 0)
+      .item('rug', 30, 1.5, 0, { size: [8, 4] }).item('tv', 36, 1, 0, { label: T('子ども向け動画', 'Kids video', '어린이 영상') })
+      .item('plant', 39, 4.6);
+    // 客席：丸テーブルと椅子、壁際のボックス席
+    [14, 20, 26].forEach(x => {
+      [9, 15].forEach(y => {
+        b.item('table_round', x, y, 0);
+        b.item('chair', x - 1.2, y + 0.4).item('chair', x + 1.9, y + 0.4);
+        b.item('chair', x + 0.4, y - 1.2).item('chair', x + 0.4, y + 1.9);
+      });
+    });
+    b.item('booth', 36.2, 8, 90).item('booth', 36.2, 14, 90)
+      .item('plant', 13, 22).item('plant', 38.5, 22);
+    // レジ・待合
+    b.item('counter', 0.4, 13.6, 0, { size: [4, 1.2], label: T('レジ', 'Checkout', '계산대') })
+      .item('register', 4.8, 13.9, 0)
+      .item('sofa3', 0.5, 18, 0, { label: T('待合', 'Waiting', '대기') })
+      .item('cctv', 0.3, 23).item('cctv', 11.4, 23.2);
+    // 外観：建物は屋根として描き、ドア・窓は1Fと同じ位置
+    const o = makeFloor(T('外観', 'Exterior', '외관'));
+    o.room(T('店舗', 'Restaurant', '식당'), 'roof', 0, 0, 40, 24)
+      .room(T('玄関ポーチ', 'Entrance porch', '현관 포치'), 'porch', 4, 24, 8, 2, { hideLabel: true })
+      .room(T('駐車場', 'Parking lot', '주차장'), 'road', 0, 26, 44, 16, { ly: 3 })
+      .room(T('歩道', 'Sidewalk', '보도'), 'porch', 0, 42, 44, 2, { hideLabel: true })
+      .room(T('道路', 'Road', '도로'), 'road', 0, 44, 44, 6, { ly: 0.4 });
+    o.item('road_sign', 36.5, 0.5, 0, { label: T('店名看板', 'Store sign', '간판') })
+      .item('vending', 1, 24.6).item('bollard_post', 25.6, 25.6)
+      .item('parking_stall', 1, 28).item('parking_stall', 6, 28).item('parking_stall', 11, 28)
+      .item('parking_stall', 16, 28).item('parking_stall', 21, 28).item('parking_stall', 26, 28)
+      .item('car', 1.5, 28.5).item('car', 11.5, 28.5).item('car', 26.5, 28.5)
+      .item('streetlight', 6, 44.5).item('road_arrow', 18, 46.5, 90);
+    return [b.f, o.f];
+  }
+
   function konbini() {
     const b = makeFloor('1F');
     b.room(T('トイレ', 'Restroom', '화장실'), 'wet', 0, 0, 5, 7, { ly: 1.4 })
@@ -5415,6 +5480,9 @@
     { id: 'office', build: officeBuilding, group: 'commerce', tags: ['modern', 'commercial', 'rooftop', 'hidden'],
       name: T('オフィスビル（3階建て・屋上）', 'Office building (3 floors & roof)', '오피스 빌딩(3층·옥상)'),
       desc: T('センターコア（両端の階段・EV2基・トイレ）は全階同じ位置。1F 風除室とロビー・セキュリティゲート・受付・防災センター・通用口・荷捌き場、2F オープンオフィス・会議室・休憩室・サーバー室・倉庫、3F 役員室・社長室と秘書室・役員会議室・応接室、屋上に塔屋と設備。社長室の奥にGM用の隠し部屋', 'A center core (two stairs, two elevators, restrooms) in the same place on every floor. 1F: vestibule, lobby with security gates and reception, security office, staff entrance, loading bay. 2F: open-plan office, meeting rooms, break room, server room, storage. 3F: executive offices, president\'s office behind the secretary, boardroom, reception room. Rooftop with stair and machine housings. A GM-only hidden room behind the president\'s office.', '센터 코어(양 끝 계단·EV 2대·화장실)는 모든 층에서 같은 위치. 1층 바람막이실과 로비·보안 게이트·접수·방재 센터·직원 출입구·하역장, 2층 오픈 오피스·회의실·휴게실·서버실·창고, 3층 임원실·비서실 안쪽의 사장실·임원 회의실·응접실, 옥상에 계단실과 설비. 사장실 안쪽에 GM 전용 비밀의 방') },
+    { id: 'family_restaurant', build: familyRestaurant, group: 'commerce', tags: ['modern', 'commercial', 'outdoor', 'hidden'],
+      name: T('ファミリーレストラン', 'Family restaurant', '패밀리 레스토랑'),
+      desc: T('自動ドアから客席へ。厨房・食品庫・トイレ・キッズスペース、ボックス席と丸テーブル、レジと待合。外観は別フロアで、駐車場つき', 'Automatic doors lead to the dining hall: kitchen, food store, restrooms, kids corner, booths and round tables, checkout and waiting area. The exterior is a separate floor with a parking lot.', '자동문에서 객석으로: 주방, 식품 창고, 화장실, 키즈 공간, 부스석과 원형 테이블, 계산대와 대기 공간. 외관은 주차장이 있는 별도 층입니다.') },
     { id: 'konbini', build: konbini, group: 'commerce', tags: ['modern', 'commercial', 'outdoor', 'hidden'],
       name: T('コンビニ（小型店舗）', 'Convenience store', '편의점'),
       desc: T('自動ドアから売場へ。冷蔵ケース・弁当棚・ゴンドラ・雑誌棚・ATM、レジカウンターとタバコ棚。裏にウォークイン冷蔵庫・バックヤード・事務スペース（防犯モニター・金庫）・搬入口。前面に駐車場、横に搬入車路。バックヤードにGM用の床下点検口', 'Through the automatic doors onto the sales floor: refrigerated cases, bento shelves, gondolas, a magazine rack and an ATM, then the checkout counter with the cigarette shelf. Behind: a walk-in cooler, backroom, staff office (CCTV monitors, safe) and delivery entrance. A parking lot out front and a delivery lane at the side. A GM-only floor hatch in the backroom.', '자동문을 지나 매장으로. 냉장 쇼케이스·도시락 진열대·곤돌라·잡지 진열대·ATM, 계산대와 담배 진열장. 뒤쪽에 워크인 냉장고·백야드·사무 공간(방범 모니터·금고)·반입구. 앞에 주차장, 옆에 반입 차로. 백야드에 GM 전용 바닥 점검구') },
