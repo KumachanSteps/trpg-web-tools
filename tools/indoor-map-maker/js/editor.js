@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.09';
+  const VERSION = 'v1.10';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -210,6 +210,7 @@
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', d.meta.description);
     document.querySelectorAll('[data-i18n]').forEach(node => { node.textContent = t(node.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-title]').forEach(node => { node.title = t(node.dataset.i18nTitle); });
     document.querySelectorAll('[data-i18n-html]').forEach(node => { node.innerHTML = t(node.dataset.i18nHtml); });
     document.querySelectorAll('[data-i18n-label]').forEach(node => {
       const label = t(node.dataset.i18nLabel);
@@ -933,20 +934,7 @@
   }
 
   function drawObjOutline(c, type, obj, width, dash) {
-    if (type === 'wall') {
-      const px = 1 / view.zoom;
-      c.save();
-      c.lineCap = 'round';
-      c.strokeStyle = 'rgba(255,255,255,0.9)';
-      c.lineWidth = Math.max(0.36, (width + 8) * px);
-      c.beginPath(); c.moveTo(obj.x1, obj.y1); c.lineTo(obj.x2, obj.y2); c.stroke();
-      c.strokeStyle = SEL;
-      c.globalAlpha = 0.55;
-      c.lineWidth = Math.max(0.3, (width + 5) * px);
-      c.stroke();
-      c.restore();
-      return;
-    }
+    // 壁・仕切りも外枠だけを青く囲む（中身の見た目を塗りつぶさない）
     outline(c, objBounds(type, obj), width, dash);
   }
 
@@ -1299,6 +1287,16 @@
     if (entries.length < all.length) toast(t('msg.lockedSkip'), 'warning', 3200);
     if (!entries.length) return;
     const hadRoom = entries.some(e => e.type === 'room');
+    if (hadRoom) {
+      // 削除する部屋の中にあるもの（まだ選ばれていないもの）を、まとめて消すか確認する
+      const f0 = cur();
+      const inside = [];
+      entries.filter(e => e.type === 'room').forEach(e => roomContents(f0, e.obj).forEach(c => {
+        const locked = c.type === 'room' && f0.rooms.some(r => r.id === c.id && r.locked);
+        if (!locked && !entries.some(x => x.type === c.type && x.id === c.id) && !inside.some(x => x.type === c.type && x.id === c.id)) inside.push(c);
+      }));
+      if (inside.length && window.confirm(t('msg.deleteContents', { n: inside.length }))) entries.push(...inside);
+    }
     change(() => {
       const f = cur();
       entries.forEach(({ type, id }) => {
@@ -1654,10 +1652,13 @@
       }
       const hit = hitTest(w.x, w.y);
       if (hit) {
-        if (event.shiftKey) {
+        if (event.shiftKey && hit.type === 'item') {
+          // 複数選択は家具・小物だけ
           setSelection(isSelected(hit.type, hit.id) ? app.sel.filter(s => !(s.type === hit.type && s.id === hit.id)) : app.sel.concat([hit]));
           return;
         }
+        if (event.shiftKey && app.sel.some(s => s.type !== 'item')) { setSelection([hit]); return; }
+        if (event.shiftKey && !isSelected(hit.type, hit.id)) { setSelection([hit]); return; }
         if (!isSelected(hit.type, hit.id)) setSelection([hit]);
         if (hit.type === 'room' && getObj('room', hit.id).locked) {
           // ロック中の部屋：選ぶだけ。ドラッグすると範囲選択になる

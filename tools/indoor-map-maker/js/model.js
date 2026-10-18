@@ -68,12 +68,14 @@
     { id: 'firedoor', group: 'door', len: 2, swing: 1, name: { ja: '防火扉', en: 'Fire door', ko: '방화문' } },
     { id: 'gate', group: 'door', len: 2, swing: 1, name: { ja: '格子扉', en: 'Grille gate', ko: '격자문' } },
     { id: 'big2', group: 'door', len: 5, swing: 2, name: { ja: '大型両開き扉', en: 'Large double door', ko: '대형 양여닫이문' } },
+    { id: 'revolve', group: 'door', len: 3, name: { ja: '回転式ドア', en: 'Revolving door', ko: '회전문' } },
     { id: 'sealed', group: 'door', len: 2, name: { ja: '封印扉', en: 'Sealed door', ko: '봉인된 문' } },
     { id: 'window', group: 'window', len: 2, name: { ja: '窓', en: 'Window', ko: '창문' } },
     { id: 'window2', group: 'window', len: 3.5, name: { ja: '掃き出し窓・大きな窓', en: 'Large / patio window', ko: '큰 창·전면창' } },
     { id: 'barred', group: 'window', len: 2, name: { ja: '鉄格子の窓', en: 'Barred window', ko: '쇠창살 창문' } },
     { id: 'boarded', group: 'window', len: 2, name: { ja: '板でふさいだ窓', en: 'Boarded window', ko: '판자로 막은 창' } },
-    { id: 'brokenwin', group: 'window', len: 2, name: { ja: '割れた窓', en: 'Broken window', ko: '깨진 창문' } }
+    { id: 'brokenwin', group: 'window', len: 2, name: { ja: '割れた窓', en: 'Broken window', ko: '깨진 창문' } },
+    { id: 'platewin', group: 'window', len: 2, name: { ja: '鉄板でふさいだ窓', en: 'Steel-plated window', ko: '철판으로 막은 창' } }
   ];
   const OPEN = Object.fromEntries(OPENINGS.map(o => [o.id, o]));
   /* 開き戸（扉の軌跡が床に出る）。swing: 1 = 片開き / 2 = 両開き */
@@ -88,6 +90,7 @@
     { id: 'fence', t: 0.1, name: { ja: '柵・フェンス', en: 'Fence', ko: '울타리' } },
     { id: 'bars', t: 0.14, name: { ja: '鉄格子', en: 'Bars', ko: '쇠창살' } },
     { id: 'broken', t: 0.3, name: { ja: '崩れた壁', en: 'Crumbling wall', ko: '무너진 벽' } },
+    { id: 'cracked', t: 0.22, name: { ja: 'ひびの入った壁', en: 'Cracked wall', ko: '금이 간 벽' } },
     { id: 'rock', t: 0.7, name: { ja: '岩壁', en: 'Rock wall', ko: '암벽' } },
     { id: 'stone', t: 0.6, name: { ja: '石壁（城・迷宮）', en: 'Stone wall (castle)', ko: '석벽(성·던전)' } },
     { id: 'sound', t: 0.5, name: { ja: '防音壁', en: 'Soundproof wall', ko: '방음벽' } }

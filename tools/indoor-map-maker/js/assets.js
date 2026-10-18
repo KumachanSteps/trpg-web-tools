@@ -385,6 +385,35 @@
 
   /* ---------- 寝室 ---------- */
 
+  function canopyBed(c, S, w, h) {
+    // 天蓋付きベッド：四隅の支柱と、布の垂れた天蓋（ダブルベッドより大きい）
+    const r = Math.min(w, h) * 0.06;
+    c.save();
+    c.globalAlpha = 0.35;
+    rr(c, 0.02, 0.02, w - 0.04, h - 0.04, 0.18);
+    c.fillStyle = S.soft;
+    c.fill();
+    c.restore();
+    box(c, S, 0.12, 0.12, w - 0.24, h - 0.24, 0.1, S.wood);
+    box(c, S, 0.26, 0.26, w - 0.52, h - 0.52, 0.06, S.fill);
+    thin(c, S);
+    [[0.18, 0.5], [w - 0.18, 0.5]].forEach(([x, y]) => { c.beginPath(); c.moveTo(x, y); c.stroke(); });
+    const pillows = w > 3 ? 2 : 1;
+    const pw = (w - 0.9) / pillows;
+    for (let i = 0; i < pillows; i++) rr(c, 0.45 + pw * i + 0.05, 0.4, pw - 0.1, 0.5, 0.12), c.stroke();
+    c.beginPath();
+    c.moveTo(0.26, h * 0.42); c.lineTo(w - 0.26, h * 0.42);
+    c.stroke();
+    // 天蓋の布（ふちは波状の点線）
+    thin(c, S, 0.5);
+    c.setLineDash([S.lw * 1.2, S.lw * 1.2]);
+    rr(c, 0.3, 0.3, w - 0.6, h - 0.6, 0.12);
+    c.stroke();
+    c.setLineDash([]);
+    normal(c, S);
+    [[0.12, 0.12], [w - 0.12, 0.12], [0.12, h - 0.12], [w - 0.12, h - 0.12]].forEach(([x, y]) => circle(c, S, x, y, r * 1.4, S.line));
+  }
+
   function bed(pillows) {
     return (c, S, w, h) => {
       box(c, S, 0, 0, w, h, 0.08);
@@ -1063,23 +1092,67 @@
   }
 
   function idol(c, S, w, h) {
-    circle(c, S, w / 2, h / 2, Math.min(w, h) * 0.44, S.soft);
-    c.save();
-    c.fillStyle = S.ritual;
+    // 奇妙な像：翼を広げて身をかがめたガーゴイル（翼・角・尾つき）
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    circle(c, S, cx, cy, s * 0.46, S.soft);
+    [-1, 1].forEach(d => {
+      const X = f => cx + d * s * f;
+      c.beginPath();
+      c.moveTo(X(0.06), cy - s * 0.06);
+      c.quadraticCurveTo(X(0.28), cy - s * 0.44, X(0.44), cy - s * 0.36);
+      c.lineTo(X(0.36), cy - s * 0.26);
+      c.lineTo(X(0.42), cy - s * 0.2);
+      c.lineTo(X(0.3), cy - s * 0.12);
+      c.lineTo(X(0.34), cy - s * 0.02);
+      c.quadraticCurveTo(X(0.18), cy + s * 0.04, X(0.06), cy + s * 0.06);
+      c.closePath();
+      c.fillStyle = S.ritual;
+      c.fill();
+      c.stroke();
+    });
     c.beginPath();
-    c.ellipse(w / 2, h * 0.42, w * 0.18, h * 0.2, 0, 0, TAU);
+    c.moveTo(cx, cy + s * 0.34);
+    c.quadraticCurveTo(cx + s * 0.06, cy + s * 0.2, cx + s * 0.14, cy + s * 0.26);
+    c.stroke();
+    ellipse(c, S, cx, cy + s * 0.04, s * 0.14, s * 0.2, S.ritual);
+    circle(c, S, cx, cy - s * 0.18, s * 0.11, S.ritual);
+    [-1, 1].forEach(d => {
+      c.beginPath();
+      c.moveTo(cx + d * s * 0.05, cy - s * 0.26);
+      c.lineTo(cx + d * s * 0.1, cy - s * 0.38);
+      c.lineTo(cx + d * s * 0.02, cy - s * 0.28);
+      c.closePath();
+      c.fillStyle = S.line;
+      c.fill();
+    });
+    c.fillStyle = S.red;
+    [-1, 1].forEach(d => { c.beginPath(); c.arc(cx + d * s * 0.04, cy - s * 0.19, s * 0.024, 0, TAU); c.fill(); });
+  }
+
+  function jizo(c, S, w, h) {
+    // 地蔵：石の台座に、丸い頭と赤い前掛けの小さな像（頭巾つき）
+    const s = Math.min(w, h), cx = w / 2, cy = h / 2;
+    box(c, S, cx - s * 0.36, cy + s * 0.12, s * 0.72, s * 0.28, s * 0.04, S.soft);
+    ellipse(c, S, cx, cy - s * 0.02, s * 0.24, s * 0.22, S.fill);
+    circle(c, S, cx, cy - s * 0.2, s * 0.14, S.fill);
+    c.beginPath();
+    c.moveTo(cx - s * 0.2, cy - s * 0.18);
+    c.quadraticCurveTo(cx, cy - s * 0.42, cx + s * 0.2, cy - s * 0.18);
+    c.stroke();
+    c.fillStyle = S.red;
+    c.beginPath();
+    c.moveTo(cx - s * 0.12, cy + s * 0.04);
+    c.lineTo(cx + s * 0.12, cy + s * 0.04);
+    c.lineTo(cx + s * 0.14, cy + s * 0.2);
+    c.lineTo(cx - s * 0.14, cy + s * 0.2);
+    c.closePath();
     c.fill();
     c.stroke();
-    thin(c, S, 0.8);
-    c.strokeStyle = S.ritual;
-    for (let i = 0; i < 5; i++) {
-      const a = Math.PI * (0.15 + i * 0.175);
-      c.beginPath();
-      c.moveTo(w / 2 + Math.cos(a) * w * 0.12, h * 0.55);
-      c.quadraticCurveTo(w / 2 + Math.cos(a) * w * 0.3, h * 0.66, w / 2 + Math.cos(a) * w * 0.26, h * 0.82);
-      c.stroke();
-    }
-    c.restore();
+  }
+
+  // 敵の駒は、中の模様を塗りつぶして黒いシルエットで描く（外枠とオーラは残す）
+  function silhouette(draw) {
+    return (c, S, w, h, item) => draw(c, { ...S, fill: S.line, soft: S.line, softLine: S.line, wall: S.line }, w, h, item);
   }
 
   function markerIcon(symbol, color) {
@@ -1546,10 +1619,24 @@
   }
 
   function komainu(c, S, w, h) {
-    // 狛犬：台座と、座った獅子
+    // 狛犬：台座の上に、白い犬のような像（耳・座った前足・丸い体）
     box(c, S, 0, 0, w, h, 0.05, S.soft);
-    ellipse(c, S, w / 2, h * 0.58, w * 0.26, h * 0.3, S.fill);
-    circle(c, S, w / 2, h * 0.3, Math.min(w, h) * 0.18, S.fill);
+    ellipse(c, S, w / 2, h * 0.3, w * 0.13, h * 0.16, '#ffffff');
+    ellipse(c, S, w / 2, h * 0.64, w * 0.22, h * 0.24, '#ffffff');
+    circle(c, S, w / 2, h * 0.26, Math.min(w, h) * 0.13, '#ffffff');
+    [-1, 1].forEach(d => {
+      c.beginPath();
+      c.moveTo(w / 2 + d * w * 0.06, h * 0.16);
+      c.lineTo(w / 2 + d * w * 0.14, h * 0.05);
+      c.lineTo(w / 2 + d * w * 0.13, h * 0.2);
+      c.closePath();
+      c.fillStyle = '#ffffff';
+      c.fill();
+      c.stroke();
+    });
+    thin(c, S, 0.7);
+    line(c, w / 2 - w * 0.2, h * 0.9, w / 2 + w * 0.2, h * 0.9);
+    normal(c, S);
   }
 
   function lantern(c, S, w, h) {
@@ -1775,16 +1862,30 @@
   }
 
   function bones(c, S, w, h) {
-    // 骨：頭蓋骨と交差した骨
-    c.save();
-    c.strokeStyle = S.softLine;
-    c.lineWidth = S.lw * 1.8;
-    line(c, w * 0.08, h * 0.2, w * 0.92, h * 0.9);
-    line(c, w * 0.92, h * 0.2, w * 0.08, h * 0.9);
-    c.restore();
-    circle(c, S, w / 2, h * 0.42, Math.min(w, h) * 0.26, S.fill);
+    // 頭蓋骨：丸い頭蓋と、くぼんだ目・鼻、歯の並んだあご
+    const s = Math.min(w, h), cx = w / 2, cy = h * 0.44;
+    c.beginPath();
+    c.moveTo(cx - s * 0.3, cy + s * 0.18);
+    c.bezierCurveTo(cx - s * 0.4, cy - s * 0.08, cx - s * 0.36, cy - s * 0.4, cx, cy - s * 0.4);
+    c.bezierCurveTo(cx + s * 0.36, cy - s * 0.4, cx + s * 0.4, cy - s * 0.08, cx + s * 0.3, cy + s * 0.18);
+    c.closePath();
+    c.fillStyle = S.fill;
+    c.fill();
+    c.stroke();
+    // あご
+    box(c, S, cx - s * 0.2, cy + s * 0.16, s * 0.4, s * 0.22, s * 0.06, S.fill);
+    thin(c, S, 0.7);
+    line(c, cx - s * 0.1, cy + s * 0.18, cx - s * 0.1, cy + s * 0.36);
+    line(c, cx + s * 0.02, cy + s * 0.18, cx + s * 0.02, cy + s * 0.36);
+    line(c, cx + s * 0.14, cy + s * 0.18, cx + s * 0.14, cy + s * 0.36);
+    normal(c, S);
+    // 目の穴と鼻
     c.fillStyle = S.line;
-    [0.4, 0.6].forEach(px => { c.beginPath(); c.arc(w * px, h * 0.4, Math.min(w, h) * 0.06, 0, TAU); c.fill(); });
+    [-1, 1].forEach(d => { c.beginPath(); c.ellipse(cx + d * s * 0.14, cy - s * 0.04, s * 0.09, s * 0.11, 0, 0, TAU); c.fill(); });
+    c.beginPath();
+    c.moveTo(cx, cy + s * 0.06); c.lineTo(cx - s * 0.04, cy + s * 0.15); c.lineTo(cx + s * 0.04, cy + s * 0.15);
+    c.closePath();
+    c.fill();
   }
 
   function pit(c, S, w, h) {
@@ -2025,6 +2126,43 @@
     box(c, S, 0, 0, w, h, 0.05, S.soft);
     circle(c, S, w / 2, h * 0.32, Math.min(w, h) * 0.16, S.fill);
     ellipse(c, S, w / 2, h * 0.62, w * 0.3, h * 0.2, S.fill);
+  }
+
+  function swing(c, S, w, h) {
+    // ブランコ：横木と両端の支柱、鎖でつった座板が2つ
+    thin(c, S, 0.8);
+    [[0.15], [w - 0.15]].forEach(([x]) => { line(c, x, 0.05, x - 0.12, h - 0.1); line(c, x, 0.05, x + 0.12, h - 0.1); });
+    normal(c, S);
+    c.save(); c.lineWidth = S.lw * 1.6; line(c, 0.1, 0.3, w - 0.1, 0.3); c.restore();
+    thin(c, S, 0.5);
+    [w * 0.32, w * 0.68].forEach(x => { line(c, x - 0.25, 0.3, x - 0.25, h * 0.62); line(c, x + 0.25, 0.3, x + 0.25, h * 0.62); });
+    normal(c, S);
+    [w * 0.32, w * 0.68].forEach(x => box(c, S, x - 0.32, h * 0.6, 0.64, 0.28, 0.06, S.wood));
+  }
+
+  function slide(c, S, w, h) {
+    // すべり台：はしごと踊り場（上）、なめらかな滑走面（下へ）
+    box(c, S, 0.05, 0.05, w - 0.1, w - 0.1, 0.06, S.soft);
+    thin(c, S, 0.6);
+    for (let y = 0.25; y < w - 0.1; y += 0.25) line(c, 0.2, y, w - 0.2, y);
+    normal(c, S);
+    rr(c, w * 0.15, w - 0.1, w * 0.7, h - w + 0.05, w * 0.3);
+    c.fillStyle = S.red;
+    c.fill();
+    c.stroke();
+    thin(c, S, 0.6);
+    line(c, w * 0.5, w + 0.1, w * 0.5, h - 0.25);
+    normal(c, S);
+  }
+
+  function sandbox(c, S, w, h) {
+    // 砂場：木の枠と砂、バケツとスコップ
+    box(c, S, 0, 0, w, h, 0.08, S.wood);
+    box(c, S, 0.25, 0.25, w - 0.5, h - 0.5, 0.06, '#ecdcae');
+    circle(c, S, w * 0.35, h * 0.4, Math.min(w, h) * 0.1, S.red);
+    thin(c, S, 0.8);
+    line(c, w * 0.6, h * 0.65, w * 0.75, h * 0.5);
+    normal(c, S);
   }
 
   function fountain(c, S, w, h) {
@@ -7618,6 +7756,8 @@
     c.restore();
   }
 
+  const TENTACLE_EDGE = '#c58bff';
+
   function tendrils(c, S, w, h) {
     // 蔓・触手状の侵食（壁に重ねる）：壁の線は長辺に沿って y = h/2 を通る想定。
     // 壁の裂け目から壁に沿って左右へ、床（主に手前）へはい出す
@@ -7636,10 +7776,11 @@
         pts.push([x, y]);
       }
       taperPath(c, pts, wid * k, wid * k * 0.12);
+      // 塗りは暗い紫、外線は明るい色で縁取る
       c.fillStyle = S.ritualSoft;
       c.fill();
       c.save();
-      c.strokeStyle = S.ritual;
+      c.strokeStyle = TENTACLE_EDGE;
       c.stroke();
       // 吸盤
       thin(c, S, 0.7);
@@ -7656,7 +7797,7 @@
     };
     // 細い蔓（壁に沿って）
     c.save();
-    c.strokeStyle = S.ritual;
+    c.strokeStyle = TENTACLE_EDGE;
     thin(c, S, 0.9);
     [[[2, 1.5], [1.4, 1.2], [0.8, 1.9], [0.1, 1.35]], [[2, 1.5], [2.7, 1.85], [3.3, 1.1], [3.95, 1.6]], [[2, 1.5], [1.7, 0.9], [1.2, 0.6], [1.0, 0.1]]].forEach(([a, b, d, e]) => {
       c.beginPath();
@@ -8686,6 +8827,7 @@
 
     A('bed_single', 'home', 2, 4, bed(1), { ja: 'シングルベッド', en: 'Single bed', ko: '싱글 침대' }),
     A('bed_double', 'home', 2.8, 4, bed(2), { ja: 'ダブルベッド', en: 'Double bed', ko: '더블 침대' }),
+    A('bed_canopy', 'home', 3.2, 4.2, canopyBed, { ja: '天蓋付きベッド', en: 'Canopy bed', ko: '천막 침대' }),
     A('futon', 'home', 2, 4, futon, { ja: '布団', en: 'Futon', ko: '이불(요)' }),
     A('wardrobe', 'home', 3, 1.2, wardrobe, { ja: 'クローゼット・洋服ダンス', en: 'Wardrobe', ko: '옷장' }),
     A('dresser', 'home', 2, 0.9, dresser, { ja: 'チェスト・ドレッサー', en: 'Dresser', ko: '서랍장' }),
@@ -8762,6 +8904,7 @@
     A('phone', 'investigation', 0.5, 0.9, phone, { ja: '携帯電話', en: 'Phone', ko: '휴대전화' }),
     A('pills', 'investigation', 0.6, 0.7, pills, { ja: '薬瓶', en: 'Pill bottle', ko: '약병' }),
     A('idol', 'occult', 0.9, 0.9, idol, { ja: '奇妙な像', en: 'Strange idol', ko: '기묘한 석상' }),
+    A('jizo', 'occult', 0.9, 0.9, jizo, { ja: '地蔵', en: 'Jizo statue', ko: '지장보살상' }, { tags: ['japanese', 'religious', 'outdoor'] }),
     A('danger', 'investigation', 1, 1, danger, { ja: '危険（！）', en: 'Danger (!)', ko: '위험(!)' }),
     A('blood', 'investigation', 2, 2, blood, { ja: '血痕', en: 'Bloodstain', ko: '핏자국' }, { under: true }),
     A('body', 'investigation', 2.2, 4, body, { ja: '人型の輪郭', en: 'Body outline', ko: '사람 윤곽' }, { under: true }),
@@ -8814,6 +8957,9 @@
     A('boat', 'vehicle', 2.2, 5, boat, { ja: '小舟', en: 'Rowboat', ko: '작은 배' }),
     A('hedge', 'outdoor', 6, 1, hedge, { ja: '生け垣', en: 'Hedge', ko: '생울타리' }),
     A('fountain', 'outdoor', 4, 4, fountain, { ja: '噴水', en: 'Fountain', ko: '분수' }),
+    A('swing', 'outdoor', 3, 1.6, swing, { ja: 'ブランコ', en: 'Swing set', ko: '그네' }, { tags: ['leisure'] }),
+    A('slide', 'outdoor', 1.2, 3.6, slide, { ja: 'すべり台', en: 'Slide', ko: '미끄럼틀' }, { tags: ['leisure'] }),
+    A('sandbox', 'outdoor', 3, 3, sandbox, { ja: '砂場', en: 'Sandbox', ko: '모래밭' }, { tags: ['leisure'] }),
     A('gazebo', 'outdoor', 5, 5, gazebo, { ja: '東屋（ガゼボ）', en: 'Gazebo', ko: '정자' }),
     A('grave', 'outdoor', 1.6, 2.6, grave, { ja: '墓', en: 'Grave', ko: '무덤' }),
     A('shed', 'outdoor', 4, 3, shed, { ja: '物置', en: 'Shed', ko: '창고(헛간)' }),
@@ -8827,7 +8973,7 @@
     A('anvil', 'fantasy', 1.6, 1, anvil, { ja: '金床', en: 'Anvil', ko: '모루' }),
     A('forge', 'fantasy', 3, 2, forge, { ja: '鍛冶炉', en: 'Forge', ko: '대장간 화로' }),
     A('quest_board', 'fantasy', 3, 0.5, questBoard, { ja: '依頼掲示板', en: 'Quest board', ko: '의뢰 게시판' }),
-    A('bunk_bed', 'fantasy', 2, 4, bunkBed, { ja: '二段ベッド', en: 'Bunk bed', ko: '2층 침대' }),
+    A('bunk_bed', 'home', 2, 4, bunkBed, { ja: '二段ベッド', en: 'Bunk bed', ko: '2층 침대' }),
     A('spike_trap', 'fantasy', 2, 2, spikeTrap, { ja: 'トゲの罠', en: 'Spike trap', ko: '가시 함정' }),
     A('torch', 'fantasy', 0.8, 0.8, torch, { ja: '壁の松明', en: 'Wall torch', ko: '벽 횃불' }),
     A('hay', 'fantasy', 2, 1.4, hay, { ja: '干し草', en: 'Hay bale', ko: '건초' }),
@@ -9047,12 +9193,12 @@
     A('npc_sitting', 'npc', 1.2, 1.6, npcSitting, { ja: '座っている人物', en: 'Seated figure', ko: '앉아 있는 인물' }),
     A('npc_lying', 'npc', 1.6, 3.6, npcLying, { ja: '倒れている人物', en: 'Fallen figure', ko: '쓰러진 인물' }),
     A('npc_bound', 'npc', 1.6, 1.6, npcBound, { ja: '拘束された人物', en: 'Restrained figure', ko: '구속된 인물' }),
-    A('enemy_humanoid', 'npc', 1.2, 1.2, enemyHumanoid, { ja: '人型の敵', en: 'Humanoid enemy', ko: '인간형 적' }, { tags: ['danger'] }),
-    A('monster_small', 'npc', 1, 1, monsterSmall, { ja: '小型モンスター', en: 'Small monster', ko: '소형 몬스터' }, { tags: ['danger'] }),
-    A('monster', 'npc', 2, 2, beast(1), { ja: 'モンスター', en: 'Monster', ko: '몬스터' }, { tags: ['danger'] }),
-    A('monster_large', 'npc', 4, 4, beast(2), { ja: '大型モンスター', en: 'Large monster', ko: '대형 몬스터' }, { tags: ['danger'] }),
-    A('monster_boss', 'npc', 6, 6, beast(3), { ja: '強大な敵', en: 'Powerful foe', ko: '강대한 적' }, { tags: ['danger'] }),
-    A('monster_huge', 'npc', 10, 10, monsterHuge, { ja: '超大型の敵', en: 'Colossal foe', ko: '초대형 적' }, { tags: ['danger'] }),
+    A('enemy_humanoid', 'npc', 1.2, 1.2, silhouette(enemyHumanoid), { ja: '人型の敵', en: 'Humanoid enemy', ko: '인간형 적' }, { tags: ['danger'] }),
+    A('monster_small', 'npc', 1, 1, silhouette(monsterSmall), { ja: '小型モンスター', en: 'Small monster', ko: '소형 몬스터' }, { tags: ['danger'] }),
+    A('monster', 'npc', 2, 2, silhouette(beast(1)), { ja: 'モンスター', en: 'Monster', ko: '몬스터' }, { tags: ['danger'] }),
+    A('monster_large', 'npc', 4, 4, silhouette(beast(2)), { ja: '大型モンスター', en: 'Large monster', ko: '대형 몬스터' }, { tags: ['danger'] }),
+    A('monster_boss', 'npc', 6, 6, silhouette(beast(3)), { ja: '強大な敵', en: 'Powerful foe', ko: '강대한 적' }, { tags: ['danger'] }),
+    A('monster_huge', 'npc', 10, 10, silhouette(monsterHuge), { ja: '超大型の敵', en: 'Colossal foe', ko: '초대형 적' }, { tags: ['danger'] }),
     A('dog', 'npc', 1, 1.8, dogShape(false), { ja: '犬', en: 'Dog', ko: '개' }),
     A('dog_big', 'npc', 1.2, 2.4, dogShape(true), { ja: '大型犬', en: 'Large dog', ko: '대형견' }),
     A('cat', 'npc', 0.6, 1.1, cat, { ja: '猫', en: 'Cat', ko: '고양이' }),
