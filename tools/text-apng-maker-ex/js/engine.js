@@ -5659,8 +5659,8 @@
       if (sc >= 0) {
         // 噛んだ点に弾ける血しぶき（手本どおり：約0.28秒で一気に広がり、約1秒そのまま、そのあとまとめて薄れて消える）
         const bf = 1 - EASE.inOutCubic(clamp((sc - (fum ? 1.1 : 1.0)) / 0.7));
-        if (fum) V.bloodBurst(ctx, cx - H * 0.1, cy, H * 0.3, sc, { seed: seed + 5, alpha: fa * bf, splinters: 130, drops: 220, drips: 3 });
-        else V.bloodBurst(ctx, cx - H * 0.07, cy, H * 0.2, sc, { seed: seed + 5, alpha: fa * bf, splinters: 90, drops: 150, drips: 2 });
+        // 手本をなぞった血しぶき：ファンブルは大きく（手本と同じ大きさ）、失敗はそれより小さく
+        V.bloodTrace(ctx, cx, cy, (H / 720) * (fum ? 1 : 0.62), sc, { alpha: fa * bf });
       }
       // 牙：閉じる（だんだん速く）→ 噛み合ったまま一拍 → はじかれるように開いて去る
       const closedGap = SS * 1.0;
@@ -5687,9 +5687,6 @@
     drawVampireFront(ctx, d, s, mb, size, textW, seed, fade, out, fum, plan, V) {
       const cx = mb.cx, cy = mb.cy;
       if (s >= 0 && s < 0.35) drawFlash(ctx, cx, cy, size * 4, fum ? '#c0182e' : '#7a1020', (fum ? 0.3 : 0.2) * Math.pow(1 - s / 0.35, 2), 0.5);
-      if (fum && s >= 0) {
-        V.cracks(ctx, cx - textW * 0.08, cy, textW * 0.45, EASE.outCubic(clamp(s / 0.3)), seed, 0.55 * fade * (1 - 0.5 * out), size * 0.01);
-      }
     }
 
     // 牙の戦闘開始：暗い帯の上下から牙の列がだんだん速く迫って噛み合い（重い揺れ・閃光・衝撃波）、文字が叩きつけられる。
