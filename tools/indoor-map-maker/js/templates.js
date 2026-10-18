@@ -4750,10 +4750,10 @@
     // 売場：壁際の冷蔵ケース・中央のゴンドラ・窓際の雑誌棚
     b.item('fridge_case', 0.05, 9, 90, { label: T('弁当', 'Bento', '도시락') }).item('fridge_case', 0.05, 13.2, 90, { label: T('惣菜', 'Deli', '반찬') })
       .item('freezer', 0.1, 17.6, 0, { size: [1.2, 3], label: T('アイス', 'Ice cream', '아이스크림') })
-      .item('store_shelf', 5, 10.2, 90).item('store_shelf', 5, 14.2, 90)
-      .item('store_shelf', 9.6, 10.2, 90).item('store_shelf', 9.6, 14.2, 90)
-      .item('store_shelf', 14.2, 10.2, 90).item('store_shelf', 14.2, 14.2, 90)
-      .item('store_shelf', 18.8, 10.2, 90, { label: T('日用品', 'Sundries', '생활용품') }).item('store_shelf', 18.8, 14.2, 90)
+      // ゴンドラは横向きに3列。通路がレジ（東）へまっすぐ抜けて、レジから見通せる
+      .item('store_shelf', 6, 10).item('store_shelf', 10, 10)
+      .item('store_shelf', 6, 14).item('store_shelf', 10, 14, 0, { label: T('日用品', 'Sundries', '생활용품') })
+      .item('store_shelf', 6, 18).item('store_shelf', 10, 18)
       .item('bookshelf', 1.2, 23.1, 0, { size: [12, 0.8], label: T('雑誌棚', 'Magazine rack', '잡지 진열대') })
       .item('copier', 14.2, 22.7, 0, { label: T('コピー機', 'Copier', '복사기') }).item('atm', 16.4, 22.95)
       .item('rug', 20.5, 22.3, 0, { size: [4, 1.5] }).item('cctv', 0.3, 7.3).item('cctv', 25.3, 23.3);
@@ -4784,7 +4784,8 @@
       .item('road_arrow', 18, 39, 90).item('road_sign', 42.4, 42.6, 0, { label: T('店舗看板', 'Store sign', '간판') })
       .item('streetlight', 6, 44.5).item('utility_pole', 30, 44.5)
       .item('road_arrow', 8, 46.5, 90).item('road_arrow', 32, 49.5, 270);
-    return [b.f];
+    // 屋内（店舗）と屋外（店先・駐車場・搬入車路・道路）に分ける
+    return splitBuilding(b.f, [[0, 0, 36, 24]], T('屋内', 'Indoors', '실내'), T('屋外', 'Outdoors', '실외'), T('コンビニ', 'Convenience store', '편의점'));
   }
 
   /* ---------- 研究・文化・軍事（T4） ---------- */
@@ -5957,11 +5958,11 @@
       C('3F', '社長室', 'diary', T('社長の手帳', 'The president\'s planner', '사장의 수첩'))
     ],
     konbini: [
-      C('1F', '事務スペース', 'laptop', T('深夜の防犯カメラ映像', 'Late-night CCTV footage', '심야 CCTV 영상')),
-      C('1F', 'レジ', 'papers', T('不自然なレシートの束', 'A bundle of odd receipts', '수상한 영수증 뭉치')),
-      C('1F', 'バックヤード', 'memo', T('夜勤の引き継ぎメモ', 'Night-shift memo', '야간 근무 인수인계 메모')),
-      C('1F', 'ウォークイン冷蔵庫', 'clue', T('血痕つきの段ボール', 'Bloodstained box', '핏자국 묻은 상자')),
-      C('1F', '駐車場', 'key', T('落ちていた車の鍵', 'A dropped car key', '떨어져 있던 자동차 열쇠'))
+      C('屋内', '事務スペース', 'laptop', T('深夜の防犯カメラ映像', 'Late-night CCTV footage', '심야 CCTV 영상')),
+      C('屋内', 'レジ', 'papers', T('不自然なレシートの束', 'A bundle of odd receipts', '수상한 영수증 뭉치')),
+      C('屋内', 'バックヤード', 'memo', T('夜勤の引き継ぎメモ', 'Night-shift memo', '야간 근무 인수인계 메모')),
+      C('屋内', 'ウォークイン冷蔵庫', 'clue', T('血痕つきの段ボール', 'Bloodstained box', '핏자국 묻은 상자')),
+      C('屋外', '駐車場', 'key', T('落ちていた車の鍵', 'A dropped car key', '떨어져 있던 자동차 열쇠'))
     ],
 
     /* (T4 の手がかりはここ) */
