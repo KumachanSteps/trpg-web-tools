@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.11';
+  const VERSION = 'v1.12';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -363,6 +363,8 @@
     out.floors = p.floors.filter(f => f && typeof f === 'object').map(f => ({
       id: String(f.id || M.uid('f')),
       name: String(f.name == null ? '' : f.name),
+      ...(f.inside ? { inside: String(f.inside) } : {}),
+      ...(f.showInside ? { showInside: true } : {}),
       rooms: list(f.rooms).filter(r => r && num(r.w) >= 1 && num(r.h) >= 1).map(r => ({
         ...r,
         id: String(r.id || M.uid('r')),
@@ -560,8 +562,27 @@
 
   /* 画面に見えている階（PL表示・隠し手がかりの表示を反映） */
   function shownFloor(playerView = app.playerView) {
-    return M.visibleFloor(cur(), playerView, !app.showClues);
+    return M.visibleFloor(ownPart(cur()), playerView, !app.showClues);
   }
+
+  /* 「内観を表示」中の外観の階：重ねた内観は選べないので、外観側に残る物だけを返す（屋根は隠れているので選べない） */
+  function ownPart(f) {
+    const inner = M.interiorFloor(f, app.project.floors);
+    if (!inner) return f;
+    const comp = M.withInterior(f, app.project.floors);
+    const mine = list => { const ids = new Set(list.map(o => o.id)); return o => ids.has(o.id); };
+    return {
+      ...comp,
+      rooms: comp.rooms.filter(mine(f.rooms)),
+      walls: comp.walls.filter(mine(f.walls)),
+      openings: comp.openings.filter(mine(f.openings)),
+      items: comp.items.filter(mine(f.items)),
+      texts: comp.texts.filter(mine(f.texts))
+    };
+  }
+
+  /* 描画・書き出し用：内観を重ねた階 */
+  const composed = f => M.withInterior(f, app.project.floors);
 
   function selectAll() {
     const f = shownFloor();
@@ -895,7 +916,7 @@
     c.setTransform(dpr * z, 0, 0, dpr * z, dpr * view.ox, dpr * view.oy);
     const viewRect = { x: -view.ox / z, y: -view.oy / z, w: view.w / z, h: view.h / z };
     const ghost = app.ghost && app.project.active > 0 ? app.project.floors[app.project.active - 1] : null;
-    M.drawFloor(c, cur(), {
+    M.drawFloor(c, composed(cur()), {
       theme: th, zoom: z, lang: app.lang, showSize: app.project.showSize, hideNames: app.project.showNames === false,
       playerView: app.playerView, hideClues: !app.showClues, editor: true, grid: app.grid, tokenGrid: app.project.tokenGrid || 0, viewRect, ghost
     });
@@ -2789,6 +2810,17 @@
     body.appendChild(prefToggle(t('props.ghost'), () => app.ghost, v => { app.ghost = v; }));
     body.appendChild(h('div', { class: 'props-sep' }));
     const f = cur();
+    const others = p.floors.filter(x => x !== f);
+    if (others.length) {
+      body.appendChild(toggleField(t('props.showInside'), () => f.showInside, v => {
+        if (v) { f.showInside = true; if (!others.some(x => x.id === f.inside)) f.inside = others[0].id; } else delete f.showInside;
+        setTimeout(() => renderProps(true), 0);
+      }));
+      body.appendChild(h('p', { class: 'props-tip' }, t('props.showInsideNote')));
+      if (f.showInside) {
+        body.appendChild(selectField(t('props.insideFloor'), others.map(x => ({ value: x.id, label: x.name || '—' })), () => f.inside, v => { f.inside = v; }));
+      }
+    }
     body.appendChild(readout(() => [[`${f.name || ''} `, t('props.stats', { rooms: f.rooms.length, items: f.items.length, openings: f.openings.length })]]));
     body.appendChild(h('p', { class: 'props-tip' }, t('props.mapTip')));
   }
@@ -3048,7 +3080,7 @@
   }
 
   function exportFloors() {
-    return app.exp.range === 'all' ? app.project.floors : [cur()];
+    return (app.exp.range === 'all' ? app.project.floors : [cur()]).map(composed);
   }
 
   function exportOptions(px) {
@@ -3146,7 +3178,7 @@
     const px = app.exp.px;
     const multi = app.project.floors.length > 1;
     const jobs = app.exp.range === 'each' && multi
-      ? app.project.floors.map(f => ({ floors: [f], name: exportName(f) }))
+      ? app.project.floors.map(f => ({ floors: [composed(f)], name: exportName(f) }))
       : [{ floors: exportFloors(), name: exportName(app.exp.range === 'all' && multi ? null : (multi ? cur() : null)) }];
     for (const job of jobs) {
       if (!job.floors.some(f => M.floorBounds(M.visibleFloor(f, app.exp.view === 'pl', app.exp.clues === 'hide')))) continue;

@@ -181,6 +181,34 @@
   }
 
   /*
+   * 外観の階に「内観を表示」がオンのとき、屋根（roof）を外して、指定した階の中身を同じ位置に重ねた階を返す。
+   * 屋根の上の飾り（文字・家具）と、内観の部屋に重なる外観側の部屋は外す。境界のドア・窓は重複を除く。
+   */
+  function isRoof(r) { return r.cat === 'roof'; }
+  function interiorFloor(floor, floors) {
+    if (!floor || !floor.showInside || !Array.isArray(floors)) return null;
+    const inner = floors.find(f => f.id === floor.inside && f !== floor) || floors.find(f => f !== floor);
+    return inner || null;
+  }
+  function withInterior(floor, floors) {
+    const inner = interiorFloor(floor, floors);
+    if (!inner) return floor;
+    const inRoom = (x, y) => inner.rooms.some(r => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h);
+    // 外す部屋：屋根と、内観の部屋に重なる外観側の部屋。その上に置いた飾りも一緒に外す
+    const drop = floor.rooms.filter(r => isRoof(r) || inRoom(r.x + r.w / 2, r.y + r.h / 2));
+    const onRoof = (x, y) => drop.some(r => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h);
+    const seen = new Set(inner.openings.map(o => `${o.o}|${o.x}|${o.y}`));
+    return {
+      ...floor,
+      rooms: floor.rooms.filter(r => !drop.includes(r)).concat(inner.rooms.filter(r => !isRoof(r))),
+      walls: floor.walls.filter(w => !onRoof((w.x1 + w.x2) / 2, (w.y1 + w.y2) / 2)).concat(inner.walls),
+      openings: floor.openings.filter(o => !seen.has(`${o.o}|${o.x}|${o.y}`)).concat(inner.openings),
+      items: floor.items.filter(i => !onRoof(i.x + i.w / 2, i.y + i.h / 2)).concat(inner.items),
+      texts: floor.texts.filter(t => !onRoof(t.x, t.y)).concat(inner.texts)
+    };
+  }
+
+  /*
    * 隠し手がかり（clue: true の家具・文字）を除いた階。GM/PL表示とは別に切り替える。
    * 部屋の中は見せたいが、手がかりはまだ見せたくないときに使う。
    */
@@ -409,7 +437,7 @@
   global.IMM = global.IMM || {};
   Object.assign(global.IMM, {
     CELL_M, TATAMI_M2, CATEGORIES, CAT, OPENINGS, OPEN, SWING_KINDS, WALL_KINDS, WALL, TAG_AXES, TAGS, TAG,
-    uid, snap, clone, emptyFloor, emptyProject, visibleFloor, computeWalls,
+    uid, snap, clone, emptyFloor, emptyProject, visibleFloor, withInterior, interiorFloor, computeWalls,
     itemLocalSize, rectsOverlap, rectContains, openingRect, floorBounds, roomArea, sizeText, pick
   });
 })(window);
