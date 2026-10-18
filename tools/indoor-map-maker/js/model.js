@@ -83,7 +83,7 @@
 
   const WALL_KINDS = [
     { id: 'ext', t: 0.34, name: { ja: '外壁（厚い）', en: 'Exterior (thick)', ko: '외벽(두꺼움)' } },
-    { id: 'int', t: 0.2, name: { ja: '内壁', en: 'Interior', ko: '내벽' } },
+    { id: 'int', t: 0.14, name: { ja: '内壁', en: 'Interior', ko: '내벽' } },
     { id: 'thin', t: 0.12, name: { ja: '間仕切り（薄い）', en: 'Partition (thin)', ko: '칸막이(얇음)' } },
     { id: 'glass', t: 0.14, name: { ja: 'ガラス壁', en: 'Glass wall', ko: '유리벽' } },
     { id: 'rail', t: 0.1, name: { ja: '手すり・腰壁', en: 'Railing', ko: '난간' } },
