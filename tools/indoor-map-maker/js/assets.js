@@ -2128,6 +2128,43 @@
     ellipse(c, S, w / 2, h * 0.62, w * 0.3, h * 0.2, S.fill);
   }
 
+  function swing(c, S, w, h) {
+    // ブランコ：横木と両端の支柱、鎖でつった座板が2つ
+    thin(c, S, 0.8);
+    [[0.15], [w - 0.15]].forEach(([x]) => { line(c, x, 0.05, x - 0.12, h - 0.1); line(c, x, 0.05, x + 0.12, h - 0.1); });
+    normal(c, S);
+    c.save(); c.lineWidth = S.lw * 1.6; line(c, 0.1, 0.3, w - 0.1, 0.3); c.restore();
+    thin(c, S, 0.5);
+    [w * 0.32, w * 0.68].forEach(x => { line(c, x - 0.25, 0.3, x - 0.25, h * 0.62); line(c, x + 0.25, 0.3, x + 0.25, h * 0.62); });
+    normal(c, S);
+    [w * 0.32, w * 0.68].forEach(x => box(c, S, x - 0.32, h * 0.6, 0.64, 0.28, 0.06, S.wood));
+  }
+
+  function slide(c, S, w, h) {
+    // すべり台：はしごと踊り場（上）、なめらかな滑走面（下へ）
+    box(c, S, 0.05, 0.05, w - 0.1, w - 0.1, 0.06, S.soft);
+    thin(c, S, 0.6);
+    for (let y = 0.25; y < w - 0.1; y += 0.25) line(c, 0.2, y, w - 0.2, y);
+    normal(c, S);
+    rr(c, w * 0.15, w - 0.1, w * 0.7, h - w + 0.05, w * 0.3);
+    c.fillStyle = S.red;
+    c.fill();
+    c.stroke();
+    thin(c, S, 0.6);
+    line(c, w * 0.5, w + 0.1, w * 0.5, h - 0.25);
+    normal(c, S);
+  }
+
+  function sandbox(c, S, w, h) {
+    // 砂場：木の枠と砂、バケツとスコップ
+    box(c, S, 0, 0, w, h, 0.08, S.wood);
+    box(c, S, 0.25, 0.25, w - 0.5, h - 0.5, 0.06, '#ecdcae');
+    circle(c, S, w * 0.35, h * 0.4, Math.min(w, h) * 0.1, S.red);
+    thin(c, S, 0.8);
+    line(c, w * 0.6, h * 0.65, w * 0.75, h * 0.5);
+    normal(c, S);
+  }
+
   function fountain(c, S, w, h) {
     // 噴水：石の縁、水盤、中央の柱
     const r = Math.min(w, h) / 2;
@@ -8920,6 +8957,9 @@
     A('boat', 'vehicle', 2.2, 5, boat, { ja: '小舟', en: 'Rowboat', ko: '작은 배' }),
     A('hedge', 'outdoor', 6, 1, hedge, { ja: '生け垣', en: 'Hedge', ko: '생울타리' }),
     A('fountain', 'outdoor', 4, 4, fountain, { ja: '噴水', en: 'Fountain', ko: '분수' }),
+    A('swing', 'outdoor', 3, 1.6, swing, { ja: 'ブランコ', en: 'Swing set', ko: '그네' }, { tags: ['leisure'] }),
+    A('slide', 'outdoor', 1.2, 3.6, slide, { ja: 'すべり台', en: 'Slide', ko: '미끄럼틀' }, { tags: ['leisure'] }),
+    A('sandbox', 'outdoor', 3, 3, sandbox, { ja: '砂場', en: 'Sandbox', ko: '모래밭' }, { tags: ['leisure'] }),
     A('gazebo', 'outdoor', 5, 5, gazebo, { ja: '東屋（ガゼボ）', en: 'Gazebo', ko: '정자' }),
     A('grave', 'outdoor', 1.6, 2.6, grave, { ja: '墓', en: 'Grave', ko: '무덤' }),
     A('shed', 'outdoor', 4, 3, shed, { ja: '物置', en: 'Shed', ko: '창고(헛간)' }),
