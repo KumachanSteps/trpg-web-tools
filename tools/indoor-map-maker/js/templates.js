@@ -1862,6 +1862,32 @@
   /* ---------- 新しいカテゴリ用の小さな道具 ---------- */
 
   /* 建物のない所を庭などで埋める。重ならない長方形に分けて置き、名前は隠す（必要なら text で名前を置く） */
+  /* 1つの階を「建物の中」と「外観」の2つの階に分ける。rects は建物の範囲（[x, y, w, h] の組）。
+   * 建物の中の部屋・家具・文字は中の階へ、それ以外は外観へ。外観では建物を屋根として描き、
+   * 外壁の上のドア・窓は両方の階に残す（屋内の階と同じ位置）。 */
+  function splitBuilding(f, rects, mainName, outName, roofName) {
+    const eps = 1e-6;
+    const strict = (x, y) => rects.some(([rx, ry, rw, rh]) => x > rx + eps && x < rx + rw - eps && y > ry + eps && y < ry + rh - eps);
+    const roomIn = r => rects.some(([rx, ry, rw, rh]) => r.x >= rx - eps && r.y >= ry - eps && r.x + r.w <= rx + rw + eps && r.y + r.h <= ry + rh + eps);
+    const main = { name: mainName, rooms: [], walls: [], openings: [], items: [], texts: [] };
+    const out = { name: outName, rooms: [], walls: [], openings: [], items: [], texts: [] };
+    f.rooms.forEach(r => (roomIn(r) ? main : out).rooms.push(r));
+    rects.forEach(([x, y, w, h], i) => out.rooms.push({ name: roofName, cat: 'roof', x, y, w, h, ...(i ? { hideLabel: true } : {}) }));
+    f.items.forEach(it => (strict(it.x + it.w / 2, it.y + it.h / 2) ? main : out).items.push(it));
+    f.texts.forEach(t => (strict(t.x, t.y) ? main : out).texts.push(t));
+    f.walls.forEach(w => (strict((w.x1 + w.x2) / 2, (w.y1 + w.y2) / 2) ? main : out).walls.push(w));
+    f.openings.forEach(o => {
+      const mx = o.o === 'h' ? o.x + o.len / 2 : o.x, my = o.o === 'h' ? o.y : o.y + o.len / 2;
+      const d = 0.1;
+      const a = o.o === 'h' ? strict(mx, my - d) : strict(mx - d, my);
+      const b = o.o === 'h' ? strict(mx, my + d) : strict(mx + d, my);
+      if (a && b) main.openings.push(o);
+      else if (a || b) { main.openings.push(o); out.openings.push({ ...o }); }
+      else out.openings.push(o);
+    });
+    return [main, out];
+  }
+
   function fillYard(b, x0, y0, x1, y1, name, cat, extra) {
     const used = new Set();
     b.f.rooms.forEach(r => { for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) used.add(`${x},${y}`); });
@@ -4217,7 +4243,9 @@
     b.text(T('中門', 'Middle gate', '중문'), 51, 42.1, { size: 0.45 })
       .text(T('勝手庭', 'Service yard', '뒷마당'), 13, 19.6, { size: 0.6, bold: true })
       .text(T('前庭', 'Front court', '앞뜰'), 46, 18.6, { size: 0.7, bold: true });
-    return [b.f];
+    // 母屋（屋内）と外観（敷地・長屋門・蔵・茶室）に分ける
+    return splitBuilding(b.f, [[6, 22, 42, 17], [14, 39, 36, 2], [48, 26, 3, 4], [48, 30, 2, 9], [34, 17, 5, 5]],
+      T('母屋', 'Main house', '안채'), T('外観', 'Exterior', '외관'), T('母屋', 'Main house', '안채'));
   }
 
   /* ---------- 歴史：寺院（山門・参道・本堂・庫裏・鐘楼・墓地・庭園） ---------- */
@@ -4343,12 +4371,8 @@
       .room(T('聖具室', 'Sacristy', '제의실'), 'office', 22, 2, 8, 7, { ly: 0.6 })
       .room(T('階段室', 'Stairwell', '계단실'), 'hall', 22, 9, 8, 5, { lx: -2.4, ly: 1.2 })
       .room(T('拝廊', 'Narthex', '배랑'), 'hall', 4, 40, 22, 5, { lx: 4.5 })
-      .room(T('鐘楼', 'Bell tower', '종탑'), 'hall', 26, 38, 7, 7, { ly: -2.8 })
-      .room(T('前庭', 'Forecourt', '앞마당'), 'porch', 6, 45, 18, 4, { lx: 5.5 })
-      .room(T('墓地', 'Churchyard', '교회 묘지'), 'garden', 28, 14, 10, 23, { ly: 1.5 });
-    fillYard(g, 0, 0, 39, 50, T('敷地', 'Church grounds', '교회 부지'));
-    g.wall(28, 14, 38, 14, 'fence').wall(38, 14, 38, 37, 'fence').wall(28, 37, 38, 37, 'fence').wall(28, 14, 28, 37, 'fence')
-      .wall(8, 13, 13.5, 13, 'rail').wall(16.5, 13, 22, 13, 'rail');           // 聖体拝領台
+      .room(T('鐘楼', 'Bell tower', '종탑'), 'hall', 26, 38, 7, 7, { ly: -2.8 });
+    g.wall(8, 13, 13.5, 13, 'rail').wall(16.5, 13, 22, 13, 'rail');           // 聖体拝領台
     g.dh(12.5, 45, 5, 1, 0, 'big2')                 // 正面の大扉
       .dh(13.5, 40, 3, -1, 0, 'door2').dh(6, 40, 1.5, -1, 0).dh(22.5, 40, 1.5, -1, 1)   // 拝廊 ↔ 身廊
       .dv(26, 42, 1.5, -1, 0)                      // 鐘楼
@@ -4358,7 +4382,6 @@
       .dv(22, 4, 1.5, 1, 0)                        // 内陣 ↔ 聖具室
       .dh(23, 9, 1.5, 1, 0)                        // 聖具室 ↔ 階段室
       .dv(0, 8, 1.5, -1, 0).dv(30, 3.5, 1.5, 1, 0)  // 事務室・聖具室の勝手口
-      .dv(28, 24.5, 2, -1, 0, 'gate')              // 墓地の門
       .wv(4, 16.5, 2).wv(4, 26, 2).wv(4, 35, 2).wv(26, 16.5, 2).wv(26, 21, 2).wv(26, 26, 2).wv(26, 31, 2).wv(26, 35.5, 2)
       .wv(8, 3, 2).wh(13.5, 2, 3).wh(1, 6, 2.5).wv(0, 11, 2).wh(26.5, 2, 2).wv(30, 6, 2)
       .wh(6, 45, 3).wh(21, 45, 3).wv(4, 42, 2).wv(33, 41, 2).wh(28.5, 38, 2);
@@ -4374,10 +4397,6 @@
       .item('wardrobe', 23.6, 2.05, 0, { size: [3, 1] }).item('counter', 24.6, 6.8, 0, { size: [3, 1] }).item('safe', 28.6, 2.1).item('washbasin', 22.1, 6.6, 90)
       .item('stairs', CHURCH_CRYPT_STAIRS[0], CHURCH_CRYPT_STAIRS[1], 90)
       .item('spiral', CHURCH_TOWER[0], CHURCH_TOWER[1]);
-    for (const [x, y] of [[29.4, 15.2], [32, 15.2], [34.6, 15.2], [29.4, 19.4], [32, 19.4], [34.6, 19.4], [29.4, 29], [32, 29], [34.6, 29], [29.4, 33.2], [32, 33.2], [34.6, 33.2]]) g.item('grave', x, y);
-    g.item('tree', 34.6, 22.6, 0, { size: [2.8, 2.8] }).item('statue', 30.6, 22.6, 0, { size: [1.4, 1.4], label: T('天使像', 'Angel statue', '천사상') })
-      .item('statue', 7, 45.6, 0, { size: [1.4, 1.4], label: T('聖母像', 'Madonna', '성모상') }).item('streetlight', 22.4, 47.6)
-      .item('tree', 0.4, 29).item('tree', 0.6, 44.6, 0, { size: [2.6, 2.6] }).item('tree', 34.6, 45.4, 0, { size: [3, 3] }).item('bush', 2, 2).item('bush', 33, 2.4);
 
     const u = makeFloor('2F');
     u.room(T('オルガン席', 'Organ loft', '오르간석'), 'public', 4, 36, 22, 9, { ly: 1.4 })
@@ -4411,7 +4430,33 @@
       .item('stairs', CHURCH_CRYPT_STAIRS[0], CHURCH_CRYPT_STAIRS[1], 90)
       .item('coffin', 3.1, 2.6).item('magic_circle', 1.5, 8.4, 0, { size: [5, 5] }).item('chains', 0.4, 3, 90, { size: [3, 0.6] })
       .item('idol', 3.6, 8.6).item('drag_marks', 5.4, 11.2, 90, { size: [1.4, 2.4] });
-    return [c.f, g.f, u.f];
+    return [c.f, g.f, u.f, churchOutside()];
+  }
+
+  // 教会の外観：建物は十字形の屋根（身廊・内陣・両翼）と尖塔の鐘楼。ドア・窓は1Fと同じ位置
+  function churchOutside() {
+    const o = makeFloor(T('外観', 'Exterior', '외관'));
+    o.room(T('教会', 'Church', '교회'), 'roof', 4, 14, 22, 31, { ly: 3 })
+      .room(T('内陣の屋根', 'Chancel roof', '내진 지붕'), 'roof', 8, 2, 14, 12, { hideLabel: true })
+      .room(T('事務室の屋根', 'Office roof', '사무실 지붕'), 'roof', 0, 6, 8, 8, { hideLabel: true })
+      .room(T('聖具室の屋根', 'Sacristy roof', '제의실 지붕'), 'roof', 22, 2, 8, 12, { hideLabel: true })
+      .room(T('鐘楼（尖塔）', 'Bell tower (spire)', '종탑(첨탑)'), 'stone', 26, 38, 7, 7, { ly: -2.8 })
+      .room(T('前庭', 'Forecourt', '앞마당'), 'porch', 6, 45, 18, 4, { lx: 5.5 })
+      .room(T('墓地', 'Churchyard', '교회 묘지'), 'garden', 28, 14, 10, 23, { ly: 1.5 });
+    fillYard(o, 0, 0, 39, 50, T('敷地', 'Church grounds', '교회 부지'));
+    o.wall(28, 14, 38, 14, 'fence').wall(38, 14, 38, 37, 'fence').wall(28, 37, 38, 37, 'fence').wall(28, 14, 28, 37, 'fence');
+    o.dh(12.5, 45, 5, 1, 0, 'big2').dv(0, 8, 1.5, -1, 0).dv(30, 3.5, 1.5, 1, 0).dv(28, 24.5, 2, -1, 0, 'gate')
+      .wv(4, 16.5, 2).wv(4, 26, 2).wv(4, 35, 2).wv(26, 16.5, 2).wv(26, 21, 2).wv(26, 26, 2).wv(26, 31, 2).wv(26, 35.5, 2)
+      .wv(8, 3, 2).wh(13.5, 2, 3).wh(1, 6, 2.5).wv(0, 11, 2).wh(26.5, 2, 2).wv(30, 6, 2)
+      .wh(6, 45, 3).wh(21, 45, 3).wv(4, 42, 2).wv(33, 41, 2);
+    // 屋根の棟に十字架、正面にばら窓、尖塔の頂に十字架
+    o.text('✝', 15, 26, { size: 4 }).text('✝', 15, 7.6, { size: 2.4 }).text('✝', 29.5, 41.5, { size: 2.4 });
+    o.item('statue', 13.9, 42.2, 0, { size: [2.2, 2.2], label: T('ばら窓', 'Rose window', '장미창') });
+    for (const [x, y] of [[29.4, 15.2], [32, 15.2], [34.6, 15.2], [29.4, 19.4], [32, 19.4], [34.6, 19.4], [29.4, 29], [32, 29], [34.6, 29], [29.4, 33.2], [32, 33.2], [34.6, 33.2]]) o.item('grave', x, y);
+    o.item('tree', 34.6, 22.6, 0, { size: [2.8, 2.8] }).item('statue', 30.6, 22.6, 0, { size: [1.4, 1.4], label: T('天使像', 'Angel statue', '천사상') })
+      .item('statue', 7, 45.6, 0, { size: [1.4, 1.4], label: T('聖母像', 'Madonna', '성모상') }).item('streetlight', 22.4, 47.6)
+      .item('tree', 0.4, 29).item('tree', 0.6, 44.6, 0, { size: [2.6, 2.6] }).item('tree', 34.6, 45.4, 0, { size: [3, 3] }).item('bush', 2, 2).item('bush', 33, 2.4);
+    return o.f;
   }
 
   /* ---------- 商業：オフィスビル（1F ロビー・2F オフィス・3F 役員・屋上、センターコア） ---------- */
@@ -5856,11 +5901,11 @@
 
     /* (T3 の手がかりはここ) */
     buke: [
-      C('1F', '書院', 'diary', T('当主の日記', 'The master\'s diary', '당주의 일기')),
-      C('1F', '蔵', 'key', T('長持の鍵', 'Key to the chest', '궤짝 열쇠')),
-      C('1F', '仏間', 'papers', T('塗りつぶされた家系図', 'Family tree with names blacked out', '이름이 지워진 가계도')),
-      C('1F', '次の間', 'cursed_item', T('割れた茶碗', 'Cracked tea bowl', '깨진 찻사발')),
-      C('1F', '寝間', 'memo', T('奉公人の書き置き', 'A servant\'s note', '하인의 쪽지'))
+      C('母屋', '書院', 'diary', T('当主の日記', 'The master\'s diary', '당주의 일기')),
+      C('外観', '蔵', 'key', T('長持の鍵', 'Key to the chest', '궤짝 열쇠')),
+      C('母屋', '仏間', 'papers', T('塗りつぶされた家系図', 'Family tree with names blacked out', '이름이 지워진 가계도')),
+      C('母屋', '次の間', 'cursed_item', T('割れた茶碗', 'Cracked tea bowl', '깨진 찻사발')),
+      C('母屋', '寝間', 'memo', T('奉公人の書き置き', 'A servant\'s note', '하인의 쪽지'))
     ],
     temple: [
       C('1F', '寺務所', 'file_folder', T('古い過去帳', 'Death register', '오래된 과거장')),
