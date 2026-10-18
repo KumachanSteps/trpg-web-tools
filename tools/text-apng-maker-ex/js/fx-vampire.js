@@ -401,6 +401,164 @@
   }
 
   /*
+   * 血しぶき（手本どおりの、べたっとした赤い飛沫）：ほぼ一色の暗い赤の大きな塊（縁は細いギザギザと外へ走る尖った筋でざらつく）と、色の違う赤い第2の塊、
+   * 下へ垂れる舌のような筋、縁のまわりの細い破片、大小さまざまな丸い滴（暗い・中間・鮮やかな赤の3色、大きいものにはごく小さなつや）、塊の下へ伸びる垂れ。
+   * ほとんど不透明な塗りつぶしで、ぼかしや光のにじみは使わない。tt は弾けてからの秒数：約0.28秒で一気に広がり（先に核と細い筋と粒が出る）、そのあとは形を保って垂れだけが伸びる。
+   * R は主な塊の半分の幅。シードが同じなら同じ形。alpha で薄めるときは別の紙に描いてからまとめて薄める（重なりの縞を出さない）
+   */
+  let burstBuf = null;
+  function bloodBurst(ctx, x, y, R, tt, o = {}) {
+    const alpha = clamp(o.alpha ?? 1);
+    if (tt <= 0 || R <= 2 || alpha <= 0.004) return;
+    if (alpha < 0.995 && ctx.canvas) {
+      const cv = ctx.canvas;
+      if (!burstBuf || burstBuf.width !== cv.width || burstBuf.height !== cv.height) burstBuf = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(cv.width, cv.height) : Object.assign(document.createElement('canvas'), { width: cv.width, height: cv.height });
+      const bx = burstBuf.getContext('2d');
+      bx.setTransform(1, 0, 0, 1, 0, 0);
+      bx.clearRect(0, 0, burstBuf.width, burstBuf.height);
+      bx.setTransform(ctx.getTransform());
+      bloodBurstInner(bx, x, y, R, tt, o);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha *= alpha;
+      ctx.drawImage(burstBuf, 0, 0);
+      ctx.restore();
+      return;
+    }
+    bloodBurstInner(ctx, x, y, R, tt, o);
+  }
+  function bloodBurstInner(ctx, x, y, R, tt, o) {
+    const seed = o.seed || 1;
+    const r = (i, q = 0) => rnd(seed, i, q);
+    const TONE = ['#7a0f12', '#a0000f', '#c01018'];
+    const pick = u => (u < 0.22 ? TONE[0] : u < 0.62 ? TONE[1] : TONE[2]);
+    const p = 1 - Math.pow(1 - clamp(tt / 0.28), 3.2);                   // 広がり（はじめに速い）
+    const core = clamp(tt / 0.1);                                        // 核と筋と粒が先に出る
+    const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+    // ギザギザに縁がざらついた塊のパス（楕円＋ゆるいうねり＋細く尖った歯＋数本の長い舌）
+    const ragged = (cx, cy, ax, ay, rot, base, nSpike, hMin, hMax, nTongue, grow) => {
+      const N = 200, pts = [];
+      const ph = [r(base, 1) * TAU, r(base, 2) * TAU, r(base, 3) * TAU, r(base, 4) * TAU];
+      const sp = [];
+      for (let j = 0; j < nSpike; j++) sp.push({ a: r(base + 10, j) * TAU, w: 0.015 + 0.04 * r(base + 11, j), h: hMin + (hMax - hMin) * Math.pow(r(base + 12, j), 2.2) });
+      for (let j = 0; j < nTongue; j++) sp.push({ a: r(base + 20, j) * TAU, w: 0.07 + 0.06 * r(base + 21, j), h: 0.3 + 0.3 * r(base + 22, j) });
+      for (let i = 0; i < N; i++) {
+        const a = i / N * TAU;
+        let m = 1 + 0.1 * Math.sin(2 * a + ph[0]) + 0.07 * Math.sin(3 * a + ph[1]) + 0.05 * Math.sin(5 * a + ph[2]) + 0.04 * Math.sin(8 * a + ph[3]) + 0.025 * Math.sin(13 * a + ph[1] * 2) + 0.02 * Math.sin(21 * a + ph[2] * 3) + (r(base + 30, i) - 0.5) * 0.03;
+        let add = 0;
+        for (const s of sp) { const da = Math.abs(wrap(a - s.a)); if (da < s.w) add += s.h * Math.pow(1 - da / s.w, 2.3); }
+        m += add * grow;
+        const ex = Math.cos(a) * ax * m, ey = Math.sin(a) * ay * m;
+        pts.push([cx + ex * Math.cos(rot) - ey * Math.sin(rot), cy + ex * Math.sin(rot) + ey * Math.cos(rot)]);
+      }
+      const path = new Path2D();
+      pts.forEach(([px, py], i) => { if (i) path.lineTo(px, py); else path.moveTo(px, py); });
+      path.closePath();
+      return path;
+    };
+    ctx.save();
+    ctx.globalAlpha *= clamp(core * 1.4);
+    const sc = 0.4 + 0.6 * p, sg = 0.35 + 0.65 * p;
+    // 垂れ（舌）：主な塊の下から、暗い赤のしずくの形で下へ。ゆっくり伸びる
+    const tongueLen = R * (0.55 + 0.15 * r(60, 1)) * (0.5 + 0.5 * clamp((tt - 0.1) / 0.9));
+    {
+      const tx = x - R * 0.12 + R * (r(61, 1) - 0.5) * 0.2, ty = y + R * 0.5 * sc;
+      const tw = R * 0.2;
+      ctx.fillStyle = '#6e0a0d';
+      ctx.beginPath();
+      ctx.moveTo(tx - tw * 1.1, ty - R * 0.12); ctx.quadraticCurveTo(tx - tw * 1.05, ty + tongueLen * 0.55, tx - tw * 0.2, ty + tongueLen);
+      ctx.lineTo(tx - tw * 0.05, ty + tongueLen + R * 0.18 * sg);
+      ctx.lineTo(tx + tw * 0.12, ty + tongueLen);
+      ctx.quadraticCurveTo(tx + tw * 1.05, ty + tongueLen * 0.5, tx + tw * 1.1, ty - R * 0.12);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(40, 2, 6, 0.4)';
+      ctx.beginPath(); ctx.ellipse(tx - tw * 0.1, ty + tongueLen * 0.7, tw * 0.5, tw * 0.35, 0.3, 0, TAU); ctx.fill();
+    }
+    // 第2の塊（右）：少し鮮やかな別の赤
+    const m2 = ragged(x + R * 1.12 * sc, y + R * 0.1 * sc, R * 0.4 * sc, R * 0.62 * sc, -0.12, 200, 40, 0.04, 0.24, 3, sg);
+    ctx.fillStyle = '#8c0309'; ctx.fill(m2);
+    ctx.save(); ctx.clip(m2);
+    ctx.fillStyle = 'rgba(190, 14, 26, 0.55)';
+    ctx.beginPath(); ctx.ellipse(x + R * 1.18 * sc, y + R * 0.3 * sc, R * 0.26 * sc, R * 0.34 * sc, 0.2, 0, TAU); ctx.fill();
+    ctx.restore();
+    // 主な塊
+    const m1 = ragged(x, y, R * sc, R * 0.72 * sc, (r(70, 1) - 0.5) * 0.3, 100, 90, 0.04, 0.2, 6, sg);
+    ctx.fillStyle = '#820d10'; ctx.fill(m1);
+    ctx.save(); ctx.clip(m1);
+    for (let q = 0; q < 6; q++) {
+      const a = r(300 + q, 1) * TAU, d = R * 0.55 * Math.sqrt(r(310 + q, 1)) * sc;
+      ctx.fillStyle = q % 2 ? 'rgba(105, 6, 10, 0.45)' : 'rgba(170, 14, 24, 0.28)';
+      ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d * 0.8, R * (0.18 + 0.2 * r(320 + q, 1)) * sc, R * (0.1 + 0.14 * r(330 + q, 1)) * sc, a, 0, TAU); ctx.fill();
+    }
+    // ごく小さなつや（細い明るい線と小さな楕円）
+    ctx.strokeStyle = 'rgba(255, 122, 130, 0.3)'; ctx.lineCap = 'round';
+    for (let q = 0; q < 3; q++) {
+      const a0 = 3.5 + r(340 + q, 1) * 1.1, rad = R * (0.35 + 0.3 * r(350 + q, 1)) * sc;
+      ctx.lineWidth = Math.max(1, R * 0.018);
+      ctx.beginPath(); ctx.arc(x, y, rad, a0, a0 + 0.3 + 0.25 * r(360 + q, 1)); ctx.stroke();
+    }
+    ctx.restore();
+    // 縁のまわりの細い破片：外へ向いた細く尖った三角（左側とまわりに多く）
+    const NSP = o.splinters ?? 110;
+    for (let i = 0; i < NSP; i++) {
+      const a = r(400 + i, 1) * TAU;
+      const rim = R * (0.95 + 0.25 * r(420 + i, 1)) * sc * (1 + 0.15 * Math.cos(a - 3.1));
+      const L = R * (0.05 + 0.3 * Math.pow(r(440 + i, 1), 2.2)) * sg;
+      const w = R * (0.012 + 0.03 * r(460 + i, 1));
+      const aa = a + (r(480 + i, 1) - 0.5) * 0.35;
+      const bx = x + Math.cos(a) * rim, by = y + Math.sin(a) * rim * 0.74;
+      ctx.fillStyle = pick(r(500 + i, 1));
+      ctx.beginPath();
+      ctx.moveTo(bx - Math.sin(aa) * w, by + Math.cos(aa) * w);
+      ctx.lineTo(bx + Math.cos(aa) * L, by + Math.sin(aa) * L);
+      ctx.lineTo(bx + Math.sin(aa) * w, by - Math.cos(aa) * w);
+      ctx.closePath(); ctx.fill();
+    }
+    // 滴：小さいものがいちばん多く、中くらいが少し、大きいものが数個。外側のものほど遅れて出て、外へ飛びながら落ち着く
+    const ND = o.drops ?? 190;
+    for (let i = 0; i < ND; i++) {
+      const u = r(600 + i, 1);
+      const a = r(620 + i, 1) * TAU;
+      const dist = R * (1.15 + 1.35 * Math.pow(r(640 + i, 1), 0.85));
+      const delay = dist / (R * 9);
+      if (tt < delay) continue;
+      const e = 1 - Math.pow(1 - clamp((tt - delay) / 0.2), 3);
+      const rad = u < 0.025 ? R * (0.13 + 0.06 * r(660 + i, 1)) : u < 0.12 ? R * (0.05 + 0.04 * r(660 + i, 1)) : u < 0.4 ? R * (0.02 + 0.02 * r(660 + i, 1)) : R * (0.007 + 0.011 * r(660 + i, 1));
+      const d2 = dist * (0.6 + 0.4 * e);
+      const dx = x + Math.cos(a) * d2 * 1.05, dy = y + Math.sin(a) * d2 * 0.9 + R * 0.05 * Math.max(0, tt - 0.4) * r(680 + i, 1);
+      const col = pick(r(700 + i, 1));
+      ctx.fillStyle = col;
+      ctx.save();
+      ctx.translate(dx, dy); ctx.rotate(a);
+      const st = 1 + 0.9 * (1 - e) + (rad > R * 0.03 ? 0.12 * r(720 + i, 1) : 0);
+      ctx.beginPath();
+      if (rad > R * 0.03 && r(740 + i, 1) < 0.25) {
+        // しずくの形（飛んできた向きに細く）
+        ctx.moveTo(-rad * 2.2 * st, 0); ctx.quadraticCurveTo(-rad * 0.6, -rad * 0.9, 0, -rad); ctx.arc(0, 0, rad, -Math.PI / 2, Math.PI / 2); ctx.quadraticCurveTo(-rad * 0.6, rad * 0.9, -rad * 2.2 * st, 0);
+      } else ctx.ellipse(0, 0, rad * st, rad / Math.sqrt(st), 0, 0, TAU);
+      ctx.fill();
+      if (rad > R * 0.045) {
+        ctx.fillStyle = 'rgba(255, 150, 156, 0.38)';
+        ctx.beginPath(); ctx.ellipse(-rad * 0.25, -rad * 0.35, rad * 0.26, rad * 0.14, -0.5, 0, TAU); ctx.fill();
+      }
+      ctx.restore();
+    }
+    // 垂れ：塊の下の縁から、先に玉のついた太めの筋がゆっくり伸びる
+    const NDR = o.drips ?? 3;
+    for (let i = 0; i < NDR; i++) {
+      const dxm = x + (r(800 + i, 1) - 0.5) * R * 1.5 * sc + R * 0.35;
+      const len = R * (0.35 + 0.45 * r(810 + i, 1)) * (1 - Math.pow(1 - clamp((tt - 0.3 - 0.15 * i) / 1.4), 2.2));
+      if (len < 2) continue;
+      const w = R * (0.035 + 0.02 * r(820 + i, 1)), y0 = y + R * 0.6 * sc;
+      ctx.fillStyle = i % 2 ? TONE[1] : TONE[0];
+      ctx.beginPath();
+      ctx.moveTo(dxm - w * 0.8, y0 - R * 0.1); ctx.lineTo(dxm - w * 0.45, y0 + len); ctx.arc(dxm, y0 + len, w * 0.8, Math.PI, 0, true); ctx.lineTo(dxm + w * 0.8, y0 - R * 0.1);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /*
    * したたり：上の端 y0 から長さ len だけ、先に丸い玉をつけて伸びる血の筋。w は太さ
    */
   function drip(ctx, x, y0, len, w, alpha = 1) {
@@ -522,5 +680,5 @@
     ctx.restore();
   }
 
-  root.TextApngVampireFx = { puff, bat, moon, teethRow, splatter, drip, cracks, flare, band, BLOOD, BONE };
+  root.TextApngVampireFx = { puff, bat, moon, teethRow, splatter, bloodBurst, drip, cracks, flare, band, BLOOD, BONE };
 })(typeof window !== 'undefined' ? window : globalThis);

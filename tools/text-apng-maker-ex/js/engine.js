@@ -5657,10 +5657,10 @@
         ctx.translate(noise1(d * 40, 3) * sh, noise1(d * 40, 9) * sh);
       }
       if (sc >= 0) {
-        // 噛んだ点に叩きつけた血の飛沫（はじめの0.14秒でいっぺんに広がり、そのあとは落ち着いて垂れる）
-        if (fum) V.splatter(ctx, cx, cy, size * 1.5, sc, { seed: seed + 5, alpha: fa, reach: 1.2, streaks: 44, drops: 130, drips: 6 });
-        else V.splatter(ctx, cx, cy, size * 0.95, sc, { seed: seed + 5, alpha: fa, reach: 1.0, streaks: 28, drops: 64, drips: 4 });
-        if (sc < 0.16) drawFlash(ctx, cx, cy, W * (fum ? 0.5 : 0.35), '#ff6a7a', (fum ? 0.55 : 0.4) * Math.pow(1 - sc / 0.16, 2), 0.5);
+        // 噛んだ点に弾ける血しぶき（手本どおり：約0.28秒で一気に広がり、約1秒そのまま、そのあとまとめて薄れて消える）
+        const bf = 1 - EASE.inOutCubic(clamp((sc - (fum ? 1.1 : 1.0)) / 0.7));
+        if (fum) V.bloodBurst(ctx, cx - H * 0.1, cy, H * 0.3, sc, { seed: seed + 5, alpha: fa * bf, splinters: 130, drops: 220, drips: 3 });
+        else V.bloodBurst(ctx, cx - H * 0.07, cy, H * 0.2, sc, { seed: seed + 5, alpha: fa * bf, splinters: 90, drops: 150, drips: 2 });
       }
       // 牙：閉じる（だんだん速く）→ 噛み合ったまま一拍 → はじかれるように開いて去る
       const closedGap = SS * 1.0;
