@@ -6298,14 +6298,103 @@
   }
 
   /* テンプレートを現在の言語でプロジェクト用のフロアに変換する */
+  /*
+   * 初めから「GM専用」にしておく部屋（テンプレートID → 階の名前 → 部屋の名前、どれも日本語名で照合）。
+   * 目安：館内図などで一般に公開されていそうな所や、PLがすぐ見て回れる所はPL公開のまま。
+   * 従業員だけが入るバックヤード・機械室・私室・初見では分からない方がよい区画をGM専用にする。
+   */
+  const GM_DEFAULTS = {
+    mansion: { B1: ['ワインセラー', '地下通路', 'ボイラー室'], '1F': ['書斎', '使用人室', '食料庫'], '2F': ['主寝室', '主寝室バス', '書庫', '納戸'], 屋外: ['庭師小屋'] },
+    basement: { B1: ['地下室', 'ボイラー室'], '1F': ['防音室', '窓のない部屋'] },
+    tower: { '1F': ['防災センター', '管理事務室', 'EPS・PS'], '20F': ['EPS・PS', 'トランクルーム'], 屋上: ['EV機械室', 'ポンプ室'] },
+    hotel: { '1F': ['厨房', '事務室'], '2F': ['宴会厨房', '宴会倉庫', 'サービス通路'], '8F': ['バーパントリー'] },
+    hospital: { '1F': ['霊安室', '更衣室'], '2F': ['スタッフ室', '汚物処理室', 'リネン庫', '器材庫'] },
+    school: { '1F': ['校長室'], '2F': ['理科準備室'] },
+    police: { '1F': ['当直室'], '2F': ['証拠品保管庫', '留置室1', '留置室2', '留置室3', '看守通路', '観察室', '資料室', '署長室'] },
+    library: { B1: ['機械室', '作業室', '閉架書庫', '貴重書庫', '地下倉庫'], '1F': ['事務室'] },
+    university: { '2F': ['資料室'] },
+    bar: { B1: ['倉庫', '事務室'] },
+    livehouse: { B1: ['楽屋1', '楽屋2', 'バックヤード', '機材倉庫', '事務室'] },
+    theatre: { '1F': ['楽屋廊下', '楽屋1', '楽屋2', '楽屋3', '楽屋口', '事務室', '大道具倉庫', '調整室'] },
+    haibyoin: { B1: ['解剖室', 'カルテ庫', '霊安室', '隔離病室'], '1F': ['霊安室'] },
+    haibiru: { '1F': ['管理人室', '機械室'], '2F': ['倉庫'] },
+    speakeasy: { '1F': ['もぐり酒場', '酒蔵', '奥の部屋', '事務所', '厨房', 'ボイラー室'] },
+    detective: { '1F': ['質屋の倉庫'], '2F': ['暗室', '資料室'] },
+    station: { 基地: ['標本庫'] },
+    kominka: { '1F': ['蔵'] },
+    shrine: { '1F': ['本殿', '宝物殿', '居間', '台所', '浴室'] },
+    tavern: { '1F': ['主人の部屋', '食料庫'], '2F': ['物置'] },
+    castle: { B1: ['拷問部屋'], '1F': ['王の私室', '武器庫'] },
+    dungeon: { B1: ['ゴブリンの巣', '罠の回廊', '宝物庫', '主の間'] },
+    wizard: { '2F': ['実験室'], '3F': ['魔法使いの寝室'] },
+    railstation: { '1F': ['駅員室', '休憩室', '遺失物保管庫', '信号機器室'] },
+    subway: {
+      B2: ['排水ポンプ室', '換気機械室'],
+      B1: ['電気室', '空調機械室', '信号通信機器室', '倉庫', '換気機械室', '駅事務室', '駅員休憩室', '清掃用具庫', '清掃員控室', '消火ポンプ室']
+    },
+    parking_tower: { '1F': ['倉庫', '管理室'] },
+    parking_ug: { B2: ['排水ポンプ室', '受水槽室', '消火設備室'], B1: ['管理室', '電気室', '倉庫', '機械室'] },
+    ship: {
+      下甲板: ['操舵機室', '機関室', '機関制御室', '船員通路', '船員食堂', '厨房', '船員室A', '船員室B', '船員室C', '船員室D', 'シャワー室', '糧食庫', '甲板部倉庫', '貨物庫', '錨鎖庫'],
+      客室甲板: ['リネン室'], 遊歩甲板: ['パントリー', '乗員通路'], ブリッジ甲板: ['無線室', '航海士室', '機関長室', '船長室']
+    },
+    viaduct: { 橋下: ['資材倉庫'] },
+    haikoujou: { '1F': ['機械室'], '2F': ['資料室'] },
+    factory: { '1F': ['機械室', '倉庫', '検査室'], '2F': ['工場長室', '資料室', '制御室'] },
+    construction: { '1F': ['現場事務所'] },
+    warehouse: { '1F': ['冷蔵室', '事務所'] },
+    sewer: { B1: ['機械室', '水門操作室'] },
+    rooftop: { 屋上: ['EV機械室', 'キュービクル'] },
+    buke: { 母屋: ['寝間', '仏間', '納戸'], 外観: ['中間部屋', '蔵'] },
+    temple: { '1F': ['居間', '住職の部屋', '台所', '浴室'] },
+    church: { B1: ['地下納骨堂', '納骨棚の部屋'], '1F': ['事務室', '聖具室'], '2F': ['鐘室'] },
+    office: { '1F': ['倉庫', '電気室', '荷捌き場', '防災センター', 'サービス通路'], '2F': ['倉庫', 'サーバー室'], '3F': ['社長室', '書庫'] },
+    family_restaurant: { '1F': ['厨房', '食品庫'] },
+    underpass: { B1: ['清掃用具室', '機械室', '配管スペース'] },
+    lodge: { '1F': ['倉庫', '厨房', '管理人室'] },
+    konbini: { 屋内: ['ウォークイン冷蔵庫', 'バックヤード', '搬入口', '事務スペース'] },
+    lab: {
+      B1: ['地下設備室', '制御室', '前室', '更衣室', 'エアロック', '隔離区画', '隔離室1', '隔離室2', '隔離室3', '標本室', '実験室'],
+      '1F': ['サーバー室', '監視室', '倉庫'], '2F': ['試料保管室', '飼育室', '所長室']
+    },
+    museum: {
+      B1: ['バックヤード通路', '機械室', '燻蒸室', '収蔵庫1（美術）', '収蔵庫2（考古・自然史）'],
+      '1F': ['バックヤード通路', '警備室', '学芸員室', '荷解き室', '搬入口'],
+      '2F': ['バックヤード通路', '館長室', '資料室', '写真室', '修復室']
+    },
+    military: { B1: ['司令官室', '作戦会議室', '発電・換気室'], '1F': ['武器庫'] },
+    shelter: { B1: ['発電室', '換気・浄水室', '機械区画通路'] }
+  };
+
+  /* 外観の階 → 「内観を表示」で重ねる階（どちらも日本語名）。オンにするのは使う人 */
+  const INSIDE_OF = {
+    house: ['屋外', '1F'], haioku: ['屋外', '1F'], mansion: ['屋外', '1F'],
+    buke: ['外観', '母屋'], church: ['外観', '1F'], family_restaurant: ['外観', '1F'], konbini: ['屋外', '屋内']
+  };
+
+  const jaName = v => (v && typeof v === 'object' ? v.ja : v);
+  function applyGmDefaults(floors, id) {
+    const table = GM_DEFAULTS[id];
+    if (!table) return;
+    floors.forEach(f => {
+      const names = table[jaName(f.name)];
+      if (names) f.rooms.forEach(r => { if (names.includes(jaName(r.name))) r.gm = true; });
+    });
+  }
+
   function instantiate(id, lang, options = {}) {
     const tpl = TEMPLATES.find(t => t.id === id);
     if (!tpl) return null;
     const floors = tpl.build();
     if (options.structureOnly) floors.forEach(f => { f.items = []; f.texts = []; });
     if (options.clues) addClues(floors, id, lang);
-    return floors.map(f => ({
-      id: M.uid('f'),
+    applyGmDefaults(floors, id);
+    const ids = floors.map(() => M.uid('f'));
+    const link = INSIDE_OF[id];
+    const idOf = name => ids[floors.findIndex(f => jaName(f.name) === name)];
+    return floors.map((f, i) => ({
+      id: ids[i],
+      ...(link && jaName(f.name) === link[0] && idOf(link[1]) ? { inside: idOf(link[1]) } : {}),
       name: M.pick(f.name, lang),
       rooms: f.rooms.map(r => ({ ...r, id: M.uid('r'), name: M.pick(r.name, lang), plName: M.pick(r.plName, lang), note: M.pick(r.note, lang) })),
       walls: f.walls.map(w => ({ ...w, id: M.uid('w') })),
@@ -6334,5 +6423,5 @@
     tp.floorCount = floors.length;
   });
 
-  Object.assign(global.IMM, { TEMPLATES, TEMPLATE_GROUPS, TEMPLATE_CLUES: CLUES, instantiateTemplate: instantiate });
+  Object.assign(global.IMM, { TEMPLATES, TEMPLATE_GROUPS, TEMPLATE_CLUES: CLUES, TEMPLATE_GM_DEFAULTS: GM_DEFAULTS, instantiateTemplate: instantiate });
 })(window);
