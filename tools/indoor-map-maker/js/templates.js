@@ -1301,7 +1301,35 @@
   }
 
   function tower() {
-    return [towerLobby(), towerTypical()];
+    return [towerLobby(), towerTypical(), towerRoof()];
+  }
+
+  // 屋上：コアの塔屋（階段2か所・EV機械室・ポンプ室）、緊急離着陸場（H）、高架水槽・室外機・アンテナ
+  function towerRoof() {
+    const b = makeFloor(T('屋上', 'Rooftop', '옥상'));
+    b.room(T('屋上', 'Rooftop', '옥상'), 'rooftop', 0, 0, 72, 72, { lx: -24, ly: -28 })
+      .room(T('階段A', 'Stairs A', '계단A'), 'hall', 25, 25, 6, 11)
+      .room(T('EV機械室', 'Elevator machine room', 'EV 기계실'), 'industrial', 31, 25, 12, 11)
+      .room(T('ポンプ室', 'Pump room', '펌프실'), 'industrial', 25, 36, 16, 11)
+      .room(T('階段B', 'Stairs B', '계단B'), 'hall', 41, 36, 6, 11)
+      .room(T('緊急離着陸場', 'Emergency helipad', '긴급 이착륙장'), 'road', 48, 48, 20, 20, { ly: 7.5 });
+    b.dv(25, 34.2, 1.5, -1, 0, 'steel')          // 階段A → 屋上
+      .dv(47, 37, 1.5, 1, 0, 'steel')             // 階段B → 屋上
+      .dh(36, 25, 1.5, -1, 0, 'steel')            // EV機械室
+      .dh(30, 47, 1.5, 1, 0, 'steel')             // ポンプ室
+      .dv(41, 38, 1.5, -1, 0);                    // ポンプ室 ↔ 階段B
+    b.item('stairs_u', 25.5, 25.3, 0, { size: [5, 8] }).item('stairs_u', 41.5, 38.8, 0, { size: [5, 8] })
+      .item('control_panel', 31.3, 25.3).item('control_panel', 35.3, 25.3).item('control_panel', 39.3, 25.3)
+      .item('cable_rack', 31.3, 33, 0, { size: [11, 0.8] })
+      .item('water_pipe', 25.3, 43.5, 0, { size: [15, 0.8] }).item('dist_board', 38.6, 36.3);
+    // 緊急離着陸場の H マーク
+    b.text('H', 58, 58, { size: 9 });
+    b.item('water_tower', 6, 6).item('water_tower', 12, 6)
+      .item('antenna', 64, 6).item('antenna', 66, 9);
+    [6, 9, 12, 15].forEach(y => b.item('ac_unit', 24, y).item('ac_unit', 27, y).item('ac_unit', 30, y));
+    [50, 54, 58, 62].forEach(y => b.item('vent_unit', 6, y));
+    b.item('extinguisher', 24.2, 36.5).item('hatch', 14, 30);
+    return b.f;
   }
 
   /* ---------- 学校（片廊下型の校舎・2階建て） ---------- */
