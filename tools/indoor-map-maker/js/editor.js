@@ -7,7 +7,7 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.12';
+  const VERSION = 'v1.13';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
@@ -144,7 +144,6 @@
     libTab: 'rooms',
     libGroup: 'all',
     libQuery: '',
-    libTag: '',
     tplGroup: 'home',
     tplQuery: '',
     tplTag: '',
@@ -2553,23 +2552,20 @@
   }
 
   function renderFurnitureLibrary(body) {
+    // 上に「検索バー＋カテゴリ」を常に出す。タグは検索バーに #タグ で入れて探す
     const search = h('input', { class: 'text-input', type: 'search', value: app.libQuery, placeholder: t('lib.search'), 'aria-label': t('lib.search') });
-    const tagMenu = tagSelect(M.ASSETS, app.libTag, t('lib.tagAll'), v => { app.libTag = v; fill(); });
-    const groups = h('div', { class: 'lib-groups', role: 'group' });
+    const groupMenu = h('select', { class: 'select-input lib-group-select', 'aria-label': t('lib.category') },
+      h('option', { value: 'all' }, t('lib.allCategories')),
+      ...M.ASSET_GROUPS.map(g => h('option', { value: g.id }, pick(g.name))));
+    groupMenu.value = M.ASSET_GROUPS.some(g => g.id === app.libGroup) ? app.libGroup : 'all';
     const results = h('div');
-    const chip = (id, label) => h('button', {
-      type: 'button', class: `chip${app.libGroup === id ? ' is-active' : ''}`,
-      onclick: e => { app.libGroup = id; groups.querySelectorAll('.chip').forEach(b => b.classList.toggle('is-active', b === e.currentTarget)); fill(); }
-    }, label);
-    groups.appendChild(chip('all', t('lib.all')));
-    M.ASSET_GROUPS.forEach(g => groups.appendChild(chip(g.id, pick(g.name))));
     const fill = () => {
       results.innerHTML = '';
       const q = app.libQuery.trim();
       let any = false;
       M.ASSET_GROUPS.forEach(g => {
-        if (!q && app.libGroup !== 'all' && app.libGroup !== g.id) return;
-        const assets = M.ASSETS.filter(a => a.group === g.id && assetMatches(a, q) && (!app.libTag || a.tags.includes(app.libTag)));
+        if (groupMenu.value !== 'all' && groupMenu.value !== g.id) return;
+        const assets = M.ASSETS.filter(a => a.group === g.id && assetMatches(a, q));
         if (!assets.length) return;
         any = true;
         results.appendChild(h('p', { class: 'lib-section' }, pick(g.name)));
@@ -2581,7 +2577,8 @@
       syncLibraryActive();
     };
     search.addEventListener('input', () => { app.libQuery = search.value; fill(); });
-    body.appendChild(h('div', { class: 'lib-search' }, h('div', { class: 'lib-search-row' }, search, tagMenu), groups));
+    groupMenu.addEventListener('change', () => { app.libGroup = groupMenu.value; body.scrollTop = 0; fill(); });
+    body.appendChild(h('div', { class: 'lib-search is-sticky' }, search, groupMenu));
     body.appendChild(results);
     fill();
   }
