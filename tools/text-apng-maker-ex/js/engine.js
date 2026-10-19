@@ -5660,7 +5660,9 @@
         // 噛んだ点に弾ける血しぶき（手本どおり：約0.28秒で一気に広がり、約1秒そのまま、そのあとまとめて薄れて消える）
         const bf = 1 - EASE.inOutCubic(clamp((sc - (fum ? 1.1 : 1.0)) / 0.7));
         // オリジナルの形の血しぶき：形ごと中心から広がり、約1秒そのまま、そのあとまとめて薄れる。ファンブルは大きく、失敗はそれより小さく
-        V.bloodSplat(ctx, cx, cy, (H / 720) * (fum ? 0.94 : 0.6), sc, { alpha: fa * bf, shape: bloodShape });
+        if (bloodShape === 'S') V.splutter(ctx, cx, cy, (H / 540) * (fum ? 1.0 : 0.7), sc, { alpha: fa });   // 画像再現のブラッドスプラッター（約2秒）
+        else V.bloodSplat(ctx, cx, cy, (H / 720) * (fum ? 0.94 : 0.6), sc, { alpha: fa * bf, shape: bloodShape });
+
       }
       // 牙：閉じる（だんだん速く）→ 噛み合ったまま一拍 → はじかれるように開いて去る
       const closedGap = SS * 1.0;

@@ -991,6 +991,64 @@
     });
     ctx.restore();
   }
+  /*
+   * ブラッドスプラッター（形 S）：画像2枚（中心の暗い厚み core と、細い広がりまで含む all）を、2段で広げる。
+   * 第1段：core が中心から丸く現れ（半径 270*ease(t/0.42)、少し拡大しながらぼけが取れる）、第2段：t=0.30 から all が外へ広がる（半径 430*ease((t-0.30)/0.55)）。
+   * 現れる縁は柔らかい円形のマスク（幅 100px）。約1.4秒から薄れて約2.0秒で消える。tt は噛んだ瞬間からの秒数、k は 540px に対する倍率（1 で高さ 540）
+   */
+  const SPL = { core: null, all: null, tmp: null };
+  function splImg(key) {
+    if (!SPL[key]) {
+      const D = root.TextApngVampireBloodData;
+      if (!D || typeof Image === 'undefined') return null;
+      SPL[key] = new Image();
+      SPL[key].src = D[key];
+    }
+    const im = SPL[key];
+    return im && im.complete && im.naturalWidth > 0 ? im : null;
+  }
+  function splutter(ctx, cx, cy, k, tt, o = {}) {
+    if (tt <= 0 || tt >= 2.0 || k <= 0) return;
+    const alphaAll = clamp(o.alpha ?? 1);
+    const ease = x => 1 - Math.pow(1 - clamp(x), 2.5);
+    const sm = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+    const fade = 1 - sm((tt - 1.4) / 0.6);
+    if (fade <= 0.003 || alphaAll <= 0.003) return;
+    const SOFT = 100, CX = 255, CY = 300;
+    const layers = [
+      { key: 'all', R: 430 * ease((tt - 0.30) / 0.55), a: sm((tt - 0.30) / 0.25), s: 0.94 + 0.06 * ease((tt - 0.30) / 0.55), blur: 0 },
+      { key: 'core', R: 270 * ease(tt / 0.42), a: sm(tt / 0.20), s: 0.72 + 0.28 * ease(tt / 0.42), blur: 6 * (1 - ease(tt / 0.42)) }
+    ];
+    if (!SPL.tmp) SPL.tmp = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(540, 540) : Object.assign(document.createElement('canvas'), { width: 540, height: 540 });
+    const tc = SPL.tmp.getContext('2d');
+    for (const l of layers) {
+      const im = splImg(l.key);
+      if (!im || l.R <= 0.5 || l.a <= 0.003) continue;
+      tc.setTransform(1, 0, 0, 1, 0, 0);
+      tc.globalCompositeOperation = 'source-over';
+      tc.clearRect(0, 0, 540, 540);
+      tc.filter = l.blur > 0.3 ? `blur(${l.blur}px)` : 'none';
+      tc.setTransform(l.s, 0, 0, l.s, CX - l.s * CX, CY - l.s * CY);   // (255,300) を中心に拡大縮小
+      tc.drawImage(im, 0, 0);
+      tc.setTransform(1, 0, 0, 1, 0, 0);
+      tc.filter = 'none';
+      // 円形の柔らかいマスク：中心から R-SOFT までは不透明、R で透明（直線の下り）
+      const g = tc.createRadialGradient(CX, CY, 0, CX, CY, l.R);
+      const edge = (l.R - SOFT) / l.R;
+      if (edge > 0) { g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(edge, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)'); }
+      else { g.addColorStop(0, `rgba(0,0,0,${clamp(l.R / SOFT)})`); g.addColorStop(1, 'rgba(0,0,0,0)'); }
+      tc.globalCompositeOperation = 'destination-in';
+      tc.fillStyle = g;
+      tc.fillRect(0, 0, 540, 540);
+      tc.globalCompositeOperation = 'source-over';
+      ctx.save();
+      ctx.globalAlpha *= l.a * fade * alphaAll;
+      ctx.translate(cx - 270 * k, cy - 270 * k);
+      ctx.scale(k, k);
+      ctx.drawImage(SPL.tmp, 0, 0);
+      ctx.restore();
+    }
+  }
   let bloodSplatBuf = null;
   function bloodSplat(ctx, x, y, u, tt, o = {}) {
     const alpha = clamp(o.alpha ?? 1);
@@ -1177,5 +1235,5 @@
     ctx.restore();
   }
 
-  root.TextApngVampireFx = { puff, bat, moon, teethRow, splatter, bloodSplat, drip, cracks, flare, band, BLOOD, BONE };
+  root.TextApngVampireFx = { puff, bat, moon, teethRow, splatter, bloodSplat, splutter, drip, cracks, flare, band, BLOOD, BONE };
 })(typeof window !== 'undefined' ? window : globalThis);
