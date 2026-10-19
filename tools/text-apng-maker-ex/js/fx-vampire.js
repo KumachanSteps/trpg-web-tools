@@ -594,6 +594,236 @@
       drips: [[-170, 140, 150, 14, 2], [-110, 106, 80, 10, 3]],
       sat: { n: 200, fan: { n: 120, a: -0.5, spread: 0.9, near: 30, far: 150 }, bigs: 8, near: 20, far: 100, stretch: 1.0 } }
   };
+  /*
+   * 血溜まりの見本 F〜J：図鑑の参考画像（透かし入りの素材）の「性格」だけを見て、形は一から作ったもの。画像の輪郭や画素は使っていない。
+   * 二段で広がる：第1段（約0〜0.15秒）は小さな核と塊の一部と少しの滴、第2段（約0.15〜0.4秒）で塊の全体と外側の細かい滴・しぶきが最終の形まで出る。
+   * 層ごとに現れる時刻（t0）と立ち上がり（ramp）を持つ。飛ばず、その場に現れる。
+   */
+  const SPLAT_RICH_TONE = { main: '#8a0809', dark: '#6f0d0e', bright: '#a3020c', black: '#2f0303', ink: '#b3150f', inkDark: '#8a0809', core: '#3a0305', vivid: '#d0140e', gloss: '#ffcfc4' };
+  function splatBuildRich(kind) {
+    const seed = { F: 61, G: 62, H: 63, I: 64, J: 65 }[kind];
+    let k = 0;
+    const rr = (q = 0) => rnd(seed, ++k, q);
+    const TAUc = Math.PI * 2;
+    const layers = [];
+    const L = (fill, t0, ramp, a = 1) => { const l = { fill, path: new Path2D(), t0, ramp, a }; layers.push(l); return l.path; };
+    const ell = (p, x, y, rx, ry, rot = 0) => { p.moveTo(x + rx * Math.cos(rot), y + rx * Math.sin(rot)); p.ellipse(x, y, rx, ry, rot, 0, TAUc); };
+    const lens = (p, x, y, len, w, rot) => {
+      const c = Math.cos(rot), s2 = Math.sin(rot), P = (a, b) => [x + a * c - b * s2, y + a * s2 + b * c];
+      const a0 = P(-len / 2, 0), a1 = P(len / 2, 0), m1 = P(-len * 0.1, -w), m2 = P(-len * 0.1, w);
+      p.moveTo(a0[0], a0[1]); p.quadraticCurveTo(m1[0], m1[1], a1[0], a1[1]); p.quadraticCurveTo(m2[0], m2[1], a0[0], a0[1]); p.closePath();
+    };
+    // 縁が丸く凹凸する塊：中心の楕円に、縁をなぞる大小の丸と、外へ出る短い葉形を重ねる
+    const blob = (p, x, y, r, sq = 1, rot = 0, rough = 1) => {
+      ell(p, x, y, r, r * sq, rot);
+      const n = Math.round(10 + r / 6);
+      for (let i = 0; i < n; i++) {
+        const a = i / n * TAUc + rr(1) * 0.3, rad = r * (0.14 + 0.26 * rr(2)) * rough;
+        const ex = Math.cos(a) * r * 0.92, ey = Math.sin(a) * r * 0.92 * sq, c = Math.cos(rot), s2 = Math.sin(rot);
+        ell(p, x + ex * c - ey * s2, y + ex * s2 + ey * c, rad, rad * (0.7 + 0.5 * rr(3)), a + rot);
+      }
+    };
+    // 先に向かって細くなる曲がった筋（始点・制御点・終点、根元の太さ w0、先の太さ w1）
+    const tendril = (p, x0, y0, cx, cy, x1, y1, w0, w1) => {
+      const N = 18, Lp = [], Rp = [];
+      for (let i = 0; i <= N; i++) {
+        const t = i / N, mt = 1 - t;
+        const x = mt * mt * x0 + 2 * mt * t * cx + t * t * x1, y = mt * mt * y0 + 2 * mt * t * cy + t * t * y1;
+        let dx = 2 * mt * (cx - x0) + 2 * t * (x1 - cx), dy = 2 * mt * (cy - y0) + 2 * t * (y1 - cy);
+        const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+        const w = w0 + (w1 - w0) * Math.pow(t, 0.7);
+        Lp.push([x - dy * w, y + dx * w]); Rp.push([x + dy * w, y - dx * w]);
+      }
+      const pts = Lp.concat(Rp.slice().reverse());
+      let ar = 0; for (let i = 0; i < pts.length; i++) { const q = pts[i], r2 = pts[(i + 1) % pts.length]; ar += q[0] * r2[1] - r2[0] * q[1]; }
+      if (ar < 0) pts.reverse();                              // 向きをそろえる（重ねても穴があかない）
+      p.moveTo(pts[0][0], pts[0][1]); pts.forEach(q => p.lineTo(q[0], q[1])); p.closePath();
+    };
+    const YL = 245;                                          // 枠の上下からはみ出さない
+    const cy_ = y => Math.max(-YL, Math.min(YL, y));
+    const stage = (d, d1, d2) => (d < d1 ? [0.04 + d / d1 * 0.06, 0.07] : d < d2 ? [0.14 + (d - d1) / (d2 - d1) * 0.06, 0.1] : [0.2 + Math.min(0.1, (d - d2) / 200 * 0.1), 0.1]);
+    const bk = {};
+    const bucket = (key, fill, t0, rp) => bk[key] || (bk[key] = L(fill, t0, rp));
+    const addDrip = (x, y, len, w, fill, t0, gl) => layers.push({ drip: { x, y, len, w, gl }, fill, t0, ramp: 0.05, a: 1 });
+    const hl = [];                                           // つやの点（Iと一部のJだけ）
+    const dropAt = (p, x, y, r, rx = 1) => ell(p, x, y, r * rx, r, 0);
+
+    if (kind === 'F') {
+      // 太いべたっとした塊に、指のような葉と先の丸い腕。まわりは針のような細い筋と粉のような点が密に放射する（インクの飛沫）
+      const T = SPLAT_RICH_TONE;
+      const m1 = L(T.ink, 0, 0.06), m2 = L(T.ink, 0.14, 0.1);
+      const lobes = [[0, 0, 82], [-62, 24, 60], [58, 30, 64], [10, -58, 56], [-40, -44, 46], [40, -30, 50], [8, 66, 50]];
+      lobes.forEach((o, i) => blob(i < 3 ? m1 : m2, o[0], o[1], o[2], 0.85 + 0.2 * rr(4), rr(5) * 3, 0.9));
+      for (let i = 0; i < 9; i++) {                          // 指のような腕
+        const a = i / 9 * TAUc + (rr(6) - 0.5) * 0.5, len = 150 + 130 * rr(7), w0 = 26 + 12 * rr(8);
+        const bend = (rr(9) - 0.5) * 0.7, x1 = Math.cos(a) * len, y1 = Math.sin(a) * len * 0.78;
+        const p = i < 3 ? m1 : m2;
+        tendril(p, Math.cos(a) * 30, Math.sin(a) * 30, Math.cos(a + bend) * len * 0.55, Math.sin(a + bend) * len * 0.5, x1, y1, w0, 11 + 5 * rr(10));
+        const kn = 15 + 11 * rr(11); ell(p, x1, y1, kn, kn * (0.8 + 0.3 * rr(12)), a);
+        if (rr(13) < 0.6) { const b = a + (rr(14) < 0.5 ? 0.5 : -0.5); tendril(m2, x1 * 0.6, y1 * 0.6, x1 * 0.8, y1 * 0.7, x1 * 0.6 + Math.cos(b) * 70, y1 * 0.6 + Math.sin(b) * 60, 9, 4); }
+      }
+      const sh = L(T.inkDark, 0.15, 0.1);                    // 影（右下寄り）
+      ell(sh, 24, 28, 62, 44, 0.4); ell(sh, -40, 46, 36, 22, -0.3); ell(sh, 66, 4, 24, 36, 0.6);
+      // 針のような筋と粉の点（距離で出る順を変える）
+      for (let i = 0; i < 620; i++) {
+        const a = rr(15) * TAUc, d = 130 + 330 * Math.pow(rr(16), 0.85), x = Math.cos(a) * d, y = cy_(Math.sin(a) * d * 0.58);
+        const [t0, rp] = stage(d, 210, 330);
+        const lp = bucket((t0 * 100 | 0), T.ink, t0, rp);
+        const len = 12 + 70 * Math.pow(rr(17), 2) * (0.5 + d / 400), w = 1.1 + 2 * rr(18);
+        lens(lp, x, y, len, w, Math.atan2(y, x));
+      }
+      for (let i = 0; i < 560; i++) {
+        const a = rr(19) * TAUc, d = 100 + 380 * Math.pow(rr(20), 0.9), x = Math.cos(a) * d, y = cy_(Math.sin(a) * d * 0.58);
+        const [t0, rp] = stage(d, 220, 340);
+        const lp = bucket(1000 + (t0 * 100 | 0), T.ink, t0, rp);
+        const r = 0.8 + 2.2 * Math.pow(rr(21), 1.6); ell(lp, x, y, r, r * (0.7 + 0.5 * rr(22)), rr(23) * 3);
+      }
+      const dp = L(T.ink, 0.17, 0.1);                        // 数個の丸い滴
+      for (let i = 0; i < 10; i++) { const a = rr(24) * TAUc, d = 190 + 130 * rr(25), r = 6 + 9 * rr(26); dropAt(dp, Math.cos(a) * d, cy_(Math.sin(a) * d * 0.58), r, 1.2); }
+    } else if (kind === 'G') {
+      // 左下から右上へ斜めに走る塗り：軸に沿って大きな塊が並び、中を淡い塗り筋が通る。中くらいの滴と小さな滴が軸の両脇に散り、丸い大きな滴が離れて残る
+      const T = SPLAT_RICH_TONE, ang = -0.56, ux = Math.cos(ang), uy = Math.sin(ang), vx = -uy, vy = ux;
+      const P = (s, t) => [s * ux + t * vx, cy_(s * uy + t * vy)];
+      const big = [[-330, 20, 40], [-235, -26, 52], [-140, 22, 46], [-52, -8, 78], [40, 12, 86], [128, -20, 58], [212, 16, 46], [292, -10, 56], [352, 20, 30]];
+      const bs1 = L(T.main, 0, 0.06), bs2 = L(T.main, 0.15, 0.1), bs3 = L(T.main, 0.2, 0.1);
+      big.forEach((o, i) => { const [x, y] = P(o[0], o[1]); const p = Math.abs(o[0]) < 100 ? bs1 : Math.abs(o[0]) < 230 ? bs2 : bs3; blob(p, x, y, o[2], 0.8 + 0.25 * rr(3), ang + rr(4) * 0.8, 1.1); for (let j = 0; j < 12; j++) { const a = rr(5) * TAUc, ln = 22 + 56 * rr(6); lens(p, x + Math.cos(a) * (o[2] + ln * 0.25), y + Math.sin(a) * (o[2] * 0.8 + ln * 0.25), ln, 1.8 + 2.4 * rr(7), a); } });
+      const cr = L(T.dark, 0.1, 0.08);                        // 塊の濃い芯
+      [-72, 18, 100, -170, 186].forEach(s => { const [x, y] = P(s, 0); ell(cr, x + 6, y + 6, 44 + 14 * rr(8), 30 + 10 * rr(9), ang); });
+      const sm = L(T.bright, 0.14, 0.1, 0.9);                      // 淡い塗り筋
+      { const [x, y] = P(-130, 16); lens(sm, x, y, 360, 22, ang); const [x2, y2] = P(110, -26); lens(sm, x2, y2, 190, 12, ang + 0.06); const [x3, y3] = P(-300, 40); lens(sm, x3, y3, 100, 9, ang - 0.05); }
+      const dk = L(T.main, 0, 0.1);                           // 筋（細い葉形）
+      for (let i = 0; i < 14; i++) { const s = -300 + 600 * rr(10), t = (rr(11) - 0.5) * 150, [x, y] = P(s, t); lens(dk, x, y, 40 + 70 * rr(12), 2 + 3 * rr(13), ang + (rr(14) - 0.5) * 0.9); }
+      for (let i = 0; i < 110; i++) {                          // 中くらいの滴
+        const s = -380 + 760 * rr(15), t = (rr(16) + rr(17) - 1) * 160, d = Math.abs(s), [x, y] = P(s, t), [t0, rp] = stage(d, 130, 260);
+        const lp = bucket(2000 + (t0 * 100 | 0), T.main, t0, rp);
+        const r = 6 + 20 * Math.pow(rr(18), 1.4); ell(lp, x, y, r * 1.2, r, ang + (rr(19) - 0.5) * 0.8);
+      }
+      for (let i = 0; i < 260; i++) {                          // 小さな滴と点
+        const s = -400 + 800 * rr(20), t = (rr(21) + rr(22) - 1) * 190, d = Math.abs(s), [x, y] = P(s, t), [t0, rp] = stage(d, 140, 270);
+        const lp = bucket(3000 + (t0 * 100 | 0), T.main, t0, rp);
+        const r = 1.2 + 4 * Math.pow(rr(23), 1.4); ell(lp, x, y, r, r * (0.7 + 0.5 * rr(24)), rr(25) * 3);
+      }
+      const rd = L(T.main, 0.19, 0.1);                        // 離れた丸い大きな滴
+      [[-300, 150, 24], [-120, -130, 18], [60, 150, 20], [190, -150, 26], [330, 90, 16], [-10, -180, 13], [250, 140, 15], [-200, 110, 12], [120, -110, 14]].forEach(o => { const [x, y] = P(o[0], o[1]); ell(rd, x, y, o[2], o[2], 0); });
+    } else if (kind === 'H') {
+      // ざらついた層：何枚かの傾いた粗い縁の面が重なり、縁は点に崩れて消える。暗い赤の面の上に明るい赤の点が散る。細かい点が外へ
+      const T = SPLAT_RICH_TONE;
+      const patch = (cx, cy, hw, hh, rot, fill, t0, n, ink) => {
+        const p = L(fill, t0, 0.1), c = Math.cos(rot), s2 = Math.sin(rot);
+        for (let i = 0; i < n; i++) {
+          const lx = (rr(1) * 2 - 1) * hw, ly = (rr(2) * 2 - 1) * hh, e = Math.min(1 - Math.abs(lx) / hw, 1 - Math.abs(ly) / hh);
+          if (rr(3) > Math.pow(Math.max(0, e) * 2.2, 0.8)) continue;
+          const x = cx + lx * c - ly * s2, y = cy_(cy + lx * s2 + ly * c), z = 1.5 + 3 * rr(4) * (e > 0.3 ? 1.3 : 0.8);
+          p.rect(x, y, z, z);
+        }
+        return p;
+      };
+      const core = L(T.main, 0, 0.07); blob(core, -10, 10, 120, 0.75, 0.3, 1.2); blob(core, 90, -20, 70, 0.8, -0.4, 1.2); blob(core, -90, 40, 60, 0.7, 0.2, 1.2);
+      patch(-30, -10, 190, 120, 0.25, T.dark, 0.03, 3600); patch(150, 60, 130, 90, -0.5, T.dark, 0.14, 2200); patch(-170, 90, 120, 80, 0.6, T.dark, 0.15, 2000);
+      patch(60, -80, 150, 70, -0.15, T.main, 0.05, 2600); patch(-120, -70, 110, 70, 0.4, T.main, 0.16, 1600); patch(190, -50, 90, 110, 0.2, T.dark, 0.2, 1500);
+      patch(-10, 110, 170, 70, 0.1, T.main, 0.12, 2400); patch(-230, -20, 80, 120, -0.35, T.dark, 0.18, 1200); patch(40, -130, 120, 50, 0.3, T.dark, 0.2, 1200);
+      const hole = L(T.black, 0.1, 0.1);                       // 乾いた穴（暗い抜け）
+      for (let i = 0; i < 26; i++) { const x = -190 + 380 * rr(5), y = -90 + 200 * rr(6), n = 4 + (rr(7) * 7 | 0); for (let j = 0; j < n; j++) hole.rect(x + (rr(8) - 0.5) * 26, y + (rr(9) - 0.5) * 16, 3 + 3 * rr(10), 3 + 3 * rr(11)); }
+      for (let b = 0; b < 3; b++) {                            // 外へ散る細かい点（距離で段階）
+        const p = L(T.dark, [0.06, 0.17, 0.24][b], 0.1);
+        for (let i = 0; i < [160, 240, 300][b]; i++) { const a = rr(12) * TAUc, d = [100, 190, 280][b] + 190 * rr(13), r = 1 + 2.4 * rr(14), x = Math.cos(a) * d, y = Math.sin(a) * d * 0.5; p.rect(x, y, r * 1.4, r * 1.4); }
+      }
+      const vv = L(T.vivid, 0.08, 0.1);                       // 明るい赤の点（面の上）
+      for (let i = 0; i < 150; i++) { const a = rr(15) * TAUc, d = 150 * Math.sqrt(rr(16)), r = 1.4 + 4.4 * Math.pow(rr(17), 1.7); ell(vv, Math.cos(a) * d * 1.3, Math.sin(a) * d * 0.8, r, r, 0); }
+      const v2 = L(T.vivid, 0.2, 0.1);
+      for (let i = 0; i < 90; i++) { const a = rr(18) * TAUc, d = 180 + 170 * rr(19), r = 1.2 + 3 * rr(20); ell(v2, Math.cos(a) * d, Math.sin(a) * d * 0.5, r, r, 0); }
+      const dp = L(T.main, 0.18, 0.1); blob(dp, 210, -110, 28, 0.9, 0.2, 1); blob(dp, -230, 110, 22, 0.9, 0.2, 1);
+    } else if (kind === 'I') {
+      // つやのある飛沫：暗い芯、そのまわりの淡い透けたような暈、曲がった長い筋の先に丸い滴（つやの点つき）、細い糸と長い垂れ
+      const T = SPLAT_RICH_TONE;
+      const halo = L(T.bright, 0, 0.1, 0.42); blob(halo, 6, -6, 130, 0.82, 0.3, 1.8);
+      const hal2 = L(T.bright, 0.14, 0.1, 0.4); blob(hal2, -20, -70, 90, 0.7, -0.4, 1.4); blob(hal2, 90, 30, 70, 0.7, 0.2, 1.4);
+      const m1 = L(T.main, 0, 0.06); blob(m1, 0, 0, 96, 0.8, 0.3, 1.1);
+      const m2 = L(T.main, 0.12, 0.1);
+      const core = L(T.core, 0, 0.07); blob(core, 0, 4, 50, 0.7, 0.3, 1.5); blob(core, -34, 22, 28, 0.7, -0.2, 1.4);
+      const mid = L(T.dark, 0.05, 0.08); ell(mid, 6, 4, 80, 56, 0.3);
+      const ligs = [[-2.6, 360, 0.8], [-1.95, 300, -0.7], [-1.25, 340, 0.6], [-0.4, 380, -0.8], [0.3, 290, 0.7], [0.95, 230, -0.6], [2.15, 330, 0.7], [2.85, 370, -0.6], [1.6, 170, 0.3]];
+      const drops = [];
+      ligs.forEach((o, i) => {
+        const [a, len, bend] = o, p = i < 4 ? m1 : m2, x1 = Math.cos(a) * len, y1 = cy_(Math.sin(a) * len * 0.82);
+        const cxx = Math.cos(a + bend * 0.5) * len * 0.55, cyy = Math.sin(a + bend * 0.5) * len * 0.5;
+        tendril(p, Math.cos(a) * 40, Math.sin(a) * 40, cxx, cyy, x1, y1, 19 + 6 * rr(1), 3.6);
+        const r = 13 + 11 * rr(2); drops.push([x1 + Math.cos(a) * r * 0.5, cy_(y1 + Math.sin(a) * r * 0.5), r]);
+      });
+      const ths = L(T.main, 0.16, 0.1);                       // 細い糸と先の小さな滴
+      for (let i = 0; i < 16; i++) {
+        const a = rr(3) * TAUc, len = 200 + 200 * rr(4), x1 = Math.cos(a) * len, y1 = cy_(Math.sin(a) * len * 0.62), b = a + (rr(5) - 0.5) * 0.9;
+        tendril(ths, Math.cos(a) * 80, Math.sin(a) * 70, Math.cos(b) * len * 0.5, Math.sin(b) * len * 0.45, x1, y1, 3.6, 1.1);
+        drops.push([x1, y1, 3 + 5 * rr(6)]);
+      }
+      const dd = L(T.main, 0.17, 0.1);
+      drops.forEach(d => ell(dd, d[0], d[1], d[2], d[2], 0));
+      for (let i = 0; i < 70; i++) { const a = rr(7) * TAUc, d = 120 + 330 * Math.pow(rr(8), 0.9), r = 1.6 + 4.6 * Math.pow(rr(9), 1.5), x = Math.cos(a) * d, y = cy_(Math.sin(a) * d * 0.74); ell(dd, x, y, r, r, 0); if (r > 3.8) drops.push([x, y, r]); }
+      const gl = L(T.gloss, 0.2, 0.1, 0.78);                  // つやの点
+      drops.forEach(d => { if (d[2] > 4.5) ell(gl, d[0] - d[2] * 0.32, d[1] - d[2] * 0.38, d[2] * 0.3, d[2] * 0.18, -0.6); });
+      addDrip(-70, 80, 150, 11, T.main, 0.18, true); addDrip(46, 90, 110, 9, T.main, 0.2, true); addDrip(110, 60, 70, 7, T.main, 0.22, true);
+    } else if (kind === 'J') {
+      // 上へ冠のように跳ねる飛沫：下は粗い点に崩れる広いにじみ、そこから曲がった筋が上へ扇状に伸び、先に丸い滴。細い垂れ
+      const T = SPLAT_RICH_TONE;
+      const base = L(T.dark, 0.02, 0.1);
+      for (let i = 0; i < 3400; i++) {
+        const lx = (rr(1) * 2 - 1) * 270, ly = (rr(2) * 2 - 1) * 90, e = Math.min(1 - Math.abs(lx) / 270, 1 - Math.abs(ly) / 90);
+        if (rr(3) > Math.pow(Math.max(0, e) * 2.2, 0.8)) continue; const z = 1.5 + 3.2 * rr(4);
+        base.rect(lx * 0.98, 70 + ly, z, z);
+      }
+      const pool = L(T.main, 0, 0.07); blob(pool, 0, 66, 130, 0.5, 0, 1.2); blob(pool, -120, 82, 72, 0.5, 0.1, 1.1); blob(pool, 130, 78, 66, 0.5, -0.1, 1.1);
+      const hal = L(T.bright, 0.05, 0.1, 0.45); blob(hal, 0, 12, 140, 0.9, 0, 1.4);
+      const body = L(T.main, 0.04, 0.08); blob(body, 0, 30, 76, 0.9, 0.2, 1.1);
+      const core = L(T.core, 0.02, 0.07); ell(core, 0, 52, 56, 24, 0); ell(core, -20, 30, 26, 18, 0.3);
+      const m2 = L(T.main, 0.14, 0.1);
+      const drops = [];
+      const angs = [-3.0, -2.62, -2.3, -2.0, -1.62, -1.38, -1.05, -0.7, -0.33, -0.05];
+      angs.forEach((a, i) => {
+        const len = 130 + 230 * Math.pow(rr(1), 1.3), bend = (rr(2) - 0.5) * 1.5;
+        const x1 = Math.cos(a) * len * 1.15, y1 = cy_(30 + Math.sin(a) * len * 0.8);
+        tendril(m2, Math.cos(a) * 30, 30 + Math.sin(a) * 20, Math.cos(a + bend) * len * 0.5, 30 + Math.sin(a + bend) * len * 0.5, x1, y1, 18 + 8 * rr(3), 3.6);
+        const r = 11 + 12 * rr(4); drops.push([x1 + Math.cos(a) * r * 0.5, cy_(y1 + Math.sin(a) * r * 0.5), r]);
+      });
+      const th = L(T.main, 0.17, 0.1);
+      for (let i = 0; i < 14; i++) { const a = -3.1 + 3.0 * rr(5), len = 140 + 150 * rr(6), x1 = Math.cos(a) * len, y1 = cy_(40 + Math.sin(a) * len * 0.9), b = a + (rr(7) - 0.5) * 0.9; tendril(th, Math.cos(a) * 70, 40 + Math.sin(a) * 40, Math.cos(b) * len * 0.5, 40 + Math.sin(b) * len * 0.4, x1, y1, 3.2, 1); drops.push([x1, y1, 3 + 4 * rr(8)]); }
+      const dd = L(T.main, 0.19, 0.1);
+      drops.forEach(d => ell(dd, d[0], d[1], d[2], d[2], 0));
+      for (let i = 0; i < 90; i++) { const a = -3.3 + 3.5 * rr(9), d = 130 + 300 * Math.pow(rr(10), 0.9), r = 1.2 + 4 * Math.pow(rr(11), 1.5); ell(dd, Math.cos(a) * d, cy_(40 + Math.sin(a) * d * 0.8), r, r, 0); }
+      const vv = L(T.vivid, 0.2, 0.1);
+      for (let i = 0; i < 90; i++) { const lx = (rr(12) * 2 - 1) * 230, ly = (rr(13) * 2 - 1) * 70, r = 1.2 + 3.2 * rr(14); ell(vv, lx, 70 + ly, r, r, 0); }
+      const gl = L(T.gloss, 0.22, 0.1, 0.7);
+      drops.forEach(d => { if (d[2] > 6) ell(gl, d[0] - d[2] * 0.32, d[1] - d[2] * 0.38, d[2] * 0.28, d[2] * 0.17, -0.6); });
+      addDrip(-150, 100, 70, 9, T.dark, 0.18, false); addDrip(-20, 104, 110, 11, T.main, 0.16, false); addDrip(110, 100, 60, 8, T.dark, 0.2, false);
+    }
+    return layers;
+  }
+  const splatRichCache = {};
+  function bloodSplatRich(ctx, u, tt, kind) {
+    const layers = splatRichCache[kind] || (splatRichCache[kind] = splatBuildRich(kind));
+    const e = clamp(tt / 0.4), p = 1 - Math.pow(1 - e, 3);
+    ctx.save();
+    ctx.scale(u * 1.25, u * 1.25);
+    const sc = 0.55 + 0.45 * p;
+    ctx.scale(sc, sc);
+    const base = ctx.globalAlpha * clamp(tt / 0.04);
+    layers.forEach(l => {
+      const a = clamp((tt - l.t0) / l.ramp) * l.a;
+      if (a <= 0.004) return;
+      ctx.globalAlpha = base * a;
+      ctx.fillStyle = l.fill;
+      if (l.drip) {
+        const dr = l.drip, len = dr.len * (0.4 + 0.6 * clamp((tt - l.t0 - 0.05) / 1.0));
+        ctx.beginPath();
+        ctx.moveTo(dr.x - dr.w * 1.1, dr.y - 30);
+        ctx.quadraticCurveTo(dr.x - dr.w * 0.9, dr.y + len * 0.5, dr.x - dr.w * 0.3, dr.y + len);
+        ctx.arc(dr.x, dr.y + len, dr.w * 0.62, Math.PI, 0, true);
+        ctx.quadraticCurveTo(dr.x + dr.w * 0.9, dr.y + len * 0.5, dr.x + dr.w * 1.1, dr.y - 30);
+        ctx.closePath(); ctx.fill();
+        if (dr.gl) { ctx.fillStyle = SPLAT_RICH_TONE.gloss; ctx.globalAlpha = base * a * 0.75; ctx.beginPath(); ctx.ellipse(dr.x - dr.w * 0.25, dr.y + len - dr.w * 0.25, dr.w * 0.16, dr.w * 0.26, -0.3, 0, TAU); ctx.fill(); }
+      } else ctx.fill(l.path);
+    });
+    ctx.restore();
+  }
   let bloodSplatBuf = null;
   function bloodSplat(ctx, x, y, u, tt, o = {}) {
     const alpha = clamp(o.alpha ?? 1);
@@ -616,6 +846,10 @@
     bloodSplatInner(ctx, x, y, u, tt, o);
   }
   function bloodSplatInner(ctx, x, y, u, tt, o = {}) {
+    if (o.shape && 'FGHIJ'.indexOf(o.shape) >= 0 && o.shape.length === 1) {
+      ctx.save(); ctx.translate(x, y); bloodSplatRich(ctx, u, tt, o.shape); ctx.restore();
+      return;
+    }
     let S;
     if (o.shape && SPLAT_SPECS[o.shape]) S = splatCache[o.shape] || (splatCache[o.shape] = splatBuildSpec(SPLAT_SPECS[o.shape]));
     else { if (!splatShapes) splatShapes = splatBuild(); S = splatShapes; }
