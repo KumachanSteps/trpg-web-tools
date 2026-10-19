@@ -422,6 +422,7 @@
    */
   const SPLAT_TONE = { 1: '#2f0303', 2: '#6f0d0e', 3: '#8a0809', 4: '#a3020c' };
   let splatShapes = null;
+  const splatCache = {};
   function splatBuild() {
     const rr = (i, q = 0) => rnd(4242, i, q);
     const lens = (p, x, y, L, w, rot) => {         // 両端がとがった細い葉形（中心 x,y・長さ L・太さ w・向き rot）
@@ -487,6 +488,112 @@
     }
     return { main, dark, black, bright, drips, sat };
   }
+  // 血溜まりの見本 A〜E：同じ描き方（形ごと広がる・べたっとした4色）で、形だけを作り分ける。形は仕様の表から、シード固定の乱数で一度だけ作る
+  function splatBuildSpec(sp) {
+    const rr = (i, q = 0) => rnd(sp.seed, i, q);
+    const TAUc = Math.PI * 2;
+    const lens = (p, x, y, L, w, rot) => {
+      const c = Math.cos(rot), s = Math.sin(rot);
+      const P = (a, b) => [x + a * c - b * s, y + a * s + b * c];
+      const a0 = P(-L / 2, 0), a1 = P(L / 2, 0), m1 = P(-L * 0.1, -w), m2 = P(-L * 0.1, w);
+      p.moveTo(a0[0], a0[1]); p.quadraticCurveTo(m1[0], m1[1], a1[0], a1[1]); p.quadraticCurveTo(m2[0], m2[1], a0[0], a0[1]); p.closePath();
+    };
+    const ell = (p, x, y, rx, ry, rot) => { p.moveTo(x + rx * Math.cos(rot), y + rx * Math.sin(rot)); p.ellipse(x, y, rx, ry, rot, 0, TAUc); };
+    const main = new Path2D(), dark = new Path2D(), black = new Path2D(), bright = new Path2D();
+    const { ax, ay, lean } = sp;
+    const wob = sp.wob || [0.12, 0.07, 0.05];
+    const edge = a => {
+      const ca = Math.cos(a - lean), sa = Math.sin(a - lean);
+      let r = 1 / Math.sqrt((ca / ax) ** 2 + (sa / ay) ** 2);
+      r *= 1 + wob[0] * Math.sin(3 * a + sp.seed) + wob[1] * Math.sin(5 * a + sp.seed * 2) + wob[2] * Math.sin(9 * a + sp.seed * 3);
+      (sp.bumps || []).forEach(b => { const da = Math.atan2(Math.sin(a - b[0]), Math.cos(a - b[0])); r += b[2] * Math.exp(-da * da / b[1]); });
+      return r;
+    };
+    ell(main, 0, 0, ax, ay, lean);
+    (sp.chain || []).forEach(c => ell(main, c[0], c[1], c[2], c[3], c[4] || 0));
+    const R = sp.rim;
+    for (let i = 0; i < R.n; i++) {
+      const a = i / R.n * TAUc + (rr(i, 1) - 0.5) * 0.12, e = edge(a), rad = R.r0 + R.r1 * rr(i, 2);
+      ell(main, Math.cos(a) * (e - rad * 0.55), Math.sin(a) * (e - rad * 0.55), rad, rad * (0.65 + 0.5 * rr(i, 3)), a);
+    }
+    for (let i = 0; i < sp.grain; i++) {
+      const a = rr(100 + i, 1) * TAUc, e = edge(a) * (0.93 + 0.2 * rr(100 + i, 2)), rad = 2.5 + 8 * rr(100 + i, 3);
+      ell(main, Math.cos(a) * e, Math.sin(a) * e, rad, rad * (0.6 + 0.6 * rr(100 + i, 4)), a);
+    }
+    const SP = sp.splinter;
+    for (let i = 0; i < SP.n; i++) {
+      const a = rr(200 + i, 1) * TAUc, e = edge(a);
+      const bias = SP.bias ? SP.bias(a) : 1;
+      const L = (SP.l0 + SP.l1 * Math.pow(rr(200 + i, 2), SP.pw || 1.8)) * bias, w = 1.6 + SP.w * rr(200 + i, 3);
+      lens(main, Math.cos(a) * (e + L * 0.3), Math.sin(a) * (e + L * 0.3), L, w, a + (rr(200 + i, 4) - 0.5) * (SP.jit ?? 0.4));
+    }
+    (sp.streaks || []).forEach((s, i) => { const e = edge(s[0]); lens(main, Math.cos(s[0]) * (e + s[1] * 0.35), Math.sin(s[0]) * (e + s[1] * 0.35), s[1], s[2], s[0] + (s[3] || 0)); });
+    (sp.dark || []).forEach(c => ell(dark, c[0], c[1], c[2], c[3], c[4] || 0));
+    (sp.darkSpots || []).forEach(d => { for (let i = 0; i < d.n; i++) { const a = rr(500 + i, 1) * TAUc, dd = d.d * rr(500 + i, 2); ell(dark, d.x + Math.cos(a) * dd, d.y + Math.sin(a) * dd * 0.7, 8 + 16 * rr(500 + i, 3), 5 + 11 * rr(500 + i, 4), a); } });
+    (sp.black || []).forEach(c => ell(black, c[0], c[1], c[2], c[3], c[4] || 0));
+    (sp.bright || []).forEach(c => ell(bright, c[0], c[1], c[2], c[3], c[4] || 0));
+    const drips = (sp.drips || []).map(d => ({ x: d[0], y: d[1], len: d[2], w: d[3], tone: d[4] || 3 }));
+    const sat = [];
+    const SA = sp.sat;
+    for (let i = 0; i < SA.n; i++) {
+      const fan = i < (SA.fan ? SA.fan.n : 0);
+      const a = fan ? SA.fan.a + (rr(400 + i, 1) - 0.5) * SA.fan.spread : (SA.ringA ? SA.ringA(rr(400 + i, 1)) : rr(400 + i, 1) * TAUc);
+      const e = edge(a);
+      let d = e + (fan ? SA.fan.near + SA.fan.far * Math.pow(rr(400 + i, 2), 0.9) : SA.near + SA.far * Math.pow(rr(400 + i, 2), 1.1));
+      if (Math.abs(Math.sin(a) * d) > 318) d *= 318 / Math.abs(Math.sin(a) * d);   // 枠の上下からはみ出さない
+      const u = rr(400 + i, 3);
+      let rad = u < 0.55 ? 1.8 + 3 * rr(400 + i, 4) : u < 0.9 ? 4 + 5 * rr(400 + i, 4) : 8 + 9 * rr(400 + i, 4);
+      if (fan && i < (SA.bigs || 0)) rad = 13 + 11 * rr(400 + i, 5);
+      const t = rr(400 + i, 6), st = rad > 5 ? 1.15 + (SA.stretch ?? 0.5) * rr(400 + i, 7) : 1 + 0.4 * rr(400 + i, 7);
+      sat.push({ x: Math.cos(a) * d, y: Math.sin(a) * d, rx: rad * st, ry: rad / Math.sqrt(st), rot: a, tone: t < 0.3 ? 2 : t < 0.62 ? 3 : 4, dist: d });
+    }
+    return { main, dark, black, bright, drips, sat };
+  }
+  const SPLAT_SPECS = {
+    // A：基準の形を整えたもの。縁をもっと荒く、大きな滴は丸くせず細長く、左下の張り出しは縁を荒らして塊になじませる
+    A: { seed: 11, ax: 195, ay: 118, lean: 0.3, bumps: [[2.35, 0.5, 62]], rim: { n: 54, r0: 12, r1: 36 }, grain: 190,
+      splinter: { n: 120, l0: 22, l1: 120, w: 6, bias: a => 0.5 + 0.55 * (0.55 + 0.45 * Math.cos(a + 0.75)) },
+      streaks: [[-0.7, 120, 7], [-0.36, 170, 8], [-0.02, 130, 7], [0.32, 100, 6], [-1.1, 110, 6]],
+      dark: [[-150, 70, 88, 52, -0.5], [-102, 108, 56, 34, 0.15], [-200, 30, 40, 26, -0.9], [-64, 90, 34, 22, 0.5], [-120, 40, 60, 30, -0.3]],
+      darkSpots: [{ x: -150, y: 70, d: 86, n: 16 }], black: [[-120, 126, 24, 9, 0.1]],
+      bright: [[120, -52, 84, 30, -0.5], [72, -86, 50, 18, -0.7], [165, -20, 38, 20, -0.4]],
+      drips: [[-122, 118, 230, 13, 2], [88, 98, 120, 10, 3], [8, 112, 64, 8, 2]],
+      sat: { n: 260, fan: { n: 100, a: -0.3, spread: 1.3, near: 40, far: 175 }, bigs: 7, near: 22, far: 125, stretch: 0.9 } },
+    // B：横に広い血だまり。下の縁に短い垂れが並び、滴は少なめ
+    B: { seed: 22, ax: 330, ay: 76, lean: -0.04, wob: [0.1, 0.08, 0.05], bumps: [[0.5, 0.4, 24], [2.7, 0.5, 30]], rim: { n: 60, r0: 10, r1: 26 }, grain: 150,
+      splinter: { n: 70, l0: 18, l1: 90, w: 5, bias: a => 0.4 + 1.1 * Math.cos(a) ** 2, jit: 0.25 },
+      streaks: [[0.1, 130, 6], [3.1, 120, 6], [-0.12, 100, 5]],
+      chain: [[-120, 20, 120, 52, 0.1], [140, 10, 110, 48, -0.1]],
+      dark: [[-200, 14, 120, 40, 0.05], [-90, 30, 70, 24, -0.1]], darkSpots: [{ x: -200, y: 14, d: 100, n: 10 }], black: [[-180, 36, 30, 8, 0.05]],
+      bright: [[170, -22, 90, 22, -0.08], [60, -34, 56, 14, 0.05]],
+      drips: [[-250, 56, 70, 11, 2], [-170, 62, 110, 12, 3], [-70, 66, 50, 9, 3], [20, 68, 130, 13, 2], [120, 64, 80, 10, 3], [210, 56, 100, 11, 3], [290, 44, 46, 8, 2]],
+      sat: { n: 80, fan: { n: 26, a: -0.15, spread: 1.0, near: 60, far: 150 }, bigs: 3, near: 26, far: 100, ringA: u => (u < 0.5 ? -0.5 + u * 1.0 : Math.PI - 0.5 + (u - 0.5) * 1.0), stretch: 0.8 } },
+    // C：縦に長い、垂れの多い塊。4〜5本の垂れの長さを変える
+    C: { seed: 33, ax: 138, ay: 100, lean: Math.PI / 2, wob: [0.1, 0.09, 0.06], bumps: [[1.57, 0.3, 24]], rim: { n: 46, r0: 10, r1: 28 }, grain: 130,
+      splinter: { n: 70, l0: 16, l1: 90, w: 5, bias: a => 0.6 + 0.7 * Math.max(0, -Math.sin(a)) + 0.3 * Math.abs(Math.cos(a)) },
+      streaks: [[-1.7, 120, 6], [-1.2, 100, 6], [3.5, 90, 5]],
+      chain: [[0, -40, 80, 70, 0], [-30, 70, 60, 50, 0.4]],
+      dark: [[-30, 20, 60, 44, 0.5], [40, 60, 40, 26, 0.2]], darkSpots: [{ x: -20, y: 30, d: 60, n: 10 }], black: [[-30, 80, 14, 8, 0.8]],
+      bright: [[40, -60, 40, 20, -0.9], [20, -100, 26, 14, -1.2]],
+      drips: [[-78, 100, 205, 13, 2], [-34, 118, 118, 11, 3], [20, 126, 190, 15, 2], [66, 112, 70, 10, 3], [104, 90, 150, 12, 3]],
+      sat: { n: 120, fan: { n: 30, a: 1.9, spread: 1.4, near: 40, far: 120 }, bigs: 3, near: 24, far: 120, stretch: 0.9 } },
+    // D：放射状の星形の飛沫。小さな核から細長い破片が四方へ伸び、細かい滴が多い
+    D: { seed: 44, ax: 78, ay: 70, lean: 0.2, wob: [0.14, 0.1, 0.07], rim: { n: 26, r0: 10, r1: 20 }, grain: 90,
+      splinter: { n: 150, l0: 50, l1: 140, w: 3.6, pw: 1.2, jit: 0.1, bias: a => 1 - 0.4 * Math.sin(a) ** 2 },
+      streaks: Array.from({ length: 16 }, (_, i) => [i / 16 * Math.PI * 2 + 0.12, (150 + 50 * ((i * 37) % 7) / 7) * (1 - 0.3 * Math.sin(i / 16 * Math.PI * 2 + 0.12) ** 2), 4.5 + 2 * ((i * 13) % 5) / 5]),
+      dark: [[-14, 8, 40, 28, 0.3]], black: [[-10, 6, 22, 14, 0.4]], bright: [[18, -14, 30, 14, -0.6]],
+      drips: [[-26, 52, 60, 9, 2], [30, 46, 38, 7, 3]],
+      sat: { n: 380, near: 40, far: 190, stretch: 0.5 } },
+    // E：片側へ引きずったような斜めの塗り。片方の端が重く、反対へ細く伸び、滴が片側へ扇状に尾を引く
+    E: { seed: 55, ax: 215, ay: 66, lean: -0.5, wob: [0.1, 0.06, 0.05], bumps: [[2.64, 0.5, 40]], rim: { n: 44, r0: 10, r1: 26 }, grain: 130,
+      splinter: { n: 80, l0: 18, l1: 110, w: 5, bias: a => 0.4 + 1.1 * Math.max(0, Math.cos(a + 0.5)), jit: 0.3 },
+      streaks: [[-0.5, 200, 7], [-0.62, 150, 6], [-0.38, 160, 6]],
+      chain: [[-150, 90, 96, 70, -0.5], [-90, 56, 90, 52, -0.5], [-30, 22, 80, 42, -0.5], [60, -26, 70, 30, -0.5], [140, -66, 70, 18, -0.5]],
+      dark: [[-150, 90, 70, 44, -0.5], [-110, 64, 40, 26, -0.4]], darkSpots: [{ x: -140, y: 86, d: 60, n: 10 }], black: [[-150, 104, 20, 8, -0.5]],
+      bright: [[30, -4, 90, 22, -0.5], [120, -50, 60, 14, -0.5]],
+      drips: [[-170, 140, 150, 14, 2], [-110, 106, 80, 10, 3]],
+      sat: { n: 200, fan: { n: 120, a: -0.5, spread: 0.9, near: 30, far: 150 }, bigs: 8, near: 20, far: 100, stretch: 1.0 } }
+  };
   let bloodSplatBuf = null;
   function bloodSplat(ctx, x, y, u, tt, o = {}) {
     const alpha = clamp(o.alpha ?? 1);
@@ -498,7 +605,7 @@
       bx.setTransform(1, 0, 0, 1, 0, 0);
       bx.clearRect(0, 0, bloodSplatBuf.width, bloodSplatBuf.height);
       bx.setTransform(ctx.getTransform());
-      bloodSplatInner(bx, x, y, u, tt);
+      bloodSplatInner(bx, x, y, u, tt, o);
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalAlpha *= alpha;
@@ -506,11 +613,12 @@
       ctx.restore();
       return;
     }
-    bloodSplatInner(ctx, x, y, u, tt);
+    bloodSplatInner(ctx, x, y, u, tt, o);
   }
-  function bloodSplatInner(ctx, x, y, u, tt) {
-    if (!splatShapes) splatShapes = splatBuild();
-    const S = splatShapes;
+  function bloodSplatInner(ctx, x, y, u, tt, o = {}) {
+    let S;
+    if (o.shape && SPLAT_SPECS[o.shape]) S = splatCache[o.shape] || (splatCache[o.shape] = splatBuildSpec(SPLAT_SPECS[o.shape]));
+    else { if (!splatShapes) splatShapes = splatBuild(); S = splatShapes; }
     const p = 1 - Math.pow(1 - clamp(tt / 0.3), 3.2);
     ctx.save();
     ctx.globalAlpha *= clamp(tt / 0.07);

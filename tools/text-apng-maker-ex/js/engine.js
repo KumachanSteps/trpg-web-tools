@@ -5591,7 +5591,7 @@
 
       if (layer === 'back') {
         if (fail || fum) {
-          this.drawVampireBite(ctx, d, band, size, W, H, mb, seed, fade, out, fum, plan, accent, tint, V, S);
+          this.drawVampireBite(ctx, d, band, size, W, H, mb, seed, fade, out, fum, plan, accent, tint, V, S, sfx.bloodShape);
           return;
         }
         // 赤い霧、赤い月、帯、奥のコウモリ
@@ -5643,7 +5643,7 @@
 
     // ヴァンパイアの失敗系（奥）：白い牙の列（上あごと下あご）が上下から迫って噛み合い、clap の時刻に小さく揺れる。
     // 噛んだ点から血がひとつながりの塊としてにじむように広がり（失敗は文字の奥にほどよく、ファンブルは画面いっぱいに）、牙は去る
-    drawVampireBite(ctx, d, band, size, W, H, mb, seed, fade, out, fum, plan, accent, tint, V, S) {
+    drawVampireBite(ctx, d, band, size, W, H, mb, seed, fade, out, fum, plan, accent, tint, V, S, bloodShape) {
       const cx = mb.cx, cy = mb.cy;
       const clap = plan.clap;
       const sc = d - clap;
@@ -5660,7 +5660,7 @@
         // 噛んだ点に弾ける血しぶき（手本どおり：約0.28秒で一気に広がり、約1秒そのまま、そのあとまとめて薄れて消える）
         const bf = 1 - EASE.inOutCubic(clamp((sc - (fum ? 1.1 : 1.0)) / 0.7));
         // オリジナルの形の血しぶき：形ごと中心から広がり、約1秒そのまま、そのあとまとめて薄れる。ファンブルは大きく、失敗はそれより小さく
-        V.bloodSplat(ctx, cx, cy, (H / 720) * (fum ? 0.94 : 0.6), sc, { alpha: fa * bf });
+        V.bloodSplat(ctx, cx, cy, (H / 720) * (fum ? 0.94 : 0.6), sc, { alpha: fa * bf, shape: bloodShape });
       }
       // 牙：閉じる（だんだん速く）→ 噛み合ったまま一拍 → はじかれるように開いて去る
       const closedGap = SS * 1.0;
