@@ -601,7 +601,7 @@
    */
   const SPLAT_RICH_TONE = { main: '#8a0809', dark: '#6f0d0e', bright: '#a3020c', black: '#2f0303', ink: '#b3150f', inkDark: '#8a0809', core: '#3a0305', vivid: '#d0140e', gloss: '#ffcfc4' };
   function splatBuildRich(kind) {
-    const seed = { F: 61, G: 62, H: 63, I: 64, J: 65, K: 71, L: 72, M: 73, N: 74 }[kind];
+    const seed = { F: 61, G: 62, H: 63, I: 64, J: 65, K: 71, L: 72, M: 73, N: 74, O: 81, P: 82, Q: 83 }[kind];
     let k = 0;
     const rr = (q = 0) => rnd(seed, ++k, q);
     const TAUc = Math.PI * 2;
@@ -648,7 +648,7 @@
     const hl = [];                                           // つやの点（Iと一部のJだけ）
     const dropAt = (p, x, y, r, rx = 1) => ell(p, x, y, r * rx, r, 0);
     // ---- K〜N 用の部品（F〜Jの描き方・乱数には触れない） ----
-    const KN = 'KLMN'.indexOf(kind) >= 0;
+    const KN = 'KLMNOPQ'.indexOf(kind) >= 0;
     const okp = (x, y) => Math.abs(y) <= (KN ? 205 : YL) && Math.abs(x) <= (KN ? 420 : 500);
     const cdrip = (p, x, y, len, w, sway) => {                       // 自然な垂れ：根元は太く、先へ細くなり、少し曲がる（先に玉は付けない）
       const x1 = x + sway, y1 = y + len, w1 = w * 0.5;
@@ -682,6 +682,7 @@
         const lp = bucket(o.key + (t0 * 100 | 0), fill, t0, rp);
         const r = 4 + (o.rmax || 20) * Math.pow(rr(16), 1.5), sq = 0.75 + 0.6 * rr(17);
         ell(lp, x, y, r * sq, r / Math.sqrt(sq), rr(18) * 3);
+        if (o.rec && r > (o.rmin || 8)) o.rec.push([x, y, r]);
         if (rr(19) < 0.45) { const a = rr(20) * TAUc, dd = r * (1.4 + rr(21)), r2 = 1.5 + 0.3 * r * rr(22); ell(lp, x + Math.cos(a) * dd, y + Math.sin(a) * dd, r2, r2, 0); }
       }
     };
@@ -928,6 +929,35 @@
       drops(T.ink, 26, [[70, 190, 80, 30], [220, 120, 50, 50], [-60, 130, 50, 30]], { key: 1000, ox: 40, oy: 40, d1: 160, d2: 260, rmax: 18 });
       spray(T.ink, 300, 70, 70, [[0.35, 230, 0.3, 60, 4], [0.9, 190, 0.3, 50, 2], [-0.2, 250, 0.25, 50, 2]], { key: 1100, d1: 200, d2: 300, needleP: 0.6, ky: 0.7 });
       spray(T.main, 160, -130, -50, [[-2.4, 230, 0.35, 60, 3], [-1.2, 210, 0.3, 50, 1]], { key: 1200, d1: 200, d2: 300, needleP: 0.3, ky: 0.7 });
+    } else if (kind === 'O' || kind === 'P' || kind === 'Q') {
+      // 血のしぶきの手本（平らなインク調の塊・小さな丸い滴・舌のような垂れ・荒い縁）に、つやのある写真の陰影（暗い芯、まわりの淡く透けた暈、大きな滴のつや）を混ぜた形。
+      // 塊の下絵は3つで共通（固定シード）。O は平らで、大きな滴に少しだけつや。P は釣り合い。Q は暈・芯・つやを強める。放射状の腕・先が玉の糸は使わない
+      const T = SPLAT_RICH_TONE, g = { O: 0, P: 1, Q: 2 }[kind];
+      let kb = 0; const rb = (q = 0) => rnd(80, ++kb, q);
+      const rec = [];
+      if (g >= 1) {                                          // 淡い暈（塊の下に透けて広がる、不ぞろいな形）
+        const h1 = L(T.bright, 0, 0.1, g === 2 ? 0.4 : 0.3);
+        [[-150, -50, 74, 0.7, 0.4], [-60, -100, 54, 0.6, 0.1], [30, -60, 60, 0.7, -0.3], [-190, 40, 52, 0.7, 0.2], [-20, 36, 40, 0.6, 0.1]].forEach(o => blob(h1, o[0], o[1], o[2] * (g === 2 ? 1.15 : 0.95), o[3], o[4], 1.9));
+        wedge(h1, -150, -50, -250, -120, 40, 6, 20); wedge(h1, 30, -60, 130, -120, 30, 5, -14);
+        if (g === 2) { const h2 = L(T.bright, 0.14, 0.1, 0.28); blob(h2, -230, 20, 56, 0.6, 0.4, 1.8); blob(h2, 90, -10, 46, 0.6, 0.1, 1.7); wedge(h2, 90, -10, 190, 20, 30, 5, 12); }
+      }
+      const m1 = L(T.main, 0, 0.06), m2 = L(T.main, 0.14, 0.1);
+      [[-80, 0, 92, 0.8, 0.3], [-20, -36, 70, 0.85, 0.1]].forEach(o => blob(m1, o[0], o[1], o[2], o[3], o[4], 1.15));
+      [[-170, 56, 66, 0.75, -0.2], [-120, -60, 58, 0.8, 0.4], [-50, 50, 62, 0.8, 0.2], [40, -6, 50, 0.8, -0.2], [100, 22, 36, 0.85, 0.3], [-210, -10, 44, 0.85, 0.1], [-20, -100, 40, 0.8, 0]].forEach(o => blob(m2, o[0], o[1], o[2], o[3], o[4], 1.25));
+      wedge(m2, 90, 10, 250, 54, 24, 5, 14); wedge(m2, -130, -70, -205, -150, 22, 5, -10);
+      for (let i = 0; i < 16; i++) { const a = rb(1) * TAUc, d = 60 + 110 * rb(2); lens(m2, -80 + Math.cos(a) * d * 1.2, -10 + Math.sin(a) * d * 0.75, 26 + 34 * rb(3), 3 + 3 * rb(4), a); }
+      const sh = L(T.dark, 0.15, 0.1); blob(sh, -110, 30, 50, 0.55, 0.3, 1.6); blob(sh, -170, 80, 26, 0.7, -0.3, 1.5);
+      const bp = L(T.bright, 0.16, 0.1, g === 0 ? 1 : 0.9); blob(bp, 20, -52, g === 0 ? 40 : 30, 0.5, -0.3, 1.4); lens(bp, 70, -20, 80, 8, -0.4);
+      if (g >= 1) { const co = L(T.core, 0.02, 0.07); blob(co, -86, 4, g === 2 ? 40 : 30, 0.7, 0.3, 1.6); if (g === 2) blob(co, -40, -20, 20, 0.7, 0.2, 1.5); }
+      const bk = L(T.black, 0.15, 0.1); blob(bk, -92, 66, 14, 0.5, 0.1, 1.3); ell(bk, -150, 30, 12, 5, -0.5); ell(bk, -40, 70, 9, 4, 0.2);
+      const D = { O: [[-150, 100, 96, 20, -10], [-60, 96, 56, 12, 6]], P: [[-100, 100, 100, 18, 8], [-170, 90, 62, 12, -6], [10, 82, 44, 11, 5]], Q: [[-180, 92, 108, 18, -8], [-110, 100, 70, 13, 5], [-30, 92, 50, 11, 4], [50, 62, 46, 10, 3]] }[kind];
+      const dd = L(T.main, 0.17, 0.06); D.forEach(d => cdrip(dd, d[0], d[1], d[2], d[3], d[4]));
+      const cfg = { O: [74, [[110, 110, 90, 50], [-210, 150, 70, 40], [160, -30, 60, 60], [20, 170, 80, 30]], 22, 230, 0.2, 0.15], P: [34, [[-60, 150, 90, 20], [140, 90, 70, 50], [-220, 90, 40, 50], [70, -130, 60, 30]], 26, 170, 0.3, 0.9], Q: [26, [[-150, 150, 80, 20], [20, 140, 70, 20], [150, 60, 60, 50], [-240, 40, 40, 50]], 30, 130, 0.2, 1.5] }[kind];
+      drops(T.main, cfg[0], cfg[1], { key: 100, ox: -60, oy: 0, d1: 190, d2: 280, rmax: cfg[2], rec, rmin: [15, 12, 9][g] });
+      spray(T.main, cfg[3], -60, 0, [[-0.2 - g * 0.3, 230, 0.4, 70, 3], [0.5, 220, 0.4, 60, 2], [2.8, 210, 0.4, 60, 1]], { key: 200, d1: 220, d2: 330, needleP: cfg[4], ky: 0.72 });
+      const gl = L(T.gloss, 0.2, 0.1, [0.55, 0.72, 0.8][g]);
+      rec.forEach(d => ell(gl, d[0] - d[2] * 0.32, d[1] - d[2] * 0.38, d[2] * 0.3, d[2] * 0.18, -0.6));
+      if (g >= 1) { const st = L(T.gloss, 0.2, 0.1, g === 2 ? 0.34 : 0.26); lens(st, -70, -66, 56, 8, -0.25); if (g === 2) { lens(st, -140, 2, 44, 7, -0.5); lens(st, 110, 10, 40, 6, -0.2); } }
     }
     return layers;
   }
@@ -936,8 +966,10 @@
     const layers = splatRichCache[kind] || (splatRichCache[kind] = splatBuildRich(kind));
     const e = clamp(tt / 0.4), p = 1 - Math.pow(1 - e, 3);
     ctx.save();
-    const km = 'KLMN'.indexOf(kind) >= 0 ? 1.5 : 1.25;
+    const km = 'KLMNOPQ'.indexOf(kind) >= 0 ? 1.5 : 1.25;
     ctx.scale(u * km, u * km);
+    if (kind === 'Q') ctx.scale(-1, 1);                    // Q は左右を逆にして配置を変える
+    else if (kind === 'P') ctx.rotate(-0.16);
     const sc = 0.55 + 0.45 * p;
     ctx.scale(sc, sc);
     const base = ctx.globalAlpha * clamp(tt / 0.04);
@@ -981,7 +1013,7 @@
     bloodSplatInner(ctx, x, y, u, tt, o);
   }
   function bloodSplatInner(ctx, x, y, u, tt, o = {}) {
-    if (o.shape && 'FGHIJKLMN'.indexOf(o.shape) >= 0 && o.shape.length === 1) {
+    if (o.shape && 'FGHIJKLMNOPQ'.indexOf(o.shape) >= 0 && o.shape.length === 1) {
       ctx.save(); ctx.translate(x, y); bloodSplatRich(ctx, u, tt, o.shape); ctx.restore();
       return;
     }
