@@ -5659,8 +5659,8 @@
       if (sc >= 0) {
         // 噛んだ点に弾ける血しぶき（手本どおり：約0.28秒で一気に広がり、約1秒そのまま、そのあとまとめて薄れて消える）
         const bf = 1 - EASE.inOutCubic(clamp((sc - (fum ? 1.1 : 1.0)) / 0.7));
-        // 手本をなぞった血しぶき：ファンブルは大きく（手本と同じ大きさ）、失敗はそれより小さく
-        V.bloodTrace(ctx, cx, cy, (H / 720) * (fum ? 1 : 0.62), sc, { alpha: fa * bf });
+        // オリジナルの形の血しぶき：形ごと中心から広がり、約1秒そのまま、そのあとまとめて薄れる。ファンブルは大きく、失敗はそれより小さく
+        V.bloodSplat(ctx, cx, cy, (H / 720) * (fum ? 0.94 : 0.6), sc, { alpha: fa * bf });
       }
       // 牙：閉じる（だんだん速く）→ 噛み合ったまま一拍 → はじかれるように開いて去る
       const closedGap = SS * 1.0;
@@ -5677,8 +5677,10 @@
         ta = 1 - EASE.inQuad(clamp((sc - 0.15) / 0.4));
       }
       if (ta > 0.01) {
-        V.teethRow(ctx, cx, topY, SS, 1, { alpha: ta * fade, shadow: '#1a0208' });
-        V.teethRow(ctx, cx, botY, SS, -1, { alpha: ta * fade, lower: true, shadow: '#1a0208' });
+        // ファンブルの牙は血に染まった暗い赤黒（ごく細い濃い縁とごく淡いつや）。失敗は白のまま
+        const fang = fum ? { fill: '#4a0710', rim: '#1a0205', rimW: 0.018, gloss: 0.16, shadow: '#000000', shadowA: 0.4 } : { shadow: '#1a0208' };
+        V.teethRow(ctx, cx, topY, SS, 1, { alpha: ta * fade, ...fang });
+        V.teethRow(ctx, cx, botY, SS, -1, { alpha: ta * fade, lower: true, ...fang });
       }
       ctx.restore();
     }
