@@ -21,9 +21,9 @@
     "devHref": "./tools/indoor-map-maker/",
     "devStage": "testing",
     "devNote": {
-      "ja": "室内の見取り図エディター。テンプレート61種・13分類と素材約370種・17分類、タグ検索、コマ用の方眼、GM/PL別のPNG書き出し。画面は日本語・英語・韓国語に対応。",
-      "en": "Indoor floor-plan editor with 61 templates in 13 categories, about 370 assets in 17 categories, tag search, a token grid, and separate GM/player PNG export. UI in Japanese, English, and Korean.",
-      "ko": "실내 평면도 편집기. 템플릿 61종·13분류, 소재 약 370종·17분류, 태그 검색, 말 이동용 격자, GM/PL별 PNG 내보내기. 일본어·영어·한국어 UI를 지원합니다."
+      "ja": "室内の見取り図エディター。テンプレート61種・13分類と素材約370種・17分類、タグ検索、コマ用の方眼、GM/PL別のPNG書き出し。画面は日本語・英語・韓国語・繁体字中国語に対応。",
+      "en": "Indoor floor-plan editor with 61 templates in 13 categories, about 370 assets in 17 categories, tag search, a token grid, and separate GM/player PNG export. UI in Japanese, English, Korean, and Traditional Chinese.",
+      "ko": "실내 평면도 편집기. 템플릿 61종·13분류, 소재 약 370종·17분류, 태그 검색, 말 이동용 격자, GM/PL별 PNG 내보내기. 일본어·영어·한국어·번체 중국어 UI를 지원합니다."
     },
     "name": {
       "ja": "TRPG室内図メーカー",
