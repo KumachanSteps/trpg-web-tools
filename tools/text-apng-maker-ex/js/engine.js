@@ -653,6 +653,7 @@
       case 'star': return { l: 0, r: 0, t: size * 0.65, b: size * 0.65 };
       case 'dream': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'vampire': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
+      case 'halloween': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'fang': return { l: 0, r: 0, t: size * 0.75, b: size * 0.75 };
       case 'fangFx': return { l: 0, r: 0, t: 0, b: 0 };
       case 'clawMark': return { l: 0, r: 0, t: 0, b: 0 };
@@ -1407,6 +1408,7 @@
     star: { lead: 0.45, tail: 0.2 },
     dream: { lead: 0.5, tail: 0.2 },
     vampire: { lead: 0.5, tail: 0.2 },
+    halloween: { lead: 0.5, tail: 0.2 },
     // 牙の戦闘開始：牙が上下から迫って噛み合う時刻（FANG_CLAP）に文字が叩きつけられる
     fang: { lead: 0.58, tail: 0 },
     // 牙の戦闘演出：文字・帯のない、噛みつく牙だけの演出（画面の中央で噛む。戦闘シーンに重ねる用）
@@ -1439,7 +1441,7 @@
   const ASH_LOOP = 6;
   const SMOKE_LOOP = 6;
   // 文字の後ろと手前の両方に描く演出（後ろに帯、手前に炎・一閃・閃光）
-  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream', 'vampire', 'fang', 'fangFx']);
+  const SFX_BOTH = new Set(['flame', 'blade', 'shot', 'star', 'dream', 'vampire', 'halloween', 'fang', 'fangFx']);
   // 牙の戦闘開始：牙が噛み合う時刻（場面の始めから）
   const FANG_CLAP = 0.56;
   // 装飾枠：線が角から辺の中央まで伸びる時間
@@ -1704,6 +1706,15 @@
   // ヴァンパイアの段取り。lead：文字が出る時刻（成功系はコウモリの群れが文字の真ん中を通る / 失敗系は牙が噛み合ってから）/
   // bats：コウモリの数 / moon：赤い月の大きさ（文字の高さが単位、0で出さない）/ mist：赤い霧のリボン / flare：決めの血の閃光 / burst：散る火の粉の数 /
   // clap：失敗系で牙が噛み合う時刻 / tail：退場のあと演出が残る時間
+  // ハロウィンの段取り。lead：文字が出る時刻 / pumpkins：ジャック・オ・ランタンの数 / ghosts：とんがり帽子のおばけの数 / bats：コウモリの数 /
+  // tombs：墓石の数 / moon：満月の大きさ（文字の高さが単位、0で出さない） / burst：散る火の粉の数 / tail：退場のあと演出が残る時間
+  const HALLOWEEN_PLAN = {
+    success: { lead: 0.5, pumpkins: 4, ghosts: 2, bats: 10, tombs: 0, moon: 0, burst: 8 },
+    special: { lead: 0.55, pumpkins: 6, ghosts: 3, bats: 12, tombs: 2, moon: 0, burst: 14 },
+    critical: { lead: 0.7, pumpkins: 8, ghosts: 5, bats: 16, tombs: 3, moon: 0.9, burst: 22 },
+    failure: { lead: 0.3, pumpkins: 4, ghosts: 3, bats: 0, tombs: 2, moon: 0, burst: 0 },
+    fumble: { lead: 0.55, tail: 0.35, pumpkins: 3, ghosts: 0, bats: 0, tombs: 3, moon: 0, burst: 0 }
+  };
   const VAMPIRE_PLAN = {
     success: { lead: 0.5, bats: 22, moon: 0, mist: 0, flare: 0, burst: 8 },
     special: { lead: 0.55, bats: 34, moon: 1.25, mist: 2, flare: 0, burst: 12 },
@@ -1861,6 +1872,7 @@
     if (sfx.type === 'star') { const pl = STAR_PLAN[rollTier(sfx)]; return { lead: pl.lead, tail: pl.tail ?? SFX_TIMING.star.tail }; }
     if (sfx.type === 'dream') { const pl = DREAM_PLAN[rollTier(sfx)]; return { lead: pl.lead, tail: pl.tail ?? SFX_TIMING.dream.tail }; }
     if (sfx.type === 'vampire') { const pl = VAMPIRE_PLAN[rollTier(sfx)]; return { lead: pl.lead, tail: pl.tail ?? SFX_TIMING.vampire.tail }; }
+    if (sfx.type === 'halloween') { const pl = HALLOWEEN_PLAN[rollTier(sfx)]; return { lead: pl.lead, tail: pl.tail ?? SFX_TIMING.halloween.tail }; }
     return SFX_TIMING[sfx.type];
   }
 
@@ -2830,6 +2842,7 @@
       else if (sfx.type === 'star') this.drawStar(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'dream') this.drawDream(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'vampire') this.drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer);
+      else if (sfx.type === 'halloween') this.drawHalloween(ctx, pg, page, t, scale, scene, sfx, k, layer);
       else if (sfx.type === 'bulletMark') this.drawBulletMark(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'katanaFx') this.drawKatanaFx(ctx, pg, page, t, scale, scene, sfx, k);
       else if (sfx.type === 'zangekiHard') this.drawZangekiHard(ctx, pg, page, t, scale, scene, sfx, k);
@@ -5537,6 +5550,156 @@
     // 失敗＝上下から牙が迫って噛み合い（ガチッ）、血の滴が飛び散ってから、色あせた暗い文字が現れる /
     // ファンブル＝牙が叩きつけるように噛み合い、画面いっぱいに血しぶきが広がって垂れ、ひび割れた血まみれの文字が暗く現れる。
     // 帯・月・霧・牙・血しぶきは文字の後ろ、手前のコウモリ・閃光・したたり・ひびは文字の手前に描く。退場は「星屑になって消える」と組み合わせる
+    drawHalloween(ctx, pg, page, t, scale, scene, sfx, k, layer) {
+      const H_ = root.TextApngHalloweenFx, V = root.TextApngVampireFx, S = root.TextApngStarFx;
+      if (!H_ || !V || !S) return;
+      const d = t - pg.start;
+      if (d < 0) return;
+      const tier = rollTier(sfx);
+      const plan = HALLOWEEN_PLAN[tier];
+      const tail = plan.tail ?? SFX_TIMING.halloween.tail;
+      const hasOut = Number.isFinite(pg.outEnd);
+      if (hasOut && t > pg.outEnd + tail) return;
+      const { layout } = this.prepared;
+      const size = layout.size;
+      const W = scene.width, H = scene.height;
+      const accent = sfx.color || '#ff7a18';
+      const tint = sfx.color2 || '#1d0b33';
+      const mb = mainBox(layout, page);
+      const cx = mb.cx, cy = mb.cy;
+      const L = pg.textStart - pg.start;
+      const s = d - L;
+      const out = outProgress(pg, t);
+      const fadeAt = hasOut ? pg.holdEnd + 0.4 * (pg.outEnd - pg.holdEnd) : Infinity;
+      const fade = hasOut ? 1 - EASE.inQuad(clamp((t - fadeAt) / Math.max(0.05, pg.outEnd + tail - fadeAt))) : 1;
+      const band = rollBandRect(page, size, W);
+      const hh = band.hh;
+      const seed = 2100 + pg.index * 13;
+      const fail = tier === 'failure', fum = tier === 'fumble';
+      const bad = fail || fum;
+      const textW = mb.x1 - mb.x0;
+      const outBack = x => { const q = clamp(x); const c = 1.70158, c3 = c + 1, u = q - 1; return 1 + c3 * u * u * u + c * u * u; };
+      const R = (i, q) => rnd(seed, i, q);
+      // 失敗・ファンブルは灰色寄りに、ファンブルはさらに暗く
+      const toneK = bad ? (fum ? 0.85 : 0.6) : 0;
+
+      if (layer === 'back') {
+        // 夜の帯、満月、奥の墓石、奥のおばけ、もや
+        const open = fum ? EASE.outCubic(clamp((d - 0.05) / 0.5)) : EASE.outCubic(clamp(d / 0.4));
+        H_.nightBand(ctx, band, W, open, fade * (bad ? 0.85 : 1), accent, tint, tier);
+        if (plan.moon > 0) {
+          const e = outBack(clamp(d / 0.6));
+          H_.moon(ctx, cx + textW * 0.5, cy - hh * 1.25 + (1 - e) * size * 0.6, size * plan.moon * (0.9 + 0.1 * e), (tier === 'critical' ? 0.95 : 0.8) * e * fade * (1 - 0.25 * out));
+        }
+        if (bad) {
+          const fogC = fum ? ['#0a0414', '#1c0c28'] : ['#6a5e86', '#463c60'];
+          for (let m = 0; m < 6; m++) {
+            const x = ((m / 6 + 0.1 * Math.sin(seed + m)) + (fum ? d * 0.05 : -d * 0.03) + 1) % 1 * W * 1.2 - W * 0.1;
+            V.puff(ctx, x, band.cy + hh * (0.5 + 0.4 * R(m, 3)), size * (0.8 + 0.4 * R(m, 4)), size * 0.35, m % 2 ? fogC[0] : fogC[1], 0.45 * fade * clamp(d / 0.5));
+          }
+        }
+        // 墓石（奥）：底から伸びて立つ。失敗は沈んでいく
+        for (let i = 0; i < plan.tombs; i++) {
+          const n = plan.tombs;
+          const tx = cx + (i - (n - 1) / 2) * textW * 0.42 + (R(i, 11) - 0.5) * size * 0.3;
+          const rise = outBack(clamp((d - 0.12 - i * 0.08) / 0.5));
+          const sink = fail ? EASE.inQuad(clamp((d - 0.5 - i * 0.05) / 0.6)) * size * 0.9 : 0;
+          const base = band.cy + hh * (0.82 + 0.12 * R(i, 12)) + (1 - rise) * size * 0.9 + sink;
+          const hgt = size * (0.5 + 0.1 * R(i, 13));
+          H_.tomb(ctx, tx, base, size * (0.34 + 0.05 * R(i, 14)), hgt, { alpha: fade * clamp(rise * 1.2), tone: toneK, rot: (fum ? 0.18 : 0) * (i % 2 ? -1 : 1) * clamp((d - 0.4) / 0.5) });
+        }
+        // 奥のおばけ：下から漂い上がる
+        for (let i = 0; i < plan.ghosts; i++) {
+          if (i % 2) continue;
+          const x0 = cx + (R(i, 21) - 0.5) * W * 0.8;
+          const p = EASE.outCubic(clamp((d - 0.1 - i * 0.12) / 1.0));
+          const y = band.cy + hh * 0.6 - p * hh * (0.9 + 0.5 * R(i, 22)) + (1 - p) * size * 0.8;
+          const x = x0 + (fail ? (x0 < cx ? -1 : 1) * W * 0.15 * out : 0);
+          H_.ghost(ctx, x, y, size * (0.26 + 0.05 * R(i, 23)), { alpha: fade * 0.55 * clamp(p * 1.5), sway: d * 3 + i, flip: i % 2 === 1, tone: toneK });
+        }
+        return;
+      }
+
+      // 手前：カボチャ、手前のおばけ、コウモリ、光、火の粉
+      // カボチャの置き場所：上の弧と下の弧に交互に、角度と半径をずらして散らす（きれいな円や楕円の輪郭にならないように）
+      const pumpkinAt = i => {
+        const n = Math.max(1, plan.pumpkins);
+        const frac = (i + 0.5) / n + 0.12 * (R(i, 31) - 0.5);
+        const top = i % 2 === 0;
+        const ang = (top ? Math.PI : 0) + frac * Math.PI;
+        const rx = textW * (0.42 + 0.14 * R(i, 32)), ry = hh * (1.0 + 0.4 * R(i, 33));
+        return { x: cx + Math.cos(ang) * rx, y: cy + Math.sin(ang) * ry };
+      };
+      for (let i = 0; i < plan.pumpkins; i++) {
+        const tgt = pumpkinAt(i);
+        const delay = 0.05 + i * 0.06;
+        const p = outBack(clamp((d - delay) / 0.45));
+        if (d < delay) continue;
+        let x = cx + (tgt.x - cx) * p, y = cy + (tgt.y - cy) * p;
+        const psize = size * (0.3 + 0.08 * R(i, 34)) * (0.3 + 0.7 * p);
+        let a = fade;
+        let rot = Math.sin(d * TAU * 0.5 + i * 1.3) * 0.1 * (bad ? 0 : 1);
+        if (bad) {
+          // 失敗・ファンブル：重さで落ちて、転がりながら消える
+          const f = EASE.inQuad(clamp((d - 0.35 - i * 0.05) / 0.9));
+          y += f * size * (fum ? 1.8 : 1.2);
+          x += f * (i % 2 ? 1 : -1) * size * 0.4;
+          rot += f * (i % 2 ? 2.2 : -2.2);
+          a = fade * (1 - 0.6 * f);
+        }
+        const lit = clamp((s + 0.4) / 0.4) * (bad ? 0.2 : 1);
+        H_.pumpkin(ctx, x, y, psize, { rot, alpha: a, tone: toneK, lit, glow: fum ? '#6a2a8a' : '#ff8a1e' });
+      }
+      // 手前のおばけ（成功系）：文字の前を横切って上へ
+      for (let i = 1; i < plan.ghosts + 1 && !bad; i += 2) {
+        const dir = i % 4 === 1 ? 1 : -1;
+        const tc = L * (0.7 + 0.2 * R(i, 41));
+        const x = cx + dir * (W * 0.7 - (d - tc) * W * 0.9) * (d > tc ? 1 : 0.0001);
+        const y = cy - hh * 0.5 + Math.sin(d * 3 + i) * size * 0.12;
+        const near = Math.exp(-Math.pow((d - tc) / 0.25, 2));
+        if (d < tc - 0.1) continue;
+        H_.ghost(ctx, x, y, size * (0.3 + 0.06 * R(i, 42)) * (1 + 0.25 * near), { alpha: fade * 0.9, sway: d * 4 + i, flip: dir < 0, rot: dir * 0.12 });
+      }
+      // コウモリ：左右から飛び込み、文字をかすめて画面の外へ
+      for (let i = 0; i < plan.bats; i++) {
+        const dir = R(i, 51) < 0.5 ? 1 : -1;
+        const tc = Math.max(0.25, L * (0.75 + 0.5 * R(i, 52)));
+        if (d < tc - 0.2) continue;
+        const v = W * (0.9 + 0.7 * R(i, 53));
+        const along = (d - tc) * v;
+        if (Math.abs(along) > W * 0.9) continue;
+        const x = cx - dir * W * 0.6 + dir * (W * 0.6 + along);
+        const y = cy + (R(i, 54) - 0.5) * hh * 2.2 + Math.sin(d * TAU * (0.9 + 0.6 * R(i, 55)) + R(i, 56) * TAU) * size * 0.2;
+        const flap = 0.5 + 0.5 * Math.sin(d * TAU * (5.5 + 2 * R(i, 57)) + R(i, 58) * TAU);
+        V.bat(ctx, x, y, size * (0.2 + 0.12 * R(i, 59)), { flap, ang: 0.12 * Math.sin(d * 5 + i), dir, alpha: fade * (bad ? 0.5 : 1), rim: accent });
+      }
+      // 墓石（手前）：失敗のときは沈む墓石を手前にも
+      for (let i = 0; i < plan.tombs && s > -0.1 && !bad; i++) {
+        const n = plan.tombs;
+        const tx = cx + (i - (n - 1) / 2) * textW * 0.42 + (R(i, 11) - 0.5) * size * 0.3;
+        const rise = outBack(clamp((d - 0.12 - i * 0.08) / 0.5));
+        const base = band.cy + hh * (0.82 + 0.12 * R(i, 12)) + (1 - rise) * size * 0.9;
+        H_.tomb(ctx, tx, base, size * (0.34 + 0.05 * R(i, 14)), size * (0.5 + 0.1 * R(i, 13)), { alpha: fade * clamp(rise * 1.2), tone: 0, rot: 0 });
+      }
+      if (!bad) {
+        // 決めの光と、散る火の粉（オレンジと紫）
+        if (s >= 0 && s < 0.4) drawFlash(ctx, cx, cy, W * (tier === 'critical' ? 0.4 : 0.3), accent, (tier === 'critical' ? 0.6 : 0.35) * clamp(k) * Math.pow(1 - s / 0.4, 2), 0.45);
+        for (let i = 0; i < plan.burst && s >= 0; i++) {
+          const life = 0.7 + 0.5 * R(i, 91);
+          if (s > life) continue;
+          const q = s / life;
+          const x0 = cx + (R(i, 92) - 0.5) * textW * 0.8, y0 = cy + (R(i, 93) - 0.5) * size * 0.5;
+          const a = Math.atan2(y0 - cy + (R(i, 94) - 0.5) * size * 0.4, x0 - cx + (R(i, 95) - 0.5) * size);
+          const v = size * (1.4 + 2.8 * R(i, 96));
+          const dist = v * (1 - Math.exp(-3 * s)) / 3;
+          const x = x0 + Math.cos(a) * dist, y = y0 + Math.sin(a) * dist - size * 0.25 * s * s;
+          const al = (1 - q * q) * fade * (0.6 + 0.4 * Math.sin(s * 14 + i));
+          const col = i % 3 === 0 ? '#ffe2a8' : i % 3 === 1 ? '#ff8a1e' : '#9a5cff';
+          S.softDot(ctx, x, y, size * (0.035 + 0.03 * R(i, 97)), col, al);
+        }
+      }
+    }
+
     drawVampire(ctx, pg, page, t, scale, scene, sfx, k, layer) {
       const V = root.TextApngVampireFx, S = root.TextApngStarFx;
       if (!V || !S) return;

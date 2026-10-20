@@ -296,7 +296,8 @@
     shot: { success: [1.0, 0.4], special: [1.0, 0.4], extreme: [1.0, 0.4], critical: [1.0, 0.45], failure: [1.05, 0.6], fumble: [1.0, 0.45] },
     star: { success: [0.9, 1.1], special: [0.85, 1.1], extreme: [0.85, 1.05], critical: [0.8, 0.95], failure: [1.0, 1.0], fumble: [0.75, 1.0] },
     dream: { success: [0.9, 1.05], special: [0.85, 1.05], extreme: [0.8, 1.0], critical: [0.75, 0.95], failure: [0.9, 1.0], fumble: [0.7, 0.9] },
-    vampire: { success: [0.9, 1.0], special: [0.85, 1.0], extreme: [0.8, 0.95], critical: [0.75, 0.9], failure: [0.85, 0.85], fumble: [0.6, 0.8] }
+    vampire: { success: [0.9, 1.0], special: [0.85, 1.0], extreme: [0.8, 0.95], critical: [0.75, 0.9], failure: [0.85, 0.85], fumble: [0.6, 0.8] },
+    halloween: { success: [0.9, 1.0], special: [0.85, 1.0], extreme: [0.8, 0.95], critical: [0.8, 0.95], failure: [0.9, 0.9], fumble: [0.65, 0.85] }
   };
   const rollTime = (kind, tier) => {
     const [hold, outDur] = ROLL_TIME[kind][tier];
@@ -467,6 +468,27 @@
     const look = VAMPIRE_LOOK[tier];
     return { ...VAMPIRE_ROLL, fontSize: Math.round(fontSize * 0.75), ...look.patch, ...rollTime('vampire', tier), sfx: { type: 'vampire', tier, color: look.accent, color2: look.band, power: 1 } };
   };
+  // ハロウィン：夜の紫、カボチャのオレンジ、骨の白。文字はポップな丸ゴシックに、橙のグラデーションと暗い紫の縁取り
+  const HALLOWEEN_LOOK = {
+    success: { accent: '#ff8a1e', band: '#1d0b33', patch: { fill: { type: 'gradient', color: '#fff3d6', color2: '#ffd08a', color3: '#ff9a3a', dir: 'v' }, stroke: { on: true, width: 2.5, color: '#2a0d3a' }, glow: { on: true, color: '#ff7a18', size: 22, strength: 0.7 }, subColor: '#ffe2b0' } },
+    special: { accent: '#ff9a2a', band: '#1d0b33', patch: { fill: { type: 'gradient', color: '#fff6e0', color2: '#ffc878', color3: '#ff8a2a', dir: 'v' }, stroke: { on: true, width: 2.5, color: '#2a0d3a' }, glow: { on: true, color: '#ff8a1e', size: 26, strength: 0.85 }, subColor: '#ffe6b8' } },
+    critical: { accent: '#ffa63a', band: '#14062a', patch: { fill: { type: 'gradient', color: '#fff8e6', color2: '#ffd27a', color3: '#ff7a1e', dir: 'v' }, stroke: { on: true, width: 2.5, color: '#2a0d3a' }, glow: { on: true, color: '#ffa03a', size: 30, strength: 0.95 }, subColor: '#ffe9c0' } },
+    failure: { accent: '#7d6ea0', band: '#15111f', patch: { fill: { type: 'gradient', color: '#d9d4e4', color2: '#aaa2c0', color3: '#7e7696', dir: 'v' }, stroke: { on: true, width: 2, color: '#14101e' }, glow: { on: false }, subColor: '#b8b0cc' } },
+    fumble: { accent: '#7a2aa8', band: '#07020f', patch: { fill: { type: 'gradient', color: '#e6d6ff', color2: '#a488d0', color3: '#5a3a8a', dir: 'v' }, stroke: { on: true, width: 2, color: '#07020f' }, glow: { on: true, color: '#5a1a8a', size: 20, strength: 0.6 }, subColor: '#c0a8e0' } }
+  };
+  const HALLOWEEN_ROLL = {
+    fontId: 'mochiy-pop-one', weight: 400, letterSpacing: 0.12,
+    subFontId: 'creepster', subWeight: 400, subSize: 0.2, subLetterSpacing: 0.5, subGap: 0.45,
+    stroke: { on: false }, stroke2: { on: false },
+    shadow: { on: true, color: '#0a0314', opacity: 0.75, blur: 10, x: 0, y: 3 },
+    subColorOn: true, deco: { type: 'none' },
+    inFx: 'pop', inDur: 0.45, inStagger: 0, subFx: 'fade', subDelay: 0.05,
+    hold: 1.7, outFx: 'stardust', outDur: 1.8
+  };
+  const halloweenPatch = (tier, fontSize) => {
+    const look = HALLOWEEN_LOOK[tier];
+    return { ...HALLOWEEN_ROLL, fontSize: Math.round(fontSize * 0.75), ...look.patch, ...rollTime('halloween', tier), sfx: { type: 'halloween', tier, color: look.accent, color2: look.band, power: 1 } };
+  };
 
   // 炎の試作を組み込んだテンプレート：装甲明朝。試作と同じ 960×540（炎は細かい模様が多く、書き出しの目安 5MB に収めるため）
   const FIRE_SIZE = { width: 960, height: 540, sizePreset: '960x540' };
@@ -549,6 +571,7 @@
         { id: 'coc7Star', label: T('CoC7 星', 'CoC 7e Stars', 'CoC7 별') },
         { id: 'cocDream', label: T('CoC6 夢', 'CoC 6e Dreams', 'CoC6 꿈') },
         { id: 'cocVampire', label: T('CoC6 ヴァンパイア', 'CoC 6e Vampire', 'CoC6 뱀파이어') },
+        { id: 'cocHalloween', label: T('CoC6 ハロウィン', 'CoC 6e Halloween', 'CoC6 할로윈') },
         { id: 'coc7Dream', label: T('CoC7 夢', 'CoC 7e Dreams', 'CoC7 꿈') },
         { id: 'emoklore', label: T('エモクロア', 'Emoklore', '에모크로아') },
         { id: 'dx', label: T('ダブクロ', 'Double Cross', '더블크로스') }
@@ -1706,6 +1729,36 @@
         text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         size: FIRE_SIZE, fps: 20,
         patch: vampirePatch('fumble', 144)
+      },
+      {
+        id: 'cocHalloweenSuccess', group: 'dice', system: 'cocHalloween', icon: 'bat', label: T('成功', 'Success', '성공'),
+        text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
+        size: FIRE_SIZE, fps: 20,
+        patch: halloweenPatch('success', 176)
+      },
+      {
+        id: 'cocHalloweenSpecial', group: 'dice', system: 'cocHalloween', icon: 'bat', label: T('スペシャル', 'Special', '스페셜'),
+        text: T('スペシャル', 'SPECIAL', '스페셜'), subText: T('SPECIAL', '', 'SPECIAL'),
+        size: FIRE_SIZE, fps: 20,
+        patch: halloweenPatch('special', 144)
+      },
+      {
+        id: 'cocHalloweenCritical', group: 'dice', system: 'cocHalloween', icon: 'bat', label: T('クリティカル', 'Critical', '크리티컬'),
+        text: T('クリティカル', 'CRITICAL', '크리티컬'), subText: T('CRITICAL', '', 'CRITICAL'),
+        size: FIRE_SIZE, fps: 20,
+        patch: halloweenPatch('critical', 144)
+      },
+      {
+        id: 'cocHalloweenFailure', group: 'dice', system: 'cocHalloween', icon: 'bat', label: T('失敗', 'Failure', '실패'),
+        text: T('失敗', 'FAILURE', '실패'), subText: T('FAILURE', '', 'FAILURE'),
+        size: FIRE_SIZE, fps: 20,
+        patch: halloweenPatch('failure', 176)
+      },
+      {
+        id: 'cocHalloweenFumble', group: 'dice', system: 'cocHalloween', icon: 'bat', label: T('ファンブル', 'Fumble', '펌블'),
+        text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
+        size: FIRE_SIZE, fps: 20,
+        patch: halloweenPatch('fumble', 144)
       },
       {
         id: 'coc7DreamSuccess', group: 'dice', system: 'coc7Dream', icon: 'butterfly', label: T('成功', 'Success', '성공'),
