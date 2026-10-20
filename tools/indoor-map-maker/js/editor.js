@@ -7,12 +7,12 @@
   const M = window.IMM;
   const I18N = window.IMM_I18N;
 
-  const VERSION = 'v1.13';
+  const VERSION = 'v1.14';
   const STORAGE_KEY = 'indoorMapMaker.v1';
   const PREFS_KEY = 'indoorMapMaker.prefs';
   const LANG_KEY = 'indoorMapMakerLang';
   const THEME_KEY = 'indoorMapMakerTheme';
-  const LANGS = ['ja', 'en', 'ko'];
+  const LANGS = ['ja', 'en', 'ko', 'zh'];
   const PUBLIC_URL = 'https://kumachansteps.github.io/trpg-web-tools/tools/indoor-map-maker/';
   const TYPE_KEY = { room: 'rooms', item: 'items', opening: 'openings', wall: 'walls', text: 'texts' };
   const ZOOM_MIN = 3;
@@ -183,7 +183,7 @@
   function t(path, vars) {
     const get = source => path.split('.').reduce((cur, key) => (cur && typeof cur === 'object' ? cur[key] : undefined), source);
     let value = get(dict());
-    if (value === undefined) value = get(I18N.ja);
+    if (value === undefined) value = get(app.lang === 'zh' ? I18N.en : I18N.ja);
     if (value === undefined) return path;
     if (vars && typeof value === 'string') value = value.replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined ? vars[k] : m));
     return value;
@@ -198,12 +198,13 @@
     const nav = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').toLowerCase();
     if (nav.startsWith('ja')) return 'ja';
     if (nav.startsWith('ko')) return 'ko';
+    if (nav.startsWith('zh')) return 'zh';
     return 'en';
   }
 
   function applyLanguage() {
     const d = dict();
-    document.documentElement.lang = app.lang;
+    document.documentElement.lang = app.lang === 'zh' ? 'zh-Hant' : app.lang;
     document.title = d.meta.title;
     syncClueToggle();
     const meta = document.querySelector('meta[name="description"]');
@@ -1092,7 +1093,7 @@
       c.strokeRect(r.x, r.y, r.w, r.h);
       c.restore();
       const p = toScreen(r.x + r.w / 2, r.y + r.h);
-      screenLabel(c, `${meters(r.w, r.h)} · ${fmt((r.w * r.h * M.CELL_M * M.CELL_M) / M.TATAMI_M2)}${app.lang === 'en' ? ' jo' : app.lang === 'ko' ? '첩' : '帖'}`, p.x, p.y + 8);
+      screenLabel(c, `${meters(r.w, r.h)} · ${fmt((r.w * r.h * M.CELL_M * M.CELL_M) / M.TATAMI_M2)}${app.lang === 'en' ? ' jo' : app.lang === 'ko' ? '첩' : app.lang === 'zh' ? '疊' : '帖'}`, p.x, p.y + 8);
     }
     // 壁を引く
     if (d && d.mode === 'wall' && d.b) {
@@ -2518,12 +2519,12 @@
   /* 検索語に合うか。空白で区切った語がすべて名前・ID・タグのどれかに入っていれば合う。「#」で始まる語はタグだけを見る */
   function tagNames(id) {
     const tag = M.TAG[id];
-    return tag ? [id, ...['ja', 'en', 'ko'].map(l => String(tag.name[l] || ''))] : [id];
+    return tag ? [id, ...['ja', 'en', 'ko'].map(l => String(tag.name[l] || '')), M.pick(tag.name, 'zh')] : [id];
   }
   function queryMatches(query, id, name, tags) {
     const words = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return true;
-    const names = ['ja', 'en', 'ko'].map(l => String((name && name[l]) || '').toLowerCase());
+    const names = ['ja', 'en', 'ko'].map(l => String((name && name[l]) || '').toLowerCase()).concat(String(M.pick(name, 'zh')).toLowerCase());
     const tagText = (tags || []).flatMap(tagNames).map(x => x.toLowerCase());
     return words.every(w => {
       if (w.startsWith('#')) { const k = w.slice(1); return !k || tagText.some(x => x.includes(k)); }
@@ -2841,7 +2842,7 @@
     body.appendChild(selectField(t('props.category'), cats, () => r.cat, v => { r.cat = v; }));
     body.appendChild(readout(() => {
       const area = M.roomArea(r);
-      return [[`${t('props.area')} `, `${meters(r.w, r.h)} · ${fmt(area)}㎡ · ${(area / M.TATAMI_M2).toFixed(1)}${app.lang === 'en' ? ' jo' : app.lang === 'ko' ? '첩' : '帖'}`]];
+      return [[`${t('props.area')} `, `${meters(r.w, r.h)} · ${fmt(area)}㎡ · ${(area / M.TATAMI_M2).toFixed(1)}${app.lang === 'en' ? ' jo' : app.lang === 'ko' ? '첩' : app.lang === 'zh' ? '疊' : '帖'}`]];
     }));
     const lockedOpt = { step: 1, suffix: cellsSuffix(), disabled: r.locked };
     body.appendChild(h('div', { class: 'props-grid' },

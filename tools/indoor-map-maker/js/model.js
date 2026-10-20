@@ -419,7 +419,7 @@
     const area = roomArea(room);
     if (mode === 'jo') {
       const jo = area / TATAMI_M2;
-      const unit = lang === 'ja' ? '帖' : lang === 'ko' ? '첩' : ' jo';
+      const unit = lang === 'ja' ? '帖' : lang === 'ko' ? '첩' : lang === 'zh' ? '疊' : ' jo';
       return `${jo.toFixed(1)}${unit}`;
     }
     if (mode === 'm2') return `${area.toFixed(1)}㎡`;
@@ -431,6 +431,11 @@
   function pick(value, lang) {
     if (value == null) return '';
     if (typeof value === 'string') return value;
+    if (lang === 'zh') {
+      // 繁體中文は日本語名をキーにした辞書（i18n-zh.js）から引く。無ければ英語
+      const names = global.IMM_ZH_NAMES || {};
+      return value.zh || names[value.ja] || value.en || value.ja || '';
+    }
     return value[lang] || value.ja || value.en || '';
   }
 
