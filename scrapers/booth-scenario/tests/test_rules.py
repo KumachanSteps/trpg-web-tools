@@ -68,3 +68,17 @@ def test_edition_kind():
 def test_evidence_kept():
     h = rules.extract_session_modes("■推奨人数：1PL")[0]
     assert "1PL" in h.excerpt
+
+
+def test_prolonged_sound_mark_is_kept():
+    assert modes("プレイヤー：2人")[0]["player_min"] == 2
+    assert modes("ソロジャーナル形式")[0]["mode"] == "GMLESS_SOLO"
+    d = rules.extract_durations("ボイセ3ー4時間")[0].value
+    assert (d["min_minutes"], d["max_minutes"]) == (180, 240)
+
+
+def test_asset_relation_per_clause():
+    got = {h.value["asset_type"]: h.value["availability_relation"] for h in rules.extract_assets("BGMなし、立ち絵あり")}
+    assert got == {"BGM_AUDIO": "EXPLICITLY_ABSENT", "NPC_IMAGE": "INCLUDED"}
+    got = {h.value["asset_type"]: h.value["availability_relation"] for h in rules.extract_assets("立ち絵 スチル あり")}
+    assert got == {"NPC_IMAGE": "INCLUDED", "STILL_IMAGE": "INCLUDED"}

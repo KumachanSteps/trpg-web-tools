@@ -13,7 +13,10 @@ from dataclasses import dataclass, field
 def normalize(text: str) -> str:
     """NFKC (full-width digits/letters -> ASCII) and unify range marks."""
     t = unicodedata.normalize("NFKC", text)
-    return re.sub(r"[~〜～ー−–—]", "~", t)
+    t = re.sub(r"[〜～−–—]", "~", t)
+    # "ー" is a range mark only between digits (3ー4時間); elsewhere it is the
+    # prolonged sound mark in words like プレイヤー / ソロジャーナル.
+    return re.sub(r"(?<=\d)\s*ー\s*(?=\d)", "~", t)
 
 
 def lines(text: str) -> list[str]:
@@ -185,20 +188,31 @@ _SEPARATE = re.compile(r"別売|別途販売|別商品|別頒布")
 _INCLUDED = re.compile(r"あり|有り|付属|同梱|収録|含む|入り|○|〇")
 
 
+def _relation(text: str) -> str | None:
+    if _ABSENT.search(text):
+        return "EXPLICITLY_ABSENT"
+    if _SEPARATE.search(text):
+        return "SOLD_SEPARATELY"
+    if _INCLUDED.search(text):
+        return "INCLUDED"
+    return None
+
+
 def extract_assets(text: str) -> list[Hit]:
+    """Relation is decided per clause ("BGMなし、立ち絵あり" -> two answers).
+    A clause naming an asset without a marker borrows the line's marker only
+    when the whole line has a single kind of marker."""
     hits: list[Hit] = []
     for ln in lines(text):
-        if _ABSENT.search(ln):
-            relation = "EXPLICITLY_ABSENT"
-        elif _SEPARATE.search(ln):
-            relation = "SOLD_SEPARATELY"
-        elif _INCLUDED.search(ln):
-            relation = "INCLUDED"
-        else:
-            continue
-        for atype, rx in _ASSET_TYPES:
-            if rx.search(ln):
-                hits.append(Hit("scenario_assets", {"asset_type": atype, "availability_relation": relation}, ln, confidence=0.6))
+        clauses = [c for c in re.split(r"[、,/|;；]|\s+", ln) if c]
+        line_kinds = {r for c in clauses if (r := _relation(c))}
+        for clause in clauses:
+            relation = _relation(clause) or (next(iter(line_kinds)) if len(line_kinds) == 1 else None)
+            if relation is None:
+                continue
+            for atype, rx in _ASSET_TYPES:
+                if rx.search(clause):
+                    hits.append(Hit("scenario_assets", {"asset_type": atype, "availability_relation": relation}, ln, confidence=0.6))
     return hits
 
 

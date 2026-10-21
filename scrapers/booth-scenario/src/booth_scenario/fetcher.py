@@ -148,14 +148,28 @@ class PoliteFetcher:
             raise StopCrawl(f"network error on {url}: {e}") from e
         return status, ctype, data.decode("utf-8", errors="replace")
 
+    def _raw_with_backoff(self, url: str) -> tuple[int, str, str]:
+        """_raw, backing off on 429 and stopping after max_429 in a row."""
+        hits_429 = 0
+        while True:
+            status, ctype, body = self._raw(url)
+            if status != 429:
+                return status, ctype, body
+            hits_429 += 1
+            if hits_429 >= self.max_429:
+                raise StopCrawl(f"repeated 429 ({hits_429}x) on {url}")
+            self._sleep(self.delay * (2 ** hits_429))
+
     def _robots_allows(self, url: str) -> bool:
         if not self.respect_robots:
             return True
         if self._robots is None:
             rp = urllib.robotparser.RobotFileParser()
-            status, _, body = self._raw("https://booth.pm/robots.txt")
+            status, _, body = self._raw_with_backoff("https://booth.pm/robots.txt")
             if status == 403:
                 raise StopCrawl("robots.txt returned 403")
+            if status >= 500:
+                raise StopCrawl(f"robots.txt returned {status}")
             if status >= 400:
                 rp.parse([])  # robots missing: treat as allow-all, per convention
             else:
@@ -169,21 +183,13 @@ class PoliteFetcher:
             return cached
         if not self._robots_allows(url):
             raise Refused(f"disallowed by robots.txt: {url}")
-        hits_429 = 0
-        while True:
-            status, ctype, body = self._raw(url)
-            if status == 429:
-                hits_429 += 1
-                if hits_429 >= self.max_429:
-                    raise StopCrawl(f"repeated 429 ({hits_429}x) on {url}")
-                self._sleep(self.delay * (2 ** hits_429))
-                continue
-            if status == 403:
-                raise StopCrawl(f"403 Forbidden on {url}")
-            if looks_like_captcha(body):
-                self._save_stopped(url, status, body)
-                raise StopCrawl(f"CAPTCHA/challenge page on {url} (HTTP {status})")
-            result = FetchResult(url, status, body, utcnow(), False, ctype)
-            if status < 500:
-                self._write_cache(result)
-            return result
+        status, ctype, body = self._raw_with_backoff(url)
+        if status == 403:
+            raise StopCrawl(f"403 Forbidden on {url}")
+        if looks_like_captcha(body):
+            self._save_stopped(url, status, body)
+            raise StopCrawl(f"CAPTCHA/challenge page on {url} (HTTP {status})")
+        result = FetchResult(url, status, body, utcnow(), False, ctype)
+        if status < 500:
+            self._write_cache(result)
+        return result

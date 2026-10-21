@@ -38,3 +38,34 @@ def test_json_variant_adopts_html_row_without_id(conn):
     store.save_detail(conn, parse_item_json(raw, 42), "2026-10-21T00:02:00+00:00", raw)
     rows = conn.execute("SELECT external_variant_id, availability FROM product_variants WHERE booth_item_id=42").fetchall()
     assert [tuple(r) for r in rows] == [("9", "AVAILABLE")]
+
+
+def _variants(conn, item):
+    return {r["variant_label"]: dict(r) for r in conn.execute("SELECT * FROM product_variants WHERE booth_item_id=?", (item,))}
+
+
+def test_html_refresh_keeps_known_availability_and_removed_variants_become_unavailable(conn):
+    from booth_scenario.parsers.detail import DetailRecord, VariantRecord
+
+    raw = json.dumps({"id": 5, "name": "T", "variations": [
+        {"id": 1, "name": "本編PDF", "price": 0, "status": "on_sale"},
+        {"id": 2, "name": "素材セット", "price": 300, "status": "on_sale"}]})
+    store.save_detail(conn, parse_item_json(raw, 5), "t1", raw)
+    html = DetailRecord(5, variants=[VariantRecord(label="本編PDF")])  # HTML row: availability UNKNOWN, no price
+    store.save_detail(conn, html, "t2", "<html/>")
+    v = _variants(conn, 5)["本編PDF"]
+    assert v["availability"] == "AVAILABLE" and v["price_jpy"] == 0
+
+    raw2 = json.dumps({"id": 5, "name": "T", "variations": [{"id": 2, "name": "素材セット", "price": 300, "status": "on_sale"}]})
+    store.save_detail(conn, parse_item_json(raw2, 5), "t3", raw2)
+    v = _variants(conn, 5)
+    assert v["本編PDF"]["availability"] == "UNAVAILABLE" and v["素材セット"]["availability"] == "AVAILABLE"
+
+
+def test_publisher_matched_by_url_after_rename(conn):
+    def rec(name):
+        return json.dumps({"id": 6, "name": "T", "shop": {"name": name, "url": "https://s.booth.pm/"}})
+    store.save_detail(conn, parse_item_json(rec("旧名"), 6), "t1", rec("旧名"))
+    store.save_detail(conn, parse_item_json(rec("新名"), 6), "t2", rec("新名"))
+    rows = conn.execute("SELECT shop_name FROM publishers").fetchall()
+    assert [r[0] for r in rows] == ["新名"]

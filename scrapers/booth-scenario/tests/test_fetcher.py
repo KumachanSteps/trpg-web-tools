@@ -95,3 +95,16 @@ def test_robots_disallow(tmp_path):
     f, _ = make(tmp_path, FakeNet({}))
     with pytest.raises(Refused):
         f.fetch("https://booth.pm/ja/items/666")
+
+
+def test_robots_429_backs_off_and_stops(tmp_path):
+    calls = []
+
+    def net(url, timeout):
+        calls.append(url)
+        return 429, "text/plain", b""
+
+    f, sleeps = make(tmp_path, net, max_429=3)
+    with pytest.raises(StopCrawl):
+        f.fetch(U)
+    assert calls == ["https://booth.pm/robots.txt"] * 3 and U not in calls

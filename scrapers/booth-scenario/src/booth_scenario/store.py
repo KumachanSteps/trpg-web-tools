@@ -63,9 +63,13 @@ def save_listing(conn, query_id: str, page_number: int, page: ListingPage, http_
 def _publisher(conn, name: str | None, url: str | None, now: str) -> str | None:
     if not name:
         return None
-    row = conn.execute("SELECT publisher_id FROM publishers WHERE shop_url IS ? AND shop_name=?", (url, name)).fetchone()
+    # shop_url is the stable key; shop names can be renamed.
+    if url:
+        row = conn.execute("SELECT publisher_id FROM publishers WHERE shop_url=?", (url,)).fetchone()
+    else:
+        row = conn.execute("SELECT publisher_id FROM publishers WHERE shop_url IS NULL AND shop_name=?", (name,)).fetchone()
     if row:
-        conn.execute("UPDATE publishers SET last_seen_at=? WHERE publisher_id=?", (now, row[0]))
+        conn.execute("UPDATE publishers SET shop_name=?, last_seen_at=? WHERE publisher_id=?", (name, now, row[0]))
         return row[0]
     pid = new_id("PUB")
     conn.execute("INSERT INTO publishers VALUES (?, ?, ?, ?)", (pid, name, url, now))
@@ -89,6 +93,7 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
                      (rec.like_count, rec.like_count_source, fetched_at, rec.booth_item_id))
     else:
         conn.execute("UPDATE products SET like_count_source='UNAVAILABLE' WHERE booth_item_id=? AND like_count IS NULL", (rec.booth_item_id,))
+    seen_ids: list[str] = []
     for v in rec.variants:
         existing = None
         if v.external_variant_id:
@@ -96,15 +101,30 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
             # Adopt a row saved earlier from HTML without an ID (same item, same label).
             existing = existing or conn.execute("SELECT variant_id FROM product_variants WHERE booth_item_id=? AND external_variant_id IS NULL AND variant_label=?", (rec.booth_item_id, v.label)).fetchone()
         else:
-            # Provisional reconciliation by item ID + label (see SCHEMA_SPEC).
-            existing = conn.execute("SELECT variant_id FROM product_variants WHERE booth_item_id=? AND external_variant_id IS NULL AND variant_label=?", (rec.booth_item_id, v.label)).fetchone()
+            # Provisional reconciliation by item ID + label (see SCHEMA_SPEC); an
+            # ID-less HTML row also lands on a JSON row with the same label.
+            existing = conn.execute(
+                "SELECT variant_id FROM product_variants WHERE booth_item_id=? AND variant_label=? ORDER BY external_variant_id IS NULL LIMIT 1",
+                (rec.booth_item_id, v.label)).fetchone()
         vid = existing[0] if existing else new_id("VAR")
+        seen_ids.append(vid)
         conn.execute(
             """INSERT INTO product_variants (variant_id, booth_item_id, external_variant_id, variant_label, price_jpy, availability, delivery_type, edition_kind)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT(variant_id) DO UPDATE SET external_variant_id=COALESCE(excluded.external_variant_id, external_variant_id), variant_label=excluded.variant_label, price_jpy=excluded.price_jpy,
-                 availability=excluded.availability, delivery_type=excluded.delivery_type, edition_kind=excluded.edition_kind""",
+               ON CONFLICT(variant_id) DO UPDATE SET external_variant_id=COALESCE(excluded.external_variant_id, external_variant_id), variant_label=excluded.variant_label,
+                 price_jpy=COALESCE(excluded.price_jpy, price_jpy),
+                 availability=CASE excluded.availability WHEN 'UNKNOWN' THEN availability ELSE excluded.availability END,
+                 delivery_type=CASE WHEN excluded.delivery_type IS NULL OR excluded.delivery_type='UNKNOWN' THEN COALESCE(delivery_type, excluded.delivery_type) ELSE excluded.delivery_type END,
+                 edition_kind=CASE excluded.edition_kind WHEN 'UNKNOWN' THEN edition_kind ELSE excluded.edition_kind END""",
             (vid, rec.booth_item_id, v.external_variant_id, v.label, v.price_jpy, v.availability, v.delivery_type, v.edition_kind),
+        )
+    if "variations" in rec.present_keys:
+        # The item JSON lists every current variation: rows missing from it are
+        # no longer offered, so they must not keep an AVAILABLE status.
+        marks = ",".join("?" * len(seen_ids))
+        conn.execute(
+            f"UPDATE product_variants SET availability='UNAVAILABLE' WHERE booth_item_id=? AND variant_id NOT IN ({marks or 'NULL'})",
+            (rec.booth_item_id, *seen_ids),
         )
     conn.execute("UPDATE crawl_queue SET state='PARSED', updated_at=?, last_error=NULL WHERE booth_item_id=?", (fetched_at, rec.booth_item_id))
     conn.commit()
