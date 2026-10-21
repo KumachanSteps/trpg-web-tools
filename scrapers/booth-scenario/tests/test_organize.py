@@ -44,13 +44,27 @@ def _item(conn, iid, title, desc, variants, shop="S", shop_url="https://s.booth.
     raw = json.dumps({"id": iid, "name": title, "description": desc, "shop": {"name": shop, "url": shop_url},
                       "tags": [{"name": t} for t in tags or []],
                       "variations": [{"id": iid * 10 + i, "name": n, "price": p, "status": "addable_to_cart" if p else "free_download"} for i, (n, p) in enumerate(variants)]})
-    from booth_scenario.crawl import extract_all
+    from booth_scenario.evidence import rebuild_evidence
     from booth_scenario.parsers.detail import parse_item_json
     rec = parse_item_json(raw, iid)
     store.save_detail(conn, rec, "2026-10-21T00:00:00+00:00", raw)
-    for h in extract_all(desc):
-        store.save_evidence(conn, iid, h)
-    conn.commit()
+    rebuild_evidence(conn, iid)
+
+
+def test_member_list_skips_prose_quotes_and_foreign_urls():
+    text = "\n".join([
+        "●収録シナリオ", "『海の部屋』", "『花を探して』", "『渚の手紙』",
+        "本書は『前作』(https://x.booth.pm/items/588090)を経た探索者向け。",
+        "・『前作』からKPは続投", "・『前作』以外で回す", "デザイン協力：山田",
+    ])
+    titles, items = organize.extract_members(text)
+    assert titles == ["海の部屋", "花を探して", "渚の手紙"]
+    assert items == {}
+
+
+def test_member_url_on_its_own_next_line():
+    text = "収録作品\n「海の部屋」作:A\nhttps://x.booth.pm/items/11\n「花を探して」作:B\n"
+    assert organize.extract_members(text)[1] == {"海の部屋": 11}
 
 
 def test_single_builds_scenario_and_is_idempotent(conn):
@@ -100,6 +114,6 @@ def test_same_page_variants_coverage(conn):
 
 def test_manual_classification_wins(conn):
     _item(conn, 5, "霧の館", "", [("PDF", 500)])
-    conn.execute("INSERT INTO product_classifications VALUES (5, 'COLLECTION', 2, ?, 'MANUAL', '[]', 't')", (json.dumps(["A", "B"]),))
+    conn.execute("INSERT INTO product_classifications (booth_item_id, product_kind, member_count, member_titles_json, method, reasons_json, classified_at) VALUES (5, 'COLLECTION', 2, ?, 'MANUAL', '[]', 't')", (json.dumps(["A", "B"]),))
     assert organize.organize_item(conn, 5).kind == "COLLECTION"
     assert conn.execute("SELECT COUNT(*) FROM collection_scenarios").fetchone()[0] == 2

@@ -33,13 +33,16 @@ class Hit:
 
 
 # -- variants -----------------------------------------------------------------
-_SAMPLE_RE = re.compile(r"サンプル|試し読み|体験版|お試し|プレビュー|preview|sample|概要", re.I)
+_SAMPLE_RE = re.compile(r"サンプル|試し読み|試読|体験版|お試し|プレビュー|preview|sample|概要", re.I)
 _FREE_EDITION_RE = re.compile(r"無料版|フリー版|free\s*edition", re.I)
-_ASSET_RE = re.compile(r"素材|立ち絵|スチル|BGM|背景|ルームデータ|部屋データ|ココフォリア|ユドナリウム|画像のみ|asset", re.I)
-_FULL_RE = re.compile(r"シナリオ|本編|完全版|PDF|テキスト|集|セット|全話|scenario", re.I)
+_ASSET_RE = re.compile(r"素材|立ち絵|スチル|BGM|背景|ルームデータ|部屋データ|ココフォリア|ユドナリウム|画像|壁紙|待ち受け|主題歌|特典|ディスプレイ|アイコン|グッズ|asset", re.I)
+# Scenario text is in the variant: "本編PDF＋素材", "素材同梱版" still carry the scenario.
+_FULL_RE = re.compile(r"シナリオ|本編|本文|完全版|PDF|テキスト|集|全話|データ版|冊子|書籍|通常版|有料版|配信用|同梱|付き|＋|\+|scenario", re.I)
 
 
 def classify_edition_kind(label: str) -> str:
+    """From the variant label alone. Labels that are just the product title
+    stay UNKNOWN here; organize resolves them with product context."""
     t = normalize(label)
     if _SAMPLE_RE.search(t):
         return "SAMPLE"
@@ -83,6 +86,35 @@ def extract_systems(text: str) -> list[Hit]:
                 seen.add((code, support))
                 hits.append(Hit("scenario_systems", {"system_code": code, "support_type": support}, ln))
     return hits
+
+
+_COC7_META = re.compile(r"新クトゥルフ|CoC\s*7|7版|7th", re.I)
+_COC6_META = re.compile(r"CoC\s*6|6版|6th", re.I)
+_COC_META = re.compile(r"クトゥルフ|CoC|克苏鲁", re.I)
+_EMO_META = re.compile(r"エモクロア|emoklore", re.I)
+
+
+def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
+    """Systems named in the product title or tags. In Japanese listings plain
+    "クトゥルフ神話TRPG"/"CoC" means the 6th edition; 新クトゥルフ means 7th."""
+    hits: list[Hit] = []
+    for source, text in (("title", title or ""), ("tags", " ".join(tags or []))):
+        t = normalize(text)
+        codes = []
+        if _COC7_META.search(t):
+            codes.append("COC7")
+        if _COC6_META.search(t) or (_COC_META.search(t) and not _COC7_META.search(t)):
+            codes.append("COC6")
+        if _EMO_META.search(t):
+            codes.append("EMOKLORE")
+        for code in codes:
+            hits.append(Hit("scenario_systems", {"system_code": code, "support_type": "NATIVE"}, f"[{source}] {text}"[:300], method="RULE", confidence=0.8 if source == "title" else 0.6))
+    seen, out = set(), []
+    for h in hits:
+        if h.value["system_code"] not in seen:
+            seen.add(h.value["system_code"])
+            out.append(h)
+    return out
 
 
 # -- session modes --------------------------------------------------------------

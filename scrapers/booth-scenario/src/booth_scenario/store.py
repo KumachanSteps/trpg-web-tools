@@ -150,6 +150,18 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
         # The item JSON lists every current variation: rows missing from it are
         # no longer offered, so they must not keep an AVAILABLE status.
         marks = ",".join("?" * len(seen_ids))
+        # ID-less rows left from HTML parsing ("(offer)", "ダウンロード商品") are not variants.
+        conn.execute(
+            f"""DELETE FROM variant_scenarios WHERE variant_id IN (SELECT variant_id FROM product_variants
+                WHERE booth_item_id=? AND external_variant_id IS NULL AND variant_id NOT IN ({marks or 'NULL'})
+                AND variant_id NOT IN (SELECT variant_id FROM acquisition_records WHERE variant_id IS NOT NULL))""",
+            (rec.booth_item_id, *seen_ids),
+        )
+        conn.execute(
+            f"""DELETE FROM product_variants WHERE booth_item_id=? AND external_variant_id IS NULL AND variant_id NOT IN ({marks or 'NULL'})
+                AND variant_id NOT IN (SELECT variant_id FROM acquisition_records WHERE variant_id IS NOT NULL)""",
+            (rec.booth_item_id, *seen_ids),
+        )
         conn.execute(
             f"UPDATE product_variants SET availability='UNAVAILABLE' WHERE booth_item_id=? AND variant_id NOT IN ({marks or 'NULL'})",
             (rec.booth_item_id, *seen_ids),

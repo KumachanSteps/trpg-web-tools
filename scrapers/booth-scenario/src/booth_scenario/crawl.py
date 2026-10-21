@@ -22,7 +22,7 @@ from .db import utcnow
 from .fetcher import PoliteFetcher, Refused, StopCrawl
 from .parsers.detail import parse_detail_html, parse_item_json
 from .parsers.listing import parse_listing
-from .rules import extract_all
+from .evidence import rebuild_evidence
 
 MAX_ATTEMPTS = 3
 
@@ -69,17 +69,13 @@ def fetch_item(conn, fetcher: PoliteFetcher, iid: int, *, use_cache: bool = True
     }
     # JSON description lacks the shop's extra sections, where system,
     # player count and play time often are; keep the HTML text if any.
-    desc = html_rec.description_text or jrec.description_text
     if html_rec.description_text:
         jrec.description_text = None
     store.save_detail(conn, jrec, j.fetched_at, j.body)
     # Evidence is regenerated per fetch so it always matches the stored text.
-    conn.execute("DELETE FROM extraction_evidence WHERE booth_item_id=? AND extraction_method IN ('REGEX','RULE')", (iid,))
-    hits = extract_all(desc or "")
-    for h in hits:
-        store.save_evidence(conn, iid, h)
-    conn.commit()
-    entry["rule_hits"] = [{"field": h.field_path, "value": h.value, "excerpt": h.excerpt[:80]} for h in hits]
+    rebuild_evidence(conn, iid)
+    hits = conn.execute("SELECT field_path, raw_excerpt FROM extraction_evidence WHERE booth_item_id=?", (iid,)).fetchall()
+    entry["rule_hits"] = [{"field": h["field_path"], "excerpt": h["raw_excerpt"][:80]} for h in hits]
     return entry
 
 

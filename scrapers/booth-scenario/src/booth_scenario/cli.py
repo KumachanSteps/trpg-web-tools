@@ -46,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     og = sub.add_parser("organize", help="classify fetched products and build scenario records")
     og.add_argument("--ids", type=int, nargs="*")
     sub.add_parser("apply-links", help="merge CONFIRMED same-work link candidates")
+    sub.add_parser("reextract", help="rebuild rule evidence from stored text (no network)")
 
     ps = sub.add_parser("pick-review-set")
     ps.add_argument("--n", type=int, default=50)
@@ -129,6 +130,11 @@ def main(argv: list[str] | None = None) -> int:
         else:
             result = organize.organize_all(conn)
         print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+    if args.cmd == "reextract":
+        from .evidence import rebuild_all
+
+        print(f"evidence rows: {rebuild_all(conn)}")
         return 0
     if args.cmd == "apply-links":
         print(f"merged: {organize.apply_confirmed_links(conn)}")

@@ -25,19 +25,32 @@ import unicodedata
 from dataclasses import dataclass, field
 
 from .db import new_id, utcnow
+from .store import ensure_product
 from .rules import classify_edition_kind, lines
 
-_COLLECTION_TITLE = re.compile(r"アンソロジー|アンソロ|シナリオ集|短編集|合同誌|合同本|詰め合わせ|オムニバス|anthology", re.I)
-_MEMBERS_HEADING = re.compile(r"収録(作品|シナリオ|内容|作|タイトル|一覧)|収録されている|目次|contents", re.I)
-_MEMBER_COUNT = re.compile(r"(?:全\s*)?(\d+)\s*(?:本|作品|作|編|シナリオ)(?:を)?\s*(?:収録|入り|セット)|収録数\s*[::]?\s*(\d+)")
-_BUNDLE_LABEL = re.compile(r"セット|全部|まとめ|全\s*\d*\s*話|一式|全作|コンプリート|バンドル|全収録|合本|詰め合わせ|全シナリオ|set|bundle", re.I)
-_FORMAT_LABEL = re.compile(r"PDF|テキスト|txt|word|版|部屋|ルーム|素材|付き|付|通常|フル|DL|ダウンロード|紙|書籍|冊子|物理|匿名配送|おまけ|支援|投げ銭|ブースト|データ|pack|edition", re.I)
+_COLLECTION_TITLE = re.compile(r"アンソロジー|アンソロ|シナリオ集|短編集|合同誌|合同本|詰め合わせ|オムニバス|アソート|anthology", re.I)
+_SINGLE_TITLE = re.compile(r"単体版|単品版|単品")
+_SECTION_HEAD = re.compile(r"収録(作品|シナリオ|作|タイトル|一覧|内容)|執筆者.{0,8}シナリオ|シナリオ一覧|目次", re.I)
+_MEMBER_COUNT = re.compile(r"(?:全\s*)?(\d+)\s*(?:本|作品|作|編|シナリオ)(?:を)?\s*(?:収録|入り|セット)|収録数\s*[::]?\s*(\d+)|シナリオ\s*全\s*(\d+)\s*本")
+# "通常セット" or "スチルセット" are not bundles of several works.
+_BUNDLE_LABEL = re.compile(r"全.{0,8}セット|シリーズ.{0,4}セット|アソート|まとめ|全部|コンプリート|一式|全\s*\d*\s*話|全作|全\s*\d+\s*本|\d+\s*本セット|バンドル|合本|詰め合わせ|全シナリオ|bundle", re.I)
+_FORMAT_LABEL = re.compile(
+    r"PDF|テキスト|txt|word|版|部屋|ルーム|素材|付き|付|通常|フル|DL|ダウンロード|紙|書籍|冊子|物理|匿名配送|おまけ|支援|投げ銭|ブースト|データ|"
+    r"pack|edition|ver|中文|English|英語|韓国語|한국어|日本語|配信|KPレス|タイマン|HO\s*\d|PL", re.I)
 _QUOTED = re.compile(r"[『「]([^』」]{1,60})[』」]")
-_BULLET = re.compile(r"^(?:[・●○◆◇■□▼▽★☆※\-*]|\d+[.)．、]|[①-⑳]|第\s*\d+\s*話|No\.?\s*\d+)\s*")
+_BULLET = re.compile(r"^(?:[・●○◆◇■□▼▽▍★☆♦◎※\-*]|\d+[.)．、]|[①-⑳]|第\s*\d+\s*話|No\.?\s*\d+)\s*")
 _SCENARIO_SIGNAL = re.compile(r"シナリオ|scenario|クトゥルフ|CoC|エモクロア|TRPG|探索者|KP|PL", re.I)
 _ASSET_SIGNAL = re.compile(r"素材|立ち絵|スチル|BGM|背景|アイコン|ルームデータ|部屋データ|ココフォリア|ユドナリウム|トレーラー|ハンドアウト素材|キャラシ|ダイス|グッズ", re.I)
-_NOT_MEMBER = re.compile(r"注意|概要|あらすじ|推奨|システム|人数|時間|価格|形式|クレジット|更新|購入|利用|規約|その他|問い合わせ|ネタバレ|トレーラー|HO\d|特記")
+# Lines that are file lists, credits or play conditions, never a work's title.
+_NOT_TITLE = re.compile(
+    r"\.(pdf|txt|zip|png|jpe?g|docx?)\b|PDF|txt|テキスト|データ|画像|素材|立ち絵|スチル|トレーラー|BGM|URL|ページ|\d+\s*P\b|字[)）]|ルーム|"
+    r"チャットパレット|tips|権利|株式会社|©|ⓒ|KADOKAWA|アークライト|Chaosium|ことがある|すること|推奨|必須|可能|不可|禁止|限定|以上|以下|"
+    r"人数|時間|ロスト|技能|HO\s*\d|ハンドアウト|注意|概要|あらすじ|システム|価格|形式|クレジット|更新|購入|規約|問い合わせ|ネタバレ|[:：]|"
+    r"本編|本文|おまけ|特典|協力|制作|デザイン|イラスト|編集|表紙|校正|ディレクター|発行|頒布|[【】()（）]|。$|^[A-Za-z]{1,4}$|^\d+$", re.I)
+# A 「quote」 followed by these is part of a sentence, not a title line.
+_SENTENCE_TAIL = re.compile(r"^(から|は|を|が|に|で|と|の|や|も|へ|より|まで|以外|以降|以前|として|など|ため|こと|です|ます|。|、)")
 _SYSTEM_WORDS = re.compile(r"^(新?クトゥルフ神話TRPG|エモクロアTRPG|CoC\s*\d?|TRPG)$", re.I)
+_ITEM_URL = re.compile(r"https?://(?:[a-z0-9-]+\.)?booth\.pm/(?:[a-z]{2}/)?items/(\d+)")
 
 # Tags that name a system (BOOTH tag text as seen on product pages).
 _TAG_SYSTEMS = {"新クトゥルフ神話TRPG": "COC7", "エモクロアTRPG": "EMOKLORE", "エモクロア": "EMOKLORE"}
@@ -59,83 +72,104 @@ class Classification:
     bundle_labels: list[str] = field(default_factory=list)
     reasons: list[str] = field(default_factory=list)
     method: str = "RULE"
+    member_items: dict[str, int] = field(default_factory=dict)  # member title -> BOOTH item linked next to it
 
 
-def extract_member_titles(text: str) -> list[str]:
-    """Titles listed under a 収録作品-style heading, or in a run of bulleted
-    『』/「」 lines. Returns [] when nothing looks like a list."""
+def _title_from_line(line: str, in_section: bool) -> str | None:
+    s = re.sub(r"https?://\S+", "", _BULLET.sub("", line.strip())).strip()
+    if not s:
+        return None
+    # 「Title」 or 「Title」author / 「Title」/author
+    m = re.fullmatch(r"[「『]([^」』]{1,50})[」』]\s*([/／]?)\s*([^「『」』/／]{0,20})", s)
+    if m:
+        tail = m.group(3).strip()
+        if not m.group(2) and _SENTENCE_TAIL.match(tail):
+            return None
+        if not in_section and not tail:
+            return None  # a bare quote outside a 収録作品 section is usually a phrase
+        t = m.group(1)
+    elif m := re.fullmatch(r"([^（(]{1,50}?)\s*[（(]\s*(?:作|著|執筆|作者)\s*[:：]\s*[^)）]{1,20}[)）]", s):
+        t = m.group(1)
+    elif in_section and (m := re.fullmatch(r"([^／/]{1,50}?)\s*[／/]\s*([^／/]{1,20})", s)):
+        t = m.group(1)  # Title／Author, only inside a 収録作品 section
+    else:
+        return None
+    t = t.strip(" 　「」『』")
+    if not t or _SYSTEM_WORDS.match(t) or _NOT_TITLE.search(t):
+        return None
+    return t
+
+
+def extract_members(text: str, whole_text: bool = False) -> tuple[list[str], dict[str, int]]:
+    """Work titles under a 収録作品-style heading (lines like 「T」author,
+    T（作：A）, ■T／A). With whole_text, also standalone 「T」author lines
+    anywhere (used only when the title already says it is a collection).
+    A booth.pm item URL on the next lines is kept as that work's own page."""
     ls = lines(text or "")
-    found: list[str] = []
+    titles: list[str] = []
+    items: dict[str, int] = {}
 
-    def take(line: str) -> str | None:
-        m = _QUOTED.search(line)
-        if m:
-            t = m.group(1).strip()
-        elif re.match(r"^[■□◆◇【\[]", line) or _NOT_MEMBER.search(line):
-            return None  # a section heading ends the list
-        elif _BULLET.match(line):
-            t = _BULLET.sub("", line)
-            t = re.split(r"\s*[/／|｜]\s*|\s+(?:作|著|作者|執筆)\s*[::]|\s*[(（](?:作|著|執筆)", t)[0].strip()
-        else:
-            return None
-        if not t or _SYSTEM_WORDS.match(t) or len(t) > 60:
-            return None
-        return t
+    def add(t: str, i: int) -> None:
+        k = normalize_title(t)
+        if not k or any(normalize_title(x) == k for x in titles):
+            return
+        titles.append(t)
+        # The work's own page: a URL on the same line, or a line holding only a URL.
+        if m := _ITEM_URL.search(ls[i]):
+            items[t] = int(m.group(1))
+        elif i + 1 < len(ls) and (m := _ITEM_URL.search(ls[i + 1])) and re.fullmatch(r"(?:[→⇒▶・●■]|URL\s*[:：]?)?\s*https?://\S+", ls[i + 1].strip()):
+            items[t] = int(m.group(1))
 
     for i, ln in enumerate(ls):
-        if _MEMBERS_HEADING.search(ln):
-            run: list[str] = []
-            # A heading line can itself hold the list ("収録作品：『A』『B』").
-            run += [m.strip() for m in _QUOTED.findall(ln) if not _SYSTEM_WORDS.match(m.strip())]
-            for nxt in ls[i + 1:i + 40]:
-                t = take(nxt)
-                if t is None:
-                    if run:
-                        break
-                    continue
-                run.append(t)
-            if len(run) >= 2:
-                found = run
-                break
-    if not found:
-        # Fallback: the longest run of consecutive bulleted lines with a quoted title.
-        run: list[str] = []
-        best: list[str] = []
-        for ln in ls:
-            if _BULLET.match(ln) and _QUOTED.search(ln) and (t := take(ln)):
-                run.append(t)
-            else:
-                best, run = (run if len(run) > len(best) else best), []
-        best = run if len(run) > len(best) else best
-        if len(best) >= 2:
-            found = best
-    seen, out = set(), []
-    for t in found:
-        k = normalize_title(t)
-        if k and k not in seen:
-            seen.add(k)
-            out.append(t)
-    return out
+        if _SECTION_HEAD.search(ln) and (len(ln) <= 30 or _BULLET.match(ln) or ln[:1] in "【[〔"):
+            for q in _QUOTED.findall(ln):
+                if not _SYSTEM_WORDS.match(q) and not _NOT_TITLE.search(q):
+                    add(q, i)
+            for j in range(i + 1, min(i + 80, len(ls))):
+                if t := _title_from_line(ls[j], in_section=True):
+                    add(t, j)
+            if len(titles) >= 2:
+                return titles, items
+            titles, items = [], {}
+    if whole_text:
+        for i, ln in enumerate(ls):
+            if t := _title_from_line(ln, in_section=False):
+                add(t, i)
+        if len(titles) >= 2:
+            return titles, items
+    return [], {}
+
+
+def extract_member_titles(text: str, whole_text: bool = False) -> list[str]:
+    return extract_members(text, whole_text)[0]
 
 
 def _member_count_hint(text: str) -> int | None:
     m = _MEMBER_COUNT.search(unicodedata.normalize("NFKC", text or ""))
     if not m:
         return None
-    n = int(m.group(1) or m.group(2))
+    n = int(m.group(1) or m.group(2) or m.group(3))
     return n if 2 <= n <= 100 else None
 
 
-def classify(title: str, description: str, variants: list[dict], tags: list[str], category: str | None = None) -> Classification:
-    text = f"{title}\n{description or ''}"
-    def kind(v):
-        return v.get("edition_kind") or classify_edition_kind(v["variant_label"])
+def effective_kind(v: dict, title: str, n_variants: int) -> str:
+    """Edition kind with product context: a variant labelled with the product's
+    own title (or the only variant) of a scenario product is the scenario."""
+    k = v.get("edition_kind") or classify_edition_kind(v["variant_label"])
+    if k != "UNKNOWN":
+        return k
+    label, t = normalize_title(v["variant_label"]), normalize_title(title)
+    if n_variants == 1 or (label and t and (label in t or t in label)):
+        return "FULL"
+    return k
 
-    full = [v for v in variants if kind(v) == "FULL"]
-    # A variant named only by a quoted title (第一話『序』) is one work, even
-    # though its label has no "scenario/PDF" word.
-    titled = [v for v in variants if kind(v) == "UNKNOWN" and _QUOTED.search(v["variant_label"])]
+
+def classify(title: str, description: str, variants: list[dict], tags: list[str], category: str | None = None) -> Classification:
     reasons: list[str] = []
+    real = [v for v in variants if v.get("external_variant_id") is not None or v.get("availability") != "UNAVAILABLE"] or variants
+    kinds = {id(v): effective_kind(v, title, len(real)) for v in real}
+    full = [v for v in real if kinds[id(v)] in ("FULL", "FREE_PLAYABLE_EDITION")]
+    unknown = [v for v in real if kinds[id(v)] == "UNKNOWN"]
 
     scenario_signal = (bool(_SCENARIO_SIGNAL.search(title)) or any(_SCENARIO_SIGNAL.search(t) for t in tags)
                        or bool(re.search(r"シナリオ", description or "")) or bool(_SCENARIO_SIGNAL.search(category or "")))
@@ -146,34 +180,46 @@ def classify(title: str, description: str, variants: list[dict], tags: list[str]
     if _ASSET_SIGNAL.search(title) and "シナリオ" not in title and not full:
         return Classification("ASSET_ONLY", reasons=["asset words in title, no full-scenario variant"])
 
-    bundles = [v for v in full if _BUNDLE_LABEL.search(v["variant_label"])]
-    singles = [v for v in full + titled if v not in bundles and (_QUOTED.search(v["variant_label"]) or not _FORMAT_LABEL.search(v["variant_label"]))]
+    # Same page sells a bundle and the works one by one.
+    bundles = [v for v in full + unknown if _BUNDLE_LABEL.search(v["variant_label"])]
+    singles = [v for v in full + unknown if v not in bundles
+               and (re.search(r"単品", v["variant_label"]) or _QUOTED.search(v["variant_label"]) or not _FORMAT_LABEL.search(v["variant_label"]))
+               and normalize_title(v["variant_label"]) != normalize_title(title)]
     if bundles and singles:
-        members = [m.group(1) if (m := _QUOTED.search(v["variant_label"])) else v["variant_label"] for v in singles]
+        members = []
+        for v in singles:
+            m = _QUOTED.search(v["variant_label"])
+            members.append(m.group(1) if m else re.sub(r"^\s*[\[【(（]?単品[\]】)）]?\s*", "", v["variant_label"]).strip())
         reasons.append(f"bundle variant(s) {[b['variant_label'] for b in bundles]} next to single variants")
-        listed = extract_member_titles(description)
-        if len(listed) > len(members):
+        listed, items = extract_members(description, whole_text=True)
+        keys = {normalize_title(x) for x in listed}
+        if len(listed) > len(members) and all(normalize_title(m) in keys for m in members):
             reasons.append(f"description lists {len(listed)} works; {len(listed) - len(members)} not sold separately here")
             members = listed
+        else:
+            items = {}
         return Classification("SAME_PAGE_VARIANTS", members=members, member_count=len(members),
-                              bundle_labels=[b["variant_label"] for b in bundles], reasons=reasons)
+                              bundle_labels=[b["variant_label"] for b in bundles], reasons=reasons, member_items=items)
 
-    members = extract_member_titles(description)
-    count_hint = _member_count_hint(text)
-    if _COLLECTION_TITLE.search(title) or len(members) >= 2 or count_hint:
-        if _COLLECTION_TITLE.search(title):
+    if _SINGLE_TITLE.search(title):
+        return Classification("SINGLE", reasons=["title says single edition (単体版/単品)"])
+    title_says = bool(_COLLECTION_TITLE.search(title))
+    members, items = extract_members(description, whole_text=title_says)
+    count_hint = _member_count_hint(description) if title_says or members else None
+    if title_says or len(members) >= 2:
+        if title_says:
             reasons.append("collection word in title")
         if members:
             reasons.append(f"{len(members)} member titles listed in description")
         if count_hint:
             reasons.append(f"description states {count_hint} works")
-        if not members and not count_hint:
+        if not members:
             reasons.append("members not found: needs review")
-        return Classification("COLLECTION", members=members, member_count=len(members) or count_hint, reasons=reasons)
+        return Classification("COLLECTION", members=members, member_count=len(members) or count_hint, reasons=reasons, member_items=items)
 
     reasons.append("scenario signal, no collection signal")
     if len(full) >= 2:
-        reasons.append(f"{len(full)} full variants read as formats of one work")
+        reasons.append(f"{len(full)} full variants read as formats/editions of one work")
     return Classification("SINGLE", reasons=reasons)
 
 
@@ -304,7 +350,40 @@ def stored_classification(conn, iid: int) -> Classification | None:
     if not r:
         return None
     return Classification(r["product_kind"], json.loads(r["member_titles_json"] or "[]"), r["member_count"],
-                          reasons=json.loads(r["reasons_json"] or "[]"), method=r["method"])
+                          reasons=json.loads(r["reasons_json"] or "[]"), method=r["method"],
+                          member_items={k: int(v) for k, v in json.loads(r["member_items_json"] or "{}").items()})
+
+
+def _drop_stale_variants(conn, iid: int, variants: list[dict]) -> list[dict]:
+    """ID-less, unavailable rows next to ID'd ones are leftovers of HTML parsing
+    (JSON-LD "(offer)", "ダウンロード商品"), not real variants."""
+    if not any(v["external_variant_id"] for v in variants):
+        return variants
+    keep = []
+    for v in variants:
+        stale = v["external_variant_id"] is None and v["availability"] == "UNAVAILABLE"
+        used = conn.execute("SELECT 1 FROM acquisition_records WHERE variant_id=?", (v["variant_id"],)).fetchone()
+        if stale and not used:
+            conn.execute("DELETE FROM variant_scenarios WHERE variant_id=?", (v["variant_id"],))
+            conn.execute("DELETE FROM product_variants WHERE variant_id=?", (v["variant_id"],))
+        else:
+            keep.append(v)
+    return keep
+
+
+def _settle_edition_kinds(conn, cls: Classification, title: str, variants: list[dict]) -> None:
+    """Store kinds that need product context (title-labelled variant = the
+    scenario; on a same-page product, a variant named after a work = that work)."""
+    members = [normalize_title(m) for m in cls.members if normalize_title(m)]
+    for v in variants:
+        if v["edition_kind"] != "UNKNOWN":
+            continue
+        k = effective_kind(v, title, len(variants))
+        if k == "UNKNOWN" and cls.kind == "SAME_PAGE_VARIANTS" and any(m in normalize_title(v["variant_label"]) for m in members):
+            k = "FULL"
+        if k != "UNKNOWN":
+            conn.execute("UPDATE product_variants SET edition_kind=? WHERE variant_id=?", (k, v["variant_id"]))
+            v["edition_kind"] = k
 
 
 def organize_item(conn, iid: int) -> Classification:
@@ -319,12 +398,22 @@ def organize_item(conn, iid: int) -> Classification:
     else:
         cls = classify(p["title"] or p["listing_title"] or "", p["description_text"] or "", variants, tags, p["category_name"])
         conn.execute(
-            "INSERT OR REPLACE INTO product_classifications VALUES (?, ?, ?, ?, 'RULE', ?, ?)",
-            (iid, cls.kind, cls.member_count, json.dumps(cls.members, ensure_ascii=False), json.dumps(cls.reasons, ensure_ascii=False), now),
+            """INSERT OR REPLACE INTO product_classifications
+               (booth_item_id, product_kind, member_count, member_titles_json, member_items_json, method, reasons_json, classified_at)
+               VALUES (?, ?, ?, ?, ?, 'RULE', ?, ?)""",
+            (iid, cls.kind, cls.member_count, json.dumps(cls.members, ensure_ascii=False),
+             json.dumps(cls.member_items, ensure_ascii=False), json.dumps(cls.reasons, ensure_ascii=False), now),
         )
     _clear_item(conn, iid)
     title = p["title"] or p["listing_title"] or f"item {iid}"
     url = p["product_url"]
+    variants = _drop_stale_variants(conn, iid, variants)
+    if cls.kind in ("SINGLE", "COLLECTION", "SAME_PAGE_VARIANTS"):
+        _settle_edition_kinds(conn, cls, title, variants)
+    # A work's own page linked in an anthology's description: queue it for crawling.
+    for linked in cls.member_items.values():
+        if linked != iid:
+            ensure_product(conn, linked, now)
 
     if cls.kind == "SINGLE":
         sid = _scenario_for_key(conn, f"item:{iid}:single", title, now)
@@ -366,8 +455,6 @@ def organize_item(conn, iid: int) -> Classification:
                     (new_id("SMP"), iid, v["variant_id"], cid, v["price_jpy"], "AVAILABLE" if v["availability"] == "AVAILABLE" else "UNKNOWN"),
                 )
                 continue
-            if cov is None and cls.kind == "SAME_PAGE_VARIANTS" and v["edition_kind"] == "UNKNOWN" and _QUOTED.search(v["variant_label"]):
-                cov = "COMPLETE"
             if cov is None:
                 continue
             label_norm = normalize_title(v["variant_label"])
@@ -416,6 +503,19 @@ def propose_links(conn) -> int:
         if s["publisher_id"]:
             by_shop.setdefault(s["publisher_id"], []).append(s)
     added = 0
+    # 1) An anthology names a work's own BOOTH page next to its title.
+    for c in conn.execute("SELECT booth_item_id, member_items_json FROM product_classifications WHERE member_items_json IS NOT NULL AND member_items_json != '{}'").fetchall():
+        for mt, linked in json.loads(c["member_items_json"]).items():
+            m = conn.execute("SELECT scenario_id FROM scenario_keys WHERE derivation_key=?", (f"item:{c['booth_item_id']}:member:{normalize_title(mt) or mt}",)).fetchone()
+            s = conn.execute("SELECT scenario_id FROM scenario_keys WHERE derivation_key=?", (f"item:{linked}:single",)).fetchone()
+            if m and s and m[0] != s[0]:
+                reasons = {"member_item": c["booth_item_id"], "single_item": linked, "url_in_description": True}
+                cur = conn.execute(
+                    "INSERT OR IGNORE INTO scenario_link_candidates VALUES (?, ?, ?, 'SAME_WORK', 0.95, ?, 'PENDING', ?)",
+                    (new_id("LNK"), s[0], m[0], json.dumps(reasons, ensure_ascii=False), utcnow()),
+                )
+                added += cur.rowcount
+    # 2) Same normalized title.
     for m in members:
         cands = {s["scenario_id"]: s for s in by_title.get(m["title_normalized"], [])}
         for s in by_shop.get(m["publisher_id"] or "", []):

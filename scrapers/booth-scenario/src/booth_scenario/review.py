@@ -186,7 +186,9 @@ def import_review(conn, path: Path) -> dict:
             if labels["product_kind"]["corrected"] or labels["members"]["corrected"]:
                 members = [t.strip() for t in re.split(r"[／/]", labels["members"]["truth"]) if t.strip()]
                 conn.execute(
-                    "INSERT OR REPLACE INTO product_classifications VALUES (?, ?, ?, ?, 'MANUAL', ?, ?)",
+                    """INSERT OR REPLACE INTO product_classifications
+                       (booth_item_id, product_kind, member_count, member_titles_json, method, reasons_json, classified_at)
+                       VALUES (?, ?, ?, ?, 'MANUAL', ?, ?)""",
                     (iid, labels["product_kind"]["truth"].strip().upper(), len(members) or None,
                      json.dumps(members, ensure_ascii=False), json.dumps(["from review table"]), utcnow()),
                 )
