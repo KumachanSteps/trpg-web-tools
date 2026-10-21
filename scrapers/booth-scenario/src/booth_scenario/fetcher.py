@@ -185,6 +185,7 @@ class PoliteFetcher:
             raise Refused(f"disallowed by robots.txt: {url}")
         status, ctype, body = self._raw_with_backoff(url)
         if status == 403:
+            self._save_stopped(url, status, body)
             raise StopCrawl(f"403 Forbidden on {url}")
         if looks_like_captcha(body):
             self._save_stopped(url, status, body)
