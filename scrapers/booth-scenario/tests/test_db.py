@@ -3,7 +3,7 @@ from booth_scenario import db
 
 def test_migrations_apply_once(conn):
     names = [r[0] for r in conn.execute("SELECT name FROM schema_migrations ORDER BY name")]
-    assert names == ["001_initial.sql", "002_nullable_product_title.sql"]
+    assert names == ["001_initial.sql", "002_nullable_product_title.sql", "003_phase1.sql"]
     assert db.migrate(conn) == []
 
 

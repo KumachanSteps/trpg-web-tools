@@ -63,6 +63,30 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 
 **この結果に合わせたコード変更:** 説明文は HTML の本文＋セクションを結合して保存し、ルール抽出もそれを使う（JSON の短い説明で上書きしない）。バリエーションは HTML 行を JSON の ID 付き行に統合（重複なし）。JSON の `status` 実測値 `addable_to_cart` / `free_download` → AVAILABLE、`restock_not_requested` → SOLD_OUT を追加。
 
+## Phase 1: 正解データ・シナリオ整理・継続収集
+
+```bash
+# 正解データ（50件）
+booth-scenario pick-review-set --n 50        # サンプル27件 + 一覧から種類が偏らないよう選ぶ
+booth-scenario fetch-items --review-set      # 未取得分を取得（最大60件、8秒間隔）
+booth-scenario organize                      # 商品を分類してシナリオを作る
+booth-scenario export-review                 # data/review/review_table.csv
+#  → CSV の ok_* 列に正しい値を書く（合っていれば空欄、「なし」は -）
+booth-scenario import-review data/review/review_table.csv
+booth-scenario organize                      # 修正した分類（MANUAL）を反映
+booth-scenario evaluate                      # 項目ごとの正解率と外れ一覧
+
+# 継続収集（中断しても続きから）
+booth-scenario crawl-listing --category "Tabletop RPG" --max-pages 50
+booth-scenario crawl-details --limit 200 --max-minutes 60
+booth-scenario crawl-details --refresh-older-than-days 30   # 古いものを取り直す
+```
+
+- **商品の分類** (`product_classifications`): `SINGLE`（単品。PDF版/部屋付きなど形式違いは1作品）、`COLLECTION`（アンソロジー・シナリオ集）、`SAME_PAGE_VARIANTS`（同じページでセットと単品を販売）、`ASSET_ONLY`（素材のみ）、`UNDETERMINED`（要確認）。レビューで直した分類は `MANUAL` として優先されます。
+- **シナリオIDの安定性**: 再実行しても同じ商品・同じ収録作には同じIDが付きます（`scenario_keys`）。
+- **別商品との関連**: アンソロジー収録作と単品販売が同じ作品らしい組は `scenario_link_candidates` に候補として入るだけで、自動では統合しません。`CONFIRMED` にしてから `apply-links` で統合します。
+- **差分更新**: 一覧のタイトル・価格が前回と変わった商品だけ詳細を取り直します。途中で止まっても `listing_progress` / `crawl_queue` から再開します。失敗した商品は間隔をあけて最大3回まで再試行し、その後は `REVIEW` に回します。
+
 ---
 
 **English summary:** Python package that collects public BOOTH TRPG scenario metadata into the normalized SQLite schema from `docs/SCHEMA_SPEC.md`. Phase 0 = migrations, a polite sequential fetcher (8 s delay, robots.txt, hard stop on 403/CAPTCHA/repeated 429), small capped probes, rule-based extraction with evidence, three-valued availability/ownership projections, and tests. No CSS selector is assumed: all start unverified and are filled from real snapshots. Real pages are kept out of git.

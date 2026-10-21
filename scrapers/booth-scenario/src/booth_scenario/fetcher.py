@@ -177,7 +177,7 @@ class PoliteFetcher:
             self._robots = rp
         return self._robots.can_fetch(USER_AGENT, url)
 
-    def fetch(self, url: str, use_cache: bool = True) -> FetchResult:
+    def fetch(self, url: str, use_cache: bool = True, store_cache: bool = True) -> FetchResult:
         self.check_scope(url)
         if use_cache and (cached := self._read_cache(url)) is not None:
             return cached
@@ -191,6 +191,6 @@ class PoliteFetcher:
             self._save_stopped(url, status, body)
             raise StopCrawl(f"CAPTCHA/challenge page on {url} (HTTP {status})")
         result = FetchResult(url, status, body, utcnow(), False, ctype)
-        if status < 500:
+        if status < 500 and store_cache:
             self._write_cache(result)
         return result

@@ -18,6 +18,8 @@ class Card:
     booth_item_id: int
     position: int
     price_jpy: int | None = None
+    price_multi: bool | None = None  # "N JPY~": several variants, N is the lowest
+    title: str | None = None
     shop_name: str | None = None
     like_count: int | None = None
 
@@ -54,8 +56,11 @@ def parse_listing(html: str, url: str, current_page: int = 1, selectors: dict | 
             if iid is None or any(c.booth_item_id == iid for c in cards):
                 continue
             c = Card(iid, len(cards) + 1)
+            # data-product-name is on every card (listing.card evidence, 2026-10-21).
+            c.title = (el.get("data-product-name") or "").strip() or None
             if (p := sel.css(selectors, "listing.card_price")) and (pe := el.select_one(p)):
                 c.price_jpy = parse_price_jpy(text_of(pe))
+                c.price_multi = text_of(pe).rstrip().endswith("~")
             if (s := sel.css(selectors, "listing.card_shop")) and (se := el.select_one(s)):
                 c.shop_name = text_of(se) or None
             if (lk := sel.css(selectors, "listing.card_like")) and (le := el.select_one(lk)):
