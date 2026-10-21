@@ -146,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "export-review":
         ids = args.ids or review.load_set(review_set_path)
-        out = args.out or data / "review" / "review_table.csv"
+        out = args.out or data / "review" / "review_table.xlsx"
         print(f"{review.export_review(conn, ids, out)} rows -> {out}")
         return 0
     if args.cmd == "import-review":

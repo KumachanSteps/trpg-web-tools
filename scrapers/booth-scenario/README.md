@@ -70,9 +70,9 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 booth-scenario pick-review-set --n 50        # サンプル27件 + 一覧から種類が偏らないよう選ぶ
 booth-scenario fetch-items --review-set      # 未取得分を取得（最大60件、8秒間隔）
 booth-scenario organize                      # 商品を分類してシナリオを作る
-booth-scenario export-review                 # data/review/review_table.csv
-#  → CSV の ok_* 列に正しい値を書く（合っていれば空欄、「なし」は -）
-booth-scenario import-review data/review/review_table.csv
+booth-scenario export-review                 # data/review/review_table.xlsx (--out x.csv for CSV)
+#  → 黄色の ok_* 列に正しい値を書く（合っていれば空欄、「なし」は -）
+booth-scenario import-review data/review/review_table.xlsx
 booth-scenario organize                      # 修正した分類（MANUAL）を反映
 booth-scenario evaluate                      # 項目ごとの正解率と外れ一覧
 

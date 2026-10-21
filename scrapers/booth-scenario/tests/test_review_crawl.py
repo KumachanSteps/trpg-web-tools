@@ -1,6 +1,8 @@
 import csv
 import json
 
+import pytest
+
 from booth_scenario import crawl, organize, review, store
 from booth_scenario.fetcher import PoliteFetcher
 from test_organize import _item
@@ -12,22 +14,39 @@ def test_review_roundtrip_and_evaluate(conn, tmp_path):
     organize.organize_all(conn)
     out = tmp_path / "r.csv"
     assert review.export_review(conn, [1, 2], out) == 2
-    rows = list(csv.DictReader(out.open(encoding="utf-8-sig")))
-    assert rows[0]["booth_item_id"] == "#説明"
-    assert rows[1]["auto_session_modes"] == "ONE_PLAYER_UNSPECIFIED 1-1 UNKNOWN/UNKNOWN"
+    raw = list(csv.reader(out.open(encoding="utf-8-sig")))
+    assert raw[1][0] == "#説明" and raw[2][1] == "booth_item_id"
+    rows = review._read_rows(out)
+    assert rows[0]["auto_session_modes"] == "ONE_PLAYER_UNSPECIFIED 1-1 UNKNOWN/UNKNOWN"
     # Reviewer: item 2 is an anthology of two works; item 1 is right as is.
-    rows[2]["ok_product_kind"] = "COLLECTION"
-    rows[2]["ok_members"] = "A／B"
+    rows[1]["ok_product_kind"] = "COLLECTION"
+    rows[1]["ok_members"] = "A／B"
     with out.open("w", encoding="utf-8-sig", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
-        w.writeheader()
-        w.writerows(rows)
+        w = csv.writer(fh)
+        w.writerows(raw[:3])
+        w.writerows([[r[k] for k in raw[2]] for r in rows])
     assert review.import_review(conn, out) == {"imported": 2, "corrected_cells": 2}
     organize.organize_item(conn, 2)
     assert conn.execute("SELECT product_kind, method FROM product_classifications WHERE booth_item_id=2").fetchone()[:] == ("COLLECTION", "MANUAL")
     ev = review.evaluate(conn)
     assert ev["product_kind"]["correct"] == 1 and ev["product_kind"]["checked"] == 2
     assert ev["session_modes"]["accuracy"] == 1.0
+
+
+def test_review_xlsx_roundtrip(conn, tmp_path):
+    openpyxl = pytest.importorskip("openpyxl")
+    _item(conn, 1, "霧の館", "推奨人数：1PL", [("PDF", 500)])
+    organize.organize_all(conn)
+    out = tmp_path / "r.xlsx"
+    assert review.export_review(conn, [1], out) == 1
+    wb = openpyxl.load_workbook(out)
+    ws = wb["review"]
+    keys = [c.value for c in ws[3]]
+    ws.cell(4, keys.index("ok_product_kind") + 1, "COLLECTION")
+    ws.cell(4, keys.index("ok_members") + 1, "A／B")
+    wb.save(out)
+    assert review.import_review(conn, out) == {"imported": 1, "corrected_cells": 2}
+    assert conn.execute("SELECT product_kind, method FROM product_classifications WHERE booth_item_id=1").fetchone()[:] == ("COLLECTION", "MANUAL")
 
 
 def test_pick_review_set_starts_with_samples(conn):
