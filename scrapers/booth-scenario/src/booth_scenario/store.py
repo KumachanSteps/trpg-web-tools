@@ -118,7 +118,8 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
                      (rec.like_count, rec.like_count_source, fetched_at, rec.booth_item_id))
     else:
         conn.execute("UPDATE products SET like_count_source='UNAVAILABLE' WHERE booth_item_id=? AND like_count IS NULL", (rec.booth_item_id,))
-    if rec.tags:
+    # JSON confirms the tag set even when empty; HTML gives tags only when found.
+    if rec.tags or "tags" in rec.present_keys:
         conn.execute("DELETE FROM product_tags WHERE booth_item_id=?", (rec.booth_item_id,))
         conn.executemany("INSERT OR IGNORE INTO product_tags VALUES (?, ?)", [(rec.booth_item_id, t) for t in rec.tags])
     seen_ids: list[str] = []

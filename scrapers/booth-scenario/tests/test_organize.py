@@ -117,3 +117,14 @@ def test_manual_classification_wins(conn):
     conn.execute("INSERT INTO product_classifications (booth_item_id, product_kind, member_count, member_titles_json, method, reasons_json, classified_at) VALUES (5, 'COLLECTION', 2, ?, 'MANUAL', '[]', 't')", (json.dumps(["A", "B"]),))
     assert organize.organize_item(conn, 5).kind == "COLLECTION"
     assert conn.execute("SELECT COUNT(*) FROM collection_scenarios").fetchone()[0] == 2
+
+
+def test_refetch_replaces_tags_and_rule_facts(conn):
+    _item(conn, 30, "霧の館", "新クトゥルフ神話TRPG対応シナリオ", [("PDF", 500)], tags=["CoC"])
+    organize.organize_item(conn, 30)
+    _item(conn, 30, "霧の館", "エモクロアTRPG対応シナリオ", [("PDF", 500)], tags=[])
+    organize.organize_item(conn, 30)
+    assert conn.execute("SELECT COUNT(*) FROM product_tags WHERE booth_item_id=30").fetchone()[0] == 0
+    systems = conn.execute(
+        "SELECT DISTINCT system_code FROM scenario_systems JOIN product_scenarios USING(scenario_id) WHERE booth_item_id=30").fetchall()
+    assert [r[0] for r in systems] == ["EMOKLORE"]

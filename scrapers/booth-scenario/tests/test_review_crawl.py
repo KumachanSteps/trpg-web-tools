@@ -55,6 +55,8 @@ class Site:
             return 200, "text/plain", b""
         if "/items/" in url:
             iid = int(url.rsplit("/", 1)[1].split(".")[0])
+            if url.endswith(".json") and iid == 998:
+                return 503, "application/json", b"busy"
             if url.endswith(".json"):
                 return 200, "application/json", json.dumps({"id": iid, "name": f"T{iid}", "variations": [{"id": 1, "name": "PDF", "price": 100, "status": "addable_to_cart"}]}).encode()
             if iid == 999:
@@ -89,14 +91,15 @@ def test_listing_resumes_and_requeues_changes(conn, tmp_path):
 
 
 def test_crawl_details_limits_retries_and_recovers(conn, tmp_path):
-    for i in (1, 2, 999):
+    for i in (1, 2, 998, 999):
         store.ensure_product(conn, i)
     conn.execute("UPDATE crawl_queue SET state='FETCHING' WHERE booth_item_id=2")  # died mid-item last run
     site = Site({})
     r = crawl.crawl_details(conn, fetcher(tmp_path, site), limit=10)
-    assert r["done"] == 2 and r["errors"] == 1
+    assert r["done"] == 2 and r["errors"] == 2
     states = dict(conn.execute("SELECT booth_item_id, state FROM crawl_queue").fetchall())
-    assert states == {1: "PARSED", 2: "PARSED", 999: "RETRY"}
+    # A page that loads but whose JSON fails is retried, not taken as complete.
+    assert states == {1: "PARSED", 2: "PARSED", 998: "RETRY", 999: "RETRY"}
     # RETRY is not due yet, so a second run does nothing.
     assert crawl.crawl_details(conn, fetcher(tmp_path, site), limit=10)["done"] == 0
     assert conn.execute("SELECT title FROM products WHERE booth_item_id=1").fetchone()[0] == "T1"

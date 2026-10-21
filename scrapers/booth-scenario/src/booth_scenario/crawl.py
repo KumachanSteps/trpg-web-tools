@@ -50,15 +50,15 @@ def fetch_item(conn, fetcher: PoliteFetcher, iid: int, *, use_cache: bool = True
     j = fetcher.fetch(targets.item_json_url(iid), use_cache=use_cache, store_cache=store_cache)
     entry["json_status"] = j.status
     entry["json_content_type"] = j.content_type
+    # A missing or broken JSON leaves the item incomplete: let the caller retry it.
     if j.status != 200:
-        return entry
+        raise RuntimeError(f"HTTP {j.status} on item JSON")
     if snapshot_dir:
         (snapshot_dir / f"item_{iid}.json").write_text(j.body, encoding="utf-8")
     try:
         jrec = parse_item_json(j.body, iid)
     except ValueError as e:
-        entry["json_error"] = str(e)
-        return entry
+        raise RuntimeError(f"bad item JSON: {e}") from e
     entry["json"] = {
         "present_keys": jrec.present_keys, "title": jrec.title, "shop": jrec.shop_name,
         "category_path": jrec.category_path, "like_count": jrec.like_count,

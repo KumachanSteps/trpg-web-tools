@@ -14,10 +14,10 @@ def rebuild_evidence(conn, iid: int) -> int:
     # Label rules change over time; keep stored edition kinds in step with them.
     for vid, label in conn.execute("SELECT variant_id, variant_label FROM product_variants WHERE booth_item_id=?", (iid,)).fetchall():
         conn.execute("UPDATE product_variants SET edition_kind=? WHERE variant_id=?", (classify_edition_kind(label), vid))
-    # Rows referencing old evidence are rebuilt by organize; detach them first.
+    # Facts derived from old evidence are rebuilt by organize; drop them with it.
     old = "SELECT evidence_id FROM extraction_evidence WHERE booth_item_id=? AND extraction_method IN ('REGEX','RULE')"
     for t in ("scenario_systems", "scenario_session_modes", "scenario_durations", "scenario_conditions", "scenario_assets"):
-        conn.execute(f"UPDATE {t} SET evidence_id=NULL WHERE evidence_id IN ({old})", (iid,))
+        conn.execute(f"DELETE FROM {t} WHERE evidence_id IN ({old})", (iid,))
     conn.execute("DELETE FROM extraction_evidence WHERE booth_item_id=? AND extraction_method IN ('REGEX','RULE')", (iid,))
     hits = extract_all(p["description_text"] or "")
     described = {h.value["system_code"] for h in hits if h.field_path == "scenario_systems"}
