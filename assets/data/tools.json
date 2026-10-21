@@ -546,6 +546,44 @@
     "devStage": "mockup"
   },
   {
+    "id": "obs-trpg-supporter",
+    "icon": "🎥",
+    "status": "production",
+    "category": "haishinTracking",
+    "badges": [
+      "preSession",
+      "duringSession",
+      "gmSupport",
+      "plSupport"
+    ],
+    "legacyKeywords": [
+      "配信",
+      "録画",
+      "OBS",
+      "CCFOLIA",
+      "ブラウザソース",
+      "オーバーレイ"
+    ],
+    "href": "./tools/obs-trpg-supporter/",
+    "devHref": "./tools/obs-trpg-supporter/",
+    "devStage": "prototype",
+    "devNote": {
+      "ja": "OBSのブラウザソース（CCFOLIAの盤面・ステータス・メッセージ欄など）のURL・カスタムCSSを、差分を確認してから一括で適用・元に戻せる試作版。背景透過のオーバーレイ4種つき。実機のOBSでの確認はこれから。",
+      "en": "Prototype that checks and then applies (or undoes) URL and custom CSS changes to OBS browser sources such as the CCFOLIA board, status and message box, with four transparent overlay layouts. Not yet fully tested with a real OBS.",
+      "ko": "OBS 브라우저 소스(CCFOLIA 보드·스테이터스·메시지 창 등)의 URL·사용자 지정 CSS를 변경 확인 후 한 번에 적용하고 되돌릴 수 있는 시제품. 배경 투명 오버레이 4종 포함. 실제 OBS에서의 확인은 아직입니다."
+    },
+    "name": {
+      "ja": "OBS TRPGサポーター",
+      "en": "OBS TRPG Supporter",
+      "ko": "OBS TRPG 서포터"
+    },
+    "description": {
+      "ja": "TRPGの録画・配信で使うOBSのブラウザソースを、ルームやPCが変わるたびにまとめて切り替えます。枠・タイトル・名札・休憩画面のオーバーレイも作れます。",
+      "en": "Switch the OBS browser sources for TRPG recordings and streams in one go whenever the room or PCs change, and make overlays with frames, titles, name plates and a break screen.",
+      "ko": "TRPG 녹화·방송에 쓰는 OBS 브라우저 소스를 룸이나 PC가 바뀔 때마다 한 번에 바꿉니다. 테두리·타이틀·이름표·휴식 화면 오버레이도 만들 수 있습니다."
+    }
+  },
+  {
     "id": "trpg-haishin-observatory",
     "icon": "🔭",
     "status": "idea",

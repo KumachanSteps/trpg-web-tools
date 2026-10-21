@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <script async src="../../assets/js/analytics.js"></script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OBS TRPGサポーター｜TRPG WEBツール観測所</title>
+  <meta name="description" content="TRPGの録画・配信で使うOBSのブラウザソース（CCFOLIAの盤面・ステータス・メッセージ欄など）のURLとカスタムCSSを、ルームごとにまとめて切り替えるツールです。背景透過のオーバーレイ（枠・タイトル・名札・休憩画面）も作れます。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="stylesheet" href="./css/obs-trpg-supporter.css?v=20261021-01" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="title-block">
+        <p class="eyebrow" data-i18n="eyebrow">TRPG WEBツール観測所</p>
+        <h1 id="appTitle" data-i18n="title">OBS TRPGサポーター</h1>
+      </div>
+      <p class="lead" data-i18n="lead">TRPGの録画・配信で使うOBSのブラウザソースを、ルームやPCが変わるたびにまとめて切り替えます。</p>
+      <div class="header-actions">
+        <a class="header-nav-link" href="../../" data-i18n="portal">←TRPG WEBツール観測所</a>
+        <a class="x-share-link" id="xShareLink" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer" data-i18n-label="share" aria-label="X / Twitterで共有"><span aria-hidden="true">𝕏</span></a>
+        <div class="language-switcher" role="group" data-i18n-label="langGroup" aria-label="言語切替">
+          <button class="lang-choice-button is-active" type="button" data-lang-choice="ja" aria-pressed="true">JP</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="en" aria-pressed="false">EN</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="ko" aria-pressed="false">KR</button>
+        </div>
+        <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
+        <button class="ghost-button theme-button" type="button" id="themeBtn"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb">☀️</span></span></button>
+      </div>
+      <div class="version-engrave">v0.1 / 2026.10.21</div>
+    </header>
+
+    <section class="drawer" id="helpDrawer" hidden>
+      <h2 data-i18n="help">使い方</h2>
+      <button class="drawer-close" type="button" data-close-drawer data-i18n-label="close" aria-label="閉じる">×</button>
+      <div class="guide-list" id="helpList"></div>
+      <div class="guide-notes" id="helpNotes"></div>
+    </section>
+
+    <p class="dev-notice" data-i18n="devNotice"></p>
+
+    <main class="workspace">
+      <div class="column">
+        <section class="card" aria-labelledby="connectHeading">
+          <div class="card-head">
+            <h2 id="connectHeading" data-i18n="connect.heading">1. OBSに接続</h2>
+            <span class="conn-state" id="connState" data-state="idle"></span>
+          </div>
+          <div class="field-grid conn-grid">
+            <label class="field"><span class="field-label" data-i18n="connect.address">WebSocketのアドレス</span><input class="text-input" id="wsAddress" type="text" spellcheck="false" autocomplete="off" inputmode="url" /></label>
+            <label class="field"><span class="field-label" data-i18n="connect.password">パスワード</span><input class="text-input" id="wsPassword" type="password" autocomplete="off" data-i18n-ph="connect.passwordPh" /></label>
+          </div>
+          <div class="button-row">
+            <button class="primary-button" type="button" id="connectBtn" data-i18n="connect.connect">接続</button>
+            <button class="ghost-button" type="button" id="disconnectBtn" data-i18n="connect.disconnect" hidden>切断</button>
+          </div>
+          <p class="card-note" data-i18n-html="connect.note"></p>
+        </section>
+
+        <section class="card" aria-labelledby="sessionHeading">
+          <div class="card-head">
+            <h2 id="sessionHeading" data-i18n="session.heading">2. ルームとPC</h2>
+            <label class="toggle-inline"><span class="switch"><input type="checkbox" class="switch-input" id="maskSwitch" checked /><span class="switch-track" aria-hidden="true"></span></span><span data-i18n="session.mask">画面ではIDを伏せる</span></label>
+          </div>
+          <label class="field">
+            <span class="field-label" data-i18n="session.room">CCFOLIAのルームURL または ルームID</span>
+            <span class="secret-input">
+              <input class="text-input" id="roomInput" type="password" spellcheck="false" autocomplete="off" data-i18n-ph="session.roomPh" />
+              <button class="ghost-button small-button" type="button" id="roomReveal" data-i18n="session.reveal">表示</button>
+            </span>
+          </label>
+          <p class="field-state" id="roomState"></p>
+          <p class="card-note is-quiet" data-i18n="session.maskNote"></p>
+          <h3 class="sub-heading" data-i18n="session.pcs">PC</h3>
+          <div class="pc-list" id="pcList"></div>
+          <button class="ghost-button" type="button" id="addPcBtn" data-i18n="session.addPc">+ PCを追加</button>
+        </section>
+
+        <section class="card" aria-labelledby="overlayHeading">
+          <div class="card-head"><h2 id="overlayHeading" data-i18n="overlay.heading">3. オーバーレイ</h2></div>
+          <p class="card-note is-quiet" data-i18n="overlay.intro"></p>
+          <div class="field">
+            <span class="field-label" data-i18n="overlay.layout">レイアウト</span>
+            <div class="segment-group" id="layoutSeg" role="group" data-i18n-label="overlay.layout"></div>
+            <p class="field-state" id="layoutNote"></p>
+          </div>
+          <div class="field-grid">
+            <label class="field"><span class="field-label" data-i18n="overlay.theme">色</span><select class="select-input" id="themeSelect"></select></label>
+            <div class="field">
+              <span class="field-label" data-i18n="overlay.accent">アクセント色</span>
+              <span class="color-row"><input class="color-input" id="accentInput" type="color" data-i18n-label="overlay.accent" /><button class="ghost-button small-button" type="button" id="accentReset" data-i18n="overlay.accentReset">色の初期値に戻す</button></span>
+            </div>
+            <label class="field"><span class="field-label" data-i18n="overlay.title">タイトル</span><input class="text-input" id="ovTitle" type="text" maxlength="80" data-i18n-ph="overlay.titlePh" /></label>
+            <label class="field"><span class="field-label" data-i18n="overlay.subtitle">サブタイトル</span><input class="text-input" id="ovSub" type="text" maxlength="120" data-i18n-ph="overlay.subtitlePh" /></label>
+            <label class="field"><span class="field-label" data-i18n="overlay.scene">シーン名</span><input class="text-input" id="ovScene" type="text" maxlength="60" data-i18n-ph="overlay.scenePh" /></label>
+            <label class="field field-check"><span class="toggle-inline"><span class="switch"><input type="checkbox" class="switch-input" id="ovPlates" checked /><span class="switch-track" aria-hidden="true"></span></span><span data-i18n="overlay.plates">PCの名札を出す</span></span></label>
+            <label class="field" data-break-only><span class="field-label" data-i18n="overlay.message">休憩画面の文</span><input class="text-input" id="ovMsg" type="text" maxlength="120" data-i18n-ph="overlay.messagePh" /></label>
+            <label class="field" data-break-only><span class="field-label" data-i18n="overlay.resume">再開予定</span><input class="text-input" id="ovResume" type="time" /></label>
+          </div>
+          <p class="field-label" data-i18n="overlay.preview">プレビュー</p>
+          <div class="preview-box" id="previewBox"><iframe id="ovPreview" title="Overlay preview" tabindex="-1"></iframe></div>
+          <details class="regions">
+            <summary data-i18n="overlay.regions">配置の目安（1920×1080）</summary>
+            <table class="data-table" id="regionTable"></table>
+          </details>
+          <div class="field">
+            <span class="field-label" data-i18n="overlay.url">オーバーレイのURL</span>
+            <span class="url-row">
+              <code class="url-code" id="ovUrl"></code>
+              <button class="ghost-button small-button" type="button" id="ovCopy" data-i18n="overlay.copy">コピー</button>
+              <a class="ghost-button small-button" id="ovOpen" target="_blank" rel="noopener" data-i18n="overlay.open">開く</a>
+            </span>
+          </div>
+        </section>
+      </div>
+
+      <div class="column">
+        <section class="card" aria-labelledby="sourcesHeading">
+          <div class="card-head">
+            <h2 id="sourcesHeading" data-i18n="sources.heading">4. ブラウザソース</h2>
+            <span class="field-state" id="fetchState"></span>
+          </div>
+          <p class="card-note is-quiet" data-i18n-html="sources.intro"></p>
+          <div class="button-row">
+            <button class="ghost-button" type="button" id="fetchBtn" data-i18n="sources.fetch" disabled>OBSのソースを読み込む</button>
+            <button class="ghost-button" type="button" id="addSourceBtn" data-i18n="sources.add">+ ソースを追加</button>
+            <button class="ghost-button" type="button" id="resetSourcesBtn" data-i18n="sources.reset">標準の4つに戻す</button>
+          </div>
+          <datalist id="obsInputs"></datalist>
+          <div class="source-list" id="sourceList"></div>
+        </section>
+
+        <section class="card" aria-labelledby="applyHeading">
+          <div class="card-head"><h2 id="applyHeading" data-i18n="apply.heading">5. 確認して適用</h2></div>
+          <div class="button-row">
+            <button class="primary-button" type="button" id="previewBtn" data-i18n="apply.preview" disabled>差分を確認</button>
+            <button class="accent-button" type="button" id="applyBtn" data-i18n="apply.apply" disabled>適用する</button>
+            <button class="ghost-button" type="button" id="undoBtn" data-i18n="apply.undo" disabled>元に戻す</button>
+            <button class="ghost-button" type="button" id="backupBtn" data-i18n="apply.backup" disabled>変更前の設定を保存</button>
+            <button class="ghost-button" type="button" id="refreshBtn" data-i18n="apply.refresh" disabled>ソースを再読み込み</button>
+          </div>
+          <p class="plan-note" id="planNote" aria-live="polite"></p>
+          <div class="table-scroll"><table class="data-table plan-table" id="planTable" hidden></table></div>
+        </section>
+
+        <section class="card" aria-labelledby="filesHeading">
+          <div class="card-head"><h2 id="filesHeading" data-i18n="files.heading">設定ファイル</h2></div>
+          <div class="button-row">
+            <button class="ghost-button" type="button" id="exportFullBtn" data-i18n="files.exportFull">自分用に保存</button>
+            <button class="ghost-button" type="button" id="exportTplBtn" data-i18n="files.exportTemplate">テンプレートとして保存（ID抜き）</button>
+            <button class="ghost-button" type="button" id="exportCliBtn" data-i18n="files.exportCli">Node版の config.json</button>
+            <button class="ghost-button" type="button" id="importBtn" data-i18n="files.import">読み込む</button>
+            <button class="ghost-button is-danger" type="button" id="clearBtn" data-i18n="files.clear">このブラウザの保存を消す</button>
+            <input type="file" id="importFile" accept=".json,application/json" class="visually-hidden" tabindex="-1" aria-hidden="true" />
+          </div>
+          <p class="card-note" data-i18n-html="files.note"></p>
+        </section>
+
+        <section class="card" aria-labelledby="checkHeading">
+          <div class="card-head">
+            <h2 id="checkHeading" data-i18n="checklist.heading">配信・録画前のチェック</h2>
+            <button class="ghost-button small-button" type="button" id="checkReset" data-i18n="checklist.reset">チェックを外す</button>
+          </div>
+          <ul class="check-list" id="checkList"></ul>
+        </section>
+      </div>
+    </main>
+
+    <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+    <footer class="legal-footer">
+      <h2 data-i18n="footer.title">利用上の注意</h2>
+      <p data-i18n-html="footer.note1"></p>
+      <p data-i18n-html="footer.note2"></p>
+      <p data-i18n-html="footer.note3"></p>
+    </footer>
+  </div>
+  <script src="./js/model.js?v=20261021-01"></script>
+  <script src="./js/obs-client.js?v=20261021-01"></script>
+  <script src="./js/i18n.js?v=20261021-01"></script>
+  <script src="./js/app.js?v=20261021-01"></script>
+</body>
+</html>

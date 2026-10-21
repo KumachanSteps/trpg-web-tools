@@ -1,0 +1,30 @@
+{
+  "websocket": {
+    "address": "ws://127.0.0.1:4455",
+    "passwordEnv": "OBS_WEBSOCKET_PASSWORD"
+  },
+  "ccfolia": {
+    "roomId": "YOUR_ROOM_ID"
+  },
+  "sources": [
+    {
+      "inputName": "TRPG | CCFOLIA Board",
+      "urlTemplate": "https://ccfolia.com/rooms/{roomId}"
+    },
+    {
+      "inputName": "TRPG | Status PC1",
+      "urlTemplate": "https://ccfolia.com/rooms/{roomId}/characters/{characterId}",
+      "characterId": "YOUR_CHARACTER_ID"
+    },
+    {
+      "inputName": "TRPG | Message Box",
+      "urlTemplate": "https://ccfolia.com/rooms/{roomId}"
+    },
+    {
+      "inputName": "TRPG | Overlay",
+      "urlTemplate": "https://kumachansteps.github.io/trpg-web-tools/tools/obs-trpg-supporter/overlay.html?layout=standard&theme=noir&title=Scenario",
+      "width": 1920,
+      "height": 1080
+    }
+  ]
+}
