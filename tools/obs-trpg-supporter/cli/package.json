@@ -1,0 +1,14 @@
+{
+  "name": "obs-trpg-supporter-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "OBS TRPGサポーターのNode版（ブラウザソースのURL・カスタムCSS・大きさをまとめて更新）",
+  "scripts": {
+    "preview": "node update-sources.mjs --config config.json",
+    "apply": "node update-sources.mjs --config config.json --apply"
+  },
+  "dependencies": {
+    "obs-websocket-js": "^5.0.0"
+  }
+}
