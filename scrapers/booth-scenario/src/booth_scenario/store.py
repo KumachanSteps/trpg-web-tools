@@ -93,6 +93,8 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
         existing = None
         if v.external_variant_id:
             existing = conn.execute("SELECT variant_id FROM product_variants WHERE booth_item_id=? AND external_variant_id=?", (rec.booth_item_id, v.external_variant_id)).fetchone()
+            # Adopt a row saved earlier from HTML without an ID (same item, same label).
+            existing = existing or conn.execute("SELECT variant_id FROM product_variants WHERE booth_item_id=? AND external_variant_id IS NULL AND variant_label=?", (rec.booth_item_id, v.label)).fetchone()
         else:
             # Provisional reconciliation by item ID + label (see SCHEMA_SPEC).
             existing = conn.execute("SELECT variant_id FROM product_variants WHERE booth_item_id=? AND external_variant_id IS NULL AND variant_label=?", (rec.booth_item_id, v.label)).fetchone()
@@ -100,7 +102,7 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
         conn.execute(
             """INSERT INTO product_variants (variant_id, booth_item_id, external_variant_id, variant_label, price_jpy, availability, delivery_type, edition_kind)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT(variant_id) DO UPDATE SET variant_label=excluded.variant_label, price_jpy=excluded.price_jpy,
+               ON CONFLICT(variant_id) DO UPDATE SET external_variant_id=COALESCE(excluded.external_variant_id, external_variant_id), variant_label=excluded.variant_label, price_jpy=excluded.price_jpy,
                  availability=excluded.availability, delivery_type=excluded.delivery_type, edition_kind=excluded.edition_kind""",
             (vid, rec.booth_item_id, v.external_variant_id, v.label, v.price_jpy, v.availability, v.delivery_type, v.edition_kind),
         )

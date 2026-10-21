@@ -26,3 +26,15 @@ def test_listing_then_detail_roundtrip(conn):
     cov = coverage(conn)
     assert cov["detail_fetched"] == 1 and cov["like_count_source"] == {"UNAVAILABLE": 1}
     assert cov["evidence_rows"] == 2 and cov["crawl_queue"] == {"PARSED": 1}
+
+
+def test_json_variant_adopts_html_row_without_id(conn):
+    from booth_scenario.parsers.detail import DetailRecord, VariantRecord
+
+    html_rec = DetailRecord(42)
+    html_rec.variants = [VariantRecord(label="体験版", price_jpy=0, evidence="DOM:detail.variant")]
+    store.save_detail(conn, html_rec, "2026-10-21T00:01:00+00:00", "<html>")
+    raw = json.dumps({"id": 42, "variations": [{"id": 9, "name": "体験版", "price": 0, "status": "free_download"}]})
+    store.save_detail(conn, parse_item_json(raw, 42), "2026-10-21T00:02:00+00:00", raw)
+    rows = conn.execute("SELECT external_variant_id, availability FROM product_variants WHERE booth_item_id=42").fetchall()
+    assert [tuple(r) for r in rows] == [("9", "AVAILABLE")]

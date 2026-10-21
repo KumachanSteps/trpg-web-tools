@@ -110,20 +110,32 @@ def parse_detail_html(html: str, booth_item_id: int, url: str, selectors: dict |
 
     if main is not doc:
         rec.image_alts = [img.get("alt").strip() for img in main.find_all("img") if img.get("alt") and img.get("alt").strip()]
-        if (d := sel.css(selectors, "detail.description")) and (de := main.select_one(d)):
-            rec.description_text, rec.description_source = text_of(de), "DOM:detail.description"
+        # The main description and the shop's free-form sections (h2 + body) are
+        # separate blocks; the item JSON only carries the first one.
+        if (d := sel.css(selectors, "detail.description")) and (des := main.select(d)):
+            rec.description_text = "\n\n".join(t for de in des if (t := text_of(de)))
+            rec.description_source = "DOM:detail.description"
         if (lk := sel.css(selectors, "detail.like")) and (le := main.select_one(lk)):
             digits = re.sub(r"\D", "", text_of(le))
             if digits:
                 rec.like_count, rec.like_count_source = int(digits), "PRODUCT_PAGE"
-        if v := sel.css(selectors, "detail.variant"):
+        if (v := sel.css(selectors, "detail.variant")) and main.select(v):
+            # JSON-LD has one Offer or an AggregateOffer range; the DOM rows replace it.
+            rec.variants = [x for x in rec.variants if x.evidence != "jsonld:offers"]
             for ve in main.select(v):
                 label = text_of(ve).split("\n")[0]
-                rec.variants.append(VariantRecord(label=label, price_jpy=parse_price_jpy(text_of(ve)), edition_kind=classify_edition_kind(label), evidence="DOM:detail.variant"))
+                # Free-download and sold-out variants have no cart button, so no ID here.
+                ide = ve.select_one("[data-product-variant]")
+                ext_id = ide["data-product-variant"] if ide else None
+                rec.variants.append(VariantRecord(label=label, external_variant_id=ext_id, price_jpy=parse_price_jpy(text_of(ve)), edition_kind=classify_edition_kind(label), evidence="DOM:detail.variant"))
     return rec
 
 
-_AVAILABILITY = {"on_sale": "AVAILABLE", "soldout": "SOLD_OUT", "sold_out": "SOLD_OUT", "out_of_stock": "SOLD_OUT"}
+# addable_to_cart / free_download / restock_not_requested seen in item JSON on 2026-10-21.
+_AVAILABILITY = {
+    "addable_to_cart": "AVAILABLE", "free_download": "AVAILABLE", "restock_not_requested": "SOLD_OUT",
+    "on_sale": "AVAILABLE", "soldout": "SOLD_OUT", "sold_out": "SOLD_OUT", "out_of_stock": "SOLD_OUT",
+}
 _DELIVERY = {"digital": "DIGITAL", "direct": "PHYSICAL", "physical": "PHYSICAL", "warehouse": "PHYSICAL"}
 
 

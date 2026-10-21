@@ -49,17 +49,19 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 
 ## Phase 0 の未解決事項（2026-10-21 プローブ結果）
 
-一覧プローブは 2カテゴリ × 2ページ（計240カード）を取得済み。詳細プローブは1件目で停止（下記）したため、詳細ページ側の項目はまだ未検証です。
+一覧 2カテゴリ × 2ページ（240カード）と、詳細 10件（HTML + `/ja/items/<id>.json`）を取得して確認しました。根拠は [selectors.json](src/booth_scenario/selectors.json) の `evidence` にあります。
 
-| 質問 | 状態 |
+| 質問 | 結果 |
 | --- | --- |
-| いいね数は一覧カード / 詳細ページ / 構造化データのどこにあるか | 一覧: **無い**（確認済）。カードには JS で後から描画される空の `div.js-item-card-wish-list-button` だけ。詳細ページ・JSON は未検証 |
-| バリエーションは初期 HTML にあり、ID で対応付けられるか | 一覧: 価格が `N JPY~` のカード（240中43、約18%）が複数バリエーション、N は最安値。詳細 HTML の構造は未検証 |
-| カテゴリのページングリンクは安定か、1ページのカード数は | **確認済**: 1ページ 60 カード（`li.item-card[data-product-id]`、position 0–59、カード外の商品リンク無し、4ページ間で重複0）。`div.pager a[rel=next]` と `<link rel=next>` あり。Tabletop RPG は最終 page=395、「Results 23,693 件」と一致 |
-| 画像 alt や SEO スニペットは信頼できるか | 一覧: サムネイルは `<a>` の background-image で alt 無し。`img alt` はショップアイコンのみ（= ショップ名）。商品名は `data-product-name` 属性とタイトルリンクで取れる。og 系は詳細未取得のため未検証 |
-| 商品説明本文を囲む要素（おすすめ欄を除外）は | 未検証（詳細ページ未取得） |
+| いいね数は一覧カード / 詳細ページ / 構造化データのどこにあるか | **商品 JSON の `wish_lists_count` のみ**（10/10）。一覧 HTML・詳細 HTML のどちらにも数値は無い（JS で後から描画） |
+| バリエーションは初期 HTML にあり、ID で対応付けられるか | **ある**。`ul#variations li.variation-item` が JSON の `variations` と同順・同名（10/10）。ID（`data-product-variant`）はカートボタンのある行だけで、無料DL・在庫切れの行には無い（26行中9行）→ ID は JSON から取り、HTML 行は名前で対応付け。一覧の `N JPY~` は複数バリエーションの最安値 |
+| カテゴリのページングリンクは安定か、1ページのカード数は | **1ページ 60 カード**（`li.item-card[data-product-id]`、カード外の商品リンク無し、4ページ間で重複0）。`div.pager a[rel=next]` あり。Tabletop RPG は最終 page=395 =「Results 23,693 件」 |
+| 画像 alt や SEO スニペットは信頼できるか | **補助のみ**。画像 alt は商品名かショップ名の繰り返しで内容情報は無い。`og:description` は JSON `description` の先頭を切ったもの（最大約290字）。`og:title` は「商品名 - ショップ名 - BOOTH」。JSON-LD は単一価格か `AggregateOffer` の最安〜最高のみ |
+| 商品説明本文を囲む要素（おすすめ欄を除外）は | 本文は `div.js-market-item-detail-description p`（JSON `description` と完全一致）。**さらに 8/10 件にショップ独自の見出し付きセクション `section.shop__text` があり、JSON には入っていない**。システム・人数・時間はここに書かれることが多く、両方を合わせるとルール抽出のヒットが 9 → 63 に増えた。おすすめ欄は `detail.main` の外 |
 
-**詳細プローブの停止について:** `CAPTCHA/challenge page on https://booth.pm/ja/items/3403696` で停止しましたが、誤検知の可能性が高いです。検知が `challenge-platform` という文字列を見ていたところ、BOOTH の通常ページはすべて Cloudflare の受動スクリプト `/cdn-cgi/challenge-platform/scripts/jsd/main.js` を読み込んでいます（一覧4ページすべてに存在。一覧は 200KB 超で検査範囲外だったため止まらなかった）。検知をチャレンジ画面専用のマーカーに絞り、停止時はページを `data/cache/*.stopped.html` に残すよう修正しました。再実行は未実施です。
+**検知処理の修正:** 初回の詳細プローブは `CAPTCHA/challenge` で停止しましたが誤検知でした。BOOTH の通常ページはすべて Cloudflare の受動スクリプト `/cdn-cgi/challenge-platform/scripts/jsd/main.js` を読み込んでおり、検知がその文字列に反応していました。チャレンジ画面専用のマーカーに絞り、停止時はページを `data/cache/*.stopped.html` に残すようにしました。修正後の再実行では 10件すべて 200 で停止なし（21リクエスト）。
+
+**この結果に合わせたコード変更:** 説明文は HTML の本文＋セクションを結合して保存し、ルール抽出もそれを使う（JSON の短い説明で上書きしない）。バリエーションは HTML 行を JSON の ID 付き行に統合（重複なし）。JSON の `status` 実測値 `addable_to_cart` / `free_download` → AVAILABLE、`restock_not_requested` → SOLD_OUT を追加。
 
 ---
 

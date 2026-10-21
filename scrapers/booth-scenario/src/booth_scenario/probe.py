@@ -80,9 +80,15 @@ def probe_details(conn, fetcher: PoliteFetcher, snapshot_dir: Path, ids: list[in
                             "listing_status": jrec.listing_status, "tags": jrec.tags[:15],
                             "variants": [asdict(v) for v in jrec.variants],
                             "description_chars": len(jrec.description_text or ""),
+                            "html_description_chars": len(html_rec.description_text or ""),
                         }
+                        # JSON description lacks the shop's extra sections, where system,
+                        # player count and play time often are; keep the HTML text if any.
+                        desc = html_rec.description_text or jrec.description_text
+                        if html_rec.description_text:
+                            jrec.description_text = None
                         store.save_detail(conn, jrec, j.fetched_at, j.body)
-                        hits = extract_all(jrec.description_text or "")
+                        hits = extract_all(desc or "")
                         for h in hits:
                             store.save_evidence(conn, iid, h)
                         conn.commit()

@@ -86,3 +86,31 @@ def test_item_json_defensive():
 def test_item_json_missing_keys_are_unknown():
     r = parse_item_json('{"id": 1}', 1)
     assert r.like_count is None and r.like_count_source == "UNAVAILABLE" and r.listing_status == "UNKNOWN"
+
+
+SHAPED_DETAIL = """<html lang="ja"><head><script type="application/ld+json">
+{"@type": "Product", "name": "T", "offers": {"@type": "Offer", "price": "800", "priceCurrency": "JPY"}}
+</script></head><body><div class="market-item-detail-article"><div class="container"><div class="flex">
+<div class="l-col-3of5"><div class="js-market-item-detail-description description"><p>本文</p></div>
+<div class="my-40"><section class="shop__text"><h2>概要</h2><p>推奨人数：1人</p></section></div></div>
+<div class="l-col-2of5"><ul id="variations">
+<li class="variation-item"><div class="variation-name">本編</div><div class="variation-price">¥ 800</div>
+<button data-product-variant="11">カートに入れる</button></li>
+<li class="variation-item"><div class="variation-name">体験版</div><div class="variation-price">¥ 0</div></li>
+</ul></div></div></div></div>
+<section><a href="/ja/items/77">おすすめ</a></section></body></html>"""
+
+
+def test_detail_with_shipped_selectors():
+    # Synthetic markup shaped like the class names recorded in selectors.json.
+    r = parse_detail_html(SHAPED_DETAIL, 42, "https://booth.pm/ja/items/42")
+    assert r.description_text == "本文\n\n概要\n推奨人数：1人"
+    assert [(v.label, v.external_variant_id, v.price_jpy) for v in r.variants] == [("本編", "11", 800), ("体験版", None, 0)]
+    assert r.like_count is None
+
+
+def test_item_json_observed_statuses():
+    data = {"id": 1, "variations": [{"id": 1, "name": "a", "price": 0, "status": "free_download"},
+                                    {"id": 2, "name": "b", "price": 9, "status": "restock_not_requested"},
+                                    {"id": 3, "name": "c", "price": 9, "status": "addable_to_cart"}]}
+    assert [v.availability for v in parse_item_json(json.dumps(data), 1).variants] == ["AVAILABLE", "SOLD_OUT", "AVAILABLE"]
