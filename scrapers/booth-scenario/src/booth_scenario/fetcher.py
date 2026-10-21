@@ -179,6 +179,7 @@ class PoliteFetcher:
                 self._sleep(self.delay * (2 ** hits_429))
                 continue
             if status == 403:
+                self._save_stopped(url, status, body)
                 raise StopCrawl(f"403 Forbidden on {url}")
             if looks_like_captcha(body):
                 self._save_stopped(url, status, body)
