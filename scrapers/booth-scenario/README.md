@@ -41,11 +41,18 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 - 詳細ページは og:title / canonical / JSON-LD などの Web 標準タグのみ読みます。`og:description` は SEO 用の要約として別保存し、本文扱いしません。
 - `/ja/items/<id>.json` という公開 JSON の存在とキー名は**未検証の候補**です。プローブがあるかどうか・どのキーがあるかを記録します。
 - 分からない値は NULL（いいね数 0、価格 0、空文字にしない）。「BGMなし」など明示的な否定は `EXPLICITLY_ABSENT` として保存。
-- 本文からのルール抽出（人数・プレイ時間・システム・素材）は全て根拠行を `extraction_evidence` に残します。`1PL` だけでは SOLO にせず `ONE_PLAYER_UNSPECIFIED`。
+- 本文からのルール抽出（人数・プレイ時間・システム・素材）は全て根拠行を `extraction_evidence` に残します。
+- レビューで決めた既定値（2026-10-21 TK）:
+  - プレイ時間はテキセ／半テキの指定がなければ `VOICE`。「3時間~」「15時間以上」は上限なし（`max_minutes` NULL）。
+  - 進行役は CoC なら `KP`、エモクロアなら `DL`。KPレス／DLレスは `NONE/NONE`。
+  - タイマンは `KP/KPC`・`DL/DPC`。それ以外（ソロ・複数PL）は本文に KPC/DPC がなければ同行者 `NONE`。`1PL` は `SOLO`。
+  - 「2PL KPレス」は `GMLESS_MULTI`（migration 005）。
+  - 権利表記の行（「『クトゥルフ神話TRPG』の二次創作物」など）はシステム判定に使わない。本文にシステムが書いてあればタイトル・タグからは足さない。
 
 ## スキーマからの変更点
 
 - `002_nullable_product_title.sql`: 一覧で ID だけ見つかった段階ではタイトルが未確認なので、`products.title` を NULL 許可にしました。
+- `005_gmless_multi.sql`: `scenario_session_modes.mode` に `GMLESS_MULTI` を追加。
 
 ## Phase 0 の未解決事項（2026-10-21 プローブ結果）
 

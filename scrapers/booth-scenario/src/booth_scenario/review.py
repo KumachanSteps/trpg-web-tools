@@ -113,7 +113,7 @@ def auto_fields(conn, iid: int) -> dict[str, str]:
             f"{v['mode']} {v.get('player_min')}-{v.get('player_max')} {v.get('facilitator_role')}/{v.get('companion_role')}"
             for v in _evidence_values(conn, iid, "scenario_session_modes")),
         "durations": _uniq_sorted(
-            f"{v['mode']} {v['scope']} {v['min_minutes']}-{v['max_minutes']}" for v in _evidence_values(conn, iid, "scenario_durations")),
+            f"{v['mode']} {v['scope']} {v['min_minutes']}-{'' if v['max_minutes'] is None else v['max_minutes']}" for v in _evidence_values(conn, iid, "scenario_durations")),
         "assets": _uniq_sorted(f"{v['asset_type']}:{v['availability_relation']}" for v in _evidence_values(conn, iid, "scenario_assets")),
         "free_full": free_full,
         "free_sample": free_sample,
@@ -308,7 +308,7 @@ def _read_rows(path: Path) -> list[dict]:
 def import_review(conn, path: Path) -> dict:
     """Store the checked table as review_labels; a corrected kind or member list
     becomes a MANUAL classification that organize will follow."""
-    imported, corrected = 0, 0
+    imported, corrected, warnings = 0, 0, []
     for row in _read_rows(path):
         iid_s = (row.get("booth_item_id") or "").strip()
         if iid_s.endswith(".0"):  # a spreadsheet may turn IDs into floats
@@ -325,6 +325,12 @@ def import_review(conn, path: Path) -> dict:
             corrected += ok != ""
         conn.execute("INSERT OR REPLACE INTO review_labels VALUES (?, ?, ?, ?)",
                      (iid, json.dumps(labels, ensure_ascii=False), row.get("notes") or None, utcnow()))
+        if labels["product_kind"]["truth"].strip().upper() not in KIND_CHOICES:
+            # Not a kind (e.g. a pasted variant line): keep the tool's answer.
+            warnings.append(f"{iid}: product_kind {labels['product_kind']['truth']!r} is not a kind; kept {labels['product_kind']['auto']}")
+            labels["product_kind"] = {"auto": labels["product_kind"]["auto"], "truth": labels["product_kind"]["auto"], "corrected": False}
+            conn.execute("UPDATE review_labels SET labels_json=? WHERE booth_item_id=?", (json.dumps(labels, ensure_ascii=False), iid))
+            corrected -= 1
         if labels["product_kind"]["corrected"] or labels["members"]["corrected"]:
             members = [t.strip() for t in re.split(r"[／/]", labels["members"]["truth"]) if t.strip()]
             conn.execute(
@@ -336,17 +342,67 @@ def import_review(conn, path: Path) -> dict:
             )
         imported += 1
     conn.commit()
-    return {"imported": imported, "corrected_cells": corrected}
+    out = {"imported": imported, "corrected_cells": corrected}
+    if warnings:
+        out["warnings"] = warnings
+    return out
+
+
+_MODE_ALIAS = {"GMLESS_PL": "GMLESS_MULTI", "ONE_PLAYER_SOLO": "SOLO", "ONE_PLAYER_UNSPECIFIED": "SOLO"}
+_SESSION_RE = re.compile(r"([A-Z_]{3,})\s+(\d+)\s*-\s*(\d+)(?:\s+([A-Z]+)\s*/\s*([A-Z]+))?")
+_DURATION_RE = re.compile(
+    r"(VOICE|TEXT|SEMI_TEXT|UNSPECIFIED)\s+(?:(MAIN|INTRO|ALL_EPISODES|EPISODE|OTHER|UNSPECIFIED)\s+)?(\d*)\s*-\s*(\d+|UNSPECIFIED)?")
+
+
+def _segments(value: str) -> list[str]:
+    # Reviewers may prefix a segment with the source phrase: "新規4人固定 -> MULTI_PL 4-4".
+    return [p.split("->")[-1].strip() for p in re.split(r"\s*;\s*|\n", value or "") if p.strip()]
 
 
 def _norm_value(field: str, value: str) -> frozenset:
+    """Comparable form of a cell. Lenient with hand-written values: free text
+    around the codes is ignored, a missing scope means UNSPECIFIED, and a time
+    without text/voice is a voice session."""
     value = (value or "").strip()
     if value in ("", "-"):
         return frozenset()
     if field == "members":
-        return frozenset(normalize_title(t) for t in re.split(r"[／/]", value) if t.strip())
+        return frozenset(normalize_title(t) for t in re.split(r"[／/;；\n]", value) if t.strip())
+    if field == "session_modes":
+        out = set()
+        for seg in _segments(value):
+            for m in _SESSION_RE.finditer(seg.upper()):
+                mode = _MODE_ALIAS.get(m.group(1), m.group(1))
+                roles = f" {m.group(4)}/{m.group(5)}" if m.group(4) else ""
+                out.add(f"{mode} {m.group(2)}-{m.group(3)}{roles}")
+        return frozenset(out)
+    if field == "durations":
+        out = set()
+        for seg in _segments(value):
+            for m in _DURATION_RE.finditer(seg.upper()):
+                mode = "VOICE" if m.group(1) == "UNSPECIFIED" else m.group(1)
+                hi = "" if m.group(4) in (None, "UNSPECIFIED") else m.group(4)
+                out.add(f"{mode} {m.group(2) or 'UNSPECIFIED'} {m.group(3)}-{hi}")
+        return frozenset(out)
     parts = re.split(r"\s*;\s*|\n", value)
     return frozenset(re.sub(r"\s+", " ", p.strip()).upper() for p in parts if p.strip())
+
+
+def _matches(field: str, tool: str, truth: str) -> bool:
+    a, b = _norm_value(field, tool), _norm_value(field, truth)
+    if field != "session_modes":
+        return a == b
+    # A truth entry without roles ("ONE_ON_ONE 1-1"), or with UNKNOWN ones left
+    # from an older export, matches the tool's entry with any roles there.
+    def same(tool_e: str, truth_e: str) -> bool:
+        t, r = tool_e.split(), truth_e.split()
+        if t[:2] != r[:2]:
+            return False
+        if len(r) < 3:
+            return True
+        tr = t[2].split("/") if len(t) > 2 else ["", ""]
+        return all(x in ("UNKNOWN", y) for x, y in zip(r[2].split("/"), tr))
+    return all(any(same(x, y) for x in a) for y in b) and all(any(same(x, y) for y in b) for x in a)
 
 
 def evaluate(conn) -> dict:
@@ -369,7 +425,7 @@ def evaluate(conn) -> dict:
                 continue
             st = per_field[f]
             st["checked"] += 1
-            if _norm_value(f, now[f]) == _norm_value(f, labels[f]["truth"]):
+            if _matches(f, now[f], labels[f]["truth"]):
                 st["correct"] += 1
             else:
                 st["misses"].append({"booth_item_id": iid, "tool": now[f], "truth": labels[f]["truth"]})

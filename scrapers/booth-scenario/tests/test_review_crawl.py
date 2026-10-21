@@ -17,7 +17,7 @@ def test_review_roundtrip_and_evaluate(conn, tmp_path):
     raw = list(csv.reader(out.open(encoding="utf-8-sig")))
     assert raw[1][0] == "#説明" and raw[2][1] == "booth_item_id"
     rows = review._read_rows(out)
-    assert rows[0]["auto_session_modes"] == "ONE_PLAYER_UNSPECIFIED 1-1 UNKNOWN/UNKNOWN"
+    assert rows[0]["auto_session_modes"] == "SOLO 1-1 UNKNOWN/NONE"
     # Reviewer: item 2 is an anthology of two works; item 1 is right as is.
     rows[1]["ok_product_kind"] = "COLLECTION"
     rows[1]["ok_members"] = "A／B"

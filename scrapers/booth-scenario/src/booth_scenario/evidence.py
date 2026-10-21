@@ -3,7 +3,7 @@ text, title and tags. Runs after every fetch, and offline via `reextract`."""
 from __future__ import annotations
 
 from . import store
-from .rules import classify_edition_kind, extract_all, extract_systems_meta
+from .rules import classify_edition_kind, default_roles, extract_all, extract_systems_meta
 
 
 def rebuild_evidence(conn, iid: int) -> int:
@@ -21,7 +21,16 @@ def rebuild_evidence(conn, iid: int) -> int:
     conn.execute("DELETE FROM extraction_evidence WHERE booth_item_id=? AND extraction_method IN ('REGEX','RULE')", (iid,))
     hits = extract_all(p["description_text"] or "")
     described = {h.value["system_code"] for h in hits if h.field_path == "scenario_systems"}
-    hits += [h for h in extract_systems_meta(p["title"] or p["listing_title"] or "", tags) if h.value["system_code"] not in described]
+    # Title/tag hints only when the description does not state what the work is
+    # for: a tag like "クトゥルフ神話TRPG" would otherwise add 6th edition to a
+    # 7th-edition work. A conversion note alone ("7版変換可") states nothing.
+    stated = any(h.value["support_type"] in ("NATIVE", "SUPPORTED") for h in hits if h.field_path == "scenario_systems")
+    if not stated:
+        hits += [h for h in extract_systems_meta(p["title"] or p["listing_title"] or "", tags) if h.value["system_code"] not in described]
+    systems = {h.value["system_code"] for h in hits if h.field_path == "scenario_systems"}
+    for h in hits:
+        if h.field_path == "scenario_session_modes":
+            h.value = default_roles(h.value, systems)
     for h in hits:
         store.save_evidence(conn, iid, h, section="description" if not h.excerpt.startswith("[") else h.excerpt[1:h.excerpt.index("]")])
     conn.commit()
