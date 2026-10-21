@@ -35,6 +35,20 @@ def test_unverified_selector_is_ignored():
     assert parse_listing('<div class="c"><a href="/ja/items/5">x</a></div>', URL, selectors=s).card_count is None
 
 
+def test_listing_with_shipped_selectors():
+    # Synthetic markup shaped like the class names recorded in selectors.json.
+    html = """<ul><li class="item-card l-card" data-product-id="7"><div class="item-card__summary">
+    <a href="https://booth.pm/en/items/7">t</a><div class="item-card__shop-name">S</div>
+    <div class="price">1,500 JPY~</div><div class="js-item-card-wish-list-button" data-item-id="7"></div></div></li></ul>
+    <a href="/en/items/8">not a card</a>
+    <div class="pager"><a rel="next" href="/en/browse/Tabletop%20RPG?page=2">next</a></div>"""
+    p = parse_listing(html, URL)
+    assert [c.booth_item_id for c in p.cards] == [7]
+    c = p.cards[0]
+    assert (c.price_jpy, c.shop_name, c.like_count) == (1500, "S", None)
+    assert p.next_page_url == "https://booth.pm/en/browse/Tabletop%20RPG?page=2"
+
+
 DETAIL = """<html lang="ja"><head>
 <meta property="og:title" content="テストシナリオ - BOOTH">
 <meta property="og:description" content="SEO snippet">

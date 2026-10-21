@@ -76,7 +76,10 @@ def parse_listing(html: str, url: str, current_page: int = 1, selectors: dict | 
         n = page_param(full)
         if n is not None and urlsplit(full).path == base_path:
             pages.setdefault(n, full)
-    if pages:
+    next_url = pages.get(current_page + 1)
+    if (pg := sel.css(selectors, "listing.pagination")) and (ne := doc.select_one(pg)) and ne.get("href"):
+        next_url = urljoin(url, ne["href"])
+    elif pages:
         notes.append("pagination taken from same-path links with a page= parameter (heuristic).")
     return ListingPage(
         url=url,
@@ -84,7 +87,7 @@ def parse_listing(html: str, url: str, current_page: int = 1, selectors: dict | 
         card_count=card_count,
         item_ids_from_links=link_ids,
         page_numbers=sorted(pages),
-        next_page_url=pages.get(current_page + 1),
+        next_page_url=next_url,
         method=method,
         notes=notes,
     )

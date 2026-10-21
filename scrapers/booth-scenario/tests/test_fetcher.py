@@ -69,6 +69,21 @@ def test_captcha_stops(tmp_path):
         f.fetch(U)
 
 
+def test_captcha_stop_keeps_page_but_not_cache(tmp_path):
+    f, _ = make(tmp_path, FakeNet({U: [(503, b"<html><title>Just a moment...</title></html>")]}))
+    with pytest.raises(StopCrawl):
+        f.fetch(U)
+    assert len(list(tmp_path.glob("*.stopped.html"))) == 1
+    assert not list(tmp_path.glob("*.body"))
+
+
+def test_passive_cloudflare_beacon_is_not_a_challenge(tmp_path):
+    # Normal booth.pm pages load this script; it must not stop the crawl.
+    beacon = b"<html><body>item</body><script>a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';</script></html>"
+    f, _ = make(tmp_path, FakeNet({U: [(200, beacon)]}))
+    assert f.fetch(U).status == 200
+
+
 def test_scope_refusals(tmp_path):
     f, _ = make(tmp_path, FakeNet({}))
     for bad in ["https://example.com/x", "http://booth.pm/ja/items/1", "https://booth.pm/downloadables/123", "https://shop.booth.pm/items/1"]:

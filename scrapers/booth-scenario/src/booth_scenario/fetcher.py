@@ -59,10 +59,17 @@ def _default_opener(url: str, timeout: float) -> tuple[int, str, bytes]:
         return e.code, e.headers.get("Content-Type", "") if e.headers else "", e.read() or b""
 
 
+# Markers that only appear on a Cloudflare challenge interstitial. Do not add
+# "challenge-platform": every normal booth.pm page loads the passive
+# /cdn-cgi/challenge-platform/scripts/jsd/main.js beacon (seen in all listing
+# snapshots, 2026-10-21), which made the first detail probe stop on a normal page.
+CHALLENGE_MARKERS = ("cf-challenge", "_cf_chl_opt", "cf-chl-", "<title>just a moment")
+
+
 def looks_like_captcha(body: str) -> bool:
     """A challenge interstitial, not a normal page that merely loads a captcha script."""
-    low = body[:200_000].lower()
-    if "cf-challenge" in low or "challenge-platform" in low:
+    low = body.lower()
+    if any(m in low for m in CHALLENGE_MARKERS):
         return True
     return "captcha" in low and len(body) < 30_000
 
@@ -118,6 +125,12 @@ class PoliteFetcher:
         body_p.write_text(r.body, encoding="utf-8")
         meta_p.write_text(json.dumps({"url": r.url, "status": r.status, "fetched_at": r.fetched_at, "content_type": r.content_type}), encoding="utf-8")
 
+    def _save_stopped(self, url: str, status: int, body: str) -> None:
+        """Keep the page that stopped the crawl so the stop can be checked offline."""
+        body_p, _ = self._cache_paths(url)
+        stop_p = body_p.with_suffix(".stopped.html")
+        stop_p.write_text(f"<!-- {url} HTTP {status} {utcnow()} -->\n{body}", encoding="utf-8")
+
     # -- network -------------------------------------------------------------
     def _wait_turn(self) -> None:
         if self._last_request is not None:
@@ -168,7 +181,8 @@ class PoliteFetcher:
             if status == 403:
                 raise StopCrawl(f"403 Forbidden on {url}")
             if looks_like_captcha(body):
-                raise StopCrawl(f"CAPTCHA/challenge page on {url}")
+                self._save_stopped(url, status, body)
+                raise StopCrawl(f"CAPTCHA/challenge page on {url} (HTTP {status})")
             result = FetchResult(url, status, body, utcnow(), False, ctype)
             if status < 500:
                 self._write_cache(result)

@@ -1,12 +1,12 @@
 {
   "_note": "CSS selectors for BOOTH pages. Every entry starts null/unverified. Fill one only after seeing it in a real snapshot (see `discover-selectors`), and record the snapshot file and date in evidence. Never guess.",
-  "listing.card": {"css": null, "verified": false, "evidence": null},
-  "listing.card_price": {"css": null, "verified": false, "evidence": null},
-  "listing.card_shop": {"css": null, "verified": false, "evidence": null},
-  "listing.card_like": {"css": null, "verified": false, "evidence": null},
-  "listing.pagination": {"css": null, "verified": false, "evidence": null},
-  "detail.main": {"css": null, "verified": false, "evidence": null},
-  "detail.description": {"css": null, "verified": false, "evidence": null},
-  "detail.variant": {"css": null, "verified": false, "evidence": null},
-  "detail.like": {"css": null, "verified": false, "evidence": null}
+  "listing.card": {"css": "li.item-card[data-product-id]", "verified": true, "evidence": "2026-10-21 listing_Tabletop_RPG_p1/p2, listing_Tabletop_Games_p1/p2 (/en/browse): exactly 60 per page, 60 unique IDs, data-product-position 0-59, no item links outside cards, no ID shared between the 4 pages. Card also carries data-product-id/name/price/brand/category attributes."},
+  "listing.card_price": {"css": ".item-card__summary .price", "verified": true, "evidence": "2026-10-21 same 4 snapshots: 240/240 cards. Text is 'N JPY' or 'N JPY~' (~ = several variants, N = lowest); digits always equal data-product-price."},
+  "listing.card_shop": {"css": ".item-card__shop-name", "verified": true, "evidence": "2026-10-21 same 4 snapshots: 240/240 cards; the shop avatar img alt holds the same name. Shop URL is the parent a.item-card__shop-name-anchor href."},
+  "listing.card_like": {"css": null, "verified": false, "evidence": "2026-10-21 same 4 snapshots: no like count in listing HTML. The card only has an empty div.js-item-card-wish-list-button[data-item-id] filled by JavaScript. Keep null."},
+  "listing.pagination": {"css": "div.pager a[rel~=next]", "verified": true, "evidence": "2026-10-21 same 4 snapshots: div.pager with a[rel=next], li.current, a.last-page (page=395 for Tabletop RPG = 60/page, matching 'Results 23,693 件'). <link rel=next> in head too."},
+  "detail.main": {"css": null, "verified": false, "evidence": "Not seen yet: the 2026-10-21 detail probe stopped on its first item (challenge detector false positive, page not kept)."},
+  "detail.description": {"css": null, "verified": false, "evidence": "Not seen yet (see detail.main)."},
+  "detail.variant": {"css": null, "verified": false, "evidence": "Not seen yet (see detail.main). Listing shows 'N JPY~' for multi-variant items, so variants exist for ~18% of cards."},
+  "detail.like": {"css": null, "verified": false, "evidence": "Not seen yet (see detail.main)."}
 }
