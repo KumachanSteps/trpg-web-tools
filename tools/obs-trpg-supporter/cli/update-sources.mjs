@@ -27,13 +27,20 @@ function parseArguments(argv) {
   return out;
 }
 
+// Same check as the browser version (js/obs-client.js isLocalAddress): parse, never prefix-match.
+function isLocalAddress(address) {
+  let url;
+  try { url = new URL(String(address || '').trim()); } catch { return false; }
+  return url.protocol === 'ws:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) && Boolean(url.port) &&
+    (url.pathname === '/' || url.pathname === '') && !url.search && !url.username && !url.password;
+}
+
 function assertValidConfig(config) {
   if (!config || !Array.isArray(config.sources) || !config.sources.length) {
     throw new Error('Config must contain a non-empty sources array.');
   }
-  if (!config.websocket?.address?.startsWith('ws://127.0.0.1:') &&
-      !config.websocket?.address?.startsWith('ws://localhost:')) {
-    throw new Error('This starter intentionally permits ONLY localhost OBS WebSocket addresses.');
+  if (!isLocalAddress(config.websocket?.address)) {
+    throw new Error('This tool intentionally permits ONLY localhost OBS WebSocket addresses (ws://127.0.0.1:PORT or ws://localhost:PORT).');
   }
   if (!config.websocket?.passwordEnv) throw new Error('Missing websocket.passwordEnv.');
   const needsRoom = config.sources.some(item => String(item.urlTemplate || '').includes('{roomId}'));

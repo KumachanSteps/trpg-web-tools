@@ -11,7 +11,7 @@
     let url;
     try { url = new URL(String(address || '').trim()); } catch (error) { return false; }
     return url.protocol === 'ws:' && LOCAL_HOSTS.includes(url.hostname) && Boolean(url.port) &&
-      (url.pathname === '/' || url.pathname === '') && !url.search && !url.username;
+      (url.pathname === '/' || url.pathname === '') && !url.search && !url.username && !url.password;
   }
 
   async function sha256Base64(text) {

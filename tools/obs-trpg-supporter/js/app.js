@@ -661,6 +661,8 @@
   const current = (settings, defaults, key) => (settings[key] !== undefined ? settings[key] : defaults[key] !== undefined ? defaults[key] : '');
 
   async function buildPlan() {
+    // 確認中に入力が変わったら、その結果は古い扱いにする（作り始めの版で記録する）
+    const rev = app.rev;
     await fetchInputs(true);
     let defaults = {};
     try {
@@ -692,7 +694,7 @@
       row.keys = Object.keys(row.next).filter(key => String(row.previous[key]) !== String(row.next[key]));
       row.status = row.keys.length ? 'change' : 'same';
     }
-    return { rev: app.rev, rows, ok: rows.length > 0 && rows.every(r => r.status !== 'error') };
+    return { rev, rows, ok: rows.length > 0 && rows.every(r => r.status !== 'error') };
   }
 
   function preview() {

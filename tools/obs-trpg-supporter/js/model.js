@@ -195,6 +195,7 @@
     project.ccfolia.roomId = parseRoomId(raw.ccfolia && raw.ccfolia.roomId) || '';
     project.participants = [];
     const sources = [];
+    let overlay = '';
     (raw.sources || []).slice(0, 40).forEach(item => {
       const template = String(item.urlTemplate || '');
       const src = sanitizeSource({ inputName: item.inputName, role: 'custom', url: template, width: item.width, height: item.height });
@@ -209,12 +210,25 @@
           project.participants.push(p);
         }
         src.slot = Math.max(0, index);
-      } else if (/\/obs-trpg-supporter\/overlay\.html/.test(template)) src.role = 'overlay';
+      } else if (/\/obs-trpg-supporter\/overlay\.html/.test(template)) {
+        src.role = 'overlay';
+        overlay = template;
+      }
       else if (/^https:\/\/streamkit\.discord\.com\//.test(template)) src.role = 'discord';
       if (src.role !== 'custom' && src.role !== 'discord') src.url = '';
       if (typeof item.css === 'string') { src.cssMode = 'set'; src.css = str(item.css, 200000); }
       sources.push(src);
     });
+    // オーバーレイのURLから、レイアウト・文字・PCの名前と色を戻す
+    if (overlay) {
+      const o = parseOverlayParams(overlay.includes('?') ? overlay.slice(overlay.indexOf('?')) : '');
+      ['layout', 'theme', 'accent', 'title', 'subtitle', 'scene', 'message', 'resume', 'plates'].forEach(key => { project.overlay[key] = o[key]; });
+      o.pcs.forEach((pc, i) => {
+        if (!project.participants[i]) project.participants[i] = defaultParticipant(i);
+        if (pc.name !== `PC${i + 1}`) project.participants[i].name = pc.name;
+        project.participants[i].color = pc.color;
+      });
+    }
     if (!project.participants.length) project.participants = [defaultParticipant(0)];
     project.sources = sources;
     return project;
@@ -369,7 +383,11 @@
       out.participants.forEach(p => { p.characterId = ''; });
       out.sources.forEach(s => {
         if (s.role === 'discord') s.url = '';
-        if (s.role === 'custom') s.url = String(s.url || '').replace(/(ccfolia\.com\/rooms\/)[A-Za-z0-9_-]+/, '$1{roomId}');
+        if (s.role === 'custom') {
+          s.url = String(s.url || '')
+            .replace(/(ccfolia\.com\/rooms\/)[A-Za-z0-9_-]+/, '$1{roomId}')
+            .replace(/(\/characters\/)[A-Za-z0-9_-]+/g, '$1{characterId}');
+        }
       });
     }
     return out;
