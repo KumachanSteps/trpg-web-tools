@@ -1,0 +1,71 @@
+import json
+
+from booth_scenario import store
+from booth_scenario.parsers.detail import parse_item_json
+from booth_scenario.parsers.listing import parse_listing
+from booth_scenario.report import coverage
+from booth_scenario.rules import extract_all
+
+
+def test_listing_then_detail_roundtrip(conn):
+    qid = store.ensure_search_query(conn, "Tabletop RPG", "クトゥルフ神話TRPG", True)
+    assert store.ensure_search_query(conn, "Tabletop RPG", "クトゥルフ神話TRPG", True) == qid
+    page = parse_listing('<a href="/ja/items/42">x</a>', "https://booth.pm/en/browse/x", selectors={})
+    store.save_listing(conn, qid, 1, page, 200, "2026-10-21T00:00:00+00:00")
+    row = conn.execute("SELECT title, like_count, like_count_source FROM products WHERE booth_item_id=42").fetchone()
+    assert tuple(row) == (None, None, None)  # unknown, not empty/zero
+
+    raw = json.dumps({"id": 42, "name": "T", "description": "推奨人数：1PL\nBGM：なし",
+                      "variations": [{"id": 7, "name": "本編PDF", "price": 500, "status": "on_sale"}]})
+    rec = parse_item_json(raw, 42)
+    store.save_detail(conn, rec, "2026-10-21T00:01:00+00:00", raw)
+    store.save_detail(conn, rec, "2026-10-21T00:02:00+00:00", raw)  # idempotent on variant id
+    assert conn.execute("SELECT COUNT(*) FROM product_variants WHERE booth_item_id=42").fetchone()[0] == 1
+    for h in extract_all(rec.description_text):
+        store.save_evidence(conn, 42, h)
+    cov = coverage(conn)
+    assert cov["detail_fetched"] == 1 and cov["like_count_source"] == {"UNAVAILABLE": 1}
+    assert cov["evidence_rows"] == 2 and cov["crawl_queue"] == {"PARSED": 1}
+
+
+def test_json_variant_adopts_html_row_without_id(conn):
+    from booth_scenario.parsers.detail import DetailRecord, VariantRecord
+
+    html_rec = DetailRecord(42)
+    html_rec.variants = [VariantRecord(label="体験版", price_jpy=0, evidence="DOM:detail.variant")]
+    store.save_detail(conn, html_rec, "2026-10-21T00:01:00+00:00", "<html>")
+    raw = json.dumps({"id": 42, "variations": [{"id": 9, "name": "体験版", "price": 0, "status": "free_download"}]})
+    store.save_detail(conn, parse_item_json(raw, 42), "2026-10-21T00:02:00+00:00", raw)
+    rows = conn.execute("SELECT external_variant_id, availability FROM product_variants WHERE booth_item_id=42").fetchall()
+    assert [tuple(r) for r in rows] == [("9", "AVAILABLE")]
+
+
+def _variants(conn, item):
+    return {r["variant_label"]: dict(r) for r in conn.execute("SELECT * FROM product_variants WHERE booth_item_id=?", (item,))}
+
+
+def test_html_refresh_keeps_known_availability_and_removed_variants_become_unavailable(conn):
+    from booth_scenario.parsers.detail import DetailRecord, VariantRecord
+
+    raw = json.dumps({"id": 5, "name": "T", "variations": [
+        {"id": 1, "name": "本編PDF", "price": 0, "status": "on_sale"},
+        {"id": 2, "name": "素材セット", "price": 300, "status": "on_sale"}]})
+    store.save_detail(conn, parse_item_json(raw, 5), "t1", raw)
+    html = DetailRecord(5, variants=[VariantRecord(label="本編PDF")])  # HTML row: availability UNKNOWN, no price
+    store.save_detail(conn, html, "t2", "<html/>")
+    v = _variants(conn, 5)["本編PDF"]
+    assert v["availability"] == "AVAILABLE" and v["price_jpy"] == 0
+
+    raw2 = json.dumps({"id": 5, "name": "T", "variations": [{"id": 2, "name": "素材セット", "price": 300, "status": "on_sale"}]})
+    store.save_detail(conn, parse_item_json(raw2, 5), "t3", raw2)
+    v = _variants(conn, 5)
+    assert v["本編PDF"]["availability"] == "UNAVAILABLE" and v["素材セット"]["availability"] == "AVAILABLE"
+
+
+def test_publisher_matched_by_url_after_rename(conn):
+    def rec(name):
+        return json.dumps({"id": 6, "name": "T", "shop": {"name": name, "url": "https://s.booth.pm/"}})
+    store.save_detail(conn, parse_item_json(rec("旧名"), 6), "t1", rec("旧名"))
+    store.save_detail(conn, parse_item_json(rec("新名"), 6), "t2", rec("新名"))
+    rows = conn.execute("SELECT shop_name FROM publishers").fetchall()
+    assert [r[0] for r in rows] == ["新名"]

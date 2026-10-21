@@ -1,0 +1,25 @@
+[project]
+name = "booth-scenario"
+version = "0.1.0"
+description = "BOOTH TRPG scenario metadata scraper (Phase 0 probe)"
+requires-python = ">=3.10"
+dependencies = ["beautifulsoup4>=4.12"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+booth-scenario = "booth_scenario.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+booth_scenario = ["migrations/*.sql", "selectors.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

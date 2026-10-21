@@ -1,0 +1,11 @@
+{
+  "fixture_type": "SYNTHETIC_NOT_SCRAPED",
+  "product": {"booth_item_id": 99999999, "title": "Example Anthology", "like_count": null},
+  "collection": {"collection_id": "COL-TEST-1", "scenario_ids": ["SCN-TEST-A", "SCN-TEST-B"]},
+  "variants": [
+    {"variant_id": "VAR-TEST-BUNDLE", "label": "Complete collection", "price_jpy": 300, "edition_kind": "FULL", "included": [{"scenario_id": "SCN-TEST-A", "coverage": "COMPLETE"}, {"scenario_id": "SCN-TEST-B", "coverage": "COMPLETE"}]},
+    {"variant_id": "VAR-TEST-A", "label": "Scenario A", "price_jpy": 200, "edition_kind": "FULL", "included": [{"scenario_id": "SCN-TEST-A", "coverage": "COMPLETE"}]},
+    {"variant_id": "VAR-TEST-SAMPLE", "label": "Free preview PDF", "price_jpy": 0, "edition_kind": "SAMPLE", "included": [{"scenario_id": "SCN-TEST-A", "coverage": "SAMPLE"}]}
+  ],
+  "expected": {"scenario_a_free": false, "scenario_a_has_free_sample": true, "scenario_b_free": false, "sample_acquisition_implies_owned": false, "bundle_acquisition_covers": ["SCN-TEST-A", "SCN-TEST-B"]}
+}
