@@ -56,6 +56,9 @@ def test_pick_review_set_starts_with_samples(conn):
     ids = review.pick_review_set(conn, 50)
     assert len(ids) == 50 and ids[0] == 3403696 and len(set(ids)) == 50
     assert {100, 101, 102, 103, 104} <= set(ids)
+    # A second round skips everything picked before, samples included.
+    again = review.pick_review_set(conn, 50, exclude=set(ids))
+    assert again and not set(again) & set(ids)
 
 
 # -- crawling with a fake site ------------------------------------------------------

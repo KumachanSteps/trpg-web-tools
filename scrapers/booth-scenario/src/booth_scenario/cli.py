@@ -50,6 +50,8 @@ def main(argv: list[str] | None = None) -> int:
 
     ps = sub.add_parser("pick-review-set")
     ps.add_argument("--n", type=int, default=50)
+    ps.add_argument("--fresh", action="store_true", help="skip items already reviewed (imported review tables)")
+    ps.add_argument("--seed", type=int, default=20261021)
     ex = sub.add_parser("export-review")
     ex.add_argument("--out", type=Path)
     ex.add_argument("--ids", type=int, nargs="*")
@@ -140,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"merged: {organize.apply_confirmed_links(conn)}")
         return 0
     if args.cmd == "pick-review-set":
-        ids = review.pick_review_set(conn, args.n)
+        ids = review.pick_review_set(conn, args.n, args.seed, review.reviewed_ids(conn) if args.fresh else None)
         review.save_set(ids, review_set_path)
         print(f"{len(ids)} items -> {review_set_path}")
         return 0

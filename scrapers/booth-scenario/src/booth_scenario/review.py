@@ -38,17 +38,19 @@ FIELD_HELP = {
 _COLLECTIONISH = re.compile(r"アンソロジー|アンソロ|シナリオ集|短編集|合同|セット|詰め合わせ|収録", re.I)
 
 
-def pick_review_set(conn, n: int = 50, seed: int = 20261021) -> list[int]:
+def pick_review_set(conn, n: int = 50, seed: int = 20261021, exclude: set[int] | None = None) -> list[int]:
     """The 27 handoff samples first, then listing items chosen to cover kinds:
-    collection-looking titles, free, multi-variant (N JPY~), then the rest."""
+    collection-looking titles, free, multi-variant (N JPY~), then the rest.
+    Items in `exclude` (e.g. already reviewed) are never picked."""
+    exclude = exclude or set()
     chosen: list[int] = []
     for group in targets.SAMPLE_IDS.values():
-        chosen += [i for i in group if i not in chosen]
+        chosen += [i for i in group if i not in chosen and i not in exclude]
     rng = random.Random(seed)
     rows = conn.execute(
         "SELECT booth_item_id, listing_title, listing_price_jpy, listing_price_multi FROM products WHERE listing_title IS NOT NULL ORDER BY booth_item_id"
     ).fetchall()
-    pool = [r for r in rows if r["booth_item_id"] not in chosen]
+    pool = [r for r in rows if r["booth_item_id"] not in chosen and r["booth_item_id"] not in exclude]
     rng.shuffle(pool)
     buckets = [
         [r for r in pool if _COLLECTIONISH.search(r["listing_title"] or "")],
@@ -432,6 +434,10 @@ def evaluate(conn) -> dict:
     for st in per_field.values():
         st["accuracy"] = round(st["correct"] / st["checked"], 3) if st["checked"] else None
     return per_field
+
+
+def reviewed_ids(conn) -> set[int]:
+    return {r[0] for r in conn.execute("SELECT booth_item_id FROM review_labels")}
 
 
 def save_set(ids: list[int], path: Path) -> None:
