@@ -128,3 +128,14 @@ def test_refetch_replaces_tags_and_rule_facts(conn):
     systems = conn.execute(
         "SELECT DISTINCT system_code FROM scenario_systems JOIN product_scenarios USING(scenario_id) WHERE booth_item_id=30").fetchall()
     assert [r[0] for r in systems] == ["EMOKLORE"]
+
+
+def test_member_list_skips_update_logs_and_heading_quotes():
+    text = "【収録シナリオ】\nR2.7/21 誤字修正をしました\nR4.2/8 PDF修正\n「収録作」\nver1.01 7/10\n"
+    assert organize.extract_members(text) == ([], {})
+
+
+def test_stated_work_count_makes_a_collection_unless_it_describes_a_linked_item():
+    assert classify("五人の人格", "中~短編のシナリオ3本を収録", [V("PDF", 1000)], ["CoC"]).kind == "COLLECTION"
+    desc = "続編はこちら\nhttps://x.booth.pm/items/1004446\n本作からの継続向けシナリオ3本を収録したシナリオ集。"
+    assert classify("ぎこちない同居", desc, [V("PDF", 1000)], ["CoC"]).kind == "SINGLE"

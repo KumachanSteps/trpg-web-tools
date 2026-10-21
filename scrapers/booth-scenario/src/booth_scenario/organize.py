@@ -46,6 +46,7 @@ _NOT_TITLE = re.compile(
     r"\.(pdf|txt|zip|png|jpe?g|docx?)\b|PDF|txt|テキスト|データ|画像|素材|立ち絵|スチル|トレーラー|BGM|URL|ページ|\d+\s*P\b|字[)）]|ルーム|"
     r"チャットパレット|tips|権利|株式会社|©|ⓒ|KADOKAWA|アークライト|Chaosium|ことがある|すること|推奨|必須|可能|不可|禁止|限定|以上|以下|"
     r"人数|時間|ロスト|技能|HO\s*\d|ハンドアウト|注意|概要|あらすじ|システム|価格|形式|クレジット|更新|購入|規約|問い合わせ|ネタバレ|[:：]|"
+    r"修正|追記|^v(?:er)?\s*\d|\d+/\d+|"
     r"本編|本文|おまけ|特典|協力|制作|デザイン|イラスト|編集|表紙|校正|ディレクター|発行|頒布|[【】()（）]|。$|^[A-Za-z]{1,4}$|^\d+$", re.I)
 # A 「quote」 followed by these is part of a sentence, not a title line.
 _SENTENCE_TAIL = re.compile(r"^(から|は|を|が|に|で|と|の|や|も|へ|より|まで|以外|以降|以前|として|など|ため|こと|です|ます|。|、)")
@@ -91,11 +92,13 @@ def _title_from_line(line: str, in_section: bool) -> str | None:
     elif m := re.fullmatch(r"([^（(]{1,50}?)\s*[（(]\s*(?:作|著|執筆|作者)\s*[:：]\s*[^)）]{1,20}[)）]", s):
         t = m.group(1)
     elif in_section and (m := re.fullmatch(r"([^／/]{1,50}?)\s*[／/]\s*([^／/]{1,20})", s)):
+        if _NOT_TITLE.search(m.group(2)):
+            return None  # "R2.7/21 誤字修正" is an update log, not Title／Author
         t = m.group(1)  # Title／Author, only inside a 収録作品 section
     else:
         return None
     t = t.strip(" 　「」『』")
-    if not t or _SYSTEM_WORDS.match(t) or _NOT_TITLE.search(t):
+    if not t or _SYSTEM_WORDS.match(t) or _NOT_TITLE.search(t) or _SECTION_HEAD.search(t) or re.fullmatch(r"[A-Za-z]?\d+(?:\.\d+)+", t):
         return None
     return t
 
@@ -123,7 +126,7 @@ def extract_members(text: str, whole_text: bool = False) -> tuple[list[str], dic
     for i, ln in enumerate(ls):
         if _SECTION_HEAD.search(ln) and (len(ln) <= 30 or _BULLET.match(ln) or ln[:1] in "【[〔"):
             for q in _QUOTED.findall(ln):
-                if not _SYSTEM_WORDS.match(q) and not _NOT_TITLE.search(q):
+                if not _SYSTEM_WORDS.match(q) and not _NOT_TITLE.search(q) and not _SECTION_HEAD.search(q):
                     add(q, i)
             for j in range(i + 1, min(i + 80, len(ls))):
                 if t := _title_from_line(ls[j], in_section=True):
@@ -144,9 +147,12 @@ def extract_member_titles(text: str, whole_text: bool = False) -> list[str]:
     return extract_members(text, whole_text)[0]
 
 
-def _member_count_hint(text: str) -> int | None:
-    m = _MEMBER_COUNT.search(unicodedata.normalize("NFKC", text or ""))
-    if not m:
+def _member_count_hint(text: str, own_only: bool = False) -> int | None:
+    """Stated number of works. With own_only, skip a count that follows a link
+    to another BOOTH item (it describes that item: "続編シナリオ3本を収録")."""
+    t = unicodedata.normalize("NFKC", text or "")
+    m = _MEMBER_COUNT.search(t)
+    if not m or (own_only and _ITEM_URL.search(t[max(0, m.start() - 200):m.start()])):
         return None
     n = int(m.group(1) or m.group(2) or m.group(3))
     return n if 2 <= n <= 100 else None
@@ -205,8 +211,9 @@ def classify(title: str, description: str, variants: list[dict], tags: list[str]
         return Classification("SINGLE", reasons=["title says single edition (単体版/単品)"])
     title_says = bool(_COLLECTION_TITLE.search(title))
     members, items = extract_members(description, whole_text=title_says)
-    count_hint = _member_count_hint(description) if title_says or members else None
-    if title_says or len(members) >= 2:
+    # "シナリオ3本を収録" is a collection even when the title does not say so.
+    count_hint = _member_count_hint(description, own_only=not (title_says or members))
+    if title_says or len(members) >= 2 or count_hint:
         if title_says:
             reasons.append("collection word in title")
         if members:

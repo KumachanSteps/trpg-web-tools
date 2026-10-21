@@ -334,7 +334,7 @@ def import_review(conn, path: Path) -> dict:
             conn.execute("UPDATE review_labels SET labels_json=? WHERE booth_item_id=?", (json.dumps(labels, ensure_ascii=False), iid))
             corrected -= 1
         if labels["product_kind"]["corrected"] or labels["members"]["corrected"]:
-            members = [t.strip() for t in re.split(r"[／/]", labels["members"]["truth"]) if t.strip()]
+            members = [t.strip() for t in re.split(r"[／/;；\n]", labels["members"]["truth"]) if t.strip()]
             conn.execute(
                 """INSERT OR REPLACE INTO product_classifications
                    (booth_item_id, product_kind, member_count, member_titles_json, method, reasons_json, classified_at)
