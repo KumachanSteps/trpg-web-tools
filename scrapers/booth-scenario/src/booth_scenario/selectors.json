@@ -1,0 +1,12 @@
+{
+  "_note": "CSS selectors for BOOTH pages. Every entry starts null/unverified. Fill one only after seeing it in a real snapshot (see `discover-selectors`), and record the snapshot file and date in evidence. Never guess.",
+  "listing.card": {"css": null, "verified": false, "evidence": null},
+  "listing.card_price": {"css": null, "verified": false, "evidence": null},
+  "listing.card_shop": {"css": null, "verified": false, "evidence": null},
+  "listing.card_like": {"css": null, "verified": false, "evidence": null},
+  "listing.pagination": {"css": null, "verified": false, "evidence": null},
+  "detail.main": {"css": null, "verified": false, "evidence": null},
+  "detail.description": {"css": null, "verified": false, "evidence": null},
+  "detail.variant": {"css": null, "verified": false, "evidence": null},
+  "detail.like": {"css": null, "verified": false, "evidence": null}
+}
