@@ -116,7 +116,14 @@ def test_duration_ranges_and_voice_default():
     assert durs("推定時間:9h~10h") == [("VOICE", "UNSPECIFIED", 540, 600)]
     assert durs("所要時間:テキセ10-12時間程度") == [("TEXT", "UNSPECIFIED", 600, 720)]
     assert durs("・出ると噂の廃神社:1時間30分") == [("VOICE", "UNSPECIFIED", 90, 90)]
-    assert durs("▶プレイ時間:2時間半~") == [("VOICE", "UNSPECIFIED", 150, None)]
+    # An open range gets one more hour.
+    assert durs("▶プレイ時間:2時間半~") == [("VOICE", "UNSPECIFIED", 150, 210)]
+    assert durs("時間:15時間以上") == [("VOICE", "UNSPECIFIED", 900, 960)]
+
+
+def test_campaign_keeps_the_stated_total():
+    text = "●時間:11時間程度\n※ボイスセッション想定\n※全エピソードを遊ぶ場合の時間\n・出ると噂の駐車場:1時間\n・幕間:30分"
+    assert durs(text) == [("VOICE", "ALL_EPISODES", 660, 660)]
 
 
 def test_rights_notice_is_not_a_system():

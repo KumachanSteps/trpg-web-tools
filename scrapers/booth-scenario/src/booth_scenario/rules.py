@@ -220,9 +220,12 @@ def _minutes(v: str, unit: str, extra: str | None) -> int:
     return round(m)
 
 
+OPEN_RANGE_EXTRA = 60  # "2時間~" is read as 2-3 hours (reviewer's convention)
+
+
 def _time_range(seg: str):
-    """(min, max) minutes of the first time range in seg; max is None for an
-    open range ("3時間~", "2時間以上")."""
+    """(min, max) minutes of the first time range in seg. An open range
+    ("3時間~", "2時間以上") gets OPEN_RANGE_EXTRA minutes on top."""
     for m in _TIME.finditer(seg):
         _, a, ua, ea, sep, b, ub, eb, tail = m.groups()
         if not (ua or ub) or (b and not ub and not ua):
@@ -234,7 +237,7 @@ def _time_range(seg: str):
         if b:
             hi = _minutes(b, ub or unit_a, eb)
         elif sep == "~" or tail == "以上":
-            hi = None
+            hi = lo + OPEN_RANGE_EXTRA
         else:
             hi = lo
         if hi is not None and hi < lo:
@@ -247,7 +250,14 @@ def extract_durations(text: str) -> list[Hit]:
     """Play time. A time that does not say text or voice counts as a voice
     session (the reviewer's convention)."""
     hits: list[Hit] = []
-    for ln in lines(text):
+    ls = lines(text)
+    for i, ln in enumerate(ls):
+        # Notes right under the line ("※全エピソードを遊ぶ場合の時間") qualify it.
+        notes = []
+        for nl in ls[i + 1:i + 3]:
+            if not nl.startswith(("※", "*")):
+                break
+            notes.append(nl)
         if not re.search(r"時間|プレイ|ボイセ|テキセ|ボイス|テキスト|半テキ|想定|所要|導入|\d\s*(分|h\b)", ln, re.I):
             continue
         # Split one line like "ボイセ3時間/テキセ6時間" into per-medium segments.
@@ -267,7 +277,7 @@ def extract_durations(text: str) -> list[Hit]:
                 mode = "VOICE"
             if re.search(r"導入|プロローグ|intro", ln, re.I):
                 scope = "INTRO"
-            elif re.search(r"全\s*\d*\s*(話|エピソード)|全編|合計|通し", ln):
+            elif re.search(r"全\s*\d*\s*(話|エピソード)|全編|合計|通し", ln) or any(re.match(r"[※*].{0,4}(全\s*\d*\s*(話|エピソード)|全編|合計|通し)", n) for n in notes):
                 scope = "ALL_EPISODES"
             elif re.search(r"各話|1話|一話|第\d+話", ln):
                 scope = "EPISODE"
@@ -275,8 +285,12 @@ def extract_durations(text: str) -> list[Hit]:
                 scope = "MAIN"
             else:
                 scope = "UNSPECIFIED"
-            approx = 1 if (m.group(1) or re.search(r"程度|前後|ほど|目安|想定", seg)) else 0
+            approx = 1 if (m.group(1) or re.search(r"程度|前後|ほど|目安|想定|~\s*$|~\s*[(（]|以上", seg)) else 0
             hits.append(Hit("scenario_durations", {"mode": mode, "scope": scope, "min_minutes": lo, "max_minutes": hi, "approximate": approx}, ln))
+    # A campaign that states its total is recorded by the total alone
+    # (episode times are listed alongside it).
+    if any(h.value["scope"] == "ALL_EPISODES" for h in hits):
+        hits = [h for h in hits if h.value["scope"] in ("ALL_EPISODES", "INTRO")]
     return hits
 
 

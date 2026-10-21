@@ -43,9 +43,9 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 - 分からない値は NULL（いいね数 0、価格 0、空文字にしない）。「BGMなし」など明示的な否定は `EXPLICITLY_ABSENT` として保存。
 - 本文からのルール抽出（人数・プレイ時間・システム・素材）は全て根拠行を `extraction_evidence` に残します。
 - レビューで決めた既定値（2026-10-21 TK）:
-  - プレイ時間はテキセ／半テキの指定がなければ `VOICE`。「3時間~」「15時間以上」は上限なし（`max_minutes` NULL）。
+  - プレイ時間はテキセ／半テキの指定がなければ `VOICE`。「2時間~」「15時間以上」のような上限なしは +1時間（120-180）。キャンペーンは全編の合計時間だけを記録。
   - 進行役は CoC なら `KP`、エモクロアなら `DL`。KPレス／DLレスは `NONE/NONE`。
-  - タイマンは `KP/KPC`・`DL/DPC`。それ以外（ソロ・複数PL）は本文に KPC/DPC がなければ同行者 `NONE`。`1PL` は `SOLO`。
+  - タイマンは `KP/KPC`・`DL/DPC`。それ以外（ソロ・複数PL）は本文に KPC/DPC がなければ同行者 `NONE`。KPありで KPC なしの1人用は `SOLO`、タイマンだけ `ONE_ON_ONE`。
   - 「2PL KPレス」は `GMLESS_MULTI`（migration 005）。
   - 権利表記の行（「『クトゥルフ神話TRPG』の二次創作物」など）はシステム判定に使わない。本文にシステムが書いてあればタイトル・タグからは足さない。
 
