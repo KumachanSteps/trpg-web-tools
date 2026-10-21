@@ -49,6 +49,7 @@ def test_403_stops(tmp_path):
     f, _ = make(tmp_path, FakeNet({U: [(403, b"no")]}))
     with pytest.raises(StopCrawl):
         f.fetch(U)
+    assert len(list(tmp_path.glob("*.stopped.html"))) == 1
 
 
 def test_repeated_429_stops_with_backoff(tmp_path):
