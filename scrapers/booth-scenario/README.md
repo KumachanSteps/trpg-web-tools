@@ -47,6 +47,8 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
   - 進行役は CoC なら `KP`、エモクロアなら `DL`。KPレス／DLレスは `NONE/NONE`。
   - タイマンは `KP/KPC`・`DL/DPC`。それ以外（ソロ・複数PL）は本文に KPC/DPC がなければ同行者 `NONE`。KPありで KPC なしの1人用は `SOLO`、タイマンだけ `ONE_ON_ONE`。
   - 「2PL KPレス」は `GMLESS_MULTI`（migration 005）。
+  - 秘匿／秘匿HOとあれば人数の各行に `SECRET`（migration 006、`secret_handouts`）。「秘匿なし」は除く。
+  - 「2、3人」「2、3時間」は 2-3 の範囲。「タイマンは推奨しない」「タイマン不可」などはタイマンとして数えない。
   - 権利表記の行（「『クトゥルフ神話TRPG』の二次創作物」など）はシステム判定に使わない。本文にシステムが書いてあればタイトル・タグからは足さない。
 
 ## スキーマからの変更点

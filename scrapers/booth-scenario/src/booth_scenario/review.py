@@ -25,7 +25,7 @@ FIELD_HELP = {
     "product_kind": "SINGLE / COLLECTION / SAME_PAGE_VARIANTS / ASSET_ONLY / UNDETERMINED",
     "members": "収録作品のタイトルを／区切り（単品は空欄のまま）",
     "systems": "COC6 / COC7 / EMOKLORE / OTHER と NATIVE / SUPPORTED / CONVERTIBLE / CONVERSION_PATCH を : でつなぎ ; 区切り",
-    "session_modes": "例: ONE_ON_ONE 1-1 KP/KPC ; MULTI_PL 2-4 KP/UNKNOWN",
+    "session_modes": "例: ONE_ON_ONE 1-1 KP/KPC ; MULTI_PL 2-4 KP/NONE SECRET（秘匿HOあり）",
     "durations": "例: VOICE MAIN 180-240 ; TEXT UNSPECIFIED 480-480（分）",
     "assets": "例: NPC_IMAGE:INCLUDED ; BGM_AUDIO:EXPLICITLY_ABSENT",
     "free_full": "yes / no / unknown（本編を無料で入手できるか）",
@@ -113,6 +113,7 @@ def auto_fields(conn, iid: int) -> dict[str, str]:
         "systems": _uniq_sorted(f"{v['system_code']}:{v['support_type']}" for v in _evidence_values(conn, iid, "scenario_systems")),
         "session_modes": _uniq_sorted(
             f"{v['mode']} {v.get('player_min')}-{v.get('player_max')} {v.get('facilitator_role')}/{v.get('companion_role')}"
+            + (" SECRET" if v.get("secret_handouts") else "")
             for v in _evidence_values(conn, iid, "scenario_session_modes")),
         "durations": _uniq_sorted(
             f"{v['mode']} {v['scope']} {v['min_minutes']}-{'' if v['max_minutes'] is None else v['max_minutes']}" for v in _evidence_values(conn, iid, "scenario_durations")),
@@ -376,7 +377,8 @@ def _norm_value(field: str, value: str) -> frozenset:
             for m in _SESSION_RE.finditer(seg.upper()):
                 mode = _MODE_ALIAS.get(m.group(1), m.group(1))
                 roles = f" {m.group(4)}/{m.group(5)}" if m.group(4) else ""
-                out.add(f"{mode} {m.group(2)}-{m.group(3)}{roles}")
+                secret = " SECRET" if re.search(r"SECRET|秘匿", seg, re.I) else ""
+                out.add(f"{mode} {m.group(2)}-{m.group(3)}{roles}{secret}")
         return frozenset(out)
     if field == "durations":
         out = set()
@@ -397,7 +399,11 @@ def _matches(field: str, tool: str, truth: str) -> bool:
     # A truth entry without roles ("ONE_ON_ONE 1-1"), or with UNKNOWN ones left
     # from an older export, matches the tool's entry with any roles there.
     def same(tool_e: str, truth_e: str) -> bool:
-        t, r = tool_e.split(), truth_e.split()
+        # SECRET (秘匿HO) was added after the first review round; compare it only
+        # when the reviewer wrote it.
+        if truth_e.endswith(" SECRET") and not tool_e.endswith(" SECRET"):
+            return False
+        t, r = tool_e.removesuffix(" SECRET").split(), truth_e.removesuffix(" SECRET").split()
         if t[:2] != r[:2]:
             return False
         if len(r) < 3:

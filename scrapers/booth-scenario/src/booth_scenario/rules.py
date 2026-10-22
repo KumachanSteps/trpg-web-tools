@@ -16,7 +16,9 @@ def normalize(text: str) -> str:
     t = re.sub(r"[〜～−–—]", "~", t)
     # "ー" is a range mark only between digits (3ー4時間); elsewhere it is the
     # prolonged sound mark in words like プレイヤー / ソロジャーナル.
-    return re.sub(r"(?<=\d)\s*ー\s*(?=\d)", "~", t)
+    t = re.sub(r"(?<=\d)\s*ー\s*(?=\d)", "~", t)
+    # "2、3人" / "2、3時間" are ranges.
+    return re.sub(r"(?<=\d)\s*[、,]\s*(?=\d+(?:\.\d+)?\s*(?:人|名|PL|時間|h|分))", "~", t)
 
 
 def lines(text: str) -> list[str]:
@@ -132,6 +134,21 @@ _RANGE_PL = re.compile(
 _COMPANION = re.compile(r"\b(KPC|DPC)\b|(KPC|DPC)")
 _GMLESS = re.compile(r"KPレス|GMレス|DLレス|KP不要|GM不要|DL不要|一人で遊べる|ひとりで遊べる|ソロジャーナル", re.I)
 _ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*対\s*1", re.I)
+# "タイマンは推奨しない" / "タイマン不可" rule the mode out.
+_ONE_ON_ONE_NEG = re.compile(
+    r"(タイマン|一対一|1\s*対\s*1).{0,12}?(不可|非推奨|推奨(し|致し|いたし)?(ない|ません|かね)|でき(ない|ません)|出来(ない|ません)|"
+    r"向き?ません|向いて(い)?ない|不向き|NG|×|お控え|ご遠慮|対応(して(い|お)?り?)?ません|対象外)|(不可|非推奨)\s*[::]?\s*タイマン")
+_SECRET = re.compile(r"秘匿")
+_SECRET_NEG = re.compile(r"秘匿\s*(HO|ハンドアウト)?\s*(は|が)?\s*(なし|無し|ありません|ございません|無い|ない)")
+
+
+def has_secret_handouts(*texts: str) -> bool:
+    """秘匿 / 秘匿HO anywhere in title, tags or description, unless denied."""
+    for t in texts:
+        for ln in lines(t or ""):
+            if _SECRET.search(ln) and not _SECRET_NEG.search(ln):
+                return True
+    return False
 
 
 def extract_session_modes(text: str) -> list[Hit]:
@@ -158,7 +175,10 @@ def extract_session_modes(text: str) -> list[Hit]:
             hi = int(m.group(2) or m.group(4) or lo)
             if lo < 1 or hi < lo or hi > 30:
                 lo = hi = None
-        gmless, one_on_one = bool(_GMLESS.search(ln)), bool(_ONE_ON_ONE.search(ln))
+        gmless = bool(_GMLESS.search(ln))
+        one_on_one = bool(_ONE_ON_ONE.search(ln)) and not _ONE_ON_ONE_NEG.search(ln)
+        if not one_on_one and _ONE_ON_ONE_NEG.search(ln) and lo is None:
+            continue  # a line only about where タイマン does not fit
         if gmless:
             if lo and hi >= 2:
                 add("GMLESS_MULTI", lo, hi, "NONE", "NONE", ln, 1 if lo == hi else 0)

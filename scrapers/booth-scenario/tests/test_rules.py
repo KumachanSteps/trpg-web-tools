@@ -129,3 +129,16 @@ def test_campaign_keeps_the_stated_total():
 def test_rights_notice_is_not_a_system():
     text = "システム :新クトゥルフ神話TRPG(7版)\n本作は「株式会社アークライト」及び「株式会社KADOKAWA」が権利を有する『クトゥルフ神話TRPG』の二次創作物です。"
     assert {h.value["system_code"] for h in rules.extract_systems(text)} == {"COC7"}
+
+
+def test_comma_ranges_and_negated_taiman():
+    assert (modes("PL:2、3人")[0]["player_min"], modes("PL:2、3人")[0]["player_max"]) == (2, 3)
+    assert durs("プレイ時間:2、3時間") == [("VOICE", "UNSPECIFIED", 120, 180)]
+    assert [m["mode"] for m in modes("人数:2~4人(タイマンは推奨しません)")] == ["MULTI_PL"]
+    assert modes("※タイマン不可") == []
+
+
+def test_secret_handouts():
+    assert rules.has_secret_handouts("秘匿HOシナリオ")
+    assert rules.has_secret_handouts("", "2PL秘匿")
+    assert not rules.has_secret_handouts("秘匿HOはありません")

@@ -320,9 +320,10 @@ def _attach_rule_facts(conn, iid: int, sid: str, *, systems_only: bool = False) 
             continue
         if table == "scenario_session_modes":
             conn.execute(
-                "INSERT INTO scenario_session_modes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                """INSERT INTO scenario_session_modes (session_mode_id, scenario_id, mode, player_min, player_max, player_fixed,
+                   facilitator_role, companion_role, evidence_id, secret_handouts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (new_id("SM"), sid, v["mode"], v.get("player_min"), v.get("player_max"), v.get("player_fixed"),
-                 v.get("facilitator_role"), v.get("companion_role"), eid),
+                 v.get("facilitator_role"), v.get("companion_role"), eid, v.get("secret_handouts", 0)),
             )
         elif table == "scenario_durations":
             conn.execute(
