@@ -150,3 +150,8 @@ def test_work_title_strips_labels():
     assert wt("▼CoC　Princess Hugging Race!!!") == "Princess Hugging Race!!!"
     assert wt("【無料KPレス】やんなみしだら・うかむくや【CoCシナリオ】") == "やんなみしだら・うかむくや"
     assert wt("PYX【CoCキャンペーンシナリオ】") == "PYX"
+    assert wt("死ね！花粉（クトゥルフ神話TRPGシナリオ）") == "死ね!花粉"
+    assert wt("棺を花で満たしてください。《CoC6版》 SPLL:E110793") == "棺を花で満たしてください。"
+    assert wt("無料【CoCシナリオ】シンガソングララバイ") == "シンガソングララバイ"
+    assert wt("【無料】幻月環（うちよそタイマンシナリオ）") == "幻月環"
+    assert wt("ジェーン・ドゥの警鐘(データ版)") == "ジェーン・ドゥの警鐘"

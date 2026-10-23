@@ -36,7 +36,7 @@ _MEMBER_COUNT = re.compile(r"(?:全\s*)?(\d+)\s*(?:本|作品|作|編|シナリ�
 _BUNDLE_LABEL = re.compile(r"全.{0,8}セット|シリーズ.{0,4}セット|アソート|まとめ|全部|コンプリート|一式|全\s*\d*\s*話|全作|全\s*\d+\s*本|\d+\s*本セット|バンドル|合本|詰め合わせ|全シナリオ|bundle", re.I)
 _FORMAT_LABEL = re.compile(
     r"PDF|テキスト|txt|word|版|部屋|ルーム|素材|付き|付|通常|フル|DL|ダウンロード|紙|書籍|冊子|物理|匿名配送|おまけ|支援|投げ銭|ブースト|データ|"
-    r"pack|edition|ver|中文|English|英語|韓国語|한국어|日本語|配信|KPレス|タイマン|HO\s*\d|PL", re.I)
+    r"本編|画像|のみ|pack|edition|ver|中文|English|英語|韓国語|한국어|日本語|配信|KPレス|タイマン|HO\s*\d|PL", re.I)
 _QUOTED = re.compile(r"[『「]([^』」]{1,60})[』」]")
 _BULLET = re.compile(r"^(?:[・●○◆◇■□▼▽▍★☆♦◎※\-*]|\d+[.)．、]|[①-⑳]|第\s*\d+\s*話|No\.?\s*\d+)\s*")
 _SCENARIO_SIGNAL = re.compile(r"シナリオ|scenario|クトゥルフ|CoC|エモクロア|TRPG|探索者|KP|PL", re.I)
@@ -80,8 +80,12 @@ def work_title(title: str) -> str:
             return q.strip()
     brackets = re.findall(r"[【\[]([^】\]]*)[】\]]", t)
     rest = re.sub(r"[【\[][^】\]]*[】\]]", " ", t)
+    # Labels in round or angle brackets: "(CoC6版)", "《CoC6版》", "(データ版)".
+    rest = re.sub(r"[(（《〈<]([^)）》〉>]*)[)）》〉>]", lambda m: " " if _TITLE_LABEL.search(m.group(1)) else m.group(0), rest)
     rest = re.sub(r"^[\s▼▽■□◆◇●○★☆▶]+", "", rest)
     rest = _TITLE_SYSTEM.sub(" ", rest)
+    rest = re.sub(r"[(（《〈<]\s*[)）》〉>]", " ", rest)
+    rest = re.sub(r"^\s*(無料|有料|新作|再販)\s*", "", rest)
     rest = re.sub(r"\s+", " ", rest).strip(" /／-~・|")
     if rest:
         return rest
