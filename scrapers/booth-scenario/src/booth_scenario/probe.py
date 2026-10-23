@@ -3,14 +3,12 @@ Hard caps are enforced here, not just in the CLI defaults."""
 from __future__ import annotations
 
 import json
-from dataclasses import asdict
 from pathlib import Path
 
 from . import store, targets
 from .fetcher import PoliteFetcher, Refused, StopCrawl
-from .parsers.detail import parse_detail_html, parse_item_json
+from .crawl import fetch_item
 from .parsers.listing import parse_listing
-from .rules import extract_all
 
 MAX_LISTING_PAGES = 2
 MAX_DETAIL_ITEMS = 10
@@ -52,52 +50,13 @@ def probe_details(conn, fetcher: PoliteFetcher, snapshot_dir: Path, ids: list[in
     ids = (ids or targets.DEFAULT_DETAIL_PROBE)[:MAX_DETAIL_ITEMS]
     report: dict = {"details": [], "errors": []}
     for iid in ids:
-        entry: dict = {"booth_item_id": iid}
         try:
-            r = fetcher.fetch(targets.item_page_url(iid))
-            entry["html_status"] = r.status
-            if r.status == 200:
-                (snapshot_dir / f"item_{iid}.html").write_text(r.body, encoding="utf-8")
-                html_rec = parse_detail_html(r.body, iid, r.url)
-                entry["html"] = {k: v for k, v in asdict(html_rec).items() if k not in ("description_text",)}
-                store.save_detail(conn, html_rec, r.fetched_at, r.body)
-            elif r.status == 404:
-                store.mark_error(conn, iid, "404 on product page", "SKIPPED")
-            if with_json and r.status == 200:
-                j = fetcher.fetch(targets.item_json_url(iid))
-                entry["json_status"] = j.status
-                entry["json_content_type"] = j.content_type
-                if j.status == 200:
-                    (snapshot_dir / f"item_{iid}.json").write_text(j.body, encoding="utf-8")
-                    try:
-                        jrec = parse_item_json(j.body, iid)
-                    except ValueError as e:
-                        entry["json_error"] = str(e)
-                    else:
-                        entry["json"] = {
-                            "present_keys": jrec.present_keys, "title": jrec.title, "shop": jrec.shop_name,
-                            "category_path": jrec.category_path, "like_count": jrec.like_count,
-                            "listing_status": jrec.listing_status, "tags": jrec.tags[:15],
-                            "variants": [asdict(v) for v in jrec.variants],
-                            "description_chars": len(jrec.description_text or ""),
-                            "html_description_chars": len(html_rec.description_text or ""),
-                        }
-                        # JSON description lacks the shop's extra sections, where system,
-                        # player count and play time often are; keep the HTML text if any.
-                        desc = html_rec.description_text or jrec.description_text
-                        if html_rec.description_text:
-                            jrec.description_text = None
-                        store.save_detail(conn, jrec, j.fetched_at, j.body)
-                        hits = extract_all(desc or "")
-                        for h in hits:
-                            store.save_evidence(conn, iid, h)
-                        conn.commit()
-                        entry["rule_hits"] = [{"field": h.field_path, "value": h.value, "excerpt": h.excerpt[:80]} for h in hits]
-        except Refused as e:
-            entry["error"] = f"Refused: {e}"
+            entry = fetch_item(conn, fetcher, iid, snapshot_dir=snapshot_dir, with_json=with_json)
+        except (Refused, RuntimeError) as e:
+            entry = {"booth_item_id": iid, "error": f"{type(e).__name__}: {e}"}
             report["errors"].append(entry["error"])
         except StopCrawl as e:
-            entry["error"] = f"StopCrawl: {e}"
+            entry = {"booth_item_id": iid, "error": f"StopCrawl: {e}"}
             report["errors"].append(entry["error"])
             report["stopped"] = str(e)
             report["details"].append(entry)

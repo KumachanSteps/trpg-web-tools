@@ -41,11 +41,23 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 - 詳細ページは og:title / canonical / JSON-LD などの Web 標準タグのみ読みます。`og:description` は SEO 用の要約として別保存し、本文扱いしません。
 - `/ja/items/<id>.json` という公開 JSON の存在とキー名は**未検証の候補**です。プローブがあるかどうか・どのキーがあるかを記録します。
 - 分からない値は NULL（いいね数 0、価格 0、空文字にしない）。「BGMなし」など明示的な否定は `EXPLICITLY_ABSENT` として保存。
-- 本文からのルール抽出（人数・プレイ時間・システム・素材）は全て根拠行を `extraction_evidence` に残します。`1PL` だけでは SOLO にせず `ONE_PLAYER_UNSPECIFIED`。
+- 本文からのルール抽出（人数・プレイ時間・システム・素材）は全て根拠行を `extraction_evidence` に残します。
+- レビューで決めた既定値（2026-10-21 TK）:
+  - プレイ時間はテキセ／半テキの指定がなければ `VOICE`。「2時間~」「15時間以上」のような上限なしは +1時間（120-180）。キャンペーンは各章と合計の両方を記録。
+  - 進行役は CoC なら `KP`、エモクロアなら `DL`。KPレス／DLレスは `NONE/NONE`。
+  - タイマンは `KP/KPC`・`DL/DPC`。それ以外（ソロ・複数PL）は本文に KPC/DPC がなければ同行者 `NONE`。KPありで KPC なしの1人用は `SOLO`、タイマンだけ `ONE_ON_ONE`。
+  - 「2PL KPレス」は `GMLESS_MULTI`（migration 005）。
+  - 秘匿／秘匿HOとあれば人数の各行に `SECRET`（migration 006、`secret_handouts`）。「秘匿なし」は除く。
+  - 「2、3人」「2、3時間」は 2-3 の範囲。「タイマンは推奨しない」「タイマン不可」などはタイマンとして数えない。
+  - 人数の上限なし（「1人から」「1人~捌けるだけ」）は上限4人、「3人前後」は 2-4。漢数字（四人固定、PL三名）も読む。翻訳文（中文）の人数は使わない。
+  - 章ごとの時間（其ノ一・第1話・Act1）は `EPISODE`、それらの合計に近い時間は `ALL_EPISODES`。アンソロジーの「1~6時間の短編7本収録」のような要約行は使わない。
+  - 単品の作品名は商品名から【CoCシナリオ】や SPLL 番号などを除いたもの（「」『』があればその中）。
+  - 権利表記の行（「『クトゥルフ神話TRPG』の二次創作物」など）はシステム判定に使わない。本文にシステムが書いてあればタイトル・タグからは足さない。
 
 ## スキーマからの変更点
 
 - `002_nullable_product_title.sql`: 一覧で ID だけ見つかった段階ではタイトルが未確認なので、`products.title` を NULL 許可にしました。
+- `005_gmless_multi.sql`: `scenario_session_modes.mode` に `GMLESS_MULTI` を追加。
 
 ## Phase 0 の未解決事項（2026-10-21 プローブ結果）
 
@@ -62,6 +74,30 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 **検知処理の修正:** 初回の詳細プローブは `CAPTCHA/challenge` で停止しましたが誤検知でした。BOOTH の通常ページはすべて Cloudflare の受動スクリプト `/cdn-cgi/challenge-platform/scripts/jsd/main.js` を読み込んでおり、検知がその文字列に反応していました。チャレンジ画面専用のマーカーに絞り、停止時はページを `data/cache/*.stopped.html` に残すようにしました。修正後の再実行では 10件すべて 200 で停止なし（21リクエスト）。
 
 **この結果に合わせたコード変更:** 説明文は HTML の本文＋セクションを結合して保存し、ルール抽出もそれを使う（JSON の短い説明で上書きしない）。バリエーションは HTML 行を JSON の ID 付き行に統合（重複なし）。JSON の `status` 実測値 `addable_to_cart` / `free_download` → AVAILABLE、`restock_not_requested` → SOLD_OUT を追加。
+
+## Phase 1: 正解データ・シナリオ整理・継続収集
+
+```bash
+# 正解データ（50件）
+booth-scenario pick-review-set --n 50        # サンプル27件 + 一覧から種類が偏らないよう選ぶ
+booth-scenario fetch-items --review-set      # 未取得分を取得（最大60件、8秒間隔）
+booth-scenario organize                      # 商品を分類してシナリオを作る
+booth-scenario export-review                 # data/review/review_table.xlsx (--out x.csv for CSV)
+#  → 黄色の ok_* 列に正しい値を書く（合っていれば空欄、「なし」は -）
+booth-scenario import-review data/review/review_table.xlsx
+booth-scenario organize                      # 修正した分類（MANUAL）を反映
+booth-scenario evaluate                      # 項目ごとの正解率と外れ一覧
+
+# 継続収集（中断しても続きから）
+booth-scenario crawl-listing --category "Tabletop RPG" --max-pages 50
+booth-scenario crawl-details --limit 200 --max-minutes 60
+booth-scenario crawl-details --refresh-older-than-days 30   # 古いものを取り直す
+```
+
+- **商品の分類** (`product_classifications`): `SINGLE`（単品。PDF版/部屋付きなど形式違いは1作品）、`COLLECTION`（アンソロジー・シナリオ集）、`SAME_PAGE_VARIANTS`（同じページでセットと単品を販売）、`ASSET_ONLY`（素材のみ）、`UNDETERMINED`（要確認）。レビューで直した分類は `MANUAL` として優先されます。
+- **シナリオIDの安定性**: 再実行しても同じ商品・同じ収録作には同じIDが付きます（`scenario_keys`）。
+- **別商品との関連**: アンソロジー収録作と単品販売が同じ作品らしい組は `scenario_link_candidates` に候補として入るだけで、自動では統合しません。`CONFIRMED` にしてから `apply-links` で統合します。
+- **差分更新**: 一覧のタイトル・価格が前回と変わった商品だけ詳細を取り直します。途中で止まっても `listing_progress` / `crawl_queue` から再開します。失敗した商品は間隔をあけて最大3回まで再試行し、その後は `REVIEW` に回します。
 
 ---
 

@@ -42,6 +42,30 @@ def ensure_search_query(conn, category_path: str, tag: str | None, in_stock: boo
     return qid
 
 
+def _note_listing_card(conn, card, now: str) -> None:
+    """Store the card's title/price; if they changed since the last pass and the
+    detail page was already parsed, queue the item for a detail refetch."""
+    prev = conn.execute(
+        "SELECT listing_title, listing_price_jpy, listing_price_multi FROM products WHERE booth_item_id=?", (card.booth_item_id,)
+    ).fetchone()
+    multi = None if card.price_multi is None else int(card.price_multi)
+    changed = prev["listing_title"] is not None and (
+        (card.title is not None and card.title != prev["listing_title"])
+        or (card.price_jpy is not None and card.price_jpy != prev["listing_price_jpy"])
+        or (multi is not None and multi != prev["listing_price_multi"])
+    )
+    conn.execute(
+        """UPDATE products SET listing_title=COALESCE(?, listing_title), listing_price_jpy=COALESCE(?, listing_price_jpy),
+             listing_price_multi=COALESCE(?, listing_price_multi) WHERE booth_item_id=?""",
+        (card.title, card.price_jpy, multi, card.booth_item_id),
+    )
+    if changed:
+        conn.execute(
+            "UPDATE crawl_queue SET state='QUEUED', next_attempt_at=NULL, updated_at=?, last_error='listing changed' WHERE booth_item_id=? AND state IN ('PARSED','SKIPPED')",
+            (now, card.booth_item_id),
+        )
+
+
 def save_listing(conn, query_id: str, page_number: int, page: ListingPage, http_status: int, fetched_at: str) -> str:
     cpid = new_id("CP")
     conn.execute(
@@ -51,6 +75,7 @@ def save_listing(conn, query_id: str, page_number: int, page: ListingPage, http_
     for card in page.cards:
         ensure_product(conn, card.booth_item_id, fetched_at)
         conn.execute("INSERT OR IGNORE INTO search_hits VALUES (?, ?, ?)", (cpid, card.booth_item_id, card.position))
+        _note_listing_card(conn, card, fetched_at)
         if card.like_count is not None:
             conn.execute(
                 "UPDATE products SET like_count=?, like_count_source='SEARCH_CARD', like_observed_at=? WHERE booth_item_id=? AND like_count_source IS NOT 'PUBLIC_STRUCTURED_DATA'",
@@ -93,6 +118,10 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
                      (rec.like_count, rec.like_count_source, fetched_at, rec.booth_item_id))
     else:
         conn.execute("UPDATE products SET like_count_source='UNAVAILABLE' WHERE booth_item_id=? AND like_count IS NULL", (rec.booth_item_id,))
+    # JSON confirms the tag set even when empty; HTML gives tags only when found.
+    if rec.tags or "tags" in rec.present_keys:
+        conn.execute("DELETE FROM product_tags WHERE booth_item_id=?", (rec.booth_item_id,))
+        conn.executemany("INSERT OR IGNORE INTO product_tags VALUES (?, ?)", [(rec.booth_item_id, t) for t in rec.tags])
     seen_ids: list[str] = []
     for v in rec.variants:
         existing = None
@@ -122,6 +151,18 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
         # The item JSON lists every current variation: rows missing from it are
         # no longer offered, so they must not keep an AVAILABLE status.
         marks = ",".join("?" * len(seen_ids))
+        # ID-less rows left from HTML parsing ("(offer)", "ダウンロード商品") are not variants.
+        conn.execute(
+            f"""DELETE FROM variant_scenarios WHERE variant_id IN (SELECT variant_id FROM product_variants
+                WHERE booth_item_id=? AND external_variant_id IS NULL AND variant_id NOT IN ({marks or 'NULL'})
+                AND variant_id NOT IN (SELECT variant_id FROM acquisition_records WHERE variant_id IS NOT NULL))""",
+            (rec.booth_item_id, *seen_ids),
+        )
+        conn.execute(
+            f"""DELETE FROM product_variants WHERE booth_item_id=? AND external_variant_id IS NULL AND variant_id NOT IN ({marks or 'NULL'})
+                AND variant_id NOT IN (SELECT variant_id FROM acquisition_records WHERE variant_id IS NOT NULL)""",
+            (rec.booth_item_id, *seen_ids),
+        )
         conn.execute(
             f"UPDATE product_variants SET availability='UNAVAILABLE' WHERE booth_item_id=? AND variant_id NOT IN ({marks or 'NULL'})",
             (rec.booth_item_id, *seen_ids),

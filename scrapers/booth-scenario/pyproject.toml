@@ -6,7 +6,8 @@ requires-python = ">=3.10"
 dependencies = ["beautifulsoup4>=4.12"]
 
 [project.optional-dependencies]
-test = ["pytest>=7"]
+test = ["pytest>=7", "openpyxl>=3.1"]
+xlsx = ["openpyxl>=3.1"]
 
 [project.scripts]
 booth-scenario = "booth_scenario.cli:main"
