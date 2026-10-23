@@ -16,14 +16,14 @@ from pathlib import Path
 
 from . import targets
 from .db import utcnow
-from .organize import normalize_title
+from .organize import normalize_title, work_title
 
 FIELDS = ["product_kind", "members", "systems", "session_modes", "durations", "assets", "free_full", "free_sample", "related_items"]
 LIST_SEP = "; "
 MEMBER_SEP = "／"
 FIELD_HELP = {
     "product_kind": "SINGLE / COLLECTION / SAME_PAGE_VARIANTS / ASSET_ONLY / UNDETERMINED",
-    "members": "収録作品のタイトルを／区切り（単品は空欄のまま）",
+    "members": "作品名（単品は作品名1つ、アンソロジーは収録作品を／区切り）",
     "systems": "COC6 / COC7 / EMOKLORE / OTHER と NATIVE / SUPPORTED / CONVERTIBLE / CONVERSION_PATCH を : でつなぎ ; 区切り",
     "session_modes": "例: ONE_ON_ONE 1-1 KP/KPC ; MULTI_PL 2-4 KP/NONE SECRET（秘匿HOあり）",
     "durations": "例: VOICE MAIN 180-240 ; TEXT UNSPECIFIED 480-480（分）",
@@ -85,6 +85,10 @@ def _uniq_sorted(vals) -> str:
 def auto_fields(conn, iid: int) -> dict[str, str]:
     cls = conn.execute("SELECT * FROM product_classifications WHERE booth_item_id=?", (iid,)).fetchone()
     members = json.loads(cls["member_titles_json"] or "[]") if cls else []
+    if cls and cls["product_kind"] == "SINGLE" and not members:
+        # A single product holds one work: show its name without labels.
+        title = conn.execute("SELECT COALESCE(title, listing_title) FROM products WHERE booth_item_id=?", (iid,)).fetchone()[0]
+        members = [work_title(title or "")]
     variants = conn.execute("SELECT * FROM product_variants WHERE booth_item_id=?", (iid,)).fetchall()
     fetched = conn.execute("SELECT detail_fetched_at FROM products WHERE booth_item_id=?", (iid,)).fetchone()[0]
 
@@ -335,7 +339,7 @@ def import_review(conn, path: Path) -> dict:
             conn.execute("UPDATE review_labels SET labels_json=? WHERE booth_item_id=?", (json.dumps(labels, ensure_ascii=False), iid))
             corrected -= 1
         if labels["product_kind"]["corrected"] or labels["members"]["corrected"]:
-            members = [t.strip() for t in re.split(r"[／/;；\n]", labels["members"]["truth"]) if t.strip()]
+            members = [t.strip() for t in re.split(r"[／/\n]|[;；](?=\s|$)", labels["members"]["truth"]) if t.strip()]
             conn.execute(
                 """INSERT OR REPLACE INTO product_classifications
                    (booth_item_id, product_kind, member_count, member_titles_json, method, reasons_json, classified_at)
@@ -354,7 +358,8 @@ def import_review(conn, path: Path) -> dict:
 _MODE_ALIAS = {"GMLESS_PL": "GMLESS_MULTI", "ONE_PLAYER_SOLO": "SOLO", "ONE_PLAYER_UNSPECIFIED": "SOLO"}
 _SESSION_RE = re.compile(r"([A-Z_]{3,})\s+(\d+)\s*-\s*(\d+)(?:\s+([A-Z]+)\s*/\s*([A-Z]+))?")
 _DURATION_RE = re.compile(
-    r"(VOICE|TEXT|SEMI_TEXT|UNSPECIFIED)\s+(?:(MAIN|INTRO|ALL_EPISODES|EPISODE|OTHER|UNSPECIFIED)\s+)?(\d*)\s*-\s*(\d+|UNSPECIFIED)?")
+    r"(VOICE|TEXT|SEMI_TEXT|UNSPECIFIED)\s+(?:(MAIN|INTRO|ALL_EPISODES|EPISODE|OTHER|UNSPECIFIED|ACT\s*\d+|EP\s*\d+|TOTAL)\s+)?(\d*)\s*-\s*(\d+|UNSPECIFIED)?")
+_SCOPE_ALIAS = {"TOTAL": "ALL_EPISODES"}
 
 
 def _segments(value: str) -> list[str]:
@@ -370,7 +375,8 @@ def _norm_value(field: str, value: str) -> frozenset:
     if value in ("", "-"):
         return frozenset()
     if field == "members":
-        return frozenset(normalize_title(t) for t in re.split(r"[／/;；\n]", value) if t.strip())
+        # ";" only as a list mark ("A;\nB"), not inside a title like "Sm;ley".
+        return frozenset(normalize_title(t) for t in re.split(r"[／/\n]|[;；](?=\s|$)", value) if t.strip())
     if field == "session_modes":
         out = set()
         for seg in _segments(value):
@@ -386,7 +392,9 @@ def _norm_value(field: str, value: str) -> frozenset:
             for m in _DURATION_RE.finditer(seg.upper()):
                 mode = "VOICE" if m.group(1) == "UNSPECIFIED" else m.group(1)
                 hi = "" if m.group(4) in (None, "UNSPECIFIED") else m.group(4)
-                out.add(f"{mode} {m.group(2) or 'UNSPECIFIED'} {m.group(3)}-{hi}")
+                scope = m.group(2) or "UNSPECIFIED"
+                scope = "EPISODE" if re.match(r"(ACT|EP)\s*\d", scope) else _SCOPE_ALIAS.get(scope, scope)
+                out.add(f"{mode} {scope} {m.group(3)}-{hi}")
         return frozenset(out)
     parts = re.split(r"\s*;\s*|\n", value)
     return frozenset(re.sub(r"\s+", " ", p.strip()).upper() for p in parts if p.strip())
@@ -394,6 +402,8 @@ def _norm_value(field: str, value: str) -> frozenset:
 
 def _matches(field: str, tool: str, truth: str) -> bool:
     a, b = _norm_value(field, tool), _norm_value(field, truth)
+    if field == "members" and not b and len(a) == 1:
+        return True  # the first round left a single work's name blank
     if field != "session_modes":
         return a == b
     # A truth entry without roles ("ONE_ON_ONE 1-1"), or with UNKNOWN ones left
@@ -427,7 +437,8 @@ def evaluate(conn) -> dict:
         data = _product(conn, iid)
         rule = classify(data["product"]["title"] or "", data["product"]["description_text"] or "", data["variants"], data["tags"],
                         data["product"]["category_name"])
-        now["product_kind"], now["members"] = rule.kind, MEMBER_SEP.join(rule.members)
+        members = rule.members or ([work_title(data["product"]["title"] or "")] if rule.kind == "SINGLE" else [])
+        now["product_kind"], now["members"] = rule.kind, MEMBER_SEP.join(members)
         for f in FIELDS:
             if f not in labels:
                 continue

@@ -65,6 +65,30 @@ def normalize_title(title: str) -> str:
     return re.sub(r"[\s・\-_~!?！？。、,.『』「」/／]+", "", t)
 
 
+# -- work title of a single product ---------------------------------------------
+_TITLE_LABEL = re.compile(r"CoC|C[оo]C|クトゥルフ|TRPG|シナリオ|版|秘匿|HO|SPLL|PDF|無料|有料|KPレス|DLレス|タイマン|ソロ|回復|SAN|DL|中文|同梱|キャンペーン|CP|エモクロア|新作|再販|改訂|R18|R-18|R15|配布|頒布|ver|対応|限定|BOOTH|シナリオブック|サンプル|PL|人用|\d+人|6th|7th", re.I)
+_TITLE_QUOTE = re.compile(r"[「『]([^」』]{1,80})[」』]")
+_TITLE_SYSTEM = re.compile(r"(新?クトゥルフ神話\s*TRPG|エモクロア\s*TRPG|C[оo]C\s*TRPG|C[оo]C|TRPG)\s*(シナリオ(ブック|集)?|ソロシナリオ|タイマンシナリオ|キャンペーンシナリオ)?\s*(\d版)?", re.I)
+
+def work_title(title: str) -> str:
+    """The work's own name inside a BOOTH product title:
+    "【CoCシナリオ】花に嵐【SPLL:E1】" -> "花に嵐", "CoC「塔葬の国」" -> "塔葬の国"."""
+    t = unicodedata.normalize("NFKC", title or "").strip()
+    t = re.sub(r"SPLL\s*[:：]?\s*E?\d+", "", t)
+    for q in _TITLE_QUOTE.findall(t):
+        if not _TITLE_SYSTEM.fullmatch(q.strip()) and not _TITLE_LABEL.fullmatch(q.strip()):
+            return q.strip()
+    brackets = re.findall(r"[【\[]([^】\]]*)[】\]]", t)
+    rest = re.sub(r"[【\[][^】\]]*[】\]]", " ", t)
+    rest = re.sub(r"^[\s▼▽■□◆◇●○★☆▶]+", "", rest)
+    rest = _TITLE_SYSTEM.sub(" ", rest)
+    rest = re.sub(r"\s+", " ", rest).strip(" /／-~・|")
+    if rest:
+        return rest
+    named = [b for b in brackets if b.strip() and not _TITLE_LABEL.search(b)]
+    return (named[0] if named else t).strip()
+
+
 @dataclass
 class Classification:
     kind: str
@@ -424,7 +448,7 @@ def organize_item(conn, iid: int) -> Classification:
             ensure_product(conn, linked, now)
 
     if cls.kind == "SINGLE":
-        sid = _scenario_for_key(conn, f"item:{iid}:single", title, now)
+        sid = _scenario_for_key(conn, f"item:{iid}:single", work_title(title), now)
         conn.execute("UPDATE scenarios SET scenario_kind='SINGLE' WHERE scenario_id=?", (sid,))
         conn.execute("INSERT OR IGNORE INTO product_scenarios VALUES (?, ?, 'STANDALONE')", (iid, sid))
         conn.execute("INSERT OR IGNORE INTO scenario_sources VALUES (?, ?, ?, ?, 'STANDALONE', 1)", (new_id("SRC"), sid, url, iid))

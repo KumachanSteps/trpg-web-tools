@@ -121,9 +121,12 @@ def test_duration_ranges_and_voice_default():
     assert durs("時間:15時間以上") == [("VOICE", "UNSPECIFIED", 900, 960)]
 
 
-def test_campaign_keeps_the_stated_total():
+def test_campaign_total_and_episodes():
     text = "●時間:11時間程度\n※ボイスセッション想定\n※全エピソードを遊ぶ場合の時間\n・出ると噂の駐車場:1時間\n・幕間:30分"
-    assert durs(text) == [("VOICE", "ALL_EPISODES", 660, 660)]
+    assert durs(text) == [("VOICE", "ALL_EPISODES", 660, 660), ("VOICE", "UNSPECIFIED", 60, 60), ("VOICE", "UNSPECIFIED", 30, 30)]
+    acts = "【推定時間】28~30時間/ボイスセッション\n其ノ零-導入 〈3~4時間〉\n其ノ一-麝香と花畑 〈3~4時間〉\n其ノ二-白檀と幕間 〈4~5時間〉"
+    assert durs(acts) == [("VOICE", "ALL_EPISODES", 1680, 1800), ("VOICE", "INTRO", 180, 240),
+                          ("VOICE", "EPISODE", 180, 240), ("VOICE", "EPISODE", 240, 300)]
 
 
 def test_rights_notice_is_not_a_system():
@@ -142,3 +145,26 @@ def test_secret_handouts():
     assert rules.has_secret_handouts("秘匿HOシナリオ")
     assert rules.has_secret_handouts("", "2PL秘匿")
     assert not rules.has_secret_handouts("秘匿HOはありません")
+
+
+def test_player_counts_round2():
+    def pl(t):
+        return [(m["mode"], m["player_min"], m["player_max"]) for m in modes(t)]
+    assert pl("推奨プレイヤー人数:1人から") == [("MULTI_PL", 1, 4)]
+    assert pl("人数:1人~捌けるだけ") == [("MULTI_PL", 1, 4)]
+    assert pl("プレイヤー人数:3人~4人") == [("MULTI_PL", 3, 4)]
+    assert pl("人数:新規四人固定、秘匿HO有り") == [("MULTI_PL", 4, 4)]
+    assert pl("人数:固定4人") == [("MULTI_PL", 4, 4)]
+    assert pl("●4人PL固定(秘匿HO制)") == [("MULTI_PL", 4, 4)]
+    assert pl("GM一名とPL三名で遊ぶシナリオ。") == [("MULTI_PL", 3, 3)]
+    assert pl("【人数】\n3 人前後") == [("MULTI_PL", 2, 4)]
+    assert pl("【人数】1(+KPC) or 2PL") == [("ONE_ON_ONE", 1, 1), ("MULTI_PL", 2, 2)]
+    assert pl("推荐人数:2-3人") == []
+    assert durs("推定時間:一時間") == [("VOICE", "UNSPECIFIED", 60, 60)]
+
+
+def test_tagline_time_is_not_play_time():
+    assert durs("「昼と夜の隙間、たった1時間のふたりごと」") == []
+    assert durs("・出ると噂の駐車場:1時間") == [("VOICE", "UNSPECIFIED", 60, 60)]
+    assert durs("・9~10時間") == [("VOICE", "UNSPECIFIED", 540, 600)]
+    assert durs("時 間:2~3時間程度") == [("VOICE", "UNSPECIFIED", 120, 180)]

@@ -17,8 +17,11 @@ def normalize(text: str) -> str:
     # "ー" is a range mark only between digits (3ー4時間); elsewhere it is the
     # prolonged sound mark in words like プレイヤー / ソロジャーナル.
     t = re.sub(r"(?<=\d)\s*ー\s*(?=\d)", "~", t)
-    # "2、3人" / "2、3時間" are ranges.
-    return re.sub(r"(?<=\d)\s*[、,]\s*(?=\d+(?:\.\d+)?\s*(?:人|名|PL|時間|h|分))", "~", t)
+    # "2、3人" / "2、3時間" / "2-3人" are ranges.
+    t = re.sub(r"(?<=\d)\s*[、,-]\s*(?=\d+(?:\.\d+)?\s*(?:人|名|PL|時間|h|分))", "~", t)
+    # "四人固定" / "PL三名" / "一時間": kanji digits next to a count unit.
+    return re.sub(r"(?<![一二三四五六七八九十])([一二三四五六七八九十])(?=\s*(?:人|名|時間)(?![一二三四五六七八九十]))",
+                  lambda m: str("一二三四五六七八九十".index(m.group(1)) + 1), t)
 
 
 def lines(text: str) -> list[str]:
@@ -128,12 +131,37 @@ def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
 
 # -- session modes --------------------------------------------------------------
 _RANGE_PL = re.compile(
-    r"(?:PL|プレイヤー|人\s*数|探索者数?|共鳴者数?)\s*(?:は|数)?\s*[::]?\s*(?:新規)?\s*(\d+)\s*(?:~\s*(\d+))?\s*(?:人|名)?"
+    r"(?:PL|プレイヤー(?:人数)?|人\s*数|探索者数?|共鳴者数?)\s*(?:は|数)?\s*[::]?\s*(?:新規|固定)?\s*(\d+)\s*(?:人|名)?"
+    r"\s*(?:(~|から)\s*(\d+)?\s*(?:人|名)?)?\s*(前後)?"
     r"(?!\s*(?:~\s*\d+\s*)?(?:歳|才|年|月|日|時|分|%))"
-    r"|(\d+)\s*(?:~\s*(\d+))?\s*(?:PL|人用|人\s*固定|名\s*固定)", re.I)
+    r"|(\d+)\s*(?:人|名)?\s*(?:~\s*(\d+)\s*)?(?:PL|人用|人\s*(?:PL\s*)?固定|名\s*(?:PL\s*)?固定)", re.I)
+OPEN_PLAYERS_MAX = 4  # "1人から" / "1人~捌けるだけ" are read as up to 4 (reviewer's convention)
+# Translated blurbs repeat the play info, sometimes with other numbers.
+_TRANSLATION = re.compile(r"推荐|模组|玩家|有多少来多少|探索者们|中文译|[这们个为]")
+
+
+def _player_ranges(ln: str) -> list[tuple[int, int]]:
+    out = []
+    for m in _RANGE_PL.finditer(ln):
+        if m.group(1):
+            lo = int(m.group(1))
+            if m.group(3):
+                hi = int(m.group(3))
+            elif m.group(2):
+                hi = max(lo, OPEN_PLAYERS_MAX)
+            elif m.group(4):
+                lo, hi = max(1, lo - 1), lo + 1
+            else:
+                hi = lo
+        else:
+            lo = int(m.group(5))
+            hi = int(m.group(6) or lo)
+        if 1 <= lo <= hi <= 30:
+            out.append((lo, hi))
+    return out
 _COMPANION = re.compile(r"\b(KPC|DPC)\b|(KPC|DPC)")
-_GMLESS = re.compile(r"KPレス|GMレス|DLレス|KP不要|GM不要|DL不要|一人で遊べる|ひとりで遊べる|ソロジャーナル", re.I)
-_ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*対\s*1", re.I)
+_GMLESS = re.compile(r"KPレス|GMレス|DLレス|KP不要|GM不要|DL不要|[1一]人で遊べる|ひとりで遊べる|ソロジャーナル", re.I)
+_ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*対\s*1|1\s*[(（]\s*\+?\s*(KPC|DPC)", re.I)
 # "タイマンは推奨しない" / "タイマン不可" rule the mode out.
 _ONE_ON_ONE_NEG = re.compile(
     r"(タイマン|一対一|1\s*対\s*1).{0,12}?(不可|非推奨|推奨(し|致し|いたし)?(ない|ません|かね)|でき(ない|ません)|出来(ない|ません)|"
@@ -163,18 +191,20 @@ def extract_session_modes(text: str) -> list[Hit]:
             v["player_fixed"] = fixed
         hits.append(Hit("scenario_session_modes", v, ln))
 
-    for ln in lines(text):
+    ls = lines(text)
+    for i, ln in enumerate(ls):
+        if _TRANSLATION.search(ln):
+            continue
+        # "【人数】" alone on a line: the value is on the next one.
+        if re.fullmatch(r"[【\[■●◆]?\s*(?:プレイ|推奨)?人\s*数\s*[】\]]?\s*[::]?", ln) and i + 1 < len(ls):
+            ln = "人数:" + ls[i + 1]
         companion = None
         if m := _COMPANION.search(ln):
             companion = (m.group(1) or m.group(2)).upper()
         facilitator = "DL" if re.search(r"(?<![A-Za-z])DL(?![A-Za-z])|ダイスロール担当", ln) else ("KP" if re.search(r"KP(?!レス|不要)", ln) else None)
-        m = _RANGE_PL.search(ln)
-        lo = hi = None
-        if m:
-            lo = int(m.group(1) or m.group(3))
-            hi = int(m.group(2) or m.group(4) or lo)
-            if lo < 1 or hi < lo or hi > 30:
-                lo = hi = None
+        ranges = _player_ranges(ln)
+        lo, hi = ranges[0] if ranges else (None, None)
+        multi = next((r for r in ranges if r[1] >= 2), None)
         gmless = bool(_GMLESS.search(ln))
         one_on_one = bool(_ONE_ON_ONE.search(ln)) and not _ONE_ON_ONE_NEG.search(ln)
         if not one_on_one and _ONE_ON_ONE_NEG.search(ln) and lo is None:
@@ -187,9 +217,9 @@ def extract_session_modes(text: str) -> list[Hit]:
         if one_on_one:
             add("ONE_ON_ONE", 1, 1, facilitator or "UNKNOWN", companion or "UNKNOWN", ln)
         if gmless or one_on_one:
-            # "2PLまたはタイマン": the player count is a separate way to play.
-            if lo and hi >= 2 and not gmless:
-                add("MULTI_PL", lo, hi, facilitator or "UNKNOWN", "UNKNOWN", ln, 1 if lo == hi else 0)
+            # "2PLまたはタイマン" / "1(+KPC) or 2PL": the count is another way to play.
+            if multi and not gmless:
+                add("MULTI_PL", multi[0], multi[1], facilitator or "UNKNOWN", "UNKNOWN", ln, 1 if multi[0] == multi[1] else 0)
             continue
         if re.search(r"ソロ(シナリオ|用|向け|プレイ)?", ln):
             add("SOLO", 1, 1, facilitator or "UNKNOWN", companion or "UNKNOWN", ln)
@@ -266,6 +296,9 @@ def _time_range(seg: str):
     return None
 
 
+_EPISODE_HEAD = re.compile(r"^[・●■▶◆]?\s*(其ノ[一二三四五六七八九十\d]|第\s*[\d一二三四五六七八九十]+\s*(話|章|幕)|Act\s*\d|Chapter\s*\d|EP\s*\d)", re.I)
+
+
 def extract_durations(text: str) -> list[Hit]:
     """Play time. A time that does not say text or voice counts as a voice
     session (the reviewer's convention)."""
@@ -278,7 +311,12 @@ def extract_durations(text: str) -> list[Hit]:
             if not nl.startswith(("※", "*")):
                 break
             notes.append(nl)
-        if not re.search(r"時間|プレイ|ボイセ|テキセ|ボイス|テキスト|半テキ|想定|所要|導入|\d\s*(分|h\b)", ln, re.I):
+        # A play-time line names it ("プレイ時間", "所要", "ボイセ") or gives the
+        # time as a labelled value ("・駐車場:1時間"); a tagline like
+        # 「たった1時間のふたりごと」 does neither.
+        if not (re.search(r"プレイ|ボイセ|テキセ|ボイス|テキスト|テキ|セッション|想定|所要|推定|目安|導入|時\s*間\s*[】\]:：]|^[【\[]?\s*時\s*間", ln, re.I)
+                or re.fullmatch(r"[・●■▶◆\-]?\s*(約|およそ)?\s*[\d.~\s]+(時間|h)\S{0,8}", ln, re.I)
+                or re.search(r"[:：〈<(（]\s*(約|およそ)?\s*\d+(\.\d+)?\s*(時間|h|分)", ln, re.I) or _EPISODE_HEAD.match(ln)):
             continue
         # Split one line like "ボイセ3時間/テキセ6時間" into per-medium segments.
         segments = re.split(r"[/、,|]|\s{2,}", ln) if re.search(r"ボイ.*テキ|テキ.*ボイ", ln) else [ln]
@@ -299,7 +337,7 @@ def extract_durations(text: str) -> list[Hit]:
                 scope = "INTRO"
             elif re.search(r"全\s*\d*\s*(話|エピソード)|全編|合計|通し", ln) or any(re.match(r"[※*].{0,4}(全\s*\d*\s*(話|エピソード)|全編|合計|通し)", n) for n in notes):
                 scope = "ALL_EPISODES"
-            elif re.search(r"各話|1話|一話|第\d+話", ln):
+            elif re.search(r"各話|1話|一話|第\s*\d+\s*(話|章|幕)", ln) or _EPISODE_HEAD.match(ln):
                 scope = "EPISODE"
             elif re.search(r"本編", ln):
                 scope = "MAIN"
@@ -307,10 +345,17 @@ def extract_durations(text: str) -> list[Hit]:
                 scope = "UNSPECIFIED"
             approx = 1 if (m.group(1) or re.search(r"程度|前後|ほど|目安|想定|~\s*$|~\s*[(（]|以上", seg)) else 0
             hits.append(Hit("scenario_durations", {"mode": mode, "scope": scope, "min_minutes": lo, "max_minutes": hi, "approximate": approx}, ln))
-    # A campaign that states its total is recorded by the total alone
-    # (episode times are listed alongside it).
-    if any(h.value["scope"] == "ALL_EPISODES" for h in hits):
-        hits = [h for h in hits if h.value["scope"] in ("ALL_EPISODES", "INTRO")]
+    # A campaign listing its episodes: an unlabelled time about as long as all
+    # of them together is the total.
+    episodes = [h for h in hits if h.value["scope"] in ("EPISODE", "INTRO")]
+    if len(episodes) >= 2:
+        total = sum(h.value["min_minutes"] for h in episodes)
+        for h in hits:
+            if h.value["scope"] == "UNSPECIFIED" and h.value["min_minutes"] >= 0.8 * total:
+                h.value["scope"] = "ALL_EPISODES"
+    # An anthology's summary line ("プレイ時間1~6時間の短編7本収録") only spans the works' own times.
+    if len(hits) > 1:
+        hits = [h for h in hits if "収録" not in h.excerpt] or hits
     return hits
 
 

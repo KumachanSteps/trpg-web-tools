@@ -139,3 +139,14 @@ def test_stated_work_count_makes_a_collection_unless_it_describes_a_linked_item(
     assert classify("五人の人格", "中~短編のシナリオ3本を収録", [V("PDF", 1000)], ["CoC"]).kind == "COLLECTION"
     desc = "続編はこちら\nhttps://x.booth.pm/items/1004446\n本作からの継続向けシナリオ3本を収録したシナリオ集。"
     assert classify("ぎこちない同居", desc, [V("PDF", 1000)], ["CoC"]).kind == "SINGLE"
+
+
+def test_work_title_strips_labels():
+    wt = organize.work_title
+    assert wt("【CoCシナリオ】花に嵐、さよならだけが人生だ") == "花に嵐、さよならだけが人生だ"
+    assert wt("CoCTRPG 「塔葬の国」") == "塔葬の国"
+    assert wt("CoC【拝啓、不器用な貴方へ】SPLL:E119688") == "拝啓、不器用な貴方へ"
+    assert wt("レプリカントの葬列【クトゥルフ神話TRPG/6版】 SPLL:E107000") == "レプリカントの葬列"
+    assert wt("▼CoC　Princess Hugging Race!!!") == "Princess Hugging Race!!!"
+    assert wt("【無料KPレス】やんなみしだら・うかむくや【CoCシナリオ】") == "やんなみしだら・うかむくや"
+    assert wt("PYX【CoCキャンペーンシナリオ】") == "PYX"
