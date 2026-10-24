@@ -65,6 +65,7 @@ _SYS_PATTERNS = [
     ("COC7", re.compile(r"新クトゥルフ|CoC\s*7|7版|第7版|7th", re.I)),
     ("COC6", re.compile(r"(?<!新)クトゥルフ神話TRPG|CoC\s*6|6版|6th", re.I)),
     ("EMOKLORE", re.compile(r"エモクロア|emoklore", re.I)),
+    ("MADAMIS", re.compile(r"マーダーミステリー|マダミス|murder\s*mystery", re.I)),
 ]
 
 
@@ -104,6 +105,7 @@ _COC7_META = re.compile(r"新クトゥルフ|CoC\s*7|7版|7th", re.I)
 _COC6_META = re.compile(r"CoC\s*6|6版|6th", re.I)
 _COC_META = re.compile(r"クトゥルフ|CoC|克苏鲁", re.I)
 _EMO_META = re.compile(r"エモクロア|emoklore", re.I)
+_MADAMIS_META = re.compile(r"マーダーミステリー|マダミス|murder\s*mystery", re.I)
 
 
 def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
@@ -119,6 +121,8 @@ def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
             codes.append("COC6")
         if _EMO_META.search(t):
             codes.append("EMOKLORE")
+        if _MADAMIS_META.search(t):
+            codes.append("MADAMIS")
         for code in codes:
             hits.append(Hit("scenario_systems", {"system_code": code, "support_type": "NATIVE"}, f"[{source}] {text}"[:300], method="RULE", confidence=0.8 if source == "title" else 0.6))
     seen, out = set(), []
@@ -238,7 +242,8 @@ def extract_session_modes(text: str) -> list[Hit]:
 
 
 def default_roles(v: dict, systems: set[str]) -> dict:
-    """Fill roles the text leaves open: KP for CoC, DL for Emoklore; タイマン
+    """Fill roles the text leaves open: KP for CoC, DL for Emoklore, GM for
+    マーダーミステリー; タイマン
     plays against a KPC/DPC; otherwise there is no companion."""
     v = dict(v)
     if v["mode"].startswith("GMLESS"):
@@ -246,7 +251,12 @@ def default_roles(v: dict, systems: set[str]) -> dict:
         if v.get("companion_role") in (None, "UNKNOWN"):
             v["companion_role"] = "NONE"
         return v
-    fac = "DL" if "EMOKLORE" in systems and not systems & {"COC6", "COC7"} else ("KP" if systems & {"COC6", "COC7"} else None)
+    if systems & {"COC6", "COC7"}:
+        fac = "KP"
+    elif "EMOKLORE" in systems:
+        fac = "DL"
+    else:
+        fac = "GM" if "MADAMIS" in systems else None
     if v.get("facilitator_role") in (None, "UNKNOWN") and fac:
         v["facilitator_role"] = fac
     if v.get("companion_role") in (None, "UNKNOWN"):

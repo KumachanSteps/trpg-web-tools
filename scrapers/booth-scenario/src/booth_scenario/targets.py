@@ -1,4 +1,5 @@
-"""Phase 0 probe targets from CODEX_PHASE0_HANDOFF.md."""
+"""Phase 0 probe targets from CODEX_PHASE0_HANDOFF.md, and the listing queries per scope."""
+from urllib.parse import quote
 
 COC_TAG = "クトゥルフ神話TRPG"
 
@@ -6,6 +7,26 @@ CATEGORY_URLS = {
     "Tabletop RPG": "https://booth.pm/en/browse/Tabletop%20RPG?in_stock=true&tags%5B%5D=%E3%82%AF%E3%83%88%E3%82%A5%E3%83%AB%E3%83%95%E7%A5%9E%E8%A9%B1TRPG",
     "Tabletop Games": "https://booth.pm/en/browse/Tabletop%20Games?in_stock=true&tags%5B%5D=%E3%82%AF%E3%83%88%E3%82%A5%E3%83%AB%E3%83%95%E7%A5%9E%E8%A9%B1TRPG",
 }
+
+
+def browse_url(category: str, tag: str) -> str:
+    """In-stock products of one BOOTH category with one tag."""
+    return f"https://booth.pm/en/browse/{quote(category)}?in_stock=true&tags%5B%5D={quote(tag)}"
+
+
+# Listing queries per scope (decided 2026-10-24: CoC, Emoklore and murder
+# mysteries first). Murder mysteries are sold under both categories.
+# In-stock result counts on 2026-10-24: CoC about 23,700, 新クトゥルフ unchecked,
+# Emoklore 2,024, murder mystery 872 (Tabletop Games) + 395 (Tabletop RPG).
+SCOPE_QUERIES = {
+    "coc": [("Tabletop RPG", COC_TAG), ("Tabletop RPG", "新クトゥルフ神話TRPG")],
+    "emoklore": [("Tabletop RPG", "エモクロアTRPG")],
+    "madamis": [("Tabletop Games", "マーダーミステリー"), ("Tabletop RPG", "マーダーミステリー")],
+}
+
+# System implied by the tag of the query that found a product; used only when
+# neither the text nor the product's own tags name a system.
+QUERY_TAG_SYSTEMS = {COC_TAG: "COC6", "新クトゥルフ神話TRPG": "COC7", "エモクロアTRPG": "EMOKLORE", "マーダーミステリー": "MADAMIS"}
 
 SAMPLE_IDS = {
     "coc": [3403696, 1712065, 3408537, 3790708, 1710879, 2907962, 3083345, 3827548, 647539, 3251000, 2625282, 3954297],
