@@ -22,10 +22,20 @@ booth-scenario probe-listing --pages 2     # 2カテゴリ × 最大2ページ
 booth-scenario probe-detail                # サンプルIDから最大10件
 booth-scenario probe-detail --ids 3403696 4604659
 booth-scenario report                      # 項目ごとの取得率・エラー
+booth-scenario export-catalog --out ../../data/catalog/v1   # Web ツール用カタログ（catalog/v1）を書き出す
 booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既知のタイトル"
 ```
 
 取得した HTML/JSON は `data/snapshots/`、キャッシュは `data/cache/`、プローブ結果は `data/reports/` に保存されます。`data/` は git 管理外です。
+
+## カタログの書き出し（catalog/v1）
+
+`export-catalog` は `scenarios` テーブルの作品を、シナリオライブラリ・マイ本棚が読む JSON（`manifest.json` と `scenarios-NNN.json`）に書き出します。リポジトリの `data/catalog/v1/` に出力してコミットすると GitHub Pages から配信されます。
+
+- 出すのは公開情報だけ（タイトル・別名・システム・人数・時間・価格・ショップ・商品 URL・表紙画像 URL）。説明文・根拠テキスト・購入記録は出しません。
+- 表紙は `og:image` の URL だけを保存し、画像ファイルは保存・再配布しません（ブラウザが BOOTH から直接表示）。
+- 分からない値は `null`。秘匿HOは HO 条件の記録があるときだけ `true`。
+- ライセンスは CC BY 4.0。`manifest.json` の `attribution` が出典表記です。
 
 ## 安全ルール（コードで強制）
 

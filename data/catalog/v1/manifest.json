@@ -1,0 +1,19 @@
+{
+ "schema": "catalog/v1",
+ "version": "sample-2026-10-24b",
+ "generated_at": "2026-10-24T00:00:00Z",
+ "sample": true,
+ "note": "架空のサンプルデータです。BOOTH スクレイパーの書き出し（booth-scenario export-catalog）で置き換えます。",
+ "license": "CC BY 4.0",
+ "attribution": "シナリオカタログ © KumachanSteps / TRPG WEBツール観測所（CC BY 4.0）",
+ "counts": {
+  "scenarios": 16
+ },
+ "shards": [
+  {
+   "path": "scenarios-000.json",
+   "count": 16,
+   "sha256": "a627d674f4983d8406ff7f444c4accd902a8d11de4a93591f894c1c43793294e"
+  }
+ ]
+}

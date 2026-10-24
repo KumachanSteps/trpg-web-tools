@@ -46,6 +46,7 @@ class DetailRecord:
     description_text: str | None = None
     description_source: str | None = None
     seo_description: str | None = None
+    cover_image_url: str | None = None
     language: str | None = None
     like_count: int | None = None
     like_count_source: str = "UNAVAILABLE"
@@ -79,6 +80,9 @@ def parse_detail_html(html: str, booth_item_id: int, url: str, selectors: dict |
     if og_title := _meta(doc, "og:title"):
         rec.title, rec.title_source = og_title, "og:title"
     rec.seo_description = _meta(doc, "og:description") or _meta(doc, "description")
+    og_image = _meta(doc, "og:image")
+    if og_image and og_image.startswith("https://"):
+        rec.cover_image_url = og_image
 
     for script in doc.find_all("script", type="application/ld+json"):
         try:
