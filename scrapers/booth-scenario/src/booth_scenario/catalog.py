@@ -35,6 +35,16 @@ def _players(modes: list[dict]) -> dict:
     return out
 
 
+def _secret_ho(modes: list[dict], has_ho_condition: bool) -> bool | None:
+    """True if any way to play has secret handouts; False only when every mode says none."""
+    flags = [m.get("secret_handouts") for m in modes]
+    if has_ho_condition or 1 in flags:
+        return True
+    if flags and all(f == 0 for f in flags):
+        return False
+    return None
+
+
 def _duration(rows: list[dict]) -> dict:
     main = [d for d in rows if d["scope"] in ("MAIN", "UNSPECIFIED", "ALL_EPISODES")] or rows
     mins = [d["min_minutes"] for d in main if d["min_minutes"] is not None]
@@ -77,7 +87,7 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         FROM variant_scenarios vs JOIN product_variants pv USING(variant_id) WHERE vs.scenario_id = ?""", (sid,))
     modes = _rows(conn, "SELECT * FROM scenario_session_modes WHERE scenario_id = ?", (sid,))
     durations = _rows(conn, "SELECT * FROM scenario_durations WHERE scenario_id = ?", (sid,))
-    has_ho = conn.execute("SELECT 1 FROM scenario_conditions WHERE scenario_id = ? AND category = 'HO'", (sid,)).fetchone()
+    has_ho_condition = conn.execute("SELECT 1 FROM scenario_conditions WHERE scenario_id = ? AND category = 'HO'", (sid,)).fetchone()
     titles = []
     for p in products:
         t = (p["title"] or "").strip()
@@ -92,7 +102,7 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         "system": system,
         "players": _players(modes),
         "duration": _duration(durations),
-        "secret_ho": True if has_ho else None,
+        "secret_ho": _secret_ho(modes, bool(has_ho_condition)),
         "price": _price(variants),
         "writers": [],
         "circle": {"name": main.get("shop_name"), "url": main.get("shop_url")},

@@ -56,3 +56,14 @@ def test_og_image_becomes_cover_url(conn):
     assert rec.cover_image_url == "https://booth.pximg.net/c/620x620/x.jpg"
     store.save_detail(conn, rec, "2026-10-24T00:00:00+00:00", html)
     assert conn.execute("SELECT cover_image_url FROM products WHERE booth_item_id=7").fetchone()[0] == rec.cover_image_url
+
+
+def test_secret_handouts_from_session_modes(conn, synthetic, tmp_path):
+    store.load_synthetic_fixture(conn, synthetic)
+    conn.execute("INSERT INTO scenario_session_modes (session_mode_id, scenario_id, mode, player_min, player_max, secret_handouts) VALUES ('m1','SCN-TEST-A','MULTI_PL',2,2,1)")
+    conn.execute("INSERT INTO scenario_session_modes (session_mode_id, scenario_id, mode, player_min, player_max, secret_handouts) VALUES ('m2','SCN-TEST-B','MULTI_PL',2,2,0)")
+    conn.commit()
+    manifest = export_catalog(conn, tmp_path)
+    by_id = {s["id"]: s for s in json.loads((tmp_path / manifest["shards"][0]["path"]).read_text(encoding="utf-8"))["scenarios"]}
+    assert by_id["SCN-TEST-A"]["secret_ho"] is True
+    assert by_id["SCN-TEST-B"]["secret_ho"] is False
