@@ -340,7 +340,7 @@
       <h4>準備タスク</h4>
       <div class="detail-tasks">${(session.tasks || []).map(task => `<div class="task-row"><span>${task.done ? '☑' : '☐'} ${esc(task.title)}</span><span>${esc(task.due || '')} <span class="chip">${esc(task.status || '')}</span></span></div>`).join('') || '<p>未登録</p>'}</div>
       <p>${esc(session.memo || '')}</p>
-      <div class="detail-actions"><button id="editBtn" class="primary" type="button">💾 編集</button><button id="deleteBtn" class="danger" type="button">🗑 削除</button><button id="sendLogBtn" class="bridge-button" type="button">↗ 卓ログトラッカーへ送る</button></div>`;
+      <div class="detail-actions"><button id="editBtn" class="hub-btn is-blue" type="button">編集</button><button id="deleteBtn" class="hub-btn danger" type="button">削除</button><button id="sendLogBtn" class="hub-btn is-note bridge-button" type="button">↗ 卓ログトラッカーへ送る</button></div>`;
     $('editBtn').onclick = () => openDialog(session.id);
     $('deleteBtn').onclick = deleteSelected;
     $('sendLogBtn').onclick = () => sendToLogTracker(session);
@@ -620,13 +620,12 @@
   $('todayBtn').onclick = () => { cursor = new Date(today.getFullYear(), today.getMonth(), 1); selectedDate = dateKey(today); render(); };
   $('prevMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() - 1); render(); };
   $('nextMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() + 1); render(); };
-  $('themeBtn').onclick = () => document.body.classList.toggle('light');
   $('helpBtn').onclick = () => alert('日付クリックでフォーカス、ダブルクリックでセッション追加。JSON/iCal/Googleカレンダーからは読み込むカレンダーを選択できます。');
   $('shortcutBtn').onclick = () => alert('Ctrl/⌘ + Shift + N: セッション追加\nCtrl/⌘ + Shift + T: タスク追加\nEsc: ダイアログを閉じる');
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.11', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.12', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];

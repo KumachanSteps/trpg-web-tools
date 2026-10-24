@@ -3,46 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓準備カレンダー v0.11 | TRPG WEBツール観測所</title>
+  <title>卓準備カレンダー v0.12 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="css/session_check_calendar.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.0" />
+  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.12" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
-<body>
-  <div class="app-shell">
-    <header class="app-header">
-      <a class="brand-block" href="../../" aria-label="TRPG WEBツール観測所へ戻る">
-        <span class="brand-kicker">TRPG WEBツール観測所</span>
-        <strong>卓準備カレンダー</strong>
-        <span>TRPGセッション予定と準備タスクをまとめて管理</span>
-      </a>
-      <div class="header-side">
-        <nav class="header-actions" aria-label="ツール操作">
-          <button id="reportBridgeBtn" type="button">報告</button>
-          <button id="languageBtn" type="button">JP/EN</button>
-          <button id="helpBtn" type="button">使い方</button>
-          <button id="shortcutBtn" type="button">ショートカット</button>
-          <button id="themeBtn" type="button">Light/Night</button>
+<body class="hub" data-hub-tool="calendar">
+  <nav id="hubRail"></nav>
+  <div class="hub-main">
+    <header class="hub-header">
+      <div class="hub-header-top">
+        <div class="hub-header-left">
+          <a class="hub-portal" href="../../">← TRPG Webツール観測所</a>
+          <div class="hub-title-row">
+            <span class="hub-icon" aria-hidden="true">▦</span>
+            <h1>卓準備カレンダー</h1>
+          </div>
+        </div>
+        <nav class="hub-actions" aria-label="ツール操作">
+          <button id="reportBridgeBtn" class="hub-btn" type="button">報告</button>
+          <button id="languageBtn" class="hub-btn" type="button">JP/EN</button>
+          <button id="helpBtn" class="hub-btn is-accent" type="button">使い方</button>
+          <button id="shortcutBtn" class="hub-btn" type="button">ショートカット</button>
+          <button id="themeToggleBtn" class="hub-btn" type="button">Light/Night</button>
         </nav>
-        <span class="version">v0.11 / 2026.06.19</span>
+      </div>
+      <div class="hub-header-meta">
+        <p class="hub-desc">TRPGセッションの予定と準備タスクをまとめて管理。遊んだ卓は卓ログトラッカーへ送れます。</p>
+        <p class="hub-version">v0.12 2026.10.24</p>
       </div>
     </header>
 
     <main class="layout">
       <section class="calendar-area">
         <div class="toolbar">
-          <button id="addSessionBtn" class="primary" type="button">＋ セッション追加</button>
-          <button id="addTaskBtn" class="ghost" type="button">☑ タスク追加</button>
-          <label class="ghost file-label">☁ JSON読込<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
-          <label class="ghost file-label">▣ iCal読込<input id="icalInput" type="file" accept="text/calendar,.ics,.ical" hidden /></label>
-          <button id="googleImportBtn" class="ghost" type="button">Googleカレンダー読込</button>
-          <button id="exportJsonBtn" class="ghost" type="button">⇩ JSON出力</button>
-          <button id="exportIcalBtn" class="ghost" type="button">▣ iCal出力</button>
+          <button id="addSessionBtn" class="hub-btn is-ink" type="button">＋ セッション追加</button>
+          <button id="addTaskBtn" class="hub-btn" type="button">☑ タスク追加</button>
           <span class="toolbar-spacer"></span>
-          <button id="todayBtn" class="ghost" type="button">今日</button>
-          <button id="prevMonthBtn" class="ghost" type="button">‹ 前月</button>
-          <button id="nextMonthBtn" class="ghost" type="button">次月 ›</button>
+          <label class="hub-btn file-label">JSON読込<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
+          <label class="hub-btn file-label">iCal読込<input id="icalInput" type="file" accept="text/calendar,.ics,.ical" hidden /></label>
+          <button id="googleImportBtn" class="hub-btn is-accent" type="button">Googleカレンダー読込</button>
+          <button id="exportJsonBtn" class="hub-btn" type="button">JSON出力</button>
+          <button id="exportIcalBtn" class="hub-btn" type="button">iCal出力</button>
         </div>
 
         <section id="focusPanel" class="focus-panel" hidden>
@@ -52,14 +59,19 @@
             <small>選択した日付にイベントや準備タスクを追加できます。</small>
           </div>
           <div class="focus-actions">
-            <button id="focusAddSessionBtn" class="primary" type="button">この日にセッション追加</button>
-            <button id="focusAddTaskBtn" class="ghost" type="button">この日にタスク追加</button>
-            <button id="clearFocusBtn" class="ghost" type="button">解除</button>
+            <button id="focusAddSessionBtn" class="hub-btn is-blue" type="button">この日にセッション追加</button>
+            <button id="focusAddTaskBtn" class="hub-btn" type="button">この日にタスク追加</button>
+            <button id="clearFocusBtn" class="hub-btn" type="button">解除</button>
           </div>
         </section>
 
         <section class="month-card" aria-label="月間カレンダー">
-          <h2 id="monthTitle">----</h2>
+          <div class="month-head">
+            <button id="prevMonthBtn" class="month-nav" type="button" aria-label="前の月">‹</button>
+            <h2 id="monthTitle">----</h2>
+            <button id="nextMonthBtn" class="month-nav" type="button" aria-label="次の月">›</button>
+            <button id="todayBtn" class="hub-btn" type="button">今日</button>
+          </div>
           <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
           <div id="calendarGrid" class="calendar-grid"></div>
         </section>
@@ -67,20 +79,20 @@
 
       <aside class="side-column">
         <section class="panel today-panel">
-          <h2>▣ 今日の予定</h2>
+          <h2>今日の予定</h2>
           <div id="todayList" class="stack-list"></div>
         </section>
         <section class="panel task-panel">
-          <h2>☑ 今週の準備タスク <span id="weekRange"></span></h2>
+          <h2>今週の準備タスク <span id="weekRange"></span></h2>
           <p class="panel-note">ドラッグで並び替え。左の大きなチェックで完了にできます。</p>
           <div id="taskList" class="task-list" aria-label="今週の準備タスク"></div>
-          <button id="showAllTasksBtn" class="wide-button" type="button">☰ すべてのタスクを表示</button>
+          <button id="showAllTasksBtn" class="hub-btn wide-button" type="button">すべてのタスクを表示</button>
         </section>
       </aside>
 
       <aside id="detailPane" class="detail-pane" aria-live="polite">
         <div class="detail-head">
-          <h2>▣ セッション詳細</h2>
+          <h2>セッション詳細</h2>
           <button id="closeDetailBtn" type="button" aria-label="詳細を閉じる">×</button>
         </div>
         <div id="detailContent" class="detail-content empty">カレンダーからセッションを選択してください。</div>
@@ -135,6 +147,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="js/session_check_calendar.js"></script>
+  <script src="../../shared/hub/shell.js?v=0.1.0"></script>
+  <script src="js/session_check_calendar.js?v=0.12"></script>
 </body>
 </html>

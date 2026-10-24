@@ -1,0 +1,289 @@
+/*
+ * 卓ログトラッカー 新デザイン（紙の手帳テーマ）
+ * <html data-design="paper"> のときだけ効く上書きスタイル。旧デザインは log_tool_style.css のまま。
+ * 色は shared/hub/hub.css の変数（--paper, --sheet, --ink など）を使う。Night は html[data-theme="night"] で切り替わる。
+ * どちらのデザインでも DOM と保存データは同じなので、切り替えてもデータは変わらない。
+ */
+
+/* 旧デザインではツール切り替えタブを出さない */
+html:not([data-design="paper"]) .hub-rail-wrap { display: none; }
+
+html[data-design="paper"] {
+  --bg-main: var(--paper);
+  --bg-panel: var(--sheet);
+  --bg-panel-soft: var(--sheet-sub);
+  --border-soft: var(--line);
+  --border-cyan: var(--line);
+  --text-main: var(--ink);
+  --text-muted: var(--muted);
+  --text-soft: var(--ink-soft);
+  --cyan: var(--pen-blue);
+  --cyan-strong: var(--pen-blue);
+  --cyan-bg: var(--sheet);
+  --violet: var(--pen-blue);
+  --amber: var(--note-ink);
+  --rose: var(--pen-red);
+  --shadow-panel: var(--shadow);
+  --selected-row-bg: var(--note);
+  background: var(--paper);
+}
+
+html[data-design="paper"] body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--paper-dot) 1px, transparent 1.3px);
+  background-size: 22px 22px;
+}
+html[data-design="paper"] body::before,
+html[data-design="paper"] body::after { display: none; }
+html[data-design="paper"] body h1,
+html[data-design="paper"] body h2 { font-family: var(--font-head); font-weight: 500; }
+
+html[data-design="paper"] body .app-shell { width: min(100% - 150px, 1480px); }
+
+/* ---------- 共通の紙パネル ---------- */
+html[data-design="paper"] body .site-header,
+html[data-design="paper"] body .filter-panel,
+html[data-design="paper"] body .table-panel,
+html[data-design="paper"] body .export-card,
+html[data-design="paper"] body .notice-card,
+html[data-design="paper"] body .stat-card,
+html[data-design="paper"] body .tool-footer-note {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  box-shadow: var(--shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--ink);
+}
+
+/* ---------- ヘッダー：罫線と赤いマージン線 ---------- */
+html[data-design="paper"] body .site-header {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 27px, var(--ruled) 27px 28px);
+  box-shadow: inset 3px 0 0 rgba(181, 82, 58, 0.45), var(--shadow);
+}
+html[data-design="paper"] body .site-title { color: var(--ink); font-size: 30px; font-weight: 500; letter-spacing: 0.06em; line-height: 1.15; }
+html[data-design="paper"] body .site-description { color: var(--ink-soft); font-size: 13px; }
+html[data-design="paper"] body .header-version { color: var(--muted); }
+html[data-design="paper"] body .portal-link { border-color: var(--line); background: var(--sheet); color: var(--pen-red); box-shadow: none; }
+html[data-design="paper"] body .portal-link:hover { transform: none; background: var(--sheet-sub); color: var(--pen-blue); }
+html[data-design="paper"] body .header-pill-violet { border-color: var(--note-line); background: var(--note); color: var(--note-ink); }
+html[data-design="paper"] body .tool-icon { border-radius: 9px; border-color: var(--line); background: var(--sheet); box-shadow: none; }
+html[data-design="paper"] body .tool-icon-main,
+html[data-design="paper"] body .tool-icon-star { color: var(--pen-red); text-shadow: none; }
+html[data-design="paper"] body .tool-icon-stats { display: none; }
+
+/* ---------- ボタン ---------- */
+html[data-design="paper"] body .header-button,
+html[data-design="paper"] body .mini-button {
+  border: 1px solid var(--line);
+  background: var(--sheet);
+  color: var(--ink-soft);
+  box-shadow: none;
+  font-weight: 700;
+}
+html[data-design="paper"] body .header-button:hover,
+html[data-design="paper"] body .mini-button:hover { transform: none; border-color: var(--ink-soft); color: var(--ink); }
+html[data-design="paper"] body .header-button.primary { border-color: var(--ink); background: var(--ink); color: var(--sheet); }
+html[data-design="paper"] body .header-button.secondary-cyan { border-color: rgba(181, 82, 58, 0.35); background: rgba(181, 82, 58, 0.07); color: var(--pen-red); }
+html[data-design="paper"] body .header-button.secondary-amber { border-color: var(--note-line); background: var(--note); color: var(--note-ink); }
+html[data-design="paper"] body .header-button.is-design { border-style: dashed; color: var(--pen-blue); }
+html[data-design="paper"] body .mini-button.active-soft { border-color: var(--note-line); background: var(--note); color: var(--note-ink); }
+html[data-design="paper"] body .mini-button.selected { background: var(--marker); color: var(--ink); }
+html[data-design="paper"] body .accent-button,
+html[data-design="paper"] body .drawer-foot-btn.primary { border-color: var(--pen-blue); background: var(--pen-blue); color: var(--sheet); }
+html[data-design="paper"] body .accent-button:disabled { opacity: 0.5; }
+html[data-design="paper"] body .drawer-foot-btn { border-color: var(--line); background: var(--sheet); color: var(--ink-soft); }
+html[data-design="paper"] body .drawer-foot-btn.accent { border-color: var(--note-line); background: var(--note); color: var(--note-ink); }
+html[data-design="paper"] body .danger-button,
+html[data-design="paper"] body .danger-soft { border: 1px solid rgba(181, 82, 58, 0.35); background: rgba(181, 82, 58, 0.07); color: var(--pen-red); }
+html[data-design="paper"] body .icon-button { background: var(--sheet-sub); color: var(--muted); }
+html[data-design="paper"] body .report-button { background: var(--ink); color: var(--sheet); }
+html[data-design="paper"] body .floating-add-button { background: var(--ink); color: var(--sheet); box-shadow: var(--shadow); }
+html[data-design="paper"] body .kansou-tab { left: auto; background: var(--pen-red); color: var(--sheet); box-shadow: var(--shadow); font-family: var(--font-head); font-weight: 500; }
+
+/* ---------- 集計カード ---------- */
+html[data-design="paper"] body .stat-card { border-radius: 10px; }
+html[data-design="paper"] body .stat-card p { color: var(--muted); font-weight: 700; }
+html[data-design="paper"] body .stat-card strong { color: var(--ink); }
+html[data-design="paper"] body .stat-card > span { border-radius: 9px; background: var(--ink); color: var(--sheet); }
+
+/* ---------- 検索・入力 ---------- */
+html[data-design="paper"] body input,
+html[data-design="paper"] body select,
+html[data-design="paper"] body textarea { color: var(--ink); }
+html[data-design="paper"] body .search-box input,
+html[data-design="paper"] body .filter-panel select,
+html[data-design="paper"] body .drawer-title-input,
+html[data-design="paper"] body .drawer-meta-grid input,
+html[data-design="paper"] body .drawer-meta-grid select,
+html[data-design="paper"] body .drawer-section textarea,
+html[data-design="paper"] body .drawer-link-row input,
+html[data-design="paper"] body .drawer-media-cap,
+html[data-design="paper"] body .export-search-row,
+html[data-design="paper"] body .export-card textarea,
+html[data-design="paper"] body .import-selfname input,
+html[data-design="paper"] body #sheetPasteInput,
+html[data-design="paper"] body #reportPasteInput,
+html[data-design="paper"] body .ccfolia-fields input,
+html[data-design="paper"] body .cc-speaker select,
+html[data-design="paper"] body .session-dialog input,
+html[data-design="paper"] body .session-dialog select,
+html[data-design="paper"] body .session-dialog textarea {
+  border-color: var(--line);
+  background: var(--sheet);
+  color: var(--ink);
+}
+html[data-design="paper"] body .search-box span,
+html[data-design="paper"] body .export-search-row span { color: var(--faint); }
+
+/* ---------- テーブル ---------- */
+html[data-design="paper"] body .table-panel { background: var(--sheet); }
+html[data-design="paper"] body .table-header { border-color: var(--line); }
+html[data-design="paper"] body .table-header p { color: var(--muted); }
+html[data-design="paper"] body .drag-tip-row,
+html[data-design="paper"] body .drag-tip { border-color: var(--line); background: var(--sheet-sub); color: var(--muted); }
+html[data-design="paper"] body table { color: var(--ink-soft); }
+html[data-design="paper"] body th,
+html[data-design="paper"] body td { border-color: var(--line-soft); }
+html[data-design="paper"] body th,
+html[data-design="paper"] body .column-report,
+html[data-design="paper"] body th.column-reported { background: var(--sheet-sub); color: var(--muted); }
+html[data-design="paper"] body .cell-report,
+html[data-design="paper"] body .cell-reported { background: var(--sheet); }
+html[data-design="paper"] body .selected-row .cell-reported,
+html[data-design="paper"] body .table-scroll tbody tr.selected-row,
+html[data-design="paper"] body .table-scroll tbody tr.selected-row td { background: var(--note); }
+html[data-design="paper"] body .table-scroll tbody tr:not(:has(.add-row-button)):hover { background: var(--sheet-sub); }
+html[data-design="paper"] body .cell-scenario { color: var(--ink); }
+html[data-design="paper"] body .hashtag-cell { color: var(--pen-blue); }
+html[data-design="paper"] body .fixed-label { background: var(--sheet-sub); color: var(--muted); }
+html[data-design="paper"] body .drag-handle { color: var(--faint); }
+html[data-design="paper"] body .draggable-header.dragging,
+html[data-design="paper"] body .draggable-header.drag-over { background: var(--marker); color: var(--ink); box-shadow: none; }
+html[data-design="paper"] body .add-row-cell { background: var(--sheet); }
+html[data-design="paper"] body .add-row-button { border-color: var(--note-line); background: transparent; color: var(--note-ink); border-radius: 10px; }
+html[data-design="paper"] body .scenario-open-btn { border-color: var(--line); background: var(--sheet); color: var(--pen-blue); }
+html[data-design="paper"] body .table-scroll::-webkit-scrollbar-track { background: var(--sheet-sub); }
+html[data-design="paper"] body .table-scroll::-webkit-scrollbar-thumb { background: var(--line); }
+
+html[data-design="paper"] body .sample-notice { border-color: var(--note-line); background: var(--note); color: var(--note-ink); }
+html[data-design="paper"] body .sample-notice .mini-button { border-color: var(--note-line); background: var(--sheet); color: var(--note-ink); }
+html[data-design="paper"] body #sessionTable tr.is-sample td { background: var(--sheet-sub); color: var(--muted); }
+
+/* システム・役割のピル（紙の色に合わせる） */
+html[data-design="paper"] body .system-pill,
+html[data-design="paper"] body .role-pill { font-weight: 700; }
+html[data-design="paper"] body .system-coc6 { border-color: var(--sys-coc6-line); background: var(--sys-coc6-bg); color: var(--sys-coc6-ink); }
+html[data-design="paper"] body .system-coc7 { border-color: var(--sys-coc7-line); background: var(--sys-coc7-bg); color: var(--sys-coc7-ink); }
+html[data-design="paper"] body .system-emoklore { border-color: var(--sys-emo-line); background: var(--sys-emo-bg); color: var(--sys-emo-ink); }
+html[data-design="paper"] body .system-madamisu { border-color: var(--sys-mada-line); background: var(--sys-mada-bg); color: var(--sys-mada-ink); }
+html[data-design="paper"] body .system-other,
+html[data-design="paper"] body .system-pill:not([class*="system-"]) { border-color: var(--sys-other-line); background: var(--sys-other-bg); color: var(--sys-other-ink); }
+html[data-design="paper"] body .role-pl { border-color: var(--ok-line); background: var(--ok-bg); color: var(--ok-ink); }
+html[data-design="paper"] body .role-gm { border-color: rgba(181, 82, 58, 0.35); background: rgba(181, 82, 58, 0.08); color: var(--pen-red); }
+html[data-design="paper"] body .role-other { border-color: var(--line); background: var(--sheet); color: var(--muted); }
+
+/* ---------- 項目追加パネル ---------- */
+html[data-design="paper"] body .field-panel { border-color: var(--line); border-radius: var(--radius); background: var(--sheet); box-shadow: var(--shadow); }
+html[data-design="paper"] body .optional-field-button { border-color: var(--line-soft); background: var(--sheet-sub); }
+html[data-design="paper"] body .optional-field-button strong { color: var(--ink); }
+html[data-design="paper"] body .optional-field-button small { color: var(--muted); }
+html[data-design="paper"] body .add-chip { background: var(--sheet); color: var(--pen-blue); }
+html[data-design="paper"] body .custom-field-button { border-color: var(--note-line); background: transparent; color: var(--note-ink); }
+
+/* ---------- 使い方・ショートカット ---------- */
+html[data-design="paper"] body .shortcut-panel-inner { border-color: var(--note-line); background: var(--note); color: var(--ink); box-shadow: var(--shadow); }
+html[data-design="paper"] body .shortcut-panel-head { border-color: var(--note-line); }
+html[data-design="paper"] body .shortcut-panel-head p { color: var(--note-ink); }
+html[data-design="paper"] body .shortcut-panel-list div { border-color: var(--note-line); background: var(--sheet); color: var(--ink-soft); }
+html[data-design="paper"] body kbd { border-color: var(--line); background: var(--sheet-sub); color: var(--ink); }
+
+/* ---------- 感想ドロワー ---------- */
+html[data-design="paper"] body .kansou-drawer { border-color: var(--line); background: var(--sheet); color: var(--ink); }
+html[data-design="paper"] body .drawer-header { border-color: var(--line); background-image: repeating-linear-gradient(to bottom, transparent 0 27px, var(--ruled) 27px 28px); box-shadow: inset 3px 0 0 rgba(181, 82, 58, 0.45); }
+html[data-design="paper"] body .drawer-footer { border-color: var(--line); background: var(--sheet-sub); }
+html[data-design="paper"] body .drawer-label,
+html[data-design="paper"] body .drawer-muted { color: var(--faint); }
+html[data-design="paper"] body .drawer-section,
+html[data-design="paper"] body .drawer-actions { border-color: var(--line); }
+html[data-design="paper"] body .drawer-media-item { border-color: var(--line); background: var(--sheet-sub); }
+html[data-design="paper"] body .drawer-link-go,
+html[data-design="paper"] body .drawer-media-link { color: var(--pen-blue); }
+html[data-design="paper"] body .drawer-link-x { background: rgba(181, 82, 58, 0.08); color: var(--pen-red); }
+html[data-design="paper"] body .drawer-overlay { background: rgba(46, 41, 34, 0.25); backdrop-filter: none; }
+
+/* ---------- 出力カード ---------- */
+html[data-design="paper"] body .export-card p,
+html[data-design="paper"] body .export-field-label { color: var(--muted); }
+html[data-design="paper"] body .export-mode-btn { border-color: var(--line); background: var(--sheet); }
+html[data-design="paper"] body .export-mode-btn strong { color: var(--ink); }
+html[data-design="paper"] body .export-mode-btn small { color: var(--muted); }
+html[data-design="paper"] body .export-mode-btn:hover { border-color: var(--ink-soft); }
+html[data-design="paper"] body .export-mode-btn.is-active { border-color: rgba(74, 58, 36, 0.3); background: var(--marker); box-shadow: none; }
+html[data-design="paper"] body .export-mode-btn.is-active strong { color: var(--ink); }
+html[data-design="paper"] body .export-hint { color: var(--pen-blue); }
+
+html[data-design="paper"] body .tool-footer-note h2 { color: var(--ink); }
+html[data-design="paper"] body .tool-footer-note p { color: var(--muted); }
+
+/* ---------- ダイアログ ---------- */
+html[data-design="paper"] body .session-dialog,
+html[data-design="paper"] body .import-dialog,
+html[data-design="paper"] body .mini-confirm {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+html[data-design="paper"] body .session-dialog::backdrop,
+html[data-design="paper"] body .import-dialog::backdrop,
+html[data-design="paper"] body .mini-confirm-dialog::backdrop { background: rgba(46, 41, 34, 0.35); }
+html[data-design="paper"] body .dialog-header,
+html[data-design="paper"] body .import-dialog-head {
+  border-color: var(--line);
+  background: var(--sheet);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 27px, var(--ruled) 27px 28px);
+  box-shadow: inset 3px 0 0 rgba(181, 82, 58, 0.45);
+}
+html[data-design="paper"] body .import-dialog-head p { color: var(--pen-red); }
+html[data-design="paper"] body .import-dialog-foot,
+html[data-design="paper"] body .import-selfname { border-color: var(--line); background: var(--sheet-sub); }
+html[data-design="paper"] body .dialog-fieldset { border-color: var(--line); background: var(--sheet); }
+html[data-design="paper"] body .dialog-fieldset legend { color: var(--muted); }
+html[data-design="paper"] body .import-tab { border-color: var(--line); background: var(--sheet); color: var(--muted); }
+html[data-design="paper"] body .import-tab.is-active { border-color: rgba(74, 58, 36, 0.3); background: var(--marker); color: var(--ink); }
+html[data-design="paper"] body .import-hint,
+html[data-design="paper"] body .import-sub-hint,
+html[data-design="paper"] body .import-filename,
+html[data-design="paper"] body .cc-field-hint { color: var(--muted); }
+html[data-design="paper"] body .import-count { background: var(--note); color: var(--note-ink); }
+html[data-design="paper"] body .cc-speaker { border-color: var(--line); background: var(--sheet-sub); }
+html[data-design="paper"] body #sheetGrid th,
+html[data-design="paper"] body #sheetGrid td,
+html[data-design="paper"] body #importPreviewTable th,
+html[data-design="paper"] body #importPreviewTable td { border-color: var(--line-soft); }
+html[data-design="paper"] body #sheetGrid thead th,
+html[data-design="paper"] body #sheetGrid td.sg-rownum,
+html[data-design="paper"] body #importPreviewTable th { background: var(--sheet-sub); color: var(--muted); }
+html[data-design="paper"] body #sheetGrid select.sg-map { border-color: var(--line); background: var(--sheet); color: var(--ink); }
+html[data-design="paper"] body #importPreviewTable tr.is-dup,
+html[data-design="paper"] body #sheetGrid tr.is-dup td { background: var(--warn-bg); color: var(--warn-ink); }
+html[data-design="paper"] body .mini-confirm-cancel { background: var(--sheet); color: var(--ink-soft); }
+html[data-design="paper"] body .mini-confirm-ok { border-color: var(--pen-red); background: var(--pen-red); color: var(--sheet); }
+html[data-design="paper"] body .field-unit { color: var(--muted); }
+
+/* 旧デザインの Night 指定（body.night-mode …）より強くする */
+html[data-design="paper"] body.night-mode .header-button.plain,
+html[data-design="paper"] body.night-mode .mini-button { border-color: var(--line); background: var(--sheet); color: var(--ink-soft); }
+html[data-design="paper"] body.night-mode .import-tab.is-active { background: var(--marker); color: var(--ink); }
+html[data-design="paper"] body .export-search-row input { background: transparent; }
+html[data-design="paper"] body .date-cell { color: var(--ink); }
+
+@media (max-width: 760px) {
+  html[data-design="paper"] body .app-shell { width: calc(100% - 24px); padding-bottom: 72px; }
+  html[data-design="paper"] body .floating-add-button { bottom: 72px; }
+}
