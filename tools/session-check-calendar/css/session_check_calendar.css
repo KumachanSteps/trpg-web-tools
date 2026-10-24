@@ -46,8 +46,6 @@
   background: var(--note);
 }
 .focus-panel strong { display: block; font-family: var(--font-head); font-weight: 500; font-size: 19px; }
-.focus-panel small { color: var(--note-ink); }
-.eyebrow { color: var(--note-ink); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; }
 .focus-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 
 /* ---------- 月表示 ---------- */

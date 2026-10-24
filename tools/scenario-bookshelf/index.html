@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.0" />
-  <link rel="stylesheet" href="css/bookshelf.css?v=0.1.0" />
+  <link rel="stylesheet" href="css/bookshelf.css?v=0.1.1" />
 </head>
 <body class="hub" data-hub-tool="bookshelf">
   <nav id="hubRail"></nav>
@@ -30,56 +30,49 @@
           <a class="hub-btn" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer" aria-label="X">𝕏</a>
           <button id="usageBtn" class="hub-btn is-accent" type="button" aria-expanded="false" aria-controls="usagePanel">使い方</button>
           <button id="themeToggleBtn" class="hub-btn" type="button">Light/Night</button>
-          <span id="saveState" class="hub-pill is-sync">この端末に保存</span>
+          <span id="saveState" class="hub-pill is-sync" hidden></span>
         </div>
       </div>
       <div class="hub-header-meta">
-        <p class="hub-desc">持っているシナリオの本棚。フォルダを登録すると自動で並び、フォルダ名もルールに沿って一括で整えられます。</p>
-        <p class="hub-version">v0.1.0 2026.10.24</p>
+        <p class="hub-version">v0.1.1 2026.10.24</p>
       </div>
     </header>
 
     <section id="usagePanel" class="hub-panel" hidden>
       <div class="hub-panel-body bs-usage">
-        <p><strong>フォルダを登録：</strong>シナリオを保存しているフォルダを選ぶと、その中のフォルダ名・ファイル名（PDF・ZIP）をシナリオライブラリと照合して本棚に並べます。読むのは名前だけで、ファイルの中身は読み込まず、どこにも送信しません。</p>
-        <p><strong>照合：</strong>候補が複数ある作品は「照合待ち」になります。表の候補から選ぶと次回のスキャンでも覚えています。ライブラリに無い作品は「未登録」です。</p>
-        <p><strong>フォルダ名を整理：</strong>命名ルールを決めると、照合できたフォルダの新しい名前を確認できます。名前の変更は書き出したスクリプトを本棚フォルダで実行して行います（元に戻すスクリプトも出せます）。</p>
-        <p><strong>保存先：</strong>本棚はこのブラウザ内（IndexedDB）に保存されます。別の端末へは JSON 出力 → 読み込みで移せます。</p>
+        <p>読むのはフォルダ名とファイル名だけです。中身は読まず、どこにも送信しません。</p>
+        <p>本棚はこのブラウザ内に保存されます。別の端末へは JSON で移せます。</p>
+        <p>フォルダ名の変更は、書き出したスクリプトを登録したフォルダで実行します。</p>
       </div>
     </section>
 
     <section class="hub-stats" aria-label="集計">
-      <article class="hub-stat"><div><p>所蔵</p><strong id="statOwned">0</strong></div><span class="hub-stat-unit">本</span></article>
-      <article class="hub-stat"><div><p>積み</p><strong id="statStack">0</strong></div><span class="hub-stat-unit">積</span></article>
-      <article class="hub-stat"><div><p>通過済み</p><strong id="statPlayed">0</strong></div><span class="hub-stat-unit">済</span></article>
-      <article class="hub-stat"><div><p>照合待ち・未登録</p><strong id="statPending">0</strong></div><span class="hub-stat-unit">?</span></article>
+      <article class="hub-stat"><div><p>所蔵</p><strong id="statOwned">0</strong></div></article>
+      <article class="hub-stat"><div><p>積み</p><strong id="statStack">0</strong></div></article>
+      <article class="hub-stat"><div><p>通過済み</p><strong id="statPlayed">0</strong></div></article>
+      <article class="hub-stat"><div><p>未照合</p><strong id="statPending">0</strong></div></article>
     </section>
 
     <section class="hub-panel" aria-label="メディアフォルダ">
       <button id="foldersToggle" class="hub-fold-toggle" type="button" aria-expanded="false" aria-controls="foldersBody">
         <span id="foldersMark" class="hub-fold-mark">+</span>
-        <strong id="foldersTitle">メディアフォルダ</strong>
+        <strong id="foldersTitle">フォルダ</strong>
         <span id="foldersMeta" class="bs-meta"></span>
       </button>
       <div id="foldersBody" class="hub-fold-body" hidden>
-        <p id="firstNote" class="hub-note-title bs-first" hidden>シナリオを保存しているフォルダを登録すると、持っているシナリオを自動で本棚に並べます。</p>
         <div id="folderList" class="bs-folder-list"></div>
         <div class="bs-folder-actions">
           <button id="addFolderBtn" class="hub-btn is-dashed is-large" type="button">＋ フォルダを登録</button>
           <input id="folderInput" type="file" webkitdirectory directory multiple hidden />
           <input id="importInput" type="file" accept="application/json,.json" hidden />
           <button id="importBtn" class="hub-btn" type="button">JSON を読み込む</button>
-          <span class="bs-hint">読むのはフォルダ名とファイル名だけです。中身は読み込まず、送信もしません。</span>
         </div>
       </div>
     </section>
 
     <section class="hub-panel" aria-label="本棚">
       <div class="hub-panel-head">
-        <div>
-          <h2>本棚</h2>
-          <p>フォルダ名をシナリオライブラリと照合し、卓ログトラッカーの記録から「積み」「通過済み」を自動で付けます。</p>
-        </div>
+        <h2>本棚</h2>
         <div class="hub-actions">
           <button id="renameToggle" class="hub-btn is-ink" type="button" aria-expanded="false" aria-controls="renamePanel">フォルダ名を整理</button>
           <button id="exportBtn" class="hub-btn is-accent" type="button">JSON出力</button>
@@ -89,7 +82,7 @@
       <div id="renamePanel" class="hub-note" hidden>
         <div class="bs-tpl-row">
           <label class="bs-tpl">
-            <span class="hub-label">命名ルール</span>
+            <span class="visually-hidden">命名ルール</span>
             <input id="tplInput" class="hub-text" type="text" spellcheck="false" />
           </label>
           <span id="tokenList" class="bs-tokens"></span>
@@ -102,15 +95,15 @@
           </table>
         </div>
         <div class="bs-rename-actions">
-          <button id="scriptWinBtn" class="hub-btn is-blue is-large" type="button">Windows 用スクリプト</button>
-          <button id="scriptMacBtn" class="hub-btn is-blue is-large" type="button">Mac・Linux 用スクリプト</button>
-          <button id="undoBtn" class="hub-btn is-large" type="button">元に戻すスクリプト</button>
+          <button id="scriptWinBtn" class="hub-btn is-blue is-large" type="button">Windows</button>
+          <button id="scriptMacBtn" class="hub-btn is-blue is-large" type="button">Mac・Linux</button>
+          <button id="undoBtn" class="hub-btn is-large" type="button">元に戻す</button>
           <span id="renameNote" class="bs-hint"></span>
         </div>
       </div>
 
       <div class="bs-filter">
-        <label class="hub-search bs-q"><span aria-hidden="true">⌕</span><input id="qInput" type="search" placeholder="シナリオ名・作者・フォルダ名を検索…" autocomplete="off" /></label>
+        <label class="hub-search bs-q"><span aria-hidden="true">⌕</span><input id="qInput" type="search" placeholder="シナリオ名・作者・フォルダ名" autocomplete="off" /></label>
         <span id="filterChips" class="bs-chips" role="group" aria-label="状態で絞り込み"></span>
       </div>
 
@@ -123,11 +116,11 @@
         </table>
       </div>
       <div id="emptyState" class="bs-empty" hidden>
-        <div class="hub-empty">まだ本棚が空です。上の「＋ フォルダを登録」から始めるか、<a href="../scenario-library/index.html">シナリオライブラリ</a>で見つけた作品を追加してください。</div>
+        <div class="hub-empty"><a href="../scenario-library/index.html">ライブラリから探す</a></div>
       </div>
     </section>
 
-    <p id="attribution" class="hub-footnote">照合にはシナリオライブラリのカタログ（CC BY 4.0）を使っています。</p>
+    <p id="attribution" class="hub-footnote">CC BY 4.0</p>
   </main>
 
   <script src="../../shared/hub/shell.js?v=0.1.0"></script>
@@ -135,6 +128,6 @@
   <script src="../../shared/hub/scenario-core.js?v=0.1.0"></script>
   <script src="../../shared/hub/catalog.js?v=0.1.0"></script>
   <script src="../../shared/hub/bookshelf-data.js?v=0.1.0"></script>
-  <script src="js/bookshelf.js?v=0.1.0"></script>
+  <script src="js/bookshelf.js?v=0.1.1"></script>
 </body>
 </html>
