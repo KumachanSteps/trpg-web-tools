@@ -31,7 +31,7 @@
 
   function init() {
     ["usageBtn", "usagePanel", "saveState", "statOwned", "statStack", "statPlayed", "statPending", "foldersToggle", "foldersMark",
-      "foldersTitle", "foldersMeta", "foldersBody", "firstNote", "folderList", "addFolderBtn", "folderInput", "importInput", "importBtn",
+      "foldersTitle", "foldersMeta", "foldersBody", "folderList", "addFolderBtn", "folderInput", "importInput", "importBtn",
       "renameToggle", "exportBtn", "renamePanel", "tplInput", "tokenList", "tplReset", "previewBody", "scriptWinBtn", "scriptMacBtn",
       "undoBtn", "renameNote", "qInput", "filterChips", "shelfBody", "emptyState", "attribution"
     ].forEach(function (id) { els[id] = $(id); });
@@ -89,6 +89,7 @@
       if (!ok) {
         els.saveState.className = "hub-pill is-warn";
         els.saveState.textContent = "保存できません（閉じると消えます）";
+        els.saveState.hidden = false;
       }
     });
 
@@ -99,8 +100,7 @@
         if (!shelf.pins) shelf.pins = {};
         plays = Hub.countPlays(catalog);
         if (catalog.manifest.attribution) {
-          els.attribution.textContent = "照合には " + catalog.manifest.attribution + " を使っています。" +
-            (catalog.manifest.sample ? "（いまは架空のサンプルデータです）" : "");
+          els.attribution.textContent = catalog.manifest.attribution + (catalog.manifest.sample ? "（サンプルデータ）" : "");
         }
         rematchAll();
         renderAll();
@@ -197,20 +197,18 @@
     els.foldersBody.hidden = !open;
     els.foldersMark.textContent = open ? "−" : "+";
     els.foldersToggle.setAttribute("aria-expanded", String(open));
-    els.firstNote.hidden = shelf.folders.length > 0;
-    els.foldersTitle.textContent = "メディアフォルダ " + shelf.folders.length + " 件";
+    els.foldersTitle.textContent = "フォルダ " + shelf.folders.length;
     var pending = rows.filter(function (r) { return r.state === "ambiguous"; }).length;
     var none = rows.filter(function (r) { return r.state === "none"; }).length;
     var last = shelf.folders.map(function (f) { return f.scannedAt || ""; }).sort().pop();
     els.foldersMeta.innerHTML = shelf.folders.length
-      ? "<span>最終スキャン " + esc(fmtDate(last)) + "</span>" +
+      ? "<span>" + esc(fmtDate(last)) + "</span>" +
         (pending ? '<span class="hub-pill is-warn">照合待ち ' + pending + "</span>" : "") +
         (none ? '<span class="hub-pill is-plain">未登録 ' + none + "</span>" : "")
-      : "<span>まだ登録されていません</span>";
+      : "";
     els.folderList.innerHTML = shelf.folders.map(function (f) {
       var count = shelf.items.filter(function (it) { return it.folderId === f.id; }).length;
-      var how = f.method === "handle" ? "再スキャンできます" : "再スキャン時はもう一度フォルダを選びます";
-      return '<div class="bs-folder"><strong>' + esc(f.name) + "<small>" + count + " 件 ・ " + esc(fmtDate(f.scannedAt)) + " ・ " + how + "</small></strong>" +
+      return '<div class="bs-folder"><strong>' + esc(f.name) + "<small>" + count + " 件 ・ " + esc(fmtDate(f.scannedAt)) + "</small></strong>" +
         '<span class="bs-folder-btns"><button type="button" class="hub-btn" data-rescan="' + esc(f.id) + '">再スキャン</button>' +
         '<button type="button" class="hub-btn" data-remove-folder="' + esc(f.id) + '">登録を解除</button></span></div>';
     }).join("");
@@ -322,15 +320,15 @@
         (!ui.unchecked[p.key] && !p.same && !p.conflict ? " checked" : "") + ' /></td><td class="hub-mono">' + esc(p.from) +
         '</td><td aria-hidden="true">→</td><td class="hub-cell-title">' + note + "</td></tr>";
     }).join("") + (unmatched ? '<tr><td></td><td colspan="3" class="bs-hint">照合待ち・未登録の ' + unmatched + " 件は変更しません。</td></tr>" : "") +
-      (!plan.length && !unmatched ? '<tr><td></td><td colspan="3" class="bs-hint">フォルダを登録すると、ここに新しい名前が並びます。</td></tr>' : "");
+      "";
     renderRenameNote();
   }
 
   function renderRenameNote() {
     var n = selectedPlan().length;
     els.renameNote.textContent = n
-      ? n + " 件を変更します。スクリプトを本棚フォルダ（登録したフォルダの中）に置いて実行してください。"
-      : "変更する名前はありません。";
+      ? n + " 件"
+      : "";
     els.scriptWinBtn.disabled = els.scriptMacBtn.disabled = n === 0;
     // 実行・再スキャン後は次の変更が無くなるので、元に戻すは履歴があれば使えるようにする
     els.undoBtn.disabled = n === 0 && shelf.renames.length === 0;

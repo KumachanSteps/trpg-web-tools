@@ -93,10 +93,10 @@
     els.sampleBanner.hidden = !m.sample;
     if (m.offline) {
       els.sampleBanner.hidden = false;
-      els.sampleBanner.textContent = "オフラインのため、前回読み込んだカタログを表示しています。";
+      els.sampleBanner.textContent = "オフライン（前回のカタログ）";
     }
     if (m.attribution) {
-      els.attribution.textContent = m.attribution + "。配布ページの公開情報をもとに作成し、表紙画像は配布元から直接表示しています（保存・再配布はしません）。";
+      els.attribution.textContent = m.attribution;
     }
     var writers = {};
     var now = Date.now();
@@ -215,8 +215,8 @@
     var shown = list.slice(0, state.limit);
     var total = catalog.scenarios.length;
     els.countLine.textContent = list.length === total
-      ? total.toLocaleString("ja-JP") + " 件中 " + shown.length + " 件を表示"
-      : list.length.toLocaleString("ja-JP") + " 件が見つかりました";
+      ? shown.length + " / " + total.toLocaleString("ja-JP")
+      : list.length.toLocaleString("ja-JP") + " 件";
     els.emptyState.hidden = list.length > 0;
     els.moreBtn.hidden = list.length <= state.limit;
 
@@ -224,7 +224,7 @@
 
     els.resultGrid.innerHTML = shown.map(function (sc) {
       return '<button type="button" class="lib-card" data-id="' + esc(sc.id) + '" aria-pressed="' + (sc.id === state.selected) + '">' +
-        cover(sc, "", '<span class="lib-card-source">' + esc((sc.source && sc.source.site) || "—") + "</span>" + mineBadge(sc) + "<span>表紙</span>") +
+        cover(sc, "", '<span class="lib-card-source">' + esc((sc.source && sc.source.site) || "—") + "</span>" + mineBadge(sc)) +
         '<span class="lib-card-body">' +
         '<span class="lib-card-title">' + esc(sc.title) + "</span>" +
         '<span class="lib-card-by">' + esc(byLine(sc)) + "</span>" +
@@ -240,8 +240,7 @@
     els.detail.hidden = !sc;
     if (!sc) return;
     els.detailCover.className = "hub-cover lib-detail-cover sys-" + sc.system;
-    els.detailCover.innerHTML = "<span>表紙（配布元から直接表示）</span>" +
-      (sc.cover_url ? '<img src="' + esc(sc.cover_url) + '" alt="" referrerpolicy="no-referrer" />' : "");
+    els.detailCover.innerHTML = (sc.cover_url ? '<img src="' + esc(sc.cover_url) + '" alt="" referrerpolicy="no-referrer" />' : "");
     els.detailPills.innerHTML = pills(sc) + '<span class="hub-pill">' + hoLabel(sc) + "</span>";
     els.detailTitle.textContent = sc.title;
     els.detailBy.textContent = byLine(sc);
@@ -264,7 +263,7 @@
 
     var manual = shelf.manual.some(function (m) { return m.scenarioId === sc.id; });
     if (folderOwned[sc.id]) {
-      els.shelfBtn.textContent = "本棚にあり（フォルダ）";
+      els.shelfBtn.textContent = "本棚にあり";
       els.shelfBtn.disabled = true;
     } else {
       els.shelfBtn.disabled = false;
@@ -274,7 +273,7 @@
     var params = new URLSearchParams({
       toolId: "scenario-library",
       toolName: "シナリオライブラリ",
-      version: "v0.1.0",
+      version: "v0.1.1",
       updated: "2026.10.24",
       sourceUrl: location.origin + location.pathname + "?id=" + encodeURIComponent(sc.id)
     });

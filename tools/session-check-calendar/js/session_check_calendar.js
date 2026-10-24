@@ -218,7 +218,7 @@
 
   function renderToday() {
     const list = sessions.filter(session => sessionDate(session) === dateKey(today));
-    $('todayList').innerHTML = list.length ? list.map(miniSession).join('') : '<p class="mini-card">今日の予定はありません。</p>';
+    $('todayList').innerHTML = list.length ? list.map(miniSession).join('') : '<p class="mini-card">予定なし</p>';
     $('todayList').querySelectorAll('[data-id]').forEach(el => {
       el.addEventListener('click', () => {
         selectedId = el.dataset.id;
@@ -265,7 +265,7 @@
         </button>
         <span class="drag-grip" aria-hidden="true">⋮⋮</span>
       </article>
-    `).join('') || '<p class="mini-card">準備タスクはありません。</p>';
+    `).join('') || '<p class="mini-card">タスクなし</p>';
 
     $('taskList').querySelectorAll('.task-card').forEach(card => {
       card.addEventListener('dragstart', event => {
@@ -318,20 +318,19 @@
 
   function renderDetail() {
     const session = sessions.find(item => item.id === selectedId);
+    $('detailPane').hidden = !session && !selectedDate;
     if (!session) {
       $('detailContent').className = 'detail-content empty';
-      $('detailContent').textContent = selectedDate ? '選択した日付にセッションはありません。上のボタンから追加できます。' : 'カレンダーからセッションを選択してください。';
+      $('detailContent').textContent = selectedDate ? '予定なし' : '';
       return;
     }
     $('detailContent').className = 'detail-content';
     $('detailContent').innerHTML = `
       <h3 class="detail-title">${esc(session.scenario)}</h3>
-      <div class="detail-row"><span>シナリオ名</span><b>${esc(session.scenario)}</b></div>
       <div class="detail-row"><span>システム</span><b>${esc(session.system)}</b></div>
       <div class="detail-row"><span>日時</span><b>${esc(fmtDateTime(session))}</b></div>
       <div class="detail-row"><span>GM</span><b>${esc(session.gm)}</b></div>
       <div class="detail-row"><span>形式</span><b>${esc(session.format)}</b></div>
-      <div class="detail-row"><span>読込元</span><b>${esc(SOURCE_LABELS[session.source] || session.source || '手入力')} / ${esc(session.sourceCalendar || 'TRPG予定')}</b></div>
       <div class="detail-row"><span>ステータス</span><b><span class="chip green">${session.status === 'scheduled' ? '予定確定' : session.status === 'completed' ? '完了' : '調整中'}</span></b></div>
       <h4>参加者（PL / PC）</h4>
       <div class="people">${(session.players || []).map(player => `<div class="person"><b>${esc(player.pl)}</b><span>${esc(player.pc)}</span></div>`).join('') || '<p>未登録</p>'}</div>
@@ -625,7 +624,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.12', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.13', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];

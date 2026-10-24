@@ -276,6 +276,18 @@ html[data-design="paper"] body .mini-confirm-cancel { background: var(--sheet); 
 html[data-design="paper"] body .mini-confirm-ok { border-color: var(--pen-red); background: var(--pen-red); color: var(--sheet); }
 html[data-design="paper"] body .field-unit { color: var(--muted); }
 
+/* 説明は配置に任せる：新デザインでは補足文・重複リンク・飾りの単位を出さない */
+html[data-design="paper"] body .site-description,
+html[data-design="paper"] body .table-header p,
+html[data-design="paper"] body .drag-tip,
+html[data-design="paper"] body .stat-card > span,
+html[data-design="paper"] body .header-action-row > a.header-button[href*="trpg-web-tools"] { display: none; }
+html[data-design="paper"] body .drag-tip-row { justify-content: flex-end; }
+html[data-design="paper"] body .export-head p,
+html[data-design="paper"] body .export-mode-btn small,
+html[data-design="paper"] body .export-field-label { display: none; }
+html[data-design="paper"] body .export-output-head { justify-content: flex-end; }
+
 /* 旧デザインの Night 指定（body.night-mode …）より強くする */
 html[data-design="paper"] body.night-mode .header-button.plain,
 html[data-design="paper"] body.night-mode .mini-button { border-color: var(--line); background: var(--sheet); color: var(--ink-soft); }
