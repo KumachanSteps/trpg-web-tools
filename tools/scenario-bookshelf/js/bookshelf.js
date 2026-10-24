@@ -114,7 +114,7 @@
   // ---------- 照合 ----------
   function matchEntry(item) {
     var base = item.kind === "file" ? item.entryName.replace(/\.[^.]+$/, "") : item.entryName;
-    var pinned = shelf.pins[item.entryName];
+    var pinned = shelf.pins[pinKey(item)];
     if (pinned && catalog.byId[pinned]) {
       item.status = "matched";
       item.scenarioId = pinned;
@@ -128,6 +128,9 @@
   }
 
   function rematchAll() { shelf.items.forEach(matchEntry); }
+
+  // 候補の選択はフォルダごとに覚える（別フォルダの同名エントリーに波及させない）
+  function pinKey(item) { return item.folderId + "/" + item.entryName; }
 
   function buildRows() {
     var out = [];
@@ -268,7 +271,7 @@
     var folder = r.manual
       ? '<span class="hub-cell-sub">手動で追加</span><button type="button" class="hub-linkbtn" data-remove-manual="' + esc(sc.id) + '">本棚から外す</button>'
       : '<span class="hub-mono">' + esc(r.item.entryName) + '</span><span class="hub-cell-sub">' + esc(r.folder ? r.folder.name : "") + "</span>" +
-        (shelf.pins[r.item.entryName] ? '<button type="button" class="hub-linkbtn" data-unpin="' + esc(r.item.entryName) + '">照合を選び直す</button>' : "");
+        (shelf.pins[r.key] ? '<button type="button" class="hub-linkbtn" data-unpin="' + esc(r.key) + '">照合を選び直す</button>' : "");
     return "<tr><td>" + thumb + "</td><td>" + title + "</td>" +
       "<td>" + (sys ? '<span class="hub-pill sys-' + esc(sys) + '">' + esc(Hub.SYSTEMS[sys]) + "</span>" : "—") + "</td>" +
       "<td>" + (sc ? esc(Hub.playersLabel(sc.players)) : "—") + "</td>" +
@@ -328,7 +331,9 @@
     els.renameNote.textContent = n
       ? n + " 件を変更します。スクリプトを本棚フォルダ（登録したフォルダの中）に置いて実行してください。"
       : "変更する名前はありません。";
-    els.scriptWinBtn.disabled = els.scriptMacBtn.disabled = els.undoBtn.disabled = n === 0;
+    els.scriptWinBtn.disabled = els.scriptMacBtn.disabled = n === 0;
+    // 実行・再スキャン後は次の変更が無くなるので、元に戻すは履歴があれば使えるようにする
+    els.undoBtn.disabled = n === 0 && shelf.renames.length === 0;
   }
 
   function psQuote(s) { return "'" + String(s).replace(/'/g, "''") + "'"; }
@@ -379,7 +384,10 @@
       download("rename-" + safeFile(name) + "." + kind, scriptFor(kind, groups[fid], name, false));
     });
     // 名前を変えたあとも選んだ照合を覚えておく
-    plan.forEach(function (p) { if (shelf.pins[p.from]) shelf.pins[p.to] = shelf.pins[p.from]; });
+    plan.forEach(function (p) {
+      var from = p.item.folderId + "/" + p.from;
+      if (shelf.pins[from]) shelf.pins[p.item.folderId + "/" + p.to] = shelf.pins[from];
+    });
     shelf.renames.push({ at: new Date().toISOString(), pairs: plan.map(function (p) { return { folderId: p.item.folderId, from: p.from, to: p.to }; }) });
     shelf.lastScriptKind = kind;
     Hub.shelf.save(shelf);
@@ -410,7 +418,9 @@
     ui.rescanTarget = targetId;
     if (window.showDirectoryPicker) {
       window.showDirectoryPicker({ id: "bookshelf", mode: "read" }).then(function (handle) {
-        return scanHandle(handle).then(function (entries) { applyScan(targetId, handle.name, entries, "handle", handle); });
+        return findSameFolder(handle).then(function (sameId) {
+          return scanHandle(handle).then(function (entries) { applyScan(targetId || sameId, handle.name, entries, "handle", handle); });
+        });
       }).catch(function (err) {
         if (err && err.name !== "AbortError") els.folderInput.click();
       });
@@ -418,6 +428,17 @@
       els.folderInput.value = "";
       els.folderInput.click();
     }
+  }
+
+  // 同じフォルダを選び直したときだけ既存の登録を使う（名前が同じ別フォルダは別登録）
+  function findSameFolder(handle) {
+    var withHandle = shelf.folders.filter(function (f) { return f.handle && f.handle.isSameEntry; });
+    return Promise.all(withHandle.map(function (f) {
+      return f.handle.isSameEntry(handle).catch(function () { return false; });
+    })).then(function (same) {
+      var i = same.indexOf(true);
+      return i >= 0 ? withHandle[i].id : null;
+    });
   }
 
   function scanHandle(handle) {
@@ -459,9 +480,6 @@
 
   function applyScan(targetId, name, entries, method, handle) {
     var folder = targetId ? shelf.folders.filter(function (f) { return f.id === targetId; })[0] : null;
-    if (!folder) {
-      folder = shelf.folders.filter(function (f) { return f.name === name; })[0];
-    }
     if (!folder) {
       folder = { id: newId(), name: name };
       shelf.folders.push(folder);
@@ -515,7 +533,7 @@
     var key = sel.getAttribute("data-pick");
     var item = shelf.items.filter(function (it) { return it.folderId + "/" + it.entryName === key; })[0];
     if (!item) return;
-    shelf.pins[item.entryName] = sel.value;
+    shelf.pins[pinKey(item)] = sel.value;
     matchEntry(item);
     save();
     renderAll();
@@ -532,9 +550,9 @@
       });
     }
     if (unpin) {
-      var name = unpin.getAttribute("data-unpin");
-      delete shelf.pins[name];
-      shelf.items.forEach(function (it) { if (it.entryName === name) matchEntry(it); });
+      var key = unpin.getAttribute("data-unpin");
+      delete shelf.pins[key];
+      shelf.items.forEach(function (it) { if (pinKey(it) === key) matchEntry(it); });
       save();
       renderAll();
     }
