@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import crawl, db, discover, organize, probe, review, store, targets
+from . import batch, crawl, db, discover, organize, probe, review, store, targets
 from .report import coverage
 
 DEFAULT_DATA = Path(__file__).resolve().parents[2] / "data"
@@ -36,6 +36,8 @@ def main(argv: list[str] | None = None) -> int:
     cl.add_argument("--category", choices=sorted(targets.CATEGORY_URLS), default="Tabletop RPG")
     cl.add_argument("--max-pages", type=int, default=50)
     cl.add_argument("--restart", action="store_true", help="start a new pass from page 1")
+    cl.add_argument("--scope", choices=sorted(targets.SCOPE_QUERIES), action="append",
+                    help="crawl the listing queries of a scope instead of --category (repeatable)")
     cd = sub.add_parser("crawl-details", help="fetch queued product pages")
     cd.add_argument("--limit", type=int, default=200)
     cd.add_argument("--max-minutes", type=float, default=60)
@@ -59,7 +61,22 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--ids", type=int, nargs="*")
     im = sub.add_parser("import-review")
     im.add_argument("path", type=Path)
-    sub.add_parser("evaluate")
+    im.add_argument("--batch", help="name of the test batch the table came from")
+    im.add_argument("--split", choices=["train", "test"], default="train",
+                    help="test = keep for scoring only (default train)")
+    ev = sub.add_parser("evaluate")
+    ev.add_argument("--batch", action="append", help="only this batch (repeatable)")
+    ev.add_argument("--split", choices=["train", "test"])
+    ss = sub.add_parser("set-split", help="move a batch between test and train")
+    ss.add_argument("batch")
+    ss.add_argument("split", choices=["train", "test"])
+    tb = sub.add_parser("test-batch", help="sample new products, fetch them and write a review table (scheduled run)")
+    tb.add_argument("--n", type=int, default=50, help="products per batch (max 100)")
+    tb.add_argument("--scope", choices=sorted(targets.SCOPE_QUERIES), action="append",
+                    help="scopes to sample (repeatable; default: all)")
+    tb.add_argument("--out", type=Path, help="folder for batch_<name>/ (default: <data-dir>/batches)")
+    tb.add_argument("--name", help="batch name (default: date and time)")
+    tb.add_argument("--seed", type=int)
     args = ap.parse_args(argv)
 
     data = args.data_dir
@@ -102,15 +119,26 @@ def main(argv: list[str] | None = None) -> int:
         print(f"exported {manifest['counts']['scenarios']} scenarios to {out} (version {manifest['version']})")
         return 0
     review_set_path = data / "review" / "review_set.json"
-    if args.cmd in ("crawl-listing", "crawl-details", "fetch-items"):
+    if args.cmd in ("crawl-listing", "crawl-details", "fetch-items", "test-batch"):
         from .fetcher import PoliteFetcher, StopCrawl
 
         fetcher = PoliteFetcher(data / "cache", delay=max(args.delay, 3.0))
-        if args.cmd == "crawl-listing":
-            try:
-                result = crawl.crawl_listing(conn, fetcher, args.category, max_pages=args.max_pages, restart=args.restart)
-            except StopCrawl as e:
-                result = {"stopped": str(e)}
+        if args.cmd == "test-batch":
+            scopes = args.scope or list(targets.SCOPE_QUERIES)
+            result = batch.run_batch(conn, fetcher, args.out or data / "batches", scopes=scopes, n=min(args.n, 100),
+                                     seed=args.seed, name=args.name)
+            result = {k: result[k] for k in ("batch", "folder", "items", "errors", "network_requests") if k in result} | (
+                {"stopped": result["stopped"]} if "stopped" in result else {})
+        elif args.cmd == "crawl-listing":
+            queries = [q for s in args.scope for q in targets.SCOPE_QUERIES[s]] if args.scope else [(args.category, targets.COC_TAG)]
+            result = {"queries": []}
+            for category, tag in queries:
+                try:
+                    result["queries"].append(crawl.crawl_listing(conn, fetcher, category, max_pages=args.max_pages, restart=args.restart,
+                                                                 tag=tag, base_url=targets.browse_url(category, tag)))
+                except StopCrawl as e:
+                    result["stopped"] = str(e)
+                    break
         elif args.cmd == "crawl-details":
             if args.refresh_older_than_days is not None:
                 print(f"requeued stale: {crawl.requeue_stale(conn, args.refresh_older_than_days)}")
@@ -161,15 +189,23 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{review.export_review(conn, ids, out)} rows -> {out}")
         return 0
     if args.cmd == "import-review":
-        print(json.dumps(review.import_review(conn, args.path), ensure_ascii=False))
+        print(json.dumps(review.import_review(conn, args.path, batch=args.batch, split=args.split), ensure_ascii=False))
+        return 0
+    if args.cmd == "set-split":
+        print(f"{review.set_split(conn, args.batch, args.split)} rows -> {args.split}")
         return 0
     if args.cmd == "evaluate":
-        result = review.evaluate(conn)
+        result = review.evaluate(conn, batches=args.batch, split=args.split)
         out = data / "reports" / "evaluation.json"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        pct = lambda v: "   -" if v is None else f"{v * 100:3.0f}%"  # noqa: E731
+        print(f"{'field':15} {'rows':>7}  accuracy  precision  coverage")
         for f, st in result.items():
-            print(f"{f:15} {st['correct']}/{st['checked']}  {st['accuracy']}")
+            if st["checked"]:
+                mark = "*" if f in review.PRIORITY_FIELDS else " "
+                print(f"{f:14}{mark} {st['correct']:>3}/{st['checked']:<3}  {pct(st['accuracy']):>8}  {pct(st['precision']):>9}  {pct(st['coverage']):>8}")
+        print("* = priority field (keep filled)")
         print(f"details: {out}")
         return 0
     if args.cmd == "load-fixture":

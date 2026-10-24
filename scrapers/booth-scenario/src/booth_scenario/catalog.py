@@ -16,7 +16,7 @@ from .db import utcnow
 SCHEMA = "catalog/v1"
 LICENSE = "CC BY 4.0"
 ATTRIBUTION = "シナリオカタログ © KumachanSteps / TRPG WEBツール観測所（CC BY 4.0）"
-SYSTEMS = {"COC6", "COC7", "EMOKLORE", "OTHER", "UNKNOWN"}
+SYSTEMS = {"COC6", "COC7", "EMOKLORE", "MADAMIS", "OTHER", "UNKNOWN"}
 
 
 def _rows(conn, sql, args=()):
