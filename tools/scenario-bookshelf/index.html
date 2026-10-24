@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>マイ本棚 | TRPG WEBツール観測所</title>
+  <meta name="description" content="シナリオを保存しているフォルダを登録すると、持っているシナリオを自動で一覧にします。フォルダ名もルールに沿って一括で整えられます。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <script async src="../../assets/js/analytics.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.0" />
+  <link rel="stylesheet" href="css/bookshelf.css?v=0.1.0" />
+</head>
+<body class="hub" data-hub-tool="bookshelf">
+  <nav id="hubRail"></nav>
+
+  <main class="hub-main">
+    <header class="hub-header">
+      <div class="hub-header-top">
+        <div class="hub-header-left">
+          <a class="hub-portal" href="https://kumachansteps.github.io/trpg-web-tools/">← TRPG Webツール観測所</a>
+          <div class="hub-title-row">
+            <span class="hub-icon" aria-hidden="true">▥</span>
+            <h1>マイ本棚</h1>
+          </div>
+        </div>
+        <div class="hub-actions">
+          <a class="hub-btn" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer" aria-label="X">𝕏</a>
+          <button id="usageBtn" class="hub-btn is-accent" type="button" aria-expanded="false" aria-controls="usagePanel">使い方</button>
+          <button id="themeToggleBtn" class="hub-btn" type="button">Light/Night</button>
+          <span id="saveState" class="hub-pill is-sync">この端末に保存</span>
+        </div>
+      </div>
+      <div class="hub-header-meta">
+        <p class="hub-desc">持っているシナリオの本棚。フォルダを登録すると自動で並び、フォルダ名もルールに沿って一括で整えられます。</p>
+        <p class="hub-version">v0.1.0 2026.10.24</p>
+      </div>
+    </header>
+
+    <section id="usagePanel" class="hub-panel" hidden>
+      <div class="hub-panel-body bs-usage">
+        <p><strong>フォルダを登録：</strong>シナリオを保存しているフォルダを選ぶと、その中のフォルダ名・ファイル名（PDF・ZIP）をシナリオライブラリと照合して本棚に並べます。読むのは名前だけで、ファイルの中身は読み込まず、どこにも送信しません。</p>
+        <p><strong>照合：</strong>候補が複数ある作品は「照合待ち」になります。表の候補から選ぶと次回のスキャンでも覚えています。ライブラリに無い作品は「未登録」です。</p>
+        <p><strong>フォルダ名を整理：</strong>命名ルールを決めると、照合できたフォルダの新しい名前を確認できます。名前の変更は書き出したスクリプトを本棚フォルダで実行して行います（元に戻すスクリプトも出せます）。</p>
+        <p><strong>保存先：</strong>本棚はこのブラウザ内（IndexedDB）に保存されます。別の端末へは JSON 出力 → 読み込みで移せます。</p>
+      </div>
+    </section>
+
+    <section class="hub-stats" aria-label="集計">
+      <article class="hub-stat"><div><p>所蔵</p><strong id="statOwned">0</strong></div><span class="hub-stat-unit">本</span></article>
+      <article class="hub-stat"><div><p>積み</p><strong id="statStack">0</strong></div><span class="hub-stat-unit">積</span></article>
+      <article class="hub-stat"><div><p>通過済み</p><strong id="statPlayed">0</strong></div><span class="hub-stat-unit">済</span></article>
+      <article class="hub-stat"><div><p>照合待ち・未登録</p><strong id="statPending">0</strong></div><span class="hub-stat-unit">?</span></article>
+    </section>
+
+    <section class="hub-panel" aria-label="メディアフォルダ">
+      <button id="foldersToggle" class="hub-fold-toggle" type="button" aria-expanded="false" aria-controls="foldersBody">
+        <span id="foldersMark" class="hub-fold-mark">+</span>
+        <strong id="foldersTitle">メディアフォルダ</strong>
+        <span id="foldersMeta" class="bs-meta"></span>
+      </button>
+      <div id="foldersBody" class="hub-fold-body" hidden>
+        <p id="firstNote" class="hub-note-title bs-first" hidden>シナリオを保存しているフォルダを登録すると、持っているシナリオを自動で本棚に並べます。</p>
+        <div id="folderList" class="bs-folder-list"></div>
+        <div class="bs-folder-actions">
+          <button id="addFolderBtn" class="hub-btn is-dashed is-large" type="button">＋ フォルダを登録</button>
+          <input id="folderInput" type="file" webkitdirectory directory multiple hidden />
+          <input id="importInput" type="file" accept="application/json,.json" hidden />
+          <button id="importBtn" class="hub-btn" type="button">JSON を読み込む</button>
+          <span class="bs-hint">読むのはフォルダ名とファイル名だけです。中身は読み込まず、送信もしません。</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="hub-panel" aria-label="本棚">
+      <div class="hub-panel-head">
+        <div>
+          <h2>本棚</h2>
+          <p>フォルダ名をシナリオライブラリと照合し、卓ログトラッカーの記録から「積み」「通過済み」を自動で付けます。</p>
+        </div>
+        <div class="hub-actions">
+          <button id="renameToggle" class="hub-btn is-ink" type="button" aria-expanded="false" aria-controls="renamePanel">フォルダ名を整理</button>
+          <button id="exportBtn" class="hub-btn is-accent" type="button">JSON出力</button>
+        </div>
+      </div>
+
+      <div id="renamePanel" class="hub-note" hidden>
+        <div class="bs-tpl-row">
+          <label class="bs-tpl">
+            <span class="hub-label">命名ルール</span>
+            <input id="tplInput" class="hub-text" type="text" spellcheck="false" />
+          </label>
+          <span id="tokenList" class="bs-tokens"></span>
+          <button id="tplReset" class="hub-linkbtn" type="button">初期値に戻す</button>
+        </div>
+        <div class="hub-table-wrap bs-preview-wrap">
+          <table class="hub-table bs-preview">
+            <thead><tr><th scope="col"><span class="visually-hidden">変更する</span></th><th scope="col">今の名前</th><th scope="col" aria-hidden="true"></th><th scope="col">新しい名前</th></tr></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+        <div class="bs-rename-actions">
+          <button id="scriptWinBtn" class="hub-btn is-blue is-large" type="button">Windows 用スクリプト</button>
+          <button id="scriptMacBtn" class="hub-btn is-blue is-large" type="button">Mac・Linux 用スクリプト</button>
+          <button id="undoBtn" class="hub-btn is-large" type="button">元に戻すスクリプト</button>
+          <span id="renameNote" class="bs-hint"></span>
+        </div>
+      </div>
+
+      <div class="bs-filter">
+        <label class="hub-search bs-q"><span aria-hidden="true">⌕</span><input id="qInput" type="search" placeholder="シナリオ名・作者・フォルダ名を検索…" autocomplete="off" /></label>
+        <span id="filterChips" class="bs-chips" role="group" aria-label="状態で絞り込み"></span>
+      </div>
+
+      <div class="hub-table-wrap">
+        <table class="hub-table bs-table">
+          <thead>
+            <tr><th scope="col"><span class="visually-hidden">表紙</span></th><th scope="col">シナリオ</th><th scope="col">システム</th><th scope="col">人数</th><th scope="col">時間</th><th scope="col">状態</th><th scope="col">フォルダ</th></tr>
+          </thead>
+          <tbody id="shelfBody"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="bs-empty" hidden>
+        <div class="hub-empty">まだ本棚が空です。上の「＋ フォルダを登録」から始めるか、<a href="../scenario-library/index.html">シナリオライブラリ</a>で見つけた作品を追加してください。</div>
+      </div>
+    </section>
+
+    <p id="attribution" class="hub-footnote">照合にはシナリオライブラリのカタログ（CC BY 4.0）を使っています。</p>
+  </main>
+
+  <script src="../../shared/hub/shell.js?v=0.1.0"></script>
+  <script src="../../shared/hub/store.js?v=0.1.0"></script>
+  <script src="../../shared/hub/scenario-core.js?v=0.1.0"></script>
+  <script src="../../shared/hub/catalog.js?v=0.1.0"></script>
+  <script src="../../shared/hub/bookshelf-data.js?v=0.1.0"></script>
+  <script src="js/bookshelf.js?v=0.1.0"></script>
+</body>
+</html>

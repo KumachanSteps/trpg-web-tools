@@ -27,6 +27,8 @@ def main(argv: list[str] | None = None) -> int:
     ds = sub.add_parser("discover-selectors")
     ds.add_argument("snapshot", type=Path)
     ds.add_argument("--text", help="text known to be on the page")
+    ec = sub.add_parser("export-catalog", help="write catalog/v1 JSON for the web tools")
+    ec.add_argument("--out", type=Path, help="output folder (default: <data-dir>/catalog/v1)")
     lf = sub.add_parser("load-fixture")
     lf.add_argument("path", type=Path)
     args = ap.parse_args(argv)
@@ -62,6 +64,13 @@ def main(argv: list[str] | None = None) -> int:
         html = args.snapshot.read_text(encoding="utf-8")
         result = discover.find_text(html, args.text) if args.text else discover.summarize_classes(html)
         print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+    if args.cmd == "export-catalog":
+        from .catalog import export_catalog
+
+        out = args.out or data / "catalog" / "v1"
+        manifest = export_catalog(conn, out)
+        print(f"exported {manifest['counts']['scenarios']} scenarios to {out} (version {manifest['version']})")
         return 0
     if args.cmd == "load-fixture":
         store.load_synthetic_fixture(conn, json.loads(args.path.read_text(encoding="utf-8")))

@@ -1,0 +1,78 @@
+.lib-usage p { margin: 0 0 8px; font-size: 13px; color: var(--ink-soft); }
+.lib-usage p:last-child { margin-bottom: 0; }
+
+.lib-search-body { display: flex; flex-direction: column; gap: 12px; padding: 14px; }
+.lib-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lib-q { flex: 3 1 380px; min-height: 48px; border-color: rgba(74, 58, 36, 0.3); }
+.lib-q input { font-size: 15px; }
+.lib-sort { flex: 1 1 150px; min-height: 48px; }
+.lib-chip-list { display: contents; }
+.lib-chips .hub-label { padding-right: 4px; }
+.lib-sources { margin-left: auto; display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+
+.lib-layout { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.lib-results { flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.lib-results-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 0 4px; }
+.lib-results-head h2 { font-size: 19px; letter-spacing: 0.04em; }
+.lib-count { font-size: 13px; color: var(--muted); }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.lib-more { align-self: center; }
+
+.lib-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--sheet);
+  box-shadow: var(--shadow);
+}
+.lib-card:hover { border-color: var(--ink-soft); }
+.lib-card[aria-pressed="true"] { border: 2px solid var(--pen-blue); box-shadow: 0 8px 18px rgba(59, 85, 121, 0.18); }
+.lib-card .hub-cover { aspect-ratio: 4 / 3; border-bottom: 1px solid var(--line-soft); }
+.lib-card-source {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 1;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--sheet);
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.lib-card-mine { position: absolute; right: 8px; top: 8px; z-index: 1; font-family: var(--font-body); }
+.lib-card-body { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 12px; }
+.lib-card-title { font-family: var(--font-head); font-size: 16px; font-weight: 500; letter-spacing: 0.03em; color: var(--ink); line-height: 1.35; }
+.lib-card-by { font-size: 12px; color: var(--muted); }
+.lib-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.lib-card-foot { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--ink-soft); }
+.lib-card-foot span:last-child { color: var(--muted); }
+
+.lib-detail { flex: 1 1 340px; min-width: 0; position: sticky; top: 18px; }
+.lib-detail-cover { height: 170px; font-size: 14px; }
+.lib-detail-head { padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--line); }
+.lib-detail-head h2 { font-size: 22px; letter-spacing: 0.04em; }
+.lib-by { margin: 0; color: var(--muted); font-size: 13px; }
+.lib-dl { margin: 0; padding: 12px 20px; display: grid; grid-template-columns: 72px 1fr; gap: 8px 10px; font-size: 13px; border-bottom: 1px solid var(--line); }
+.lib-dl dt { color: var(--muted); }
+.lib-dl dd { margin: 0; color: var(--ink-soft); overflow-wrap: anywhere; }
+.lib-mine { padding: 12px 20px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--line); }
+.lib-mine-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
+.lib-mine-grid > * { padding: 8px 4px; border-radius: 9px; background: var(--sheet-sub); color: var(--ink-soft); text-decoration: none; }
+.lib-mine-grid strong { display: block; font-size: 15px; }
+.lib-mine-grid span { font-size: 11px; color: var(--muted); }
+.lib-mine-grid .is-soon { opacity: 0.6; }
+.lib-actions { padding: 14px 20px 18px; display: flex; flex-direction: column; gap: 8px; }
+.lib-actions .hub-linkbtn { align-self: center; }
+
+@media (max-width: 760px) {
+  .lib-detail { position: static; }
+  .lib-sources { margin-left: 0; }
+}

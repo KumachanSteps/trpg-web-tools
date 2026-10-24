@@ -1,0 +1,617 @@
+{
+ "schema": "catalog/v1",
+ "scenarios": [
+  {
+   "id": "sample-001",
+   "title": "霧笛の灯台",
+   "aliases": [
+    "霧笛の灯台 改訂版",
+    "Foghorn Lighthouse"
+   ],
+   "system": "COC6",
+   "players": {
+    "min": 1,
+    "max": 1
+   },
+   "duration": {
+    "min": 240,
+    "max": 240,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 1000,
+    "max": 1000
+   },
+   "writers": [
+    "作者A"
+   ],
+   "circle": {
+    "name": "サークルA",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2025-06-14",
+   "tags": [
+    "クローズド",
+    "現代"
+   ]
+  },
+  {
+   "id": "sample-002",
+   "title": "灰の花嫁",
+   "aliases": [
+    "灰の花嫁 -ash bride-"
+   ],
+   "system": "COC6",
+   "players": {
+    "min": 1,
+    "max": 1
+   },
+   "duration": {
+    "min": 300,
+    "max": 300,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 1000,
+    "max": 1000
+   },
+   "writers": [
+    "作者A"
+   ],
+   "circle": {
+    "name": "サークルA",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2026-07-07",
+   "tags": [
+    "シティ",
+    "現代"
+   ]
+  },
+  {
+   "id": "sample-003",
+   "title": "月蝕の庭",
+   "aliases": [],
+   "system": "COC6",
+   "players": {
+    "min": 2,
+    "max": 2
+   },
+   "duration": {
+    "min": 480,
+    "max": 480,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 1200,
+    "max": 1200
+   },
+   "writers": [
+    "作者A"
+   ],
+   "circle": {
+    "name": "サークルA",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2024-09-01",
+   "tags": [
+    "継続向け"
+   ]
+  },
+  {
+   "id": "sample-004",
+   "title": "星喰いの塔",
+   "aliases": [
+    "星喰いの塔【HO配布版】"
+   ],
+   "system": "COC6",
+   "players": {
+    "min": 2,
+    "max": 2
+   },
+   "duration": {
+    "min": 720,
+    "max": 720,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 1500,
+    "max": 1500
+   },
+   "writers": [
+    "作者G"
+   ],
+   "circle": {
+    "name": "サークルG",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2026-03-02",
+   "tags": [
+    "長編",
+    "秘匿HO"
+   ]
+  },
+  {
+   "id": "sample-005",
+   "title": "燐光のカルテ",
+   "aliases": [
+    "燐光のカルテ（Rinkou no Karte）"
+   ],
+   "system": "COC6",
+   "players": {
+    "min": 2,
+    "max": 2
+   },
+   "duration": {
+    "min": 360,
+    "max": 360,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 1200,
+    "max": 1200
+   },
+   "writers": [
+    "作者G"
+   ],
+   "circle": {
+    "name": "サークルG",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2026-09-20",
+   "tags": [
+    "病院"
+   ]
+  },
+  {
+   "id": "sample-006",
+   "title": "残響のアトリエ",
+   "aliases": [],
+   "system": "COC6",
+   "players": {
+    "min": 1,
+    "max": 1
+   },
+   "duration": {
+    "min": 300,
+    "max": 300,
+    "approximate": true
+   },
+   "secret_ho": false,
+   "price": {
+    "min": 800,
+    "max": 800
+   },
+   "writers": [
+    "作者E"
+   ],
+   "circle": {
+    "name": "サークルE",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2025-02-11",
+   "tags": [
+    "美術"
+   ]
+  },
+  {
+   "id": "sample-007",
+   "title": "錆びた天球儀",
+   "aliases": [],
+   "system": "COC6",
+   "players": {
+    "min": 3,
+    "max": 3
+   },
+   "duration": {
+    "min": 480,
+    "max": 480,
+    "approximate": true
+   },
+   "secret_ho": false,
+   "price": {
+    "min": 1000,
+    "max": 1000
+   },
+   "writers": [
+    "作者I"
+   ],
+   "circle": {
+    "name": "サークルI",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2025-10-30",
+   "tags": [
+    "探索"
+   ]
+  },
+  {
+   "id": "sample-008",
+   "title": "白昼の葬列",
+   "aliases": [
+    "白昼の葬列 第2版"
+   ],
+   "system": "COC7",
+   "players": {
+    "min": 2,
+    "max": 2
+   },
+   "duration": {
+    "min": 360,
+    "max": 360,
+    "approximate": true
+   },
+   "secret_ho": false,
+   "price": {
+    "min": 800,
+    "max": 800
+   },
+   "writers": [
+    "作者B"
+   ],
+   "circle": {
+    "name": "サークルB",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2024-11-03",
+   "tags": [
+    "現代"
+   ]
+  },
+  {
+   "id": "sample-009",
+   "title": "深海図書館",
+   "aliases": [
+    "深海の図書館"
+   ],
+   "system": "COC7",
+   "players": {
+    "min": 4,
+    "max": 4
+   },
+   "duration": {
+    "min": 600,
+    "max": 600,
+    "approximate": true
+   },
+   "secret_ho": false,
+   "price": {
+    "min": 1800,
+    "max": 1800
+   },
+   "writers": [
+    "作者F"
+   ],
+   "circle": {
+    "name": "サークルF",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2023-08-10",
+   "tags": [
+    "クローズド"
+   ]
+  },
+  {
+   "id": "sample-010",
+   "title": "夜明けの円舞曲",
+   "aliases": [
+    "夜明けのワルツ"
+   ],
+   "system": "EMOKLORE",
+   "players": {
+    "min": 2,
+    "max": 2
+   },
+   "duration": {
+    "min": 180,
+    "max": 180,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 0,
+    "max": 0
+   },
+   "writers": [
+    "作者H"
+   ],
+   "circle": {
+    "name": "サークルH",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2025-12-24",
+   "tags": [
+    "無料"
+   ]
+  },
+  {
+   "id": "sample-011",
+   "title": "硝子の温室",
+   "aliases": [
+    "ガラスの温室"
+   ],
+   "system": "EMOKLORE",
+   "players": {
+    "min": 3,
+    "max": 3
+   },
+   "duration": {
+    "min": 180,
+    "max": 180,
+    "approximate": true
+   },
+   "secret_ho": false,
+   "price": {
+    "min": 500,
+    "max": 500
+   },
+   "writers": [
+    "作者C"
+   ],
+   "circle": {
+    "name": "サークルC",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2025-04-01",
+   "tags": []
+  },
+  {
+   "id": "sample-012",
+   "title": "夜行列車と七つの嘘",
+   "aliases": [
+    "七つの嘘"
+   ],
+   "system": "MADAMIS",
+   "players": {
+    "min": 5,
+    "max": 5,
+    "label": "5人"
+   },
+   "duration": {
+    "min": 240,
+    "max": 240,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 2000,
+    "max": 2000
+   },
+   "writers": [
+    "作者D"
+   ],
+   "circle": {
+    "name": "サークルD",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2026-01-15",
+   "tags": [
+    "マーダーミステリー"
+   ]
+  },
+  {
+   "id": "sample-013",
+   "title": "雨宿りの喫茶店",
+   "aliases": [],
+   "system": "EMOKLORE",
+   "players": {
+    "min": 1,
+    "max": 2
+   },
+   "duration": {
+    "min": 120,
+    "max": 180,
+    "approximate": true
+   },
+   "secret_ho": false,
+   "price": {
+    "min": 0,
+    "max": 500
+   },
+   "writers": [
+    "作者J"
+   ],
+   "circle": {
+    "name": "サークルJ",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2026-10-18",
+   "tags": [
+    "短編"
+   ]
+  },
+  {
+   "id": "sample-014",
+   "title": "鏡の国の招待状",
+   "aliases": [],
+   "system": "COC6",
+   "players": {
+    "min": 2,
+    "max": 3
+   },
+   "duration": {
+    "min": 240,
+    "max": 360,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 1000,
+    "max": 1000
+   },
+   "writers": [
+    "作者K"
+   ],
+   "circle": {
+    "name": "サークルK",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2026-10-20",
+   "tags": [
+    "新作"
+   ]
+  },
+  {
+   "id": "sample-015",
+   "title": "凍てつく星図",
+   "aliases": [],
+   "system": "COC7",
+   "players": {
+    "min": 1,
+    "max": 1
+   },
+   "duration": {
+    "min": 420,
+    "max": 420,
+    "approximate": true
+   },
+   "secret_ho": true,
+   "price": {
+    "min": 1500,
+    "max": 1500
+   },
+   "writers": [
+    "作者K"
+   ],
+   "circle": {
+    "name": "サークルK",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2026-05-05",
+   "tags": []
+  },
+  {
+   "id": "sample-016",
+   "title": "潮騒の手紙",
+   "aliases": [],
+   "system": "COC6",
+   "players": {
+    "min": 1,
+    "max": 1
+   },
+   "duration": {
+    "min": 150,
+    "max": 150,
+    "approximate": true
+   },
+   "secret_ho": false,
+   "price": {
+    "min": 0,
+    "max": 0
+   },
+   "writers": [
+    "作者L"
+   ],
+   "circle": {
+    "name": "サークルL",
+    "url": null
+   },
+   "source": {
+    "site": "BOOTH",
+    "url": null,
+    "item_id": null
+   },
+   "cover_url": null,
+   "published_at": "2026-08-08",
+   "tags": [
+    "無料",
+    "短編"
+   ]
+  }
+ ]
+}

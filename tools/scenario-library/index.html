@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>シナリオライブラリ | TRPG WEBツール観測所</title>
+  <meta name="description" content="BOOTH などで配布されている TRPG シナリオを横断検索。システム・人数・時間・秘匿HOで絞り込めます。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <script async src="../../assets/js/analytics.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.0" />
+  <link rel="stylesheet" href="css/library.css?v=0.1.0" />
+</head>
+<body class="hub" data-hub-tool="library">
+  <nav id="hubRail"></nav>
+
+  <main class="hub-main">
+    <header class="hub-header">
+      <div class="hub-header-top">
+        <div class="hub-header-left">
+          <a class="hub-portal" href="https://kumachansteps.github.io/trpg-web-tools/">← TRPG Webツール観測所</a>
+          <div class="hub-title-row">
+            <span class="hub-icon" aria-hidden="true">⌕</span>
+            <h1>シナリオライブラリ</h1>
+          </div>
+        </div>
+        <div class="hub-actions">
+          <a class="hub-btn" href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer" aria-label="X">𝕏</a>
+          <button id="usageBtn" class="hub-btn is-accent" type="button" aria-expanded="false" aria-controls="usagePanel">使い方</button>
+          <button id="themeToggleBtn" class="hub-btn" type="button">Light/Night</button>
+        </div>
+      </div>
+      <div class="hub-header-meta">
+        <p class="hub-desc">BOOTH などで配布されているシナリオを横断検索。持っていなくても探せる、みんなの図書館です。</p>
+        <p class="hub-version">v0.1.0 2026.10.24</p>
+      </div>
+    </header>
+
+    <section id="usagePanel" class="hub-panel" hidden>
+      <div class="hub-panel-body lib-usage">
+        <p><strong>探す：</strong>シナリオ名・作者・サークル・別名で検索できます。全角半角や【配布版】などの表記ゆれは自動でそろえます。</p>
+        <p><strong>本棚と連動：</strong>マイ本棚に登録したシナリオには「本棚にあり」と表示されます。カードを選ぶと右に詳細が開き、本棚への追加や配布ページへの移動ができます。</p>
+        <p><strong>データについて：</strong>配布ページの公開情報（タイトル・作者・人数・時間・価格など）だけを集めています。本文や画像は保存せず、表紙は配布元から直接表示します。間違いは「情報の修正を提案」から送れます。</p>
+      </div>
+    </section>
+
+    <section class="hub-stats" aria-label="収録状況">
+      <article class="hub-stat"><div><p>収録作品</p><strong id="statWorks">—</strong></div><span class="hub-stat-unit">冊</span></article>
+      <article class="hub-stat"><div><p>作者・サークル</p><strong id="statWriters">—</strong></div><span class="hub-stat-unit">人</span></article>
+      <article class="hub-stat"><div><p>30日以内の新着</p><strong id="statNew">—</strong></div><span class="hub-stat-unit">新</span></article>
+      <article class="hub-stat"><div><p>本棚と一致</p><strong id="statShelf">—</strong></div><span class="hub-stat-unit">棚</span></article>
+    </section>
+
+    <section class="hub-panel lib-search" aria-label="検索">
+      <div id="sampleBanner" class="hub-banner" hidden>いま表示しているのは架空のサンプルデータです。BOOTH のデータを書き出したら置き換わります。</div>
+      <div class="lib-search-body">
+        <div class="lib-row">
+          <label class="hub-search lib-q"><span aria-hidden="true">⌕</span><input id="qInput" type="search" placeholder="シナリオ名・作者・サークル・別名で検索（例：灯台、作者A）" autocomplete="off" /></label>
+          <select id="sortSelect" class="hub-select lib-sort" aria-label="並び順">
+            <option value="relevance">関連度順</option>
+            <option value="new">新着順</option>
+            <option value="short">プレイ時間が短い順</option>
+            <option value="title">タイトル順</option>
+          </select>
+        </div>
+        <div class="lib-row lib-chips" role="group" aria-label="システム">
+          <span class="hub-label">システム</span>
+          <span id="systemChips" class="lib-chip-list"></span>
+        </div>
+        <div class="lib-row">
+          <select id="plSelect" class="hub-select" aria-label="人数">
+            <option value="">人数：すべて</option>
+            <option value="1">タイマン</option>
+            <option value="2">2PL</option>
+            <option value="3">3PL</option>
+            <option value="4">4PL 以上</option>
+          </select>
+          <select id="timeSelect" class="hub-select" aria-label="時間">
+            <option value="">時間：すべて</option>
+            <option value="0-180">3h 未満</option>
+            <option value="180-360">3〜6h</option>
+            <option value="360-600">6〜10h</option>
+            <option value="600-99999">10h 以上</option>
+          </select>
+          <select id="priceSelect" class="hub-select" aria-label="価格">
+            <option value="">価格：すべて</option>
+            <option value="free">無料あり</option>
+            <option value="paid">有料</option>
+          </select>
+          <label class="hub-check"><input id="hoCheck" type="checkbox" />秘匿HOあり</label>
+          <label class="hub-check"><input id="notOwnedCheck" type="checkbox" />本棚にないものだけ</label>
+          <button id="resetBtn" class="hub-linkbtn" type="button">条件をクリア</button>
+          <span class="lib-sources">配布元
+            <span class="hub-pill is-note">BOOTH</span>
+            <span class="hub-pill is-soon" title="利用規約を確認してから追加します">TALTO 準備中</span>
+            <span class="hub-pill is-soon" title="利用規約を確認してから追加します">pixiv 準備中</span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <div class="lib-layout">
+      <section class="lib-results" aria-label="検索結果">
+        <div class="lib-results-head">
+          <h2>検索結果</h2>
+          <span id="countLine" class="lib-count" aria-live="polite">読み込み中…</span>
+        </div>
+        <div id="resultGrid" class="lib-grid"></div>
+        <div id="emptyState" class="hub-empty" hidden>見つかりませんでした。別名や作者名でも探せます。条件を減らすか、未収録なら「作品を提案」から教えてください。</div>
+        <div id="errorState" class="hub-empty" hidden></div>
+        <button id="moreBtn" class="hub-btn is-large lib-more" type="button" hidden>さらに表示</button>
+      </section>
+
+      <aside id="detail" class="hub-panel lib-detail" aria-label="選択中の作品" hidden>
+        <div id="detailCover" class="hub-cover lib-detail-cover"><span>表紙（配布元から直接表示）</span></div>
+        <div class="lib-detail-head">
+          <div id="detailPills" class="lib-pills"></div>
+          <h2 id="detailTitle"></h2>
+          <p id="detailBy" class="lib-by"></p>
+        </div>
+        <dl class="lib-dl">
+          <dt>価格</dt><dd id="detailPrice"></dd>
+          <dt>配布元</dt><dd id="detailSource"></dd>
+          <dt>別名</dt><dd id="detailAliases"></dd>
+          <dt>タグ</dt><dd id="detailTags"></dd>
+        </dl>
+        <div class="lib-mine">
+          <p class="hub-label">あなたの記録</p>
+          <div class="lib-mine-grid">
+            <a href="../scenario-bookshelf/index.html"><strong id="mineShelf">—</strong><span>本棚</span></a>
+            <a href="../session-log-tool/index.html"><strong id="mineLog">—</strong><span>卓ログ</span></a>
+            <span class="is-soon"><strong>—</strong><span>視聴（準備中）</span></span>
+          </div>
+        </div>
+        <div class="lib-actions">
+          <a id="sourceLink" class="hub-btn is-ink is-large" href="#" target="_blank" rel="noopener noreferrer">配布ページを開く ↗</a>
+          <button id="shelfBtn" class="hub-btn is-note is-large" type="button">本棚に追加</button>
+          <a id="suggestLink" class="hub-linkbtn" href="../../report/" target="_blank" rel="noopener">情報の修正を提案する</a>
+        </div>
+      </aside>
+    </div>
+
+    <p id="attribution" class="hub-footnote">カタログは配布ページの公開情報をもとに作成しています（CC BY 4.0・出典表記が必要）。表紙画像は配布元から直接表示し、保存・再配布はしません。</p>
+  </main>
+
+  <script src="../../shared/hub/shell.js?v=0.1.0"></script>
+  <script src="../../shared/hub/store.js?v=0.1.0"></script>
+  <script src="../../shared/hub/scenario-core.js?v=0.1.0"></script>
+  <script src="../../shared/hub/catalog.js?v=0.1.0"></script>
+  <script src="../../shared/hub/bookshelf-data.js?v=0.1.0"></script>
+  <script src="js/library.js?v=0.1.0"></script>
+</body>
+</html>

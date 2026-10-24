@@ -83,9 +83,11 @@ def save_detail(conn, rec: DetailRecord, fetched_at: str, raw: str) -> None:
         """UPDATE products SET publisher_id=COALESCE(?, publisher_id), title=COALESCE(?, title),
              category_name=COALESCE(?, category_name), category_path=COALESCE(?, category_path),
              description_text=COALESCE(?, description_text), language=COALESCE(?, language),
+             cover_image_url=COALESCE(?, cover_image_url),
              listing_status=?, detail_fetched_at=?, content_hash=?
            WHERE booth_item_id=?""",
         (pub, rec.title, rec.category_name, rec.category_path, rec.description_text, rec.language,
+         rec.cover_image_url,
          rec.listing_status, fetched_at, hashlib.sha256(raw.encode()).hexdigest(), rec.booth_item_id),
     )
     if rec.like_count is not None:
