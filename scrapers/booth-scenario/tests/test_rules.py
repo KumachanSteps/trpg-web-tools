@@ -192,3 +192,9 @@ def test_count_inside_time_line_and_kpc_or_npc_aside():
     assert modes("PL3人でプレイ時間4時間でした") == []
     m = modes("推奨人数：1PL\nプレイ時間：3～4時間（※KPCかNPCかで多少前後する可能性あり）")
     assert [x["mode"] for x in m] == ["SOLO"]
+
+
+def test_labelled_count_on_time_line_and_denied_secret():
+    assert [(m["player_min"], m["player_max"]) for m in modes("PL：4名／プレイ時間：3時間")] == [(4, 4)]
+    assert not rules.has_secret_handouts("秘匿HOなし。\nHO1：刑事\nHO2：探偵")
+    assert rules.has_secret_handouts("HO1：刑事\nHO2：探偵")

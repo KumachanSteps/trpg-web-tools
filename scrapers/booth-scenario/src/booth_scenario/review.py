@@ -138,8 +138,9 @@ def auto_fields(conn, iid: int, kind: str | None = None) -> dict[str, str]:
         "free_sample": free_sample,
         "related_items": _uniq_sorted(str(r[0]) for r in related),
         # Every way to buy the work: full, short or updated editions, but not a
-        # materials-only set or a free preview.
-        "price": _price_range([v for v in variants if v["edition_kind"] not in ("ASSET_ONLY", "SAMPLE")] or variants),
+        # materials-only set, a free preview or an edition no longer sold.
+        "price": _price_range([v for v in variants if v["edition_kind"] not in ("ASSET_ONLY", "SAMPLE")
+                               and v["availability"] != "UNAVAILABLE"] or variants),
         "secret_ho": "yes" if any(v.get("secret_handouts") for v in sessions) else "no",
     }
 

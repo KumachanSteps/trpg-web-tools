@@ -173,15 +173,19 @@ _SECRET_NEG = re.compile(r"秘匿\s*(HO|ハンドアウト)?\s*(は|が)?\s*(な
 def has_secret_handouts(*texts: str) -> bool:
     """秘匿 / 秘匿HO anywhere in title, tags or description, unless denied;
     or numbered handouts (【HO1 …】【HO2 …】) given to the players."""
-    hos = set()
+    hos, denied = set(), False
     for t in texts:
         for ln in lines(t or ""):
-            if _SECRET.search(ln) and not _SECRET_NEG.search(ln):
+            if _SECRET_NEG.search(ln):
+                denied = True  # "秘匿HOなし": numbered handouts are then all public
+            elif _SECRET.search(ln):
                 return True
             hos.update(re.findall(r"HO\s*(\d)", ln))
-    return len(hos) >= 2
+    return len(hos) >= 2 and not denied
 
 
+# A labelled count ("PL：4名", "プレイ人数：1～4人") on a line that also gives the time.
+_PLAYER_LABEL = re.compile(r"人数|(PL|プレイヤー)\s*[:：]", re.I)
 # "KPCかNPCかで前後する": an aside on how the KP runs it, not a タイマン companion.
 _KPC_OR_NPC = re.compile(r"KPC\s*(か|or|/|／|\(|（)\s*NPC|NPC\s*(か|or|/|／)\s*KPC", re.I)
 
@@ -211,7 +215,8 @@ def extract_session_modes(text: str) -> list[Hit]:
         facilitator = "DL" if re.search(r"(?<![A-Za-z])DL(?![A-Za-z])|ダイスロール担当", ln) else ("KP" if re.search(r"KP(?!レス|不要)", ln) else None)
         # A time line counts players only when it labels them ("（プレイ人数：1～4人）"),
         # not in a report ("PL3人で4時間かかりました").
-        ranges = [] if re.search(r"(所要|プレイ|推定|想定)\s*時\s*間", ln) and "人数" not in ln else _player_ranges(ln)
+        ranges = ([] if re.search(r"(所要|プレイ|推定|想定)\s*時\s*間", ln) and not _PLAYER_LABEL.search(ln)
+                  else _player_ranges(ln))
         lo, hi = ranges[0] if ranges else (None, None)
         multi = next((r for r in ranges if r[1] >= 2), None)
         gmless = bool(_GMLESS.search(ln))
