@@ -134,6 +134,8 @@
     loadThumb: (key) => get('thumbs', key),
     saveThumb: (key, value) => put('thumbs', key, value),
     loadLastHandle: () => get('handles', 'last'),
+    loadLibIndex: () => get('handles', 'index'),
+    saveLibIndex: (index) => put('handles', 'index', index),
     saveLastHandle: (handle) => put('handles', 'last', handle),
     scanHandle,
     scanFileList,

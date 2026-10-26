@@ -224,18 +224,33 @@
 
   // ---------- 保存 ----------
 
-  const persist = debounce(async () => {
-    if (!app.lib || !app.libId) return;
-    app.lib.savedAt = Date.now();
-    await Store.saveLibrary(app.libId, app.lib);
-    if (app.writeToFolder && app.root) {
-      try { await Store.writeTagFile(app.root, exportData()); } catch (error) {
+  // 保存は少し待ってまとめて行う。待っている間に別のフォルダを開いても、
+  // 編集していたフォルダの分を先に保存してから切り替える（flushPersist）。
+  let persistTimer = null;
+
+  function persist() {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(flushPersist, 800);
+  }
+
+  async function flushPersist() {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+    const lib = app.lib;
+    const libId = app.libId;
+    const root = app.writeToFolder ? app.root : null;
+    if (!lib || !libId) return;
+    lib.savedAt = Date.now();
+    await Store.saveLibrary(libId, lib);
+    if (!root) return;
+    try { await Store.writeTagFile(root, exportData(lib, libId)); } catch (error) {
+      if (app.root === root) {
         app.writeToFolder = false;
         updateSaveButton();
-        toast(t('toast.saveFolderFailed'), 'error');
       }
+      toast(t('toast.saveFolderFailed'), 'error');
     }
-  }, 800);
+  }
 
   function changed() {
     persist();
@@ -245,15 +260,15 @@
     scheduleScenes();
   }
 
-  function exportData() {
+  function exportData(lib = app.lib, libId = app.libId) {
     // 今あるファイルの分だけでなく、見つからなかった画像のタグも残す
     return {
       app: 'haikei-suggest',
       version: LIB_VERSION,
-      name: app.libId,
-      savedAt: app.lib.savedAt || Date.now(),
-      customTags: app.lib.customTags,
-      images: app.lib.images
+      name: libId,
+      savedAt: lib.savedAt || Date.now(),
+      customTags: lib.customTags,
+      images: lib.images
     };
   }
 
@@ -336,9 +351,7 @@
       updateStatus();
       return;
     }
-    app.root = handle;
-    Store.saveLastHandle(handle);
-    await loadFolder(result);
+    if (await loadFolder(result, handle)) Store.saveLastHandle(handle);
   }
 
   async function reopenLast() {
@@ -353,16 +366,44 @@
   async function openFileList(list) {
     const result = await Store.scanFileList(list);
     if (!result) return;
-    app.root = null;
-    await loadFolder(result);
+    await loadFolder(result, null);
   }
 
-  async function loadFolder(result) {
+  // 同じ名前の別フォルダとタグが混ざらないように、フォルダごとの保存キーを決める。
+  // Chrome・Edge はフォルダそのものが同じか（isSameEntry）で、
+  // それ以外はパスの重なり具合で、前に開いたフォルダと同じかを判断する。
+  async function resolveLibId(name, handle, paths) {
+    const index = (await Store.loadLibIndex()) || [];
+    const pathSet = new Set(paths);
+    for (const item of index.filter((row) => row.name === name)) {
+      if (handle && item.handle) {
+        try { if (await item.handle.isSameEntry(handle)) return item.id; } catch (error) { /* 別のフォルダ扱い */ }
+        continue;
+      }
+      const lib = await Store.loadLibrary(item.id);
+      const known = lib && lib.images ? Object.keys(lib.images) : [];
+      if (!known.length) return item.id;
+      const overlap = known.filter((path) => pathSet.has(path)).length;
+      if (overlap / Math.min(known.length, pathSet.size) >= 0.3) {
+        if (handle && !item.handle) { item.handle = handle; await Store.saveLibIndex(index); }
+        return item.id;
+      }
+    }
+    let id = name;
+    for (let n = 2; index.some((row) => row.id === id); n += 1) id = name + ' (' + n + ')';
+    index.push({ id, name, handle: handle || null });
+    await Store.saveLibIndex(index);
+    return id;
+  }
+
+  async function loadFolder(result, handle) {
     if (!result.files.length) {
       toast(t('toast.noImages'), 'error');
       updateStatus();
-      return;
+      return false;
     }
+    await flushPersist();
+    app.root = handle;
     app.thumbUrls.forEach((url) => URL.revokeObjectURL(url));
     app.thumbUrls.clear();
     app.pathTags.clear();
@@ -372,10 +413,10 @@
     app.filter.tags.clear();
     app.sceneOff.clear();
     app.writeToFolder = false;
-    app.libId = result.name;
     app.files = new Map(result.files.map((item) => [item.path, item.file]));
     app.order = result.files.map((item) => item.path)
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    app.libId = await resolveLibId(result.name, handle, app.order);
 
     const saved = sanitizeLibrary(await Store.loadLibrary(app.libId));
     const fromFolder = result.tagFile ? sanitizeLibrary(result.tagFile) : null;
@@ -398,7 +439,7 @@
     app.shownLimit = PAGE_SIZE;
 
     $('emptyState').hidden = true;
-    $('folderName').textContent = '📁 ' + app.libId;
+    $('folderName').textContent = '📁 ' + result.name;
     $('exportBtn').disabled = false;
     $('importBtn').disabled = false;
     updateSaveButton();
@@ -409,6 +450,7 @@
     renderScenes();
     persist();
     analyzeAll();
+    return true;
   }
 
   // ---------- 画像の解析（サムネイルと色） ----------
