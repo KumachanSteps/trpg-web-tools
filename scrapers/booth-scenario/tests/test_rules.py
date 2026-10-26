@@ -168,3 +168,27 @@ def test_tagline_time_is_not_play_time():
     assert durs("・出ると噂の駐車場:1時間") == [("VOICE", "UNSPECIFIED", 60, 60)]
     assert durs("・9~10時間") == [("VOICE", "UNSPECIFIED", 540, 600)]
     assert durs("時 間:2~3時間程度") == [("VOICE", "UNSPECIFIED", 120, 180)]
+
+
+def test_player_counts_round3():
+    def pl(t):
+        return [(m["mode"], m["player_min"], m["player_max"], m["companion_role"]) for m in modes(t)]
+    assert pl("プレイ人数...4名") == [("MULTI_PL", 4, 4, "UNKNOWN")]
+    assert pl("プレイ人数:1~(KPが管理可能な人数)+KP側の探索者") == [("MULTI_PL", 1, 4, "KPC")]
+    assert pl("人数:1PL\nKPCの手料理を朝から晩まで一緒に食べよう") == [("ONE_ON_ONE", 1, 1, "KPC")]
+    assert pl("X2Uをタイマンでまわしちゃだめ?\nPL2人用に作られているのでタイマンは想定していないのですが") == [("MULTI_PL", 2, 2, "UNKNOWN")]
+    assert pl("●所要時間:10時間程度(実際に回した際にはPL3人で15時間程度かかりました)") == []
+    assert pl("1PL発言で共有する") == []
+    assert [h.value["mode"] for h in rules.session_modes_from_title("[CoCソロシナリオ]花冷えの失彩")] == ["SOLO"]
+
+
+def test_secret_needs_more_than_one_player():
+    assert rules.has_secret_handouts("【HO1 真理への背教】\n【HO2 陰背負う英雄】")
+    assert not rules.has_secret_handouts("【HO1 共通】")
+
+
+def test_count_inside_time_line_and_kpc_or_npc_aside():
+    assert [(m["player_min"], m["player_max"]) for m in modes("・備考、プレイ時間：1～2時間（プレイ人数：1～4人）")] == [(1, 4)]
+    assert modes("PL3人でプレイ時間4時間でした") == []
+    m = modes("推奨人数：1PL\nプレイ時間：3～4時間（※KPCかNPCかで多少前後する可能性あり）")
+    assert [x["mode"] for x in m] == ["SOLO"]
