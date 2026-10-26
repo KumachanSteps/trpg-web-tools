@@ -64,6 +64,7 @@
       palette: 'タグ一覧から付ける',
       paletteNote: 'タップで付ける／外す。複数選択中は、全員に付いていれば外し、そうでなければ全員に付けます。',
       resetAuto: '外した自動タグを戻す',
+      aiTitle: 'AI追加パックが画像の中身から付けたタグです。×で外せます。',
       preview: '大きく表示',
       note: 'メモ',
       notePh: '使いたい場面など（サジェストの照合にも使われます）',
@@ -98,6 +99,15 @@
       showInLibrary: 'ライブラリで編集',
       copied: 'コピーしました'
     },
+    ai: {
+      button: 'AIパック',
+      buttonTitle: '別配布のAI追加パックを読み込むと、画像の中身からもタグを付けます',
+      on: 'AI：オン',
+      loading: 'AIパックを読み込み中…',
+      loaded: 'AIパック（{name}）を読み込みました。',
+      loadFailed: 'AIパックを読み込めませんでした。ZIPを展開したフォルダを選んでください。',
+      analyzing: 'AIで解析中 {done} / {total}'
+    },
     toast: {
       noImages: 'このフォルダには画像が見つかりませんでした。',
       unsupported: 'このブラウザはフォルダの読み込みに対応していません。',
@@ -118,6 +128,7 @@
       '5. 候補をクリックすると大きく表示され、パスやファイル名をコピーできます。ココフォリアなどに背景を登録するときに使ってください。'
     ],
     helpNotes: [
+      'AI追加パック（任意・別配布）を「AIパック」から読み込むと、連番ファイル名の画像にも中身からタグ（AIと表示）が付きます。パックの読み込みも解析も、このブラウザの中だけで行います。',
       'このツールは外部と一切通信しません（ページ自体が通信を禁止する設定になっています）。画像・タグ・本文はこのブラウザの中だけで扱います。',
       'Chrome・Edge では「フォルダに保存」でタグを haikei-tags.json としてフォルダ内に保存でき、次回フォルダを開くと自動で読み込みます。その他のブラウザではブラウザ内に保存されるので、「タグを書き出す」でバックアップしてください。',
       'ファイル名を変えたり移動したりしても、同じ名前・同じサイズの画像ならタグを引き継ぎます。'
@@ -192,6 +203,7 @@
       palette: 'Pick from the tag list',
       paletteNote: 'Tap to add or remove. With several images selected, a tag is removed if all have it and added to all otherwise.',
       resetAuto: 'Restore removed auto tags',
+      aiTitle: 'Added by the AI add-on pack from what the image shows. Remove it with ×.',
       preview: 'View large',
       note: 'Note',
       notePh: 'Scenes you want it for, etc. (also used for matching)',
@@ -226,6 +238,15 @@
       showInLibrary: 'Edit in Library',
       copied: 'Copied'
     },
+    ai: {
+      button: 'AI pack',
+      buttonTitle: 'Load the separately distributed AI add-on pack to tag images by what they show',
+      on: 'AI: on',
+      loading: 'Loading AI pack…',
+      loaded: 'Loaded AI pack ({name}).',
+      loadFailed: 'Could not load the AI pack. Choose the folder extracted from the ZIP.',
+      analyzing: 'AI analyzing {done} / {total}'
+    },
     toast: {
       noImages: 'No images were found in this folder.',
       unsupported: 'This browser cannot read folders.',
@@ -246,6 +267,7 @@
       '5. Click a candidate to view it large and copy its path or file name, for example when adding the background to CCFOLIA.'
     ],
     helpNotes: [
+      'Load the optional AI add-on pack (distributed separately) with "AI pack" to tag even numbered file names by what the images show (marked AI). Loading and analysis happen only inside this browser.',
       'This tool makes no external connections (the page itself is set to block them). Images, tags and text are handled only inside this browser.',
       'In Chrome and Edge, "Save to folder" stores tags as haikei-tags.json inside the folder and reads it back next time. Other browsers keep tags in the browser, so back them up with "Export tags".',
       'Renamed or moved images keep their tags as long as the file name and size stay the same.'
@@ -320,6 +342,7 @@
       palette: '태그 목록에서 붙이기',
       paletteNote: '탭하면 붙이기/떼기. 여러 장 선택 중에는 모두에게 붙어 있으면 떼고, 아니면 모두에게 붙입니다.',
       resetAuto: '뗀 자동 태그 되돌리기',
+      aiTitle: 'AI 추가 팩이 이미지 내용으로 붙인 태그입니다. ×로 뗄 수 있습니다.',
       preview: '크게 보기',
       note: '메모',
       notePh: '쓰고 싶은 장면 등(추천 대조에도 사용됩니다)',
@@ -354,6 +377,15 @@
       showInLibrary: '라이브러리에서 편집',
       copied: '복사했습니다'
     },
+    ai: {
+      button: 'AI 팩',
+      buttonTitle: '별도 배포되는 AI 추가 팩을 불러오면 이미지 내용으로도 태그를 붙입니다',
+      on: 'AI: 켜짐',
+      loading: 'AI 팩 불러오는 중…',
+      loaded: 'AI 팩({name})을 불러왔습니다.',
+      loadFailed: 'AI 팩을 불러오지 못했습니다. ZIP을 푼 폴더를 선택해 주세요.',
+      analyzing: 'AI 분석 중 {done} / {total}'
+    },
     toast: {
       noImages: '이 폴더에서 이미지를 찾지 못했습니다.',
       unsupported: '이 브라우저는 폴더 읽기를 지원하지 않습니다.',
@@ -374,6 +406,7 @@
       '5. 후보를 클릭하면 크게 표시되고 경로나 파일 이름을 복사할 수 있습니다. 코코포리아 등에 배경을 등록할 때 사용해 주세요.'
     ],
     helpNotes: [
+      '선택 사항인 AI 추가 팩(별도 배포)을 「AI 팩」에서 불러오면 번호 파일 이름 이미지에도 내용으로 태그(AI 표시)가 붙습니다. 팩 불러오기와 분석은 이 브라우저 안에서만 이루어집니다.',
       '이 도구는 외부와 일절 통신하지 않습니다(페이지 자체가 통신을 막도록 설정되어 있습니다). 이미지·태그·본문은 이 브라우저 안에서만 다룹니다.',
       'Chrome·Edge에서는 「폴더에 저장」으로 태그를 haikei-tags.json으로 폴더 안에 저장할 수 있고, 다음에 폴더를 열면 자동으로 불러옵니다. 그 밖의 브라우저에서는 브라우저 안에 저장되므로 「태그 내보내기」로 백업해 주세요.',
       '파일 이름을 바꾸거나 옮겨도 같은 이름·같은 크기의 이미지라면 태그를 이어받습니다.'

@@ -200,7 +200,7 @@ textarea.text-input { resize: vertical; min-height: 60px; line-height: 1.6; }
 .folder-name { max-width: 240px; overflow: hidden; color: var(--muted); font-size: 0.82rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .view-toggle .segment { min-width: 96px; }
 .status-text { color: var(--faint); font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
-#saveFolderBtn.is-on { border-color: var(--ok); color: var(--ok); }
+#saveFolderBtn.is-on, #aiPackBtn.is-on { border-color: var(--ok); color: var(--ok); }
 
 .link-button { padding: 2px 4px; border: 0; background: transparent; color: var(--yellow); font-size: 0.78rem; font-weight: 700; text-align: left; }
 .link-button:hover { text-decoration: underline; }
@@ -241,6 +241,7 @@ button.chip:hover { border-color: var(--yellow); }
 .chip.is-some { border-color: var(--line-strong); border-style: dashed; color: var(--yellow); }
 .chip.is-off { color: var(--faint); text-decoration: line-through; }
 .chip.is-auto { border-style: dashed; border-color: var(--muted); }
+.chip.is-ai { border-color: var(--ok); }
 .chip.is-partial { opacity: 0.75; }
 .chip-count { color: var(--faint); font-size: 0.7rem; font-weight: 700; }
 .chip-note { color: var(--faint); font-size: 0.66rem; font-weight: 700; }

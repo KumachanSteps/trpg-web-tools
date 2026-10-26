@@ -73,6 +73,26 @@
     return out;
   }
 
+  // AIパック用：フォルダ内のすべてのファイルを「相対パス → File」で返す
+  async function scanAllFiles(dir, prefix = '', out = new Map()) {
+    for await (const [name, handle] of dir.entries()) {
+      const path = prefix ? prefix + '/' + name : name;
+      if (handle.kind === 'directory') await scanAllFiles(handle, path, out);
+      else out.set(path, await handle.getFile());
+    }
+    return out;
+  }
+
+  // <input webkitdirectory> の一覧から、先頭のフォルダ名を除いた相対パスで返す
+  function filesFromList(list) {
+    const out = new Map();
+    Array.from(list || []).forEach((file) => {
+      const rel = (file.webkitRelativePath || file.name).split('/').slice(1).join('/') || file.name;
+      out.set(rel, file);
+    });
+    return out;
+  }
+
   async function scanHandle(root, onProgress) {
     const files = await walkHandle(root, '', [], onProgress);
     let tagFile = null;
@@ -138,6 +158,10 @@
     saveLibIndex: (index) => put('handles', 'index', index),
     saveLastHandle: (handle) => put('handles', 'last', handle),
     scanHandle,
+    scanAllFiles,
+    filesFromList,
+    loadPackHandle: () => get('handles', 'aipack'),
+    savePackHandle: (handle) => put('handles', 'aipack', handle),
     scanFileList,
     ensurePermission,
     hasPermission,

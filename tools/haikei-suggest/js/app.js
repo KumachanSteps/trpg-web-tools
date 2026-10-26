@@ -6,6 +6,7 @@
   const Engine = window.HaikeiEngine;
   const Store = window.HaikeiStore;
   const DICT = window.HaikeiI18n;
+  const AI = window.HaikeiAI;
 
   const LANG_KEY = 'haikei-suggest:lang';
   const TEXT_KEY = 'haikei-suggest:text';
@@ -28,6 +29,10 @@
     pathTags: new Map(), // path -> [tagId]（ファイル名由来）
     pathWords: new Map(), // path -> [語]（本文と直接照合）
     colorTags: new Map(), // path -> [tagId]（色解析）
+    aiTags: new Map(), // path -> [tagId]（AI追加パック）
+    colorDone: false,
+    aiDone: 0,
+    aiRunning: false,
     thumbUrls: new Map(), // path -> blob URL
     analyzed: 0,
     matcher: null,
@@ -80,6 +85,7 @@
     $('helpList').replaceChildren(...t('helpItems').map((line) => h('p', null, line)));
     $('helpNotes').replaceChildren(...t('helpNotes').map((line) => h('p', null, line)));
     updateSaveButton();
+    if ($('aiPackBtn')) updateAiButton();
     updateStatus();
     if (app.lib) {
       renderFilters();
@@ -156,7 +162,7 @@
   }
 
   function autoTags(path) {
-    const list = (app.pathTags.get(path) || []).concat(app.colorTags.get(path) || []);
+    const list = (app.pathTags.get(path) || []).concat(app.colorTags.get(path) || [], app.aiTags.get(path) || []);
     return Array.from(new Set(list));
   }
 
@@ -167,6 +173,12 @@
     const set = new Set(autoTags(path).filter((id) => !removed.includes(id)));
     if (item) item.tags.forEach((id) => set.add(id));
     return set;
+  }
+
+  function isAiOnly(path, id) {
+    return (app.aiTags.get(path) || []).includes(id)
+      && !(app.pathTags.get(path) || []).includes(id)
+      && !(app.colorTags.get(path) || []).includes(id);
   }
 
   function isAuto(path, id) {
@@ -409,6 +421,10 @@
     app.pathTags.clear();
     app.pathWords.clear();
     app.colorTags.clear();
+    app.aiTags.clear();
+    app.colorDone = false;
+    aiRun += 1;
+    app.aiRunning = false;
     app.selected.clear();
     app.filter.tags.clear();
     app.sceneOff.clear();
@@ -537,10 +553,118 @@
     };
     await Promise.all([worker(), worker(), worker()]);
     if (run === analyzeRun) {
+      app.colorDone = true;
       updateStatus();
       renderFilters();
       renderGrid();
+      analyzeAI();
     }
+  }
+
+  // ---------- AI追加パック ----------
+
+  // パックのフォルダを選ぶ。Chrome・Edge は前回のパックを覚えておく。
+  async function openAiPack() {
+    if (Store.canPickDirectory) {
+      const last = await Store.loadPackHandle();
+      if (last && (await Store.ensurePermission(last, 'read'))) {
+        if (await loadAiPack(await Store.scanAllFiles(last), last)) return;
+      }
+      let handle;
+      try {
+        handle = await window.showDirectoryPicker({ id: 'haikei-ai-pack', mode: 'read' });
+      } catch (error) {
+        if (error && error.name === 'AbortError') return;
+        $('aiPackInput').click();
+        return;
+      }
+      await loadAiPack(await Store.scanAllFiles(handle), handle);
+    } else {
+      $('aiPackInput').click();
+    }
+  }
+
+  async function loadAiPack(files, handle) {
+    setStatus(t('ai.loading'));
+    try {
+      await AI.loadPack(files);
+    } catch (error) {
+      console.warn('AI pack:', error);
+      toast(t('ai.loadFailed'), 'error');
+      updateStatus();
+      return false;
+    }
+    if (handle) Store.savePackHandle(handle);
+    toast(t('ai.loaded', { name: AI.packName }));
+    updateAiButton();
+    updateStatus();
+    analyzeAI();
+    return true;
+  }
+
+  function updateAiButton() {
+    const btn = $('aiPackBtn');
+    btn.textContent = AI.ready ? t('ai.on') : t('ai.button');
+    btn.classList.toggle('is-on', AI.ready);
+    btn.title = AI.ready ? AI.packName : t('ai.buttonTitle');
+  }
+
+  let aiRun = 0;
+
+  // 画像の中身からタグを付ける。結果（特徴量）はサムネイルと一緒にキャッシュする。
+  async function analyzeAI() {
+    if (!AI.ready || !app.lib || !app.colorDone) return;
+    const run = ++aiRun;
+    const packId = AI.packId;
+    app.aiDone = 0;
+    app.aiRunning = true;
+    const refresh = debounce(() => {
+      renderFilters();
+      renderGrid();
+      renderInspector();
+      scheduleScenes();
+    }, 800);
+    for (const path of app.order.slice()) {
+      if (run !== aiRun) return;
+      try {
+        const key = thumbKey(path);
+        const record = await Store.loadThumb(key);
+        let emb = record && record.ai && record.ai.pack === packId ? record.ai.emb : null;
+        if (!emb) {
+          const source = await decodeForAI(path, record);
+          emb = await AI.embed(source);
+          if (source.close) source.close();
+          if (record) {
+            record.ai = { pack: packId, emb };
+            Store.saveThumb(key, record);
+          }
+        }
+        if (run !== aiRun) return;
+        app.aiTags.set(path, AI.tagsFromEmbedding(emb));
+      } catch (error) { /* 読めない画像は飛ばす */ }
+      app.aiDone += 1;
+      if (app.aiDone % 5 === 0) updateStatus();
+      refresh();
+    }
+    app.aiRunning = false;
+    updateStatus();
+    refresh();
+  }
+
+  // AI には短い辺が 224px あれば足りるので、縮小して読み込む
+  async function decodeForAI(path, record) {
+    const file = app.files.get(path);
+    if (record && record.width && record.height && typeof createImageBitmap === 'function') {
+      const scale = Math.min(1, 256 / Math.min(record.width, record.height));
+      try {
+        return await createImageBitmap(file, {
+          resizeWidth: Math.max(1, Math.round(record.width * scale)),
+          resizeHeight: Math.max(1, Math.round(record.height * scale)),
+          resizeQuality: 'high'
+        });
+      } catch (error) { /* 下の方法で読む */ }
+    }
+    return decode(file);
   }
 
   function fillThumb(path, url) {
@@ -556,6 +680,7 @@
   function updateStatus() {
     if (!app.lib) { setStatus(t('status.noFolder')); return; }
     if (app.analyzed < app.order.length) setStatus(t('status.analyzing', { done: app.analyzed, total: app.order.length }));
+    else if (app.aiRunning) setStatus(t('ai.analyzing', { done: app.aiDone, total: app.order.length }));
     else setStatus(t('status.ready', { n: app.order.length }));
   }
 
@@ -734,9 +859,10 @@
     const chips = ordered.map((id) => {
       const all = counts.get(id) === paths.length;
       const auto = single ? isAuto(single, id) : false;
-      return h('span', { class: 'chip tag-chip' + (auto ? ' is-auto' : '') + (all ? '' : ' is-partial'), title: auto ? t('insp.autoTitle') : null },
+      const byAI = auto && isAiOnly(single, id);
+      return h('span', { class: 'chip tag-chip' + (auto ? ' is-auto' : '') + (byAI ? ' is-ai' : '') + (all ? '' : ' is-partial'), title: auto ? t(byAI ? 'insp.aiTitle' : 'insp.autoTitle') : null },
         tagLabel(id),
-        auto ? h('span', { class: 'chip-note' }, t('insp.auto')) : null,
+        auto ? h('span', { class: 'chip-note' }, byAI ? 'AI' : t('insp.auto')) : null,
         all ? null : h('span', { class: 'chip-note' }, t('insp.partial') + ' ' + counts.get(id)),
         h('button', { type: 'button', class: 'chip-x', dataset: { removeTag: id }, 'aria-label': '×' }, '×'));
     });
@@ -1052,6 +1178,12 @@
       event.target.value = '';
     });
     $('saveFolderBtn').addEventListener('click', saveToFolder);
+    $('aiPackBtn').addEventListener('click', openAiPack);
+    $('aiPackInput').addEventListener('change', async (event) => {
+      const files = Store.filesFromList(event.target.files);
+      event.target.value = '';
+      if (files.size) await loadAiPack(files, null);
+    });
     $('exportBtn').addEventListener('click', exportTags);
     $('importBtn').addEventListener('click', () => $('importInput').click());
     $('importInput').addEventListener('change', (event) => {
@@ -1201,6 +1333,7 @@
     if (!Store.canPickDirectory) $('fallbackNote').hidden = false;
     bind();
     applyLanguage();
+    updateAiButton();
     setView('library');
     if (Store.canPickDirectory && (await Store.loadLastHandle())) $('reopenBtn').hidden = false;
   }
