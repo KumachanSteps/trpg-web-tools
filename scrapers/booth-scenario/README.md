@@ -113,6 +113,37 @@ booth-scenario crawl-details --refresh-older-than-days 30   # 古いものを取
 - **別商品との関連**: アンソロジー収録作と単品販売が同じ作品らしい組は `scenario_link_candidates` に候補として入るだけで、自動では統合しません。`CONFIRMED` にしてから `apply-links` で統合します。
 - **差分更新**: 一覧のタイトル・価格が前回と変わった商品だけ詳細を取り直します。途中で止まっても `listing_progress` / `crawl_queue` から再開します。失敗した商品は間隔をあけて最大3回まで再試行し、その後は `REVIEW` に回します。
 
+## Phase 2: 定期テストバッチ（TK の PC で実行）
+
+2026-10-24 の決定: 収集は TK の PC で定期的に行い、届いた試験データで採点とルール修正を繰り返す。対象はまず CoC・エモクロア・マダミス。優先項目（作品名・システム・人数・プレイ時間・価格）はなるべく空にしない。
+
+```bash
+booth-scenario test-batch --n 50 --out ~/booth-batches   # 約15〜20分（8秒間隔）
+```
+
+- 対象ごとに件数を均等に分け（50件なら 17/17/16）、各対象の一覧から**無作為のページ**を選び、1ページ最大5件ずつ**まだ取得していない商品**を取ります。
+- 結果は `batch_<日時>/` に `review_table.xlsx`（レビュー表）・`batch.json`（抽出条件と seed）・`booth.sqlite3`（採点用のコピー）として出ます。このフォルダを送ってください。
+- 403・CAPTCHA・429 が出たらその場で止まり、そこまでの分だけでフォルダを作ります。
+- 対象を絞るときは `--scope coc --scope madamis` のように指定します。
+
+**定期実行の例**
+
+- Windows（タスク スケジューラ）: 「基本タスクの作成」→ 毎週 → 操作「プログラムの開始」に `booth-scenario`、引数に `test-batch --n 50 --out %USERPROFILE%\booth-batches`
+- Mac / Linux（cron）: `0 21 * * 6 cd ~/trpg-web-tools/scrapers/booth-scenario && .venv/bin/booth-scenario test-batch --n 50 --out ~/booth-batches`
+
+**採点の流れ（こちらで実行）**
+
+```bash
+booth-scenario import-review batch_20261025-2100/review_table.xlsx --batch 20261025-2100 --split test
+booth-scenario evaluate --split test      # 正確さ（accuracy / precision）と埋まり具合（coverage）を項目ごとに表示
+booth-scenario set-split 20261025-2100 train   # ルール修正に使ったら学習用へ移す
+```
+
+- `split=test` のラベルは採点専用です。外れを見てルールを直したら `train` に移し、次の採点は新しいバッチで行います（同じ問題で何度も測らない）。
+- 採点項目に価格（`price`）と秘匿HO（`secret_ho`）を追加。プレイ時間は ±1時間を正解とします。
+- 一覧の収集も対象ごとにできます: `booth-scenario crawl-listing --scope emoklore --scope madamis --max-pages 50`
+- マーダーミステリーはシステム `MADAMIS`、進行役の既定は `GM`（migration 008）。本文・タグでシステムが分からないときは、見つかった一覧のタグ（例: エモクロアTRPG）で補います。
+
 ---
 
 **English summary:** Python package that collects public BOOTH TRPG scenario metadata into the normalized SQLite schema from `docs/SCHEMA_SPEC.md`. Phase 0 = migrations, a polite sequential fetcher (8 s delay, robots.txt, hard stop on 403/CAPTCHA/repeated 429), small capped probes, rule-based extraction with evidence, three-valued availability/ownership projections, and tests. No CSS selector is assumed: all start unverified and are filled from real snapshots. Real pages are kept out of git.

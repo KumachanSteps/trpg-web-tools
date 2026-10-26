@@ -24,6 +24,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 
+from . import targets
 from .db import new_id, utcnow
 from .store import ensure_product
 from .rules import classify_edition_kind, lines, normalize as _normalize_text
@@ -39,7 +40,7 @@ _FORMAT_LABEL = re.compile(
     r"本編|画像|のみ|pack|edition|ver|中文|English|英語|韓国語|한국어|日本語|配信|KPレス|タイマン|HO\s*\d|PL", re.I)
 _QUOTED = re.compile(r"[『「]([^』」]{1,60})[』」]")
 _BULLET = re.compile(r"^(?:[・●○◆◇■□▼▽▍★☆♦◎※\-*]|\d+[.)．、]|[①-⑳]|第\s*\d+\s*話|No\.?\s*\d+)\s*")
-_SCENARIO_SIGNAL = re.compile(r"シナリオ|scenario|クトゥルフ|CoC|エモクロア|TRPG|探索者|KP|PL", re.I)
+_SCENARIO_SIGNAL = re.compile(r"シナリオ|scenario|クトゥルフ|CoC|エモクロア|TRPG|探索者|KP|PL|マーダーミステリー|マダミス|murder\s*mystery", re.I)
 _ASSET_SIGNAL = re.compile(r"素材|立ち絵|スチル|BGM|背景|アイコン|ルームデータ|部屋データ|ココフォリア|ユドナリウム|トレーラー|ハンドアウト素材|キャラシ|ダイス|グッズ", re.I)
 # Lines that are file lists, credits or play conditions, never a work's title.
 _NOT_TITLE = re.compile(
@@ -54,7 +55,8 @@ _SYSTEM_WORDS = re.compile(r"^(新?クトゥルフ神話TRPG|エモクロアTRPG
 _ITEM_URL = re.compile(r"https?://(?:[a-z0-9-]+\.)?booth\.pm/(?:[a-z]{2}/)?items/(\d+)")
 
 # Tags that name a system (BOOTH tag text as seen on product pages).
-_TAG_SYSTEMS = {"新クトゥルフ神話TRPG": "COC7", "エモクロアTRPG": "EMOKLORE", "エモクロア": "EMOKLORE"}
+_TAG_SYSTEMS = {"新クトゥルフ神話TRPG": "COC7", "エモクロアTRPG": "EMOKLORE", "エモクロア": "EMOKLORE",
+                "マーダーミステリー": "MADAMIS", "マダミス": "MADAMIS"}
 
 
 def normalize_title(title: str) -> str:
@@ -245,7 +247,7 @@ def classify(title: str, description: str, variants: list[dict], tags: list[str]
     unknown = [v for v in real if kinds[id(v)] == "UNKNOWN"]
 
     scenario_signal = (bool(_SCENARIO_SIGNAL.search(title)) or any(_SCENARIO_SIGNAL.search(t) for t in tags)
-                       or bool(re.search(r"シナリオ", description or "")) or bool(_SCENARIO_SIGNAL.search(category or "")))
+                       or bool(re.search(r"シナリオ|マーダーミステリー|マダミス", description or "")) or bool(_SCENARIO_SIGNAL.search(category or "")))
     if not scenario_signal:
         if _ASSET_SIGNAL.search(title):
             return Classification("ASSET_ONLY", reasons=["no scenario signal; asset words in title"])
@@ -420,7 +422,14 @@ def _primary_system(conn, sid: str, tags: list[str]) -> str:
     if len(set(native)) == 1:
         return native[0]
     from_tags = {_TAG_SYSTEMS[t] for t in tags if t in _TAG_SYSTEMS}
-    return from_tags.pop() if len(from_tags) == 1 else "UNKNOWN"
+    if len(from_tags) == 1:
+        return from_tags.pop()
+    # Last resort: the tag of the listing query the product was found under.
+    found_under = {targets.QUERY_TAG_SYSTEMS.get(r[0]) for r in conn.execute(
+        """SELECT DISTINCT q.tag FROM product_scenarios ps JOIN search_hits h USING(booth_item_id)
+           JOIN crawl_pages cp USING(crawl_page_id) JOIN search_queries q USING(search_query_id)
+           WHERE ps.scenario_id=?""", (sid,))} - {None}
+    return found_under.pop() if len(found_under) == 1 else "UNKNOWN"
 
 
 def _variant_coverage(v: dict) -> str | None:

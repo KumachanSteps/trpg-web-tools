@@ -20,12 +20,14 @@ from .organize import normalize_title, work_title
 
 FIELDS = ["product_kind", "members", "systems", "session_modes", "durations", "assets", "free_full", "free_sample", "related_items",
           "price", "secret_ho"]
+# Fields the library filters and matches on: keep them filled (decided 2026-10-24).
+PRIORITY_FIELDS = ["members", "systems", "session_modes", "durations", "price"]
 LIST_SEP = "; "
 MEMBER_SEP = "／"
 FIELD_HELP = {
     "product_kind": "SINGLE / COLLECTION / SAME_PAGE_VARIANTS / ASSET_ONLY / UNDETERMINED",
     "members": "作品名（単品は作品名1つ、アンソロジーは収録作品を／区切り）",
-    "systems": "COC6 / COC7 / EMOKLORE / OTHER と NATIVE / SUPPORTED / CONVERTIBLE / CONVERSION_PATCH を : でつなぎ ; 区切り",
+    "systems": "COC6 / COC7 / EMOKLORE / MADAMIS / OTHER と NATIVE / SUPPORTED / CONVERTIBLE / CONVERSION_PATCH を : でつなぎ ; 区切り",
     "session_modes": "例: ONE_ON_ONE 1-1 KP/KPC ; MULTI_PL 2-4 KP/NONE SECRET（秘匿HOあり）",
     "durations": "例: VOICE MAIN 180-240 ; TEXT UNSPECIFIED 480-480（分）",
     "assets": "例: NPC_IMAGE:INCLUDED ; BGM_AUDIO:EXPLICITLY_ABSENT",
@@ -179,6 +181,7 @@ INFO_COLS = [  # key, label, help
 ]
 KIND_CHOICES = ["SINGLE", "COLLECTION", "SAME_PAGE_VARIANTS", "ASSET_ONLY", "UNDETERMINED", "-"]
 YES_NO = ["yes", "no", "unknown"]
+SPLITS = ("TRAIN", "TEST")
 
 
 def _check_first(auto: dict) -> str:
@@ -189,8 +192,11 @@ def _check_first(auto: dict) -> str:
         notes.append("種類を判定できず")
     if kind in ("COLLECTION", "SAME_PAGE_VARIANTS"):
         notes.append("収録作品が見つからない" if not auto["members"] else "収録作品名を確認")
-    if not auto["systems"] and kind not in ("ASSET_ONLY", "UNDETERMINED"):
-        notes.append("システム未検出")
+    if kind not in ("ASSET_ONLY", "UNDETERMINED"):
+        missing = [label for f, label in (("systems", "システム"), ("session_modes", "人数"), ("durations", "時間"), ("price", "価格"))
+                   if not auto[f]]
+        if missing:
+            notes.append("・".join(missing) + "未検出")
     if auto["free_full"] == "unknown":
         notes.append("本編無料か不明")
     return " / ".join(notes)
@@ -339,9 +345,13 @@ def _read_rows(path: Path) -> list[dict]:
     return [dict(zip(header, r)) for r in raw[header_at + 1:]]
 
 
-def import_review(conn, path: Path) -> dict:
+def import_review(conn, path: Path, *, batch: str | None = None, split: str = "TRAIN") -> dict:
     """Store the checked table as review_labels; a corrected kind or member list
-    becomes a MANUAL classification that organize will follow."""
+    becomes a MANUAL classification that organize will follow. `split` TEST
+    marks labels kept for scoring only (rules are not tuned on them)."""
+    split = split.upper()
+    if split not in SPLITS:
+        raise ValueError(f"split must be one of {SPLITS}")
     imported, corrected, warnings = 0, 0, []
     for row in _read_rows(path):
         iid_s = (row.get("booth_item_id") or "").strip()
@@ -359,8 +369,9 @@ def import_review(conn, path: Path) -> dict:
             auto, ok = row.get(f"auto_{f}", ""), (row.get(f"ok_{f}") or "").strip()
             labels[f] = {"auto": auto, "truth": auto if ok == "" else ("" if ok == "-" else ok), "corrected": ok != ""}
             corrected += ok != ""
-        conn.execute("INSERT OR REPLACE INTO review_labels VALUES (?, ?, ?, ?)",
-                     (iid, json.dumps(labels, ensure_ascii=False), row.get("notes") or None, utcnow()))
+        conn.execute(
+            "INSERT OR REPLACE INTO review_labels (booth_item_id, labels_json, reviewer_notes, imported_at, batch, split) VALUES (?, ?, ?, ?, ?, ?)",
+            (iid, json.dumps(labels, ensure_ascii=False), row.get("notes") or None, utcnow(), batch, split))
         if labels["product_kind"]["truth"].strip().upper() not in KIND_CHOICES:
             # Not a kind (e.g. a pasted variant line): keep the tool's answer.
             warnings.append(f"{iid}: product_kind {labels['product_kind']['truth']!r} is not a kind; kept {labels['product_kind']['auto']}")
@@ -425,14 +436,36 @@ def _norm_value(field: str, value: str) -> frozenset:
                 scope = "EPISODE" if re.match(r"(ACT|EP)\s*\d", scope) else _SCOPE_ALIAS.get(scope, scope)
                 out.add(f"{mode} {scope} {m.group(3)}-{hi}")
         return frozenset(out)
+    if field == "price":
+        if re.fullmatch(r"無料|free", value, re.I):
+            return frozenset(["0"])
+        nums = re.findall(r"\d+", re.sub(r"[,，]", "", value))
+        return frozenset(["-".join(nums[:2]) if len(nums) > 1 and nums[0] != nums[1] else nums[0]]) if nums else frozenset()
+    if field in ("free_full", "free_sample") and value.lower() == "unknown":
+        return frozenset()
     parts = re.split(r"\s*;\s*|\n", value)
     return frozenset(re.sub(r"\s+", " ", p.strip()).upper() for p in parts if p.strip())
+
+
+DURATION_TOLERANCE = 60  # minutes: play time is a guide, ±1 hour counts as right
+
+
+def _near_duration(x: str, y: str) -> bool:
+    (hx, rx), (hy, ry) = x.rsplit(" ", 1), y.rsplit(" ", 1)
+    if hx != hy:
+        return False
+    (lx, ux), (ly, uy) = rx.split("-"), ry.split("-")
+    if (ux == "") != (uy == ""):
+        return False
+    return abs(int(lx or 0) - int(ly or 0)) <= DURATION_TOLERANCE and (ux == "" or abs(int(ux) - int(uy)) <= DURATION_TOLERANCE)
 
 
 def _matches(field: str, tool: str, truth: str) -> bool:
     a, b = _norm_value(field, tool), _norm_value(field, truth)
     if field == "members" and not b and len(a) == 1:
         return True  # the first round left a single work's name blank
+    if field == "durations":
+        return all(any(_near_duration(x, y) for x in a) for y in b) and all(any(_near_duration(x, y) for y in b) for x in a)
     if field != "session_modes":
         return a == b
     # A truth entry without roles ("ONE_ON_ONE 1-1"), or with UNKNOWN ones left
@@ -453,14 +486,27 @@ def _matches(field: str, tool: str, truth: str) -> bool:
     return all(any(same(x, y) for x in a) for y in b) and all(any(same(x, y) for y in b) for x in a)
 
 
-def evaluate(conn) -> dict:
+def evaluate(conn, *, batches: list[str] | None = None, split: str | None = None) -> dict:
     """Compare the current rule output with the reviewed truth, per field.
     MANUAL classifications are compared against their own rule result, so the
-    score measures the rules, not the corrections."""
+    score measures the rules, not the corrections.
+
+    Per field: accuracy (rows where the tool equals the truth, empty = empty
+    included), precision (of the values the tool gave, how many are right) and
+    coverage (of the rows that have a true value, how many the tool filled).
+    `batches`/`split` limit the rows, e.g. split="TEST" for an honest score."""
     from .organize import classify, _product
 
-    per_field = {f: {"checked": 0, "correct": 0, "misses": []} for f in FIELDS}
-    for r in conn.execute("SELECT * FROM review_labels").fetchall():
+    sql, args = "SELECT * FROM review_labels WHERE 1=1", []
+    if batches:
+        sql += f" AND batch IN ({','.join('?' * len(batches))})"
+        args += batches
+    if split:
+        sql += " AND split=?"
+        args.append(split.upper())
+    per_field = {f: {"checked": 0, "correct": 0, "filled": 0, "filled_correct": 0, "has_truth": 0, "covered": 0, "misses": []}
+                 for f in FIELDS}
+    for r in conn.execute(sql, args).fetchall():
         iid = r["booth_item_id"]
         labels = json.loads(r["labels_json"])
         data = _product(conn, iid)
@@ -473,14 +519,33 @@ def evaluate(conn) -> dict:
             if f not in labels:
                 continue
             st = per_field[f]
+            truth = labels[f]["truth"]
+            ok = _matches(f, now[f], truth)
+            filled, has_truth = bool(_norm_value(f, now[f])), bool(_norm_value(f, truth))
             st["checked"] += 1
-            if _matches(f, now[f], labels[f]["truth"]):
-                st["correct"] += 1
-            else:
-                st["misses"].append({"booth_item_id": iid, "tool": now[f], "truth": labels[f]["truth"]})
+            st["correct"] += ok
+            st["filled"] += filled
+            st["filled_correct"] += filled and ok
+            st["has_truth"] += has_truth
+            st["covered"] += has_truth and filled
+            if not ok:
+                st["misses"].append({"booth_item_id": iid, "tool": now[f], "truth": truth, "kind": "wrong" if filled else "empty"})
     for st in per_field.values():
         st["accuracy"] = round(st["correct"] / st["checked"], 3) if st["checked"] else None
+        st["precision"] = round(st["filled_correct"] / st["filled"], 3) if st["filled"] else None
+        st["coverage"] = round(st["covered"] / st["has_truth"], 3) if st["has_truth"] else None
     return per_field
+
+
+def set_split(conn, batch: str, split: str) -> int:
+    """Move a scored test batch to training (or back): once its misses are used
+    to fix rules it no longer measures them fairly."""
+    split = split.upper()
+    if split not in SPLITS:
+        raise ValueError(f"split must be one of {SPLITS}")
+    cur = conn.execute("UPDATE review_labels SET split=? WHERE batch=?", (split, batch))
+    conn.commit()
+    return cur.rowcount
 
 
 def reviewed_ids(conn) -> set[int]:
