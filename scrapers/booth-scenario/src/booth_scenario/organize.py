@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 
 from .db import new_id, utcnow
 from .store import ensure_product
-from .rules import classify_edition_kind, lines
+from .rules import classify_edition_kind, lines, normalize as _normalize_text
 
 _COLLECTION_TITLE = re.compile(r"アンソロジー|アンソロ|シナリオ集|短編集|合同誌|合同本|詰め合わせ|オムニバス|アソート|anthology", re.I)
 _SINGLE_TITLE = re.compile(r"単体版|単品版|単品")
@@ -85,6 +85,7 @@ def work_title(title: str) -> str:
     rest = re.sub(r"^[\s▼▽■□◆◇●○★☆▶]+", "", rest)
     rest = _TITLE_SYSTEM.sub(" ", rest)
     rest = re.sub(r"[(（《〈<]\s*[)）》〉>]", " ", rest)
+    rest = re.sub(r"\s*[+＋].*(設定資料|リプレイ|素材|特典|おまけ|資料).*$", "", rest)
     rest = re.sub(r"^\s*(無料|有料|新作|再販)\s*", "", rest)
     rest = re.sub(r"\s+", " ", rest).strip(" /／-~・|")
     if rest:
@@ -175,10 +176,48 @@ def extract_member_titles(text: str, whole_text: bool = False) -> list[str]:
     return extract_members(text, whole_text)[0]
 
 
+_QUOTE_LINE = re.compile(r"([▼▽■□◆◇●○・★☆▶]?)\s*(?:[^「『」』]{0,24}?)([「『])([^」』]{1,50})[」』]")
+
+
+def _members_by_count(text: str, n: int | None) -> list[str]:
+    """With a stated count ("4本収録"), the works are often bare quoted lines
+    (『Re:おキツネさま』 / ▼「残夏に啼く」). Lines are grouped by their bullet
+    and bracket; a group of exactly n is taken."""
+    if not n:
+        return []
+    groups: dict[tuple, list[str]] = {}
+    for ln in lines(text or ""):
+        m = _QUOTE_LINE.fullmatch(ln)
+        if not m:
+            continue
+        t = m.group(3).strip()
+        if re.search(r"[:：]\s*$|テーマ|傾向|キーワード", ln[:m.start(2)]):
+            continue  # a labelled value ("テーマ：『ペット』"), not a title
+        # Lighter filter than _NOT_TITLE: a title may hold a colon ("Re:おキツネさま").
+        if _SYSTEM_WORDS.match(t) or _SECTION_HEAD.search(t) or re.search(r"。$|\.(pdf|txt|zip)|^\d|修正|追記|ver\s*\d", t, re.I):
+            continue
+        g = groups.setdefault((m.group(1), m.group(2)), [])
+        if normalize_title(t) not in {normalize_title(x) for x in g}:
+            g.append(t)
+    hits = [(k, g) for k, g in groups.items() if len(g) == n]
+    if len(hits) > 1:  # titles get a bullet more often than taglines do
+        hits = [(k, g) for k, g in hits if k[0]]
+    return hits[0][1] if len(hits) == 1 else []
+
+
+def _members_from_title(title: str, text: str) -> list[str]:
+    """"＃落園 / プリズム": two names in the title, each quoted in the text."""
+    parts = [p.strip(" #＃") for p in re.split(r"\s+[/／]\s+", work_title(title))]
+    if len(parts) < 2:
+        return []
+    quoted = {normalize_title(q) for q in _QUOTED.findall(text or "")}
+    return parts if all(normalize_title(p) in quoted for p in parts) else []
+
+
 def _member_count_hint(text: str, own_only: bool = False) -> int | None:
     """Stated number of works. With own_only, skip a count that follows a link
     to another BOOTH item (it describes that item: "続編シナリオ3本を収録")."""
-    t = unicodedata.normalize("NFKC", text or "")
+    t = _normalize_text(text or "")
     m = _MEMBER_COUNT.search(t)
     if not m or (own_only and _ITEM_URL.search(t[max(0, m.start() - 200):m.start()])):
         return None
@@ -211,8 +250,12 @@ def classify(title: str, description: str, variants: list[dict], tags: list[str]
         if _ASSET_SIGNAL.search(title):
             return Classification("ASSET_ONLY", reasons=["no scenario signal; asset words in title"])
         return Classification("UNDETERMINED", reasons=["no scenario signal"])
-    if _ASSET_SIGNAL.search(title) and "シナリオ" not in title and not full:
-        return Classification("ASSET_ONLY", reasons=["asset words in title, no full-scenario variant"])
+    # Only a plain statement about the product itself ("これは、シナリオではない",
+    # "…はシナリオではなく補助ツール"), not a remark on the story's tone.
+    if re.search(r"これは[、,]?\s*シナリオでは(ない|ありません)|シナリオではなく[^。\n]{0,30}(ツール|素材)", description or ""):
+        return Classification("ASSET_ONLY", reasons=["description says it is not a scenario (a tool or material)"])
+    if (m := _ASSET_SIGNAL.search(title)) and "シナリオ" not in title and not re.match(r"\s*(付き|付|同梱|あり|入り)", title[m.end():]):
+        return Classification("ASSET_ONLY", reasons=["asset words in title, no scenario word"])
 
     # Same page sells a bundle and the works one by one.
     bundles = [v for v in full + unknown if _BUNDLE_LABEL.search(v["variant_label"])]
@@ -241,6 +284,10 @@ def classify(title: str, description: str, variants: list[dict], tags: list[str]
     members, items = extract_members(description, whole_text=title_says)
     # "シナリオ3本を収録" is a collection even when the title does not say so.
     count_hint = _member_count_hint(description, own_only=not (title_says or members))
+    if not members:
+        members = _members_by_count(description, count_hint) or _members_from_title(title, description)
+        if members:
+            reasons.append("member titles from quoted lines")
     if title_says or len(members) >= 2 or count_hint:
         if title_says:
             reasons.append("collection word in title")

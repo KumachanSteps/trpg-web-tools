@@ -3,7 +3,8 @@ text, title and tags. Runs after every fetch, and offline via `reextract`."""
 from __future__ import annotations
 
 from . import store
-from .rules import classify_edition_kind, default_roles, extract_all, extract_systems_meta, has_secret_handouts
+from .rules import (classify_edition_kind, default_roles, default_session_mode, extract_all, extract_systems_meta,
+                    has_secret_handouts, session_modes_from_title)
 
 
 def rebuild_evidence(conn, iid: int) -> int:
@@ -28,11 +29,14 @@ def rebuild_evidence(conn, iid: int) -> int:
     if not stated:
         hits += [h for h in extract_systems_meta(p["title"] or p["listing_title"] or "", tags) if h.value["system_code"] not in described]
     systems = {h.value["system_code"] for h in hits if h.field_path == "scenario_systems"}
+    if not any(h.field_path == "scenario_session_modes" for h in hits):
+        hits += session_modes_from_title(p["title"] or p["listing_title"] or "") or [default_session_mode()]
     secret = has_secret_handouts(p["title"] or p["listing_title"] or "", " ".join(tags), p["description_text"] or "")
     for h in hits:
         if h.field_path == "scenario_session_modes":
             h.value = default_roles(h.value, systems)
-            if secret:
+            # Secret handouts are between players: not for solo or タイマン play.
+            if secret and h.value["mode"] in ("MULTI_PL", "GMLESS_MULTI"):
                 h.value["secret_handouts"] = 1
     for h in hits:
         store.save_evidence(conn, iid, h, section="description" if not h.excerpt.startswith("[") else h.excerpt[1:h.excerpt.index("]")])
