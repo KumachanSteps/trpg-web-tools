@@ -75,17 +75,17 @@ def test_price_secret_and_duration_tolerance():
 
 
 def test_evaluate_precision_coverage_and_split(conn, tmp_path):
-    _item(conn, 1, "霧の館", "推奨人数：1PL", [("PDF", 500)])
+    _item(conn, 1, "霧の館", "推奨人数：1PL\nボイセ3時間", [("PDF", 500)])
     _item(conn, 2, "霧の夜", "これはシナリオです", [("PDF", 900)])
     organize.organize_all(conn)
     out = tmp_path / "r.csv"
     review.export_review(conn, [1, 2], out)
     rows = review._read_rows(out)
     assert {r["auto_price"] for r in rows} == {"500", "900"} and {r["auto_secret_ho"] for r in rows} == {"no"}
-    # Item 2 has a player count the rules missed.
+    # Item 2 has a play time the rules missed.
     for r in rows:
         if r["booth_item_id"] == "2":
-            r["ok_session_modes"] = "MULTI_PL 3-4"
+            r["ok_durations"] = "VOICE MAIN 180-240"
     import csv
     raw = list(csv.reader(out.open(encoding="utf-8-sig")))
     with out.open("w", encoding="utf-8-sig", newline="") as fh:
@@ -93,7 +93,7 @@ def test_evaluate_precision_coverage_and_split(conn, tmp_path):
         w.writerows(raw[:3])
         w.writerows([[r[k] for k in raw[2]] for r in rows])
     review.import_review(conn, out, batch="b1", split="test")
-    sm = review.evaluate(conn, split="TEST")["session_modes"]
+    sm = review.evaluate(conn, split="TEST")["durations"]
     assert (sm["accuracy"], sm["precision"], sm["coverage"]) == (0.5, 1.0, 0.5)
     assert sm["misses"][0]["kind"] == "empty"
     assert review.evaluate(conn, split="TRAIN")["session_modes"]["checked"] == 0

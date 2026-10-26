@@ -76,9 +76,14 @@ def pick_review_set(conn, n: int = 50, seed: int = 20261021, exclude: set[int] |
 
 
 # -- auto values --------------------------------------------------------------------
-def _evidence_values(conn, iid: int, table: str) -> list[dict]:
+def _evidence_values(conn, iid: int, table: str, stated_only: bool = False) -> list[dict]:
+    """stated_only drops the guesses made for a page that states nothing
+    (player count from the title, or the 2-4 default)."""
     out = []
-    for (fp,) in conn.execute("SELECT field_path FROM extraction_evidence WHERE booth_item_id=? AND field_path LIKE ?", (iid, f"{table}:%")):
+    for fp, section in conn.execute("SELECT field_path, source_section FROM extraction_evidence WHERE booth_item_id=? AND field_path LIKE ?",
+                                    (iid, f"{table}:%")):
+        if stated_only and section in ("default", "title"):
+            continue
         out.append(json.loads(fp.partition(":")[2]))
     return out
 
@@ -87,15 +92,19 @@ def _uniq_sorted(vals) -> str:
     return LIST_SEP.join(sorted(set(vals)))
 
 
-def auto_fields(conn, iid: int) -> dict[str, str]:
+def auto_fields(conn, iid: int, kind: str | None = None) -> dict[str, str]:
+    """kind overrides the stored product kind (evaluate scores the rule's own)."""
     cls = conn.execute("SELECT * FROM product_classifications WHERE booth_item_id=?", (iid,)).fetchone()
     members = json.loads(cls["member_titles_json"] or "[]") if cls else []
-    if cls and cls["product_kind"] == "SINGLE" and not members:
-        # A single product holds one work: show its name without labels.
+    if cls and cls["product_kind"] in ("SINGLE", "ASSET_ONLY") and not members:
+        # A single product or a tool holds one work: show its name without labels.
         title = conn.execute("SELECT COALESCE(title, listing_title) FROM products WHERE booth_item_id=?", (iid,)).fetchone()[0]
         members = [work_title(title or "")]
     variants = conn.execute("SELECT * FROM product_variants WHERE booth_item_id=?", (iid,)).fetchall()
     fetched = conn.execute("SELECT detail_fetched_at FROM products WHERE booth_item_id=?", (iid,)).fetchone()[0]
+    # The title/default player count is a guess about one work; an anthology or
+    # a tool gets only what its text states.
+    sessions = _evidence_values(conn, iid, "scenario_session_modes", stated_only=(kind or (cls["product_kind"] if cls else None)) != "SINGLE")
 
     full = [v for v in variants if v["edition_kind"] in ("FULL", "FREE_PLAYABLE_EDITION")]
     if any(v["price_jpy"] == 0 and v["availability"] == "AVAILABLE" for v in full):
@@ -116,11 +125,6 @@ def auto_fields(conn, iid: int) -> dict[str, str]:
            WHERE ps.booth_item_id=?""",
         (iid,),
     ).fetchall()
-    sellable = [v["price_jpy"] for v in variants
-                if v["edition_kind"] in ("FULL", "FREE_PLAYABLE_EDITION", "UNKNOWN") and v["price_jpy"] is not None
-                and v["availability"] != "UNAVAILABLE"]
-    price = "" if not sellable else (str(min(sellable)) if min(sellable) == max(sellable) else f"{min(sellable)}-{max(sellable)}")
-    modes = _evidence_values(conn, iid, "scenario_session_modes")
     return {
         "product_kind": cls["product_kind"] if cls else "UNDETERMINED",
         "members": MEMBER_SEP.join(members),
@@ -128,16 +132,26 @@ def auto_fields(conn, iid: int) -> dict[str, str]:
         "session_modes": _uniq_sorted(
             f"{v['mode']} {v.get('player_min')}-{v.get('player_max')} {v.get('facilitator_role')}/{v.get('companion_role')}"
             + (" SECRET" if v.get("secret_handouts") else "")
-            for v in modes),
+            for v in sessions),
         "durations": _uniq_sorted(
             f"{v['mode']} {v['scope']} {v['min_minutes']}-{'' if v['max_minutes'] is None else v['max_minutes']}" for v in _evidence_values(conn, iid, "scenario_durations")),
         "assets": _uniq_sorted(f"{v['asset_type']}:{v['availability_relation']}" for v in _evidence_values(conn, iid, "scenario_assets")),
         "free_full": free_full,
         "free_sample": free_sample,
         "related_items": _uniq_sorted(str(r[0]) for r in related),
-        "price": price,
-        "secret_ho": "yes" if any(v.get("secret_handouts") for v in modes) else "no",
+        # Every way to buy the work: full, short or updated editions, but not a
+        # materials-only set, a free preview or an edition no longer sold.
+        "price": _price_range([v for v in variants if v["edition_kind"] not in ("ASSET_ONLY", "SAMPLE")
+                               and v["availability"] != "UNAVAILABLE"] or variants),
+        "secret_ho": "yes" if any(v.get("secret_handouts") for v in sessions) else "no",
     }
+
+
+def _price_range(variants) -> str:
+    prices = sorted({v["price_jpy"] for v in variants if v["price_jpy"] is not None})
+    if not prices:
+        return ""
+    return str(prices[0]) if len(prices) == 1 else f"{prices[0]}-{prices[-1]}"
 
 
 # -- export / import --------------------------------------------------------------------
@@ -351,7 +365,7 @@ def import_review(conn, path: Path, *, batch: str | None = None, split: str = "T
         labels = {}
         for f in FIELDS:
             if f"auto_{f}" not in row:
-                continue  # a table exported before this field existed
+                continue  # a table from before this field existed
             auto, ok = row.get(f"auto_{f}", ""), (row.get(f"ok_{f}") or "").strip()
             labels[f] = {"auto": auto, "truth": auto if ok == "" else ("" if ok == "-" else ok), "corrected": ok != ""}
             corrected += ok != ""
@@ -459,7 +473,8 @@ def _matches(field: str, tool: str, truth: str) -> bool:
     def same(tool_e: str, truth_e: str) -> bool:
         # SECRET (秘匿HO) was added after the first review round; compare it only
         # when the reviewer wrote it.
-        if truth_e.endswith(" SECRET") and not tool_e.endswith(" SECRET"):
+        # Solo and タイマン play have no secret handouts, whatever the sheet says.
+        if truth_e.endswith(" SECRET") and not tool_e.endswith(" SECRET") and truth_e.split()[0] not in ("SOLO", "ONE_ON_ONE"):
             return False
         t, r = tool_e.removesuffix(" SECRET").split(), truth_e.removesuffix(" SECRET").split()
         if t[:2] != r[:2]:
@@ -494,11 +509,11 @@ def evaluate(conn, *, batches: list[str] | None = None, split: str | None = None
     for r in conn.execute(sql, args).fetchall():
         iid = r["booth_item_id"]
         labels = json.loads(r["labels_json"])
-        now = auto_fields(conn, iid)
         data = _product(conn, iid)
         rule = classify(data["product"]["title"] or "", data["product"]["description_text"] or "", data["variants"], data["tags"],
                         data["product"]["category_name"])
-        members = rule.members or ([work_title(data["product"]["title"] or "")] if rule.kind == "SINGLE" else [])
+        now = auto_fields(conn, iid, kind=rule.kind)
+        members = rule.members or ([work_title(data["product"]["title"] or "")] if rule.kind in ("SINGLE", "ASSET_ONLY") else [])
         now["product_kind"], now["members"] = rule.kind, MEMBER_SEP.join(members)
         for f in FIELDS:
             if f not in labels:

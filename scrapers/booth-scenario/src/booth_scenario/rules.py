@@ -20,7 +20,7 @@ def normalize(text: str) -> str:
     # "2、3人" / "2、3時間" / "2-3人" are ranges.
     t = re.sub(r"(?<=\d)\s*[、,-]\s*(?=\d+(?:\.\d+)?\s*(?:人|名|PL|時間|h|分))", "~", t)
     # "四人固定" / "PL三名" / "一時間": kanji digits next to a count unit.
-    return re.sub(r"(?<![一二三四五六七八九十])([一二三四五六七八九十])(?=\s*(?:人|名|時間)(?![一二三四五六七八九十]))",
+    return re.sub(r"(?<![一二三四五六七八九十])([一二三四五六七八九十])(?=\s*(?:人|名|時間|本)(?![一二三四五六七八九十]))",
                   lambda m: str("一二三四五六七八九十".index(m.group(1)) + 1), t)
 
 
@@ -135,10 +135,10 @@ def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
 
 # -- session modes --------------------------------------------------------------
 _RANGE_PL = re.compile(
-    r"(?:PL|プレイヤー(?:人数)?|人\s*数|探索者数?|共鳴者数?)\s*(?:は|数)?\s*[::]?\s*(?:新規|固定)?\s*(\d+)\s*(?:人|名)?"
+    r"(?:PL|プレイヤー(?:人数)?|人\s*数|探索者数?|共鳴者数?)\s*(?:は|数)?\s*[::.…]*\s*(?:新規|固定)?\s*(\d+)\s*(?:人|名)?"
     r"\s*(?:(~|から)\s*(\d+)?\s*(?:人|名)?)?\s*(前後)?"
     r"(?!\s*(?:~\s*\d+\s*)?(?:歳|才|年|月|日|時|分|%))"
-    r"|(\d+)\s*(?:人|名)?\s*(?:~\s*(\d+)\s*)?(?:PL|人用|人\s*(?:PL\s*)?固定|名\s*(?:PL\s*)?固定)", re.I)
+    r"|(\d+)\s*(?:人|名)?\s*(?:~\s*(\d+)\s*)?(?:PL(?!発言|視点|目線|側)|人用|人\s*(?:PL\s*)?固定|名\s*(?:PL\s*)?固定)", re.I)
 OPEN_PLAYERS_MAX = 4  # "1人から" / "1人~捌けるだけ" are read as up to 4 (reviewer's convention)
 # Translated blurbs repeat the play info, sometimes with other numbers.
 _TRANSLATION = re.compile(r"推荐|模组|玩家|有多少来多少|探索者们|中文译|[这们个为]")
@@ -163,24 +163,35 @@ def _player_ranges(ln: str) -> list[tuple[int, int]]:
         if 1 <= lo <= hi <= 30:
             out.append((lo, hi))
     return out
-_COMPANION = re.compile(r"\b(KPC|DPC)\b|(KPC|DPC)")
+_COMPANION = re.compile(r"\b(KPC|DPC)\b|(KPC|DPC)|(KP側(?:の|から)(?:探索者|PC))")
 _GMLESS = re.compile(r"KPレス|GMレス|DLレス|KP不要|GM不要|DL不要|[1一]人で遊べる|ひとりで遊べる|ソロジャーナル", re.I)
 _ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*対\s*1|1\s*[(（]\s*\+?\s*(KPC|DPC)", re.I)
 # "タイマンは推奨しない" / "タイマン不可" rule the mode out.
 _ONE_ON_ONE_NEG = re.compile(
     r"(タイマン|一対一|1\s*対\s*1).{0,12}?(不可|非推奨|推奨(し|致し|いたし)?(ない|ません|かね)|でき(ない|ません)|出来(ない|ません)|"
-    r"向き?ません|向いて(い)?ない|不向き|NG|×|お控え|ご遠慮|対応(して(い|お)?り?)?ません|対象外)|(不可|非推奨)\s*[::]?\s*タイマン")
+    r"向き?ません|向いて(い)?ない|不向き|NG|×|お控え|ご遠慮|対応(して(い|お)?り?)?ません|対象外|想定(して(い|お)?り?)?(ない|ません))|(不可|非推奨)\s*[::]?\s*タイマン")
 _SECRET = re.compile(r"秘匿")
 _SECRET_NEG = re.compile(r"秘匿\s*(HO|ハンドアウト)?\s*(は|が)?\s*(なし|無し|ありません|ございません|無い|ない)")
 
 
 def has_secret_handouts(*texts: str) -> bool:
-    """秘匿 / 秘匿HO anywhere in title, tags or description, unless denied."""
+    """秘匿 / 秘匿HO anywhere in title, tags or description, unless denied;
+    or numbered handouts (【HO1 …】【HO2 …】) given to the players."""
+    hos, denied = set(), False
     for t in texts:
         for ln in lines(t or ""):
-            if _SECRET.search(ln) and not _SECRET_NEG.search(ln):
+            if _SECRET_NEG.search(ln):
+                denied = True  # "秘匿HOなし": numbered handouts are then all public
+            elif _SECRET.search(ln):
                 return True
-    return False
+            hos.update(re.findall(r"HO\s*(\d)", ln))
+    return len(hos) >= 2 and not denied
+
+
+# A labelled count ("PL：4名", "プレイ人数：1～4人") on a line that also gives the time.
+_PLAYER_LABEL = re.compile(r"人数|(PL|プレイヤー)\s*[:：]", re.I)
+# "KPCかNPCかで前後する": an aside on how the KP runs it, not a タイマン companion.
+_KPC_OR_NPC = re.compile(r"KPC\s*(か|or|/|／|\(|（)\s*NPC|NPC\s*(か|or|/|／)\s*KPC", re.I)
 
 
 def extract_session_modes(text: str) -> list[Hit]:
@@ -204,13 +215,17 @@ def extract_session_modes(text: str) -> list[Hit]:
             ln = "人数:" + ls[i + 1]
         companion = None
         if m := _COMPANION.search(ln):
-            companion = (m.group(1) or m.group(2)).upper()
+            companion = (m.group(1) or m.group(2) or "KPC").upper()
         facilitator = "DL" if re.search(r"(?<![A-Za-z])DL(?![A-Za-z])|ダイスロール担当", ln) else ("KP" if re.search(r"KP(?!レス|不要)", ln) else None)
-        ranges = _player_ranges(ln)
+        # A time line counts players only when it labels them ("（プレイ人数：1～4人）"),
+        # not in a report ("PL3人で4時間かかりました").
+        ranges = ([] if re.search(r"(所要|プレイ|推定|想定)\s*時\s*間", ln) and not _PLAYER_LABEL.search(ln)
+                  else _player_ranges(ln))
         lo, hi = ranges[0] if ranges else (None, None)
         multi = next((r for r in ranges if r[1] >= 2), None)
         gmless = bool(_GMLESS.search(ln))
-        one_on_one = bool(_ONE_ON_ONE.search(ln)) and not _ONE_ON_ONE_NEG.search(ln)
+        # A question ("タイマンでまわしちゃだめ?") is not a statement of the mode.
+        one_on_one = bool(_ONE_ON_ONE.search(ln)) and not _ONE_ON_ONE_NEG.search(ln) and not re.search(r"[?？]\s*$", ln)
         if not one_on_one and _ONE_ON_ONE_NEG.search(ln) and lo is None:
             continue  # a line only about where タイマン does not fit
         if gmless:
@@ -233,12 +248,36 @@ def extract_session_modes(text: str) -> list[Hit]:
         if lo == hi == 1:
             # One player with a KP; a named KPC/DPC makes it a タイマン table.
             add("ONE_ON_ONE" if companion else "SOLO", 1, 1, facilitator or "UNKNOWN", companion or "UNKNOWN", ln)
+            if not companion:
+                hits[-1].value["from_count"] = 1  # "1PL" alone; a KPC elsewhere makes it タイマン
         else:
             add("MULTI_PL", lo, hi, facilitator or "UNKNOWN", companion or "UNKNOWN", ln, 1 if lo == hi else 0)
     # "2PL KPレス" elsewhere: lines that only say KPレス are about that same mode.
     if any(h.value["mode"] == "GMLESS_MULTI" for h in hits):
         hits = [h for h in hits if h.value["mode"] != "GMLESS_SOLO"]
+    # "人数:1PL" with a KPC named elsewhere ("KPCの手料理を…") is a タイマン.
+    kpc = next((m for ln in ls if not _TRANSLATION.search(ln) and not _KPC_OR_NPC.search(ln) and (m := _COMPANION.search(ln))), None)
+    for h in hits:
+        if h.value.pop("from_count", None) and kpc:
+            h.value.update(mode="ONE_ON_ONE", companion_role=(kpc.group(1) or kpc.group(2) or "KPC").upper())
     return hits
+
+
+def session_modes_from_title(title: str) -> list[Hit]:
+    """[CoCソロシナリオ] / タイマンシナリオ in the product title, for a page
+    whose text gives no player count."""
+    out = []
+    for h in extract_session_modes(title or ""):
+        h.excerpt = f"[title] {title}"[:300]
+        out.append(h)
+    return out
+
+
+def default_session_mode() -> Hit:
+    """No player count anywhere: the reviewer reads such a page as 2-4 players."""
+    return Hit("scenario_session_modes", {"mode": "MULTI_PL", "player_min": 2, "player_max": 4, "facilitator_role": "UNKNOWN",
+                                          "companion_role": "UNKNOWN", "player_fixed": 0}, "[default] no player count stated",
+               method="RULE", confidence=0.3)
 
 
 def default_roles(v: dict, systems: set[str]) -> dict:

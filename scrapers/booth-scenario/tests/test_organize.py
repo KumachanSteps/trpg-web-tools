@@ -155,3 +155,27 @@ def test_work_title_strips_labels():
     assert wt("無料【CoCシナリオ】シンガソングララバイ") == "シンガソングララバイ"
     assert wt("【無料】幻月環（うちよそタイマンシナリオ）") == "幻月環"
     assert wt("ジェーン・ドゥの警鐘(データ版)") == "ジェーン・ドゥの警鐘"
+
+
+def test_round3_kinds_and_members():
+    assert classify("【TRPG】もっと楽しもう!", "これは、シナリオではない。補助ツールです。", [V("PDF", 0)], ["TRPGシナリオ"]).kind == "ASSET_ONLY"
+    assert classify("【TRPG】クリファン素材集", "演出用素材です。", [V("素材集", 0)], ["TRPGシナリオ"]).kind == "ASSET_ONLY"
+    fox = "「また会えたな、親友。」\n『Re:おキツネさま』\n『楽園パラノイア』\n『彼方からのメッセージ』\n『盲目白痴の安寧アンノウン』\nクトゥルフ神話の物語が4本収録されたシナリオ集です!"
+    c = classify("現代日本シナリオ集『FoxTales』", fox, [V("PDF", 1000)], ["CoC"])
+    assert c.kind == "COLLECTION" and c.members == ["Re:おキツネさま", "楽園パラノイア", "彼方からのメッセージ", "盲目白痴の安寧アンノウン"]
+    jane = "シナリオが二本収録されており、どちらも秘匿HOのあるシナリオとなっています。\n▼「残夏に啼く」\n『あなたはたしかににんげんなのか』\n▼「ストックホルムに愛を唄え」\n『あなたの罪をゆる×××』"
+    assert classify("ジェーン・ドゥの警鐘(データ版)", jane, [V("PDF", 1000)], ["CoC"]).members == ["残夏に啼く", "ストックホルムに愛を唄え"]
+    assert classify("＃落園 / プリズム", "「落園」\n「プリズム」\nKPのロスト探索者×メルヘン 「プリズム」", [V("PDF", 1000)], ["CoCシナリオ"]).members == ["落園", "プリズム"]
+    assert organize.work_title("【クトゥルフ神話TRPGシナリオ】羊たちは夢見る+設定資料,テキストリプレイ") == "羊たちは夢見る"
+
+
+def test_tone_remarks_are_not_asset_statements():
+    for d in ("※生還が目的のシナリオではありません。", "初心者向けのシナリオではありません。", "よくあるかっこいいバディシナリオではない刑事シナリオ"):
+        assert classify("CoC「レゾンデートル」", d, [V("PDF", 1000)], ["CoCシナリオ"]).kind == "SINGLE"
+    assert classify("【TRPG】もっと楽しもう!", "「もっと楽しもう!」はシナリオではなく、別シナリオを楽しむための補助ツールです。",
+                    [V("PDF", 0)], ["TRPGシナリオ"]).kind == "ASSET_ONLY"
+
+
+def test_labelled_quotes_are_not_members():
+    text = "7本収録\n■水鏡メランコリイ\n テーマ：『HO制』\n テーマ：『ペット』\n テーマ：『中華』\n テーマ：『人間』\n テーマ：『魚』\n テーマ：『葬式』\n テーマ：『夢』"
+    assert organize._members_by_count(text, 7) == []
