@@ -80,21 +80,16 @@
     return { scale: raw.logitScale || 100, groups };
   }
 
-  // CLIP と同じ前処理：短い辺を合わせて中央を切り抜き、平均と標準偏差で正規化
+  // 前処理：背景は画面全体が大事なので、切り抜かずに正方形へ縮小し、平均と標準偏差で正規化する
   function toTensor(source) {
     const input = pack.manifest.input;
     const size = input.size;
-    const w = source.width || source.naturalWidth;
-    const h = source.height || source.naturalHeight;
-    const scale = size / Math.min(w, h);
-    const dw = w * scale;
-    const dh = h * scale;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(source, (size - dw) / 2, (size - dh) / 2, dw, dh);
+    ctx.drawImage(source, 0, 0, size, size);
     const data = ctx.getImageData(0, 0, size, size).data;
     const plane = size * size;
     const out = new Float32Array(3 * plane);

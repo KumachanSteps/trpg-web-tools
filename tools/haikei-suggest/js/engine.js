@@ -216,7 +216,7 @@
     let carry = '';
     blocks.forEach((block) => {
       const body = carry ? carry + '\n' + block : block;
-      if (body.replace(/\s/g, '').length < 24) { carry = body; return; }
+      if (body.replace(/\s/g, '').length < 12) { carry = body; return; }
       merged.push(body);
       carry = '';
     });

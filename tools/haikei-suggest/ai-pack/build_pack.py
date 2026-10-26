@@ -48,7 +48,7 @@ TEMPLATES = [
 # タグごとの英語の説明（CLIP に渡す文）。色・明るさのタグは色解析で付けるので使わない。
 PROMPTS = {
     'in.mansion': ['the interior of an old western mansion', 'a grand manor hall'],
-    'in.room': ['a room interior', 'a small private room'],
+    'in.room': ['a room interior', 'a small private room', 'a cozy wooden room', 'an empty room'],
     'in.bedroom': ['a bedroom with a bed'],
     'in.living': ['a living room with a sofa', 'a parlor'],
     'in.japaneseRoom': ['a traditional japanese tatami room with sliding doors'],
@@ -129,7 +129,7 @@ PROMPTS = {
     'mood.fantasy': ['a dreamlike mystical fantasy scene'],
     'mood.battle': ['a battlefield', 'an intense action scene'],
     'mood.festival': ['a japanese summer festival with lanterns', 'fireworks'],
-    'mood.romance': ['a romantic scene'],
+    'mood.romance': ['a romantic date scene for a couple'],
     'mood.sacred': ['a holy sacred place with heavenly light'],
     'style.japanese': ['traditional japanese architecture'],
     'style.western': ['european gothic architecture'],
@@ -142,12 +142,12 @@ PROMPTS = {
 
 # 分類ごとの設定。none は「どれにも当てはまらない」ことを表す文。
 GROUPS = [
-    {'id': 'place', 'cats': ['indoor', 'outdoor'], 'threshold': 0.22, 'maxTags': 2, 'none': []},
-    {'id': 'time', 'cats': ['time'], 'threshold': 0.45, 'maxTags': 1, 'none': ['an indoor room with no window']},
-    {'id': 'weather', 'cats': ['weather'], 'threshold': 0.45, 'maxTags': 1,
+    {'id': 'place', 'cats': ['indoor', 'outdoor'], 'threshold': 0.2, 'maxTags': 2, 'none': []},
+    {'id': 'time', 'cats': ['time'], 'threshold': 0.5, 'maxTags': 1, 'none': ['an indoor room with no window']},
+    {'id': 'weather', 'cats': ['weather'], 'threshold': 0.5, 'maxTags': 1,
      'none': ['clear normal weather', 'an indoor room']},
-    {'id': 'mood', 'cats': ['mood'], 'threshold': 0.45, 'maxTags': 1, 'none': ['an ordinary scene']},
-    {'id': 'style', 'cats': ['style'], 'threshold': 0.45, 'maxTags': 1, 'none': ['a generic scene']},
+    {'id': 'mood', 'cats': ['mood'], 'threshold': 0.5, 'maxTags': 1, 'none': ['an ordinary scene']},
+    {'id': 'style', 'cats': ['style'], 'threshold': 0.6, 'maxTags': 1, 'none': ['a generic scene']},
 ]
 
 

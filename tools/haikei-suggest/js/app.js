@@ -618,6 +618,7 @@
     const packId = AI.packId;
     app.aiDone = 0;
     app.aiRunning = true;
+    updateStatus();
     const refresh = debounce(() => {
       renderFilters();
       renderGrid();
