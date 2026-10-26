@@ -718,6 +718,40 @@
     "preview": "./assets/img/previews/house-rule-table.png"
   },
   {
+    "id": "haikei-suggest",
+    "icon": "🖼️",
+    "status": "production",
+    "category": "scenarioPrep",
+    "badges": [
+      "preSession",
+      "duringSession",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "シナリオ準備",
+      "背景",
+      "素材管理",
+      "オフライン"
+    ],
+    "href": "./tools/haikei-suggest/",
+    "devHref": "./tools/haikei-suggest/",
+    "devStage": "testing",
+    "devNote": {
+      "ja": "手元の背景画像フォルダをファイル名・フォルダ名・色から自動タグ付けし、シナリオ本文のシーンごとに背景を提案。外部通信なし（CSPで通信禁止）。日本語・英語・韓国語。",
+      "en": "Auto-tags a local background folder from file/folder names and colors and suggests backgrounds per scenario scene. No external connections (blocked by CSP). Japanese, English and Korean UI."
+    },
+    "name": {
+      "ja": "TRPG背景サジェストツール",
+      "en": "TRPG Background Suggester",
+      "ko": "TRPG 배경 추천 도구"
+    },
+    "description": {
+      "ja": "パソコンの中の背景画像フォルダをタグ付け・分類し、シナリオ本文に合う背景をシーンごとに提案します。画像も本文も外部に送信しない、完全ローカルのツールです。",
+      "en": "Tag and sort the background images in a folder on your computer and get matching backgrounds for each scene of your scenario. Fully local: images and text are never sent anywhere.",
+      "ko": "컴퓨터 안의 배경 이미지 폴더에 태그를 붙여 분류하고, 시나리오 본문에 맞는 배경을 장면별로 추천합니다. 이미지도 본문도 외부로 보내지 않는 완전 로컬 도구입니다."
+    }
+  },
+  {
     "id": "bgm-organizer",
     "icon": "🎧",
     "status": "idea",
