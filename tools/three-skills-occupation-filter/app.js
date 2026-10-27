@@ -12,11 +12,11 @@ function render() {
   $('percent').textContent = `${result.percent.toFixed(1)}%`;
   $('ratio-fill').style.width = `${result.percent}%`;
   $('scope-label').textContent = $('source').value === 'all'
-    ? '登録170職業中（固定職業技能のみ）'
-    : `${$('source').selectedOptions[0].textContent}の${result.denominator}職業中 · 全出典では ${result.overallCount} / 170件`;
+    ? '全出典 · 固定職業技能のみ'
+    : `固定職業技能のみ · 全出典では ${result.overallCount} / 170件`;
   $('impact').textContent = selected.length
-    ? `${selected.join('・')}を固定枠でそろえる条件で、${result.denominator}件 → ${result.count}件。${result.denominator - result.count}件がこの集計の対象外になります。`
-    : '技能の条件なし。対象の出典に登録されたすべての職業を表示しています。';
+    ? `${result.denominator - result.count}件が固定枠の条件外`
+    : '';
 
   const fragment = document.createDocumentFragment();
   for (const job of result.matches) {
@@ -28,19 +28,7 @@ function render() {
     const source = document.createElement('span');
     source.className = 'job-source';
     source.textContent = job.source;
-    const tags = document.createElement('span');
-    tags.className = 'tags';
-    for (const skill of selected) {
-      const tag = document.createElement('span');
-      tag.className = 'tag';
-      tag.textContent = skill;
-      tags.append(tag);
-    }
-    if (!selected.length) {
-      tags.classList.add('unselected');
-      tags.textContent = '条件なし';
-    }
-    row.append(name, source, tags);
+    row.append(name, source);
     fragment.append(row);
   }
   if (!result.count) {

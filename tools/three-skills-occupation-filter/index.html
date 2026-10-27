@@ -13,49 +13,47 @@
 </head>
 <body>
 <main>
-  <nav><a href="../../">← TRPG WEBツール観測所</a><a href="../trpg-three-skills-calculator/">ポイントの負担も見る ↗</a></nav>
+  <nav><a href="../../">← TRPG WEBツール観測所</a><a href="../trpg-three-skills-calculator/">ポイント計算 ↗</a></nav>
   <header>
-    <p class="eyebrow">三大探索技能と、キャラクターの幅</p>
     <h1>職業の選択肢</h1>
-    <p class="lead">〈目星〉〈聞き耳〉〈図書館〉を職業技能でそろえると、選択肢はどう変わる？</p>
+    <p class="lead">三大探索技能を、職業技能でそろえると。</p>
   </header>
   <div class="layout">
     <section class="panel filters" aria-labelledby="filter-title">
-      <h2 id="filter-title">職業に含めたい技能</h2>
+      <h2 id="filter-title">職業技能で取りたい技能</h2>
       <fieldset>
-        <legend>チェックしたすべてを固定職業技能に含む職業</legend>
+        <legend class="sr-only">選んだすべての技能を固定職業技能に含む職業を表示</legend>
         <label class="skill"><input type="checkbox" value="目星">目星</label>
         <label class="skill"><input type="checkbox" value="聞き耳">聞き耳</label>
         <label class="skill"><input type="checkbox" value="図書館">図書館</label>
       </fieldset>
-      <div class="actions"><button type="button" id="select-all">3つとも選ぶ</button><button type="button" id="clear">技能の選択解除</button></div>
+      <div class="actions"><button type="button" id="select-all" aria-label="3つの技能をすべて選ぶ">すべて</button><button type="button" id="clear">クリア</button></div>
+      <div class="source-control">
       <label class="source-label" for="source">出典</label>
       <select id="source">
-        <option value="all">すべての出典</option>
-        <option>クトゥルフ2015</option>
-        <option>クトゥルフ2026</option>
-        <option value="クトゥルフ神話TRPGプレイングガイド">プレイングガイド</option>
+        <option value="all">全出典</option>
+        <option value="クトゥルフ2015">2015 · 6版</option>
+        <option value="クトゥルフ2026">2026 · 7版</option>
+        <option value="クトゥルフ神話TRPGプレイングガイド">ガイド · 7版</option>
       </select>
-      <p class="small">2015：6版／2026・プレイングガイド：7版。異なる出典の同名職業は別件として数えます。</p>
-      <a class="calculator-link" href="../trpg-three-skills-calculator/">興味Pに回すと、どれくらい？<span>ポイント配分の計算機 →</span></a>
+      </div>
     </section>
     <section class="panel results" aria-labelledby="result-title">
-      <h2 id="result-title">固定の職業技能に含む職業</h2>
+      <h2 id="result-title">該当する職業</h2>
       <div id="summary" role="status" aria-live="polite" aria-atomic="true">
         <p class="count"><strong id="count">—</strong><span id="denominator"> / — 件</span><b id="percent">—</b></p>
         <p id="scope-label" class="small">職業データを読み込んでいます…</p>
         <div class="ratio" aria-hidden="true"><div id="ratio-fill"></div></div>
         <p id="impact"></p>
       </div>
-      <p class="context">これは「その職業では取れない」という意味ではありません。選択技能や興味Pでも取得できます。毎回同じ技能を求めるとき、どこに負担が寄るかを考えるための比較です。</p>
-      <div class="list-header" aria-hidden="true"><span>職業名</span><span>出典</span><span>選択した技能</span></div>
+      <p class="context">条件外の職業でも、選択技能や興味Pで取得できます。</p>
+      <div class="list-header" aria-hidden="true"><span>職業名</span><span>出典</span></div>
       <div class="job-list" id="job-list" tabindex="0" role="region" aria-label="該当職業一覧"></div>
       <p id="error" role="alert" hidden></p>
       <noscript><p>職業の絞り込みにはJavaScriptを有効にしてください。</p></noscript>
     </section>
   </div>
   <footer>
-    <p>出典：提供データ「探索者ヘルパー v2.47」の登録情報（170件）。ルールブック原本との照合は未実施です。固定技能の完全一致で集計し、選択技能・任意技能枠は含めません。実際の作成時は使用するルールと卓の合意を確認してください。</p>
     <p>v0.1 · <a href="../../terms.html">利用規約</a> · <a href="../../privacy.html">プライバシーポリシー</a></p>
   </footer>
 </main>
