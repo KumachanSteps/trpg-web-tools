@@ -3,6 +3,7 @@ text, title and tags. Runs after every fetch, and offline via `reextract`."""
 from __future__ import annotations
 
 from . import store
+from .tendency import extract_tendency
 from .rules import (classify_edition_kind, default_roles, default_session_mode, extract_all, extract_systems_meta,
                     has_secret_handouts, session_modes_from_title)
 
@@ -20,7 +21,7 @@ def rebuild_evidence(conn, iid: int) -> int:
     for t in ("scenario_systems", "scenario_session_modes", "scenario_durations", "scenario_conditions", "scenario_assets"):
         conn.execute(f"DELETE FROM {t} WHERE evidence_id IN ({old})", (iid,))
     conn.execute("DELETE FROM extraction_evidence WHERE booth_item_id=? AND extraction_method IN ('REGEX','RULE')", (iid,))
-    hits = extract_all(p["description_text"] or "")
+    hits = extract_all(p["description_text"] or "") + extract_tendency(p["description_text"] or "")
     described = {h.value["system_code"] for h in hits if h.field_path == "scenario_systems"}
     # Title/tag hints only when the description does not state what the work is
     # for: a tag like "クトゥルフ神話TRPG" would otherwise add 6th edition to a

@@ -12,6 +12,7 @@ import csv
 import json
 import random
 import re
+import unicodedata
 from pathlib import Path
 
 from . import targets
@@ -19,7 +20,7 @@ from .db import utcnow
 from .organize import normalize_title, work_title
 
 FIELDS = ["product_kind", "members", "systems", "session_modes", "durations", "assets", "free_full", "free_sample", "related_items",
-          "price", "secret_ho"]
+          "price", "secret_ho", "published_at", "skills", "lost_rate", "modification", "content_warnings"]
 # Fields the library filters and matches on: keep them filled (decided 2026-10-24).
 PRIORITY_FIELDS = ["members", "systems", "session_modes", "durations", "price"]
 LIST_SEP = "; "
@@ -36,6 +37,11 @@ FIELD_HELP = {
     "related_items": "同じ作品を売っている別商品のID ; 区切り（例: 3403696）",
     "price": "本編の価格（円）。幅があれば 500-1000、無料は 0",
     "secret_ho": "yes / no（秘匿HOがあるか）",
+    "published_at": "公開日 YYYY-MM-DD（BOOTHの商品データから）",
+    "skills": "例: RECOMMENDED: 目星, 図書館 ; SEMI: 心理学 ; STATUS: SAN50以上（REQUIRED=必須, SEMI=準推奨, なし=推奨なし, HO=HOごと）",
+    "lost_rate": "NONE / LOW / MID / HIGH / VERY_HIGH（幅は LOW-MID）、POSSIBLE（ありとだけ）、HIDDEN（伏せ字）、VARIABLE（展開次第）",
+    "modification": "ALLOWED / CONDITIONAL / FORBIDDEN（改変について作者の記載）",
+    "content_warnings": "GORE / VIOLENCE / SUICIDE_SELF_HARM / DEATH / CHILD_HARM / SEXUAL / ROMANCE / MENTAL_HEALTH / MEDICAL / JUMPSCARE / PVP / UNFAIR_BAD_END / AFTEREFFECT / PC_BACKGROUND_CHANGE / MYTHOS_INTERPRETATION / DISCRIMINATION_RELIGION_WAR / INSECT_TENTACLE / LONG_DESCRIPTION を ; 区切り",
 }
 
 
@@ -144,6 +150,29 @@ def auto_fields(conn, iid: int, kind: str | None = None) -> dict[str, str]:
         "price": _price_range([v for v in variants if v["edition_kind"] not in ("ASSET_ONLY", "SAMPLE")
                                and v["availability"] != "UNAVAILABLE"] or variants),
         "secret_ho": "yes" if any(v.get("secret_handouts") for v in sessions) else "no",
+        **_tendency_fields(conn, iid),
+    }
+
+
+def _tendency_fields(conn, iid: int) -> dict[str, str]:
+    published = conn.execute("SELECT published_at FROM products WHERE booth_item_id=?", (iid,)).fetchone()[0]
+    conds = _evidence_values(conn, iid, "scenario_conditions")
+    skills: list[str] = []
+    for v in conds:
+        if v["category"] == "SKILL":
+            what = "なし" if v.get("none") else "HO" if v.get("per_ho") else ", ".join(v["skills"])
+            skills.append(f"{v['level']}: {what}")
+        elif v["category"] == "STATUS":
+            skills.append(f"STATUS: {v['text']}")
+    loss = next((v for v in conds if v["category"] == "LOSS"), None)
+    mod = next((v for v in conds if v["category"] == "MODIFICATION"), None)
+    tags = [t for v in conds if v["category"] == "CONTENT_WARNING" for t in v["tags"]]
+    return {
+        "published_at": (published or "")[:10],
+        "skills": LIST_SEP.join(dict.fromkeys(skills)),
+        "lost_rate": " ".join(x for x in [loss["level"], *loss["flags"]] if x) if loss else "",
+        "modification": mod["stance"] if mod else "",
+        "content_warnings": LIST_SEP.join(dict.fromkeys(tags)),
     }
 
 
@@ -169,6 +198,11 @@ FIELD_LABEL = {
     "related_items": "関連商品 / Related items",
     "price": "価格 / Price",
     "secret_ho": "秘匿HO / Secret handouts",
+    "published_at": "公開日 / Published",
+    "skills": "推奨技能・ステータス / Recommended skills",
+    "lost_rate": "ロスト率 / Lost rate",
+    "modification": "改変 / Altering",
+    "content_warnings": "地雷・注意要素 / Sensitive elements",
 }
 INFO_COLS = [  # key, label, help
     ("check_first", "★まず確認 / Check first", "ツールが自信のない点"),
@@ -202,7 +236,7 @@ def _check_first(auto: dict) -> str:
     return " / ".join(notes)
 
 
-def _review_rows(conn, ids: list[int]) -> list[dict]:
+def _review_rows(conn, ids: list[int], fields: list[str] | None = None) -> list[dict]:
     rows = []
     for iid in ids:
         p = conn.execute(
@@ -220,32 +254,37 @@ def _review_rows(conn, ids: list[int]) -> list[dict]:
             "variants": "\n".join(f"{v['variant_label']} | {v['price_jpy'] if v['price_jpy'] is not None else '?'} | {v['edition_kind']} | {v['availability']}"
                                   for v in variants),
         }
-        for f in FIELDS:
+        for f in fields or FIELDS:
             row[f"auto_{f}"], row[f"ok_{f}"] = auto[f], ""
         row["notes"] = ""
         rows.append(row)
     return rows
 
 
-def _columns() -> list[tuple[str, str, str, bool]]:
+def _columns(fields: list[str] | None = None) -> list[tuple[str, str, str, bool]]:
     """(key, label, help, is_input) in sheet order."""
     cols = [(k, label, h, False) for k, label, h in INFO_COLS]
-    for f in FIELDS:
+    for f in fields or FIELDS:
         cols.append((f"auto_{f}", f"{FIELD_LABEL[f]}\nツールの判定", FIELD_HELP[f], False))
         cols.append((f"ok_{f}", f"✏ {FIELD_LABEL[f]}\n正しい値", "合っていれば空欄 / 該当なしは -", True))
     cols.append(("notes", "✏ メモ / Notes", "自由記述", True))
     return cols
 
 
-def export_review(conn, ids: list[int], path: Path) -> int:
-    """Write the review table as .xlsx (colour-coded, dropdowns) or .csv."""
+def export_review(conn, ids: list[int], path: Path, fields: list[str] | None = None) -> int:
+    """Write the review table as .xlsx (colour-coded, dropdowns) or .csv.
+    `fields` limits the sheet to some fields (e.g. new ones for items already
+    reviewed); importing it keeps the item's other labels."""
+    unknown = set(fields or []) - set(FIELDS)
+    if unknown:
+        raise ValueError(f"unknown fields: {sorted(unknown)}")
     path.parent.mkdir(parents=True, exist_ok=True)
     # Rows the rules are unsure about come first.
-    rows = sorted(_review_rows(conn, ids), key=lambda r: r["check_first"] == "")
+    rows = sorted(_review_rows(conn, ids, fields), key=lambda r: r["check_first"] == "")
     if path.suffix.lower() == ".xlsx":
-        _write_xlsx(rows, path)
+        _write_xlsx(rows, path, fields)
         return len(rows)
-    cols = _columns()
+    cols = _columns(fields)
     with path.open("w", encoding="utf-8-sig", newline="") as fh:
         w = csv.writer(fh)
         w.writerow([c[1].replace("\n", " ") for c in cols])
@@ -256,13 +295,13 @@ def export_review(conn, ids: list[int], path: Path) -> int:
     return len(rows)
 
 
-def _write_xlsx(rows: list[dict], path: Path) -> None:
+def _write_xlsx(rows: list[dict], path: Path, fields: list[str] | None = None) -> None:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.utils import get_column_letter
     from openpyxl.worksheet.datavalidation import DataValidation
 
-    cols = _columns()
+    cols = _columns(fields)
     read_fill, input_fill = PatternFill("solid", fgColor="EEEEEE"), PatternFill("solid", fgColor="FFF2CC")
     head_read, head_input = PatternFill("solid", fgColor="D9D9D9"), PatternFill("solid", fgColor="FFD966")
     flag_fill = PatternFill("solid", fgColor="F8CBAD")
@@ -298,7 +337,9 @@ def _write_xlsx(rows: list[dict], path: Path) -> None:
     last = len(rows) + 3
     letter = {key: get_column_letter(ci) for ci, (key, *_r) in enumerate(cols, 1)}
     for key, choices in (("ok_product_kind", KIND_CHOICES), ("ok_free_full", YES_NO + ["-"]), ("ok_free_sample", YES_NO + ["-"]),
-                         ("ok_secret_ho", ["yes", "no"])):
+                         ("ok_secret_ho", ["yes", "no"]), ("ok_modification", ["ALLOWED", "CONDITIONAL", "FORBIDDEN", "-"])):
+        if key not in letter:
+            continue
         dv = DataValidation(type="list", formula1='"' + ",".join(choices) + '"', allow_blank=True)
         ws.add_data_validation(dv)
         dv.add(f"{letter[key]}4:{letter[key]}{last}")
@@ -362,6 +403,7 @@ def import_review(conn, path: Path, *, batch: str | None = None, split: str = "T
         iid = int(iid_s)
         if not conn.execute("SELECT 1 FROM products WHERE booth_item_id=?", (iid,)).fetchone():
             continue
+        old = conn.execute("SELECT labels_json, batch, split FROM review_labels WHERE booth_item_id=?", (iid,)).fetchone()
         labels = {}
         for f in FIELDS:
             if f"auto_{f}" not in row:
@@ -369,16 +411,25 @@ def import_review(conn, path: Path, *, batch: str | None = None, split: str = "T
             auto, ok = row.get(f"auto_{f}", ""), (row.get(f"ok_{f}") or "").strip()
             labels[f] = {"auto": auto, "truth": auto if ok == "" else ("" if ok == "-" else ok), "corrected": ok != ""}
             corrected += ok != ""
+        if not labels:
+            continue
+        # A sheet with only some fields adds to the item's earlier labels.
+        merged = {**json.loads(old["labels_json"]), **labels} if old else labels
         conn.execute(
             "INSERT OR REPLACE INTO review_labels (booth_item_id, labels_json, reviewer_notes, imported_at, batch, split) VALUES (?, ?, ?, ?, ?, ?)",
-            (iid, json.dumps(labels, ensure_ascii=False), row.get("notes") or None, utcnow(), batch, split))
+            (iid, json.dumps(merged, ensure_ascii=False), row.get("notes") or None, utcnow(),
+             batch if batch or not old else old["batch"], split if not old or batch else old["split"]))
+        imported += 1
+        if "product_kind" not in labels:
+            continue
+        labels = merged
         if labels["product_kind"]["truth"].strip().upper() not in KIND_CHOICES:
             # Not a kind (e.g. a pasted variant line): keep the tool's answer.
             warnings.append(f"{iid}: product_kind {labels['product_kind']['truth']!r} is not a kind; kept {labels['product_kind']['auto']}")
             labels["product_kind"] = {"auto": labels["product_kind"]["auto"], "truth": labels["product_kind"]["auto"], "corrected": False}
             conn.execute("UPDATE review_labels SET labels_json=? WHERE booth_item_id=?", (json.dumps(labels, ensure_ascii=False), iid))
             corrected -= 1
-        if labels["product_kind"]["corrected"] or labels["members"]["corrected"]:
+        if labels["product_kind"]["corrected"] or labels.get("members", {}).get("corrected"):
             members = [t.strip() for t in re.split(r"[／/\n]|[;；](?=\s|$)", labels["members"]["truth"]) if t.strip()]
             conn.execute(
                 """INSERT OR REPLACE INTO product_classifications
@@ -387,7 +438,6 @@ def import_review(conn, path: Path, *, batch: str | None = None, split: str = "T
                 (iid, labels["product_kind"]["truth"].strip().upper(), len(members) or None,
                  json.dumps(members, ensure_ascii=False), json.dumps(["from review table"]), utcnow()),
             )
-        imported += 1
     conn.commit()
     out = {"imported": imported, "corrected_cells": corrected}
     if warnings:
@@ -441,6 +491,25 @@ def _norm_value(field: str, value: str) -> frozenset:
             return frozenset(["0"])
         nums = re.findall(r"\d+", re.sub(r"[,，]", "", value))
         return frozenset(["-".join(nums[:2]) if len(nums) > 1 and nums[0] != nums[1] else nums[0]]) if nums else frozenset()
+    if field == "published_at":
+        m = re.search(r"(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})", value)
+        return frozenset([f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"]) if m else frozenset()
+    if field == "skills":
+        out = set()
+        for seg in _segments(value):
+            m = re.match(r"\s*([A-Z_]+)\s*[:：]\s*(.*)", seg.strip(), re.I)
+            if not m:
+                continue
+            level, rest = m.group(1).upper(), m.group(2)
+            if level == "STATUS":
+                out.add("STATUS:" + re.sub(r"\s+", "", unicodedata.normalize("NFKC", rest)))
+                continue
+            for sk in re.split(r"[,，、/／]", rest):
+                if sk.strip():
+                    out.add(level + ":" + re.sub(r"[\s<>《》＜＞]", "", unicodedata.normalize("NFKC", sk)))
+        return frozenset(out)
+    if field in ("lost_rate", "content_warnings"):
+        return frozenset(t.upper() for t in re.split(r"[\s;；,、]+", value) if t)
     if field in ("free_full", "free_sample") and value.lower() == "unknown":
         return frozenset()
     parts = re.split(r"\s*;\s*|\n", value)

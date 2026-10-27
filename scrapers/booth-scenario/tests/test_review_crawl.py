@@ -125,3 +125,23 @@ def test_crawl_details_limits_retries_and_recovers(conn, tmp_path):
     # RETRY is not due yet, so a second run does nothing.
     assert crawl.crawl_details(conn, fetcher(tmp_path, site), limit=10)["done"] == 0
     assert conn.execute("SELECT title FROM products WHERE booth_item_id=1").fetchone()[0] == "T1"
+
+
+def test_partial_review_sheet_keeps_other_labels(conn, tmp_path):
+    openpyxl = pytest.importorskip("openpyxl")
+    _item(conn, 1, "霧の館", "推奨人数：1PL\nロスト率：高", [("PDF", 500)])
+    organize.organize_all(conn)
+    full = tmp_path / "full.xlsx"
+    review.export_review(conn, [1], full)
+    review.import_review(conn, full)
+    part = tmp_path / "part.xlsx"
+    review.export_review(conn, [1], part, fields=["lost_rate"])
+    wb = openpyxl.load_workbook(part)
+    ws = wb["review"]
+    keys = [c.value for c in ws[3]]
+    assert "auto_session_modes" not in keys and ws.cell(4, keys.index("auto_lost_rate") + 1).value == "HIGH"
+    ws.cell(4, keys.index("ok_lost_rate") + 1, "VERY_HIGH")
+    wb.save(part)
+    assert review.import_review(conn, part) == {"imported": 1, "corrected_cells": 1}
+    labels = json.loads(conn.execute("SELECT labels_json FROM review_labels").fetchone()[0])
+    assert labels["lost_rate"]["truth"] == "VERY_HIGH" and labels["session_modes"]["truth"] == "SOLO 1-1 UNKNOWN/NONE"

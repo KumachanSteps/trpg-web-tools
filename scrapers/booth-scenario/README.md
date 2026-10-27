@@ -68,6 +68,18 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
   - 単品の作品名は商品名から【CoCシナリオ】や SPLL 番号などを除いたもの（「」『』があればその中）。
   - 権利表記の行（「『クトゥルフ神話TRPG』の二次創作物」など）はシステム判定に使わない。本文にシステムが書いてあればタイトル・タグからは足さない。
 
+### シナリオの傾向（`tendency.py`、migration 009）
+
+本文から次を `scenario_conditions` に記録します（アンソロジーは商品単位の証拠のみ）。レビュー表では各列のツール判定を確認します。
+
+- **推奨技能・ステータス**（`SKILL` / `STATUS`）: 「推奨技能」「準推奨技能」「必須技能」の後ろの一覧（次の行でも可）。「なし」「HOごとに記載」も記録。「推奨能力値」「SAN50以上」なども `STATUS` として原文で。
+- **ロスト率**（`LOSS`）: ラベル付きの値だけ（「ロスト率：中~高」「【ロスト】あり」「ロスト率：■■」）。`NONE` / `LOW` / `MID` / `HIGH` / `VERY_HIGH`（幅は `LOW-MID`）、`POSSIBLE`（ありとだけ）、`HIDDEN`（伏せ字）、`VARIABLE`（展開次第）。「ロスト救済」「NPCロスト率」は使わない。
+- **改変**（`MODIFICATION`）: `ALLOWED` / `CONDITIONAL` / `FORBIDDEN`。許可と禁止が両方ある・範囲の条件付きは `CONDITIONAL`。「改変データの配布」など再配布の話は数えない。
+- **地雷・注意要素**（`CONTENT_WARNING`）: 「注意事項」「含まれる要素」「地雷」などの見出しの下の要素と、R-15G などの表記から `GORE` / `SUICIDE_SELF_HARM` / `PVP` などのタグ。要素の原文も残す。
+- **公開日**（`products.published_at`）: 商品 JSON の `published_at`。それ以前に取得した商品は再取得で埋まります。
+
+傾向だけを確認する表: `export-review --fields skills lost_rate modification content_warnings`。取り込むと既存のラベルに追加されます。
+
 ## スキーマからの変更点
 
 - `002_nullable_product_title.sql`: 一覧で ID だけ見つかった段階ではタイトルが未確認なので、`products.title` を NULL 許可にしました。

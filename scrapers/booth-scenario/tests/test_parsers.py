@@ -114,3 +114,8 @@ def test_item_json_observed_statuses():
                                     {"id": 2, "name": "b", "price": 9, "status": "restock_not_requested"},
                                     {"id": 3, "name": "c", "price": 9, "status": "addable_to_cart"}]}
     assert [v.availability for v in parse_item_json(json.dumps(data), 1).variants] == ["AVAILABLE", "SOLD_OUT", "AVAILABLE"]
+
+
+def test_item_json_published_at():
+    assert parse_item_json('{"id": 1, "published_at": "2021-04-05T12:00:00.000+09:00"}', 1).published_at.startswith("2021-04-05")
+    assert parse_item_json('{"id": 1, "published_at": null}', 1).published_at is None
