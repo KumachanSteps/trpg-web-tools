@@ -290,5 +290,25 @@ def extract_content_warnings(text: str) -> list[Hit]:
                 " / ".join(dict.fromkeys(excerpt))[:500], confidence=0.5)]
 
 
+_DIFFICULTY = re.compile(r"(?<!KP)(?<!PL)難\s*易\s*度\s*[:：】]\s*(.+)")
+
+
+def loss_from_difficulty(text: str) -> list[Hit]:
+    """No lost rate stated: the reviewer reads "難易度：低" as the lost rate."""
+    for ln in lines(text):
+        if (m := _DIFFICULTY.search(ln)) and not re.search(r"ロスト", ln):
+            v = re.split(r"[/／|｜(（]|\s{2,}", m.group(1))[0].strip()
+            found = []
+            for part in re.split(r"~|から|〜|-|→|/", v):
+                if (lv := _level(part.strip())) and lv not in ("NONE",) and lv not in found:
+                    found.append(lv)
+            if found:
+                found.sort(key=_LEVELS.index)
+                level = "-".join([found[0], found[-1]] if len(found) > 1 else found)
+                return [Hit("scenario_conditions", {"category": "LOSS", "level": level, "flags": []}, f"[difficulty] {ln}", confidence=0.4)]
+    return []
+
+
 def extract_tendency(text: str) -> list[Hit]:
-    return extract_skills(text) + list(extract_loss(text)) + extract_modification(text) + extract_content_warnings(text)
+    loss = list(extract_loss(text)) or loss_from_difficulty(text)
+    return extract_skills(text) + loss + extract_modification(text) + extract_content_warnings(text)

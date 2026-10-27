@@ -527,6 +527,10 @@ def _norm_value(field: str, value: str) -> frozenset:
         from .tendency import CONTENT_TAGS, content_tags
         codes = {c for c, _ in CONTENT_TAGS}
         return frozenset(content_tags(value)) | {t for t in re.split(r"[\s;；,、／/]+", value.upper()) if t in codes}
+    if field == "lost_rate" and not re.search(r"[A-Z]", value.upper().replace("■", "")):
+        from .tendency import _level  # "難易度：低" written by hand
+        lv = _level(re.sub(r"^.*[:：]", "", value).strip())
+        return frozenset([lv] if lv else [])
     if field == "lost_rate":
         return frozenset(t.upper() for t in re.split(r"[\s;；,、]+", value) if t)
     if field in ("free_full", "free_sample") and value.lower() == "unknown":

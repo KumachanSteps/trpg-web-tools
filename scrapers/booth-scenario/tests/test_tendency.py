@@ -72,3 +72,10 @@ def test_element_lists_keep_every_element():
              "触手/グロテスクな描写・展開/医療的倫理\n\nまた、どうしても避けられない残酷な選択があるため、KPと相談した上で通過するかどうか決定してください。", "CONTENT_WARNING")[0]
     assert v["items"] == ["触手", "グロテスクな描写・展開", "医療的倫理"]
     assert vals("▼注意\n軽度のグロ描写が含まれます。\n\n▼内容\n・全文テキストファイル", "CONTENT_WARNING")[0]["items"] == ["軽度のグロ描写"]
+
+
+def test_difficulty_stands_in_for_lost_rate():
+    assert vals("推奨技能：元気な心\n難易度 ：低", "LOSS")[0]["level"] == "LOW"
+    assert vals("難易度：低\nロスト率：高", "LOSS")[0]["level"] == "HIGH"
+    assert vals("KP難易度：高", "LOSS") == []
+    assert vals("難易度：不明", "LOSS") == []
