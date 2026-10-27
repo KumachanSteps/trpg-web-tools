@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f8fa"><title>三大探索技能｜ポイント配分｜TRPG WEBツール観測所</title>
+<meta name="description" content="CoC 6版・7版の目星・聞き耳・図書館に必要な技能ポイントと、職業・興味ポイントの使用率を計算します。">
+<link rel="icon" href="../../assets/img/kuma_icon.png" type="image/png">
+<link rel="canonical" href="https://kumachansteps.github.io/trpg-web-tools/tools/trpg-three-skills-calculator/">
+<script async src="../../assets/js/analytics.js"></script><style>
+:root{color-scheme:dark;--bg:#0b1120;--surface:#151f32;--surface2:#1d2a40;--border:#34415a;--txt:#ecf2ff;--sub:#aab8ce;--occup:#56bdb5;--interest:#ae9bfb;--warn:#ffbb75;--red:#ff7f89}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% -10%,#1d3650 0%,transparent 50%),var(--bg);font:15px/1.55 system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;color:var(--txt)}main{max-width:1040px;margin:auto;padding:30px 20px 70px}header{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;margin-bottom:23px}h1{font-size:clamp(22px,3.5vw,32px);margin:0 0 6px}h2{font-size:17px;margin:0 0 18px}.lead,.muted{color:var(--sub)}.lead{margin:0;max-width:740px}.eyebrow{color:#7edccf;font-size:12px;letter-spacing:.12em;font-weight:800}.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{background:var(--surface);border:1px solid var(--border);border-radius:17px;padding:20px;min-width:0}.wide{grid-column:1/-1}.controls{display:flex;gap:8px;flex-wrap:wrap}.toggle{border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--txt);padding:9px 16px;cursor:pointer;font-weight:700}.toggle[aria-pressed=true]{border-color:#77dacf;background:#194548}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field label{display:flex;justify-content:space-between;gap:8px;font-weight:650;margin-bottom:7px}.field small{color:var(--sub);font-weight:400}.field input{width:100%;border-radius:10px;border:1px solid #53637d;padding:10px 12px;color:var(--txt);background:#101a2d;font:inherit;outline-color:#80d8cf}.helper{font-size:12px;color:var(--sub);margin:8px 0 0}.target-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.target-num{font-size:35px;font-weight:800;color:#87e0d5;font-variant-numeric:tabular-nums}.slider{width:100%;accent-color:#69d4c7;cursor:pointer;margin:7px 0 1px}.ticks{display:flex;justify-content:space-between;font-size:11px;color:#96a5bc;margin:0 -3px 5px}.ticks .major{font-size:14px;font-weight:800;color:#eaf4ff}.choices{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.choice{border:1px solid #50607a;border-radius:11px;padding:11px 3px;text-align:center;cursor:pointer;background:#1a273b;color:var(--txt);font-weight:800;font-size:18px}.choice small{display:block;color:var(--sub);font-size:10px;font-weight:500}.choice[aria-pressed=true]{background:#214d53;border:2px solid #86e5d6;padding:10px 2px}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:17px}.stat{background:#101a2d;border:1px solid var(--border);border-radius:12px;padding:14px}.stat .val{font-size:clamp(19px,3vw,27px);font-weight:800;font-variant-numeric:tabular-nums}.stat .cap{font-size:12px;color:var(--sub)}.bar-block{margin:0 0 24px}.bar-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}.bar-heading strong{font-size:16px}.bar-heading .pct{font-weight:850;font-size:20px;font-variant-numeric:tabular-nums}.track{height:26px;border-radius:8px;overflow:hidden;background:#26374b;position:relative}.fill{height:100%;width:0;transition:width .2s;background:var(--occup)}.track.interest .fill{background:var(--interest)}.track::after{content:'';position:absolute;left:50%;height:100%;width:1px;background:#ffffff3a;top:0;pointer-events:none}.track .over{position:absolute;top:0;right:0;bottom:0;width:0;background:repeating-linear-gradient(-45deg,#fca5a5 0 7px,#b94b57 7px 14px);opacity:.8}.bar-meta{display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:var(--sub);font-size:13px}.bar-meta b{color:var(--txt)}.legend{display:inline-block;height:10px;width:10px;border-radius:3px;margin-right:6px}.note{border-left:3px solid #6fd5c8;background:#152a38;padding:12px 14px;border-radius:0 9px 9px 0}.warning{color:#ffd3b1}.overall{background:#101c2b;padding:14px;border-radius:13px;border:1px solid var(--border);margin-bottom:16px}.overall strong{color:#c7f1ea}.foot{font-size:12px;color:var(--sub);margin-top:17px}.small-title{font-size:12px;color:var(--sub);margin-bottom:4px}.meter-summary{font-size:14px;margin:4px 0 0;color:#c9d6e7}.reset{font-size:12px;border:1px solid var(--border);border-radius:9px;background:transparent;color:var(--sub);padding:8px 12px;cursor:pointer}.reset:hover{color:white}@media(max-width:720px){.layout{grid-template-columns:1fr}.wide{grid-column:auto}header{flex-direction:column}.stats{gap:7px}.stat{padding:10px}.panel{padding:16px}.bar-meta{font-size:12px}.choices{gap:5px}}
+
+/* v0.2 minimal light UI */
+:root{color-scheme:light;--bg:#f7f8fa;--surface:#fff;--surface2:#f3f5f7;--border:#e2e6eb;--txt:#202936;--sub:#707b89;--occup:#527a96;--interest:#9c86b6;--warn:#a65e24;--red:#b54343}
+body{background:var(--bg);color:var(--txt);font-size:14px}
+main{max-width:950px;padding:34px 20px 64px}
+header{align-items:center;margin-bottom:20px}
+h1{font-size:clamp(21px,3vw,28px);font-weight:700;letter-spacing:-.025em;margin:0}
+h2{font-size:15px;font-weight:700;margin-bottom:15px}
+.layout{gap:14px}.panel{border-radius:12px;padding:23px;box-shadow:0 1px 2px #1c273008}
+.toggle,.choice{background:white;color:var(--txt);border-color:var(--border);border-radius:8px}
+.toggle{padding:8px 22px;font-weight:600}
+.toggle[aria-pressed=true]{background:#e9f1f5;border-color:#85a5bb;color:#315b77}
+.field label{font-size:13px}.field small{color:var(--sub)}
+.field input{background:#fff;color:var(--txt);border-color:#ccd4dc;border-radius:8px;padding:9px 12px}
+.field input:focus-visible,.toggle:focus-visible,.choice:focus-visible,.reset:focus-visible{outline:2px solid #527a96;outline-offset:2px}
+.target-num{color:#315b77;font-size:31px}
+.slider{accent-color:#527a96}
+.ticks{color:var(--sub)}.ticks .major{color:#273f50}
+.choice{font-size:18px;font-weight:700;background:#fff;border-color:#d8dfe5}
+.choice small{font-weight:500}
+.choice[aria-pressed=true]{background:#e9f1f5;color:#315b77;border:2px solid #85a5bb}
+.stats{margin-bottom:24px}.stat{background:#f8f9fb;border:1px solid #e8ebef;border-radius:9px;padding:14px}.stat .val{color:#273443;font-size:25px}
+.bar-heading .pct{font-size:19px}.bar-block{margin-bottom:25px}
+.track{height:19px;background:#edf0f3;border-radius:5px}.track::after{background:#c8cfd644}
+.track .over{background:repeating-linear-gradient(-45deg,#d27d7d 0 7px,#b94b57 7px 14px)}
+.bar-meta b{color:var(--txt)}
+.overall{background:#f8f9fb;border-color:#e8ebef;border-radius:9px}.overall strong{color:var(--txt)!important}
+.note{background:transparent;border-left:2px solid #c8d5de;border-radius:0;padding:5px 12px;color:var(--sub);font-size:13px}
+.note.warning{border-color:#bb7b4c;color:#985324}.foot{color:#87919c}
+.reset{color:#596573;background:#fff;border-color:#d6dce2}.reset:hover{color:#202936;background:#f0f3f5}
+@media(max-width:720px){main{padding:20px 14px 50px}.panel{padding:17px}.stats{gap:8px}}
+
+/* v0.3 compact desktop layout: keep complete results visible without scrolling on common laptop screens */
+@media (min-width:721px){
+  main{max-width:1080px;padding:14px 20px 22px}
+  header{margin-bottom:10px}
+  h1{font-size:23px}
+  .layout{gap:10px;grid-template-columns:1fr 1fr}
+  .panel{padding:14px 17px;border-radius:10px}
+  h2{font-size:14px;margin-bottom:10px}
+  .controls{gap:6px}
+  .toggle{padding:5px 19px}
+  .fields{gap:8px 12px!important;margin-top:10px!important}
+  .field label{margin-bottom:3px;font-size:12px}
+  .field input{padding:5px 9px;min-height:33px}
+  .target-num{font-size:25px;line-height:1.15}
+  .slider{margin:2px 0 0}
+  .ticks{margin-bottom:1px;font-size:10px}
+  .ticks .major{font-size:12px}
+  .helper{margin:3px 0 0;font-size:11px;line-height:1.35}
+  .panel h2[style]{margin-top:10px!important;margin-bottom:7px}
+  .choices{gap:6px}
+  .choice{font-size:16px;padding:5px 3px;border-radius:7px;line-height:1.15}
+  .choice[aria-pressed=true]{padding:4px 2px}
+  .choice small{font-size:9px}
+  .wide{padding:13px 17px 10px}
+  .wide>h2{margin-bottom:8px}
+  .stats{gap:9px;margin-bottom:11px}
+  .stat{padding:7px 11px}
+  .stat .val{font-size:21px;line-height:1.2}
+  .stat .cap{font-size:11px}
+  .bar-block{margin-bottom:12px}
+  .bar-heading{margin-bottom:3px}
+  .bar-heading strong{font-size:13px}
+  .bar-heading .pct{font-size:17px}
+  .track{height:15px}
+  .bar-meta{margin-top:3px;font-size:11px}
+  .overall{padding:8px 11px;margin-bottom:8px}
+  .overall strong{font-size:21px!important}
+  .small-title{font-size:11px;margin-bottom:0}
+  .note{padding:3px 9px;font-size:11px}
+  .foot{margin-top:6px;font-size:10px}
+  .reset{padding:5px 10px}
+}
+@media(max-width:720px){main{padding:14px 12px 28px}header{margin-bottom:10px}.layout{gap:10px}.panel{padding:14px}.stats{margin-bottom:12px}.bar-block{margin-bottom:15px}.overall{margin-bottom:9px}.foot{margin-top:9px}}
+/* v0.5 compact editable total fields */
+@media(min-width:721px){.fields{gap:6px 12px!important}.field input{min-height:31px}.panel{padding-top:12px;padding-bottom:12px}}
+
+/* v0.6: two-row point equations and balanced upper panels */
+.layout{align-items:stretch}
+.point-equations{display:grid;gap:11px;margin-top:14px}
+.point-equation{display:grid;grid-template-columns:45px minmax(48px,.72fr) 15px minmax(62px,.8fr) 15px minmax(90px,1.3fr);gap:6px;align-items:end;min-width:0}
+.equation-stat{font-size:13px;font-weight:700;align-self:end;display:flex;flex-direction:column;gap:1px;line-height:1.15;padding-bottom:7px}
+.equation-stat small{font-size:10px;font-weight:400;color:var(--sub);white-space:nowrap}
+.point-equation input{width:100%;min-width:0;min-height:34px;background:#fff;color:var(--txt);border:1px solid #ccd4dc;border-radius:8px;padding:5px 7px;font:inherit;font-variant-numeric:tabular-nums}
+.equation-input{min-width:0}
+.equation-input label{display:block;font-size:10px;color:var(--sub);white-space:nowrap;margin-bottom:3px}
+.equation-total input{font-weight:700;background:#f5f8fa;border-color:#b7c7d4}
+.equation-sign{text-align:center;font-weight:700;font-size:15px;color:var(--sub);padding-bottom:7px}
+.point-equation input:focus-visible{outline:2px solid var(--occup);outline-offset:1px}
+@media(min-width:721px){.layout>.panel:not(.wide){min-height:244px}.point-equations{margin-top:17px;gap:15px}.point-equation{gap:7px}}
+@media(max-width:440px){.point-equation{grid-template-columns:38px minmax(41px,.65fr) 10px minmax(58px,.8fr) 10px minmax(78px,1.2fr);gap:3px}.equation-stat{font-size:12px}.equation-stat small,.equation-input label{font-size:9px}.point-equation input{padding:5px 4px}.equation-sign{font-size:13px}}
+</style></head><body><main><header><div><a href="../../" style="color:var(--sub);font-size:12px;text-decoration:none">← TRPG WEBツール観測所</a><h1>三大探索技能｜ポイント配分</h1></div><button class="reset" id="reset">初期値に戻す</button></header><div class="layout"><section class="panel"><h2>能力値・ポイント</h2><div class="controls" role="group" aria-label="ルール選択"><button type="button" class="toggle" id="e6" aria-pressed="true">6版</button><button type="button" class="toggle" id="e7" aria-pressed="false">7版</button></div><div class="point-equations" aria-label="能力値とポイントの計算">
+  <div class="point-equation">
+    <label class="equation-stat" for="edu">EDU <small id="edu-hint">平均 14</small></label>
+    <input id="edu" type="number" min="1" max="200" step="1" value="14" aria-label="EDU">
+    <span class="equation-sign">×</span>
+    <div class="equation-input"><label for="job-mult">職業P倍率</label><input id="job-mult" type="number" min="0" max="50" step="1" value="20"></div>
+    <span class="equation-sign">=</span>
+    <div class="equation-input equation-total"><label for="job-pool-input">合計職業P</label><input id="job-pool-input" type="number" min="0" step="1" value="280" aria-label="合計職業ポイント"></div>
+  </div>
+  <div class="point-equation">
+    <label class="equation-stat" for="int">INT <small id="int-hint">平均 13</small></label>
+    <input id="int" type="number" min="1" max="200" step="1" value="13" aria-label="INT">
+    <span class="equation-sign">×</span>
+    <div class="equation-input"><label for="interest-mult">興味P倍率</label><input id="interest-mult" type="number" min="0" max="50" step="1" value="10"></div>
+    <span class="equation-sign">=</span>
+    <div class="equation-input equation-total"><label for="interest-pool-input">合計興味P</label><input id="interest-pool-input" type="number" min="0" step="1" value="130" aria-label="合計興味ポイント"></div>
+  </div>
+</div></section><section class="panel"><h2>三大探索技能（目星・聞き耳・図書館）</h2><div class="target-row"><label for="target" style="font-weight:700">目標技能値</label><span class="target-num"><span id="target-label">70</span>%</span></div><input class="slider" id="target" type="range" min="50" max="95" step="5" value="70" aria-label="目標技能値"><div class="ticks" aria-hidden="true"><span>50</span><span>55</span><span class="major">60</span><span>65</span><span class="major">70</span><span>75</span><span class="major">80</span><span>85</span><span class="major">90</span><span>95</span></div><p class="helper"><span id="base-skill-hint">初期値：目星25%・聞き耳25%・図書館25%</span></p><h2 style="margin-top:21px">職業ポイントで取得できる技能数</h2><div class="choices" role="group" aria-label="職業ポイントで上げられる三大技能の数"><button type="button" class="choice" data-owned="0" aria-pressed="false">0<small>技能</small></button><button type="button" class="choice" data-owned="1" aria-pressed="true">1<small>技能</small></button><button type="button" class="choice" data-owned="2" aria-pressed="false">2<small>技能</small></button><button type="button" class="choice" data-owned="3" aria-pressed="false">3<small>技能</small></button></div></section><section class="panel wide"><h2>ポイントの使用率</h2><div class="stats"><div class="stat"><div class="cap">職業P</div><div class="val" id="job-total">280</div></div><div class="stat"><div class="cap">興味P</div><div class="val" id="interest-total">130</div></div><div class="stat"><div class="cap">三大技能への使用P</div><div class="val" id="required-total">135</div></div></div><div class="bar-block"><div class="bar-heading"><strong><i class="legend" style="background:var(--occup)"></i>職業ポイント</strong><span class="pct" id="job-pct">16.7%</span></div><div class="track"><div class="fill" id="job-fill"></div><div class="over" id="job-over"></div></div><div class="bar-meta"><span>三大技能に <b id="job-used">45</b> P使用</span><span>残り <b id="job-left">235</b> P</span></div></div><div class="bar-block"><div class="bar-heading"><strong><i class="legend" style="background:var(--interest)"></i>興味ポイント</strong><span class="pct" id="interest-pct">69.2%</span></div><div class="track interest"><div class="fill" id="interest-fill"></div><div class="over" id="interest-over"></div></div><div class="bar-meta"><span>三大技能に <b id="interest-used">90</b> P使用</span><span>残り <b id="interest-left">40</b> P</span></div></div><div class="overall"><div class="small-title">全技能ポイントに対する負担</div><div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap"><strong style="font-size:25px" id="overall-pct">33.8%</strong><span class="muted" id="overall-desc">合計410Pのうち135Pを三大探索技能に使用</span></div></div><div class="note" id="insight" aria-live="polite"></div><p class="foot">目標値は3技能共通。職業Pの割当順は〈目星→聞き耳→図書館〉。職業・特徴表による補正は含みません。</p></section></div><p class="foot">v0.6 · <a href="../../terms.html" style="color:inherit">利用規約</a> · <a href="../../privacy.html" style="color:inherit">プライバシーポリシー</a></p></main><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+let edition='6e',owned=1;
+const numeric=id=>{const n=Number($(id).value);return Number.isFinite(n)?Math.max(0,n):0};
+const fmt=n=>Number.isFinite(n)?n.toLocaleString('ja-JP',{maximumFractionDigits:2}):'—';
+const pct=(n,d)=>d>0?100*n/d:(n===0?0:Infinity);
+function syncPools(){
+ $('job-pool-input').value=numeric('edu')*numeric('job-mult');
+ $('interest-pool-input').value=numeric('int')*numeric('interest-mult');
+ update();
+}
+function update(){
+ const target=numeric('target'),initial=edition==='7e'?[25,20,20]:[25,25,25];
+ const costs=initial.map(base=>Math.max(0,target-base));
+ const jobPool=numeric('job-pool-input'),interestPool=numeric('interest-pool-input');
+ const jobUsed=costs.slice(0,owned).reduce((a,b)=>a+b,0);
+ const interestUsed=costs.slice(owned).reduce((a,b)=>a+b,0);
+ const total=jobUsed+interestUsed,jobPct=pct(jobUsed,jobPool),interestPct=pct(interestUsed,interestPool),overall=pct(total,jobPool+interestPool);
+ $('target-label').textContent=target;
+ for(const [prefix,pool,used,portion] of [['job',jobPool,jobUsed,jobPct],['interest',interestPool,interestUsed,interestPct]]){
+  $(prefix+'-total').textContent=fmt(pool);$(prefix+'-used').textContent=fmt(used);
+  $(prefix+'-left').textContent=fmt(pool-used);$(prefix+'-pct').textContent=Number.isFinite(portion)?portion.toFixed(1)+'%':'計算不可';
+  $(prefix+'-fill').style.width=Math.min(100,Number.isFinite(portion)?portion:100)+'%';
+  $(prefix+'-over').style.width=used>pool?'14%':'0';$(prefix+'-left').style.color=used>pool?'var(--red)':'';
+ }
+ $('required-total').textContent=fmt(total);
+ $('overall-pct').textContent=Number.isFinite(overall)?overall.toFixed(1)+'%':'計算不可';
+ $('overall-desc').textContent=`合計${fmt(jobPool+interestPool)}Pのうち${fmt(total)}Pを三大探索技能に使用`;
+ const reasons=[];if(jobUsed>jobPool)reasons.push(`職業ポイントが${fmt(jobUsed-jobPool)}P不足`);
+ if(interestUsed>interestPool)reasons.push(`興味ポイントが${fmt(interestUsed-interestPool)}P不足`);
+ $('insight').classList.toggle('warning',reasons.length>0);
+ $('insight').textContent=reasons.length>0?`不足：${reasons.join('、')}。`:`残り：職業P ${fmt(jobPool-jobUsed)} ／ 興味P ${fmt(interestPool-interestUsed)}`;
+}
+function setEdition(next){
+ if(next===edition)return;edition=next;
+ const seven=next==='7e';
+ $('edu').value=seven?70:14;$('int').value=seven?65:13;
+ $('job-mult').value=seven?4:20;$('interest-mult').value=seven?2:10;
+ $('edu-hint').textContent=seven?'平均 70':'平均 14';$('int-hint').textContent=seven?'平均 65':'平均 13';
+ $('base-skill-hint').textContent=seven?'初期値：目星25%・聞き耳20%・図書館20%':'初期値：目星25%・聞き耳25%・図書館25%';
+ $('e6').setAttribute('aria-pressed',String(!seven));$('e7').setAttribute('aria-pressed',String(seven));
+ syncPools();
+}
+function setOwned(n){owned=n;document.querySelectorAll('[data-owned]').forEach(x=>x.setAttribute('aria-pressed',String(Number(x.dataset.owned)===owned)));update();}
+['edu','int','job-mult','interest-mult'].forEach(id=>$(id).addEventListener('input',syncPools));
+['job-pool-input','interest-pool-input','target'].forEach(id=>$(id).addEventListener('input',update));
+document.querySelectorAll('[data-owned]').forEach(btn=>btn.addEventListener('click',()=>setOwned(Number(btn.dataset.owned))));
+$('e6').addEventListener('click',()=>setEdition('6e'));$('e7').addEventListener('click',()=>setEdition('7e'));
+$('reset').addEventListener('click',()=>{edition='7e';setEdition('6e');$('target').value=70;setOwned(1);update();});
+update();
+})();
+</script></body></html>

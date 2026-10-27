@@ -193,6 +193,39 @@
     "preview": "./assets/img/previews/session-report-generator.png"
   },
   {
+    "id": "trpg-three-skills-calculator",
+    "icon": "🧮",
+    "status": "available",
+    "category": "characterUtility",
+    "badges": [
+      "preSession",
+      "plSupport",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "CoC",
+      "6版",
+      "7版",
+      "目星",
+      "聞き耳",
+      "図書館",
+      "技能ポイント",
+      "ポイント配分"
+    ],
+    "href": "./tools/trpg-three-skills-calculator/",
+    "name": {
+      "ja": "三大探索技能｜ポイント配分",
+      "en": "Three Investigation Skills Point Calculator",
+      "ko": "3대 탐사 기능 포인트 계산기"
+    },
+    "description": {
+      "ja": "目星・聞き耳・図書館の目標値から、必要な技能ポイントと職業・興味ポイントの使用率を計算します。CoC 6版・7版に対応。",
+      "en": "Calculate the points needed for Spot Hidden, Listen, and Library Use, and their share of occupational and personal interest points in CoC 6e/7e.",
+      "ko": "CoC 6판·7판의 관찰력·듣기·자료 조사 목표치에 필요한 기능 포인트와 직업·관심 포인트 사용률을 계산합니다."
+    },
+    "preview": "./assets/img/previews/trpg-three-skills-calculator.png"
+  },
+  {
     "id": "chat-palette-formatter",
     "icon": "💬",
     "status": "available",
