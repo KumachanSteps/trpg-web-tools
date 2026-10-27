@@ -38,10 +38,10 @@ FIELD_HELP = {
     "price": "本編の価格（円）。幅があれば 500-1000、無料は 0",
     "secret_ho": "yes / no（秘匿HOがあるか）",
     "published_at": "公開日 YYYY-MM-DD（BOOTHの商品データから）",
-    "skills": "例: RECOMMENDED: 目星, 図書館 ; SEMI: 心理学 ; STATUS: SAN50以上（REQUIRED=必須, SEMI=準推奨, なし=推奨なし, HO=HOごと）",
+    "skills": "例: RECOMMENDED: 目星, 図書館 ; SEMI: 心理学 ; NOT_RECOMMENDED: 低SAN値 ; STATUS: SAN50以上（REQUIRED=必須, SEMI=準推奨, なし=推奨なし, HO=HOごと）",
     "lost_rate": "NONE / LOW / MID / HIGH / VERY_HIGH（幅は LOW-MID）、POSSIBLE（ありとだけ）、HIDDEN（伏せ字）、VARIABLE（展開次第）",
     "modification": "ALLOWED / CONDITIONAL / FORBIDDEN（改変について作者の記載）",
-    "content_warnings": "GORE / VIOLENCE / SUICIDE_SELF_HARM / DEATH / CHILD_HARM / SEXUAL / ROMANCE / MENTAL_HEALTH / MEDICAL / JUMPSCARE / PVP / UNFAIR_BAD_END / AFTEREFFECT / PC_BACKGROUND_CHANGE / MYTHOS_INTERPRETATION / DISCRIMINATION_RELIGION_WAR / INSECT_TENTACLE / LONG_DESCRIPTION を ; 区切り",
+    "content_warnings": "注意事項・含まれる要素に書かれた要素を ／ 区切りで（原文のまま。足りない要素を足す）",
 }
 
 
@@ -160,19 +160,19 @@ def _tendency_fields(conn, iid: int) -> dict[str, str]:
     skills: list[str] = []
     for v in conds:
         if v["category"] == "SKILL":
-            what = "なし" if v.get("none") else "HO" if v.get("per_ho") else ", ".join(v["skills"])
+            what = ", ".join((["なし"] if v.get("none") else []) + (["HO"] if v.get("per_ho") else []) + v["skills"])
             skills.append(f"{v['level']}: {what}")
         elif v["category"] == "STATUS":
             skills.append(f"STATUS: {v['text']}")
     loss = next((v for v in conds if v["category"] == "LOSS"), None)
     mod = next((v for v in conds if v["category"] == "MODIFICATION"), None)
-    tags = [t for v in conds if v["category"] == "CONTENT_WARNING" for t in v["tags"]]
+    elements = [t for v in conds if v["category"] == "CONTENT_WARNING" for t in v.get("items", [])]
     return {
         "published_at": (published or "")[:10],
         "skills": LIST_SEP.join(dict.fromkeys(skills)),
         "lost_rate": " ".join(x for x in [loss["level"], *loss["flags"]] if x) if loss else "",
         "modification": mod["stance"] if mod else "",
-        "content_warnings": LIST_SEP.join(dict.fromkeys(tags)),
+        "content_warnings": MEMBER_SEP.join(dict.fromkeys(elements)),
     }
 
 
@@ -503,20 +503,31 @@ def _norm_value(field: str, value: str) -> frozenset:
         m = re.search(r"(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})", value)
         return frozenset([f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"]) if m else frozenset()
     if field == "skills":
-        out = set()
+        out, level = set(), None
         for seg in _segments(value):
             m = re.match(r"\s*([A-Z_]+)\s*[:：]\s*(.*)", seg.strip(), re.I)
-            if not m:
+            if m:
+                level, rest = m.group(1).upper(), m.group(2)
+            elif level:
+                rest = seg  # the list goes on over the next line
+            else:
                 continue
-            level, rest = m.group(1).upper(), m.group(2)
             if level == "STATUS":
-                out.add("STATUS:" + re.sub(r"\s+", "", unicodedata.normalize("NFKC", rest)))
+                if rest.strip():
+                    out.add("STATUS:" + re.sub(r"[\s・]+", "", unicodedata.normalize("NFKC", rest)))
                 continue
-            for sk in re.split(r"[,，、/／]", rest):
-                if sk.strip():
-                    out.add(level + ":" + re.sub(r"[\s<>《》＜＞]", "", unicodedata.normalize("NFKC", sk)))
+            for sk in re.split(r"[,，、/／]|(?<=[〉>》])", rest):
+                sk = re.sub(r"[\s<>《》＜＞〈〉()]", "", unicodedata.normalize("NFKC", sk))
+                sk = re.sub(r"(?<=技)能$", "", sk)
+                if sk:
+                    out.add(level + ":" + sk)
         return frozenset(out)
-    if field in ("lost_rate", "content_warnings"):
+    if field == "content_warnings":
+        # Elements are free text: compare the topics they name.
+        from .tendency import CONTENT_TAGS, content_tags
+        codes = {c for c, _ in CONTENT_TAGS}
+        return frozenset(content_tags(value)) | {t for t in re.split(r"[\s;；,、／/]+", value.upper()) if t in codes}
+    if field == "lost_rate":
         return frozenset(t.upper() for t in re.split(r"[\s;；,、]+", value) if t)
     if field in ("free_full", "free_sample") and value.lower() == "unknown":
         return frozenset()

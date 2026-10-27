@@ -44,3 +44,31 @@ def test_content_warnings():
     assert vals("注:R-15G程度の表現あり。", "CONTENT_WARNING")[0]["tags"] == ["GORE"]
     assert vals("R18シナリオじゃありません", "CONTENT_WARNING") == []
     assert vals("■注意事項\nPUBLISHED BY KADOKAWA CORPORATION", "CONTENT_WARNING") == []
+
+
+def test_round1_skill_forms():
+    skills = lambda t: [(v["level"], v["skills"], v["none"]) for v in vals(t, "SKILL")]
+    assert skills("推奨技能：基本探索技能\n場合によっては使うかも：医学、戦闘技能") == [
+        ("RECOMMENDED", ["基本探索技能"], False), ("SEMI", ["医学", "戦闘技能"], False)]
+    assert skills("▶ 推奨技能：目星・聞き耳\n▶ 準 推奨：天文学（代用可）") == [
+        ("RECOMMENDED", ["目星", "聞き耳"], False), ("SEMI", ["天文学"], False)]
+    assert skills("非推奨 ：低すぎるSAN値") == [("NOT_RECOMMENDED", ["低SAN値"], False)]
+    assert skills("推奨技能 図書館、目星、\nオカルト、化学、\nを振る機会があるがいずれも必須ではない。")[0][1] == ["図書館", "目星", "オカルト", "化学"]
+    assert skills("●推奨技能：\n〈目星〉〈聞き耳〉〈戦闘系技能〉") == [("RECOMMENDED", ["目星", "聞き耳", "戦闘系技能"], False)]
+    assert skills("●準推奨技能(誰か持っていると良い)：ある程度のDEXor投擲") == [("SEMI", ["ある程度のDEX", "投擲"], False)]
+    assert skills("推奨技能：なし\n使える技能：目星、聞き耳") == [("SEMI", ["目星", "聞き耳"], False)]
+    assert skills("2022/8/2 アップデート版に推奨技能を追記しました。") == []
+
+
+def test_unlabelled_lost_possibility():
+    assert vals("推奨技能：基本探索技能\nロスト可能性あり", "LOSS")[0]["flags"] == ["POSSIBLE"]
+    assert vals("ロスト：出目が悪いと戦闘で死ぬかもしれない", "LOSS")[0]["flags"] == ["POSSIBLE"]
+
+
+def test_element_lists_keep_every_element():
+    v = vals("これらの要素を含む\nタイマン ／ シティ ／ 神話生物独自解釈\nうちよそ ／ エモ ／ 記憶喪失 ／ 理不尽展開", "CONTENT_WARNING")[0]
+    assert v["items"] == ["タイマン", "シティ", "神話生物独自解釈", "うちよそ", "エモ", "記憶喪失", "理不尽展開"]
+    v = vals("■注意事項\n単純なシナリオではありません。\n以下の要素を含むため、引き返すことを推奨します。\n"
+             "触手/グロテスクな描写・展開/医療的倫理\n\nまた、どうしても避けられない残酷な選択があるため、KPと相談した上で通過するかどうか決定してください。", "CONTENT_WARNING")[0]
+    assert v["items"] == ["触手", "グロテスクな描写・展開", "医療的倫理"]
+    assert vals("▼注意\n軽度のグロ描写が含まれます。\n\n▼内容\n・全文テキストファイル", "CONTENT_WARNING")[0]["items"] == ["軽度のグロ描写"]

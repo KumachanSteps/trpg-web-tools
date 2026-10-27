@@ -72,10 +72,10 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 
 本文から次を `scenario_conditions` に記録します（アンソロジーは商品単位の証拠のみ）。レビュー表では各列のツール判定を確認します。
 
-- **推奨技能・ステータス**（`SKILL` / `STATUS`）: 「推奨技能」「準推奨技能」「必須技能」の後ろの一覧（次の行でも可）。「なし」「HOごとに記載」も記録。「推奨能力値」「SAN50以上」なども `STATUS` として原文で。
+- **推奨技能・ステータス**（`SKILL` / `STATUS`）: 「推奨技能」「準推奨技能」「必須技能」「推奨：」の後ろの一覧（次の行や「、」で続く行も）。「振る機会がある技能」「使える技能」は準推奨。「非推奨：低SAN値」は `NOT_RECOMMENDED`。「なし」「HOごとに記載」も記録。「推奨能力値」「SAN50以上」なども `STATUS` として原文で。
 - **ロスト率**（`LOSS`）: ラベル付きの値だけ（「ロスト率：中~高」「【ロスト】あり」「ロスト率：■■」）。`NONE` / `LOW` / `MID` / `HIGH` / `VERY_HIGH`（幅は `LOW-MID`）、`POSSIBLE`（ありとだけ）、`HIDDEN`（伏せ字）、`VARIABLE`（展開次第）。「ロスト救済」「NPCロスト率」は使わない。
 - **改変**（`MODIFICATION`）: `ALLOWED` / `CONDITIONAL` / `FORBIDDEN`。許可と禁止が両方ある・範囲の条件付きは `CONDITIONAL`。「改変データの配布」など再配布の話は数えない。
-- **地雷・注意要素**（`CONTENT_WARNING`）: 「注意事項」「含まれる要素」「地雷」などの見出しの下の要素と、R-15G などの表記から `GORE` / `SUICIDE_SELF_HARM` / `PVP` などのタグ。要素の原文も残す。
+- **地雷・注意要素**（`CONTENT_WARNING`）: 「含まれる要素」「以下の要素」「これらの要素を含む」の一覧は要素をすべて原文で、「注意事項」などの下は注意すべき話題（グロ・自殺・PvP など）を含む要素だけ。R-15G なども。検索用に `GORE` / `PVP` などのタグも付け、採点はタグで比べる。
 - **公開日**（`products.published_at`）: 商品 JSON の `published_at`。それ以前に取得した商品は再取得で埋まります。
 
 傾向だけを確認する表: `export-review --fields skills lost_rate modification content_warnings`。取り込むと既存のラベルに追加されます。
