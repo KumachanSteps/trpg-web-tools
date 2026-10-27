@@ -407,6 +407,12 @@ def _attach_rule_facts(conn, iid: int, sid: str, *, systems_only: bool = False) 
                 "INSERT INTO scenario_durations VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (new_id("DU"), sid, v["mode"], v["scope"], v["min_minutes"], v["max_minutes"], v.get("approximate", 0), eid),
             )
+        elif table == "scenario_conditions":
+            excerpt = conn.execute("SELECT raw_excerpt FROM extraction_evidence WHERE evidence_id=?", (eid,)).fetchone()[0]
+            conn.execute(
+                "INSERT INTO scenario_conditions VALUES (?, ?, ?, ?, ?, ?)",
+                (new_id("CO"), sid, v["category"], excerpt, json.dumps(v, ensure_ascii=False), eid),
+            )
         elif table == "scenario_assets":
             conn.execute(
                 "INSERT INTO scenario_assets (asset_id, scenario_id, asset_type, availability_relation, evidence_id) VALUES (?, ?, ?, ?, ?)",
