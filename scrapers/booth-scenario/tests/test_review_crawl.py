@@ -145,3 +145,27 @@ def test_partial_review_sheet_keeps_other_labels(conn, tmp_path):
     assert review.import_review(conn, part) == {"imported": 1, "corrected_cells": 1}
     labels = json.loads(conn.execute("SELECT labels_json FROM review_labels").fetchone()[0])
     assert labels["lost_rate"]["truth"] == "VERY_HIGH" and labels["session_modes"]["truth"] == "SOLO 1-1 UNKNOWN/NONE"
+
+
+def test_partial_sheet_kind_or_members_only(conn, tmp_path):
+    openpyxl = pytest.importorskip("openpyxl")
+    _item(conn, 1, "霧の館", "推奨人数：1PL", [("PDF", 500)])
+    organize.organize_all(conn)
+
+    def fix(fields, key, value):
+        path = tmp_path / f"{key}.xlsx"
+        review.export_review(conn, [1], path, fields=fields)
+        wb = openpyxl.load_workbook(path)
+        ws = wb["review"]
+        keys = [c.value for c in ws[3]]
+        ws.cell(4, keys.index(key) + 1, value)
+        wb.save(path)
+        return review.import_review(conn, path)
+
+    # Kind only, no earlier labels: members come from the stored classification.
+    assert fix(["product_kind"], "ok_product_kind", "COLLECTION")["imported"] == 1
+    assert conn.execute("SELECT product_kind, method FROM product_classifications").fetchone()[:] == ("COLLECTION", "MANUAL")
+    # Members only: the kind reviewed before stays, the members change.
+    fix(["members"], "ok_members", "A／B")
+    row = conn.execute("SELECT product_kind, member_titles_json FROM product_classifications").fetchone()
+    assert row[0] == "COLLECTION" and json.loads(row[1]) == ["A", "B"]

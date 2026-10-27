@@ -420,22 +420,30 @@ def import_review(conn, path: Path, *, batch: str | None = None, split: str = "T
             (iid, json.dumps(merged, ensure_ascii=False), row.get("notes") or None, utcnow(),
              batch if batch or not old else old["batch"], split if not old or batch else old["split"]))
         imported += 1
-        if "product_kind" not in labels:
+        if not {"product_kind", "members"} & labels.keys():
             continue
+        sheet_kind = "product_kind" in labels
         labels = merged
-        if labels["product_kind"]["truth"].strip().upper() not in KIND_CHOICES:
+        if sheet_kind and labels["product_kind"]["truth"].strip().upper() not in KIND_CHOICES:
             # Not a kind (e.g. a pasted variant line): keep the tool's answer.
             warnings.append(f"{iid}: product_kind {labels['product_kind']['truth']!r} is not a kind; kept {labels['product_kind']['auto']}")
             labels["product_kind"] = {"auto": labels["product_kind"]["auto"], "truth": labels["product_kind"]["auto"], "corrected": False}
             conn.execute("UPDATE review_labels SET labels_json=? WHERE booth_item_id=?", (json.dumps(labels, ensure_ascii=False), iid))
             corrected -= 1
-        if labels["product_kind"]["corrected"] or labels.get("members", {}).get("corrected"):
-            members = [t.strip() for t in re.split(r"[／/\n]|[;；](?=\s|$)", labels["members"]["truth"]) if t.strip()]
+        kind_l, members_l = labels.get("product_kind"), labels.get("members")
+        if (kind_l and kind_l["corrected"]) or (members_l and members_l["corrected"]):
+            # A partial sheet may hold only one of the two: take the other from
+            # the stored classification.
+            stored = conn.execute("SELECT product_kind, member_titles_json FROM product_classifications WHERE booth_item_id=?",
+                                  (iid,)).fetchone()
+            kind = kind_l["truth"].strip().upper() if kind_l else (stored["product_kind"] if stored else "UNDETERMINED")
+            members = ([t.strip() for t in re.split(r"[／/\n]|[;；](?=\s|$)", members_l["truth"]) if t.strip()] if members_l
+                       else json.loads(stored["member_titles_json"] or "[]") if stored else [])
             conn.execute(
                 """INSERT OR REPLACE INTO product_classifications
                    (booth_item_id, product_kind, member_count, member_titles_json, method, reasons_json, classified_at)
                    VALUES (?, ?, ?, ?, 'MANUAL', ?, ?)""",
-                (iid, labels["product_kind"]["truth"].strip().upper(), len(members) or None,
+                (iid, kind, len(members) or None,
                  json.dumps(members, ensure_ascii=False), json.dumps(["from review table"]), utcnow()),
             )
     conn.commit()

@@ -32,6 +32,7 @@ def test_modification():
     assert stance("■改変：条件付き") == "CONDITIONAL"
     assert stance("背景に沿っていれば内容の改変はご自由にどうぞ。\n背景の改変はお止め下さい。") == "CONDITIONAL"
     assert stance("シナリオの改変は禁止です。") == "FORBIDDEN"
+    assert stance("シナリオの改変は不可です。") == "FORBIDDEN"
     assert stance("・改変は禁止していませんが、遊んだ後に明かすように") == "ALLOWED"
     # Redistributing an altered copy is a different rule.
     assert stance("○改変データの配布") is None
