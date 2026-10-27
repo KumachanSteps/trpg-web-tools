@@ -1,0 +1,5735 @@
+[
+  {
+    "id": "animal_therapist_2015",
+    "name": "アニマルセラピスト",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "聞き耳",
+      "心理学",
+      "精神分析",
+      "生物学",
+      "跳躍",
+      "追跡",
+      "博物学"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "nurse_2015",
+    "name": "看護師",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "科学",
+      "生物学",
+      "応急手当",
+      "薬学",
+      "心理学",
+      "聞き耳",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "言いくるめ または 説得",
+        "choose": 1,
+        "options": [
+          "言いくるめ",
+          "説得"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "emergency_medical_technician_2015",
+    "name": "救急救命士",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "科学",
+      "鍵開け",
+      "機械修理",
+      "電気修理",
+      "登攀"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "plastic_surgeon_2015",
+    "name": "形成外科医",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "経理",
+      "心理学",
+      "説得",
+      "値切り",
+      "薬学",
+      "ほかの言語（英語）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "surgeon_or_dentist_2015",
+    "name": "外科医 or 歯科医",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "経理",
+      "信用",
+      "生物学",
+      "説得",
+      "薬学",
+      "ほかの言語（英語）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "psychiatrist_2015",
+    "name": "精神科医",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "科学",
+      "心理学",
+      "精神分析",
+      "生物学",
+      "説得",
+      "薬学",
+      "ほかの言語"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "underground_doctor_2015",
+    "name": "闇医者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "経理",
+      "説得",
+      "法律",
+      "薬学",
+      "ほかの言語"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "coast_guard_2015",
+    "name": "海上保安官",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "機械修理",
+      "重機械操作",
+      "信用",
+      "操縦（船舶）",
+      "登攀",
+      "ナビゲート",
+      "法律",
+      "サバイバル（海）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "forensic_scientist_2015",
+    "name": "科学捜査研究員",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "医学",
+      "科学",
+      "コンピューター",
+      "写真術",
+      "人類学",
+      "生物学",
+      "法律",
+      "薬学"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "mountain_rescue_worker_2015",
+    "name": "山岳救助隊員",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "軍事・警備系",
+    "skills": [
+      "応急手当",
+      "聞き耳",
+      "跳躍",
+      "追跡",
+      "登攀",
+      "ナビゲート",
+      "サバイバル（山）",
+      "ほかの言語"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "firefighter_2015",
+    "name": "消防士",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "運転（自動車）",
+      "応急手当",
+      "回避",
+      "機械修理",
+      "重機械操作",
+      "跳躍",
+      "投擲",
+      "登攀"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "artist_basic_2015",
+    "name": "芸術家（基本）",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "芸術・創作系",
+    "skills": [
+      "心理学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "言いくるめ または 説得",
+        "choose": 1,
+        "options": [
+          "言いくるめ",
+          "説得"
+        ]
+      },
+      {
+        "label": "芸術（任意） または 製作（任意）",
+        "choose": 1,
+        "options": [
+          "芸術（任意）",
+          "製作（任意）"
+        ]
+      },
+      {
+        "label": "歴史 または 博物学",
+        "choose": 1,
+        "options": [
+          "歴史",
+          "博物学"
+        ]
+      },
+      {
+        "label": "次の技能から3つ選択",
+        "choose": 3,
+        "options": [
+          "コンピューター",
+          "写真術",
+          "生物学",
+          "天文学",
+          "芸術（任意）",
+          "製作（任意）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "dancer_2015",
+    "name": "ダンサー",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "芸術・創作系",
+    "skills": [
+      "回避",
+      "芸術（ダンス）",
+      "忍び歩き",
+      "跳躍",
+      "登攀",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "designer_2015",
+    "name": "デザイナー",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "芸術・創作系",
+    "skills": [
+      "コンピューター",
+      "心理学",
+      "図書館",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "言いくるめ または 説得",
+        "choose": 1,
+        "options": [
+          "言いくるめ",
+          "説得"
+        ]
+      },
+      {
+        "label": "芸術（任意） または 製作（任意）",
+        "choose": 1,
+        "options": [
+          "芸術（任意）",
+          "製作（任意）"
+        ]
+      },
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "fashion_artist_2015",
+    "name": "ファッション系芸術家",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "心理学",
+      "値切り",
+      "変装",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "言いくるめ または 説得",
+        "choose": 1,
+        "options": [
+          "言いくるめ",
+          "説得"
+        ]
+      },
+      {
+        "label": "芸術（任意） または 製作（任意）",
+        "choose": 1,
+        "options": [
+          "芸術（任意）",
+          "製作（任意）"
+        ]
+      },
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "jsdf_ground_member_2015",
+    "name": "自衛官（陸上自衛隊員）",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "軍事・警備系",
+    "skills": [
+      "応急手当",
+      "回避",
+      "隠れる"
+    ],
+    "skillOptions": [
+      {
+        "label": "サバイバル（山 または 砂漠）",
+        "choose": 1,
+        "options": [
+          "サバイバル（山）",
+          "サバイバル（砂漠）"
+        ]
+      },
+      {
+        "label": "任意の近接戦技能",
+        "choose": 1,
+        "options": [
+          "こぶし（パンチ）",
+          "キック",
+          "組み付き",
+          "頭突き",
+          "武道（任意）",
+          "日本刀",
+          "ナイフ",
+          "杖"
+        ]
+      },
+      {
+        "label": "任意の火器技能",
+        "choose": 1,
+        "options": [
+          "拳銃",
+          "サブマシンガン",
+          "ショットガン",
+          "マシンガン",
+          "ライフル",
+          "砲"
+        ]
+      },
+      {
+        "label": "次の技能から2つ選択",
+        "choose": 2,
+        "options": [
+          "機械修理",
+          "忍び歩き",
+          "水泳",
+          "登攀",
+          "ほかの言語",
+          "パラシュート",
+          "重機械操作",
+          "砲"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "jsdf_maritime_member_2015",
+    "name": "自衛官（海上自衛隊員･艦上勤務）",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "軍事・警備系",
+    "skills": [
+      "応急手当",
+      "重機械操作",
+      "水泳",
+      "操縦（ボート）",
+      "ナビゲート",
+      "サバイバル（海）"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から2つ選択",
+        "choose": 2,
+        "options": [
+          "機械修理",
+          "電気修理",
+          "任意の近接戦技能",
+          "任意の火器技能",
+          "砲"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "jsdf_pilot_2015",
+    "name": "自衛官（自衛隊パイロット･陸海空）",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "機械修理",
+      "重機械操作",
+      "操縦（戦闘機、大型機、ヘリコプターなど）",
+      "電気修理",
+      "天文学",
+      "ナビゲート",
+      "パラシュート"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "pmc_member_2015",
+    "name": "民間軍事会社メンバー",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "軍事・警備系",
+    "skills": [
+      "回避",
+      "隠れる",
+      "忍び歩き"
+    ],
+    "skillOptions": [
+      {
+        "label": "水泳 または 登攀",
+        "choose": 1,
+        "options": [
+          "水泳",
+          "登攀"
+        ]
+      },
+      {
+        "label": "任意の近接戦技能",
+        "choose": 1,
+        "options": [
+          "こぶし（パンチ）",
+          "キック",
+          "組み付き",
+          "頭突き",
+          "武道（任意）",
+          "ナイフ"
+        ]
+      },
+      {
+        "label": "任意の火器技能",
+        "choose": 1,
+        "options": [
+          "拳銃",
+          "サブマシンガン",
+          "ショットガン",
+          "マシンガン",
+          "ライフル"
+        ]
+      },
+      {
+        "label": "次の技能から2つ選択",
+        "choose": 2,
+        "options": [
+          "応急手当",
+          "機械修理",
+          "サバイバル（山）",
+          "サバイバル（砂漠）",
+          "ほかの言語"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "athlete_dex_2015",
+    "name": "DEX系アスリート",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "忍び歩き",
+      "回避",
+      "芸術（任意のスポーツ競技）",
+      "跳躍",
+      "投擲",
+      "登攀"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から3つ選択",
+        "choose": 3,
+        "options": [
+          "応急手当",
+          "乗馬",
+          "水泳",
+          "こぶし（パンチ）",
+          "キック",
+          "頭突き",
+          "組み付き",
+          "武道（任意）",
+          "日本刀",
+          "薙刀",
+          "杖",
+          "弓",
+          "アーチェリー",
+          "拳銃",
+          "ライフル",
+          "ショットガン"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "athlete_str_2015",
+    "name": "STR系アスリート",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "回避",
+      "芸術（任意のスポーツ競技）",
+      "跳躍",
+      "投擲",
+      "登攀"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から3つ選択",
+        "choose": 3,
+        "options": [
+          "応急手当",
+          "乗馬",
+          "水泳",
+          "こぶし（パンチ）",
+          "キック",
+          "頭突き",
+          "組み付き",
+          "武道（任意）",
+          "日本刀",
+          "薙刀",
+          "杖",
+          "弓",
+          "アーチェリー",
+          "拳銃",
+          "ライフル",
+          "ショットガン"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "athlete_con_2015",
+    "name": "CON系アスリート",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "回避",
+      "芸術（任意のスポーツ競技）",
+      "跳躍",
+      "投擲",
+      "登攀"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から3つ選択",
+        "choose": 3,
+        "options": [
+          "応急手当",
+          "乗馬",
+          "水泳",
+          "こぶし（パンチ）",
+          "キック",
+          "頭突き",
+          "組み付き",
+          "武道（任意）",
+          "日本刀",
+          "薙刀",
+          "杖",
+          "弓",
+          "アーチェリー",
+          "拳銃",
+          "ライフル",
+          "ショットガン"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "adventurer_professor_2015",
+    "name": "冒険家教授",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "応急手当",
+      "説得",
+      "跳躍",
+      "登攀",
+      "図書館",
+      "ほかの言語"
+    ],
+    "skillOptions": [
+      {
+        "label": "専門の技能として2つ選択",
+        "choose": 2,
+        "options": [
+          "考古学",
+          "地質学",
+          "歴史"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "critic_2015",
+    "name": "評論家",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "信用",
+      "心理学",
+      "説得",
+      "図書館",
+      "値切り",
+      "母国語"
+    ],
+    "skillOptions": [
+      {
+        "label": "専門分野として2つ選択",
+        "choose": 2,
+        "options": [
+          "オカルト",
+          "博物学",
+          "歴史"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "idol_music_talent_2015",
+    "name": "アイドル・音楽タレント",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "タレント系",
+    "skills": [
+      "言いくるめ",
+      "芸術（歌唱）",
+      "芸術（ダンス）",
+      "心理学",
+      "説得",
+      "変装"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "announcer_2015",
+    "name": "アナウンサー",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "タレント系",
+    "skills": [
+      "言いくるめ",
+      "信用",
+      "心理学",
+      "説得",
+      "芸術（アナウンス）",
+      "図書館",
+      "母国語"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "comedian_2015",
+    "name": "コメディアン",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "言いくるめ",
+      "聞き耳",
+      "心理学",
+      "芸術（物語）",
+      "芸術（演劇）",
+      "変装"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "sports_talent_2015",
+    "name": "スポーツタレント",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "言いくるめ",
+      "心理学",
+      "芸術（演劇）",
+      "変装"
+    ],
+    "skillOptions": [
+      {
+        "label": "跳躍 または 登攀",
+        "choose": 1,
+        "options": [
+          "跳躍",
+          "登攀"
+        ]
+      },
+      {
+        "label": "任意の素手の近接戦技能",
+        "choose": 1,
+        "options": [
+          "こぶし（パンチ）",
+          "キック",
+          "組み付き",
+          "頭突き"
+        ]
+      },
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "commentator_2015",
+    "name": "コメンテーター",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "タレント系",
+    "skills": [
+      "言いくるめ",
+      "聞き耳",
+      "信用",
+      "心理学",
+      "説得",
+      "図書館",
+      "値切り"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な専門の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "internet_talent_2015",
+    "name": "ネットタレント",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "タレント系",
+    "skills": [
+      "コンピューター",
+      "心理学",
+      "説得",
+      "電気修理"
+    ],
+    "skillOptions": [
+      {
+        "label": "芸術（歌唱、演劇、ダンス、楽器演奏など）",
+        "choose": 1,
+        "options": [
+          "芸術（歌唱）",
+          "芸術（演劇）",
+          "芸術（ダンス）",
+          "芸術（楽器演奏）"
+        ]
+      },
+      {
+        "label": "個人的な関心の技能3つ",
+        "choose": 3,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "actor_2015",
+    "name": "俳優",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "タレント系",
+    "skills": [
+      "言いくるめ",
+      "運転（自動車）",
+      "芸術（演劇）",
+      "心理学",
+      "説得",
+      "変装"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "producer_manager_2015",
+    "name": "プロデューサー・マネージャー",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "タレント系",
+    "skills": [
+      "言いくるめ",
+      "運転（自動車）",
+      "隠れる",
+      "聞き耳",
+      "忍び歩き",
+      "値切り",
+      "法律"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "ghost_hunter_2015",
+    "name": "ゴーストハンター",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "オカルト",
+      "科学",
+      "機械修理",
+      "写真術",
+      "生物学",
+      "説得",
+      "電気修理",
+      "物理学"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "fortune_teller_spiritualist_medium_2015",
+    "name": "占い師・スピリチュアリスト・霊媒師",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "言いくるめ",
+      "オカルト",
+      "芸術（演劇）",
+      "信用",
+      "心理学",
+      "説得",
+      "値切り"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "butler_maid_2015",
+    "name": "執事・メイド",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "応急手当",
+      "聞き耳",
+      "経理",
+      "心理学",
+      "目星",
+      "ほかの言語"
+    ],
+    "skillOptions": [
+      {
+        "label": "言いくるめ または 説得",
+        "choose": 1,
+        "options": [
+          "言いくるめ",
+          "説得"
+        ]
+      },
+      {
+        "label": "芸術 または 製作（ワイン鑑定、料理、裁縫、掃除など）",
+        "choose": 1,
+        "options": [
+          "芸術（ワイン鑑定）",
+          "製作（料理）",
+          "製作（裁縫）",
+          "製作（掃除）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "salesperson_2015",
+    "name": "セールスマン",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "言いくるめ",
+      "運転（自動車）",
+      "芸術（演技）",
+      "経理",
+      "心理学",
+      "説得",
+      "値切り"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "customer_service_worker_2015",
+    "name": "対面接客業",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "言いくるめ",
+      "回避",
+      "聞き耳",
+      "経理",
+      "心理学",
+      "説得",
+      "値切り",
+      "目星"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "mechanic_2015",
+    "name": "メカニック",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "登攀",
+      "運転（自動車）",
+      "電気修理",
+      "機械修理",
+      "重機械操作"
+    ],
+    "skillOptions": [
+      {
+        "label": "芸術 または 製作（大工、溶接、配管など）",
+        "choose": 1,
+        "options": [
+          "芸術（任意）",
+          "製作（大工）",
+          "製作（溶接）",
+          "製作（配管）"
+        ]
+      },
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "cook_2015",
+    "name": "料理人",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "科学",
+      "生物学",
+      "博物学",
+      "目星",
+      "ほかの言語",
+      "歴史（特に料理関係）"
+    ],
+    "skillOptions": [
+      {
+        "label": "芸術 または 製作（料理）",
+        "choose": 1,
+        "options": [
+          "芸術（料理）",
+          "製作（料理）"
+        ]
+      },
+      {
+        "label": "次の技能から1つ選択",
+        "choose": 1,
+        "options": [
+          "肉切り包丁",
+          "小型ナイフ",
+          "小さい棍棒"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "gambler_2015",
+    "name": "ギャンブラー",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "言いくるめ",
+      "隠す",
+      "聞き耳",
+      "芸術（演劇）",
+      "経理",
+      "心理学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "financial_criminal_2015",
+    "name": "経済犯罪者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "言いくるめ",
+      "経理",
+      "コンピューター",
+      "信用",
+      "心理学",
+      "説得",
+      "値切り",
+      "法律"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "street_rogue_2015",
+    "name": "ストリート・ローグ",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "言いくるめ",
+      "隠れる",
+      "心理学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から4つ選択",
+        "choose": 4,
+        "options": [
+          "芸術（ダンス）",
+          "芸術（ファッション）",
+          "跳躍",
+          "投擲",
+          "登攀",
+          "変装",
+          "任意の素手の戦闘技能",
+          "ナイフ"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "cyber_criminal_2015",
+    "name": "ネット犯罪者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "コンピューター",
+      "心理学",
+      "芸術（ハッキング）",
+      "製作（コンピューターウイルス）",
+      "図書館",
+      "法律"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "bodyguard_hitman_2015",
+    "name": "用心棒",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "軍事・警備系",
+    "skills": [
+      "鍵開け",
+      "隠れる",
+      "忍び歩き",
+      "心理学",
+      "追跡",
+      "変装"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意の近接戦技能",
+        "choose": 1,
+        "options": [
+          "こぶし（パンチ）",
+          "キック",
+          "組み付き",
+          "頭突き",
+          "武道（任意）",
+          "ナイフ",
+          "日本刀",
+          "杖"
+        ]
+      },
+      {
+        "label": "任意の火器技能",
+        "choose": 1,
+        "options": [
+          "拳銃",
+          "サブマシンガン",
+          "ショットガン",
+          "マシンガン",
+          "ライフル"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "cultist_2015",
+    "name": "狂信者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "elected_official_2015",
+    "name": "公選職",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "言いくるめ",
+      "聞き耳",
+      "芸術（握手）",
+      "心理学",
+      "説得",
+      "法律",
+      "歴史",
+      "母国語"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "human_mountain_2015",
+    "name": "人間山脈",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "軍事・警備系",
+    "skills": [
+      "投擲",
+      "武道"
+    ],
+    "skillOptions": [
+      {
+        "label": "素手の近接戦技能2つ",
+        "choose": 2,
+        "options": [
+          "こぶし（パンチ）",
+          "キック",
+          "組み付き",
+          "頭突き"
+        ]
+      },
+      {
+        "label": "個人的な関心の技能3つ",
+        "choose": 3,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "game_tester_2015",
+    "name": "テストプレイヤー",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "その他",
+    "skills": [
+      "言いくるめ",
+      "聞き耳",
+      "芸術（ゲーム）",
+      "コンピューター",
+      "電気修理",
+      "値切り"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な関心の技能2つ",
+        "choose": 2,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "video_journalist_2015",
+    "name": "ビデオジャーナリスト",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "言いくるめ",
+      "隠す",
+      "写真術",
+      "電気修理",
+      "法律"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から2つ選択",
+        "choose": 2,
+        "options": [
+          "運転（自動車）",
+          "隠れる",
+          "ナビゲート"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "doctor_updated_2015",
+    "name": "医師",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "経理",
+      "信用",
+      "生物学",
+      "説得",
+      "薬学",
+      "ほかの言語（英語、ラテン語、ドイツ語）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "engineer_updated_2015",
+    "name": "エンジニア",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "専門職エンジニア",
+    "skills": [
+      "機械修理",
+      "コンピューター",
+      "重機械操作",
+      "電気修理",
+      "図書館",
+      "物理学",
+      "ほかの言語（英語）"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から1つ選択",
+        "choose": 1,
+        "options": [
+          "科学",
+          "地質学",
+          "電子工学"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "police_detective_updated_2015",
+    "name": "警官、刑事",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "言いくるめ",
+      "聞き耳",
+      "心理学",
+      "説得",
+      "追跡",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から1つ選択",
+        "choose": 1,
+        "options": [
+          "運転（自動車）",
+          "運転（二輪車）",
+          "信用",
+          "組み付き",
+          "武道（柔道）",
+          "日本刀",
+          "拳銃",
+          "杖"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "antiquarian_updated_2015",
+    "name": "古物研究家",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "その他",
+    "skills": [
+      "芸術（任意）",
+      "コンピューター",
+      "製作（古書修復、古美術修復など）",
+      "図書館",
+      "値切り",
+      "ほかの言語（英語、漢文、ラテン語など）",
+      "目星",
+      "歴史"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "computer_technician_updated_2015",
+    "name": "コンピューター技術者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "専門職エンジニア",
+    "skills": [
+      "言いくるめ",
+      "経理",
+      "コンピューター",
+      "電気修理",
+      "電子工学",
+      "図書館",
+      "物理学",
+      "ほかの言語（英語、その他）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "writer_updated_2015",
+    "name": "作家",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "オカルト",
+      "芸術（トリビア知識、詩的表現など）",
+      "心理学",
+      "説得",
+      "図書館",
+      "ほかの言語（英語など）",
+      "母国語",
+      "歴史"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "journalist_updated_2015",
+    "name": "ジャーナリスト",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "言いくるめ",
+      "写真術",
+      "心理学",
+      "説得",
+      "図書館",
+      "母国語",
+      "ほかの言語（英語など）",
+      "歴史"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "religious_worker_updated_2015",
+    "name": "宗教家",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "オカルト・宗教系",
+    "skills": [
+      "オカルト",
+      "聞き耳",
+      "経理",
+      "心理学",
+      "説得",
+      "図書館",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から1つ選択",
+        "choose": 1,
+        "options": [
+          "言いくるめ",
+          "信用",
+          "ほかの言語（漢文、梵語、ラテン語など）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "shopkeeper_clerk_updated_2015",
+    "name": "商店主、店員",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "言いくるめ",
+      "聞き耳",
+      "経理",
+      "心理学",
+      "信用",
+      "値切り"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から1つ選択",
+        "choose": 1,
+        "options": [
+          "運転（自動車）",
+          "運転（二輪車）",
+          "コンピューター"
+        ]
+      },
+      {
+        "label": "商品知識として好きな技能を1つ",
+        "choose": 1,
+        "options": []
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "private_detective_updated_2015",
+    "name": "私立探偵",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "言いくるめ",
+      "鍵開け",
+      "心理学",
+      "追跡",
+      "図書館",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から1つ選択",
+        "choose": 1,
+        "options": [
+          "聞き耳",
+          "写真術",
+          "値切り",
+          "こぶし（パンチ）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "fisheries_worker_updated_2015",
+    "name": "水産業従事者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "農業従事者",
+    "skills": [
+      "機械修理",
+      "重機械操作",
+      "水泳",
+      "操縦（船舶）",
+      "天文学",
+      "ナビゲート",
+      "博物学",
+      "目星"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "university_professor_updated_2015",
+    "name": "大学教授",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "信用",
+      "心理学",
+      "説得",
+      "図書館",
+      "値切り",
+      "ほかの言語（英語など）"
+    ],
+    "skillOptions": [
+      {
+        "label": "専門的研究分野として2つ選択",
+        "choose": 2,
+        "options": [
+          "医学",
+          "化学",
+          "考古学",
+          "人類学",
+          "生物学",
+          "地質学",
+          "電子工学",
+          "天文学",
+          "博物学",
+          "物理学",
+          "法律",
+          "歴史"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "talent_updated_2015",
+    "name": "タレント",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.5-14",
+    "ruleType": "6e",
+    "occupationCategory": "タレント系",
+    "skills": [
+      "言いくるめ",
+      "聞き耳",
+      "信用",
+      "心理学",
+      "説得",
+      "芸術（楽器演奏、歌唱、ダンス、演技、司会など）",
+      "変装",
+      "ほかの言語"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "parapsychologist_updated_2015",
+    "name": "超心理学者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "オカルト",
+      "人類学",
+      "写真術",
+      "心理学",
+      "精神分析",
+      "図書館",
+      "ほかの言語（英語、ラテン語など）",
+      "歴史"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "dilettante_updated_2015",
+    "name": "ディレッタント",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "その他",
+    "skills": [
+      "運転（自動車）",
+      "芸術（音楽、美術、文学、ダンス、スポーツなど）",
+      "信用",
+      "図書館",
+      "法律",
+      "ほかの言語（英語など）"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から2つ選択",
+        "choose": 2,
+        "options": [
+          "乗馬",
+          "写真術",
+          "操縦（航空機）",
+          "操縦（船舶）",
+          "拳銃",
+          "ライフル",
+          "ショットガン",
+          "武道（任意）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "driver_boat_racer_updated_2015",
+    "name": "ドライバー / ボートレーサー",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "機械修理",
+      "聞き耳",
+      "重機械操作",
+      "電気修理",
+      "ナビゲート",
+      "値切り",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "運転（自動車、二輪車）または操縦（モーターボート）",
+        "choose": 1,
+        "options": [
+          "運転（自動車）",
+          "運転（二輪車）",
+          "操縦（モーターボート）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "agriculture_forestry_worker_updated_2015",
+    "name": "農林業作業者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "農業従事者",
+    "skills": [
+      "応急手当",
+      "機械修理",
+      "重機械操作",
+      "製作（農作物、畜産、養蜂など）",
+      "追跡",
+      "電気修理",
+      "博物学"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から1つ選択",
+        "choose": 1,
+        "options": [
+          "杖",
+          "ライフル",
+          "ショットガン",
+          "チェーンソー"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "pilot_updated_2015",
+    "name": "パイロット",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "機械修理",
+      "重機械操作",
+      "電気修理",
+      "操縦（民間プロペラ機、民間ジェット機、定期旅客機、ジェット戦闘機、ヘリコプター、飛行船）",
+      "天文学",
+      "ナビゲート",
+      "物理学",
+      "ほかの言語（英語、その他）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "businessperson_updated_2015",
+    "name": "ビジネスマン",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "言いくるめ",
+      "経理",
+      "コンピューター",
+      "信用",
+      "説得",
+      "値切り",
+      "法律",
+      "ほかの言語（英語、その他ビジネス相手の国の言語）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "lawyer_updated_2015",
+    "name": "法律家",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "言いくるめ",
+      "経理",
+      "信用",
+      "心理学",
+      "説得",
+      "図書館",
+      "値切り",
+      "法律"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "yakuza_member_updated_2015",
+    "name": "暴力団団員",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "その他",
+    "skills": [
+      "言いくるめ",
+      "隠す",
+      "芸術（刺青彫り、イカサマ）",
+      "心理学",
+      "値切り",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から2つ選択",
+        "choose": 2,
+        "options": [
+          "隠れる",
+          "こぶし（パンチ）",
+          "キック",
+          "組み付き",
+          "武道（任意）",
+          "日本刀",
+          "ナイフ",
+          "拳銃"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "wanderer_updated_2015",
+    "name": "放浪者",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "探索・冒険系",
+    "skills": [
+      "言いくるめ",
+      "隠れる",
+      "聞き耳",
+      "忍び歩き",
+      "心理学",
+      "値切り",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "次の技能から1つ選択",
+        "choose": 1,
+        "options": [
+          "運転（自動車）",
+          "運転（二輪車）",
+          "芸術（ギャンブル）",
+          "ほかの言語（英語など）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "musician_updated_2015",
+    "name": "ミュージシャン",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "芸術・創作系",
+    "skills": [
+      "言いくるめ",
+      "聞き耳",
+      "芸術（歌唱、楽器演奏）",
+      "製作（作詞、作曲）",
+      "説得",
+      "心理学",
+      "値切り",
+      "ほかの言語（英語など）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "mental_therapist_updated_2015",
+    "name": "メンタルセラピスト",
+    "source": "クトゥルフ2015",
+    "sourceShort": "クトゥルフ2015",
+    "page": "p.15-16",
+    "ruleType": "6e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "言いくるめ",
+      "芸術（絵画、楽器演奏、歌唱、アロマなど）",
+      "信用",
+      "心理学",
+      "精神分析",
+      "説得",
+      "法律",
+      "ほかの言語（英語、ドイツ語など）"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "salesperson_playing_guide",
+    "name": "外交販売員／セールスマン",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "運転（自動車）",
+      "聞き耳",
+      "経理",
+      "心理学"
+    ],
+    "skillOptions": [
+      {
+        "label": "隠密 または 手さばき",
+        "choose": 1,
+        "options": [
+          "隠密",
+          "手さばき"
+        ]
+      },
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "scientist_playing_guide",
+    "name": "科学者／サイエンティスト",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "目星",
+      "ほかの言語",
+      "母国語"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意の専門分野の〈科学〉を3つ",
+        "choose": 3,
+        "options": [
+          "科学（天文学）",
+          "科学（生物学）",
+          "科学（化学）",
+          "科学（地質学）",
+          "科学（数学）",
+          "科学（物理学）",
+          "科学（薬学）",
+          "科学（植物学）",
+          "科学（動物学）",
+          "科学（専門分野）"
+        ]
+      },
+      {
+        "label": "コンピューター または 図書館",
+        "choose": 1,
+        "options": [
+          "コンピューター",
+          "図書館"
+        ]
+      },
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "student_intern_playing_guide",
+    "name": "学生／インターン",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "聞き耳",
+      "図書館"
+    ],
+    "skillOptions": [
+      {
+        "label": "ほかの言語 または 母国語",
+        "choose": 1,
+        "options": [
+          "ほかの言語",
+          "母国語"
+        ]
+      },
+      {
+        "label": "専攻分野として3つの技能",
+        "choose": 3,
+        "options": [
+          "専攻分野に関連する技能"
+        ]
+      },
+      {
+        "label": "個人的な専門または時代に関連する任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "cult_leader_playing_guide",
+    "name": "カルト指導者／Cult Leader",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "オカルト・宗教系",
+    "skills": [
+      "オカルト",
+      "経理",
+      "心理学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "個人的な専門に関連する任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "book_dealer_playing_guide",
+    "name": "書籍商／Book Dealer",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "専門職エンジニア",
+    "skills": [
+      "運転（自動車）",
+      "鑑定",
+      "経理",
+      "図書館",
+      "歴史",
+      "母国語",
+      "ほかの言語"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "psychologist_psychoanalyst_playing_guide",
+    "name": "心理学者／精神分析学者",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "聞き耳",
+      "経理",
+      "心理学",
+      "精神分析",
+      "説得",
+      "図書館"
+    ],
+    "skillOptions": [
+      {
+        "label": "学術的もしくは個人的な専門または時代に関連する任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "stuntman_playing_guide",
+    "name": "スタントマン／Stuntman",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "その他",
+    "skills": [
+      "応急手当",
+      "回避",
+      "近接戦闘",
+      "水泳",
+      "跳躍",
+      "登攀"
+    ],
+    "skillOptions": [
+      {
+        "label": "機械修理 または 電気修理",
+        "choose": 1,
+        "options": [
+          "機械修理",
+          "電気修理"
+        ]
+      },
+      {
+        "label": "以下から1つの技能",
+        "choose": 1,
+        "options": [
+          "運転（自動車）",
+          "乗馬",
+          "ダイビング"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "diver_playing_guide",
+    "name": "ダイバー／Diver",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "探索・冒険系",
+    "skills": [
+      "応急手当",
+      "科学（生物学）",
+      "機械修理",
+      "水泳",
+      "操縦（ボート）",
+      "ダイビング",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な専門または時代的な専門として任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "mountain_climber_playing_guide",
+    "name": "登山家／Mountain Climber",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "応急手当",
+      "聞き耳",
+      "サバイバル（山岳）",
+      "跳躍",
+      "追跡",
+      "登攀",
+      "ナビゲート",
+      "ほかの言語"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "assassin_playing_guide",
+    "name": "暗殺者",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "隠密",
+      "鍵開け",
+      "機械修理",
+      "近接戦闘",
+      "射撃",
+      "心理学",
+      "電気修理",
+      "変装"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "lone_criminal_playing_guide",
+    "name": "一匹狼の犯罪者",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "隠密",
+      "鑑定",
+      "心理学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "鍵開け または 機械修理",
+        "choose": 1,
+        "options": [
+          "鍵開け",
+          "機械修理"
+        ]
+      },
+      {
+        "label": "近接戦闘 または 射撃",
+        "choose": 1,
+        "options": [
+          "近接戦闘",
+          "射撃"
+        ]
+      },
+      {
+        "label": "芸術／製作（演技） または 変装",
+        "choose": 1,
+        "options": [
+          "芸術／製作（演技）",
+          "変装"
+        ]
+      },
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "home_invader_playing_guide",
+    "name": "押し込み強盗",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "隠密",
+      "鑑定",
+      "鍵開け",
+      "聞き耳",
+      "手さばき",
+      "登攀",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "機械修理 または 電気修理",
+        "choose": 1,
+        "options": [
+          "機械修理",
+          "電気修理"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "forger_counterfeiter_playing_guide",
+    "name": "偽造犯／偽金造り",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "鑑定",
+      "芸術／製作（文書偽造）",
+      "経理",
+      "手さばき",
+      "図書館",
+      "目星",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な専門あるいは時代に関連する任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "コンピューター",
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "bank_robber_playing_guide",
+    "name": "銀行強盗",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "威圧",
+      "運転（自動車）",
+      "鍵開け",
+      "近接戦闘",
+      "射撃",
+      "重機械操作"
+    ],
+    "skillOptions": [
+      {
+        "label": "機械修理 または 電気修理",
+        "choose": 1,
+        "options": [
+          "機械修理",
+          "電気修理"
+        ]
+      },
+      {
+        "label": "個人的専門あるいは時代に関連する任意のほかの1つ",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "fence_playing_guide",
+    "name": "故買人（こかいにん）",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "鑑定",
+      "芸術／製作（偽造）",
+      "経理",
+      "図書館",
+      "目星",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "ほかの1つ",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "con_artist_playing_guide",
+    "name": "詐欺師",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "鑑定",
+      "聞き耳",
+      "芸術／製作（演技）",
+      "心理学",
+      "手さばき"
+    ],
+    "skillOptions": [
+      {
+        "label": "法律 または ほかの言語",
+        "choose": 1,
+        "options": [
+          "法律",
+          "ほかの言語"
+        ]
+      },
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "bootlegger_gangster_playing_guide",
+    "name": "酒密売人／ギャング",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "運転（自動車）",
+      "隠密",
+      "近接戦闘",
+      "射撃",
+      "心理学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "female_criminal_1920s_playing_guide",
+    "name": "女性犯罪者［1920年代］",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "運転（自動車）",
+      "隠密",
+      "聞き耳"
+    ],
+    "skillOptions": [
+      {
+        "label": "近接戦闘（格闘） または 射撃（ピストル）",
+        "choose": 1,
+        "options": [
+          "近接戦闘（格闘）",
+          "射撃（ピストル）"
+        ]
+      },
+      {
+        "label": "芸術／製作（専門分野を選ぶ）",
+        "choose": 1,
+        "options": [
+          "芸術／製作（専門分野）"
+        ]
+      },
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "個人的な専門に関連する任意のほかの1つ",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "street_punk_playing_guide",
+    "name": "ストリート・パンク",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "隠密",
+      "近接戦闘",
+      "射撃",
+      "跳躍",
+      "手さばき",
+      "投擲",
+      "登攀"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "smuggler_playing_guide",
+    "name": "密輸人",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "犯罪・アウトロー系",
+    "skills": [
+      "聞き耳",
+      "射撃",
+      "心理学",
+      "手さばき",
+      "ナビゲート",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "運転（自動車） または 操縦（航空機またはボート）",
+        "choose": 1,
+        "options": [
+          "運転（自動車）",
+          "操縦（航空機）",
+          "操縦（ボート）"
+        ]
+      },
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "secretary_playing_guide",
+    "name": "秘書／Secretary",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "労働・サービス系",
+    "skills": [
+      "経理",
+      "図書館",
+      "目星",
+      "心理学",
+      "説得",
+      "魅惑",
+      "聞き耳",
+      "母国語"
+    ],
+    "skillOptions": [],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "editor_playing_guide",
+    "name": "編集者／Editor",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "経理",
+      "心理学",
+      "目星",
+      "歴史",
+      "母国語"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "その他の任意の技能1つ",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "boxer_wrestler_playing_guide",
+    "name": "ボクサー／レスラー／Boxer / Wrestler",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "威圧",
+      "回避",
+      "近接戦闘（格闘）",
+      "心理学",
+      "跳躍",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な専門または時代に関連する任意の2技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "big_game_hunter_playing_guide",
+    "name": "猛獣ハンター／Big Game Hunter",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "探索・冒険系",
+    "skills": [
+      "隠密",
+      "自然",
+      "射撃",
+      "追跡",
+      "ナビゲート"
+    ],
+    "skillOptions": [
+      {
+        "label": "科学分野から1つ",
+        "choose": 1,
+        "options": [
+          "科学（植物学）",
+          "科学（生物学）",
+          "科学（動物学）"
+        ]
+      },
+      {
+        "label": "聞き耳 または 目星",
+        "choose": 1,
+        "options": [
+          "聞き耳",
+          "目星"
+        ]
+      },
+      {
+        "label": "サバイバル または ほかの言語",
+        "choose": 1,
+        "options": [
+          "サバイバル",
+          "ほかの言語"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "unskilled_laborer_playing_guide",
+    "name": "未熟練労働者／Unskilled Laborer",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "運転（自動車）",
+      "応急手当",
+      "機械修理",
+      "近接戦闘",
+      "重機械操作",
+      "電気修理",
+      "投擲"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な専門あるいは時代に関連する任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "lumberjack_playing_guide",
+    "name": "木こり／Lumberjack",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "労働・サービス系",
+    "skills": [
+      "応急手当",
+      "回避",
+      "機械修理",
+      "近接戦闘（チェーンソー）",
+      "跳躍",
+      "投擲",
+      "登攀"
+    ],
+    "skillOptions": [
+      {
+        "label": "科学（生物学または植物学） もしくは 自然",
+        "choose": 1,
+        "options": [
+          "科学（生物学）",
+          "科学（植物学）",
+          "自然"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "miner_playing_guide",
+    "name": "鉱山労働者／Miner",
+    "source": "クトゥルフ神話TRPGプレイングガイド",
+    "sourceShort": "プレイングガイド",
+    "page": "p.242-255",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "隠密",
+      "科学（地質学）",
+      "機械修理",
+      "重機械操作",
+      "跳躍",
+      "登攀",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "個人的な専門あるいは時代に関連する任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_001",
+    "name": "薬剤師",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "応急手当",
+      "科学（化学）",
+      "科学（薬学）",
+      "経理",
+      "心理学",
+      "図書館"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_002",
+    "name": "介護事業従事者",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "聞き耳",
+      "心理学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_003",
+    "name": "理学療法士",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "科学（生物学）",
+      "科学（薬学）",
+      "心理学",
+      "精神分析"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "coc2026_004",
+    "name": "監察医",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "科学（法医学）",
+      "科学（薬学）",
+      "図書館",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_005",
+    "name": "ケースワーカー",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "聞き耳",
+      "経理",
+      "心理学",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_006",
+    "name": "東洋医",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "心理学",
+      "図書館",
+      "歴史",
+      "科学（薬学）",
+      "近接戦闘（格闘）",
+      "精神分析",
+      "ほかの言語"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "以下から2つの技能",
+        "choose": 2,
+        "options": [
+          "オカルト"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_007",
+    "name": "遺体衛生保全士",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "芸術／製作（エンバーミング）",
+      "精神分析",
+      "図書館",
+      "変装",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_008",
+    "name": "獣医師",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "医学",
+      "科学（動物学）",
+      "科学（薬学）",
+      "自然",
+      "図書館",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_009",
+    "name": "樹木医",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "医療・保険・福祉系",
+    "skills": [
+      "運転（自動車）",
+      "科学（植物学）",
+      "機械修理",
+      "自然",
+      "登攀",
+      "図書館",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_010",
+    "name": "検察官",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "科学（法医学）",
+      "心理学",
+      "図書館",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_011",
+    "name": "労働基準監督官",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "経理",
+      "心理学",
+      "説得",
+      "図書館",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_012",
+    "name": "入国審査官・税関職員",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "心理学",
+      "図書館",
+      "法律",
+      "ほかの言語（任意）",
+      "目星",
+      "科学（動物学）",
+      "科学（薬学）",
+      "鑑定",
+      "人類学"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "以下から2つの技能",
+        "choose": 2,
+        "options": [
+          "科学（植物学）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_013",
+    "name": "保険調査員",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "法務・社会・調査系",
+    "skills": [
+      "運転（自動車）",
+      "経理",
+      "心理学",
+      "図書館",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_014",
+    "name": "評論家",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "鑑定",
+      "芸術／製作（任意）",
+      "心理学",
+      "図書館",
+      "母国語",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_015",
+    "name": "通訳",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "聞き耳",
+      "心理学",
+      "図書館",
+      "ほかの言語",
+      "母国語",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_016",
+    "name": "家庭教師",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "聞き耳",
+      "心理学",
+      "図書館",
+      "母国語",
+      "ほかの言語",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      },
+      {
+        "label": "以下から1つの技能",
+        "choose": 1,
+        "options": [
+          "科学（任意）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_017",
+    "name": "気象予報士",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "科学（気象学）",
+      "芸術／製作（アナウンス）",
+      "自然",
+      "図書館",
+      "母国語",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_018",
+    "name": "修復家",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "学術・言語系",
+    "skills": [
+      "科学（化学）",
+      "鑑定",
+      "芸術／製作（修復）",
+      "図書館",
+      "目星",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_019",
+    "name": "モデル",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "芸術／製作（ファッション）",
+      "芸術／製作（ポージング）",
+      "心理学",
+      "変装",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_020",
+    "name": "声優",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "聞き耳",
+      "芸術／製作（声の演技）",
+      "心理学",
+      "変装",
+      "ほかの言語",
+      "母国語"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_021",
+    "name": "プロモーター",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "経理",
+      "心理学",
+      "図書館",
+      "法律",
+      "ほかの言語（任意）"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_022",
+    "name": "動画配信者",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "芸術／製作（動画）",
+      "コンピューター",
+      "心理学",
+      "図書館",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_023",
+    "name": "シナリオライター",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "芸術／製作（執筆）",
+      "心理学",
+      "図書館",
+      "母国語"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの3つの技能",
+        "choose": 3,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_024",
+    "name": "ゴーストライター",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "芸術／製作（執筆）",
+      "心理学",
+      "図書館",
+      "変装",
+      "母国語"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_025",
+    "name": "Webライター",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "聞き耳",
+      "心理学",
+      "図書館",
+      "母国語",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_026",
+    "name": "パパラッチ",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "メディア・表現・創作系",
+    "skills": [
+      "運転（自動車またはオートバイ）",
+      "隠密",
+      "芸術／製作（写真）",
+      "追跡",
+      "図書館",
+      "変装",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_027",
+    "name": "経営コンサルタント",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "経理",
+      "コンピューター",
+      "心理学",
+      "図書館",
+      "法律",
+      "ほかの言語"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_028",
+    "name": "デイトレーダー",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "科学（数学）",
+      "経理",
+      "コンピューター",
+      "図書館",
+      "法律",
+      "ほかの言語（任意）",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_029",
+    "name": "サイバーセキュリティーエンジニア",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "科学（暗号学）",
+      "コンピューター",
+      "電気修理",
+      "電子工学",
+      "図書館",
+      "法律",
+      "ほかの言語（英語）"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_030",
+    "name": "鍵師",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "鍵開け",
+      "機械修理",
+      "聞き耳",
+      "手さばき",
+      "電気修理",
+      "電子工学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_031",
+    "name": "民泊運営者",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "機械修理",
+      "経理",
+      "心理学",
+      "人類学",
+      "図書館",
+      "ほかの言語（任意）",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_032",
+    "name": "退職代行",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "言いくるめ",
+      "経理",
+      "心理学",
+      "説得",
+      "図書館",
+      "法律",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_033",
+    "name": "闇金融業者",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "金融・ビジネス・サービス系",
+    "skills": [
+      "威圧",
+      "心理学",
+      "法律",
+      "目星",
+      "近接戦闘（格闘）",
+      "経理",
+      "追跡"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      },
+      {
+        "label": "以下から2つの技能",
+        "choose": 2,
+        "options": [
+          "運転（自動車）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_034",
+    "name": "鉄道運転士",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "運転（鉄道車両）",
+      "機械修理",
+      "聞き耳",
+      "電気修理",
+      "ナビゲート",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_035",
+    "name": "駅務員",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "応急手当",
+      "聞き耳",
+      "芸術／製作（アナウンス）",
+      "心理学",
+      "ナビゲート",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_036",
+    "name": "キャビンアテンダント",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "応急手当",
+      "聞き耳",
+      "心理学",
+      "ほかの言語",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から2つ",
+        "choose": 2,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_037",
+    "name": "航空管制官",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "科学（気象学）",
+      "自然",
+      "図書館",
+      "法律",
+      "ほかの言語（英語）",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_038",
+    "name": "一般船員",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "機械修理",
+      "自然",
+      "水泳",
+      "操縦（船舶）",
+      "電気修理",
+      "ほかの言語（英語）",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_039",
+    "name": "船舶職員",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "心理学",
+      "水泳",
+      "操縦（船舶）",
+      "ほかの言語（英語）",
+      "機械修理",
+      "電気修理",
+      "重機械操作",
+      "ナビゲート",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "以下から3つの技能",
+        "choose": 3,
+        "options": [
+          "科学（気象学）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_040",
+    "name": "水先人",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "交通系",
+    "skills": [
+      "科学（気象学）",
+      "聞き耳",
+      "自然",
+      "操縦（船舶）",
+      "ナビゲート",
+      "ほかの言語（英語）",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_041",
+    "name": "配送員",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "運転（自動車またはオートバイ）",
+      "回避",
+      "聞き耳",
+      "追跡",
+      "ナビゲート",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_042",
+    "name": "メッセンジャー",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "運転（オートバイまたは自転車）",
+      "回避",
+      "聞き耳",
+      "追跡",
+      "ナビゲート",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_043",
+    "name": "重機オペレーター",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "運転（自動車）",
+      "科学（地質学）",
+      "機械修理",
+      "重機械操作",
+      "電気修理",
+      "登攀",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_044",
+    "name": "清掃・廃棄物処理業",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "運転（自動車）",
+      "科学（化学）",
+      "機械修理",
+      "重機械操作",
+      "跳躍",
+      "電気修理",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_045",
+    "name": "害獣・害虫駆除業者",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "隠密",
+      "科学（生物学）",
+      "科学（薬学）",
+      "機械修理",
+      "聞き耳",
+      "登攀",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_046",
+    "name": "ドローン操縦士",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "コンピューター",
+      "自然",
+      "操縦（ドローン）",
+      "電気修理",
+      "電子工学",
+      "ナビゲート",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_047",
+    "name": "海女・海士",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "物流・現場インフラ系",
+    "skills": [
+      "回避",
+      "聞き耳",
+      "サバイバル（海）",
+      "自然",
+      "水泳",
+      "跳躍",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_048",
+    "name": "レーサー",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "回避",
+      "自然",
+      "追跡",
+      "目星",
+      "操縦（任意）",
+      "乗馬"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      },
+      {
+        "label": "以下から1つの技能",
+        "choose": 1,
+        "options": [
+          "運転（任意）"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_049",
+    "name": "プロレスラー",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "威圧",
+      "応急手当",
+      "回避",
+      "近接戦闘（格闘）",
+      "芸術／製作（プロレス）",
+      "跳躍",
+      "登攀"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "coc2026_050",
+    "name": "トレーナー",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "医学",
+      "応急手当",
+      "科学（薬学）",
+      "心理学",
+      "図書館",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_051",
+    "name": "盤上競技者",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "競技系",
+    "skills": [
+      "科学（数学）",
+      "芸術／製作（任意の盤上競技）",
+      "コンピューター",
+      "心理学",
+      "図書館"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_052",
+    "name": "耕作農家",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "農業従事者",
+    "skills": [
+      "運転（自動車）",
+      "機械修理",
+      "芸術／製作（農業）",
+      "自然",
+      "重機械操作",
+      "追跡"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": []
+  },
+  {
+    "id": "coc2026_053",
+    "name": "施設園芸農家",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "農業従事者",
+    "skills": [
+      "科学（植物学）",
+      "機械修理",
+      "芸術／製作（農業）",
+      "自然",
+      "電気修理",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  },
+  {
+    "id": "coc2026_054",
+    "name": "畜産・酪農家",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "農業従事者",
+    "skills": [
+      "科学（動物学）",
+      "機械修理",
+      "聞き耳",
+      "芸術／製作（畜産）",
+      "自然",
+      "重機械操作"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_055",
+    "name": "養蜂家",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "農業従事者",
+    "skills": [
+      "運転（自動車）",
+      "科学（動物学）",
+      "機械修理",
+      "聞き耳",
+      "芸術／製作（養蜂）",
+      "自然",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_056",
+    "name": "金属化学工場エンジニア",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "専門職エンジニア",
+    "skills": [
+      "科学（化学）",
+      "機械修理",
+      "コンピューター",
+      "電気修理",
+      "図書館",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_057",
+    "name": "土木エンジニア",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "専門職エンジニア",
+    "skills": [
+      "科学（地質学）",
+      "機械修理",
+      "重機械操作",
+      "図書館",
+      "ナビゲート",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_058",
+    "name": "情報通信エンジニア",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "専門職エンジニア",
+    "skills": [
+      "機械修理",
+      "コンピューター",
+      "電気修理",
+      "電子工学",
+      "図書館",
+      "ナビゲート"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_059",
+    "name": "建築エンジニア",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "専門職エンジニア",
+    "skills": [
+      "科学（物理学または数学）",
+      "機械修理",
+      "コンピューター",
+      "電気修理",
+      "電子工学",
+      "図書館"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_060",
+    "name": "建築デザイナー",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "専門職エンジニア",
+    "skills": [
+      "機械修理",
+      "芸術／製作（建築設計）",
+      "コンピューター",
+      "心理学",
+      "図書館",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_061",
+    "name": "情報屋",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "言いくるめ",
+      "隠密",
+      "聞き耳",
+      "コンピューター",
+      "心理学",
+      "図書館",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_062",
+    "name": "スパイ",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "隠密",
+      "回避",
+      "近接戦闘（任意）",
+      "心理学",
+      "図書館",
+      "変装",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_063",
+    "name": "陰陽師",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "オカルト",
+      "科学（天文学）",
+      "精神分析",
+      "図書館",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの2つの技能",
+        "choose": 2,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_064",
+    "name": "運び屋",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "運転（自動車）",
+      "隠密",
+      "聞き耳",
+      "操縦（任意）",
+      "追跡",
+      "手さばき",
+      "ナビゲート"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_065",
+    "name": "賞金稼ぎ",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "隠密",
+      "聞き耳",
+      "近接戦闘（格闘）",
+      "心理学",
+      "追跡",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_066",
+    "name": "殺し屋",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "隠密",
+      "聞き耳",
+      "心理学",
+      "登攀",
+      "目星",
+      "運転（自動車）",
+      "科学（薬学）",
+      "近接戦闘（任意）",
+      "射撃（任意）",
+      "電気修理"
+    ],
+    "skillOptions": [
+      {
+        "label": "以下から3つの技能",
+        "choose": 3,
+        "options": [
+          "医学"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_067",
+    "name": "掃除屋",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "医学",
+      "運転（自動車）",
+      "隠密",
+      "科学（化学）",
+      "聞き耳",
+      "手さばき",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_068",
+    "name": "マッドサイエンティスト",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "科学（任意）",
+      "図書館",
+      "ほかの言語",
+      "目星",
+      "オカルト",
+      "科学（任意）",
+      "考古学",
+      "コンピューター",
+      "人類学",
+      "電気修理",
+      "電子工学",
+      "歴史"
+    ],
+    "skillOptions": [
+      {
+        "label": "以下から4つの技能",
+        "choose": 4,
+        "options": [
+          "医学"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "図書館"
+    ]
+  },
+  {
+    "id": "coc2026_069",
+    "name": "夜逃げ屋",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "運転（自動車）",
+      "隠密",
+      "鍵開け",
+      "聞き耳",
+      "心理学",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      },
+      {
+        "label": "任意のほかの1つの技能",
+        "choose": 1,
+        "options": [
+          "任意の技能"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星",
+      "聞き耳"
+    ]
+  },
+  {
+    "id": "coc2026_070",
+    "name": "怪盗",
+    "source": "クトゥルフ2026",
+    "sourceShort": "クトゥルフ2026",
+    "page": "",
+    "ruleType": "7e",
+    "occupationCategory": "フィクションの職業",
+    "skills": [
+      "隠密",
+      "鍵開け",
+      "鑑定",
+      "心理学",
+      "手さばき",
+      "変装",
+      "目星"
+    ],
+    "skillOptions": [
+      {
+        "label": "対人関係技能から1つ",
+        "choose": 1,
+        "options": [
+          "威圧",
+          "言いくるめ",
+          "説得",
+          "魅惑"
+        ]
+      }
+    ],
+    "coreSkillsFixed": [
+      "目星"
+    ]
+  }
+]

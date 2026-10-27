@@ -31,6 +31,7 @@ KP／GM・PLが行う繰り返し作業や情報整理の負担を軽くし、TR
 | [ダイス解析アナライザー](https://kumachansteps.github.io/trpg-web-tools/tools/dice-stat-analyst/) | ログから成功率・クリティカル・ファンブル・出目分布を解析 |
 | [卓報告ジェネレーター](https://kumachansteps.github.io/trpg-web-tools/tools/session-report-generator/) | X向けの卓報告文を生成・編集・プレビュー |
 | [三大探索技能｜ポイント配分](https://kumachansteps.github.io/trpg-web-tools/tools/trpg-three-skills-calculator/) | 目星・聞き耳・図書館に必要な技能ポイントと職業・興味ポイントの使用率を計算 |
+| [三大探索技能｜職業の選択肢](https://kumachansteps.github.io/trpg-web-tools/tools/three-skills-occupation-filter/) | 固定職業技能で170職業を絞り込み、推奨技能と職業の選択肢を比較 |
 | [チャットパレット整形ツール](https://kumachansteps.github.io/trpg-web-tools/tools/chat-palette-formatter/) | CoC 6版・7版のチャットパレットを整形 |
 | [キャラ差分管理ツール](https://kumachansteps.github.io/trpg-web-tools/tools/chara-sabun-kanri-tool/) | キャラクター立ち絵の表情・画像差分を整理 |
 | [GM用キャラシビューワー](https://kumachansteps.github.io/trpg-web-tools/tools/gm-charashi-viewer/) | 複数のキャラクターシートを一画面で確認・管理 |

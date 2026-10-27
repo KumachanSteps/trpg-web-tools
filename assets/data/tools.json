@@ -226,6 +226,38 @@
     "preview": "./assets/img/previews/trpg-three-skills-calculator.png"
   },
   {
+    "id": "three-skills-occupation-filter",
+    "icon": "🔎",
+    "status": "available",
+    "category": "characterUtility",
+    "badges": [
+      "preSession",
+      "plSupport",
+      "gmSupport"
+    ],
+    "legacyKeywords": [
+      "CoC",
+      "職業",
+      "目星",
+      "聞き耳",
+      "図書館",
+      "三大探索技能",
+      "推奨技能"
+    ],
+    "href": "./tools/three-skills-occupation-filter/",
+    "name": {
+      "ja": "三大探索技能｜職業の選択肢",
+      "en": "Investigation Skills & Occupation Choices",
+      "ko": "3대 탐사 기능과 직업 선택지"
+    },
+    "description": {
+      "ja": "三大探索技能をチェックして、固定職業技能に含む職業を170件から検索。推奨技能の条件で職業の選択肢がどう変わるか比較できます。",
+      "en": "Filter 170 occupation entries by fixed investigation skills and see how requiring more skills narrows the matching choices. Optional skills are excluded.",
+      "ko": "170개 직업에서 고정 탐사 기능으로 필터링하고 요구 기능이 늘수록 일치하는 선택지가 어떻게 줄어드는지 비교합니다."
+    },
+    "preview": "./assets/img/previews/three-skills-occupation-filter.png"
+  },
+  {
     "id": "chat-palette-formatter",
     "icon": "💬",
     "status": "available",
