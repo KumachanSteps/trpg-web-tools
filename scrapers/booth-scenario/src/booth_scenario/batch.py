@@ -128,8 +128,12 @@ def run_batch(conn, fetcher: PoliteFetcher, out_root: Path, *, scopes: list[str]
     report["items"] = ids
     report["network_requests"] = fetcher.network_requests
     report["finished_at"] = utcnow()
-    review.export_review(conn, ids, out / "review_table.xlsx")
+    if "CERTIFICATE_VERIFY_FAILED" in report.get("stopped", ""):
+        # python.org's Python on macOS ships without root certificates.
+        report["hint"] = "macOS: run /Applications/Python 3.x/Install Certificates.command once, then try again"
     (out / "batch.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    if ids:
+        review.export_review(conn, ids, out / "review_table.xlsx")
     _copy_db(conn, out / "booth.sqlite3")
     report["folder"] = str(out)
     return report
