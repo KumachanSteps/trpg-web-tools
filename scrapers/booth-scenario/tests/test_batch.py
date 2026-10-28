@@ -99,3 +99,18 @@ def test_evaluate_precision_coverage_and_split(conn, tmp_path):
     assert review.evaluate(conn, split="TRAIN")["session_modes"]["checked"] == 0
     assert review.set_split(conn, "b1", "train") == 2
     assert review.evaluate(conn, split="TRAIN")["session_modes"]["checked"] == 2
+
+
+def test_batch_that_stops_at_once_still_writes_folder(conn, tmp_path):
+    class Down:
+        def __call__(self, url, timeout):
+            import urllib.error
+            raise urllib.error.URLError("[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed")
+    r = batch.run_batch(conn, fetcher(tmp_path, Down()), tmp_path / "out", scopes=["madamis"], n=3, seed=1, name="t0")
+    assert r["items"] == [] and "CERTIFICATE_VERIFY_FAILED" in r["stopped"] and "Install Certificates" in r["hint"]
+    assert (tmp_path / "out" / "batch_t0" / "batch.json").exists()
+
+
+def test_empty_review_table(conn, tmp_path):
+    pytest.importorskip("openpyxl")
+    assert review.export_review(conn, [], tmp_path / "r.xlsx") == 0

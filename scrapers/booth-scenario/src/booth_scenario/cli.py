@@ -127,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
             scopes = args.scope or list(targets.SCOPE_QUERIES)
             result = batch.run_batch(conn, fetcher, args.out or data / "batches", scopes=scopes, n=min(args.n, 100),
                                      seed=args.seed, name=args.name)
-            result = {k: result[k] for k in ("batch", "folder", "items", "errors", "network_requests") if k in result} | (
+            result = {k: result[k] for k in ("batch", "folder", "items", "errors", "network_requests", "hint") if k in result} | (
                 {"stopped": result["stopped"]} if "stopped" in result else {})
         elif args.cmd == "crawl-listing":
             queries = [q for s in args.scope for q in targets.SCOPE_QUERIES[s]] if args.scope else [(args.category, targets.COC_TAG)]

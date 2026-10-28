@@ -295,7 +295,7 @@ def _write_xlsx(rows: list[dict], path: Path) -> None:
               "auto_members": 30, "ok_members": 30, "auto_variants": 30}
     for ci, (key, *_rest) in enumerate(cols, 1):
         ws.column_dimensions[get_column_letter(ci)].width = widths.get(key, 20)
-    last = len(rows) + 3
+    last = max(len(rows), 1) + 3  # an empty table still gets one input row
     letter = {key: get_column_letter(ci) for ci, (key, *_r) in enumerate(cols, 1)}
     for key, choices in (("ok_product_kind", KIND_CHOICES), ("ok_free_full", YES_NO + ["-"]), ("ok_free_sample", YES_NO + ["-"]),
                          ("ok_secret_ho", ["yes", "no"])):
