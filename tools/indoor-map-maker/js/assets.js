@@ -1537,6 +1537,106 @@
     }
   }
 
+  function squatRack(c, S, w, h) {
+    // スクワットラック。背面の支柱が上、バーベルを掛けた状態
+    box(c, S, 0.1, 0.1, w - 0.2, h - 0.2, 0.04, S.soft);
+    [[0.25, 0.25], [w - 0.45, 0.25], [0.25, h - 0.45], [w - 0.45, h - 0.45]].forEach(([x, y]) => box(c, S, x, y, 0.2, 0.2, 0.02, S.dark));
+    line(c, 0.02, h * 0.42, w - 0.02, h * 0.42);
+    box(c, S, 0.02, h * 0.32, 0.16, h * 0.2, 0.03, S.dark);
+    box(c, S, w - 0.18, h * 0.32, 0.16, h * 0.2, 0.03, S.dark);
+  }
+
+  function cableMachine(c, S, w, h) {
+    // ケーブルマシン。ウエイトスタックが上、両側にプーリー
+    box(c, S, 0, 0, w, h, 0.05, S.soft);
+    box(c, S, w * 0.32, 0.12, w * 0.36, h * 0.3, 0.03, S.dark);
+    thin(c, S);
+    for (let y = 0.2; y < h * 0.4; y += 0.12) line(c, w * 0.34, y, w * 0.66, y);
+    line(c, w * 0.12, h * 0.2, w * 0.5, h * 0.75);
+    line(c, w * 0.88, h * 0.2, w * 0.5, h * 0.75);
+    normal(c, S);
+    circle(c, S, w * 0.12, h * 0.2, 0.12, S.fill);
+    circle(c, S, w * 0.88, h * 0.2, 0.12, S.fill);
+    box(c, S, w * 0.4, h * 0.68, w * 0.2, h * 0.22, 0.06);
+  }
+
+  function rowingMachine(c, S, w, h) {
+    // ローイングマシン。フライホイールとハンドルが上、レールの上をシートが動く
+    circle(c, S, w / 2, h * 0.12, Math.min(w * 0.4, h * 0.1), S.dark);
+    thin(c, S);
+    line(c, w * 0.15, h * 0.24, w * 0.85, h * 0.24);
+    normal(c, S);
+    box(c, S, w * 0.42, h * 0.22, w * 0.16, h * 0.74, 0.04, S.soft);
+    box(c, S, w * 0.25, h * 0.5, w * 0.5, h * 0.12, 0.06);
+    thin(c, S);
+    box(c, S, w * 0.08, h * 0.3, w * 0.24, h * 0.08, 0.03);
+    box(c, S, w * 0.68, h * 0.3, w * 0.24, h * 0.08, 0.03);
+    normal(c, S);
+  }
+
+  function yogaMat(c, S, w, h) {
+    box(c, S, 0, 0, w, h, 0.08, S.soft);
+    thin(c, S, 0.4);
+    line(c, 0.1, 0.25, w - 0.1, 0.25);
+    line(c, 0.1, h - 0.25, w - 0.1, h - 0.25);
+    normal(c, S);
+  }
+
+  /* ---------- 浴場・トイレ（寮・学校・銭湯） ---------- */
+
+  function washStation(c, S, w, h) {
+    // 洗い場。上が壁（鏡とカラン）、手前に風呂椅子と桶。幅に合わせて並ぶ
+    const n = Math.max(1, Math.round(w / 1.6));
+    const u = w / n;
+    box(c, S, 0, 0, w, h * 0.16, 0.02, S.water);
+    for (let i = 0; i < n; i++) {
+      const x = u * i;
+      thin(c, S);
+      if (i) line(c, x, 0, x, h * 0.16);
+      rr(c, x + u * 0.2, h * 0.02, u * 0.6, h * 0.1, 0.03);
+      c.fillStyle = S.fill; c.fill(); c.stroke();
+      normal(c, S);
+      circle(c, S, x + u * 0.5, h * 0.24, 0.07, S.line, true);
+      box(c, S, x + u * 0.3, h * 0.5, u * 0.4, h * 0.26, 0.08, S.soft);
+      circle(c, S, x + u * 0.78, h * 0.42, Math.min(u * 0.12, 0.18), S.water);
+    }
+  }
+
+  function urinal(c, S, w, h) {
+    // 小便器。上が壁
+    box(c, S, w * 0.05, 0, w * 0.9, h * 0.18, 0.03);
+    rr(c, w * 0.15, h * 0.12, w * 0.7, h * 0.8, w * 0.3);
+    c.fillStyle = S.fill; c.fill(); c.stroke();
+    thin(c, S);
+    ellipse(c, S, w / 2, h * 0.52, w * 0.2, h * 0.24, S.water);
+    normal(c, S);
+  }
+
+  function squatToilet(c, S, w, h) {
+    // 和式トイレ。金隠し（覆い）が上、足を置く場所が下
+    rr(c, w * 0.12, h * 0.08, w * 0.76, h * 0.84, w * 0.36);
+    c.fillStyle = S.fill; c.fill(); c.stroke();
+    thin(c, S);
+    rr(c, w * 0.26, h * 0.3, w * 0.48, h * 0.5, w * 0.22);
+    c.fillStyle = S.water; c.fill(); c.stroke();
+    normal(c, S);
+    c.beginPath();
+    c.ellipse(w / 2, h * 0.24, w * 0.34, h * 0.16, 0, Math.PI, TAU);
+    c.closePath();
+    c.fillStyle = S.soft; c.fill(); c.stroke();
+  }
+
+  function troughSink(c, S, w, h) {
+    // 手洗い場（学校・公園の横長の流し）。上が壁で、蛇口が並ぶ
+    box(c, S, 0, 0, w, h, 0.04);
+    thin(c, S);
+    rr(c, 0.1, h * 0.32, w - 0.2, h * 0.56, 0.08);
+    c.fillStyle = S.water; c.fill(); c.stroke();
+    normal(c, S);
+    const n = Math.max(1, Math.round(w / 0.8));
+    for (let i = 0; i < n; i++) circle(c, S, (w / n) * (i + 0.5), h * 0.17, 0.07, S.line, true);
+  }
+
   /* ---------- レトロ（1920年代）・和風 ---------- */
 
   function glow(c, x, y, r, rgb) {
@@ -8848,6 +8948,10 @@
     A('bathtub', 'kitchen', 1.6, 3, bathtub, { ja: '浴槽', en: 'Bathtub', ko: '욕조' }),
     A('unitbath', 'kitchen', 3, 3.2, unitbath, { ja: 'ユニットバス', en: 'Bathtub & wash area', ko: '욕조+씻는 곳' }),
     A('shower', 'kitchen', 1.8, 1.8, shower, { ja: 'シャワー', en: 'Shower', ko: '샤워' }),
+    A('wash_station', 'kitchen', 1.6, 2, washStation, { ja: '洗い場（銭湯・大浴場）', en: 'Bathhouse wash station', ko: '세신대(대중탕)' }),
+    A('urinal', 'kitchen', 0.9, 0.8, urinal, { ja: '小便器', en: 'Urinal', ko: '소변기' }),
+    A('squat_toilet', 'kitchen', 1, 1.6, squatToilet, { ja: '和式トイレ', en: 'Squat toilet', ko: '화변기' }),
+    A('trough_sink', 'kitchen', 4, 1.2, troughSink, { ja: '手洗い場（横長の流し）', en: 'Trough sink', ko: '긴 개수대' }),
     A('washer', 'kitchen', 1.3, 1.3, washer, { ja: '洗濯機', en: 'Washing machine', ko: '세탁기' }),
 
     A('office_desk', 'office', 2.4, 1.4, desk, { ja: '事務机', en: 'Office desk', ko: '사무용 책상' }),
@@ -8893,6 +8997,10 @@
     A('exercise_bike', 'leisure', 1.2, 2.6, exerciseBike, { ja: 'エアロバイク', en: 'Exercise bike', ko: '실내 자전거' }),
     A('weight_bench', 'leisure', 3, 3.2, weightBench, { ja: 'ベンチプレス', en: 'Weight bench', ko: '벤치프레스' }),
     A('dumbbell_rack', 'leisure', 3, 1, dumbbellRack, { ja: 'ダンベルラック', en: 'Dumbbell rack', ko: '덤벨 랙' }),
+    A('squat_rack', 'leisure', 3, 2.4, squatRack, { ja: 'スクワットラック', en: 'Squat rack', ko: '스쿼트 랙' }),
+    A('cable_machine', 'leisure', 3, 2.4, cableMachine, { ja: 'ケーブルマシン', en: 'Cable machine', ko: '케이블 머신' }),
+    A('rowing_machine', 'leisure', 1.2, 4.4, rowingMachine, { ja: 'ローイングマシン', en: 'Rowing machine', ko: '로잉 머신' }),
+    A('yoga_mat', 'leisure', 1.2, 3.6, yogaMat, { ja: 'ヨガマット', en: 'Yoga mat', ko: '요가 매트' }),
 
     A('evidence', 'investigation', 0.9, 0.9, evidence, { ja: '証拠マーカー', en: 'Evidence marker', ko: '증거 마커' }, { labelInside: true }),
     A('clue', 'investigation', 1, 1, markerIcon('?', 'blue'), { ja: '手がかり（？）', en: 'Clue marker (?)', ko: '단서 마커(?)' }),

@@ -56,6 +56,7 @@
     { id: 'door2', group: 'door', len: 3, swing: 2, name: { ja: '両開きドア', en: 'Double door', ko: '양여닫이문' } },
     { id: 'sliding', group: 'door', len: 1.5, name: { ja: '引き戸', en: 'Sliding door', ko: '미닫이문' } },
     { id: 'sliding2', group: 'door', len: 3, name: { ja: '引違い戸・ふすま', en: 'Double sliding / fusuma', ko: '미서기문·후스마' } },
+    { id: 'slidingc', group: 'door', len: 3, name: { ja: '両開きの引き戸', en: 'Bi-parting sliding door', ko: '양쪽 미닫이문' } },
     { id: 'folding', group: 'door', len: 2, name: { ja: '折れ戸・クローゼット扉', en: 'Folding door', ko: '접이문' } },
     { id: 'auto', group: 'door', len: 3, name: { ja: '自動ドア', en: 'Automatic door', ko: '자동문' } },
     { id: 'shutter', group: 'door', len: 5, name: { ja: 'シャッター', en: 'Shutter', ko: '셔터' } },

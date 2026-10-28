@@ -800,6 +800,29 @@
     } else if (kind === 'door2') {
       swingDoor(c, o, true, len / 2, start, theme, lw, false);
       swingDoor(c, o, false, len / 2, start + len / 2, theme, lw, false);
+    } else if (kind === 'slidingc') {
+      // 両開きの引き戸：真ん中から左右の戸袋へ開く
+      withLocal(c, o, () => {
+        const s = o.side || 1;
+        const pt = Math.max(t * 0.28, 0.07);
+        c.fillStyle = theme.furn.fill;
+        c.strokeStyle = theme.door;
+        c.lineWidth = lw * 0.9;
+        const y = -pt / 2 + s * pt * 0.4;
+        c.fillRect(0, y, len * 0.47, pt);
+        c.strokeRect(0, y, len * 0.47, pt);
+        c.fillRect(len * 0.53, y, len * 0.47, pt);
+        c.strokeRect(len * 0.53, y, len * 0.47, pt);
+        c.lineWidth = lw * 0.7;
+        const ay = s * (t / 2 + 0.14);
+        c.beginPath();
+        [-1, 1].forEach(dir => {
+          const ax0 = len / 2 + dir * len * 0.06, ax1 = len / 2 + dir * len * 0.3;
+          c.moveTo(ax0, ay); c.lineTo(ax1, ay);
+          c.moveTo(ax1 - dir * 0.12, ay - 0.08); c.lineTo(ax1, ay); c.lineTo(ax1 - dir * 0.12, ay + 0.08);
+        });
+        c.stroke();
+      });
     } else if (kind === 'sliding' || kind === 'sliding2' || kind === 'auto') {
       withLocal(c, o, () => {
         const s = o.side || 1;

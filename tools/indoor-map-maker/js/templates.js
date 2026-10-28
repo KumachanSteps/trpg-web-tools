@@ -4972,6 +4972,89 @@
     return splitBuilding(b.f, [[0, 0, 36, 24]], T('屋内', 'Indoors', '실내'), T('屋外', 'Outdoors', '실외'), T('コンビニ', 'Convenience store', '편의점'));
   }
 
+  /* ---------- ジム（フィットネスクラブ） ---------- */
+  // 奥に更衣室・シャワー・トイレ、手前の通りに面してガラス張りのカーディオエリア。
+  // トレーニングフロアは3つのエリア（壁なし）に分け、廊下・スタジオとの境はガラス
+  function gym() {
+    const b = makeFloor('1F');
+    b.room(T('スタッフルーム', 'Staff room', '직원실'), 'office', 0, 0, 8, 10, { ly: 1.6 })
+      .room(T('男子更衣室', "Men's locker room", '남자 탈의실'), 'wet', 8, 0, 9, 10, { ly: 1.4 })
+      .room(T('男子シャワー室', "Men's showers", '남자 샤워실'), 'wet', 17, 0, 5, 10, { ly: 2.8 })
+      .room(T('女子シャワー室', "Women's showers", '여자 샤워실'), 'wet', 22, 0, 5, 10, { ly: 2.8 })
+      .room(T('女子更衣室', "Women's locker room", '여자 탈의실'), 'wet', 27, 0, 9, 10, { ly: 1.4 })
+      .room(T('男子トイレ', "Men's restroom", '남자 화장실'), 'wet', 36, 0, 5, 10, { ly: 1.6 })
+      .room(T('女子トイレ', "Women's restroom", '여자 화장실'), 'wet', 41, 0, 7, 10, { ly: 1.6 })
+      .room(T('通路', 'Passage', '통로'), 'hall', 0, 10, 3, 15, { hideLabel: true })
+      .room(T('廊下', 'Corridor', '복도'), 'hall', 3, 10, 45, 3, { lx: -12 })
+      .room(T('スタジオ', 'Studio', '스튜디오'), 'public', 3, 13, 11, 12, { wall: 'glass', ly: 5 })
+      .room(T('エントランス・受付', 'Entrance & front desk', '입구·접수'), 'public', 0, 25, 14, 9, { wall: 'glass', ly: 1.6 })
+      .room(T('マシンエリア', 'Machine area', '머신 구역'), 'public', 14, 13, 20, 9, { noWall: true, ly: -0.6 })
+      .room(T('フリーウェイトエリア', 'Free-weight area', '프리웨이트 구역'), 'public', 34, 13, 14, 21, { noWall: true, lx: -1.6, ly: -2.4 })
+      .room(T('カーディオエリア', 'Cardio area', '유산소 구역'), 'public', 14, 22, 20, 12, { wall: 'glass', ly: -2.6 })
+      .room(T('歩道', 'Sidewalk', '보도'), 'porch', 0, 34, 48, 3, { hideLabel: true })
+      .room(T('道路', 'Road', '도로'), 'road', 0, 37, 48, 6, { ly: 0.4 });
+    // 壁のないエリアの外まわり：廊下・スタジオとの境はガラス、歩道側は外壁
+    b.wall(14, 13, 48, 13, 'glass').wall(14, 13, 14, 22, 'glass').wall(34, 34, 48, 34, 'ext');
+    b.dh(5, 34, 3, 1, 0, 'auto')                    // 正面の自動ドア
+      .dh(0, 25, 3, 1, 0, 'open')                   // 受付 → 通路
+      .dv(3, 10, 3, 1, 0, 'open')                   // 通路 ↔ 廊下
+      .dv(14, 27, 3, 1, 0, 'open')                  // 受付 → カーディオエリア（ゲート）
+      .dv(3, 18, 3, 1, 0, 'slidingc')               // 通路 → スタジオ
+      .dv(14, 16, 3, 1, 0, 'slidingc')              // スタジオ → マシンエリア
+      .dh(24, 13, 3, 1, 0, 'open').dh(38, 13, 3, 1, 0, 'open')   // 廊下 → トレーニングフロア
+      .dh(5, 10, 1.5, -1, 0)                        // スタッフルーム
+      .dh(9, 10, 1.5, -1, 0).dv(17, 7, 2, 1, 0, 'sliding')       // 男子更衣室 → シャワー
+      .dh(34, 10, 1.5, -1, 1).dv(27, 7, 2, -1, 0, 'sliding')     // 女子更衣室 → シャワー
+      .dh(38.5, 10, 1.5, -1, 0).dh(42, 10, 1.5, -1, 0)          // トイレ
+      .dv(48, 30.5, 2, 1, 1, 'steel');              // 非常口
+    // トイレの個室
+    b.wall(39.4, 0, 39.4, 2.6, 'thin').wall(39.4, 2.6, 41, 2.6, 'thin')
+      .wall(43.3, 0, 43.3, 2.6, 'thin').wall(45.6, 0, 45.6, 2.6, 'thin').wall(41, 2.6, 48, 2.6, 'thin')
+      .dh(39.7, 2.6, 1.1, 1, 0).dh(41.6, 2.6, 1.1, 1, 0).dh(43.9, 2.6, 1.1, 1, 0).dh(46.2, 2.6, 1.1, 1, 0);
+    // スタッフルーム（GM用）
+    b.item('monitor_wall', 0.4, 0.1, 0, { size: [4, 0.5], label: T('防犯モニター', 'CCTV monitors', '방범 모니터') })
+      .item('office_desk', 0.6, 1.2).item('chair', 1.3, 2.7, 180)
+      .item('filing', 6.8, 0.2).item('locker', 6.9, 3.2, 90).item('safe', 0.3, 8.4)
+      .item('crate', 2.4, 8, 0, { size: [2.4, 1.6], label: T('備品', 'Supplies', '비품') });
+    // 更衣室：ロッカー・ベンチ・洗面台
+    b.item('locker', 8.4, 0.1).item('locker', 11.4, 0.1).item('locker', 8.05, 3, 270)
+      .item('bench', 10.6, 4.4).item('washbasin', 12.6, 8.85, 180).item('washbasin', 14.6, 8.85, 180);
+    b.item('locker', 28.6, 0.1).item('locker', 31.6, 0.1).item('locker', 34.95, 3, 90)
+      .item('bench', 29.4, 4.4).item('washbasin', 27.6, 8.85, 180).item('washbasin', 29.6, 8.85, 180);
+    // シャワー室：個別のシャワーと座って使う洗い場
+    [0.2, 2.2, 4.2].forEach(y => b.item('shower', 20.15, y, 90).item('shower', 22.05, y, 270));
+    b.item('wash_station', 17.05, 0.3, 270, { size: [3.2, 2] }).item('wash_station', 24.95, 0.3, 90, { size: [3.2, 2] });
+    // トイレ：小便器・個室（洋式・和式）・手洗い場
+    [36.3, 37.3, 38.3].forEach(x => b.item('urinal', x, 0.1));
+    b.item('toilet', 39.8, 0.15).item('trough_sink', 36.05, 4.4, 270)
+      .item('toilet', 41.65, 0.15).item('squat_toilet', 43.95, 0.2).item('toilet', 46.3, 0.15)
+      .item('washbasin', 46.85, 4.4, 90).item('washbasin', 46.85, 6.4, 90);
+    // 廊下
+    b.item('vending', 28.6, 11.55, 180).item('vending', 30.8, 11.55, 180).item('bench', 16, 11.95, 180);
+    // スタジオ：インストラクターと2列のヨガマット
+    b.item('yoga_mat', 6.7, 13.3, 90).item('speaker', 3.3, 13.2).item('speaker', 12.6, 13.2);
+    [4.2, 6.2, 8.2, 10.2, 12.2].forEach(x => b.item('yoga_mat', x, 15.4).item('yoga_mat', x, 19.8));
+    // エントランス：受付カウンター・ベンチ・シューズロッカー
+    b.item('reception', 4.5, 27).item('npc_station', 6.4, 25.5, 180, { label: T('受付', 'Front desk', '접수') })
+      .item('bench', 0.1, 28.4, 270).item('locker', 10.4, 32.9, 180, { label: T('シューズロッカー', 'Shoe lockers', '신발장') })
+      .item('plant', 0.4, 32.4).item('plant', 12.4, 25.3);
+    // マシンエリア
+    b.item('cable_machine', 15, 13.3).item('cable_machine', 18.6, 13.3).item('cable_machine', 15, 18.4, 180);
+    [14, 16.2, 18.4].forEach(y => b.item('rowing_machine', 28.6, y, 90));
+    b.item('yoga_mat', 19.6, 19.8, 90, { label: T('ストレッチ', 'Stretching', '스트레칭') });
+    // カーディオエリア：通りの窓に向いたランニングマシンとエアロバイク
+    [15.5, 17.7, 19.9, 22.1, 24.3].forEach(x => b.item('treadmill', x, 29.4, 180));
+    [27, 28.8, 30.6, 32.4].forEach(x => b.item('exercise_bike', x, 30.8, 180));
+    // フリーウェイトエリア
+    b.item('squat_rack', 45.5, 14, 90).item('squat_rack', 45.5, 18, 90);
+    [22.5, 26, 29.5].forEach(y => b.item('dumbbell_rack', 46.9, y, 90));
+    b.item('weight_bench', 36, 22).item('weight_bench', 40, 22).item('weight_bench', 36, 27.5).item('weight_bench', 40, 27.5);
+    // 屋外
+    b.item('streetlight', 20, 34.6).item('streetlight', 40, 34.6).item('plant', 9.6, 34.4)
+      .item('road_arrow', 8, 38, 90).item('road_arrow', 32, 40.2, 270);
+    return [b.f];
+  }
+
   /* ---------- 研究・文化・軍事（T4） ---------- */
 
   /* (T4 のテンプレート関数はここ) */
@@ -5760,6 +5843,9 @@
       name: T('コンビニ（小型店舗）', 'Convenience store', '편의점'),
       desc: T('自動ドアから売場へ。冷蔵ケース・弁当棚・ゴンドラ・雑誌棚・ATM、レジカウンターとタバコ棚。裏にウォークイン冷蔵庫・バックヤード・事務スペース（防犯モニター・金庫）・搬入口。前面に駐車場、横に搬入車路。バックヤードにGM用の床下点検口', 'Through the automatic doors onto the sales floor: refrigerated cases, bento shelves, gondolas, a magazine rack and an ATM, then the checkout counter with the cigarette shelf. Behind: a walk-in cooler, backroom, staff office (CCTV monitors, safe) and delivery entrance. A parking lot out front and a delivery lane at the side. A GM-only floor hatch in the backroom.', '자동문을 지나 매장으로. 냉장 쇼케이스·도시락 진열대·곤돌라·잡지 진열대·ATM, 계산대와 담배 진열장. 뒤쪽에 워크인 냉장고·백야드·사무 공간(방범 모니터·금고)·반입구. 앞에 주차장, 옆에 반입 차로. 백야드에 GM 전용 바닥 점검구') },
 
+    { id: 'gym', build: gym, group: 'leisure', tags: ['modern', 'commercial', 'outdoor'],
+      name: T('ジム（フィットネスクラブ）', 'Gym (fitness club)', '헬스장(피트니스 클럽)'),
+      desc: T('通りに面したガラス張りのカーディオエリア（ランニングマシン・エアロバイク）、ケーブルマシンとローイングマシンのマシンエリア、スクワットラック・ベンチプレス・ダンベルのフリーウェイトエリア。ガラス張りのヨガスタジオ、受付、更衣室・シャワー室（洗い場つき）・トイレ（小便器・和式）とスタッフルーム', 'A glass-fronted cardio area on the street (treadmills, exercise bikes), a machine area with cable and rowing machines, and a free-weight area with squat racks, bench presses and dumbbells. A glass-walled yoga studio, front desk, locker rooms, showers with wash stations, restrooms (urinals, a squat toilet) and a staff room.', '거리에 면한 유리벽 유산소 구역(러닝머신·실내 자전거), 케이블 머신과 로잉 머신의 머신 구역, 스쿼트 랙·벤치프레스·덤벨의 프리웨이트 구역. 유리벽 요가 스튜디오, 접수, 탈의실·샤워실(세신대)·화장실(소변기·화변기)과 직원실') },
     /* (T4 研究・文化・軍事 の登録はここ) */
     { id: 'lab', build: lab, group: 'medical', tags: ['modern', 'research', 'medical', 'underground', 'hidden', 'danger'],
       name: T('研究所／秘密研究施設', 'Research institute / secret lab', '연구소／비밀 연구 시설'),
@@ -6164,6 +6250,12 @@
       C('屋外', '駐車場', 'key', T('落ちていた車の鍵', 'A dropped car key', '떨어져 있던 자동차 열쇠'))
     ],
 
+    gym: [
+      C('1F', 'スタッフルーム', 'laptop', T('閉館後の防犯カメラ映像', 'After-hours CCTV footage', '폐관 후 CCTV 영상')),
+      C('1F', 'エントランス・受付', 'file_folder', T('会員の入退館記録', 'Member check-in log', '회원 출입 기록')),
+      C('1F', '男子更衣室', 'key', T('番号札つきのロッカーキー', 'A numbered locker key', '번호표가 달린 사물함 열쇠')),
+      C('1F', 'スタジオ', 'memo', T('インストラクターの走り書き', "The instructor's scribbled note", '강사의 메모'))
+    ],
     /* (T4 の手がかりはここ) */
     lab: [
       C('1F', '監視室', 'file_folder', T('存在しないB1のカメラ記録', 'Camera log for a B1 that "doesn\'t exist"', '존재하지 않는 B1의 카메라 기록')),
@@ -6353,6 +6445,7 @@
     underpass: { B1: ['清掃用具室', '機械室', '配管スペース'] },
     lodge: { '1F': ['倉庫', '厨房', '管理人室'] },
     konbini: { 屋内: ['ウォークイン冷蔵庫', 'バックヤード', '搬入口', '事務スペース'] },
+    gym: { '1F': ['スタッフルーム'] },
     lab: {
       B1: ['地下設備室', '制御室', '前室', '更衣室', 'エアロック', '隔離区画', '隔離室1', '隔離室2', '隔離室3', '標本室', '実験室'],
       '1F': ['サーバー室', '監視室', '倉庫'], '2F': ['試料保管室', '飼育室', '所長室']

@@ -31,9 +31,9 @@
       "ko": "TRPG 실내 지도 메이커"
     },
     "description": {
-      "ja": "探索シーンで使う室内の見取り図を、61種のテンプレートから作成できます。コマ用の方眼つきで、PL用・GM用の画像を書き出せます。",
-      "en": "Make indoor floor plans for investigation scenes from 61 templates, and export player and GM images with an optional token grid.",
-      "ko": "조사 장면에 쓸 실내 평면도를 61종의 템플릿으로 만들고, 말 이동용 격자와 함께 플레이어용·GM용 이미지를 내보낼 수 있습니다."
+      "ja": "探索シーンで使う室内の見取り図を、62種のテンプレートから作成できます。コマ用の方眼つきで、PL用・GM用の画像を書き出せます。",
+      "en": "Make indoor floor plans for investigation scenes from 62 templates, and export player and GM images with an optional token grid.",
+      "ko": "조사 장면에 쓸 실내 평면도를 62종의 템플릿으로 만들고, 말 이동용 격자와 함께 플레이어용·GM용 이미지를 내보낼 수 있습니다."
     },
     "preview": "./assets/img/previews/indoor-map-maker.png"
   },
