@@ -35,13 +35,14 @@ _SECTION_HEAD = re.compile(r"収録(作品|シナリオ|作|タイトル|一覧|
 _MEMBER_COUNT = re.compile(r"(?:全\s*)?(\d+)\s*(?:本|作品|作|編|シナリオ)(?:を)?\s*(?:収録|入り|セット)|収録数\s*[::]?\s*(\d+)|シナリオ\s*全\s*(\d+)\s*本")
 # "通常セット" or "スチルセット" are not bundles of several works.
 _BUNDLE_LABEL = re.compile(r"全.{0,8}セット|シリーズ.{0,4}セット|アソート|まとめ|全部|コンプリート|一式|全\s*\d*\s*話|全作|全\s*\d+\s*本|\d+\s*本セット|バンドル|合本|詰め合わせ|全シナリオ|bundle", re.I)
+_ROLE_PACKET = re.compile(r"^\s*(HO\s*\d|(GM|KP|DL|PL)\s*用)", re.I)
 _FORMAT_LABEL = re.compile(
     r"PDF|テキスト|txt|word|版|部屋|ルーム|素材|付き|付|通常|フル|DL|ダウンロード|紙|書籍|冊子|物理|匿名配送|おまけ|支援|投げ銭|ブースト|データ|"
     r"本編|画像|のみ|pack|edition|ver|中文|English|英語|韓国語|한국어|日本語|配信|KPレス|タイマン|HO\s*\d|PL", re.I)
 _QUOTED = re.compile(r"[『「]([^』」]{1,60})[』」]")
 _BULLET = re.compile(r"^(?:[・●○◆◇■□▼▽▍★☆♦◎※\-*]|\d+[.)．、]|[①-⑳]|第\s*\d+\s*話|No\.?\s*\d+)\s*")
 _SCENARIO_SIGNAL = re.compile(r"シナリオ|scenario|クトゥルフ|CoC|エモクロア|TRPG|探索者|KP|PL|マーダーミステリー|マダミス|murder\s*mystery", re.I)
-_ASSET_SIGNAL = re.compile(r"素材|立ち絵|スチル|BGM|背景|アイコン|ルームデータ|部屋データ|ココフォリア|ユドナリウム|トレーラー|ハンドアウト素材|キャラシ|ダイス|グッズ", re.I)
+_ASSET_SIGNAL = re.compile(r"素材|立ち絵|スチル|BGM|背景|アイコン|ルームデータ|部屋データ|ココフォリア|ユドナリウム|トレーラー|ハンドアウト素材|キャラシ|ダイス|グッズ|テンプレート|サプリメント", re.I)
 # Lines that are file lists, credits or play conditions, never a work's title.
 _NOT_TITLE = re.compile(
     r"\.(pdf|txt|zip|png|jpe?g|docx?)\b|PDF|txt|テキスト|データ|画像|素材|立ち絵|スチル|トレーラー|BGM|URL|ページ|\d+\s*P\b|字[)）]|ルーム|"
@@ -85,6 +86,10 @@ def work_title(title: str) -> str:
     # Labels in round or angle brackets: "(CoC6版)", "《CoC6版》", "(データ版)".
     rest = re.sub(r"[(（《〈<]([^)）》〉>]*)[)）》〉>]", lambda m: " " if _TITLE_LABEL.search(m.group(1)) else m.group(0), rest)
     rest = re.sub(r"^[\s▼▽■□◆◇●○★☆▶]+", "", rest)
+    # "稲妻のように燃えて寄せ｜COC6&7th": a system label after a bar.
+    rest = re.sub(r"\s*\|[^|]*(C[оo]C|クトゥルフ|エモクロア|TRPG|\d\s*(th|版))[^|]*$", "", rest, flags=re.I)
+    # Edition words at the end: "月の御殿 オンライン版", "(印刷用データ)".
+    rest = re.sub(r"\s*[(（]?\s*(オンライン|オフライン|印刷用|PDF|データ|テキスト)(版|データ)?\s*[)）]?\s*$", "", rest)
     rest = _TITLE_SYSTEM.sub(" ", rest)
     rest = re.sub(r"[(（《〈<]\s*[)）》〉>]", " ", rest)
     rest = re.sub(r"\s*[+＋].*(設定資料|リプレイ|素材|特典|おまけ|資料).*$", "", rest)
@@ -261,9 +266,13 @@ def classify(title: str, description: str, variants: list[dict], tags: list[str]
 
     # Same page sells a bundle and the works one by one.
     bundles = [v for v in full + unknown if _BUNDLE_LABEL.search(v["variant_label"])]
-    singles = [v for v in full + unknown if v not in bundles
+    singles = [v for v in full + unknown if v not in bundles and not _ROLE_PACKET.search(v["variant_label"])
                and (re.search(r"単品", v["variant_label"]) or _QUOTED.search(v["variant_label"]) or not _FORMAT_LABEL.search(v["variant_label"]))
                and normalize_title(v["variant_label"]) != normalize_title(title)]
+    if bundles and not singles and any(_ROLE_PACKET.search(v["variant_label"]) for v in full + unknown):
+        # A murder mystery sold as a set and per role ("HO1…", "GM用"): one work.
+        return Classification("SAME_PAGE_VARIANTS", members=[work_title(title)], member_count=1,
+                              bundle_labels=[b["variant_label"] for b in bundles], reasons=["role packets next to a set"])
     if bundles and singles:
         members = []
         for v in singles:

@@ -135,7 +135,7 @@ def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
 
 # -- session modes --------------------------------------------------------------
 _RANGE_PL = re.compile(
-    r"(?:PL|プレイヤー(?:人数)?|人\s*数|探索者数?|共鳴者数?)\s*(?:は|数)?\s*[::.…]*\s*(?:新規|固定)?\s*(\d+)\s*(?:人|名)?"
+    r"(?:PL|プレイヤー(?:人数)?|人\s*数|探索者数?|共鳴者数?)\s*(?:は|数)?\s*[::.…】\]]*\s*(?:新規|固定)?\s*(\d+)\s*(?:人|名)?"
     r"\s*(?:(~|から)\s*(\d+)?\s*(?:人|名)?)?\s*(前後)?"
     r"(?!\s*(?:~\s*\d+\s*)?(?:歳|才|年|月|日|時|分|%))"
     r"|(\d+)\s*(?:人|名)?\s*(?:~\s*(\d+)\s*)?(?:PL(?!発言|視点|目線|側)|人用|人\s*(?:PL\s*)?固定|名\s*(?:PL\s*)?固定)", re.I)
@@ -163,9 +163,19 @@ def _player_ranges(ln: str) -> list[tuple[int, int]]:
         if 1 <= lo <= hi <= 30:
             out.append((lo, hi))
     return out
-_COMPANION = re.compile(r"\b(KPC|DPC)\b|(KPC|DPC)|(KP側(?:の|から)(?:探索者|PC))")
-_GMLESS = re.compile(r"KPレス|GMレス|DLレス|KP不要|GM不要|DL不要|[1一]人で遊べる|ひとりで遊べる|ソロジャーナル", re.I)
-_ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*対\s*1|1\s*[(（]\s*\+?\s*(KPC|DPC)", re.I)
+_COMPANION = re.compile(r"\b(KPC|DPC)\b|(KPC|DPC)|(KP側(?:の|から)?(?:探索者|PC))")
+_GMLESS = re.compile(r"KPレス|GMレス|DLレス|KP不要|GM不要|DL不要|[(（]\s*(?:GM|KP|DL)\s*なし\s*[)）]|[1一]人で遊べる|ひとりで遊べる|ソロジャーナル", re.I)
+_GMLESS_NEG = re.compile(r"(KP|GM|DL)\s*レス\s*(は)?\s*(不可|NG|×|非対応|でき(ない|ません)|出来(ない|ません))", re.I)
+# "6人（プレイヤー5人＋GM1人）", "GM1名＋4名", "2人（DL1人とPL1人）": the facilitator is counted
+# in the total; the players are the rest.
+_WITH_FACILITATOR = [
+    (re.compile(r"\d+\s*(?:人|名)\s*[(（][^)）]*?(?:PL|プレイヤー)\s*(\d+)\s*(?:人|名)[^)）]*[)）]"), r"\1人"),
+    (re.compile(r"(?:GM|KP|DL)\s*\d\s*(?:人|名)?\s*[+＋と]\s*(?:PL|プレイヤー)?\s*(?=\d+\s*(?:人|名))"), "PL"),
+]
+# "(KPC、DPC改変可)", "(DPC 可)": a 2-player scenario that also plays as タイマン.
+_COMPANION_OK = re.compile(r"(KPC|DPC)(\s*[、,/／]\s*(KPC|DPC))?\s*(改変)?\s*(可|OK|でも可|も可)", re.I)
+_ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*対\s*1|1\s*[(（]\s*\+?\s*(KPC|DPC)"
+                         r"|(KPC|DPC|KP側(?:の)?(?:探索者|PC))\s*[+＋]\s*(?:PC|PL|探索者|共鳴者)\s*1", re.I)
 # "タイマンは推奨しない" / "タイマン不可" rule the mode out.
 _ONE_ON_ONE_NEG = re.compile(
     r"(タイマン|一対一|1\s*対\s*1).{0,12}?(不可|非推奨|推奨(し|致し|いたし)?(ない|ません|かね)|でき(ない|ません)|出来(ない|ません)|"
@@ -213,6 +223,9 @@ def extract_session_modes(text: str) -> list[Hit]:
         # "【人数】" alone on a line: the value is on the next one.
         if re.fullmatch(r"[【\[■●◆]?\s*(?:プレイ|推奨)?人\s*数\s*[】\]]?\s*[::]?", ln) and i + 1 < len(ls):
             ln = "人数:" + ls[i + 1]
+        stated = ln
+        for rx, repl in _WITH_FACILITATOR:
+            ln = rx.sub(repl, ln)
         companion = None
         if m := _COMPANION.search(ln):
             companion = (m.group(1) or m.group(2) or "KPC").upper()
@@ -223,9 +236,11 @@ def extract_session_modes(text: str) -> list[Hit]:
                   else _player_ranges(ln))
         lo, hi = ranges[0] if ranges else (None, None)
         multi = next((r for r in ranges if r[1] >= 2), None)
-        gmless = bool(_GMLESS.search(ln))
+        gmless = bool(_GMLESS.search(ln)) and not _GMLESS_NEG.search(ln)
         # A question ("タイマンでまわしちゃだめ?") is not a statement of the mode.
         one_on_one = bool(_ONE_ON_ONE.search(ln)) and not _ONE_ON_ONE_NEG.search(ln) and not re.search(r"[?？]\s*$", ln)
+        if not one_on_one and multi and multi[0] <= 2 and _COMPANION_OK.search(ln):
+            one_on_one, companion = True, None
         if not one_on_one and _ONE_ON_ONE_NEG.search(ln) and lo is None:
             continue  # a line only about where タイマン does not fit
         if gmless:
@@ -239,6 +254,9 @@ def extract_session_modes(text: str) -> list[Hit]:
             # "2PLまたはタイマン" / "1(+KPC) or 2PL": the count is another way to play.
             if multi and not gmless:
                 add("MULTI_PL", multi[0], multi[1], facilitator or "UNKNOWN", "UNKNOWN", ln, 1 if multi[0] == multi[1] else 0)
+            elif multi and re.search(r"(GM|KP|DL)\s*[+＋]", stated):
+                # "4人（GMなし）or 5人（GM+PL4人）": also playable with a facilitator.
+                add("MULTI_PL", multi[0], multi[1], "UNKNOWN", "UNKNOWN", ln, 1 if multi[0] == multi[1] else 0)
             continue
         if re.search(r"ソロ(シナリオ|用|向け|プレイ)?", ln):
             add("SOLO", 1, 1, facilitator or "UNKNOWN", companion or "UNKNOWN", ln)
@@ -308,7 +326,7 @@ def default_roles(v: dict, systems: set[str]) -> dict:
 
 # -- durations ------------------------------------------------------------------
 # One time: "3時間", "1時間半", "1時間30分", "90分", "9h", "2.5時間".
-_T = r"(\d+(?:\.\d+)?)\s*(時間|h|分)?\s*(半|\d+\s*分)?"
+_T = r"(\d+(?:\.\d+)?)\s*(時間|h(?![a-z])|分)?\s*(半|\d+\s*分)?"
 _TIME = re.compile(rf"(約|およそ|目安)?\s*{_T}\s*(?:(~|から|-)\s*(?:{_T})?)?(程度|前後|ほど|以上)?", re.I)
 
 

@@ -179,3 +179,16 @@ def test_tone_remarks_are_not_asset_statements():
 def test_labelled_quotes_are_not_members():
     text = "7本収録\n■水鏡メランコリイ\n テーマ：『HO制』\n テーマ：『ペット』\n テーマ：『中華』\n テーマ：『人間』\n テーマ：『魚』\n テーマ：『葬式』\n テーマ：『夢』"
     assert organize._members_by_count(text, 7) == []
+
+
+def test_work_title_drops_system_bar_and_edition_words():
+    assert organize.work_title("稲妻のように燃えて寄せ｜COC6&7th") == "稲妻のように燃えて寄せ"
+    assert organize.work_title("月の御殿　オンライン版") == "月の御殿"
+    assert organize.work_title("腐女子山荘殺人事件（印刷用データ）【マーダーミステリーonline】") == "腐女子山荘殺人事件"
+
+
+def test_role_packets_are_one_work():
+    variants = [{"variant_label": l, "price_jpy": 500, "edition_kind": "UNKNOWN", "availability": "AVAILABLE", "external_variant_id": i}
+                for i, l in enumerate(["まとめてセット", "HO１白浜ほのか", "HO２ジャーナリスト", "GM用"])]
+    c = organize.classify("メモリーズ・エンド【オンライン用マーダーミステリー】", "", variants, [])
+    assert c.members == ["メモリーズ・エンド"]

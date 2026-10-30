@@ -92,6 +92,10 @@ def _uniq_sorted(vals) -> str:
     return LIST_SEP.join(sorted(set(vals)))
 
 
+# A free "variant" that is only a notice to read before buying.
+_NOTICE_LABEL = re.compile(r"注意事項|お読みください|お知らせ|説明書き|readme", re.I)
+
+
 def auto_fields(conn, iid: int, kind: str | None = None) -> dict[str, str]:
     """kind overrides the stored product kind (evaluate scores the rule's own)."""
     cls = conn.execute("SELECT * FROM product_classifications WHERE booth_item_id=?", (iid,)).fetchone()
@@ -107,6 +111,10 @@ def auto_fields(conn, iid: int, kind: str | None = None) -> dict[str, str]:
     sessions = _evidence_values(conn, iid, "scenario_session_modes", stated_only=(kind or (cls["product_kind"] if cls else None)) != "SINGLE")
 
     full = [v for v in variants if v["edition_kind"] in ("FULL", "FREE_PLAYABLE_EDITION")]
+    # No variant is known to be the full edition: judge by the unlabelled ones
+    # ("本体パック", "01.基本セット"), else by everything but a sample.
+    full = (full or [v for v in variants if v["edition_kind"] == "UNKNOWN" and not _NOTICE_LABEL.search(v["variant_label"])]
+            or [v for v in variants if v["edition_kind"] != "SAMPLE"])
     if any(v["price_jpy"] == 0 and v["availability"] == "AVAILABLE" for v in full):
         free_full = "yes"
     elif fetched and full and all(v["price_jpy"] is not None for v in full):
@@ -525,6 +533,8 @@ def evaluate(conn, *, batches: list[str] | None = None, split: str | None = None
                 continue
             st = per_field[f]
             truth = labels[f]["truth"]
+            if f in ("free_full", "free_sample") and truth.strip().lower() == "unknown":
+                continue  # the reviewer did not know either: not an answer to score
             ok = _matches(f, now[f], truth)
             filled, has_truth = bool(_norm_value(f, now[f])), bool(_norm_value(f, truth))
             st["checked"] += 1
