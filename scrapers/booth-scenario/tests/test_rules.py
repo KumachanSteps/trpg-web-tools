@@ -198,3 +198,20 @@ def test_labelled_count_on_time_line_and_denied_secret():
     assert [(m["player_min"], m["player_max"]) for m in modes("PL：4名／プレイ時間：3時間")] == [(4, 4)]
     assert not rules.has_secret_handouts("秘匿HOなし。\nHO1：刑事\nHO2：探偵")
     assert rules.has_secret_handouts("HO1：刑事\nHO2：探偵")
+
+
+def test_player_counts_test_batch_1():
+    # From the first test batch (20261027-2251): the facilitator is not a player.
+    modes = lambda t: sorted((h.value["mode"], h.value["player_min"], h.value["player_max"])  # noqa: E731
+                             for h in rules.extract_session_modes(rules.normalize(t)))
+    assert modes("プレイ人数：6人（プレイヤー5人＋GM1人）") == [("MULTI_PL", 5, 5)]
+    assert modes("【人数】GM1名＋4名") == [("MULTI_PL", 4, 4)]
+    assert modes("参加人数：2人（DL1人とPL1人）\nDPCロゴ（png）×2") == [("ONE_ON_ONE", 1, 1)]
+    assert modes("人数：KP側PC+PC1名、またはPL2名") == [("MULTI_PL", 2, 2), ("ONE_ON_ONE", 1, 1)]
+    assert modes("・人数:PL2人(KPC、DPC改変可)") == [("MULTI_PL", 2, 2), ("ONE_ON_ONE", 1, 1)]
+    assert modes("人数：４人（GMレス不可）") == [("MULTI_PL", 4, 4)]
+    assert modes("◆人数\n4人（GMなし）or 5人（GM+PL4人）") == [("GMLESS_MULTI", 4, 4), ("MULTI_PL", 4, 4)]
+
+
+def test_hz_is_not_hours():
+    assert rules.extract_durations(rules.normalize("● 52Hzのくじら")) == []
