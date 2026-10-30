@@ -114,3 +114,9 @@ def test_batch_that_stops_at_once_still_writes_folder(conn, tmp_path):
 def test_empty_review_table(conn, tmp_path):
     pytest.importorskip("openpyxl")
     assert review.export_review(conn, [], tmp_path / "r.xlsx") == 0
+
+
+def test_none_words_read_as_empty():
+    for w in ("N/A", "n/a", "NONE", "NOT AVAILABLE", "なし", "NONE;"):
+        assert review._NONE_WORDS.fullmatch(w)
+    assert not review._NONE_WORDS.fullmatch("NONE/NONE")

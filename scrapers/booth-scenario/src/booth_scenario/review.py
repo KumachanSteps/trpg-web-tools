@@ -345,6 +345,9 @@ def _read_rows(path: Path) -> list[dict]:
     return [dict(zip(header, r)) for r in raw[header_at + 1:]]
 
 
+_NONE_WORDS = re.compile(r"(?:N/?A|NONE|NOT\s+AVAILABLE|なし|無し|該当なし)[;；\s]*", re.I)
+
+
 def import_review(conn, path: Path, *, batch: str | None = None, split: str = "TRAIN") -> dict:
     """Store the checked table as review_labels; a corrected kind or member list
     becomes a MANUAL classification that organize will follow. `split` TEST
@@ -367,6 +370,8 @@ def import_review(conn, path: Path, *, batch: str | None = None, split: str = "T
             if f"auto_{f}" not in row:
                 continue  # a table from before this field existed
             auto, ok = row.get(f"auto_{f}", ""), (row.get(f"ok_{f}") or "").strip()
+            if _NONE_WORDS.fullmatch(ok):
+                ok = "-"  # reviewers also write "N/A", "NONE" or "なし" for none
             labels[f] = {"auto": auto, "truth": auto if ok == "" else ("" if ok == "-" else ok), "corrected": ok != ""}
             corrected += ok != ""
         conn.execute(
