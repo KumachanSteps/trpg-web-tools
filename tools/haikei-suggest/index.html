@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <!-- 外部との通信を一切しないため、解析タグは入れず、通信そのものをページ側で禁止する（connect-src 'none'）。
+       blob: と wasm-unsafe-eval は、利用者が選んだAI追加パック（ローカルのファイル）を動かすためだけに使う -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' blob: 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TRPG背景サジェストツール｜TRPG WEBツール観測所</title>
+  <meta name="description" content="パソコンの中の背景画像フォルダをタグ付け・分類し、シナリオ本文に合う背景をシーンごとに提案するツールです。外部との通信は一切行いません。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="stylesheet" href="./css/haikei-suggest.css?v=20261026-02" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-row">
+        <h1 class="app-name"><span data-i18n="title">TRPG背景サジェストツール</span><span class="app-version">v0.10 / 2026.10.26</span></h1>
+        <span class="offline-badge" data-i18n="offlineBadge" data-i18n-title="offlineBadgeTitle">通信なし</span>
+        <span class="header-spacer"></span>
+        <a class="header-nav-link" href="../../"><span class="nav-long" data-i18n="portal">←TRPG WEBツール観測所</span><span class="nav-short" data-i18n="portalShort">←観測所</span></a>
+        <div class="language-switcher" role="group" data-i18n-label="langGroup" aria-label="言語切替">
+          <button class="lang-choice-button is-active" type="button" data-lang-choice="ja" aria-pressed="true">JP</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="en" aria-pressed="false">EN</button>
+          <span class="lang-divider" aria-hidden="true">|</span>
+          <button class="lang-choice-button" type="button" data-lang-choice="ko" aria-pressed="false">KR</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <button class="accent-button" type="button" id="openFolderBtn" data-i18n="bar.openFolder">フォルダを開く</button>
+      <button class="ghost-button" type="button" id="reopenBtn" data-i18n="bar.reopen" hidden>前回のフォルダ</button>
+      <input type="file" id="folderInput" webkitdirectory directory multiple class="visually-hidden" tabindex="-1" aria-hidden="true" />
+      <span class="folder-name" id="folderName"></span>
+      <div class="segment-group view-toggle" id="viewToggle" role="group" data-i18n-label="bar.views" aria-label="表示切替">
+        <button class="segment is-active" type="button" data-view="library" data-i18n="bar.library">ライブラリ</button>
+        <button class="segment" type="button" data-view="suggest" data-i18n="bar.suggest">サジェスト</button>
+      </div>
+      <span class="bar-spacer"></span>
+      <span class="status-text" id="statusText" aria-live="polite"></span>
+      <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
+      <button class="ghost-button" type="button" id="aiPackBtn">AIパック</button>
+      <input type="file" id="aiPackInput" webkitdirectory directory multiple class="visually-hidden" tabindex="-1" aria-hidden="true" />
+      <button class="ghost-button" type="button" id="saveFolderBtn" data-i18n="bar.saveFolder" hidden>フォルダに保存</button>
+      <button class="ghost-button" type="button" id="exportBtn" data-i18n="bar.exportTags" disabled>タグを書き出す</button>
+      <button class="ghost-button" type="button" id="importBtn" data-i18n="bar.importTags" disabled>タグを読み込む</button>
+      <input type="file" id="importInput" accept=".json,application/json" class="visually-hidden" tabindex="-1" aria-hidden="true" />
+    </div>
+
+    <section class="drawer" id="helpDrawer" hidden>
+      <h2 data-i18n="help">使い方</h2>
+      <button class="drawer-close" type="button" data-close-drawer data-i18n-label="close" aria-label="閉じる">×</button>
+      <div class="guide-list" id="helpList"></div>
+      <div class="guide-notes" id="helpNotes"></div>
+    </section>
+
+    <section class="empty-state" id="emptyState">
+      <h2 data-i18n="empty.heading">背景画像のフォルダを選んでください</h2>
+      <p data-i18n="empty.lead"></p>
+      <p class="offline-note" data-i18n="empty.offline"></p>
+      <button class="accent-button big" type="button" id="emptyPickBtn" data-i18n="empty.pick">フォルダを開く</button>
+      <p class="muted small" data-i18n="empty.formats"></p>
+      <p class="muted small" id="fallbackNote" data-i18n="empty.fallbackNote" hidden></p>
+    </section>
+
+    <main class="layout library-layout" id="libraryView" hidden>
+      <aside class="side-panel">
+        <input class="text-input" type="search" id="searchInput" data-i18n-ph="lib.search" placeholder="ファイル名で絞り込み" />
+        <label class="check-row"><input type="checkbox" id="untaggedOnly" /><span data-i18n="lib.untagged">タグなしだけ</span></label>
+        <div class="side-head">
+          <h2 data-i18n="lib.filters">タグで絞り込み</h2>
+          <button class="link-button" type="button" id="clearFilterBtn" data-i18n="lib.clearFilter" hidden>絞り込みを解除</button>
+        </div>
+        <div class="filter-list" id="filterList"></div>
+      </aside>
+
+      <section class="grid-panel">
+        <div class="grid-head">
+          <span class="muted" id="shownCount"></span>
+          <span class="bar-spacer"></span>
+          <button class="link-button" type="button" id="selectAllBtn" data-i18n="lib.selectAll">表示中をすべて選択</button>
+          <button class="link-button" type="button" id="selectNoneBtn" data-i18n="lib.selectNone">選択を解除</button>
+        </div>
+        <div class="image-grid" id="imageGrid"></div>
+        <p class="muted center" id="noMatch" data-i18n="lib.noMatch" hidden></p>
+        <button class="ghost-button more-button" type="button" id="moreBtn" data-i18n="lib.more" hidden>さらに表示</button>
+      </section>
+
+      <aside class="inspector" id="inspector"></aside>
+    </main>
+
+    <main class="layout suggest-layout" id="suggestView" hidden>
+      <section class="text-panel">
+        <label class="field-label" for="scenarioText" data-i18n="sug.textLabel">シナリオ本文</label>
+        <textarea class="text-input scenario-text" id="scenarioText" data-i18n-ph="sug.textPh" spellcheck="false"></textarea>
+        <div class="text-actions">
+          <button class="ghost-button" type="button" id="loadTextBtn" data-i18n="sug.loadText">テキストを読み込む</button>
+          <button class="ghost-button" type="button" id="clearTextBtn" data-i18n="sug.clear">クリア</button>
+          <span class="bar-spacer"></span>
+          <span class="muted small" id="charCount"></span>
+          <input type="file" id="textInput" accept=".txt,.md,.text,text/plain,text/markdown" class="visually-hidden" tabindex="-1" aria-hidden="true" />
+        </div>
+        <div class="field">
+          <span class="field-label" data-i18n="sug.split">シーンの分け方</span>
+          <div class="segment-group" id="splitToggle" role="group">
+            <button class="segment is-active" type="button" data-split="heading" data-i18n="sug.splitHeading">見出し</button>
+            <button class="segment" type="button" data-split="paragraph" data-i18n="sug.splitParagraph">段落</button>
+            <button class="segment" type="button" data-split="whole" data-i18n="sug.splitWhole">全文</button>
+          </div>
+        </div>
+        <label class="field">
+          <span class="field-label" data-i18n="sug.perScene">1シーンの候補数</span>
+          <select class="text-input" id="perScene">
+            <option value="4">4</option>
+            <option value="6" selected>6</option>
+            <option value="10">10</option>
+            <option value="16">16</option>
+          </select>
+        </label>
+      </section>
+      <section class="scene-list" id="sceneList"></section>
+    </main>
+
+    <div class="modal" id="previewModal" hidden>
+      <div class="modal-backdrop" data-close-modal></div>
+      <div class="modal-body" role="dialog" aria-modal="true" aria-labelledby="previewPath">
+        <button class="drawer-close" type="button" data-close-modal data-i18n-label="close" aria-label="閉じる">×</button>
+        <img class="preview-image" id="previewImage" alt="" />
+        <p class="preview-path" id="previewPath"></p>
+        <div class="chip-row" id="previewTags"></div>
+        <div class="modal-actions">
+          <button class="ghost-button" type="button" id="copyPathBtn" data-i18n="modal.copyPath">パスをコピー</button>
+          <button class="ghost-button" type="button" id="copyNameBtn" data-i18n="modal.copyName">ファイル名をコピー</button>
+          <button class="ghost-button" type="button" id="showInLibBtn" data-i18n="modal.showInLibrary">ライブラリで編集</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <footer class="legal-footer">
+      <h2 data-i18n="footer.title">利用上の注意</h2>
+      <p data-i18n="footer.note1"></p>
+      <p data-i18n="footer.note2"></p>
+      <p data-i18n="footer.note3"></p>
+    </footer>
+  </div>
+
+  <script src="./js/vocab.js?v=20261026-02"></script>
+  <script src="./js/engine.js?v=20261026-02"></script>
+  <script src="./js/i18n.js?v=20261026-02"></script>
+  <script src="./js/ai.js?v=20261026-02"></script>
+  <script src="./js/store.js?v=20261026-02"></script>
+  <script src="./js/app.js?v=20261026-02"></script>
+</body>
+</html>
