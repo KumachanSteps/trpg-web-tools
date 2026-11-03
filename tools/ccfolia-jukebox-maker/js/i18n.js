@@ -17,7 +17,7 @@
     close: '閉じる',
     helpItems: [
       '1. 左の「ジュークボックスの設定」で、レコードの枚数・曲名（＝シーン名）・ラベルの色・BGMを決めます。',
-      '2. 右の「シーンのつながり」に、全シーンが並びます。線は「このレコードをクリックすると、このシーンに切り替わる」という意味です。シーンをクリックすると、そのシーンから出る線が強調されます。',
+      '2. 「シーンのつながり」の大きな盤面に、選んだシーン（最初は部屋の開始シーン）が表示されます。盤面のパネルから右の「シーン一覧」のサムネイルへ伸びる線は「このパネルをクリックすると、このシーンに切り替わる」という意味です。一覧のサムネイルをクリックすると、そのシーンが大きく表示されます。',
       '3. 「テストプレイ」で、ココフォリアと同じようにレコードをクリックしてシーンを切り替えて試せます。',
       '4. 「ルームZIPを書き出す」で、ココフォリアに読み込めるルームデータ（ZIP）を作ります。ココフォリアの部屋にZIPをドラッグ＆ドロップすると読み込めます。',
       '5. ココフォリアから書き出したルームZIPを「ZIPを読み込む」で開くと、ほかの部屋のシーンとパネルのつながりも線で確認できます。'
@@ -60,10 +60,12 @@
     defaultNames: ['日常', '戦闘', '緊迫', '楽しい', '探索', '不穏', '悲しい', '狂気', '感動', '休憩'],
     graph: {
       heading: 'シーンのつながり',
-      hint: 'シーンをクリックで選択。線は「クリックすると切り替わる先」です。',
+      hint: '大きな盤面のパネルから、クリックで切り替わる先のシーンへ線を引いています。一覧のシーンをクリックすると表示が切り替わります。',
       showAll: 'すべての線',
-      showSelected: '選んだシーンの線だけ',
+      showSelected: '選んだパネルの線だけ',
+      list: 'シーン一覧',
       start: '開始',
+      current: '今の盤面',
       links: '{n}本の線',
       shared: 'スクリーンパネル（全シーン共通）'
     },
@@ -129,7 +131,7 @@
     close: 'Close',
     helpItems: [
       '1. In "Jukebox settings" on the left, choose how many records, each record\'s title (it becomes the scene name), label color and BGM.',
-      '2. "Scene links" on the right shows every scene. A line means "clicking this record switches to that scene". Click a scene to highlight the lines that leave it.',
+      '2. The large board in "Scene links" shows the selected scene (the room\'s start scene at first). A line from a panel to a thumbnail in the "Scenes" list means "clicking this panel switches to that scene". Click a thumbnail to show that scene on the large board.',
       '3. "Test play" lets you click records and switch scenes just like in CCFOLIA.',
       '4. "Export room ZIP" makes room data you can load into CCFOLIA. Drag and drop the ZIP onto your CCFOLIA room.',
       '5. Open a room ZIP exported from CCFOLIA with "Open ZIP" to see the scene-to-panel links of any room.'
@@ -167,10 +169,12 @@
     defaultNames: ['Daily', 'Battle', 'Tension', 'Cheerful', 'Explore', 'Uneasy', 'Sorrow', 'Madness', 'Moving', 'Break'],
     graph: {
       heading: 'Scene links',
-      hint: 'Click a scene to select it. Lines point to the scene a click switches to.',
+      hint: 'Lines run from each panel on the large board to the scene a click switches to. Click a scene in the list to show it.',
       showAll: 'All lines',
-      showSelected: 'Selected scene only',
+      showSelected: 'Selected panel only',
+      list: 'Scenes',
       start: 'Start',
+      current: 'Current',
       links: '{n} lines',
       shared: 'Screen panels (all scenes)'
     },
@@ -236,7 +240,7 @@
     close: '닫기',
     helpItems: [
       '1. 왼쪽 "주크박스 설정"에서 레코드 장수, 곡명(＝장면 이름), 라벨 색, BGM을 정합니다.',
-      '2. 오른쪽 "장면 연결"에 모든 장면이 나열됩니다. 선은 "이 레코드를 클릭하면 이 장면으로 바뀐다"는 뜻입니다. 장면을 클릭하면 그 장면에서 나가는 선이 강조됩니다.',
+      '2. "장면 연결"의 큰 보드에 선택한 장면(처음에는 방의 시작 장면)이 표시됩니다. 보드의 패널에서 오른쪽 "장면 목록" 썸네일로 이어지는 선은 "이 패널을 클릭하면 이 장면으로 바뀐다"는 뜻입니다. 목록의 썸네일을 클릭하면 그 장면이 크게 표시됩니다.',
       '3. "테스트 플레이"에서 코코포리아처럼 레코드를 클릭해 장면을 바꿔 볼 수 있습니다.',
       '4. "룸 ZIP 내보내기"로 코코포리아에 불러올 수 있는 룸 데이터(ZIP)를 만듭니다. 코코포리아 방에 ZIP을 드래그 앤 드롭하면 불러옵니다.',
       '5. 코코포리아에서 내보낸 룸 ZIP을 "ZIP 열기"로 열면 다른 방의 장면과 패널 연결도 선으로 확인할 수 있습니다.'
@@ -274,10 +278,12 @@
     defaultNames: ['일상', '전투', '긴박', '즐거움', '탐색', '불온', '슬픔', '광기', '감동', '휴식'],
     graph: {
       heading: '장면 연결',
-      hint: '장면을 클릭해 선택. 선은 "클릭하면 바뀌는 장면"입니다.',
+      hint: '큰 보드의 패널에서 클릭하면 바뀌는 장면으로 선을 그립니다. 목록의 장면을 클릭하면 표시가 바뀝니다.',
       showAll: '모든 선',
-      showSelected: '선택한 장면의 선만',
+      showSelected: '선택한 패널의 선만',
+      list: '장면 목록',
       start: '시작',
+      current: '현재',
       links: '선 {n}개',
       shared: '스크린 패널 (모든 장면 공통)'
     },

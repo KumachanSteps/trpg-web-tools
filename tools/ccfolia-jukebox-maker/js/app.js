@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.10';
+  const VERSION = '0.11';
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
   const LANG_KEY = 'ccfoliaJukeboxLang';
   const LANGS = ['ja', 'en', 'ko'];
@@ -34,8 +34,9 @@
     room: null,         // ジュークボックスから組み立てた部屋
     imported: null,     // { name, data, files }
     view: null,         // 画面に出すシーン一覧
-    selected: 0,        // 選んでいるシーン（shared は -1）
+    selected: 0,        // 大きく表示しているシーン
     marker: -1,         // 選んでいるパネル
+    hover: -1,          // マウスを乗せているパネル
     lines: 'all',
     buildSeq: 0,
     buildTimer: 0,
@@ -368,12 +369,17 @@
         imgUrl: resolve(item.imageUrl),
         action: Ccfolia.readClickAction(item.clickAction)
       }));
+    // 部屋の今の盤面と同じマーカーを持つシーンを「今のシーン」とみなす
+    const roomKeys = Object.keys(room.markers || {}).sort().join('|');
+    const sceneList = Object.values(ents.scenes || {}).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+    let current = roomKeys ? sceneList.findIndex(sc => Object.keys(sc.markers || {}).sort().join('|') === roomKeys) : -1;
+    if (current < 0 && room.backgroundUrl) current = sceneList.findIndex(sc => sc.backgroundUrl === room.backgroundUrl);
     return {
       kind: 'import',
       name: imported.name,
       fieldWidth: fw,
       fieldHeight: fh,
-      start: -1,
+      start: current,
       shared: items.length ? { name: t('graph.shared'), color: '#9d9fa6', bgUrl: resolve(room.backgroundUrl), fieldWidth: fw, fieldHeight: fh, markers: items, shared: true } : null,
       scenes
     };
@@ -451,32 +457,42 @@
     return board;
   }
 
-  function sceneCard(scene, i) {
+  // スクリーンパネルは全シーンに出るので、盤面に重ねて表示する
+  function withShared(scene) {
+    if (!scene || !app.view.shared) return scene;
+    return { ...scene, markers: [...scene.markers, ...app.view.shared.markers.map(m => ({ ...m, shared: true, ref: m.ref, _src: m }))] };
+  }
+
+  function sceneThumb(scene, i) {
     const selected = app.selected === i;
     const links = scene.markers.reduce((n, m) => n + Ccfolia.sceneTargets(m.action).length, 0);
-    const card = h('article', {
-      class: `scene-card${selected ? ' is-selected' : ''}${scene.shared ? ' is-shared' : ''}`,
+    return h('li', null, h('button', {
+      type: 'button',
+      class: `scene-thumb${selected ? ' is-selected' : ''}`,
       dataset: { scene: String(i) },
       style: { '--scene': scene.color },
-      tabindex: '0',
-      onclick: () => selectScene(i),
-      onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectScene(i); } }
+      'aria-pressed': String(selected),
+      onclick: () => selectScene(i)
     },
-    h('header', { class: 'scene-head' },
-      h('span', { class: 'scene-dot' }),
-      h('span', { class: 'scene-name' }, scene.name || '—'),
-      app.view.start === i ? h('span', { class: 'scene-badge' }, t('graph.start')) : null,
-      links ? h('span', { class: 'scene-links' }, `→${links}`) : null),
-    boardEl(scene));
-    return card;
+    boardEl(scene, { className: 'board-thumb' }),
+    h('span', { class: 'thumb-info' },
+      h('span', { class: 'scene-head' },
+        h('span', { class: 'scene-dot' }),
+        h('span', { class: 'scene-name' }, scene.name || '—')),
+      h('span', { class: 'thumb-meta' },
+        app.view.start === i ? h('span', { class: 'scene-badge' }, t(app.view.kind === 'import' ? 'graph.current' : 'graph.start')) : null,
+        links ? h('span', { class: 'scene-links' }, `→${links}`) : null))));
   }
 
   function selectScene(i) {
     if (app.selected === i) return;
     app.selected = i;
     app.marker = -1;
-    document.querySelectorAll('.scene-card').forEach(card => card.classList.toggle('is-selected', Number(card.dataset.scene) === i));
-    drawLinks();
+    els.sceneGrid.querySelectorAll('.scene-thumb').forEach(btn => {
+      const on = Number(btn.dataset.scene) === i;
+      btn.classList.toggle('is-selected', on);
+      btn.setAttribute('aria-pressed', String(on));
+    });
     renderDetail();
   }
 
@@ -487,8 +503,7 @@
     els.backBtn.hidden = !app.imported;
     if (app.imported) els.importName.textContent = app.imported.name;
     els.sceneGrid.innerHTML = '';
-    app.view.scenes.forEach((scene, i) => els.sceneGrid.appendChild(sceneCard(scene, i)));
-    if (app.view.shared) els.sceneGrid.appendChild(sceneCard(app.view.shared, -1));
+    app.view.scenes.forEach((scene, i) => els.sceneGrid.appendChild(sceneThumb(scene, i)));
     document.querySelectorAll('[data-lines]').forEach(btn => btn.classList.toggle('is-active', btn.dataset.lines === app.lines));
     const links = collectLinks();
     els.graphCount.textContent = t('graph.links', { n: links.length });
@@ -499,68 +514,82 @@
       els.warnBox.appendChild(h('p', { class: 'warn-title' }, t('warn.heading')));
       els.warnBox.appendChild(h('ul', null, warnings.map(w => h('li', null, w))));
     }
-    requestAnimationFrame(drawLinks);
     renderDetail();
   }
 
   function currentScene() {
-    if (app.selected === -1) return app.view.shared;
-    return app.view.scenes[app.selected] || app.view.scenes[0];
+    return withShared(app.view.scenes[app.selected] || app.view.scenes[0]);
   }
 
-  /* ---------- 線 ---------- */
+  /* ---------- 線（大きな盤面のパネル → 一覧のサムネイル） ---------- */
 
   function drawLinks() {
     const layer = els.linkLayer;
     while (layer.firstChild) layer.removeChild(layer.firstChild);
     if (!app.view) return;
+    const scene = currentScene();
+    if (!scene) return;
     const box = els.graph.getBoundingClientRect();
     layer.setAttribute('width', String(box.width));
     layer.setAttribute('height', String(box.height));
     layer.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
-    const cards = new Map();
-    els.sceneGrid.querySelectorAll('.scene-card').forEach(card => cards.set(Number(card.dataset.scene), card));
-    const links = collectLinks();
+    const thumbs = new Map();
+    els.sceneGrid.querySelectorAll('.scene-thumb').forEach(btn => thumbs.set(Number(btn.dataset.scene), btn));
+    const focus = app.hover >= 0 ? app.hover : app.marker;
+    const narrow = window.matchMedia('(max-width: 860px)').matches;
     const back = svg('g', { class: 'links-back' });
     const front = svg('g', { class: 'links-front' });
     layer.appendChild(back);
     layer.appendChild(front);
-    links.forEach(link => {
-      const fromCard = cards.get(link.from);
-      if (!fromCard) return;
-      const markerEl = fromCard.querySelector(`.marker[data-mi="${link.marker}"]`);
-      if (!markerEl) return;
-      const hot = link.from === app.selected;
-      if (app.lines === 'selected' && !hot) return;
-      const mr = markerEl.getBoundingClientRect();
-      const sx = mr.left + mr.width / 2 - box.left;
-      const sy = mr.top + mr.height / 2 - box.top;
-      let tx;
-      let ty;
-      let color;
-      if (link.to >= 0 && cards.get(link.to)) {
-        const head = cards.get(link.to).querySelector('.scene-head').getBoundingClientRect();
-        tx = head.left + 8 - box.left;
-        ty = head.top + head.height / 2 - box.top;
-        color = app.view.scenes[link.to].color;
-      } else {
-        tx = sx + 18;
-        ty = sy - 26;
-        color = '#e2675f';
-      }
-      if (link.to === link.from) return;
-      const dy = Math.max(40, Math.abs(ty - sy) * 0.35);
-      const d = `M ${sx} ${sy} C ${sx} ${sy - dy}, ${tx - 40} ${ty}, ${tx} ${ty}`;
-      const g = hot ? front : back;
-      g.appendChild(svg('path', { d, class: `link${hot ? ' is-hot' : ''}${link.to < 0 ? ' is-missing' : ''}`, stroke: color }));
-      if (hot) {
-        g.appendChild(svg('circle', { cx: sx, cy: sy, r: 3.5, fill: color, class: 'link-dot' }));
-        g.appendChild(svg('circle', { cx: tx, cy: ty, r: 5, fill: 'none', stroke: color, 'stroke-width': 2, class: 'link-dot' }));
-      }
+    scene.markers.forEach((m, mi) => {
+      Ccfolia.sceneTargets(m.action).forEach(name => {
+        const hot = mi === focus;
+        // 一覧が盤面の下に回る狭い画面では、線が重なりすぎるので選んだパネルの線だけにする
+        if ((app.lines === 'selected' || narrow) && !hot) return;
+        const markerEl = els.detailBoard.querySelector(`.marker[data-mi="${mi}"]`);
+        if (!markerEl) return;
+        const mr = markerEl.getBoundingClientRect();
+        const sx = mr.left + mr.width / 2 - box.left;
+        const sy = mr.top + mr.height / 2 - box.top;
+        const to = sceneIndexByName(name);
+        const thumb = thumbs.get(to);
+        const color = to >= 0 ? app.view.scenes[to].color : '#e2675f';
+        let tx;
+        let ty;
+        let d;
+        if (thumb && to !== app.selected) {
+          const r = thumb.getBoundingClientRect();
+          const sideways = r.left - box.left > sx + 20;
+          if (sideways) {
+            tx = r.left - box.left - 2;
+            ty = r.top + r.height / 2 - box.top;
+            const dx = Math.max(60, (tx - sx) * 0.5);
+            d = `M ${sx} ${sy} C ${sx + dx} ${sy}, ${tx - dx} ${ty}, ${tx} ${ty}`;
+          } else {
+            tx = r.left + r.width / 2 - box.left;
+            ty = r.top - box.top - 2;
+            const dy = Math.max(60, (ty - sy) * 0.5);
+            d = `M ${sx} ${sy} C ${sx} ${sy + dy}, ${tx} ${ty - dy}, ${tx} ${ty}`;
+          }
+        } else if (to < 0) {
+          tx = sx + 22;
+          ty = sy - 22;
+          d = `M ${sx} ${sy} L ${tx} ${ty}`;
+        } else {
+          return;
+        }
+        const g = hot ? front : back;
+        g.appendChild(svg('path', { d, class: `link${hot ? ' is-hot' : ''}${to < 0 ? ' is-missing' : ''}`, stroke: color }));
+        g.appendChild(svg('circle', { cx: sx, cy: sy, r: hot ? 4.5 : 3, fill: color, class: 'link-dot' }));
+        g.appendChild(svg('circle', { cx: tx, cy: ty, r: hot ? 5 : 3.5, fill: hot ? color : 'none', stroke: color, 'stroke-width': 2, class: 'link-dot' }));
+      });
     });
+    els.sceneGrid.querySelectorAll('.scene-thumb').forEach(btn => btn.classList.remove('is-target'));
+    const fm = scene.markers[focus];
+    if (fm) Ccfolia.sceneTargets(fm.action).forEach(name => { const el = thumbs.get(sceneIndexByName(name)); if (el) el.classList.add('is-target'); });
   }
 
-  /* ---------- 選んだシーン ---------- */
+  /* ---------- 大きな盤面 ---------- */
 
   function renderDetail() {
     const scene = currentScene();
@@ -568,13 +597,20 @@
     els.detailTitle.textContent = scene.name || '—';
     els.detailTitle.style.setProperty('--scene', scene.color);
     els.detailBoard.innerHTML = '';
-    els.detailBoard.appendChild(boardEl(scene, {
+    const board = boardEl(scene, {
       interactive: true,
       className: 'board-large',
       selectedMarker: app.marker,
       onMarker: mi => { app.marker = mi; renderDetail(); }
-    }));
+    });
+    board.querySelectorAll('.marker').forEach(node => {
+      const mi = Number(node.dataset.mi);
+      node.addEventListener('mouseenter', () => { app.hover = mi; drawLinks(); });
+      node.addEventListener('mouseleave', () => { app.hover = -1; drawLinks(); });
+    });
+    els.detailBoard.appendChild(board);
     renderInspector(scene);
+    requestAnimationFrame(drawLinks);
   }
 
   function renderInspector(scene) {
@@ -586,31 +622,38 @@
       if (app.view.kind === 'jukebox') body.appendChild(h('p', { class: 'muted-note' }, t('insp.jukeboxNote')));
       return;
     }
-    if (m.imgUrl) body.appendChild(h('img', { class: 'insp-thumb', src: m.imgUrl, alt: '' }));
+    const wrap = h('div', { class: 'insp-grid' });
+    body.appendChild(wrap);
+    if (m.imgUrl) wrap.appendChild(h('img', { class: 'insp-thumb', src: m.imgUrl, alt: '' }));
+    const col = h('div', { class: 'insp-col' });
+    wrap.appendChild(col);
+    if (m.shared) col.appendChild(h('p', { class: 'insp-tag' }, t('graph.shared')));
     if (m.text) {
-      body.appendChild(h('p', { class: 'field-label' }, t('insp.text')));
-      body.appendChild(h('p', { class: 'insp-text' }, m.text));
+      col.appendChild(h('p', { class: 'field-label' }, t('insp.text')));
+      col.appendChild(h('p', { class: 'insp-text' }, m.text));
     }
-    body.appendChild(h('p', { class: 'field-label' }, t('insp.action')));
+    col.appendChild(h('p', { class: 'field-label' }, t('insp.action')));
     if (app.view.kind === 'import') {
-      const area = h('textarea', { class: 'text-input insp-action', rows: '3', 'aria-label': t('insp.edit') });
+      const area = h('textarea', { class: 'text-input insp-action', rows: '2', 'aria-label': t('insp.edit') });
       area.value = m.action;
       area.addEventListener('change', () => {
+        const target = m._src || m;
+        target.action = area.value;
         m.action = area.value;
         m.ref.clickAction = Ccfolia.buildClickAction(area.value);
         renderAll();
       });
-      body.appendChild(area);
+      col.appendChild(area);
     } else {
-      body.appendChild(h('p', { class: 'insp-code' }, m.action || t('insp.actionNone')));
+      col.appendChild(h('p', { class: 'insp-code' }, m.action || t('insp.actionNone')));
     }
     Ccfolia.sceneTargets(m.action).forEach(name => {
       const idx = sceneIndexByName(name);
-      body.appendChild(idx >= 0
+      col.appendChild(idx >= 0
         ? h('button', { type: 'button', class: 'jump-link', style: { '--scene': app.view.scenes[idx].color }, onclick: () => selectScene(idx) }, t('insp.jumpsTo', { name }))
         : h('p', { class: 'jump-missing' }, t('insp.missing', { name })));
     });
-    if (app.view.kind === 'jukebox') body.appendChild(h('p', { class: 'muted-note' }, t('insp.jukeboxNote')));
+    if (app.view.kind === 'jukebox') col.appendChild(h('p', { class: 'muted-note' }, t('insp.jukeboxNote')));
   }
 
   /* ================= テストプレイ ================= */
@@ -635,7 +678,7 @@
     els.playScene.style.setProperty('--scene', scene.color);
     els.playBgm.textContent = scene.sound ? t('play.bgm', { name: scene.sound.name || scene.name }) : t('play.noBgm');
     els.playBoard.innerHTML = '';
-    els.playBoard.appendChild(boardEl(scene, {
+    els.playBoard.appendChild(boardEl(withShared(scene), {
       interactive: true,
       className: 'board-large',
       onMarker: (mi, m, targets) => {
@@ -705,7 +748,7 @@
       const name = (data.entities.room && data.entities.room.name) || file.name.replace(/\.zip$/i, '');
       app.imported = { name, fileName: file.name, data, files };
       app.view = viewFromImport(app.imported);
-      app.selected = app.view.scenes.length ? 0 : -1;
+      app.selected = Math.max(0, app.view.start);
       app.marker = -1;
       renderShape();
       renderAll();
