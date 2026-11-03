@@ -4,7 +4,9 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.11';
+  const VERSION = '0.12';
+  const LAYOUT_KEY = 'ccfoliaJukebox.layout';
+  const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
   const LANG_KEY = 'ccfoliaJukeboxLang';
   const LANGS = ['ja', 'en', 'ko'];
@@ -20,7 +22,7 @@
     roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'),
     diskList: $('diskList'), resetBtn: $('resetBtn'),
     shapeLabel: $('shapeLabel'), shapeResetBtn: $('shapeResetBtn'),
-    graph: $('graph'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), graphCount: $('graphCount'), warnBox: $('warnBox'),
+    graph: $('layout'), layout: $('layout'), layoutResetBtn: $('layoutResetBtn'), settingsTitle: $('settingsTitle'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), graphCount: $('graphCount'), warnBox: $('warnBox'),
     detailTitle: $('detailTitle'), detailBoard: $('detailBoard'), inspectorBody: $('inspectorBody'),
     playModal: $('playModal'), playScene: $('playScene'), playBgm: $('playBgm'), playBoard: $('playBoard'),
     playChat: $('playChat'), playRestart: $('playRestart'), playAudio: $('playAudio'),
@@ -502,6 +504,7 @@
     els.importPanel.hidden = !app.imported;
     els.backBtn.hidden = !app.imported;
     if (app.imported) els.importName.textContent = app.imported.name;
+    els.settingsTitle.textContent = t(app.imported ? 'io.importedTitle' : 'set.heading');
     els.sceneGrid.innerHTML = '';
     app.view.scenes.forEach((scene, i) => els.sceneGrid.appendChild(sceneThumb(scene, i)));
     document.querySelectorAll('[data-lines]').forEach(btn => btn.classList.toggle('is-active', btn.dataset.lines === app.lines));
@@ -536,7 +539,10 @@
     const thumbs = new Map();
     els.sceneGrid.querySelectorAll('.scene-thumb').forEach(btn => thumbs.set(Number(btn.dataset.scene), btn));
     const focus = app.hover >= 0 ? app.hover : app.marker;
-    const narrow = window.matchMedia('(max-width: 860px)').matches;
+    // 一覧が盤面の横に並んでいないとき（狭い画面で折り返したとき）は線が重なりすぎるので、選んだパネルの線だけにする
+    const stagePanel = els.layout.querySelector('[data-panel="stage"]');
+    const scenesPanel = els.layout.querySelector('[data-panel="scenes"]');
+    const narrow = Math.abs(stagePanel.offsetTop - scenesPanel.offsetTop) > 40;
     const back = svg('g', { class: 'links-back' });
     const front = svg('g', { class: 'links-front' });
     layer.appendChild(back);
@@ -544,7 +550,6 @@
     scene.markers.forEach((m, mi) => {
       Ccfolia.sceneTargets(m.action).forEach(name => {
         const hot = mi === focus;
-        // 一覧が盤面の下に回る狭い画面では、線が重なりすぎるので選んだパネルの線だけにする
         if ((app.lines === 'selected' || narrow) && !hot) return;
         const markerEl = els.detailBoard.querySelector(`.marker[data-mi="${mi}"]`);
         if (!markerEl) return;
@@ -559,16 +564,22 @@
         let d;
         if (thumb && to !== app.selected) {
           const r = thumb.getBoundingClientRect();
-          const sideways = r.left - box.left > sx + 20;
-          if (sideways) {
-            tx = r.left - box.left - 2;
-            ty = r.top + r.height / 2 - box.top;
-            const dx = Math.max(60, (tx - sx) * 0.5);
+          const left = r.left - box.left;
+          const right = r.right - box.left;
+          const top = r.top - box.top;
+          const bottom = r.bottom - box.top;
+          if (left > sx + 20 || right < sx - 20) {
+            // 一覧が横にあるときは、近い側の辺の真ん中へ
+            const toRight = left > sx;
+            tx = toRight ? left - 2 : right + 2;
+            ty = top + (bottom - top) / 2;
+            const dx = Math.max(60, Math.abs(tx - sx) * 0.5) * (toRight ? 1 : -1);
             d = `M ${sx} ${sy} C ${sx + dx} ${sy}, ${tx - dx} ${ty}, ${tx} ${ty}`;
           } else {
-            tx = r.left + r.width / 2 - box.left;
-            ty = r.top - box.top - 2;
-            const dy = Math.max(60, (ty - sy) * 0.5);
+            const below = top > sy;
+            tx = left + (right - left) / 2;
+            ty = below ? top - 2 : bottom + 2;
+            const dy = Math.max(60, Math.abs(ty - sy) * 0.5) * (below ? 1 : -1);
             d = `M ${sx} ${sy} C ${sx} ${sy + dy}, ${tx} ${ty - dy}, ${tx} ${ty}`;
           }
         } else if (to < 0) {
@@ -775,6 +786,87 @@
     els.shapeResetBtn.hidden = !learned;
   }
 
+  /* ================= 欄の並べ替え ================= */
+
+  function loadLayout() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null'); } catch (error) { saved = null; }
+    if (Array.isArray(saved) && saved.length === PANELS.length && PANELS.every(p => saved.includes(p))) return saved;
+    return [...PANELS];
+  }
+
+  function applyLayout(order, save) {
+    order.forEach(name => {
+      const panel = els.layout.querySelector(`[data-panel="${name}"]`);
+      if (panel) els.layout.insertBefore(panel, els.linkLayer);
+    });
+    if (save) {
+      try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(order)); } catch (error) { /* noop */ }
+    }
+    requestAnimationFrame(drawLinks);
+  }
+
+  const currentOrder = () => [...els.layout.querySelectorAll('[data-panel]')].map(p => p.dataset.panel);
+
+  function movePanel(name, toIndex) {
+    const order = currentOrder().filter(p => p !== name);
+    order.splice(Math.max(0, Math.min(order.length, toIndex)), 0, name);
+    applyLayout(order, true);
+    track('ccfolia_jukebox_layout', { order: order.join(',') });
+  }
+
+  // つまみを押したままドラッグして、落とした場所の欄と入れ替える
+  function bindPanelDrag() {
+    let drag = null;
+    const panelAt = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      return el && el.closest ? el.closest('[data-panel]') : null;
+    };
+    const clearMarks = () => els.layout.querySelectorAll('[data-panel]').forEach(p => p.classList.remove('is-drop-target', 'is-dragging'));
+    els.layout.querySelectorAll('[data-drag-handle]').forEach(handle => {
+      const panel = handle.closest('[data-panel]');
+      handle.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        handle.setPointerCapture(e.pointerId);
+        drag = { panel, target: null };
+        panel.classList.add('is-dragging');
+        document.body.classList.add('is-panel-dragging');
+      });
+      handle.addEventListener('pointermove', e => {
+        if (!drag) return;
+        const over = panelAt(e.clientX, e.clientY);
+        els.layout.querySelectorAll('[data-panel]').forEach(p => p.classList.toggle('is-drop-target', p === over && p !== drag.panel));
+        drag.target = over && over !== drag.panel ? over : null;
+      });
+      const end = () => {
+        if (!drag) return;
+        const { panel: from, target } = drag;
+        drag = null;
+        clearMarks();
+        document.body.classList.remove('is-panel-dragging');
+        if (!target) return;
+        const order = currentOrder();
+        const a = order.indexOf(from.dataset.panel);
+        const b = order.indexOf(target.dataset.panel);
+        [order[a], order[b]] = [order[b], order[a]];
+        applyLayout(order, true);
+        track('ccfolia_jukebox_layout', { order: order.join(',') });
+      };
+      handle.addEventListener('pointerup', end);
+      handle.addEventListener('pointercancel', end);
+      handle.addEventListener('keydown', e => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        e.preventDefault();
+        const order = currentOrder();
+        const i = order.indexOf(panel.dataset.panel);
+        movePanel(panel.dataset.panel, i + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1));
+        handle.focus();
+      });
+    });
+    els.layoutResetBtn.addEventListener('click', () => applyLayout([...PANELS], true));
+  }
+
   /* ================= イベント ================= */
 
   function bind() {
@@ -836,6 +928,11 @@
       const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
       if (f && /\.zip$/i.test(f.name)) { e.preventDefault(); importZip(f); }
     });
+    let scrollRaf = 0;
+    window.addEventListener('scroll', () => {
+      if (scrollRaf) return;
+      scrollRaf = requestAnimationFrame(() => { scrollRaf = 0; drawLinks(); });
+    }, { passive: true });
     if (typeof ResizeObserver === 'function') new ResizeObserver(() => drawLinks()).observe(els.graph);
     else window.addEventListener('resize', drawLinks);
   }
@@ -843,7 +940,9 @@
   function init() {
     app.lang = detectLang();
     app.settings = loadSettings();
+    applyLayout(loadLayout(), false);
     bind();
+    bindPanelDrag();
     applyLanguage();
     rebuild();
   }

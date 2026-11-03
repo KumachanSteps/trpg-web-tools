@@ -9,13 +9,13 @@
   <meta name="description" content="ココフォリアのクリックアクションと /scene コマンドで動く、KPがいなくても使えるジュークボックス部屋を作るツールです。シーンとマーカーパネルのつながりを線で一覧できます。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/jukebox.css?v=20261103-02" />
+  <link rel="stylesheet" href="./css/jukebox.css?v=20261103-03" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
       <div class="header-row">
-        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.11 / 2026.11.03</span></h1>
+        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.12 / 2026.11.03</span></h1>
         <span class="header-spacer"></span>
         <a class="header-nav-link" href="../../"><span class="nav-long" data-i18n="portal">←TRPG WEBツール観測所</span><span class="nav-short" data-i18n="portalShort">←観測所</span></a>
         <div class="language-switcher" role="group" data-i18n-label="langGroup" aria-label="言語切替">
@@ -33,6 +33,7 @@
       <input type="file" id="importFile" accept=".zip,application/zip" class="visually-hidden" tabindex="-1" aria-hidden="true" />
       <button class="ghost-button" type="button" id="backBtn" data-i18n="bar.backToJukebox" hidden>ジュークボックスに戻る</button>
       <span class="bar-spacer"></span>
+      <button class="text-button" type="button" id="layoutResetBtn" data-i18n="layout.reset">並びを元に戻す</button>
       <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
       <button class="ghost-button" type="button" id="playBtn" data-i18n="bar.play">テストプレイ</button>
       <button class="accent-button" type="button" id="exportBtn" data-i18n="bar.export">ルームZIPを書き出す</button>
@@ -45,10 +46,36 @@
       <div class="guide-notes" id="helpNotes"></div>
     </section>
 
-    <div class="layout">
-      <aside class="side card" id="side">
+    <div class="layout" id="layout">
+      <section class="panel card" data-panel="scenes">
+        <div class="panel-bar"><button class="drag-handle" type="button" data-drag-handle data-i18n-label="layout.drag" aria-label="ドラッグで並べ替え"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button><h2 class="panel-title" data-i18n="graph.list">シーン一覧</h2></div>
+        <ol class="scene-list" id="sceneGrid"></ol>
+      </section>
+
+      <section class="panel card" data-panel="stage">
+        <div class="panel-bar">
+          <button class="drag-handle" type="button" data-drag-handle data-i18n-label="layout.drag" aria-label="ドラッグで並べ替え"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button>
+          <h2 class="panel-title" data-i18n="graph.heading">シーンのつながり</h2>
+          <span class="graph-count" id="graphCount"></span>
+          <span class="bar-spacer"></span>
+          <div class="segment-group" role="group">
+            <button class="segment" type="button" data-lines="all" data-i18n="graph.showAll">すべての線</button>
+            <button class="segment" type="button" data-lines="selected" data-i18n="graph.showSelected">選んだパネルの線だけ</button>
+          </div>
+        </div>
+        <p class="muted-note" data-i18n="graph.hint"></p>
+        <div class="warn-box" id="warnBox" hidden></div>
+        <h3 class="stage-title" id="detailTitle"></h3>
+        <div class="detail-board" id="detailBoard"></div>
+        <div class="inspector" id="inspector">
+          <h3 class="section-title small" data-i18n="insp.heading">パネルの中身</h3>
+          <div id="inspectorBody"></div>
+        </div>
+      </section>
+
+      <section class="panel card side" data-panel="settings" id="side">
+        <div class="panel-bar"><button class="drag-handle" type="button" data-drag-handle data-i18n-label="layout.drag" aria-label="ドラッグで並べ替え"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button><h2 class="panel-title" id="settingsTitle" data-i18n="set.heading">ジュークボックスの設定</h2></div>
         <div id="jukeboxPanel">
-          <h2 class="section-title" data-i18n="set.heading">ジュークボックスの設定</h2>
           <label class="field"><span class="field-label" data-i18n="set.roomName">部屋の名前</span><input class="text-input" id="roomName" type="text" maxlength="80" /></label>
           <label class="field"><span class="field-label" data-i18n="set.stopName">停止中のシーン名</span><input class="text-input" id="stopName" type="text" maxlength="40" /></label>
           <div class="field">
@@ -63,7 +90,7 @@
           <button class="text-button" type="button" id="resetBtn" data-i18n="set.reset">最初の設定に戻す</button>
         </div>
         <div id="importPanel" hidden>
-          <h2 class="section-title" data-i18n="io.importedTitle">読み込んだ部屋</h2>
+          <h3 class="section-title small" data-i18n="io.importedTitle">読み込んだ部屋</h3>
           <p class="import-name" id="importName"></p>
           <p class="muted-note" data-i18n="io.importedNote"></p>
         </div>
@@ -71,38 +98,9 @@
           <p class="shape-label" id="shapeLabel"></p>
           <button class="text-button" type="button" id="shapeResetBtn" data-i18n="io.shapeReset" hidden>推測に戻す</button>
         </div>
-      </aside>
+      </section>
 
-      <main class="main">
-        <section class="card graph-card">
-          <div class="graph-head">
-            <h2 class="section-title" data-i18n="graph.heading">シーンのつながり</h2>
-            <span class="graph-count" id="graphCount"></span>
-            <span class="bar-spacer"></span>
-            <div class="segment-group" role="group">
-              <button class="segment" type="button" data-lines="all" data-i18n="graph.showAll">すべての線</button>
-              <button class="segment" type="button" data-lines="selected" data-i18n="graph.showSelected">選んだパネルの線だけ</button>
-            </div>
-          </div>
-          <p class="muted-note" data-i18n="graph.hint"></p>
-          <div class="warn-box" id="warnBox" hidden></div>
-          <div class="graph" id="graph">
-            <div class="stage">
-              <h3 class="stage-title" id="detailTitle"></h3>
-              <div class="detail-board" id="detailBoard"></div>
-              <div class="inspector" id="inspector">
-                <h3 class="section-title small" data-i18n="insp.heading">パネルの中身</h3>
-                <div id="inspectorBody"></div>
-              </div>
-            </div>
-            <div class="scene-list-panel">
-              <h3 class="section-title small" data-i18n="graph.list">シーン一覧</h3>
-              <ol class="scene-list" id="sceneGrid"></ol>
-            </div>
-            <svg class="link-layer" id="linkLayer" aria-hidden="true"></svg>
-          </div>
-        </section>
-      </main>
+      <svg class="link-layer" id="linkLayer" aria-hidden="true"></svg>
     </div>
 
     <div class="modal-backdrop" id="playModal" hidden>
@@ -132,9 +130,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="./js/i18n.js?v=20261103-02"></script>
-  <script src="./js/ccfolia.js?v=20261103-02"></script>
-  <script src="./js/jukebox.js?v=20261103-02"></script>
-  <script src="./js/app.js?v=20261103-02"></script>
+  <script src="./js/i18n.js?v=20261103-03"></script>
+  <script src="./js/ccfolia.js?v=20261103-03"></script>
+  <script src="./js/jukebox.js?v=20261103-03"></script>
+  <script src="./js/app.js?v=20261103-03"></script>
 </body>
 </html>

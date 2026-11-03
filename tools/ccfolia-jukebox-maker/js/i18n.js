@@ -26,8 +26,10 @@
       'ココフォリアでは「/scene シーン名」の実行はルームマスターとサブルームマスターだけができます。KPなしで遊ぶときは、参加者をサブルームマスターにしてください。',
       'クリックアクションはキャラクターを選んだ状態でパネルをクリックすると、そのキャラクターの発言として送信されます。',
       'BGMはURL（YouTubeなど）か音声ファイルを指定できます。音声ファイルはZIPに入るので、ファイルサイズに気をつけてください。',
+      '「シーン一覧」「シーンのつながり」「ジュークボックスの設定」の3つの欄は、見出しの左のつまみをドラッグして並べ替えられます。',
       '入力した設定はこのブラウザに自動で保存されます（音声ファイルは保存されません）。'
     ],
+    layout: { drag: 'ドラッグで並べ替え（←→キーでも移動）', reset: '並びを元に戻す' },
     bar: {
       importZip: 'ZIPを読み込む',
       backToJukebox: 'ジュークボックスに戻る',
@@ -140,8 +142,10 @@
       'In CCFOLIA, only the room master and sub room masters can run "/scene name". To play without a GM, make the players sub room masters.',
       'A click action is sent as the selected character\'s message when you click the panel.',
       'BGM can be a URL (such as YouTube) or an audio file. Audio files go inside the ZIP, so watch the file size.',
+      'Drag the grip at the left of each heading to rearrange the Scenes, Scene links and Jukebox settings panels.',
       'Your settings are saved in this browser automatically (audio files are not).'
     ],
+    layout: { drag: 'Drag to rearrange (or use ← → keys)', reset: 'Reset layout' },
     bar: { importZip: 'Open ZIP', backToJukebox: 'Back to jukebox', play: 'Test play', export: 'Export room ZIP' },
     set: {
       heading: 'Jukebox settings',
@@ -249,8 +253,10 @@
       '코코포리아에서 "/scene 장면 이름"은 룸 마스터와 서브 룸 마스터만 실행할 수 있습니다. KP 없이 놀 때는 참가자를 서브 룸 마스터로 지정해 주세요.',
       '클릭 액션은 캐릭터를 선택한 상태에서 패널을 클릭하면 그 캐릭터의 발언으로 전송됩니다.',
       'BGM은 URL(YouTube 등)이나 음성 파일을 지정할 수 있습니다. 음성 파일은 ZIP에 들어가므로 파일 크기에 주의해 주세요.',
+      '"장면 목록", "장면 연결", "주크박스 설정" 세 칸은 제목 왼쪽의 손잡이를 드래그해 순서를 바꿀 수 있습니다.',
       '입력한 설정은 이 브라우저에 자동 저장됩니다(음성 파일은 저장되지 않습니다).'
     ],
+    layout: { drag: '드래그로 순서 바꾸기 (← → 키로도 이동)', reset: '배치 초기화' },
     bar: { importZip: 'ZIP 열기', backToJukebox: '주크박스로 돌아가기', play: '테스트 플레이', export: '룸 ZIP 내보내기' },
     set: {
       heading: '주크박스 설정',

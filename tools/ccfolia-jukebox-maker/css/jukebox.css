@@ -94,12 +94,23 @@ textarea.text-input { resize: vertical; line-height: 1.6; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--hair); }
 
 /* ---------- 配置 ---------- */
-.layout { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 16px; align-items: start; }
+.layout { position: relative; display: flex; flex-wrap: wrap; gap: 16px 56px; align-items: flex-start; }
+.panel { min-width: 0; }
+.panel[data-panel="scenes"] { flex: 0 0 250px; }
+.panel[data-panel="stage"] { flex: 1 1 560px; }
+.panel[data-panel="settings"] { flex: 0 0 330px; }
+.panel-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -4px 0 8px -6px; }
+.panel-title { margin: 0; font-size: 1rem; font-weight: 800; }
+.drag-handle { display: grid; flex: none; place-items: center; width: 24px; height: 28px; padding: 0; border: 0; border-radius: var(--radius); background: transparent; color: var(--faint); cursor: grab; touch-action: none; }
+.drag-handle svg { width: 18px; height: 18px; fill: currentColor; }
+.drag-handle:hover, .drag-handle:focus-visible { color: var(--yellow); background: var(--yellow-soft); }
+.panel.is-dragging { opacity: 0.6; }
+.panel.is-drop-target { outline: 2px dashed var(--yellow); outline-offset: 3px; }
+body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; user-select: none; }
 .card { padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 .section-title { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 1rem; font-weight: 800; }
 .section-title.small { font-size: 0.88rem; }
 .muted-note { margin: 0 0 8px; color: var(--faint); font-size: 0.76rem; line-height: 1.55; }
-.main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 /* ---------- 左：設定 ---------- */
 .side { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; scrollbar-width: thin; }
@@ -124,25 +135,20 @@ textarea.text-input { resize: vertical; line-height: 1.6; }
 .shape-label.is-guess { color: var(--mod); }
 
 /* ---------- シーンのつながり ---------- */
-.graph-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 4px; }
-.graph-head .section-title { margin: 0; }
 .graph-count { color: var(--faint); font-size: 0.76rem; font-weight: 700; }
 .warn-box { margin: 0 0 10px; padding: 8px 12px; border-left: 3px solid var(--danger); background: rgba(226, 103, 95, 0.08); font-size: 0.8rem; }
 .warn-title { margin: 0 0 2px; color: var(--danger); font-weight: 800; }
 .warn-box ul { margin: 0; padding-left: 1.2em; }
 
-.graph { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 16px 96px; align-items: start; }
 .link-layer { position: absolute; inset: 0; z-index: 5; overflow: visible; pointer-events: none; }
 .link { fill: none; stroke-width: 1.6; opacity: 0.55; stroke-linecap: round; }
 .link.is-hot { stroke-width: 3; opacity: 1; }
 .link.is-missing { stroke-dasharray: 4 4; opacity: 0.9; }
 .links-back .link-dot { opacity: 0.7; }
 
-.stage { min-width: 0; }
 .stage-title { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 1.05rem; font-weight: 800; }
 .stage-title::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--scene, var(--yellow)); }
 
-.scene-list-panel { min-width: 0; }
 .scene-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .scene-thumb { display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 8px; align-items: center; width: 100%; padding: 4px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--field); color: var(--ink); text-align: left; }
 .scene-thumb:hover { border-color: var(--line-strong); }
@@ -207,13 +213,13 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .legal-footer a { font-weight: 700; text-decoration: none; }
 
 @media (max-width: 1100px) {
-  .graph { grid-template-columns: minmax(0, 1fr) 200px; column-gap: 64px; }
+  .panel[data-panel="scenes"] { flex-basis: 200px; }
   .scene-thumb { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 860px) {
-  .layout { grid-template-columns: minmax(0, 1fr); }
+  .layout { row-gap: 40px; }
+  .panel[data-panel] { flex: 1 1 100%; }
   .side { position: static; max-height: none; }
-  .graph { grid-template-columns: minmax(0, 1fr); row-gap: 56px; }
   .scene-list { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
 @media (max-width: 560px) {
@@ -226,4 +232,4 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 @media (prefers-reduced-motion: reduce) {
   .toast { transition: none; }
 }
-.graph-head .segment { flex: none; }
+.panel-bar .segment { flex: none; }
