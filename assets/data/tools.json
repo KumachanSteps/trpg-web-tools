@@ -783,6 +783,46 @@
     "preview": "./assets/img/previews/house-rule-table.png"
   },
   {
+    "id": "ccfolia-jukebox-maker",
+    "icon": "📀",
+    "status": "production",
+    "category": "gmSupport",
+    "badges": [
+      "preSession",
+      "duringSession",
+      "gmSupport",
+      "plSupport"
+    ],
+    "legacyKeywords": [
+      "CCFOLIA",
+      "ココフォリア",
+      "BGM",
+      "ジュークボックス",
+      "クリックアクション",
+      "シーン",
+      "KPレス"
+    ],
+    "href": "",
+    "devHref": "./tools/ccfolia-jukebox-maker/",
+    "devStage": "prototype",
+    "devNote": {
+      "ja": "ココフォリアのクリックアクション（/scene）で動くKPレスのジュークボックス部屋を作り、全シーンとマーカーパネルのつながりを線で一覧する試作版。ルームZIPの書き出しは、クリックアクションの形が未確認のため実機での読み込み確認待ち。",
+      "en": "Prototype that builds a GM-less CCFOLIA jukebox room driven by click actions (/scene) and shows every scene-to-panel link as lines. Room ZIP export awaits a real CCFOLIA import check because the click action format is unverified.",
+      "ko": "코코포리아 클릭 액션(/scene)으로 움직이는 KP리스 주크박스 방을 만들고, 모든 장면과 마커 패널의 연결을 선으로 보여 주는 시제품. 클릭 액션 형식이 미확인이라 룸 ZIP은 실제 코코포리아에서 불러오기 확인 대기 중."
+    },
+    "name": {
+      "ja": "KPレス・ジュークボックスメーカー",
+      "en": "KP-less Jukebox Maker",
+      "ko": "KP리스 주크박스 메이커"
+    },
+    "description": {
+      "ja": "レコードをクリックするとBGMのシーンに切り替わる、KPがいなくても使えるココフォリアのジュークボックス部屋を作れます。シーンとマーカーパネルのつながりを線で一覧できます。",
+      "en": "Build a CCFOLIA jukebox room that works without a GM: click a record to switch to its BGM scene. See how every marker panel links to every scene at a glance.",
+      "ko": "레코드를 클릭하면 BGM 장면으로 바뀌는, KP 없이도 쓸 수 있는 코코포리아 주크박스 방을 만들 수 있습니다. 장면과 마커 패널의 연결을 선으로 한눈에 볼 수 있습니다."
+    },
+    "preview": "./assets/img/previews/ccfolia-jukebox-maker.png"
+  },
+  {
     "id": "bgm-organizer",
     "icon": "🎧",
     "status": "idea",
