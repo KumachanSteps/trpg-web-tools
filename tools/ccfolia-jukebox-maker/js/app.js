@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.15';
+  const VERSION = '0.16';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -193,7 +193,7 @@
       stopName: d.set.stopNameDefault,
       count: 9,
       showCover: true,
-      disks: Jukebox.COLORS.map((c, i) => ({ color: c.id, name: d.defaultNames[i], url: '', cover: { style: 'plain' } }))
+      disks: Jukebox.COLORS.map((c, i) => ({ color: c.id, name: d.defaultNames[i], bgm: '', url: '', cover: { style: 'plain' } }))
     };
   }
 
@@ -207,6 +207,7 @@
       return {
         color: Jukebox.COLORS.some(c => c.id === s.color) ? s.color : disk.color,
         name: typeof s.name === 'string' ? s.name : disk.name,
+        bgm: typeof s.bgm === 'string' ? s.bgm : '',
         url: typeof s.url === 'string' ? s.url : '',
         cover: readCover(s.cover)
       };
@@ -297,6 +298,10 @@
           h('input', {
             class: 'text-input', type: 'text', maxlength: '40', value: disk.name, 'aria-label': `${t('set.diskName')} ${i + 1}`,
             oninput: e => { disk.name = e.target.value; changed(false); }
+          }),
+          h('input', {
+            class: 'text-input small', type: 'text', maxlength: '60', value: disk.bgm || '', placeholder: t('set.bgmTitlePh'), 'aria-label': `${t('set.bgmTitle')} ${i + 1}`,
+            oninput: e => { disk.bgm = e.target.value; changed(false); }
           }),
           swatches,
           h('div', { class: 'bgm-row' },
