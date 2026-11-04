@@ -119,8 +119,30 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .count-row output { min-width: 2ch; color: var(--yellow); font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
 
 .disk-list { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; }
-.disk-row { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px; border: 1px solid var(--hair); border-left: 3px solid var(--disk); border-radius: var(--radius); background: var(--field); }
-.disk-thumb { width: 44px; height: 44px; margin-top: 2px; }
+.disk-row { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px; border: 1px solid var(--hair); border-left: 3px solid var(--disk); border-radius: var(--radius); background: var(--field); }
+.disk-thumb { display: block; width: 76px; aspect-ratio: 336 / 304; margin-top: 2px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
+.disk-thumb:hover { background: var(--yellow-soft); }
+.disk-thumb-art { display: block; width: 100%; height: 100%; }
+.disk-row.is-drop { outline: 2px dashed var(--yellow); outline-offset: 2px; }
+.cover-label { margin: 2px 0 0; }
+.cover-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.cover-chip { position: relative; display: grid; place-items: center; width: 26px; height: 25px; padding: 0; overflow: hidden; border: 2px solid transparent; border-radius: 3px; background: var(--panel); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); color: var(--muted); font-size: 0.9rem; font-weight: 800; }
+.cover-chip canvas, .cover-chip img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cover-chip.is-on { border-color: var(--ink); }
+.cover-chip:hover { border-color: var(--yellow); }
+.cover-upload { border-style: dashed; border-color: var(--hair); }
+
+/* ---------- ジャケットの切り抜き ---------- */
+.cover-modal { width: min(640px, 100%); }
+.crop-drop { position: relative; width: min(100%, 538px); margin: 0 auto; aspect-ratio: 538 / 520; border-radius: 6px; background: repeating-conic-gradient(#2e2f33 0 25%, #26272a 0 50%) 0 0 / 20px 20px; }
+.crop-drop.is-drop { outline: 2px dashed var(--yellow); outline-offset: 3px; }
+.crop-drop canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.crop-drop canvas:active { cursor: grabbing; }
+.crop-empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 24px; color: var(--muted); font-size: 0.88rem; font-weight: 700; text-align: center; pointer-events: none; }
+.crop-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
+.crop-zoom { display: flex; flex: 1 1 200px; align-items: center; gap: 8px; color: var(--muted); font-size: 0.78rem; font-weight: 700; }
+.crop-zoom input { flex: 1 1 auto; accent-color: var(--yellow); }
+.crop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--hair); }
 .disk-fields { display: grid; gap: 6px; min-width: 0; }
 .swatches { display: flex; flex-wrap: wrap; gap: 4px; }
 .swatch { width: 18px; height: 18px; padding: 0; border: 2px solid transparent; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35); }
