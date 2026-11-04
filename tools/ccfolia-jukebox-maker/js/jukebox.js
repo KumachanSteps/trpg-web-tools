@@ -329,11 +329,13 @@
     return toBlob(await drawSlot(diskImg, coverCanvas, name, color, empty));
   }
 
-  // 設定欄の見本用（スロットと同じ見た目）
+  // 設定欄の見本用
   async function slotPreview(disk, showCover = true) {
     const color = colorOf(disk.color);
-    const [diskImg, cover] = await Promise.all([loadImage(assetUrl(`disk-${disk.color}.png`)), showCover ? makeCover(disk.cover, color.line) : null]);
-    return drawSlot(diskImg, cover, disk.name, color, false);
+    // ジャケットありはジャケットだけ（レコードだけの見本と同じくらいの大きさに見せる）
+    if (showCover) return makeCover(disk.cover, color.line);
+    const diskImg = await loadImage(assetUrl(`disk-${disk.color}.png`));
+    return drawSlot(diskImg, null, disk.name, color, false);
   }
 
   async function makePlate(label, name, color) {

@@ -120,7 +120,7 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 
 .disk-list { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; }
 .disk-row { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px; border: 1px solid var(--hair); border-left: 3px solid var(--disk); border-radius: var(--radius); background: var(--field); }
-.disk-thumb { display: block; width: 76px; aspect-ratio: 336 / 304; margin-top: 2px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
+.disk-thumb { display: block; width: 76px; aspect-ratio: 538 / 520; margin-top: 2px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
 .disk-thumb:hover { background: var(--yellow-soft); }
 .disk-thumb-art { display: block; width: 100%; height: 100%; }
 .disk-row.is-drop { outline: 2px dashed var(--yellow); outline-offset: 2px; }
