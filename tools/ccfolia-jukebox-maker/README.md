@@ -27,7 +27,7 @@ __data.json  { meta: { version: '1.1.0' },
 - マーカー（`room.markers` / `scene.markers` のキーは16進の文字列）：`x, y, z, width, height, locked, freezed, text, imageUrl, clickAction`。座標はマス単位、原点は盤面の中央。
 - スクリーンパネル（`entities.items[id]`）にも `clickAction` がある。
 
-**未確認：`clickAction` の中身。** 未設定のときは `null` か `''`。設定したときの形は資料が見つからず、`{ type: 'message', text: '/scene 名前' }` と推測して書き出している（`js/ccfolia.js` の `DEFAULT_SHAPE`）。ココフォリアで書き出した、クリックアクション入りのルームZIPをこのツールで読み込むと、その形を覚えて以後の書き出しに使う。
+**`clickAction` の中身：** 未設定のときは `null` か `''`。「チャットに送信」は `{ type: 'message', text: '/scene 名前' }` で書き出す（`js/ccfolia.js` の `DEFAULT_SHAPE`）。2026-11-04 にココフォリアでZIPの読み込みと、マーカーパネルのクリックでシーンが切り替わることを確認済み。別の形のZIPを読み込んだときは、その形を覚えて以後の書き出しに使う。
 
 ## ファイル
 

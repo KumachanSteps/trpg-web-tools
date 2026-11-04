@@ -5,9 +5,9 @@
  *   .token       '0.' + sha256(__data.json のバイト列)
  *   <sha256>.<ext>  画像・音声。ファイル名はバイト列の SHA-256
  *
- * クリックアクション（clickAction）の中身は公開資料が見つからなかったため、
- * 既定の形は推測。ココフォリアから書き出したZIPを読み込むと、その中のクリックアクションから
- * 形を覚えて（learnShape）以後の書き出しに使う。 */
+ * クリックアクション（clickAction）は { type: 'message', text } の形で書き出す。
+ * 2026-11-04 にココフォリアで読み込み・クリックでのシーン切り替えを確認済み。
+ * 別の形のZIPを読み込んだときは、その形を覚えて（learnShape）以後の書き出しに使う。 */
 (function (global) {
   'use strict';
 
@@ -15,7 +15,7 @@
   const TOKEN_FILE = '.token';
   const SHAPE_KEY = 'ccfoliaJukebox.clickActionShape';
 
-  // 推測の既定形: { type: 'message', text: '<送信する文字>' }
+  // 既定の形（ココフォリアで動作確認済み）: { type: 'message', text: '<送信する文字>' }
   const DEFAULT_SHAPE = { kind: 'object', typeKey: 'type', typeValue: 'message', textKey: 'text', extra: {}, learned: false };
 
   let shape = loadShape();
@@ -69,7 +69,7 @@
       extra[key] = v;
     }
     if (!textKey) return false;
-    // このツール自身の推測の形と同じなら、確認できたことにはしない
+    // 既定の形と同じなら、覚え直す必要はない
     const sameAsGuess = typeKey === DEFAULT_SHAPE.typeKey && value[typeKey] === DEFAULT_SHAPE.typeValue && textKey === DEFAULT_SHAPE.textKey && !Object.keys(extra).length;
     if (sameAsGuess) return false;
     saveShape({ kind: 'object', typeKey, typeValue: typeKey ? value[typeKey] : '', textKey, extra, learned: true });

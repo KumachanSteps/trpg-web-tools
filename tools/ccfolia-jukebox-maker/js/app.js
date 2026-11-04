@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.12';
+  const VERSION = '0.13';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -782,7 +782,6 @@
   function renderShape() {
     const learned = Ccfolia.getShape().learned;
     els.shapeLabel.textContent = learned ? t('io.shapeLearned') : t('io.shapeGuess');
-    els.shapeLabel.classList.toggle('is-guess', !learned);
     els.shapeResetBtn.hidden = !learned;
   }
 

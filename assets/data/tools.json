@@ -802,13 +802,13 @@
       "シーン",
       "KPレス"
     ],
-    "href": "",
+    "href": "./tools/ccfolia-jukebox-maker/",
     "devHref": "./tools/ccfolia-jukebox-maker/",
-    "devStage": "prototype",
+    "devStage": "testing",
     "devNote": {
-      "ja": "ココフォリアのクリックアクション（/scene）で動くKPレスのジュークボックス部屋を作り、全シーンとマーカーパネルのつながりを線で一覧する試作版。ルームZIPの書き出しは、クリックアクションの形が未確認のため実機での読み込み確認待ち。",
-      "en": "Prototype that builds a GM-less CCFOLIA jukebox room driven by click actions (/scene) and shows every scene-to-panel link as lines. Room ZIP export awaits a real CCFOLIA import check because the click action format is unverified.",
-      "ko": "코코포리아 클릭 액션(/scene)으로 움직이는 KP리스 주크박스 방을 만들고, 모든 장면과 마커 패널의 연결을 선으로 보여 주는 시제품. 클릭 액션 형식이 미확인이라 룸 ZIP은 실제 코코포리아에서 불러오기 확인 대기 중."
+      "ja": "ココフォリアのクリックアクション（/scene）で動くKPレスのジュークボックス部屋を作り、全シーンとマーカーパネルのつながりを線で一覧するツール。書き出したルームZIPの読み込みとクリックでのシーン切り替えは、ココフォリアで確認済み。開発中として公開。",
+      "en": "Builds a GM-less CCFOLIA jukebox room driven by click actions (/scene) and shows every scene-to-panel link as lines. Room ZIP import and click-to-switch scenes are confirmed in CCFOLIA. Public as in development.",
+      "ko": "코코포리아 클릭 액션(/scene)으로 움직이는 KP리스 주크박스 방을 만들고, 모든 장면과 마커 패널의 연결을 선으로 보여 주는 툴. 내보낸 룸 ZIP 불러오기와 클릭으로 장면 전환은 코코포리아에서 확인됨. 개발 중으로 공개."
     },
     "name": {
       "ja": "KPレス・ジュークボックスメーカー",
