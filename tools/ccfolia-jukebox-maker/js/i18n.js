@@ -16,7 +16,7 @@
     help: '使い方',
     close: '閉じる',
     helpItems: [
-      '1. 左の「ジュークボックスの設定」で、レコードの枚数・曲名（＝シーン名）・ラベルの色・BGMを決めます。',
+      '1. 「ジュークボックスの設定」で、レコードの枚数・曲名（＝シーン名）・ラベルの色・BGM・ジャケットを決めます。ジャケットは見本から選ぶか、「＋」から好きな画像を切り抜いて作れます（画像を行にドラッグ＆ドロップしてもOK）。',
       '2. 「シーンのつながり」の大きな盤面に、選んだシーン（最初は部屋の開始シーン）が表示されます。盤面のパネルから右の「シーン一覧」のサムネイルへ伸びる線は「このパネルをクリックすると、このシーンに切り替わる」という意味です。一覧のサムネイルをクリックすると、そのシーンが大きく表示されます。',
       '3. 「テストプレイ」で、ココフォリアと同じようにレコードをクリックしてシーンを切り替えて試せます。',
       '4. 「ルームZIPを書き出す」で、ココフォリアに読み込めるルームデータ（ZIP）を作ります。ココフォリアの部屋にZIPをドラッグ＆ドロップすると読み込めます。',
@@ -43,6 +43,8 @@
       stopName: '停止中のシーン名',
       stopNameDefault: '停止中',
       count: 'レコードの枚数',
+      showCover: 'ジャケットを表示する',
+      showCoverNote: 'オフにすると、棚にはレコードだけが並びます（シーンの画面と一覧の両方）。',
       disks: 'レコード（曲名がシーン名になります）',
       diskName: '曲名',
       color: 'ラベルの色',
@@ -57,9 +59,24 @@
     },
     colors: {
       cream: 'クリーム', red: '赤', orange: 'オレンジ', yellow: '黄', green: '緑',
-      teal: '青緑', blue: '青', purple: '紫', pink: 'ピンク', gray: 'グレー'
+      teal: '青緑', blue: '青', purple: '紫', pink: 'ピンク', gray: 'グレー', brown: '茶', navy: '紺'
     },
-    defaultNames: ['日常', '戦闘', '緊迫', '楽しい', '探索', '不穏', '悲しい', '狂気', '感動', '休憩'],
+    defaultNames: ['日常', '戦闘', '緊迫', '楽しい', '探索', '不穏', '悲しい', '狂気', '感動', '休憩', '謎解き', 'エンディング'],
+    cover: {
+      label: 'ジャケット',
+      upload: '画像からジャケットを作る',
+      title: 'ジャケットの画像（{name}）',
+      hint: '画像をドラッグで動かし、マウスホイール（スマートフォンは2本指）で拡大・縮小して、ジャケットに入る範囲を決めます。暗い部分はジャケットの外です。',
+      empty: 'ここに画像をドラッグ＆ドロップ、またはクリックしてファイルを開く',
+      open: 'ファイルを開く',
+      zoom: '拡大',
+      fit: '全体を合わせる',
+      remove: '画像を外す',
+      cancel: 'キャンセル',
+      ok: 'この範囲で決定',
+      notImage: '画像ファイルを選んでください。',
+      styles: { plain: '白（無地）', tint: 'ラベルの色', gradient: 'グラデーション', stripes: 'ライン', sunburst: 'サンバースト', dots: 'ドット', rings: 'リング' }
+    },
     graph: {
       heading: 'シーンのつながり',
       hint: '大きな盤面のパネルから、クリックで切り替わる先のシーンへ線を引いています。一覧のシーンをクリックすると表示が切り替わります。',
@@ -132,7 +149,7 @@
     help: 'How to use',
     close: 'Close',
     helpItems: [
-      '1. In "Jukebox settings" on the left, choose how many records, each record\'s title (it becomes the scene name), label color and BGM.',
+      '1. In "Jukebox settings", choose how many records, each record\'s title (it becomes the scene name), label color, BGM and sleeve. Pick a sample sleeve, or use "+" to crop any image into one (you can also drop an image onto the row).',
       '2. The large board in "Scene links" shows the selected scene (the room\'s start scene at first). A line from a panel to a thumbnail in the "Scenes" list means "clicking this panel switches to that scene". Click a thumbnail to show that scene on the large board.',
       '3. "Test play" lets you click records and switch scenes just like in CCFOLIA.',
       '4. "Export room ZIP" makes room data you can load into CCFOLIA. Drag and drop the ZIP onto your CCFOLIA room.',
@@ -154,6 +171,8 @@
       stopName: 'Stopped scene name',
       stopNameDefault: 'Stopped',
       count: 'Number of records',
+      showCover: 'Show sleeves',
+      showCoverNote: 'When off, the shelf shows only the records (in both the scene view and the list).',
       disks: 'Records (the title becomes the scene name)',
       diskName: 'Title',
       color: 'Label color',
@@ -168,9 +187,24 @@
     },
     colors: {
       cream: 'Cream', red: 'Red', orange: 'Orange', yellow: 'Yellow', green: 'Green',
-      teal: 'Teal', blue: 'Blue', purple: 'Purple', pink: 'Pink', gray: 'Gray'
+      teal: 'Teal', blue: 'Blue', purple: 'Purple', pink: 'Pink', gray: 'Gray', brown: 'Brown', navy: 'Navy'
     },
-    defaultNames: ['Daily', 'Battle', 'Tension', 'Cheerful', 'Explore', 'Uneasy', 'Sorrow', 'Madness', 'Moving', 'Break'],
+    defaultNames: ['Daily', 'Battle', 'Tension', 'Cheerful', 'Explore', 'Uneasy', 'Sorrow', 'Madness', 'Moving', 'Break', 'Puzzle', 'Ending'],
+    cover: {
+      label: 'Sleeve',
+      upload: 'Make a sleeve from an image',
+      title: 'Sleeve image ({name})',
+      hint: 'Drag the image to move it and use the mouse wheel (two fingers on a phone) to zoom, so the part you want fits on the sleeve. The dark area is outside the sleeve.',
+      empty: 'Drop an image here, or click to open a file',
+      open: 'Open file',
+      zoom: 'Zoom',
+      fit: 'Fit whole image',
+      remove: 'Remove image',
+      cancel: 'Cancel',
+      ok: 'Use this crop',
+      notImage: 'Please choose an image file.',
+      styles: { plain: 'White (plain)', tint: 'Label color', gradient: 'Gradient', stripes: 'Lines', sunburst: 'Sunburst', dots: 'Dots', rings: 'Rings' }
+    },
     graph: {
       heading: 'Scene links',
       hint: 'Lines run from each panel on the large board to the scene a click switches to. Click a scene in the list to show it.',
@@ -243,7 +277,7 @@
     help: '사용 방법',
     close: '닫기',
     helpItems: [
-      '1. 왼쪽 "주크박스 설정"에서 레코드 장수, 곡명(＝장면 이름), 라벨 색, BGM을 정합니다.',
+      '1. "주크박스 설정"에서 레코드 장수, 곡명(＝장면 이름), 라벨 색, BGM, 재킷을 정합니다. 재킷은 견본에서 고르거나 "＋"로 원하는 이미지를 잘라 만들 수 있습니다(이미지를 행에 드래그 앤 드롭해도 OK).',
       '2. "장면 연결"의 큰 보드에 선택한 장면(처음에는 방의 시작 장면)이 표시됩니다. 보드의 패널에서 오른쪽 "장면 목록" 썸네일로 이어지는 선은 "이 패널을 클릭하면 이 장면으로 바뀐다"는 뜻입니다. 목록의 썸네일을 클릭하면 그 장면이 크게 표시됩니다.',
       '3. "테스트 플레이"에서 코코포리아처럼 레코드를 클릭해 장면을 바꿔 볼 수 있습니다.',
       '4. "룸 ZIP 내보내기"로 코코포리아에 불러올 수 있는 룸 데이터(ZIP)를 만듭니다. 코코포리아 방에 ZIP을 드래그 앤 드롭하면 불러옵니다.',
@@ -265,6 +299,8 @@
       stopName: '정지 장면 이름',
       stopNameDefault: '정지',
       count: '레코드 장수',
+      showCover: '재킷 표시',
+      showCoverNote: '끄면 선반에 레코드만 놓입니다 (장면 화면과 목록 모두).',
       disks: '레코드 (곡명이 장면 이름이 됩니다)',
       diskName: '곡명',
       color: '라벨 색',
@@ -279,9 +315,24 @@
     },
     colors: {
       cream: '크림', red: '빨강', orange: '주황', yellow: '노랑', green: '초록',
-      teal: '청록', blue: '파랑', purple: '보라', pink: '분홍', gray: '회색'
+      teal: '청록', blue: '파랑', purple: '보라', pink: '분홍', gray: '회색', brown: '갈색', navy: '남색'
     },
-    defaultNames: ['일상', '전투', '긴박', '즐거움', '탐색', '불온', '슬픔', '광기', '감동', '휴식'],
+    defaultNames: ['일상', '전투', '긴박', '즐거움', '탐색', '불온', '슬픔', '광기', '감동', '휴식', '수수께끼', '엔딩'],
+    cover: {
+      label: '재킷',
+      upload: '이미지로 재킷 만들기',
+      title: '재킷 이미지 ({name})',
+      hint: '이미지를 드래그해 옮기고, 마우스 휠(스마트폰은 두 손가락)로 확대·축소해 재킷에 들어갈 범위를 정합니다. 어두운 부분은 재킷 바깥입니다.',
+      empty: '여기에 이미지를 드래그 앤 드롭하거나, 클릭해 파일을 여세요',
+      open: '파일 열기',
+      zoom: '확대',
+      fit: '전체 맞추기',
+      remove: '이미지 빼기',
+      cancel: '취소',
+      ok: '이 범위로 결정',
+      notImage: '이미지 파일을 선택해 주세요.',
+      styles: { plain: '흰색(무지)', tint: '라벨 색', gradient: '그라데이션', stripes: '라인', sunburst: '선버스트', dots: '도트', rings: '링' }
+    },
     graph: {
       heading: '장면 연결',
       hint: '큰 보드의 패널에서 클릭하면 바뀌는 장면으로 선을 그립니다. 목록의 장면을 클릭하면 표시가 바뀝니다.',

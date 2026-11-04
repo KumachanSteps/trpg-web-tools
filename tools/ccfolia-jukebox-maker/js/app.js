@@ -4,13 +4,13 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.13';
+  const VERSION = '0.15';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
   const LANG_KEY = 'ccfoliaJukeboxLang';
   const LANGS = ['ja', 'en', 'ko'];
-  const MAX_DISKS = 10;
+  const MAX_DISKS = Jukebox.MAX_DISKS;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
 
   const $ = id => document.getElementById(id);
@@ -19,13 +19,15 @@
     importBtn: $('importBtn'), importFile: $('importFile'), backBtn: $('backBtn'),
     playBtn: $('playBtn'), exportBtn: $('exportBtn'),
     jukeboxPanel: $('jukeboxPanel'), importPanel: $('importPanel'), importName: $('importName'),
-    roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'),
+    roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), showCover: $('showCover'),
     diskList: $('diskList'), resetBtn: $('resetBtn'),
     shapeLabel: $('shapeLabel'), shapeResetBtn: $('shapeResetBtn'),
     graph: $('layout'), layout: $('layout'), layoutResetBtn: $('layoutResetBtn'), settingsTitle: $('settingsTitle'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), graphCount: $('graphCount'), warnBox: $('warnBox'),
     detailTitle: $('detailTitle'), detailBoard: $('detailBoard'), inspectorBody: $('inspectorBody'),
     playModal: $('playModal'), playScene: $('playScene'), playBgm: $('playBgm'), playBoard: $('playBoard'),
     playChat: $('playChat'), playRestart: $('playRestart'), playAudio: $('playAudio'),
+    coverModal: $('coverModal'), coverTitle: $('coverTitle'), cropCanvas: $('cropCanvas'), cropDrop: $('cropDrop'), cropEmpty: $('cropEmpty'),
+    cropZoom: $('cropZoom'), cropOpen: $('cropOpen'), cropFile: $('cropFile'), cropFit: $('cropFit'), cropOk: $('cropOk'), cropRemove: $('cropRemove'),
     toastHost: $('toastHost')
   };
 
@@ -190,7 +192,8 @@
       roomName: d.set.roomNameDefault,
       stopName: d.set.stopNameDefault,
       count: 9,
-      disks: Jukebox.COLORS.map((c, i) => ({ color: c.id, name: d.defaultNames[i], url: '' }))
+      showCover: true,
+      disks: Jukebox.COLORS.map((c, i) => ({ color: c.id, name: d.defaultNames[i], url: '', cover: { style: 'plain' } }))
     };
   }
 
@@ -204,15 +207,23 @@
       return {
         color: Jukebox.COLORS.some(c => c.id === s.color) ? s.color : disk.color,
         name: typeof s.name === 'string' ? s.name : disk.name,
-        url: typeof s.url === 'string' ? s.url : ''
+        url: typeof s.url === 'string' ? s.url : '',
+        cover: readCover(s.cover)
       };
     });
     return {
       roomName: typeof saved.roomName === 'string' ? saved.roomName : base.roomName,
       stopName: typeof saved.stopName === 'string' ? saved.stopName : base.stopName,
       count: Math.min(MAX_DISKS, Math.max(1, Number(saved.count) || base.count)),
+      showCover: saved.showCover !== false,
       disks
     };
+  }
+
+  function readCover(c) {
+    if (!c || typeof c !== 'object') return { style: 'plain' };
+    if (c.style === 'image' && typeof c.image === 'string' && c.image.startsWith('data:image/')) return { style: 'image', image: c.image };
+    return { style: Jukebox.COVER_STYLES.includes(c.style) ? c.style : 'plain' };
   }
 
   function saveSettings() {
@@ -233,6 +244,8 @@
     els.stopName.value = s.stopName;
     els.diskCount.value = String(s.count);
     els.diskCountOut.textContent = String(s.count);
+    els.showCover.checked = s.showCover !== false;
+    els.diskList.classList.toggle('no-cover', s.showCover === false);
     els.diskList.innerHTML = '';
     s.disks.slice(0, s.count).forEach((disk, i) => {
       const color = Jukebox.colorOf(disk.color);
@@ -253,8 +266,33 @@
         const f = fileInput.files && fileInput.files[0];
         if (f) { app.files[i] = f; changed(true); }
       });
-      els.diskList.appendChild(h('li', { class: 'disk-row', style: { '--disk': color.line } },
-        h('img', { class: 'disk-thumb', src: Jukebox.assetUrl(`disk-${disk.color}.png`), alt: '' }),
+      const cover = disk.cover || { style: 'plain' };
+      const coverRow = h('div', { class: 'cover-row', role: 'radiogroup', 'aria-label': t('cover.label') },
+        Jukebox.COVER_STYLES.map(style => {
+          const chip = h('canvas', { width: '44', height: '42', class: 'cover-chip-art' });
+          const cx = chip.getContext('2d');
+          if (style === 'plain') { cx.fillStyle = '#f3f1ec'; cx.fillRect(0, 0, 44, 42); } else Jukebox.drawPattern(cx, 44, 42, style, color.line);
+          return h('button', {
+            type: 'button',
+            class: `cover-chip${cover.style === style ? ' is-on' : ''}`,
+            role: 'radio',
+            'aria-checked': String(cover.style === style),
+            title: t(`cover.styles.${style}`),
+            'aria-label': t(`cover.styles.${style}`),
+            onclick: () => { disk.cover = { style }; changed(true); }
+          }, chip);
+        }),
+        h('button', {
+          type: 'button',
+          class: `cover-chip cover-upload${cover.style === 'image' ? ' is-on' : ''}`,
+          title: t('cover.upload'),
+          'aria-label': t('cover.upload'),
+          onclick: () => openCropper(i)
+        }, cover.style === 'image' ? h('img', { src: cover.image, alt: '' }) : h('span', { 'aria-hidden': 'true' }, '＋')));
+      const row = h('li', { class: 'disk-row', style: { '--disk': color.line } },
+        s.showCover === false
+          ? h('span', { class: 'disk-thumb', dataset: { preview: String(i) } })
+          : h('button', { type: 'button', class: 'disk-thumb', dataset: { preview: String(i) }, title: t('cover.upload'), onclick: () => openCropper(i) }),
         h('div', { class: 'disk-fields' },
           h('input', {
             class: 'text-input', type: 'text', maxlength: '40', value: disk.name, 'aria-label': `${t('set.diskName')} ${i + 1}`,
@@ -269,8 +307,252 @@
                 oninput: e => { disk.url = e.target.value; changed(false); }
               }),
             h('label', { class: 'ghost-button small file-button' }, t('set.bgmFile'), fileInput)
-          ))));
+          ),
+          h('p', { class: 'field-label cover-label' }, t('cover.label')),
+          coverRow));
+      // 画像ファイルを行に落とすと、そのレコードのジャケットにする
+      row.addEventListener('dragover', e => { if (hasFiles(e)) { e.preventDefault(); e.stopPropagation(); row.classList.add('is-drop'); } });
+      row.addEventListener('dragleave', () => row.classList.remove('is-drop'));
+      row.addEventListener('drop', e => {
+        row.classList.remove('is-drop');
+        const f = imageFile(e);
+        if (!f || s.showCover === false) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openCropper(i, f);
+      });
+      els.diskList.appendChild(row);
     });
+    refreshPreviews();
+  }
+
+  // 設定欄のサムネイル（ジャケット＋レコード＋曲名）を描き直す
+  let previewSeq = 0;
+  async function refreshPreviews() {
+    const seq = ++previewSeq;
+    const disks = activeDisks();
+    for (let i = 0; i < disks.length; i += 1) {
+      const holder = els.diskList.querySelector(`[data-preview="${i}"]`);
+      if (!holder) continue;
+      let c;
+      try { c = await Jukebox.slotPreview(disks[i], app.settings.showCover !== false); } catch (error) { continue; }
+      if (seq !== previewSeq) return;
+      c.classList.add('disk-thumb-art');
+      holder.replaceChildren(c);
+    }
+  }
+
+  const hasFiles = e => Boolean(e.dataTransfer && [...e.dataTransfer.types].includes('Files'));
+  const imageFile = e => {
+    const files = e.dataTransfer && e.dataTransfer.files ? [...e.dataTransfer.files] : [];
+    return files.find(f => /^image\//.test(f.type)) || null;
+  };
+
+  /* ================= ジャケット画像の切り抜き ================= */
+
+  const crop = { session: 0, index: -1, img: null, scale: 1, min: 1, ox: 0, oy: 0, pointers: new Map(), pinch: 0, sources: [] };
+
+  function openCropper(index, file) {
+    crop.session += 1;
+    crop.index = index;
+    crop.img = null;
+    els.coverModal.hidden = false;
+    els.cropFile.value = '';
+    const disk = app.settings.disks[index];
+    els.coverTitle.textContent = t('cover.title', { name: disk.name || '' });
+    const source = crop.sources[index];
+    if (file) loadCropFile(file);
+    else if (source) setCropImage(source.img, source);
+    else if (disk.cover && disk.cover.style === 'image' && disk.cover.image) {
+      const session = crop.session;
+      Jukebox.loadImage(disk.cover.image).then(img => { if (session === crop.session) setCropImage(img); }).catch(() => drawCrop());
+    }
+    else drawCrop();
+  }
+
+  function closeCropper() {
+    els.coverModal.hidden = true;
+    crop.session += 1;
+    crop.index = -1;
+  }
+
+  function loadCropFile(file) {
+    if (!file || !/^image\//.test(file.type)) { toast(t('cover.notImage'), 'error'); return; }
+    // 読み込み中に閉じたり別の画像を選んだりしたら、古い読み込みの結果は捨てる
+    crop.session += 1;
+    const session = crop.session;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { if (session === crop.session) setCropImage(img); };
+    img.onerror = () => { if (session === crop.session) toast(t('cover.notImage'), 'error'); };
+    img.src = url;
+  }
+
+  function setCropImage(img, view) {
+    const { w, h: hh } = Jukebox.SLEEVE;
+    crop.img = img;
+    crop.min = Math.max(w / img.naturalWidth, hh / img.naturalHeight);
+    if (view) {
+      crop.scale = view.scale;
+      crop.ox = view.ox;
+      crop.oy = view.oy;
+    } else {
+      crop.scale = crop.min;
+      crop.ox = (w - img.naturalWidth * crop.scale) / 2;
+      crop.oy = (hh - img.naturalHeight * crop.scale) / 2;
+    }
+    clampCrop();
+    syncZoom();
+    drawCrop();
+  }
+
+  function clampCrop() {
+    if (!crop.img) return;
+    const { w, h: hh } = Jukebox.SLEEVE;
+    crop.scale = Math.max(crop.min, Math.min(crop.min * 8, crop.scale));
+    const iw = crop.img.naturalWidth * crop.scale;
+    const ih = crop.img.naturalHeight * crop.scale;
+    crop.ox = Math.min(0, Math.max(w - iw, crop.ox));
+    crop.oy = Math.min(0, Math.max(hh - ih, crop.oy));
+  }
+
+  function zoomAt(factor, px, py) {
+    if (!crop.img) return;
+    // 倍率だけを先に範囲に収め、位置は元の値から計算してから収める
+    const before = crop.scale;
+    const next = Math.max(crop.min, Math.min(crop.min * 8, before * factor));
+    crop.scale = next;
+    const k = next / before;
+    crop.ox = px - (px - crop.ox) * k;
+    crop.oy = py - (py - crop.oy) * k;
+    clampCrop();
+    syncZoom();
+    drawCrop();
+  }
+
+  function syncZoom() {
+    els.cropZoom.disabled = !crop.img;
+    els.cropZoom.value = crop.img ? String(Math.round((Math.log(crop.scale / crop.min) / Math.log(8)) * 100)) : '0';
+  }
+
+  let sleeveImg = null;
+  function drawCrop() {
+    const c = els.cropCanvas;
+    const ctx = c.getContext('2d');
+    const { w, h: hh } = Jukebox.SLEEVE;
+    ctx.clearRect(0, 0, w, hh);
+    els.cropEmpty.hidden = Boolean(crop.img);
+    els.cropOk.disabled = !crop.img;
+    if (crop.img) ctx.drawImage(crop.img, crop.ox, crop.oy, crop.img.naturalWidth * crop.scale, crop.img.naturalHeight * crop.scale);
+    if (!sleeveImg) {
+      Jukebox.loadImage(Jukebox.assetUrl('sleeve.png')).then(img => { sleeveImg = img; drawCrop(); }).catch(() => {});
+      return;
+    }
+    // 紙の質感を重ね、ジャケットの外（右の切り欠きなど）は暗くする
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(sleeveImg, 0, 0, w, hh);
+    ctx.globalCompositeOperation = 'source-over';
+    const shadeCanvas = document.createElement('canvas');
+    shadeCanvas.width = w;
+    shadeCanvas.height = hh;
+    const sctx = shadeCanvas.getContext('2d');
+    sctx.fillStyle = 'rgba(12,12,14,0.72)';
+    sctx.fillRect(0, 0, w, hh);
+    sctx.globalCompositeOperation = 'destination-out';
+    sctx.drawImage(sleeveImg, 0, 0, w, hh);
+    ctx.drawImage(shadeCanvas, 0, 0);
+  }
+
+  function canvasPoint(e) {
+    const r = els.cropCanvas.getBoundingClientRect();
+    return { x: ((e.clientX - r.left) / r.width) * Jukebox.SLEEVE.w, y: ((e.clientY - r.top) / r.height) * Jukebox.SLEEVE.h };
+  }
+
+  function applyCrop() {
+    if (crop.index < 0 || !crop.img) return;
+    const { w, h: hh } = Jukebox.SLEEVE;
+    const out = document.createElement('canvas');
+    out.width = w;
+    out.height = hh;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, hh);
+    ctx.drawImage(crop.img, crop.ox, crop.oy, crop.img.naturalWidth * crop.scale, crop.img.naturalHeight * crop.scale);
+    const index = crop.index;
+    app.settings.disks[index].cover = { style: 'image', image: out.toDataURL('image/jpeg', 0.88) };
+    crop.sources[index] = { img: crop.img, scale: crop.scale, ox: crop.ox, oy: crop.oy };
+    closeCropper();
+    changed(true);
+    track('ccfolia_jukebox_cover_image');
+  }
+
+  function bindCropper() {
+    const c = els.cropCanvas;
+    c.addEventListener('pointerdown', e => {
+      if (!crop.img) { els.cropFile.click(); return; }
+      c.setPointerCapture(e.pointerId);
+      crop.pointers.set(e.pointerId, canvasPoint(e));
+      if (crop.pointers.size === 2) {
+        const [a, b] = [...crop.pointers.values()];
+        crop.pinch = Math.hypot(a.x - b.x, a.y - b.y);
+      }
+    });
+    c.addEventListener('pointermove', e => {
+      if (!crop.pointers.has(e.pointerId)) return;
+      const prev = crop.pointers.get(e.pointerId);
+      const p = canvasPoint(e);
+      crop.pointers.set(e.pointerId, p);
+      if (crop.pointers.size === 1) {
+        crop.ox += p.x - prev.x;
+        crop.oy += p.y - prev.y;
+        clampCrop();
+        drawCrop();
+      } else if (crop.pointers.size === 2) {
+        const [a, b] = [...crop.pointers.values()];
+        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+        if (crop.pinch) zoomAt(dist / crop.pinch, (a.x + b.x) / 2, (a.y + b.y) / 2);
+        crop.pinch = dist;
+      }
+    });
+    const up = e => { crop.pointers.delete(e.pointerId); if (crop.pointers.size < 2) crop.pinch = 0; };
+    c.addEventListener('pointerup', up);
+    c.addEventListener('pointercancel', up);
+    c.addEventListener('wheel', e => {
+      if (!crop.img) return;
+      e.preventDefault();
+      const p = canvasPoint(e);
+      zoomAt(Math.exp(-e.deltaY * 0.0015), p.x, p.y);
+    }, { passive: false });
+    els.cropZoom.addEventListener('input', () => {
+      if (!crop.img) return;
+      const target = crop.min * Math.pow(8, Number(els.cropZoom.value) / 100);
+      zoomAt(target / crop.scale, Jukebox.SLEEVE.w / 2, Jukebox.SLEEVE.h / 2);
+    });
+    els.cropOpen.addEventListener('click', () => els.cropFile.click());
+    els.cropFile.addEventListener('change', () => { const f = els.cropFile.files && els.cropFile.files[0]; if (f) loadCropFile(f); });
+    els.cropFit.addEventListener('click', () => { if (crop.img) setCropImage(crop.img); });
+    els.cropOk.addEventListener('click', applyCrop);
+    els.cropRemove.addEventListener('click', () => {
+      if (crop.index < 0) return;
+      app.settings.disks[crop.index].cover = { style: 'plain' };
+      crop.sources[crop.index] = null;
+      closeCropper();
+      changed(true);
+    });
+    els.coverModal.querySelectorAll('[data-close-cover]').forEach(btn => btn.addEventListener('click', closeCropper));
+    els.coverModal.addEventListener('click', e => { if (e.target === els.coverModal) closeCropper(); });
+    const drop = els.cropDrop;
+    drop.addEventListener('dragover', e => { if (hasFiles(e)) { e.preventDefault(); e.stopPropagation(); drop.classList.add('is-drop'); } });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-drop'));
+    drop.addEventListener('drop', e => {
+      drop.classList.remove('is-drop');
+      const f = imageFile(e);
+      e.preventDefault();
+      e.stopPropagation();
+      if (f) loadCropFile(f);
+      else toast(t('cover.notImage'), 'error');
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !els.coverModal.hidden) closeCropper(); });
   }
 
   // rerender=true は設定欄も描き直す（色・枚数・ファイル）
@@ -278,7 +560,7 @@
     saveSettings();
     if (rerender) renderSettings();
     clearTimeout(app.buildTimer);
-    app.buildTimer = setTimeout(rebuild, rerender ? 0 : 260);
+    app.buildTimer = setTimeout(rebuild, rerender ? 120 : 260);
   }
 
   /* ================= 組み立て ================= */
@@ -292,6 +574,7 @@
       stopName: s.stopName.trim() || t('set.stopNameDefault'),
       playingLabel: t('set.playingLabel'),
       stopLabel: t('set.stopLabel'),
+      showCover: s.showCover !== false,
       disks: activeDisks()
     });
     if (seq !== app.buildSeq || app.imported) return;
@@ -302,6 +585,7 @@
     if (app.selected >= app.view.scenes.length) app.selected = 0;
     app.marker = -1;
     renderAll();
+    refreshPreviews();
     setTimeout(() => old.forEach(url => URL.revokeObjectURL(url)), 2000);
   }
 
@@ -894,6 +1178,11 @@
       app.settings.count = Math.min(MAX_DISKS, Math.max(1, Number(els.diskCount.value) || 1));
       changed(true);
     });
+    els.showCover.addEventListener('change', () => {
+      app.settings.showCover = els.showCover.checked;
+      track('ccfolia_jukebox_show_cover', { on: els.showCover.checked });
+      changed(true);
+    });
     els.resetBtn.addEventListener('click', () => {
       if (!window.confirm(t('set.resetConfirm'))) return;
       app.settings = defaultSettings();
@@ -925,7 +1214,9 @@
     document.addEventListener('dragover', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
     document.addEventListener('drop', e => {
       const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-      if (f && /\.zip$/i.test(f.name)) { e.preventDefault(); importZip(f); }
+      if (!f) return;
+      e.preventDefault();
+      if (/\.zip$/i.test(f.name)) importZip(f);
     });
     let scrollRaf = 0;
     window.addEventListener('scroll', () => {
@@ -942,6 +1233,7 @@
     applyLayout(loadLayout(), false);
     bind();
     bindPanelDrag();
+    bindCropper();
     applyLanguage();
     rebuild();
   }
