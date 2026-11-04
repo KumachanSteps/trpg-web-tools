@@ -4,13 +4,13 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.14';
+  const VERSION = '0.15';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
   const LANG_KEY = 'ccfoliaJukeboxLang';
   const LANGS = ['ja', 'en', 'ko'];
-  const MAX_DISKS = 10;
+  const MAX_DISKS = Jukebox.MAX_DISKS;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
 
   const $ = id => document.getElementById(id);
@@ -19,7 +19,7 @@
     importBtn: $('importBtn'), importFile: $('importFile'), backBtn: $('backBtn'),
     playBtn: $('playBtn'), exportBtn: $('exportBtn'),
     jukeboxPanel: $('jukeboxPanel'), importPanel: $('importPanel'), importName: $('importName'),
-    roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'),
+    roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), showCover: $('showCover'),
     diskList: $('diskList'), resetBtn: $('resetBtn'),
     shapeLabel: $('shapeLabel'), shapeResetBtn: $('shapeResetBtn'),
     graph: $('layout'), layout: $('layout'), layoutResetBtn: $('layoutResetBtn'), settingsTitle: $('settingsTitle'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), graphCount: $('graphCount'), warnBox: $('warnBox'),
@@ -192,6 +192,7 @@
       roomName: d.set.roomNameDefault,
       stopName: d.set.stopNameDefault,
       count: 9,
+      showCover: true,
       disks: Jukebox.COLORS.map((c, i) => ({ color: c.id, name: d.defaultNames[i], url: '', cover: { style: 'plain' } }))
     };
   }
@@ -214,6 +215,7 @@
       roomName: typeof saved.roomName === 'string' ? saved.roomName : base.roomName,
       stopName: typeof saved.stopName === 'string' ? saved.stopName : base.stopName,
       count: Math.min(MAX_DISKS, Math.max(1, Number(saved.count) || base.count)),
+      showCover: saved.showCover !== false,
       disks
     };
   }
@@ -242,6 +244,8 @@
     els.stopName.value = s.stopName;
     els.diskCount.value = String(s.count);
     els.diskCountOut.textContent = String(s.count);
+    els.showCover.checked = s.showCover !== false;
+    els.diskList.classList.toggle('no-cover', s.showCover === false);
     els.diskList.innerHTML = '';
     s.disks.slice(0, s.count).forEach((disk, i) => {
       const color = Jukebox.colorOf(disk.color);
@@ -286,7 +290,9 @@
           onclick: () => openCropper(i)
         }, cover.style === 'image' ? h('img', { src: cover.image, alt: '' }) : h('span', { 'aria-hidden': 'true' }, '＋')));
       const row = h('li', { class: 'disk-row', style: { '--disk': color.line } },
-        h('button', { type: 'button', class: 'disk-thumb', dataset: { preview: String(i) }, title: t('cover.upload'), onclick: () => openCropper(i) }),
+        s.showCover === false
+          ? h('span', { class: 'disk-thumb', dataset: { preview: String(i) } })
+          : h('button', { type: 'button', class: 'disk-thumb', dataset: { preview: String(i) }, title: t('cover.upload'), onclick: () => openCropper(i) }),
         h('div', { class: 'disk-fields' },
           h('input', {
             class: 'text-input', type: 'text', maxlength: '40', value: disk.name, 'aria-label': `${t('set.diskName')} ${i + 1}`,
@@ -310,7 +316,7 @@
       row.addEventListener('drop', e => {
         row.classList.remove('is-drop');
         const f = imageFile(e);
-        if (!f) return;
+        if (!f || s.showCover === false) return;
         e.preventDefault();
         e.stopPropagation();
         openCropper(i, f);
@@ -329,7 +335,7 @@
       const holder = els.diskList.querySelector(`[data-preview="${i}"]`);
       if (!holder) continue;
       let c;
-      try { c = await Jukebox.slotPreview(disks[i]); } catch (error) { continue; }
+      try { c = await Jukebox.slotPreview(disks[i], app.settings.showCover !== false); } catch (error) { continue; }
       if (seq !== previewSeq) return;
       c.classList.add('disk-thumb-art');
       holder.replaceChildren(c);
@@ -568,6 +574,7 @@
       stopName: s.stopName.trim() || t('set.stopNameDefault'),
       playingLabel: t('set.playingLabel'),
       stopLabel: t('set.stopLabel'),
+      showCover: s.showCover !== false,
       disks: activeDisks()
     });
     if (seq !== app.buildSeq || app.imported) return;
@@ -1169,6 +1176,11 @@
     els.stopName.addEventListener('input', () => { app.settings.stopName = els.stopName.value; changed(false); });
     els.diskCount.addEventListener('input', () => {
       app.settings.count = Math.min(MAX_DISKS, Math.max(1, Number(els.diskCount.value) || 1));
+      changed(true);
+    });
+    els.showCover.addEventListener('change', () => {
+      app.settings.showCover = els.showCover.checked;
+      track('ccfolia_jukebox_show_cover', { on: els.showCover.checked });
       changed(true);
     });
     els.resetBtn.addEventListener('click', () => {

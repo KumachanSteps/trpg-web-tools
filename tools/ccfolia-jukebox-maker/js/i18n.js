@@ -43,6 +43,8 @@
       stopName: '停止中のシーン名',
       stopNameDefault: '停止中',
       count: 'レコードの枚数',
+      showCover: 'ジャケットを表示する',
+      showCoverNote: 'オフにすると、棚にはレコードだけが並びます（シーンの画面と一覧の両方）。',
       disks: 'レコード（曲名がシーン名になります）',
       diskName: '曲名',
       color: 'ラベルの色',
@@ -57,9 +59,9 @@
     },
     colors: {
       cream: 'クリーム', red: '赤', orange: 'オレンジ', yellow: '黄', green: '緑',
-      teal: '青緑', blue: '青', purple: '紫', pink: 'ピンク', gray: 'グレー'
+      teal: '青緑', blue: '青', purple: '紫', pink: 'ピンク', gray: 'グレー', brown: '茶', navy: '紺'
     },
-    defaultNames: ['日常', '戦闘', '緊迫', '楽しい', '探索', '不穏', '悲しい', '狂気', '感動', '休憩'],
+    defaultNames: ['日常', '戦闘', '緊迫', '楽しい', '探索', '不穏', '悲しい', '狂気', '感動', '休憩', '謎解き', 'エンディング'],
     cover: {
       label: 'ジャケット',
       upload: '画像からジャケットを作る',
@@ -169,6 +171,8 @@
       stopName: 'Stopped scene name',
       stopNameDefault: 'Stopped',
       count: 'Number of records',
+      showCover: 'Show sleeves',
+      showCoverNote: 'When off, the shelf shows only the records (in both the scene view and the list).',
       disks: 'Records (the title becomes the scene name)',
       diskName: 'Title',
       color: 'Label color',
@@ -183,9 +187,9 @@
     },
     colors: {
       cream: 'Cream', red: 'Red', orange: 'Orange', yellow: 'Yellow', green: 'Green',
-      teal: 'Teal', blue: 'Blue', purple: 'Purple', pink: 'Pink', gray: 'Gray'
+      teal: 'Teal', blue: 'Blue', purple: 'Purple', pink: 'Pink', gray: 'Gray', brown: 'Brown', navy: 'Navy'
     },
-    defaultNames: ['Daily', 'Battle', 'Tension', 'Cheerful', 'Explore', 'Uneasy', 'Sorrow', 'Madness', 'Moving', 'Break'],
+    defaultNames: ['Daily', 'Battle', 'Tension', 'Cheerful', 'Explore', 'Uneasy', 'Sorrow', 'Madness', 'Moving', 'Break', 'Puzzle', 'Ending'],
     cover: {
       label: 'Sleeve',
       upload: 'Make a sleeve from an image',
@@ -295,6 +299,8 @@
       stopName: '정지 장면 이름',
       stopNameDefault: '정지',
       count: '레코드 장수',
+      showCover: '재킷 표시',
+      showCoverNote: '끄면 선반에 레코드만 놓입니다 (장면 화면과 목록 모두).',
       disks: '레코드 (곡명이 장면 이름이 됩니다)',
       diskName: '곡명',
       color: '라벨 색',
@@ -309,9 +315,9 @@
     },
     colors: {
       cream: '크림', red: '빨강', orange: '주황', yellow: '노랑', green: '초록',
-      teal: '청록', blue: '파랑', purple: '보라', pink: '분홍', gray: '회색'
+      teal: '청록', blue: '파랑', purple: '보라', pink: '분홍', gray: '회색', brown: '갈색', navy: '남색'
     },
-    defaultNames: ['일상', '전투', '긴박', '즐거움', '탐색', '불온', '슬픔', '광기', '감동', '휴식'],
+    defaultNames: ['일상', '전투', '긴박', '즐거움', '탐색', '불온', '슬픔', '광기', '감동', '휴식', '수수께끼', '엔딩'],
     cover: {
       label: '재킷',
       upload: '이미지로 재킷 만들기',

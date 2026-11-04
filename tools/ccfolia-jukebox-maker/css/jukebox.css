@@ -125,6 +125,12 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .disk-thumb-art { display: block; width: 100%; height: 100%; }
 .disk-row.is-drop { outline: 2px dashed var(--yellow); outline-offset: 2px; }
 .cover-label { margin: 2px 0 0; }
+.no-cover .cover-label, .no-cover .cover-row { display: none; }
+.no-cover .disk-thumb { aspect-ratio: 272 / 304; cursor: default; }
+.no-cover .disk-thumb:hover { background: transparent; }
+.toggle-field { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.toggle-field .field-label { margin: 0; }
+.toggle-field input { width: 18px; height: 18px; accent-color: var(--yellow); }
 .cover-row { display: flex; flex-wrap: wrap; gap: 4px; }
 .cover-chip { position: relative; display: grid; place-items: center; width: 26px; height: 25px; padding: 0; overflow: hidden; border: 2px solid transparent; border-radius: 3px; background: var(--panel); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); color: var(--muted); font-size: 0.9rem; font-weight: 800; }
 .cover-chip canvas, .cover-chip img { display: block; width: 100%; height: 100%; object-fit: cover; }

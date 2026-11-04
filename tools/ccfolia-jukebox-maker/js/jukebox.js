@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
 
-  const ASSET_VER = '20261104-01';
+  const ASSET_VER = '20261104-03';
   const CELL_PX = 24;
   const FIELD = { width: 72, height: 36 };
 
@@ -19,7 +19,9 @@
     { id: 'blue', line: '#5a80b8' },
     { id: 'purple', line: '#8a62a8' },
     { id: 'pink', line: '#d98aa0' },
-    { id: 'gray', line: '#b0b0b0' }
+    { id: 'gray', line: '#b0b0b0' },
+    { id: 'brown', line: '#a0683e' },
+    { id: 'navy', line: '#4a5c9e' }
   ];
   const colorOf = id => COLORS.find(c => c.id === id) || COLORS[0];
 
@@ -30,6 +32,8 @@
   // ジャケット（sleeve.png 538×520）と、棚のスロット画像（ジャケット＋はみ出したレコード＋曲名）
   const SLEEVE = { w: 538, h: 520, inset: 4 };
   const SLOT = { w: 336, h: 304, coverH: 256, peek: 0.3 };
+  // ジャケットなしのスロット（レコード＋曲名）
+  const BARE = { w: 272, h: 304, disk: 252 };
   // ジャケットの見本デザイン
   const COVER_STYLES = ['plain', 'tint', 'gradient', 'stripes', 'sunburst', 'dots', 'rings'];
 
@@ -82,14 +86,14 @@
 
   /* ---------- 並べ方 ---------- */
 
-  function slotLayout(n) {
+  function slotLayout(n, bare) {
     const area = { x: -10, y: -16, w: 44, h: 32 };
     const cols = n <= 4 ? 2 : n <= 9 ? 3 : 4;
     const rows = Math.ceil(n / cols);
     const gapX = 1.5;
     const gapY = 1;
     // スロット画像は 幅:高さ = SLOT.w:SLOT.h（ジャケットからレコードが3割はみ出す分、横長）
-    const ratio = SLOT.h / SLOT.w;
+    const ratio = bare ? BARE.h / BARE.w : SLOT.h / SLOT.w;
     const w = Math.min((area.w - gapX * (cols - 1)) / cols, ((area.h - gapY * (rows - 1)) / rows) / ratio);
     const h = w * ratio;
     const totalW = cols * w + (cols - 1) * gapX;
@@ -258,6 +262,7 @@
 
   // 棚のスロット: ジャケットの右から、レコードを直径の3割だけ見せる。empty はレコードなし
   async function drawSlot(diskImg, coverCanvas, name, color, empty) {
+    if (!coverCanvas) return drawBare(diskImg, name, color, empty);
     const c = canvas(SLOT.w, SLOT.h);
     const ctx = c.getContext('2d');
     const ch = SLOT.coverH;
@@ -272,8 +277,40 @@
     ctx.globalAlpha = empty ? 0.55 : 1;
     ctx.drawImage(coverCanvas, 0, 2, cw, ch);
     ctx.restore();
-    // 曲名プレート
-    roundRect(ctx, 8, ch + 8, SLOT.w - 16, 38, 10);
+    drawCaption(ctx, SLOT.w, ch, name, color, empty);
+    return c;
+  }
+
+  // ジャケットなし: レコードだけ。empty は点線の丸
+  function drawBare(diskImg, name, color, empty) {
+    const c = canvas(BARE.w, BARE.h);
+    const ctx = c.getContext('2d');
+    const D = BARE.disk;
+    const x = (BARE.w - D) / 2;
+    if (empty) {
+      ctx.save();
+      ctx.setLineDash([10, 8]);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(244,234,216,0.45)';
+      ctx.beginPath();
+      ctx.arc(BARE.w / 2, 2 + D / 2, D / 2 - 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 3;
+      ctx.drawImage(diskImg, x, 2, D, D);
+      ctx.restore();
+    }
+    drawCaption(ctx, BARE.w, D, name, color, empty);
+    return c;
+  }
+
+  // 曲名プレート
+  function drawCaption(ctx, w, ch, name, color, empty) {
+    roundRect(ctx, 8, ch + 8, w - 16, 38, 10);
     ctx.fillStyle = empty ? 'rgba(20,16,12,0.55)' : 'rgba(20,16,12,0.9)';
     ctx.fill();
     ctx.lineWidth = 3;
@@ -281,12 +318,11 @@
     ctx.globalAlpha = empty ? 0.45 : 1;
     ctx.stroke();
     ctx.fillStyle = '#f4ead8';
-    fitText(ctx, name, SLOT.w - 40, 25, SANS, 800);
+    fitText(ctx, name, w - 40, 25, SANS, 800);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(name, SLOT.w / 2, ch + 28);
+    ctx.fillText(name, w / 2, ch + 28);
     ctx.globalAlpha = 1;
-    return c;
   }
 
   async function makeSlot(diskImg, coverCanvas, name, color, empty) {
@@ -294,9 +330,9 @@
   }
 
   // 設定欄の見本用（スロットと同じ見た目）
-  async function slotPreview(disk) {
+  async function slotPreview(disk, showCover = true) {
     const color = colorOf(disk.color);
-    const [diskImg, cover] = await Promise.all([loadImage(assetUrl(`disk-${disk.color}.png`)), makeCover(disk.cover, color.line)]);
+    const [diskImg, cover] = await Promise.all([loadImage(assetUrl(`disk-${disk.color}.png`)), showCover ? makeCover(disk.cover, color.line) : null]);
     return drawSlot(diskImg, cover, disk.name, color, false);
   }
 
@@ -328,7 +364,7 @@
 
   /* ---------- 組み立て ---------- */
 
-  /* settings = { roomName, stopName, playingLabel, stopLabel, disks: [{ color, name, url, file }] }
+  /* settings = { roomName, stopName, playingLabel, stopLabel, showCover, disks: [{ color, name, url, file }] }
    * 戻り値: CCFOLIAの書き出し用の room と、画面表示用の model */
   async function build(settings) {
     const disks = settings.disks;
@@ -337,13 +373,14 @@
       ...disks.map(d => loadImage(assetUrl(`disk-${d.color}.png`)))
     ]);
     const playerBlob = await fetch(assetUrl('player.png')).then(r => r.blob());
-    const layout = slotLayout(disks.length);
+    const showCover = settings.showCover !== false;
+    const layout = slotLayout(disks.length, !showCover);
     const background = asset(await makeBackground(layout.shelf));
     const onPlayer = diskOnPlayer();
     const plate = plateRect();
 
     const diskBlobs = await Promise.all(disks.map(d => fetch(assetUrl(`disk-${d.color}.png`)).then(r => r.blob())));
-    const covers = await Promise.all(disks.map(d => makeCover(d.cover, colorOf(d.color).line)));
+    const covers = await Promise.all(disks.map(d => (showCover ? makeCover(d.cover, colorOf(d.color).line) : null)));
     const slotBlobs = await Promise.all(disks.map((d, i) => makeSlot(diskImgs[i], covers[i], d.name, colorOf(d.color), false)));
     const emptyBlobs = await Promise.all(disks.map((d, i) => makeSlot(diskImgs[i], covers[i], d.name, colorOf(d.color), true)));
     const stopPlate = asset(await makePlate(settings.stopLabel, settings.stopName, '#8b7d66'));
@@ -392,5 +429,5 @@
     };
   }
 
-  global.Jukebox = { COLORS, COVER_STYLES, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
+  global.Jukebox = { MAX_DISKS: 12, COLORS, COVER_STYLES, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
 })(window);
