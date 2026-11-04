@@ -344,9 +344,10 @@
 
   /* ================= ジャケット画像の切り抜き ================= */
 
-  const crop = { index: -1, img: null, scale: 1, min: 1, ox: 0, oy: 0, pointers: new Map(), pinch: 0, sources: [] };
+  const crop = { session: 0, index: -1, img: null, scale: 1, min: 1, ox: 0, oy: 0, pointers: new Map(), pinch: 0, sources: [] };
 
   function openCropper(index, file) {
+    crop.session += 1;
     crop.index = index;
     crop.img = null;
     els.coverModal.hidden = false;
@@ -356,21 +357,28 @@
     const source = crop.sources[index];
     if (file) loadCropFile(file);
     else if (source) setCropImage(source.img, source);
-    else if (disk.cover && disk.cover.style === 'image' && disk.cover.image) Jukebox.loadImage(disk.cover.image).then(img => setCropImage(img)).catch(() => drawCrop());
+    else if (disk.cover && disk.cover.style === 'image' && disk.cover.image) {
+      const session = crop.session;
+      Jukebox.loadImage(disk.cover.image).then(img => { if (session === crop.session) setCropImage(img); }).catch(() => drawCrop());
+    }
     else drawCrop();
   }
 
   function closeCropper() {
     els.coverModal.hidden = true;
+    crop.session += 1;
     crop.index = -1;
   }
 
   function loadCropFile(file) {
     if (!file || !/^image\//.test(file.type)) { toast(t('cover.notImage'), 'error'); return; }
+    // 読み込み中に閉じたり別の画像を選んだりしたら、古い読み込みの結果は捨てる
+    crop.session += 1;
+    const session = crop.session;
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => setCropImage(img);
-    img.onerror = () => toast(t('cover.notImage'), 'error');
+    img.onload = () => { if (session === crop.session) setCropImage(img); };
+    img.onerror = () => { if (session === crop.session) toast(t('cover.notImage'), 'error'); };
     img.src = url;
   }
 
@@ -404,10 +412,11 @@
 
   function zoomAt(factor, px, py) {
     if (!crop.img) return;
+    // 倍率だけを先に範囲に収め、位置は元の値から計算してから収める
     const before = crop.scale;
-    crop.scale *= factor;
-    clampCrop();
-    const k = crop.scale / before;
+    const next = Math.max(crop.min, Math.min(crop.min * 8, before * factor));
+    crop.scale = next;
+    const k = next / before;
     crop.ox = px - (px - crop.ox) * k;
     crop.oy = py - (py - crop.oy) * k;
     clampCrop();
