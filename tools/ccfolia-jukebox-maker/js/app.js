@@ -175,6 +175,19 @@
     return blobUrls.get(blob);
   }
 
+  // 1回だけ再生するAPNG（針が下りる）は、同じURLだと再生済みの状態を使い回してしまう。
+  // 盤面ごと（大きな盤面・テストプレイ）に、シーンに入るたびに新しいURLを作り直す
+  const freshCache = {};
+  function freshUrlOf(context, sceneKey, mi, blob) {
+    let c = freshCache[context];
+    if (!c || c.key !== sceneKey) {
+      if (c) c.urls.forEach(url => URL.revokeObjectURL(url));
+      c = freshCache[context] = { key: sceneKey, urls: new Map() };
+    }
+    if (!c.urls.has(mi)) c.urls.set(mi, URL.createObjectURL(blob));
+    return c.urls.get(mi);
+  }
+
   function downloadBlob(blob, name) {
     const a = h('a', { href: URL.createObjectURL(blob), download: name });
     document.body.appendChild(a);
@@ -741,7 +754,8 @@
         },
         onclick: opts.onMarker ? e => { e.stopPropagation(); opts.onMarker(mi, m, targets); } : null
       });
-      if (m.imgUrl) node.appendChild(h('img', { src: m.imgUrl, alt: m.text || '', draggable: 'false' }));
+      const src = opts.fresh && m.restart && m.image && m.image.blob ? freshUrlOf(opts.fresh, opts.sceneKey, mi, m.image.blob) : m.imgUrl;
+      if (src) node.appendChild(h('img', { src, alt: m.text || '', draggable: 'false' }));
       else node.appendChild(h('span', { class: 'marker-text' }, m.text || ''));
       board.appendChild(node);
     });
@@ -900,6 +914,8 @@
     const board = boardEl(scene, {
       interactive: true,
       className: 'board-large',
+      fresh: 'main',
+      sceneKey: `${app.buildSeq}:${app.selected}`,
       selectedMarker: app.marker,
       onMarker: mi => { app.marker = mi; renderDetail(); }
     });
@@ -978,9 +994,12 @@
     els.playScene.style.setProperty('--scene', scene.color);
     els.playBgm.textContent = scene.sound ? t('play.bgm', { name: scene.sound.name || scene.name }) : t('play.noBgm');
     els.playBoard.innerHTML = '';
+    app.play.visit = (app.play.visit || 0) + 1;
     els.playBoard.appendChild(boardEl(withShared(scene), {
       interactive: true,
       className: 'board-large',
+      fresh: 'play',
+      sceneKey: app.play.visit,
       onMarker: (mi, m, targets) => {
         if (!m.action) return;
         els.playChat.prepend(h('li', null, t('play.chat', { text: m.action.replace(/\n/g, ' / ') })));

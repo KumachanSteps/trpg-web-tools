@@ -417,7 +417,7 @@
       if (playingIndex >= 0) {
         markers.push({ ...onPlayer, z: 30, text: disks[playingIndex].name, image: asset(spinBlobs[playingIndex]), action: `/scene ${settings.stopName}`, role: 'onPlayer', color: disks[playingIndex].color });
         // 針が下りるAPNG（1回だけ再生）。アームを押しても停止する
-        markers.push({ ...arm, image: armDrop, action: `/scene ${settings.stopName}`, role: 'arm', color: disks[playingIndex].color });
+        markers.push({ ...arm, image: armDrop, action: `/scene ${settings.stopName}`, role: 'arm', restart: true, color: disks[playingIndex].color });
         markers.push({ ...plate, z: 20, text: '', image: asset(playPlates[playingIndex]), action: '', role: 'plate' });
       } else {
         markers.push({ ...plate, z: 20, text: '', image: stopPlate, action: '', role: 'plate' });
