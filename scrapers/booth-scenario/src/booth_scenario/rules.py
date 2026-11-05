@@ -68,10 +68,45 @@ _SYS_PATTERNS = [
     ("MADAMIS", re.compile(r"マーダーミステリー|マダミス|murder\s*mystery", re.I)),
     ("STORYPLAYING", re.compile(r"ストプレ|ストーリー\s*プレイング|story\s*playing", re.I)),
 ]
-# "ガスライトサプリメント使用": a CoC scenario that needs クトゥルフ・バイ・ガスライト.
-_GASLIGHT = re.compile(r"ガスライト|gaslight", re.I)
-_SUPPLEMENT_WORD = re.compile(r"サプリ(メント)?\s*(を|が|の)?\s*(使用|必須|必要|前提)|supplement\s*required", re.I)
-_SUPPLEMENT_NEG = re.compile(r"無く|なく|不要|なしで|無しで|いりません|なくても")
+# CoC supplements a scenario uses: code, name pattern, and whether the name is
+# also a place or an era ("アーカムへ向かう", "ガスライト時代"). Such a name counts
+# only next to "サプリ" or as a bracketed book title that is used
+# (「『ミスカトニック』使用」); a unique book name counts next to 使用/対応/準拠 too.
+SUPPLEMENTS = [
+    ("GASLIGHT", r"(クトゥルフ\s*・?\s*バイ\s*・?\s*)?ガスライト|gaslight", True),
+    ("DREAMLANDS", r"夢幻境|ドリームランド|dreamlands?", True),
+    ("HIEIZAN", r"比叡山炎上", False),
+    ("ARKHAM", r"アーカム", True),
+    ("MISKATONIC", r"ミスカトニック(大学)?", True),
+    ("TEIKOKU", r"帝国とクトゥルフ|クトゥルフと帝国", False),
+    ("PULP", r"パルプ\s*・?\s*クトゥルフ|pulp\s*cthulhu", False),
+    ("COC2010", r"クトゥルフ\s*2010", False),
+    ("COC2015", r"クトゥルフ\s*2015", False),
+    ("CULT_NOW", r"カルト\s*・?\s*ナウ", False),
+    ("MALLEUS", r"マレウス\s*・?\s*モンストロルム", False),
+    ("KEEPER_COMPANION", r"キーパー\s*・?\s*コンパニオン", False),
+]
+_SUPPLEMENT_USE = r"(を|の)?\s*(使用|準拠|必須|必要|前提|対応|採用|推奨|ルール)"
+_SUPPLEMENT_RX = [
+    (code, re.compile(rf"(?:{name})[^、。]{{0,12}}サプリ|サプリ[^、。]{{0,12}}(?:{name})"
+                      rf"|[『「【]\s*(クトゥルフ神話TRPG\s*)?(サプリ(メント)?\s*)?(?:{name})[^』」】]{{0,10}}[』」】]\s*{_SUPPLEMENT_USE}"
+                      + ("" if place else rf"|(?:{name})\s*{_SUPPLEMENT_USE}"), re.I))
+    for code, name, place in SUPPLEMENTS
+]
+_SUPPLEMENT_NEG = re.compile(r"無く|なく|不要|なしで|無しで|いりません|なくても|使用しません|使いません|のみで\s*(回|遊|プレイ)")
+# "◆使用サプリ：基本ルールブック6版、マレウス・モンストロルム", "サプリメント(A、B)を元に":
+# every supplement listed after the label.
+_SUPPLEMENT_LIST = re.compile(r"(使用|必要|推奨)?\s*サプリ(メント)?\s*[:：(（]")
+_SUPPLEMENT_NAME = [(code, re.compile(name, re.I)) for code, name, _ in SUPPLEMENTS]
+
+
+def extract_supplements(ln: str) -> list[str]:
+    """Supplement codes one line says the scenario uses."""
+    if _SUPPLEMENT_NEG.search(ln):
+        return []
+    listed = _SUPPLEMENT_LIST.search(ln)
+    rest = ln[listed.end():] if listed else ""
+    return [code for (code, rx), (_, name) in zip(_SUPPLEMENT_RX, _SUPPLEMENT_NAME) if rx.search(ln) or name.search(rest)]
 
 
 _COC6_EXPLICIT = re.compile(r"CoC\s*6|6版|6th", re.I)
@@ -88,9 +123,10 @@ def extract_systems(text: str) -> list[Hit]:
     for ln in lines(text):
         if _RIGHTS_LINE.search(ln):
             continue
-        if _GASLIGHT.search(ln) and _SUPPLEMENT_WORD.search(ln) and not _SUPPLEMENT_NEG.search(ln) and ("GASLIGHT", "SUPPLEMENT") not in seen:
-            seen.add(("GASLIGHT", "SUPPLEMENT"))
-            hits.append(Hit("scenario_systems", {"system_code": "GASLIGHT", "support_type": "SUPPLEMENT"}, ln))
+        for code in extract_supplements(ln):
+            if (code, "SUPPLEMENT") not in seen:
+                seen.add((code, "SUPPLEMENT"))
+                hits.append(Hit("scenario_systems", {"system_code": code, "support_type": "SUPPLEMENT"}, ln))
         if re.search(r"変換|コンバート|convert", ln, re.I):
             support = "CONVERSION_PATCH" if re.search(r"パッチ|変換表|変換データ|patch", ln, re.I) else "CONVERTIBLE"
         elif re.match(r"^[\[【■◆●・]?\s*(使用)?システム|^system", ln, re.I):
