@@ -28,7 +28,7 @@ MEMBER_SEP = "／"
 FIELD_HELP = {
     "product_kind": "SINGLE / COLLECTION / SAME_PAGE_VARIANTS / ASSET_ONLY / UNDETERMINED",
     "members": "作品名（単品は作品名1つ、アンソロジーは収録作品を／区切り）",
-    "systems": "COC6 / COC7 / EMOKLORE / MADAMIS / OTHER と NATIVE / SUPPORTED / CONVERTIBLE / CONVERSION_PATCH を : でつなぎ ; 区切り",
+    "systems": "COC6 / COC7 / EMOKLORE / MADAMIS / STORYPLAYING / OTHER と NATIVE / SUPPORTED / CONVERTIBLE / CONVERSION_PATCH を : でつなぎ ; 区切り。ガスライト使用は GASLIGHT:SUPPLEMENT",
     "session_modes": "例: ONE_ON_ONE 1-1 KP/KPC ; MULTI_PL 2-4 KP/NONE SECRET（秘匿HOあり）",
     "durations": "例: VOICE MAIN 180-240 ; TEXT UNSPECIFIED 480-480（分）",
     "assets": "例: NPC_IMAGE:INCLUDED ; BGM_AUDIO:EXPLICITLY_ABSENT",
@@ -549,6 +549,9 @@ def _norm_value(field: str, value: str) -> frozenset:
     if field in ("free_full", "free_sample") and value.lower() == "unknown":
         return frozenset()
     parts = re.split(r"\s*;\s*|\n", value)
+    if field == "systems":
+        # "SUPPLEMENT:GASLIGHT" is also written for GASLIGHT:SUPPLEMENT.
+        parts = [re.sub(r"^\s*SUPPLEMENT\s*:\s*(\w+)", r"\1:SUPPLEMENT", p, flags=re.I) for p in parts]
     return frozenset(re.sub(r"\s+", " ", p.strip()).upper() for p in parts if p.strip())
 
 

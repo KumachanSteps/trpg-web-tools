@@ -57,7 +57,7 @@ _ITEM_URL = re.compile(r"https?://(?:[a-z0-9-]+\.)?booth\.pm/(?:[a-z]{2}/)?items
 
 # Tags that name a system (BOOTH tag text as seen on product pages).
 _TAG_SYSTEMS = {"新クトゥルフ神話TRPG": "COC7", "エモクロアTRPG": "EMOKLORE", "エモクロア": "EMOKLORE",
-                "マーダーミステリー": "MADAMIS", "マダミス": "MADAMIS"}
+                "マーダーミステリー": "MADAMIS", "マダミス": "MADAMIS", "ストプレ": "STORYPLAYING", "ストーリープレイング": "STORYPLAYING"}
 
 
 def normalize_title(title: str) -> str:
