@@ -87,6 +87,8 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         FROM variant_scenarios vs JOIN product_variants pv USING(variant_id) WHERE vs.scenario_id = ?""", (sid,))
     modes = _rows(conn, "SELECT * FROM scenario_session_modes WHERE scenario_id = ?", (sid,))
     durations = _rows(conn, "SELECT * FROM scenario_durations WHERE scenario_id = ?", (sid,))
+    supplements = sorted(r[0] for r in conn.execute(
+        "SELECT system_code FROM scenario_systems WHERE scenario_id = ? AND support_type = 'SUPPLEMENT'", (sid,)))
     has_ho_condition = conn.execute("SELECT 1 FROM scenario_conditions WHERE scenario_id = ? AND category = 'HO'", (sid,)).fetchone()
     titles = []
     for p in products:
@@ -100,6 +102,7 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         "title": sc["canonical_title"],
         "aliases": titles,
         "system": system,
+        "supplements": supplements,
         "players": _players(modes),
         "duration": _duration(durations),
         "secret_ho": _secret_ho(modes, bool(has_ho_condition)),

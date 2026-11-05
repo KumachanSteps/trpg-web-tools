@@ -242,3 +242,26 @@ def test_storyplaying_and_gaslight():
     hits = rules.extract_systems(rules.normalize("■システム：クトゥルフ神話TRPG\nガスライトサプリメント使用"))
     assert [(h.value["system_code"], h.value["support_type"]) for h in hits] == [("COC6", "NATIVE"), ("GASLIGHT", "SUPPLEMENT")]
     assert rules.extract_systems(rules.normalize("特殊な形式のガスライトシナリオですのでサプリが無くとも基本ルルブのみで遊べる")) == []
+
+
+def test_coc_supplements():
+    sup = lambda t: rules.extract_supplements(rules.normalize(t))  # noqa: E731
+    assert sup("ガスライトサプリメント使用") == ["GASLIGHT"]
+    assert sup("サプリ『比叡山炎上』を使用します") == ["HIEIZAN"]
+    assert sup("比叡山炎上対応") == ["HIEIZAN"]
+    assert sup("『クトゥルフと帝国』準拠") == ["TEIKOKU"]
+    assert sup("パルプクトゥルフのルールを使用") == ["PULP"]
+    assert sup("クトゥルフ2015対応、カルト・ナウ使用") == ["COC2015", "CULT_NOW"]
+    assert sup("サプリ「ドリームランド」「アーカム」使用") == ["DREAMLANDS", "ARKHAM"]
+    assert sup("『ミスカトニック』使用") == ["MISKATONIC"]
+    # Places and eras alone, and denials, are not supplements.
+    assert sup("探索者はアーカムに向かう必要があります") == []
+    assert sup("ミスカトニック大学の教授からの依頼") == []
+    assert sup("夢幻境を舞台にしたシナリオです") == []
+    assert sup("サプリが無くとも基本ルルブのみで遊べる") == []
+    hits = rules.extract_systems(rules.normalize("■システム：クトゥルフ神話TRPG\nサプリ『比叡山炎上』を使用"))
+    assert [(h.value["system_code"], h.value["support_type"]) for h in hits] == [("COC6", "NATIVE"), ("HIEIZAN", "SUPPLEMENT")]
+    assert sup("◆ 使用サプリ ： 基本ルールブック 6 版、マレウス・モンストロルム") == ["MALLEUS"]
+    assert sup("サプリメント(マレウス・モンストロルム、キーパーコンパニオン、クトゥルフ・カルト・ナウ)を元にした") == ["CULT_NOW", "MALLEUS", "KEEPER_COMPANION"]
+    assert sup("サプリ「キーパーコンパニオン」があると回しやすいが、基本ルールブック6版のみで回せる") == []
+    assert sup("使用サプリ：なし") == []
