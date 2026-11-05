@@ -117,7 +117,9 @@ def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
         codes = []
         if _COC7_META.search(t):
             codes.append("COC7")
-        if _COC6_META.search(t) or (_COC_META.search(t) and not _COC7_META.search(t)):
+        # "クトゥルフ神話×マーダーミステリー": the mythos as a theme, not the TRPG.
+        theme_only = _MADAMIS_META.search(t) and not re.search(r"TRPG|CoC|版|6th|7th", t, re.I)
+        if _COC6_META.search(t) or (_COC_META.search(t) and not _COC7_META.search(t) and not theme_only):
             codes.append("COC6")
         if _EMO_META.search(t):
             codes.append("EMOKLORE")
@@ -164,14 +166,18 @@ def _player_ranges(ln: str) -> list[tuple[int, int]]:
             out.append((lo, hi))
     return out
 _COMPANION = re.compile(r"\b(KPC|DPC)\b|(KPC|DPC)|(KP側(?:の|から)?(?:探索者|PC))")
-_GMLESS = re.compile(r"KPレス|GMレス|DLレス|KP不要|GM不要|DL不要|[(（]\s*(?:GM|KP|DL)\s*なし\s*[)）]|[1一]人で遊べる|ひとりで遊べる|ソロジャーナル", re.I)
+_GMLESS = re.compile(r"KPレス|GMレス|DLレス|KP不要|GM不要|DL不要|ゲームマスター不要|[(（]\s*(?:GM|KP|DL)\s*なし\s*[)）]|[1一]人で遊べる|ひとりで遊べる|ソロジャーナル", re.I)
 _GMLESS_NEG = re.compile(r"(KP|GM|DL)\s*レス\s*(は)?\s*(不可|NG|×|非対応|でき(ない|ません)|出来(ない|ません))", re.I)
-# "6人（プレイヤー5人＋GM1人）", "GM1名＋4名", "2人（DL1人とPL1人）": the facilitator is counted
-# in the total; the players are the rest.
+# "6人（プレイヤー5人＋GM1人）", "6人用（GM1人、PL5人）", "GM1名＋4名", "GM(1名)+プレイヤー(4名)",
+# "2人（DL1人とPL1人）", "プレイヤー6人+ゲームマスターGM1人": the facilitator is counted
+# in the total or added to the players; the players are the rest.
 _WITH_FACILITATOR = [
-    (re.compile(r"\d+\s*(?:人|名)\s*[(（][^)）]*?(?:PL|プレイヤー)\s*(\d+)\s*(?:人|名)[^)）]*[)）]"), r"\1人"),
-    (re.compile(r"(?:GM|KP|DL)\s*\d\s*(?:人|名)?\s*[+＋と]\s*(?:PL|プレイヤー)?\s*(?=\d+\s*(?:人|名))"), "PL"),
+    (re.compile(r"\d+\s*(?:人|名)\s*用?\s*[(（][^)）]*?(?:PL|プレイヤー)\s*(\d+)\s*(?:人|名)[^)）]*[)）]"), r"\1人用"),
+    (re.compile(r"(?:GM|KP|DL)\s*[(（]?\s*\d\s*(?:人|名)?\s*[)）]?\s*[+＋と]\s*(?:PL|プレイヤー)?\s*[(（]?\s*(?=\d+\s*(?:人|名))"), "PL"),
+    (re.compile(r"((?:PL|プレイヤー)\s*[(（]?\s*\d+\s*(?:人|名))\s*[)）]?\s*[+＋]\s*(?:ゲームマスター)?\s*(?:GM|KP|DL)\s*[(（]?\s*\d\s*(?:人|名)?\s*[)）]?"), r"\1"),
 ]
+# "GM+4人", "GM(1名)+", "プレイヤー4人+GM1人": the line also plays with a facilitator.
+_PLUS_FACILITATOR = re.compile(r"(?:GM|KP|DL)\s*[(（]?\s*\d?\s*(?:人|名)?\s*[)）]?\s*[+＋]|[+＋]\s*(?:ゲームマスター)?\s*(?:GM|KP|DL)", re.I)
 # "(KPC、DPC改変可)", "(DPC 可)": a 2-player scenario that also plays as タイマン.
 _COMPANION_OK = re.compile(r"(KPC|DPC)(\s*[、,/／]\s*(KPC|DPC))?\s*(改変)?\s*(可|OK|でも可|も可)", re.I)
 _ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*対\s*1|1\s*[(（]\s*\+?\s*(KPC|DPC)"
@@ -179,7 +185,7 @@ _ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*�
 # "タイマンは推奨しない" / "タイマン不可" rule the mode out.
 _ONE_ON_ONE_NEG = re.compile(
     r"(タイマン|一対一|1\s*対\s*1).{0,12}?(不可|非推奨|推奨(し|致し|いたし)?(ない|ません|かね)|でき(ない|ません)|出来(ない|ません)|"
-    r"向き?ません|向いて(い)?ない|不向き|NG|×|お控え|ご遠慮|対応(して(い|お)?り?)?ません|対象外|想定(して(い|お)?り?)?(ない|ません))|(不可|非推奨)\s*[::]?\s*タイマン")
+    r"向き?ません|向いて(い)?ない|不向き|NG|×|お控え|ご遠慮|(では|じゃ)(ない|ありません)|対応(して(い|お)?り?)?ません|対象外|想定(して(い|お)?り?)?(ない|ません))|(不可|非推奨)\s*[::]?\s*タイマン")
 _SECRET = re.compile(r"秘匿")
 _SECRET_NEG = re.compile(r"秘匿\s*(HO|ハンドアウト)?\s*(は|が)?\s*(なし|無し|ありません|ございません|無い|ない)")
 
@@ -248,13 +254,14 @@ def extract_session_modes(text: str) -> list[Hit]:
                 add("GMLESS_MULTI", lo, hi, "NONE", "NONE", ln, 1 if lo == hi else 0)
             else:
                 add("GMLESS_SOLO", 1, 1, "NONE", "NONE", ln)
+                hits[-1].value["no_count"] = 1
         if one_on_one:
             add("ONE_ON_ONE", 1, 1, facilitator or "UNKNOWN", companion or "UNKNOWN", ln)
         if gmless or one_on_one:
             # "2PLまたはタイマン" / "1(+KPC) or 2PL": the count is another way to play.
             if multi and not gmless:
                 add("MULTI_PL", multi[0], multi[1], facilitator or "UNKNOWN", "UNKNOWN", ln, 1 if multi[0] == multi[1] else 0)
-            elif multi and re.search(r"(GM|KP|DL)\s*[+＋]", stated):
+            elif multi and _PLUS_FACILITATOR.search(stated):
                 # "4人（GMなし）or 5人（GM+PL4人）": also playable with a facilitator.
                 add("MULTI_PL", multi[0], multi[1], "UNKNOWN", "UNKNOWN", ln, 1 if multi[0] == multi[1] else 0)
             continue
@@ -270,15 +277,39 @@ def extract_session_modes(text: str) -> list[Hit]:
                 hits[-1].value["from_count"] = 1  # "1PL" alone; a KPC elsewhere makes it タイマン
         else:
             add("MULTI_PL", lo, hi, facilitator or "UNKNOWN", companion or "UNKNOWN", ln, 1 if lo == hi else 0)
+    # "GMレス" on its own line and "プレイ人数 5人用" on another: a GM-less game for
+    # that many players. The count stays a with-GM mode too only when the GM-less
+    # line offers it as an option ("GMレスでもプレイ可能", "GMレスも可").
+    bare = [h for h in hits if h.value.get("no_count")]
+    multis = [h for h in hits if h.value["mode"] == "MULTI_PL"]
+    if bare and multis and not any(h.value["mode"] == "GMLESS_MULTI" for h in hits):
+        m = multis[0].value
+        add("GMLESS_MULTI", m["player_min"], m["player_max"], "NONE", "NONE", bare[0].excerpt, m.get("player_fixed", 0))
+        if not any(re.search(r"でも|も\s*可|も\s*OK", h.excerpt) for h in bare):
+            hits = [h for h in hits if h.value["mode"] != "MULTI_PL"]
+    for h in hits:
+        h.value.pop("no_count", None)
     # "2PL KPレス" elsewhere: lines that only say KPレス are about that same mode.
     if any(h.value["mode"] == "GMLESS_MULTI" for h in hits):
         hits = [h for h in hits if h.value["mode"] != "GMLESS_SOLO"]
     # "人数:1PL" with a KPC named elsewhere ("KPCの手料理を…") is a タイマン.
-    kpc = next((m for ln in ls if not _TRANSLATION.search(ln) and not _KPC_OR_NPC.search(ln) and (m := _COMPANION.search(ln))), None)
+    kpc = next((m for ln in ls if not _TRANSLATION.search(ln) and not _KPC_OR_NPC.search(ln) and not _ONE_ON_ONE_NEG.search(ln)
+                and (m := _COMPANION.search(ln))), None)
     for h in hits:
         if h.value.pop("from_count", None) and kpc:
             h.value.update(mode="ONE_ON_ONE", companion_role=(kpc.group(1) or kpc.group(2) or "KPC").upper())
-    return hits
+    return _dedupe(hits)
+
+
+def _dedupe(hits: list[Hit]) -> list[Hit]:
+    """A header line read together with its value line gives that value twice."""
+    seen, out = set(), []
+    for h in hits:
+        key = tuple(sorted(h.value.items()))
+        if key not in seen:
+            seen.add(key)
+            out.append(h)
+    return out
 
 
 def session_modes_from_title(title: str) -> list[Hit]:
@@ -363,6 +394,13 @@ def _time_range(seg: str):
     return None
 
 
+_KANJI_NUM = {c: i for i, c in enumerate("一二三四五六七八九十", 1)}
+
+
+def _count(s: str) -> int:
+    return int(s) if s.isdigit() else _KANJI_NUM.get(s, 1)
+
+
 _EPISODE_HEAD = re.compile(r"^[・●■▶◆]?\s*(其ノ[一二三四五六七八九十\d]|第\s*[\d一二三四五六七八九十]+\s*(話|章|幕)|Act\s*\d|Chapter\s*\d|EP\s*\d)", re.I)
 
 
@@ -372,6 +410,9 @@ def extract_durations(text: str) -> list[Hit]:
     hits: list[Hit] = []
     ls = lines(text)
     for i, ln in enumerate(ls):
+        # "◆時間" alone on a line: the value is on the next one.
+        if re.fullmatch(r"[【\[■●◆・]?\s*(?:プレイ|所要|想定)?\s*時\s*間\s*[】\]]?\s*[:：]?", ln) and i + 1 < len(ls):
+            ln = "時間:" + ls[i + 1]
         # Notes right under the line ("※全エピソードを遊ぶ場合の時間") qualify it.
         notes = []
         for nl in ls[i + 1:i + 3]:
@@ -381,7 +422,7 @@ def extract_durations(text: str) -> list[Hit]:
         # A play-time line names it ("プレイ時間", "所要", "ボイセ") or gives the
         # time as a labelled value ("・駐車場:1時間"); a tagline like
         # 「たった1時間のふたりごと」 does neither.
-        if not (re.search(r"プレイ|ボイセ|テキセ|ボイス|テキスト|テキ|セッション|想定|所要|推定|目安|導入|時\s*間\s*[】\]:：]|^[【\[]?\s*時\s*間", ln, re.I)
+        if not (re.search(r"プレイ|ボイセ|テキセ|ボイス|テキスト|テキ|セッション|想定|所要|推定|目安|導入|時\s*間\s*[】\]:：]|^[【\[■●◆・\-]?\s*時\s*間", ln, re.I)
                 or re.fullmatch(r"[・●■▶◆\-]?\s*(約|およそ)?\s*[\d.~\s]+(時間|h)\S{0,8}", ln, re.I)
                 or re.search(r"[:：〈<(（]\s*(約|およそ)?\s*\d+(\.\d+)?\s*(時間|h|分)", ln, re.I) or _EPISODE_HEAD.match(ln)):
             continue
@@ -392,6 +433,15 @@ def extract_durations(text: str) -> list[Hit]:
             if not r:
                 continue
             lo, hi, m = r
+            # "2~4時間×五章構成": that long for each of the chapters.
+            per = re.search(r"[×xX✕]\s*([\d一二三四五六七八九十]+)\s*(章|話|部|幕|回|エピソード)", seg[m.end():])
+            n = _count(per.group(1)) if per else 1
+            lo, hi = lo * n, hi * n
+            # "本編60分程度（読み込み、感想戦含め2時間程度）": the table runs from the
+            # main part to the total with the extras.
+            whole = _time_range(seg[m.end():]) if "含" in seg[m.end():] else None
+            if whole and whole[1] > hi:
+                hi = whole[1]
             if re.search(r"半テキ|セミテキ", seg):
                 mode = "SEMI_TEXT"
             elif re.search(r"ボイセ|ボイス|voice", seg, re.I):
@@ -400,7 +450,9 @@ def extract_durations(text: str) -> list[Hit]:
                 mode = "TEXT"
             else:
                 mode = "VOICE"
-            if re.search(r"導入|プロローグ|intro", ln, re.I):
+            if whole and whole[1] == hi:
+                scope = "UNSPECIFIED"
+            elif re.search(r"導入|プロローグ|intro", ln, re.I):
                 scope = "INTRO"
             elif re.search(r"全\s*\d*\s*(話|エピソード)|全編|合計|通し", ln) or any(re.match(r"[※*].{0,4}(全\s*\d*\s*(話|エピソード)|全編|合計|通し)", n) for n in notes):
                 scope = "ALL_EPISODES"
@@ -423,7 +475,7 @@ def extract_durations(text: str) -> list[Hit]:
     # An anthology's summary line ("プレイ時間1~6時間の短編7本収録") only spans the works' own times.
     if len(hits) > 1:
         hits = [h for h in hits if "収録" not in h.excerpt] or hits
-    return hits
+    return _dedupe(hits)
 
 
 # -- assets ---------------------------------------------------------------------

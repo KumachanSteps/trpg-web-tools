@@ -215,3 +215,22 @@ def test_player_counts_test_batch_1():
 
 def test_hz_is_not_hours():
     assert rules.extract_durations(rules.normalize("● 52Hzのくじら")) == []
+
+
+def test_test_batch_2():
+    # From the second test batch (20261029-2132).
+    modes = lambda t: sorted((h.value["mode"], h.value["player_min"], h.value["player_max"])  # noqa: E731
+                             for h in rules.extract_session_modes(rules.normalize(t)))
+    assert modes("プレイ人数は、6人用（ＧＭ1人、PL5人）") == [("MULTI_PL", 5, 5)]
+    assert modes("・プレイ人数：GM(1名)+プレイヤー(4名)※GMレスも可") == [("GMLESS_MULTI", 4, 4), ("MULTI_PL", 4, 4)]
+    assert modes("人数：プレイヤー4人+GM1人（パッケージ版はGM不要）") == [("GMLESS_MULTI", 4, 4), ("MULTI_PL", 4, 4)]
+    assert modes("7人用シナリオ\nGMレスでもプレイ可能です\n◆人数\n 7人(オンライン時ゲームマスター不要)") == [("GMLESS_MULTI", 7, 7), ("MULTI_PL", 7, 7)]
+    assert modes("GMレス\nプレイ人数 5人用") == [("GMLESS_MULTI", 5, 5)]
+    assert modes("■推奨人数\n1人固定\n本シナリオはソロシナリオです。KPC(KPの継続探索者など)を用いたタイマンシナリオではありません。") == [("SOLO", 1, 1)]
+    assert durs(rules.normalize("◆時間\n 3－4時間程度")) == [("VOICE", "UNSPECIFIED", 180, 240)]
+    assert durs(rules.normalize("・時間 60～90分")) == [("VOICE", "UNSPECIFIED", 60, 90)]
+    assert durs(rules.normalize("・時間 本編60分程度（読み込み、感想戦含め2時間程度）")) == [("VOICE", "UNSPECIFIED", 60, 120)]
+    assert durs(rules.normalize("シナリオ時間：２～４時間×五章構成")) == [("VOICE", "UNSPECIFIED", 600, 1200)]
+    codes = lambda t: [h.value["system_code"] for h in rules.extract_systems_meta(t, [])]  # noqa: E731
+    assert codes("「虚実をかける」クトゥルフ神話×マーダーミステリー") == ["MADAMIS"]
+    assert codes("CoCマダミス「館」") == ["COC6", "MADAMIS"]
