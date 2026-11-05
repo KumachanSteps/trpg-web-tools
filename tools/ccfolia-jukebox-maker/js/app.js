@@ -4,10 +4,11 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.16';
+  const VERSION = '0.18';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
+  const BACKDROP_KEY = 'ccfoliaJukebox.backdrop';
   const LANG_KEY = 'ccfoliaJukeboxLang';
   const LANGS = ['ja', 'en', 'ko'];
   const MAX_DISKS = Jukebox.MAX_DISKS;
@@ -20,6 +21,7 @@
     playBtn: $('playBtn'), exportBtn: $('exportBtn'),
     jukeboxPanel: $('jukeboxPanel'), importPanel: $('importPanel'), importName: $('importName'),
     roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), showCover: $('showCover'),
+    backdropField: $('backdropField'), backdropThumb: $('backdropThumb'), backdropImg: $('backdropImg'), backdropOpen: $('backdropOpen'), backdropClear: $('backdropClear'), backdropFile: $('backdropFile'),
     diskList: $('diskList'), resetBtn: $('resetBtn'),
     shapeLabel: $('shapeLabel'), shapeResetBtn: $('shapeResetBtn'),
     graph: $('layout'), layout: $('layout'), layoutResetBtn: $('layoutResetBtn'), settingsTitle: $('settingsTitle'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), graphCount: $('graphCount'), warnBox: $('warnBox'),
@@ -173,6 +175,19 @@
       app.urls.push(url);
     }
     return blobUrls.get(blob);
+  }
+
+  // 1回だけ再生するAPNG（針が下りる）は、同じURLだと再生済みの状態を使い回してしまう。
+  // 盤面ごと（大きな盤面・テストプレイ）に、シーンに入るたびに新しいURLを作り直す
+  const freshCache = {};
+  function freshUrlOf(context, sceneKey, mi, blob) {
+    let c = freshCache[context];
+    if (!c || c.key !== sceneKey) {
+      if (c) c.urls.forEach(url => URL.revokeObjectURL(url));
+      c = freshCache[context] = { key: sceneKey, urls: new Map() };
+    }
+    if (!c.urls.has(mi)) c.urls.set(mi, URL.createObjectURL(blob));
+    return c.urls.get(mi);
   }
 
   function downloadBlob(blob, name) {
@@ -580,6 +595,7 @@
       playingLabel: t('set.playingLabel'),
       stopLabel: t('set.stopLabel'),
       showCover: s.showCover !== false,
+      backdrop: app.backdrop || '',
       disks: activeDisks()
     });
     if (seq !== app.buildSeq || app.imported) return;
@@ -741,7 +757,8 @@
         },
         onclick: opts.onMarker ? e => { e.stopPropagation(); opts.onMarker(mi, m, targets); } : null
       });
-      if (m.imgUrl) node.appendChild(h('img', { src: m.imgUrl, alt: m.text || '', draggable: 'false' }));
+      const src = opts.fresh && m.restart && m.image && m.image.blob ? freshUrlOf(opts.fresh, opts.sceneKey, mi, m.image.blob) : m.imgUrl;
+      if (src) node.appendChild(h('img', { src, alt: m.text || '', draggable: 'false' }));
       else node.appendChild(h('span', { class: 'marker-text' }, m.text || ''));
       board.appendChild(node);
     });
@@ -900,6 +917,8 @@
     const board = boardEl(scene, {
       interactive: true,
       className: 'board-large',
+      fresh: 'main',
+      sceneKey: `${app.buildSeq}:${app.selected}`,
       selectedMarker: app.marker,
       onMarker: mi => { app.marker = mi; renderDetail(); }
     });
@@ -978,9 +997,12 @@
     els.playScene.style.setProperty('--scene', scene.color);
     els.playBgm.textContent = scene.sound ? t('play.bgm', { name: scene.sound.name || scene.name }) : t('play.noBgm');
     els.playBoard.innerHTML = '';
+    app.play.visit = (app.play.visit || 0) + 1;
     els.playBoard.appendChild(boardEl(withShared(scene), {
       interactive: true,
       className: 'board-large',
+      fresh: 'play',
+      sceneKey: app.play.visit,
       onMarker: (mi, m, targets) => {
         if (!m.action) return;
         els.playChat.prepend(h('li', null, t('play.chat', { text: m.action.replace(/\n/g, ' / ') })));
@@ -1232,9 +1254,69 @@
     else window.addEventListener('resize', drawLinks);
   }
 
+  /* ================= 部屋の外側の背景 ================= */
+
+  // 画像は長辺1920pxまでのJPEGにして、設定とは別のキーに保存する（容量があふれても他の設定は残る）
+  function renderBackdrop() {
+    const on = Boolean(app.backdrop);
+    els.backdropImg.src = on ? app.backdrop : Jukebox.backdropPreview();
+    els.backdropClear.hidden = !on;
+  }
+
+  function setBackdropFile(file) {
+    if (!file || !/^image\//.test(file.type)) { toast(t('cover.notImage'), 'error'); return; }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1920 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k);
+      c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      app.backdrop = c.toDataURL('image/jpeg', 0.86);
+      try { localStorage.setItem(BACKDROP_KEY, app.backdrop); } catch (error) { toast(t('set.backdropNotSaved'), 'error'); }
+      renderBackdrop();
+      changed(true);
+      track('ccfolia_jukebox_backdrop');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); toast(t('cover.notImage'), 'error'); };
+    img.src = url;
+  }
+
+  function bindBackdrop() {
+    try { app.backdrop = localStorage.getItem(BACKDROP_KEY) || ''; } catch (error) { app.backdrop = ''; }
+    if (!/^data:image\//.test(app.backdrop)) app.backdrop = '';
+    const open = () => els.backdropFile.click();
+    els.backdropOpen.addEventListener('click', open);
+    els.backdropThumb.addEventListener('click', open);
+    els.backdropFile.addEventListener('change', () => {
+      setBackdropFile(els.backdropFile.files && els.backdropFile.files[0]);
+      els.backdropFile.value = '';
+    });
+    els.backdropClear.addEventListener('click', () => {
+      app.backdrop = '';
+      try { localStorage.removeItem(BACKDROP_KEY); } catch (error) { /* noop */ }
+      renderBackdrop();
+      changed(true);
+    });
+    els.backdropField.addEventListener('dragover', e => { if (hasFiles(e)) { e.preventDefault(); e.stopPropagation(); els.backdropField.classList.add('is-drop'); } });
+    els.backdropField.addEventListener('dragleave', () => els.backdropField.classList.remove('is-drop'));
+    els.backdropField.addEventListener('drop', e => {
+      els.backdropField.classList.remove('is-drop');
+      const f = imageFile(e);
+      if (!f) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setBackdropFile(f);
+    });
+    renderBackdrop();
+  }
+
   function init() {
     app.lang = detectLang();
     app.settings = loadSettings();
+    bindBackdrop();
     applyLayout(loadLayout(), false);
     bind();
     bindPanelDrag();

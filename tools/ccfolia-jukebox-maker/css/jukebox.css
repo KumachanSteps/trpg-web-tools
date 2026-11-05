@@ -155,6 +155,10 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .swatch.is-on { border-color: var(--ink); }
 .swatch:hover { transform: scale(1.12); }
 .bgm-row { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.backdrop-row { display: flex; gap: 8px; align-items: center; }
+.backdrop-thumb { flex: 0 0 auto; width: 96px; aspect-ratio: 16 / 9; padding: 0; overflow: hidden; border: 1px solid var(--hair); border-radius: 4px; background: var(--field); cursor: pointer; }
+.backdrop-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.backdrop-field.is-drop { outline: 2px dashed var(--yellow); outline-offset: 4px; border-radius: 4px; }
 .bgm-file { display: flex; flex: 1 1 auto; gap: 6px; align-items: center; min-width: 0; overflow: hidden; color: var(--muted); font-size: 0.76rem; white-space: nowrap; text-overflow: ellipsis; }
 
 .import-name { margin: 0 0 6px; font-weight: 800; word-break: break-all; }

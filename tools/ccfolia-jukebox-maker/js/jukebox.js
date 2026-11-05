@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
 
-  const ASSET_VER = '20261104-05';
+  const ASSET_VER = '20261105-03';
   const CELL_PX = 24;
   const FIELD = { width: 72, height: 36 };
 
@@ -28,6 +28,8 @@
   // プレーヤー画像の中のターンテーブル中心（画像幅・高さに対する割合）と、レコードを置く大きさ
   const PLATTER = { cx: 0.413, cy: 0.4625, size: 0.625 };
   const PLAYER = { x: -34, y: -12, size: 20 };
+  // プレーヤーは3枚重ね: 本体（アームなし）→ レコード → トーンアーム。アームの画像はプレーヤーの左上からのマス位置
+  const TONEARM = { x: 11, y: 2.25, width: 7.5, height: 13.75 };
 
   // ジャケット（sleeve.png 538×520）と、棚のスロット画像（ジャケット＋はみ出したレコード＋曲名）
   const SLEEVE = { w: 538, h: 520, inset: 4 };
@@ -60,6 +62,8 @@
   }
 
   const toBlob = c => new Promise(resolve => c.toBlob(resolve, 'image/png'));
+  // 透過のいらない大きな絵（盤面・前景・背景）はJPEGにしてZIPを軽くする
+  const jpeg = async c => ({ blob: await new Promise(resolve => c.toBlob(resolve, 'image/jpeg', 0.86)), type: 'image/jpeg' });
 
   const FONT = '"Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", "Noto Serif KR", serif';
   const SANS = '"Hiragino Sans", "Noto Sans JP", "Noto Sans KR", "Yu Gothic UI", system-ui, sans-serif';
@@ -129,6 +133,11 @@
   /* ---------- 画像づくり ---------- */
 
   async function makeBackground(shelf) {
+    return toBlob(drawBackground(shelf));
+  }
+
+  // 盤面の絵（棚と木目）。前景を覆うマーカーパネルに使う
+  function drawBackground(shelf) {
     const W = FIELD.width * CELL_PX;
     const H = FIELD.height * CELL_PX;
     const c = canvas(W, H);
@@ -158,7 +167,90 @@
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(214,170,96,0.45)';
     ctx.stroke();
-    return toBlob(c);
+    return c;
+  }
+
+  // 部屋の外側の背景（画像を選ばなかったとき）: 暗い色に、大きなレコードの溝を薄く
+  function drawBackdrop() {
+    const W = 1920, H = 1080;
+    const c = canvas(W, H);
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(W * 0.3, H * 0.4, 60, W * 0.5, H * 0.5, W * 0.8);
+    g.addColorStop(0, '#2c2019');
+    g.addColorStop(0.6, '#140e0b');
+    g.addColorStop(1, '#060505');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    const cx = W * 0.82, cy = H * 0.62;
+    for (let r = 160; r < 1100; r += 5) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,236,210,${0.018 + 0.012 * Math.sin(r * 0.21)})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    // 光の筋
+    const sheen = ctx.createLinearGradient(W * 0.45, 0, W, H);
+    sheen.addColorStop(0, 'rgba(255,220,180,0)');
+    sheen.addColorStop(0.5, 'rgba(255,220,180,0.06)');
+    sheen.addColorStop(1, 'rgba(255,220,180,0)');
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, W, H);
+    const v = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, W * 0.7);
+    v.addColorStop(0, 'rgba(0,0,0,0)');
+    v.addColorStop(1, 'rgba(0,0,0,0.6)');
+    ctx.fillStyle = v;
+    ctx.fillRect(0, 0, W, H);
+    return c;
+  }
+
+  // シーンの前景（ココフォリアのシーン一覧のサムネイル用）: 盤面を暗くして、レコード（とジャケット）と曲名を大きく
+  function drawFace(board, art, label, title, sub, color) {
+    const W = board.width, H = board.height;
+    const c = canvas(W, H);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(board, 0, 0);
+    ctx.fillStyle = 'rgba(8,6,5,0.55)';
+    ctx.fillRect(0, 0, W, H);
+    const box = { x: 70, y: 90, w: 860, h: 684 };
+    // ラベル色の光（小さいサムネイルでも色で見分けられるように）
+    const glow = ctx.createRadialGradient(box.x + box.w / 2, H / 2, 40, box.x + box.w / 2, H / 2, W * 0.42);
+    glow.addColorStop(0, rgba(color, 0.55));
+    glow.addColorStop(1, rgba(color, 0));
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+    const k = Math.min(box.w / art.width, box.h / art.height);
+    const aw = art.width * k, ah = art.height * k;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 30;
+    ctx.drawImage(art, box.x + (box.w - aw) / 2, box.y + (box.h - ah) / 2, aw, ah);
+    ctx.restore();
+    const tx = 990, tw = W - tx - 70;
+    ctx.fillStyle = color;
+    ctx.fillRect(tx, 300, 10, 270);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#b8a888';
+    ctx.font = `800 40px ${SANS}`;
+    ctx.fillText(label, tx + 40, 350);
+    ctx.fillStyle = '#f6ecd9';
+    fitText(ctx, title, tw - 40, 130, FONT, 700);
+    ctx.fillText(title, tx + 40, 480);
+    if (sub) {
+      ctx.fillStyle = '#c9b994';
+      fitText(ctx, `♪ ${sub}`, tw - 40, 54, SANS, 600);
+      ctx.fillText(`♪ ${sub}`, tx + 40, 560);
+    }
+    return c;
+  }
+
+  // スロットの絵から曲名プレートを除いた部分
+  function artOf(slotCanvas, bare) {
+    const h = (bare ? BARE.disk : SLOT.coverH) + 6;
+    const c = canvas(slotCanvas.width, h);
+    c.getContext('2d').drawImage(slotCanvas, 0, 0);
+    return c;
   }
 
   /* ---------- ジャケット ---------- */
@@ -383,22 +475,26 @@
 
   /* ---------- 組み立て ---------- */
 
-  /* settings = { roomName, stopName, playingLabel, stopLabel, showCover, disks: [{ color, name, bgm, url, file }] }
+  /* settings = { roomName, stopName, playingLabel, stopLabel, showCover, backdrop (JPEGのdata URL), disks: [{ color, name, bgm, url, file }] }
    * 戻り値: CCFOLIAの書き出し用の room と、画面表示用の model */
   async function build(settings) {
     const disks = settings.disks;
-    const [playerImg, ...diskImgs] = await Promise.all([
-      loadImage(assetUrl('player.png')),
-      ...disks.map(d => loadImage(assetUrl(`disk-${d.color}.png`)))
-    ]);
-    const playerBlob = await fetch(assetUrl('player.png')).then(r => r.blob());
+    const diskImgs = await Promise.all(disks.map(d => loadImage(assetUrl(`disk-${d.color}.png`))));
+    const blobOf = name => fetch(assetUrl(name)).then(r => r.blob());
+    const [playerBlob, armRestBlob, armDropBlob] = await Promise.all([blobOf('player-base.png'), blobOf('tonearm-rest.png'), blobOf('tonearm-drop.png')]);
     const showCover = settings.showCover !== false;
     const layout = slotLayout(disks.length, !showCover);
-    const background = asset(await makeBackground(layout.shelf));
+    const boardCanvas = drawBackground(layout.shelf);
+    const fieldPanel = await jpeg(boardCanvas);
+    // 部屋の外側の背景: 選んだ画像（JPEG）か、作った絵
+    const background = settings.backdrop
+      ? { blob: await fetch(settings.backdrop).then(r => r.blob()), type: 'image/jpeg' }
+      : await jpeg(drawBackdrop());
     const onPlayer = diskOnPlayer();
     const plate = plateRect();
 
-    const diskBlobs = await Promise.all(disks.map(d => fetch(assetUrl(`disk-${d.color}.png`)).then(r => r.blob())));
+    // 再生中のレコードはラベルが回るAPNG
+    const spinBlobs = await Promise.all(disks.map(d => blobOf(`disk-${d.color}-spin.png`)));
     const covers = await Promise.all(disks.map(d => (showCover ? makeCover(d.cover, colorOf(d.color).line) : null)));
     const slotBlobs = await Promise.all(disks.map((d, i) => makeSlot(diskImgs[i], covers[i], d.name, bgmTitle(d), colorOf(d.color), false)));
     const emptyBlobs = await Promise.all(disks.map((d, i) => makeSlot(diskImgs[i], covers[i], d.name, bgmTitle(d), colorOf(d.color), true)));
@@ -407,14 +503,36 @@
 
     const player = { ...PLAYER, width: PLAYER.size, height: PLAYER.size, z: 10, text: '', image: asset(playerBlob), action: '', role: 'player' };
     delete player.size;
+    const arm = { x: PLAYER.x + TONEARM.x, y: PLAYER.y + TONEARM.y, width: TONEARM.width, height: TONEARM.height, z: 40, text: '' };
+    const armRest = asset(armRestBlob);
+    const armDrop = asset(armDropBlob);
+
+    // 前景は各シーンのサムネイル用。盤面では同じ大きさのマーカーパネル（棚の絵）で覆う
+    const field = { x: -FIELD.width / 2, y: -FIELD.height / 2, width: FIELD.width, height: FIELD.height, z: 1, text: '', image: fieldPanel, action: '', role: 'field' };
+    const [baseImg, restImg] = await Promise.all([loadImage(assetUrl('player-base.png')), loadImage(assetUrl('tonearm-rest.png'))]);
+    const stopArt = canvas(baseImg.width, baseImg.height);
+    {
+      const sctx = stopArt.getContext('2d');
+      sctx.drawImage(baseImg, 0, 0);
+      const s = baseImg.width / PLAYER.size;
+      sctx.drawImage(restImg, TONEARM.x * s, TONEARM.y * s, TONEARM.width * s, TONEARM.height * s);
+    }
+    const stopFace = await jpeg(drawFace(boardCanvas, stopArt, settings.stopLabel, settings.stopName, '', '#8b7d66'));
+    const playFaces = await Promise.all(disks.map(async (d, i) => {
+      const slot = await drawSlot(diskImgs[i], covers[i], d.name, '', colorOf(d.color), false);
+      return jpeg(drawFace(boardCanvas, artOf(slot, !showCover), settings.playingLabel, d.name, bgmTitle(d), colorOf(d.color).line));
+    }));
 
     const sceneOf = (name, playingIndex) => {
-      const markers = [player];
+      const markers = [field, player];
       if (playingIndex >= 0) {
-        markers.push({ ...onPlayer, z: 30, text: disks[playingIndex].name, image: asset(diskBlobs[playingIndex]), action: `/scene ${settings.stopName}`, role: 'onPlayer', color: disks[playingIndex].color });
+        markers.push({ ...onPlayer, z: 30, text: disks[playingIndex].name, image: asset(spinBlobs[playingIndex]), action: `/scene ${settings.stopName}`, role: 'onPlayer', color: disks[playingIndex].color });
+        // 針が下りるAPNG（1回だけ再生）。アームを押しても停止する
+        markers.push({ ...arm, image: armDrop, action: `/scene ${settings.stopName}`, role: 'arm', restart: true, color: disks[playingIndex].color });
         markers.push({ ...plate, z: 20, text: '', image: asset(playPlates[playingIndex]), action: '', role: 'plate' });
       } else {
         markers.push({ ...plate, z: 20, text: '', image: stopPlate, action: '', role: 'plate' });
+        markers.push({ ...arm, image: armRest, action: '', role: 'arm' });
       }
       disks.forEach((d, i) => {
         const slot = layout.slots[i];
@@ -427,14 +545,14 @@
       return markers;
     };
 
-    const scenes = [{ name: settings.stopName, text: '', sound: null, markers: sceneOf(settings.stopName, -1), color: '#8b7d66' }];
+    const scenes = [{ name: settings.stopName, text: '', sound: null, foreground: stopFace, markers: sceneOf(settings.stopName, -1), color: '#8b7d66' }];
     disks.forEach((d, i) => {
       const file = d.file || null;
       const url = String(d.url || '').trim();
       const sound = file || url
         ? { name: bgmTitle(d) || d.name, url: file ? '' : url, asset: file ? { blob: file, type: file.type || Ccfolia.typeOfName(file.name) || 'audio/mpeg' } : null, volume: 0.5, repeat: true }
         : null;
-      scenes.push({ name: d.name, text: '', sound, markers: sceneOf(d.name, i), color: colorOf(d.color).line });
+      scenes.push({ name: d.name, text: '', sound, foreground: playFaces[i], markers: sceneOf(d.name, i), color: colorOf(d.color).line });
     });
 
     return {
@@ -448,5 +566,8 @@
     };
   }
 
-  global.Jukebox = { MAX_DISKS: 12, COLORS, COVER_STYLES, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
+  let backdropUrl = '';
+  const backdropPreview = () => backdropUrl || (backdropUrl = drawBackdrop().toDataURL('image/jpeg', 0.8));
+
+  global.Jukebox = { MAX_DISKS: 12, backdropPreview, COLORS, COVER_STYLES, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
 })(window);
