@@ -134,7 +134,7 @@
    *   name, fieldWidth, fieldHeight, gridSize,
    *   background: Asset|null,
    *   startSceneIndex,
-   *   scenes: [{ name, text, background: Asset|null, sound: { name, url, asset, volume, repeat } | null,
+   *   scenes: [{ name, text, background: Asset|null, foreground: Asset|null, sound: { name, url, asset, volume, repeat } | null,
    *              markers: [{ x, y, z, width, height, text, image: Asset, action }] }]
    * }
    * Asset = { blob, type }
@@ -180,12 +180,13 @@
         };
       }
       const bg = await addAsset(scene.background || room.background);
+      const fg = await addAsset(scene.foreground || null);
       const sound = scene.sound || null;
       const soundFile = sound && sound.asset ? await addAsset(sound.asset) : null;
       const data = {
         name: scene.name,
         backgroundUrl: bg,
-        foregroundUrl: null,
+        foregroundUrl: fg,
         fieldObjectFit: 'fill',
         fieldWidth: room.fieldWidth,
         fieldHeight: room.fieldHeight,
@@ -217,7 +218,7 @@
     const roomEntity = {
       name: room.name || '',
       backgroundUrl: start ? start.backgroundUrl : null,
-      foregroundUrl: null,
+      foregroundUrl: start ? start.foregroundUrl : null,
       fieldObjectFit: 'fill',
       fieldWidth: room.fieldWidth,
       fieldHeight: room.fieldHeight,
