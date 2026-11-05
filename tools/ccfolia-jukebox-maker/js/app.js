@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.16';
+  const VERSION = '0.17';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';

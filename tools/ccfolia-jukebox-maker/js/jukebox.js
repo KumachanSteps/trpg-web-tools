@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
 
-  const ASSET_VER = '20261104-05';
+  const ASSET_VER = '20261105-01';
   const CELL_PX = 24;
   const FIELD = { width: 72, height: 36 };
 
@@ -28,6 +28,8 @@
   // プレーヤー画像の中のターンテーブル中心（画像幅・高さに対する割合）と、レコードを置く大きさ
   const PLATTER = { cx: 0.413, cy: 0.4625, size: 0.625 };
   const PLAYER = { x: -34, y: -12, size: 20 };
+  // プレーヤーは3枚重ね: 本体（アームなし）→ レコード → トーンアーム。アームの画像はプレーヤーの左上からのマス位置
+  const TONEARM = { x: 11, y: 2.25, width: 7.5, height: 13.75 };
 
   // ジャケット（sleeve.png 538×520）と、棚のスロット画像（ジャケット＋はみ出したレコード＋曲名）
   const SLEEVE = { w: 538, h: 520, inset: 4 };
@@ -387,18 +389,17 @@
    * 戻り値: CCFOLIAの書き出し用の room と、画面表示用の model */
   async function build(settings) {
     const disks = settings.disks;
-    const [playerImg, ...diskImgs] = await Promise.all([
-      loadImage(assetUrl('player.png')),
-      ...disks.map(d => loadImage(assetUrl(`disk-${d.color}.png`)))
-    ]);
-    const playerBlob = await fetch(assetUrl('player.png')).then(r => r.blob());
+    const diskImgs = await Promise.all(disks.map(d => loadImage(assetUrl(`disk-${d.color}.png`))));
+    const blobOf = name => fetch(assetUrl(name)).then(r => r.blob());
+    const [playerBlob, armRestBlob, armDropBlob] = await Promise.all([blobOf('player-base.png'), blobOf('tonearm-rest.png'), blobOf('tonearm-drop.png')]);
     const showCover = settings.showCover !== false;
     const layout = slotLayout(disks.length, !showCover);
     const background = asset(await makeBackground(layout.shelf));
     const onPlayer = diskOnPlayer();
     const plate = plateRect();
 
-    const diskBlobs = await Promise.all(disks.map(d => fetch(assetUrl(`disk-${d.color}.png`)).then(r => r.blob())));
+    // 再生中のレコードはラベルが回るAPNG
+    const spinBlobs = await Promise.all(disks.map(d => blobOf(`disk-${d.color}-spin.png`)));
     const covers = await Promise.all(disks.map(d => (showCover ? makeCover(d.cover, colorOf(d.color).line) : null)));
     const slotBlobs = await Promise.all(disks.map((d, i) => makeSlot(diskImgs[i], covers[i], d.name, bgmTitle(d), colorOf(d.color), false)));
     const emptyBlobs = await Promise.all(disks.map((d, i) => makeSlot(diskImgs[i], covers[i], d.name, bgmTitle(d), colorOf(d.color), true)));
@@ -407,14 +408,20 @@
 
     const player = { ...PLAYER, width: PLAYER.size, height: PLAYER.size, z: 10, text: '', image: asset(playerBlob), action: '', role: 'player' };
     delete player.size;
+    const arm = { x: PLAYER.x + TONEARM.x, y: PLAYER.y + TONEARM.y, width: TONEARM.width, height: TONEARM.height, z: 40, text: '' };
+    const armRest = asset(armRestBlob);
+    const armDrop = asset(armDropBlob);
 
     const sceneOf = (name, playingIndex) => {
       const markers = [player];
       if (playingIndex >= 0) {
-        markers.push({ ...onPlayer, z: 30, text: disks[playingIndex].name, image: asset(diskBlobs[playingIndex]), action: `/scene ${settings.stopName}`, role: 'onPlayer', color: disks[playingIndex].color });
+        markers.push({ ...onPlayer, z: 30, text: disks[playingIndex].name, image: asset(spinBlobs[playingIndex]), action: `/scene ${settings.stopName}`, role: 'onPlayer', color: disks[playingIndex].color });
+        // 針が下りるAPNG（1回だけ再生）。アームを押しても停止する
+        markers.push({ ...arm, image: armDrop, action: `/scene ${settings.stopName}`, role: 'arm', color: disks[playingIndex].color });
         markers.push({ ...plate, z: 20, text: '', image: asset(playPlates[playingIndex]), action: '', role: 'plate' });
       } else {
         markers.push({ ...plate, z: 20, text: '', image: stopPlate, action: '', role: 'plate' });
+        markers.push({ ...arm, image: armRest, action: '', role: 'arm' });
       }
       disks.forEach((d, i) => {
         const slot = layout.slots[i];
