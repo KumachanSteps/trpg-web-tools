@@ -59,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
     ex = sub.add_parser("export-review")
     ex.add_argument("--out", type=Path)
     ex.add_argument("--ids", type=int, nargs="*")
+    ex.add_argument("--fields", nargs="*", help="only these fields (e.g. the tendency ones for items already reviewed)")
     im = sub.add_parser("import-review")
     im.add_argument("path", type=Path)
     im.add_argument("--batch", help="name of the test batch the table came from")
@@ -186,7 +187,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "export-review":
         ids = args.ids or review.load_set(review_set_path)
         out = args.out or data / "review" / "review_table.xlsx"
-        print(f"{review.export_review(conn, ids, out)} rows -> {out}")
+        print(f"{review.export_review(conn, ids, out, fields=args.fields)} rows -> {out}")
         return 0
     if args.cmd == "import-review":
         print(json.dumps(review.import_review(conn, args.path, batch=args.batch, split=args.split), ensure_ascii=False))

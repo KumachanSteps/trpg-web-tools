@@ -47,6 +47,7 @@ class DetailRecord:
     description_source: str | None = None
     seo_description: str | None = None
     cover_image_url: str | None = None
+    published_at: str | None = None
     language: str | None = None
     like_count: int | None = None
     like_count_source: str = "UNAVAILABLE"
@@ -165,6 +166,9 @@ def parse_item_json(text: str, booth_item_id: int) -> DetailRecord:
         rec.category_name = cat["name"]
         parent = (cat.get("parent") or {}).get("name") if isinstance(cat.get("parent"), dict) else None
         rec.category_path = f"{parent}/{cat['name']}" if parent else cat["name"]
+    pub = data.get("published_at")
+    if isinstance(pub, str) and re.match(r"\d{4}-\d{2}-\d{2}", pub):
+        rec.published_at = pub
     wl = data.get("wish_lists_count")
     if isinstance(wl, int) and wl >= 0:
         rec.like_count, rec.like_count_source = wl, "PUBLIC_STRUCTURED_DATA"

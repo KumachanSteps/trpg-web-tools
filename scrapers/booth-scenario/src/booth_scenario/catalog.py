@@ -75,7 +75,7 @@ def _json_list(text: str | None) -> list:
 def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
     sid = sc["scenario_id"]
     products = _rows(conn, """
-        SELECT p.booth_item_id, p.product_url, p.title, p.cover_image_url, p.first_seen_at, ps.relation_type,
+        SELECT p.booth_item_id, p.product_url, p.title, p.cover_image_url, p.first_seen_at, p.published_at, ps.relation_type,
                pub.shop_name, pub.shop_url
         FROM product_scenarios ps JOIN products p USING(booth_item_id)
         LEFT JOIN publishers pub ON pub.publisher_id = p.publisher_id
@@ -108,7 +108,7 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         "circle": {"name": main.get("shop_name"), "url": main.get("shop_url")},
         "source": {"site": "BOOTH", "url": main.get("product_url"), "item_id": main.get("booth_item_id")},
         "cover_url": main.get("cover_image_url"),
-        "published_at": None,
+        "published_at": (main.get("published_at") or "")[:10] or None,
         "first_seen_at": first_seen[:10] if first_seen else None,
         "tags": _json_list(sc["genre_json"]),
     }
