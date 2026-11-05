@@ -66,7 +66,12 @@ _SYS_PATTERNS = [
     ("COC6", re.compile(r"(?<!新)クトゥルフ神話TRPG|CoC\s*6|6版|6th", re.I)),
     ("EMOKLORE", re.compile(r"エモクロア|emoklore", re.I)),
     ("MADAMIS", re.compile(r"マーダーミステリー|マダミス|murder\s*mystery", re.I)),
+    ("STORYPLAYING", re.compile(r"ストプレ|ストーリー\s*プレイング|story\s*playing", re.I)),
 ]
+# "ガスライトサプリメント使用": a CoC scenario that needs クトゥルフ・バイ・ガスライト.
+_GASLIGHT = re.compile(r"ガスライト|gaslight", re.I)
+_SUPPLEMENT_WORD = re.compile(r"サプリ(メント)?\s*(を|が|の)?\s*(使用|必須|必要|前提)|supplement\s*required", re.I)
+_SUPPLEMENT_NEG = re.compile(r"無く|なく|不要|なしで|無しで|いりません|なくても")
 
 
 _COC6_EXPLICIT = re.compile(r"CoC\s*6|6版|6th", re.I)
@@ -83,6 +88,9 @@ def extract_systems(text: str) -> list[Hit]:
     for ln in lines(text):
         if _RIGHTS_LINE.search(ln):
             continue
+        if _GASLIGHT.search(ln) and _SUPPLEMENT_WORD.search(ln) and not _SUPPLEMENT_NEG.search(ln) and ("GASLIGHT", "SUPPLEMENT") not in seen:
+            seen.add(("GASLIGHT", "SUPPLEMENT"))
+            hits.append(Hit("scenario_systems", {"system_code": "GASLIGHT", "support_type": "SUPPLEMENT"}, ln))
         if re.search(r"変換|コンバート|convert", ln, re.I):
             support = "CONVERSION_PATCH" if re.search(r"パッチ|変換表|変換データ|patch", ln, re.I) else "CONVERTIBLE"
         elif re.match(r"^[\[【■◆●・]?\s*(使用)?システム|^system", ln, re.I):
@@ -106,6 +114,7 @@ _COC6_META = re.compile(r"CoC\s*6|6版|6th", re.I)
 _COC_META = re.compile(r"クトゥルフ|CoC|克苏鲁", re.I)
 _EMO_META = re.compile(r"エモクロア|emoklore", re.I)
 _MADAMIS_META = re.compile(r"マーダーミステリー|マダミス|murder\s*mystery", re.I)
+_STORYPLAYING_META = re.compile(r"ストプレ|ストーリー\s*プレイング|story\s*playing", re.I)
 
 
 def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
@@ -125,6 +134,8 @@ def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
             codes.append("EMOKLORE")
         if _MADAMIS_META.search(t):
             codes.append("MADAMIS")
+        if _STORYPLAYING_META.search(t):
+            codes.append("STORYPLAYING")
         for code in codes:
             hits.append(Hit("scenario_systems", {"system_code": code, "support_type": "NATIVE"}, f"[{source}] {text}"[:300], method="RULE", confidence=0.8 if source == "title" else 0.6))
     seen, out = set(), []

@@ -34,11 +34,12 @@
     COC7: "CoC 7版",
     EMOKLORE: "エモクロア",
     MADAMIS: "マダミス",
+    STORYPLAYING: "ストプレ",
     OTHER: "その他",
     UNKNOWN: "不明"
   };
 
-  Hub.SYSTEM_SHORT = { COC6: "CoC6", COC7: "CoC7", EMOKLORE: "エモクロア", MADAMIS: "マダミス", OTHER: "その他", UNKNOWN: "不明" };
+  Hub.SYSTEM_SHORT = { COC6: "CoC6", COC7: "CoC7", EMOKLORE: "エモクロア", MADAMIS: "マダミス", STORYPLAYING: "ストプレ", OTHER: "その他", UNKNOWN: "不明" };
 
   // フォルダ名やメモからシステムを推定する。分からなければ null。
   Hub.detectSystem = function (text) {
@@ -47,6 +48,7 @@
     if (/(coc|クトゥルフ|cthulhu)\s*6|6版|6th/.test(s)) return "COC6";
     if (/エモクロア|emoklore|(^|[^a-z])emo([^a-z]|$)/.test(s)) return "EMOKLORE";
     if (/マダミス|マーダーミステリー|murder\s*mystery/.test(s)) return "MADAMIS";
+    if (/ストプレ|ストーリープレイング|story\s*playing/.test(s)) return "STORYPLAYING";
     if (/coc|クトゥルフ/.test(s)) return null;
     return null;
   };

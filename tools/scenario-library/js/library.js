@@ -114,7 +114,7 @@
 
     var present = {};
     catalog.scenarios.forEach(function (sc) { present[sc.system || "UNKNOWN"] = true; });
-    var order = ["COC6", "COC7", "EMOKLORE", "MADAMIS", "OTHER", "UNKNOWN"];
+    var order = ["COC6", "COC7", "EMOKLORE", "MADAMIS", "STORYPLAYING", "OTHER", "UNKNOWN"];
     var chips = [{ v: "", label: "すべて" }].concat(order.filter(function (k) { return present[k]; }).map(function (k) { return { v: k, label: Hub.SYSTEMS[k] }; }));
     els.systemChips.innerHTML = chips.map(function (c) {
       return '<button type="button" class="hub-chip" data-sys="' + c.v + '" aria-pressed="false">' + esc(c.label) + "</button>";

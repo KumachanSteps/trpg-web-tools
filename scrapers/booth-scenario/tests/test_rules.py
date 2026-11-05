@@ -234,3 +234,11 @@ def test_test_batch_2():
     codes = lambda t: [h.value["system_code"] for h in rules.extract_systems_meta(t, [])]  # noqa: E731
     assert codes("「虚実をかける」クトゥルフ神話×マーダーミステリー") == ["MADAMIS"]
     assert codes("CoCマダミス「館」") == ["COC6", "MADAMIS"]
+
+
+def test_storyplaying_and_gaslight():
+    codes = lambda t: [h.value["system_code"] for h in rules.extract_systems_meta(t, [])]  # noqa: E731
+    assert codes("相手の名前を正しく呼ばないと出られない部屋【ストプレ】") == ["STORYPLAYING"]
+    hits = rules.extract_systems(rules.normalize("■システム：クトゥルフ神話TRPG\nガスライトサプリメント使用"))
+    assert [(h.value["system_code"], h.value["support_type"]) for h in hits] == [("COC6", "NATIVE"), ("GASLIGHT", "SUPPLEMENT")]
+    assert rules.extract_systems(rules.normalize("特殊な形式のガスライトシナリオですのでサプリが無くとも基本ルルブのみで遊べる")) == []
