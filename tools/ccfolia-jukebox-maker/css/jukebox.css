@@ -119,11 +119,11 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .count-row output { min-width: 2ch; color: var(--yellow); font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
 
 .disk-list { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; }
-.disk-row { display: grid; grid-template-columns: 18px 76px minmax(0, 1fr); gap: 8px; align-items: start; padding: 8px; border: 1px solid var(--hair); border-left: 3px solid var(--disk); border-radius: var(--radius); background: var(--field); }
+.disk-row { position: relative; display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 8px 8px 20px; border: 1px solid var(--hair); border-left: 3px solid var(--disk); border-radius: var(--radius); background: var(--field); }
 .disk-thumb { display: block; width: 76px; aspect-ratio: 538 / 520; margin-top: 2px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
 .disk-thumb:hover { background: var(--yellow-soft); }
 .disk-thumb-art { display: block; width: 100%; height: 100%; }
-.disk-grip { display: grid; align-self: stretch; place-items: center; width: 18px; margin: -8px 0 -8px -6px; padding: 0; border: 0; border-radius: 3px 0 0 3px; background: transparent; color: var(--faint); cursor: grab; touch-action: none; }
+.disk-grip { position: absolute; top: 0; bottom: 0; left: 0; display: grid; place-items: center; width: 18px; padding: 0; border: 0; border-radius: 3px 0 0 3px; background: transparent; color: var(--faint); cursor: grab; touch-action: none; }
 .disk-grip svg { width: 16px; height: 16px; fill: currentColor; }
 .disk-grip:hover, .disk-grip:focus-visible { color: var(--disk); background: rgba(255, 255, 255, 0.04); }
 .disk-list.is-sorting { user-select: none; }
@@ -147,7 +147,9 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 /* ---------- ジャケットの切り抜き ---------- */
 .cover-modal { width: min(880px, 100%); }
 .cover-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); gap: 18px; align-items: start; }
-.cover-presets { max-height: min(560px, calc(100vh - 160px)); padding-right: 4px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--hair) transparent; }
+.cover-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.cover-open { width: 100%; }
+.cover-presets { max-height: min(510px, calc(100vh - 210px)); padding-right: 4px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--hair) transparent; }
 .cover-presets-title { margin: 0 0 6px; color: var(--muted); font-size: 0.76rem; font-weight: 800; }
 .cover-presets-title + .cover-grid + .cover-presets-title { margin-top: 12px; }
 .cover-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
@@ -163,7 +165,7 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .crop-drop canvas:active { cursor: grabbing; }
 .crop-empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 24px; color: var(--muted); font-size: 0.88rem; font-weight: 700; text-align: center; pointer-events: none; }
 .crop-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
-.crop-zoom { display: flex; flex: 1 1 200px; align-items: center; gap: 8px; color: var(--muted); font-size: 0.78rem; font-weight: 700; }
+.crop-zoom { display: flex; flex: 1 1 260px; align-items: center; gap: 8px; color: var(--muted); font-size: 0.78rem; font-weight: 700; }
 .crop-zoom input { flex: 1 1 auto; accent-color: var(--yellow); }
 .crop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--hair); }
 .disk-fields { display: grid; gap: 6px; min-width: 0; }

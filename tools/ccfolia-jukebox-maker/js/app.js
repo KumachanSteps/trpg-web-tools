@@ -493,6 +493,11 @@
     crop.session += 1;
     const session = crop.session;
     crop.preset = id;
+    // 読み込みが終わるまでは前の画像で決定できないように、いったん空にする
+    crop.img = null;
+    crop.presetView = null;
+    syncZoom();
+    drawCrop();
     renderCoverPresets();
     Jukebox.loadImage(Jukebox.photoUrl(id)).then(img => {
       if (session !== crop.session) return;
@@ -513,6 +518,9 @@
     // 読み込み中に閉じたり別の画像を選んだりしたら、古い読み込みの結果は捨てる
     crop.session += 1;
     const session = crop.session;
+    crop.img = null;
+    syncZoom();
+    drawCrop();
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => { if (session === crop.session) setCropImage(img); };
