@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.20';
+  const VERSION = '0.21';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -964,7 +964,18 @@
       fresh: 'main',
       sceneKey: `${app.buildSeq}:${app.selected}`,
       selectedMarker: app.marker,
-      onMarker: mi => { app.marker = mi; renderDetail(); }
+      onMarker: mi => {
+        // クリックでパネルの中身、すばやく2回クリックでその先のシーンへ（クリックのたびに盤面を描き直すので dblclick ではなく時間で判定）
+        const now = Date.now();
+        const twice = app.lastMarkerClick && app.lastMarkerClick.mi === mi && now - app.lastMarkerClick.at < 400;
+        app.lastMarkerClick = twice ? null : { mi, at: now };
+        if (twice) {
+          const to = Ccfolia.sceneTargets(scene.markers[mi] && scene.markers[mi].action).map(sceneIndexByName).find(i => i >= 0);
+          if (to !== undefined && to !== app.selected) { selectScene(to); return; }
+        }
+        app.marker = mi;
+        renderDetail();
+      }
     });
     board.querySelectorAll('.marker').forEach(node => {
       const mi = Number(node.dataset.mi);
