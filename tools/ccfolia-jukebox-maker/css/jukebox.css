@@ -198,8 +198,8 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 
 /* ---------- 盤面 ---------- */
 .board { position: relative; width: 100%; overflow: hidden; border-radius: 4px; background: #111; }
-/* 一覧のサムネイルの中のマーカーの z-index を外へ出さない（スクロールするパネルの見出しより上に出ないように） */
-.scene-list .board { isolation: isolate; }
+/* 盤面の中のマーカーの z-index を外へ出さない（スクロールするパネルの見出しより上に出ないように） */
+.board { isolation: isolate; }
 .board-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; user-select: none; }
 .marker { position: absolute; display: block; padding: 0; border: 0; background: transparent; }
 .marker img { display: block; width: 100%; height: 100%; object-fit: fill; pointer-events: none; user-select: none; }
