@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
 
-  const ASSET_VER = '20261105-03';
+  const ASSET_VER = '20261106-02';
   const CELL_PX = 24;
   const FIELD = { width: 72, height: 36 };
 
@@ -38,6 +38,25 @@
   const BARE = { w: 272, h: 340, disk: 252 };
   // ジャケットの見本デザイン
   const COVER_STYLES = ['plain', 'tint', 'gradient', 'stripes', 'sunburst', 'dots', 'rings'];
+
+  // プリセットの写真ジャケット（Unsplash License の無料写真。assets/covers/<id>.jpg、538×520 に切り抜き済み）
+  const U = 'https://unsplash.com';
+  const PHOTOS = [
+    { id: 'introduction', color: 'cream', author: 'Andy Luo', user: 'andy8647', photo: 'a-chair-sitting-in-the-middle-of-a-room-0lfMluAw8wk' },
+    { id: 'handout', color: 'gray', author: 'mk. s', user: 'mk__s', photo: 'a-wax-stamp-on-a-piece-of-paper-KGDVTn9lYDE' },
+    { id: 'investigation', color: 'teal', author: 'Dariusz Sankowski', user: 'dariuszsankowski', photo: 'brown-pencil-on-white-book-beside-black-eyeglasses-dvK_CT1Wg78' },
+    { id: 'secret-talk', color: 'purple', author: 'lhon karwan', user: 'lhonkarwanhamasalih', photo: 'two-silhouettes-are-holding-hands-in-the-darkness-xVAEsUhEGTc' },
+    { id: 'investigation-2', color: 'brown', author: 'Veer Mickey Shah', user: 'veermickey', photo: 'investigation-board-with-red-string-connecting-photos-and-documents-y13Sg2MLI40' },
+    { id: 'debate', color: 'blue', author: 'Kevin Hessey', user: 'kevinhessey', photo: 'a-wooden-chess-board-with-chess-pieces-on-it-yXAuWd4nX6c' },
+    { id: 'break-time', color: 'green', author: 'Alexas_Fotos', user: 'alexas_fotos', photo: 'a-drink-sitting-next-to-a-sign-that-says-have-a-break-mJZn0eZUzh0' },
+    { id: 'final-debate', color: 'red', author: 'Daniele Franchi', user: 'daniele_franchi', photo: 'the-pawn-triumphs-over-the-fallen-king-b_NUj9eklsk' },
+    { id: 'thinking', color: 'navy', author: 'Saad Ahmad', user: 'saadahmad_umn', photo: 'text-BQLw0OrA6F4' },
+    { id: 'climax', color: 'orange', author: 'Quilia', user: 'heyquilia', photo: 'orange-and-yellow-fire-illustration-y3RFJh6-r0Q' },
+    { id: 'after-talk', color: 'yellow', author: 'Parinaz Mirhosseini', user: 'parinaz_mhs', photo: 'colorful-game-tiles-scattered-on-a-grid-RxAyATWag6A' },
+    { id: 'epilogue', color: 'pink', author: 'Richard Heinen', user: 'richard_he', photo: 'an-empty-theater-with-red-curtains-and-seats-25OeoEKoNP8' }
+  ].map(p => ({ ...p, authorUrl: `${U}/@${p.user}`, photoUrl: `${U}/photos/${p.photo}` }));
+  const photoOf = id => PHOTOS.find(p => p.id === id) || null;
+  const photoUrl = id => assetUrl(`covers/${id}.jpg`);
 
   const imageCache = new Map();
   function loadImage(src) {
@@ -322,7 +341,7 @@
     }
   }
 
-  /* cover = { style: 'plain' | COVER_STYLES | 'image', image: dataURL }
+  /* cover = { style: 'plain' | COVER_STYLES | 'image' | 'photo', image: dataURL, photo: PHOTOS id }
    * ジャケットの紙の形に絵を重ね、紙の質感と縁の影を残す */
   async function makeCover(cover, hex) {
     const sleeve = await loadImage(assetUrl('sleeve.png'));
@@ -334,9 +353,9 @@
     const art = canvas(SLEEVE.w, SLEEVE.h);
     const actx = art.getContext('2d');
     const i = SLEEVE.inset;
-    if (style === 'image' && cover.image) {
+    if ((style === 'image' && cover.image) || (style === 'photo' && photoOf(cover.photo))) {
       try {
-        const img = await loadImage(cover.image);
+        const img = await loadImage(style === 'photo' ? photoUrl(cover.photo) : cover.image);
         actx.drawImage(img, 0, 0, SLEEVE.w, SLEEVE.h);
       } catch (error) { return c; }
     } else {
@@ -569,5 +588,5 @@
   let backdropUrl = '';
   const backdropPreview = () => backdropUrl || (backdropUrl = drawBackdrop().toDataURL('image/jpeg', 0.8));
 
-  global.Jukebox = { MAX_DISKS: 12, backdropPreview, COLORS, COVER_STYLES, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
+  global.Jukebox = { MAX_DISKS: 12, backdropPreview, COLORS, COVER_STYLES, PHOTOS, photoOf, photoUrl, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
 })(window);

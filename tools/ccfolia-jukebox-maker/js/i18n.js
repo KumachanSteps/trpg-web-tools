@@ -68,10 +68,11 @@
       cream: 'クリーム', red: '赤', orange: 'オレンジ', yellow: '黄', green: '緑',
       teal: '青緑', blue: '青', purple: '紫', pink: 'ピンク', gray: 'グレー', brown: '茶', navy: '紺'
     },
-    defaultNames: ['日常', '戦闘', '緊迫', '楽しい', '探索', '不穏', '悲しい', '狂気', '感動', '休憩', '謎解き', 'エンディング'],
+    defaultNames: ['導入', 'ハンドアウト', '調査', '密談', '調査2', '議論', '休憩', '最終議論', '考察', 'クライマックス', '感想戦', 'エピローグ'],
     cover: {
       label: 'ジャケット',
       upload: '画像からジャケットを作る',
+      photo: '写真：{name}（撮影 {author}）',
       title: 'ジャケットの画像（{name}）',
       hint: '画像をドラッグで動かし、マウスホイール（スマートフォンは2本指）で拡大・縮小して、ジャケットに入る範囲を決めます。暗い部分はジャケットの外です。',
       empty: 'ここに画像をドラッグ＆ドロップ、またはクリックしてファイルを開く',
@@ -140,7 +141,8 @@
       title: '利用上の注意',
       note1: 'ココフォリアのルームデータ（ZIP）の形式は公開されていないため、このツールの書き出しは非公式です。読み込めない・動きが違う場合は ' + X_LINK + ' までお知らせください。',
       note2: 'レコードとプレーヤーの画像は、このツールで作る部屋の中で自由に使えます。画像だけの再配布はしないでください。',
-      note3: 'このツールはココフォリア（CCFOLIA）の公式ツールではありません。'
+      note3: 'このツールはココフォリア（CCFOLIA）の公式ツールではありません。',
+      photos: 'ジャケットのプリセット写真は <a href="https://unsplash.com/license" target="_blank" rel="noopener">Unsplash License</a> の写真です（テーマ：撮影者）。'
     }
   };
 
@@ -203,10 +205,11 @@
       cream: 'Cream', red: 'Red', orange: 'Orange', yellow: 'Yellow', green: 'Green',
       teal: 'Teal', blue: 'Blue', purple: 'Purple', pink: 'Pink', gray: 'Gray', brown: 'Brown', navy: 'Navy'
     },
-    defaultNames: ['Daily', 'Battle', 'Tension', 'Cheerful', 'Explore', 'Uneasy', 'Sorrow', 'Madness', 'Moving', 'Break', 'Puzzle', 'Ending'],
+    defaultNames: ['Introduction', 'Read handout', 'Investigation', 'Secret talk', 'Investigation 2', 'Debate', 'Break time', 'Final debate', 'Thinking', 'Climax', 'After talk', 'Epilogue'],
     cover: {
       label: 'Sleeve',
       upload: 'Make a sleeve from an image',
+      photo: 'Photo: {name} (by {author})',
       title: 'Sleeve image ({name})',
       hint: 'Drag the image to move it and use the mouse wheel (two fingers on a phone) to zoom, so the part you want fits on the sleeve. The dark area is outside the sleeve.',
       empty: 'Drop an image here, or click to open a file',
@@ -275,7 +278,8 @@
       title: 'Notes',
       note1: 'CCFOLIA\'s room data (ZIP) format is not public, so this export is unofficial. If it does not load or behaves differently, please tell ' + X_LINK + '.',
       note2: 'The record and player images may be used freely inside rooms made with this tool. Please do not redistribute the images on their own.',
-      note3: 'This tool is not an official CCFOLIA tool.'
+      note3: 'This tool is not an official CCFOLIA tool.',
+      photos: 'The preset sleeve photos are from Unsplash, used under the <a href="https://unsplash.com/license" target="_blank" rel="noopener">Unsplash License</a> (theme: photographer). '
     }
   };
 
@@ -338,10 +342,11 @@
       cream: '크림', red: '빨강', orange: '주황', yellow: '노랑', green: '초록',
       teal: '청록', blue: '파랑', purple: '보라', pink: '분홍', gray: '회색', brown: '갈색', navy: '남색'
     },
-    defaultNames: ['일상', '전투', '긴박', '즐거움', '탐색', '불온', '슬픔', '광기', '감동', '휴식', '수수께끼', '엔딩'],
+    defaultNames: ['도입', '핸드아웃', '조사', '밀담', '조사 2', '토론', '휴식', '최종 토론', '고찰', '클라이맥스', '애프터 토크', '에필로그'],
     cover: {
       label: '재킷',
       upload: '이미지로 재킷 만들기',
+      photo: '사진: {name} (촬영 {author})',
       title: '재킷 이미지 ({name})',
       hint: '이미지를 드래그해 옮기고, 마우스 휠(스마트폰은 두 손가락)로 확대·축소해 재킷에 들어갈 범위를 정합니다. 어두운 부분은 재킷 바깥입니다.',
       empty: '여기에 이미지를 드래그 앤 드롭하거나, 클릭해 파일을 여세요',
@@ -410,7 +415,8 @@
       title: '이용 시 주의',
       note1: '코코포리아의 룸 데이터(ZIP) 형식은 공개되어 있지 않아 이 툴의 내보내기는 비공식입니다. 불러오지 못하거나 다르게 동작하면 ' + X_LINK + ' 으로 알려 주세요.',
       note2: '레코드와 플레이어 이미지는 이 툴로 만든 방 안에서 자유롭게 쓸 수 있습니다. 이미지만 재배포하지는 말아 주세요.',
-      note3: '이 툴은 코코포리아(CCFOLIA)의 공식 툴이 아닙니다.'
+      note3: '이 툴은 코코포리아(CCFOLIA)의 공식 툴이 아닙니다.',
+      photos: '재킷 프리셋 사진은 <a href="https://unsplash.com/license" target="_blank" rel="noopener">Unsplash License</a>의 사진입니다(테마: 촬영자). '
     }
   };
 
