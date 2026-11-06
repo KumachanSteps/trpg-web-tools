@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.18';
+  const VERSION = '0.19';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -73,6 +73,19 @@
     return 'en';
   }
 
+  // プリセット写真の撮影者と写真ページへのリンク（Unsplash の帰属表示）
+  function renderPhotoCredits() {
+    const el = document.getElementById('photoCredits');
+    if (!el) return;
+    el.innerHTML = t('footer.photos');
+    const names = dict().defaultNames;
+    Jukebox.PHOTOS.forEach((p, i) => {
+      if (i) el.appendChild(document.createTextNode(' / '));
+      el.append(h('a', { href: p.photoUrl, target: '_blank', rel: 'noopener' }, names[i]), ': ',
+        h('a', { href: p.authorUrl, target: '_blank', rel: 'noopener' }, p.author));
+    });
+  }
+
   function applyLanguage() {
     const d = dict();
     document.documentElement.lang = app.lang;
@@ -81,6 +94,7 @@
     if (meta) meta.setAttribute('content', d.meta.description);
     document.querySelectorAll('[data-i18n]').forEach(node => { node.textContent = t(node.dataset.i18n); });
     document.querySelectorAll('[data-i18n-html]').forEach(node => { node.innerHTML = t(node.dataset.i18nHtml); });
+    renderPhotoCredits();
     document.querySelectorAll('[data-i18n-label]').forEach(node => {
       const label = t(node.dataset.i18nLabel);
       node.setAttribute('aria-label', label);
@@ -201,14 +215,21 @@
 
   /* ================= 設定 ================= */
 
+  const EXTRA_COLORS = ['yellow', 'brown'];
+
   function defaultSettings() {
     const d = dict();
     return {
       roomName: d.set.roomNameDefault,
       stopName: d.set.stopNameDefault,
-      count: 9,
+      count: Jukebox.PHOTOS.length,
       showCover: true,
-      disks: Jukebox.COLORS.map((c, i) => ({ color: c.id, name: d.defaultNames[i], bgm: '', url: '', cover: { style: 'plain' } }))
+      // 最初の10枚はマーダーミステリー向けのテーマ（色と写真ジャケット付き）。残りは無地
+      disks: Array.from({ length: MAX_DISKS }, (_, i) => {
+        const photo = Jukebox.PHOTOS[i];
+        const color = photo ? photo.color : EXTRA_COLORS[i - Jukebox.PHOTOS.length];
+        return { color, name: d.defaultNames[i], bgm: '', url: '', cover: photo ? { style: 'photo', photo: photo.id } : { style: 'plain' } };
+      })
     };
   }
 
@@ -239,6 +260,7 @@
   function readCover(c) {
     if (!c || typeof c !== 'object') return { style: 'plain' };
     if (c.style === 'image' && typeof c.image === 'string' && c.image.startsWith('data:image/')) return { style: 'image', image: c.image };
+    if (c.style === 'photo' && Jukebox.photoOf(c.photo)) return { style: 'photo', photo: c.photo };
     return { style: Jukebox.COVER_STYLES.includes(c.style) ? c.style : 'plain' };
   }
 
@@ -284,6 +306,19 @@
       });
       const cover = disk.cover || { style: 'plain' };
       const coverRow = h('div', { class: 'cover-row', role: 'radiogroup', 'aria-label': t('cover.label') },
+        Jukebox.PHOTOS.map((p, pi) => {
+          const on = cover.style === 'photo' && cover.photo === p.id;
+          const label = t('cover.photo', { name: dict().defaultNames[pi], author: p.author });
+          return h('button', {
+            type: 'button',
+            class: `cover-chip cover-photo${on ? ' is-on' : ''}`,
+            role: 'radio',
+            'aria-checked': String(on),
+            title: label,
+            'aria-label': label,
+            onclick: () => { disk.cover = { style: 'photo', photo: p.id }; changed(true); }
+          }, h('img', { src: Jukebox.photoUrl(p.id), alt: '', loading: 'lazy' }));
+        }),
         Jukebox.COVER_STYLES.map(style => {
           const chip = h('canvas', { width: '44', height: '42', class: 'cover-chip-art' });
           const cx = chip.getContext('2d');
@@ -383,9 +418,9 @@
     const source = crop.sources[index];
     if (file) loadCropFile(file);
     else if (source) setCropImage(source.img, source);
-    else if (disk.cover && disk.cover.style === 'image' && disk.cover.image) {
+    else if (disk.cover && ((disk.cover.style === 'image' && disk.cover.image) || disk.cover.style === 'photo')) {
       const session = crop.session;
-      Jukebox.loadImage(disk.cover.image).then(img => { if (session === crop.session) setCropImage(img); }).catch(() => drawCrop());
+      Jukebox.loadImage(disk.cover.style === 'photo' ? Jukebox.photoUrl(disk.cover.photo) : disk.cover.image).then(img => { if (session === crop.session) setCropImage(img); }).catch(() => drawCrop());
     }
     else drawCrop();
   }
