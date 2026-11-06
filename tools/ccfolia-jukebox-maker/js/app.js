@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.19';
+  const VERSION = '0.20';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -878,6 +878,16 @@
     const stagePanel = els.layout.querySelector('[data-panel="stage"]');
     const scenesPanel = els.layout.querySelector('[data-panel="scenes"]');
     const narrow = Math.abs(stagePanel.offsetTop - scenesPanel.offsetTop) > 40;
+    // パネルが縦にスクロールするとき、見えていない端点はパネルの見えている範囲の端に寄せる
+    const viewOf = panel => {
+      const r = panel.getBoundingClientRect();
+      const bar = panel.querySelector('.panel-bar');
+      const barBottom = bar ? bar.getBoundingClientRect().bottom : r.top;
+      return { top: Math.max(r.top, barBottom) - box.top, bottom: r.bottom - box.top };
+    };
+    const scenesView = viewOf(scenesPanel);
+    const stageView = viewOf(stagePanel);
+    const clampY = (y, v) => Math.min(Math.max(y, v.top + 4), v.bottom - 4);
     const back = svg('g', { class: 'links-back' });
     const front = svg('g', { class: 'links-front' });
     layer.appendChild(back);
@@ -890,13 +900,15 @@
         if (!markerEl) return;
         const mr = markerEl.getBoundingClientRect();
         const sx = mr.left + mr.width / 2 - box.left;
-        const sy = mr.top + mr.height / 2 - box.top;
+        const rawSy = mr.top + mr.height / 2 - box.top;
+        const sy = clampY(rawSy, stageView);
         const to = sceneIndexByName(name);
         const thumb = thumbs.get(to);
         const color = to >= 0 ? app.view.scenes[to].color : '#e2675f';
         let tx;
         let ty;
         let d;
+        let targetOff = false;
         if (thumb && to !== app.selected) {
           const r = thumb.getBoundingClientRect();
           const left = r.left - box.left;
@@ -907,7 +919,9 @@
             // 一覧が横にあるときは、近い側の辺の真ん中へ
             const toRight = left > sx;
             tx = toRight ? left - 2 : right + 2;
-            ty = top + (bottom - top) / 2;
+            const rawTy = top + (bottom - top) / 2;
+            ty = clampY(rawTy, scenesView);
+            targetOff = rawTy !== ty;
             const dx = Math.max(60, Math.abs(tx - sx) * 0.5) * (toRight ? 1 : -1);
             d = `M ${sx} ${sy} C ${sx + dx} ${sy}, ${tx - dx} ${ty}, ${tx} ${ty}`;
           } else {
@@ -925,7 +939,8 @@
           return;
         }
         const g = hot ? front : back;
-        g.appendChild(svg('path', { d, class: `link${hot ? ' is-hot' : ''}${to < 0 ? ' is-missing' : ''}`, stroke: color }));
+        const off = rawSy !== sy || targetOff;
+        g.appendChild(svg('path', { d, class: `link${hot ? ' is-hot' : ''}${to < 0 ? ' is-missing' : ''}${off ? ' is-off' : ''}`, stroke: color }));
         g.appendChild(svg('circle', { cx: sx, cy: sy, r: hot ? 4.5 : 3, fill: color, class: 'link-dot' }));
         g.appendChild(svg('circle', { cx: tx, cy: ty, r: hot ? 5 : 3.5, fill: hot ? color : 'none', stroke: color, 'stroke-width': 2, class: 'link-dot' }));
       });
@@ -1275,10 +1290,13 @@
       if (/\.zip$/i.test(f.name)) importZip(f);
     });
     let scrollRaf = 0;
-    window.addEventListener('scroll', () => {
+    const onScroll = () => {
       if (scrollRaf) return;
       scrollRaf = requestAnimationFrame(() => { scrollRaf = 0; drawLinks(); });
-    }, { passive: true });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // パネルの中のスクロール（scroll は伝わらないので capture で受ける）
+    els.layout.addEventListener('scroll', onScroll, { passive: true, capture: true });
     if (typeof ResizeObserver === 'function') new ResizeObserver(() => drawLinks()).observe(els.graph);
     else window.addEventListener('resize', drawLinks);
   }
