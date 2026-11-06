@@ -9,13 +9,13 @@
   <meta name="description" content="ココフォリアのクリックアクションと /scene コマンドで動く、KPがいなくても使えるジュークボックス部屋を作るツールです。シーンとマーカーパネルのつながりを線で一覧できます。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/jukebox.css?v=20261106-04" />
+  <link rel="stylesheet" href="./css/jukebox.css?v=20261106-08" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
       <div class="header-row">
-        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.21 / 2026.11.06</span></h1>
+        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.22 / 2026.11.06</span></h1>
         <span class="header-spacer"></span>
         <a class="header-nav-link" href="../../"><span class="nav-long" data-i18n="portal">←TRPG WEBツール観測所</span><span class="nav-short" data-i18n="portalShort">←観測所</span></a>
         <div class="language-switcher" role="group" data-i18n-label="langGroup" aria-label="言語切替">
@@ -136,16 +136,23 @@
       <section class="modal cover-modal" role="dialog" aria-modal="true" aria-labelledby="coverTitle">
         <button class="drawer-close" type="button" data-close-cover data-i18n-label="close" aria-label="閉じる">×</button>
         <h2 id="coverTitle">ジャケットの画像</h2>
+        <div class="cover-layout">
+        <div class="cover-side">
+          <aside class="cover-presets" id="coverPresets" aria-labelledby="coverPresetsTitle"></aside>
+          <button class="ghost-button small cover-open" type="button" id="cropOpen" data-i18n="cover.open">ファイルを開く</button>
+        </div>
+        <div class="cover-main">
         <p class="muted-note" data-i18n="cover.hint"></p>
         <div class="crop-drop" id="cropDrop">
           <canvas id="cropCanvas" width="538" height="520"></canvas>
           <p class="crop-empty" id="cropEmpty" data-i18n="cover.empty">ここに画像をドラッグ＆ドロップ、またはクリックしてファイルを開く</p>
         </div>
         <div class="crop-controls">
-          <button class="ghost-button small" type="button" id="cropOpen" data-i18n="cover.open">ファイルを開く</button>
           <input type="file" id="cropFile" accept="image/*" class="visually-hidden" tabindex="-1" aria-hidden="true" />
           <label class="crop-zoom"><span data-i18n="cover.zoom">拡大</span><input type="range" id="cropZoom" min="0" max="100" step="1" value="0" /></label>
           <button class="text-button" type="button" id="cropFit" data-i18n="cover.fit">全体を合わせる</button>
+        </div>
+        </div>
         </div>
         <div class="crop-actions">
           <button class="text-button" type="button" id="cropRemove" data-i18n="cover.remove">画像を外す</button>
@@ -168,9 +175,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="./js/i18n.js?v=20261106-04"></script>
-  <script src="./js/ccfolia.js?v=20261106-04"></script>
-  <script src="./js/jukebox.js?v=20261106-04"></script>
-  <script src="./js/app.js?v=20261106-04"></script>
+  <script src="./js/i18n.js?v=20261106-08"></script>
+  <script src="./js/ccfolia.js?v=20261106-08"></script>
+  <script src="./js/jukebox.js?v=20261106-08"></script>
+  <script src="./js/app.js?v=20261106-08"></script>
 </body>
 </html>

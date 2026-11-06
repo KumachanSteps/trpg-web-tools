@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.21';
+  const VERSION = '0.22';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -28,7 +28,7 @@
     detailTitle: $('detailTitle'), detailBoard: $('detailBoard'), inspectorBody: $('inspectorBody'),
     playModal: $('playModal'), playScene: $('playScene'), playBgm: $('playBgm'), playBoard: $('playBoard'),
     playChat: $('playChat'), playRestart: $('playRestart'), playAudio: $('playAudio'),
-    coverModal: $('coverModal'), coverTitle: $('coverTitle'), cropCanvas: $('cropCanvas'), cropDrop: $('cropDrop'), cropEmpty: $('cropEmpty'),
+    coverModal: $('coverModal'), coverPresets: $('coverPresets'), coverTitle: $('coverTitle'), cropCanvas: $('cropCanvas'), cropDrop: $('cropDrop'), cropEmpty: $('cropEmpty'),
     cropZoom: $('cropZoom'), cropOpen: $('cropOpen'), cropFile: $('cropFile'), cropFit: $('cropFit'), cropOk: $('cropOk'), cropRemove: $('cropRemove'),
     toastHost: $('toastHost')
   };
@@ -270,6 +270,59 @@
     }));
   }
 
+  const GRIP_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+
+  // レコードの順番を入れ替える（設定・音声ファイル・切り抜きの元画像をいっしょに動かす）
+  function moveDisk(from, to) {
+    const n = app.settings.count;
+    if (to < 0 || to >= n || from === to) return false;
+    [app.settings.disks, app.files, crop.sources].forEach(list => {
+      while (list.length < n) list.push(list === app.settings.disks ? undefined : null);
+      const [item] = list.splice(from, 1);
+      list.splice(to, 0, item);
+    });
+    changed(true);
+    return true;
+  }
+
+  // つまみをドラッグして並べ替え。ドラッグ中は行を入れ替えて見せ、離したら確定
+  function startDiskDrag(e, from) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const list = els.diskList;
+    const row = list.children[from];
+    if (!row) return;
+    row.classList.add('is-dragging');
+    list.classList.add('is-sorting');
+    const move = ev => {
+      const rows = [...list.children].filter(r => r !== row);
+      const y = ev.clientY;
+      const after = rows.find(r => { const b = r.getBoundingClientRect(); return y < b.top + b.height / 2; });
+      if (after) { if (after !== row.nextSibling) list.insertBefore(row, after); }
+      else if (row !== list.lastElementChild) list.appendChild(row);
+      // パネルの端に近づいたら自動でスクロール
+      const panel = list.closest('.panel');
+      if (panel) {
+        const pr = panel.getBoundingClientRect();
+        if (y < pr.top + 60) panel.scrollTop -= 12;
+        else if (y > pr.bottom - 40) panel.scrollTop += 12;
+      }
+    };
+    const end = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+      row.classList.remove('is-dragging');
+      list.classList.remove('is-sorting');
+      const to = [...list.children].indexOf(row);
+      if (!moveDisk(from, to)) renderSettings();
+    };
+    // 行を DOM の中で動かすとポインターキャプチャが外れるので、window で受ける
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+  }
+
   function renderSettings() {
     const s = app.settings;
     els.roomName.value = s.roomName;
@@ -298,43 +351,19 @@
         const f = fileInput.files && fileInput.files[0];
         if (f) { app.files[i] = f; changed(true); }
       });
-      const cover = disk.cover || { style: 'plain' };
-      const coverRow = h('div', { class: 'cover-row', role: 'radiogroup', 'aria-label': t('cover.label') },
-        Jukebox.PHOTOS.map((p, pi) => {
-          const on = cover.style === 'photo' && cover.photo === p.id;
-          const label = t('cover.photo', { name: dict().defaultNames[pi], author: p.author });
-          return h('button', {
-            type: 'button',
-            class: `cover-chip cover-photo${on ? ' is-on' : ''}`,
-            role: 'radio',
-            'aria-checked': String(on),
-            title: label,
-            'aria-label': label,
-            onclick: () => { disk.cover = { style: 'photo', photo: p.id }; delete crop.sources[i]; changed(true); }
-          }, h('img', { src: Jukebox.photoUrl(p.id), alt: '', loading: 'lazy' }));
-        }),
-        Jukebox.COVER_STYLES.map(style => {
-          const chip = h('canvas', { width: '44', height: '42', class: 'cover-chip-art' });
-          const cx = chip.getContext('2d');
-          if (style === 'plain') { cx.fillStyle = '#f3f1ec'; cx.fillRect(0, 0, 44, 42); } else Jukebox.drawPattern(cx, 44, 42, style, color.line);
-          return h('button', {
-            type: 'button',
-            class: `cover-chip${cover.style === style ? ' is-on' : ''}`,
-            role: 'radio',
-            'aria-checked': String(cover.style === style),
-            title: t(`cover.styles.${style}`),
-            'aria-label': t(`cover.styles.${style}`),
-            onclick: () => { disk.cover = { style }; delete crop.sources[i]; changed(true); }
-          }, chip);
-        }),
-        h('button', {
-          type: 'button',
-          class: `cover-chip cover-upload${cover.style === 'image' ? ' is-on' : ''}`,
-          title: t('cover.upload'),
-          'aria-label': t('cover.upload'),
-          onclick: () => openCropper(i)
-        }, cover.style === 'image' ? h('img', { src: cover.image, alt: '' }) : h('span', { 'aria-hidden': 'true' }, '＋')));
-      const row = h('li', { class: 'disk-row', style: { '--disk': color.line } },
+      const grip = h('button', {
+        type: 'button', class: 'disk-grip', 'aria-label': t('set.reorder', { n: i + 1 }), title: t('set.reorder', { n: i + 1 }),
+        onkeydown: e => {
+          const d = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0;
+          if (!d) return;
+          e.preventDefault();
+          if (moveDisk(i, i + d)) requestAnimationFrame(() => { const g = els.diskList.querySelectorAll('.disk-grip')[i + d]; if (g) g.focus(); });
+        }
+      });
+      grip.innerHTML = GRIP_SVG;
+      grip.addEventListener('pointerdown', e => startDiskDrag(e, i));
+      const row = h('li', { class: 'disk-row', style: { '--disk': color.line }, dataset: { index: String(i) } },
+        grip,
         s.showCover === false
           ? h('span', { class: 'disk-thumb', dataset: { preview: String(i) } })
           : h('button', { type: 'button', class: 'disk-thumb', dataset: { preview: String(i) }, title: t('cover.upload'), onclick: () => openCropper(i) }),
@@ -357,8 +386,7 @@
               }),
             h('label', { class: 'ghost-button small file-button' }, t('set.bgmFile'), fileInput)
           ),
-          h('p', { class: 'field-label cover-label' }, t('cover.label')),
-          coverRow));
+        ));
       // 画像ファイルを行に落とすと、そのレコードのジャケットにする
       row.addEventListener('dragover', e => { if (hasFiles(e)) { e.preventDefault(); e.stopPropagation(); row.classList.add('is-drop'); } });
       row.addEventListener('dragleave', () => row.classList.remove('is-drop'));
@@ -399,7 +427,7 @@
 
   /* ================= ジャケット画像の切り抜き ================= */
 
-  const crop = { session: 0, index: -1, img: null, scale: 1, min: 1, ox: 0, oy: 0, pointers: new Map(), pinch: 0, sources: [] };
+  const crop = { session: 0, index: -1, preset: null, presetView: null, img: null, scale: 1, min: 1, ox: 0, oy: 0, pointers: new Map(), pinch: 0, sources: [] };
 
   function openCropper(index, file) {
     crop.session += 1;
@@ -409,14 +437,73 @@
     els.cropFile.value = '';
     const disk = app.settings.disks[index];
     els.coverTitle.textContent = t('cover.title', { name: disk.name || '' });
+    crop.preset = null;
+    crop.presetView = null;
+    renderCoverPresets();
     const source = crop.sources[index];
     if (file) loadCropFile(file);
     else if (source) setCropImage(source.img, source);
     else if (disk.cover && ((disk.cover.style === 'image' && disk.cover.image) || disk.cover.style === 'photo')) {
       const session = crop.session;
-      Jukebox.loadImage(disk.cover.style === 'photo' ? Jukebox.photoUrl(disk.cover.photo) : disk.cover.image).then(img => { if (session === crop.session) setCropImage(img); }).catch(() => drawCrop());
+      if (disk.cover.style === 'photo') { loadPresetPhoto(disk.cover.photo); return; }
+      Jukebox.loadImage(disk.cover.image).then(img => { if (session === crop.session) setCropImage(img); }).catch(() => drawCrop());
     }
     else drawCrop();
+  }
+
+  // ダイアログの左側：プリセット写真と見本デザイン。写真は右で切り抜きを調整でき、見本デザインはそのまま決まる
+  function renderCoverPresets() {
+    const box = els.coverPresets;
+    box.innerHTML = '';
+    const disk = app.settings.disks[crop.index];
+    if (!disk) return;
+    const cover = disk.cover || { style: 'plain' };
+    const color = Jukebox.colorOf(disk.color);
+    const names = dict().defaultNames;
+    box.append(
+      h('h3', { class: 'cover-presets-title', id: 'coverPresetsTitle' }, t('cover.photos')),
+      h('div', { class: 'cover-grid', role: 'radiogroup', 'aria-label': t('cover.photos') }, Jukebox.PHOTOS.map((p, pi) => {
+        const on = crop.preset ? crop.preset === p.id : (cover.style === 'photo' && cover.photo === p.id);
+        const label = t('cover.photo', { name: names[pi], author: p.author });
+        return h('button', {
+          type: 'button', class: `cover-chip cover-photo${on ? ' is-on' : ''}`, role: 'radio', 'aria-checked': String(on), title: label, 'aria-label': label,
+          onclick: () => loadPresetPhoto(p.id)
+        }, h('img', { src: Jukebox.photoUrl(p.id), alt: '', loading: 'lazy' }));
+      })),
+      h('h3', { class: 'cover-presets-title' }, t('cover.patterns')),
+      h('div', { class: 'cover-grid', role: 'radiogroup', 'aria-label': t('cover.patterns') }, Jukebox.COVER_STYLES.map(style => {
+        const chip = h('canvas', { width: '88', height: '85', class: 'cover-chip-art' });
+        const cx = chip.getContext('2d');
+        if (style === 'plain') { cx.fillStyle = '#f3f1ec'; cx.fillRect(0, 0, 88, 85); } else Jukebox.drawPattern(cx, 88, 85, style, color.line);
+        const on = !crop.preset && cover.style === style;
+        return h('button', {
+          type: 'button', class: `cover-chip${on ? ' is-on' : ''}`, role: 'radio', 'aria-checked': String(on), title: t(`cover.styles.${style}`), 'aria-label': t(`cover.styles.${style}`),
+          onclick: () => {
+            const index = crop.index;
+            app.settings.disks[index].cover = { style };
+            crop.sources[index] = null;
+            closeCropper();
+            changed(true);
+          }
+        }, chip);
+      })));
+  }
+
+  function loadPresetPhoto(id) {
+    crop.session += 1;
+    const session = crop.session;
+    crop.preset = id;
+    // 読み込みが終わるまでは前の画像で決定できないように、いったん空にする
+    crop.img = null;
+    crop.presetView = null;
+    syncZoom();
+    drawCrop();
+    renderCoverPresets();
+    Jukebox.loadImage(Jukebox.photoUrl(id)).then(img => {
+      if (session !== crop.session) return;
+      setCropImage(img);
+      crop.presetView = { scale: crop.scale, ox: crop.ox, oy: crop.oy };
+    }).catch(() => drawCrop());
   }
 
   function closeCropper() {
@@ -427,9 +514,13 @@
 
   function loadCropFile(file) {
     if (!file || !/^image\//.test(file.type)) { toast(t('cover.notImage'), 'error'); return; }
+    if (crop.preset) { crop.preset = null; crop.presetView = null; renderCoverPresets(); }
     // 読み込み中に閉じたり別の画像を選んだりしたら、古い読み込みの結果は捨てる
     crop.session += 1;
     const session = crop.session;
+    crop.img = null;
+    syncZoom();
+    drawCrop();
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => { if (session === crop.session) setCropImage(img); };
@@ -519,6 +610,16 @@
 
   function applyCrop() {
     if (crop.index < 0 || !crop.img) return;
+    const v = crop.presetView;
+    if (crop.preset && v && Math.abs(v.scale - crop.scale) < 1e-6 && Math.abs(v.ox - crop.ox) < 0.5 && Math.abs(v.oy - crop.oy) < 0.5) {
+      // プリセット写真を動かさずに決めたときは、画像を埋め込まずに写真の指定だけを残す
+      const index = crop.index;
+      app.settings.disks[index].cover = { style: 'photo', photo: crop.preset };
+      crop.sources[index] = null;
+      closeCropper();
+      changed(true);
+      return;
+    }
     const { w, h: hh } = Jukebox.SLEEVE;
     const out = document.createElement('canvas');
     out.width = w;
