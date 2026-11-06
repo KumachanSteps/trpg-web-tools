@@ -68,7 +68,7 @@
       cream: 'クリーム', red: '赤', orange: 'オレンジ', yellow: '黄', green: '緑',
       teal: '青緑', blue: '青', purple: '紫', pink: 'ピンク', gray: 'グレー', brown: '茶', navy: '紺'
     },
-    defaultNames: ['導入', 'ハンドアウト', '調査', '密談', '議論', '休憩', '最終議論', '考察', 'クライマックス', 'エピローグ', '日常', '緊迫'],
+    defaultNames: ['導入', 'ハンドアウト', '調査', '密談', '調査2', '議論', '休憩', '最終議論', '考察', 'クライマックス', '感想戦', 'エピローグ'],
     cover: {
       label: 'ジャケット',
       upload: '画像からジャケットを作る',
@@ -205,7 +205,7 @@
       cream: 'Cream', red: 'Red', orange: 'Orange', yellow: 'Yellow', green: 'Green',
       teal: 'Teal', blue: 'Blue', purple: 'Purple', pink: 'Pink', gray: 'Gray', brown: 'Brown', navy: 'Navy'
     },
-    defaultNames: ['Introduction', 'Read handout', 'Investigation', 'Secret talk', 'Debate', 'Break time', 'Final debate', 'Thinking', 'Climax', 'Epilogue', 'Daily', 'Tension'],
+    defaultNames: ['Introduction', 'Read handout', 'Investigation', 'Secret talk', 'Investigation 2', 'Debate', 'Break time', 'Final debate', 'Thinking', 'Climax', 'After talk', 'Epilogue'],
     cover: {
       label: 'Sleeve',
       upload: 'Make a sleeve from an image',
@@ -342,7 +342,7 @@
       cream: '크림', red: '빨강', orange: '주황', yellow: '노랑', green: '초록',
       teal: '청록', blue: '파랑', purple: '보라', pink: '분홍', gray: '회색', brown: '갈색', navy: '남색'
     },
-    defaultNames: ['도입', '핸드아웃', '조사', '밀담', '토론', '휴식', '최종 토론', '고찰', '클라이맥스', '에필로그', '일상', '긴박'],
+    defaultNames: ['도입', '핸드아웃', '조사', '밀담', '조사 2', '토론', '휴식', '최종 토론', '고찰', '클라이맥스', '애프터 토크', '에필로그'],
     cover: {
       label: '재킷',
       upload: '이미지로 재킷 만들기',

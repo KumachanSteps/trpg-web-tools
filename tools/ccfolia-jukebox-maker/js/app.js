@@ -215,8 +215,6 @@
 
   /* ================= 設定 ================= */
 
-  const EXTRA_COLORS = ['yellow', 'brown'];
-
   function defaultSettings() {
     const d = dict();
     return {
@@ -224,12 +222,8 @@
       stopName: d.set.stopNameDefault,
       count: Jukebox.PHOTOS.length,
       showCover: true,
-      // 最初の10枚はマーダーミステリー向けのテーマ（色と写真ジャケット付き）。残りは無地
-      disks: Array.from({ length: MAX_DISKS }, (_, i) => {
-        const photo = Jukebox.PHOTOS[i];
-        const color = photo ? photo.color : EXTRA_COLORS[i - Jukebox.PHOTOS.length];
-        return { color, name: d.defaultNames[i], bgm: '', url: '', cover: photo ? { style: 'photo', photo: photo.id } : { style: 'plain' } };
-      })
+      // マーダーミステリー向けの12テーマ（ラベル色と写真ジャケット付き）
+      disks: Jukebox.PHOTOS.map((p, i) => ({ color: p.color, name: d.defaultNames[i], bgm: '', url: '', cover: { style: 'photo', photo: p.id } }))
     };
   }
 
