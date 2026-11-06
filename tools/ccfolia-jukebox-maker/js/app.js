@@ -310,7 +310,7 @@
             'aria-checked': String(on),
             title: label,
             'aria-label': label,
-            onclick: () => { disk.cover = { style: 'photo', photo: p.id }; changed(true); }
+            onclick: () => { disk.cover = { style: 'photo', photo: p.id }; delete crop.sources[i]; changed(true); }
           }, h('img', { src: Jukebox.photoUrl(p.id), alt: '', loading: 'lazy' }));
         }),
         Jukebox.COVER_STYLES.map(style => {
@@ -324,7 +324,7 @@
             'aria-checked': String(cover.style === style),
             title: t(`cover.styles.${style}`),
             'aria-label': t(`cover.styles.${style}`),
-            onclick: () => { disk.cover = { style }; changed(true); }
+            onclick: () => { disk.cover = { style }; delete crop.sources[i]; changed(true); }
           }, chip);
         }),
         h('button', {
