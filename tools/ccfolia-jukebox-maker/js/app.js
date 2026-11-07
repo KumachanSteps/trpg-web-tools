@@ -1894,6 +1894,8 @@
         { opacity: 0, transform: `translateX(${dir * 44}px)`, filter: 'blur(3px)' },
         { opacity: 1, transform: 'translateX(0)', filter: 'blur(0)' }
       ], { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)' });
+      // 滑り込んでいる途中に測った線の端はずれるので、止まってから引き直す
+      inn.onfinish = () => { if (app.pane === 'preview') drawLinks(); };
       paneAnims.push(inn);
     };
   }
