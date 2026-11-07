@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.27';
+  const VERSION = '0.28';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1583,10 +1583,20 @@
       }))
       : JukeboxShelf.defaults();
     shelf.active = ok && Number.isInteger(saved.active) ? Math.max(0, Math.min(shelf.tabs.length - 1, saved.active)) : 0;
+    // 前に保存した棚には、その後に足した初期の曲を、残っているタブの後ろに足す（消した曲は戻さない）
+    const from = ok && Number.isInteger(saved.v) ? saved.v : 1;
+    if (ok && from < JukeboxShelf.VERSION) {
+      JukeboxShelf.additions(from).forEach(add => {
+        const tab = shelf.tabs.find(tb => tb.id === add.id);
+        if (!tab) return;
+        add.tracks.forEach(tr => { if (!tab.tracks.some(x => x.yt === tr.yt)) tab.tracks.push(tr); });
+      });
+      saveShelf();
+    }
   }
 
   function saveShelf() {
-    try { localStorage.setItem(SHELF_KEY, JSON.stringify({ v: 1, active: shelf.active, tabs: shelf.tabs })); } catch (error) { /* noop */ }
+    try { localStorage.setItem(SHELF_KEY, JSON.stringify({ v: JukeboxShelf.VERSION, active: shelf.active, tabs: shelf.tabs })); } catch (error) { /* noop */ }
   }
 
   // 初期のタブは言語ごとの名前、名前を変えたタブや足したタブはその名前
