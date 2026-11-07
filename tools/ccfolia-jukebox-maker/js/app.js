@@ -4,12 +4,13 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.22';
+  const VERSION = '0.23';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
   const BACKDROP_KEY = 'ccfoliaJukebox.backdrop';
   const LANG_KEY = 'ccfoliaJukeboxLang';
+  const SOUND_KEY = 'ccfoliaJukebox.sound';
   const LANGS = ['ja', 'en', 'ko'];
   const MAX_DISKS = Jukebox.MAX_DISKS;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
@@ -27,7 +28,7 @@
     graph: $('layout'), layout: $('layout'), layoutResetBtn: $('layoutResetBtn'), settingsTitle: $('settingsTitle'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), graphCount: $('graphCount'), warnBox: $('warnBox'),
     detailTitle: $('detailTitle'), detailBoard: $('detailBoard'), inspectorBody: $('inspectorBody'),
     playModal: $('playModal'), playScene: $('playScene'), playBgm: $('playBgm'), playBoard: $('playBoard'),
-    playChat: $('playChat'), playRestart: $('playRestart'), playAudio: $('playAudio'),
+    playChat: $('playChat'), playRestart: $('playRestart'), soundToggle: $('soundToggle'), soundLabel: $('soundLabel'), soundVolume: $('soundVolume'),
     coverModal: $('coverModal'), coverPresets: $('coverPresets'), coverTitle: $('coverTitle'), cropCanvas: $('cropCanvas'), cropDrop: $('cropDrop'), cropEmpty: $('cropEmpty'),
     cropZoom: $('cropZoom'), cropOpen: $('cropOpen'), cropFile: $('cropFile'), cropFit: $('cropFit'), cropOk: $('cropOk'), cropRemove: $('cropRemove'),
     toastHost: $('toastHost')
@@ -36,7 +37,9 @@
   const app = {
     lang: 'ja',
     settings: null,
-    files: [],          // 音声ファイル（レコードの順番と同じ。保存はしない）
+    files: [],          // 音声ファイル（レコードの順番と同じ。IndexedDB に保存）
+    stageSound: true,   // シーンを選んだらそのBGMをページで鳴らす（ヘッダーで切り替え）
+    volume: 50,
     room: null,         // ジュークボックスから組み立てた部屋
     imported: null,     // { name, data, files }
     view: null,         // 画面に出すシーン一覧
@@ -282,6 +285,7 @@
       list.splice(to, 0, item);
     });
     changed(true);
+    saveFiles();
     return true;
   }
 
@@ -349,7 +353,7 @@
       const fileInput = h('input', { type: 'file', accept: 'audio/*', class: 'visually-hidden', tabindex: '-1' });
       fileInput.addEventListener('change', () => {
         const f = fileInput.files && fileInput.files[0];
-        if (f) { app.files[i] = f; changed(true); }
+        if (f) { app.files[i] = f; changed(true); saveFiles(); }
       });
       const grip = h('button', {
         type: 'button', class: 'disk-grip', 'aria-label': t('set.reorder', { n: i + 1 }), title: t('set.reorder', { n: i + 1 }),
@@ -379,12 +383,13 @@
           swatches,
           h('div', { class: 'bgm-row' },
             file
-              ? h('span', { class: 'bgm-file' }, `♪ ${file.name}`, h('button', { type: 'button', class: 'text-button', onclick: () => { app.files[i] = null; changed(true); } }, t('set.bgmFileClear')))
+              ? h('span', { class: 'bgm-file' }, `♪ ${file.name}`, h('button', { type: 'button', class: 'text-button', onclick: () => { app.files[i] = null; changed(true); saveFiles(); } }, t('set.bgmFileClear')))
               : h('input', {
                 class: 'text-input small', type: 'url', value: disk.url, placeholder: t('set.bgmUrlPh'), 'aria-label': t('set.bgmUrl'),
-                oninput: e => { disk.url = e.target.value; changed(false); }
+                oninput: e => { disk.url = e.target.value; changed(false); syncBgmUi(); }
               }),
-            h('label', { class: 'ghost-button small file-button' }, t('set.bgmFile'), fileInput)
+            h('label', { class: 'ghost-button small file-button' }, t('set.bgmFile'), fileInput),
+            h('button', { type: 'button', class: 'bgm-play', dataset: { index: String(i) }, onclick: () => toggleDiskPreview(i) })
           ),
         ));
       // 画像ファイルを行に落とすと、そのレコードのジャケットにする
@@ -401,6 +406,7 @@
       els.diskList.appendChild(row);
     });
     refreshPreviews();
+    syncBgmUi();
   }
 
   // 設定欄のサムネイル（ジャケット＋レコード＋曲名）を描き直す
@@ -932,6 +938,7 @@
       btn.setAttribute('aria-pressed', String(on));
     });
     renderDetail();
+    syncStageBgm();
   }
 
   function renderAll() {
@@ -954,6 +961,15 @@
       els.warnBox.appendChild(h('ul', null, warnings.map(w => h('li', null, w))));
     }
     renderDetail();
+    // 試聴中のレコードの音声が外されたり変わったり、枚数から外れたりしたら止める
+    if (bgm.owner.startsWith('disk:')) {
+      // 並べ替えで番号が変わっただけなら、同じ音声のレコードを追いかける
+      const at = app.settings.disks.findIndex((d, j) => { const sound = diskSound(j); return Boolean(sound && sound.src === bgm.src); });
+      if (at >= 0) bgm.owner = `disk:${at}`;
+      else stopBgm(true);
+    }
+    if (els.playModal.hidden && (!bgm.owner || bgm.owner === 'stage')) syncStageBgm();
+    else syncBgmUi();
   }
 
   function currentScene() {
@@ -1058,6 +1074,8 @@
     if (!scene) return;
     els.detailTitle.textContent = scene.name || '—';
     els.detailTitle.style.setProperty('--scene', scene.color);
+    const sound = sceneSound(app.selected);
+    if (sound) els.detailTitle.appendChild(h('span', { class: 'stage-bgm', dataset: { src: sound.src } }, t('sound.now', { name: sound.name })));
     els.detailBoard.innerHTML = '';
     const board = boardEl(scene, {
       interactive: true,
@@ -1093,7 +1111,14 @@
     body.innerHTML = '';
     const m = scene.markers[app.marker];
     if (!m) {
-      body.appendChild(h('p', { class: 'muted-note' }, t('insp.none')));
+      // 何も選んでいないときも、選んだら中身が出る場所だとわかるように空の枠を出す
+      body.appendChild(h('div', { class: 'insp-grid is-empty' },
+        h('div', { class: 'insp-thumb insp-thumb-empty', 'aria-hidden': 'true' }),
+        h('div', { class: 'insp-col' },
+          h('p', { class: 'field-label' }, t('insp.text')),
+          h('p', { class: 'insp-text insp-empty' }, '—'),
+          h('p', { class: 'field-label' }, t('insp.action')),
+          h('p', { class: 'insp-code insp-empty' }, t('insp.none')))));
       if (app.view.kind === 'jukebox') body.appendChild(h('p', { class: 'muted-note' }, t('insp.jukeboxNote')));
       return;
     }
@@ -1131,6 +1156,182 @@
     if (app.view.kind === 'jukebox') col.appendChild(h('p', { class: 'muted-note' }, t('insp.jukeboxNote')));
   }
 
+  /* ================= BGM をページで鳴らす ================= */
+
+  // 音声ファイルの URL はレコードを組み立て直しても変わらないように別に持つ
+  const fileUrls = new WeakMap();
+  function fileUrl(file) {
+    if (!fileUrls.has(file)) fileUrls.set(file, URL.createObjectURL(file));
+    return fileUrls.get(file);
+  }
+
+  function youtubeId(url) {
+    const m = String(url).match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/i);
+    return m ? m[1] : '';
+  }
+
+  // レコード i のBGM（音声ファイルがあればそちらを優先）
+  function diskSound(i) {
+    const disk = app.settings.disks[i];
+    if (!disk || i >= app.settings.count) return null;
+    const title = String(disk.bgm || '').trim();
+    const file = app.files[i];
+    if (file) return { src: fileUrl(file), name: title || file.name || disk.name };
+    const url = String(disk.url || '').trim();
+    if (!/^https?:\/\/\S+$/i.test(url)) return null;
+    return { src: url, name: title || disk.name || url };
+  }
+
+  // シーン i のBGM。ジュークボックスはシーン0が停止中で、1からがレコード
+  function sceneSound(i) {
+    if (!app.view) return null;
+    if (app.view.kind === 'jukebox') return i > 0 ? diskSound(i - 1) : null;
+    const scene = app.view.scenes[i];
+    return scene && scene.soundUrl ? { src: scene.soundUrl, name: (scene.sound && scene.sound.name) || scene.name } : null;
+  }
+
+  // ページ全体で鳴らす曲は1つだけ。owner は 'stage'（大きな盤面）・'disk:N'（試聴）・'play'（テストプレイ）
+  const bgm = { audio: new Audio(), frame: null, src: '', owner: '' };
+  bgm.audio.loop = true;
+
+  function applyVolume() {
+    const v = Math.max(0, Math.min(100, app.volume));
+    bgm.audio.volume = v / 100;
+    if (bgm.frame && bgm.frame.contentWindow) {
+      try { bgm.frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [v] }), '*'); } catch (error) { /* noop */ }
+    }
+  }
+
+  function loadSoundPrefs() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SOUND_KEY) || 'null'); } catch (error) { saved = null; }
+    if (saved && typeof saved === 'object') {
+      if (typeof saved.on === 'boolean') app.stageSound = saved.on;
+      if (Number.isFinite(saved.volume)) app.volume = Math.max(0, Math.min(100, saved.volume));
+    }
+    els.soundVolume.value = String(app.volume);
+    applyVolume();
+  }
+
+  function saveSoundPrefs() {
+    try { localStorage.setItem(SOUND_KEY, JSON.stringify({ on: app.stageSound, volume: app.volume })); } catch (error) { /* noop */ }
+  }
+  bgm.audio.addEventListener('error', () => {
+    if (!bgm.src || bgm.frame) return;
+    toast(t('sound.failed'), 'error');
+    stopBgm();
+  });
+
+  function playBgm(sound, owner) {
+    if (!sound) { stopBgm(); return; }
+    if (bgm.src === sound.src) { bgm.owner = owner; syncBgmUi(); return; }
+    stopBgm(true);
+    bgm.src = sound.src;
+    bgm.owner = owner;
+    const yt = youtubeId(sound.src);
+    if (yt) {
+      // YouTube は音声だけ取り出せないので、見えない埋め込みプレイヤーで鳴らす
+      bgm.frame = h('iframe', {
+        class: 'bgm-frame', title: sound.name, tabindex: '-1', 'aria-hidden': 'true', allow: 'autoplay; encrypted-media',
+        src: `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&loop=1&playlist=${yt}&controls=0&playsinline=1&enablejsapi=1`
+      });
+      bgm.frame.addEventListener('load', applyVolume);
+      document.body.appendChild(bgm.frame);
+    } else {
+      bgm.audio.src = sound.src;
+      bgm.audio.play().catch(error => {
+        // 自動再生が止められたときは、次にボタンを押すまで待つ
+        if (error && error.name === 'NotAllowedError' && bgm.src === sound.src) { bgm.src = ''; bgm.owner = ''; syncBgmUi(); }
+      });
+    }
+    syncBgmUi();
+  }
+
+  function stopBgm(quiet) {
+    try { bgm.audio.pause(); } catch (error) { /* noop */ }
+    bgm.audio.removeAttribute('src');
+    try { bgm.audio.load(); } catch (error) { /* noop */ }
+    if (bgm.frame) { bgm.frame.remove(); bgm.frame = null; }
+    bgm.src = '';
+    bgm.owner = '';
+    if (!quiet) syncBgmUi();
+  }
+
+  function syncStageBgm() {
+    if (!els.playModal.hidden) return;
+    if (app.stageSound) playBgm(sceneSound(app.selected), 'stage');
+    else if (bgm.owner === 'stage') stopBgm();
+    else syncBgmUi();
+  }
+
+  function toggleDiskPreview(i) {
+    const sound = diskSound(i);
+    if (sound && bgm.src === sound.src) stopBgm();
+    else playBgm(sound, `disk:${i}`);
+  }
+
+  // ボタンと「♪ 曲名」の表示を、いま鳴っている曲に合わせる
+  function syncBgmUi() {
+    els.soundToggle.classList.toggle('is-on', app.stageSound);
+    els.soundToggle.setAttribute('aria-pressed', String(app.stageSound));
+    els.soundLabel.textContent = t(app.stageSound ? 'sound.on' : 'sound.off');
+    els.soundToggle.title = t('sound.toggleTitle');
+    document.querySelectorAll('.bgm-play').forEach(btn => {
+      const i = Number(btn.dataset.index);
+      const sound = diskSound(i);
+      const on = Boolean(sound && bgm.src === sound.src);
+      btn.disabled = !sound;
+      btn.classList.toggle('is-playing', on);
+      btn.textContent = on ? '■' : '▶';
+      const label = t(on ? 'sound.stop' : 'sound.preview', { n: i + 1 });
+      btn.title = sound ? label : t('sound.none');
+      btn.setAttribute('aria-label', btn.title);
+    });
+    document.querySelectorAll('.stage-bgm').forEach(chip => chip.classList.toggle('is-playing', chip.dataset.src === bgm.src));
+  }
+
+  // 音声ファイルはこのブラウザの IndexedDB に保存する（localStorage には入りきらないため）
+  function audioDb() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) { reject(new Error('indexedDB')); return; }
+      const req = indexedDB.open('ccfoliaJukebox', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('files');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function saveFiles() {
+    try {
+      const db = await audioDb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('files', 'readwrite');
+        tx.objectStore('files').put(app.files.slice(0, MAX_DISKS).map(f => f || null), 'disks');
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+      db.close();
+    } catch (error) {
+      toast(t('sound.notSaved'), 'error');
+    }
+  }
+
+  async function loadFiles() {
+    try {
+      const db = await audioDb();
+      const list = await new Promise((resolve, reject) => {
+        const req = db.transaction('files').objectStore('files').get('disks');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      db.close();
+      return Array.isArray(list) ? list.map(f => (f instanceof Blob ? f : null)) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
   /* ================= テストプレイ ================= */
 
   function openPlay() {
@@ -1144,14 +1345,17 @@
 
   function closePlay() {
     els.playModal.hidden = true;
-    try { els.playAudio.pause(); } catch (error) { /* noop */ }
+    // テストプレイの音を止め、BGMがONなら大きな盤面のシーンの曲に戻す
+    if (bgm.owner === 'play') stopBgm();
+    syncStageBgm();
   }
 
   function renderPlay() {
     const scene = app.view.scenes[app.play.index];
     els.playScene.textContent = t('play.scene', { name: scene.name });
     els.playScene.style.setProperty('--scene', scene.color);
-    els.playBgm.textContent = scene.sound ? t('play.bgm', { name: scene.sound.name || scene.name }) : t('play.noBgm');
+    const sound = sceneSound(app.play.index);
+    els.playBgm.textContent = sound ? t('play.bgm', { name: sound.name }) : t('play.noBgm');
     els.playBoard.innerHTML = '';
     app.play.visit = (app.play.visit || 0) + 1;
     els.playBoard.appendChild(boardEl(withShared(scene), {
@@ -1170,22 +1374,7 @@
         }
       }
     }));
-    playSound(scene);
-  }
-
-  function playSound(scene) {
-    const audio = els.playAudio;
-    const src = scene.soundUrl && /^(blob:|https?:\/\/.+\.(mp3|ogg|wav|m4a|aac)(\?|$))/i.test(scene.soundUrl) ? scene.soundUrl : '';
-    if (!src) {
-      try { audio.pause(); } catch (error) { /* noop */ }
-      audio.removeAttribute('src');
-      return;
-    }
-    if (audio.getAttribute('src') !== src) {
-      audio.setAttribute('src', src);
-      audio.volume = 0.5;
-      audio.play().catch(() => { /* 自動再生が止められても気にしない */ });
-    }
+    playBgm(sceneSound(app.play.index), 'play');
   }
 
   /* ================= 読み込み・書き出し ================= */
@@ -1370,7 +1559,9 @@
       if (!window.confirm(t('set.resetConfirm'))) return;
       app.settings = defaultSettings();
       app.files = [];
+      stopBgm();
       changed(true);
+      saveFiles();
     });
     els.importBtn.addEventListener('click', () => els.importFile.click());
     els.importFile.addEventListener('change', () => {
@@ -1380,6 +1571,19 @@
     els.backBtn.addEventListener('click', backToJukebox);
     els.exportBtn.addEventListener('click', exportZip);
     els.playBtn.addEventListener('click', openPlay);
+    els.soundToggle.addEventListener('click', () => {
+      app.stageSound = !app.stageSound;
+      saveSoundPrefs();
+      track('ccfolia_jukebox_sound', { on: app.stageSound });
+      // オフにしたら、試聴中の曲も含めて止める（テストプレイ中はそのまま）
+      if (!app.stageSound && bgm.owner !== 'play') stopBgm();
+      syncStageBgm();
+    });
+    els.soundVolume.addEventListener('input', () => {
+      app.volume = Number(els.soundVolume.value) || 0;
+      applyVolume();
+      saveSoundPrefs();
+    });
     els.playRestart.addEventListener('click', () => {
       app.play.index = app.view.start >= 0 ? app.view.start : 0;
       renderPlay();
@@ -1475,6 +1679,7 @@
   function init() {
     app.lang = detectLang();
     app.settings = loadSettings();
+    loadSoundPrefs();
     bindBackdrop();
     applyLayout(loadLayout(), false);
     bind();
@@ -1482,6 +1687,12 @@
     bindCropper();
     applyLanguage();
     rebuild();
+    // 前に選んだ音声ファイルを読み戻す
+    loadFiles().then(files => {
+      if (!files.some(Boolean) || app.files.some(Boolean)) return;
+      app.files = files;
+      changed(true);
+    });
   }
 
   init();
