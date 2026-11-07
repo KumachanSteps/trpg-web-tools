@@ -28,7 +28,7 @@
     backdropField: $('backdropField'), backdropThumb: $('backdropThumb'), backdropImg: $('backdropImg'), backdropOpen: $('backdropOpen'), backdropClear: $('backdropClear'), backdropFile: $('backdropFile'),
     diskList: $('diskList'), resetBtn: $('resetBtn'),
     shapeLabel: $('shapeLabel'), shapeResetBtn: $('shapeResetBtn'),
-    graph: $('layout'), layout: $('layout'), layoutResetBtn: $('layoutResetBtn'), settingsTitle: $('settingsTitle'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), graphCount: $('graphCount'), warnBox: $('warnBox'),
+    graph: $('layout'), layout: $('layout'), layoutResetBtn: $('layoutResetBtn'), settingsTitle: $('settingsTitle'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), warnBox: $('warnBox'),
     detailTitle: $('detailTitle'), detailBoard: $('detailBoard'), inspectorBody: $('inspectorBody'),
     playModal: $('playModal'), playScene: $('playScene'), playBgm: $('playBgm'), playBoard: $('playBoard'),
     playChat: $('playChat'), playRestart: $('playRestart'), soundToggle: $('soundToggle'), soundLabel: $('soundLabel'), soundVolume: $('soundVolume'),
@@ -1016,7 +1016,6 @@
     requestAnimationFrame(updateMarquees);
     document.querySelectorAll('[data-lines]').forEach(btn => btn.classList.toggle('is-active', btn.dataset.lines === app.lines));
     const links = collectLinks();
-    els.graphCount.textContent = t('graph.links', { n: links.length });
     const warnings = collectWarnings(links);
     els.warnBox.hidden = !warnings.length;
     els.warnBox.innerHTML = '';
@@ -1975,6 +1974,8 @@
       toast(t('shelf.resetDone'));
     });
     // シーンプレビューとレコード棚の切り替え
+    // 言語の切り替えなどでボタンの幅が変わったら玉も合わせる
+    if (window.ResizeObserver) new ResizeObserver(() => placeSwitchThumb()).observe(els.viewSwitch);
     els.viewSwitch.querySelectorAll('[data-view-btn]').forEach(btn => {
       btn.addEventListener('click', () => setPane(btn.dataset.viewBtn, true));
       btn.addEventListener('keydown', e => {
@@ -1992,12 +1993,21 @@
   }
 
   // 真ん中の欄の中身を入れ替える。外す側を横へ流して消し、入れる側を反対から滑り込ませる
+  // 切り替えの黄色い玉を、選んだボタンの位置と幅に合わせる（ボタンは文字の長さなりの幅）
+  function placeSwitchThumb(name) {
+    const btn = els.viewSwitch.querySelector(`[data-view-btn="${name || app.pane}"]`);
+    if (!btn || !btn.offsetWidth) return;
+    els.viewSwitch.style.setProperty('--thumb-x', `${btn.offsetLeft}px`);
+    els.viewSwitch.style.setProperty('--thumb-w', `${btn.offsetWidth}px`);
+  }
+
   let paneAnims = [];
   const PANES = ['preview', 'shelf', 'lists'];
   function setPane(name, animate) {
     const panel = els.layout.querySelector('[data-panel="stage"]');
     const from = app.pane;
     els.viewSwitch.dataset.active = name;
+    placeSwitchThumb(name);
     els.viewSwitch.querySelectorAll('[data-view-btn]').forEach(btn => {
       const on = btn.dataset.viewBtn === name;
       btn.classList.toggle('is-active', on);

@@ -9,7 +9,7 @@
   <meta name="description" content="ココフォリアのクリックアクションと /scene コマンドで動く、KPがいなくても使えるジュークボックス部屋を作るツールです。シーンとマーカーパネルのつながりを線で一覧できます。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/jukebox.css?v=20261108-01" />
+  <link rel="stylesheet" href="./css/jukebox.css?v=20261108-02" />
 </head>
 <body>
   <div class="app-shell">
@@ -66,9 +66,7 @@
             <button class="view-switch-btn" type="button" role="tab" id="viewTabShelf" aria-selected="false" aria-controls="shelfPane" data-view-btn="shelf" tabindex="-1" data-i18n="shelf.heading">レコード棚</button>
             <button class="view-switch-btn" type="button" role="tab" id="viewTabLists" aria-selected="false" aria-controls="listsPane" data-view-btn="lists" tabindex="-1" data-i18n="pl.menu">プレイリスト</button>
           </div>
-          <span class="graph-count preview-only" id="graphCount"></span>
-          <span class="bar-spacer"></span>
-          <div class="segment-group preview-only" role="group">
+          <div class="segment-group preview-only bar-end" role="group">
             <button class="segment" type="button" data-lines="all" data-i18n="graph.showAll">すべての線</button>
             <button class="segment" type="button" data-lines="selected" data-i18n="graph.showSelected">選んだパネルの線だけ</button>
           </div>
@@ -237,10 +235,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="./js/i18n.js?v=20261108-01"></script>
-  <script src="./js/ccfolia.js?v=20261108-01"></script>
-  <script src="./js/jukebox.js?v=20261108-01"></script>
-  <script src="./js/shelf-data.js?v=20261108-01"></script>
-  <script src="./js/app.js?v=20261108-01"></script>
+  <script src="./js/i18n.js?v=20261108-02"></script>
+  <script src="./js/ccfolia.js?v=20261108-02"></script>
+  <script src="./js/jukebox.js?v=20261108-02"></script>
+  <script src="./js/shelf-data.js?v=20261108-02"></script>
+  <script src="./js/app.js?v=20261108-02"></script>
 </body>
 </html>
