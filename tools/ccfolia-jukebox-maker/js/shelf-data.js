@@ -26,7 +26,10 @@
       ['LlyNqUHQI-I', '策謀（DOVA-SYNDROME）', 2],
       ['dguMK2aSuvY', '不吉な森（DOVA-SYNDROME）', 2],
       ['IBgpHazjeHM', 'コールドフィッシュ（DOVA-SYNDROME）', 2],
-      ['0KRrv75t8sU', 'クリスタルコア（DOVA-SYNDROME）', 2]
+      ['0KRrv75t8sU', 'クリスタルコア（DOVA-SYNDROME）', 2],
+      ['XWsWn7Iuh_8', 'Flutter（DOVA-SYNDROME）', 2],
+      ['ZTgbzcta0LU', '不穏ROOM（DOVA-SYNDROME）', 2],
+      ['bG6WnM8ultE', '誰もいない風景（DOVA-SYNDROME）', 2]
     ] },
     { id: 'comic', tracks: [
       ['Nf_lqAWh-mE', 'コミカルな日常（DOVA-SYNDROME）'],
@@ -34,7 +37,12 @@
       ['7JhjnxhO7YY', 'ぽかぽか日和'],
       ['DzY-e-cNFt0', '怪しい魔法薬（1時間）', 2],
       ['fDtc6_c9VgQ', '探偵事務所（DOVA-SYNDROME）', 2],
-      ['JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）', 2]
+      ['JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）', 2],
+      ['hS6NUgyGFkg', 'ensolarado（DOVA-SYNDROME）', 2],
+      ['uSdtzlqVdVw', '青空空港（DOVA-SYNDROME）', 2],
+      ['eo7w_Pnctvg', 'なんでしょう？（DOVA-SYNDROME）', 2],
+      ['f2yOXZA0dp0', '収穫祭（DOVA-SYNDROME）', 2],
+      ['KKzSCyV5H0E', 'ジョゼフは今日もご機嫌（DOVA-SYNDROME）', 2]
     ] },
     { id: 'deduction', tracks: [
       ['3pfQ3bDq0Wc', 'プロセス'],
@@ -54,7 +62,10 @@
       ['jzhBKLjP0o4', '作戦会議2（DOVA-SYNDROME）', 2],
       ['VH8r_CYjGbI', 'Mystic Room（DOVA-SYNDROME）', 2],
       ['Siga1GQDcEA', '会議延長（DOVA-SYNDROME）', 2],
-      ['GbR-off3SaE', '探偵は喫茶にいる的なBGM（DOVA-SYNDROME）', 2]
+      ['GbR-off3SaE', '探偵は喫茶にいる的なBGM（DOVA-SYNDROME）', 2],
+      ['hudWFBPXeH4', 'ミラージュ（DOVA-SYNDROME）', 2],
+      ['gQVWawCveAI', 'funky session（DOVA-SYNDROME）', 2],
+      ['9EzV0w-UUGY', '日没廃校（DOVA-SYNDROME）', 2]
     ] },
     { id: 'moving', tracks: [
       ['dc0oRjmZtQs', 'BGM193_Glory'],
@@ -68,7 +79,10 @@
       ['16Bj6aPi1A8', '2:23AM（DOVA-SYNDROME）', 2],
       ['olxbmbavH5w', 'ムスカリの花（DOVA-SYNDROME）', 2],
       ['P626a-2Tip8', '真実（DOVA-SYNDROME）', 2],
-      ['nALEcCgFN1s', 'ゴーゴー探偵事務所（DOVA-SYNDROME）', 2]
+      ['nALEcCgFN1s', 'ゴーゴー探偵事務所（DOVA-SYNDROME）', 2],
+      ['_6VxTpU1-Z8', 'ローファイ少女は今日も寝不足（DOVA-SYNDROME）', 2],
+      ['CVi8ZStKBTc', '朝露喫煙所（DOVA-SYNDROME）', 2],
+      ['MfIWpMnEBbM', 'On The Moon（DOVA-SYNDROME）', 2]
     ] },
     { id: 'sad', tracks: [
       ['G80jLc37jAo', '雪解けを待つ'],
@@ -91,12 +105,16 @@
       ['F4zE_7JCybQ', '捜査会議（DOVA-SYNDROME）', 2],
       ['mt9O1CgqPrc', '古い実験施設（DOVA-SYNDROME）', 2],
       ['rqhgH4oZQSg', 'Ice is wall（DOVA-SYNDROME）', 2],
-      ['NhpYAtmA-mk', 'Investigation3（PeriTune）', 2]
+      ['NhpYAtmA-mk', 'Investigation3（PeriTune）', 2],
+      ['ZrE7sdgkwj4', '危機（DOVA-SYNDROME）', 2],
+      ['nru0SQvo6U0', '目を光らせて（DOVA-SYNDROME）', 2],
+      ['JsMDr41OXL0', '基地出撃５分前（DOVA-SYNDROME）', 2]
     ] },
     { id: 'climax', tracks: [
       ['ISHbwrrNTeM', '決戦（DOVA-SYNDROME）'],
       ['jHSQ2vCIRcc', 'The Final Confrontation'],
-      ['asKyymlaleE', 'Bound to Fate']
+      ['asKyymlaleE', 'Bound to Fate'],
+      ['vHINNBwmbBE', 'Flap（PeriTune）', 2]
     ] },
     { id: 'mansion', tracks: [
       ['KhjjEh6T33w', 'ホラーゲームの洋館'],
@@ -115,21 +133,27 @@
       ['GYjV6x0XJsg', '忘れられた図書館（DOVA-SYNDROME）', 2],
       ['eoZLBoqhsEU', '怪しい館（DOVA-SYNDROME）', 2],
       ['iZji1SLIj9o', 'Mystery_Detective（PeriTune）', 2],
-      ['1EkQUC4DK8o', 'Suspense8（PeriTune）', 2]
+      ['1EkQUC4DK8o', 'Suspense8（PeriTune）', 2],
+      ['MM7zV8Lf-c8', 'ワイングラスと私（DOVA-SYNDROME）', 2],
+      ['pR2TyMCkfBM', '紫煙（DOVA-SYNDROME）', 2]
     ] },
     { id: 'horror', tracks: [
       ['EhmXo0S81ts', '生暖かい空気 -Tepid air-'],
       ['54EVnRk494A', '壊れたオルゴール（1時間）'],
       ['A1fdlha_zB0', 'その村、立ち入るべからず。（30分）'],
       ['Vw7b30JzwlA', 'Crystal thorn（DOVA-SYNDROME）', 2],
-      ['g-v-4cA-VNo', 'おどろ通り（1時間・もみじばミュージック）', 2]
+      ['g-v-4cA-VNo', 'おどろ通り（1時間・もみじばミュージック）', 2],
+      ['SQFXE086VuQ', 'イビツ（DOVA-SYNDROME）', 2],
+      ['PVsGwTRHDwo', 'だれもいないはずだった（DOVA-SYNDROME）', 2]
     ] },
     { id: 'digital', tracks: [
       ['_wwur8OsNd8', 'cyber'],
       ['9YWKyezOcg0', 'Cybernetic'],
       ['IRQuR8KuriE', 'サイバー32（魔王魂）'],
       ['vu8Qq8G_bl4', 'NEON VELOCITY'],
-      ['EXxv41Umk5o', 'Polygonic Artifact（DOVA-SYNDROME）', 2]
+      ['EXxv41Umk5o', 'Polygonic Artifact（DOVA-SYNDROME）', 2],
+      ['3F-2QY1H2Hw', '夜の病室エレクトロ（DOVA-SYNDROME）', 2],
+      ['0i8L4oN4SWg', '星空と衛星（DOVA-SYNDROME）', 2]
     ] }
   ];
 
