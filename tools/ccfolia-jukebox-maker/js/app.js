@@ -124,10 +124,10 @@
     const s = app.settings;
     if (s.roomName === a.set.roomNameDefault) s.roomName = b.set.roomNameDefault;
     if (s.stopName === a.set.stopNameDefault) s.stopName = b.set.stopNameDefault;
-    s.disks.forEach((disk, i) => {
-      const idx = Jukebox.COLORS.findIndex(c => c.id === disk.color);
-      if (idx >= 0 && disk.name === a.defaultNames[idx]) disk.name = b.defaultNames[idx];
-      else if (disk.name === a.defaultNames[i]) disk.name = b.defaultNames[i];
+    // 初期のテーマ名は言語ごとに同じ並びなので、位置ではなく名前で探す（並べ替えや並び順の変更があっても訳せる）
+    s.disks.forEach(disk => {
+      const idx = a.defaultNames.indexOf(disk.name);
+      if (idx >= 0 && b.defaultNames[idx]) disk.name = b.defaultNames[idx];
     });
   }
 
