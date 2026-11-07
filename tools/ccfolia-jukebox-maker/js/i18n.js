@@ -28,7 +28,7 @@
       'BGMはURL（YouTubeなど）か音声ファイルを指定できます。音声ファイルはZIPに入るので、ファイルサイズに気をつけてください。',
       '「シーン一覧」「シーンのつながり」「ジュークボックスの設定」の3つの欄は、見出しの左のつまみをドラッグして並べ替えられます。',
       '入力した設定と音声ファイルはこのブラウザに自動で保存されます。',
-      'レコードの「▶」でBGMを試聴できます。「♪ BGMを鳴らす」をオンにすると、シーンを選ぶたびにそのシーンのBGMがこのページで流れます（音声ファイル・音声のURL・YouTube）。'
+      'レコードの「▶」でBGMを試聴できます。ヘッダーが「BGM ON」のあいだは、シーンを選ぶたびにそのシーンのBGMがこのページで流れます（音量もヘッダーで調整）（音声ファイル・音声のURL・YouTube）。'
     ],
     layout: { drag: 'ドラッグで並べ替え（←→キーでも移動）', reset: '並びを元に戻す' },
     bar: {
@@ -126,7 +126,11 @@
       restart: '最初のシーンに戻す'
     },
     sound: {
-      toggle: '♪ BGMを鳴らす',
+      group: 'BGM',
+      on: 'BGM ON',
+      off: 'BGM OFF',
+      volume: 'BGMの音量',
+      toggleTitle: 'ONのあいだは、BGMのあるシーンを選ぶとこのページでBGMが流れます',
       now: '♪ {name}',
       preview: '{n}枚目のBGMを試聴',
       stop: 'BGMを止める',
@@ -182,7 +186,7 @@
       'BGM can be a URL (such as YouTube) or an audio file. Audio files go inside the ZIP, so watch the file size.',
       'Drag the grip at the left of each heading to rearrange the Scenes, Scene links and Jukebox settings panels.',
       'Your settings and audio files are saved in this browser automatically.',
-      'Press "▶" on a record to preview its BGM. Turn on "♪ Play BGM" and each scene you select plays its BGM on this page (audio files, audio URLs and YouTube).'
+      'Press "▶" on a record to preview its BGM. While the header shows "BGM ON", each scene you select plays its BGM on this page (set the volume there too) (audio files, audio URLs and YouTube).'
     ],
     layout: { drag: 'Drag to rearrange (or use ← → keys)', reset: 'Reset layout' },
     bar: { importZip: 'Open ZIP', backToJukebox: 'Back to jukebox', play: 'Test play', export: 'Export room ZIP' },
@@ -275,7 +279,11 @@
       restart: 'Back to first scene'
     },
     sound: {
-      toggle: '♪ Play BGM',
+      group: 'BGM',
+      on: 'BGM ON',
+      off: 'BGM OFF',
+      volume: 'BGM volume',
+      toggleTitle: 'While ON, selecting a scene with BGM plays it on this page',
       now: '♪ {name}',
       preview: 'Preview the BGM of record {n}',
       stop: 'Stop BGM',
@@ -331,7 +339,7 @@
       'BGM은 URL(YouTube 등)이나 음성 파일을 지정할 수 있습니다. 음성 파일은 ZIP에 들어가므로 파일 크기에 주의해 주세요.',
       '"장면 목록", "장면 연결", "주크박스 설정" 세 칸은 제목 왼쪽의 손잡이를 드래그해 순서를 바꿀 수 있습니다.',
       '입력한 설정과 음성 파일은 이 브라우저에 자동 저장됩니다.',
-      '레코드의 "▶"로 BGM을 미리 들을 수 있습니다. "♪ BGM 재생"을 켜면 장면을 고를 때마다 그 장면의 BGM이 이 페이지에서 재생됩니다(음성 파일, 음성 URL, YouTube).'
+      '레코드의 "▶"로 BGM을 미리 들을 수 있습니다. 헤더가 "BGM ON"인 동안에는 장면을 고를 때마다 그 장면의 BGM이 이 페이지에서 재생됩니다(음량도 헤더에서 조절)(음성 파일, 음성 URL, YouTube).'
     ],
     layout: { drag: '드래그로 순서 바꾸기 (← → 키로도 이동)', reset: '배치 초기화' },
     bar: { importZip: 'ZIP 열기', backToJukebox: '주크박스로 돌아가기', play: '테스트 플레이', export: '룸 ZIP 내보내기' },
@@ -424,7 +432,11 @@
       restart: '첫 장면으로'
     },
     sound: {
-      toggle: '♪ BGM 재생',
+      group: 'BGM',
+      on: 'BGM ON',
+      off: 'BGM OFF',
+      volume: 'BGM 음량',
+      toggleTitle: 'ON인 동안 BGM이 있는 장면을 고르면 이 페이지에서 BGM이 재생됩니다',
       now: '♪ {name}',
       preview: '{n}번째 레코드 BGM 미리 듣기',
       stop: 'BGM 정지',

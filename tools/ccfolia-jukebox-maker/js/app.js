@@ -10,6 +10,7 @@
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
   const BACKDROP_KEY = 'ccfoliaJukebox.backdrop';
   const LANG_KEY = 'ccfoliaJukeboxLang';
+  const SOUND_KEY = 'ccfoliaJukebox.sound';
   const LANGS = ['ja', 'en', 'ko'];
   const MAX_DISKS = Jukebox.MAX_DISKS;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
@@ -27,7 +28,7 @@
     graph: $('layout'), layout: $('layout'), layoutResetBtn: $('layoutResetBtn'), settingsTitle: $('settingsTitle'), sceneGrid: $('sceneGrid'), linkLayer: $('linkLayer'), graphCount: $('graphCount'), warnBox: $('warnBox'),
     detailTitle: $('detailTitle'), detailBoard: $('detailBoard'), inspectorBody: $('inspectorBody'),
     playModal: $('playModal'), playScene: $('playScene'), playBgm: $('playBgm'), playBoard: $('playBoard'),
-    playChat: $('playChat'), playRestart: $('playRestart'), soundToggle: $('soundToggle'),
+    playChat: $('playChat'), playRestart: $('playRestart'), soundToggle: $('soundToggle'), soundLabel: $('soundLabel'), soundVolume: $('soundVolume'),
     coverModal: $('coverModal'), coverPresets: $('coverPresets'), coverTitle: $('coverTitle'), cropCanvas: $('cropCanvas'), cropDrop: $('cropDrop'), cropEmpty: $('cropEmpty'),
     cropZoom: $('cropZoom'), cropOpen: $('cropOpen'), cropFile: $('cropFile'), cropFit: $('cropFit'), cropOk: $('cropOk'), cropRemove: $('cropRemove'),
     toastHost: $('toastHost')
@@ -37,7 +38,8 @@
     lang: 'ja',
     settings: null,
     files: [],          // 音声ファイル（レコードの順番と同じ。IndexedDB に保存）
-    stageSound: false,  // シーンを選んだらそのBGMをページで鳴らす
+    stageSound: true,   // シーンを選んだらそのBGMをページで鳴らす（ヘッダーで切り替え）
+    volume: 50,
     room: null,         // ジュークボックスから組み立てた部屋
     imported: null,     // { name, data, files }
     view: null,         // 画面に出すシーン一覧
@@ -1109,7 +1111,14 @@
     body.innerHTML = '';
     const m = scene.markers[app.marker];
     if (!m) {
-      body.appendChild(h('p', { class: 'muted-note' }, t('insp.none')));
+      // 何も選んでいないときも、選んだら中身が出る場所だとわかるように空の枠を出す
+      body.appendChild(h('div', { class: 'insp-grid is-empty' },
+        h('div', { class: 'insp-thumb insp-thumb-empty', 'aria-hidden': 'true' }),
+        h('div', { class: 'insp-col' },
+          h('p', { class: 'field-label' }, t('insp.text')),
+          h('p', { class: 'insp-text insp-empty' }, '—'),
+          h('p', { class: 'field-label' }, t('insp.action')),
+          h('p', { class: 'insp-code insp-empty' }, t('insp.none')))));
       if (app.view.kind === 'jukebox') body.appendChild(h('p', { class: 'muted-note' }, t('insp.jukeboxNote')));
       return;
     }
@@ -1184,7 +1193,29 @@
   // ページ全体で鳴らす曲は1つだけ。owner は 'stage'（大きな盤面）・'disk:N'（試聴）・'play'（テストプレイ）
   const bgm = { audio: new Audio(), frame: null, src: '', owner: '' };
   bgm.audio.loop = true;
-  bgm.audio.volume = 0.5;
+
+  function applyVolume() {
+    const v = Math.max(0, Math.min(100, app.volume));
+    bgm.audio.volume = v / 100;
+    if (bgm.frame && bgm.frame.contentWindow) {
+      try { bgm.frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [v] }), '*'); } catch (error) { /* noop */ }
+    }
+  }
+
+  function loadSoundPrefs() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SOUND_KEY) || 'null'); } catch (error) { saved = null; }
+    if (saved && typeof saved === 'object') {
+      if (typeof saved.on === 'boolean') app.stageSound = saved.on;
+      if (Number.isFinite(saved.volume)) app.volume = Math.max(0, Math.min(100, saved.volume));
+    }
+    els.soundVolume.value = String(app.volume);
+    applyVolume();
+  }
+
+  function saveSoundPrefs() {
+    try { localStorage.setItem(SOUND_KEY, JSON.stringify({ on: app.stageSound, volume: app.volume })); } catch (error) { /* noop */ }
+  }
   bgm.audio.addEventListener('error', () => {
     if (!bgm.src || bgm.frame) return;
     toast(t('sound.failed'), 'error');
@@ -1202,8 +1233,9 @@
       // YouTube は音声だけ取り出せないので、見えない埋め込みプレイヤーで鳴らす
       bgm.frame = h('iframe', {
         class: 'bgm-frame', title: sound.name, tabindex: '-1', 'aria-hidden': 'true', allow: 'autoplay; encrypted-media',
-        src: `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&loop=1&playlist=${yt}&controls=0&playsinline=1`
+        src: `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&loop=1&playlist=${yt}&controls=0&playsinline=1&enablejsapi=1`
       });
+      bgm.frame.addEventListener('load', applyVolume);
       document.body.appendChild(bgm.frame);
     } else {
       bgm.audio.src = sound.src;
@@ -1242,6 +1274,8 @@
   function syncBgmUi() {
     els.soundToggle.classList.toggle('is-on', app.stageSound);
     els.soundToggle.setAttribute('aria-pressed', String(app.stageSound));
+    els.soundLabel.textContent = t(app.stageSound ? 'sound.on' : 'sound.off');
+    els.soundToggle.title = t('sound.toggleTitle');
     document.querySelectorAll('.bgm-play').forEach(btn => {
       const i = Number(btn.dataset.index);
       const sound = diskSound(i);
@@ -1311,7 +1345,7 @@
 
   function closePlay() {
     els.playModal.hidden = true;
-    // テストプレイの音を止め、「BGMを鳴らす」がオンなら大きな盤面のシーンの曲に戻す
+    // テストプレイの音を止め、BGMがONなら大きな盤面のシーンの曲に戻す
     if (bgm.owner === 'play') stopBgm();
     syncStageBgm();
   }
@@ -1539,8 +1573,16 @@
     els.playBtn.addEventListener('click', openPlay);
     els.soundToggle.addEventListener('click', () => {
       app.stageSound = !app.stageSound;
+      saveSoundPrefs();
       track('ccfolia_jukebox_sound', { on: app.stageSound });
+      // オフにしたら、試聴中の曲も含めて止める（テストプレイ中はそのまま）
+      if (!app.stageSound && bgm.owner !== 'play') stopBgm();
       syncStageBgm();
+    });
+    els.soundVolume.addEventListener('input', () => {
+      app.volume = Number(els.soundVolume.value) || 0;
+      applyVolume();
+      saveSoundPrefs();
     });
     els.playRestart.addEventListener('click', () => {
       app.play.index = app.view.start >= 0 ? app.view.start : 0;
@@ -1637,6 +1679,7 @@
   function init() {
     app.lang = detectLang();
     app.settings = loadSettings();
+    loadSoundPrefs();
     bindBackdrop();
     applyLayout(loadLayout(), false);
     bind();

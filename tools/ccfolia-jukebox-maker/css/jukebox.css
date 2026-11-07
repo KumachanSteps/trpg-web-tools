@@ -306,8 +306,17 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .panel-bar .segment { flex: none; }
 
 /* BGM をページで鳴らす */
-.sound-toggle { flex: none; white-space: nowrap; }
-.sound-toggle.is-on { border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow); }
+.sound-control { display: inline-flex; flex: none; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border: 1px solid var(--line); border-radius: var(--radius); }
+.sound-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border: 0; border-radius: 4px; background: transparent; color: var(--faint); font-size: 0.74rem; font-weight: 800; letter-spacing: 0.03em; white-space: nowrap; cursor: pointer; }
+.sound-toggle:hover { color: var(--ink); }
+.sound-toggle.is-on { background: var(--yellow-soft); color: var(--yellow); }
+.sound-icon { font-size: 0.9rem; line-height: 1; }
+.sound-volume { width: 96px; accent-color: var(--yellow); }
+.sound-toggle:not(.is-on) + .sound-volume { opacity: 0.45; }
+@media (max-width: 560px) { .header-row { flex-wrap: wrap; row-gap: 6px; padding: 6px 0; } .app-name { flex: 1 1 100%; } .header-row > .header-spacer { display: none; } .sound-control { margin-right: auto; } .sound-volume { width: 56px; } }
+.insp-thumb-empty { width: 96px; height: 96px; border: 1px dashed var(--line); border-radius: 6px; background: repeating-linear-gradient(135deg, transparent 0 8px, rgba(255, 255, 255, 0.025) 8px 16px); }
+.insp-empty { color: var(--faint); }
+.insp-code.insp-empty { border: 1px dashed var(--hair); background: transparent; font-family: inherit; }
 .bgm-play { display: grid; flex: none; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--disk, var(--yellow)); font-size: 0.72rem; line-height: 1; cursor: pointer; }
 .bgm-play:hover:not(:disabled), .bgm-play:focus-visible { border-color: var(--disk, var(--yellow)); }
 .bgm-play.is-playing { border-color: var(--disk, var(--yellow)); background: var(--disk, var(--yellow)); color: #1d1e21; }
