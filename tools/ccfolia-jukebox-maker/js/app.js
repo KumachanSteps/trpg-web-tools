@@ -4,13 +4,15 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.26';
+  const VERSION = '0.27';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
   const BACKDROP_KEY = 'ccfoliaJukebox.backdrop';
   const LANG_KEY = 'ccfoliaJukeboxLang';
   const SOUND_KEY = 'ccfoliaJukebox.sound';
+  const SHELF_KEY = 'ccfoliaJukebox.shelf';
+  const PANE_KEY = 'ccfoliaJukebox.pane';
   const LANGS = ['ja', 'en', 'ko'];
   const MAX_DISKS = Jukebox.MAX_DISKS;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
@@ -31,6 +33,7 @@
     playChat: $('playChat'), playRestart: $('playRestart'), soundToggle: $('soundToggle'), soundLabel: $('soundLabel'), soundVolume: $('soundVolume'),
     coverModal: $('coverModal'), coverPresets: $('coverPresets'), coverTitle: $('coverTitle'), cropCanvas: $('cropCanvas'), cropDrop: $('cropDrop'), cropEmpty: $('cropEmpty'),
     cropZoom: $('cropZoom'), cropOpen: $('cropOpen'), cropFile: $('cropFile'), cropFit: $('cropFit'), cropOk: $('cropOk'), cropRemove: $('cropRemove'),
+    viewSwitch: $('viewSwitch'), shelfTabs: $('shelfTabs'), shelfEdit: $('shelfEdit'), shelfList: $('shelfList'), shelfAdd: $('shelfAdd'), shelfUrl: $('shelfUrl'), shelfReset: $('shelfReset'),
     toastHost: $('toastHost')
   };
 
@@ -47,6 +50,7 @@
     marker: -1,         // 選んでいるパネル
     hover: -1,          // マウスを乗せているパネル
     lines: 'all',
+    pane: 'preview',    // 真ん中の欄：'preview'（シーンプレビュー）か 'shelf'（レコード棚）
     buildSeq: 0,
     buildTimer: 0,
     urls: [],
@@ -96,6 +100,7 @@
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', d.meta.description);
     document.querySelectorAll('[data-i18n]').forEach(node => { node.textContent = t(node.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(node => { node.placeholder = t(node.dataset.i18nPlaceholder); });
     document.querySelectorAll('[data-i18n-html]').forEach(node => { node.innerHTML = t(node.dataset.i18nHtml); });
     renderPhotoCredits();
     document.querySelectorAll('[data-i18n-label]').forEach(node => {
@@ -114,6 +119,7 @@
     d.helpNotes.forEach(text => els.helpNotes.appendChild(h('p', null, text)));
     renderSettings();
     renderShape();
+    renderShelf();
     renderAll();
   }
 
@@ -734,6 +740,7 @@
     saveSettings();
     autoBgmTitles();
     if (rerender) renderSettings();
+    refreshShelfRecords();
     clearTimeout(app.buildTimer);
     app.buildTimer = setTimeout(rebuild, rerender ? 120 : 260);
   }
@@ -935,7 +942,7 @@
       dataset: { scene: String(i) },
       style: { '--scene': scene.color },
       'aria-pressed': String(selected),
-      onclick: () => selectScene(i)
+      onclick: () => { setPane('preview', true); selectScene(i); }
     },
     boardEl(scene, { className: 'board-thumb' }),
     h('span', { class: 'thumb-info' },
@@ -978,6 +985,7 @@
     if (!app.view) return;
     els.jukeboxPanel.hidden = Boolean(app.imported);
     els.importPanel.hidden = !app.imported;
+    refreshShelfRecords();
     els.backBtn.hidden = !app.imported;
     if (app.imported) els.importName.textContent = app.imported.name;
     els.settingsTitle.textContent = t(app.imported ? 'io.importedTitle' : 'set.heading');
@@ -1015,7 +1023,7 @@
   function drawLinks() {
     const layer = els.linkLayer;
     while (layer.firstChild) layer.removeChild(layer.firstChild);
-    if (!app.view) return;
+    if (!app.view || app.pane !== 'preview') return;
     const scene = currentScene();
     if (!scene) return;
     const box = els.graph.getBoundingClientRect();
@@ -1403,6 +1411,7 @@
       link.setAttribute('aria-label', link.title);
     });
     document.querySelectorAll('.stage-bgm').forEach(chip => chip.classList.toggle('is-playing', chip.dataset.src === bgm.src));
+    syncShelfUi();
   }
 
   // 音声ファイルはこのブラウザの IndexedDB に保存する（localStorage には入りきらないため）
@@ -1554,6 +1563,339 @@
     const learned = Ccfolia.getShape().learned;
     els.shapeLabel.textContent = learned ? t('io.shapeLearned') : t('io.shapeGuess');
     els.shapeResetBtn.hidden = !learned;
+  }
+
+
+  /* ================= レコード棚（フリーBGMの棚） ================= */
+
+  const shelf = { tabs: [], active: 0, editing: false, armed: '' };
+  const shelfSrc = yt => `https://youtu.be/${yt}`;
+
+  function loadShelf() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SHELF_KEY) || 'null'); } catch (error) { saved = null; }
+    const ok = saved && Array.isArray(saved.tabs) && saved.tabs.every(tab => tab && typeof tab.id === 'string' && Array.isArray(tab.tracks));
+    shelf.tabs = ok
+      ? saved.tabs.map(tab => ({
+        id: tab.id,
+        name: typeof tab.name === 'string' ? tab.name.slice(0, 30) : '',
+        tracks: tab.tracks.filter(tr => tr && /^[\w-]{11}$/.test(tr.yt)).map(tr => ({ yt: tr.yt, title: typeof tr.title === 'string' ? tr.title.slice(0, 150) : '' }))
+      }))
+      : JukeboxShelf.defaults();
+    shelf.active = ok && Number.isInteger(saved.active) ? Math.max(0, Math.min(shelf.tabs.length - 1, saved.active)) : 0;
+  }
+
+  function saveShelf() {
+    try { localStorage.setItem(SHELF_KEY, JSON.stringify({ v: 1, active: shelf.active, tabs: shelf.tabs })); } catch (error) { /* noop */ }
+  }
+
+  // 初期のタブは言語ごとの名前、名前を変えたタブや足したタブはその名前
+  function shelfTabName(tab) {
+    if (tab.name) return tab.name;
+    const name = t(`shelf.tabs.${tab.id}`);
+    return name === `shelf.tabs.${tab.id}` ? t('shelf.newTab') : name;
+  }
+
+  const trackTitle = tr => tr.title || ytTitles[tr.yt] || `youtu.be/${tr.yt}`;
+
+  function renderShelf(animate) {
+    if (!els.shelfTabs) return;
+    const tabs = shelf.tabs;
+    if (shelf.active >= tabs.length) shelf.active = Math.max(0, tabs.length - 1);
+    els.shelfTabs.innerHTML = '';
+    tabs.forEach((tab, i) => {
+      const on = i === shelf.active;
+      els.shelfTabs.appendChild(h('button', {
+        type: 'button', role: 'tab', class: `shelf-tab${on ? ' is-active' : ''}`,
+        'aria-selected': String(on), tabindex: on ? '0' : '-1',
+        onclick: () => { if (shelf.active === i) return; shelf.active = i; shelf.armed = ''; saveShelf(); renderShelf(true); },
+        onkeydown: e => {
+          if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+          e.preventDefault();
+          shelf.active = (i + (e.key === 'ArrowLeft' ? -1 : 1) + tabs.length) % tabs.length;
+          saveShelf();
+          renderShelf(true);
+          const next = els.shelfTabs.querySelector('.shelf-tab.is-active');
+          if (next) next.focus();
+        }
+      }, shelfTabName(tab), h('span', { class: 'shelf-tab-count' }, String(tab.tracks.length))));
+    });
+    els.shelfTabs.appendChild(h('button', { type: 'button', class: 'shelf-tab-tool', title: t('shelf.addTab'), 'aria-label': t('shelf.addTab'), onclick: addShelfTab }, '＋'));
+    els.shelfTabs.appendChild(h('button', {
+      type: 'button', class: `shelf-tab-tool${shelf.editing ? ' is-on' : ''}`, title: t('shelf.editTab'), 'aria-label': t('shelf.editTab'),
+      'aria-pressed': String(shelf.editing), disabled: !tabs.length || undefined,
+      onclick: () => { shelf.editing = !shelf.editing; shelf.armed = ''; renderShelf(); if (shelf.editing) focusShelfName(); }
+    }, '✎'));
+    renderShelfEdit();
+    renderShelfList(animate);
+    const active = els.shelfTabs.querySelector('.shelf-tab.is-active');
+    if (active && active.scrollIntoView) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  function focusShelfName() {
+    const input = els.shelfEdit.querySelector('input');
+    if (input) { input.focus(); input.select(); }
+  }
+
+  function renderShelfEdit() {
+    const tab = shelf.tabs[shelf.active];
+    els.shelfEdit.innerHTML = '';
+    els.shelfEdit.hidden = !shelf.editing || !tab;
+    if (els.shelfEdit.hidden) return;
+    const move = dir => {
+      const to = shelf.active + dir;
+      if (to < 0 || to >= shelf.tabs.length) return;
+      [shelf.tabs[shelf.active], shelf.tabs[to]] = [shelf.tabs[to], shelf.tabs[shelf.active]];
+      shelf.active = to;
+      saveShelf();
+      renderShelf();
+    };
+    const armed = shelf.armed === 'tab';
+    els.shelfEdit.append(
+      h('label', { class: 'shelf-edit-name' }, h('span', { class: 'field-label' }, t('shelf.tabName')),
+        h('input', {
+          class: 'text-input', type: 'text', maxlength: '30', value: shelfTabName(tab),
+          oninput: e => {
+            tab.name = e.target.value.trim();
+            saveShelf();
+            const btn = els.shelfTabs.querySelector('.shelf-tab.is-active');
+            if (btn && btn.firstChild) btn.firstChild.textContent = shelfTabName(tab);
+          },
+          onkeydown: e => { if (e.key === 'Enter') { e.preventDefault(); shelf.editing = false; renderShelf(); } }
+        })),
+      h('button', { type: 'button', class: 'ghost-button small', title: t('shelf.moveLeft'), 'aria-label': t('shelf.moveLeft'), disabled: shelf.active === 0 || undefined, onclick: () => move(-1) }, '←'),
+      h('button', { type: 'button', class: 'ghost-button small', title: t('shelf.moveRight'), 'aria-label': t('shelf.moveRight'), disabled: shelf.active === shelf.tabs.length - 1 || undefined, onclick: () => move(1) }, '→'),
+      h('button', {
+        type: 'button', class: `ghost-button small danger${armed ? ' is-armed' : ''}`,
+        onclick: () => {
+          if (!armed) { shelf.armed = 'tab'; renderShelfEdit(); return; }
+          shelf.tabs.splice(shelf.active, 1);
+          shelf.armed = '';
+          if (!shelf.tabs.length) shelf.editing = false;
+          saveShelf();
+          renderShelf(true);
+        }
+      }, t(armed ? 'shelf.deleteTabSure' : 'shelf.deleteTab')),
+      h('button', { type: 'button', class: 'accent-button small', onclick: () => { shelf.editing = false; shelf.armed = ''; renderShelf(); } }, t('shelf.done'))
+    );
+  }
+
+  function addShelfTab() {
+    shelf.tabs.push({ id: `c${Date.now().toString(36)}`, name: t('shelf.newTab'), tracks: [] });
+    shelf.active = shelf.tabs.length - 1;
+    shelf.editing = true;
+    shelf.armed = '';
+    saveShelf();
+    renderShelf(true);
+    focusShelfName();
+  }
+
+  function renderShelfList(animate) {
+    const tab = shelf.tabs[shelf.active];
+    els.shelfList.innerHTML = '';
+    els.shelfAdd.hidden = !tab;
+    if (!tab) {
+      els.shelfList.appendChild(h('li', { class: 'shelf-empty' }, t('shelf.noTabs')));
+      return;
+    }
+    if (!tab.tracks.length) els.shelfList.appendChild(h('li', { class: 'shelf-empty' }, t('shelf.emptyTab')));
+    tab.tracks.forEach((tr, ti) => {
+      const src = shelfSrc(tr.yt);
+      const title = trackTitle(tr);
+      const records = app.settings ? app.settings.disks.slice(0, app.settings.count) : [];
+      els.shelfList.appendChild(h('li', { class: 'shelf-track', dataset: { yt: tr.yt }, style: { '--i': String(ti) } },
+        h('button', {
+          type: 'button', class: 'shelf-sleeve', dataset: { src },
+          onclick: () => { if (bgm.src === src) stopBgm(); else playBgm({ src, name: title }, `shelf:${tr.yt}`); }
+        },
+        h('span', { class: 'shelf-disc', 'aria-hidden': 'true' }),
+        h('img', { src: `https://i.ytimg.com/vi/${tr.yt}/mqdefault.jpg`, alt: '', loading: 'lazy', decoding: 'async' }),
+        h('span', { class: 'shelf-sleeve-icon', 'aria-hidden': 'true' })),
+        h('span', { class: 'shelf-meta' },
+          h('span', { class: 'shelf-title', title }, title),
+          h('span', { class: 'shelf-sub' }, `youtu.be/${tr.yt}`)),
+        h('span', { class: 'shelf-actions' },
+          h('button', { type: 'button', class: 'shelf-icon shelf-copy', title: t('shelf.copy'), 'aria-label': t('shelf.copy'), onclick: () => copyText(src) }),
+          h('select', {
+            class: 'shelf-to', title: t('shelf.toRecord'), 'aria-label': t('shelf.toRecord'), disabled: Boolean(app.imported) || !records.length || undefined,
+            onchange: e => { const i = Number(e.target.value); e.target.value = ''; if (Number.isInteger(i) && i >= 0) assignShelfTrack(i, tr); }
+          },
+          h('option', { value: '' }, t('shelf.toRecordShort')),
+          records.map((disk, i) => h('option', { value: String(i) }, `${i + 1}. ${disk.name || '—'}`))),
+          h('a', { class: 'shelf-icon', href: `https://www.youtube.com/watch?v=${tr.yt}`, target: '_blank', rel: 'noopener', title: t('sound.openYoutube'), 'aria-label': t('sound.openYoutube') }, '↗'),
+          h('button', {
+            type: 'button', class: 'shelf-icon shelf-remove', title: t('shelf.remove'), 'aria-label': t('shelf.remove'),
+            onclick: () => {
+              if (bgm.src === src && bgm.owner.startsWith('shelf:')) stopBgm();
+              tab.tracks.splice(ti, 1);
+              saveShelf();
+              renderShelf();
+            }
+          }, '×'))));
+    });
+    // コピーのアイコン（2枚重ねの四角）
+    els.shelfList.querySelectorAll('.shelf-copy').forEach(btn => { btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>'; });
+    if (animate) els.shelfList.classList.remove('is-entering'), void els.shelfList.offsetWidth, els.shelfList.classList.add('is-entering');
+    syncShelfUi();
+  }
+
+  // レコードの名前や枚数が変わったら「レコードへ」の選択肢だけ作り直す
+  function refreshShelfRecords() {
+    if (!els.shelfList || !app.settings) return;
+    const records = app.settings.disks.slice(0, app.settings.count);
+    els.shelfList.querySelectorAll('.shelf-to').forEach(select => {
+      while (select.options.length > 1) select.remove(1);
+      records.forEach((disk, i) => select.appendChild(h('option', { value: String(i) }, `${i + 1}. ${disk.name || '—'}`)));
+      select.disabled = Boolean(app.imported) || !records.length;
+    });
+  }
+
+  function syncShelfUi() {
+    if (!els.shelfList) return;
+    els.shelfList.querySelectorAll('.shelf-sleeve').forEach(btn => {
+      const on = btn.dataset.src === bgm.src;
+      btn.closest('.shelf-track').classList.toggle('is-playing', on);
+      const label = t(on ? 'sound.stop' : 'shelf.listen');
+      btn.title = label;
+      btn.setAttribute('aria-label', `${label}: ${btn.closest('.shelf-track').querySelector('.shelf-title').textContent}`);
+    });
+  }
+
+  async function copyText(text) {
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch (error) {
+      const area = h('textarea', { class: 'visually-hidden' }, text);
+      document.body.appendChild(area);
+      area.select();
+      try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+      area.remove();
+    }
+    toast(ok ? t('shelf.copied') : t('shelf.copyFailed', { url: text }), ok ? 'info' : 'error');
+  }
+
+  // 棚の曲をレコードに入れる（音声ファイルを選んでいたら、URLの曲に切り替える）
+  function assignShelfTrack(i, tr) {
+    const disk = app.settings.disks[i];
+    if (!disk) return;
+    disk.url = shelfSrc(tr.yt);
+    disk.bgm = trackTitle(tr);
+    disk.bgmAuto = true;
+    disk.bgmFor = tr.yt;
+    if (app.files[i]) { app.files[i] = null; saveFiles(); }
+    changed(true);
+    toast(t('shelf.assigned', { n: i + 1, name: disk.name || '' }));
+    track('ccfolia_jukebox_shelf_assign', { tab: (shelf.tabs[shelf.active] || {}).id || '' });
+  }
+
+  function addShelfUrl(raw) {
+    const tab = shelf.tabs[shelf.active];
+    const yt = youtubeId(raw);
+    if (!tab) return;
+    if (!yt) { toast(t('shelf.badUrl'), 'error'); return; }
+    if (tab.tracks.some(tr => tr.yt === yt)) { toast(t('shelf.already')); return; }
+    const tr = { yt, title: ytTitles[yt] || '' };
+    tab.tracks.push(tr);
+    saveShelf();
+    renderShelf();
+    els.shelfUrl.value = '';
+    if (!tr.title) {
+      fetchYoutubeTitle(yt).then(title => {
+        if (!title || tr.title) return;
+        tr.title = title;
+        saveShelf();
+        renderShelfList();
+      });
+    }
+  }
+
+  function bindShelf() {
+    loadShelf();
+    els.shelfAdd.addEventListener('submit', e => { e.preventDefault(); addShelfUrl(els.shelfUrl.value); });
+    let resetArmed = 0;
+    els.shelfReset.addEventListener('click', () => {
+      if (!resetArmed) {
+        els.shelfReset.textContent = t('shelf.resetSure');
+        resetArmed = setTimeout(() => { resetArmed = 0; els.shelfReset.textContent = t('shelf.reset'); }, 4000);
+        return;
+      }
+      clearTimeout(resetArmed);
+      resetArmed = 0;
+      els.shelfReset.textContent = t('shelf.reset');
+      shelf.tabs = JukeboxShelf.defaults();
+      shelf.active = 0;
+      shelf.editing = false;
+      saveShelf();
+      renderShelf(true);
+      toast(t('shelf.resetDone'));
+    });
+    // シーンプレビューとレコード棚の切り替え
+    els.viewSwitch.querySelectorAll('[data-view-btn]').forEach(btn => {
+      btn.addEventListener('click', () => setPane(btn.dataset.viewBtn, true));
+      btn.addEventListener('keydown', e => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        setPane(app.pane === 'preview' ? 'shelf' : 'preview', true);
+        els.viewSwitch.querySelector(`[data-view-btn="${app.pane}"]`).focus();
+      });
+    });
+    let saved = 'preview';
+    try { saved = localStorage.getItem(PANE_KEY) === 'shelf' ? 'shelf' : 'preview'; } catch (error) { saved = 'preview'; }
+    setPane(saved, false);
+  }
+
+  // 真ん中の欄の中身を入れ替える。外す側を横へ流して消し、入れる側を反対から滑り込ませる
+  let paneAnims = [];
+  function setPane(name, animate) {
+    const panel = els.layout.querySelector('[data-panel="stage"]');
+    const from = app.pane;
+    els.viewSwitch.dataset.active = name;
+    els.viewSwitch.querySelectorAll('[data-view-btn]').forEach(btn => {
+      const on = btn.dataset.viewBtn === name;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', String(on));
+      btn.tabIndex = on ? 0 : -1;
+    });
+    if (from === name && !animate) {
+      panel.querySelectorAll('[data-view-pane]').forEach(p => { p.hidden = p.dataset.viewPane !== name; });
+    }
+    if (from === name) { panel.dataset.pane = name; return; }
+    app.pane = name;
+    panel.dataset.pane = name;
+    els.layout.classList.toggle('is-shelf', name === 'shelf');
+    try { localStorage.setItem(PANE_KEY, name); } catch (error) { /* noop */ }
+    const outgoing = panel.querySelector(`[data-view-pane="${from}"]`);
+    const incoming = panel.querySelector(`[data-view-pane="${name}"]`);
+    paneAnims.forEach(a => a.cancel());
+    paneAnims = [];
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finish = () => {
+      outgoing.hidden = true;
+      incoming.hidden = false;
+      if (panel.scrollTop > 0) panel.scrollTop = 0;
+      if (name === 'preview') { renderDetail(); requestAnimationFrame(drawLinks); } else drawLinks();
+    };
+    if (!animate || reduce || !incoming.animate) {
+      finish();
+      if (name === 'shelf') renderShelfList();
+      return;
+    }
+    drawLinks();
+    const dir = name === 'shelf' ? 1 : -1;
+    const out = outgoing.animate([
+      { opacity: 1, transform: 'translateX(0)', filter: 'blur(0)' },
+      { opacity: 0, transform: `translateX(${-dir * 36}px)`, filter: 'blur(3px)' }
+    ], { duration: 140, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+    paneAnims.push(out);
+    out.onfinish = () => {
+      out.cancel();
+      finish();
+      if (name === 'shelf') renderShelfList(true);
+      const inn = incoming.animate([
+        { opacity: 0, transform: `translateX(${dir * 44}px)`, filter: 'blur(3px)' },
+        { opacity: 1, transform: 'translateX(0)', filter: 'blur(0)' }
+      ], { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)' });
+      paneAnims.push(inn);
+    };
   }
 
   /* ================= 欄の並べ替え ================= */
@@ -1801,6 +2143,7 @@
     bind();
     bindPanelDrag();
     bindCropper();
+    bindShelf();
     applyLanguage();
     rebuild();
     // 前に選んだ音声ファイルを読み戻してから、曲名の自動入力を始める
