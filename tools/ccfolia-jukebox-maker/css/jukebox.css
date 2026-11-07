@@ -173,7 +173,11 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .swatch { width: 18px; height: 18px; padding: 0; border: 2px solid transparent; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35); }
 .swatch.is-on { border-color: var(--ink); }
 .swatch:hover { transform: scale(1.12); }
-.bgm-row { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.bgm-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+/* 1段目：URL（または音声ファイル名）と↗、2段目：音声ファイルと試聴 */
+.bgm-row > .text-input, .bgm-row > .bgm-file { flex: 1 1 calc(100% - 32px); min-width: 0; }
+.bgm-row > .bgm-open + .file-button, .bgm-row > .bgm-file + .file-button { margin-left: 0; }
+.bgm-row > .bgm-play { margin-left: auto; }
 .backdrop-row { display: flex; gap: 8px; align-items: center; }
 .backdrop-thumb { flex: 0 0 auto; width: 96px; aspect-ratio: 16 / 9; padding: 0; overflow: hidden; border: 1px solid var(--hair); border-radius: 4px; background: var(--field); cursor: pointer; }
 .backdrop-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -336,3 +340,6 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 @keyframes bgm-pulse { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .stage-bgm.is-playing { animation: none; } }
 .bgm-frame { position: fixed; width: 1px; height: 1px; right: 0; bottom: 0; border: 0; opacity: 0; pointer-events: none; }
+.bgm-open { display: grid; flex: none; place-items: center; width: 26px; height: 30px; border-radius: 4px; color: var(--muted); font-size: 0.9rem; font-weight: 800; text-decoration: none; }
+.bgm-open:hover, .bgm-open:focus-visible { background: var(--yellow-soft); color: var(--yellow); }
+.bgm-open[hidden] { display: none; }

@@ -10,7 +10,7 @@
   - 棚のレコードのクリックアクション：`/scene テーマ`。プレーヤーに載ったレコード：`/scene 停止中`。
   - プレーヤーは3枚のマーカーパネルを重ねる：本体（アームなし `player-base.png`）→ レコード → トーンアーム。停止中はアームが休み位置（`tonearm-rest.png`）。再生中はレコードがラベルの回るAPNG（`disk-<色>-spin.png`、33⅓回転、ループ）になり、アームは0.6秒止まってから0.8秒で盤面に下りるAPNG（`tonearm-drop.png`、1回だけ再生）。再生中はアームを押しても停止する。
   - 棚のレコードはジャケット（`assets/sleeve.png`）から直径の3割だけはみ出す。ジャケットはプリセット写真（下記の12枚）か見本デザイン（白・ラベル色・グラデーション・ライン・サンバースト・ドット・リング）から選ぶか、画像を開く／ドラッグ＆ドロップして、ドラッグで移動・ホイール（2本指）で拡大縮小して切り抜く。切り抜いた画像はJPEGでブラウザに保存する。
-  - 初期設定はマーダーミステリー向けの12テーマ：導入・ハンドアウト・調査・密談・調査2・議論・休憩・最終議論・考察・クライマックス・感想戦・エピローグ。それぞれラベル色とプリセット写真のジャケット付き。
+  - 初期設定はマーダーミステリー向けの12テーマ：導入・ハンドアウト・調査・密談・調査2・議論・休憩・最終議論・考察・クライマックス・エピローグ・感想戦。それぞれラベル色とプリセット写真のジャケット、YouTubeのフリーBGM（URL）付き。
   - 「ジャケットを表示する」をオフにすると、棚にはレコードだけが並ぶ（シーンの画面・シーン一覧・書き出すZIPのすべて）。
 - 前景と背景：各シーンの前景は、そのシーンのレコード（ジャケットあり・なし）と曲名の絵（ココフォリアのシーン一覧のサムネイルで見分けるため）。盤面では、前景と同じ大きさのマーカーパネル（棚の絵、z=1）で前景を覆う。部屋の外側の背景は、選んだ画像（長辺1920pxのJPEGにしてブラウザに保存）か、作った暗いレコード模様。選んだ画像はZIPにそのまま入るので、配布するときは画像のライセンスに注意。
 - シーンのつながり：全シーンを一覧し、クリックアクションの `/scene` を線で表示。重複したシーン名・存在しないシーンの呼び出しを警告。
@@ -60,5 +60,5 @@ __data.json  { meta: { version: '1.1.0' },
 | 最終議論 | [the pawn triumphs over the fallen king](https://unsplash.com/photos/the-pawn-triumphs-over-the-fallen-king-b_NUj9eklsk) | [Daniele Franchi](https://unsplash.com/@daniele_franchi) |
 | 考察 | [text](https://unsplash.com/photos/text-BQLw0OrA6F4) | [Saad Ahmad](https://unsplash.com/@saadahmad_umn) |
 | クライマックス | [orange and yellow fire illustration](https://unsplash.com/photos/orange-and-yellow-fire-illustration-y3RFJh6-r0Q) | [Quilia](https://unsplash.com/@heyquilia) |
-| 感想戦 | [colorful game tiles scattered on a grid](https://unsplash.com/photos/colorful-game-tiles-scattered-on-a-grid-RxAyATWag6A) | [Parinaz Mirhosseini](https://unsplash.com/@parinaz_mhs) |
 | エピローグ | [an empty theater with red curtains and seats](https://unsplash.com/photos/an-empty-theater-with-red-curtains-and-seats-25OeoEKoNP8) | [Richard Heinen](https://unsplash.com/@richard_he) |
+| 感想戦 | [colorful game tiles scattered on a grid](https://unsplash.com/photos/colorful-game-tiles-scattered-on-a-grid-RxAyATWag6A) | [Parinaz Mirhosseini](https://unsplash.com/@parinaz_mhs) |
