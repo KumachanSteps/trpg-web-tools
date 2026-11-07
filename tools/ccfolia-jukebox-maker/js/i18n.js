@@ -27,7 +27,8 @@
       'クリックアクションはキャラクターを選んだ状態でパネルをクリックすると、そのキャラクターの発言として送信されます。',
       'BGMはURL（YouTubeなど）か音声ファイルを指定できます。音声ファイルはZIPに入るので、ファイルサイズに気をつけてください。',
       '「シーン一覧」「シーンのつながり」「ジュークボックスの設定」の3つの欄は、見出しの左のつまみをドラッグして並べ替えられます。',
-      '入力した設定はこのブラウザに自動で保存されます（音声ファイルは保存されません）。'
+      '入力した設定と音声ファイルはこのブラウザに自動で保存されます。',
+      'レコードの「▶」でBGMを試聴できます。「♪ BGMを鳴らす」をオンにすると、シーンを選ぶたびにそのシーンのBGMがこのページで流れます（音声ファイル・音声のURL・YouTube）。'
     ],
     layout: { drag: 'ドラッグで並べ替え（←→キーでも移動）', reset: '並びを元に戻す' },
     bar: {
@@ -124,6 +125,15 @@
       noBgm: 'BGMなし',
       restart: '最初のシーンに戻す'
     },
+    sound: {
+      toggle: '♪ BGMを鳴らす',
+      now: '♪ {name}',
+      preview: '{n}枚目のBGMを試聴',
+      stop: 'BGMを止める',
+      none: 'BGMが指定されていません',
+      failed: 'このBGMはページでは再生できませんでした（音声ファイルか、音声ファイルのURL・YouTubeのURLを指定してください）。',
+      notSaved: '音声ファイルをこのブラウザに保存できませんでした。このページを開いている間だけ使えます。'
+    },
     io: {
       exporting: 'ルームZIPを作っています…',
       exported: 'ルームZIPを書き出しました。ココフォリアの部屋にドラッグ＆ドロップしてください。',
@@ -171,7 +181,8 @@
       'A click action is sent as the selected character\'s message when you click the panel.',
       'BGM can be a URL (such as YouTube) or an audio file. Audio files go inside the ZIP, so watch the file size.',
       'Drag the grip at the left of each heading to rearrange the Scenes, Scene links and Jukebox settings panels.',
-      'Your settings are saved in this browser automatically (audio files are not).'
+      'Your settings and audio files are saved in this browser automatically.',
+      'Press "▶" on a record to preview its BGM. Turn on "♪ Play BGM" and each scene you select plays its BGM on this page (audio files, audio URLs and YouTube).'
     ],
     layout: { drag: 'Drag to rearrange (or use ← → keys)', reset: 'Reset layout' },
     bar: { importZip: 'Open ZIP', backToJukebox: 'Back to jukebox', play: 'Test play', export: 'Export room ZIP' },
@@ -263,6 +274,15 @@
       noBgm: 'No BGM',
       restart: 'Back to first scene'
     },
+    sound: {
+      toggle: '♪ Play BGM',
+      now: '♪ {name}',
+      preview: 'Preview the BGM of record {n}',
+      stop: 'Stop BGM',
+      none: 'No BGM set',
+      failed: 'This BGM can\'t be played on the page. Use an audio file, a direct audio URL or a YouTube URL.',
+      notSaved: 'The audio file couldn\'t be saved in this browser. It works only while this page is open.'
+    },
     io: {
       exporting: 'Building the room ZIP…',
       exported: 'Exported the room ZIP. Drag and drop it onto your CCFOLIA room.',
@@ -310,7 +330,8 @@
       '클릭 액션은 캐릭터를 선택한 상태에서 패널을 클릭하면 그 캐릭터의 발언으로 전송됩니다.',
       'BGM은 URL(YouTube 등)이나 음성 파일을 지정할 수 있습니다. 음성 파일은 ZIP에 들어가므로 파일 크기에 주의해 주세요.',
       '"장면 목록", "장면 연결", "주크박스 설정" 세 칸은 제목 왼쪽의 손잡이를 드래그해 순서를 바꿀 수 있습니다.',
-      '입력한 설정은 이 브라우저에 자동 저장됩니다(음성 파일은 저장되지 않습니다).'
+      '입력한 설정과 음성 파일은 이 브라우저에 자동 저장됩니다.',
+      '레코드의 "▶"로 BGM을 미리 들을 수 있습니다. "♪ BGM 재생"을 켜면 장면을 고를 때마다 그 장면의 BGM이 이 페이지에서 재생됩니다(음성 파일, 음성 URL, YouTube).'
     ],
     layout: { drag: '드래그로 순서 바꾸기 (← → 키로도 이동)', reset: '배치 초기화' },
     bar: { importZip: 'ZIP 열기', backToJukebox: '주크박스로 돌아가기', play: '테스트 플레이', export: '룸 ZIP 내보내기' },
@@ -401,6 +422,15 @@
       bgm: '♪ {name}',
       noBgm: 'BGM 없음',
       restart: '첫 장면으로'
+    },
+    sound: {
+      toggle: '♪ BGM 재생',
+      now: '♪ {name}',
+      preview: '{n}번째 레코드 BGM 미리 듣기',
+      stop: 'BGM 정지',
+      none: 'BGM이 지정되지 않았습니다',
+      failed: '이 BGM은 페이지에서 재생할 수 없습니다(음성 파일, 음성 파일 URL, YouTube URL을 지정해 주세요).',
+      notSaved: '음성 파일을 이 브라우저에 저장하지 못했습니다. 이 페이지를 열어 둔 동안만 사용할 수 있습니다.'
     },
     io: {
       exporting: '룸 ZIP을 만드는 중…',

@@ -304,3 +304,16 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
   .toast { transition: none; }
 }
 .panel-bar .segment { flex: none; }
+
+/* BGM をページで鳴らす */
+.sound-toggle { flex: none; white-space: nowrap; }
+.sound-toggle.is-on { border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow); }
+.bgm-play { display: grid; flex: none; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--disk, var(--yellow)); font-size: 0.72rem; line-height: 1; cursor: pointer; }
+.bgm-play:hover:not(:disabled), .bgm-play:focus-visible { border-color: var(--disk, var(--yellow)); }
+.bgm-play.is-playing { border-color: var(--disk, var(--yellow)); background: var(--disk, var(--yellow)); color: #1d1e21; }
+.bgm-play:disabled { opacity: 0.35; cursor: default; }
+.stage-bgm { min-width: 0; overflow: hidden; color: var(--muted); font-size: 0.78rem; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.stage-bgm.is-playing { color: var(--scene, var(--yellow)); animation: bgm-pulse 1.6s ease-in-out infinite; }
+@keyframes bgm-pulse { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .stage-bgm.is-playing { animation: none; } }
+.bgm-frame { position: fixed; width: 1px; height: 1px; right: 0; bottom: 0; border: 0; opacity: 0; pointer-events: none; }
