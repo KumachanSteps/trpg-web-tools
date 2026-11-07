@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.25';
+  const VERSION = '0.26';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -228,7 +228,7 @@
       // マーダーミステリー向けの12テーマ（ラベル色と写真ジャケット付き）
       // BGMの初期値は、テーマに合うYouTubeのフリーBGM
       disks: Jukebox.PHOTOS.map((p, i) => ({ color: p.color, name: d.defaultNames[i], bgm: '', url: p.bgmUrl, cover: { style: 'photo', photo: p.id } })),
-      bgmDefaults: 1
+      bgmDefaults: 2
     };
   }
 
@@ -243,6 +243,8 @@
         color: Jukebox.COLORS.some(c => c.id === s.color) ? s.color : disk.color,
         name: typeof s.name === 'string' ? s.name : disk.name,
         bgm: typeof s.bgm === 'string' ? s.bgm : '',
+        bgmAuto: s.bgmAuto === true,           // 曲名をYouTubeから自動で入れたか（手で直したら false）
+        bgmFor: typeof s.bgmFor === 'string' ? s.bgmFor : '', // 自動で入れた曲名の動画ID
         url: typeof s.url === 'string' ? s.url : '',
         cover: readCover(s.cover)
       };
@@ -252,15 +254,19 @@
       stopName: typeof saved.stopName === 'string' ? saved.stopName : base.stopName,
       count: Math.min(MAX_DISKS, Math.max(1, Number(saved.count) || base.count)),
       showCover: saved.showCover !== false,
-      disks: saved.bgmDefaults ? disks : disks.map(withDefaultBgm),
-      bgmDefaults: 1
+      disks: disks.map(disk => withDefaultBgm(disk, Number(saved.bgmDefaults) || 0)),
+      bgmDefaults: 2
     };
   }
 
   // 初期BGMが入る前に保存した設定は、URLが空のプリセット写真のレコードに1回だけ初期BGMを入れる
-  function withDefaultBgm(disk) {
+  // 2: ハンドアウトと密談の初期BGMを差し替え（前の初期URLのままなら新しいURLにする）
+  function withDefaultBgm(disk, version) {
     const photo = disk.cover.style === 'photo' ? Jukebox.photoOf(disk.cover.photo) : null;
-    return photo && !disk.url.trim() ? { ...disk, url: photo.bgmUrl } : disk;
+    if (!photo) return disk;
+    if (version < 1 && !disk.url.trim()) return { ...disk, url: photo.bgmUrl };
+    if (version < 2 && photo.oldYt && youtubeId(disk.url) === photo.oldYt) return { ...disk, url: photo.bgmUrl };
+    return disk;
   }
 
   function readCover(c) {
@@ -386,8 +392,10 @@
             oninput: e => { disk.name = e.target.value; changed(false); }
           }),
           h('input', {
-            class: 'text-input small', type: 'text', maxlength: '60', value: disk.bgm || '', placeholder: t('set.bgmTitlePh'), 'aria-label': `${t('set.bgmTitle')} ${i + 1}`,
-            oninput: e => { disk.bgm = e.target.value; changed(false); }
+            class: 'text-input small', type: 'text', maxlength: '150', value: disk.bgm || '', placeholder: t('set.bgmTitlePh'), 'aria-label': `${t('set.bgmTitle')} ${i + 1}`,
+            dataset: { bgmTitle: String(i) },
+            // 手で直した曲名は、URLを変えても上書きしない（空にすると次のURLから自動で入る）
+            oninput: e => { disk.bgm = e.target.value; disk.bgmAuto = false; disk.bgmFor = ''; changed(false); }
           }),
           swatches,
           h('div', { class: 'bgm-row' },
@@ -724,6 +732,7 @@
   // rerender=true は設定欄も描き直す（色・枚数・ファイル）
   function changed(rerender) {
     saveSettings();
+    autoBgmTitles();
     if (rerender) renderSettings();
     clearTimeout(app.buildTimer);
     app.buildTimer = setTimeout(rebuild, rerender ? 120 : 260);
@@ -1193,6 +1202,75 @@
   function youtubeId(url) {
     const m = String(url).match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/i);
     return m ? m[1] : '';
+  }
+
+  /* ---------- YouTube の曲名を取ってくる ---------- */
+
+  const TITLE_KEY = 'ccfoliaJukebox.ytTitles';
+  let ytTitles = {};
+  try { ytTitles = JSON.parse(localStorage.getItem(TITLE_KEY) || '{}') || {}; } catch (error) { ytTitles = {}; }
+  const titleJobs = new Map();
+
+  // YouTube の oEmbed（だめなら noembed）から動画のタイトルを読む。読めたらこのブラウザに覚えておく
+  function fetchYoutubeTitle(id) {
+    if (ytTitles[id]) return Promise.resolve(ytTitles[id]);
+    if (titleJobs.has(id)) return titleJobs.get(id);
+    const watch = encodeURIComponent(`https://www.youtube.com/watch?v=${id}`);
+    const sources = [`https://www.youtube.com/oembed?url=${watch}&format=json`, `https://noembed.com/embed?url=${watch}`];
+    const job = (async () => {
+      for (const url of sources) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          const title = data && typeof data.title === 'string' ? data.title.trim() : '';
+          if (!title) continue;
+          ytTitles[id] = title;
+          try { localStorage.setItem(TITLE_KEY, JSON.stringify(ytTitles)); } catch (error) { /* noop */ }
+          return title;
+        } catch (error) { /* 次の取得先へ */ }
+      }
+      return '';
+    })();
+    titleJobs.set(id, job);
+    job.then(() => titleJobs.delete(id));
+    return job;
+  }
+
+  // 曲名が空か、前に自動で入れた曲名なら、YouTube のタイトルで埋める
+  function autoBgmTitles() {
+    if (!app.settings) return;
+    app.settings.disks.slice(0, app.settings.count).forEach((disk, i) => {
+      if (!disk || app.files[i]) return;
+      const id = youtubeId(disk.url);
+      if (!id) {
+        // 自動で入れた曲名は、YouTube の URL を外したら一緒に消す
+        if (disk.bgmAuto) {
+          disk.bgm = '';
+          disk.bgmAuto = false;
+          disk.bgmFor = '';
+          const input = els.diskList.querySelector(`[data-bgm-title="${i}"]`);
+          if (input && document.activeElement !== input) input.value = '';
+          setTimeout(() => changed(false), 0);
+        }
+        return;
+      }
+      const manual = String(disk.bgm || '').trim() && !disk.bgmAuto;
+      if (manual || (disk.bgmAuto && disk.bgmFor === id)) return;
+      fetchYoutubeTitle(id).then(title => {
+        if (!title || youtubeId(disk.url) !== id) return;
+        if (String(disk.bgm || '').trim() && !disk.bgmAuto) return;
+        if (disk.bgmAuto && disk.bgmFor === id && disk.bgm === title) return;
+        disk.bgm = title;
+        disk.bgmAuto = true;
+        disk.bgmFor = id;
+        const at = app.settings.disks.indexOf(disk);
+        const input = at >= 0 ? els.diskList.querySelector(`[data-bgm-title="${at}"]`) : null;
+        if (input && document.activeElement !== input) input.value = title;
+        changed(false);
+        refreshPreviews();
+      });
+    });
   }
 
   // レコード i のBGM（音声ファイルがあればそちらを優先）
@@ -1723,6 +1801,7 @@
     bindCropper();
     applyLanguage();
     rebuild();
+    autoBgmTitles();
     // 前に選んだ音声ファイルを読み戻す
     loadFiles().then(files => {
       if (!files.some(Boolean) || app.files.some(Boolean)) return;
