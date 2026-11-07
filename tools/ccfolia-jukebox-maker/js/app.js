@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.29';
+  const VERSION = '0.30';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -13,6 +13,7 @@
   const SOUND_KEY = 'ccfoliaJukebox.sound';
   const SHELF_KEY = 'ccfoliaJukebox.shelf';
   const PANE_KEY = 'ccfoliaJukebox.pane';
+  const PL_CUR_KEY = 'ccfoliaJukebox.playlist';
   const LANGS = ['ja', 'en', 'ko'];
   const MAX_DISKS = Jukebox.MAX_DISKS;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
@@ -33,6 +34,11 @@
     playChat: $('playChat'), playRestart: $('playRestart'), soundToggle: $('soundToggle'), soundLabel: $('soundLabel'), soundVolume: $('soundVolume'),
     coverModal: $('coverModal'), coverPresets: $('coverPresets'), coverTitle: $('coverTitle'), cropCanvas: $('cropCanvas'), cropDrop: $('cropDrop'), cropEmpty: $('cropEmpty'),
     cropZoom: $('cropZoom'), cropOpen: $('cropOpen'), cropFile: $('cropFile'), cropFit: $('cropFit'), cropOk: $('cropOk'), cropRemove: $('cropRemove'),
+    plStatus: $('plStatus'), plMenuBtn: $('plMenuBtn'), plMenu: $('plMenu'), plFile: $('plFile'),
+    plTabs: $('plTabs'), plMineCount: $('plMineCount'), plGrid: $('plGrid'), plSaveBtn: $('plSaveBtn'), plImportBtn: $('plImportBtn'),
+    plModal: $('plModal'), plModalTitle: $('plModalTitle'), plModalNote: $('plModalNote'), plForm: $('plForm'),
+    plNameField: $('plNameField'), plName: $('plName'), plMemoField: $('plMemoField'), plMemo: $('plMemo'),
+    plImagesField: $('plImagesField'), plImages: $('plImages'), plModalActions: $('plModalActions'),
     viewSwitch: $('viewSwitch'), shelfTabs: $('shelfTabs'), shelfEdit: $('shelfEdit'), shelfList: $('shelfList'), shelfAdd: $('shelfAdd'), shelfUrl: $('shelfUrl'), shelfReset: $('shelfReset'),
     toastHost: $('toastHost')
   };
@@ -50,7 +56,7 @@
     marker: -1,         // 選んでいるパネル
     hover: -1,          // マウスを乗せているパネル
     lines: 'all',
-    pane: 'preview',    // 真ん中の欄：'preview'（シーンプレビュー）か 'shelf'（レコード棚）
+    pane: 'preview',    // 真ん中の欄：'preview'（シーンプレビュー）/ 'shelf'（レコード棚）/ 'lists'（プレイリスト）
     buildSeq: 0,
     buildTimer: 0,
     urls: [],
@@ -120,6 +126,8 @@
     renderSettings();
     renderShape();
     renderShelf();
+    plStatus();
+    renderPlaylists();
     renderAll();
   }
 
@@ -171,9 +179,11 @@
     return node;
   }
 
-  function toast(message, type = 'info', duration = 3600) {
+  // action = { label, run }：トーストの中にボタンを1つ出す（押したら閉じる）
+  function toast(message, type = 'info', duration = 3600, action) {
     if (!message) return;
-    const node = h('div', { class: `toast toast-${type}`, role: type === 'error' ? 'alert' : 'status' }, h('span', null, message));
+    const node = h('div', { class: `toast toast-${type}${action ? ' has-action' : ''}`, role: type === 'error' ? 'alert' : 'status' }, h('span', null, message),
+      action ? h('button', { class: 'toast-action', type: 'button', onclick: () => { node.remove(); action.run(); } }, action.label) : null);
     els.toastHost.appendChild(node);
     requestAnimationFrame(() => node.classList.add('is-visible'));
     setTimeout(() => {
@@ -241,23 +251,31 @@
   function loadSettings() {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (error) { saved = null; }
+    return normalizeSettings(saved);
+  }
+
+  // 保存した設定や、プレイリストのファイルから読んだ設定を、使える形にそろえる（知らない項目は捨てる）
+  // URLは http(s) 以外の書き方（javascript: など）を捨てる。入力途中の「youtu.be/…」のような形は残す
+  const safeUrl = u => (typeof u === 'string' && !/^\s*[a-z][a-z0-9+.-]*:/i.test(u.replace(/^\s*https?:/i, '')) ? u.slice(0, 500) : '');
+  const safeText = (v, max) => (typeof v === 'string' ? v.slice(0, max) : null);
+  function normalizeSettings(saved) {
     const base = defaultSettings();
-    if (!saved || !Array.isArray(saved.disks)) return base;
+    if (!saved || typeof saved !== 'object' || !Array.isArray(saved.disks)) return base;
     const disks = base.disks.map((disk, i) => {
       const s = saved.disks[i] || {};
       return {
         color: Jukebox.COLORS.some(c => c.id === s.color) ? s.color : disk.color,
-        name: typeof s.name === 'string' ? s.name : disk.name,
-        bgm: typeof s.bgm === 'string' ? s.bgm : '',
+        name: safeText(s.name, 40) ?? disk.name,
+        bgm: safeText(s.bgm, 150) ?? '',
         bgmAuto: s.bgmAuto === true,           // 曲名をYouTubeから自動で入れたか（手で直したら false）
-        bgmFor: typeof s.bgmFor === 'string' ? s.bgmFor : '', // 自動で入れた曲名の動画ID
-        url: typeof s.url === 'string' ? s.url : '',
+        bgmFor: typeof s.bgmFor === 'string' ? s.bgmFor.slice(0, 20) : '', // 自動で入れた曲名の動画ID
+        url: safeUrl(s.url),
         cover: readCover(s.cover)
       };
     });
     return {
-      roomName: typeof saved.roomName === 'string' ? saved.roomName : base.roomName,
-      stopName: typeof saved.stopName === 'string' ? saved.stopName : base.stopName,
+      roomName: safeText(saved.roomName, 80) ?? base.roomName,
+      stopName: safeText(saved.stopName, 40) ?? base.stopName,
       count: Math.min(MAX_DISKS, Math.max(1, Number(saved.count) || base.count)),
       showCover: saved.showCover !== false,
       disks: disks.map(disk => withDefaultBgm(disk, Number(saved.bgmDefaults) || 0)),
@@ -275,9 +293,12 @@
     return disk;
   }
 
+  // 画像は data URL の PNG / JPEG / WebP / GIF だけを受け付ける
+  const isImageData = v => typeof v === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(v) && v.length < 12e6;
+
   function readCover(c) {
     if (!c || typeof c !== 'object') return { style: 'plain' };
-    if (c.style === 'image' && typeof c.image === 'string' && c.image.startsWith('data:image/')) return { style: 'image', image: c.image };
+    if (c.style === 'image' && isImageData(c.image)) return { style: 'image', image: c.image };
     if (c.style === 'photo' && Jukebox.photoOf(c.photo)) return { style: 'photo', photo: c.photo };
     return { style: Jukebox.COVER_STYLES.includes(c.style) ? c.style : 'plain' };
   }
@@ -741,6 +762,7 @@
     autoBgmTitles();
     if (rerender) renderSettings();
     refreshShelfRecords();
+    plStatusSoon();
     clearTimeout(app.buildTimer);
     app.buildTimer = setTimeout(rebuild, rerender ? 120 : 260);
   }
@@ -1418,8 +1440,13 @@
   function audioDb() {
     return new Promise((resolve, reject) => {
       if (!window.indexedDB) { reject(new Error('indexedDB')); return; }
-      const req = indexedDB.open('ccfoliaJukebox', 1);
-      req.onupgradeneeded = () => req.result.createObjectStore('files');
+      // 2: プレイリストの置き場（playlists）を追加
+      const req = indexedDB.open('ccfoliaJukebox', 2);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
+        if (!db.objectStoreNames.contains('playlists')) db.createObjectStore('playlists', { keyPath: 'id' });
+      };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
@@ -1953,17 +1980,20 @@
       btn.addEventListener('keydown', e => {
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
         e.preventDefault();
-        setPane(app.pane === 'preview' ? 'shelf' : 'preview', true);
+        const step = e.key === 'ArrowRight' ? 1 : -1;
+        setPane(PANES[(PANES.indexOf(app.pane) + step + PANES.length) % PANES.length], true);
         els.viewSwitch.querySelector(`[data-view-btn="${app.pane}"]`).focus();
       });
     });
     let saved = 'preview';
-    try { saved = localStorage.getItem(PANE_KEY) === 'shelf' ? 'shelf' : 'preview'; } catch (error) { saved = 'preview'; }
+    try { saved = localStorage.getItem(PANE_KEY); } catch (error) { saved = 'preview'; }
+    if (!PANES.includes(saved)) saved = 'preview';
     setPane(saved, false);
   }
 
   // 真ん中の欄の中身を入れ替える。外す側を横へ流して消し、入れる側を反対から滑り込ませる
   let paneAnims = [];
+  const PANES = ['preview', 'shelf', 'lists'];
   function setPane(name, animate) {
     const panel = els.layout.querySelector('[data-panel="stage"]');
     const from = app.pane;
@@ -1980,7 +2010,7 @@
     if (from === name) { panel.dataset.pane = name; return; }
     app.pane = name;
     panel.dataset.pane = name;
-    els.layout.classList.toggle('is-shelf', name === 'shelf');
+    els.layout.classList.toggle('is-shelf', name !== 'preview');
     try { localStorage.setItem(PANE_KEY, name); } catch (error) { /* noop */ }
     const outgoing = panel.querySelector(`[data-view-pane="${from}"]`);
     const incoming = panel.querySelector(`[data-view-pane="${name}"]`);
@@ -1996,10 +2026,11 @@
     if (!animate || reduce || !incoming.animate) {
       finish();
       if (name === 'shelf') renderShelfList();
+      if (name === 'lists') renderPlaylists();
       return;
     }
     drawLinks();
-    const dir = name === 'shelf' ? 1 : -1;
+    const dir = PANES.indexOf(name) > PANES.indexOf(from) ? 1 : -1;
     const out = outgoing.animate([
       { opacity: 1, transform: 'translateX(0)', filter: 'blur(0)' },
       { opacity: 0, transform: `translateX(${-dir * 36}px)`, filter: 'blur(3px)' }
@@ -2009,6 +2040,7 @@
       out.cancel();
       finish();
       if (name === 'shelf') renderShelfList(true);
+      if (name === 'lists') renderPlaylists();
       const inn = incoming.animate([
         { opacity: 0, transform: `translateX(${dir * 44}px)`, filter: 'blur(3px)' },
         { opacity: 1, transform: 'translateX(0)', filter: 'blur(0)' }
@@ -2017,6 +2049,448 @@
       inn.onfinish = () => { if (app.pane === 'preview') drawLinks(); };
       paneAnims.push(inn);
     };
+  }
+
+  /* ================= プレイリスト（シーン構成とBGMの組み合わせを名前を付けて取っておく） ================= */
+
+  // 端末内の保存は IndexedDB の playlists。開いているプレイリストの印は localStorage に置く。
+  // 音声ファイルは入れない（ココフォリアにも別にアップロードが要るため）。YouTubeのURLは入る。
+  const PL_FORMAT = 'ccfolia-jukebox-playlist';
+  const pl = { list: [], tab: 'mine', current: null, undo: false, armed: '', armTimer: 0, statusTimer: 0, dirty: false };
+
+  function idbRun(store, mode, work) {
+    return audioDb().then(db => new Promise((resolve, reject) => {
+      const tx = db.transaction(store, mode);
+      const req = work(tx.objectStore(store));
+      tx.oncomplete = () => { db.close(); resolve(req ? req.result : undefined); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+      tx.onabort = () => { db.close(); reject(tx.error); };
+    }));
+  }
+
+  const plId = () => `pl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
+  // 今の設定の写し（曲名の自動入力の印は比べない）
+  function plSnapshot() {
+    return { settings: JSON.parse(JSON.stringify(app.settings)), backdrop: app.backdrop || '' };
+  }
+
+  function plSig(snap) {
+    const s = snap.settings;
+    const body = JSON.stringify([s.roomName, s.stopName, s.count, s.showCover !== false,
+      s.disks.map(d => [d.color, d.name, d.bgm, d.url, d.cover])]) + '|' + (snap.backdrop || '');
+    let x = 0x811c9dc5;
+    for (let i = 0; i < body.length; i++) { x ^= body.charCodeAt(i); x = Math.imul(x, 0x01000193); }
+    return `${body.length.toString(36)}.${(x >>> 0).toString(36)}`;
+  }
+
+  function plLoadCurrent() {
+    try {
+      const c = JSON.parse(localStorage.getItem(PL_CUR_KEY) || 'null');
+      pl.current = c && typeof c.id === 'string' && typeof c.name === 'string' ? { id: c.id, name: c.name, sig: String(c.sig || '') } : null;
+    } catch (error) { pl.current = null; }
+  }
+
+  function plSaveCurrent() {
+    try {
+      if (pl.current) localStorage.setItem(PL_CUR_KEY, JSON.stringify(pl.current));
+      else localStorage.removeItem(PL_CUR_KEY);
+    } catch (error) { /* noop */ }
+  }
+
+  async function plRefreshList() {
+    try {
+      const list = await idbRun('playlists', 'readonly', st => st.getAll());
+      pl.list = (Array.isArray(list) ? list : []).sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+    } catch (error) { pl.list = []; }
+    if (pl.current && !pl.list.some(r => r.id === pl.current.id)) { pl.current = null; plSaveCurrent(); }
+    plStatus();
+    if (app.pane === 'lists') renderPlaylists();
+  }
+
+  async function plPut(rec) {
+    await idbRun('playlists', 'readwrite', st => st.put(rec));
+  }
+
+  // 設定欄の見出しの横：開いているプレイリスト名と、保存していない変更の印
+  function plStatus() {
+    clearTimeout(pl.statusTimer);
+    const sig = plSig(plSnapshot());
+    pl.dirty = pl.current ? sig !== pl.current.sig : sig !== plSig({ settings: defaultSettings(), backdrop: '' });
+    els.plStatus.textContent = '';
+    els.plStatus.classList.toggle('is-none', !pl.current);
+    els.plStatus.appendChild(h('span', { class: 'pl-status-name' }, pl.current ? pl.current.name : t('pl.untitled')));
+    if (pl.current && pl.dirty) els.plStatus.appendChild(h('span', { class: 'pl-status-dot', title: t('pl.modified'), 'aria-label': t('pl.modified') }, '●'));
+    els.plStatus.title = pl.current ? `${pl.current.name}${pl.dirty ? ` (${t('pl.modified')})` : ''}` : t('pl.untitled');
+  }
+
+  function plStatusSoon() {
+    clearTimeout(pl.statusTimer);
+    pl.statusTimer = setTimeout(plStatus, 300);
+  }
+
+  /* ---------- 小さな確認窓（名前・メモ・画像を含めるか・ボタン） ---------- */
+
+  let plDialogDone = null;
+  function plDialog({ title, note, name, memo, images, buttons }) {
+    if (plDialogDone) plDialogDone(null);
+    els.plModalTitle.textContent = title;
+    els.plModalNote.textContent = note || '';
+    els.plModalNote.hidden = !note;
+    els.plNameField.hidden = name === undefined;
+    els.plMemoField.hidden = memo === undefined;
+    els.plImagesField.hidden = images === undefined;
+    els.plName.value = name || '';
+    els.plMemo.value = memo || '';
+    els.plImages.checked = images !== false;
+    els.plModalActions.textContent = '';
+    return new Promise(resolve => {
+      const done = value => {
+        if (!plDialogDone) return;
+        plDialogDone = null;
+        els.plModal.hidden = true;
+        resolve(value === null ? null : { value, name: els.plName.value.trim().slice(0, 60), memo: els.plMemo.value.trim().slice(0, 200), images: els.plImages.checked });
+      };
+      plDialogDone = done;
+      buttons.forEach(b => els.plModalActions.appendChild(h('button', {
+        class: b.primary ? 'accent-button' : 'ghost-button', type: b.primary ? 'submit' : 'button', dataset: { value: b.value },
+        onclick: e => {
+          e.preventDefault();
+          if (b.primary && name !== undefined && !els.plName.value.trim()) { els.plName.focus(); return; }
+          done(b.value);
+        }
+      }, b.label)));
+      els.plModal.hidden = false;
+      (name !== undefined ? els.plName : els.plModalActions.querySelector('.accent-button') || els.plModalActions.firstChild).focus();
+      if (name !== undefined) els.plName.select();
+    });
+  }
+
+  /* ---------- 保存 ---------- */
+
+  async function plSaveAs() {
+    const res = await plDialog({
+      title: t('pl.saveAsTitle'), name: pl.current ? t('pl.copyName', { name: pl.current.name }) : (app.settings.roomName.trim() || t('pl.newName')), memo: '',
+      buttons: [{ label: t('pl.cancel'), value: 'cancel' }, { label: t('pl.save'), value: 'ok', primary: true }]
+    });
+    if (!res || res.value !== 'ok') return;
+    const snap = plSnapshot();
+    const now = Date.now();
+    const rec = { id: plId(), name: res.name, memo: res.memo, createdAt: now, savedAt: now, ...snap, audio: plAudioList() };
+    try { await plPut(rec); } catch (error) { toast(t('pl.saveFailed'), 'error'); return; }
+    pl.current = { id: rec.id, name: rec.name, sig: plSig(snap) };
+    plSaveCurrent();
+    toast(t('pl.saved', { name: rec.name }), 'success');
+    track('ccfolia_jukebox_playlist_save', { mode: 'new' });
+    plRefreshList();
+  }
+
+  async function plOverwrite() {
+    if (!pl.current) { plSaveAs(); return; }
+    const rec = pl.list.find(r => r.id === pl.current.id);
+    if (!rec) { plSaveAs(); return; }
+    const snap = plSnapshot();
+    const next = { ...rec, ...snap, savedAt: Date.now(), audio: plAudioList() };
+    try { await plPut(next); } catch (error) { toast(t('pl.saveFailed'), 'error'); return; }
+    pl.current.sig = plSig(snap);
+    plSaveCurrent();
+    toast(t('pl.saved', { name: rec.name }), 'success');
+    track('ccfolia_jukebox_playlist_save', { mode: 'overwrite' });
+    plRefreshList();
+  }
+
+  // 音声ファイルを入れていたレコードの番号（読み込んだ時に、選び直す案内に使う）
+  function plAudioList() {
+    return app.files.slice(0, app.settings.count).map((f, i) => (f ? i + 1 : 0)).filter(Boolean);
+  }
+
+  /* ---------- 読み込み ---------- */
+
+  // 保存していない変更があれば、切り替える前に聞く。false ならやめる
+  async function plConfirmLeave() {
+    plStatus();
+    if (!pl.dirty) return true;
+    const res = await plDialog({
+      title: t('pl.leaveTitle'), note: pl.current ? t('pl.leaveNote', { name: pl.current.name }) : t('pl.leaveNoteNew'),
+      buttons: [{ label: t('pl.cancel'), value: 'cancel' }, { label: t('pl.leaveDiscard'), value: 'discard' }, { label: t('pl.leaveSave'), value: 'save', primary: true }]
+    });
+    if (!res || res.value === 'cancel') return false;
+    if (res.value === 'save') {
+      if (pl.current) await plOverwrite(); else await plSaveAs();
+      plStatus();
+      if (pl.dirty) return false;
+    }
+    return true;
+  }
+
+  // 切り替える前の状態を控えておく（音声ファイルも含めて1つだけ）
+  async function plKeepUndo() {
+    const undo = { ...plSnapshot(), files: app.files.slice(0, MAX_DISKS).map(f => f || null), current: pl.current };
+    try {
+      await idbRun('files', 'readwrite', st => st.put(undo, 'undo'));
+      pl.undo = true;
+    } catch (error) { pl.undo = false; }
+  }
+
+  function plApply(snap, current, files) {
+    stopBgm(true);
+    app.settings = normalizeSettings({ ...snap.settings, bgmDefaults: 2 });
+    app.files = files || [];
+    crop.sources = [];
+    app.backdrop = isImageData(snap.backdrop) ? snap.backdrop : '';
+    try {
+      if (app.backdrop) localStorage.setItem(BACKDROP_KEY, app.backdrop);
+      else localStorage.removeItem(BACKDROP_KEY);
+    } catch (error) { toast(t('set.backdropNotSaved'), 'error'); }
+    renderBackdrop();
+    pl.current = current;
+    plSaveCurrent();
+    if (app.imported) { app.imported = null; app.marker = -1; }
+    app.selected = 0;
+    changed(true);
+    saveFiles();
+    plStatus();
+    if (app.pane === 'lists') renderPlaylists();
+  }
+
+  async function plOpen(rec) {
+    if (!(await plConfirmLeave())) return;
+    await plKeepUndo();
+    plApply(rec, { id: rec.id, name: rec.name, sig: '' }, []);
+    // 読み込んだ後の形で印を付け直す（古い形の設定を直した分は変更に数えない）
+    pl.current.sig = plSig(plSnapshot());
+    plSaveCurrent();
+    plStatus();
+    const audio = Array.isArray(rec.audio) ? rec.audio.filter(n => Number.isInteger(n) && n > 0 && n <= app.settings.count) : [];
+    const msg = audio.length ? t('pl.openedAudio', { name: rec.name, list: audio.join('・') }) : t('pl.opened', { name: rec.name });
+    toast(msg, 'success', audio.length ? 8000 : 6000, pl.undo ? { label: t('pl.undo'), run: plUndo } : null);
+    track('ccfolia_jukebox_playlist_open');
+  }
+
+  async function plStartPreset(preset) {
+    if (!(await plConfirmLeave())) return;
+    await plKeepUndo();
+    plApply({ settings: preset.settings(), backdrop: '' }, null, []);
+    toast(t('pl.presetStarted', { name: preset.name() }), 'success', 6000, pl.undo ? { label: t('pl.undo'), run: plUndo } : null);
+    track('ccfolia_jukebox_preset', { preset: preset.id });
+  }
+
+  async function plUndo() {
+    let undo = null;
+    try { undo = await idbRun('files', 'readonly', st => st.get('undo')); } catch (error) { undo = null; }
+    if (!undo || !undo.settings) { pl.undo = false; toast(t('pl.noUndo'), 'error'); return; }
+    const files = Array.isArray(undo.files) ? undo.files.map(f => (f instanceof Blob ? f : null)) : [];
+    plApply(undo, undo.current && typeof undo.current.id === 'string' ? undo.current : null, files);
+    try { await idbRun('files', 'readwrite', st => st.delete('undo')); } catch (error) { /* noop */ }
+    pl.undo = false;
+    toast(t('pl.undone'));
+  }
+
+  /* ---------- 一覧での操作 ---------- */
+
+  async function plRename(rec) {
+    const res = await plDialog({
+      title: t('pl.renameTitle'), name: rec.name, memo: rec.memo || '',
+      buttons: [{ label: t('pl.cancel'), value: 'cancel' }, { label: t('pl.apply'), value: 'ok', primary: true }]
+    });
+    if (!res || res.value !== 'ok') return;
+    try { await plPut({ ...rec, name: res.name, memo: res.memo }); } catch (error) { toast(t('pl.saveFailed'), 'error'); return; }
+    if (pl.current && pl.current.id === rec.id) { pl.current.name = res.name; plSaveCurrent(); }
+    plRefreshList();
+  }
+
+  async function plDuplicate(rec) {
+    const now = Date.now();
+    try { await plPut({ ...rec, id: plId(), name: t('pl.copyName', { name: rec.name }).slice(0, 60), createdAt: now, savedAt: now }); } catch (error) { toast(t('pl.saveFailed'), 'error'); return; }
+    plRefreshList();
+  }
+
+  async function plDelete(rec) {
+    if (pl.armed !== rec.id) {
+      clearTimeout(pl.armTimer);
+      pl.armed = rec.id;
+      renderPlaylists();
+      pl.armTimer = setTimeout(() => { pl.armed = ''; renderPlaylists(); }, 4000);
+      return;
+    }
+    clearTimeout(pl.armTimer);
+    pl.armed = '';
+    try { await idbRun('playlists', 'readwrite', st => st.delete(rec.id)); } catch (error) { toast(t('pl.saveFailed'), 'error'); return; }
+    if (pl.current && pl.current.id === rec.id) { pl.current = null; plSaveCurrent(); }
+    toast(t('pl.deleted', { name: rec.name }));
+    plRefreshList();
+  }
+
+  /* ---------- ファイル（.jukebox.json） ---------- */
+
+  async function plExport(rec) {
+    const src = rec || { name: pl.current ? pl.current.name : (app.settings.roomName.trim() || t('pl.newName')), memo: '', ...plSnapshot(), audio: plAudioList() };
+    const res = await plDialog({
+      title: t('pl.exportTitle'), note: t('pl.exportNote'), name: src.name, images: true,
+      buttons: [{ label: t('pl.cancel'), value: 'cancel' }, { label: t('pl.exportGo'), value: 'ok', primary: true }]
+    });
+    if (!res || res.value !== 'ok') return;
+    const settings = JSON.parse(JSON.stringify(src.settings));
+    if (!res.images) settings.disks.forEach(d => { if (d.cover && d.cover.style === 'image') d.cover = { style: 'plain' }; });
+    const data = {
+      format: PL_FORMAT, v: 1, app: `ccfolia-jukebox-maker ${VERSION}`,
+      name: res.name, memo: src.memo || '', savedAt: new Date().toISOString(),
+      settings, backdrop: res.images ? (src.backdrop || '') : '', audio: src.audio || []
+    };
+    downloadBlob(new Blob([JSON.stringify(data)], { type: 'application/json' }), `${safeFileName(res.name)}.jukebox.json`);
+    track('ccfolia_jukebox_playlist_export', { images: res.images });
+  }
+
+  // ほかの人が作ったファイルも読むので、中身は全部確かめてから使う
+  async function plImportFile(file) {
+    if (!file) return;
+    if (file.size > 40e6) { toast(t('pl.badFile'), 'error'); return; }
+    let data = null;
+    try { data = JSON.parse(await file.text()); } catch (error) { data = null; }
+    if (!data || data.format !== PL_FORMAT || !data.settings || !Array.isArray(data.settings.disks)) { toast(t('pl.badFile'), 'error'); return; }
+    const now = Date.now();
+    const name = (safeText(data.name, 60) || '').trim() || file.name.replace(/\.jukebox\.json$|\.json$/i, '').slice(0, 60) || t('pl.newName');
+    const rec = {
+      id: plId(), name, memo: (safeText(data.memo, 200) || '').trim(), createdAt: now, savedAt: now,
+      settings: normalizeSettings({ ...data.settings, disks: data.settings.disks.slice(0, MAX_DISKS), bgmDefaults: 2 }),
+      backdrop: isImageData(data.backdrop) ? data.backdrop : '',
+      audio: Array.isArray(data.audio) ? data.audio.filter(n => Number.isInteger(n) && n > 0 && n <= MAX_DISKS) : []
+    };
+    try { await plPut(rec); } catch (error) { toast(t('pl.saveFailed'), 'error'); return; }
+    pl.tab = 'mine';
+    await plRefreshList();
+    setPane('lists', true);
+    toast(t('pl.imported', { name }), 'success', 6000, { label: t('pl.open'), run: () => plOpen(rec) });
+    track('ccfolia_jukebox_playlist_import');
+  }
+
+  /* ---------- 一覧の画面（真ん中の欄の3つめ） ---------- */
+
+  // プリセット（P2 で種類を増やす）
+  const PL_PRESETS = [
+    { id: 'standard', name: () => t('pl.presetStandard'), memo: () => t('pl.presetStandardMemo'), settings: () => defaultSettings() }
+  ];
+
+  function plSleeves(settings) {
+    return settings.disks.slice(0, Math.min(4, settings.count)).map(d => {
+      const c = d.cover || {};
+      const src = c.style === 'photo' && Jukebox.photoOf(c.photo) ? Jukebox.photoUrl(c.photo) : (c.style === 'image' && isImageData(c.image) ? c.image : '');
+      return h('span', { class: 'pl-sleeve', style: { '--disk': Jukebox.colorOf(d.color).line } }, src ? h('img', { src, alt: '', loading: 'lazy' }) : null);
+    });
+  }
+
+  const plDate = ms => {
+    const d = new Date(ms || 0);
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+
+  function renderPlaylists() {
+    if (!els.plGrid) return;
+    els.plTabs.querySelectorAll('[data-pl-tab]').forEach(btn => {
+      const on = btn.dataset.plTab === pl.tab;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', String(on));
+    });
+    els.plMineCount.textContent = String(pl.list.length);
+    els.plGrid.textContent = '';
+    if (pl.tab === 'presets') {
+      PL_PRESETS.forEach(p => {
+        const settings = p.settings();
+        els.plGrid.appendChild(h('li', { class: 'pl-card is-preset' },
+          h('div', { class: 'pl-stack' }, plSleeves(settings)),
+          h('div', { class: 'pl-meta' },
+            h('p', { class: 'pl-name' }, p.name()),
+            h('p', { class: 'pl-memo' }, p.memo()),
+            h('p', { class: 'pl-sub' }, t('pl.records', { n: settings.count }))),
+          h('div', { class: 'pl-actions' },
+            h('button', { class: 'accent-button small', type: 'button', onclick: () => plStartPreset(p) }, t('pl.startPreset')))));
+      });
+      return;
+    }
+    if (!pl.list.length) {
+      els.plGrid.appendChild(h('li', { class: 'pl-empty' }, t('pl.empty')));
+      return;
+    }
+    pl.list.forEach(rec => {
+      const open = pl.current && pl.current.id === rec.id;
+      const settings = rec.settings && Array.isArray(rec.settings.disks) ? rec.settings : defaultSettings();
+      els.plGrid.appendChild(h('li', { class: `pl-card${open ? ' is-open' : ''}` },
+        h('div', { class: 'pl-stack' }, plSleeves(settings)),
+        h('div', { class: 'pl-meta' },
+          h('p', { class: 'pl-name' }, rec.name, open ? h('span', { class: 'pl-badge' }, pl.dirty ? t('pl.openDirty') : t('pl.openNow')) : null),
+          rec.memo ? h('p', { class: 'pl-memo' }, rec.memo) : null,
+          h('p', { class: 'pl-sub' }, `${t('pl.records', { n: settings.count })} · ${plDate(rec.savedAt)}`)),
+        h('div', { class: 'pl-actions' },
+          h('button', { class: 'accent-button small', type: 'button', onclick: () => plOpen(rec) }, open ? t('pl.reopen') : t('pl.open')),
+          h('button', { class: 'ghost-button small', type: 'button', onclick: () => plRename(rec) }, t('pl.rename')),
+          h('button', { class: 'ghost-button small', type: 'button', onclick: () => plDuplicate(rec) }, t('pl.duplicate')),
+          h('button', { class: 'ghost-button small', type: 'button', onclick: () => plExport(rec) }, t('pl.export')),
+          h('button', { class: `ghost-button small danger${pl.armed === rec.id ? ' is-armed' : ''}`, type: 'button', onclick: () => plDelete(rec) },
+            pl.armed === rec.id ? t('pl.deleteSure') : t('pl.delete')))));
+    });
+  }
+
+  /* ---------- メニュー ---------- */
+
+  function plMenu(open) {
+    const show = open === undefined ? els.plMenu.hidden : open;
+    els.plMenu.hidden = !show;
+    els.plMenuBtn.setAttribute('aria-expanded', String(show));
+    if (!show) return;
+    plStatus();
+    els.plMenu.querySelector('[data-pl-act="save"]').disabled = !pl.current;
+    els.plMenu.querySelector('[data-pl-act="undo"]').hidden = !pl.undo;
+    const first = els.plMenu.querySelector('[role="menuitem"]:not(:disabled):not([hidden])');
+    if (first) first.focus();
+  }
+
+  function plAct(act) {
+    plMenu(false);
+    if (act === 'save') plOverwrite();
+    else if (act === 'saveAs') plSaveAs();
+    else if (act === 'list') { pl.tab = 'mine'; renderPlaylists(); setPane('lists', true); }
+    else if (act === 'presets') { pl.tab = 'presets'; renderPlaylists(); setPane('lists', true); }
+    else if (act === 'export') plExport(null);
+    else if (act === 'import') els.plFile.click();
+    else if (act === 'undo') plUndo();
+  }
+
+  function bindPlaylists() {
+    plLoadCurrent();
+    els.plMenuBtn.addEventListener('click', e => { e.stopPropagation(); plMenu(); });
+    els.plMenu.addEventListener('click', e => {
+      const btn = e.target.closest('[data-pl-act]');
+      if (btn && !btn.disabled) plAct(btn.dataset.plAct);
+    });
+    els.plMenu.addEventListener('keydown', e => {
+      const items = [...els.plMenu.querySelectorAll('[role="menuitem"]:not(:disabled):not([hidden])')];
+      const i = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const next = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+        if (next) next.focus();
+      } else if (e.key === 'Escape') { plMenu(false); els.plMenuBtn.focus(); }
+    });
+    document.addEventListener('click', e => { if (!els.plMenu.hidden && !e.target.closest('.pl-menu-wrap')) plMenu(false); });
+    els.plFile.addEventListener('change', () => {
+      plImportFile(els.plFile.files && els.plFile.files[0]);
+      els.plFile.value = '';
+    });
+    els.plTabs.querySelectorAll('[data-pl-tab]').forEach(btn => btn.addEventListener('click', () => { pl.tab = btn.dataset.plTab; renderPlaylists(); }));
+    els.plSaveBtn.addEventListener('click', () => plOverwrite());
+    els.plImportBtn.addEventListener('click', () => els.plFile.click());
+    els.plModal.addEventListener('click', e => { if (e.target === els.plModal && plDialogDone) plDialogDone(null); });
+    els.plModal.querySelector('[data-close-pl]').addEventListener('click', () => { if (plDialogDone) plDialogDone(null); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !els.plModal.hidden && plDialogDone) plDialogDone(null); });
+    els.plForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const primary = els.plModalActions.querySelector('.accent-button');
+      if (primary) primary.click();
+    });
+    // 控えが残っていれば「直前の状態に戻す」を出す
+    idbRun('files', 'readonly', st => st.getKey('undo')).then(k => { pl.undo = k !== undefined; }).catch(() => {});
+    plRefreshList();
   }
 
   /* ================= 欄の並べ替え ================= */
@@ -2182,6 +2656,7 @@
       if (!f) return;
       e.preventDefault();
       if (/\.zip$/i.test(f.name)) importZip(f);
+      else if (/\.json$/i.test(f.name)) plImportFile(f);
     });
     let scrollRaf = 0;
     const onScroll = () => {
@@ -2265,6 +2740,7 @@
     bindPanelDrag();
     bindCropper();
     bindShelf();
+    bindPlaylists();
     applyLanguage();
     rebuild();
     // 前に選んだ音声ファイルを読み戻してから、曲名の自動入力を始める
