@@ -22,13 +22,19 @@
       ['Lq0-hoae0OU', '霧の思考'],
       ['biayjoKoIN8', 'Dark cave（DOVA-SYNDROME）', 2],
       ['_hrqKpdZw2Y', '不可解な謎（1時間・もみじばミュージック）', 2],
-      ['owBxeiw6pgI', '思考の牢（1時間）', 2]
+      ['owBxeiw6pgI', '思考の牢（1時間）', 2],
+      ['LlyNqUHQI-I', '策謀（DOVA-SYNDROME）', 2],
+      ['dguMK2aSuvY', '不吉な森（DOVA-SYNDROME）', 2],
+      ['IBgpHazjeHM', 'コールドフィッシュ（DOVA-SYNDROME）', 2],
+      ['0KRrv75t8sU', 'クリスタルコア（DOVA-SYNDROME）', 2]
     ] },
     { id: 'comic', tracks: [
       ['Nf_lqAWh-mE', 'コミカルな日常（DOVA-SYNDROME）'],
       ['JNUWDIaxqOo', 'ドジっこハプニング'],
       ['7JhjnxhO7YY', 'ぽかぽか日和'],
-      ['DzY-e-cNFt0', '怪しい魔法薬（1時間）', 2]
+      ['DzY-e-cNFt0', '怪しい魔法薬（1時間）', 2],
+      ['fDtc6_c9VgQ', '探偵事務所（DOVA-SYNDROME）', 2],
+      ['JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）', 2]
     ] },
     { id: 'deduction', tracks: [
       ['3pfQ3bDq0Wc', 'プロセス'],
@@ -43,7 +49,12 @@
       ['X_UDyB4WaNM', '消えた絵画（1時間）', 2],
       ['5fiqDbPPMaE', '出口のない迷路（1時間）', 2],
       ['7SUohkp8bFw', '推理BGM1（1時間）', 2],
-      ['TipFijm1l6U', '推理BGM2（1時間）', 2]
+      ['TipFijm1l6U', '推理BGM2（1時間）', 2],
+      ['BshNcJVCPhc', '作戦会議（DOVA-SYNDROME）', 2],
+      ['jzhBKLjP0o4', '作戦会議2（DOVA-SYNDROME）', 2],
+      ['VH8r_CYjGbI', 'Mystic Room（DOVA-SYNDROME）', 2],
+      ['Siga1GQDcEA', '会議延長（DOVA-SYNDROME）', 2],
+      ['GbR-off3SaE', '探偵は喫茶にいる的なBGM（DOVA-SYNDROME）', 2]
     ] },
     { id: 'moving', tracks: [
       ['dc0oRjmZtQs', 'BGM193_Glory'],
@@ -54,7 +65,10 @@
       ['NHfopv9no38', 'ワスレナグサ（DOVA-SYNDROME）', 2],
       ['SOmJcGLxk5w', '露草（DOVA-SYNDROME）', 2],
       ['_bJr0OjB8g4', 'stream（DOVA-SYNDROME）', 2],
-      ['16Bj6aPi1A8', '2:23AM（DOVA-SYNDROME）', 2]
+      ['16Bj6aPi1A8', '2:23AM（DOVA-SYNDROME）', 2],
+      ['olxbmbavH5w', 'ムスカリの花（DOVA-SYNDROME）', 2],
+      ['P626a-2Tip8', '真実（DOVA-SYNDROME）', 2],
+      ['nALEcCgFN1s', 'ゴーゴー探偵事務所（DOVA-SYNDROME）', 2]
     ] },
     { id: 'sad', tracks: [
       ['G80jLc37jAo', '雪解けを待つ'],
@@ -72,7 +86,12 @@
       ['J6Fxuc0veos', 'BGM003-緊張、切迫1（DOVA-SYNDROME）'],
       ['vxMIQiE2Cig', 'まるでサスペンスドラマ～犯人は語る～（DOVA-SYNDROME）'],
       ['EB2XjA8oiyc', '毎日がサスペンス'],
-      ['V_6j2x4fjYs', 'Evil Dance（DOVA-SYNDROME）', 2]
+      ['V_6j2x4fjYs', 'Evil Dance（DOVA-SYNDROME）', 2],
+      ['lWBUXp2TEus', '事件が発生した的なBGM（DOVA-SYNDROME）', 2],
+      ['F4zE_7JCybQ', '捜査会議（DOVA-SYNDROME）', 2],
+      ['mt9O1CgqPrc', '古い実験施設（DOVA-SYNDROME）', 2],
+      ['rqhgH4oZQSg', 'Ice is wall（DOVA-SYNDROME）', 2],
+      ['NhpYAtmA-mk', 'Investigation3（PeriTune）', 2]
     ] },
     { id: 'climax', tracks: [
       ['ISHbwrrNTeM', '決戦（DOVA-SYNDROME）'],
@@ -91,7 +110,12 @@
       ['FKMLeiZrpZo', 'ハロウィンハウス（もみじばミュージック）', 2],
       ['ReKrMQKoazY', '魔女の小部屋（1時間）', 2],
       ['69fBHoRYdMg', 'かぼちゃの館（1時間）', 2],
-      ['j-XvoDR32h0', 'TaishoRoman_Theme2（1時間・PeriTune）', 2]
+      ['DbogJZ7POjA', 'TaishoRoman_Theme2（PeriTune）', 2],
+      ['_MLZ9q1KZAE', '厳格な石の鳥篭（DOVA-SYNDROME）', 2],
+      ['GYjV6x0XJsg', '忘れられた図書館（DOVA-SYNDROME）', 2],
+      ['eoZLBoqhsEU', '怪しい館（DOVA-SYNDROME）', 2],
+      ['iZji1SLIj9o', 'Mystery_Detective（PeriTune）', 2],
+      ['1EkQUC4DK8o', 'Suspense8（PeriTune）', 2]
     ] },
     { id: 'horror', tracks: [
       ['EhmXo0S81ts', '生暖かい空気 -Tepid air-'],
