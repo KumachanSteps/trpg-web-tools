@@ -1259,13 +1259,15 @@
       if (manual || (disk.bgmAuto && disk.bgmFor === id)) return;
       fetchYoutubeTitle(id).then(title => {
         if (!title || youtubeId(disk.url) !== id) return;
+        // 待っている間に音声ファイルが選ばれたら、そちらが優先なので入れない
+        const at = app.settings.disks.indexOf(disk);
+        if (at < 0 || at >= app.settings.count || app.files[at]) return;
         if (String(disk.bgm || '').trim() && !disk.bgmAuto) return;
         if (disk.bgmAuto && disk.bgmFor === id && disk.bgm === title) return;
         disk.bgm = title;
         disk.bgmAuto = true;
         disk.bgmFor = id;
-        const at = app.settings.disks.indexOf(disk);
-        const input = at >= 0 ? els.diskList.querySelector(`[data-bgm-title="${at}"]`) : null;
+        const input = els.diskList.querySelector(`[data-bgm-title="${at}"]`);
         if (input && document.activeElement !== input) input.value = title;
         changed(false);
         refreshPreviews();
@@ -1801,13 +1803,12 @@
     bindCropper();
     applyLanguage();
     rebuild();
-    autoBgmTitles();
-    // 前に選んだ音声ファイルを読み戻す
+    // 前に選んだ音声ファイルを読み戻してから、曲名の自動入力を始める
     loadFiles().then(files => {
       if (!files.some(Boolean) || app.files.some(Boolean)) return;
       app.files = files;
       changed(true);
-    });
+    }).catch(() => {}).then(() => autoBgmTitles());
   }
 
   init();
