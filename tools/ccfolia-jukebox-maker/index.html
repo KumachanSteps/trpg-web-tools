@@ -9,13 +9,13 @@
   <meta name="description" content="ココフォリアのクリックアクションと /scene コマンドで動く、KPがいなくても使えるジュークボックス部屋を作るツールです。シーンとマーカーパネルのつながりを線で一覧できます。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/jukebox.css?v=20261107-10" />
+  <link rel="stylesheet" href="./css/jukebox.css?v=20261108-02" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
       <div class="header-row">
-        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.28 / 2026.11.07</span></h1>
+        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.30 / 2026.11.08</span></h1>
         <span class="header-spacer"></span>
         <div class="sound-control" role="group" data-i18n-label="sound.group" aria-label="BGM">
           <button class="sound-toggle" type="button" id="soundToggle" aria-pressed="true"><span class="sound-icon" aria-hidden="true">♪</span><span id="soundLabel">BGM ON</span></button>
@@ -64,10 +64,9 @@
             <span class="view-switch-thumb" aria-hidden="true"></span>
             <button class="view-switch-btn is-active" type="button" role="tab" id="viewTabPreview" aria-selected="true" aria-controls="previewPane" data-view-btn="preview" data-i18n="graph.heading">シーンプレビュー</button>
             <button class="view-switch-btn" type="button" role="tab" id="viewTabShelf" aria-selected="false" aria-controls="shelfPane" data-view-btn="shelf" tabindex="-1" data-i18n="shelf.heading">レコード棚</button>
+            <button class="view-switch-btn" type="button" role="tab" id="viewTabLists" aria-selected="false" aria-controls="listsPane" data-view-btn="lists" tabindex="-1" data-i18n="pl.menu">プレイリスト</button>
           </div>
-          <span class="graph-count preview-only" id="graphCount"></span>
-          <span class="bar-spacer"></span>
-          <div class="segment-group preview-only" role="group">
+          <div class="segment-group preview-only bar-end" role="group">
             <button class="segment" type="button" data-lines="all" data-i18n="graph.showAll">すべての線</button>
             <button class="segment" type="button" data-lines="selected" data-i18n="graph.showSelected">選んだパネルの線だけ</button>
           </div>
@@ -83,20 +82,47 @@
           </div>
         </div>
         <div class="view-pane shelf" id="shelfPane" role="tabpanel" aria-labelledby="viewTabShelf" data-view-pane="shelf" hidden>
-          <p class="muted-note" data-i18n="shelf.hint"></p>
           <div class="shelf-tabs" id="shelfTabs" role="tablist" data-i18n-label="shelf.tabsLabel" aria-label="タブ"></div>
           <div class="shelf-edit" id="shelfEdit" hidden></div>
           <ul class="shelf-list" id="shelfList"></ul>
+          <p class="muted-note shelf-hint" data-i18n="shelf.hint"></p>
           <form class="shelf-add" id="shelfAdd">
             <input class="text-input" id="shelfUrl" type="url" inputmode="url" autocomplete="off" data-i18n-placeholder="shelf.addPlaceholder" placeholder="YouTubeのURLを貼り付け" />
             <button class="ghost-button small" type="submit" data-i18n="shelf.add">棚に追加</button>
           </form>
           <p class="shelf-foot"><span data-i18n="shelf.license">曲を使える範囲（商用利用・クレジット表記など）は曲ごとに違います。使う前に各動画の概要欄で確認してください。</span> <button class="text-button" type="button" id="shelfReset" data-i18n="shelf.reset">初期の棚に戻す</button></p>
         </div>
+        <div class="view-pane playlists" id="listsPane" role="tabpanel" aria-labelledby="viewTabLists" data-view-pane="lists" hidden>
+          <div class="shelf-tabs pl-tabs" id="plTabs" role="tablist">
+            <button class="shelf-tab" type="button" role="tab" data-pl-tab="mine"><span data-i18n="pl.mine">マイプレイリスト</span><span class="shelf-tab-count" id="plMineCount">0</span></button>
+            <button class="shelf-tab" type="button" role="tab" data-pl-tab="presets"><span data-i18n="pl.presets">プリセット</span></button>
+            <span class="bar-spacer"></span>
+            <button class="ghost-button small" type="button" id="plSaveBtn" data-i18n="pl.saveNow">今の設定を保存</button>
+            <button class="ghost-button small" type="button" id="plImportBtn" data-i18n="pl.importFile">ファイルを読み込む</button>
+          </div>
+          <ul class="pl-grid" id="plGrid"></ul>
+          <p class="muted-note pl-hint" data-i18n="pl.hint"></p>
+        </div>
       </section>
 
       <section class="panel card side" data-panel="settings" id="side">
-        <div class="panel-bar"><button class="drag-handle" type="button" data-drag-handle data-i18n-label="layout.drag" aria-label="ドラッグで並べ替え"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button><h2 class="panel-title" id="settingsTitle" data-i18n="set.heading">ジュークボックスの設定</h2></div>
+        <div class="panel-bar"><button class="drag-handle" type="button" data-drag-handle data-i18n-label="layout.drag" aria-label="ドラッグで並べ替え"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button><h2 class="panel-title" id="settingsTitle" data-i18n="set.heading">LPディスクの設定</h2>
+          <div class="pl-menu-wrap">
+            <button class="ghost-button small pl-menu-btn" type="button" id="plMenuBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="plMenu"><span data-i18n="pl.menu">プレイリスト</span><span class="pl-caret" aria-hidden="true">▾</span></button>
+            <div class="pl-menu" id="plMenu" role="menu" aria-labelledby="plMenuBtn" hidden>
+              <button type="button" role="menuitem" data-pl-act="save" data-i18n="pl.overwrite">上書き保存</button>
+              <button type="button" role="menuitem" data-pl-act="saveAs" data-i18n="pl.saveAs">名前を付けて保存</button>
+              <button type="button" role="menuitem" data-pl-act="list" data-i18n="pl.openList">プレイリスト一覧</button>
+              <button type="button" role="menuitem" data-pl-act="presets" data-i18n="pl.fromPreset">プリセットから始める</button>
+              <span class="pl-menu-sep" role="separator"></span>
+              <button type="button" role="menuitem" data-pl-act="export" data-i18n="pl.exportFile">ファイルに書き出す</button>
+              <button type="button" role="menuitem" data-pl-act="import" data-i18n="pl.importFile">ファイルを読み込む</button>
+              <button type="button" role="menuitem" data-pl-act="undo" data-i18n="pl.undoMenu" hidden>直前の状態に戻す</button>
+            </div>
+            <input type="file" id="plFile" accept=".json,application/json" class="visually-hidden" tabindex="-1" aria-hidden="true" />
+          </div>
+          <p class="pl-status is-none" id="plStatus" aria-live="polite"></p>
+        </div>
         <div id="jukeboxPanel">
           <label class="field"><span class="field-label" data-i18n="set.roomName">部屋の名前</span><input class="text-input" id="roomName" type="text" maxlength="80" /></label>
           <label class="field"><span class="field-label" data-i18n="set.stopName">停止中のシーン名</span><input class="text-input" id="stopName" type="text" maxlength="40" /></label>
@@ -118,7 +144,6 @@
           </div>
           <div class="field">
             <label class="toggle-field"><input type="checkbox" id="showCover" checked /><span class="field-label" data-i18n="set.showCover">ジャケットを表示する</span></label>
-            <p class="muted-note" data-i18n="set.showCoverNote"></p>
           </div>
           <p class="field-label" data-i18n="set.disks">レコード</p>
           <ol class="disk-list" id="diskList"></ol>
@@ -150,6 +175,20 @@
         </div>
         <div class="play-board" id="playBoard"></div>
         <ol class="play-chat" id="playChat"></ol>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="plModal" hidden>
+      <section class="modal pl-modal" role="dialog" aria-modal="true" aria-labelledby="plModalTitle">
+        <button class="drawer-close" type="button" data-close-pl data-i18n-label="close" aria-label="閉じる">×</button>
+        <h2 id="plModalTitle"></h2>
+        <p class="muted-note" id="plModalNote"></p>
+        <form id="plForm" class="pl-form">
+          <label class="field" id="plNameField"><span class="field-label" data-i18n="pl.name">名前</span><input class="text-input" id="plName" type="text" maxlength="60" autocomplete="off" /></label>
+          <label class="field" id="plMemoField"><span class="field-label" data-i18n="pl.memo">メモ（任意）</span><input class="text-input" id="plMemo" type="text" maxlength="200" autocomplete="off" /></label>
+          <label class="toggle-field" id="plImagesField"><input type="checkbox" id="plImages" checked /><span class="field-label" data-i18n="pl.includeImages">画像（切り抜いたジャケット・背景）を含める</span></label>
+          <div class="pl-modal-actions" id="plModalActions"></div>
+        </form>
       </section>
     </div>
 
@@ -196,10 +235,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="./js/i18n.js?v=20261107-10"></script>
-  <script src="./js/ccfolia.js?v=20261107-10"></script>
-  <script src="./js/jukebox.js?v=20261107-10"></script>
-  <script src="./js/shelf-data.js?v=20261107-10"></script>
-  <script src="./js/app.js?v=20261107-10"></script>
+  <script src="./js/i18n.js?v=20261108-02"></script>
+  <script src="./js/ccfolia.js?v=20261108-02"></script>
+  <script src="./js/jukebox.js?v=20261108-02"></script>
+  <script src="./js/shelf-data.js?v=20261108-02"></script>
+  <script src="./js/app.js?v=20261108-02"></script>
 </body>
 </html>

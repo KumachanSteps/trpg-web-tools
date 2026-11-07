@@ -86,7 +86,7 @@ textarea.text-input { resize: vertical; line-height: 1.6; }
 ::placeholder { color: var(--faint); opacity: 1; }
 
 .segment-group { display: flex; flex-wrap: nowrap; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.segment { flex: 1 1 0; min-width: 0; padding: 4px 12px; border: 0; border-left: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
+.segment { flex: 1 1 0; min-width: 0; padding: 4px 8px; border: 0; border-left: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
 .segment:first-child { border-left: 0; }
 .segment:not(.is-active):hover { color: var(--ink); background: var(--yellow-soft); }
 .segment.is-active { background: var(--yellow); color: var(--yellow-ink); }
@@ -190,7 +190,6 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .shape-label.is-guess { color: var(--mod); }
 
 /* ---------- シーンのつながり ---------- */
-.graph-count { color: var(--faint); font-size: 0.76rem; font-weight: 700; }
 .warn-box { margin: 0 0 10px; padding: 8px 12px; border-left: 3px solid var(--danger); background: rgba(226, 103, 95, 0.08); font-size: 0.8rem; }
 .warn-title { margin: 0 0 2px; color: var(--danger); font-weight: 800; }
 .warn-box ul { margin: 0; padding-left: 1.2em; }
@@ -318,6 +317,8 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
   .toast { transition: none; }
 }
 .panel-bar .segment { flex: none; }
+.panel-bar .bar-end { margin-left: auto; }
+.panel[data-panel="stage"] > .panel-bar { column-gap: 8px; }
 
 /* BGM をページで鳴らす */
 .sound-control { display: inline-flex; flex: none; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border: 1px solid var(--line); border-radius: var(--radius); }
@@ -345,20 +346,19 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .bgm-open[hidden] { display: none; }
 
 /* シーンプレビュー ⇄ レコード棚 の切り替え */
-.view-switch { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--field); isolation: isolate; }
-.view-switch-thumb { position: absolute; top: 2px; bottom: 2px; left: 2px; z-index: -1; width: calc(50% - 2px); border-radius: 999px; background: var(--yellow); box-shadow: 0 2px 10px rgba(227, 185, 56, 0.28); transition: transform 0.32s cubic-bezier(.16, 1, .3, 1); }
-.view-switch[data-active="shelf"] .view-switch-thumb { transform: translateX(100%); }
-.view-switch-btn { padding: 5px 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 0.92rem; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; cursor: pointer; transition: color 0.2s; }
+.view-switch { position: relative; display: inline-grid; grid-template-columns: repeat(3, auto); padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--field); isolation: isolate; }
+.view-switch-thumb { position: absolute; top: 2px; bottom: 2px; left: 0; z-index: -1; width: var(--thumb-w, calc((100% - 4px) / 3)); border-radius: 999px; background: var(--yellow); box-shadow: 0 2px 10px rgba(227, 185, 56, 0.28); transform: translateX(var(--thumb-x, 2px)); transition: transform 0.32s cubic-bezier(.16, 1, .3, 1), width 0.32s cubic-bezier(.16, 1, .3, 1); }
+.view-switch-btn { padding: 5px 12px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 0.92rem; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; cursor: pointer; transition: color 0.2s; }
 .view-switch-btn:not(.is-active):hover { color: var(--ink); }
 .view-switch-btn.is-active { color: var(--yellow-ink); }
-.panel[data-pane="shelf"] .preview-only { display: none; }
+.panel[data-pane="shelf"] .preview-only, .panel[data-pane="lists"] .preview-only { display: none; }
 .view-pane { will-change: auto; }
 .view-pane[hidden] { display: none; }
 #linkLayer { transition: opacity 0.18s; }
 .layout.is-shelf #linkLayer { opacity: 0; }
 
 /* レコード棚 */
-.shelf-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 2px 0 0; }
+.shelf-tabs { position: sticky; top: 0; z-index: 40; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 -16px 12px; padding: 8px 16px 10px; background: var(--panel); box-shadow: 0 1px 0 var(--hair); }
 .shelf-tab { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--hair); border-radius: 999px; background: transparent; color: var(--muted); font-size: 0.8rem; font-weight: 800; white-space: nowrap; cursor: pointer; transition: background 0.18s, color 0.18s, border-color 0.18s; }
 .shelf-tab:hover { border-color: var(--line-strong); color: var(--ink); }
 .shelf-tab.is-active { border-color: var(--yellow); background: var(--yellow); color: var(--yellow-ink); }
@@ -374,7 +374,7 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .ghost-button.danger.is-armed { border-color: var(--danger); color: var(--danger); }
 .shelf-list { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; }
 .shelf-empty { padding: 16px; border: 1px dashed var(--hair); border-radius: var(--radius); color: var(--faint); font-size: 0.8rem; text-align: center; }
-.shelf-track { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--field); transition: border-color 0.18s; }
+.shelf-track { display: grid; grid-template-columns: 18px 74px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--field); transition: border-color 0.18s; }
 .shelf-track:hover { border-color: var(--line); }
 .shelf-track.is-playing { border-color: var(--yellow); }
 .shelf-track.is-playing .shelf-title { color: var(--yellow); }
@@ -405,11 +405,77 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .shelf-list.is-entering .shelf-track { animation: shelf-in 0.34s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(var(--i, 0) * 26ms); }
 @keyframes shelf-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
 @media (max-width: 560px) {
-  .shelf-track { grid-template-columns: 74px minmax(0, 1fr); }
+  .shelf-track { grid-template-columns: 18px 74px minmax(0, 1fr); }
   .shelf-actions { grid-column: 1 / -1; justify-content: flex-end; }
   .view-switch-btn { padding: 5px 12px; font-size: 0.84rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .view-switch-thumb, .shelf-disc { transition: none; }
   .shelf-track.is-playing .shelf-disc, .shelf-list.is-entering .shelf-track { animation: none; }
+}
+
+/* レコード棚：タブの固定と曲のドラッグ */
+@media (min-width: 1180px) and (min-height: 540px) {
+  .shelf-tabs { top: var(--bar-h, 0px); }
+}
+.shelf-hint { margin: 14px 0 6px; }
+.shelf-grip { display: grid; place-items: center; width: 18px; height: 40px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--faint); font-size: 0.7rem; letter-spacing: -2px; cursor: grab; touch-action: none; }
+.shelf-grip:hover, .shelf-grip:focus-visible { background: var(--yellow-soft); color: var(--yellow); }
+.shelf-track.is-dragging { opacity: 0.35; }
+.shelf-track.drop-before { box-shadow: 0 -3px 0 var(--yellow); }
+.shelf-track.drop-after { box-shadow: 0 3px 0 var(--yellow); }
+.shelf-tab.is-drop { border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow); transform: scale(1.06); }
+.shelf-ghost { position: fixed; top: 0; left: 0; z-index: 1000; display: flex; align-items: center; gap: 8px; max-width: 260px; padding: 4px 12px 4px 4px; border: 1px solid var(--yellow); border-radius: 999px; background: var(--field); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55); color: var(--ink); font-size: 0.8rem; font-weight: 800; white-space: nowrap; pointer-events: none; }
+.shelf-ghost img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.shelf-ghost span { overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- プレイリスト ---------- */
+.pl-menu-wrap { position: relative; flex: none; }
+.pl-menu-btn { gap: 6px; }
+.pl-caret { font-size: 0.7rem; transition: transform 0.2s; }
+.pl-menu-btn[aria-expanded="true"] .pl-caret { transform: rotate(180deg); }
+.pl-menu { position: fixed; top: 0; left: 0; z-index: 65; display: grid; min-width: 210px; padding: 6px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--panel); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45); transform-origin: top left; animation: pl-pop 0.16s cubic-bezier(.16, 1, .3, 1); }
+.pl-menu[hidden] { display: none; }
+.pl-menu button { padding: 8px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font-size: 0.82rem; font-weight: 700; text-align: left; cursor: pointer; }
+.pl-menu button:hover:not(:disabled), .pl-menu button:focus-visible { background: var(--yellow-soft); color: var(--yellow); outline: none; }
+.pl-menu button:disabled { color: var(--faint); cursor: default; }
+.pl-menu-sep { height: 1px; margin: 4px 6px; background: var(--hair); }
+@keyframes pl-pop { from { opacity: 0; transform: translateY(-4px) scale(0.97); } to { opacity: 1; transform: none; } }
+.pl-status { display: flex; flex: 1 0 100%; align-items: center; gap: 6px; min-width: 0; margin: 0 0 0 6px; color: var(--ink); font-size: 0.76rem; font-weight: 800; }
+.pl-status::before { content: '♫'; color: var(--yellow); }
+.pl-status.is-none { color: var(--faint); font-weight: 700; }
+.pl-status-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-status-dot { flex: none; color: var(--yellow); font-size: 0.6rem; }
+.pl-tabs { align-items: center; }
+.pl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin: 0 0 12px; padding: 0; list-style: none; }
+.pl-card { display: grid; grid-template-columns: 92px 1fr; gap: 10px 12px; padding: 12px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--field); }
+.pl-card.is-open { border-color: var(--yellow); box-shadow: inset 0 0 0 1px var(--yellow); }
+.pl-stack { position: relative; width: 92px; height: 64px; }
+.pl-sleeve { position: absolute; top: 4px; width: 56px; height: 56px; overflow: hidden; border-radius: 4px; background: var(--disk, #888); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45); }
+.pl-sleeve:nth-child(1) { left: 0; z-index: 4; }
+.pl-sleeve:nth-child(2) { left: 12px; z-index: 3; transform: rotate(4deg); }
+.pl-sleeve:nth-child(3) { left: 24px; z-index: 2; transform: rotate(8deg); }
+.pl-sleeve:nth-child(4) { left: 36px; z-index: 1; transform: rotate(12deg); }
+.pl-sleeve img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pl-meta { min-width: 0; }
+.pl-meta p { margin: 0; }
+.pl-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 0.92rem; font-weight: 800; overflow-wrap: anywhere; }
+.pl-badge { padding: 1px 8px; border-radius: 999px; background: var(--yellow); color: var(--yellow-ink); font-size: 0.66rem; font-weight: 800; }
+.pl-memo { margin-top: 2px !important; color: var(--muted); font-size: 0.76rem; overflow-wrap: anywhere; }
+.pl-sub { margin-top: 4px !important; color: var(--faint); font-size: 0.7rem; }
+.pl-actions { display: flex; flex-wrap: wrap; grid-column: 1 / -1; gap: 6px; }
+.accent-button.small { min-height: 30px; padding: 4px 12px; font-size: 0.76rem; }
+.pl-empty { grid-column: 1 / -1; padding: 28px 16px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); font-size: 0.84rem; text-align: center; }
+.pl-hint { margin: 4px 0 0; }
+.playlists.is-drop .pl-grid { outline: 2px dashed var(--yellow); outline-offset: 4px; border-radius: var(--radius); }
+.pl-modal { width: min(460px, 100%); }
+.pl-form { display: grid; gap: 10px; margin-top: 6px; }
+.pl-form [hidden] { display: none; }
+.pl-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+#plModalNote { margin: 0 0 4px; }
+.toast.has-action { display: flex; align-items: center; gap: 12px; pointer-events: auto; }
+.toast-action { flex: none; padding: 4px 10px; border: 1px solid var(--yellow); border-radius: 999px; background: transparent; color: var(--yellow); font-size: 0.76rem; font-weight: 800; cursor: pointer; }
+.toast-action:hover { background: var(--yellow); color: var(--yellow-ink); }
+@media (prefers-reduced-motion: reduce) {
+  .pl-menu { animation: none; }
 }
