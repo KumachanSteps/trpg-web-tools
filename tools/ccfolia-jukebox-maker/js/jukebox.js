@@ -43,9 +43,9 @@
   const U = 'https://unsplash.com';
   const PHOTOS = [
     { id: 'introduction', yt: 'k8wX3elrsbE', color: 'cream', author: 'Andy Luo', user: 'andy8647', photo: 'a-chair-sitting-in-the-middle-of-a-room-0lfMluAw8wk' },
-    { id: 'handout', yt: 'k8wX3elrsbE', color: 'gray', author: 'mk. s', user: 'mk__s', photo: 'a-wax-stamp-on-a-piece-of-paper-KGDVTn9lYDE' },
+    { id: 'handout', yt: '_tMnO_Pnfwg', oldYt: 'k8wX3elrsbE', color: 'gray', author: 'mk. s', user: 'mk__s', photo: 'a-wax-stamp-on-a-piece-of-paper-KGDVTn9lYDE' },
     { id: 'investigation', yt: 'hudWFBPXeH4', color: 'teal', author: 'Dariusz Sankowski', user: 'dariuszsankowski', photo: 'brown-pencil-on-white-book-beside-black-eyeglasses-dvK_CT1Wg78' },
-    { id: 'secret-talk', yt: '16Bj6aPi1A8', color: 'purple', author: 'lhon karwan', user: 'lhonkarwanhamasalih', photo: 'two-silhouettes-are-holding-hands-in-the-darkness-xVAEsUhEGTc' },
+    { id: 'secret-talk', yt: '1vQ8ExyYaLU', oldYt: '16Bj6aPi1A8', color: 'purple', author: 'lhon karwan', user: 'lhonkarwanhamasalih', photo: 'two-silhouettes-are-holding-hands-in-the-darkness-xVAEsUhEGTc' },
     { id: 'investigation-2', yt: 'bSc0BC_FHnc', color: 'brown', author: 'Veer Mickey Shah', user: 'veermickey', photo: 'investigation-board-with-red-string-connecting-photos-and-documents-y13Sg2MLI40' },
     { id: 'debate', yt: 'DJf-wqjuwwM', color: 'blue', author: 'Kevin Hessey', user: 'kevinhessey', photo: 'a-wooden-chess-board-with-chess-pieces-on-it-yXAuWd4nX6c' },
     { id: 'break-time', yt: '7VfFDhFGHFw', color: 'green', author: 'Alexas_Fotos', user: 'alexas_fotos', photo: 'a-drink-sitting-next-to-a-sign-that-says-have-a-break-mJZn0eZUzh0' },
@@ -95,6 +95,21 @@
       s -= 1;
     } while (s > 10);
     return s;
+  }
+
+  // 1行に収める。小さくしすぎず（7割まで）、それでも入らなければ末尾を「…」で切る（YouTubeの長い曲名向け）
+  function fitLine(ctx, text, maxWidth, size, family, weight) {
+    const min = Math.max(10, Math.round(size * 0.7));
+    let s = size;
+    do {
+      ctx.font = `${weight || 700} ${s}px ${family}`;
+      if (ctx.measureText(text).width <= maxWidth) return text;
+      s -= 1;
+    } while (s > min);
+    ctx.font = `${weight || 700} ${s}px ${family}`;
+    const chars = Array.from(text);
+    while (chars.length > 1 && ctx.measureText(`${chars.join('')}…`).width > maxWidth) chars.pop();
+    return `${chars.join('')}…`;
   }
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -258,8 +273,7 @@
     ctx.fillText(title, tx + 40, 480);
     if (sub) {
       ctx.fillStyle = '#c9b994';
-      fitText(ctx, `♪ ${sub}`, tw - 40, 54, SANS, 600);
-      ctx.fillText(`♪ ${sub}`, tx + 40, 560);
+      ctx.fillText(fitLine(ctx, `♪ ${sub}`, tw - 40, 54, SANS, 600), tx + 40, 560);
     }
     return c;
   }
@@ -439,8 +453,7 @@
     ctx.fillText(name, w / 2, ch + (sub ? 29 : 28));
     if (sub) {
       ctx.fillStyle = '#c9b994';
-      fitText(ctx, sub, w - 40, 19, SANS, 600);
-      ctx.fillText(sub, w / 2, ch + 59);
+      ctx.fillText(fitLine(ctx, sub, w - 40, 19, SANS, 600), w / 2, ch + 59);
     }
     ctx.globalAlpha = 1;
   }
@@ -483,8 +496,7 @@
     ctx.fillText(name, 66, sub ? 56 : 70);
     if (sub) {
       ctx.fillStyle = '#c9b994';
-      fitText(ctx, `♪ ${sub}`, 390, 22, SANS, 600);
-      ctx.fillText(`♪ ${sub}`, 66, 92);
+      ctx.fillText(fitLine(ctx, `♪ ${sub}`, 390, 22, SANS, 600), 66, 92);
     }
     return toBlob(c);
   }
