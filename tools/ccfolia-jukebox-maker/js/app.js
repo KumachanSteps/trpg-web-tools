@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.23';
+  const VERSION = '0.24';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -909,7 +909,7 @@
 
   function sceneThumb(scene, i) {
     const selected = app.selected === i;
-    const links = scene.markers.reduce((n, m) => n + Ccfolia.sceneTargets(m.action).length, 0);
+    const sound = sceneSound(i);
     return h('li', null, h('button', {
       type: 'button',
       class: `scene-thumb${selected ? ' is-selected' : ''}`,
@@ -925,7 +925,21 @@
         h('span', { class: 'scene-name' }, scene.name || '—')),
       h('span', { class: 'thumb-meta' },
         app.view.start === i ? h('span', { class: 'scene-badge' }, t(app.view.kind === 'import' ? 'graph.current' : 'graph.start')) : null,
-        links ? h('span', { class: 'scene-links' }, `→${links}`) : null))));
+        // 登録しているBGM名。長いときは横に流して全文を見せる
+        h('span', { class: `scene-bgm${sound ? '' : ' is-none'}`, title: sound ? sound.name : '' },
+          h('span', { class: 'scene-bgm-text' }, sound ? `♪ ${sound.name}` : t('play.noBgm')))))));
+  }
+
+  function updateMarquees() {
+    els.sceneGrid.querySelectorAll('.scene-bgm').forEach(box => {
+      const text = box.firstChild;
+      box.classList.remove('is-marquee');
+      const over = text.scrollWidth - box.clientWidth;
+      if (over <= 2) return;
+      box.style.setProperty('--shift', `${-over}px`);
+      box.style.setProperty('--marquee-time', `${Math.max(4, over / 22 + 3).toFixed(1)}s`);
+      box.classList.add('is-marquee');
+    });
   }
 
   function selectScene(i) {
@@ -950,6 +964,7 @@
     els.settingsTitle.textContent = t(app.imported ? 'io.importedTitle' : 'set.heading');
     els.sceneGrid.innerHTML = '';
     app.view.scenes.forEach((scene, i) => els.sceneGrid.appendChild(sceneThumb(scene, i)));
+    requestAnimationFrame(updateMarquees);
     document.querySelectorAll('[data-lines]').forEach(btn => btn.classList.toggle('is-active', btn.dataset.lines === app.lines));
     const links = collectLinks();
     els.graphCount.textContent = t('graph.links', { n: links.length });
@@ -1613,8 +1628,8 @@
     window.addEventListener('scroll', onScroll, { passive: true });
     // パネルの中のスクロール（scroll は伝わらないので capture で受ける）
     els.layout.addEventListener('scroll', onScroll, { passive: true, capture: true });
-    if (typeof ResizeObserver === 'function') new ResizeObserver(() => drawLinks()).observe(els.graph);
-    else window.addEventListener('resize', drawLinks);
+    if (typeof ResizeObserver === 'function') new ResizeObserver(() => { drawLinks(); updateMarquees(); }).observe(els.graph);
+    else window.addEventListener('resize', () => { drawLinks(); updateMarquees(); });
   }
 
   /* ================= 部屋の外側の背景 ================= */

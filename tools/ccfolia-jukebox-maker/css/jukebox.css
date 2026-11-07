@@ -96,7 +96,7 @@ textarea.text-input { resize: vertical; line-height: 1.6; }
 /* ---------- 配置 ---------- */
 .layout { position: relative; display: flex; flex-wrap: wrap; gap: 16px 56px; align-items: flex-start; }
 .panel { min-width: 0; }
-.panel[data-panel="scenes"] { flex: 0 0 250px; }
+.panel[data-panel="scenes"] { flex: 0 0 300px; }
 .panel[data-panel="stage"] { flex: 1 1 560px; }
 .panel[data-panel="settings"] { flex: 0 0 330px; }
 .panel-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -4px 0 8px -6px; }
@@ -208,12 +208,22 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .scene-thumb.is-target { border-color: var(--scene); background: rgba(255, 255, 255, 0.04); }
 .scene-thumb.is-selected { border-color: var(--scene); box-shadow: 0 0 0 1px var(--scene); }
 .thumb-info { display: grid; gap: 2px; min-width: 0; }
-.thumb-meta { display: flex; gap: 6px; align-items: center; min-height: 1em; }
+.thumb-meta { display: flex; gap: 6px; align-items: center; min-width: 0; min-height: 1em; }
 .scene-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .scene-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--scene); }
 .scene-name { flex: 1 1 auto; min-width: 0; overflow: hidden; font-size: 0.84rem; font-weight: 800; white-space: nowrap; text-overflow: ellipsis; }
 .scene-badge { flex: none; padding: 0 6px; border: 1px solid var(--yellow); border-radius: 999px; color: var(--yellow); font-size: 0.64rem; font-weight: 800; }
-.scene-links { flex: none; color: var(--faint); font-size: 0.7rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.scene-bgm { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--muted); font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
+.scene-bgm.is-none { color: var(--faint); font-weight: 600; }
+.scene-bgm-text { display: inline-block; }
+/* 長い曲名は端まで流して戻る（止まる時間をはさむ） */
+.scene-bgm.is-marquee { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 10px), transparent); mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 10px), transparent); }
+.scene-bgm.is-marquee .scene-bgm-text { padding: 0 6px; animation: scene-bgm-marquee var(--marquee-time, 6s) ease-in-out infinite alternate; }
+@keyframes scene-bgm-marquee { 0%, 18% { transform: translateX(0); } 82%, 100% { transform: translateX(calc(var(--shift, 0px) - 12px)); } }
+@media (prefers-reduced-motion: reduce) {
+  .scene-bgm.is-marquee .scene-bgm-text { animation: none; }
+  .scene-bgm { text-overflow: ellipsis; }
+}
 
 /* ---------- 盤面 ---------- */
 .board { position: relative; width: 100%; overflow: hidden; border-radius: 4px; background: #111; }
@@ -284,7 +294,7 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 }
 
 @media (max-width: 1100px) {
-  .panel[data-panel="scenes"] { flex-basis: 200px; }
+  .panel[data-panel="scenes"] { flex-basis: 240px; }
   .scene-thumb { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 860px) {
