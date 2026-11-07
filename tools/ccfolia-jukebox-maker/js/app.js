@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.24';
+  const VERSION = '0.25';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -124,10 +124,10 @@
     const s = app.settings;
     if (s.roomName === a.set.roomNameDefault) s.roomName = b.set.roomNameDefault;
     if (s.stopName === a.set.stopNameDefault) s.stopName = b.set.stopNameDefault;
-    s.disks.forEach((disk, i) => {
-      const idx = Jukebox.COLORS.findIndex(c => c.id === disk.color);
-      if (idx >= 0 && disk.name === a.defaultNames[idx]) disk.name = b.defaultNames[idx];
-      else if (disk.name === a.defaultNames[i]) disk.name = b.defaultNames[i];
+    // 初期のテーマ名は言語ごとに同じ並びなので、位置ではなく名前で探す（並べ替えや並び順の変更があっても訳せる）
+    s.disks.forEach(disk => {
+      const idx = a.defaultNames.indexOf(disk.name);
+      if (idx >= 0 && b.defaultNames[idx]) disk.name = b.defaultNames[idx];
     });
   }
 
@@ -226,7 +226,9 @@
       count: Jukebox.PHOTOS.length,
       showCover: true,
       // マーダーミステリー向けの12テーマ（ラベル色と写真ジャケット付き）
-      disks: Jukebox.PHOTOS.map((p, i) => ({ color: p.color, name: d.defaultNames[i], bgm: '', url: '', cover: { style: 'photo', photo: p.id } }))
+      // BGMの初期値は、テーマに合うYouTubeのフリーBGM
+      disks: Jukebox.PHOTOS.map((p, i) => ({ color: p.color, name: d.defaultNames[i], bgm: '', url: p.bgmUrl, cover: { style: 'photo', photo: p.id } })),
+      bgmDefaults: 1
     };
   }
 
@@ -250,8 +252,15 @@
       stopName: typeof saved.stopName === 'string' ? saved.stopName : base.stopName,
       count: Math.min(MAX_DISKS, Math.max(1, Number(saved.count) || base.count)),
       showCover: saved.showCover !== false,
-      disks
+      disks: saved.bgmDefaults ? disks : disks.map(withDefaultBgm),
+      bgmDefaults: 1
     };
+  }
+
+  // 初期BGMが入る前に保存した設定は、URLが空のプリセット写真のレコードに1回だけ初期BGMを入れる
+  function withDefaultBgm(disk) {
+    const photo = disk.cover.style === 'photo' ? Jukebox.photoOf(disk.cover.photo) : null;
+    return photo && !disk.url.trim() ? { ...disk, url: photo.bgmUrl } : disk;
   }
 
   function readCover(c) {
@@ -388,6 +397,7 @@
                 class: 'text-input small', type: 'url', value: disk.url, placeholder: t('set.bgmUrlPh'), 'aria-label': t('set.bgmUrl'),
                 oninput: e => { disk.url = e.target.value; changed(false); syncBgmUi(); }
               }),
+            file ? null : h('a', { class: 'bgm-open', dataset: { index: String(i) }, target: '_blank', rel: 'noopener noreferrer' }, '↗'),
             h('label', { class: 'ghost-button small file-button' }, t('set.bgmFile'), fileInput),
             h('button', { type: 'button', class: 'bgm-play', dataset: { index: String(i) }, onclick: () => toggleDiskPreview(i) })
           ),
@@ -1302,6 +1312,16 @@
       btn.title = sound ? label : t('sound.none');
       btn.setAttribute('aria-label', btn.title);
     });
+    // URLの曲をYouTubeなどの元のページで開くリンク
+    document.querySelectorAll('.bgm-open').forEach(link => {
+      const disk = app.settings.disks[Number(link.dataset.index)];
+      const url = disk ? String(disk.url || '').trim() : '';
+      const ok = /^https?:\/\/\S+$/i.test(url);
+      link.hidden = !ok;
+      if (ok) link.href = url; else link.removeAttribute('href');
+      link.title = t(youtubeId(url) ? 'sound.openYoutube' : 'sound.open');
+      link.setAttribute('aria-label', link.title);
+    });
     document.querySelectorAll('.stage-bgm').forEach(chip => chip.classList.toggle('is-playing', chip.dataset.src === bgm.src));
   }
 
@@ -1694,6 +1714,7 @@
   function init() {
     app.lang = detectLang();
     app.settings = loadSettings();
+    saveSettings(); // 初期BGMを入れた印（bgmDefaults）をすぐ残す
     loadSoundPrefs();
     bindBackdrop();
     applyLayout(loadLayout(), false);

@@ -27,6 +27,7 @@
       'クリックアクションはキャラクターを選んだ状態でパネルをクリックすると、そのキャラクターの発言として送信されます。',
       'BGMはURL（YouTubeなど）か音声ファイルを指定できます。音声ファイルはZIPに入るので、ファイルサイズに気をつけてください。',
       '「シーン一覧」「シーンのつながり」「ジュークボックスの設定」の3つの欄は、見出しの左のつまみをドラッグして並べ替えられます。',
+      '初期設定のBGMは、テーマに合わせたYouTubeのフリーBGMです。URLの横の「↗」で元の動画を開けるので、利用条件の確認や曲のダウンロードはそちらからどうぞ。',
       '入力した設定と音声ファイルはこのブラウザに自動で保存されます。',
       'レコードの「▶」でBGMを試聴できます。ヘッダーが「BGM ON」のあいだは、シーンを選ぶたびにそのシーンのBGMがこのページで流れます（音量もヘッダーで調整）（音声ファイル・音声のURL・YouTube）。'
     ],
@@ -69,7 +70,7 @@
       cream: 'クリーム', red: '赤', orange: 'オレンジ', yellow: '黄', green: '緑',
       teal: '青緑', blue: '青', purple: '紫', pink: 'ピンク', gray: 'グレー', brown: '茶', navy: '紺'
     },
-    defaultNames: ['導入', 'ハンドアウト', '調査', '密談', '調査2', '議論', '休憩', '最終議論', '考察', 'クライマックス', '感想戦', 'エピローグ'],
+    defaultNames: ['導入', 'ハンドアウト', '調査', '密談', '調査2', '議論', '休憩', '最終議論', '考察', 'クライマックス', 'エピローグ', '感想戦'],
     cover: {
       label: 'ジャケット',
       upload: '画像からジャケットを作る',
@@ -130,6 +131,8 @@
       on: 'BGM ON',
       off: 'BGM OFF',
       volume: 'BGMの音量',
+      open: 'BGMのページを開く',
+      openYoutube: 'YouTubeでこのBGMを開く',
       toggleTitle: 'ONのあいだは、BGMのあるシーンを選ぶとこのページでBGMが流れます',
       now: '♪ {name}',
       preview: '{n}枚目のBGMを試聴',
@@ -185,6 +188,7 @@
       'A click action is sent as the selected character\'s message when you click the panel.',
       'BGM can be a URL (such as YouTube) or an audio file. Audio files go inside the ZIP, so watch the file size.',
       'Drag the grip at the left of each heading to rearrange the Scenes, Scene links and Jukebox settings panels.',
+      'The default BGM for each theme is free music on YouTube. Use "↗" next to the URL to open the video, where you can check the terms and download the track.',
       'Your settings and audio files are saved in this browser automatically.',
       'Press "▶" on a record to preview its BGM. While the header shows "BGM ON", each scene you select plays its BGM on this page (set the volume there too) (audio files, audio URLs and YouTube).'
     ],
@@ -222,7 +226,7 @@
       cream: 'Cream', red: 'Red', orange: 'Orange', yellow: 'Yellow', green: 'Green',
       teal: 'Teal', blue: 'Blue', purple: 'Purple', pink: 'Pink', gray: 'Gray', brown: 'Brown', navy: 'Navy'
     },
-    defaultNames: ['Introduction', 'Read handout', 'Investigation', 'Secret talk', 'Investigation 2', 'Debate', 'Break time', 'Final debate', 'Thinking', 'Climax', 'After talk', 'Epilogue'],
+    defaultNames: ['Introduction', 'Read handout', 'Investigation', 'Secret talk', 'Investigation 2', 'Debate', 'Break time', 'Final debate', 'Thinking', 'Climax', 'Epilogue', 'After talk'],
     cover: {
       label: 'Sleeve',
       upload: 'Make a sleeve from an image',
@@ -283,6 +287,8 @@
       on: 'BGM ON',
       off: 'BGM OFF',
       volume: 'BGM volume',
+      open: 'Open the BGM page',
+      openYoutube: 'Open this BGM on YouTube',
       toggleTitle: 'While ON, selecting a scene with BGM plays it on this page',
       now: '♪ {name}',
       preview: 'Preview the BGM of record {n}',
@@ -338,6 +344,7 @@
       '클릭 액션은 캐릭터를 선택한 상태에서 패널을 클릭하면 그 캐릭터의 발언으로 전송됩니다.',
       'BGM은 URL(YouTube 등)이나 음성 파일을 지정할 수 있습니다. 음성 파일은 ZIP에 들어가므로 파일 크기에 주의해 주세요.',
       '"장면 목록", "장면 연결", "주크박스 설정" 세 칸은 제목 왼쪽의 손잡이를 드래그해 순서를 바꿀 수 있습니다.',
+      '기본 BGM은 테마에 맞춘 YouTube의 무료 BGM입니다. URL 옆의 "↗"로 원래 영상을 열 수 있으니, 이용 조건 확인이나 곡 다운로드는 그쪽에서 해 주세요.',
       '입력한 설정과 음성 파일은 이 브라우저에 자동 저장됩니다.',
       '레코드의 "▶"로 BGM을 미리 들을 수 있습니다. 헤더가 "BGM ON"인 동안에는 장면을 고를 때마다 그 장면의 BGM이 이 페이지에서 재생됩니다(음량도 헤더에서 조절)(음성 파일, 음성 URL, YouTube).'
     ],
@@ -375,7 +382,7 @@
       cream: '크림', red: '빨강', orange: '주황', yellow: '노랑', green: '초록',
       teal: '청록', blue: '파랑', purple: '보라', pink: '분홍', gray: '회색', brown: '갈색', navy: '남색'
     },
-    defaultNames: ['도입', '핸드아웃', '조사', '밀담', '조사 2', '토론', '휴식', '최종 토론', '고찰', '클라이맥스', '애프터 토크', '에필로그'],
+    defaultNames: ['도입', '핸드아웃', '조사', '밀담', '조사 2', '토론', '휴식', '최종 토론', '고찰', '클라이맥스', '에필로그', '애프터 토크'],
     cover: {
       label: '재킷',
       upload: '이미지로 재킷 만들기',
@@ -436,6 +443,8 @@
       on: 'BGM ON',
       off: 'BGM OFF',
       volume: 'BGM 음량',
+      open: 'BGM 페이지 열기',
+      openYoutube: 'YouTube에서 이 BGM 열기',
       toggleTitle: 'ON인 동안 BGM이 있는 장면을 고르면 이 페이지에서 BGM이 재생됩니다',
       now: '♪ {name}',
       preview: '{n}번째 레코드 BGM 미리 듣기',

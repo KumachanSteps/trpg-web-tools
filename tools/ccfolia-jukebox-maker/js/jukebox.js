@@ -42,19 +42,19 @@
   // プリセットの写真ジャケット（Unsplash License の無料写真。assets/covers/<id>.jpg、538×520 に切り抜き済み）
   const U = 'https://unsplash.com';
   const PHOTOS = [
-    { id: 'introduction', color: 'cream', author: 'Andy Luo', user: 'andy8647', photo: 'a-chair-sitting-in-the-middle-of-a-room-0lfMluAw8wk' },
-    { id: 'handout', color: 'gray', author: 'mk. s', user: 'mk__s', photo: 'a-wax-stamp-on-a-piece-of-paper-KGDVTn9lYDE' },
-    { id: 'investigation', color: 'teal', author: 'Dariusz Sankowski', user: 'dariuszsankowski', photo: 'brown-pencil-on-white-book-beside-black-eyeglasses-dvK_CT1Wg78' },
-    { id: 'secret-talk', color: 'purple', author: 'lhon karwan', user: 'lhonkarwanhamasalih', photo: 'two-silhouettes-are-holding-hands-in-the-darkness-xVAEsUhEGTc' },
-    { id: 'investigation-2', color: 'brown', author: 'Veer Mickey Shah', user: 'veermickey', photo: 'investigation-board-with-red-string-connecting-photos-and-documents-y13Sg2MLI40' },
-    { id: 'debate', color: 'blue', author: 'Kevin Hessey', user: 'kevinhessey', photo: 'a-wooden-chess-board-with-chess-pieces-on-it-yXAuWd4nX6c' },
-    { id: 'break-time', color: 'green', author: 'Alexas_Fotos', user: 'alexas_fotos', photo: 'a-drink-sitting-next-to-a-sign-that-says-have-a-break-mJZn0eZUzh0' },
-    { id: 'final-debate', color: 'red', author: 'Daniele Franchi', user: 'daniele_franchi', photo: 'the-pawn-triumphs-over-the-fallen-king-b_NUj9eklsk' },
-    { id: 'thinking', color: 'navy', author: 'Saad Ahmad', user: 'saadahmad_umn', photo: 'text-BQLw0OrA6F4' },
-    { id: 'climax', color: 'orange', author: 'Quilia', user: 'heyquilia', photo: 'orange-and-yellow-fire-illustration-y3RFJh6-r0Q' },
-    { id: 'after-talk', color: 'yellow', author: 'Parinaz Mirhosseini', user: 'parinaz_mhs', photo: 'colorful-game-tiles-scattered-on-a-grid-RxAyATWag6A' },
-    { id: 'epilogue', color: 'pink', author: 'Richard Heinen', user: 'richard_he', photo: 'an-empty-theater-with-red-curtains-and-seats-25OeoEKoNP8' }
-  ].map(p => ({ ...p, authorUrl: `${U}/@${p.user}`, photoUrl: `${U}/photos/${p.photo}` }));
+    { id: 'introduction', yt: 'k8wX3elrsbE', color: 'cream', author: 'Andy Luo', user: 'andy8647', photo: 'a-chair-sitting-in-the-middle-of-a-room-0lfMluAw8wk' },
+    { id: 'handout', yt: 'k8wX3elrsbE', color: 'gray', author: 'mk. s', user: 'mk__s', photo: 'a-wax-stamp-on-a-piece-of-paper-KGDVTn9lYDE' },
+    { id: 'investigation', yt: 'hudWFBPXeH4', color: 'teal', author: 'Dariusz Sankowski', user: 'dariuszsankowski', photo: 'brown-pencil-on-white-book-beside-black-eyeglasses-dvK_CT1Wg78' },
+    { id: 'secret-talk', yt: '16Bj6aPi1A8', color: 'purple', author: 'lhon karwan', user: 'lhonkarwanhamasalih', photo: 'two-silhouettes-are-holding-hands-in-the-darkness-xVAEsUhEGTc' },
+    { id: 'investigation-2', yt: 'bSc0BC_FHnc', color: 'brown', author: 'Veer Mickey Shah', user: 'veermickey', photo: 'investigation-board-with-red-string-connecting-photos-and-documents-y13Sg2MLI40' },
+    { id: 'debate', yt: 'DJf-wqjuwwM', color: 'blue', author: 'Kevin Hessey', user: 'kevinhessey', photo: 'a-wooden-chess-board-with-chess-pieces-on-it-yXAuWd4nX6c' },
+    { id: 'break-time', yt: '7VfFDhFGHFw', color: 'green', author: 'Alexas_Fotos', user: 'alexas_fotos', photo: 'a-drink-sitting-next-to-a-sign-that-says-have-a-break-mJZn0eZUzh0' },
+    { id: 'final-debate', yt: 'VH8r_CYjGbI', color: 'red', author: 'Daniele Franchi', user: 'daniele_franchi', photo: 'the-pawn-triumphs-over-the-fallen-king-b_NUj9eklsk' },
+    { id: 'thinking', yt: 'Siga1GQDcEA', color: 'navy', author: 'Saad Ahmad', user: 'saadahmad_umn', photo: 'text-BQLw0OrA6F4' },
+    { id: 'climax', yt: '54GIJFKSFGw', color: 'orange', author: 'Quilia', user: 'heyquilia', photo: 'orange-and-yellow-fire-illustration-y3RFJh6-r0Q' },
+    { id: 'epilogue', yt: 'Dt9eBjJdTjc', color: 'pink', author: 'Richard Heinen', user: 'richard_he', photo: 'an-empty-theater-with-red-curtains-and-seats-25OeoEKoNP8' },
+    { id: 'after-talk', yt: '16Bj6aPi1A8', color: 'yellow', author: 'Parinaz Mirhosseini', user: 'parinaz_mhs', photo: 'colorful-game-tiles-scattered-on-a-grid-RxAyATWag6A' }
+  ].map(p => ({ ...p, authorUrl: `${U}/@${p.user}`, photoUrl: `${U}/photos/${p.photo}`, bgmUrl: `https://youtu.be/${p.yt}` }));
   const photoOf = id => PHOTOS.find(p => p.id === id) || null;
   const photoUrl = id => assetUrl(`covers/${id}.jpg`);
 
