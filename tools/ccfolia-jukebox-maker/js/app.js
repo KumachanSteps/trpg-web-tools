@@ -959,6 +959,13 @@
       els.warnBox.appendChild(h('ul', null, warnings.map(w => h('li', null, w))));
     }
     renderDetail();
+    // 試聴中のレコードの音声が外されたり変わったり、枚数から外れたりしたら止める
+    if (bgm.owner.startsWith('disk:')) {
+      // 並べ替えで番号が変わっただけなら、同じ音声のレコードを追いかける
+      const at = app.settings.disks.findIndex((d, j) => { const sound = diskSound(j); return Boolean(sound && sound.src === bgm.src); });
+      if (at >= 0) bgm.owner = `disk:${at}`;
+      else stopBgm(true);
+    }
     if (els.playModal.hidden && (!bgm.owner || bgm.owner === 'stage')) syncStageBgm();
     else syncBgmUi();
   }
