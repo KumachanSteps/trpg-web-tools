@@ -1840,21 +1840,27 @@
         target = { to };
       }
     };
-    const end = () => {
-      grip.removeEventListener('pointermove', move);
-      grip.removeEventListener('pointerup', end);
-      grip.removeEventListener('pointercancel', end);
+    let done = false;
+    // 指を離した時だけ移動を確定する。中断（pointercancel）や、ドラッグ中に一覧が
+    // 描き直されて元の行が消えた時は片付けだけ行う。つまみが消えても後片付けできるよう
+    // イベントは window で受ける。
+    const end = ev => {
+      if (done) return;
+      done = true;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
       ghost.remove();
       row.classList.remove('is-dragging');
       document.body.classList.remove('is-panel-dragging');
       clear();
-      if (!target) return;
+      if (!target || ev.type !== 'pointerup' || !row.isConnected) return;
       if (target.tab !== undefined) moveTrack(from, target.tab);
       else if (target.to !== from) moveTrack(from, shelf.active, target.to);
     };
-    grip.addEventListener('pointermove', move);
-    grip.addEventListener('pointerup', end);
-    grip.addEventListener('pointercancel', end);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
   }
 
   function syncShelfUi() {
