@@ -9,13 +9,13 @@
   <meta name="description" content="ココフォリアのクリックアクションと /scene コマンドで動く、KPがいなくても使えるジュークボックス部屋を作るツールです。シーンとマーカーパネルのつながりを線で一覧できます。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/jukebox.css?v=20261107-10" />
+  <link rel="stylesheet" href="./css/jukebox.css?v=20261107-11" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
       <div class="header-row">
-        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.28 / 2026.11.07</span></h1>
+        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.29 / 2026.11.07</span></h1>
         <span class="header-spacer"></span>
         <div class="sound-control" role="group" data-i18n-label="sound.group" aria-label="BGM">
           <button class="sound-toggle" type="button" id="soundToggle" aria-pressed="true"><span class="sound-icon" aria-hidden="true">♪</span><span id="soundLabel">BGM ON</span></button>
@@ -83,10 +83,10 @@
           </div>
         </div>
         <div class="view-pane shelf" id="shelfPane" role="tabpanel" aria-labelledby="viewTabShelf" data-view-pane="shelf" hidden>
-          <p class="muted-note" data-i18n="shelf.hint"></p>
           <div class="shelf-tabs" id="shelfTabs" role="tablist" data-i18n-label="shelf.tabsLabel" aria-label="タブ"></div>
           <div class="shelf-edit" id="shelfEdit" hidden></div>
           <ul class="shelf-list" id="shelfList"></ul>
+          <p class="muted-note shelf-hint" data-i18n="shelf.hint"></p>
           <form class="shelf-add" id="shelfAdd">
             <input class="text-input" id="shelfUrl" type="url" inputmode="url" autocomplete="off" data-i18n-placeholder="shelf.addPlaceholder" placeholder="YouTubeのURLを貼り付け" />
             <button class="ghost-button small" type="submit" data-i18n="shelf.add">棚に追加</button>
@@ -196,10 +196,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="./js/i18n.js?v=20261107-10"></script>
-  <script src="./js/ccfolia.js?v=20261107-10"></script>
-  <script src="./js/jukebox.js?v=20261107-10"></script>
-  <script src="./js/shelf-data.js?v=20261107-10"></script>
-  <script src="./js/app.js?v=20261107-10"></script>
+  <script src="./js/i18n.js?v=20261107-11"></script>
+  <script src="./js/ccfolia.js?v=20261107-11"></script>
+  <script src="./js/jukebox.js?v=20261107-11"></script>
+  <script src="./js/shelf-data.js?v=20261107-11"></script>
+  <script src="./js/app.js?v=20261107-11"></script>
 </body>
 </html>

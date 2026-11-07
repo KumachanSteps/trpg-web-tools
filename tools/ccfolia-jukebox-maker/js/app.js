@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.28';
+  const VERSION = '0.29';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1713,7 +1713,20 @@
       const src = shelfSrc(tr.yt);
       const title = trackTitle(tr);
       const records = app.settings ? app.settings.disks.slice(0, app.settings.count) : [];
-      els.shelfList.appendChild(h('li', { class: 'shelf-track', dataset: { yt: tr.yt }, style: { '--i': String(ti) } },
+      els.shelfList.appendChild(h('li', { class: 'shelf-track', dataset: { yt: tr.yt, index: String(ti) }, style: { '--i': String(ti) } },
+        h('button', {
+          type: 'button', class: 'shelf-grip', title: t('shelf.drag'), 'aria-label': `${t('shelf.drag')}: ${title}`,
+          onpointerdown: e => startTrackDrag(e, ti),
+          onkeydown: e => {
+            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+            e.preventDefault();
+            const to = ti + (e.key === 'ArrowUp' ? -1 : 1);
+            if (to < 0 || to >= tab.tracks.length) return;
+            moveTrack(ti, shelf.active, to);
+            const grip = els.shelfList.querySelector(`.shelf-track[data-index="${to}"] .shelf-grip`);
+            if (grip) grip.focus();
+          }
+        }, h('span', { 'aria-hidden': 'true' }, '⋮⋮')),
         h('button', {
           type: 'button', class: 'shelf-sleeve', dataset: { src },
           onclick: () => { if (bgm.src === src) stopBgm(); else playBgm({ src, name: title }, `shelf:${tr.yt}`); }
@@ -1758,6 +1771,90 @@
       records.forEach((disk, i) => select.appendChild(h('option', { value: String(i) }, `${i + 1}. ${disk.name || '—'}`)));
       select.disabled = Boolean(app.imported) || !records.length;
     });
+  }
+
+  // 曲を動かす。同じタブの中なら位置 to へ、別のタブなら最後に足す
+  function moveTrack(from, tabIndex, to) {
+    const src = shelf.tabs[shelf.active];
+    const dest = shelf.tabs[tabIndex];
+    if (!src || !dest || !src.tracks[from]) return;
+    if (dest === src) {
+      const [tr] = src.tracks.splice(from, 1);
+      src.tracks.splice(Math.max(0, Math.min(src.tracks.length, to)), 0, tr);
+    } else {
+      const tr = src.tracks[from];
+      if (dest.tracks.some(x => x.yt === tr.yt)) { toast(t('shelf.alreadyIn', { tab: shelfTabName(dest) })); return; }
+      src.tracks.splice(from, 1);
+      dest.tracks.push(tr);
+      toast(t('shelf.moved', { tab: shelfTabName(dest) }));
+    }
+    saveShelf();
+    renderShelf();
+  }
+
+  // つまみを押したまま動かす：曲の上なら差し込む位置、タブの上ならそのタブへ移す
+  function startTrackDrag(e, from) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const grip = e.currentTarget;
+    const row = grip.closest('.shelf-track');
+    const scroller = row.closest('.panel');
+    grip.setPointerCapture(e.pointerId);
+    // 指の右下に小さな札を出して、落とす先（タブや曲）が隠れないようにする
+    const img = row.querySelector('.shelf-sleeve img');
+    const ghost = h('div', { class: 'shelf-ghost', 'aria-hidden': 'true' },
+      img ? h('img', { src: img.src, alt: '' }) : null,
+      h('span', null, row.querySelector('.shelf-title').textContent));
+    document.body.appendChild(ghost);
+    const place = (x, y) => { ghost.style.transform = `translate(${x + 14}px, ${y + 12}px)`; };
+    place(e.clientX, e.clientY);
+    row.classList.add('is-dragging');
+    document.body.classList.add('is-panel-dragging');
+    let target = null;
+    const clear = () => {
+      els.shelfList.querySelectorAll('.drop-before, .drop-after').forEach(n => n.classList.remove('drop-before', 'drop-after'));
+      els.shelfTabs.querySelectorAll('.is-drop').forEach(n => n.classList.remove('is-drop'));
+    };
+    const move = ev => {
+      place(ev.clientX, ev.clientY);
+      // パネルの上下の端に来たら少しずつスクロールする
+      if (scroller && scroller.scrollHeight > scroller.clientHeight) {
+        const r = scroller.getBoundingClientRect();
+        if (ev.clientY < r.top + 60) scroller.scrollTop -= 12;
+        else if (ev.clientY > r.bottom - 40) scroller.scrollTop += 12;
+      }
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      clear();
+      target = null;
+      const tabBtn = under && under.closest('.shelf-tab');
+      const overRow = under && under.closest('.shelf-track');
+      if (tabBtn) {
+        const ti = [...els.shelfTabs.querySelectorAll('.shelf-tab')].indexOf(tabBtn);
+        if (ti >= 0 && ti !== shelf.active) { tabBtn.classList.add('is-drop'); target = { tab: ti }; }
+      } else if (overRow && overRow.parentNode === els.shelfList && overRow !== row) {
+        const r = overRow.getBoundingClientRect();
+        const after = ev.clientY > r.top + r.height / 2;
+        overRow.classList.add(after ? 'drop-after' : 'drop-before');
+        let to = Number(overRow.dataset.index) + (after ? 1 : 0);
+        if (to > from) to -= 1;
+        target = { to };
+      }
+    };
+    const end = () => {
+      grip.removeEventListener('pointermove', move);
+      grip.removeEventListener('pointerup', end);
+      grip.removeEventListener('pointercancel', end);
+      ghost.remove();
+      row.classList.remove('is-dragging');
+      document.body.classList.remove('is-panel-dragging');
+      clear();
+      if (!target) return;
+      if (target.tab !== undefined) moveTrack(from, target.tab);
+      else if (target.to !== from) moveTrack(from, shelf.active, target.to);
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
   }
 
   function syncShelfUi() {
@@ -1820,6 +1917,12 @@
 
   function bindShelf() {
     loadShelf();
+    // 固定するタブの位置を、見出し（つまみの列）の高さに合わせる
+    const stagePanel = els.layout.querySelector('[data-panel="stage"]');
+    const bar = stagePanel.querySelector('.panel-bar');
+    const setBar = () => stagePanel.style.setProperty('--bar-h', `${bar.offsetHeight}px`);
+    setBar();
+    if (window.ResizeObserver) new ResizeObserver(setBar).observe(bar);
     els.shelfAdd.addEventListener('submit', e => { e.preventDefault(); addShelfUrl(els.shelfUrl.value); });
     let resetArmed = 0;
     els.shelfReset.addEventListener('click', () => {

@@ -358,7 +358,7 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .layout.is-shelf #linkLayer { opacity: 0; }
 
 /* レコード棚 */
-.shelf-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 2px 0 0; }
+.shelf-tabs { position: sticky; top: 0; z-index: 40; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 -16px 12px; padding: 8px 16px 10px; background: var(--panel); box-shadow: 0 1px 0 var(--hair); }
 .shelf-tab { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--hair); border-radius: 999px; background: transparent; color: var(--muted); font-size: 0.8rem; font-weight: 800; white-space: nowrap; cursor: pointer; transition: background 0.18s, color 0.18s, border-color 0.18s; }
 .shelf-tab:hover { border-color: var(--line-strong); color: var(--ink); }
 .shelf-tab.is-active { border-color: var(--yellow); background: var(--yellow); color: var(--yellow-ink); }
@@ -374,7 +374,7 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .ghost-button.danger.is-armed { border-color: var(--danger); color: var(--danger); }
 .shelf-list { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; }
 .shelf-empty { padding: 16px; border: 1px dashed var(--hair); border-radius: var(--radius); color: var(--faint); font-size: 0.8rem; text-align: center; }
-.shelf-track { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--field); transition: border-color 0.18s; }
+.shelf-track { display: grid; grid-template-columns: 18px 74px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--field); transition: border-color 0.18s; }
 .shelf-track:hover { border-color: var(--line); }
 .shelf-track.is-playing { border-color: var(--yellow); }
 .shelf-track.is-playing .shelf-title { color: var(--yellow); }
@@ -405,7 +405,7 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .shelf-list.is-entering .shelf-track { animation: shelf-in 0.34s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(var(--i, 0) * 26ms); }
 @keyframes shelf-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
 @media (max-width: 560px) {
-  .shelf-track { grid-template-columns: 74px minmax(0, 1fr); }
+  .shelf-track { grid-template-columns: 18px 74px minmax(0, 1fr); }
   .shelf-actions { grid-column: 1 / -1; justify-content: flex-end; }
   .view-switch-btn { padding: 5px 12px; font-size: 0.84rem; }
 }
@@ -413,3 +413,18 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
   .view-switch-thumb, .shelf-disc { transition: none; }
   .shelf-track.is-playing .shelf-disc, .shelf-list.is-entering .shelf-track { animation: none; }
 }
+
+/* レコード棚：タブの固定と曲のドラッグ */
+@media (min-width: 1180px) and (min-height: 540px) {
+  .shelf-tabs { top: var(--bar-h, 0px); }
+}
+.shelf-hint { margin: 14px 0 6px; }
+.shelf-grip { display: grid; place-items: center; width: 18px; height: 40px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--faint); font-size: 0.7rem; letter-spacing: -2px; cursor: grab; touch-action: none; }
+.shelf-grip:hover, .shelf-grip:focus-visible { background: var(--yellow-soft); color: var(--yellow); }
+.shelf-track.is-dragging { opacity: 0.35; }
+.shelf-track.drop-before { box-shadow: 0 -3px 0 var(--yellow); }
+.shelf-track.drop-after { box-shadow: 0 3px 0 var(--yellow); }
+.shelf-tab.is-drop { border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow); transform: scale(1.06); }
+.shelf-ghost { position: fixed; top: 0; left: 0; z-index: 1000; display: flex; align-items: center; gap: 8px; max-width: 260px; padding: 4px 12px 4px 4px; border: 1px solid var(--yellow); border-radius: 999px; background: var(--field); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55); color: var(--ink); font-size: 0.8rem; font-weight: 800; white-space: nowrap; pointer-events: none; }
+.shelf-ghost img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.shelf-ghost span { overflow: hidden; text-overflow: ellipsis; }
