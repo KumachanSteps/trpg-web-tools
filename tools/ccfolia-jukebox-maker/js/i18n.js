@@ -16,7 +16,7 @@
     help: '使い方',
     close: '閉じる',
     helpItems: [
-      '1. 「ジュークボックスの設定」で、レコードの枚数・テーマ（＝シーン名）・BGMの曲名・ラベルの色・BGM・ジャケットを決めます。ジャケットは見本から選ぶか、「＋」から好きな画像を切り抜いて作れます（画像を行にドラッグ＆ドロップしてもOK）。',
+      '1. 「LPディスクの設定」で、レコードの枚数・テーマ（＝シーン名）・BGMの曲名・ラベルの色・BGM・ジャケットを決めます。ジャケットは見本から選ぶか、「＋」から好きな画像を切り抜いて作れます（画像を行にドラッグ＆ドロップしてもOK）。',
       '2. 「シーンプレビュー」の大きな盤面に、選んだシーン（最初は部屋の開始シーン）が表示されます。盤面のパネルから右の「シーン一覧」のサムネイルへ伸びる線は「このパネルをクリックすると、このシーンに切り替わる」という意味です。一覧のサムネイルをクリックすると、そのシーンが大きく表示されます。',
       '3. 「テストプレイ」で、ココフォリアと同じようにレコードをクリックしてシーンを切り替えて試せます。',
       '4. 「ルームZIPを書き出す」で、ココフォリアに読み込めるルームデータ（ZIP）を作ります。ココフォリアの部屋にZIPをドラッグ＆ドロップすると読み込めます。',
@@ -26,7 +26,7 @@
       'ココフォリアでは「/scene シーン名」の実行はルームマスターとサブルームマスターだけができます。KPなしで遊ぶときは、参加者をサブルームマスターにしてください。',
       'クリックアクションはキャラクターを選んだ状態でパネルをクリックすると、そのキャラクターの発言として送信されます。',
       'BGMはURL（YouTubeなど）か音声ファイルを指定できます。音声ファイルはZIPに入るので、ファイルサイズに気をつけてください。',
-      '「シーン一覧」「シーンプレビュー」「ジュークボックスの設定」の3つの欄は、見出しの左のつまみをドラッグして並べ替えられます。',
+      '「シーン一覧」「シーンプレビュー」「LPディスクの設定」の3つの欄は、見出しの左のつまみをドラッグして並べ替えられます。',
       '初期設定のBGMは、テーマに合わせたYouTubeのフリーBGMです。URLの横の「↗」で元の動画を開けるので、利用条件の確認や曲のダウンロードはそちらからどうぞ。',
       '真ん中の欄の見出しで「レコード棚」に切り替えると、雰囲気ごとのタブに分けたYouTubeのフリーBGMを試聴できます。気に入った曲は「レコードへ」でそのままレコードに入れるか、URLをコピーして使ってください。タブや曲は自由に足したり消したりでき、このブラウザに保存されます。',
       '入力した設定と音声ファイルはこのブラウザに自動で保存されます。設定欄の「プレイリスト ▾」で、今のシーン構成とBGMに名前を付けて保存し、あとで読み込んだりファイルに書き出したりできます。',
@@ -40,7 +40,7 @@
       export: 'ルームZIPを書き出す'
     },
     set: {
-      heading: 'ジュークボックスの設定',
+      heading: 'LPディスクの設定',
       roomName: '部屋の名前',
       roomNameDefault: 'KPレス・ジュークボックス',
       stopName: '停止中のシーン名',
@@ -52,7 +52,6 @@
       backdropNotSaved: '画像が大きすぎてブラウザに保存できませんでした。このページを開いている間だけ使えます。',
       count: 'レコードの枚数',
       showCover: 'ジャケットを表示する',
-      showCoverNote: 'オフにすると、棚にはレコードだけが並びます（シーンの画面と一覧の両方）。',
       disks: 'レコード（テーマがシーン名になります）',
       diskName: 'テーマ',
       color: 'ラベルの色',
@@ -65,7 +64,7 @@
       playingLabel: 'NOW PLAYING',
       stopLabel: 'STOP',
       reset: '最初の設定に戻す',
-      resetConfirm: 'ジュークボックスの設定を最初の状態に戻しますか？'
+      resetConfirm: 'LPディスクの設定を最初の状態に戻しますか？'
     },
     colors: {
       cream: 'クリーム', red: '赤', orange: 'オレンジ', yellow: '黄', green: '緑',
@@ -273,7 +272,7 @@
     help: 'How to use',
     close: 'Close',
     helpItems: [
-      '1. In "Jukebox settings", choose how many records, each record\'s theme (it becomes the scene name), BGM title, label color, BGM and sleeve. Pick a sample sleeve, or use "+" to crop any image into one (you can also drop an image onto the row).',
+      '1. In "LP disc settings", choose how many records, each record\'s theme (it becomes the scene name), BGM title, label color, BGM and sleeve. Pick a sample sleeve, or use "+" to crop any image into one (you can also drop an image onto the row).',
       '2. The large board in "Scene preview" shows the selected scene (the room\'s start scene at first). A line from a panel to a thumbnail in the "Scenes" list means "clicking this panel switches to that scene". Click a thumbnail to show that scene on the large board.',
       '3. "Test play" lets you click records and switch scenes just like in CCFOLIA.',
       '4. "Export room ZIP" makes room data you can load into CCFOLIA. Drag and drop the ZIP onto your CCFOLIA room.',
@@ -283,7 +282,7 @@
       'In CCFOLIA, only the room master and sub room masters can run "/scene name". To play without a GM, make the players sub room masters.',
       'A click action is sent as the selected character\'s message when you click the panel.',
       'BGM can be a URL (such as YouTube) or an audio file. Audio files go inside the ZIP, so watch the file size.',
-      'Drag the grip at the left of each heading to rearrange the Scenes, Scene preview and Jukebox settings panels.',
+      'Drag the grip at the left of each heading to rearrange the Scenes, Scene preview and LP disc settings panels.',
       'The default BGM for each theme is free music on YouTube. Use "↗" next to the URL to open the video, where you can check the terms and download the track.',
       'Switch the middle panel to "Record shelf" to listen to free YouTube BGM sorted into mood tabs. Put a track straight onto a record with "To record", or copy its URL. Add or remove tabs and tracks freely; the shelf is saved in this browser.',
       'Your settings and audio files are saved in this browser automatically. Use "Playlists ▾" in the settings to save the current scenes and BGM under a name, then load them later or export them to a file.',
@@ -292,7 +291,7 @@
     layout: { drag: 'Drag to rearrange (or use ← → keys)', reset: 'Reset layout' },
     bar: { importZip: 'Open ZIP', backToJukebox: 'Back to jukebox', play: 'Test play', export: 'Export room ZIP' },
     set: {
-      heading: 'Jukebox settings',
+      heading: 'LP disc settings',
       roomName: 'Room name',
       roomNameDefault: 'KP-less Jukebox',
       stopName: 'Stopped scene name',
@@ -304,7 +303,6 @@
       backdropNotSaved: 'The image is too large to save in the browser. It works only while this page stays open.',
       count: 'Number of records',
       showCover: 'Show sleeves',
-      showCoverNote: 'When off, the shelf shows only the records (in both the scene view and the list).',
       disks: 'Records (the theme becomes the scene name)',
       diskName: 'Theme',
       color: 'Label color',
@@ -525,7 +523,7 @@
     help: '사용 방법',
     close: '닫기',
     helpItems: [
-      '1. "주크박스 설정"에서 레코드 장수, 테마(＝장면 이름), BGM 곡명, 라벨 색, BGM, 재킷을 정합니다. 재킷은 견본에서 고르거나 "＋"로 원하는 이미지를 잘라 만들 수 있습니다(이미지를 행에 드래그 앤 드롭해도 OK).',
+      '1. "LP 디스크 설정"에서 레코드 장수, 테마(＝장면 이름), BGM 곡명, 라벨 색, BGM, 재킷을 정합니다. 재킷은 견본에서 고르거나 "＋"로 원하는 이미지를 잘라 만들 수 있습니다(이미지를 행에 드래그 앤 드롭해도 OK).',
       '2. "장면 미리보기"의 큰 보드에 선택한 장면(처음에는 방의 시작 장면)이 표시됩니다. 보드의 패널에서 오른쪽 "장면 목록" 썸네일로 이어지는 선은 "이 패널을 클릭하면 이 장면으로 바뀐다"는 뜻입니다. 목록의 썸네일을 클릭하면 그 장면이 크게 표시됩니다.',
       '3. "테스트 플레이"에서 코코포리아처럼 레코드를 클릭해 장면을 바꿔 볼 수 있습니다.',
       '4. "룸 ZIP 내보내기"로 코코포리아에 불러올 수 있는 룸 데이터(ZIP)를 만듭니다. 코코포리아 방에 ZIP을 드래그 앤 드롭하면 불러옵니다.',
@@ -535,7 +533,7 @@
       '코코포리아에서 "/scene 장면 이름"은 룸 마스터와 서브 룸 마스터만 실행할 수 있습니다. KP 없이 놀 때는 참가자를 서브 룸 마스터로 지정해 주세요.',
       '클릭 액션은 캐릭터를 선택한 상태에서 패널을 클릭하면 그 캐릭터의 발언으로 전송됩니다.',
       'BGM은 URL(YouTube 등)이나 음성 파일을 지정할 수 있습니다. 음성 파일은 ZIP에 들어가므로 파일 크기에 주의해 주세요.',
-      '"장면 목록", "장면 미리보기", "주크박스 설정" 세 칸은 제목 왼쪽의 손잡이를 드래그해 순서를 바꿀 수 있습니다.',
+      '"장면 목록", "장면 미리보기", "LP 디스크 설정" 세 칸은 제목 왼쪽의 손잡이를 드래그해 순서를 바꿀 수 있습니다.',
       '기본 BGM은 테마에 맞춘 YouTube의 무료 BGM입니다. URL 옆의 "↗"로 원래 영상을 열 수 있으니, 이용 조건 확인이나 곡 다운로드는 그쪽에서 해 주세요.',
       '가운데 칸의 제목에서 "레코드 선반"으로 바꾸면 분위기별 탭으로 나눈 YouTube 무료 BGM을 미리 들을 수 있습니다. 마음에 드는 곡은 "레코드로"로 바로 레코드에 넣거나 URL을 복사해 쓰세요. 탭과 곡은 자유롭게 추가·삭제할 수 있고 이 브라우저에 저장됩니다.',
       '입력한 설정과 음성 파일은 이 브라우저에 자동 저장됩니다. 설정 칸의 "플레이리스트 ▾"로 지금의 장면 구성과 BGM에 이름을 붙여 저장하고, 나중에 불러오거나 파일로 내보낼 수 있습니다.',
@@ -544,7 +542,7 @@
     layout: { drag: '드래그로 순서 바꾸기 (← → 키로도 이동)', reset: '배치 초기화' },
     bar: { importZip: 'ZIP 열기', backToJukebox: '주크박스로 돌아가기', play: '테스트 플레이', export: '룸 ZIP 내보내기' },
     set: {
-      heading: '주크박스 설정',
+      heading: 'LP 디스크 설정',
       roomName: '방 이름',
       roomNameDefault: 'KP리스 주크박스',
       stopName: '정지 장면 이름',
@@ -556,7 +554,6 @@
       backdropNotSaved: '이미지가 너무 커서 브라우저에 저장하지 못했습니다. 이 페이지를 연 동안에만 사용할 수 있습니다.',
       count: '레코드 장수',
       showCover: '재킷 표시',
-      showCoverNote: '끄면 선반에 레코드만 놓입니다 (장면 화면과 목록 모두).',
       disks: '레코드 (테마가 장면 이름이 됩니다)',
       diskName: '테마',
       color: '라벨 색',
@@ -569,7 +566,7 @@
       playingLabel: 'NOW PLAYING',
       stopLabel: 'STOP',
       reset: '처음 설정으로',
-      resetConfirm: '주크박스 설정을 처음 상태로 되돌릴까요?'
+      resetConfirm: 'LP 디스크 설정을 처음 상태로 되돌릴까요?'
     },
     colors: {
       cream: '크림', red: '빨강', orange: '주황', yellow: '노랑', green: '초록',

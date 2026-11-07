@@ -2439,10 +2439,26 @@
     els.plMenuBtn.setAttribute('aria-expanded', String(show));
     if (!show) return;
     plStatus();
+    plPlaceMenu();
     els.plMenu.querySelector('[data-pl-act="save"]').disabled = !pl.current;
     els.plMenu.querySelector('[data-pl-act="undo"]').hidden = !pl.undo;
     const first = els.plMenu.querySelector('[role="menuitem"]:not(:disabled):not([hidden])');
     if (first) first.focus();
+  }
+
+  // メニューは画面に固定して出す（欄のスクロール枠で切れないように）。ボタンの下、はみ出すなら左や上へずらす
+  function plPlaceMenu() {
+    if (els.plMenu.hidden) return;
+    const r = els.plMenuBtn.getBoundingClientRect();
+    const m = { width: els.plMenu.offsetWidth, height: els.plMenu.offsetHeight }; // 開くアニメの途中でも本来の大きさ
+    const vw = document.documentElement.clientWidth;
+    const vh = window.innerHeight;
+    let left = Math.min(r.left, vw - m.width - 8);
+    left = Math.max(8, left);
+    let top = r.bottom + 6;
+    if (top + m.height > vh - 8 && r.top - 6 - m.height >= 8) top = r.top - 6 - m.height;
+    els.plMenu.style.left = `${Math.round(left)}px`;
+    els.plMenu.style.top = `${Math.round(Math.max(8, top))}px`;
   }
 
   function plAct(act) {
@@ -2473,6 +2489,9 @@
       } else if (e.key === 'Escape') { plMenu(false); els.plMenuBtn.focus(); }
     });
     document.addEventListener('click', e => { if (!els.plMenu.hidden && !e.target.closest('.pl-menu-wrap')) plMenu(false); });
+    // 開いたままスクロールや大きさの変更があったら閉じる
+    window.addEventListener('resize', () => { if (!els.plMenu.hidden) plMenu(false); });
+    document.addEventListener('scroll', e => { if (!els.plMenu.hidden && !els.plMenu.contains(e.target)) plMenu(false); }, true);
     els.plFile.addEventListener('change', () => {
       plImportFile(els.plFile.files && els.plFile.files[0]);
       els.plFile.value = '';

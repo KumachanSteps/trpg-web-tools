@@ -9,13 +9,13 @@
   <meta name="description" content="ココフォリアのクリックアクションと /scene コマンドで動く、KPがいなくても使えるジュークボックス部屋を作るツールです。シーンとマーカーパネルのつながりを線で一覧できます。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/jukebox.css?v=20261107-13" />
+  <link rel="stylesheet" href="./css/jukebox.css?v=20261108-01" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
       <div class="header-row">
-        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.30 / 2026.11.07</span></h1>
+        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.30 / 2026.11.08</span></h1>
         <span class="header-spacer"></span>
         <div class="sound-control" role="group" data-i18n-label="sound.group" aria-label="BGM">
           <button class="sound-toggle" type="button" id="soundToggle" aria-pressed="true"><span class="sound-icon" aria-hidden="true">♪</span><span id="soundLabel">BGM ON</span></button>
@@ -108,8 +108,7 @@
       </section>
 
       <section class="panel card side" data-panel="settings" id="side">
-        <div class="panel-bar"><button class="drag-handle" type="button" data-drag-handle data-i18n-label="layout.drag" aria-label="ドラッグで並べ替え"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button><h2 class="panel-title" id="settingsTitle" data-i18n="set.heading">ジュークボックスの設定</h2>
-          <span class="bar-spacer"></span>
+        <div class="panel-bar"><button class="drag-handle" type="button" data-drag-handle data-i18n-label="layout.drag" aria-label="ドラッグで並べ替え"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button><h2 class="panel-title" id="settingsTitle" data-i18n="set.heading">LPディスクの設定</h2>
           <div class="pl-menu-wrap">
             <button class="ghost-button small pl-menu-btn" type="button" id="plMenuBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="plMenu"><span data-i18n="pl.menu">プレイリスト</span><span class="pl-caret" aria-hidden="true">▾</span></button>
             <div class="pl-menu" id="plMenu" role="menu" aria-labelledby="plMenuBtn" hidden>
@@ -147,7 +146,6 @@
           </div>
           <div class="field">
             <label class="toggle-field"><input type="checkbox" id="showCover" checked /><span class="field-label" data-i18n="set.showCover">ジャケットを表示する</span></label>
-            <p class="muted-note" data-i18n="set.showCoverNote"></p>
           </div>
           <p class="field-label" data-i18n="set.disks">レコード</p>
           <ol class="disk-list" id="diskList"></ol>
@@ -239,10 +237,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="./js/i18n.js?v=20261107-13"></script>
-  <script src="./js/ccfolia.js?v=20261107-13"></script>
-  <script src="./js/jukebox.js?v=20261107-13"></script>
-  <script src="./js/shelf-data.js?v=20261107-13"></script>
-  <script src="./js/app.js?v=20261107-13"></script>
+  <script src="./js/i18n.js?v=20261108-01"></script>
+  <script src="./js/ccfolia.js?v=20261108-01"></script>
+  <script src="./js/jukebox.js?v=20261108-01"></script>
+  <script src="./js/shelf-data.js?v=20261108-01"></script>
+  <script src="./js/app.js?v=20261108-01"></script>
 </body>
 </html>
