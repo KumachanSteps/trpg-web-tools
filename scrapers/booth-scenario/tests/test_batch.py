@@ -120,3 +120,15 @@ def test_none_words_read_as_empty():
     for w in ("N/A", "n/a", "NONE", "NOT AVAILABLE", "なし", "NONE;"):
         assert review._NONE_WORDS.fullmatch(w)
     assert not review._NONE_WORDS.fullmatch("NONE/NONE")
+
+
+def test_batch_that_fails_on_a_listing_page_still_writes_folder(conn, tmp_path):
+    class Broken:
+        def __call__(self, url, timeout):
+            if url.endswith("robots.txt"):
+                return 200, "text/plain", b""
+            return 500, "text/html", b"oops"
+    r = batch.run_batch(conn, fetcher(tmp_path, Broken()), tmp_path / "out", scopes=["madamis"], n=3, seed=1, name="t1")
+    assert r["items"] == [] and r["stopped"].startswith("RuntimeError: HTTP 500")
+    saved = json.loads((tmp_path / "out" / "batch_t1" / "batch.json").read_text(encoding="utf-8"))
+    assert "Traceback" in saved["traceback"]

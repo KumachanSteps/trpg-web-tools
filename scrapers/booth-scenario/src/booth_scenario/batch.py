@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import random
 import sqlite3
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -86,6 +87,11 @@ def pick_new_items(conn, fetcher: PoliteFetcher, scopes: list[str], n: int, rng:
     return chosen
 
 
+def _fetched(conn, ids: list[int]) -> list[int]:
+    return [i for i in ids if conn.execute(
+        "SELECT 1 FROM products WHERE booth_item_id=? AND detail_fetched_at IS NOT NULL", (i,)).fetchone()]
+
+
 def _copy_db(conn, path: Path) -> None:
     dest = sqlite3.connect(str(path))
     with dest:
@@ -96,8 +102,9 @@ def _copy_db(conn, path: Path) -> None:
 def run_batch(conn, fetcher: PoliteFetcher, out_root: Path, *, scopes: list[str], n: int = 50,
               seed: int | None = None, name: str | None = None) -> dict:
     """Sample, fetch and organize n new products; write the batch folder.
-    A StopCrawl (403, challenge, repeated 429) ends the run early, and the
-    folder still holds what was fetched up to then."""
+    A StopCrawl (403, challenge, repeated 429) or any other error ends the
+    run early; the folder still holds what was fetched up to then, and
+    batch.json says why it stopped."""
     name = name or datetime.now().strftime("%Y%m%d-%H%M")
     seed = seed if seed is not None else random.SystemRandom().randrange(2**31)
     rng = random.Random(seed)
@@ -119,8 +126,11 @@ def run_batch(conn, fetcher: PoliteFetcher, out_root: Path, *, scopes: list[str]
         ids = done
     except StopCrawl as e:
         report["stopped"] = str(e)
-        ids = [i for i in ids if conn.execute(
-            "SELECT 1 FROM products WHERE booth_item_id=? AND detail_fetched_at IS NOT NULL", (i,)).fetchone()]
+        ids = _fetched(conn, ids)
+    except Exception as e:  # noqa: BLE001 - keep what was fetched and say why the run ended
+        report["stopped"] = f"{type(e).__name__}: {e}"
+        report["traceback"] = traceback.format_exc()
+        ids = _fetched(conn, ids)
     for iid in ids:
         organize.organize_item(conn, iid)
     organize.propose_links(conn)
