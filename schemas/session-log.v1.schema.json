@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kumachansteps.github.io/trpg-web-tools/schemas/session-log.v1.schema.json",
+  "title": "KumachanSteps TRPG Session Log",
+  "description": "卓ログトラッカーの交換・バックアップ形式。既存インポーターとの互換性のため rows と columns をルートに置く。",
+  "type": "object",
+  "required": ["rows", "columns"],
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "format": { "const": "kumachansteps.trpg.session-log" },
+    "formatVersion": { "type": "string", "pattern": "^1\\." },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "properties": {
+        "app": { "type": "string" },
+        "appVersion": { "type": "string" },
+        "reason": { "type": "string" },
+        "installationId": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "rows": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/session" }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "label"],
+        "properties": {
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "type": { "type": "string" },
+          "width": { "type": "number" },
+          "locked": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "hiddenColumns": { "type": "array" },
+    "customColumns": { "type": "array" },
+    "migrations": { "type": "object" }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "session": {
+      "type": "object",
+      "required": ["id", "scenario"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "scenarioId": { "type": "string" },
+        "scenario": { "type": "string" },
+        "date": { "type": "string" },
+        "dates": { "type": "array", "items": { "type": "string", "format": "date" } },
+        "system": { "type": "string" },
+        "role": { "type": "string" },
+        "gm": { "type": "string" },
+        "players": { "type": "string" },
+        "pc": { "type": "string" },
+        "status": { "type": "string" },
+        "time": { "type": ["string", "number"] },
+        "note": { "type": "string" },
+        "longNote": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "revision": { "type": "integer", "minimum": 0 },
+        "deletedAt": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": true
+    }
+  }
+}
