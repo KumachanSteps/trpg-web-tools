@@ -1,0 +1,168 @@
+/* KPレス・ジュークボックスメーカー — プリセット（ジャンル別のシーン構成とBGM）
+ * scenes: [シーン名, ラベル色ID, ジャケット, YouTube ID, 曲名, 新しい写真の希望]
+ *   ジャケットは写真ID（assets/covers/<id>.jpg）か 'p:模様名'（写真が届くまでの代わり）。
+ * シーン名の英語・韓国語は NAMES。曲はレコード棚（js/shelf-data.js）から選んでいる。
+ * 選曲は試聴前の仮決め（2026-11-08、ChatGPT との設計会話をもとに TK さんが確認予定）。 */
+(function (global) {
+  'use strict';
+
+  const NAMES = {
+    '導入': ['Introduction', '도입'],
+    '洋館': ['The mansion', '양관'],
+    '晩餐': ['Dinner', '만찬'],
+    '自室': ['Own room', '자기 방'],
+    '調査': ['Investigation', '조사'],
+    '異変': ['Something wrong', '이변'],
+    '事件発生': ['The incident', '사건 발생'],
+    '密談': ['Secret talk', '밀담'],
+    '議論': ['Debate', '토론'],
+    '休憩': ['Break time', '휴식'],
+    'クライマックス': ['Climax', '클라이맥스'],
+    '感想戦': ['After talk', '애프터 토크'],
+    'ブリーフィング': ['Briefing', '브리핑'],
+    '電脳探索': ['Cyber dive', '전뇌 탐색'],
+    '通信': ['Comms', '통신'],
+    'ハッキング': ['Hacking', '해킹'],
+    '警報': ['Alarm', '경보'],
+    'エピローグ': ['Epilogue', '에필로그'],
+    '日常': ['Everyday', '일상'],
+    '違和感': ['Unease', '위화감'],
+    '不穏': ['Ominous', '불온'],
+    '怪異': ['The uncanny', '괴이'],
+    '逃走': ['Escape', '도주'],
+    '絶望': ['Despair', '절망'],
+    '現場検証': ['Crime scene', '현장 검증'],
+    '聞き込み': ['Interviews', '탐문'],
+    '情報整理': ['Sorting clues', '정보 정리'],
+    '最終議論': ['Final debate', '최종 토론'],
+    'お出かけ': ['Outing', '외출'],
+    'ハプニング': ['Mishap', '해프닝'],
+    '大騒ぎ': ['Uproar', '대소동'],
+    '依頼': ['The request', '의뢰'],
+    '資料調査': ['Research', '자료 조사'],
+    '禁忌': ['Taboo', '금기'],
+    '狂気': ['Madness', '광기'],
+    '神話的恐怖': ['Mythic horror', '신화적 공포'],
+    '学園生活': ['School life', '학교생활'],
+    '放課後': ['After school', '방과 후'],
+    '青春の日々': ['Golden days', '청춘의 나날'],
+    'すれ違い': ['Drifting apart', '엇갈림'],
+    '出会い': ['First meeting', '만남'],
+    '穏やかな日々': ['Quiet days', '평온한 나날'],
+    '二人の時間': ['Time together', '둘만의 시간'],
+    '別離': ['Parting', '이별']
+  };
+
+  const LIST = [
+    { id: 'mansion', name: ['館もの', 'Mansion', '저택물'], desc: ['洋館や古城を舞台とする、探索・事件・推理中心のKPレス向け。', 'Mansion mysteries set in a manor or old castle: exploring, the incident, deduction.', '양관이나 고성을 무대로 한 탐색·사건·추리 중심의 KP리스용.'], scenes: [
+      ['導入', 'cream', 'handout', 'OxX9Zi1Vydo', '無記名の招待状'],
+      ['洋館', 'brown', 'p:rings', 'KhjjEh6T33w', 'ホラーゲームの洋館', '洋館の玄関'],
+      ['晩餐', 'red', 'p:sunburst', 'MM7zV8Lf-c8', 'ワイングラスと私（DOVA-SYNDROME）', '晩餐の食卓'],
+      ['自室', 'navy', 'p:tint', 'I9_yZH7nSzA', '月は知っている（60分）', '古い寝室'],
+      ['調査', 'teal', 'investigation', 'GYjV6x0XJsg', '忘れられた図書館（DOVA-SYNDROME）'],
+      ['異変', 'purple', 'p:gradient', '_tMnO_Pnfwg', 'すきま風の声（DOVA-SYNDROME）', '薄暗い廊下'],
+      ['事件発生', 'red', 'investigation-2', 'lWBUXp2TEus', '事件が発生した的なBGM（DOVA-SYNDROME）'],
+      ['密談', 'blue', 'secret-talk', 'jiPmnkrWfyU', '心淵の扉（もみじばミュージック）'],
+      ['議論', 'gray', 'debate', 'iZji1SLIj9o', 'Mystery_Detective（PeriTune）'],
+      ['休憩', 'green', 'break-time', 'pR2TyMCkfBM', '紫煙（DOVA-SYNDROME）'],
+      ['クライマックス', 'orange', 'final-debate', 'P626a-2Tip8', '真実（DOVA-SYNDROME）'],
+      ['感想戦', 'yellow', 'after-talk', '16Bj6aPi1A8', '2:23AM（DOVA-SYNDROME）']
+    ] },
+    { id: 'digital', name: ['デジタル', 'Digital', '디지털'], desc: ['サイバー・近未来・仮想空間を舞台に、情報戦と危機に対応。', 'Cyber, near-future and virtual worlds: information warfare and crises.', '사이버·근미래·가상 공간을 무대로 정보전과 위기에 대응.'], scenes: [
+      ['導入', 'teal', 'p:dots', '_wwur8OsNd8', 'cyber', 'デジタル端末'],
+      ['ブリーフィング', 'blue', 'p:rings', '9YWKyezOcg0', 'Cybernetic', 'ホログラム'],
+      ['調査', 'navy', 'investigation', 'EXxv41Umk5o', 'Polygonic Artifact（DOVA-SYNDROME）'],
+      ['電脳探索', 'purple', 'p:dots', 'IRQuR8KuriE', 'サイバー32（魔王魂）', '電子回路'],
+      ['通信', 'teal', 'p:rings', '0i8L4oN4SWg', '星空と衛星（DOVA-SYNDROME）', '無線端末'],
+      ['ハッキング', 'orange', 'p:stripes', 'vu8Qq8G_bl4', 'NEON VELOCITY', 'コード画面'],
+      ['警報', 'red', 'p:stripes', 'JsMDr41OXL0', '基地出撃５分前（DOVA-SYNDROME）', '警告灯'],
+      ['クライマックス', 'purple', 'p:sunburst', 'ZrE7sdgkwj4', '危機（DOVA-SYNDROME）', '赤い警告画面'],
+      ['休憩', 'teal', 'break-time', '3F-2QY1H2Hw', '夜の病室エレクトロ（DOVA-SYNDROME）'],
+      ['エピローグ', 'blue', 'p:gradient', 'MfIWpMnEBbM', 'On The Moon（DOVA-SYNDROME）', '電子都市の夜景'],
+      ['感想戦', 'green', 'after-talk', '_6VxTpU1-Z8', 'ローファイ少女は今日も寝不足（DOVA-SYNDROME）']
+    ] },
+    { id: 'horror', name: ['ホラー', 'Horror', '호러'], desc: ['怪談や廃墟、怪異の探索から恐怖の高まりまでを切り替える。', 'Ghost stories, ruins and the uncanny, from first unease to rising terror.', '괴담·폐허·괴이 탐색부터 공포가 고조되기까지.'], scenes: [
+      ['導入', 'cream', 'introduction', 'CQyZ0x0GxMM', '物語の始まり（DOVA-SYNDROME）'],
+      ['日常', 'green', 'p:tint', 'JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）', '静かな街角'],
+      ['違和感', 'gray', 'thinking', 'hEQ5q006NXs', '違和感（1時間・もみじばミュージック）'],
+      ['不穏', 'navy', 'p:gradient', 'EhmXo0S81ts', '生暖かい空気 -Tepid air-', '暗い廊下'],
+      ['調査', 'purple', 'p:stripes', 'PVsGwTRHDwo', 'だれもいないはずだった（DOVA-SYNDROME）', '廃墟の内部'],
+      ['怪異', 'red', 'p:gradient', 'SQFXE086VuQ', 'イビツ（DOVA-SYNDROME）', '闇に浮かぶ影'],
+      ['逃走', 'orange', 'p:stripes', 'TLIZfSg1qeA', '緊迫 -will be Arrested...!（DOVA-SYNDROME）', '暗い階段'],
+      ['絶望', 'navy', 'p:rings', '54EVnRk494A', '壊れたオルゴール（1時間）', '壊れた人形'],
+      ['休憩', 'green', 'break-time', 'bG6WnM8ultE', '誰もいない風景（DOVA-SYNDROME）'],
+      ['クライマックス', 'red', 'climax', 'jHSQ2vCIRcc', 'The Final Confrontation'],
+      ['エピローグ', 'blue', 'epilogue', 'G80jLc37jAo', '雪解けを待つ'],
+      ['感想戦', 'yellow', 'after-talk', '16Bj6aPi1A8', '2:23AM（DOVA-SYNDROME）']
+    ] },
+    { id: 'classic-mystery', name: ['本格ミステリ', 'Classic mystery', '본격 미스터리'], desc: ['証拠の検討・密談・議論・推理披露を段階的に扱う。', 'Step by step: evidence, secret talks, debate and the big reveal.', '증거 검토·밀담·토론·추리 공개를 단계적으로.'], scenes: [
+      ['導入', 'cream', 'handout', 'k8wX3elrsbE', '不可解な事件簿的なBGM（DOVA-SYNDROME）'],
+      ['事件発生', 'red', 'investigation-2', 'JYm6-WvtM6M', '謎発生（もみじばミュージック）'],
+      ['現場検証', 'teal', 'investigation', 'DJf-wqjuwwM', 'Investigation（DOVA-SYNDROME）'],
+      ['調査', 'brown', 'p:dots', '9-Nfb9lWSQQ', '私立探偵と不可解な古文書', '証拠品'],
+      ['聞き込み', 'blue', 'p:stripes', 'GbR-off3SaE', '探偵は喫茶にいる的なBGM（DOVA-SYNDROME）', '取調室'],
+      ['密談', 'purple', 'secret-talk', 'LlyNqUHQI-I', '策謀（DOVA-SYNDROME）'],
+      ['情報整理', 'gray', 'thinking', '3pfQ3bDq0Wc', 'プロセス'],
+      ['議論', 'navy', 'debate', 'Siga1GQDcEA', '会議延長（DOVA-SYNDROME）'],
+      ['休憩', 'green', 'break-time', 'JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）'],
+      ['最終議論', 'orange', 'final-debate', 'VH8r_CYjGbI', 'Mystic Room（DOVA-SYNDROME）'],
+      ['クライマックス', 'red', 'p:sunburst', 'P626a-2Tip8', '真実（DOVA-SYNDROME）', '開かれた古い扉'],
+      ['感想戦', 'yellow', 'after-talk', 'nALEcCgFN1s', 'ゴーゴー探偵事務所（DOVA-SYNDROME）']
+    ] },
+    { id: 'slice-of-life', name: ['日常コメディ', 'Slice-of-life comedy', '일상 코미디'], desc: ['日常・ドタバタ・軽い謎解き・和やかな結末に対応。', 'Everyday life, slapstick, light puzzles and a warm ending.', '일상·소동·가벼운 수수께끼와 훈훈한 결말.'], scenes: [
+      ['導入', 'yellow', 'introduction', '7JhjnxhO7YY', 'ぽかぽか日和'],
+      ['日常', 'green', 'p:sunburst', 'Nf_lqAWh-mE', 'コミカルな日常（DOVA-SYNDROME）', '日差しの差す部屋'],
+      ['お出かけ', 'blue', 'p:dots', 'hS6NUgyGFkg', 'ensolarado（DOVA-SYNDROME）', '賑やかな商店街'],
+      ['ハプニング', 'orange', 'p:stripes', 'JNUWDIaxqOo', 'ドジっこハプニング', '散らかった机'],
+      ['調査', 'teal', 'investigation', 'fDtc6_c9VgQ', '探偵事務所（DOVA-SYNDROME）'],
+      ['議論', 'purple', 'debate', 'BshNcJVCPhc', '作戦会議（DOVA-SYNDROME）'],
+      ['大騒ぎ', 'red', 'p:dots', 'eo7w_Pnctvg', 'なんでしょう？（DOVA-SYNDROME）', '散乱した書類'],
+      ['休憩', 'cream', 'break-time', 'JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）'],
+      ['クライマックス', 'orange', 'p:sunburst', 'f2yOXZA0dp0', '収穫祭（DOVA-SYNDROME）', '祝祭の飾り'],
+      ['エピローグ', 'pink', 'epilogue', 'olxbmbavH5w', 'ムスカリの花（DOVA-SYNDROME）'],
+      ['感想戦', 'yellow', 'after-talk', '16Bj6aPi1A8', '2:23AM（DOVA-SYNDROME）']
+    ] },
+    { id: 'cthulhu', name: ['クトゥルフ神話', 'Cthulhu Mythos', '크툴루 신화'], desc: ['未知の存在・禁忌の知識・狂気を伴う調査型シナリオ向け。', 'Investigations into unknown beings, forbidden knowledge and madness.', '미지의 존재·금기의 지식·광기를 동반한 조사형 시나리오용.'], scenes: [
+      ['導入', 'cream', 'introduction', 'k8wX3elrsbE', '不可解な事件簿的なBGM（DOVA-SYNDROME）'],
+      ['依頼', 'brown', 'handout', 'OxX9Zi1Vydo', '無記名の招待状'],
+      ['異変', 'gray', 'p:gradient', 'IQcUAwpCfrY', '不穏の続き Op.61', '霧に包まれた街'],
+      ['資料調査', 'teal', 'investigation', 'GYjV6x0XJsg', '忘れられた図書館（DOVA-SYNDROME）'],
+      ['調査', 'green', 'p:tint', 'A1fdlha_zB0', 'その村、立ち入るべからず。（30分）', '古びた廃村'],
+      ['禁忌', 'purple', 'p:rings', 'jiPmnkrWfyU', '心淵の扉（もみじばミュージック）', '古い魔導書'],
+      ['狂気', 'red', 'p:stripes', 'SQFXE086VuQ', 'イビツ（DOVA-SYNDROME）', '異様な幾何学模様'],
+      ['神話的恐怖', 'navy', 'p:gradient', 'Vw7b30JzwlA', 'Crystal thorn（DOVA-SYNDROME）', '暗闇の巨大な影'],
+      ['休憩', 'brown', 'break-time', '_tMnO_Pnfwg', 'すきま風の声（DOVA-SYNDROME）'],
+      ['クライマックス', 'orange', 'climax', 'asKyymlaleE', 'Bound to Fate'],
+      ['エピローグ', 'blue', 'epilogue', 'Dt9eBjJdTjc', '神隠しの真相（DOVA-SYNDROME）'],
+      ['感想戦', 'yellow', 'after-talk', 'CVi8ZStKBTc', '朝露喫煙所（DOVA-SYNDROME）']
+    ] },
+    { id: 'youth', name: ['青春', 'Coming of age', '청춘'], desc: ['学園・友情・部活・成長と、人物同士の葛藤を描く。', 'School, friendship, clubs and growing up, with friction between characters.', '학원·우정·동아리·성장과 인물 간의 갈등.'], scenes: [
+      ['導入', 'yellow', 'p:sunburst', '6fwxJqoLJMk', 'Spectacular World', '青空の校舎'],
+      ['学園生活', 'green', 'p:tint', '7JhjnxhO7YY', 'ぽかぽか日和', '明るい教室'],
+      ['放課後', 'orange', 'p:gradient', 'uSdtzlqVdVw', '青空空港（DOVA-SYNDROME）', '夕暮れの教室'],
+      ['青春の日々', 'blue', 'p:sunburst', 'Vh7_Tzav8Qs', 'BGM177_Fireworks', '夏空のグラウンド'],
+      ['密談', 'purple', 'secret-talk', 'lPYMqGa_xT4', '儚く透明な色（DOVA-SYNDROME）'],
+      ['すれ違い', 'gray', 'p:stripes', 'geHgfGdO4iU', '曇り空', '雨の窓辺'],
+      ['議論', 'teal', 'debate', 'vIOyAFZXg_0', '記憶を辿る旋律（もみじばミュージック）'],
+      ['休憩', 'green', 'break-time', 'JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）'],
+      ['クライマックス', 'red', 'p:rings', 'dc0oRjmZtQs', 'BGM193_Glory', '夕陽の校庭'],
+      ['エピローグ', 'pink', 'epilogue', 'NHfopv9no38', 'ワスレナグサ（DOVA-SYNDROME）'],
+      ['感想戦', 'yellow', 'after-talk', '_6VxTpU1-Z8', 'ローファイ少女は今日も寝不足（DOVA-SYNDROME）']
+    ] },
+    { id: 'romance', name: ['ロマンス', 'Romance', '로맨스'], desc: ['出会い・親密さ・葛藤・選択と結末を描く関係性重視型。', 'Meeting, closeness, conflict, choices and an ending: relationship-driven.', '만남·친밀함·갈등·선택과 결말을 그리는 관계 중심형.'], scenes: [
+      ['導入', 'cream', 'p:dots', '0mbmvlg8iZU', 'fairy tale（DOVA-SYNDROME）', '花束と手紙'],
+      ['出会い', 'pink', 'p:sunburst', 'lPYMqGa_xT4', '儚く透明な色（DOVA-SYNDROME）', '花咲く街並み'],
+      ['穏やかな日々', 'green', 'p:tint', 'SOmJcGLxk5w', '露草（DOVA-SYNDROME）', '窓辺のカフェ'],
+      ['二人の時間', 'orange', 'p:gradient', 'olxbmbavH5w', 'ムスカリの花（DOVA-SYNDROME）', '夕暮れのベンチ'],
+      ['密談', 'purple', 'secret-talk', 'PbV8D4DYWv4', '水中流星群（DOVA-SYNDROME）'],
+      ['すれ違い', 'gray', 'p:stripes', 'K58XkKv6Qso', '雨にうたれて', '雨の街角'],
+      ['別離', 'navy', 'p:tint', 'AMA6cyrRCyI', '閉ざした心の奥（もみじばミュージック）', '無人の駅のホーム'],
+      ['休憩', 'cream', 'break-time', 'JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）'],
+      ['クライマックス', 'red', 'thinking', 'P626a-2Tip8', '真実（DOVA-SYNDROME）'],
+      ['エピローグ', 'blue', 'p:gradient', 'MfIWpMnEBbM', 'On The Moon（DOVA-SYNDROME）', '夕暮れの海'],
+      ['感想戦', 'yellow', 'after-talk', '16Bj6aPi1A8', '2:23AM（DOVA-SYNDROME）']
+    ] }
+  ];
+
+  global.JukeboxPresets = { NAMES, LIST };
+})(window);

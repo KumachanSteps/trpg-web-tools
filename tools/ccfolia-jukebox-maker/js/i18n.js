@@ -182,8 +182,8 @@
       records: 'レコード {n}枚',
       empty: 'まだプレイリストはありません。設定欄の「プレイリスト ▾」か、上の「今の設定を保存」で保存できます。',
       startPreset: 'このプリセットで始める',
-      presetStandard: 'スタンダード',
-      presetStandardMemo: 'マーダーミステリー向けの12シーン（最初の設定と同じ）'
+      presetStandard: '汎用マダミス',
+      presetStandardMemo: 'マーダーミステリー全般に使える12シーン（最初の設定と同じ）'
     },
     shelf: {
       heading: 'レコード棚',
@@ -433,8 +433,8 @@
       records: '{n} records',
       empty: 'No playlists yet. Save one from "Playlists ▾" in the settings or with "Save current setup" above.',
       startPreset: 'Start with this preset',
-      presetStandard: 'Standard',
-      presetStandardMemo: '12 murder-mystery scenes (same as the default setup)'
+      presetStandard: 'General murder mystery',
+      presetStandardMemo: '12 scenes for any murder mystery (same as the default setup)'
     },
     shelf: {
       heading: 'Record shelf',
@@ -684,8 +684,8 @@
       records: '레코드 {n}장',
       empty: '아직 플레이리스트가 없습니다. 설정 칸의 "플레이리스트 ▾"나 위의 "지금 설정을 저장"으로 저장할 수 있습니다.',
       startPreset: '이 프리셋으로 시작',
-      presetStandard: '스탠다드',
-      presetStandardMemo: '머더 미스터리용 12장면(처음 설정과 같음)'
+      presetStandard: '범용 머더 미스터리',
+      presetStandardMemo: '머더 미스터리 전반에 쓸 수 있는 12장면(처음 설정과 같음)'
     },
     shelf: {
       heading: '레코드 선반',

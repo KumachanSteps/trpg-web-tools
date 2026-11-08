@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.31';
+  const VERSION = '0.32';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -2376,10 +2376,23 @@
 
   /* ---------- 一覧の画面（真ん中の欄の3つめ） ---------- */
 
-  // プリセット（P2 で種類を増やす）
+  // プリセット：「汎用マダミス」（最初の設定と同じ。内部IDは standard のまま）と、js/presets.js のジャンル別
+  const langIndex = () => Math.max(0, LANGS.indexOf(app.lang));
+  function presetSettings(p) {
+    const li = langIndex();
+    const base = defaultSettings();
+    const disks = p.scenes.map(([name, color, cover, yt, title]) => ({
+      color, name: li ? ((JukeboxPresets.NAMES[name] || [])[li - 1] || name) : name,
+      bgm: title, bgmAuto: true, bgmFor: yt, url: `https://youtu.be/${yt}`,
+      cover: cover.startsWith('p:') ? { style: cover.slice(2) } : { style: 'photo', photo: cover }
+    }));
+    return { ...base, roomName: p.name[li] || p.name[0], count: disks.length, disks: disks.concat(base.disks.slice(disks.length)) };
+  }
   const PL_PRESETS = [
     { id: 'standard', name: () => t('pl.presetStandard'), memo: () => t('pl.presetStandardMemo'), settings: () => defaultSettings() }
-  ];
+  ].concat(((window.JukeboxPresets && JukeboxPresets.LIST) || []).map(p => ({
+    id: p.id, name: () => p.name[langIndex()] || p.name[0], memo: () => p.desc[langIndex()] || p.desc[0], settings: () => presetSettings(p)
+  })));
 
   function plSleeves(settings) {
     return settings.disks.slice(0, Math.min(4, settings.count)).map(d => {
