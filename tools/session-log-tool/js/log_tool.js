@@ -1,6 +1,7 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.100";
+  const APP_VERSION = "v1.103";
+  window.SESSION_LOG_APP_VERSION = APP_VERSION;
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
@@ -75,7 +76,10 @@
     { key: "kansouUrl", label: "感想URL", desc: "公開感想リンク" }
   ];
 
+  let stateLoadStatus = "loaded";
+  let storageWriteEnabled = true;
   let state = loadState();
+  storageWriteEnabled = stateLoadStatus === "loaded";
   let activeId = state.rows[0]?.id || null;
   let draggingKey = null;
   let dragOverKey = null;
@@ -90,15 +94,18 @@
 
   document.addEventListener("DOMContentLoaded", init);
 
-  function init(){
+  async function init(){
     collectElements();
     bindEvents();
     renderAll();
     exposeApi();
+    renderStorageRecoveryNotice();
+    storageWriteEnabled = true;
+    await initBackupManager();
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","drawerFooter","drawerSaveBtn","drawerCloseBtn2","drawerToReportBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","drawerFooter","drawerSaveBtn","drawerCloseBtn2","drawerToReportBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel","backupPanel","backupStatus","connectBackupBtn","backupNowBtn","restoreBrowserBackupBtn","disconnectBackupBtn","storageRecoveryNotice","storageRecoveryMessage"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -122,6 +129,10 @@
     els.importJsonBtn.addEventListener("click", openImportDialog);
     els.jsonFileInput.addEventListener("change", handleJsonFilePicked);
     els.exportJsonBtn.addEventListener("click", exportJson);
+    els.connectBackupBtn?.addEventListener("click", connectExternalBackup);
+    els.backupNowBtn?.addEventListener("click", writeBackupNow);
+    els.restoreBrowserBackupBtn?.addEventListener("click", restoreBrowserBackup);
+    els.disconnectBackupBtn?.addEventListener("click", disconnectExternalBackup);
     els.closeImportDialogBtn?.addEventListener("click",()=>els.importDialog.close());
     els.cancelImportBtn?.addEventListener("click",()=>els.importDialog.close());
     els.runImportBtn?.addEventListener("click", runImport);
@@ -1123,8 +1134,83 @@
     return text;
   }
 
+  async function initBackupManager(){
+    if(!window.SessionLogBackup){
+      updateBackupStatus({ status:"unsupported", detail:"バックアップ機能を読み込めませんでした", supported:false });
+      return;
+    }
+    await window.SessionLogBackup.init({
+      onStatus:updateBackupStatus,
+      onError:message=>showLogToast(message)
+    });
+    if(stateLoadStatus === "loaded"){
+      window.SessionLogBackup.capture(state,{ reason:"startup", forceSnapshot:false });
+    }
+  }
+
+  function updateBackupStatus(info){
+    if(els.backupPanel) els.backupPanel.dataset.status = info.status || "disconnected";
+    if(els.backupStatus && info.detail) els.backupStatus.textContent = info.detail;
+    if(els.disconnectBackupBtn) els.disconnectBackupBtn.hidden = !info.connected;
+    if(els.connectBackupBtn){
+      els.connectBackupBtn.disabled = info.supported === false;
+      els.connectBackupBtn.textContent = info.status === "permission-required" ? "外部JSONを再接続" : (info.connected ? "接続先を確認" : "外部JSONを接続");
+    }
+  }
+
+  async function connectExternalBackup(){
+    const ok = await window.SessionLogBackup?.connectFile(state);
+    if(ok) showLogToast("外部JSONへの自動バックアップを接続しました");
+  }
+
+  async function writeBackupNow(){
+    const ok = await window.SessionLogBackup?.writeNow(state);
+    if(ok) showLogToast("ブラウザ内・外部ファイルへ保存しました");
+  }
+
+  async function disconnectExternalBackup(){
+    if(!confirm("外部JSONへの自動バックアップを切断しますか？\nブラウザ内のデータとスナップショットは残ります。")) return;
+    await window.SessionLogBackup?.disconnectFile();
+    showLogToast("外部バックアップを切断しました");
+  }
+
+  async function restoreBrowserBackup(){
+    const snapshot = await window.SessionLogBackup?.latestSnapshot();
+    if(!snapshot || !Array.isArray(snapshot.rows)){
+      alert("復元できるブラウザ内バックアップがありません。外部JSONがある場合は「インポート」から読み込んでください。");
+      return;
+    }
+    const savedAt = snapshot.exportedAt ? new Date(snapshot.exportedAt).toLocaleString("ja-JP") : "日時不明";
+    if(!confirm(`${savedAt} のブラウザ内バックアップ（${snapshot.rows.length}件）を復元しますか？\n現在表示中のデータは置き換わります。`)) return;
+    state = normalizeBackupPayload(snapshot);
+    stateLoadStatus = "loaded";
+    storageWriteEnabled = true;
+    activeId = state.rows[0]?.id || null;
+    saveState({ reason:"restore-browser", forceSnapshot:true });
+    renderAll();
+    renderStorageRecoveryNotice();
+    showLogToast(`${state.rows.length}件を復元しました`);
+  }
+
+  function normalizeBackupPayload(payload){
+    const copy = clone(payload);
+    ["$schema","format","formatVersion","exportedAt","source"].forEach(key=>delete copy[key]);
+    return copy;
+  }
+
+  function renderStorageRecoveryNotice(){
+    if(!els.storageRecoveryNotice) return;
+    const needsRecovery = stateLoadStatus !== "loaded";
+    els.storageRecoveryNotice.hidden = !needsRecovery;
+    if(!needsRecovery) return;
+    els.storageRecoveryMessage.textContent = stateLoadStatus === "corrupt"
+      ? "保存データが破損しているため、サンプルを仮表示しています。元データは上書きしていません。ブラウザ内または外部JSONのバックアップから復元してください。"
+      : "ブラウザ保存が見つからないため、サンプルを仮表示しています。サンプルは自動保存されません。ブラウザ内または外部JSONのバックアップから復元してください。";
+  }
+
   function exportJson(){
-    const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+    const payload = window.SessionLogBackup?.buildPayload(state,"manual-export") || state;
+    const blob = new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `session-log-tool-${new Date().toISOString().slice(0,10)}.json`;
@@ -2612,11 +2698,36 @@
   function loadState(){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
-      if(raw) return JSON.parse(raw);
-    }catch(_error){}
+      if(!raw){
+        stateLoadStatus = "missing";
+        return { rows: clone(defaultRows), columns: clone(defaultColumns) };
+      }
+      const parsed = JSON.parse(raw);
+      if(!parsed || !Array.isArray(parsed.rows)) throw new Error("invalid session log state");
+      stateLoadStatus = "loaded";
+      return parsed;
+    }catch(error){
+      console.error("卓ログのブラウザ保存を読み込めませんでした",error);
+      stateLoadStatus = "corrupt";
+    }
     return { rows: clone(defaultRows), columns: clone(defaultColumns) };
   }
-  function saveState(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
+  function saveState(options){
+    if(!storageWriteEnabled) return false;
+    try{
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+      stateLoadStatus = "loaded";
+      renderStorageRecoveryNotice();
+      window.SessionLogBackup?.capture(state,options || { reason:"autosave" });
+      return true;
+    }catch(error){
+      console.error("卓ログをブラウザへ保存できませんでした",error);
+      window.SessionLogBackup?.capture(state,{ reason:"local-storage-error", forceSnapshot:true });
+      updateBackupStatus({ status:"error", detail:"ブラウザ保存に失敗しました。外部JSONへ今すぐ保存してください。", connected:Boolean(els.disconnectBackupBtn && !els.disconnectBackupBtn.hidden), supported:"showSaveFilePicker" in window });
+      showLogToast("ブラウザ保存に失敗しました");
+      return false;
+    }
+  }
   function clone(value){ return JSON.parse(JSON.stringify(value)); }
   function cryptoId(){ return `session_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
   function unique(values){ return [...new Set(values)]; }
