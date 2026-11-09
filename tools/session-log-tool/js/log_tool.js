@@ -1,6 +1,6 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.103";
+  const APP_VERSION = "v1.104";
   window.SESSION_LOG_APP_VERSION = APP_VERSION;
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
@@ -89,6 +89,7 @@
   const EXPORT_MODES = ["all", "system", "role", "sessions"];
   let exportMode = "all";
   let exportQuery = "";
+  let backupConnectionStatus = "disconnected";
 
   const els = {};
 
@@ -1149,18 +1150,19 @@
   }
 
   function updateBackupStatus(info){
+    backupConnectionStatus = info.status || "disconnected";
     if(els.backupPanel) els.backupPanel.dataset.status = info.status || "disconnected";
     if(els.backupStatus && info.detail) els.backupStatus.textContent = info.detail;
     if(els.disconnectBackupBtn) els.disconnectBackupBtn.hidden = !info.connected;
     if(els.connectBackupBtn){
       els.connectBackupBtn.disabled = info.supported === false;
-      els.connectBackupBtn.textContent = info.status === "permission-required" ? "外部JSONを再接続" : (info.connected ? "接続先を確認" : "外部JSONを接続");
+      els.connectBackupBtn.textContent = info.status === "permission-required" ? "保存先を再接続" : (info.connected ? "保存先を変更" : "保存先フォルダを選択");
     }
   }
 
   async function connectExternalBackup(){
-    const ok = await window.SessionLogBackup?.connectFile(state);
-    if(ok) showLogToast("外部JSONへの自動バックアップを接続しました");
+    const ok = await window.SessionLogBackup?.connectFolder(state,{ reuseExisting:backupConnectionStatus === "permission-required" });
+    if(ok) showLogToast("バックアップ用フォルダを接続しました");
   }
 
   async function writeBackupNow(){
