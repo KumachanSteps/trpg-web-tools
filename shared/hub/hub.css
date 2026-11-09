@@ -205,6 +205,55 @@ body.hub {
 .hub-desc { margin: 0; color: var(--ink-soft); font-size: 13px; }
 .hub-version { margin: 0; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
 
+/* ---------- 卓ログトラッカー基準の統一ヘッダー ---------- */
+.hub-unified-header .hub-main {
+  width: min(100% - 150px, 1480px);
+}
+.hub-header.is-unified {
+  padding: 16px 18px;
+}
+.hub-header.is-unified .hub-header-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+}
+.hub-header.is-unified .hub-header-left {
+  gap: 12px;
+}
+.hub-header.is-unified h1 {
+  font-size: 30px;
+}
+.hub-header.is-unified .hub-actions {
+  gap: 8px;
+  justify-content: flex-end;
+}
+.hub-header.is-unified .hub-btn {
+  min-height: 34px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.hub-header.is-unified .hub-header-meta {
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 10px;
+}
+.hub-header.is-unified .hub-version {
+  flex: 0 0 auto;
+  margin-left: auto;
+  opacity: 0.34;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .hub-header.is-unified .hub-header-top { grid-template-columns: 1fr; }
+  .hub-header.is-unified .hub-actions { justify-content: flex-start; }
+}
+
 /* ---------- ボタン・ピル ---------- */
 .hub-btn {
   display: inline-flex;
@@ -484,6 +533,7 @@ body.hub {
 
 /* ---------- スマホ：タブは下に横並び ---------- */
 @media (max-width: 760px) {
+  .hub-unified-header .hub-main { width: calc(100% - 24px); }
   .hub-main { width: calc(100% - 32px); padding-bottom: 96px; }
   .hub-rail {
     top: auto;
