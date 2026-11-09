@@ -6,12 +6,18 @@
   const SNAPSHOT_STORE = "snapshots";
   const SETTINGS_STORE = "settings";
   const HANDLE_KEY = "externalBackupHandle";
+  const DIRECTORY_HANDLE_KEY = "externalBackupDirectoryHandle";
+  const DATA_ROOT_DIR = "TRPG-Web-Tools-Data";
+  const APP_DIR = "session-log-tool";
+  const BACKUP_FILENAME = "session-log-tool-autobackup.json";
   const MAX_SNAPSHOTS = 30;
   const SNAPSHOT_INTERVAL_MS = 5 * 60 * 1000;
   const WRITE_DEBOUNCE_MS = 700;
 
   let dbPromise = null;
   let fileHandle = null;
+  let directoryHandle = null;
+  let backupPath = "";
   let pendingPayload = null;
   let writeTimer = null;
   let writeChain = Promise.resolve();
@@ -98,7 +104,13 @@
   }
 
   function emitStatus(status,detail){
-    callbacks.onStatus?.({ status, detail:detail || "", connected:Boolean(fileHandle), supported:"showSaveFilePicker" in global });
+    callbacks.onStatus?.({
+      status,
+      detail:detail || "",
+      connected:Boolean(fileHandle || directoryHandle),
+      supported:"showDirectoryPicker" in global || "showSaveFilePicker" in global,
+      path:backupPath
+    });
   }
 
   function emitError(message,error){
@@ -132,8 +144,38 @@
     const writable = await fileHandle.createWritable();
     await writable.write(JSON.stringify(payload,null,2) + "\n");
     await writable.close();
-    emitStatus("saved",`外部ファイル保存: ${new Date(payload.exportedAt).toLocaleString("ja-JP")}`);
+    emitStatus("saved",`${backupPath || fileHandle.name} に保存: ${new Date(payload.exportedAt).toLocaleString("ja-JP")}`);
     return true;
+  }
+
+  async function resolveDirectoryTarget(parent,{ create=true }={}){
+    if(!parent) return null;
+    let appDirectory = parent;
+    const segments = [parent.name].filter(Boolean);
+    if(parent.name !== APP_DIR){
+      let dataRoot = parent;
+      if(parent.name !== DATA_ROOT_DIR){
+        dataRoot = await parent.getDirectoryHandle(DATA_ROOT_DIR,{ create });
+        segments.push(DATA_ROOT_DIR);
+      }
+      appDirectory = await dataRoot.getDirectoryHandle(APP_DIR,{ create });
+      segments.push(APP_DIR);
+    }
+    fileHandle = await appDirectory.getFileHandle(BACKUP_FILENAME,{ create });
+    backupPath = [...segments,BACKUP_FILENAME].join(" / ");
+    return fileHandle;
+  }
+
+  async function pickDirectory(){
+    try{
+      return await global.showDirectoryPicker({ id:"trpg-session-log-backup", mode:"readwrite", startIn:"documents" });
+    }catch(error){
+      if(error?.name === "AbortError") throw error;
+      if(error instanceof TypeError){
+        return global.showDirectoryPicker({ mode:"readwrite" });
+      }
+      throw error;
+    }
   }
 
   function queueExternalWrite(payload){
@@ -153,14 +195,18 @@
     callbacks = options || {};
     try{
       await openDb();
+      directoryHandle = await idbGet(SETTINGS_STORE,DIRECTORY_HANDLE_KEY) || null;
       fileHandle = await idbGet(SETTINGS_STORE,HANDLE_KEY) || null;
-      if(!fileHandle){
+      if(!directoryHandle && !fileHandle){
         emitStatus("disconnected","外部バックアップは未接続です");
         return;
       }
-      const allowed = await permission(fileHandle,false);
+      const targetHandle = directoryHandle || fileHandle;
+      const allowed = await permission(targetHandle,false);
+      if(allowed === "granted" && directoryHandle) await resolveDirectoryTarget(directoryHandle);
+      if(!backupPath && fileHandle) backupPath = fileHandle.name;
       emitStatus(allowed === "granted" ? "connected" : "permission-required",
-        allowed === "granted" ? `接続済み: ${fileHandle.name}` : `再許可待ち: ${fileHandle.name}`);
+        allowed === "granted" ? `接続済み: ${backupPath}` : `保存先フォルダの再許可が必要です: ${targetHandle.name}`);
     }catch(error){
       fileHandle = null;
       emitStatus("error","ブラウザ内バックアップを初期化できませんでした");
@@ -178,23 +224,41 @@
     if(fileHandle) queueExternalWrite(payload);
   }
 
-  async function connectFile(state){
-    if(!("showSaveFilePicker" in global)){
+  async function reconnectStoredTarget(state){
+    const targetHandle = directoryHandle || fileHandle;
+    if(!targetHandle || await permission(targetHandle,true) !== "granted") return false;
+    if(directoryHandle) await resolveDirectoryTarget(directoryHandle);
+    if(!backupPath && fileHandle) backupPath = fileHandle.name;
+    await writePayload(buildPayload(state,"reconnect"),true);
+    return true;
+  }
+
+  async function connectFolder(state,options){
+    if(!("showDirectoryPicker" in global) && !("showSaveFilePicker" in global)){
       emitStatus("unsupported","このブラウザは外部ファイル自動保存に対応していません");
       return false;
     }
     try{
-      if(fileHandle && await permission(fileHandle,true) === "granted"){
-        await writePayload(buildPayload(state,"reconnect"),true);
-        return true;
+      if(options?.reuseExisting && await reconnectStoredTarget(state)) return true;
+
+      if("showDirectoryPicker" in global){
+        directoryHandle = await pickDirectory();
+        if(await permission(directoryHandle,true) !== "granted") return false;
+        await resolveDirectoryTarget(directoryHandle);
+        await idbPut(SETTINGS_STORE,directoryHandle,DIRECTORY_HANDLE_KEY);
+        await idbDelete(SETTINGS_STORE,HANDLE_KEY);
+      }else{
+        directoryHandle = null;
+        fileHandle = await global.showSaveFilePicker({
+          suggestedName:BACKUP_FILENAME,
+          startIn:"documents",
+          types:[{ description:"TRPG卓ログ JSON", accept:{ "application/json":[".json"] } }]
+        });
+        backupPath = fileHandle.name;
+        await idbPut(SETTINGS_STORE,fileHandle,HANDLE_KEY);
       }
-      fileHandle = await global.showSaveFilePicker({
-        suggestedName:"session-log-tool-autobackup.json",
-        types:[{ description:"TRPG卓ログ JSON", accept:{ "application/json":[".json"] } }]
-      });
-      await idbPut(SETTINGS_STORE,fileHandle,HANDLE_KEY);
       await writePayload(buildPayload(state,"connect"),true);
-      emitStatus("saved",`自動バックアップ接続済み: ${fileHandle.name}`);
+      emitStatus("saved",`自動バックアップ接続済み: ${backupPath}`);
       return true;
     }catch(error){
       if(error?.name !== "AbortError"){
@@ -207,14 +271,17 @@
 
   async function disconnectFile(){
     fileHandle = null;
+    directoryHandle = null;
+    backupPath = "";
     pendingPayload = null;
     clearTimeout(writeTimer);
     await idbDelete(SETTINGS_STORE,HANDLE_KEY);
+    await idbDelete(SETTINGS_STORE,DIRECTORY_HANDLE_KEY);
     emitStatus("disconnected","外部バックアップを切断しました");
   }
 
   async function writeNow(state){
-    if(!fileHandle) return connectFile(state);
+    if(!fileHandle) return connectFolder(state,{ reuseExisting:Boolean(directoryHandle) });
     try{
       const payload = buildPayload(state,"manual");
       await saveSnapshot(payload,true);
@@ -231,5 +298,15 @@
     return snapshots[0]?.payload || null;
   }
 
-  global.SessionLogBackup = { init, capture, connectFile, disconnectFile, writeNow, latestSnapshot, getAllSnapshots, buildPayload };
+  global.SessionLogBackup = {
+    init,
+    capture,
+    connectFolder,
+    connectFile:connectFolder,
+    disconnectFile,
+    writeNow,
+    latestSnapshot,
+    getAllSnapshots,
+    buildPayload
+  };
 })(window);
