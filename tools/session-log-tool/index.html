@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.0" />
-  <link rel="stylesheet" href="css/log_tool_style.css?v=1.104" />
-  <link rel="stylesheet" href="css/log_tool_paper.css?v=1.104" />
+  <link rel="stylesheet" href="css/log_tool_style.css?v=1.104.1" />
+  <link rel="stylesheet" href="css/log_tool_paper.css?v=1.104.1" />
 </head>
 <body data-hub-tool="log">
   <div class="hub hub-rail-wrap"><nav id="hubRail"></nav></div>
@@ -42,7 +42,10 @@
                 <span class="tool-icon-stat-bar tool-icon-stat-bar-3"></span>
               </span>
             </div>
-            <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー</h1>
+            <div class="title-lockup">
+              <h1 class="site-title" data-i18n="toolTitle">卓ログトラッカー</h1>
+              <p class="header-version">v1.104 <time datetime="2026-11-08">2026.11.08</time></p>
+            </div>
           </div>
 
         </div>
@@ -61,7 +64,6 @@
       </div>
       <div class="header-meta-row">
         <p class="site-description" data-i18n="siteDescription">遊んだ卓を記録し、感想・卓報告・プレイ済みリストへつなげるログ管理ツール。テーブルで履歴を整理し、各行から「卓報告ジェネレーター」へ連携できます。</p>
-        <p class="header-version">v1.104 2026.11.08</p>
       </div>
       <input id="jsonFileInput" type="file" accept="application/json,.json" hidden />
     </header>
@@ -130,22 +132,26 @@
 
     </section>
 
-    <section id="backupPanel" class="backup-panel" aria-labelledby="backupPanelTitle">
-      <div class="backup-panel-copy">
-        <span class="backup-panel-kicker">DATA SAFETY</span>
-        <div>
-          <h2 id="backupPanelTitle">自動バックアップ</h2>
+    <details id="backupPanel" class="backup-panel">
+      <summary class="backup-panel-summary">
+        <span class="backup-panel-icon" aria-hidden="true">◈</span>
+        <span id="backupPanelTitle" class="backup-panel-title">自動バックアップ</span>
+        <span id="backupSummaryStatus" class="backup-summary-status">ブラウザ内に保存中</span>
+        <span class="backup-panel-chevron" aria-hidden="true"></span>
+      </summary>
+      <div class="backup-panel-body">
+        <div class="backup-panel-copy">
           <p id="backupStatus" role="status" aria-live="polite">Documents、Downloads、または任意のツール用フォルダを選ぶと、整理された保存先を自動作成します。</p>
           <p class="backup-path-guide">作成先：選択したフォルダ / TRPG-Web-Tools-Data / session-log-tool / session-log-tool-autobackup.json</p>
         </div>
+        <div class="backup-panel-actions">
+          <button id="connectBackupBtn" class="header-button primary" type="button">保存先フォルダを選択</button>
+          <button id="backupNowBtn" class="mini-button" type="button">今すぐ保存</button>
+          <button id="restoreBrowserBackupBtn" class="mini-button" type="button">ブラウザ内バックアップから復元</button>
+          <button id="disconnectBackupBtn" class="mini-button ghost" type="button" hidden>切断</button>
+        </div>
       </div>
-      <div class="backup-panel-actions">
-        <button id="connectBackupBtn" class="header-button primary" type="button">保存先フォルダを選択</button>
-        <button id="backupNowBtn" class="mini-button" type="button">今すぐ保存</button>
-        <button id="restoreBrowserBackupBtn" class="mini-button" type="button">ブラウザ内バックアップから復元</button>
-        <button id="disconnectBackupBtn" class="mini-button ghost" type="button" hidden>切断</button>
-      </div>
-    </section>
+    </details>
 
     <div id="storageRecoveryNotice" class="storage-recovery-notice" role="alert" hidden>
       <strong>保存データを読み込めませんでした。</strong>
