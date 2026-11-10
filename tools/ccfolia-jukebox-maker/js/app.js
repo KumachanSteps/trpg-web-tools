@@ -1773,14 +1773,15 @@
         h('span', { class: 'shelf-sleeve-icon', 'aria-hidden': 'true' })),
         h('span', { class: 'shelf-meta' },
           h('span', { class: 'shelf-title', title }, title),
+          // URLと同じ行に、曲ごとの小さなメモ（このブラウザの棚に保存）
+          h('span', { class: 'shelf-subrow' },
           h('span', { class: 'shelf-sub' }, `youtu.be/${tr.yt}`),
-          // 曲ごとの小さなメモ（このブラウザの棚に保存）
           h('input', {
             type: 'text', class: 'shelf-memo', value: tr.memo || '', maxlength: '100', placeholder: t('shelf.memo'),
             'aria-label': `${t('shelf.memo')}: ${title}`, spellcheck: 'false',
             oninput: e => { tr.memo = e.target.value.slice(0, 100); saveShelf(); },
             onkeydown: e => { if (e.key === 'Enter') e.target.blur(); }
-          })),
+          }))),
         h('span', { class: 'shelf-actions' },
           h('button', { type: 'button', class: 'shelf-icon shelf-copy', title: t('shelf.copy'), 'aria-label': t('shelf.copy'), onclick: () => copyText(src) }),
           h('select', {
