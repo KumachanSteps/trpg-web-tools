@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.37';
+  const VERSION = '0.38';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -2101,7 +2101,7 @@
   // 端末内の保存は IndexedDB の playlists。開いているプレイリストの印は localStorage に置く。
   // 音声ファイルは入れない（ココフォリアにも別にアップロードが要るため）。YouTubeのURLは入る。
   const PL_FORMAT = 'ccfolia-jukebox-playlist';
-  const pl = { list: [], tab: 'mine', current: null, undo: false, armed: '', armTimer: 0, statusTimer: 0, dirty: false };
+  const pl = { list: [], tab: null, current: null, undo: false, armed: '', armTimer: 0, statusTimer: 0, dirty: false };
 
   function idbRun(store, mode, work) {
     return audioDb().then(db => new Promise((resolve, reject) => {
@@ -2446,14 +2446,16 @@
 
   function renderPlaylists() {
     if (!els.plGrid) return;
+    // タブを選んでいないあいだは、マイプレイリストが空ならプリセットを見せる
+    const tab = pl.tab || (pl.list.length ? 'mine' : 'presets');
     els.plTabs.querySelectorAll('[data-pl-tab]').forEach(btn => {
-      const on = btn.dataset.plTab === pl.tab;
+      const on = btn.dataset.plTab === tab;
       btn.classList.toggle('is-active', on);
       btn.setAttribute('aria-selected', String(on));
     });
     els.plMineCount.textContent = String(pl.list.length);
     els.plGrid.textContent = '';
-    if (pl.tab === 'presets') {
+    if (tab === 'presets') {
       PL_PRESETS.forEach(p => {
         const settings = p.settings();
         els.plGrid.appendChild(h('li', { class: 'pl-card is-preset' },
