@@ -56,7 +56,7 @@
   const LIST = [
     { id: 'mansion', name: ['館もの', 'Mansion', '저택물'], desc: ['洋館や古城を舞台とする、探索・事件・推理中心のKPレス向け。', 'Mansion mysteries set in a manor or old castle: exploring, the incident, deduction.', '양관이나 고성을 무대로 한 탐색·사건·추리 중심의 KP리스용.'], scenes: [
       ['導入', 'cream', 'handout', 'OxX9Zi1Vydo', '無記名の招待状'],
-      ['洋館', 'brown', 'p:rings', 'KhjjEh6T33w', 'ホラーゲームの洋館', '洋館の玄関'],
+      ['洋館', 'brown', 'mansion-02', 'KhjjEh6T33w', 'ホラーゲームの洋館', '洋館の玄関'],
       ['晩餐', 'red', 'mansion-03', 'MM7zV8Lf-c8', 'ワイングラスと私（DOVA-SYNDROME）', '晩餐の食卓'],
       ['自室', 'navy', 'mansion-04', 'I9_yZH7nSzA', '月は知っている（60分）', '古い寝室'],
       ['調査', 'teal', 'investigation', 'GYjV6x0XJsg', '忘れられた図書館（DOVA-SYNDROME）'],
