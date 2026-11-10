@@ -75,6 +75,27 @@ html[data-design="paper"] body .tool-icon-main,
 html[data-design="paper"] body .tool-icon-star { color: var(--pen-red); text-shadow: none; }
 html[data-design="paper"] body .tool-icon-stats { display: none; }
 
+/* ---------- バックアップ：通常は1行のステータス表示 ---------- */
+html[data-design="paper"] body .backup-panel { border-color: var(--line); background: var(--sheet); box-shadow: var(--shadow); }
+html[data-design="paper"] body .backup-panel-summary:hover { background: var(--sheet-sub); }
+html[data-design="paper"] body .backup-panel-icon { background: var(--sheet-sub); color: var(--pen-blue); }
+html[data-design="paper"] body .backup-panel-title { color: var(--ink); }
+html[data-design="paper"] body .backup-summary-status,
+html[data-design="paper"] body .backup-panel-chevron { color: var(--muted); }
+html[data-design="paper"] body .backup-panel-body { border-color: var(--line); }
+html[data-design="paper"] body .backup-panel p { color: var(--ink-soft); }
+html[data-design="paper"] body .backup-panel .backup-path-guide { color: var(--muted); }
+html[data-design="paper"] body .backup-panel[data-status="saved"] .backup-panel-icon,
+html[data-design="paper"] body .backup-panel[data-status="connected"] .backup-panel-icon { background: var(--ok-bg); color: var(--ok-ink); }
+html[data-design="paper"] body .backup-panel[data-status="error"],
+html[data-design="paper"] body .backup-panel[data-status="permission-required"] { border-color: var(--warn-line); background: var(--warn-bg); }
+html[data-design="paper"] body .backup-panel[data-status="error"] .backup-panel-icon,
+html[data-design="paper"] body .backup-panel[data-status="permission-required"] .backup-panel-icon { background: var(--warn-bg); color: var(--warn-ink); }
+@media (max-width: 560px) {
+  html[data-design="paper"] body .title-lockup .site-title { font-size: 21px; letter-spacing: 0.025em; }
+  html[data-design="paper"] body .title-lockup .header-version { font-size: 8.5px; letter-spacing: 0; }
+}
+
 /* ---------- ボタン ---------- */
 html[data-design="paper"] body .header-button,
 html[data-design="paper"] body .mini-button {

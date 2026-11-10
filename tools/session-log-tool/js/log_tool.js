@@ -106,7 +106,7 @@
   }
 
   function collectElements(){
-    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","drawerFooter","drawerSaveBtn","drawerCloseBtn2","drawerToReportBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel","backupPanel","backupStatus","connectBackupBtn","backupNowBtn","restoreBrowserBackupBtn","disconnectBackupBtn","storageRecoveryNotice","storageRecoveryMessage"].forEach(id=>{
+    ["tableHead","tableBody","searchInput","systemFilter","roleFilter","sortSelect","toggleFieldPanelBtn","toggleRemoveFieldPanelBtn","fieldPanel","removeFieldPanel","closeFieldPanelBtn","closeRemoveFieldPanelBtn","optionalFieldsList","visibleFieldsList","createCustomFieldBtn","resetFieldsBtn","jsonFileInput","importJsonBtn","exportJsonBtn","exportTextBtn","importDialog","closeImportDialogBtn","cancelImportBtn","runImportBtn","selfNameInput","downloadTemplateBtn","sheetFileInput","pickSheetFileBtn","sheetFileName","sheetPasteInput","sheetPasteWrap","sheetGridArea","sheetGrid","sheetGridCount","sheetAddRowBtn","sheetShowPasteBtn","importPreviewArea","importPreviewCount","importPreviewTable","sheetParseMsg","reportPasteInput","reportParseMsg","ccfoliaFileInput","pickCcfoliaBtn","ccfoliaFileName","ccfoliaForm","ccScenario","ccDate","ccSystem","ccRole","ccGm","ccPl","ccSpeakers","ccToSheetBtn","ccfoliaParseMsg","pickJsonBtn","jsonFileName","dupSkipInput","dupSkipWrap","textExportOutput","exportSearchInput","exportSearchClearBtn","exportCopyBtn","exportSearchHint","sampleNotice","clearSamplesBtn","kansouTab","drawerOverlay","kansouDrawer","drawerContent","closeDrawerBtn","drawerFooter","drawerSaveBtn","drawerCloseBtn2","drawerToReportBtn","sessionDialog","sessionForm","sessionFormFields","longNoteInput","sessionDialogTitle","deleteSessionBtn","addSessionTopBtn","floatingAddBtn","shortcutPanel","backupPanel","backupStatus","backupSummaryStatus","connectBackupBtn","backupNowBtn","restoreBrowserBackupBtn","disconnectBackupBtn","storageRecoveryNotice","storageRecoveryMessage"].forEach(id=>{
       els[id] = document.getElementById(id);
     });
   }
@@ -1153,6 +1153,21 @@
     backupConnectionStatus = info.status || "disconnected";
     if(els.backupPanel) els.backupPanel.dataset.status = info.status || "disconnected";
     if(els.backupStatus && info.detail) els.backupStatus.textContent = info.detail;
+    if(els.backupSummaryStatus){
+      const summaryLabels = {
+        saved:"外部JSONに自動保存中",
+        connected:"外部JSONに自動保存中",
+        writing:"保存中…",
+        "permission-required":"再接続が必要です",
+        error:"バックアップを確認してください",
+        unsupported:"外部保存は未対応です",
+        disconnected:"ブラウザ内に保存中"
+      };
+      els.backupSummaryStatus.textContent = summaryLabels[info.status] || (info.connected ? "外部JSONに自動保存中" : "ブラウザ内に保存中");
+    }
+    if(els.backupPanel && (info.status === "error" || info.status === "permission-required")){
+      els.backupPanel.open = true;
+    }
     if(els.disconnectBackupBtn) els.disconnectBackupBtn.hidden = !info.connected;
     if(els.connectBackupBtn){
       els.connectBackupBtn.disabled = info.supported === false;
