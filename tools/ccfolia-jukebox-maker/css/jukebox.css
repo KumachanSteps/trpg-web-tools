@@ -285,6 +285,16 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 .toast-success { border-left-color: var(--ok); }
 .toast-error { border-left-color: var(--danger); }
 
+.credit-tabs { position: static; margin: 0 0 10px; padding: 0; box-shadow: none; background: transparent; }
+.credit-note { margin: 0 0 10px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
+.credit-note a, .credit-pane a { font-weight: 700; text-decoration: none; }
+.credit-photos, .credit-bgm { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 4px 20px; max-height: 360px; margin: 0; padding: 0; overflow-y: auto; list-style: none; font-size: 0.8rem; }
+.credit-photos li, .credit-bgm li { display: flex; align-items: baseline; gap: 8px; min-width: 0; padding: 4px 0; border-bottom: 1px solid var(--hair); }
+.credit-photos li > a:first-child, .credit-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.credit-by { flex: none; max-width: 50%; overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.credit-name { color: var(--ink); font-weight: 700; }
+.credit-count { flex: none; color: var(--faint); font-size: 0.72rem; }
+.credit-links { display: inline-flex; flex: none; gap: 10px; }
 .legal-footer { padding: 14px 0 0; border-top: 1px solid var(--hair); color: var(--faint); font-size: 0.78rem; line-height: 1.7; }
 .legal-footer h2 { margin-bottom: 4px; color: var(--muted); font-size: 0.84rem; }
 .legal-footer p { margin: 0; }

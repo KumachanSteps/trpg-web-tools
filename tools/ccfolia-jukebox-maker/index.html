@@ -9,13 +9,13 @@
   <meta name="description" content="ココフォリアのクリックアクションと /scene コマンドで動く、KPがいなくても使えるジュークボックス部屋を作るツールです。シーンとマーカーパネルのつながりを線で一覧できます。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/jukebox.css?v=20261110-06" />
+  <link rel="stylesheet" href="./css/jukebox.css?v=20261110-07" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
       <div class="header-row">
-        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.38 / 2026.11.10</span></h1>
+        <h1 class="app-name"><span data-i18n="title">KPレス・ジュークボックスメーカー</span><span class="app-version">v0.39 / 2026.11.10</span></h1>
         <span class="header-spacer"></span>
         <div class="sound-control" role="group" data-i18n-label="sound.group" aria-label="BGM">
           <button class="sound-toggle" type="button" id="soundToggle" aria-pressed="true"><span class="sound-icon" aria-hidden="true">♪</span><span id="soundLabel">BGM ON</span></button>
@@ -39,6 +39,7 @@
       <span class="bar-spacer"></span>
       <button class="text-button" type="button" id="layoutResetBtn" data-i18n="layout.reset">並びを元に戻す</button>
       <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
+      <button class="ghost-button" type="button" id="creditsBtn" aria-expanded="false" aria-controls="creditsDrawer" data-i18n="credits.title">版権元</button>
       <button class="ghost-button" type="button" id="playBtn" data-i18n="bar.play">テストプレイ</button>
       <button class="accent-button" type="button" id="exportBtn" data-i18n="bar.export">ルームZIPを書き出す</button>
     </div>
@@ -48,6 +49,23 @@
       <button class="drawer-close" type="button" data-close-drawer data-i18n-label="close" aria-label="閉じる">×</button>
       <div class="guide-list" id="helpList"></div>
       <div class="guide-notes" id="helpNotes"></div>
+    </section>
+
+    <section class="drawer credits-drawer" id="creditsDrawer" hidden>
+      <h2 data-i18n="credits.title">版権元</h2>
+      <button class="drawer-close" type="button" data-close-credits data-i18n-label="close" aria-label="閉じる">×</button>
+      <div class="shelf-tabs credit-tabs" role="tablist">
+        <button class="shelf-tab is-active" type="button" role="tab" aria-selected="true" data-credit-tab="images" aria-controls="creditImages" data-i18n="credits.images">画像</button>
+        <button class="shelf-tab" type="button" role="tab" aria-selected="false" data-credit-tab="bgm" aria-controls="creditBgm" data-i18n="credits.bgm">BGM</button>
+      </div>
+      <div class="credit-pane" id="creditImages" role="tabpanel">
+        <p class="credit-note" data-i18n-html="footer.photos"></p>
+        <ul class="credit-photos" id="photoCredits"></ul>
+      </div>
+      <div class="credit-pane" id="creditBgm" role="tabpanel" hidden>
+        <p class="credit-note" data-i18n="credits.bgmNote"></p>
+        <ul class="credit-bgm" id="bgmCredits"></ul>
+      </div>
     </section>
 
     <div class="layout" id="layout">
@@ -235,16 +253,17 @@
       <p data-i18n-html="footer.note1"></p>
       <p data-i18n-html="footer.note2"></p>
       <p data-i18n-html="footer.note3"></p>
-      <p id="photoCredits"></p>
+      <p data-i18n="credits.footer"></p>
     </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="./js/i18n.js?v=20261110-06"></script>
-  <script src="./js/ccfolia.js?v=20261110-06"></script>
-  <script src="./js/jukebox.js?v=20261110-06"></script>
-  <script src="./js/shelf-data.js?v=20261110-06"></script>
-  <script src="./js/presets.js?v=20261110-06"></script>
-  <script src="./js/app.js?v=20261110-06"></script>
+  <script src="./js/i18n.js?v=20261110-07"></script>
+  <script src="./js/ccfolia.js?v=20261110-07"></script>
+  <script src="./js/jukebox.js?v=20261110-07"></script>
+  <script src="./js/shelf-data.js?v=20261110-07"></script>
+  <script src="./js/presets.js?v=20261110-07"></script>
+  <script src="./js/credits.js?v=20261110-07"></script>
+  <script src="./js/app.js?v=20261110-07"></script>
 </body>
 </html>

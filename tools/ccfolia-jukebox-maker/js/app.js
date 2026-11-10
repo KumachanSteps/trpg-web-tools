@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.38';
+  const VERSION = '0.39';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -103,12 +103,36 @@
   function renderPhotoCredits() {
     const el = document.getElementById('photoCredits');
     if (!el) return;
-    el.innerHTML = t('footer.photos');
+    el.innerHTML = '';
     allPhotos().forEach((p, i) => {
-      if (i) el.appendChild(document.createTextNode(' / '));
-      el.append(h('a', { href: p.photoUrl, target: '_blank', rel: 'noopener' }, photoLabel(p, i)), ': ',
-        h('a', { href: p.authorUrl, target: '_blank', rel: 'noopener' }, p.author));
+      el.append(h('li', {}, h('a', { href: p.photoUrl, target: '_blank', rel: 'noopener' }, photoLabel(p, i)),
+        h('a', { class: 'credit-by', href: p.authorUrl, target: '_blank', rel: 'noopener' }, p.author)));
     });
+  }
+
+  // BGMの配布元（js/credits.js）：名前・曲数・公式サイト・YouTubeチャンネル
+  function renderBgmCredits() {
+    const el = document.getElementById('bgmCredits');
+    if (!el) return;
+    el.innerHTML = '';
+    (window.JukeboxBgmSources || []).forEach(src => {
+      const links = [];
+      if (src.site) links.push(h('a', { href: src.site, target: '_blank', rel: 'noopener' }, t('credits.site')));
+      links.push(h('a', { href: src.channel, target: '_blank', rel: 'noopener' }, t('credits.channel')));
+      el.append(h('li', {}, h('span', { class: 'credit-name' }, src.name),
+        h('span', { class: 'credit-count' }, t('credits.tracks', { n: src.count })),
+        h('span', { class: 'credit-links' }, ...links)));
+    });
+  }
+
+  function setCreditTab(name) {
+    document.querySelectorAll('[data-credit-tab]').forEach(btn => {
+      const on = btn.dataset.creditTab === name;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', String(on));
+    });
+    document.getElementById('creditImages').hidden = name !== 'images';
+    document.getElementById('creditBgm').hidden = name !== 'bgm';
   }
 
   function applyLanguage() {
@@ -121,6 +145,7 @@
     document.querySelectorAll('[data-i18n-placeholder]').forEach(node => { node.placeholder = t(node.dataset.i18nPlaceholder); });
     document.querySelectorAll('[data-i18n-html]').forEach(node => { node.innerHTML = t(node.dataset.i18nHtml); });
     renderPhotoCredits();
+    renderBgmCredits();
     document.querySelectorAll('[data-i18n-label]').forEach(node => {
       const label = t(node.dataset.i18nLabel);
       node.setAttribute('aria-label', label);
@@ -2667,11 +2692,19 @@
       applyLanguage();
       if (!app.imported) rebuild();
     }));
-    els.helpBtn.addEventListener('click', () => {
-      const open = els.helpDrawer.hidden;
-      els.helpDrawer.hidden = !open;
-      els.helpBtn.setAttribute('aria-expanded', String(open));
-    });
+    // 「使い方」と「版権元」は同時には開かない
+    const creditsBtn = document.getElementById('creditsBtn');
+    const creditsDrawer = document.getElementById('creditsDrawer');
+    const showDrawer = which => {
+      els.helpDrawer.hidden = which !== 'help';
+      els.helpBtn.setAttribute('aria-expanded', String(which === 'help'));
+      creditsDrawer.hidden = which !== 'credits';
+      creditsBtn.setAttribute('aria-expanded', String(which === 'credits'));
+    };
+    els.helpBtn.addEventListener('click', () => showDrawer(els.helpDrawer.hidden ? 'help' : ''));
+    creditsBtn.addEventListener('click', () => showDrawer(creditsDrawer.hidden ? 'credits' : ''));
+    document.querySelectorAll('[data-close-credits]').forEach(btn => btn.addEventListener('click', () => showDrawer('')));
+    document.querySelectorAll('[data-credit-tab]').forEach(btn => btn.addEventListener('click', () => setCreditTab(btn.dataset.creditTab)));
     document.querySelectorAll('[data-close-drawer]').forEach(btn => btn.addEventListener('click', () => {
       els.helpDrawer.hidden = true;
       els.helpBtn.setAttribute('aria-expanded', 'false');
