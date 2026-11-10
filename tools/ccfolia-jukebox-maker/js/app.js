@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.35';
+  const VERSION = '0.36';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1616,7 +1616,7 @@
       ? saved.tabs.map(tab => ({
         id: tab.id,
         name: typeof tab.name === 'string' ? tab.name.slice(0, 30) : '',
-        tracks: tab.tracks.filter(tr => tr && /^[\w-]{11}$/.test(tr.yt)).map(tr => ({ yt: tr.yt, title: typeof tr.title === 'string' ? tr.title.slice(0, 150) : '' }))
+        tracks: tab.tracks.filter(tr => tr && /^[\w-]{11}$/.test(tr.yt)).map(tr => ({ yt: tr.yt, title: typeof tr.title === 'string' ? tr.title.slice(0, 150) : '', memo: typeof tr.memo === 'string' ? tr.memo.slice(0, 100) : '' }))
       }))
       : JukeboxShelf.defaults();
     shelf.active = ok && Number.isInteger(saved.active) ? Math.max(0, Math.min(shelf.tabs.length - 1, saved.active)) : 0;
@@ -1773,7 +1773,15 @@
         h('span', { class: 'shelf-sleeve-icon', 'aria-hidden': 'true' })),
         h('span', { class: 'shelf-meta' },
           h('span', { class: 'shelf-title', title }, title),
-          h('span', { class: 'shelf-sub' }, `youtu.be/${tr.yt}`)),
+          // URLと同じ行に、曲ごとの小さなメモ（このブラウザの棚に保存）
+          h('span', { class: 'shelf-subrow' },
+          h('span', { class: 'shelf-sub' }, `youtu.be/${tr.yt}`),
+          h('input', {
+            type: 'text', class: 'shelf-memo', value: tr.memo || '', maxlength: '100', placeholder: t('shelf.memo'),
+            'aria-label': `${t('shelf.memo')}: ${title}`, spellcheck: 'false',
+            oninput: e => { tr.memo = e.target.value.slice(0, 100); saveShelf(); },
+            onkeydown: e => { if (e.key === 'Enter') e.target.blur(); }
+          }))),
         h('span', { class: 'shelf-actions' },
           h('button', { type: 'button', class: 'shelf-icon shelf-copy', title: t('shelf.copy'), 'aria-label': t('shelf.copy'), onclick: () => copyText(src) }),
           h('select', {
@@ -1782,6 +1790,10 @@
           },
           h('option', { value: '' }, t('shelf.toRecordShort')),
           records.map((disk, i) => h('option', { value: String(i) }, `${i + 1}. ${disk.name || '—'}`))),
+          h('button', {
+            type: 'button', class: 'shelf-icon shelf-play', dataset: { src },
+            onclick: () => { if (bgm.src === src) stopBgm(); else playBgm({ src, name: title }, `shelf:${tr.yt}`); }
+          }, '▶︎'),
           h('a', { class: 'shelf-icon', href: `https://www.youtube.com/watch?v=${tr.yt}`, target: '_blank', rel: 'noopener', title: t('sound.openYoutube'), 'aria-label': t('sound.openYoutube') }, '↗'),
           h('button', {
             type: 'button', class: 'shelf-icon shelf-remove', title: t('shelf.remove'), 'aria-label': t('shelf.remove'),
@@ -1908,6 +1920,16 @@
       const label = t(on ? 'sound.stop' : 'shelf.listen');
       btn.title = label;
       btn.setAttribute('aria-label', `${label}: ${btn.closest('.shelf-track').querySelector('.shelf-title').textContent}`);
+    });
+    // 「レコードへ」の右の再生ボタン：再生中は■（止める）
+    els.shelfList.querySelectorAll('.shelf-play').forEach(btn => {
+      const on = btn.dataset.src === bgm.src;
+      const label = t(on ? 'sound.stop' : 'shelf.listen');
+      btn.textContent = on ? '■' : '▶︎';
+      btn.classList.toggle('is-on', on);
+      btn.title = label;
+      btn.setAttribute('aria-label', `${label}: ${btn.closest('.shelf-track').querySelector('.shelf-title').textContent}`);
+      btn.setAttribute('aria-pressed', String(on));
     });
   }
 
@@ -2292,6 +2314,7 @@
     if (!(await plConfirmLeave())) return;
     await plKeepUndo();
     plApply({ settings: preset.settings(), backdrop: '' }, null, []);
+    setPane('preview', true);   // 切り替えたら、そのプリセットの盤面が見えるようにシーンプレビューへ
     toast(t('pl.presetStarted', { name: preset.name() }), 'success', 6000, pl.undo ? { label: t('pl.undo'), run: plUndo } : null);
     track('ccfolia_jukebox_preset', { preset: preset.id });
   }
