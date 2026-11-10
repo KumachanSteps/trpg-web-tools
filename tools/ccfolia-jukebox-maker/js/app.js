@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.35';
+  const VERSION = '0.36';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1782,6 +1782,10 @@
           },
           h('option', { value: '' }, t('shelf.toRecordShort')),
           records.map((disk, i) => h('option', { value: String(i) }, `${i + 1}. ${disk.name || '—'}`))),
+          h('button', {
+            type: 'button', class: 'shelf-icon shelf-play', dataset: { src },
+            onclick: () => { if (bgm.src === src) stopBgm(); else playBgm({ src, name: title }, `shelf:${tr.yt}`); }
+          }, '▶︎'),
           h('a', { class: 'shelf-icon', href: `https://www.youtube.com/watch?v=${tr.yt}`, target: '_blank', rel: 'noopener', title: t('sound.openYoutube'), 'aria-label': t('sound.openYoutube') }, '↗'),
           h('button', {
             type: 'button', class: 'shelf-icon shelf-remove', title: t('shelf.remove'), 'aria-label': t('shelf.remove'),
@@ -1908,6 +1912,16 @@
       const label = t(on ? 'sound.stop' : 'shelf.listen');
       btn.title = label;
       btn.setAttribute('aria-label', `${label}: ${btn.closest('.shelf-track').querySelector('.shelf-title').textContent}`);
+    });
+    // 「レコードへ」の右の再生ボタン：再生中は■（止める）
+    els.shelfList.querySelectorAll('.shelf-play').forEach(btn => {
+      const on = btn.dataset.src === bgm.src;
+      const label = t(on ? 'sound.stop' : 'shelf.listen');
+      btn.textContent = on ? '■' : '▶︎';
+      btn.classList.toggle('is-on', on);
+      btn.title = label;
+      btn.setAttribute('aria-label', `${label}: ${btn.closest('.shelf-track').querySelector('.shelf-title').textContent}`);
+      btn.setAttribute('aria-pressed', String(on));
     });
   }
 
@@ -2292,6 +2306,7 @@
     if (!(await plConfirmLeave())) return;
     await plKeepUndo();
     plApply({ settings: preset.settings(), backdrop: '' }, null, []);
+    setPane('preview', true);   // 切り替えたら、そのプリセットの盤面が見えるようにシーンプレビューへ
     toast(t('pl.presetStarted', { name: preset.name() }), 'success', 6000, pl.undo ? { label: t('pl.undo'), run: plUndo } : null);
     track('ccfolia_jukebox_preset', { preset: preset.id });
   }

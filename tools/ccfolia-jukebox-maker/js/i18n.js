@@ -187,7 +187,7 @@
     },
     shelf: {
       heading: 'レコード棚',
-      hint: 'YouTubeで公開されているフリーBGMを、雰囲気ごとの棚に並べています。ジャケットを押すと音声だけを試聴できます。「レコードへ」でそのままレコードに入れるか、URLをコピーして使ってください。',
+      hint: 'YouTubeで公開されているフリーBGMを、雰囲気ごとの棚に並べています。ジャケットか「レコードへ」の右の ▶︎ を押すと、音声だけを試聴できます。「レコードへ」でそのままレコードに入れるか、URLをコピーして使ってください。',
       tabsLabel: 'BGMのタブ',
       tabs: { intro: '導入', unease: '不穏', comic: 'コミカル', deduction: '推理', moving: '感動', sad: '悲しい', tension: '緊迫', climax: 'クライマックス', mansion: '館', horror: 'ホラー', digital: 'デジタル' },
       newTab: '新しいタブ',
@@ -438,7 +438,7 @@
     },
     shelf: {
       heading: 'Record shelf',
-      hint: 'Free BGM published on YouTube, sorted onto shelves by mood. Press a sleeve to listen (audio only). Use "To record" to put a track onto a record, or copy its URL.',
+      hint: 'Free BGM published on YouTube, sorted onto shelves by mood. Press a sleeve or the ▶︎ next to "To record" to listen (audio only). Use "To record" to put a track onto a record, or copy its URL.',
       tabsLabel: 'BGM tabs',
       tabs: { intro: 'Intro', unease: 'Unease', comic: 'Comical', deduction: 'Deduction', moving: 'Moving', sad: 'Sad', tension: 'Tension', climax: 'Climax', mansion: 'Mansion', horror: 'Horror', digital: 'Digital' },
       newTab: 'New tab',
@@ -689,7 +689,7 @@
     },
     shelf: {
       heading: '레코드 선반',
-      hint: 'YouTube에 공개된 무료 BGM을 분위기별 선반에 모았습니다. 재킷을 누르면 소리만 미리 들을 수 있습니다. "레코드로"로 바로 레코드에 넣거나 URL을 복사해 쓰세요.',
+      hint: 'YouTube에 공개된 무료 BGM을 분위기별 선반에 모았습니다. 재킷이나 "레코드로" 오른쪽의 ▶︎를 누르면 소리만 미리 들을 수 있습니다. "레코드로"로 바로 레코드에 넣거나 URL을 복사해 쓰세요.',
       tabsLabel: 'BGM 탭',
       tabs: { intro: '도입', unease: '불온', comic: '코믹', deduction: '추리', moving: '감동', sad: '슬픔', tension: '긴박', climax: '클라이맥스', mansion: '저택', horror: '호러', digital: '디지털' },
       newTab: '새 탭',
