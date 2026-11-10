@@ -16,7 +16,7 @@
     { id: "calendar", name: "卓準備カレンダー", icon: "▦", url: "../session-check-calendar/index.html" },
     { id: "library", name: "シナリオライブラリ", icon: "⌕", url: "../scenario-library/index.html" },
     { id: "bookshelf", name: "マイ本棚", icon: "▥", url: "../scenario-bookshelf/index.html" },
-    { id: "watch", name: "配信視聴ログ", icon: "▶", url: null },
+    { id: "watch", name: "配信視聴ログ", icon: "▶", url: "../viewing-log/index.html" },
     { id: "analysis", name: "嗜好アナライザー", icon: "◔", url: null }
   ];
 
