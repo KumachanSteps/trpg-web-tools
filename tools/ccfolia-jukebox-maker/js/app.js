@@ -2101,7 +2101,7 @@
   // 端末内の保存は IndexedDB の playlists。開いているプレイリストの印は localStorage に置く。
   // 音声ファイルは入れない（ココフォリアにも別にアップロードが要るため）。YouTubeのURLは入る。
   const PL_FORMAT = 'ccfolia-jukebox-playlist';
-  const pl = { list: [], tab: 'mine', current: null, undo: false, armed: '', armTimer: 0, statusTimer: 0, dirty: false };
+  const pl = { list: [], tab: 'presets', tabChosen: false, current: null, undo: false, armed: '', armTimer: 0, statusTimer: 0, dirty: false };
 
   function idbRun(store, mode, work) {
     return audioDb().then(db => new Promise((resolve, reject) => {
@@ -2148,6 +2148,8 @@
       const list = await idbRun('playlists', 'readonly', st => st.getAll());
       pl.list = (Array.isArray(list) ? list : []).sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
     } catch (error) { pl.list = []; }
+    // タブを自分で選ぶまでは、マイプレイリストが空ならプリセットを開いておく
+    if (!pl.tabChosen) pl.tab = pl.list.length ? 'mine' : 'presets';
     if (pl.current && !pl.list.some(r => r.id === pl.current.id)) { pl.current = null; plSaveCurrent(); }
     plStatus();
     if (app.pane === 'lists') renderPlaylists();
@@ -2403,7 +2405,7 @@
       audio: Array.isArray(data.audio) ? data.audio.filter(n => Number.isInteger(n) && n > 0 && n <= MAX_DISKS) : []
     };
     try { await plPut(rec); } catch (error) { toast(t('pl.saveFailed'), 'error'); return; }
-    pl.tab = 'mine';
+    pl.tab = 'mine'; pl.tabChosen = true;
     await plRefreshList();
     setPane('lists', true);
     toast(t('pl.imported', { name }), 'success', 6000, { label: t('pl.open'), run: () => plOpen(rec) });
@@ -2524,8 +2526,8 @@
     plMenu(false);
     if (act === 'save') plOverwrite();
     else if (act === 'saveAs') plSaveAs();
-    else if (act === 'list') { pl.tab = 'mine'; renderPlaylists(); setPane('lists', true); }
-    else if (act === 'presets') { pl.tab = 'presets'; renderPlaylists(); setPane('lists', true); }
+    else if (act === 'list') { pl.tab = 'mine'; pl.tabChosen = true; renderPlaylists(); setPane('lists', true); }
+    else if (act === 'presets') { pl.tab = 'presets'; pl.tabChosen = true; renderPlaylists(); setPane('lists', true); }
     else if (act === 'export') plExport(null);
     else if (act === 'import') els.plFile.click();
     else if (act === 'undo') plUndo();
@@ -2555,7 +2557,7 @@
       plImportFile(els.plFile.files && els.plFile.files[0]);
       els.plFile.value = '';
     });
-    els.plTabs.querySelectorAll('[data-pl-tab]').forEach(btn => btn.addEventListener('click', () => { pl.tab = btn.dataset.plTab; renderPlaylists(); }));
+    els.plTabs.querySelectorAll('[data-pl-tab]').forEach(btn => btn.addEventListener('click', () => { pl.tab = btn.dataset.plTab; pl.tabChosen = true; renderPlaylists(); }));
     els.plSaveBtn.addEventListener('click', () => plOverwrite());
     els.plImportBtn.addEventListener('click', () => els.plFile.click());
     els.plModal.addEventListener('click', e => { if (e.target === els.plModal && plDialogDone) plDialogDone(null); });
