@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   window.JukeboxBgmSources = [
-    { name: "OpenTracks（旧DOVA-SYNDROME）", count: 246, channel: "https://www.youtube.com/@opentracksbgm", site: "https://opentracks.com/" },
+    { name: "OpenTracks（旧DOVA-SYNDROME）", count: 245, channel: "https://www.youtube.com/@opentracksbgm", site: "https://opentracks.com/" },
     { name: "PeriTune", count: 24, channel: "https://www.youtube.com/@PeriTune", site: "https://peritune.com/" },
     { name: "もみじばミュージック", count: 13, channel: "https://www.youtube.com/@momiziba" },
     { name: "コニシユカ / nonai sound", count: 9, channel: "https://www.youtube.com/@yuconishi", site: "https://nonaisound.com/" },
@@ -31,6 +31,6 @@
     { name: "宇城和孝", count: 1, channel: "https://www.youtube.com/@ushirokazutaka" },
     { name: "西向く侍 / 369", count: 1, channel: "https://www.youtube.com/@369musiq" },
     { name: "鈴木何某 Nanigashi Suzuki", count: 1, channel: "https://www.youtube.com/@nanigashisuzuki" },
-    { name: "音獅子 - Music Lion -", count: 1, channel: "https://www.youtube.com/@ryo_lion" }
+    { name: "音獅子 - Music Lion -", count: 2, channel: "https://www.youtube.com/@ryo_lion" }
   ];
 })();
