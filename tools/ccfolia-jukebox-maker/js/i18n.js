@@ -41,6 +41,7 @@
     },
     set: {
       heading: 'LPディスクの設定',
+      roomBox: '部屋の設定',
       roomName: '部屋の名前',
       roomNameDefault: 'KPレス・ジュークボックス',
       stopName: '停止中のシーン名',
@@ -293,6 +294,7 @@
     bar: { importZip: 'Open ZIP', backToJukebox: 'Back to jukebox', play: 'Test play', export: 'Export room ZIP' },
     set: {
       heading: 'LP disc settings',
+      roomBox: 'Room settings',
       roomName: 'Room name',
       roomNameDefault: 'KP-less Jukebox',
       stopName: 'Stopped scene name',
@@ -545,6 +547,7 @@
     bar: { importZip: 'ZIP 열기', backToJukebox: '주크박스로 돌아가기', play: '테스트 플레이', export: '룸 ZIP 내보내기' },
     set: {
       heading: 'LP 디스크 설정',
+      roomBox: '방 설정',
       roomName: '방 이름',
       roomNameDefault: 'KP리스 주크박스',
       stopName: '정지 장면 이름',

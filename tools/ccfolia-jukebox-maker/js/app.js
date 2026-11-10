@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.36';
+  const VERSION = '0.37';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -14,6 +14,7 @@
   const SHELF_KEY = 'ccfoliaJukebox.shelf';
   const PANE_KEY = 'ccfoliaJukebox.pane';
   const PL_CUR_KEY = 'ccfoliaJukebox.playlist';
+  const ROOM_BOX_KEY = 'ccfoliaJukebox.roomBox';
   const LANGS = ['ja', 'en', 'ko'];
   const MAX_DISKS = Jukebox.MAX_DISKS;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
@@ -24,7 +25,7 @@
     importBtn: $('importBtn'), importFile: $('importFile'), backBtn: $('backBtn'),
     playBtn: $('playBtn'), exportBtn: $('exportBtn'),
     jukeboxPanel: $('jukeboxPanel'), importPanel: $('importPanel'), importName: $('importName'),
-    roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), showCover: $('showCover'),
+    roomBox: $('roomBox'), roomPeek: $('roomPeek'), roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), showCover: $('showCover'),
     backdropField: $('backdropField'), backdropThumb: $('backdropThumb'), backdropImg: $('backdropImg'), backdropOpen: $('backdropOpen'), backdropClear: $('backdropClear'), backdropFile: $('backdropFile'),
     diskList: $('diskList'), resetBtn: $('resetBtn'),
     shapeLabel: $('shapeLabel'), shapeResetBtn: $('shapeResetBtn'),
@@ -383,6 +384,7 @@
   function renderSettings() {
     const s = app.settings;
     els.roomName.value = s.roomName;
+    updateRoomPeek();
     els.stopName.value = s.stopName;
     els.diskCount.value = String(s.count);
     els.diskCountOut.textContent = String(s.count);
@@ -2672,7 +2674,7 @@
       els.helpDrawer.hidden = true;
       els.helpBtn.setAttribute('aria-expanded', 'false');
     }));
-    els.roomName.addEventListener('input', () => { app.settings.roomName = els.roomName.value; changed(false); });
+    els.roomName.addEventListener('input', () => { app.settings.roomName = els.roomName.value; updateRoomPeek(); changed(false); });
     els.stopName.addEventListener('input', () => { app.settings.stopName = els.stopName.value; changed(false); });
     els.diskCount.addEventListener('input', () => {
       app.settings.count = Math.min(MAX_DISKS, Math.max(1, Number(els.diskCount.value) || 1));
@@ -2805,6 +2807,19 @@
     renderBackdrop();
   }
 
+  // 部屋の設定（部屋の名前・停止中のシーン名・背景画像）は折りたためる。開閉はこのブラウザに覚える
+  function updateRoomPeek() {
+    if (els.roomPeek) els.roomPeek.textContent = (app.settings && app.settings.roomName) || '';
+  }
+
+  function bindRoomBox() {
+    if (!els.roomBox) return;
+    try { if (localStorage.getItem(ROOM_BOX_KEY) === 'closed') els.roomBox.open = false; } catch (error) { /* noop */ }
+    els.roomBox.addEventListener('toggle', () => {
+      try { localStorage.setItem(ROOM_BOX_KEY, els.roomBox.open ? 'open' : 'closed'); } catch (error) { /* noop */ }
+    });
+  }
+
   function init() {
     app.lang = detectLang();
     app.settings = loadSettings();
@@ -2817,6 +2832,7 @@
     bindCropper();
     bindShelf();
     bindPlaylists();
+    bindRoomBox();
     applyLanguage();
     rebuild();
     // 前に選んだ音声ファイルを読み戻してから、曲名の自動入力を始める
