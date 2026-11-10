@@ -11,7 +11,7 @@
       ['6fwxJqoLJMk', 'Spectacular World'],
       ['Vh7_Tzav8Qs', 'BGM177_Fireworks'],
       ['lPYMqGa_xT4', '儚く透明な色（DOVA-SYNDROME）', 2],
-      ['0mbmvlg8iZU', 'fairy tale（DOVA-SYNDROME）', 2],
+      ['6Y4c6hdvV4Y', 'Fairy Tale（OpenTracks）', 2],
       ['k8wX3elrsbE', '不可解な事件簿的なBGM（DOVA-SYNDROME）', 2],
       ['7VfFDhFGHFw', '不思議な森（DOVA-SYNDROME）', 2],
       ['4iRdNvIjG-o', 'the opening of a book（OpenTracks）', 3],
@@ -110,7 +110,7 @@
       ['9-Nfb9lWSQQ', '私立探偵と不可解な古文書'],
       ['bCO6umFZ8VI', '大正浪漫探偵'],
       ['DJf-wqjuwwM', 'Investigation（DOVA-SYNDROME）', 2],
-      ['A_Tlq2opviQ', 'Thief\'s Time（DOVA-SYNDROME）', 2],
+      ['yeyfRn6zc8Q', 'Thief\'s time（音獅子）', 2],
       ['GsIrInVSe-A', '時計図書館（DOVA-SYNDROME）', 2],
       ['hEQ5q006NXs', '違和感（1時間・もみじばミュージック）', 2],
       ['JYm6-WvtM6M', '謎発生（もみじばミュージック）', 2],
@@ -251,7 +251,7 @@
       ['LQFvIEfVBmA', '迫りくる影はだれ?的なBGM（OpenTracks）', 3]
     ] },
     { id: 'climax', tracks: [
-      ['ISHbwrrNTeM', '決戦（DOVA-SYNDROME）'],
+      ['_v9eOCZsKz4', '決戦（OpenTracks）'],
       ['jHSQ2vCIRcc', 'The Final Confrontation'],
       ['asKyymlaleE', 'Bound to Fate'],
       ['vHINNBwmbBE', 'Flap（PeriTune）', 2],
@@ -380,8 +380,16 @@
   // 初期の曲を足したら上げる。曲の3つ目の数字は、その曲を足したときの版
   const VERSION = 3;
 
+  // YouTube で埋め込み再生できなくなった初期の曲と、その代わり（保存済みの棚でも差し替える）
+  const REPLACED = {
+    '0mbmvlg8iZU': ['6Y4c6hdvV4Y', 'Fairy Tale（OpenTracks）'],
+    'A_Tlq2opviQ': ['yeyfRn6zc8Q', 'Thief\'s time（音獅子）'],
+    'ISHbwrrNTeM': ['_v9eOCZsKz4', '決戦（OpenTracks）']
+  };
+
   window.JukeboxShelf = {
     VERSION,
+    REPLACED,
     // 毎回まっさらなコピーを返す（画面側で書き換えるため）
     defaults() {
       return TABS.map(tab => ({ id: tab.id, name: '', tracks: tab.tracks.map(([yt, title]) => ({ yt, title })) }));

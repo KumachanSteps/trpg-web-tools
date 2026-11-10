@@ -150,7 +150,7 @@
       ['感想戦', 'yellow', 'after-talk', '_6VxTpU1-Z8', 'ローファイ少女は今日も寝不足（DOVA-SYNDROME）']
     ] },
     { id: 'romance', name: ['ロマンス', 'Romance', '로맨스'], desc: ['出会い・親密さ・葛藤・選択と結末を描く関係性重視型。', 'Meeting, closeness, conflict, choices and an ending: relationship-driven.', '만남·친밀함·갈등·선택과 결말을 그리는 관계 중심형.'], scenes: [
-      ['導入', 'cream', 'romance-01', '0mbmvlg8iZU', 'fairy tale（DOVA-SYNDROME）', '花束と手紙'],
+      ['導入', 'cream', 'romance-01', '6Y4c6hdvV4Y', 'Fairy Tale（OpenTracks）', '花束と手紙'],
       ['出会い', 'pink', 'romance-02', 'lPYMqGa_xT4', '儚く透明な色（DOVA-SYNDROME）', '花咲く街並み'],
       ['穏やかな日々', 'green', 'romance-03', 'SOmJcGLxk5w', '露草（DOVA-SYNDROME）', '窓辺のカフェ'],
       ['二人の時間', 'orange', 'romance-04', 'olxbmbavH5w', 'ムスカリの花（DOVA-SYNDROME）', '夕暮れのベンチ'],

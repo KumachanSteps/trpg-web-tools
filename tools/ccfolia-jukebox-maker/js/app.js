@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.39';
+  const VERSION = '0.40';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1647,6 +1647,18 @@
       }))
       : JukeboxShelf.defaults();
     shelf.active = ok && Number.isInteger(saved.active) ? Math.max(0, Math.min(shelf.tabs.length - 1, saved.active)) : 0;
+    // 埋め込みできなくなった初期の曲は、保存済みの棚でも代わりの曲にする（メモは残す）
+    const repl = JukeboxShelf.REPLACED || {};
+    let swapped = false;
+    shelf.tabs.forEach(tab => {
+      tab.tracks = tab.tracks.flatMap(tr => {
+        const to = repl[tr.yt];
+        if (!to) return [tr];
+        swapped = true;
+        return tab.tracks.some(x => x.yt === to[0]) ? [] : [{ ...tr, yt: to[0], title: to[1] }];
+      });
+    });
+    if (ok && swapped) saveShelf();
     // 前に保存した棚には、その後に足した初期の曲を、残っているタブの後ろに足す（消した曲は戻さない）
     const from = ok && Number.isInteger(saved.v) ? saved.v : 1;
     if (ok && from < JukeboxShelf.VERSION) {
