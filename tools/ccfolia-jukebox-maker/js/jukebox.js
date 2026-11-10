@@ -55,7 +55,26 @@
     { id: 'epilogue', yt: 'Dt9eBjJdTjc', color: 'pink', author: 'Richard Heinen', user: 'richard_he', photo: 'an-empty-theater-with-red-curtains-and-seats-25OeoEKoNP8' },
     { id: 'after-talk', yt: '16Bj6aPi1A8', color: 'yellow', author: 'Parinaz Mirhosseini', user: 'parinaz_mhs', photo: 'colorful-game-tiles-scattered-on-a-grid-RxAyATWag6A' }
   ].map(p => ({ ...p, authorUrl: `${U}/@${p.user}`, photoUrl: `${U}/photos/${p.photo}`, bgmUrl: `https://youtu.be/${p.yt}` }));
-  const photoOf = id => PHOTOS.find(p => p.id === id) || null;
+  // プリセット用の写真（同じく Unsplash License の無料写真。TK さんが選んで 538×520 に切り抜いたもの。
+  // 出どころは assets/covers/presets-manifest.csv）。初期設定のレコードには使わず、プリセットとジャケット選びで使う
+  const EXTRA_PHOTOS = [
+    { id: 'mansion-03', scene: '晩餐', author: 'Alexander Mass', user: 'alexandermassph', photo: 'a-candle-illuminates-a-formal-dinner-table-setting-_6u9TEcD6NM' },
+    { id: 'mansion-06', scene: '異変', author: 'Yaqing Wei', user: 'yunwuwanzi', photo: 'dark-hallway-with-light-reflecting-on-floor-e8xSjQTk9bw' },
+    { id: 'classic-mystery-04', scene: '調査', author: 'Volodymyr Hryshchenko', user: 'lunarts', photo: 'shallow-focus-photo-of-white-paper-sheet-mounted-on-cork-board-ZT9gjcJog6U' },
+    { id: 'cthulhu-03', scene: '異変', author: 'Oleg Zarevennyi', user: 'olegolegoleg', photo: 'a-foggy-city-street-at-night-with-street-lights-2rMuzqQr5aE' },
+    { id: 'cthulhu-05', scene: '調査', author: 'Polina Kuzovkova', user: 'p_kuzovkova', photo: 'white-and-brown-house-near-mountain-under-white-clouds-during-daytime-LLYsih4byQQ' },
+    { id: 'cthulhu-07', scene: '狂気', author: 'Valiant Lambda', user: 'valiant_lambda', photo: 'abstract-geometric-pattern-with-sharp-angles-and-shadows-vAq8q0vw8Es' },
+    { id: 'cthulhu-08', scene: '神話的恐怖', author: 'Mustafi Numann', user: 'mustafijpg', photo: 'dark-ominous-storm-clouds-gather-in-the-sky-_Epm8if8JFM' },
+    { id: 'youth-02', scene: '学園生活', author: 'Ivan Aleksic', user: 'ivalex', photo: 'empty-classroom-with-desks-and-chalkboard-PDRFeeDniCk' },
+    { id: 'youth-04', scene: '青春の日々', author: 'Susmitha Veganosaurus', user: 'veganosaurus', photo: 'an-empty-soccer-field-with-a-sky-background-C2v6EeGXVQM' },
+    { id: 'youth-09', scene: 'クライマックス', author: 'Ricky LK', user: 'rickyrynselo', photo: 'a-grassy-field-with-a-building-in-the-background-7cSmlMP7-ho' },
+    { id: 'romance-02', scene: '出会い', author: 'Huang Lin', user: 'habobo', photo: 'cherry-blossoms-bloom-over-a-busy-city-street-esumwtMcwgI' },
+    { id: 'romance-03', scene: '穏やかな日々', author: 'Long Chung', user: 'chungj07', photo: 'sunlight-streams-through-a-window-onto-a-cafe-table-6_Yye5kmEkM' },
+    { id: 'romance-04', scene: '二人の時間', author: 'Richard Sagredo', user: 'sagredophotography', photo: 'a-man-and-woman-sitting-on-a-bench-at-sunset-5HifIYdqtXE' },
+    { id: 'romance-07', scene: '別離', author: 'Ben Kupke', user: 'benkupke', photo: 'an-empty-train-station-at-night-So1gBE5ayQw' }
+  ].map(p => ({ ...p, authorUrl: `${U}/@${p.user}`, photoUrl: `${U}/photos/${p.photo}` }));
+  const ALL_PHOTOS = PHOTOS.concat(EXTRA_PHOTOS);
+  const photoOf = id => ALL_PHOTOS.find(p => p.id === id) || null;
   const photoUrl = id => assetUrl(`covers/${id}.jpg`);
 
   const imageCache = new Map();
@@ -600,5 +619,5 @@
   let backdropUrl = '';
   const backdropPreview = () => backdropUrl || (backdropUrl = drawBackdrop().toDataURL('image/jpeg', 0.8));
 
-  global.Jukebox = { MAX_DISKS: 12, backdropPreview, COLORS, COVER_STYLES, PHOTOS, photoOf, photoUrl, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
+  global.Jukebox = { MAX_DISKS: 12, backdropPreview, COLORS, COVER_STYLES, PHOTOS, EXTRA_PHOTOS, photoOf, photoUrl, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
 })(window);

@@ -66,3 +66,22 @@ __data.json  { meta: { version: '1.1.0' },
 | クライマックス | [orange and yellow fire illustration](https://unsplash.com/photos/orange-and-yellow-fire-illustration-y3RFJh6-r0Q) | [Quilia](https://unsplash.com/@heyquilia) |
 | エピローグ | [an empty theater with red curtains and seats](https://unsplash.com/photos/an-empty-theater-with-red-curtains-and-seats-25OeoEKoNP8) | [Richard Heinen](https://unsplash.com/@richard_he) |
 | 感想戦 | [colorful game tiles scattered on a grid](https://unsplash.com/photos/colorful-game-tiles-scattered-on-a-grid-RxAyATWag6A) | [Parinaz Mirhosseini](https://unsplash.com/@parinaz_mhs) |
+
+プリセット用の写真（プリセットとジャケット選びで使います。写真がまだない場面は模様のジャケットです）
+
+| プリセット・場面 | 写真 | 撮影者 |
+| --- | --- | --- |
+| 館もの・晩餐 | [a candle illuminates a formal dinner table setting](https://unsplash.com/photos/a-candle-illuminates-a-formal-dinner-table-setting-_6u9TEcD6NM) | [Alexander Mass](https://unsplash.com/@alexandermassph) |
+| 館もの・異変 | [dark hallway with light reflecting on floor](https://unsplash.com/photos/dark-hallway-with-light-reflecting-on-floor-e8xSjQTk9bw) | [Yaqing Wei](https://unsplash.com/@yunwuwanzi) |
+| 本格ミステリ・調査 | [shallow focus photo of white paper sheet mounted on cork board](https://unsplash.com/photos/shallow-focus-photo-of-white-paper-sheet-mounted-on-cork-board-ZT9gjcJog6U) | [Volodymyr Hryshchenko](https://unsplash.com/@lunarts) |
+| クトゥルフ神話・異変 | [a foggy city street at night with street lights](https://unsplash.com/photos/a-foggy-city-street-at-night-with-street-lights-2rMuzqQr5aE) | [Oleg Zarevennyi](https://unsplash.com/@olegolegoleg) |
+| クトゥルフ神話・調査 | [white and brown house near mountain under white clouds during daytime](https://unsplash.com/photos/white-and-brown-house-near-mountain-under-white-clouds-during-daytime-LLYsih4byQQ) | [Polina Kuzovkova](https://unsplash.com/@p_kuzovkova) |
+| クトゥルフ神話・狂気 | [abstract geometric pattern with sharp angles and shadows](https://unsplash.com/photos/abstract-geometric-pattern-with-sharp-angles-and-shadows-vAq8q0vw8Es) | [Valiant Lambda](https://unsplash.com/@valiant_lambda) |
+| クトゥルフ神話・神話的恐怖 | [dark ominous storm clouds gather in the sky](https://unsplash.com/photos/dark-ominous-storm-clouds-gather-in-the-sky-_Epm8if8JFM) | [Mustafi Numann](https://unsplash.com/@mustafijpg) |
+| 青春・学園生活 | [empty classroom with desks and chalkboard](https://unsplash.com/photos/empty-classroom-with-desks-and-chalkboard-PDRFeeDniCk) | [Ivan Aleksic](https://unsplash.com/@ivalex) |
+| 青春・青春の日々 | [an empty soccer field with a sky background](https://unsplash.com/photos/an-empty-soccer-field-with-a-sky-background-C2v6EeGXVQM) | [Susmitha Veganosaurus](https://unsplash.com/@veganosaurus) |
+| 青春・クライマックス | [a grassy field with a building in the background](https://unsplash.com/photos/a-grassy-field-with-a-building-in-the-background-7cSmlMP7-ho) | [Ricky LK](https://unsplash.com/@rickyrynselo) |
+| ロマンス・出会い | [cherry blossoms bloom over a busy city street](https://unsplash.com/photos/cherry-blossoms-bloom-over-a-busy-city-street-esumwtMcwgI) | [Huang Lin](https://unsplash.com/@habobo) |
+| ロマンス・穏やかな日々 | [sunlight streams through a window onto a cafe table](https://unsplash.com/photos/sunlight-streams-through-a-window-onto-a-cafe-table-6_Yye5kmEkM) | [Long Chung](https://unsplash.com/@chungj07) |
+| ロマンス・二人の時間 | [a man and woman sitting on a bench at sunset](https://unsplash.com/photos/a-man-and-woman-sitting-on-a-bench-at-sunset-5HifIYdqtXE) | [Richard Sagredo](https://unsplash.com/@sagredophotography) |
+| ロマンス・別離 | [an empty train station at night](https://unsplash.com/photos/an-empty-train-station-at-night-So1gBE5ayQw) | [Ben Kupke](https://unsplash.com/@benkupke) |
