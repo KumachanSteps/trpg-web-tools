@@ -94,11 +94,11 @@ textarea.text-input { resize: vertical; line-height: 1.6; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--hair); }
 
 /* ---------- 配置 ---------- */
-.layout { position: relative; display: flex; flex-wrap: wrap; gap: 16px 56px; align-items: flex-start; }
+.layout { position: relative; display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: flex-start; }
 .panel { min-width: 0; }
-.panel[data-panel="scenes"] { flex: 0 0 300px; }
+.panel[data-panel="scenes"] { flex: 0 0 328px; }
 .panel[data-panel="stage"] { flex: 1 1 560px; }
-.panel[data-panel="settings"] { flex: 0 0 330px; }
+.panel[data-panel="settings"] { flex: 0 0 358px; }
 .panel-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -4px 0 8px -6px; }
 .panel-title { margin: 0; font-size: 1rem; font-weight: 800; }
 .drag-handle { display: grid; flex: none; place-items: center; width: 24px; height: 28px; padding: 0; border: 0; border-radius: var(--radius); background: transparent; color: var(--faint); cursor: grab; touch-action: none; }

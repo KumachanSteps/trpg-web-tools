@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.30';
+  const VERSION = '0.33';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -86,15 +86,26 @@
     return 'en';
   }
 
+  // 写真の一覧：初期設定の12枚のあとに、プリセット用の写真。名前は初期の12枚はテーマ名、
+  // プリセット用はシーン名（「プリセット名・シーン名」。同じシーン名が別プリセットにもあるため）
+  const allPhotos = () => Jukebox.PHOTOS.concat(Jukebox.EXTRA_PHOTOS || []);
+  function photoLabel(p, i) {
+    if (i < Jukebox.PHOTOS.length) return dict().defaultNames[i];
+    const li = Math.max(0, LANGS.indexOf(app.lang));
+    const names = window.JukeboxPresets ? JukeboxPresets.NAMES[p.scene] : null;
+    const scene = li && names ? names[li - 1] : p.scene;
+    const preset = window.JukeboxPresets ? JukeboxPresets.LIST.find(x => p.id.startsWith(`${x.id}-`)) : null;
+    return preset ? `${preset.name[li] || preset.name[0]}・${scene}` : scene;
+  }
+
   // プリセット写真の撮影者と写真ページへのリンク（Unsplash の帰属表示）
   function renderPhotoCredits() {
     const el = document.getElementById('photoCredits');
     if (!el) return;
     el.innerHTML = t('footer.photos');
-    const names = dict().defaultNames;
-    Jukebox.PHOTOS.forEach((p, i) => {
+    allPhotos().forEach((p, i) => {
       if (i) el.appendChild(document.createTextNode(' / '));
-      el.append(h('a', { href: p.photoUrl, target: '_blank', rel: 'noopener' }, names[i]), ': ',
+      el.append(h('a', { href: p.photoUrl, target: '_blank', rel: 'noopener' }, photoLabel(p, i)), ': ',
         h('a', { href: p.authorUrl, target: '_blank', rel: 'noopener' }, p.author));
     });
   }
@@ -287,7 +298,7 @@
   // 2: ハンドアウトと密談の初期BGMを差し替え（前の初期URLのままなら新しいURLにする）
   function withDefaultBgm(disk, version) {
     const photo = disk.cover.style === 'photo' ? Jukebox.photoOf(disk.cover.photo) : null;
-    if (!photo) return disk;
+    if (!photo || !photo.bgmUrl) return disk; // プリセット用の写真には初期BGMがない
     if (version < 1 && !disk.url.trim()) return { ...disk, url: photo.bgmUrl };
     if (version < 2 && photo.oldYt && youtubeId(disk.url) === photo.oldYt) return { ...disk, url: photo.bgmUrl };
     return disk;
@@ -513,9 +524,9 @@
     const names = dict().defaultNames;
     box.append(
       h('h3', { class: 'cover-presets-title', id: 'coverPresetsTitle' }, t('cover.photos')),
-      h('div', { class: 'cover-grid', role: 'radiogroup', 'aria-label': t('cover.photos') }, Jukebox.PHOTOS.map((p, pi) => {
+      h('div', { class: 'cover-grid', role: 'radiogroup', 'aria-label': t('cover.photos') }, allPhotos().map((p, pi) => {
         const on = crop.preset ? crop.preset === p.id : (cover.style === 'photo' && cover.photo === p.id);
-        const label = t('cover.photo', { name: names[pi], author: p.author });
+        const label = t('cover.photo', { name: photoLabel(p, pi), author: p.author });
         return h('button', {
           type: 'button', class: `cover-chip cover-photo${on ? ' is-on' : ''}`, role: 'radio', 'aria-checked': String(on), title: label, 'aria-label': label,
           onclick: () => loadPresetPhoto(p.id)
@@ -2376,10 +2387,23 @@
 
   /* ---------- 一覧の画面（真ん中の欄の3つめ） ---------- */
 
-  // プリセット（P2 で種類を増やす）
+  // プリセット：「汎用マダミス」（最初の設定と同じ。内部IDは standard のまま）と、js/presets.js のジャンル別
+  const langIndex = () => Math.max(0, LANGS.indexOf(app.lang));
+  function presetSettings(p) {
+    const li = langIndex();
+    const base = defaultSettings();
+    const disks = p.scenes.map(([name, color, cover, yt, title]) => ({
+      color, name: li ? ((JukeboxPresets.NAMES[name] || [])[li - 1] || name) : name,
+      bgm: title, bgmAuto: true, bgmFor: yt, url: `https://youtu.be/${yt}`,
+      cover: cover.startsWith('p:') ? { style: cover.slice(2) } : { style: 'photo', photo: cover }
+    }));
+    return { ...base, roomName: p.name[li] || p.name[0], count: disks.length, disks: disks.concat(base.disks.slice(disks.length)) };
+  }
   const PL_PRESETS = [
     { id: 'standard', name: () => t('pl.presetStandard'), memo: () => t('pl.presetStandardMemo'), settings: () => defaultSettings() }
-  ];
+  ].concat(((window.JukeboxPresets && JukeboxPresets.LIST) || []).map(p => ({
+    id: p.id, name: () => p.name[langIndex()] || p.name[0], memo: () => p.desc[langIndex()] || p.desc[0], settings: () => presetSettings(p)
+  })));
 
   function plSleeves(settings) {
     return settings.disks.slice(0, Math.min(4, settings.count)).map(d => {

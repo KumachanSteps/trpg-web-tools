@@ -15,7 +15,7 @@
 - 前景と背景：各シーンの前景は、そのシーンのレコード（ジャケットあり・なし）と曲名の絵（ココフォリアのシーン一覧のサムネイルで見分けるため）。盤面では、前景と同じ大きさのマーカーパネル（棚の絵、z=1）で前景を覆う。部屋の外側の背景は、選んだ画像（長辺1920pxのJPEGにしてブラウザに保存）か、作った暗いレコード模様。選んだ画像はZIPにそのまま入るので、配布するときは画像のライセンスに注意。
 - シーンプレビュー：全シーンを一覧し、クリックアクションの `/scene` を線で表示。重複したシーン名・存在しないシーンの呼び出しを警告。
 - レコード棚：真ん中の欄の見出しで「シーンプレビュー」と切り替える。YouTubeのフリーBGMを11のタブ（導入・不穏・コミカル・推理・感動・悲しい・緊迫・クライマックス・館・ホラー・デジタル）に並べ、ジャケットを押すと音声だけを試聴。「レコードへ」でレコードのBGMに入れる、URLをコピー、YouTubeで開く。曲（YouTubeのURL）とタブは追加・名前変更・並べ替え・削除でき、ブラウザに保存（初期の曲は `js/shelf-data.js`）。
-- プレイリスト：設定欄の「プレイリスト ▾」で、今の設定（部屋の名前・レコードのシーン名と色・BGMのURLと曲名・ジャケット・背景画像）に名前を付けて保存、上書き保存、ファイル（`.jukebox.json`）への書き出しと読み込み。一覧は真ん中の欄の3つめ「プレイリスト」で、読み込む・名前変更・複製・書き出す・削除ができる。読み込む前に、保存していない変更があれば確認し、切り替え前の状態を1つ控えて「元に戻す」で戻せる。音声ファイルは入らない。端末内の保存は IndexedDB（`ccfoliaJukebox` の `playlists`）。「プリセット」タブから初期の構成で始められる。
+- プレイリスト：設定欄の「プレイリスト ▾」で、今の設定（部屋の名前・レコードのシーン名と色・BGMのURLと曲名・ジャケット・背景画像）に名前を付けて保存、上書き保存、ファイル（`.jukebox.json`）への書き出しと読み込み。一覧は真ん中の欄の3つめ「プレイリスト」で、読み込む・名前変更・複製・書き出す・削除ができる。読み込む前に、保存していない変更があれば確認し、切り替え前の状態を1つ控えて「元に戻す」で戻せる。音声ファイルは入らない。端末内の保存は IndexedDB（`ccfoliaJukebox` の `playlists`）。「プリセット」タブから9種（汎用マダミス・館もの・デジタル・ホラー・本格ミステリ・日常コメディ・クトゥルフ神話・青春・ロマンス）で始められる。プリセットは未保存の新しいプレイリストとして開き、中身は `js/presets.js`（シーン名・ラベル色・ジャケット・レコード棚の曲。写真がまだないジャケットは模様で代用）。
 - テストプレイ：ブラウザ上でレコードをクリックしてシーンを切り替えて試す。
 - ルームZIPの書き出し・読み込み。読み込んだZIPのクリックアクションを編集して書き戻せる（ほかの中身はそのまま）。
 
@@ -43,6 +43,7 @@ __data.json  { meta: { version: '1.1.0' },
 - `js/jukebox.js` … テンプレート（配置・画像の生成）
 - `js/app.js` … 画面（つながりの線・テストプレイ・レコード棚）
 - `js/shelf-data.js` … レコード棚の初期の曲（YouTubeのフリーBGM）
+- `js/presets.js` … プリセット8種（汎用マダミスは最初の設定と同じなので app.js 側）
 - `js/i18n.js` … 日本語・英語・韓国語
 - `assets/covers/` … プリセット写真のジャケット（538×520に切り抜いたJPEG）
 - `assets/` … プレーヤー（本体・トーンアーム）とレコード12色の画像（茶・紺はグレーのラベルを塗り替えたもの）、回るレコードと針が下りるAPNG
@@ -65,3 +66,22 @@ __data.json  { meta: { version: '1.1.0' },
 | クライマックス | [orange and yellow fire illustration](https://unsplash.com/photos/orange-and-yellow-fire-illustration-y3RFJh6-r0Q) | [Quilia](https://unsplash.com/@heyquilia) |
 | エピローグ | [an empty theater with red curtains and seats](https://unsplash.com/photos/an-empty-theater-with-red-curtains-and-seats-25OeoEKoNP8) | [Richard Heinen](https://unsplash.com/@richard_he) |
 | 感想戦 | [colorful game tiles scattered on a grid](https://unsplash.com/photos/colorful-game-tiles-scattered-on-a-grid-RxAyATWag6A) | [Parinaz Mirhosseini](https://unsplash.com/@parinaz_mhs) |
+
+プリセット用の写真（プリセットとジャケット選びで使います。写真がまだない場面は模様のジャケットです）
+
+| プリセット・場面 | 写真 | 撮影者 |
+| --- | --- | --- |
+| 館もの・晩餐 | [a candle illuminates a formal dinner table setting](https://unsplash.com/photos/a-candle-illuminates-a-formal-dinner-table-setting-_6u9TEcD6NM) | [Alexander Mass](https://unsplash.com/@alexandermassph) |
+| 館もの・異変 | [dark hallway with light reflecting on floor](https://unsplash.com/photos/dark-hallway-with-light-reflecting-on-floor-e8xSjQTk9bw) | [Yaqing Wei](https://unsplash.com/@yunwuwanzi) |
+| 本格ミステリ・調査 | [shallow focus photo of white paper sheet mounted on cork board](https://unsplash.com/photos/shallow-focus-photo-of-white-paper-sheet-mounted-on-cork-board-ZT9gjcJog6U) | [Volodymyr Hryshchenko](https://unsplash.com/@lunarts) |
+| クトゥルフ神話・異変 | [a foggy city street at night with street lights](https://unsplash.com/photos/a-foggy-city-street-at-night-with-street-lights-2rMuzqQr5aE) | [Oleg Zarevennyi](https://unsplash.com/@olegolegoleg) |
+| クトゥルフ神話・調査 | [white and brown house near mountain under white clouds during daytime](https://unsplash.com/photos/white-and-brown-house-near-mountain-under-white-clouds-during-daytime-LLYsih4byQQ) | [Polina Kuzovkova](https://unsplash.com/@p_kuzovkova) |
+| クトゥルフ神話・狂気 | [abstract geometric pattern with sharp angles and shadows](https://unsplash.com/photos/abstract-geometric-pattern-with-sharp-angles-and-shadows-vAq8q0vw8Es) | [Valiant Lambda](https://unsplash.com/@valiant_lambda) |
+| クトゥルフ神話・神話的恐怖 | [dark ominous storm clouds gather in the sky](https://unsplash.com/photos/dark-ominous-storm-clouds-gather-in-the-sky-_Epm8if8JFM) | [Mustafi Numann](https://unsplash.com/@mustafijpg) |
+| 青春・学園生活 | [empty classroom with desks and chalkboard](https://unsplash.com/photos/empty-classroom-with-desks-and-chalkboard-PDRFeeDniCk) | [Ivan Aleksic](https://unsplash.com/@ivalex) |
+| 青春・青春の日々 | [an empty soccer field with a sky background](https://unsplash.com/photos/an-empty-soccer-field-with-a-sky-background-C2v6EeGXVQM) | [Susmitha Veganosaurus](https://unsplash.com/@veganosaurus) |
+| 青春・クライマックス | [a grassy field with a building in the background](https://unsplash.com/photos/a-grassy-field-with-a-building-in-the-background-7cSmlMP7-ho) | [Ricky LK](https://unsplash.com/@rickyrynselo) |
+| ロマンス・出会い | [cherry blossoms bloom over a busy city street](https://unsplash.com/photos/cherry-blossoms-bloom-over-a-busy-city-street-esumwtMcwgI) | [Huang Lin](https://unsplash.com/@habobo) |
+| ロマンス・穏やかな日々 | [sunlight streams through a window onto a cafe table](https://unsplash.com/photos/sunlight-streams-through-a-window-onto-a-cafe-table-6_Yye5kmEkM) | [Long Chung](https://unsplash.com/@chungj07) |
+| ロマンス・二人の時間 | [a man and woman sitting on a bench at sunset](https://unsplash.com/photos/a-man-and-woman-sitting-on-a-bench-at-sunset-5HifIYdqtXE) | [Richard Sagredo](https://unsplash.com/@sagredophotography) |
+| ロマンス・別離 | [an empty train station at night](https://unsplash.com/photos/an-empty-train-station-at-night-So1gBE5ayQw) | [Ben Kupke](https://unsplash.com/@benkupke) |
