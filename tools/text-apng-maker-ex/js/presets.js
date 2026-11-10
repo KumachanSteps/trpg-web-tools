@@ -1612,7 +1612,7 @@
         text: T('ファンブル', 'FUMBLE', '펌블'), subText: T('FUMBLE', '', 'FUMBLE'),
         patch: rollPatch('shot', 'fumble', 140)
       },
-      // 星（夢と星空）の判定。CoC6版とCoC7版（CoC7版は抜刀と同じ漢字の段階名）
+      // 星（夢と星空）の判定。CoC6版とCoC7版（段階名はカタカナ：銃撃・夢と同じ）
       {
         id: 'cocStarSuccess', group: 'dice', system: 'cocStar', icon: 'shootingStar', label: T('成功', 'Success', '성공'),
         text: T('成功', 'SUCCESS', '성공'), subText: T('SUCCESS', '', 'SUCCESS'),
@@ -1624,8 +1624,8 @@
         patch: starPatch('special', 144)
       },
       {
-        id: 'cocStarCritical', group: 'dice', system: 'cocStar', icon: 'shootingStar', label: T('決定的成功', 'Critical', '결정적 성공'),
-        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        id: 'cocStarCritical', group: 'dice', system: 'cocStar', icon: 'shootingStar', label: T('クリティカル', 'Critical', '결정적 성공'),
+        text: T('クリティカル', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
         patch: starPatch('critical', 144)
       },
       {
@@ -1634,8 +1634,8 @@
         patch: starPatch('failure', 176)
       },
       {
-        id: 'cocStarFumble', group: 'dice', system: 'cocStar', icon: 'shootingStar', label: T('致命的失敗', 'Fumble', '치명적 실패'),
-        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        id: 'cocStarFumble', group: 'dice', system: 'cocStar', icon: 'shootingStar', label: T('ファンブル', 'Fumble', '치명적 실패'),
+        text: T('ファンブル', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
         patch: starPatch('fumble', 144)
       },
       {
@@ -1644,18 +1644,18 @@
         patch: starPatch('success', 176)
       },
       {
-        id: 'coc7StarHard', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('難成功', 'Hard Success', '어려운 성공'),
-        text: T('難成功', 'HARD SUCCESS', '어려운 성공'), subText: T('HARD SUCCESS', '', 'HARD SUCCESS'),
+        id: 'coc7StarHard', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('ハード成功', 'Hard Success', '어려운 성공'),
+        text: T('ハード成功', 'HARD SUCCESS', '어려운 성공'), subText: T('HARD SUCCESS', '', 'HARD SUCCESS'),
         patch: starPatch('special', 160)
       },
       {
-        id: 'coc7StarExtreme', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('極成功', 'Extreme Success', '극단적 성공'),
-        text: T('極成功', 'EXTREME SUCCESS', '극단적 성공'), subText: T('EXTREME SUCCESS', '', 'EXTREME SUCCESS'),
+        id: 'coc7StarExtreme', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('イクストリーム成功', 'Extreme Success', '극단적 성공'),
+        text: T('イクストリーム成功', 'EXTREME SUCCESS', '극단적 성공'), subText: T('EXTREME SUCCESS', '', 'EXTREME SUCCESS'),
         patch: starPatch('extreme', 160)
       },
       {
-        id: 'coc7StarCritical', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('決定的成功', 'Critical', '결정적 성공'),
-        text: T('決定的成功', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
+        id: 'coc7StarCritical', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('クリティカル', 'Critical', '결정적 성공'),
+        text: T('クリティカル', 'CRITICAL', '결정적 성공'), subText: T('CRITICAL', '', 'CRITICAL'),
         patch: starPatch('critical', 144)
       },
       {
@@ -1664,8 +1664,8 @@
         patch: starPatch('failure', 176)
       },
       {
-        id: 'coc7StarFumble', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('致命的失敗', 'Fumble', '치명적 실패'),
-        text: T('致命的失敗', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
+        id: 'coc7StarFumble', group: 'dice', system: 'coc7Star', icon: 'shootingStar', label: T('ファンブル', 'Fumble', '치명적 실패'),
+        text: T('ファンブル', 'FUMBLE', '치명적 실패'), subText: T('FUMBLE', '', 'FUMBLE'),
         patch: starPatch('fumble', 144)
       },
       // 夢（魔法と夢）の判定。CoC6版とCoC7版（CoC7版は抜刀・星と同じ漢字の段階名）
