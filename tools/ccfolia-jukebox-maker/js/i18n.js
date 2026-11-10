@@ -13,6 +13,16 @@
     portal: '←TRPG WEBツール観測所',
     portalShort: '←観測所',
     langGroup: '言語切替',
+    credits: {
+      title: '版権元',
+      images: '画像',
+      bgm: 'BGM',
+      bgmNote: 'レコード棚とプリセットのBGMは、各配布元がYouTubeで公開しているフリーBGMを埋め込みで再生しています（曲のファイルはこのツールに含みません）。使える範囲（商用利用・クレジット表記など）は配布元ごとに違うので、使う前に公式サイトの利用規約と動画の概要欄で確認してください。',
+      tracks: '{n}曲',
+      site: '公式サイト',
+      channel: 'YouTube',
+      footer: 'ジャケット写真とBGMの出典は、上の「版権元」から確認できます。'
+    },
     help: '使い方',
     close: '閉じる',
     helpItems: [
@@ -271,6 +281,16 @@
     portal: '← TRPG Web Tools Observatory',
     portalShort: '← Portal',
     langGroup: 'Language',
+    credits: {
+      title: 'Credits',
+      images: 'Images',
+      bgm: 'BGM',
+      bgmNote: 'The Record shelf and preset BGM are free tracks that each creator publishes on YouTube, played through the YouTube embed (no audio files are included in this tool). What you may do with them (commercial use, crediting and so on) differs by creator, so check the terms on their site and the video description before use.',
+      tracks: '{n} tracks',
+      site: 'Website',
+      channel: 'YouTube',
+      footer: 'Sources of the sleeve photos and BGM are listed under "Credits" at the top.'
+    },
     help: 'How to use',
     close: 'Close',
     helpItems: [
@@ -524,6 +544,16 @@
     portal: '←TRPG WEB 툴 관측소',
     portalShort: '←관측소',
     langGroup: '언어 전환',
+    credits: {
+      title: '저작권 출처',
+      images: '이미지',
+      bgm: 'BGM',
+      bgmNote: '레코드 선반과 프리셋의 BGM은 각 배포처가 YouTube에 공개한 무료 BGM을 임베드로 재생합니다(곡 파일은 이 툴에 포함되지 않습니다). 사용 범위(상업적 이용, 크레디트 표기 등)는 배포처마다 다르므로 사용 전에 공식 사이트의 이용 약관과 동영상 설명란을 확인해 주세요.',
+      tracks: '{n}곡',
+      site: '공식 사이트',
+      channel: 'YouTube',
+      footer: '재킷 사진과 BGM의 출처는 위의 「저작권 출처」에서 확인할 수 있습니다.'
+    },
     help: '사용 방법',
     close: '닫기',
     helpItems: [
