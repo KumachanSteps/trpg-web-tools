@@ -380,10 +380,29 @@
     window.addEventListener('pointercancel', end);
   }
 
+  // 部屋の名前・停止中のシーン名・背景画像は折りたためる。開閉はこのブラウザに覚えておく。
+  const ROOM_FOLD_KEY = 'ccfoliaJukebox.roomFoldOpen';
+  function syncRoomFoldPeek() {
+    const peek = document.getElementById('roomFoldPeek');
+    if (peek) peek.textContent = els.roomName.value.trim() || t('set.roomNameDefault');
+  }
+  function initRoomFold() {
+    const fold = document.getElementById('roomFold');
+    if (!fold) return;
+    let open = false;
+    try { open = localStorage.getItem(ROOM_FOLD_KEY) === '1'; } catch (error) { open = false; }
+    fold.open = open;
+    fold.addEventListener('toggle', () => {
+      try { localStorage.setItem(ROOM_FOLD_KEY, fold.open ? '1' : '0'); } catch (error) { /* noop */ }
+    });
+    els.roomName.addEventListener('input', syncRoomFoldPeek);
+  }
+
   function renderSettings() {
     const s = app.settings;
     els.roomName.value = s.roomName;
     els.stopName.value = s.stopName;
+    syncRoomFoldPeek();
     els.diskCount.value = String(s.count);
     els.diskCountOut.textContent = String(s.count);
     els.showCover.checked = s.showCover !== false;
@@ -2811,6 +2830,7 @@
     saveSettings(); // 初期BGMを入れた印（bgmDefaults）をすぐ残す
     loadSoundPrefs();
     bindBackdrop();
+    initRoomFold();
     applyLayout(loadLayout(), false);
     bind();
     bindPanelDrag();

@@ -78,6 +78,16 @@ a { color: var(--yellow); }
 .file-button { position: relative; flex: none; cursor: pointer; }
 
 .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; margin-bottom: 10px; }
+.room-fold { margin: 0 0 12px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--field); }
+.room-fold-sum { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 6px 10px; cursor: pointer; list-style: none; user-select: none; }
+.room-fold-sum::-webkit-details-marker { display: none; }
+.room-fold-sum::before { content: '▸'; flex: none; color: var(--yellow); font-size: 0.8rem; transition: transform 0.15s; }
+.room-fold[open] > .room-fold-sum::before { transform: rotate(90deg); }
+.room-fold-title { flex: none; color: var(--muted); font-size: 0.76rem; font-weight: 700; }
+.room-fold-peek { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--ink); font-size: 0.82rem; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.room-fold[open] .room-fold-peek { display: none; }
+.room-fold-sum:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.room-fold-body { padding: 2px 10px 0; }
 .field-label { margin: 0 0 4px; color: var(--muted); font-size: 0.74rem; font-weight: 700; }
 .text-input { width: 100%; min-height: 34px; padding: 6px 9px; border: 1px solid var(--hair); border-radius: var(--radius); background: var(--field); color: var(--ink); font-size: 0.88rem; }
 .text-input.small { min-height: 30px; padding: 4px 8px; font-size: 0.78rem; }
