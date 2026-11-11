@@ -75,7 +75,9 @@
   margin-bottom: 14px;
 }
 .toolbar-spacer { flex: 1; }
+.toolbar .hub-btn { padding-inline: 11px; }
 .file-label { position: relative; }
+.sample-remove-button { border-color: rgba(181,82,58,.32) !important; color: var(--pen-red) !important; }
 .sync-status {
   display: inline-flex;
   min-height: 32px;
@@ -392,6 +394,19 @@ button.mini-card:hover { border-color: var(--ink-soft); }
 .security-note { padding: 10px 12px; border-left: 3px solid var(--note-line); background: var(--note); font-size: 11px; }
 .sync-details { min-height: 20px; color: var(--muted); font-size: 12px; }
 .sync-details.is-error { color: var(--pen-red); }
+.calendar-feed-section { display: grid; gap: 10px; }
+.calendar-feed-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.calendar-feed-head strong { color: var(--ink); font-size: 13px; }
+.calendar-feed-head button { min-height: 30px; padding: 4px 12px; font-size: 12px; }
+.calendar-feed-list { display: grid; max-height: 310px; gap: 9px; overflow-y: auto; padding-right: 3px; scrollbar-gutter: stable; }
+.calendar-feed-row { display: grid; grid-template-columns: minmax(120px,.55fr) minmax(260px,1.45fr) auto auto; gap: 9px; align-items: end; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--sheet-sub); }
+.calendar-feed-row label { display: grid; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 700; }
+.calendar-feed-row .feed-enabled { display: flex; min-height: 38px; align-items: center; gap: 6px; }
+.calendar-feed-row .feed-enabled input { width: auto; accent-color: var(--pen-blue); }
+.calendar-feed-row .feed-remove { min-height: 32px; padding: 4px 10px; color: var(--pen-red); font-size: 11px; }
+.calendar-feed-row .feed-status { grid-column: 1 / -1; margin: 0; color: var(--faint); font-size: 10px; }
+.calendar-feed-row .feed-status.is-error { color: var(--pen-red); }
+.calendar-feed-empty { margin: 0; border: 1px dashed var(--line); border-radius: 10px; padding: 14px; color: var(--muted); text-align: center; font-size: 12px; }
 
 /* ---------- トースト ---------- */
 .toast {
@@ -436,6 +451,8 @@ button.mini-card:hover { border-color: var(--ink-soft); }
   .event-time { display: none; }
   .form-grid { grid-template-columns: 1fr; }
   .google-sync-grid { grid-template-columns: 1fr; }
+  .calendar-feed-row { grid-template-columns: 1fr; }
+  .calendar-feed-row .feed-status { grid-column: 1; }
   .sync-status { order: 10; }
   .toast { bottom: 84px; }
 }

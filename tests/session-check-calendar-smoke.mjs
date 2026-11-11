@@ -9,14 +9,16 @@ for (const id of [
   'rightPanel',
   'collapseCalendarBtn',
   'collapseRightBtn',
+  'removeSampleDataBtn',
   'googleSyncDialog',
-  'googleSecretIcalInput',
+  'googleCalendarList',
+  'addGoogleCalendarBtn',
   'googleAutoSyncInput',
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.15 2026.11.11') || !html.includes('session_check_calendar.js?v=0.15')) {
+if (!html.includes('v0.16 2026.11.11') || !html.includes('session_check_calendar.js?v=0.16')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -35,18 +37,23 @@ for (const contract of [
   "PANEL_STATE_KEY",
   "trpg-calendar-ical-proxy.oc-character-cloudflare.workers.dev",
   "secretIcalUrl",
+  "googleSettings.feeds",
+  "readGoogleFeedRows",
+  "renderGoogleFeedRows",
   "fetchSecretIcal",
   "hashSecretIcalUrl",
   "validateSecretIcalUrl",
   "googleEventId",
   "maybeAutoSyncGoogle",
   "mergeGoogleEvents",
+  "isSampleSession",
+  "removeSampleData",
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.15'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.16'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
-console.log('session-check-calendar smoke passed: collapsible panes and Google Calendar sync are present');
+console.log('session-check-calendar smoke passed: sample cleanup, collapsible panes, and multi-calendar sync are present');
