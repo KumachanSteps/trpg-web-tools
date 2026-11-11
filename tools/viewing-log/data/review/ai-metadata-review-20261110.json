@@ -1,0 +1,2059 @@
+{
+  "generatedAt": "2026-11-11T04:12:19.371Z",
+  "backup": {
+    "source": "trpg-log-keeper-backup-20261110.json",
+    "exportedAt": "2026-11-11T00:17:58.432Z",
+    "recordsApplied": 28,
+    "customRecordsAdded": 7,
+    "relatedClassificationsProtected": 0
+  },
+  "scope": {
+    "videos": 2399,
+    "activeUnverifiedSessions": 1833
+  },
+  "changes": {
+    "total": 225,
+    "aiReviewedRecords": 182,
+    "byField": {
+      "deleted": 1,
+      "deletedAt": 1,
+      "gmKpDl": 8,
+      "pl": 104,
+      "system": 111
+    }
+  },
+  "remainingMissing": {
+    "system": 15,
+    "scenario": 0,
+    "gmKpDl": 46,
+    "pl": 280
+  },
+  "policy": "Only explicit title labels, cast brackets, quoted-title suffixes, and unambiguous same-hashtag table propagation are applied. AI-reviewed records remain Partial until human verification.",
+  "items": [
+    {
+      "id": "NPOEjthuO7I",
+      "title": "【クトゥルフ神話TRPG】胡桃炸裂症候群 -Drosselmeyer Syndrome- / DAY3 ヨシヅキ参謀 藍月すりっぷ【＃よしっぷ症候群】",
+      "field": "pl",
+      "before": null,
+      "after": "ヨシヅキ参謀、藍月すりっぷ",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "ioEkLFLzAcQ",
+      "title": "【クトゥルフ神話TRPG】胡桃炸裂症候群 -Drosselmeyer Syndrome- / DAY2 ヨシヅキ参謀 藍月すりっぷ【＃よしっぷ症候群】",
+      "field": "pl",
+      "before": null,
+      "after": "ヨシヅキ参謀、藍月すりっぷ",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "YpRcaCAKwT0",
+      "title": "エモクロアTRPG「大悪党 地獄ケ原斬人」PL/ 高生 紳士",
+      "field": "pl",
+      "before": null,
+      "after": "高生 紳士",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "2tnNrOABIrU",
+      "title": "エモクロアTRPG「大悪党 地獄ケ原斬人」PL/ 健屋花那",
+      "field": "pl",
+      "before": null,
+      "after": "健屋花那",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "VLPHPJyR0xo",
+      "title": "【エモクロアTRPG】新約・きさらぎ駅【#新約きらめぐきち駅 / きら子 / 草野植木 / 諸星めぐる / 星見まどか】",
+      "field": "pl",
+      "before": null,
+      "after": "きら子 / 草野植木 / 諸星めぐる / 星見まどか",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "Tm_YH2PzdsU",
+      "title": "エモクロアTRPG「大悪党 地獄ケ原斬人」PL/ 藍月なくる",
+      "field": "pl",
+      "before": null,
+      "after": "藍月なくる",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "MOL_tSGWd9A",
+      "title": "エモクロアTRPG「大悪党 地獄ケ原斬人」PL/ 小ka栗ショーン",
+      "field": "pl",
+      "before": null,
+      "after": "小ka栗ショーン",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "vZ8KIOde5tc",
+      "title": "エモクロアTRPG「大悪党 地獄ケ原斬人」PL/ まだら牛",
+      "field": "pl",
+      "before": null,
+      "after": "まだら牛",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "O2APUgNxuo0",
+      "title": "クトゥルフ神話TRPG「怪物a」【 #怪物高生 】",
+      "field": "pl",
+      "before": null,
+      "after": "高生紳士",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "khjXcGJhKUo",
+      "title": "エモクロアTRPG「大悪党 地獄ケ原斬人」PL/ むつー",
+      "field": "pl",
+      "before": null,
+      "after": "むつー",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "X9dCjg1cL20",
+      "title": "エモクロアTRPG「大怪獣サメラ」PL/吉上亮 柴田勝家 祁答院慎",
+      "field": "pl",
+      "before": null,
+      "after": "吉上亮、柴田勝家、祁答院慎",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "QPrskTvgWn0",
+      "title": "【クトゥルフ神話TRPG】星の神話、エンドロール/後編【KP:紫ノ夢ロマン/PLイツナ、山田垂、怪崎ショウ子】 #星の神話シアノトーン",
+      "field": "pl",
+      "before": null,
+      "after": "紫ノ夢ロマン/PLイツナ、山田垂、怪崎ショウ子",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "6jwvGfqZI-g",
+      "title": "エモクロアTRPG「大怪獣サメラ」PL/どぐら なない えいた",
+      "field": "pl",
+      "before": null,
+      "after": "どぐら、なない、えいた",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "iV20dBSO4uc",
+      "title": "クトゥルフ神話TRPG「実験体δは青に微笑む」【 #むつーは青に微笑む 】",
+      "field": "pl",
+      "before": null,
+      "after": "むつー",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "aoFdUHyGckA",
+      "title": "エモクロアTRPG『彼方からの幻燈』堰代ミコ,宗谷いちか",
+      "field": "pl",
+      "before": null,
+      "after": "堰代ミコ,宗谷いちか",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "eKn7HMplFqM",
+      "title": "【クトゥルフ神話TRPG】辜月のN 第十幕 - 後編　#かなンゴこげぬ【健屋花那／周央サンゴ】",
+      "field": "pl",
+      "before": null,
+      "after": "健屋花那/周央サンゴ",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "RmWoFNMo-J0",
+      "title": "【クトゥルフ神話TRPG】辜月のN 第十幕 - 前編　#かなンゴこげぬ【健屋花那／周央サンゴ】",
+      "field": "pl",
+      "before": null,
+      "after": "健屋花那/周央サンゴ",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "V04HhlS8K4E",
+      "title": "クトゥルフ神話TRPG「君を土に埋める日」【 #サンゴを土に埋める日 】",
+      "field": "pl",
+      "before": null,
+      "after": "周央サンゴ",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "guwjRxgzXcU",
+      "title": "クトゥルフ神話TRPG「君を土に埋める日」【 #むつーを土に埋める日 】",
+      "field": "pl",
+      "before": null,
+      "after": "むつー",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "MTAgj1WjrOA",
+      "title": "クトゥルフ神話TRPG「君を土に埋める日」【 #健屋を土に埋める日 】",
+      "field": "pl",
+      "before": null,
+      "after": "健屋花那",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "Dp2gPPlCmTw",
+      "title": "クトゥルフ神話TRPG「君を土に埋める日」【 #なくるを土に埋める日 】",
+      "field": "pl",
+      "before": null,
+      "after": "藍月なくる",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "bo5Y7pIsGvw",
+      "title": "クトゥルフ神話TRPG「君を土に埋める日」【 #高生を土に埋める日 】",
+      "field": "pl",
+      "before": null,
+      "after": "高生紳士",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "_p9QUdNX_bA",
+      "title": "エモクロアTRPG『彼方からの幻燈』千春,岡田彩夢",
+      "field": "pl",
+      "before": null,
+      "after": "千春,岡田彩夢",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "tdrHRw_PNKw",
+      "title": "新クトゥルフ神話TRPG『彼方からの幻燈』千春,岡田彩夢",
+      "field": "pl",
+      "before": null,
+      "after": "千春,岡田彩夢",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "Ney7EkRldjk",
+      "title": "クトゥルフ神話TRPG「箱庭とリボルバー」【#ゆーなな箱リボ】",
+      "field": "deleted",
+      "before": null,
+      "after": true,
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "Ney7EkRldjk",
+      "title": "クトゥルフ神話TRPG「箱庭とリボルバー」【#ゆーなな箱リボ】",
+      "field": "deletedAt",
+      "before": null,
+      "after": "2026-11-10T23:36:17.217Z",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "rUmKfPBTNVM",
+      "title": "新クトゥルフ神話TRPG『クラウド・ジョーズ～地獄の艦隊～』千春,岡田彩夢,ディズム",
+      "field": "pl",
+      "before": null,
+      "after": "千春,岡田彩夢,ディズム",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "mOzRKo5nYFk",
+      "title": "【クトゥルフ神話TRPG】鵺の正体、見破ったり！【栗山やんみ/日ノ森あんず/夢咲刻夜/影。】#ひのかげときやんみの正体",
+      "field": "pl",
+      "before": null,
+      "after": "栗山やんみ/日ノ森あんず/夢咲刻夜/影。",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "uGc8XO8Oz7s",
+      "title": "【クトゥルフ神話TRPG】胡桃炸裂症候群 -Drosselmeyer Syndrome- / 後編 しぐれなお、水凪自由【＃雨水症候群】",
+      "field": "pl",
+      "before": null,
+      "after": "しぐれなお、水凪自由",
+      "reason": "user backup",
+      "confidence": "user"
+    },
+    {
+      "id": "JSKIQDF50gk",
+      "title": "CoC「ネームレス・カルト」第5陣1日目①｜PL：ちとせさん、りとのすけさん、まてらすさん、ふささん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "bj-WBIfcRS8",
+      "title": "CoC「ビスポークランドでなにがあったか？」第1陣1日目③｜PL：ぴーさん、たちばなさん、とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "-_-bpo_ik9s",
+      "title": "CoC 「ビスポークランドでなにがあったか？」第1陣1日目②｜PL：ぴーさん、たちばなさん、とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "om_X83cp1NU",
+      "title": "CoC「ビスポークランドでなにがあったか？」第1陣1日目①｜PL：ぴーさん、たちばなさん、とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "oZPNmSB6nZ0",
+      "title": "CoC「オルタナティヴダブル」第4陣①序章「母胎」｜PL：たまさん、38さん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "lVrVng2teVw",
+      "title": "Call of Cthulhu「Duo Vera」3日目①｜KP：てけてけさん、PL：くま。、とこさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "lQZORp4yMig",
+      "title": "Call of Cthulhu「Duo Vera」10日目Chapter4 Asia ④｜KP：てけてけさん、PL：くま。、とこさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "rk6YacomOmE",
+      "title": "CoC『 爛爛』第二話「爛壊」｜KP：ねむさん、PL：餅パンさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "In1f7fIwoS8",
+      "title": "CoC 「ピリオド・アズール」第一陣・前編｜PL：千歳さん、なるみんさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "yoL_fycFRyA",
+      "title": "Call of Cthulhu 『 SHADOWCODE-シャドウコード-』冒頭シーン",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "bQ0i6ayIdi8",
+      "title": "CoC「アルフ・ライラ・ワ・ライラは語らない」第6陣第一航海『鯨の呼び声』｜PL：そらもちさん、Nagatoさん、さんびょうしんさん、より。さん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "moZNRqFRCRU",
+      "title": "クトゥルフ神話TRPG『星環ダ・カーポ』第1章②｜KP/作：naoさん、PL：とこさん、くま。",
+      "field": "gmKpDl",
+      "before": null,
+      "after": "naoさん",
+      "reason": "explicit KP/GM/DL label",
+      "confidence": "high"
+    },
+    {
+      "id": "EPi-udTkFGg",
+      "title": "クトゥルフ神話TRPG『星環ダ・カーポ』第2章②｜KP/作：naoさん、PL：とこさん、くま。",
+      "field": "gmKpDl",
+      "before": null,
+      "after": "naoさん",
+      "reason": "explicit KP/GM/DL label",
+      "confidence": "high"
+    },
+    {
+      "id": "-671RPlav_c",
+      "title": "クトゥルフ神話TRPG『星環ダ・カーポ』第1章①｜KP/作：naoさん、PL：とこさん、くま。",
+      "field": "gmKpDl",
+      "before": null,
+      "after": "naoさん",
+      "reason": "explicit KP/GM/DL label",
+      "confidence": "high"
+    },
+    {
+      "id": "5txx_UjVQxw",
+      "title": "クトゥルフ神話TRPG『星環ダ・カーポ』第2章①｜KP/作：naoさん、PL：とこさん、くま。",
+      "field": "gmKpDl",
+      "before": null,
+      "after": "naoさん",
+      "reason": "explicit KP/GM/DL label",
+      "confidence": "high"
+    },
+    {
+      "id": "v4B1h7lMGL0",
+      "title": "CoC「Dの信仰」1日目｜KP：のむさん、PL：千歳さん、なるみんさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "7qwaAO_HqYI",
+      "title": "CoC「Dの信仰」2日目｜KP：のむさん、PL：千歳さん、なるみんさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "CJpSpcG1Kbc",
+      "title": "CoC『アルフ・ライラ・ワ・ライラは語らない』第5陣：第五航海『酒宴と私怨』③",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "3x_q1tsuKbc",
+      "title": "CoC『アルフ・ライラ・ワ・ライラは語らない』第5陣：第五航海『酒宴と私怨』②",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "tAelMXzx3m8",
+      "title": "CoC『アルフ・ライラ・ワ・ライラは語らない』第5陣：：第二航海『ダイヤモンドに翼はない』｜PL：なごみさん、naoさん、ぴーさん、たちばなさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "WOjY9ZXnpjg",
+      "title": "CoC「アトラシアの楽園」後編②｜KP/作：naoさん、PL：くま。、とこさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "WOjY9ZXnpjg",
+      "title": "CoC「アトラシアの楽園」後編②｜KP/作：naoさん、PL：くま。、とこさん",
+      "field": "gmKpDl",
+      "before": null,
+      "after": "naoさん",
+      "reason": "explicit KP/GM/DL label",
+      "confidence": "high"
+    },
+    {
+      "id": "P4cW7Km_sh4",
+      "title": "CoC「アトラシアの楽園」後編①｜KP/作：naoさん、PL：くま。、とこさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "P4cW7Km_sh4",
+      "title": "CoC「アトラシアの楽園」後編①｜KP/作：naoさん、PL：くま。、とこさん",
+      "field": "gmKpDl",
+      "before": null,
+      "after": "naoさん",
+      "reason": "explicit KP/GM/DL label",
+      "confidence": "high"
+    },
+    {
+      "id": "aPnTvOqkZ-8",
+      "title": "CoC「アトラシアの楽園」前編①｜KP/作：naoさん、PL：くま。、とこさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "aPnTvOqkZ-8",
+      "title": "CoC「アトラシアの楽園」前編①｜KP/作：naoさん、PL：くま。、とこさん",
+      "field": "gmKpDl",
+      "before": null,
+      "after": "naoさん",
+      "reason": "explicit KP/GM/DL label",
+      "confidence": "high"
+    },
+    {
+      "id": "QplH4ARPzZA",
+      "title": "CoC「アトラシアの楽園」前編②｜KP/作：naoさん、PL：くま。、とこさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "QplH4ARPzZA",
+      "title": "CoC「アトラシアの楽園」前編②｜KP/作：naoさん、PL：くま。、とこさん",
+      "field": "gmKpDl",
+      "before": null,
+      "after": "naoさん",
+      "reason": "explicit KP/GM/DL label",
+      "confidence": "high"
+    },
+    {
+      "id": "sz8f1ZWPyxQ",
+      "title": "CoC『ピリオド・アズール』後編｜KP：うたかたさん、PL：くま。、志筑さん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "CW580BfElNQ",
+      "title": "CoC『ピリオド・アズール』前編｜KP：うたかたさん、PL：くま。、志筑さん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "UylPPoYNe04",
+      "title": "CoC「Good night,Judas.」②｜KP：あっとさん、PL：くま。、千歳さん、たちばなさん、fusaさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "YL_lf_1SadM",
+      "title": "CoC「Good night,Judas.」①｜KP：あっとさん、PL：くま。、千歳さん、たちばなさん、fusaさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "4D8dRyhp3qs",
+      "title": "Call of Cthulhu 「Aconite:re」Part.1 | KP：なるみんさん、PL：千歳さん、たちばなさん、くま。、らとさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "hGD7-xs1mOI",
+      "title": "CoC 『かわらぬ挨拶』｜KP：餅パンさん、PL：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "xM2aVP6abps",
+      "title": "CoC「閏の心眼」①個別導入｜KP：なるみんさん、PL：餅ぱんさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "YlJibRGIlDs",
+      "title": "【 CoC 】読経ネットワーク #石油王ネットワーク 【 クトゥルフ神話TRPG 】KP川犬 PLたみー/めんだこちゃん/きつねさん/花笠イリヤ",
+      "field": "pl",
+      "before": null,
+      "after": "たみー/めんだこちゃん/きつねさん/花笠イリヤ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "nuKQBs-V524",
+      "title": "CoC 『暑と寒』｜PL：満月みおさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "Z5TzEy3LLaE",
+      "title": "【 CoC 】ハートフルワンダーランド #ハトワン03【 クトゥルフ神話TRPG 】KP川犬 PL秋月ユエノ/ラングドシャ/玄武みちる/超高音",
+      "field": "pl",
+      "before": null,
+      "after": "秋月ユエノ/ラングドシャ/玄武みちる/超高音",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "SKWpU9EyjnE",
+      "title": "クトゥルフ神話TRPG『腕に刻まれる死』Ci,天城てん,ペレ夫",
+      "field": "pl",
+      "before": null,
+      "after": "Ci,天城てん,ペレ夫",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "_XW5mJJPcxA",
+      "title": "【 CoC 】ホワイトブラッククリスマス #コーかなくるホワブラ #ホワブラ2024 【 クトゥルフ神話TRPG 】KP川犬 PLコーサカ/健屋花那/藍月なくる",
+      "field": "pl",
+      "before": null,
+      "after": "コーサカ/健屋花那/藍月なくる",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "OXO774Z4GSg",
+      "title": "クトゥルフ神話TRPG『ゴエツドウシュウ』｜withとこちゃん、兎和ちゃんと踊",
+      "field": "pl",
+      "before": null,
+      "after": "とこちゃん、兎和ちゃん",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "IKTsOipw1IA",
+      "title": "CoC『ようこそ！迷冥市役所都市伝説課へ！』④ KP：ハナレさん｜PL：くま。、千歳さん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "xSuZto1BbSU",
+      "title": "Call of Cthulhu 『 SHADOWCODE-シャドウコード-』8日目｜PL：とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "_L7jDullS1k",
+      "title": "Call of Cthulhu 「Aconite:re」Part.2 | KP：なるみんさん、PL：千歳さん、たちばなさん、くま。、らとさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "NhhXriYuqX0",
+      "title": "マーダーミステリー「箱庭の観測者様へ」｜GM：ひふみ四歩さん、PL：くま。",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "120nsySP9YI",
+      "title": "CoC『救世主』第8陣2日目 PL：むくさん、うみさん、まめさん｜KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "DvRoSyodQZs",
+      "title": "CoC『DOGMA』前編｜KP： たまさん、 HO1：くま。、HO2：みおさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "DvRoSyodQZs",
+      "title": "CoC『DOGMA』前編｜KP： たまさん、 HO1：くま。、HO2：みおさん",
+      "field": "pl",
+      "before": null,
+      "after": "くま。 / みおさん",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "gvIp51uevTY",
+      "title": "エモクロア「アストラ」withのむさん",
+      "field": "pl",
+      "before": null,
+      "after": "のむさん",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "Xo8uUAAqdv4",
+      "title": "CoC「夜暇氷雨」withのむさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "Xo8uUAAqdv4",
+      "title": "CoC「夜暇氷雨」withのむさん",
+      "field": "pl",
+      "before": null,
+      "after": "のむさん",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "tG56e4x-cko",
+      "title": "Call of Cthulhu 『 SHADOWCODE-シャドウコード-』7日目｜PL：とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "MlSJVDqyEN4",
+      "title": "Call of Cthulhu 『 SHADOWCODE-シャドウコード-』1日目｜PL：とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "YX-m77TG_FU",
+      "title": "Call of Cthulhu 『 SHADOWCODE-シャドウコード-』5日目｜PL：とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "g2gz-6Ho78c",
+      "title": "Call of Cthulhu 『 SHADOWCODE-シャドウコード-』4日目｜PL：とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "mR6L_vCD2sA",
+      "title": "Call of Cthulhu 『 SHADOWCODE-シャドウコード-』3日目｜PL：とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "7VoVqXTOLUE",
+      "title": "Call of Cthulhu 『 SHADOWCODE-シャドウコード-』6日目｜PL：とこさん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "YUbWM_8w5hw",
+      "title": "CoC『イドラの約束』1日目①｜KP：椎さん、PL：あてなんさん、餅パンさん、くま。、みおさん、たまさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "Y-yr3p2CSOk",
+      "title": "CoC『イドラの約束』5日目②｜KP：椎さん、PL：あてなんさん、餅パンさん、くま。、みおさん、たまさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "YXjOCPMhPSQ",
+      "title": "CoC『イドラの約束』3日目｜KP：椎さん、PL：あてなんさん、餅パンさん、くま。、みおさん、たまさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "qtmcs1lEgE4",
+      "title": "CoC『イドラの約束』4日目｜KP：椎さん、PL：あてなんさん、餅パンさん、くま。、みおさん、たまさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "qI0FFhUvEM4",
+      "title": "CoC『イドラの約束』2日目｜KP：椎さん、PL：あてなんさん、餅パンさん、くま。、みおさん、たまさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "UBwk4wIFTSw",
+      "title": "CoC『イドラの約束』1日目②｜KP：椎さん、PL：あてなんさん、餅パンさん、くま。、みおさん、たまさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "ebg0oAk5fn0",
+      "title": "CoC「アルフ・ライラ・ワ・ライラは語らない」第4航海【花嫁の贈り物】",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "czFmPPRapDw",
+      "title": "CoC 「アルフ・ライラ・ワ・ライラは語らない」第5航海【酒宴、そして私怨】③",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "FKZvhlqzujI",
+      "title": "【マーダーミステリー】『ふわふわクリームさらにジューシー』 ( PL：常春、秋野てくと、御子柴しげ、GM：天井音らむね ) 【GM視点】",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "AleXORCOsk8",
+      "title": "CoC「胡桃炸裂症候群 Drosselmeyer Syndrome  」⑦CASE4｜KP：満月みおさん、PL：くま。、剣犬士さん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "OEgHuvZ9Tzg",
+      "title": "CoC「胡桃炸裂症候群 Drosselmeyer Syndrome  」⑥CASE3｜KP：満月みおさん、PL：くま。、剣犬士さん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "EwMI6uKYR7k",
+      "title": "CoC「アルフ・ライラ・ワ・ライラは語らない」第一陣第6航海②「灰を喰らえど腹は満たず」",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "UQD66ZrXonI",
+      "title": "CoC 「アルフ・ライラ・ワ・ライラは語らない」第一陣第6航海①「灰を喰らえど腹は満たず」",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "bySvr4naneE",
+      "title": "CoC 「エル・コルガド・アヴァターラ」①導入｜KP：うみさん、PL：むくさん、まめさん、まるたさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "z3IVCBlA6Xw",
+      "title": "CoC「明日ハ私ノ風ガ吹ク」うみトむくノ風ガク",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "OzSiz8SO_Z8",
+      "title": "CoC「閏の心眼」③EP1 呪いのビデオ 後編｜KP：なるみんさん、PL：餅ぱんさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "xgFiUq1uh6A",
+      "title": "CoC『終末トランジット第6陣』後編",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "OvQTl8-GZTw",
+      "title": "CoC「ディープブルーにキラめいて」本編②｜KP：みよんさん、PL：満月みおさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "XcJiFroSrm8",
+      "title": "CoC「ディープブルーにキラめいて」本編①｜KP：みよんさん、PL：満月みおさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "fppze749hck",
+      "title": "新クトゥルフ神話TRPG『忘れじの理想郷』星川サラ,山神カルタ,フミ",
+      "field": "pl",
+      "before": null,
+      "after": "星川サラ,山神カルタ,フミ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "H6HQyuGc_AY",
+      "title": "クトゥルフ神話TRPG『奇妙な共闘』ハメコ。 , Jaeger , いちみボム , 螺旋巻かたり",
+      "field": "pl",
+      "before": null,
+      "after": "ハメコ。 , Jaeger , いちみボム , 螺旋巻かたり",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "4rvzDoVwf_U",
+      "title": "新クトゥルフ神話TRPG『帰らじの理想郷』星川サラ,山神カルタ,フミ",
+      "field": "pl",
+      "before": null,
+      "after": "星川サラ,山神カルタ,フミ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "WM2wQJI5WMw",
+      "title": "【 CoC 】窓の中の箱庭にて #窓庭13 【 クトゥルフ神話TRPG 】KP川犬 PL あお/辛咲こまど/甘乃あもこ/心導しるべ",
+      "field": "pl",
+      "before": null,
+      "after": "あお/辛咲こまど/甘乃あもこ/心導しるべ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "h9S_HfZcR2A",
+      "title": "CoC『ようこそ！迷冥市役所都市伝説課へ！』① KP：ハナレさん｜PL：くま。、千歳さん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "fom8e_4mzkc",
+      "title": "エモクロアTRPG『ロールシャッハシンドローム』帝レン,スコティッシュ・ホールド（紅月サクヤ,健屋花那）",
+      "field": "pl",
+      "before": null,
+      "after": "帝レン,スコティッシュ・ホールド",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "rbXauTGXELU",
+      "title": "新クトゥルフ神話TRPG『冒涜都市Ｚ～深碧の魔境～』雪城眞尋,鷲見友美ジェナ,neon",
+      "field": "pl",
+      "before": null,
+      "after": "雪城眞尋,鷲見友美ジェナ,neon",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "oneGb1ObZxY",
+      "title": "エモクロアTRPG「大怪獣サメラ」PL/むつー ズズ ぱぱびっぷ",
+      "field": "pl",
+      "before": null,
+      "after": "むつー ズズ ぱぱびっぷ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "TcIk_5sWpfQ",
+      "title": "マーダーミステリー『押忍！魔駄魅剃学園』GM視点 #マダミス学園歌リレー科",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "xPHzyvPmOlg",
+      "title": "CoC 「先生」｜KP：ハナレさん、PL：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "sDtnRYTQa5w",
+      "title": "【 CoC 】近くて遠きは終着点Another #キックするちかしゅうアナザー 【 クトゥルフ神話TRPG 】KP川犬 PL花笠イリヤ/すべからくおかぴ/音海早良/すいそ",
+      "field": "pl",
+      "before": null,
+      "after": "花笠イリヤ/すべからくおかぴ/音海早良/すいそ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "oppEQ_yP3BE",
+      "title": "CoC「快刀乱魔」① 一日目｜KP：ちなてさん、PL：より。さん、ふぁんとさん、くま。、Nagatoさん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "JYyyL8goYas",
+      "title": "CoC「累卵」第8陣2日目｜PL：ながみつさん、雛ノ衣さん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "6BWDVxRUuDQ",
+      "title": "エモクロアTRPG『ロールシャッハシンドローム』竜胆 尊,レグルシュ・ライオンハート",
+      "field": "pl",
+      "before": null,
+      "after": "竜胆 尊,レグルシュ・ライオンハート",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "qhjPEKGPryI",
+      "title": "CoC「Call the Name of Your Fate 」第10陣 ｜PL:うみさん、むくさん、KP:くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "qymcOahv_9Q",
+      "title": "CoC『初恋性ストックホルム症候群』｜KP：Nagatoさん、PL：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "Bs_H-R5ttlo",
+      "title": "CoC 「アルフ・ライラ・ワ・ライラは語らない」第一陣第3航海②「霊長という獣」",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "0CstMUBUU4E",
+      "title": "CoC 「プルガトリウムの夜」第四陣後編",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "Zl2iXnARn_M",
+      "title": "CoC『ロトカ・ヴォルテラの愛堕討ち』②｜KP：うみさん｜PL：千歳さん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "uNE01VOq3Mg",
+      "title": "CoC『ロトカ・ヴォルテラの愛堕討ち』③｜KP：うみさん｜PL：千歳さん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "Nfw6rMv3yAk",
+      "title": "エモクロアTRPG「大怪獣サメラ」PL/高生紳士 佐藤ホームズ 周央サンゴ",
+      "field": "pl",
+      "before": null,
+      "after": "高生紳士 佐藤ホームズ 周央サンゴ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "idq6zFfL8YY",
+      "title": "新クトゥルフ神話TRPG『冒涜都市Ｚ～深碧の魔境～』k4sen,ボドカ,おぼ",
+      "field": "pl",
+      "before": null,
+      "after": "k4sen,ボドカ,おぼ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "ZK-ncpo5iF0",
+      "title": "【 エモクロアTRPG 】ロールシャッハシンドローム #超やぴシャッハ KP川犬 PL 超高音/やぴさん。",
+      "field": "pl",
+      "before": null,
+      "after": "超高音/やぴさん。",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "BVwrPH-gdjA",
+      "title": "舞台『ロールシャッハシンドローム』すずきさん,ディズム（2023/11/25/19:00）",
+      "field": "pl",
+      "before": null,
+      "after": "すずきさん,ディズム",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "VHN-q--UQjw",
+      "title": "舞台『ロールシャッハシンドローム』千春,岡田彩夢,ディズム（2023/11/26/13:00）",
+      "field": "pl",
+      "before": null,
+      "after": "千春,岡田彩夢,ディズム",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "JW9MOzs1EyA",
+      "title": "舞台『ロールシャッハシンドローム』森永千才,ディズム（2023/11/23/14:00）",
+      "field": "pl",
+      "before": null,
+      "after": "森永千才,ディズム",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "AsEDAN3bUas",
+      "title": "舞台『ロールシャッハシンドローム』祁答院慎,ディズム（2023/11/25/14:00）",
+      "field": "pl",
+      "before": null,
+      "after": "祁答院慎,ディズム",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "yPUVYJX-l5o",
+      "title": "舞台『ロールシャッハシンドローム』ハヤシ,ディズム（2023/11/24/19:00）",
+      "field": "pl",
+      "before": null,
+      "after": "ハヤシ,ディズム",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "wqx-hN3KSQo",
+      "title": "舞台『ロールシャッハシンドローム』上田悠介,平田裕香,ディズム（2023/11/23/19:00）",
+      "field": "pl",
+      "before": null,
+      "after": "上田悠介,平田裕香,ディズム",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "ug_eSXck0vA",
+      "title": "舞台『ロールシャッハシンドローム』名越康文,ディズム（2023/11/22/18:00）",
+      "field": "pl",
+      "before": null,
+      "after": "名越康文,ディズム",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "fpbaf0bIH4o",
+      "title": "メン限 / 舞台『ロールシャッハシンドローム』hacchi,ディズム（2023/11/22/ゲネプロ）",
+      "field": "pl",
+      "before": null,
+      "after": "hacchi,ディズム",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "5eG5lofYVug",
+      "title": "新クトゥルフ神話TRPG『帰らじの理想郷』上田悠介 ,井上優 ,平田裕香",
+      "field": "pl",
+      "before": null,
+      "after": "上田悠介 ,井上優 ,平田裕香",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "1_da3Efg0X8",
+      "title": "【エモクロアTRPG】夕星シンフォニア #天ホムシンフォニア【天開司、佐藤ホームズ】",
+      "field": "pl",
+      "before": null,
+      "after": "天開司、佐藤ホームズ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "KuFqr1aPyHE",
+      "title": "CoC『 爛爛』第一話「燦爛」｜KP：ねむさん、PL：餅パンさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "_BTWvudZHxs",
+      "title": "CoC『 爛爛』第四話「絢爛」｜KP：ねむさん、PL：餅パンさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "KHqXw5G8thQ",
+      "title": "【エモクロアTRPG】夕星シンフォニア #すこなくシンフォニア【藍月なくる、健屋花那】",
+      "field": "pl",
+      "before": null,
+      "after": "藍月なくる、健屋花那",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "fEp3mtnLsQE",
+      "title": "CoC『永虹灰帰のポリス』4日目｜KP：たるととさん、PL：雪車町ルイさん、満月みおさん、ぷるぱさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "OcHmvYxLGnQ",
+      "title": "CoC 『永虹灰帰のポリス』2日目②｜KP：たるととさん、PL：雪車町ルイさん、満月みおさん、ぷるぱさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "2NoeJaQpUeY",
+      "title": "CoC『永虹灰帰のポリス』2日目①｜KP：たるととさん、PL：雪車町ルイさん、満月みおさん、ぷるぱさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "f3314Vov2Ug",
+      "title": "エモクロアTRPG「大怪獣サメラ」PL/秋月ユエノ　川犬　喜多嶋みちる",
+      "field": "pl",
+      "before": null,
+      "after": "秋月ユエノ 川犬 喜多嶋みちる",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "BGIpq7hx32k",
+      "title": "【エモクロアTRPG】夕星シンフォニア  #逆行シンフォニア【ディズム、岡田彩夢】",
+      "field": "pl",
+      "before": null,
+      "after": "ディズム、岡田彩夢",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "O6JrMk6dqTo",
+      "title": "【マダミス】「籠の燕は夜、夢を見る 」【医者：高音超子】 #いいなかごゆめ",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "Bog-UJnoZkk",
+      "title": "CoC『永虹灰帰のポリス』2日目③｜KP：たるととさん、PL：雪車町ルイさん、満月みおさん、ぷるぱさん、くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "Le3iOSyrTTo",
+      "title": "新クトゥルフ神話TRPG『コーヒー一杯分の恐怖』堰代ミコ,宗谷いちか",
+      "field": "pl",
+      "before": null,
+      "after": "堰代ミコ,宗谷いちか",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "foHMNajrC3c",
+      "title": "新クトゥルフ神話TRPG『忘れじの理想郷』上田悠介 ,井上優 ,平田裕香",
+      "field": "pl",
+      "before": null,
+      "after": "上田悠介 ,井上優 ,平田裕香",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "TEN7X0-FdWg",
+      "title": "【 CoC 】近くて遠きは終着点 #ちかしゅう05 【 クトゥルフ神話TRPG 】KP川犬 PL ぜったい天使くるみ/乙奈りの/姫乃のえ",
+      "field": "pl",
+      "before": null,
+      "after": "ぜったい天使くるみ/乙奈りの/姫乃のえ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "qSWK3oOK28w",
+      "title": "【マダミス】「狂気山脈　 陰謀の分水嶺」【医者視点：高音超子】 #か行狂気山脈",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "0CiYGpy8FFA",
+      "title": "【クトゥルフ神話TRPG】辜月のN 第三幕 - 後編　#むつ高こげぬ【むつー／高生紳士】",
+      "field": "pl",
+      "before": null,
+      "after": "むつー/高生紳士",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "DJi6TvlQ7js",
+      "title": "【クトゥルフ神話TRPG】辜月のN 第三幕 - 前編　#むつ高こげぬ【むつー／高生紳士】",
+      "field": "pl",
+      "before": null,
+      "after": "むつー/高生紳士",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "zBlscE-MzdM",
+      "title": "【 CoC 】ホワイトブラッククリスマス #テラななホワブラ #ホワブラ2022 【 クトゥルフ神話TRPG 】KP川犬 PLテラゾー/ゆうきななえ",
+      "field": "pl",
+      "before": null,
+      "after": "テラゾー/ゆうきななえ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "qaUHt_1Ii7Y",
+      "title": "CoC『片鱗』｜PL： 雲中さん、れんがさん｜KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "_4i82K5fWrI",
+      "title": "【 CoC 】ハートフルワンダーランド #ハトワン01【 クトゥルフ神話TRPG 】KP川犬 PL空衣御侍/小ka栗ショーン/しょぼすけ",
+      "field": "pl",
+      "before": null,
+      "after": "空衣御侍/小ka栗ショーン/しょぼすけ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "u2HmvCmexSg",
+      "title": "マダミス狂気山脈完結篇『薄明三角点』　#登山隊いよいよリストラかも　GM視点配信",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "oG9QBaf2xuo",
+      "title": "エモクロアTRPG「大怪獣サメラ」PL/カルロ ピノ　宇推くりあ　星見まどか",
+      "field": "pl",
+      "before": null,
+      "after": "カルロ ピノ 宇推くりあ 星見まどか",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "dtCZLr8tHd8",
+      "title": "CoC『星のない夜』第13陣 とこさん、コウさん、めんだこさん、やけくそ乙女さん",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "2gf0g-BZg6M",
+      "title": "エモクロアTRPG『ロールシャッハシンドローム』k4sen,Ajaka",
+      "field": "pl",
+      "before": null,
+      "after": "k4sen,Ajaka",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "1tvYrTKzxrE",
+      "title": "【 CoC 】近くて遠きは終着点 #ちかしゅう01 【 クトゥルフ神話TRPG 】KP川犬 PLココロニ・ノンノ/IMAGINA/獅子姫ろみお/朝霧すいむ",
+      "field": "pl",
+      "before": null,
+      "after": "ココロニ・ノンノ/IMAGINA/獅子姫ろみお/朝霧すいむ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "_Uth9ScoXLk",
+      "title": "【 CoC 】近くて遠きは終着点 #ちかしゅう02 【 クトゥルフ神話TRPG 】KP川犬 PL 紡生ムルク/マイケル・J・タナカ/maŸUko/雪城眞尋",
+      "field": "pl",
+      "before": null,
+      "after": "紡生ムルク/マイケル・J・タナカ/maŸUko/雪城眞尋",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "TDoZxWde9AY",
+      "title": "【 CoC 】近くて遠きは終着点 #ちかしゅう03 【 クトゥルフ神話TRPG 】KP川犬 PL こにゃばた/月田桜菜/烏星",
+      "field": "pl",
+      "before": null,
+      "after": "こにゃばた/月田桜菜/烏星",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "N3aePKtSfp8",
+      "title": "マーダーミステリー『押忍！魔駄魅剃学園』GM視点 #マダミス学園ニコニコ科",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "H-BOZLfN4RY",
+      "title": "CoCTRPGシナリオ「 Re:chain 」",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "oMHYyoVAMI0",
+      "title": "マーダーミステリー『王女と5人の暗殺者』全体会議視点",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "0ylfP8uix-w",
+      "title": "CoC 『救世主』第7陣1日目｜PL：満月みおさん、より。さん、雪車町ルイさん｜KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "iDhexQM4iPI",
+      "title": "マダミス狂気山脈2周目『星ふる天辺』　#登山隊またリストラかも　GM視点配信",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "3vhYlIauOLU",
+      "title": "エモクロアTRPG『ロールシャッハシンドローム』橘ひなの,如月れん",
+      "field": "pl",
+      "before": null,
+      "after": "橘ひなの,如月れん",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "D5NN17vQUkc",
+      "title": "【 CoC 】のっく、のっく、ちゃいむ #おちゃむつのくちゃ【 クトゥルフ神話TRPG 】KP川犬 PL御先蔵馬/むつー/ちゃげぽよ。",
+      "field": "pl",
+      "before": null,
+      "after": "御先蔵馬/むつー/ちゃげぽよ。",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "lortepxlVCo",
+      "title": "【 CoC 】のっく、のっく、ちゃいむ #ひなたみあんのくちゃ【 クトゥルフ神話TRPG 】KP川犬 PL猫宮ひなた/たみー/日ノ森あんず",
+      "field": "pl",
+      "before": null,
+      "after": "猫宮ひなた/たみー/日ノ森あんず",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "rvsp0a66Ows",
+      "title": "新クトゥルフ神話TRPG『冒涜都市Ｚ～深碧の魔境～』文町,ごくつぶし,イチ",
+      "field": "pl",
+      "before": null,
+      "after": "文町,ごくつぶし,イチ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "XmDtB_xz3k8",
+      "title": "【 CoC 】キルキルイキル #じゃっくるキルキル 【 クトゥルフ神話TRPG 】KP川犬 PL霧島ジャック/藍月なくる",
+      "field": "pl",
+      "before": null,
+      "after": "霧島ジャック/藍月なくる",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "BruGOyJGRZI",
+      "title": "新クトゥルフ神話TRPG『忘れじの理想郷』宗谷いちか,堰代ミコ,大浦るかこ",
+      "field": "pl",
+      "before": null,
+      "after": "宗谷いちか,堰代ミコ,大浦るかこ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "TXKVkwcSoL8",
+      "title": "【エモクロアTRPG】オトギバラシ/ #アモミバラシ 【PL甘乃あもこ/ミカ・ドロップ】",
+      "field": "pl",
+      "before": null,
+      "after": "甘乃あもこ/ミカ・ドロップ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "UTDhk1JEW6k",
+      "title": "【クトゥルフ神話TRPG】奇奇怪怪同好会 chapter1 心霊プリ　＃奇怪なセレじょ【東堂コハク/西園チグサ/北小路ヒスイ/周央サンゴ】",
+      "field": "pl",
+      "before": null,
+      "after": "東堂コハク/西園チグサ/北小路ヒスイ/周央サンゴ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "LxroP8gxb6U",
+      "title": "エモクロアTRPG「大怪獣サメラ」PL/夢咲刻夜 烏星 小花衣ももみ",
+      "field": "pl",
+      "before": null,
+      "after": "夢咲刻夜 烏星 小花衣ももみ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "lO8mT8MJB6o",
+      "title": "マーダーミステリー『絆の永逝』本部配信 #絆の永逝桜菜卓2",
+      "field": "system",
+      "before": null,
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "IORO4pqryh0",
+      "title": "【クトゥルフ神話TRPG】マイ・ロスト・シティー #Re_マイロス  【ありあ/上田悠介/ズズ/もこ田めめめ/周央サンゴ】",
+      "field": "pl",
+      "before": null,
+      "after": "ありあ/上田悠介/ズズ/もこ田めめめ/周央サンゴ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "gw9XiFD1eDw",
+      "title": "【前編】マーダーミステリー「狂気山脈　陰謀の分水嶺」【佐藤ホームズ視点】",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "O914tVqUX8c",
+      "title": "薄明三角点◬03　／マダミス狂気山脈完結篇【GM視点】（PL：ななひら、藍月なくる、西園チグサ、大浦るかこ、花京院ちえり）",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "bHYNKKllAV4",
+      "title": "新クトゥルフ神話TRPG『帰らじの理想郷』むつー,夢咲刻夜,ぱぱびっぷ",
+      "field": "pl",
+      "before": null,
+      "after": "むつー,夢咲刻夜,ぱぱびっぷ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "MUgJg8OhLZk",
+      "title": "新クトゥルフ神話TRPG「命盟」【前編】 プレイヤー：天開司&コーサカ&健屋花那 #命盟03",
+      "field": "pl",
+      "before": null,
+      "after": "天開司&コーサカ&健屋花那",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "uGMR2Loto6c",
+      "title": "新クトゥルフ神話TRPG『彼方への羨望』コーサカ,高生紳士",
+      "field": "pl",
+      "before": null,
+      "after": "コーサカ,高生紳士",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "IztKZPHHhas",
+      "title": "新クトゥルフ神話TRPG「命盟」 プレイヤー：高生紳士&ディズム&まだら牛 #命盟01",
+      "field": "pl",
+      "before": null,
+      "after": "高生紳士&ディズム&まだら牛",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "TQP890JexVc",
+      "title": "新クトゥルフ神話TRPG「命盟」【前編】 プレイヤー：カルロ・ピノ&もこ田めめめ&ヤマトイオリ #命盟02",
+      "field": "pl",
+      "before": null,
+      "after": "カルロ・ピノ&もこ田めめめ&ヤマトイオリ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "8KoO2s4DLo4",
+      "title": "新クトゥルフ神話TRPG『聖なる夜の性癖詰め込みTRPG』でびでび・でびる,高生紳士,磁富モノエ,夢咲刻夜",
+      "field": "pl",
+      "before": null,
+      "after": "でびでび・でびる,高生紳士,磁富モノエ,夢咲刻夜",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "vLH5Krn1LOA",
+      "title": "【クトゥルフ神話TRPG】ぼくらのシャングリラ、あの子のほうき星 #キカイノカラダなぼくシャン【PL 藍月なくる、周央 サンゴ、健屋 花那、でびでび・でびる】",
+      "field": "pl",
+      "before": null,
+      "after": "藍月なくる、周央 サンゴ、健屋 花那、でびでび・でびる",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "SyoRYUwSauk",
+      "title": "クトゥルフ神話TRPG「REDLINE DEADLINE」/PL-キリト、栗山やんみ、藍月なくる、ユーガタ",
+      "field": "pl",
+      "before": null,
+      "after": "キリト、栗山やんみ、藍月なくる、ユーガタ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "bya3OYleBuY",
+      "title": "【マーダーミステリー】狂気山脈　陰謀の分水嶺 / 3rd Climb【謎の超豪華異種格闘卓】 - 【定点】オープン無線",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "マダミス",
+      "reason": "explicit system name",
+      "confidence": "high"
+    },
+    {
+      "id": "rXOb1JijV0E",
+      "title": "新クトゥルフ神話TRPG『帰らじの理想郷』モイラ,周央サンゴ,栗山やんみ",
+      "field": "pl",
+      "before": null,
+      "after": "モイラ,周央サンゴ,栗山やんみ",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "j5O0n4N8tPo",
+      "title": "【マーダーミステリー】この慟哭は届かない【PL：管理ロボ／結崎有理 視点】 #0601の慟哭",
+      "field": "pl",
+      "before": "",
+      "after": "管理ロボ/結崎有理",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "poMGJRmTz9U",
+      "title": "【マーダーミステリー】背徳の代紋（エムブレム）【ひよりん*／張 多幸 視点】#背徳のしあぴこひゆ",
+      "field": "pl",
+      "before": "",
+      "after": "ひよりん*/張 多幸",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "twvtCaLDzEk",
+      "title": "夕星シンフォニア　前編  #さけひよシンフォニア【ひよりん*、さけこ。】",
+      "field": "pl",
+      "before": null,
+      "after": "ひよりん*、さけこ。",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "LY5uR3DyvXQ",
+      "title": "夕星シンフォニア　後編 #さけひよシンフォニア【ひよりん*、さけこ。】",
+      "field": "pl",
+      "before": null,
+      "after": "ひよりん*、さけこ。",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "Cq0oLCkM6aE",
+      "title": "マジックブルーの境界線 #七たい境界線 【七篠K、たい】",
+      "field": "pl",
+      "before": null,
+      "after": "七篠K、たい",
+      "reason": "explicit cast in title",
+      "confidence": "high"
+    },
+    {
+      "id": "gnWdYKG_1To",
+      "title": "『アルフ・ライラ・ワ・ライラは語らない』第3陣：第二航海  「ダイヤモンドに翼はない」｜PL：Suzuさん、サマー漱石さん、みずかみりいなさん、Ya_1945さん、KP：くま。",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "CsUKcl1fhog",
+      "title": "【都市伝説】にじさんじライバーたち、あの「きさらぎ駅」に迷い込む【TRPG】　#にじさんじの新約きさらぎ駅",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "BVwrPH-gdjA",
+      "title": "舞台『ロールシャッハシンドローム』すずきさん,ディズム（2023/11/25/19:00）",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "VHN-q--UQjw",
+      "title": "舞台『ロールシャッハシンドローム』千春,岡田彩夢,ディズム（2023/11/26/13:00）",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "JW9MOzs1EyA",
+      "title": "舞台『ロールシャッハシンドローム』森永千才,ディズム（2023/11/23/14:00）",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "AsEDAN3bUas",
+      "title": "舞台『ロールシャッハシンドローム』祁答院慎,ディズム（2023/11/25/14:00）",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "yPUVYJX-l5o",
+      "title": "舞台『ロールシャッハシンドローム』ハヤシ,ディズム（2023/11/24/19:00）",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "wqx-hN3KSQo",
+      "title": "舞台『ロールシャッハシンドローム』上田悠介,平田裕香,ディズム（2023/11/23/19:00）",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "ug_eSXck0vA",
+      "title": "舞台『ロールシャッハシンドローム』名越康文,ディズム（2023/11/22/18:00）",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "fpbaf0bIH4o",
+      "title": "メン限 / 舞台『ロールシャッハシンドローム』hacchi,ディズム（2023/11/22/ゲネプロ）",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "IgtCQJgCBGM",
+      "title": "#新約ネットロアはしご卓（後編）『新約・コトリバコ』 ／PL：k4sen、おぼ、ボドカ　〚クリアランク：SS 〛",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "1uJAbBexrO4",
+      "title": "#新約ネットロアはしご卓（前編）『新約・きさらぎ駅』 ／PL：k4sen、おぼ、ボドカ",
+      "field": "system",
+      "before": null,
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "sU-2jYvURgs",
+      "title": "キャラメイクから遊ぶTRPG『新約・きさらぎ駅』 ／PL：天開司、猫宮ひなた、富士葵",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "sQagV23KnUo",
+      "title": "ソープスクール第3陣HO1大万尖先生の受難",
+      "field": "system",
+      "before": null,
+      "after": "CoC6",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "1f3qhZNS0_c",
+      "title": "【高生卓】暗闇の中、傍に立つ【#暗闇の中俺らがいる】",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "CoC6",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "0bk_j28na_0",
+      "title": "TRPG Live ｜ 暗闇の中、傍に立つ❷　-Stand by me, in the Dark.　【PL：緋笠トモシカ、日ノ森あんず、しまどりる】",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "CoC6",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "m-8bOBq6cjo",
+      "title": "声優とおきがるにTRPG #おきくら15",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "CoC7",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "t_YOLPSOKm4",
+      "title": "📦新約コトリバコ第参号作戦 〚クリアランク：S〛",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "tjpGqnD5BFc",
+      "title": "前編 ｜ Re:chain  #高月宮Re_chain【ねこずし卓】",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "CoC6",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "fPJWf1gSLPk",
+      "title": "📦新約コトリバコ第拾伍号作戦 〚クリアランク：A 〛",
+      "field": "system",
+      "before": "TRPG (Unknown)",
+      "after": "エモクロア",
+      "reason": "same canonical scenario",
+      "confidence": "high"
+    },
+    {
+      "id": "mUhI0ZB9qwc",
+      "title": "【クトゥルフ神話TRPG】胡桃炸裂症候群 -Drosselmeyer Syndrome- / 後編 おらんじ～な、天羽よつは【＃じなよちゅ症候群】",
+      "field": "pl",
+      "before": null,
+      "after": "おらんじ~な、天羽よつは",
+      "reason": "same scenario/channel/hashtag",
+      "confidence": "high"
+    },
+    {
+      "id": "td56zOOM1os",
+      "title": "【クトゥルフ神話TRPG】胡桃炸裂症候群 -Drosselmeyer Syndrome- / 導入 おらんじ～な、天羽よつは【＃じなよちゅ症候群】",
+      "field": "pl",
+      "before": null,
+      "after": "おらんじ~な、天羽よつは",
+      "reason": "same scenario/channel/hashtag",
+      "confidence": "high"
+    },
+    {
+      "id": "TJ-rwTjsk0U",
+      "title": "【クトゥルフ神話TRPG】胡桃炸裂症候群 -Drosselmeyer Syndrome- / 中編 おらんじ～な、天羽よつは【＃じなよちゅ症候群】",
+      "field": "pl",
+      "before": null,
+      "after": "おらんじ~な、天羽よつは",
+      "reason": "same scenario/channel/hashtag",
+      "confidence": "high"
+    },
+    {
+      "id": "cnr2FQqyszQ",
+      "title": "【クトゥルフ神話TRPG】胡桃炸裂症候群 -Drosselmeyer Syndrome- / 中編 しぐれなお、水凪自由【＃雨水症候群】",
+      "field": "pl",
+      "before": null,
+      "after": "しぐれなお、水凪自由",
+      "reason": "same scenario/channel/hashtag",
+      "confidence": "high"
+    },
+    {
+      "id": "8-XZ233cO88",
+      "title": "【クトゥルフ神話TRPG】胡桃炸裂症候群 -Drosselmeyer Syndrome- / 前編 しぐれなお、水凪自由【＃雨水症候群】",
+      "field": "pl",
+      "before": null,
+      "after": "しぐれなお、水凪自由",
+      "reason": "same scenario/channel/hashtag",
+      "confidence": "high"
+    },
+    {
+      "id": "gW9EtG33qLI",
+      "title": "Vtuberとゲーム実況者のクトゥルフ神話TRPG「狂気山脈～邪神の山嶺～」前編　 #むつー卓",
+      "field": "pl",
+      "before": null,
+      "after": "高生紳士、にどみ、天開司",
+      "reason": "same scenario/channel/hashtag",
+      "confidence": "high"
+    },
+    {
+      "id": "E8sNQASmfJk",
+      "title": "【🎲クトゥルフ神話TRPG】ネームレス・カルト/後編【#アベンジャーズカルト】",
+      "field": "pl",
+      "before": null,
+      "after": "川犬、すいそ、スクラップ、御子柴しげ",
+      "reason": "same scenario/channel/hashtag",
+      "confidence": "high"
+    },
+    {
+      "id": "i8ValF-qd-A",
+      "title": "【#マーダーミステリー】名探偵は四人もいらない【GM視点/#名探偵四とあ卓2】",
+      "field": "pl",
+      "before": "",
+      "after": "天翔ゆゐ、花笠イリヤ、蛇艸、桐谷こむぎ、鳳梨みこ、真瀬みうし、 夢乃たると、夏月",
+      "reason": "same scenario/channel/hashtag",
+      "confidence": "high"
+    }
+  ]
+}
