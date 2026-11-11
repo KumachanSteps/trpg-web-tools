@@ -19,11 +19,9 @@
   const pad = n => String(n).padStart(2, '0');
   const today = new Date();
   let sessions = loadSessions();
-  let selectedId = sessions[0]?.id || '';
-  let selectedDate = '';
-  let cursor = selectedId
-    ? new Date(new Date(sessions[0].start).getFullYear(), new Date(sessions[0].start).getMonth(), 1)
-    : new Date(today.getFullYear(), today.getMonth(), 1);
+  let selectedDate = dateKey(today);
+  let selectedId = sessions.find(session => sessionDate(session) === selectedDate)?.id || '';
+  let cursor = new Date(today.getFullYear(), today.getMonth(), 1);
   let editingId = '';
   let pendingImport = [];
   let googleSettings = loadGoogleSettings();
@@ -37,7 +35,7 @@
   }
 
   function loadGoogleSettings() {
-    const defaults = { feeds: [], autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '' };
+    const defaults = { feeds: [], autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '', ignoredEvents: [] };
     try {
       localStorage.removeItem(LEGACY_GOOGLE_SETTINGS_KEY);
       const stored = JSON.parse(localStorage.getItem(GOOGLE_SETTINGS_KEY) || '{}');
@@ -53,7 +51,7 @@
               lastError: stored.lastError,
             }, 0)]
           : [];
-      return { ...defaults, ...stored, feeds, secretIcalUrl: undefined, feedKey: undefined };
+      return { ...defaults, ...stored, feeds, ignoredEvents: Array.isArray(stored.ignoredEvents) ? stored.ignoredEvents : [], secretIcalUrl: undefined, feedKey: undefined };
     } catch {
       return defaults;
     }
@@ -77,9 +75,9 @@
 
   function loadPanelState() {
     try {
-      return { calendar: false, right: false, ...JSON.parse(localStorage.getItem(PANEL_STATE_KEY) || '{}') };
+      return { calendar: false, right: false, dataTools: false, ...JSON.parse(localStorage.getItem(PANEL_STATE_KEY) || '{}') };
     } catch {
-      return { calendar: false, right: false };
+      return { calendar: false, right: false, dataTools: false };
     }
   }
 
@@ -99,6 +97,7 @@
     $('collapseRightBtn').setAttribute('aria-expanded', String(!rightCollapsed));
     $('collapseCalendarBtn').title = calendarCollapsed ? 'カレンダーを展開する' : 'カレンダーを折りたたむ';
     $('collapseRightBtn').title = rightCollapsed ? '予定と準備を展開する' : '予定と準備を折りたたむ';
+    $('dataToolsPanel').open = Boolean(panelState.dataTools);
   }
 
   function togglePanel(name) {
@@ -223,6 +222,17 @@
     return (session.start || '').slice(0, 10);
   }
 
+  function eventTimeClass(session) {
+    if (session.allDay) return 'is-all-day';
+    const hour = Number((session.start || '').slice(11, 13));
+    return Number.isFinite(hour) && hour >= 18 ? 'is-night' : 'is-daytime';
+  }
+
+  function eventTimeLabel(session) {
+    if (session.allDay) return '終日';
+    return `${(session.start || '').slice(11, 16)}${session.end ? `–${esc(session.end)}` : ''}`;
+  }
+
   function fmtDate(iso) {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso || '';
@@ -232,6 +242,7 @@
   function fmtDateTime(session) {
     const d = new Date(session.start);
     if (Number.isNaN(d.getTime())) return '';
+    if (session.allDay) return `${fmtDate(session.start)} 終日`;
     return `${fmtDate(session.start)} ${pad(d.getHours())}:${pad(d.getMinutes())}${session.end ? `–${session.end}` : ''}`;
   }
 
@@ -284,8 +295,8 @@
           <span class="day-num">${d.getDate()}</span>
           <span class="day-add">＋</span>
           ${evs.map(session => `
-            <span class="event ${esc(session.format).includes('オンライン') ? 'voice' : ''}" data-id="${esc(session.id)}">
-              <span class="event-time">● ${(session.start || '').slice(11, 16)}${session.end ? `–${esc(session.end)}` : ''}</span>
+            <span class="event ${eventTimeClass(session)}" data-id="${esc(session.id)}" title="ダブルクリックで編集">
+              <span class="event-time">● ${eventTimeLabel(session)}</span>
               <span class="event-title">${esc(session.scenario)}</span>
             </span>
           `).join('')}
@@ -305,7 +316,15 @@
         }
         render();
       });
-      day.addEventListener('dblclick', () => openDialog('', day.dataset.date));
+      day.addEventListener('dblclick', event => {
+        const eventEl = event.target.closest('.event');
+        if (eventEl) {
+          event.preventDefault();
+          openDialog(eventEl.dataset.id);
+          return;
+        }
+        openDialog('', day.dataset.date);
+      });
     });
   }
 
@@ -366,6 +385,7 @@
           <small>${esc(task.scenario)}　${esc(task.due || '期限なし')}</small>
           <span class="chip ${task.status === '完了' ? 'green' : task.status === '期限切れ' ? 'red' : 'amber'}">${esc(task.status || '未着手')}</span>
         </button>
+        <button class="task-delete" type="button" aria-label="${esc(task.title)}を削除" title="タスクを削除">×</button>
         <span class="drag-grip" aria-hidden="true">⋮⋮</span>
       </article>
     `).join('') || '<p class="mini-card">タスクなし</p>';
@@ -390,6 +410,7 @@
       card.querySelector('input').addEventListener('change', event => {
         toggleTask(card.dataset.sessionId, card.dataset.taskId, event.target.checked);
       });
+      card.querySelector('.task-delete').addEventListener('click', () => deleteTask(card.dataset.sessionId, card.dataset.taskId));
     });
   }
 
@@ -419,6 +440,15 @@
     render();
   }
 
+  function deleteTask(sessionId, taskId) {
+    const session = sessions.find(item => item.id === sessionId);
+    const task = session?.tasks.find(item => item.id === taskId);
+    if (!session || !task || !confirm(`タスク「${task.title}」を削除しますか？`)) return;
+    session.tasks = session.tasks.filter(item => item.id !== taskId);
+    toast('タスクを削除しました');
+    render();
+  }
+
   function renderDetail() {
     const session = sessions.find(item => item.id === selectedId);
     $('detailPane').hidden = !session && !selectedDate;
@@ -428,8 +458,12 @@
       return;
     }
     $('detailContent').className = 'detail-content';
+    const seriesSessions = session.series
+      ? sessions.filter(item => item.series === session.series).sort((a, b) => String(a.start).localeCompare(String(b.start)))
+      : [];
     $('detailContent').innerHTML = `
       <h3 class="detail-title">${esc(session.scenario)}</h3>
+      ${session.series ? `<div class="detail-row"><span>シリーズ</span><b>${esc(session.series)}</b></div>` : ''}
       <div class="detail-row"><span>システム</span><b>${esc(session.system)}</b></div>
       <div class="detail-row"><span>日時</span><b>${esc(fmtDateTime(session))}</b></div>
       <div class="detail-row"><span>GM</span><b>${esc(session.gm)}</b></div>
@@ -440,12 +474,21 @@
       <h4>関連リンク</h4>
       <div class="links">${(session.links || []).map(link => `<a class="link-pill" href="${esc(link.url || '#')}" target="_blank" rel="noopener noreferrer">🔗 ${esc(link.label)} <span>↗</span></a>`).join('') || '<p>未登録</p>'}</div>
       <h4>準備タスク</h4>
-      <div class="detail-tasks">${(session.tasks || []).map(task => `<div class="task-row"><span>${task.done ? '☑' : '☐'} ${esc(task.title)}</span><span>${esc(task.due || '')} <span class="chip">${esc(task.status || '')}</span></span></div>`).join('') || '<p>未登録</p>'}</div>
+      <div class="detail-tasks">${(session.tasks || []).map(task => `<div class="task-row"><span>${task.done ? '☑' : '☐'} ${esc(task.title)}</span><span class="task-row-meta">${esc(task.due || '')} <span class="chip">${esc(task.status || '')}</span><button class="task-row-delete" type="button" data-task-id="${esc(task.id)}" aria-label="タスクを削除">×</button></span></div>`).join('') || '<p>未登録</p>'}</div>
+      ${seriesSessions.length > 1 ? `<h4>同じシリーズ</h4><div class="series-list">${seriesSessions.map(item => `<button class="series-link ${item.id === session.id ? 'is-current' : ''}" type="button" data-series-id="${esc(item.id)}"><b>${esc(fmtDate(item.start))}</b>　${esc(item.scenario)}</button>`).join('')}</div>` : ''}
       <p>${esc(session.memo || '')}</p>
       <div class="detail-actions"><button id="editBtn" class="hub-btn is-blue" type="button">編集</button><button id="deleteBtn" class="hub-btn danger" type="button">削除</button><button id="sendLogBtn" class="hub-btn is-note bridge-button" type="button">↗ 卓ログトラッカーへ送る</button></div>`;
     $('editBtn').onclick = () => openDialog(session.id);
     $('deleteBtn').onclick = deleteSelected;
     $('sendLogBtn').onclick = () => sendToLogTracker(session);
+    $('detailContent').querySelectorAll('.task-row-delete').forEach(button => button.onclick = () => deleteTask(session.id, button.dataset.taskId));
+    $('detailContent').querySelectorAll('.series-link').forEach(button => button.onclick = () => {
+      selectedId = button.dataset.seriesId;
+      selectedDate = sessionDate(sessions.find(item => item.id === selectedId) || {});
+      const d = new Date(`${selectedDate}T00:00`);
+      if (!Number.isNaN(d.getTime())) cursor = new Date(d.getFullYear(), d.getMonth(), 1);
+      render();
+    });
   }
 
   function openDialog(id = '', date = '') {
@@ -467,6 +510,7 @@
     $('endTimeInput').value = session.end || '';
     $('gmInput').value = session.gm || '';
     $('formatInput').value = session.format || '';
+    $('seriesInput').value = session.series || '';
     $('statusInput').value = session.status || 'scheduled';
     $('hashtagsInput').value = (session.hashtags || []).join(', ');
     $('playersInput').value = (session.players || []).map(player => `${player.pl || ''} / ${player.pc || ''}`).join('\n');
@@ -504,6 +548,7 @@
       end: $('endTimeInput').value,
       gm: $('gmInput').value.trim(),
       format: $('formatInput').value.trim(),
+      series: $('seriesInput').value.trim(),
       status: $('statusInput').value,
       memo: $('memoInput').value.trim(),
       hashtags: splitTags($('hashtagsInput').value),
@@ -551,10 +596,15 @@
 
   function deleteSelected() {
     if (!selectedId || !confirm('このセッションを削除しますか？')) return;
+    const selected = sessions.find(session => session.id === selectedId);
+    if (selected?.source === 'google' && selected.googleFeedKey && selected.googleEventId) {
+      const key = googleIgnoreKey(selected.googleFeedKey, selected.googleEventId);
+      googleSettings.ignoredEvents = [...new Set([...(googleSettings.ignoredEvents || []), key])];
+      saveGoogleSettings();
+    }
     sessions = sessions.filter(session => session.id !== selectedId);
-    selectedId = sessions[0]?.id || '';
-    selectedDate = selectedId ? sessionDate(sessions[0]) : '';
-    toast('削除しました');
+    selectedId = sessions.find(session => sessionDate(session) === selectedDate)?.id || '';
+    toast(selected?.source === 'google' ? '同期予定を非表示にしました' : '削除しました');
     render();
   }
 
@@ -764,6 +814,7 @@
         system: '',
         start: startDate.datetime,
         end: endDate.allDay ? '' : endDate.time,
+        allDay: startDate.allDay,
         gm: '',
         format: decodeIcalText(first('LOCATION').value),
         status: statusValue === 'CANCELLED' ? 'cancelled' : statusValue === 'TENTATIVE' ? 'tentative' : 'scheduled',
@@ -815,6 +866,9 @@
         ? `最終同期: ${new Date(googleSettings.lastSyncAt).toLocaleString('ja-JP')}`
         : 'まだ同期していません。';
     $('disconnectGoogleBtn').hidden = !(googleSettings.feeds || []).length;
+    const ignoredCount = (googleSettings.ignoredEvents || []).length;
+    $('ignoredEventsCount').textContent = `非表示の同期予定 ${ignoredCount}件`;
+    $('restoreIgnoredEventsBtn').hidden = ignoredCount === 0;
     $('googleSyncDialog').showModal();
   }
 
@@ -882,6 +936,8 @@
       end: event.end || '',
       gm: existing?.gm || '',
       format: existing?.format || event.format || '',
+      series: existing?.series || '',
+      allDay: Boolean(event.allDay),
       status: event.status === 'tentative' ? 'tentative' : 'scheduled',
       memo: keepsManualMemo ? existing.memo : description,
       hashtags: existing?.hashtags?.length ? existing.hashtags : (event.hashtags || []),
@@ -900,6 +956,7 @@
 
     events.filter(event => event.status !== 'cancelled').forEach(event => {
       seenIds.add(event.googleEventId);
+      if ((googleSettings.ignoredEvents || []).includes(googleIgnoreKey(feedKey, event.googleEventId))) return;
       const index = sessions.findIndex(session => session.source === 'google' && session.googleFeedKey === feedKey && session.googleEventId === event.googleEventId);
       const existing = index >= 0 ? sessions[index] : null;
       const mapped = googleEventToSession(event, feedKey, existing);
@@ -928,6 +985,10 @@
       return true;
     });
     return { added, updated, removed };
+  }
+
+  function googleIgnoreKey(feedKey, eventId) {
+    return `${feedKey}::${eventId}`;
   }
 
   function validateSecretIcalUrl(value) {
@@ -1089,17 +1150,26 @@
   $('disconnectGoogleBtn').onclick = () => {
     window.clearTimeout(googleSyncTimer);
     googleSyncTimer = 0;
-    googleSettings = { feeds: [], autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '' };
+    googleSettings = { feeds: [], autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '', ignoredEvents: googleSettings.ignoredEvents || [] };
     saveGoogleSettings();
     $('googleSyncDialog').close();
     renderGoogleSyncStatus();
     toast('Google Calendar連携を解除しました（同期済み予定は残ります）');
   };
 
+  $('restoreIgnoredEventsBtn').onclick = () => {
+    const count = (googleSettings.ignoredEvents || []).length;
+    if (!count || !confirm(`非表示にした同期予定${count}件を、次回同期で再表示しますか？`)) return;
+    googleSettings.ignoredEvents = [];
+    saveGoogleSettings();
+    $('ignoredEventsCount').textContent = '非表示の同期予定 0件';
+    $('restoreIgnoredEventsBtn').hidden = true;
+    toast('非表示を解除しました。同期を開始します');
+    syncGoogleCalendar(true);
+  };
+
   $('deleteSessionBtn').onclick = deleteSelected;
   $('reportBridgeBtn').onclick = sendToReportGenerator;
-  $('addSessionBtn').onclick = () => openDialog('', selectedDate);
-  $('addTaskBtn').onclick = () => openTaskDialog(selectedDate);
   $('removeSampleDataBtn').onclick = removeSampleData;
   $('focusAddSessionBtn').onclick = () => openDialog('', selectedDate);
   $('focusAddTaskBtn').onclick = () => openTaskDialog(selectedDate);
@@ -1112,7 +1182,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.16', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.17', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
@@ -1135,6 +1205,10 @@
   };
   $('collapseCalendarBtn').onclick = () => togglePanel('calendar');
   $('collapseRightBtn').onclick = () => togglePanel('right');
+  $('dataToolsPanel').addEventListener('toggle', () => {
+    panelState.dataTools = $('dataToolsPanel').open;
+    savePanelState();
+  });
 
   function toIcal() {
     return [
