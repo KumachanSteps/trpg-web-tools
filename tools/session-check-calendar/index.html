@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓準備カレンダー v0.19 | TRPG WEBツール観測所</title>
+  <title>卓準備カレンダー v0.20 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.1" />
-  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.19" />
+  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.20" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body class="hub hub-unified-header" data-hub-tool="calendar">
@@ -22,7 +22,7 @@
           <a class="hub-portal" href="../../">← TRPG Webツール観測所</a>
           <div class="hub-title-row calendar-title-row">
             <span class="hub-icon" aria-hidden="true">▦</span>
-            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.19 <time datetime="2026-11-11">2026.11.11</time></p></div>
+            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.20 <time datetime="2026-11-11">2026.11.11</time></p></div>
           </div>
         </div>
         <nav class="hub-actions" aria-label="ツール操作">
@@ -40,37 +40,23 @@
       <section id="calendarPanel" class="workspace-panel calendar-workspace">
         <header class="workspace-head calendar-workspace-head">
           <div class="workspace-head-copy"><span class="workspace-kicker">CALENDAR</span><h2>月間カレンダー</h2></div>
-          <div class="workspace-head-actions"><button id="dataToolsToggleBtn" class="header-tool-button" type="button" aria-expanded="false" aria-controls="dataToolsPanel">データ操作</button><span id="googleSyncStatus" class="sync-status" aria-live="polite">未接続</span><button id="calendarSettingsBtn" class="calendar-settings-button" type="button" title="カレンダー設定" aria-label="カレンダー設定">⚙</button></div>
-          <div id="dataToolsPanel" class="calendar-header-tools" hidden>
-            <div class="toolbar">
+          <div class="workspace-head-actions"><button id="dataToolsToggleBtn" class="header-tool-button" type="button" aria-expanded="false" aria-controls="dataToolsPanel">データ操作</button><div id="dataToolsPanel" class="calendar-header-tools" aria-hidden="true"><div class="toolbar">
               <label class="hub-btn file-label">JSON読込<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
               <label class="hub-btn file-label">iCal読込<input id="icalInput" type="file" accept="text/calendar,.ics,.ical" hidden /></label>
               <button id="googleImportBtn" class="hub-btn is-accent" type="button">Google連携</button>
-              <span class="toolbar-spacer"></span>
               <button id="exportJsonBtn" class="hub-btn" type="button">JSON出力</button>
               <button id="exportIcalBtn" class="hub-btn" type="button">iCal出力</button>
               <button id="removeSampleDataBtn" class="hub-btn sample-remove-button" type="button">サンプル削除</button>
-            </div>
-          </div>
+            </div></div><span id="googleSyncStatus" class="sync-status" aria-live="polite">未接続</span><button id="calendarSettingsBtn" class="calendar-settings-button" type="button" title="カレンダー設定" aria-label="カレンダー設定">⚙</button></div>
         </header>
         <div id="calendarPanelBody" class="workspace-panel-body calendar-panel-scroll">
           <div class="calendar-area">
-        <section id="focusPanel" class="focus-panel" hidden>
-          <div>
-            <strong id="focusDateLabel">----</strong>
-          </div>
-          <div class="focus-actions">
-            <button id="focusAddSessionBtn" class="hub-btn is-blue" type="button">＋ セッション</button>
-            <button id="focusAddTaskBtn" class="hub-btn" type="button">＋ タスク</button>
-            <button id="clearFocusBtn" class="hub-btn" type="button">解除</button>
-          </div>
-        </section>
-
         <section class="month-card" aria-label="月間カレンダー">
           <div class="month-head">
             <button id="prevMonthBtn" class="month-nav" type="button" aria-label="前の月">‹</button>
             <h2 id="monthTitle">----</h2>
             <button id="nextMonthBtn" class="month-nav" type="button" aria-label="次の月">›</button>
+            <div class="month-add-actions"><span id="selectionTargetLabel">今日に追加</span><button id="focusAddSessionBtn" class="hub-btn is-blue" type="button">＋ セッション</button><button id="focusAddTaskBtn" class="hub-btn" type="button">＋ タスク</button></div>
             <button id="todayBtn" class="hub-btn" type="button">今日</button>
           </div>
           <div class="time-legend" aria-label="時間帯の色分け"><b id="calendarTimeZoneLabel">日本時間</b><span class="is-daytime">日中卓</span><span class="is-night">夜卓</span><span class="is-all-day">終日卓</span></div>
@@ -111,14 +97,13 @@
 
   <dialog id="sessionDialog" class="modal">
     <form id="sessionForm" method="dialog">
-      <div class="modal-head"><h2 id="dialogTitle">セッション追加</h2><button value="cancel" type="submit">×</button></div>
+      <div class="modal-head"><h2 id="dialogTitle">セッション追加</h2><button value="cancel" type="submit" formnovalidate>×</button></div>
       <div class="form-grid">
         <label>シナリオ名<input id="scenarioInput" required /></label>
         <label>システム<input id="systemInput" placeholder="クトゥルフ神話TRPG" /></label>
         <label>日時<input id="dateInput" type="datetime-local" required /></label>
         <label>終了時刻<input id="endTimeInput" type="time" /></label>
         <label>GM / KP<input id="gmInput" /></label>
-        <label>形式<input id="formatInput" placeholder="オンライン（ココフォリア＋Discord）" /></label>
         <label>シリーズ名<input id="seriesInput" placeholder="同じシリーズの卓をまとめる名前" /></label>
         <label>ステータス<select id="statusInput"><option value="scheduled">予定確定</option><option value="tentative">調整中</option><option value="completed">完了</option></select></label>
         <label>タグ<input id="hashtagsInput" placeholder="TRPG, クトゥルフ神話TRPG" /></label>
@@ -127,13 +112,13 @@
         <label class="full">準備タスク（1行につき タスク名 | 期限YYYY-MM-DD | ステータス）<textarea id="tasksInput" placeholder="NPC立ち絵準備 | 2026-07-02 | 今日"></textarea></label>
         <label class="full">メモ<textarea id="memoInput"></textarea></label>
       </div>
-      <div class="modal-actions"><button class="danger" id="deleteSessionBtn" type="button">削除</button><span></span><button value="cancel" type="submit">キャンセル</button><button id="saveSessionBtn" class="primary" value="default" type="submit">保存</button></div>
+      <div class="modal-actions"><button class="danger" id="deleteSessionBtn" type="button">削除</button><span></span><button value="cancel" type="submit" formnovalidate>キャンセル</button><button id="saveSessionBtn" class="primary" value="default" type="submit">保存</button></div>
     </form>
   </dialog>
 
   <dialog id="taskDialog" class="modal task-modal">
     <form id="taskForm" method="dialog">
-      <div class="modal-head"><h2>準備タスク追加</h2><button value="cancel" type="submit">×</button></div>
+      <div class="modal-head"><h2>準備タスク追加</h2><button value="cancel" type="submit" formnovalidate>×</button></div>
       <div class="form-grid">
         <label class="full">タスク名<input id="taskTitleInput" required placeholder="NPC立ち絵準備" /></label>
         <label>紐付ける卓<select id="taskSessionSelect" required></select></label>
@@ -141,7 +126,7 @@
         <label>ステータス<select id="taskStatusInput"><option value="未着手">未着手</option><option value="今日">今日</option><option value="3日以内">3日以内</option><option value="期限切れ">期限切れ</option><option value="完了">完了</option></select></label>
         <label>完了<select id="taskDoneInput"><option value="false">未完了</option><option value="true">完了</option></select></label>
       </div>
-      <div class="modal-actions"><span></span><span></span><button value="cancel" type="submit">キャンセル</button><button class="primary" value="default" type="submit">追加</button></div>
+      <div class="modal-actions"><span></span><span></span><button value="cancel" type="submit" formnovalidate>キャンセル</button><button class="primary" value="default" type="submit">追加</button></div>
     </form>
   </dialog>
 
@@ -201,6 +186,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
-  <script src="js/session_check_calendar.js?v=0.19"></script>
+  <script src="js/session_check_calendar.js?v=0.20"></script>
 </body>
 </html>

@@ -24,12 +24,23 @@ for (const id of [
   'taskPanelToggle',
   'todayPanelBody',
   'taskPanelBody',
+  'selectionTargetLabel',
+  'focusAddSessionBtn',
+  'focusAddTaskBtn',
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.19') || !html.includes('session_check_calendar.js?v=0.19')) {
+if (!html.includes('v0.20') || !html.includes('session_check_calendar.js?v=0.20')) {
   throw new Error('Calendar version assets were not updated');
+}
+
+if (html.includes('id="focusPanel"') || html.includes('id="formatInput"')) {
+  throw new Error('Legacy selected-day panel or session format input should be removed');
+}
+
+if ((html.match(/formnovalidate/g) || []).length < 4) {
+  throw new Error('Required-field dialogs must allow close/cancel without validation');
 }
 
 if (html.includes('id="collapseCalendarBtn"') || html.includes('id="collapseRightBtn"')) {
@@ -41,6 +52,9 @@ for (const contract of [
   'overflow-y: auto',
   '.calendar-workspace-head',
   '.calendar-header-tools',
+  '.calendar-header-tools.is-open',
+  'transform: translateX',
+  '.month-add-actions',
   '.overview-panel.is-collapsed',
   '.detail-pane.has-session',
   '.event.is-daytime',
@@ -81,12 +95,16 @@ for (const contract of [
   "collapseOverviewPanels",
   "setOverviewPanel",
   "dataToolsToggleBtn",
+  "renderSelectionTarget",
+  "seriesBaseName",
+  "applyAutoSeriesGrouping",
+  "seriesAuto",
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.19'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.20'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
-console.log('session-check-calendar smoke passed: header tools, contextual overview collapse, timezone settings, time colors, and multi-calendar sync are present');
+console.log('session-check-calendar smoke passed: horizontal header tools, selected-day actions, series grouping, dialog close, timezone settings, and multi-calendar sync are present');
