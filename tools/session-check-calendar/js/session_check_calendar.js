@@ -3,7 +3,9 @@
 
   const $ = id => document.getElementById(id);
   const STORAGE_KEY = 'trpgWebTools.sessionCheckCalendar.sessions';
-  const GOOGLE_SETTINGS_KEY = 'trpgWebTools.sessionCheckCalendar.googleSync';
+  const GOOGLE_SETTINGS_KEY = 'trpgWebTools.sessionCheckCalendar.secretIcalSync';
+  const LEGACY_GOOGLE_SETTINGS_KEY = 'trpgWebTools.sessionCheckCalendar.googleSync';
+  const GOOGLE_ICAL_PROXY_URL = 'https://trpg-calendar-ical-proxy.oc-character-cloudflare.workers.dev/';
   const PANEL_STATE_KEY = 'trpgWebTools.sessionCheckCalendar.panelState';
   const REPORT_KEY = 'trpgWebTools.sessionReportGenerator.pendingImport';
   const LOG_KEY = 'trpgWebTools.sessionLogTracker.pendingImport';
@@ -35,8 +37,9 @@
   }
 
   function loadGoogleSettings() {
-    const defaults = { calendarId: '', apiKey: '', autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '' };
+    const defaults = { secretIcalUrl: '', autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '', feedKey: '' };
     try {
+      localStorage.removeItem(LEGACY_GOOGLE_SETTINGS_KEY);
       return { ...defaults, ...JSON.parse(localStorage.getItem(GOOGLE_SETTINGS_KEY) || '{}') };
     } catch {
       return defaults;
@@ -609,45 +612,116 @@
     }));
   }
 
-  function parseIcal(text, source = 'ical') {
-    return text.split('BEGIN:VEVENT').slice(1).map(block => {
-      const get = key => (block.match(new RegExp(`${key}(?:;[^:]*)?:(.+)`)) || [])[1]?.trim() || '';
-      const startRaw = get('DTSTART');
-      const endRaw = get('DTEND');
-      const startDate = parseIcalDate(startRaw);
-      const endDate = parseIcalDate(endRaw);
-      const calendar = get('X-WR-CALNAME') || get('CATEGORIES') || 'TRPG予定';
+  function unfoldIcal(text) {
+    return String(text || '').replace(/\r?\n[ \t]/g, '');
+  }
+
+  function parseIcalProperties(block) {
+    const properties = new Map();
+    unfoldIcal(block).split(/\r?\n/).forEach(line => {
+      const colon = line.indexOf(':');
+      if (colon < 1) return;
+      const descriptor = line.slice(0, colon);
+      const [rawName, ...rawParams] = descriptor.split(';');
+      const name = rawName.toUpperCase();
+      const params = Object.fromEntries(rawParams.map(param => {
+        const separator = param.indexOf('=');
+        return separator < 0
+          ? [param.toUpperCase(), '']
+          : [param.slice(0, separator).toUpperCase(), param.slice(separator + 1).replace(/^"|"$/g, '')];
+      }));
+      const entry = { value: line.slice(colon + 1), params };
+      if (!properties.has(name)) properties.set(name, []);
+      properties.get(name).push(entry);
+    });
+    return properties;
+  }
+
+  function decodeIcalText(value) {
+    return String(value || '')
+      .replaceAll('\\n', '\n')
+      .replaceAll('\\N', '\n')
+      .replaceAll('\\,', ',')
+      .replaceAll('\\;', ';')
+      .replaceAll('\\\\', '\\');
+  }
+
+  function localDateTime(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return { datetime: '', time: '' };
+    return { datetime: `${dateKey(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}`, time: `${pad(date.getHours())}:${pad(date.getMinutes())}` };
+  }
+
+  function zonedWallTimeToDate(parts, timeZone) {
+    const utcGuess = Date.UTC(parts.y, parts.m - 1, parts.d, parts.h, parts.min);
+    try {
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+      });
+      const displayed = Object.fromEntries(formatter.formatToParts(new Date(utcGuess)).map(part => [part.type, part.value]));
+      const displayedAsUtc = Date.UTC(Number(displayed.year), Number(displayed.month) - 1, Number(displayed.day), Number(displayed.hour), Number(displayed.minute));
+      return new Date(utcGuess - (displayedAsUtc - utcGuess));
+    } catch {
+      return new Date(parts.y, parts.m - 1, parts.d, parts.h, parts.min);
+    }
+  }
+
+  function parseIcalDate(property) {
+    const value = String(property?.value || '');
+    const match = value.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?)?(Z)?$/);
+    if (!match) return { datetime: '', time: '', allDay: false };
+    const [, y, m, d, h, min, , utc] = match;
+    if (!h) return { datetime: `${y}-${m}-${d}T00:00`, time: '', allDay: true };
+    const parts = { y: Number(y), m: Number(m), d: Number(d), h: Number(h), min: Number(min) };
+    const date = utc
+      ? new Date(Date.UTC(parts.y, parts.m - 1, parts.d, parts.h, parts.min))
+      : property?.params?.TZID
+        ? zonedWallTimeToDate(parts, property.params.TZID)
+        : new Date(parts.y, parts.m - 1, parts.d, parts.h, parts.min);
+    return { ...localDateTime(date), allDay: false };
+  }
+
+  function parseIcal(text, source = 'ical', feedKey = '') {
+    const unfolded = unfoldIcal(text);
+    const calendarProperties = parseIcalProperties(unfolded.split('BEGIN:VEVENT')[0] || '');
+    const calendarName = decodeIcalText(calendarProperties.get('X-WR-CALNAME')?.[0]?.value) || 'TRPG予定';
+    return unfolded.split('BEGIN:VEVENT').slice(1).map(block => {
+      const properties = parseIcalProperties(block.split('END:VEVENT')[0] || '');
+      const first = name => properties.get(name)?.[0] || { value: '', params: {} };
+      const startDate = parseIcalDate(first('DTSTART'));
+      const endDate = parseIcalDate(first('DTEND'));
+      const uid = decodeIcalText(first('UID').value) || newId('ical-event');
+      const recurrenceId = decodeIcalText(first('RECURRENCE-ID').value);
+      const statusValue = String(first('STATUS').value || '').toUpperCase();
+      const url = decodeIcalText(first('URL').value);
+      const categories = decodeIcalText(first('CATEGORIES').value).split(',').map(item => item.trim()).filter(Boolean);
       return {
-        id: newId('session'),
+        id: newId(source === 'google' ? 'google' : 'session'),
         source,
-        sourceCalendar: calendar,
-        scenario: get('SUMMARY') || '名称未設定',
+        sourceCalendar: calendarName,
+        googleFeedKey: feedKey,
+        googleEventId: recurrenceId ? `${uid}::${recurrenceId}` : uid,
+        googleDescription: decodeIcalText(first('DESCRIPTION').value),
+        scenario: decodeIcalText(first('SUMMARY').value) || '名称未設定',
         system: '',
         start: startDate.datetime,
-        end: endDate.time,
+        end: endDate.allDay ? '' : endDate.time,
         gm: '',
-        format: '',
-        status: 'scheduled',
-        memo: get('DESCRIPTION').replaceAll('\\n', '\n'),
-        hashtags: [],
+        format: decodeIcalText(first('LOCATION').value),
+        status: statusValue === 'CANCELLED' ? 'cancelled' : statusValue === 'TENTATIVE' ? 'tentative' : 'scheduled',
+        memo: decodeIcalText(first('DESCRIPTION').value),
+        hashtags: categories,
         players: [],
-        links: [],
+        links: url ? [{ label: 'Google Calendar', url }] : [],
         tasks: [],
       };
     }).filter(item => item.start);
   }
 
-  function parseIcalDate(value) {
-    const compact = String(value || '').replace('Z', '');
-    const match = compact.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?/);
-    if (!match) return { datetime: '', time: '' };
-    const [, y, m, d, h = '20', min = '00'] = match;
-    return { datetime: `${y}-${m}-${d}T${h}:${min}`, time: `${h}:${min}` };
-  }
-
   function renderGoogleSyncStatus() {
     const status = $('googleSyncStatus');
-    if (!googleSettings.calendarId || !googleSettings.apiKey) {
+    if (!googleSettings.secretIcalUrl) {
       status.textContent = '未接続';
       status.className = 'sync-status';
       status.title = '';
@@ -669,12 +743,11 @@
       ? `同期 ${pad(lastSync.getHours())}:${pad(lastSync.getMinutes())}`
       : '接続済み';
     status.className = 'sync-status is-active';
-    status.title = googleSettings.calendarId;
+    status.title = 'シークレットiCal連携中';
   }
 
   function openGoogleSyncDialog() {
-    $('googleCalendarIdInput').value = googleSettings.calendarId || '';
-    $('googleApiKeyInput').value = googleSettings.apiKey || '';
+    $('googleSecretIcalInput').value = googleSettings.secretIcalUrl || '';
     $('googleAutoSyncInput').checked = googleSettings.autoSync !== false;
     $('googleSyncIntervalInput').value = String(googleSettings.intervalMinutes || 30);
     $('googleSyncDetails').className = `sync-details${googleSettings.lastError ? ' is-error' : ''}`;
@@ -683,64 +756,51 @@
       : googleSettings.lastSyncAt
         ? `最終同期: ${new Date(googleSettings.lastSyncAt).toLocaleString('ja-JP')}`
         : 'まだ同期していません。';
-    $('disconnectGoogleBtn').hidden = !googleSettings.calendarId;
+    $('disconnectGoogleBtn').hidden = !googleSettings.secretIcalUrl;
     $('googleSyncDialog').showModal();
   }
 
-  function googleDateTime(value) {
-    if (!value) return '';
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T00:00`;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return `${dateKey(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  }
-
-  function googleEndTime(event) {
-    if (!event.end?.dateTime) return '';
-    return googleDateTime(event.end.dateTime).slice(11, 16);
-  }
-
-  function googleEventToSession(event, calendarId, calendarName, existing = null) {
-    const description = event.description || '';
+  function googleEventToSession(event, feedKey, existing = null) {
+    const description = event.googleDescription || event.memo || '';
     const keepsManualMemo = Boolean(existing?.memo && existing.memo !== existing.googleDescription);
     const links = (existing?.links || []).filter(link => link.label !== 'Google Calendar');
-    if (event.htmlLink) links.push({ label: 'Google Calendar', url: event.htmlLink });
+    const googleLink = (event.links || []).find(link => link.label === 'Google Calendar');
+    if (googleLink) links.push(googleLink);
     return {
       ...(existing || {}),
       id: existing?.id || newId('google'),
       source: 'google',
-      sourceCalendar: calendarName || calendarId,
-      googleCalendarId: calendarId,
-      googleEventId: event.id,
-      googleUpdatedAt: event.updated || '',
+      sourceCalendar: event.sourceCalendar || 'TRPG予定',
+      googleFeedKey: feedKey,
+      googleEventId: event.googleEventId,
       googleDescription: description,
-      scenario: event.summary || existing?.scenario || '名称未設定',
+      scenario: event.scenario || existing?.scenario || '名称未設定',
       system: existing?.system || '',
-      start: googleDateTime(event.start?.dateTime || event.start?.date),
-      end: googleEndTime(event),
+      start: event.start,
+      end: event.end || '',
       gm: existing?.gm || '',
-      format: existing?.format || event.location || '',
+      format: existing?.format || event.format || '',
       status: event.status === 'tentative' ? 'tentative' : 'scheduled',
       memo: keepsManualMemo ? existing.memo : description,
-      hashtags: existing?.hashtags || [],
+      hashtags: existing?.hashtags?.length ? existing.hashtags : (event.hashtags || []),
       players: existing?.players || [],
       links,
       tasks: normalizeTasks(existing?.tasks || []),
     };
   }
 
-  function mergeGoogleEvents(events, calendarId, calendarName, rangeStart, rangeEnd) {
+  function mergeGoogleEvents(events, feedKey, rangeStart, rangeEnd) {
     const seenIds = new Set();
     let added = 0;
     let updated = 0;
     let removed = 0;
-    const cancelledIds = new Set(events.filter(event => event.status === 'cancelled').map(event => event.id));
+    const cancelledIds = new Set(events.filter(event => event.status === 'cancelled').map(event => event.googleEventId));
 
     events.filter(event => event.status !== 'cancelled').forEach(event => {
-      seenIds.add(event.id);
-      const index = sessions.findIndex(session => session.source === 'google' && session.googleCalendarId === calendarId && session.googleEventId === event.id);
+      seenIds.add(event.googleEventId);
+      const index = sessions.findIndex(session => session.source === 'google' && session.googleEventId === event.googleEventId);
       const existing = index >= 0 ? sessions[index] : null;
-      const mapped = googleEventToSession(event, calendarId, calendarName, existing);
+      const mapped = googleEventToSession(event, feedKey, existing);
       if (!mapped.start) return;
       if (index >= 0) {
         sessions[index] = mapped;
@@ -752,7 +812,7 @@
     });
 
     sessions = sessions.filter(session => {
-      if (session.source !== 'google' || session.googleCalendarId !== calendarId || !session.googleEventId) return true;
+      if (session.source !== 'google' || session.googleFeedKey !== feedKey || !session.googleEventId) return true;
       if (cancelledIds.has(session.googleEventId)) {
         removed += 1;
         return false;
@@ -768,47 +828,51 @@
     return { added, updated, removed };
   }
 
-  async function fetchGoogleEvents(calendarId, apiKey, rangeStart, rangeEnd) {
-    const events = [];
-    let pageToken = '';
-    let calendarName = calendarId;
-    do {
-      const params = new URLSearchParams({
-        key: apiKey,
-        singleEvents: 'true',
-        showDeleted: 'true',
-        orderBy: 'startTime',
-        maxResults: '2500',
-        timeMin: rangeStart.toISOString(),
-        timeMax: rangeEnd.toISOString(),
-      });
-      if (pageToken) params.set('pageToken', pageToken);
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
-      const response = await fetch(url, { headers: { Accept: 'application/json' }, referrerPolicy: 'strict-origin-when-cross-origin' });
+  function validateSecretIcalUrl(value) {
+    let url;
+    try {
+      url = new URL(String(value || '').trim());
+    } catch {
+      throw new Error('シークレットiCal URLの形式を確認してください。');
+    }
+    if (url.protocol !== 'https:' || url.hostname !== 'calendar.google.com' || !url.pathname.startsWith('/calendar/ical/') || !url.pathname.endsWith('/basic.ics')) {
+      throw new Error('Google Calendarの「シークレット アドレス（iCal形式）」を貼り付けてください。');
+    }
+    return url.toString();
+  }
+
+  async function hashSecretIcalUrl(value) {
+    const bytes = new TextEncoder().encode(value);
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return [...new Uint8Array(digest)].slice(0, 12).map(byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function fetchSecretIcal(secretIcalUrl) {
+    const response = await fetch(GOOGLE_ICAL_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'text/calendar' },
+      body: JSON.stringify({ url: secretIcalUrl }),
+      referrerPolicy: 'no-referrer',
+    });
+    if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const reason = payload?.error?.message || `HTTP ${response.status}`;
-        throw new Error(response.status === 403
-          ? 'アクセスできません。Calendar APIの有効化、APIキー制限、カレンダーの公開設定を確認してください。'
-          : reason);
-      }
-      calendarName = payload.summary || calendarName;
-      events.push(...(payload.items || []));
-      pageToken = payload.nextPageToken || '';
-    } while (pageToken);
-    return { events, calendarName };
+      throw new Error(payload.error || `iCal中継エラー（HTTP ${response.status}）`);
+    }
+    const text = await response.text();
+    if (!text.includes('BEGIN:VCALENDAR')) throw new Error('Google CalendarからiCalデータを取得できませんでした。');
+    return text;
   }
 
   function scheduleGoogleSync(delayMinutes = googleSettings.intervalMinutes || 30) {
     window.clearTimeout(googleSyncTimer);
     googleSyncTimer = 0;
-    if (!googleSettings.autoSync || !googleSettings.calendarId || !googleSettings.apiKey) return;
+    if (!googleSettings.autoSync || !googleSettings.secretIcalUrl) return;
     googleSyncTimer = window.setTimeout(() => syncGoogleCalendar(false), Math.max(1, Number(delayMinutes)) * 60 * 1000);
   }
 
   async function syncGoogleCalendar(manual = false) {
     if (googleSyncing) return;
-    if (!googleSettings.calendarId || !googleSettings.apiKey) {
+    if (!googleSettings.secretIcalUrl) {
       if (manual) openGoogleSyncDialog();
       return;
     }
@@ -818,8 +882,16 @@
     const rangeStart = new Date(today.getFullYear(), today.getMonth() - 3, 1);
     const rangeEnd = new Date(today.getFullYear() + 2, today.getMonth() + 1, 1);
     try {
-      const result = await fetchGoogleEvents(googleSettings.calendarId, googleSettings.apiKey, rangeStart, rangeEnd);
-      const counts = mergeGoogleEvents(result.events, googleSettings.calendarId, result.calendarName, rangeStart, rangeEnd);
+      const secretIcalUrl = validateSecretIcalUrl(googleSettings.secretIcalUrl);
+      const feedKey = await hashSecretIcalUrl(secretIcalUrl);
+      const text = await fetchSecretIcal(secretIcalUrl);
+      const parsed = parseIcal(text, 'google', feedKey);
+      const events = parsed.filter(event => {
+        const start = new Date(event.start).getTime();
+        return event.status === 'cancelled' || (Number.isFinite(start) && start >= rangeStart.getTime() && start <= rangeEnd.getTime());
+      });
+      const counts = mergeGoogleEvents(events, feedKey, rangeStart, rangeEnd);
+      googleSettings.feedKey = feedKey;
       googleSettings.lastSyncAt = new Date().toISOString();
       saveGoogleSettings();
       render();
@@ -838,7 +910,7 @@
 
   function maybeAutoSyncGoogle() {
     renderGoogleSyncStatus();
-    if (!googleSettings.autoSync || !googleSettings.calendarId || !googleSettings.apiKey) return;
+    if (!googleSettings.autoSync || !googleSettings.secretIcalUrl) return;
     const interval = Math.max(1, Number(googleSettings.intervalMinutes || 30));
     const elapsed = Date.now() - new Date(googleSettings.lastSyncAt || 0).getTime();
     if (!googleSettings.lastSyncAt || elapsed >= interval * 60 * 1000) {
@@ -877,8 +949,7 @@
     event.preventDefault();
     googleSettings = {
       ...googleSettings,
-      calendarId: $('googleCalendarIdInput').value.trim(),
-      apiKey: $('googleApiKeyInput').value.trim(),
+      secretIcalUrl: $('googleSecretIcalInput').value.trim(),
       autoSync: $('googleAutoSyncInput').checked,
       intervalMinutes: Number($('googleSyncIntervalInput').value) || 30,
       lastError: '',
@@ -892,7 +963,7 @@
   $('disconnectGoogleBtn').onclick = () => {
     window.clearTimeout(googleSyncTimer);
     googleSyncTimer = 0;
-    googleSettings = { calendarId: '', apiKey: '', autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '' };
+    googleSettings = { secretIcalUrl: '', autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '', feedKey: '' };
     saveGoogleSettings();
     $('googleSyncDialog').close();
     renderGoogleSyncStatus();
@@ -909,12 +980,12 @@
   $('todayBtn').onclick = () => { cursor = new Date(today.getFullYear(), today.getMonth(), 1); selectedDate = dateKey(today); render(); };
   $('prevMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() - 1); render(); };
   $('nextMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() + 1); render(); };
-  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、ダブルクリックでセッション追加。左右パネルは個別にスクロール・折りたたみできます。Google連携は公開カレンダーを起動時と設定間隔で読み取り専用同期します。');
+  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、ダブルクリックでセッション追加。左右パネルは個別にスクロール・折りたたみできます。Google連携は非公開カレンダーのシークレットiCal URLを起動時と設定間隔で読み取り専用同期します。');
   $('shortcutBtn').onclick = () => alert('Ctrl/⌘ + Shift + N: セッション追加\nCtrl/⌘ + Shift + T: タスク追加\nEsc: ダイアログを閉じる');
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.14', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.15', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];

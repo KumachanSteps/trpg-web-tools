@@ -1,0 +1,7 @@
+name = "trpg-calendar-ical-proxy"
+main = "worker.js"
+compatibility_date = "2026-11-11"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGINS = "https://kumachansteps.github.io"
