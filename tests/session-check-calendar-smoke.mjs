@@ -14,11 +14,14 @@ for (const id of [
   'googleCalendarList',
   'addGoogleCalendarBtn',
   'googleAutoSyncInput',
+  'dataToolsPanel',
+  'seriesInput',
+  'restoreIgnoredEventsBtn',
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.16 2026.11.11') || !html.includes('session_check_calendar.js?v=0.16')) {
+if (!html.includes('v0.17') || !html.includes('session_check_calendar.js?v=0.17')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -28,6 +31,10 @@ for (const contract of [
   '.workspace-panel.is-collapsed',
   '.layout.left-collapsed',
   '.layout.right-collapsed',
+  '.event.is-daytime',
+  '.event.is-night',
+  '.event.is-all-day',
+  '.task-delete',
 ]) {
   if (!css.includes(contract)) throw new Error(`Missing independent-panel layout contract: ${contract}`);
 }
@@ -48,12 +55,17 @@ for (const contract of [
   "mergeGoogleEvents",
   "isSampleSession",
   "removeSampleData",
+  "eventTimeClass",
+  "deleteTask",
+  "googleIgnoreKey",
+  "ignoredEvents",
+  "seriesSessions",
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.16'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.17'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
-console.log('session-check-calendar smoke passed: sample cleanup, collapsible panes, and multi-calendar sync are present');
+console.log('session-check-calendar smoke passed: compact tools, time colors, editable series, deletions, panes, and multi-calendar sync are present');

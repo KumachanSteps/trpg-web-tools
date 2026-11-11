@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓準備カレンダー v0.16 | TRPG WEBツール観測所</title>
+  <title>卓準備カレンダー v0.17 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.1" />
-  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.16" />
+  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.17" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body class="hub hub-unified-header" data-hub-tool="calendar">
@@ -20,9 +20,9 @@
       <div class="hub-header-top">
         <div class="hub-header-left">
           <a class="hub-portal" href="../../">← TRPG Webツール観測所</a>
-          <div class="hub-title-row">
+          <div class="hub-title-row calendar-title-row">
             <span class="hub-icon" aria-hidden="true">▦</span>
-            <h1>卓準備カレンダー</h1>
+            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.17 <time datetime="2026-11-11">2026.11.11</time></p></div>
           </div>
         </div>
         <nav class="hub-actions" aria-label="ツール操作">
@@ -34,9 +34,6 @@
           <button id="themeToggleBtn" class="hub-btn" type="button">Light/Night</button>
         </nav>
       </div>
-      <div class="hub-header-meta">
-        <p class="hub-version">v0.16 2026.11.11</p>
-      </div>
     </header>
 
     <main id="calendarLayout" class="layout">
@@ -47,18 +44,18 @@
         </header>
         <div id="calendarPanelBody" class="workspace-panel-body calendar-panel-scroll">
           <div class="calendar-area">
-        <div class="toolbar">
-          <button id="addSessionBtn" class="hub-btn is-ink" type="button">＋ セッション追加</button>
-          <button id="addTaskBtn" class="hub-btn" type="button">＋ タスク追加</button>
-          <button id="removeSampleDataBtn" class="hub-btn sample-remove-button" type="button">サンプル削除</button>
-          <span class="toolbar-spacer"></span>
-          <label class="hub-btn file-label">JSON読込<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
-          <label class="hub-btn file-label">iCal読込<input id="icalInput" type="file" accept="text/calendar,.ics,.ical" hidden /></label>
-          <button id="googleImportBtn" class="hub-btn is-accent" type="button">Google連携</button>
-          <span id="googleSyncStatus" class="sync-status" aria-live="polite">未接続</span>
-          <button id="exportJsonBtn" class="hub-btn" type="button">JSON出力</button>
-          <button id="exportIcalBtn" class="hub-btn" type="button">iCal出力</button>
-        </div>
+        <details id="dataToolsPanel" class="data-tools">
+          <summary><span>データ操作</span><span id="googleSyncStatus" class="sync-status" aria-live="polite">未接続</span><span class="data-tools-chevron" aria-hidden="true"></span></summary>
+          <div class="toolbar">
+            <label class="hub-btn file-label">JSON読込<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
+            <label class="hub-btn file-label">iCal読込<input id="icalInput" type="file" accept="text/calendar,.ics,.ical" hidden /></label>
+            <button id="googleImportBtn" class="hub-btn is-accent" type="button">Google連携</button>
+            <span class="toolbar-spacer"></span>
+            <button id="exportJsonBtn" class="hub-btn" type="button">JSON出力</button>
+            <button id="exportIcalBtn" class="hub-btn" type="button">iCal出力</button>
+            <button id="removeSampleDataBtn" class="hub-btn sample-remove-button" type="button">サンプル削除</button>
+          </div>
+        </details>
 
         <section id="focusPanel" class="focus-panel" hidden>
           <div>
@@ -78,6 +75,7 @@
             <button id="nextMonthBtn" class="month-nav" type="button" aria-label="次の月">›</button>
             <button id="todayBtn" class="hub-btn" type="button">今日</button>
           </div>
+          <div class="time-legend" aria-label="時間帯の色分け"><span class="is-daytime">日中卓</span><span class="is-night">夜卓</span><span class="is-all-day">終日卓</span></div>
           <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
           <div id="calendarGrid" class="calendar-grid"></div>
         </section>
@@ -125,6 +123,7 @@
         <label>終了時刻<input id="endTimeInput" type="time" /></label>
         <label>GM / KP<input id="gmInput" /></label>
         <label>形式<input id="formatInput" placeholder="オンライン（ココフォリア＋Discord）" /></label>
+        <label>シリーズ名<input id="seriesInput" placeholder="同じシリーズの卓をまとめる名前" /></label>
         <label>ステータス<select id="statusInput"><option value="scheduled">予定確定</option><option value="tentative">調整中</option><option value="completed">完了</option></select></label>
         <label>タグ<input id="hashtagsInput" placeholder="TRPG, クトゥルフ神話TRPG" /></label>
         <label class="full">参加者（1行につき PL / PC）<textarea id="playersInput" placeholder="Aさん / 探索者A&#10;Bさん / 探索者B"></textarea></label>
@@ -175,6 +174,7 @@
           <label class="toggle-option"><input id="googleAutoSyncInput" type="checkbox" checked /><span>ページを開いている間、自動更新する</span></label>
         </div>
         <p class="security-note">各シークレットURLはこのブラウザ内だけに保存され、JSON出力やGitHubには含まれません。登録行を削除・連携解除しても、すでに同期した予定は残ります。</p>
+        <div class="ignored-events-row"><span id="ignoredEventsCount">非表示の同期予定 0件</span><button id="restoreIgnoredEventsBtn" type="button">非表示を解除</button></div>
         <div id="googleSyncDetails" class="sync-details" aria-live="polite"></div>
       </div>
       <div class="modal-actions google-sync-actions"><button id="disconnectGoogleBtn" class="danger" type="button">すべて連携解除</button><span></span><button value="cancel" type="submit">キャンセル</button><button id="saveGoogleSyncBtn" class="primary" value="default" type="submit">保存してすべて同期</button></div>
@@ -183,6 +183,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
-  <script src="js/session_check_calendar.js?v=0.16"></script>
+  <script src="js/session_check_calendar.js?v=0.17"></script>
 </body>
 </html>
