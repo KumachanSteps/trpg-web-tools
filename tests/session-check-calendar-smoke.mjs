@@ -10,14 +10,13 @@ for (const id of [
   'collapseCalendarBtn',
   'collapseRightBtn',
   'googleSyncDialog',
-  'googleCalendarIdInput',
-  'googleApiKeyInput',
+  'googleSecretIcalInput',
   'googleAutoSyncInput',
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.14 2026.11.11') || !html.includes('session_check_calendar.js?v=0.14')) {
+if (!html.includes('v0.15 2026.11.11') || !html.includes('session_check_calendar.js?v=0.15')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -34,9 +33,11 @@ for (const contract of [
 for (const contract of [
   "GOOGLE_SETTINGS_KEY",
   "PANEL_STATE_KEY",
-  "www.googleapis.com/calendar/v3/calendars/",
-  "singleEvents: 'true'",
-  "showDeleted: 'true'",
+  "trpg-calendar-ical-proxy.oc-character-cloudflare.workers.dev",
+  "secretIcalUrl",
+  "fetchSecretIcal",
+  "hashSecretIcalUrl",
+  "validateSecretIcalUrl",
   "googleEventId",
   "maybeAutoSyncGoogle",
   "mergeGoogleEvents",
@@ -44,7 +45,7 @@ for (const contract of [
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.14'") || js.includes('Googleカレンダー連携のプレビュー取り込みです')) {
+if (!js.includes("version: '0.15'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
