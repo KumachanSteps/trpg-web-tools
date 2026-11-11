@@ -9,136 +9,51 @@
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png">
   <script async src="../../assets/js/analytics.js"></script>
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=1.105.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body data-hub-tool="watch">
   <div class="hub hub-rail-wrap"><nav id="hubRail"></nav></div>
-  <header class="app-header">
-    <a class="brand" href="../../index.html" aria-label="TRPG WEBツール観測所へ戻る">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 52 52" role="img"><path d="M26 3 46 17l-8 25H14L6 17 26 3Z"/><path d="m6 17 20 9 20-9M26 3v23m0 0L14 42m12-16 12 16"/><text x="26" y="22">20</text></svg>
-      </span>
-      <span><strong>配信視聴ログ</strong><small>TRPG WEBツール観測所 · v1.105</small></span>
-    </a>
-    <div class="header-actions">
-      <label class="global-search">
-        <span class="sr-only">動画、シナリオ、出演者を検索</span>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
-        <input id="globalSearch" type="search" placeholder="動画・シナリオ・出演者を検索" autocomplete="off">
-        <kbd>⌘ K</kbd>
-      </label>
-      <button class="icon-button" id="backupButton" type="button" title="修正データをバックアップ" aria-label="修正データをバックアップ">
-        <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
-      </button>
-      <button class="icon-button" id="themeButton" type="button" title="表示テーマを切り替え" aria-label="表示テーマを切り替え">
-        <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.45-.03-.9-.1-1.33A7 7 0 0 1 12 3Z"/></svg>
-      </button>
-    </div>
-  </header>
-
   <div class="app-shell">
-    <aside class="sidebar" aria-label="メインナビゲーション">
-      <nav>
-        <button class="nav-item active" data-view="dashboard" type="button"><span class="nav-icon">⌂</span><span>ダッシュボード</span></button>
-        <button class="nav-item" data-view="log" type="button"><span class="nav-icon">▤</span><span>視聴ログ</span></button>
-        <button class="nav-item" data-review-preset="needs-review" type="button"><span class="nav-icon">◇</span><span>要確認フィルター</span><span id="reviewBadge" class="nav-badge">0</span></button>
-        <p class="nav-label">データベース</p>
-        <button class="nav-item" data-view="scenarios" type="button"><span class="nav-icon">⬡</span><span>シナリオ</span></button>
-        <button class="nav-item" data-view="channels" type="button"><span class="nav-icon">▣</span><span>チャンネル</span></button>
-        <p class="nav-label">管理</p>
-        <button class="nav-item" id="unifiedExportButton" type="button" title="統合JSONをエクスポート" aria-label="統合JSONをエクスポート"><span class="nav-icon">⇩</span><span>統合JSONを出力</span></button>
-        <button class="nav-item" id="copyBackupButton" type="button" title="ブラウザ内の修正データをコピー" aria-label="修正データをコピー"><span class="nav-icon">⧉</span><span>修正データをコピー</span></button>
-        <button class="nav-item" id="restoreButton" type="button"><span class="nav-icon">↥</span><span>修正データを復元</span></button>
-        <input id="restoreInput" type="file" accept="application/json,.json" hidden>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="sync-state"><span class="status-dot"></span><span><strong>ローカル保存</strong><small>変更はこのブラウザに保存</small></span></div>
-        <div class="data-version"><span>DATASET</span><strong id="datasetVersion">読み込み中</strong></div>
+    <header class="site-header">
+      <div class="header-layout">
+        <div class="header-left">
+          <div class="header-tags"><a class="portal-link" href="../../index.html">← TRPG WEBツール観測所</a><a class="header-pill" href="../session-log-tool/index.html">卓ログトラッカーと連携</a></div>
+          <div class="title-row"><div class="tool-icon" aria-hidden="true">▶</div><div class="title-lockup"><h1 class="site-title">配信視聴ログ</h1><p class="header-version">v1.106 <time datetime="2026-11-10">2026.11.10</time></p></div></div>
+        </div>
+        <div class="header-actions"><div class="header-action-row"><a class="header-button plain" href="../../index.html">←TRPG WEBツール観測所</a><button id="themeButton" class="header-button plain" type="button">Light/Night</button></div></div>
       </div>
-    </aside>
+      <div class="header-meta-row"><p class="site-description">視聴したTRPG配信を、動画・シナリオ・チャンネルで整理するログ管理ツール。卓ログトラッカーと同じ保存方式で、変更をブラウザと外部JSONに残せます。</p><strong id="datasetVersion" class="dataset-version">読み込み中</strong></div>
+    </header>
 
-    <main id="mainContent" tabindex="-1">
-      <section id="dashboardView" class="view active" aria-labelledby="dashboardTitle">
-        <div class="page-heading">
-          <div><p class="eyebrow">OVERVIEW</p><h1 id="dashboardTitle">視聴記録の全体像</h1><p>これまでのTRPG配信視聴履歴を、いま有効なCanonical値で集計しています。</p></div>
-          <button class="button secondary" data-go="log" type="button">視聴ログを開く</button>
-        </div>
-        <div id="kpiGrid" class="kpi-grid" aria-live="polite"></div>
-        <div class="dashboard-grid">
-          <article class="panel span-7">
-            <div class="panel-heading"><div><p class="eyebrow">SYSTEM</p><h2>システム別の視聴卓数</h2></div><span class="panel-note">6区分</span></div>
-            <div id="systemChart" class="bar-chart"></div>
-          </article>
-          <article class="panel span-5">
-            <div class="panel-heading"><div><p class="eyebrow">QUALITY</p><h2>メタデータの状態</h2></div></div>
-            <div id="qualityChart" class="quality-chart"></div>
-          </article>
-          <article class="panel span-7">
-            <div class="panel-heading"><div><p class="eyebrow">RECENT</p><h2>最近見た配信</h2></div><button class="text-button" data-go="log" type="button">すべて見る</button></div>
-            <div id="recentList" class="recent-list"></div>
-          </article>
-          <article class="panel span-5">
-            <div class="panel-heading"><div><p class="eyebrow">REVIEW</p><h2>確認が必要な記録</h2></div><button class="text-button" data-review-preset="needs-review" type="button">視聴ログで絞り込む</button></div>
-            <div id="reviewSummary" class="review-summary"></div>
-          </article>
-        </div>
-      </section>
+    <section id="kpiGrid" class="stats-grid" aria-label="視聴ログ集計" aria-live="polite"></section>
 
-      <section id="logView" class="view" aria-labelledby="logTitle">
-        <div class="page-heading">
-          <div><p class="eyebrow">VIEWING LOG</p><h1 id="logTitle">視聴ログ</h1><p id="logCount">動画を読み込んでいます。</p></div>
-          <div class="button-row">
-            <button id="addRecordButton" class="button primary" type="button">＋ 新規登録</button>
-            <button id="filterToggle" class="button secondary" type="button">絞り込み</button>
-            <details class="export-menu">
-              <summary class="button primary">エクスポート</summary>
-              <div class="menu-popover">
-                <button data-export="csv" type="button">CSV</button>
-                <button data-export="json" type="button">JSON</button>
-                <button data-export="xlsx" type="button">XLSX</button>
-              </div>
-            </details>
-          </div>
-        </div>
-        <div id="filterPanel" class="filter-panel">
-          <label>システム<select id="systemFilter"><option value="">すべて</option></select></label>
-          <label>確認プリセット<select id="reviewPreset"><option value="">すべて</option><option value="needs-review">要確認</option><option value="unreviewed">未確認</option><option value="session-incomplete">Session情報不足</option><option value="provisional">仮データ</option><option value="related">関連動画</option><option value="deleted">削除済み</option><option value="low-quality">低品質メタデータ</option></select></label>
-          <label>レビュー<select id="reviewFilter"><option value="">すべて</option><option>Open</option><option>Partial</option><option>Verified</option><option>Corrected</option><option>Excluded</option></select></label>
-          <label>品質<select id="qualityFilter"><option value="">すべて</option><option>High</option><option>Medium</option><option>Low</option></select></label>
-          <label>カウント区分<select id="classificationFilter"><option value="">すべて</option><option>Session</option><option>Review</option><option>Related</option><option>Non-TRPG</option></select></label>
-          <label class="check-filter"><input id="subscribedFilter" type="checkbox"><span>登録チャンネルのみ</span></label>
-          <label class="check-filter"><input id="ownedFilter" type="checkbox"><span>所有チャンネルのみ</span></label>
-          <label class="check-filter"><input id="showOwnVideosFilter" type="checkbox"><span>自分の動画を表示</span></label>
-          <label class="check-filter"><input id="deletedFilter" type="checkbox"><span>削除済みを表示</span></label>
-          <button id="clearFilters" class="button ghost" type="button">クリア</button>
-        </div>
-        <div class="panel table-panel">
-          <div class="table-wrap"><table class="data-table"><thead><tr><th>視聴日</th><th>System / Scenario</th><th>GM・KP・DL / PL</th><th>Channel</th><th>視聴</th><th>Review</th><th>Quality</th><th><span class="sr-only">操作</span></th></tr></thead><tbody id="logTableBody"></tbody></table></div>
-          <div id="logPagination" class="pagination"></div>
-        </div>
-      </section>
+    <section id="filterPanel" class="filter-panel open" aria-label="視聴ログの絞り込み">
+      <label class="search-box"><span aria-hidden="true">⌕</span><input id="globalSearch" type="search" placeholder="動画、シナリオ、GM/KP/DL、PLを検索..." autocomplete="off"></label>
+      <select id="systemFilter" aria-label="システム"><option value="">すべてのシステム</option></select>
+      <select id="reviewPreset" aria-label="確認プリセット"><option value="">すべての記録</option><option value="needs-review">要確認</option><option value="unreviewed">未確認</option><option value="session-incomplete">Session情報不足</option><option value="provisional">仮データ</option><option value="related">関連動画</option><option value="deleted">削除済み</option><option value="low-quality">低品質メタデータ</option></select>
+      <select id="classificationFilter" aria-label="カウント区分"><option value="">すべての区分</option><option>Session</option><option>Review</option><option>Related</option><option>Non-TRPG</option></select>
+      <button id="filterToggle" class="mini-button" type="button">詳細</button>
+      <div class="filter-details">
+        <select id="reviewFilter" aria-label="レビュー"><option value="">すべてのレビュー</option><option>Open</option><option>Partial</option><option>Verified</option><option>Corrected</option><option>Excluded</option></select>
+        <select id="qualityFilter" aria-label="メタデータ品質"><option value="">すべての品質</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <label class="check-filter"><input id="subscribedFilter" type="checkbox"><span>登録チャンネル</span></label><label class="check-filter"><input id="ownedFilter" type="checkbox"><span>所有チャンネル</span></label><label class="check-filter"><input id="showOwnVideosFilter" type="checkbox"><span>自分の動画</span></label><label class="check-filter"><input id="deletedFilter" type="checkbox"><span>削除済み</span></label><button id="clearFilters" class="mini-button" type="button">クリア</button>
+      </div>
+    </section>
 
-      <section id="reviewView" class="view" aria-labelledby="reviewTitle">
-        <div class="page-heading">
-          <div><p class="eyebrow">REVIEW QUEUE</p><h1 id="reviewTitle">レビューキュー</h1><p>不足情報と判定の曖昧さから、確認する順番を整理しています。</p></div>
-          <div class="segmented" role="group" aria-label="優先度フィルター">
-            <button class="active" data-priority="All" type="button">すべて</button><button data-priority="Critical" type="button">Critical</button><button data-priority="High" type="button">High</button><button data-priority="Medium" type="button">Medium</button>
-          </div>
-        </div>
-        <div class="review-layout">
-          <div><div id="reviewQueue" class="review-queue"></div><div id="reviewPagination" class="pagination"></div></div>
-          <aside class="review-guide panel"><p class="eyebrow">PROGRESS</p><h2>確認状況</h2><div id="reviewProgress"></div><hr><h3>優先度の基準</h3><dl class="priority-guide"><div><dt><span class="priority critical">Critical</span></dt><dd>シナリオ不明、分類要確認</dd></div><div><dt><span class="priority high">High</span></dt><dd>System・GM/KP/DL・PLが不足</dd></div><div><dt><span class="priority medium">Medium</span></dt><dd>作者・配布URLが不足</dd></div></dl></aside>
-        </div>
-      </section>
+    <details id="backupPanel" class="backup-panel">
+      <summary class="backup-panel-summary"><span class="backup-panel-icon" aria-hidden="true">◈</span><span class="backup-panel-title">自動バックアップ</span><span id="backupSummaryStatus" class="backup-summary-status">ブラウザ内に保存中</span><span class="backup-panel-chevron" aria-hidden="true"></span></summary>
+      <div class="backup-panel-body"><div class="backup-panel-copy"><p id="backupStatus" role="status" aria-live="polite">Documents、Downloads、またはツール用フォルダを選ぶと、整理された保存先を自動作成します。</p><p class="backup-path-guide">作成先：選択したフォルダ / TRPG-Web-Tools-Data / viewing-log / viewing-log-autobackup.json</p></div><div class="backup-panel-actions"><button id="connectBackupBtn" class="header-button primary" type="button">保存先フォルダを選択</button><button id="backupNowBtn" class="mini-button" type="button">今すぐ保存</button><button id="restoreBrowserBackupBtn" class="mini-button" type="button">ブラウザ内バックアップから復元</button><button id="backupButton" class="mini-button" type="button">JSON書き出し</button><button id="copyBackupButton" class="mini-button" type="button">コピー</button><button id="restoreButton" class="mini-button" type="button">外部JSONから復元</button><input id="restoreInput" type="file" accept="application/json,.json" hidden><button id="disconnectBackupBtn" class="mini-button" type="button" hidden>外部保存を切断</button></div></div>
+    </details>
 
-      <section id="scenariosView" class="view" aria-labelledby="scenariosTitle">
-        <div class="page-heading"><div><p class="eyebrow">SCENARIOS</p><h1 id="scenariosTitle">シナリオ</h1><p>別卓・別チャンネルをまたいで、視聴記録をまとめます。</p></div></div>
-        <div class="entity-layout"><div class="panel entity-index"><div class="entity-index-controls"><label class="inline-search">シナリオを検索<input id="scenarioSearch" type="search" placeholder="シナリオ名"></label><label class="entity-sort">並び順<select id="scenarioSort"><option value="count">件数順</option><option value="name">名前順（A–Z）</option></select></label></div><div id="scenarioList" class="entity-list"></div></div><article id="scenarioDetail" class="panel entity-detail"></article></div>
-      </section>
-
-      <section id="channelsView" class="view" aria-labelledby="channelsTitle">
-        <div class="page-heading"><div><p class="eyebrow">CHANNELS</p><h1 id="channelsTitle">チャンネル</h1><p>チャンネルごとの視聴したシナリオと卓を確認できます。</p></div></div>
-        <div class="entity-layout"><div class="panel entity-index"><div class="entity-index-controls"><label class="inline-search">チャンネルを検索<input id="channelSearch" type="search" placeholder="チャンネル名"></label><label class="entity-sort">並び順<select id="channelSort"><option value="count">件数順</option><option value="name">名前順（A–Z）</option></select></label></div><div id="channelList" class="entity-list"></div></div><article id="channelDetail" class="panel entity-detail"></article></div>
+    <main id="mainContent" class="main-panel" tabindex="-1">
+      <section class="table-panel">
+        <div class="table-header"><div><p class="eyebrow">VIEWING DATABASE</p><h2 id="panelTitle">視聴ログ</h2><p id="logCount">動画を読み込んでいます。</p></div><div class="table-actions"><div class="view-switcher" role="tablist" aria-label="表示切り替え"><button class="mini-button active" data-view="log" type="button">視聴ログ</button><button class="mini-button" data-view="scenarios" type="button">シナリオ</button><button class="mini-button" data-view="channels" type="button">チャンネル</button></div><span id="reviewBadge" class="review-count" title="要確認の記録数">0</span><button id="addRecordButton" class="accent-button" type="button">＋ 新規登録</button><details class="export-menu"><summary class="mini-button">エクスポート</summary><div class="menu-popover"><button data-export="csv" type="button">CSV</button><button data-export="json" type="button">JSON</button><button data-export="xlsx" type="button">XLSX</button><button id="unifiedExportButton" type="button">統合JSON</button></div></details></div></div>
+        <section id="logView" class="view active" aria-label="視聴ログ"><div class="table-wrap"><table class="data-table"><thead><tr><th>視聴日</th><th>System / Scenario</th><th>GM・KP・DL / PL</th><th>Channel</th><th>視聴</th><th>Review</th><th>Quality</th><th><span class="sr-only">操作</span></th></tr></thead><tbody id="logTableBody"></tbody></table></div><div id="logPagination" class="pagination"></div></section>
+        <section id="scenariosView" class="view" aria-label="シナリオ一覧"><div class="entity-index-controls"><label class="inline-search">シナリオを検索<input id="scenarioSearch" type="search" placeholder="シナリオ名"></label><label class="entity-sort">並び順<select id="scenarioSort"><option value="count">件数順</option><option value="name">名前順（A–Z）</option></select></label></div><div class="entity-layout"><div id="scenarioList" class="entity-list"></div><article id="scenarioDetail" class="entity-detail"></article></div></section>
+        <section id="channelsView" class="view" aria-label="チャンネル一覧"><div class="entity-index-controls"><label class="inline-search">チャンネルを検索<input id="channelSearch" type="search" placeholder="チャンネル名"></label><label class="entity-sort">並び順<select id="channelSort"><option value="count">件数順</option><option value="name">名前順（A–Z）</option></select></label></div><div class="entity-layout"><div id="channelList" class="entity-list"></div><article id="channelDetail" class="entity-detail"></article></div></section>
       </section>
     </main>
   </div>
@@ -187,6 +102,7 @@
   <pre id="backupPayload" hidden aria-hidden="true"></pre>
   <script src="data/videos-data.js"></script>
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
+  <script src="backup-manager.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
