@@ -1,0 +1,51 @@
+import { readFileSync } from 'node:fs';
+
+const html = readFileSync(new URL('../tools/session-check-calendar/index.html', import.meta.url), 'utf8');
+const css = readFileSync(new URL('../tools/session-check-calendar/css/session_check_calendar.css', import.meta.url), 'utf8');
+const js = readFileSync(new URL('../tools/session-check-calendar/js/session_check_calendar.js', import.meta.url), 'utf8');
+
+for (const id of [
+  'calendarPanel',
+  'rightPanel',
+  'collapseCalendarBtn',
+  'collapseRightBtn',
+  'googleSyncDialog',
+  'googleCalendarIdInput',
+  'googleApiKeyInput',
+  'googleAutoSyncInput',
+]) {
+  if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
+}
+
+if (!html.includes('v0.14 2026.11.11') || !html.includes('session_check_calendar.js?v=0.14')) {
+  throw new Error('Calendar version assets were not updated');
+}
+
+for (const contract of [
+  '.workspace-panel-body',
+  'overflow-y: auto',
+  '.workspace-panel.is-collapsed',
+  '.layout.left-collapsed',
+  '.layout.right-collapsed',
+]) {
+  if (!css.includes(contract)) throw new Error(`Missing independent-panel layout contract: ${contract}`);
+}
+
+for (const contract of [
+  "GOOGLE_SETTINGS_KEY",
+  "PANEL_STATE_KEY",
+  "www.googleapis.com/calendar/v3/calendars/",
+  "singleEvents: 'true'",
+  "showDeleted: 'true'",
+  "googleEventId",
+  "maybeAutoSyncGoogle",
+  "mergeGoogleEvents",
+]) {
+  if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
+}
+
+if (!js.includes("version: '0.14'") || js.includes('Googleカレンダー連携のプレビュー取り込みです')) {
+  throw new Error('Calendar export version or legacy Google preview is incorrect');
+}
+
+console.log('session-check-calendar smoke passed: collapsible panes and Google Calendar sync are present');
