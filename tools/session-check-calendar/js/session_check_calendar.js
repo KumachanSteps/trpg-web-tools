@@ -138,6 +138,7 @@
     $('dataToolsPanel').setAttribute('aria-hidden', String(!dataToolsOpen));
     $('dataToolsToggleBtn').setAttribute('aria-expanded', String(dataToolsOpen));
     $('dataToolsToggleBtn').hidden = dataToolsOpen;
+    $('dataToolsCloseBtn').hidden = !dataToolsOpen;
     $('dataToolsToggleBtn').textContent = 'データ操作';
     setOverviewPanel('today', panelState.todayOpen !== false, false);
     setOverviewPanel('tasks', panelState.tasksOpen !== false, false);
@@ -1445,7 +1446,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.23', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.24', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];

@@ -43,7 +43,7 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.23') || !html.includes('session_check_calendar.js?v=0.23') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.24') || !html.includes('session_check_calendar.js?v=0.24') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -51,7 +51,7 @@ if (!sessionLogHtml.includes('hub.css?v=0.1.2')) {
   throw new Error('Session log tracker does not load the shared select-arrow update');
 }
 
-if (!html.includes('title="データ表記を閉じる">▶</button>')) {
+if (!html.includes('title="データ表記を閉じる" hidden>▶</button>')) {
   throw new Error('Data tools compact close control is missing');
 }
 
@@ -80,6 +80,8 @@ for (const contract of [
   '.calendar-header-tools.is-open',
   '.calendar-workspace-head.is-tools-open',
   '.data-tools-close-button',
+  '.data-tools-toggle-slot',
+  'flex: 0 0 96px',
   '.day-head',
   '.day.is-sunday',
   '.day.is-saturday',
@@ -137,12 +139,13 @@ for (const contract of [
   "updateAllDaySettingsState",
   "dataToolsCloseBtn",
   "dataToolsToggleBtn').hidden = dataToolsOpen",
+  "dataToolsCloseBtn').hidden = !dataToolsOpen",
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.23'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.24'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
-console.log('session-check-calendar smoke passed: compact data tools, inset shared select arrows, week starts, time bands, and multi-calendar sync are present');
+console.log('session-check-calendar smoke passed: position-stable data tools, inset select arrows, week starts, time bands, and multi-calendar sync are present');
