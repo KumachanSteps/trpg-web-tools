@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.42';
+  const VERSION = '0.43';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1669,6 +1669,13 @@
         if (!tab) return;
         add.tracks.forEach(tr => { if (!tab.tracks.some(x => x.yt === tr.yt)) tab.tracks.push(tr); });
       });
+      // 版5より前に保存した棚は、初期のタブをグループごとの新しい並びにする（自分で足したタブは後ろへ、開いていたタブはそのまま）
+      if (ok && from < (JukeboxShelf.ORDER_SINCE || 0)) {
+        const activeTab = shelf.tabs[shelf.active];
+        const rank = id => { const k = JukeboxShelf.order.indexOf(id); return k < 0 ? Infinity : k; };
+        shelf.tabs = shelf.tabs.map((tab, i) => ({ tab, i })).sort((x, y) => (rank(x.tab.id) - rank(y.tab.id)) || (x.i - y.i)).map(x => x.tab);
+        shelf.active = Math.max(0, shelf.tabs.indexOf(activeTab));
+      }
       saveShelf();
     }
   }
@@ -1693,6 +1700,10 @@
     els.shelfTabs.innerHTML = '';
     tabs.forEach((tab, i) => {
       const on = i === shelf.active;
+      // グループ（場面・雰囲気・舞台・音楽のジャンル）が変わるところで行を改める
+      const group = JukeboxShelf.groupOf(tab.id);
+      const prev = i ? JukeboxShelf.groupOf(tabs[i - 1].id) : '';
+      if (group && prev && group !== prev) els.shelfTabs.appendChild(h('span', { class: 'shelf-tab-break', 'aria-hidden': 'true' }));
       els.shelfTabs.appendChild(h('button', {
         type: 'button', role: 'tab', class: `shelf-tab${on ? ' is-active' : ''}`,
         'aria-selected': String(on), tabindex: on ? '0' : '-1',

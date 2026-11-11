@@ -194,7 +194,7 @@
       heading: 'レコード棚',
       hint: 'YouTubeで公開されているフリーBGMを、雰囲気ごとの棚に並べています。ジャケットか「レコードへ」の右の ▶︎ を押すと、音声だけを試聴できます。「レコードへ」でそのままレコードに入れるか、URLをコピーして使ってください。',
       tabsLabel: 'BGMのタブ',
-      tabs: { intro: '導入', unease: '不穏', comic: 'コミカル', deduction: '推理', moving: '感動', sad: '悲しい', tension: '緊迫', climax: 'クライマックス', mansion: '館', horror: 'ホラー', digital: 'デジタル', celtic: 'ケルト', fantasy: 'ファンタジー', jazz: 'ジャズ', piano: 'ピアノ', house: 'ハウス', wafu: '和風', ethnic: 'エスニック' },
+      tabs: { intro: '導入', unease: '不穏', comic: 'コミカル', deduction: '推理', moving: '感動', sad: '悲しい', tension: '緊迫', climax: 'クライマックス', mansion: '館もの', horror: 'ホラー', digital: 'デジタル', celtic: 'ケルト', fantasy: 'ファンタジー', jazz: 'ジャズ', piano: 'ピアノ', house: 'ハウス', wafu: '和風', ethnic: 'エスニック' },
       newTab: '新しいタブ',
       addTab: 'タブを足す',
       editTab: 'このタブを編集',
