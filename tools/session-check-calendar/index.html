@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓準備カレンダー v0.21 | TRPG WEBツール観測所</title>
+  <title>卓準備カレンダー v0.22 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.1" />
-  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.21" />
+  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.22" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body class="hub hub-unified-header" data-hub-tool="calendar">
@@ -22,7 +22,7 @@
           <a class="hub-portal" href="../../">← TRPG Webツール観測所</a>
           <div class="hub-title-row calendar-title-row">
             <span class="hub-icon" aria-hidden="true">▦</span>
-            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.21 <time datetime="2026-11-11">2026.11.11</time></p></div>
+            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.22 <time datetime="2026-11-11">2026.11.11</time></p></div>
           </div>
         </div>
         <nav class="hub-actions" aria-label="ツール操作">
@@ -47,6 +47,7 @@
               <button id="exportJsonBtn" class="hub-btn" type="button">JSON出力</button>
               <button id="exportIcalBtn" class="hub-btn" type="button">iCal出力</button>
               <button id="removeSampleDataBtn" class="hub-btn sample-remove-button" type="button">サンプル削除</button>
+              <button id="dataToolsCloseBtn" class="data-tools-close-button" type="button" aria-label="データ操作を閉じる" title="閉じる">×</button>
             </div></div><span id="googleSyncStatus" class="sync-status" aria-live="polite">未接続</span><button id="calendarSettingsBtn" class="calendar-settings-button" type="button" title="カレンダー設定" aria-label="カレンダー設定">⚙</button></div>
         </header>
         <div id="calendarPanelBody" class="workspace-panel-body calendar-panel-scroll">
@@ -59,8 +60,8 @@
             <div class="month-add-actions"><span id="selectionTargetLabel">今日に追加</span><button id="focusAddSessionBtn" class="hub-btn is-blue" type="button">＋ セッション</button><button id="focusAddTaskBtn" class="hub-btn" type="button">＋ タスク</button></div>
             <button id="todayBtn" class="hub-btn" type="button">今日</button>
           </div>
-          <div class="time-legend" aria-label="時間帯の色分け"><b id="calendarTimeZoneLabel">日本時間</b><span class="is-daytime">日中卓</span><span class="is-night">夜卓</span><span class="is-all-day">終日卓</span></div>
-          <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+          <div class="time-legend" aria-label="時間帯の色分け"><b id="calendarTimeZoneLabel">日本時間</b><span id="daytimeLegend" class="is-daytime">日中卓</span><span id="nightLegend" class="is-night">夜卓</span><span id="allDayLegend" class="is-all-day">終日卓</span></div>
+          <div id="weekdays" class="weekdays" aria-label="曜日"></div>
           <div id="calendarGrid" class="calendar-grid"></div>
         </section>
           </div>
@@ -164,7 +165,7 @@
 
   <dialog id="calendarSettingsDialog" class="modal settings-modal">
     <form id="calendarSettingsForm" method="dialog">
-      <div class="modal-head"><h2>カレンダー設定</h2><button value="cancel" type="submit" aria-label="閉じる">×</button></div>
+      <div class="modal-head"><h2>カレンダー設定</h2><button value="cancel" type="submit" formnovalidate aria-label="閉じる">×</button></div>
       <div class="settings-body">
         <label>表示・時間帯判定のタイムゾーン
           <select id="calendarTimeZoneInput">
@@ -177,15 +178,27 @@
             <option value="UTC">協定世界時（UTC）</option>
           </select>
         </label>
-        <p>同期イベントの日付・表示時刻と、「日中卓／夜卓」の判定に使用します。終日イベントはタイムゾーンに関係なく終日卓として扱います。</p>
+        <label>週の開始曜日
+          <select id="weekStartsOnInput"><option value="0">日曜日始まり</option><option value="1">月曜日始まり</option></select>
+        </label>
+        <section class="time-band-settings" aria-labelledby="timeBandSettingsTitle">
+          <h3 id="timeBandSettingsTitle">卓の時間帯</h3>
+          <div class="settings-grid">
+            <label>日中卓の開始<input id="daytimeStartInput" type="time" step="1800" required /></label>
+            <label>夜卓の開始<input id="nightStartInput" type="time" step="1800" required /></label>
+            <label>終日卓の判定<select id="allDayRuleInput"><option value="explicit">終日指定のイベントのみ</option><option value="duration">指定時間以上のイベントも含める</option></select></label>
+            <label id="allDayDurationLabel">終日扱いにする長さ<input id="allDayDurationHoursInput" type="number" min="1" max="48" step="1" inputmode="numeric" />時間以上</label>
+          </div>
+        </section>
+        <p>同期イベントの日付・表示時刻と色分けに使用します。初期設定は、日中卓が0:00から、夜卓が18:00から、終日卓は終日指定されたイベントのみです。</p>
         <div class="timezone-preview"><span>現在の設定時刻</span><strong id="calendarTimeZonePreview">----</strong></div>
       </div>
-      <div class="modal-actions"><span></span><span></span><button value="cancel" type="submit">キャンセル</button><button class="primary" value="default" type="submit">保存</button></div>
+      <div class="modal-actions"><span></span><span></span><button value="cancel" type="submit" formnovalidate>キャンセル</button><button class="primary" value="default" type="submit">保存</button></div>
     </form>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
-  <script src="js/session_check_calendar.js?v=0.21"></script>
+  <script src="js/session_check_calendar.js?v=0.22"></script>
 </body>
 </html>

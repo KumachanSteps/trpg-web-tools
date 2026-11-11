@@ -27,11 +27,21 @@ for (const id of [
   'selectionTargetLabel',
   'focusAddSessionBtn',
   'focusAddTaskBtn',
+  'dataToolsCloseBtn',
+  'weekdays',
+  'weekStartsOnInput',
+  'daytimeStartInput',
+  'nightStartInput',
+  'allDayRuleInput',
+  'allDayDurationHoursInput',
+  'daytimeLegend',
+  'nightLegend',
+  'allDayLegend',
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.21') || !html.includes('session_check_calendar.js?v=0.21')) {
+if (!html.includes('v0.22') || !html.includes('session_check_calendar.js?v=0.22')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -54,6 +64,11 @@ for (const contract of [
   'justify-content: flex-end',
   '.calendar-header-tools',
   '.calendar-header-tools.is-open',
+  '.calendar-workspace-head.is-tools-open',
+  '.data-tools-close-button',
+  '.day-head',
+  '.day.is-sunday',
+  '.day.is-saturday',
   'transform: translateX',
   '.month-add-actions',
   '.overview-panel.is-collapsed',
@@ -100,12 +115,19 @@ for (const contract of [
   "seriesBaseName",
   "applyAutoSeriesGrouping",
   "seriesAuto",
+  "DEFAULT_CALENDAR_SETTINGS",
+  "weekStartsOn",
+  "allDayDurationHours",
+  "sessionDurationHours",
+  "isConfiguredAllDay",
+  "updateAllDaySettingsState",
+  "dataToolsCloseBtn",
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.21'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.22'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
-console.log('session-check-calendar smoke passed: horizontal header tools, selected-day actions, series grouping, dialog close, timezone settings, and multi-calendar sync are present');
+console.log('session-check-calendar smoke passed: complete header tools, week starts, configurable time bands, aligned day cells, and multi-calendar sync are present');

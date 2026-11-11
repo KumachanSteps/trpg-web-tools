@@ -10,6 +10,14 @@
   const CALENDAR_SETTINGS_KEY = 'trpgWebTools.sessionCheckCalendar.settings';
   const REPORT_KEY = 'trpgWebTools.sessionReportGenerator.pendingImport';
   const LOG_KEY = 'trpgWebTools.sessionLogTracker.pendingImport';
+  const DEFAULT_CALENDAR_SETTINGS = {
+    timeZone: 'Asia/Tokyo',
+    weekStartsOn: 0,
+    daytimeStart: '00:00',
+    nightStart: '18:00',
+    allDayRule: 'explicit',
+    allDayDurationHours: 8,
+  };
   const SOURCE_LABELS = {
     manual: '手入力',
     sessionLog: '卓ログトラッカーJSON',
@@ -35,10 +43,23 @@
   function loadCalendarSettings() {
     try {
       const stored = JSON.parse(localStorage.getItem(CALENDAR_SETTINGS_KEY) || '{}');
-      return { timeZone: isValidTimeZone(stored.timeZone) ? stored.timeZone : 'Asia/Tokyo' };
+      return normalizeCalendarSettings(stored);
     } catch {
-      return { timeZone: 'Asia/Tokyo' };
+      return { ...DEFAULT_CALENDAR_SETTINGS };
     }
+  }
+
+  function normalizeCalendarSettings(value = {}) {
+    const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+    const duration = Number(value.allDayDurationHours);
+    return {
+      timeZone: isValidTimeZone(value.timeZone) ? value.timeZone : DEFAULT_CALENDAR_SETTINGS.timeZone,
+      weekStartsOn: Number(value.weekStartsOn) === 1 ? 1 : 0,
+      daytimeStart: timePattern.test(value.daytimeStart) ? value.daytimeStart : DEFAULT_CALENDAR_SETTINGS.daytimeStart,
+      nightStart: timePattern.test(value.nightStart) ? value.nightStart : DEFAULT_CALENDAR_SETTINGS.nightStart,
+      allDayRule: value.allDayRule === 'duration' ? 'duration' : 'explicit',
+      allDayDurationHours: Number.isFinite(duration) ? Math.min(48, Math.max(1, duration)) : DEFAULT_CALENDAR_SETTINGS.allDayDurationHours,
+    };
   }
 
   function saveCalendarSettings() {
@@ -112,9 +133,11 @@
 
   function applyPanelState() {
     const dataToolsOpen = Boolean(panelState.dataTools);
+    document.querySelector('.calendar-workspace-head').classList.toggle('is-tools-open', dataToolsOpen);
     $('dataToolsPanel').classList.toggle('is-open', dataToolsOpen);
     $('dataToolsPanel').setAttribute('aria-hidden', String(!dataToolsOpen));
     $('dataToolsToggleBtn').setAttribute('aria-expanded', String(dataToolsOpen));
+    $('dataToolsToggleBtn').textContent = dataToolsOpen ? 'データ操作を閉じる' : 'データ操作';
     setOverviewPanel('today', panelState.todayOpen !== false, false);
     setOverviewPanel('tasks', panelState.tasksOpen !== false, false);
   }
@@ -333,10 +356,41 @@
     return sessionDisplayStart(session).slice(0, 10);
   }
 
+  function timeToMinutes(value) {
+    const [hours, minutes] = String(value || '').split(':').map(Number);
+    return Number.isFinite(hours) && Number.isFinite(minutes) ? (hours * 60) + minutes : 0;
+  }
+
+  function sessionDurationHours(session) {
+    if (session.startInstant && session.endInstant) {
+      const start = new Date(session.startInstant).getTime();
+      const end = new Date(session.endInstant).getTime();
+      if (Number.isFinite(start) && Number.isFinite(end) && end > start) return (end - start) / 3600000;
+    }
+    const startTime = sessionDisplayStart(session).slice(11, 16);
+    const endTime = sessionDisplayEnd(session);
+    if (!startTime || !endTime) return 0;
+    const startMinutes = timeToMinutes(startTime);
+    let endMinutes = timeToMinutes(endTime);
+    if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+    return (endMinutes - startMinutes) / 60;
+  }
+
+  function isConfiguredAllDay(session) {
+    if (session.allDay) return true;
+    return calendarSettings.allDayRule === 'duration'
+      && sessionDurationHours(session) >= calendarSettings.allDayDurationHours;
+  }
+
   function eventTimeClass(session) {
-    if (session.allDay) return 'is-all-day';
-    const hour = Number(sessionDisplayStart(session).slice(11, 13));
-    return Number.isFinite(hour) && hour >= 18 ? 'is-night' : 'is-daytime';
+    if (isConfiguredAllDay(session)) return 'is-all-day';
+    const startMinutes = timeToMinutes(sessionDisplayStart(session).slice(11, 16));
+    const daytimeStart = timeToMinutes(calendarSettings.daytimeStart);
+    const nightStart = timeToMinutes(calendarSettings.nightStart);
+    const isDaytime = daytimeStart < nightStart
+      ? startMinutes >= daytimeStart && startMinutes < nightStart
+      : startMinutes >= daytimeStart || startMinutes < nightStart;
+    return isDaytime ? 'is-daytime' : 'is-night';
   }
 
   function eventTimeLabel(session) {
@@ -403,6 +457,11 @@
 
   function renderCalendarTimeZone() {
     $('calendarTimeZoneLabel').textContent = `${timeZoneLabel()} · ${calendarSettings.timeZone}`;
+    $('daytimeLegend').textContent = `日中 ${calendarSettings.daytimeStart}–${calendarSettings.nightStart}`;
+    $('nightLegend').textContent = `夜 ${calendarSettings.nightStart}–${calendarSettings.daytimeStart}`;
+    $('allDayLegend').textContent = calendarSettings.allDayRule === 'duration'
+      ? `終日 ${calendarSettings.allDayDurationHours}時間以上`
+      : '終日 指定のみ';
   }
 
   function updateTimeZonePreview() {
@@ -414,8 +473,20 @@
     }).format(new Date());
   }
 
+  function updateAllDaySettingsState() {
+    const usesDuration = $('allDayRuleInput').value === 'duration';
+    $('allDayDurationHoursInput').disabled = !usesDuration;
+    $('allDayDurationLabel').classList.toggle('is-disabled', !usesDuration);
+  }
+
   function openCalendarSettings() {
     $('calendarTimeZoneInput').value = calendarSettings.timeZone;
+    $('weekStartsOnInput').value = String(calendarSettings.weekStartsOn);
+    $('daytimeStartInput').value = calendarSettings.daytimeStart;
+    $('nightStartInput').value = calendarSettings.nightStart;
+    $('allDayRuleInput').value = calendarSettings.allDayRule;
+    $('allDayDurationHoursInput').value = String(calendarSettings.allDayDurationHours);
+    updateAllDaySettingsState();
     updateTimeZonePreview();
     $('calendarSettingsDialog').showModal();
   }
@@ -428,9 +499,13 @@
 
   function renderCalendar() {
     $('monthTitle').textContent = `${cursor.getFullYear()}年 ${cursor.getMonth() + 1}月`;
+    const weekdayLabels = ['日', '月', '火', '水', '木', '金', '土'];
+    const weekdays = Array.from({ length: 7 }, (_, index) => (calendarSettings.weekStartsOn + index) % 7);
+    $('weekdays').innerHTML = weekdays.map(day => `<span class="${day === 0 ? 'is-sunday' : day === 6 ? 'is-saturday' : ''}">${weekdayLabels[day]}</span>`).join('');
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
     const start = new Date(first);
-    start.setDate(1 - first.getDay());
+    const leadingDays = (first.getDay() - calendarSettings.weekStartsOn + 7) % 7;
+    start.setDate(1 - leadingDays);
 
     $('calendarGrid').innerHTML = Array.from({ length: 42 }, (_, i) => {
       const d = new Date(start);
@@ -439,9 +514,8 @@
       const evs = sessions.filter(session => sessionDate(session) === key);
       const isSelected = selectedDate === key;
       return `
-        <button class="day ${d.getMonth() !== cursor.getMonth() ? 'other' : ''} ${key === currentCalendarDateKey() ? 'today' : ''} ${isSelected ? 'selected' : ''}" type="button" data-date="${key}">
-          <span class="day-num">${d.getDate()}</span>
-          <span class="day-add">＋</span>
+        <button class="day ${d.getDay() === 0 ? 'is-sunday' : d.getDay() === 6 ? 'is-saturday' : ''} ${d.getMonth() !== cursor.getMonth() ? 'other' : ''} ${key === currentCalendarDateKey() ? 'today' : ''} ${isSelected ? 'selected' : ''}" type="button" data-date="${key}">
+          <span class="day-head"><span class="day-num">${d.getDate()}</span><span class="day-add">＋</span></span>
           ${evs.map(session => `
             <span class="event ${eventTimeClass(session)}" data-id="${esc(session.id)}" title="ダブルクリックで編集">
               <span class="event-time">● ${eventTimeLabel(session)}</span>
@@ -1336,14 +1410,24 @@
     event.preventDefault();
     const timeZone = $('calendarTimeZoneInput').value;
     if (!isValidTimeZone(timeZone)) return toast('有効なタイムゾーンを選択してください');
-    calendarSettings.timeZone = timeZone;
+    const daytimeStart = $('daytimeStartInput').value;
+    const nightStart = $('nightStartInput').value;
+    if (!daytimeStart || !nightStart || daytimeStart === nightStart) return toast('日中卓と夜卓の開始時刻は別々に設定してください');
+    calendarSettings = normalizeCalendarSettings({
+      timeZone,
+      weekStartsOn: $('weekStartsOnInput').value,
+      daytimeStart,
+      nightStart,
+      allDayRule: $('allDayRuleInput').value,
+      allDayDurationHours: $('allDayDurationHoursInput').value,
+    });
     saveCalendarSettings();
     const selected = sessions.find(session => session.id === selectedId);
     selectedDate = selected ? sessionDate(selected) : currentCalendarDateKey();
     cursor = calendarMonthDate(selectedDate);
     $('calendarSettingsDialog').close();
     render();
-    toast(`${timeZoneLabel()}へ変更しました`);
+    toast('カレンダー設定を保存しました');
     if ((googleSettings.feeds || []).some(feed => feed.enabled !== false && feed.secretIcalUrl)) syncGoogleCalendar(false);
   });
 
@@ -1355,19 +1439,19 @@
   $('todayBtn').onclick = () => { selectedDate = currentCalendarDateKey(); cursor = calendarMonthDate(selectedDate); render(); };
   $('prevMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() - 1); render(); };
   $('nextMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() + 1); render(); };
-  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、イベントのダブルクリックで編集できます。歯車から表示タイムゾーンを選択でき、日中卓・夜卓もその時間帯で判定します。Google連携では複数の非公開カレンダーを読み取り専用で同期します。');
+  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、イベントのダブルクリックで編集できます。歯車から週の開始曜日・表示タイムゾーン・日中卓／夜卓／終日卓の判定を設定できます。Google連携では複数の非公開カレンダーを読み取り専用で同期します。');
   $('shortcutBtn').onclick = () => alert('Ctrl/⌘ + Shift + N: セッション追加\nCtrl/⌘ + Shift + T: タスク追加\nEsc: ダイアログを閉じる');
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.21', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.22', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
     if (!file) return;
     const data = JSON.parse(await file.text());
-    if (isValidTimeZone(data?.calendarSettings?.timeZone)) {
-      calendarSettings.timeZone = data.calendarSettings.timeZone;
+    if (data?.calendarSettings) {
+      calendarSettings = normalizeCalendarSettings({ ...calendarSettings, ...data.calendarSettings });
       saveCalendarSettings();
       renderCalendarTimeZone();
     }
@@ -1388,12 +1472,15 @@
   };
   $('calendarSettingsBtn').onclick = openCalendarSettings;
   $('calendarTimeZoneInput').onchange = updateTimeZonePreview;
-  $('dataToolsToggleBtn').onclick = () => {
-    panelState.dataTools = !panelState.dataTools;
+  $('allDayRuleInput').onchange = updateAllDaySettingsState;
+  const setDataToolsOpen = open => {
+    panelState.dataTools = Boolean(open);
     savePanelState();
     applyPanelState();
     requestAnimationFrame(updatePanelViewportHeight);
   };
+  $('dataToolsToggleBtn').onclick = () => setDataToolsOpen(!panelState.dataTools);
+  $('dataToolsCloseBtn').onclick = () => setDataToolsOpen(false);
   $('todayPanelToggle').onclick = () => setOverviewPanel('today', $('todayPanel').classList.contains('is-collapsed'));
   $('taskPanelToggle').onclick = () => setOverviewPanel('tasks', $('taskPanel').classList.contains('is-collapsed'));
 
