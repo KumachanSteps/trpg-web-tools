@@ -7,11 +7,65 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 18px;
-  align-items: start;
+  height: var(--calendar-viewport-height, calc(100dvh - 176px));
+  min-height: 560px;
+  gap: 12px;
+  align-items: stretch;
+  overflow: hidden;
 }
-.calendar-area { grid-row: span 2; min-width: 0; }
-.side-column { display: grid; gap: 18px; align-content: start; min-width: 0; }
+.layout.left-collapsed { grid-template-columns: 52px minmax(340px, 1fr); }
+.layout.right-collapsed { grid-template-columns: minmax(0, 1fr) 52px; }
+.layout.left-collapsed.right-collapsed { grid-template-columns: 52px 52px; justify-content: space-between; }
+.workspace-panel {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  box-shadow: var(--shadow);
+}
+.workspace-head {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px 8px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sheet-sub);
+}
+.workspace-head-copy { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.workspace-head h2 { margin: 0; font-size: 16px; letter-spacing: .04em; }
+.workspace-kicker { color: var(--faint); font-size: 9px; font-weight: 700; letter-spacing: .16em; }
+.panel-collapse {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--sheet);
+  color: var(--ink-soft);
+  font-size: 20px;
+  cursor: pointer;
+}
+.panel-collapse:hover { border-color: var(--ink-soft); color: var(--ink); }
+.workspace-panel-body { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.calendar-panel-scroll { padding: 12px; }
+.right-panel-scroll { display: grid; gap: 12px; align-content: start; padding: 12px; }
+.calendar-area { min-width: 0; }
+.side-column { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.workspace-panel.is-collapsed { grid-template-rows: minmax(0, 1fr); }
+.workspace-panel.is-collapsed .workspace-panel-body { display: none; }
+.workspace-panel.is-collapsed .workspace-head { min-height: 0; flex-direction: column; justify-content: flex-start; padding: 10px 7px; border-bottom: 0; }
+.workspace-panel.is-collapsed .workspace-head-copy { flex-direction: column; align-items: center; gap: 8px; writing-mode: vertical-rl; }
+.workspace-panel.is-collapsed .workspace-head h2 { font-size: 13px; }
+.workspace-panel.is-collapsed .workspace-kicker { display: none; }
+.workspace-panel.is-collapsed .panel-collapse { transform: rotate(180deg); }
 
 .toolbar {
   display: flex;
@@ -22,6 +76,22 @@
 }
 .toolbar-spacer { flex: 1; }
 .file-label { position: relative; }
+.sync-status {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--sheet-sub);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sync-status.is-active { border-color: var(--ok-line); background: var(--ok-bg); color: var(--ok-ink); }
+.sync-status.is-error { border-color: rgba(181,82,58,.35); background: rgba(181,82,58,.08); color: var(--pen-red); }
+.sync-status.is-syncing { border-color: var(--note-line); background: var(--note); color: var(--pen-blue); }
 
 /* ---------- 紙のパネル ---------- */
 .focus-panel,
@@ -34,6 +104,9 @@
   box-shadow: var(--shadow);
   overflow: hidden;
 }
+.workspace-panel .month-card,
+.workspace-panel .panel,
+.workspace-panel .detail-pane { box-shadow: none; }
 
 .focus-panel {
   display: flex;
@@ -309,6 +382,16 @@ button.mini-card:hover { border-color: var(--ink-soft); }
 .source-option { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--sheet-sub); }
 .source-option small { display: block; color: var(--muted); }
 .source-option input { accent-color: var(--pen-blue); }
+.google-sync-body { display: grid; gap: 13px; padding: 18px 20px; }
+.google-sync-body > p { margin: 0; color: var(--muted); line-height: 1.65; }
+.google-sync-body > label,
+.google-sync-grid > label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .03em; }
+.google-sync-grid { display: grid; grid-template-columns: minmax(180px,.7fr) minmax(260px,1.3fr); gap: 12px; align-items: end; }
+.google-sync-grid .toggle-option { display: flex; min-height: 42px; align-items: center; gap: 9px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--sheet-sub); }
+.google-sync-grid .toggle-option input { width: auto; accent-color: var(--pen-blue); }
+.security-note { padding: 10px 12px; border-left: 3px solid var(--note-line); background: var(--note); font-size: 11px; }
+.sync-details { min-height: 20px; color: var(--muted); font-size: 12px; }
+.sync-details.is-error { color: var(--pen-red); }
 
 /* ---------- トースト ---------- */
 .toast {
@@ -331,8 +414,17 @@ button.mini-card:hover { border-color: var(--ink-soft); }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 1100px) {
-  .layout { grid-template-columns: 1fr; }
-  .calendar-area { grid-row: auto; }
+  .layout,
+  .layout.left-collapsed,
+  .layout.right-collapsed,
+  .layout.left-collapsed.right-collapsed { height: auto; min-height: 0; grid-template-columns: 1fr; overflow: visible; }
+  .workspace-panel { min-height: 0; }
+  .workspace-panel-body { max-height: none; overflow: visible; }
+  .workspace-panel.is-collapsed { min-height: 48px; }
+  .workspace-panel.is-collapsed .workspace-head { flex-direction: row; justify-content: space-between; padding: 8px 12px 8px 16px; }
+  .workspace-panel.is-collapsed .workspace-head-copy { flex-direction: row; writing-mode: initial; }
+  .workspace-panel.is-collapsed .workspace-head h2 { font-size: 16px; }
+  .workspace-panel.is-collapsed .panel-collapse { transform: rotate(90deg); }
 }
 
 @media (max-width: 760px) {
@@ -343,5 +435,7 @@ button.mini-card:hover { border-color: var(--ink-soft); }
   .event { padding: 2px 4px; font-size: 10.5px; }
   .event-time { display: none; }
   .form-grid { grid-template-columns: 1fr; }
+  .google-sync-grid { grid-template-columns: 1fr; }
+  .sync-status { order: 10; }
   .toast { bottom: 84px; }
 }

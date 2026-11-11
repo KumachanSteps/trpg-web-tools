@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓準備カレンダー v0.13 | TRPG WEBツール観測所</title>
+  <title>卓準備カレンダー v0.14 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.1" />
-  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.13" />
+  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.14" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body class="hub hub-unified-header" data-hub-tool="calendar">
@@ -35,19 +35,26 @@
         </nav>
       </div>
       <div class="hub-header-meta">
-        <p class="hub-version">v0.13 2026.10.24</p>
+        <p class="hub-version">v0.14 2026.11.11</p>
       </div>
     </header>
 
-    <main class="layout">
-      <section class="calendar-area">
+    <main id="calendarLayout" class="layout">
+      <section id="calendarPanel" class="workspace-panel calendar-workspace">
+        <header class="workspace-head">
+          <div class="workspace-head-copy"><span class="workspace-kicker">CALENDAR</span><h2>月間カレンダー</h2></div>
+          <button id="collapseCalendarBtn" class="panel-collapse" type="button" aria-expanded="true" aria-controls="calendarPanelBody" title="カレンダーを折りたたむ">‹</button>
+        </header>
+        <div id="calendarPanelBody" class="workspace-panel-body calendar-panel-scroll">
+          <div class="calendar-area">
         <div class="toolbar">
           <button id="addSessionBtn" class="hub-btn is-ink" type="button">＋ セッション追加</button>
           <button id="addTaskBtn" class="hub-btn" type="button">＋ タスク追加</button>
           <span class="toolbar-spacer"></span>
           <label class="hub-btn file-label">JSON読込<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
           <label class="hub-btn file-label">iCal読込<input id="icalInput" type="file" accept="text/calendar,.ics,.ical" hidden /></label>
-          <button id="googleImportBtn" class="hub-btn is-accent" type="button">Googleカレンダー読込</button>
+          <button id="googleImportBtn" class="hub-btn is-accent" type="button">Google連携</button>
+          <span id="googleSyncStatus" class="sync-status" aria-live="polite">未接続</span>
           <button id="exportJsonBtn" class="hub-btn" type="button">JSON出力</button>
           <button id="exportIcalBtn" class="hub-btn" type="button">iCal出力</button>
         </div>
@@ -73,26 +80,36 @@
           <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
           <div id="calendarGrid" class="calendar-grid"></div>
         </section>
+          </div>
+        </div>
       </section>
 
-      <aside class="side-column">
-        <section class="panel today-panel">
-          <h2>今日の予定</h2>
-          <div id="todayList" class="stack-list"></div>
-        </section>
-        <section class="panel task-panel">
-          <h2>今週のタスク <span id="weekRange"></span></h2>
-          <div id="taskList" class="task-list" aria-label="今週の準備タスク"></div>
-          <button id="showAllTasksBtn" class="hub-btn wide-button" type="button">すべて</button>
-        </section>
-      </aside>
+      <aside id="rightPanel" class="workspace-panel right-workspace">
+        <header class="workspace-head">
+          <div class="workspace-head-copy"><span class="workspace-kicker">PREPARATION</span><h2>予定と準備</h2></div>
+          <button id="collapseRightBtn" class="panel-collapse" type="button" aria-expanded="true" aria-controls="rightPanelBody" title="予定と準備を折りたたむ">›</button>
+        </header>
+        <div id="rightPanelBody" class="workspace-panel-body right-panel-scroll">
+          <div class="side-column">
+            <section class="panel today-panel">
+              <h2>今日の予定</h2>
+              <div id="todayList" class="stack-list"></div>
+            </section>
+            <section class="panel task-panel">
+              <h2>今週のタスク <span id="weekRange"></span></h2>
+              <div id="taskList" class="task-list" aria-label="今週の準備タスク"></div>
+              <button id="showAllTasksBtn" class="hub-btn wide-button" type="button">すべて</button>
+            </section>
+          </div>
 
-      <aside id="detailPane" class="detail-pane" aria-live="polite">
-        <div class="detail-head">
-          <h2>詳細</h2>
-          <button id="closeDetailBtn" type="button" aria-label="詳細を閉じる">×</button>
+          <section id="detailPane" class="detail-pane" aria-live="polite">
+            <div class="detail-head">
+              <h2>詳細</h2>
+              <button id="closeDetailBtn" type="button" aria-label="詳細を閉じる">×</button>
+            </div>
+            <div id="detailContent" class="detail-content empty"></div>
+          </section>
         </div>
-        <div id="detailContent" class="detail-content empty"></div>
       </aside>
     </main>
   </div>
@@ -143,8 +160,26 @@
     </form>
   </dialog>
 
+  <dialog id="googleSyncDialog" class="modal google-sync-modal">
+    <form id="googleSyncForm" method="dialog">
+      <div class="modal-head"><h2>Google Calendar連携</h2><button value="cancel" type="submit" aria-label="閉じる">×</button></div>
+      <div class="google-sync-body">
+        <p>公開Google Calendarを読み取り専用で同期します。ページ起動時と指定間隔で予定を更新し、手動で追加したシステム・GM・参加者・準備タスクは保持します。</p>
+        <label>Google Calendar ID<input id="googleCalendarIdInput" autocomplete="off" placeholder="example@group.calendar.google.com" required /></label>
+        <label>Google Calendar APIキー<input id="googleApiKeyInput" type="password" autocomplete="off" placeholder="Google Cloudで作成した制限付きAPIキー" required /></label>
+        <div class="google-sync-grid">
+          <label>自動更新間隔<select id="googleSyncIntervalInput"><option value="15">15分</option><option value="30">30分</option><option value="60">60分</option></select></label>
+          <label class="toggle-option"><input id="googleAutoSyncInput" type="checkbox" checked /><span>ページを開いている間、自動更新する</span></label>
+        </div>
+        <p class="security-note">APIキーとカレンダーIDはこのブラウザ内だけに保存され、JSON出力には含まれません。APIキーにはGoogle Calendar APIのみ・このサイトのURLのみを許可する制限を設定してください。非公開カレンダーはIDとAPIキーだけでは取得できません。</p>
+        <div id="googleSyncDetails" class="sync-details" aria-live="polite"></div>
+      </div>
+      <div class="modal-actions google-sync-actions"><button id="disconnectGoogleBtn" class="danger" type="button">連携解除</button><span></span><button value="cancel" type="submit">キャンセル</button><button id="saveGoogleSyncBtn" class="primary" value="default" type="submit">保存して同期</button></div>
+    </form>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
-  <script src="js/session_check_calendar.js?v=0.13"></script>
+  <script src="js/session_check_calendar.js?v=0.14"></script>
 </body>
 </html>

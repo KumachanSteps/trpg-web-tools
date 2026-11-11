@@ -3,6 +3,8 @@
 
   const $ = id => document.getElementById(id);
   const STORAGE_KEY = 'trpgWebTools.sessionCheckCalendar.sessions';
+  const GOOGLE_SETTINGS_KEY = 'trpgWebTools.sessionCheckCalendar.googleSync';
+  const PANEL_STATE_KEY = 'trpgWebTools.sessionCheckCalendar.panelState';
   const REPORT_KEY = 'trpgWebTools.sessionReportGenerator.pendingImport';
   const LOG_KEY = 'trpgWebTools.sessionLogTracker.pendingImport';
   const SOURCE_LABELS = {
@@ -22,10 +24,68 @@
     : new Date(today.getFullYear(), today.getMonth(), 1);
   let editingId = '';
   let pendingImport = [];
+  let googleSettings = loadGoogleSettings();
+  let panelState = loadPanelState();
+  let googleSyncTimer = 0;
+  let googleSyncing = false;
 
   function newId(prefix = 'calendar') {
     if (window.crypto?.randomUUID) return `${prefix}_${crypto.randomUUID()}`;
     return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  }
+
+  function loadGoogleSettings() {
+    const defaults = { calendarId: '', apiKey: '', autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '' };
+    try {
+      return { ...defaults, ...JSON.parse(localStorage.getItem(GOOGLE_SETTINGS_KEY) || '{}') };
+    } catch {
+      return defaults;
+    }
+  }
+
+  function saveGoogleSettings() {
+    localStorage.setItem(GOOGLE_SETTINGS_KEY, JSON.stringify(googleSettings));
+  }
+
+  function loadPanelState() {
+    try {
+      return { calendar: false, right: false, ...JSON.parse(localStorage.getItem(PANEL_STATE_KEY) || '{}') };
+    } catch {
+      return { calendar: false, right: false };
+    }
+  }
+
+  function savePanelState() {
+    localStorage.setItem(PANEL_STATE_KEY, JSON.stringify(panelState));
+  }
+
+  function applyPanelState() {
+    const layout = $('calendarLayout');
+    const calendarCollapsed = Boolean(panelState.calendar);
+    const rightCollapsed = Boolean(panelState.right);
+    $('calendarPanel').classList.toggle('is-collapsed', calendarCollapsed);
+    $('rightPanel').classList.toggle('is-collapsed', rightCollapsed);
+    layout.classList.toggle('left-collapsed', calendarCollapsed);
+    layout.classList.toggle('right-collapsed', rightCollapsed);
+    $('collapseCalendarBtn').setAttribute('aria-expanded', String(!calendarCollapsed));
+    $('collapseRightBtn').setAttribute('aria-expanded', String(!rightCollapsed));
+    $('collapseCalendarBtn').title = calendarCollapsed ? 'カレンダーを展開する' : 'カレンダーを折りたたむ';
+    $('collapseRightBtn').title = rightCollapsed ? '予定と準備を展開する' : '予定と準備を折りたたむ';
+  }
+
+  function togglePanel(name) {
+    panelState[name] = !panelState[name];
+    savePanelState();
+    applyPanelState();
+  }
+
+  function updatePanelViewportHeight() {
+    if (window.matchMedia('(max-width: 1100px)').matches) {
+      $('calendarLayout').style.removeProperty('--calendar-viewport-height');
+      return;
+    }
+    const top = $('calendarLayout').getBoundingClientRect().top;
+    $('calendarLayout').style.setProperty('--calendar-viewport-height', `${Math.max(560, window.innerHeight - top - 16)}px`);
   }
 
   function seedSessions() {
@@ -585,6 +645,209 @@
     return { datetime: `${y}-${m}-${d}T${h}:${min}`, time: `${h}:${min}` };
   }
 
+  function renderGoogleSyncStatus() {
+    const status = $('googleSyncStatus');
+    if (!googleSettings.calendarId || !googleSettings.apiKey) {
+      status.textContent = '未接続';
+      status.className = 'sync-status';
+      status.title = '';
+      return;
+    }
+    if (googleSyncing) {
+      status.textContent = 'Google同期中…';
+      status.className = 'sync-status is-syncing';
+      return;
+    }
+    if (googleSettings.lastError) {
+      status.textContent = '同期エラー';
+      status.className = 'sync-status is-error';
+      status.title = googleSettings.lastError;
+      return;
+    }
+    const lastSync = googleSettings.lastSyncAt ? new Date(googleSettings.lastSyncAt) : null;
+    status.textContent = lastSync && !Number.isNaN(lastSync.getTime())
+      ? `同期 ${pad(lastSync.getHours())}:${pad(lastSync.getMinutes())}`
+      : '接続済み';
+    status.className = 'sync-status is-active';
+    status.title = googleSettings.calendarId;
+  }
+
+  function openGoogleSyncDialog() {
+    $('googleCalendarIdInput').value = googleSettings.calendarId || '';
+    $('googleApiKeyInput').value = googleSettings.apiKey || '';
+    $('googleAutoSyncInput').checked = googleSettings.autoSync !== false;
+    $('googleSyncIntervalInput').value = String(googleSettings.intervalMinutes || 30);
+    $('googleSyncDetails').className = `sync-details${googleSettings.lastError ? ' is-error' : ''}`;
+    $('googleSyncDetails').textContent = googleSettings.lastError
+      ? `前回の同期エラー: ${googleSettings.lastError}`
+      : googleSettings.lastSyncAt
+        ? `最終同期: ${new Date(googleSettings.lastSyncAt).toLocaleString('ja-JP')}`
+        : 'まだ同期していません。';
+    $('disconnectGoogleBtn').hidden = !googleSettings.calendarId;
+    $('googleSyncDialog').showModal();
+  }
+
+  function googleDateTime(value) {
+    if (!value) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T00:00`;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return `${dateKey(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  function googleEndTime(event) {
+    if (!event.end?.dateTime) return '';
+    return googleDateTime(event.end.dateTime).slice(11, 16);
+  }
+
+  function googleEventToSession(event, calendarId, calendarName, existing = null) {
+    const description = event.description || '';
+    const keepsManualMemo = Boolean(existing?.memo && existing.memo !== existing.googleDescription);
+    const links = (existing?.links || []).filter(link => link.label !== 'Google Calendar');
+    if (event.htmlLink) links.push({ label: 'Google Calendar', url: event.htmlLink });
+    return {
+      ...(existing || {}),
+      id: existing?.id || newId('google'),
+      source: 'google',
+      sourceCalendar: calendarName || calendarId,
+      googleCalendarId: calendarId,
+      googleEventId: event.id,
+      googleUpdatedAt: event.updated || '',
+      googleDescription: description,
+      scenario: event.summary || existing?.scenario || '名称未設定',
+      system: existing?.system || '',
+      start: googleDateTime(event.start?.dateTime || event.start?.date),
+      end: googleEndTime(event),
+      gm: existing?.gm || '',
+      format: existing?.format || event.location || '',
+      status: event.status === 'tentative' ? 'tentative' : 'scheduled',
+      memo: keepsManualMemo ? existing.memo : description,
+      hashtags: existing?.hashtags || [],
+      players: existing?.players || [],
+      links,
+      tasks: normalizeTasks(existing?.tasks || []),
+    };
+  }
+
+  function mergeGoogleEvents(events, calendarId, calendarName, rangeStart, rangeEnd) {
+    const seenIds = new Set();
+    let added = 0;
+    let updated = 0;
+    let removed = 0;
+    const cancelledIds = new Set(events.filter(event => event.status === 'cancelled').map(event => event.id));
+
+    events.filter(event => event.status !== 'cancelled').forEach(event => {
+      seenIds.add(event.id);
+      const index = sessions.findIndex(session => session.source === 'google' && session.googleCalendarId === calendarId && session.googleEventId === event.id);
+      const existing = index >= 0 ? sessions[index] : null;
+      const mapped = googleEventToSession(event, calendarId, calendarName, existing);
+      if (!mapped.start) return;
+      if (index >= 0) {
+        sessions[index] = mapped;
+        updated += 1;
+      } else {
+        sessions.push(mapped);
+        added += 1;
+      }
+    });
+
+    sessions = sessions.filter(session => {
+      if (session.source !== 'google' || session.googleCalendarId !== calendarId || !session.googleEventId) return true;
+      if (cancelledIds.has(session.googleEventId)) {
+        removed += 1;
+        return false;
+      }
+      const start = new Date(session.start).getTime();
+      const inRange = Number.isFinite(start) && start >= rangeStart.getTime() && start <= rangeEnd.getTime();
+      if (inRange && !seenIds.has(session.googleEventId)) {
+        removed += 1;
+        return false;
+      }
+      return true;
+    });
+    return { added, updated, removed };
+  }
+
+  async function fetchGoogleEvents(calendarId, apiKey, rangeStart, rangeEnd) {
+    const events = [];
+    let pageToken = '';
+    let calendarName = calendarId;
+    do {
+      const params = new URLSearchParams({
+        key: apiKey,
+        singleEvents: 'true',
+        showDeleted: 'true',
+        orderBy: 'startTime',
+        maxResults: '2500',
+        timeMin: rangeStart.toISOString(),
+        timeMax: rangeEnd.toISOString(),
+      });
+      if (pageToken) params.set('pageToken', pageToken);
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+      const response = await fetch(url, { headers: { Accept: 'application/json' }, referrerPolicy: 'strict-origin-when-cross-origin' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const reason = payload?.error?.message || `HTTP ${response.status}`;
+        throw new Error(response.status === 403
+          ? 'アクセスできません。Calendar APIの有効化、APIキー制限、カレンダーの公開設定を確認してください。'
+          : reason);
+      }
+      calendarName = payload.summary || calendarName;
+      events.push(...(payload.items || []));
+      pageToken = payload.nextPageToken || '';
+    } while (pageToken);
+    return { events, calendarName };
+  }
+
+  function scheduleGoogleSync(delayMinutes = googleSettings.intervalMinutes || 30) {
+    window.clearTimeout(googleSyncTimer);
+    googleSyncTimer = 0;
+    if (!googleSettings.autoSync || !googleSettings.calendarId || !googleSettings.apiKey) return;
+    googleSyncTimer = window.setTimeout(() => syncGoogleCalendar(false), Math.max(1, Number(delayMinutes)) * 60 * 1000);
+  }
+
+  async function syncGoogleCalendar(manual = false) {
+    if (googleSyncing) return;
+    if (!googleSettings.calendarId || !googleSettings.apiKey) {
+      if (manual) openGoogleSyncDialog();
+      return;
+    }
+    googleSyncing = true;
+    googleSettings.lastError = '';
+    renderGoogleSyncStatus();
+    const rangeStart = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+    const rangeEnd = new Date(today.getFullYear() + 2, today.getMonth() + 1, 1);
+    try {
+      const result = await fetchGoogleEvents(googleSettings.calendarId, googleSettings.apiKey, rangeStart, rangeEnd);
+      const counts = mergeGoogleEvents(result.events, googleSettings.calendarId, result.calendarName, rangeStart, rangeEnd);
+      googleSettings.lastSyncAt = new Date().toISOString();
+      saveGoogleSettings();
+      render();
+      toast(`Google同期: 追加${counts.added}・更新${counts.updated}・削除${counts.removed}件`);
+    } catch (error) {
+      googleSettings.lastError = error instanceof Error ? error.message : 'Google Calendarを同期できませんでした。';
+      saveGoogleSettings();
+      if (manual) openGoogleSyncDialog();
+      toast('Google Calendarの同期に失敗しました');
+    } finally {
+      googleSyncing = false;
+      renderGoogleSyncStatus();
+      scheduleGoogleSync();
+    }
+  }
+
+  function maybeAutoSyncGoogle() {
+    renderGoogleSyncStatus();
+    if (!googleSettings.autoSync || !googleSettings.calendarId || !googleSettings.apiKey) return;
+    const interval = Math.max(1, Number(googleSettings.intervalMinutes || 30));
+    const elapsed = Date.now() - new Date(googleSettings.lastSyncAt || 0).getTime();
+    if (!googleSettings.lastSyncAt || elapsed >= interval * 60 * 1000) {
+      syncGoogleCalendar(false);
+    } else {
+      scheduleGoogleSync(Math.max(1, interval - elapsed / 60000));
+    }
+  }
+
   function openImportDialog(items, title, lead) {
     pendingImport = items;
     $('importDialogTitle').textContent = title;
@@ -609,6 +872,33 @@
     render();
   });
 
+  $('googleSyncForm').addEventListener('submit', event => {
+    if (event.submitter?.value === 'cancel') return;
+    event.preventDefault();
+    googleSettings = {
+      ...googleSettings,
+      calendarId: $('googleCalendarIdInput').value.trim(),
+      apiKey: $('googleApiKeyInput').value.trim(),
+      autoSync: $('googleAutoSyncInput').checked,
+      intervalMinutes: Number($('googleSyncIntervalInput').value) || 30,
+      lastError: '',
+    };
+    saveGoogleSettings();
+    $('googleSyncDialog').close();
+    renderGoogleSyncStatus();
+    syncGoogleCalendar(true);
+  });
+
+  $('disconnectGoogleBtn').onclick = () => {
+    window.clearTimeout(googleSyncTimer);
+    googleSyncTimer = 0;
+    googleSettings = { calendarId: '', apiKey: '', autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '' };
+    saveGoogleSettings();
+    $('googleSyncDialog').close();
+    renderGoogleSyncStatus();
+    toast('Google Calendar連携を解除しました（同期済み予定は残ります）');
+  };
+
   $('deleteSessionBtn').onclick = deleteSelected;
   $('reportBridgeBtn').onclick = sendToReportGenerator;
   $('addSessionBtn').onclick = () => openDialog('', selectedDate);
@@ -619,12 +909,12 @@
   $('todayBtn').onclick = () => { cursor = new Date(today.getFullYear(), today.getMonth(), 1); selectedDate = dateKey(today); render(); };
   $('prevMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() - 1); render(); };
   $('nextMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() + 1); render(); };
-  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、ダブルクリックでセッション追加。JSON/iCal/Googleカレンダーからは読み込むカレンダーを選択できます。');
+  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、ダブルクリックでセッション追加。左右パネルは個別にスクロール・折りたたみできます。Google連携は公開カレンダーを起動時と設定間隔で読み取り専用同期します。');
   $('shortcutBtn').onclick = () => alert('Ctrl/⌘ + Shift + N: セッション追加\nCtrl/⌘ + Shift + T: タスク追加\nEsc: ダイアログを閉じる');
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.13', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.14', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
@@ -639,13 +929,9 @@
     openImportDialog(parseIcal(await file.text(), 'ical'), 'iCalから読み込むカレンダーを選択', 'iCal内のカレンダー名・カテゴリごとに取り込み対象を選択できます。');
     event.target.value = '';
   };
-  $('googleImportBtn').onclick = () => {
-    const sample = [
-      { id: newId('session'), source: 'google', sourceCalendar: 'TRPG予定', scenario: 'Google予定：無貌の街 第4回', system: '', start: `${dateKey(today)}T20:00`, end: '23:00', gm: '', format: 'オンライン', status: 'scheduled', memo: 'Googleカレンダー連携のプレビュー取り込みです。', hashtags: [], players: [], links: [], tasks: [] },
-      { id: newId('session'), source: 'google', sourceCalendar: '仕事', scenario: 'Google予定：別カレンダー例', system: '', start: `${dateKey(today)}T10:00`, end: '11:00', gm: '', format: '', status: 'tentative', memo: '', hashtags: [], players: [], links: [], tasks: [] },
-    ];
-    openImportDialog(sample, 'Googleカレンダーから同期するカレンダーを選択', 'ブラウザのみで動くため、現段階では同期対象選択UIのプレビューです。「TRPG予定」など必要なカレンダーだけを選べます。');
-  };
+  $('googleImportBtn').onclick = openGoogleSyncDialog;
+  $('collapseCalendarBtn').onclick = () => togglePanel('calendar');
+  $('collapseRightBtn').onclick = () => togglePanel('right');
 
   function toIcal() {
     return [
@@ -686,5 +972,14 @@
     if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 't') openTaskDialog(selectedDate);
   });
 
+  window.addEventListener('resize', updatePanelViewportHeight);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) maybeAutoSyncGoogle();
+  });
+
+  applyPanelState();
+  updatePanelViewportHeight();
   render();
+  renderGoogleSyncStatus();
+  maybeAutoSyncGoogle();
 })();
