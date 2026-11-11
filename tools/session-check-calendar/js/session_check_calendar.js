@@ -37,13 +37,38 @@
   }
 
   function loadGoogleSettings() {
-    const defaults = { secretIcalUrl: '', autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '', feedKey: '' };
+    const defaults = { feeds: [], autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '' };
     try {
       localStorage.removeItem(LEGACY_GOOGLE_SETTINGS_KEY);
-      return { ...defaults, ...JSON.parse(localStorage.getItem(GOOGLE_SETTINGS_KEY) || '{}') };
+      const stored = JSON.parse(localStorage.getItem(GOOGLE_SETTINGS_KEY) || '{}');
+      const feeds = Array.isArray(stored.feeds)
+        ? stored.feeds.map(normalizeGoogleFeed)
+        : stored.secretIcalUrl
+          ? [normalizeGoogleFeed({
+              id: 'feed_migrated',
+              label: 'Google Calendar 1',
+              secretIcalUrl: stored.secretIcalUrl,
+              feedKey: stored.feedKey,
+              lastSyncAt: stored.lastSyncAt,
+              lastError: stored.lastError,
+            }, 0)]
+          : [];
+      return { ...defaults, ...stored, feeds, secretIcalUrl: undefined, feedKey: undefined };
     } catch {
       return defaults;
     }
+  }
+
+  function normalizeGoogleFeed(feed, index) {
+    return {
+      id: feed?.id || newId('feed'),
+      label: String(feed?.label || `Google Calendar ${index + 1}`),
+      secretIcalUrl: String(feed?.secretIcalUrl || ''),
+      enabled: feed?.enabled !== false,
+      feedKey: String(feed?.feedKey || ''),
+      lastSyncAt: String(feed?.lastSyncAt || ''),
+      lastError: String(feed?.lastError || ''),
+    };
   }
 
   function saveGoogleSettings() {
@@ -95,6 +120,7 @@
     return [
       {
         id: newId('session'),
+        sampleData: true,
         source: 'manual',
         sourceCalendar: 'TRPG予定',
         scenario: '無貌の街 第3回',
@@ -126,6 +152,7 @@
       },
       {
         id: newId('session'),
+        sampleData: true,
         source: 'manual',
         sourceCalendar: 'TRPG予定',
         scenario: '星屑の魔導師',
@@ -156,6 +183,12 @@
       hashtags: Array.isArray(session.hashtags) ? session.hashtags : splitTags(session.hashtags || ''),
       tasks: normalizeTasks(session.tasks),
     }));
+  }
+
+  function isSampleSession(session) {
+    if (session?.sampleData === true) return true;
+    return (session?.scenario === '無貌の街 第3回' && session?.start === '2026-07-02T20:00' && session?.gm === '星見 月夜')
+      || (session?.scenario === '星屑の魔導師' && session?.start === '2026-07-04T13:00' && session?.gm === 'くま');
   }
 
   function normalizeTasks(tasks) {
@@ -224,7 +257,14 @@
     renderToday();
     renderTasks();
     renderDetail();
+    renderSampleDataButton();
     save();
+  }
+
+  function renderSampleDataButton() {
+    const count = sessions.filter(isSampleSession).length;
+    $('removeSampleDataBtn').hidden = count === 0;
+    $('removeSampleDataBtn').textContent = count ? `サンプル削除 (${count})` : 'サンプル削除';
   }
 
   function renderCalendar() {
@@ -518,6 +558,23 @@
     render();
   }
 
+  function removeSampleData() {
+    const count = sessions.filter(isSampleSession).length;
+    if (!count) return toast('削除できるサンプルデータはありません');
+    if (!confirm(`サンプルのセッション${count}件と、その準備タスクを削除しますか？\n手入力・同期・読込データは削除しません。`)) return;
+    sessions = sessions.filter(session => !isSampleSession(session));
+    if (!sessions.some(session => session.id === selectedId)) {
+      selectedId = sessions[0]?.id || '';
+      selectedDate = selectedId ? sessionDate(sessions[0]) : '';
+    }
+    const anchor = sessions.find(session => session.id === selectedId);
+    cursor = anchor
+      ? new Date(new Date(anchor.start).getFullYear(), new Date(anchor.start).getMonth(), 1)
+      : new Date(today.getFullYear(), today.getMonth(), 1);
+    toast(`サンプルデータ${count}件を削除しました`);
+    render();
+  }
+
   function createBridgeItem(session) {
     return {
       id: `calendar_import_${Date.now()}`,
@@ -721,7 +778,8 @@
 
   function renderGoogleSyncStatus() {
     const status = $('googleSyncStatus');
-    if (!googleSettings.secretIcalUrl) {
+    const feeds = (googleSettings.feeds || []).filter(feed => feed.secretIcalUrl);
+    if (!feeds.length) {
       status.textContent = '未接続';
       status.className = 'sync-status';
       status.title = '';
@@ -740,14 +798,14 @@
     }
     const lastSync = googleSettings.lastSyncAt ? new Date(googleSettings.lastSyncAt) : null;
     status.textContent = lastSync && !Number.isNaN(lastSync.getTime())
-      ? `同期 ${pad(lastSync.getHours())}:${pad(lastSync.getMinutes())}`
-      : '接続済み';
+      ? `${feeds.length}件 同期 ${pad(lastSync.getHours())}:${pad(lastSync.getMinutes())}`
+      : `${feeds.length}件 接続済み`;
     status.className = 'sync-status is-active';
-    status.title = 'シークレットiCal連携中';
+    status.title = `${feeds.map(feed => feed.label).join('、')} を連携中`;
   }
 
   function openGoogleSyncDialog() {
-    $('googleSecretIcalInput').value = googleSettings.secretIcalUrl || '';
+    renderGoogleFeedRows(googleSettings.feeds?.length ? googleSettings.feeds : [normalizeGoogleFeed({}, 0)]);
     $('googleAutoSyncInput').checked = googleSettings.autoSync !== false;
     $('googleSyncIntervalInput').value = String(googleSettings.intervalMinutes || 30);
     $('googleSyncDetails').className = `sync-details${googleSettings.lastError ? ' is-error' : ''}`;
@@ -756,8 +814,52 @@
       : googleSettings.lastSyncAt
         ? `最終同期: ${new Date(googleSettings.lastSyncAt).toLocaleString('ja-JP')}`
         : 'まだ同期していません。';
-    $('disconnectGoogleBtn').hidden = !googleSettings.secretIcalUrl;
+    $('disconnectGoogleBtn').hidden = !(googleSettings.feeds || []).length;
     $('googleSyncDialog').showModal();
+  }
+
+  function googleFeedStatus(feed) {
+    if (feed.lastError) return { text: `前回のエラー: ${feed.lastError}`, error: true };
+    if (feed.lastSyncAt) return { text: `最終同期: ${new Date(feed.lastSyncAt).toLocaleString('ja-JP')}`, error: false };
+    return { text: 'まだ同期していません。', error: false };
+  }
+
+  function renderGoogleFeedRows(feeds) {
+    const list = $('googleCalendarList');
+    if (!feeds.length) {
+      list.innerHTML = '<p class="calendar-feed-empty">カレンダーがありません。「カレンダー追加」から登録してください。</p>';
+      return;
+    }
+    list.innerHTML = feeds.map((feed, index) => {
+      const status = googleFeedStatus(feed);
+      return `
+        <article class="calendar-feed-row" data-feed-id="${esc(feed.id)}">
+          <label>表示名<input class="feed-label-input" value="${esc(feed.label || `Google Calendar ${index + 1}`)}" placeholder="TRPG予定" /></label>
+          <label>シークレットiCal URL<input class="feed-url-input" type="password" autocomplete="off" value="${esc(feed.secretIcalUrl)}" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" /></label>
+          <label class="feed-enabled"><input class="feed-enabled-input" type="checkbox" ${feed.enabled !== false ? 'checked' : ''} /><span>同期</span></label>
+          <button class="feed-remove" type="button">削除</button>
+          <p class="feed-status ${status.error ? 'is-error' : ''}">${esc(status.text)}</p>
+        </article>`;
+    }).join('');
+    list.querySelectorAll('.feed-remove').forEach(button => {
+      button.onclick = () => {
+        const id = button.closest('.calendar-feed-row').dataset.feedId;
+        renderGoogleFeedRows(readGoogleFeedRows().filter(feed => feed.id !== id));
+      };
+    });
+  }
+
+  function readGoogleFeedRows() {
+    return [...$('googleCalendarList').querySelectorAll('.calendar-feed-row')].map((row, index) => {
+      const previous = (googleSettings.feeds || []).find(feed => feed.id === row.dataset.feedId) || {};
+      return normalizeGoogleFeed({
+        ...previous,
+        id: row.dataset.feedId,
+        label: row.querySelector('.feed-label-input').value.trim() || `Google Calendar ${index + 1}`,
+        secretIcalUrl: row.querySelector('.feed-url-input').value.trim(),
+        enabled: row.querySelector('.feed-enabled-input').checked,
+      }, index);
+    });
   }
 
   function googleEventToSession(event, feedKey, existing = null) {
@@ -798,7 +900,7 @@
 
     events.filter(event => event.status !== 'cancelled').forEach(event => {
       seenIds.add(event.googleEventId);
-      const index = sessions.findIndex(session => session.source === 'google' && session.googleEventId === event.googleEventId);
+      const index = sessions.findIndex(session => session.source === 'google' && session.googleFeedKey === feedKey && session.googleEventId === event.googleEventId);
       const existing = index >= 0 ? sessions[index] : null;
       const mapped = googleEventToSession(event, feedKey, existing);
       if (!mapped.start) return;
@@ -866,13 +968,14 @@
   function scheduleGoogleSync(delayMinutes = googleSettings.intervalMinutes || 30) {
     window.clearTimeout(googleSyncTimer);
     googleSyncTimer = 0;
-    if (!googleSettings.autoSync || !googleSettings.secretIcalUrl) return;
+    if (!googleSettings.autoSync || !(googleSettings.feeds || []).some(feed => feed.enabled !== false && feed.secretIcalUrl)) return;
     googleSyncTimer = window.setTimeout(() => syncGoogleCalendar(false), Math.max(1, Number(delayMinutes)) * 60 * 1000);
   }
 
   async function syncGoogleCalendar(manual = false) {
     if (googleSyncing) return;
-    if (!googleSettings.secretIcalUrl) {
+    const feeds = (googleSettings.feeds || []).filter(feed => feed.enabled !== false && feed.secretIcalUrl);
+    if (!feeds.length) {
       if (manual) openGoogleSyncDialog();
       return;
     }
@@ -881,36 +984,49 @@
     renderGoogleSyncStatus();
     const rangeStart = new Date(today.getFullYear(), today.getMonth() - 3, 1);
     const rangeEnd = new Date(today.getFullYear() + 2, today.getMonth() + 1, 1);
-    try {
-      const secretIcalUrl = validateSecretIcalUrl(googleSettings.secretIcalUrl);
-      const feedKey = await hashSecretIcalUrl(secretIcalUrl);
-      const text = await fetchSecretIcal(secretIcalUrl);
-      const parsed = parseIcal(text, 'google', feedKey);
-      const events = parsed.filter(event => {
-        const start = new Date(event.start).getTime();
-        return event.status === 'cancelled' || (Number.isFinite(start) && start >= rangeStart.getTime() && start <= rangeEnd.getTime());
-      });
-      const counts = mergeGoogleEvents(events, feedKey, rangeStart, rangeEnd);
-      googleSettings.feedKey = feedKey;
-      googleSettings.lastSyncAt = new Date().toISOString();
-      saveGoogleSettings();
-      render();
-      toast(`Google同期: 追加${counts.added}・更新${counts.updated}・削除${counts.removed}件`);
-    } catch (error) {
-      googleSettings.lastError = error instanceof Error ? error.message : 'Google Calendarを同期できませんでした。';
-      saveGoogleSettings();
+    const totals = { added: 0, updated: 0, removed: 0, succeeded: 0 };
+    const errors = [];
+    for (const feed of feeds) {
+      try {
+        const secretIcalUrl = validateSecretIcalUrl(feed.secretIcalUrl);
+        const feedKey = await hashSecretIcalUrl(secretIcalUrl);
+        const text = await fetchSecretIcal(secretIcalUrl);
+        const parsed = parseIcal(text, 'google', feedKey);
+        const events = parsed.filter(event => {
+          const start = new Date(event.start).getTime();
+          return event.status === 'cancelled' || (Number.isFinite(start) && start >= rangeStart.getTime() && start <= rangeEnd.getTime());
+        });
+        const counts = mergeGoogleEvents(events, feedKey, rangeStart, rangeEnd);
+        feed.feedKey = feedKey;
+        feed.lastSyncAt = new Date().toISOString();
+        feed.lastError = '';
+        totals.added += counts.added;
+        totals.updated += counts.updated;
+        totals.removed += counts.removed;
+        totals.succeeded += 1;
+      } catch (error) {
+        feed.lastError = error instanceof Error ? error.message : 'Google Calendarを同期できませんでした。';
+        errors.push(`${feed.label}: ${feed.lastError}`);
+      }
+    }
+    googleSettings.lastSyncAt = totals.succeeded ? new Date().toISOString() : googleSettings.lastSyncAt;
+    googleSettings.lastError = errors.join(' / ');
+    saveGoogleSettings();
+    render();
+    googleSyncing = false;
+    renderGoogleSyncStatus();
+    scheduleGoogleSync();
+    if (errors.length) {
+      toast(`Google同期: ${totals.succeeded}/${feeds.length}件成功`);
       if (manual) openGoogleSyncDialog();
-      toast('Google Calendarの同期に失敗しました');
-    } finally {
-      googleSyncing = false;
-      renderGoogleSyncStatus();
-      scheduleGoogleSync();
+    } else {
+      toast(`${feeds.length}カレンダー同期: 追加${totals.added}・更新${totals.updated}・削除${totals.removed}件`);
     }
   }
 
   function maybeAutoSyncGoogle() {
     renderGoogleSyncStatus();
-    if (!googleSettings.autoSync || !googleSettings.secretIcalUrl) return;
+    if (!googleSettings.autoSync || !(googleSettings.feeds || []).some(feed => feed.enabled !== false && feed.secretIcalUrl)) return;
     const interval = Math.max(1, Number(googleSettings.intervalMinutes || 30));
     const elapsed = Date.now() - new Date(googleSettings.lastSyncAt || 0).getTime();
     if (!googleSettings.lastSyncAt || elapsed >= interval * 60 * 1000) {
@@ -947,9 +1063,19 @@
   $('googleSyncForm').addEventListener('submit', event => {
     if (event.submitter?.value === 'cancel') return;
     event.preventDefault();
+    const feeds = readGoogleFeedRows().filter(feed => feed.secretIcalUrl);
+    try {
+      if (!feeds.length) throw new Error('同期するカレンダーを1件以上登録してください。');
+      feeds.forEach(feed => validateSecretIcalUrl(feed.secretIcalUrl));
+      if (new Set(feeds.map(feed => feed.secretIcalUrl)).size !== feeds.length) throw new Error('同じシークレットiCal URLが重複しています。');
+    } catch (error) {
+      $('googleSyncDetails').className = 'sync-details is-error';
+      $('googleSyncDetails').textContent = error instanceof Error ? error.message : 'カレンダー設定を確認してください。';
+      return;
+    }
     googleSettings = {
       ...googleSettings,
-      secretIcalUrl: $('googleSecretIcalInput').value.trim(),
+      feeds,
       autoSync: $('googleAutoSyncInput').checked,
       intervalMinutes: Number($('googleSyncIntervalInput').value) || 30,
       lastError: '',
@@ -963,7 +1089,7 @@
   $('disconnectGoogleBtn').onclick = () => {
     window.clearTimeout(googleSyncTimer);
     googleSyncTimer = 0;
-    googleSettings = { secretIcalUrl: '', autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '', feedKey: '' };
+    googleSettings = { feeds: [], autoSync: true, intervalMinutes: 30, lastSyncAt: '', lastError: '' };
     saveGoogleSettings();
     $('googleSyncDialog').close();
     renderGoogleSyncStatus();
@@ -974,18 +1100,19 @@
   $('reportBridgeBtn').onclick = sendToReportGenerator;
   $('addSessionBtn').onclick = () => openDialog('', selectedDate);
   $('addTaskBtn').onclick = () => openTaskDialog(selectedDate);
+  $('removeSampleDataBtn').onclick = removeSampleData;
   $('focusAddSessionBtn').onclick = () => openDialog('', selectedDate);
   $('focusAddTaskBtn').onclick = () => openTaskDialog(selectedDate);
   $('clearFocusBtn').onclick = () => { selectedDate = ''; render(); };
   $('todayBtn').onclick = () => { cursor = new Date(today.getFullYear(), today.getMonth(), 1); selectedDate = dateKey(today); render(); };
   $('prevMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() - 1); render(); };
   $('nextMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() + 1); render(); };
-  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、ダブルクリックでセッション追加。左右パネルは個別にスクロール・折りたたみできます。Google連携は非公開カレンダーのシークレットiCal URLを起動時と設定間隔で読み取り専用同期します。');
+  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、ダブルクリックでセッション追加。左右パネルは個別にスクロール・折りたたみできます。Google連携では複数の非公開カレンダーを登録し、起動時と設定間隔で読み取り専用同期します。');
   $('shortcutBtn').onclick = () => alert('Ctrl/⌘ + Shift + N: セッション追加\nCtrl/⌘ + Shift + T: タスク追加\nEsc: ダイアログを閉じる');
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.15', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.16', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
@@ -1001,6 +1128,11 @@
     event.target.value = '';
   };
   $('googleImportBtn').onclick = openGoogleSyncDialog;
+  $('addGoogleCalendarBtn').onclick = () => {
+    const feeds = readGoogleFeedRows();
+    feeds.push(normalizeGoogleFeed({ label: `Google Calendar ${feeds.length + 1}` }, feeds.length));
+    renderGoogleFeedRows(feeds);
+  };
   $('collapseCalendarBtn').onclick = () => togglePanel('calendar');
   $('collapseRightBtn').onclick = () => togglePanel('right');
 
