@@ -7,6 +7,7 @@
   const LEGACY_GOOGLE_SETTINGS_KEY = 'trpgWebTools.sessionCheckCalendar.googleSync';
   const GOOGLE_ICAL_PROXY_URL = 'https://trpg-calendar-ical-proxy.oc-character-cloudflare.workers.dev/';
   const PANEL_STATE_KEY = 'trpgWebTools.sessionCheckCalendar.panelState';
+  const CALENDAR_SETTINGS_KEY = 'trpgWebTools.sessionCheckCalendar.settings';
   const REPORT_KEY = 'trpgWebTools.sessionReportGenerator.pendingImport';
   const LOG_KEY = 'trpgWebTools.sessionLogTracker.pendingImport';
   const SOURCE_LABELS = {
@@ -18,16 +19,39 @@
 
   const pad = n => String(n).padStart(2, '0');
   const today = new Date();
+  let calendarSettings = loadCalendarSettings();
   let sessions = loadSessions();
-  let selectedDate = dateKey(today);
+  let selectedDate = currentCalendarDateKey();
   let selectedId = sessions.find(session => sessionDate(session) === selectedDate)?.id || '';
-  let cursor = new Date(today.getFullYear(), today.getMonth(), 1);
+  let cursor = calendarMonthDate(selectedDate);
   let editingId = '';
   let pendingImport = [];
   let googleSettings = loadGoogleSettings();
   let panelState = loadPanelState();
   let googleSyncTimer = 0;
   let googleSyncing = false;
+
+  function loadCalendarSettings() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(CALENDAR_SETTINGS_KEY) || '{}');
+      return { timeZone: isValidTimeZone(stored.timeZone) ? stored.timeZone : 'Asia/Tokyo' };
+    } catch {
+      return { timeZone: 'Asia/Tokyo' };
+    }
+  }
+
+  function saveCalendarSettings() {
+    localStorage.setItem(CALENDAR_SETTINGS_KEY, JSON.stringify(calendarSettings));
+  }
+
+  function isValidTimeZone(timeZone) {
+    try {
+      new Intl.DateTimeFormat('ja-JP', { timeZone }).format();
+      return Boolean(timeZone);
+    } catch {
+      return false;
+    }
+  }
 
   function newId(prefix = 'calendar') {
     if (window.crypto?.randomUUID) return `${prefix}_${crypto.randomUUID()}`;
@@ -218,32 +242,73 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
 
+  function zonedDateTime(date, timeZone = calendarSettings.timeZone) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return { date: '', time: '', datetime: '' };
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    });
+    const parts = Object.fromEntries(formatter.formatToParts(date).map(part => [part.type, part.value]));
+    const datePart = `${parts.year}-${parts.month}-${parts.day}`;
+    const timePart = `${parts.hour}:${parts.minute}`;
+    return { date: datePart, time: timePart, datetime: `${datePart}T${timePart}` };
+  }
+
+  function currentCalendarDateKey() {
+    return zonedDateTime(new Date()).date;
+  }
+
+  function calendarMonthDate(key) {
+    const [year, month] = String(key || '').split('-').map(Number);
+    return new Date(year || today.getFullYear(), (month || today.getMonth() + 1) - 1, 1);
+  }
+
+  function sessionDisplayStart(session) {
+    if (session?.startInstant && !session?.allDay) {
+      const display = zonedDateTime(new Date(session.startInstant));
+      if (display.datetime) return display.datetime;
+    }
+    return session?.start || '';
+  }
+
+  function sessionDisplayEnd(session) {
+    if (session?.endInstant && !session?.allDay) {
+      const display = zonedDateTime(new Date(session.endInstant));
+      if (display.time) return display.time;
+    }
+    return session?.end || '';
+  }
+
   function sessionDate(session) {
-    return (session.start || '').slice(0, 10);
+    return sessionDisplayStart(session).slice(0, 10);
   }
 
   function eventTimeClass(session) {
     if (session.allDay) return 'is-all-day';
-    const hour = Number((session.start || '').slice(11, 13));
+    const hour = Number(sessionDisplayStart(session).slice(11, 13));
     return Number.isFinite(hour) && hour >= 18 ? 'is-night' : 'is-daytime';
   }
 
   function eventTimeLabel(session) {
     if (session.allDay) return '終日';
-    return `${(session.start || '').slice(11, 16)}${session.end ? `–${esc(session.end)}` : ''}`;
+    const start = sessionDisplayStart(session).slice(11, 16);
+    const end = sessionDisplayEnd(session);
+    return `${start}${end ? `–${esc(end)}` : ''}`;
   }
 
   function fmtDate(iso) {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso || '';
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+    const [year, month, day] = String(iso || '').slice(0, 10).split('-').map(Number);
+    if (!year || !month || !day) return iso || '';
+    return `${year}年${month}月${day}日`;
   }
 
   function fmtDateTime(session) {
-    const d = new Date(session.start);
-    if (Number.isNaN(d.getTime())) return '';
-    if (session.allDay) return `${fmtDate(session.start)} 終日`;
-    return `${fmtDate(session.start)} ${pad(d.getHours())}:${pad(d.getMinutes())}${session.end ? `–${session.end}` : ''}`;
+    const start = sessionDisplayStart(session);
+    if (!start) return '';
+    if (session.allDay) return `${fmtDate(start)} 終日`;
+    const end = sessionDisplayEnd(session);
+    return `${fmtDate(start)} ${start.slice(11, 16)}${end ? `–${end}` : ''}`;
   }
 
   function esc(value) {
@@ -269,7 +334,40 @@
     renderTasks();
     renderDetail();
     renderSampleDataButton();
+    renderCalendarTimeZone();
     save();
+  }
+
+  function timeZoneLabel(timeZone = calendarSettings.timeZone) {
+    const labels = {
+      'Asia/Tokyo': '日本時間',
+      'America/New_York': '米国東部時間',
+      'America/Chicago': '米国中部時間',
+      'America/Denver': '米国山岳部時間',
+      'America/Los_Angeles': '米国太平洋時間',
+      'Europe/London': '英国時間',
+      UTC: '協定世界時',
+    };
+    return labels[timeZone] || timeZone;
+  }
+
+  function renderCalendarTimeZone() {
+    $('calendarTimeZoneLabel').textContent = `${timeZoneLabel()} · ${calendarSettings.timeZone}`;
+  }
+
+  function updateTimeZonePreview() {
+    const timeZone = $('calendarTimeZoneInput').value;
+    $('calendarTimeZonePreview').textContent = new Intl.DateTimeFormat('ja-JP', {
+      timeZone,
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date());
+  }
+
+  function openCalendarSettings() {
+    $('calendarTimeZoneInput').value = calendarSettings.timeZone;
+    updateTimeZonePreview();
+    $('calendarSettingsDialog').showModal();
   }
 
   function renderSampleDataButton() {
@@ -291,7 +389,7 @@
       const evs = sessions.filter(session => sessionDate(session) === key);
       const isSelected = selectedDate === key;
       return `
-        <button class="day ${d.getMonth() !== cursor.getMonth() ? 'other' : ''} ${key === dateKey(today) ? 'today' : ''} ${isSelected ? 'selected' : ''}" type="button" data-date="${key}">
+        <button class="day ${d.getMonth() !== cursor.getMonth() ? 'other' : ''} ${key === currentCalendarDateKey() ? 'today' : ''} ${isSelected ? 'selected' : ''}" type="button" data-date="${key}">
           <span class="day-num">${d.getDate()}</span>
           <span class="day-add">＋</span>
           ${evs.map(session => `
@@ -339,7 +437,7 @@
   }
 
   function renderToday() {
-    const list = sessions.filter(session => sessionDate(session) === dateKey(today));
+    const list = sessions.filter(session => sessionDate(session) === currentCalendarDateKey());
     $('todayList').innerHTML = list.length ? list.map(miniSession).join('') : '<p class="mini-card">予定なし</p>';
     $('todayList').querySelectorAll('[data-id]').forEach(el => {
       el.addEventListener('click', () => {
@@ -353,7 +451,7 @@
   function miniSession(session) {
     return `
       <button class="mini-card" data-id="${esc(session.id)}" type="button">
-        <small>${(session.start || '').slice(11, 16)}${session.end ? `–${esc(session.end)}` : ''}</small>
+        <small>${eventTimeLabel(session)}</small>
         <strong>${esc(session.scenario)}</strong>
         <span class="chip">${esc(session.format || '形式未設定')}</span>
         <span class="chip green">${esc(session.system || 'システム未設定')}</span>
@@ -367,8 +465,8 @@
   }
 
   function renderTasks() {
-    const start = new Date(today);
-    start.setDate(today.getDate() - today.getDay());
+    const start = new Date(`${currentCalendarDateKey()}T12:00`);
+    start.setDate(start.getDate() - start.getDay());
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
     $('weekRange').textContent = `(${start.getMonth() + 1}/${start.getDate()}〜${end.getMonth() + 1}/${end.getDate()})`;
@@ -494,7 +592,7 @@
   function openDialog(id = '', date = '') {
     editingId = id;
     const session = sessions.find(item => item.id === id) || {
-      start: `${date || selectedDate || dateKey(today)}T20:00`,
+      start: `${date || selectedDate || currentCalendarDateKey()}T20:00`,
       players: [],
       links: [],
       tasks: [],
@@ -506,8 +604,8 @@
     $('deleteSessionBtn').hidden = !id;
     $('scenarioInput').value = session.scenario || '';
     $('systemInput').value = session.system || '';
-    $('dateInput').value = session.start || '';
-    $('endTimeInput').value = session.end || '';
+    $('dateInput').value = sessionDisplayStart(session);
+    $('endTimeInput').value = sessionDisplayEnd(session);
     $('gmInput').value = session.gm || '';
     $('formatInput').value = session.format || '';
     $('seriesInput').value = session.series || '';
@@ -522,7 +620,7 @@
 
   function openTaskDialog(date = '') {
     $('taskTitleInput').value = '';
-    $('taskDueInput').value = date || selectedDate || dateKey(today);
+    $('taskDueInput').value = date || selectedDate || currentCalendarDateKey();
     $('taskStatusInput').value = '未着手';
     $('taskDoneInput').value = 'false';
     $('taskSessionSelect').innerHTML = sessions.map(session => `<option value="${esc(session.id)}" ${session.id === selectedId ? 'selected' : ''}>${esc(session.scenario)} / ${esc(fmtDateTime(session))}</option>`).join('');
@@ -541,11 +639,15 @@
     if (event.submitter?.value === 'cancel') return;
     event.preventDefault();
     const current = sessions.find(item => item.id === editingId) || { id: newId('session'), source: 'manual', sourceCalendar: 'TRPG予定' };
+    const displayedStartBeforeEdit = sessionDisplayStart(current);
+    const displayedEndBeforeEdit = sessionDisplayEnd(current);
+    const nextStart = $('dateInput').value;
+    const nextEnd = $('endTimeInput').value;
     Object.assign(current, {
       scenario: $('scenarioInput').value.trim(),
       system: $('systemInput').value.trim(),
-      start: $('dateInput').value,
-      end: $('endTimeInput').value,
+      start: nextStart,
+      end: nextEnd,
       gm: $('gmInput').value.trim(),
       format: $('formatInput').value.trim(),
       series: $('seriesInput').value.trim(),
@@ -565,6 +667,8 @@
         return { title, due, status, done: done === 'done' || status === '完了' };
       })),
     });
+    if (nextStart !== displayedStartBeforeEdit) current.startInstant = '';
+    if (nextEnd !== displayedEndBeforeEdit) current.endInstant = '';
     if (!editingId) sessions.push(current);
     selectedId = current.id;
     selectedDate = sessionDate(current);
@@ -619,8 +723,8 @@
     }
     const anchor = sessions.find(session => session.id === selectedId);
     cursor = anchor
-      ? new Date(new Date(anchor.start).getFullYear(), new Date(anchor.start).getMonth(), 1)
-      : new Date(today.getFullYear(), today.getMonth(), 1);
+      ? calendarMonthDate(sessionDate(anchor))
+      : calendarMonthDate(currentCalendarDateKey());
     toast(`サンプルデータ${count}件を削除しました`);
     render();
   }
@@ -686,7 +790,7 @@
       sourceCalendar: '卓ログトラッカー',
       scenario: item.scenario || item.title || '名称未設定',
       system: item.system || '',
-      start: `${item.latestDate || item.dates?.[0] || dateKey(today)}T20:00`,
+      start: `${item.latestDate || item.dates?.[0] || currentCalendarDateKey()}T20:00`,
       end: '',
       gm: item.gm || item.keeper || '',
       format: item.format || '',
@@ -706,7 +810,7 @@
       sourceCalendar: '卓ログトラッカー',
       scenario: row.scenario || row.title || row.scenarioName || '名称未設定',
       system: row.system || '',
-      start: `${row.latestDate || row.date || row.dates?.[0] || dateKey(today)}T20:00`,
+      start: `${row.latestDate || row.date || row.dates?.[0] || currentCalendarDateKey()}T20:00`,
       end: '',
       gm: row.gm || row.keeper || row.kp || '',
       format: row.format || '',
@@ -753,9 +857,9 @@
       .replaceAll('\\\\', '\\');
   }
 
-  function localDateTime(date) {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return { datetime: '', time: '' };
-    return { datetime: `${dateKey(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}`, time: `${pad(date.getHours())}:${pad(date.getMinutes())}` };
+  function calendarDateTime(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return { datetime: '', date: '', time: '', instant: '' };
+    return { ...zonedDateTime(date), instant: date.toISOString() };
   }
 
   function zonedWallTimeToDate(parts, timeZone) {
@@ -777,16 +881,14 @@
   function parseIcalDate(property) {
     const value = String(property?.value || '');
     const match = value.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?)?(Z)?$/);
-    if (!match) return { datetime: '', time: '', allDay: false };
+    if (!match) return { datetime: '', time: '', instant: '', allDay: false };
     const [, y, m, d, h, min, , utc] = match;
-    if (!h) return { datetime: `${y}-${m}-${d}T00:00`, time: '', allDay: true };
+    if (!h) return { datetime: `${y}-${m}-${d}T00:00`, time: '', instant: '', allDay: true };
     const parts = { y: Number(y), m: Number(m), d: Number(d), h: Number(h), min: Number(min) };
     const date = utc
       ? new Date(Date.UTC(parts.y, parts.m - 1, parts.d, parts.h, parts.min))
-      : property?.params?.TZID
-        ? zonedWallTimeToDate(parts, property.params.TZID)
-        : new Date(parts.y, parts.m - 1, parts.d, parts.h, parts.min);
-    return { ...localDateTime(date), allDay: false };
+      : zonedWallTimeToDate(parts, property?.params?.TZID || calendarSettings.timeZone);
+    return { ...calendarDateTime(date), allDay: false };
   }
 
   function parseIcal(text, source = 'ical', feedKey = '') {
@@ -814,6 +916,8 @@
         system: '',
         start: startDate.datetime,
         end: endDate.allDay ? '' : endDate.time,
+        startInstant: startDate.instant,
+        endInstant: endDate.instant,
         allDay: startDate.allDay,
         gm: '',
         format: decodeIcalText(first('LOCATION').value),
@@ -934,6 +1038,8 @@
       system: existing?.system || '',
       start: event.start,
       end: event.end || '',
+      startInstant: event.startInstant || '',
+      endInstant: event.endInstant || '',
       gm: existing?.gm || '',
       format: existing?.format || event.format || '',
       series: existing?.series || '',
@@ -976,7 +1082,7 @@
         removed += 1;
         return false;
       }
-      const start = new Date(session.start).getTime();
+      const start = new Date(session.startInstant || session.start).getTime();
       const inRange = Number.isFinite(start) && start >= rangeStart.getTime() && start <= rangeEnd.getTime();
       if (inRange && !seenIds.has(session.googleEventId)) {
         removed += 1;
@@ -1054,7 +1160,7 @@
         const text = await fetchSecretIcal(secretIcalUrl);
         const parsed = parseIcal(text, 'google', feedKey);
         const events = parsed.filter(event => {
-          const start = new Date(event.start).getTime();
+          const start = new Date(event.startInstant || event.start).getTime();
           return event.status === 'cancelled' || (Number.isFinite(start) && start >= rangeStart.getTime() && start <= rangeEnd.getTime());
         });
         const counts = mergeGoogleEvents(events, feedKey, rangeStart, rangeEnd);
@@ -1090,7 +1196,8 @@
     if (!googleSettings.autoSync || !(googleSettings.feeds || []).some(feed => feed.enabled !== false && feed.secretIcalUrl)) return;
     const interval = Math.max(1, Number(googleSettings.intervalMinutes || 30));
     const elapsed = Date.now() - new Date(googleSettings.lastSyncAt || 0).getTime();
-    if (!googleSettings.lastSyncAt || elapsed >= interval * 60 * 1000) {
+    const needsTimezoneMigration = sessions.some(session => session.source === 'google' && !session.allDay && !session.startInstant);
+    if (needsTimezoneMigration || !googleSettings.lastSyncAt || elapsed >= interval * 60 * 1000) {
       syncGoogleCalendar(false);
     } else {
       scheduleGoogleSync(Math.max(1, interval - elapsed / 60000));
@@ -1168,26 +1275,47 @@
     syncGoogleCalendar(true);
   };
 
+  $('calendarSettingsForm').addEventListener('submit', event => {
+    if (event.submitter?.value === 'cancel') return;
+    event.preventDefault();
+    const timeZone = $('calendarTimeZoneInput').value;
+    if (!isValidTimeZone(timeZone)) return toast('有効なタイムゾーンを選択してください');
+    calendarSettings.timeZone = timeZone;
+    saveCalendarSettings();
+    const selected = sessions.find(session => session.id === selectedId);
+    selectedDate = selected ? sessionDate(selected) : currentCalendarDateKey();
+    cursor = calendarMonthDate(selectedDate);
+    $('calendarSettingsDialog').close();
+    render();
+    toast(`${timeZoneLabel()}へ変更しました`);
+    if ((googleSettings.feeds || []).some(feed => feed.enabled !== false && feed.secretIcalUrl)) syncGoogleCalendar(false);
+  });
+
   $('deleteSessionBtn').onclick = deleteSelected;
   $('reportBridgeBtn').onclick = sendToReportGenerator;
   $('removeSampleDataBtn').onclick = removeSampleData;
   $('focusAddSessionBtn').onclick = () => openDialog('', selectedDate);
   $('focusAddTaskBtn').onclick = () => openTaskDialog(selectedDate);
   $('clearFocusBtn').onclick = () => { selectedDate = ''; render(); };
-  $('todayBtn').onclick = () => { cursor = new Date(today.getFullYear(), today.getMonth(), 1); selectedDate = dateKey(today); render(); };
+  $('todayBtn').onclick = () => { selectedDate = currentCalendarDateKey(); cursor = calendarMonthDate(selectedDate); render(); };
   $('prevMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() - 1); render(); };
   $('nextMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() + 1); render(); };
-  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、ダブルクリックでセッション追加。左右パネルは個別にスクロール・折りたたみできます。Google連携では複数の非公開カレンダーを登録し、起動時と設定間隔で読み取り専用同期します。');
+  $('helpBtn').onclick = () => alert('日付クリックでフォーカス、イベントのダブルクリックで編集できます。歯車から表示タイムゾーンを選択でき、日中卓・夜卓もその時間帯で判定します。Google連携では複数の非公開カレンダーを読み取り専用で同期します。');
   $('shortcutBtn').onclick = () => alert('Ctrl/⌘ + Shift + N: セッション追加\nCtrl/⌘ + Shift + T: タスク追加\nEsc: ダイアログを閉じる');
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.17', exportedAt: new Date().toISOString(), sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.18', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
     if (!file) return;
     const data = JSON.parse(await file.text());
+    if (isValidTimeZone(data?.calendarSettings?.timeZone)) {
+      calendarSettings.timeZone = data.calendarSettings.timeZone;
+      saveCalendarSettings();
+      renderCalendarTimeZone();
+    }
     openImportDialog(normalizeImportedJson(data), 'JSONから読み込むカレンダーを選択', '卓準備カレンダーJSONと卓ログトラッカー出力JSONに対応しています。');
     event.target.value = '';
   };
@@ -1205,6 +1333,8 @@
   };
   $('collapseCalendarBtn').onclick = () => togglePanel('calendar');
   $('collapseRightBtn').onclick = () => togglePanel('right');
+  $('calendarSettingsBtn').onclick = openCalendarSettings;
+  $('calendarTimeZoneInput').onchange = updateTimeZonePreview;
   $('dataToolsPanel').addEventListener('toggle', () => {
     panelState.dataTools = $('dataToolsPanel').open;
     savePanelState();
@@ -1215,18 +1345,37 @@
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'PRODID:-//TRPG Web Tools//Session Check Calendar//JA',
+      `X-WR-TIMEZONE:${calendarSettings.timeZone}`,
       ...sessions.flatMap(session => [
         'BEGIN:VEVENT',
         `UID:${session.id}@trpg-web-tools`,
         `SUMMARY:${session.scenario}`,
-        `DTSTART:${(session.start || '').replaceAll('-', '').replace(':', '')}00`,
-        session.end ? `DTEND:${sessionDate(session).replaceAll('-', '')}T${session.end.replace(':', '')}00` : '',
+        icalDateLine(session, false),
+        icalDateLine(session, true),
         `CATEGORIES:${session.sourceCalendar || 'TRPG予定'}`,
         `DESCRIPTION:${(session.memo || '').replaceAll('\n', '\\n')}`,
         'END:VEVENT',
       ].filter(Boolean)),
       'END:VCALENDAR',
     ].join('\r\n');
+  }
+
+  function icalDateLine(session, isEnd) {
+    const instant = isEnd ? session.endInstant : session.startInstant;
+    if (instant) {
+      const date = new Date(instant);
+      if (!Number.isNaN(date.getTime())) {
+        const value = date.toISOString().replaceAll('-', '').replaceAll(':', '').replace('.000', '');
+        return `${isEnd ? 'DTEND' : 'DTSTART'}:${value}`;
+      }
+    }
+    const start = sessionDisplayStart(session);
+    if (!start) return '';
+    if (!isEnd && session.allDay) return `DTSTART;VALUE=DATE:${start.slice(0, 10).replaceAll('-', '')}`;
+    const time = isEnd ? sessionDisplayEnd(session) : start.slice(11, 16);
+    if (!time) return '';
+    const value = `${start.slice(0, 10).replaceAll('-', '')}T${time.replace(':', '')}00`;
+    return `${isEnd ? 'DTEND' : 'DTSTART'};TZID=${calendarSettings.timeZone}:${value}`;
   }
 
   function download(name, text, type) {
