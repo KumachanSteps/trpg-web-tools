@@ -31,7 +31,7 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.20') || !html.includes('session_check_calendar.js?v=0.20')) {
+if (!html.includes('v0.21') || !html.includes('session_check_calendar.js?v=0.21')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -51,6 +51,7 @@ for (const contract of [
   '.workspace-panel-body',
   'overflow-y: auto',
   '.calendar-workspace-head',
+  'justify-content: flex-end',
   '.calendar-header-tools',
   '.calendar-header-tools.is-open',
   'transform: translateX',
@@ -103,7 +104,7 @@ for (const contract of [
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.20'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.21'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
