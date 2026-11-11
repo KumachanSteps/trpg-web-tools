@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 const html = readFileSync(new URL('../tools/session-check-calendar/index.html', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../tools/session-check-calendar/css/session_check_calendar.css', import.meta.url), 'utf8');
 const js = readFileSync(new URL('../tools/session-check-calendar/js/session_check_calendar.js', import.meta.url), 'utf8');
+const hubCss = readFileSync(new URL('../shared/hub/hub.css', import.meta.url), 'utf8');
+const sessionLogHtml = readFileSync(new URL('../tools/session-log-tool/index.html', import.meta.url), 'utf8');
 
 for (const id of [
   'calendarPanel',
@@ -41,8 +43,20 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.22') || !html.includes('session_check_calendar.js?v=0.22')) {
+if (!html.includes('v0.23') || !html.includes('session_check_calendar.js?v=0.23') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
+}
+
+if (!sessionLogHtml.includes('hub.css?v=0.1.2')) {
+  throw new Error('Session log tracker does not load the shared select-arrow update');
+}
+
+if (!html.includes('title="データ表記を閉じる">▶</button>')) {
+  throw new Error('Data tools compact close control is missing');
+}
+
+for (const contract of ['appearance: none !important', 'background-position: right 18px center', 'padding-right: 40px !important']) {
+  if (!hubCss.includes(contract)) throw new Error(`Missing shared select-arrow contract: ${contract}`);
 }
 
 if (html.includes('id="focusPanel"') || html.includes('id="formatInput"')) {
@@ -122,12 +136,13 @@ for (const contract of [
   "isConfiguredAllDay",
   "updateAllDaySettingsState",
   "dataToolsCloseBtn",
+  "dataToolsToggleBtn').hidden = dataToolsOpen",
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.22'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.23'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
-console.log('session-check-calendar smoke passed: complete header tools, week starts, configurable time bands, aligned day cells, and multi-calendar sync are present');
+console.log('session-check-calendar smoke passed: compact data tools, inset shared select arrows, week starts, time bands, and multi-calendar sync are present');
