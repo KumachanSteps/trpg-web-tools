@@ -35,7 +35,7 @@
   background: var(--sheet-sub);
 }
 .workspace-head-copy { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-.workspace-head-actions { display: flex; align-items: center; gap: 7px; }
+.workspace-head-actions { display: flex; min-width: 0; align-items: center; gap: 7px; }
 .workspace-head h2 { margin: 0; font-size: 16px; letter-spacing: .04em; }
 .workspace-kicker { color: var(--faint); font-size: 9px; font-weight: 700; letter-spacing: .16em; }
 .calendar-settings-button {
@@ -85,9 +85,39 @@
 .hub-header.is-unified { min-height: 124px; }
 .calendar-title-lockup .hub-version { margin: 0 0 3px; opacity: .62; white-space: nowrap; font-size: 9px; }
 
-.calendar-workspace-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
-.calendar-header-tools { grid-column: 1 / -1; min-width: 0; padding-top: 8px; border-top: 1px solid var(--line); }
-.calendar-header-tools .toolbar { margin: 0; }
+.calendar-workspace-head { display: flex; height: 52px; min-height: 52px; max-height: 52px; overflow: hidden; }
+.calendar-workspace-head .workspace-head-copy { flex: 0 0 auto; }
+.calendar-workspace-head .workspace-head-actions {
+  flex: 1 1 auto;
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  margin-left: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.calendar-workspace-head .workspace-head-actions::-webkit-scrollbar { display: none; }
+.calendar-header-tools {
+  flex: 0 0 auto;
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(14px);
+  transition: width .26s ease, max-width .26s ease, opacity .18s ease, transform .26s ease;
+}
+.calendar-header-tools.is-open {
+  width: min(600px, 58vw);
+  max-width: 600px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+.calendar-header-tools .toolbar { flex-wrap: nowrap; gap: 5px; margin: 0; white-space: nowrap; }
+.calendar-header-tools .hub-btn { min-height: 28px; padding: 4px 8px; font-size: 10px; }
 
 .toolbar {
   display: flex;
@@ -118,7 +148,6 @@
 .sync-status.is-syncing { color: var(--pen-blue); }
 
 /* ---------- 紙のパネル ---------- */
-.focus-panel,
 .month-card,
 .panel,
 .detail-pane {
@@ -132,19 +161,6 @@
 .workspace-panel .panel,
 .workspace-panel .detail-pane { box-shadow: none; }
 
-.focus-panel {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: center;
-  margin-bottom: 14px;
-  padding: 12px 18px;
-  border-color: var(--note-line);
-  background: var(--note);
-}
-.focus-panel strong { display: block; font-family: var(--font-head); font-weight: 500; font-size: 19px; }
-.focus-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-
 /* ---------- 月表示 ---------- */
 .month-head {
   display: flex;
@@ -155,7 +171,9 @@
   border-bottom: 1px solid var(--line);
 }
 .month-head h2 { font-size: 21px; letter-spacing: 0.04em; min-width: 7.5em; text-align: center; }
-.month-head #todayBtn { margin-left: auto; }
+.month-add-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.month-add-actions > span { color: var(--muted); font-size: 10px; font-weight: 700; white-space: nowrap; }
+.month-add-actions .hub-btn { min-height: 32px; padding: 5px 10px; }
 .month-nav {
   width: 34px;
   height: 34px;
@@ -525,12 +543,15 @@ button.mini-card:hover { border-color: var(--ink-soft); }
 
 @media (max-width: 760px) {
   .calendar-title-lockup { align-items: baseline; flex-wrap: wrap; gap: 4px 7px; }
-  .focus-panel { flex-direction: column; align-items: stretch; }
   .toolbar { gap: 6px; }
   .toolbar-spacer { flex-basis: 100%; height: 0; }
-  .calendar-workspace-head { grid-template-columns: 1fr; }
-  .calendar-workspace-head .workspace-head-actions { justify-content: flex-start; }
-  .calendar-header-tools { grid-column: 1; }
+  .calendar-workspace-head { align-items: flex-start; }
+  .calendar-workspace-head .workspace-head-actions { max-width: 72%; justify-content: flex-start; }
+  .calendar-header-tools.is-open { width: 540px; max-width: 540px; }
+  .month-head { gap: 7px; padding-inline: 10px; }
+  .month-head h2 { min-width: 6.5em; font-size: 18px; }
+  .month-add-actions { order: 2; width: 100%; margin-left: 0; }
+  .month-add-actions #selectionTargetLabel { margin-right: auto; }
   .day { min-height: 82px; padding: 5px; }
   .event { padding: 2px 4px; font-size: 10.5px; }
   .event-time { display: none; }

@@ -21,6 +21,7 @@
   const today = new Date();
   let calendarSettings = loadCalendarSettings();
   let sessions = loadSessions();
+  applyAutoSeriesGrouping();
   let selectedDate = currentCalendarDateKey();
   let selectedId = sessions.find(session => sessionDate(session) === selectedDate)?.id || '';
   let cursor = calendarMonthDate(selectedDate);
@@ -111,7 +112,8 @@
 
   function applyPanelState() {
     const dataToolsOpen = Boolean(panelState.dataTools);
-    $('dataToolsPanel').hidden = !dataToolsOpen;
+    $('dataToolsPanel').classList.toggle('is-open', dataToolsOpen);
+    $('dataToolsPanel').setAttribute('aria-hidden', String(!dataToolsOpen));
     $('dataToolsToggleBtn').setAttribute('aria-expanded', String(dataToolsOpen));
     setOverviewPanel('today', panelState.todayOpen !== false, false);
     setOverviewPanel('tasks', panelState.tasksOpen !== false, false);
@@ -238,6 +240,49 @@
     }
   }
 
+  function normalizeSeriesText(value) {
+    return String(value || '').normalize('NFKC').replace(/[\s　]+/g, ' ').trim();
+  }
+
+  function seriesBaseName(value) {
+    let title = normalizeSeriesText(value);
+    if (!title) return '';
+    const suffixes = [
+      /[\s　]*(?:-|–|—|｜|\|)?[\s　]*(?:第?[一二三四五六七八九十百\d]+陣)\s*$/i,
+      /[\s　]*(?:-|–|—|｜|\|)?[\s　]*(?:第?[一二三四五六七八九十百\d]+(?:話|夜|日目|回))\s*$/i,
+      /[\s　]*(?:-|–|—|｜|\|)?[\s　]*(?:chapter|chap\.?|ch\.?|day|part|#)\s*[\d一二三四五六七八九十百]+\s*$/i,
+      /[\s　]*(?:-|–|—|｜|\|)?[\s　]*(?:前編|中編|後編|前半|後半|上巻|下巻)\s*$/i,
+    ];
+    let previous = '';
+    while (title && title !== previous) {
+      previous = title;
+      suffixes.forEach(pattern => { title = title.replace(pattern, '').trim(); });
+      title = title.replace(/[\s　]*(?:-|–|—|｜|\|)\s*$/, '').trim();
+    }
+    return title || normalizeSeriesText(value);
+  }
+
+  function applyAutoSeriesGrouping() {
+    const candidates = sessions.map(session => ({ session, title: normalizeSeriesText(session.scenario), base: seriesBaseName(session.scenario) }));
+    const counts = new Map();
+    candidates.forEach(({ title, base }) => {
+      if (!base) return;
+      counts.set(base, (counts.get(base) || 0) + 1);
+      if (title === base) return;
+    });
+    candidates.forEach(({ session, title, base }) => {
+      if (!base || session.seriesManual === true || (session.series && session.seriesAuto !== true)) return;
+      const isVariant = title !== base;
+      if (isVariant || (counts.get(base) || 0) > 1) {
+        session.series = base;
+        session.seriesAuto = true;
+      } else if (session.seriesAuto === true) {
+        session.series = '';
+        session.seriesAuto = false;
+      }
+    });
+  }
+
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
   }
@@ -332,8 +377,9 @@
   }
 
   function render() {
+    applyAutoSeriesGrouping();
     renderCalendar();
-    renderFocus();
+    renderSelectionTarget();
     renderToday();
     renderTasks();
     renderDetail();
@@ -432,14 +478,11 @@
     });
   }
 
-  function renderFocus() {
-    const panel = $('focusPanel');
-    if (!selectedDate) {
-      panel.hidden = true;
-      return;
-    }
-    panel.hidden = false;
-    $('focusDateLabel').textContent = fmtDate(`${selectedDate}T00:00`);
+  function renderSelectionTarget() {
+    const target = selectedDate || currentCalendarDateKey();
+    $('selectionTargetLabel').textContent = target === currentCalendarDateKey()
+      ? '今日に追加'
+      : `${fmtDate(`${target}T00:00`)}に追加`;
   }
 
   function renderToday() {
@@ -616,7 +659,6 @@
     $('dateInput').value = sessionDisplayStart(session);
     $('endTimeInput').value = sessionDisplayEnd(session);
     $('gmInput').value = session.gm || '';
-    $('formatInput').value = session.format || '';
     $('seriesInput').value = session.series || '';
     $('statusInput').value = session.status || 'scheduled';
     $('hashtagsInput').value = (session.hashtags || []).join(', ');
@@ -652,14 +694,19 @@
     const displayedEndBeforeEdit = sessionDisplayEnd(current);
     const nextStart = $('dateInput').value;
     const nextEnd = $('endTimeInput').value;
+    const previousSeries = current.series || '';
+    const nextSeries = $('seriesInput').value.trim();
+    const keepAutoSeries = current.seriesAuto === true && nextSeries === previousSeries;
+    const manuallyClearedSeries = Boolean(previousSeries) && !nextSeries;
     Object.assign(current, {
       scenario: $('scenarioInput').value.trim(),
       system: $('systemInput').value.trim(),
       start: nextStart,
       end: nextEnd,
       gm: $('gmInput').value.trim(),
-      format: $('formatInput').value.trim(),
-      series: $('seriesInput').value.trim(),
+      series: nextSeries,
+      seriesAuto: keepAutoSeries,
+      seriesManual: keepAutoSeries ? false : Boolean(nextSeries || manuallyClearedSeries),
       status: $('statusInput').value,
       memo: $('memoInput').value.trim(),
       hashtags: splitTags($('hashtagsInput').value),
@@ -1305,7 +1352,6 @@
   $('removeSampleDataBtn').onclick = removeSampleData;
   $('focusAddSessionBtn').onclick = () => openDialog('', selectedDate);
   $('focusAddTaskBtn').onclick = () => openTaskDialog(selectedDate);
-  $('clearFocusBtn').onclick = () => { selectedDate = ''; render(); };
   $('todayBtn').onclick = () => { selectedDate = currentCalendarDateKey(); cursor = calendarMonthDate(selectedDate); render(); };
   $('prevMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() - 1); render(); };
   $('nextMonthBtn').onclick = () => { cursor.setMonth(cursor.getMonth() + 1); render(); };
@@ -1314,7 +1360,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.19', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.20', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
