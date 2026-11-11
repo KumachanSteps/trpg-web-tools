@@ -4,17 +4,17 @@
 (function () {
   'use strict';
   window.JukeboxBgmSources = [
-    { name: "OpenTracks（旧DOVA-SYNDROME）", count: 312, channel: "https://www.youtube.com/@opentracksbgm", site: "https://opentracks.com/" },
-    { name: "PeriTune", count: 45, channel: "https://www.youtube.com/@PeriTune", site: "https://peritune.com/" },
-    { name: "もみじばミュージック", count: 14, channel: "https://www.youtube.com/@momiziba" },
+    { name: "OpenTracks（旧DOVA-SYNDROME）", count: 330, channel: "https://www.youtube.com/@opentracksbgm", site: "https://opentracks.com/" },
+    { name: "PeriTune", count: 62, channel: "https://www.youtube.com/@PeriTune", site: "https://peritune.com/" },
+    { name: "もみじばミュージック", count: 16, channel: "https://www.youtube.com/@momiziba" },
+    { name: "MusMus", count: 10, channel: "https://www.youtube.com/@musmusch", site: "https://musmus.main.jp/" },
     { name: "コニシユカ / nonai sound", count: 9, channel: "https://www.youtube.com/@yuconishi", site: "https://nonaisound.com/" },
-    { name: "MusMus", count: 9, channel: "https://www.youtube.com/@musmusch", site: "https://musmus.main.jp/" },
     { name: "MATSU", count: 8, channel: "https://www.youtube.com/@matsubgm" },
     { name: "柊情景音楽店", count: 8, channel: "https://www.youtube.com/@HiiragiMusic" },
     { name: "Tak_mfk", count: 6, channel: "https://www.youtube.com/@Tak_mfk" },
+    { name: "魔王魂（森田交一）", count: 6, channel: "https://www.youtube.com/@koichi_maou", site: "https://maou.audio/" },
     { name: "h/mix（秋山裕和）", count: 5, channel: "https://www.youtube.com/@hmixbgm", site: "https://www.hmix.net/" },
     { name: "たう", count: 4, channel: "https://www.youtube.com/@BGMusicJp" },
-    { name: "魔王魂（森田交一）", count: 4, channel: "https://www.youtube.com/@koichi_maou", site: "https://maou.audio/" },
     { name: "zukisuzuki BGM", count: 3, channel: "https://www.youtube.com/@zukisuzukiBGM", site: "https://zukisuzukibgm.com/" },
     { name: "音獅子 - Music Lion -", count: 3, channel: "https://www.youtube.com/@ryo_lion" },
     { name: "zippy", count: 2, channel: "https://www.youtube.com/@zippysound" },
