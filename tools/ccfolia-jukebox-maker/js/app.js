@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.44';
+  const VERSION = '0.45';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -353,6 +353,8 @@
   }
 
   const GRIP_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+  // 音声ファイル（楽譜付きの書類）のアイコン
+  const FILE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm-1 1.5L18.5 9H13zM15 12v5.2a2 2 0 1 1-1.5-1.94V12h-3v6.2a2 2 0 1 1-1.5-1.94V10.5h6z"/></svg>';
 
   // レコードの順番を入れ替える（設定・音声ファイル・切り抜きの元画像をいっしょに動かす）
   function moveDisk(from, to) {
@@ -448,9 +450,13 @@
       grip.addEventListener('pointerdown', e => startDiskDrag(e, i));
       const row = h('li', { class: 'disk-row', style: { '--disk': color.line }, dataset: { index: String(i) } },
         grip,
-        s.showCover === false
-          ? h('span', { class: 'disk-thumb', dataset: { preview: String(i) } })
-          : h('button', { type: 'button', class: 'disk-thumb', dataset: { preview: String(i) }, title: t('cover.upload'), onclick: () => openCropper(i) }),
+        // ジャケットの右下に試聴ボタンを重ねる
+        h('div', { class: 'disk-left' },
+          s.showCover === false
+            ? h('span', { class: 'disk-thumb', dataset: { preview: String(i) } })
+            : h('button', { type: 'button', class: 'disk-thumb', dataset: { preview: String(i) }, title: t('cover.upload'), onclick: () => openCropper(i) }),
+          h('button', { type: 'button', class: 'bgm-play', dataset: { index: String(i) }, onclick: () => toggleDiskPreview(i) })
+        ),
         h('div', { class: 'disk-fields' },
           h('input', {
             class: 'text-input', type: 'text', maxlength: '40', value: disk.name, 'aria-label': `${t('set.diskName')} ${i + 1}`,
@@ -463,16 +469,22 @@
             oninput: e => { disk.bgm = e.target.value; disk.bgmAuto = false; disk.bgmFor = ''; changed(false); }
           }),
           swatches,
-          h('div', { class: 'bgm-row' },
+          // URL欄の右端に「↗（元のページで開く）」と「音声ファイル」の小さなボタンを入れる
+          h('div', { class: `bgm-row${file ? ' has-file' : ''}` },
             file
-              ? h('span', { class: 'bgm-file' }, `♪ ${file.name}`, h('button', { type: 'button', class: 'text-button', onclick: () => { app.files[i] = null; changed(true); saveFiles(); } }, t('set.bgmFileClear')))
+              ? h('span', { class: 'bgm-file', title: file.name }, h('span', { class: 'bgm-file-name' }, `♪ ${file.name}`), h('button', { type: 'button', class: 'text-button', onclick: () => { app.files[i] = null; changed(true); saveFiles(); } }, t('set.bgmFileClear')))
               : h('input', {
                 class: 'text-input small', type: 'url', value: disk.url, placeholder: t('set.bgmUrlPh'), 'aria-label': t('set.bgmUrl'),
                 oninput: e => { disk.url = e.target.value; changed(false); syncBgmUi(); }
               }),
-            file ? null : h('a', { class: 'bgm-open', dataset: { index: String(i) }, target: '_blank', rel: 'noopener noreferrer' }, '↗'),
-            h('label', { class: 'ghost-button small file-button' }, t('set.bgmFile'), fileInput),
-            h('button', { type: 'button', class: 'bgm-play', dataset: { index: String(i) }, onclick: () => toggleDiskPreview(i) })
+            h('span', { class: 'bgm-tools' },
+              file ? null : h('a', { class: 'bgm-open', dataset: { index: String(i) }, target: '_blank', rel: 'noopener noreferrer' }, '↗'),
+              (() => {
+                const label = h('label', { class: 'file-button', title: t('set.bgmFile') }, h('span', { class: 'visually-hidden' }, t('set.bgmFile')), fileInput);
+                label.insertAdjacentHTML('afterbegin', FILE_SVG);
+                return label;
+              })()
+            )
           ),
         ));
       // 画像ファイルを行に落とすと、そのレコードのジャケットにする
