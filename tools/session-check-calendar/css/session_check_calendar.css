@@ -52,6 +52,8 @@
 }
 .calendar-settings-button:hover { color: var(--ink); transform: rotate(18deg); }
 .header-tool-button {
+  grid-area: 1 / 1;
+  min-width: 96px;
   min-height: 30px;
   padding: 5px 11px;
   border: 1px solid var(--line);
@@ -63,6 +65,13 @@
   cursor: pointer;
 }
 .header-tool-button[aria-expanded="true"] { border-color: var(--pen-blue); background: var(--sys-coc6-bg); color: var(--pen-blue); }
+.data-tools-toggle-slot {
+  display: grid;
+  width: 96px;
+  height: 36px;
+  flex: 0 0 96px;
+  place-items: center;
+}
 .workspace-panel-body { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 .calendar-panel-scroll { padding: 12px; }
 .right-workspace { height: 100%; min-height: 0; }
@@ -128,6 +137,7 @@
 .calendar-header-tools .toolbar .hub-btn { min-height: 28px; padding: 4px 7px; font-size: 9.5px; }
 .data-tools-close-button {
   display: grid;
+  grid-area: 1 / 1;
   flex: 0 0 auto;
   width: 28px;
   height: 28px;
