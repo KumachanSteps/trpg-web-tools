@@ -12,7 +12,7 @@ const state = {
   manualImport: null,
   generatedAt: "",
   overrides: { records: {}, edits: [], customRecords: [] },
-  currentView: "dashboard",
+  currentView: "log",
   logPage: 1,
   reviewPage: 1,
   reviewPriority: "All",
@@ -344,6 +344,7 @@ async function initialize() {
   bindEvents();
   applyTheme();
   renderAll();
+  await initBackupManager();
 }
 
 function populateFilters() {
@@ -355,6 +356,7 @@ function populateFilters() {
 
 function bindEvents() {
   $$(".nav-item[data-view]").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
+  $$(".view-switcher [data-view]").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
   $$('[data-go]').forEach((button) => button.addEventListener("click", () => switchView(button.dataset.go)));
   $("#globalSearch").addEventListener("input", () => {
     state.logPage = 1;
@@ -414,6 +416,10 @@ function bindEvents() {
   $("#restoreButton").addEventListener("click", () => $("#restoreInput").click());
   $("#restoreInput").addEventListener("change", restoreOverrides);
   $("#themeButton").addEventListener("click", toggleTheme);
+  $("#connectBackupBtn").addEventListener("click", connectExternalBackup);
+  $("#backupNowBtn").addEventListener("click", writeBackupNow);
+  $("#restoreBrowserBackupBtn").addEventListener("click", restoreBrowserBackup);
+  $("#disconnectBackupBtn").addEventListener("click", disconnectExternalBackup);
   $("#addRecordButton").addEventListener("click", openAddRecordDialog);
   $("#closeAddRecord").addEventListener("click", closeAddRecordDialog);
   $("#cancelAddRecord").addEventListener("click", closeAddRecordDialog);
@@ -444,10 +450,12 @@ function switchView(view) {
   state.currentView = view;
   $$(".view").forEach((section) => section.classList.toggle("active", section.id === `${view}View`));
   $$(".nav-item[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
+  $$(".view-switcher [data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
+  const titles = { log: "視聴ログ", scenarios: "シナリオ", channels: "チャンネル" };
+  $("#panelTitle").textContent = titles[view] || titles.log;
+  $("#logCount").hidden = view !== "log";
   $("#mainContent").focus({ preventScroll: true });
-  window.scrollTo({ top: 0, behavior: "smooth" });
   if (view === "log") renderLog();
-  if (view === "review") renderReview();
   if (view === "scenarios") renderScenarios();
   if (view === "channels") renderChannels();
 }
@@ -455,11 +463,10 @@ function switchView(view) {
 function renderAll() {
   renderDashboard();
   renderLog();
-  renderReview();
   renderScenarios();
   renderChannels();
   const open = reviewItems().length;
-  $("#reviewBadge").textContent = fmt.format(open);
+  $("#reviewBadge").textContent = `要確認 ${fmt.format(open)}`;
 }
 
 function updateDatasetVersion() {
@@ -468,7 +475,6 @@ function updateDatasetVersion() {
 
 function renderDashboard() {
   const active = activeVideos();
-  const available = availableVideos();
   const sessions = uniqueCount(active, "sessionId");
   const scenarioCount = new Set(active.filter((v) => v.canonical.scenario).map(scenarioKey)).size;
   const channelCount = new Set(active.map((v) => v.channelName).filter((name) => name && name !== "チャンネル不明")).size;
@@ -480,29 +486,8 @@ function renderDashboard() {
     ["シナリオ", fmt.format(scenarioCount), "Canonical名で重複を集約"],
     ["チャンネル", fmt.format(channelCount), `所有チャンネルの配信 ${fmt.format(ownedVideos)}本を識別`],
   ];
-  $("#kpiGrid").innerHTML = cards.map(([label, value, note]) => `<article class="kpi-card"><span class="kpi-label">${label}</span><div class="kpi-value">${value}</div><span class="kpi-note">${note}</span></article>`).join("");
-
-  const systemRows = countSessionsBySystem(active);
-  const max = Math.max(...systemRows.map(([, count]) => count), 1);
-  $("#systemChart").innerHTML = systemRows.map(([label, count]) => `<div class="bar-row"><span class="bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</span><div class="bar-track"><div class="bar-fill" style="width:${(count / max) * 100}%"></div></div><span class="bar-value">${fmt.format(count)}卓</span></div>`).join("");
-
-  const quality = Object.fromEntries(countBy(available, (v) => v.quality));
-  const total = available.length || 1;
-  const high = quality.High || 0;
-  const medium = quality.Medium || 0;
-  const low = quality.Low || 0;
-  const highPct = high / total * 100;
-  const mediumPct = medium / total * 100;
-  $("#qualityChart").innerHTML = `<div class="donut" style="background:conic-gradient(var(--success) 0 ${highPct}%, var(--warning) ${highPct}% ${highPct + mediumPct}%, var(--danger) ${highPct + mediumPct}% 100%)"></div><div class="chart-legend">${qualityLegend("High", high, "var(--success)")}${qualityLegend("Medium", medium, "var(--warning)")}${qualityLegend("Low", low, "var(--danger)")}</div>`;
-
-  const recent = sortVideosForDisplay(active).slice(0, 5);
-  $("#recentList").innerHTML = recent.map((v) => `<button class="recent-item" type="button" data-video-id="${v.id}"><span class="recent-marker"></span><span class="recent-copy"><strong>${escapeHtml(v.canonical.scenario || v.title)}</strong><small>${escapeHtml(v.canonical.system || "System不明")} · ${escapeHtml(v.channelName)}</small></span><span class="recent-date">${dateLabel(v.lastWatchedAt)}</span></button>`).join("");
-  $$("[data-video-id]", $("#recentList")).forEach((item) => item.addEventListener("click", () => openEditor(item.dataset.videoId)));
-
-  const reviewStats = reviewProgressStats();
-  const next = reviewItems()[0];
-  $("#reviewSummary").innerHTML = `<div class="progress-ring-row"><div class="progress-ring" style="--value:${reviewStats.percent}" data-label="${reviewStats.percent}%"></div><div class="summary-lines"><div class="summary-line"><span>確認済み</span><strong>${fmt.format(reviewStats.verified)}</strong></div><div class="summary-line"><span>一部確認</span><strong>${fmt.format(reviewStats.partial)}</strong></div><div class="summary-line"><span>未確認</span><strong>${fmt.format(reviewStats.open)}</strong></div></div></div>${next ? `<button class="queue-preview" type="button" data-next-review="${next.id}"><strong>次の確認候補</strong><br>${escapeHtml(next.canonical.scenario || "シナリオ不明")} · ${escapeHtml(priorityInfo(next).missing.join("、"))}</button>` : ""}`;
-  $("[data-next-review]")?.addEventListener("click", (event) => openEditor(event.currentTarget.dataset.nextReview));
+  const units = ["本", "卓", "本", "ch"];
+  $("#kpiGrid").innerHTML = cards.map(([label, value, note], index) => `<article class="stat-card"><div><p>${label}</p><strong>${value}</strong><small>${escapeHtml(note)}</small></div><span>${units[index]}</span></article>`).join("");
 }
 
 function qualityLegend(label, value, color) {
@@ -1238,7 +1223,56 @@ function resetOverride(video) {
 }
 
 function persistOverrides() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides));
+    window.ViewingLogBackup?.capture(state.overrides, { reason: "autosave" });
+  } catch (error) {
+    console.error("視聴ログのブラウザ保存に失敗しました", error);
+    window.ViewingLogBackup?.capture(state.overrides, { reason: "local-storage-error", forceSnapshot: true });
+    updateBackupStatus({ status: "error", detail: "ブラウザ保存に失敗しました。外部JSONへ今すぐ保存してください。" });
+  }
+}
+
+async function initBackupManager() {
+  if (!window.ViewingLogBackup) return updateBackupStatus({ status: "unsupported", detail: "バックアップ機能を読み込めませんでした", supported: false });
+  await window.ViewingLogBackup.init({ onStatus: updateBackupStatus });
+  window.ViewingLogBackup.capture(state.overrides, { reason: "startup" });
+}
+
+function updateBackupStatus(info) {
+  const panel = $("#backupPanel");
+  panel.dataset.status = info.status || "disconnected";
+  if (info.detail) $("#backupStatus").textContent = info.detail;
+  const labels = { saved: "外部JSONに自動保存中", connected: "外部JSONに自動保存中", "permission-required": "再接続が必要です", error: "バックアップを確認してください", unsupported: "外部保存は未対応です", disconnected: "ブラウザ内に保存中" };
+  $("#backupSummaryStatus").textContent = labels[info.status] || (info.connected ? labels.connected : labels.disconnected);
+  $("#disconnectBackupBtn").hidden = !info.connected;
+  $("#connectBackupBtn").disabled = info.supported === false;
+  $("#connectBackupBtn").textContent = info.status === "permission-required" ? "保存先を再接続" : (info.connected ? "保存先を変更" : "保存先フォルダを選択");
+  if (["error", "permission-required"].includes(info.status)) panel.open = true;
+}
+
+async function connectExternalBackup() {
+  if (await window.ViewingLogBackup?.connectFolder(state.overrides)) showToast("バックアップ用フォルダを接続しました。");
+}
+
+async function writeBackupNow() {
+  if (await window.ViewingLogBackup?.writeNow(state.overrides)) showToast("ブラウザ内と外部JSONへ保存しました。");
+}
+
+async function disconnectExternalBackup() {
+  if (!confirm("外部JSONへの自動バックアップを切断しますか？\nブラウザ内のデータとスナップショットは残ります。")) return;
+  await window.ViewingLogBackup?.disconnectFile();
+  showToast("外部バックアップを切断しました。");
+}
+
+async function restoreBrowserBackup() {
+  const snapshot = await window.ViewingLogBackup?.latestSnapshot();
+  if (!snapshot?.records || !snapshot?.edits) return alert("復元できるブラウザ内バックアップがありません。");
+  const savedAt = snapshot.exportedAt ? new Date(snapshot.exportedAt).toLocaleString("ja-JP") : "日時不明";
+  if (!confirm(`${savedAt} のバックアップから修正データを復元しますか？`)) return;
+  state.overrides = { records: snapshot.records, edits: snapshot.edits, customRecords: Array.isArray(snapshot.customRecords) ? snapshot.customRecords : [] };
+  persistOverrides();
+  location.reload();
 }
 
 function closeEditor() {

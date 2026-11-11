@@ -5,6 +5,7 @@ const root = new URL("../", import.meta.url);
 const html = readFileSync(new URL("tools/viewing-log/index.html", root), "utf8");
 const shell = readFileSync(new URL("shared/hub/shell.js", root), "utf8");
 const app = readFileSync(new URL("tools/viewing-log/app.js", root), "utf8");
+const backupManager = readFileSync(new URL("tools/viewing-log/backup-manager.js", root), "utf8");
 const dataSource = readFileSync(new URL("tools/viewing-log/data/videos-data.js", root), "utf8");
 const payload = JSON.parse(readFileSync(new URL("tools/viewing-log/data/videos.json", root), "utf8"));
 
@@ -20,6 +21,15 @@ if (!shell.includes('{ id: "watch", name: "配信視聴ログ", icon: "▶", url
 }
 if (!app.includes("matchesReviewPreset") || !app.includes("applyReviewPreset")) {
   throw new Error("Review queue was not migrated to log filter presets");
+}
+if (!app.includes('$$(".view-switcher [data-view]")')) {
+  throw new Error("Viewing database switcher is not wired");
+}
+for (const required of ['class="site-header"', 'id="kpiGrid"', 'id="backupPanel"', 'class="view-switcher"', 'data-view="log"', 'data-view="scenarios"', 'data-view="channels"']) {
+  if (!html.includes(required)) throw new Error(`Paper viewing-log layout is missing: ${required}`);
+}
+if (html.includes('id="dashboardView"') || html.includes('id="reviewView"') || html.includes('class="utility-strip"') || !backupManager.includes("showDirectoryPicker")) {
+  throw new Error("The viewing-log page still has legacy panels or lacks automatic backup support");
 }
 if (payload.videos.length !== 2392 || embedded?.videos?.length !== payload.videos.length) {
   throw new Error("The migrated viewing-log dataset is incomplete");
