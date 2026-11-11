@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.41';
+  const VERSION = '0.42';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1663,7 +1663,9 @@
     const from = ok && Number.isInteger(saved.v) ? saved.v : 1;
     if (ok && from < JukeboxShelf.VERSION) {
       JukeboxShelf.additions(from).forEach(add => {
-        const tab = shelf.tabs.find(tb => tb.id === add.id);
+        let tab = shelf.tabs.find(tb => tb.id === add.id);
+        // 前に保存したあとで足したタブは、棚の後ろに足す（それより前からあるタブを消していたら戻さない）
+        if (!tab && add.since > from) { tab = { id: add.id, name: '', tracks: [] }; shelf.tabs.push(tab); }
         if (!tab) return;
         add.tracks.forEach(tr => { if (!tab.tracks.some(x => x.yt === tr.yt)) tab.tracks.push(tr); });
       });
