@@ -7,8 +7,6 @@ const js = readFileSync(new URL('../tools/session-check-calendar/js/session_chec
 for (const id of [
   'calendarPanel',
   'rightPanel',
-  'collapseCalendarBtn',
-  'collapseRightBtn',
   'removeSampleDataBtn',
   'googleSyncDialog',
   'googleCalendarList',
@@ -21,20 +19,30 @@ for (const id of [
   'calendarSettingsDialog',
   'calendarTimeZoneInput',
   'calendarTimeZoneLabel',
+  'dataToolsToggleBtn',
+  'todayPanelToggle',
+  'taskPanelToggle',
+  'todayPanelBody',
+  'taskPanelBody',
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.18') || !html.includes('session_check_calendar.js?v=0.18')) {
+if (!html.includes('v0.19') || !html.includes('session_check_calendar.js?v=0.19')) {
   throw new Error('Calendar version assets were not updated');
+}
+
+if (html.includes('id="collapseCalendarBtn"') || html.includes('id="collapseRightBtn"')) {
+  throw new Error('Whole workspace collapse controls should be removed');
 }
 
 for (const contract of [
   '.workspace-panel-body',
   'overflow-y: auto',
-  '.workspace-panel.is-collapsed',
-  '.layout.left-collapsed',
-  '.layout.right-collapsed',
+  '.calendar-workspace-head',
+  '.calendar-header-tools',
+  '.overview-panel.is-collapsed',
+  '.detail-pane.has-session',
   '.event.is-daytime',
   '.event.is-night',
   '.event.is-all-day',
@@ -70,12 +78,15 @@ for (const contract of [
   "sessionDisplayStart",
   "startInstant",
   "calendarTimeZoneInput",
+  "collapseOverviewPanels",
+  "setOverviewPanel",
+  "dataToolsToggleBtn",
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.18'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.19'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
-console.log('session-check-calendar smoke passed: timezone settings, compact tools, time colors, editable series, deletions, panes, and multi-calendar sync are present');
+console.log('session-check-calendar smoke passed: header tools, contextual overview collapse, timezone settings, time colors, and multi-calendar sync are present');
