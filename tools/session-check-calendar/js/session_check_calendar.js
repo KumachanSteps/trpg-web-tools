@@ -99,9 +99,9 @@
 
   function loadPanelState() {
     try {
-      return { calendar: false, right: false, dataTools: false, ...JSON.parse(localStorage.getItem(PANEL_STATE_KEY) || '{}') };
+      return { dataTools: false, todayOpen: true, tasksOpen: true, ...JSON.parse(localStorage.getItem(PANEL_STATE_KEY) || '{}') };
     } catch {
-      return { calendar: false, right: false, dataTools: false };
+      return { dataTools: false, todayOpen: true, tasksOpen: true };
     }
   }
 
@@ -110,24 +110,28 @@
   }
 
   function applyPanelState() {
-    const layout = $('calendarLayout');
-    const calendarCollapsed = Boolean(panelState.calendar);
-    const rightCollapsed = Boolean(panelState.right);
-    $('calendarPanel').classList.toggle('is-collapsed', calendarCollapsed);
-    $('rightPanel').classList.toggle('is-collapsed', rightCollapsed);
-    layout.classList.toggle('left-collapsed', calendarCollapsed);
-    layout.classList.toggle('right-collapsed', rightCollapsed);
-    $('collapseCalendarBtn').setAttribute('aria-expanded', String(!calendarCollapsed));
-    $('collapseRightBtn').setAttribute('aria-expanded', String(!rightCollapsed));
-    $('collapseCalendarBtn').title = calendarCollapsed ? 'カレンダーを展開する' : 'カレンダーを折りたたむ';
-    $('collapseRightBtn').title = rightCollapsed ? '予定と準備を展開する' : '予定と準備を折りたたむ';
-    $('dataToolsPanel').open = Boolean(panelState.dataTools);
+    const dataToolsOpen = Boolean(panelState.dataTools);
+    $('dataToolsPanel').hidden = !dataToolsOpen;
+    $('dataToolsToggleBtn').setAttribute('aria-expanded', String(dataToolsOpen));
+    setOverviewPanel('today', panelState.todayOpen !== false, false);
+    setOverviewPanel('tasks', panelState.tasksOpen !== false, false);
   }
 
-  function togglePanel(name) {
-    panelState[name] = !panelState[name];
-    savePanelState();
-    applyPanelState();
+  function setOverviewPanel(name, open, persist = true) {
+    const panel = name === 'today' ? $('todayPanel') : $('taskPanel');
+    const toggle = name === 'today' ? $('todayPanelToggle') : $('taskPanelToggle');
+    panel.classList.toggle('is-collapsed', !open);
+    toggle.setAttribute('aria-expanded', String(open));
+    if (persist) {
+      panelState[name === 'today' ? 'todayOpen' : 'tasksOpen'] = open;
+      savePanelState();
+    }
+  }
+
+  function collapseOverviewPanels() {
+    setOverviewPanel('today', false, false);
+    setOverviewPanel('tasks', false, false);
+    $('rightPanelBody').scrollTop = 0;
   }
 
   function updatePanelViewportHeight() {
@@ -407,10 +411,12 @@
         if (eventEl) {
           selectedId = eventEl.dataset.id;
           selectedDate = sessionDate(sessions.find(session => session.id === selectedId) || {});
+          collapseOverviewPanels();
         } else {
           selectedDate = day.dataset.date;
           const firstSession = sessions.find(session => sessionDate(session) === selectedDate);
           selectedId = firstSession?.id || '';
+          if (!selectedId) applyPanelState();
         }
         render();
       });
@@ -443,6 +449,7 @@
       el.addEventListener('click', () => {
         selectedId = el.dataset.id;
         selectedDate = sessionDate(sessions.find(session => session.id === selectedId) || {});
+        collapseOverviewPanels();
         render();
       });
     });
@@ -503,6 +510,7 @@
       card.querySelector('.task-main').addEventListener('click', () => {
         selectedId = card.dataset.sessionId;
         selectedDate = sessionDate(sessions.find(session => session.id === selectedId) || {});
+        collapseOverviewPanels();
         render();
       });
       card.querySelector('input').addEventListener('change', event => {
@@ -550,6 +558,7 @@
   function renderDetail() {
     const session = sessions.find(item => item.id === selectedId);
     $('detailPane').hidden = !session && !selectedDate;
+    $('detailPane').classList.toggle('has-session', Boolean(session));
     if (!session) {
       $('detailContent').className = 'detail-content empty';
       $('detailContent').textContent = selectedDate ? '予定なし' : '';
@@ -1303,9 +1312,9 @@
   $('helpBtn').onclick = () => alert('日付クリックでフォーカス、イベントのダブルクリックで編集できます。歯車から表示タイムゾーンを選択でき、日中卓・夜卓もその時間帯で判定します。Google連携では複数の非公開カレンダーを読み取り専用で同期します。');
   $('shortcutBtn').onclick = () => alert('Ctrl/⌘ + Shift + N: セッション追加\nCtrl/⌘ + Shift + T: タスク追加\nEsc: ダイアログを閉じる');
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
-  $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); };
+  $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.18', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.19', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
@@ -1331,14 +1340,16 @@
     feeds.push(normalizeGoogleFeed({ label: `Google Calendar ${feeds.length + 1}` }, feeds.length));
     renderGoogleFeedRows(feeds);
   };
-  $('collapseCalendarBtn').onclick = () => togglePanel('calendar');
-  $('collapseRightBtn').onclick = () => togglePanel('right');
   $('calendarSettingsBtn').onclick = openCalendarSettings;
   $('calendarTimeZoneInput').onchange = updateTimeZonePreview;
-  $('dataToolsPanel').addEventListener('toggle', () => {
-    panelState.dataTools = $('dataToolsPanel').open;
+  $('dataToolsToggleBtn').onclick = () => {
+    panelState.dataTools = !panelState.dataTools;
     savePanelState();
-  });
+    applyPanelState();
+    requestAnimationFrame(updatePanelViewportHeight);
+  };
+  $('todayPanelToggle').onclick = () => setOverviewPanel('today', $('todayPanel').classList.contains('is-collapsed'));
+  $('taskPanelToggle').onclick = () => setOverviewPanel('tasks', $('taskPanel').classList.contains('is-collapsed'));
 
   function toIcal() {
     return [
