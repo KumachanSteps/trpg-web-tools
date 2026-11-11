@@ -31,7 +31,7 @@ for (const required of ['class="site-header"', 'id="kpiGrid"', 'id="backupPanel"
 if (html.includes('id="dashboardView"') || html.includes('id="reviewView"') || html.includes('class="utility-strip"') || !backupManager.includes("showDirectoryPicker")) {
   throw new Error("The viewing-log page still has legacy panels or lacks automatic backup support");
 }
-if (payload.videos.length !== 2392 || embedded?.videos?.length !== payload.videos.length) {
+if (payload.videos.length !== 2399 || embedded?.videos?.length !== payload.videos.length) {
   throw new Error("The migrated viewing-log dataset is incomplete");
 }
 if (payload.viewingLogSalvageImport?.addedVideos !== 13 || payload.viewingLogSalvageImport?.uniqueVideoIds !== 1704) {
@@ -42,10 +42,13 @@ const active = payload.videos.filter((video) => !video.deleted);
 const latest = active.map((video) => video.lastWatchedAt).filter(Boolean).sort().at(-1);
 const deleted = payload.videos.filter((video) => video.deleted).length;
 const related = active.filter((video) => video.classification === "Related").length;
-const expectedNewIds = ["Mw_6RwtxGno", "_dajJRXe5d0", "6QlqNGsfCsQ", "lbJ6kczKhzg", "-OL0lWvSpfw", "iEyF5OMlCHk", "CAFf64pr2nY", "BXXosJjqmfk", "UWQRbmd7aJ4", "8NQNPgRhfeA", "WAyGGlsrjHE", "QwIrNWDF0VY", "_dJyx8fjexU"];
+const expectedNewIds = ["Mw_6RwtxGno", "_dajJRXe5d0", "6QlqNGsfCsQ", "lbJ6kczKhzg", "-OL0lWvSpfw", "iEyF5OMlCHk", "CAFf64pr2nY", "BXXosJjqmfk", "UWQRbmd7aJ4", "8NQNPgRhfeA", "WAyGGlsrjHE", "QwIrNWDF0VY", "_dJyx8fjexU", "ecPUff5wRJ4", "GCAbPTJs60U", "bqFhrLLa0rA", "kyt49VAP4xA", "16XTtIKOBVw", "1gZBcZlBqWg", "RwaNy7cCa84"];
 
-if (latest !== "2026-10-20 12:00:00" || deleted !== 341 || related !== 179) {
+if (latest !== "2026-11-10 12:00:00" || deleted !== 342 || related !== 179) {
   throw new Error("Migrated counts or latest viewing date changed unexpectedly");
+}
+if (payload.aiMetadataReview?.customRecordsAdded !== 7 || payload.aiMetadataReview?.aiReviewedRecords !== 182 || payload.aiMetadataReview?.fieldsFilled?.pl !== 104) {
+  throw new Error("The 2026-11-10 backup or AI metadata review is incomplete");
 }
 for (const id of expectedNewIds) {
   if (!payload.videos.some((video) => video.id === id && !video.deleted)) throw new Error(`Missing salvaged video: ${id}`);
