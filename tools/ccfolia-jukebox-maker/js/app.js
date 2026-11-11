@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.45';
+  const VERSION = '0.46';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -435,7 +435,17 @@
       const fileInput = h('input', { type: 'file', accept: 'audio/*', class: 'visually-hidden', tabindex: '-1' });
       fileInput.addEventListener('change', () => {
         const f = fileInput.files && fileInput.files[0];
-        if (f) { app.files[i] = f; changed(true); saveFiles(); }
+        if (!f) return;
+        app.files[i] = f;
+        // 曲名が空か自動で入れたものなら、ファイル名（拡張子を除く）を曲名にする。手で書いた曲名はそのまま
+        if (!String(disk.bgm || '').trim() || disk.bgmAuto) {
+          const title = (f.name.replace(/\.[^.\s]{1,8}$/, '').trim() || f.name).slice(0, 150);
+          disk.bgm = title;
+          disk.bgmAuto = true;
+          disk.bgmFor = '';
+        }
+        changed(true);
+        saveFiles();
       });
       const grip = h('button', {
         type: 'button', class: 'disk-grip', 'aria-label': t('set.reorder', { n: i + 1 }), title: t('set.reorder', { n: i + 1 }),
