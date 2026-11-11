@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.43';
+  const VERSION = '0.44';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1662,6 +1662,16 @@
     // 前に保存した棚には、その後に足した初期の曲を、残っているタブの後ろに足す（消した曲は戻さない）
     const from = ok && Number.isInteger(saved.v) ? saved.v : 1;
     if (ok && from < JukeboxShelf.VERSION) {
+      // 版6で id を変えたタブ（ハウス → アダルト）は読み替え、合わなくなった初期の曲を外す（メモを書いた曲は残す）
+      if (from < 6) {
+        const renamed = JukeboxShelf.RENAMED || {};
+        const dropped = JukeboxShelf.DROPPED || [];
+        shelf.tabs.forEach(tab => {
+          if (!renamed[tab.id] || shelf.tabs.some(tb => tb.id === renamed[tab.id])) return;
+          tab.id = renamed[tab.id];
+          tab.tracks = tab.tracks.filter(tr => tr.memo || !dropped.includes(tr.yt));
+        });
+      }
       JukeboxShelf.additions(from).forEach(add => {
         let tab = shelf.tabs.find(tb => tb.id === add.id);
         // 前に保存したあとで足したタブは、棚の後ろに足す（それより前からあるタブを消していたら戻さない）
@@ -1669,7 +1679,7 @@
         if (!tab) return;
         add.tracks.forEach(tr => { if (!tab.tracks.some(x => x.yt === tr.yt)) tab.tracks.push(tr); });
       });
-      // 版5より前に保存した棚は、初期のタブをグループごとの新しい並びにする（自分で足したタブは後ろへ、開いていたタブはそのまま）
+      // 版6より前に保存した棚は、初期のタブを新しい並びにする（自分で足したタブは後ろへ、開いていたタブはそのまま）
       if (ok && from < (JukeboxShelf.ORDER_SINCE || 0)) {
         const activeTab = shelf.tabs[shelf.active];
         const rank = id => { const k = JukeboxShelf.order.indexOf(id); return k < 0 ? Infinity : k; };
@@ -1700,10 +1710,6 @@
     els.shelfTabs.innerHTML = '';
     tabs.forEach((tab, i) => {
       const on = i === shelf.active;
-      // グループ（場面・雰囲気・舞台・音楽のジャンル）が変わるところで行を改める
-      const group = JukeboxShelf.groupOf(tab.id);
-      const prev = i ? JukeboxShelf.groupOf(tabs[i - 1].id) : '';
-      if (group && prev && group !== prev) els.shelfTabs.appendChild(h('span', { class: 'shelf-tab-break', 'aria-hidden': 'true' }));
       els.shelfTabs.appendChild(h('button', {
         type: 'button', role: 'tab', class: `shelf-tab${on ? ' is-active' : ''}`,
         'aria-selected': String(on), tabindex: on ? '0' : '-1',

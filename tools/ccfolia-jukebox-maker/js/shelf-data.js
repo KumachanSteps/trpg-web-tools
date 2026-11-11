@@ -6,7 +6,7 @@
   'use strict';
 
   const TABS = [
-    { id: 'intro', group: 'scene', tracks: [
+    { id: 'intro', tracks: [
       ['CQyZ0x0GxMM', '物語の始まり（DOVA-SYNDROME）'],
       ['6fwxJqoLJMk', 'Spectacular World'],
       ['Vh7_Tzav8Qs', 'BGM177_Fireworks'],
@@ -35,7 +35,29 @@
       ['s16yPdrMZ30', 'Daybreak（OpenTracks）', 3],
       ['iW_QvlgsS7A', 'Welcome（zukisuzuki）', 3]
     ] },
-    { id: 'deduction', group: 'scene', tracks: [
+    { id: 'explore', since: 6, tracks: [
+      ['70sCmmaLhns', '探索（OpenTracks）', 6],
+      ['NIWuE_ieAKQ', '怪しい屋敷を探索する的なBGM（OpenTracks）', 6],
+      ['aZeqqrwPk-c', '深夜の探索（OpenTracks）', 6],
+      ['8_M3_2mTzWs', '調査（OpenTracks）', 6],
+      ['yPwduiXiKRQ', '調査開始（OpenTracks）', 6],
+      ['gKdyychcsFI', '調査中（OpenTracks）', 6],
+      ['FF9i59z4gqI', '聞き込み調査（OpenTracks）', 6],
+      ['pEoSv7egoTs', '張り込み調査（OpenTracks）', 6],
+      ['OchLgDH0Y_8', 'Lost_Place2（PeriTune）', 6],
+      ['XNcWUAgqKdQ', 'Lost Place3（PeriTune）', 6],
+      ['PHhgCXgeK-E', '緑の遺構（OpenTracks）', 6],
+      ['OwomNmb9WKc', '隠された遺跡の中へ（OpenTracks）', 6],
+      ['FYA2T1bof-c', '古代遺跡（OpenTracks）', 6],
+      ['oxUsYF5WreQ', 'ダンジョン（OpenTracks）', 6],
+      ['FrypYFJYhxQ', '謎の洞窟（OpenTracks）', 6],
+      ['WFvm27FypeA', '不思議な洞窟（OpenTracks）', 6],
+      ['GSKr6uYCJZ0', 'Black Crystal（PeriTune）', 6],
+      ['cTHL3UP3VFU', '謎（OpenTracks）', 6],
+      ['j8Ebz-eYndU', 'Source（zukisuzuki）', 6],
+      ['4qDDuCHMoBI', '薄青い洞窟（OpenTracks）', 6]
+    ] },
+    { id: 'deduction', tracks: [
       ['3pfQ3bDq0Wc', 'プロセス'],
       ['hPZd9QDIlZo', '思考する化石'],
       ['9-Nfb9lWSQQ', '私立探偵と不可解な古文書'],
@@ -78,7 +100,7 @@
       ['h0eCs4xo_JQ', 'Just the Record（OpenTracks）', 3],
       ['TxkWXdjkMeA', '奇妙な案内人（OpenTracks）', 3]
     ] },
-    { id: 'tension', group: 'scene', tracks: [
+    { id: 'tension', tracks: [
       ['TLIZfSg1qeA', '緊迫 -will be Arrested...!（DOVA-SYNDROME）'],
       ['J6Fxuc0veos', 'BGM003-緊張、切迫1（DOVA-SYNDROME）'],
       ['vxMIQiE2Cig', 'まるでサスペンスドラマ～犯人は語る～（DOVA-SYNDROME）'],
@@ -113,7 +135,7 @@
       ['2gaWTgblYG4', '脅威（OpenTracks）', 3],
       ['LQFvIEfVBmA', '迫りくる影はだれ?的なBGM（OpenTracks）', 3]
     ] },
-    { id: 'climax', group: 'scene', tracks: [
+    { id: 'climax', tracks: [
       ['_v9eOCZsKz4', '決戦（OpenTracks）'],
       ['jHSQ2vCIRcc', 'The Final Confrontation'],
       ['asKyymlaleE', 'Bound to Fate'],
@@ -139,7 +161,51 @@
       ['zOgZXB-FftA', 'EpicBattle J（PeriTune）', 3],
       ['KXr37qaQ9TQ', 'トランセンド（OpenTracks）', 3]
     ] },
-    { id: 'comic', group: 'mood', tracks: [
+    { id: 'epilogue', since: 6, tracks: [
+      ['hvJSNTvahnE', 'Epilogue（OpenTracks）', 6],
+      ['4sFNT7CDOh0', 'ひとつのエピローグ（OpenTracks）', 6],
+      ['hRrGjGCjF3A', 'エピローグ（OpenTracks）', 6],
+      ['f1Ve9nyWUXw', 'Epilogue #2（OpenTracks）', 6],
+      ['9PTQcHDYwJw', 'エンディング（OpenTracks）', 6],
+      ['nXUYOxJC66Q', 'エンディング（OpenTracks）', 6],
+      ['v4VzVGfSfRY', 'エンディングロール（OpenTracks）', 6],
+      ['f72kioXpUQI', '静かな余韻（OpenTracks）', 6],
+      ['Ita4345Q_Tc', '雨音のエンドロール（OpenTracks）', 6],
+      ['mAaKuKKcUA4', '旅立ち（OpenTracks）', 6],
+      ['tIlI1gnPUYs', '旅立ちの季節に（OpenTracks）', 6],
+      ['6AMowi_JHCo', '夕暮れの旅立ち（OpenTracks）', 6],
+      ['gshRn-L5ZHU', '希望への旅立ち（OpenTracks）', 6],
+      ['dJnN7hk1mFY', '旅の日記（OpenTracks）', 6],
+      ['9DG01kZDMOg', '優しい別れ（OpenTracks）', 6],
+      ['ahRj5p87_30', '別れと笑顔（OpenTracks）', 6],
+      ['UGsEUwEy2eU', 'センチメンタル（出会いと別れ）（OpenTracks）', 6],
+      ['q6wdg4cxqFE', '別れの夕暮れ（OpenTracks）', 6],
+      ['qM7weDhsy-s', 'エンディング・テーマ（もみじばミュージック）', 6],
+      ['VYp6YaAkqJg', 'Last_Embrace（PeriTune）', 6]
+    ] },
+    { id: 'daily', since: 6, tracks: [
+      ['rxN_Vzu9E_c', '金木犀（OpenTracks）', 6],
+      ['lrgbxyVUiVY', '木漏れ日の下で（OpenTracks）', 6],
+      ['kJjoLCRhzXs', 'カフェ雨模様（OpenTracks）', 6],
+      ['C_6SLgOZ3HY', 'Cassette Tape Dream（しゃろう）', 6],
+      ['u1inSXny700', 'Morning（しゃろう）', 6],
+      ['Y7Zu2IruAq4', 'so sweet（OpenTracks）', 6],
+      ['bBNk_4nEeMs', '君と歩こう（OpenTracks）', 6],
+      ['y6Z0p6C7Prk', '潮騒アーベント（MusMus）', 6],
+      ['vbav36N8oZw', '雨の日のガーティ（MusMus）', 6],
+      ['TJcmIDyGoHk', '穏やかな午後（OpenTracks）', 6],
+      ['aRZQ7ntrW-Y', 'Routine（OpenTracks）', 6],
+      ['4pR2DFsiHX8', 'Diary（OpenTracks）', 6],
+      ['O0OHNUsW8Yg', 'Daily Accumulation（OpenTracks）', 6],
+      ['SXSpBohhmck', '今日のひとしな（OpenTracks）', 6],
+      ['liU1EnD6lcw', '他愛のない話（OpenTracks）', 6],
+      ['xudH7fA13YA', '夏の停留所（OpenTracks）', 6],
+      ['3hKwejk03BA', 'すてきなシエスタ（OpenTracks）', 6],
+      ['iSIS_T2VPMQ', 'いつもの居酒屋で（OpenTracks）', 6],
+      ['fe4tkf9__Vo', 'Guitar Gentle（PeriTune）', 6],
+      ['ElB7i1nBZDQ', 'Retry（zukisuzuki）', 6]
+    ] },
+    { id: 'comic', tracks: [
       ['Nf_lqAWh-mE', 'コミカルな日常（DOVA-SYNDROME）'],
       ['JNUWDIaxqOo', 'ドジっこハプニング'],
       ['7JhjnxhO7YY', 'ぽかぽか日和'],
@@ -172,7 +238,7 @@
       ['b6GAQ7FwrMs', 'ベーコン・オン・ザ・ハムエッグ（OpenTracks）', 3],
       ['vzmAgdly4Bc', '中華ラーメン（OpenTracks）', 3]
     ] },
-    { id: 'moving', group: 'mood', tracks: [
+    { id: 'moving', tracks: [
       ['dc0oRjmZtQs', 'BGM193_Glory'],
       ['B14YckVIJwU', 'BGM285_Homeward'],
       ['jhm0or_mdHw', 'BGM279_Prelude'],
@@ -209,7 +275,7 @@
       ['u2AXvwdMmY0', 'Hanagoyomi（PeriTune）', 3],
       ['mjImJD369oA', 'Awayuki（PeriTune）', 3]
     ] },
-    { id: 'sad', group: 'mood', tracks: [
+    { id: 'sad', tracks: [
       ['G80jLc37jAo', '雪解けを待つ'],
       ['K58XkKv6Qso', '雨にうたれて'],
       ['2Q4y93LvoeQ', '夢想世界'],
@@ -240,7 +306,7 @@
       ['RcyEMBXuMMk', '悲しい記憶（OpenTracks）', 3],
       ['LyAtr5D49y0', '雨に消える声（OpenTracks）', 3]
     ] },
-    { id: 'unease', group: 'mood', tracks: [
+    { id: 'unease', tracks: [
       ['Nfq8trmYyYo', '不穏（DOVA-SYNDROME）'],
       ['IQcUAwpCfrY', '不穏の続き Op.61'],
       ['5Q1XCz5BLow', '不穏な探索'],
@@ -276,7 +342,7 @@
       ['u3Ga8hWXxMU', 'ねじの回転（OpenTracks）', 3],
       ['C4Jv8DFwQRQ', '真相は闇の中（OpenTracks）', 3]
     ] },
-    { id: 'horror', group: 'mood', tracks: [
+    { id: 'horror', tracks: [
       ['EhmXo0S81ts', '生暖かい空気 -Tepid air-'],
       ['54EVnRk494A', '壊れたオルゴール（1時間）'],
       ['A1fdlha_zB0', 'その村、立ち入るべからず。（30分）'],
@@ -305,7 +371,36 @@
       ['G9mfStPbzMk', '闇の中に囚われしもの（OpenTracks）', 3],
       ['Uk77rLz9lc0', '弟切草（OpenTracks）', 3]
     ] },
-    { id: 'mansion', group: 'world', tracks: [
+    { id: 'digital', tracks: [
+      ['_wwur8OsNd8', 'cyber'],
+      ['9YWKyezOcg0', 'Cybernetic'],
+      ['IRQuR8KuriE', 'サイバー32（魔王魂）'],
+      ['vu8Qq8G_bl4', 'NEON VELOCITY'],
+      ['EXxv41Umk5o', 'Polygonic Artifact（DOVA-SYNDROME）', 2],
+      ['3F-2QY1H2Hw', '夜の病室エレクトロ（DOVA-SYNDROME）', 2],
+      ['0i8L4oN4SWg', '星空と衛星（DOVA-SYNDROME）', 2],
+      ['3v-71FOb3FE', 'Techno Trap（OpenTracks）', 3],
+      ['eYJVcjcyA5Q', 'Cyber Dead Dance（OpenTracks）', 3],
+      ['GitxSorrIuI', 'Dull Color City（OpenTracks）', 3],
+      ['z-5PXa05iw8', 'Dooo（OpenTracks）', 3],
+      ['I7ApdDUpHso', 'Hard Wall（OpenTracks）', 3],
+      ['953M0VOaY-o', 'Scream A10（OpenTracks）', 3],
+      ['YZUfNRzb_eA', 'Grenade（OpenTracks）', 3],
+      ['_9LiBPegQXk', 'Exceeders（OpenTracks）', 3],
+      ['ROJ1tYF-NKs', 'Solid Steel Survivor（OpenTracks）', 3],
+      ['IU_sZ-qdfjc', 'Hard Rain（OpenTracks）', 3],
+      ['yRXijdpf3SQ', '地下研究所（OpenTracks）', 3],
+      ['LTXqKWWOHgM', 'ラボラトリー（OpenTracks）', 3],
+      ['LxL3Yf0cDys', 'Factorial（OpenTracks）', 3],
+      ['3p3OLkOXcRY', 'Floating brain（OpenTracks）', 3],
+      ['nxMdhLQp628', 'No.6882AD4G（nonai sound）', 3],
+      ['cWAmfuZBJjY', '管理棟制御室（nonai sound）', 3],
+      ['gh897DA9Lno', 'GO DO SOUSA（nonai sound）', 3],
+      ['xO1ePMCY5fA', '銀ノ河（nonai sound）', 3],
+      ['1mTZ5NdqcpQ', '衛星の夜（音獅子）', 3],
+      ['PD8DU1bqvqg', 'Facading - Take It Down（NCS）', 3]
+    ] },
+    { id: 'mansion', tracks: [
       ['KhjjEh6T33w', 'ホラーゲームの洋館'],
       ['uQYnymedaE8', '奇妙な案内人'],
       ['I9_yZH7nSzA', '月は知っている（60分）'],
@@ -346,7 +441,7 @@
       ['VjT4j3GDFvA', '愛しのファムファタル（nonai sound）', 3],
       ['-7G5GxrYutI', 'NOIR（OpenTracks）', 3]
     ] },
-    { id: 'wafu', group: 'world', since: 4, tracks: [
+    { id: 'wafu', since: 4, tracks: [
       ['Ls55uJx9Ne0', '和テイスト（OpenTracks）', 4],
       ['poNqBbzWjyA', '神秘的な和の夜（OpenTracks）', 4],
       ['S0YmUYoCISU', '和の街並み（OpenTracks）', 4],
@@ -368,7 +463,7 @@
       ['gXL1S4xl_TU', '雪椿（MusMus）', 4],
       ['wX9MuRyTahE', '祭りの夜（OpenTracks）', 4]
     ] },
-    { id: 'fantasy', group: 'world', since: 4, tracks: [
+    { id: 'fantasy', since: 4, tracks: [
       ['b1S2WGS5LHs', 'World OP（PeriTune）', 4],
       ['UbwJKnv48jo', 'Odyssey（PeriTune）', 4],
       ['hbF0ZRFsCRY', 'Dawning Tale（PeriTune）', 4],
@@ -390,7 +485,7 @@
       ['MnmDAO2kpT0', '古の世界地図（OpenTracks）', 4],
       ['x-CEPYoX2zk', 'Peaceful Place（魔王魂）', 4]
     ] },
-    { id: 'celtic', group: 'world', since: 4, tracks: [
+    { id: 'celtic', since: 4, tracks: [
       ['OdImx0lVD8s', 'irish iris（OpenTracks）', 4],
       ['cR2RfeJ1b7o', 'irish iris #2（OpenTracks）', 4],
       ['SM8igiyI7T0', 'ケルト風ロック（OpenTracks）', 4],
@@ -412,7 +507,7 @@
       ['rSVjfuOlPiY', 'Harvest4（PeriTune）', 4],
       ['8w5krb_BWHE', 'Pastorale（PeriTune）', 4]
     ] },
-    { id: 'ethnic', group: 'world', since: 4, tracks: [
+    { id: 'ethnic', since: 4, tracks: [
       ['yvBfWeEk2gA', 'Clay and Spice（PeriTune）', 4],
       ['8siLyH6CsOQ', 'Desert4（PeriTune）', 4],
       ['9BqvaO_rTKg', 'Folk Arabian（PeriTune）', 4],
@@ -434,36 +529,29 @@
       ['gJM7KqPebk0', '砂漠を超えた先の国（OpenTracks）', 4],
       ['9nqssnDnxWU', 'Phuniaya(フニェーヤ)（OpenTracks）', 4]
     ] },
-    { id: 'digital', group: 'world', tracks: [
-      ['_wwur8OsNd8', 'cyber'],
-      ['9YWKyezOcg0', 'Cybernetic'],
-      ['IRQuR8KuriE', 'サイバー32（魔王魂）'],
-      ['vu8Qq8G_bl4', 'NEON VELOCITY'],
-      ['EXxv41Umk5o', 'Polygonic Artifact（DOVA-SYNDROME）', 2],
-      ['3F-2QY1H2Hw', '夜の病室エレクトロ（DOVA-SYNDROME）', 2],
-      ['0i8L4oN4SWg', '星空と衛星（DOVA-SYNDROME）', 2],
-      ['3v-71FOb3FE', 'Techno Trap（OpenTracks）', 3],
-      ['eYJVcjcyA5Q', 'Cyber Dead Dance（OpenTracks）', 3],
-      ['GitxSorrIuI', 'Dull Color City（OpenTracks）', 3],
-      ['z-5PXa05iw8', 'Dooo（OpenTracks）', 3],
-      ['I7ApdDUpHso', 'Hard Wall（OpenTracks）', 3],
-      ['953M0VOaY-o', 'Scream A10（OpenTracks）', 3],
-      ['YZUfNRzb_eA', 'Grenade（OpenTracks）', 3],
-      ['_9LiBPegQXk', 'Exceeders（OpenTracks）', 3],
-      ['ROJ1tYF-NKs', 'Solid Steel Survivor（OpenTracks）', 3],
-      ['IU_sZ-qdfjc', 'Hard Rain（OpenTracks）', 3],
-      ['yRXijdpf3SQ', '地下研究所（OpenTracks）', 3],
-      ['LTXqKWWOHgM', 'ラボラトリー（OpenTracks）', 3],
-      ['LxL3Yf0cDys', 'Factorial（OpenTracks）', 3],
-      ['3p3OLkOXcRY', 'Floating brain（OpenTracks）', 3],
-      ['nxMdhLQp628', 'No.6882AD4G（nonai sound）', 3],
-      ['cWAmfuZBJjY', '管理棟制御室（nonai sound）', 3],
-      ['gh897DA9Lno', 'GO DO SOUSA（nonai sound）', 3],
-      ['xO1ePMCY5fA', '銀ノ河（nonai sound）', 3],
-      ['1mTZ5NdqcpQ', '衛星の夜（音獅子）', 3],
-      ['PD8DU1bqvqg', 'Facading - Take It Down（NCS）', 3]
+    { id: 'adult', since: 4, tracks: [
+      ['vn8mcjwUg4o', 'Smoky house（OpenTracks）', 4],
+      ['gvfblaR3CCc', 'CLUB DEEP FOG（OpenTracks）', 4],
+      ['rJPND1LZCxM', 'club jazz（OpenTracks）', 4],
+      ['KjIN51XEU9E', 'ウィッチクラブ（OpenTracks）', 4],
+      ['Mh-cHFVdIxE', 'Chill Out Lounge（OpenTracks）', 4],
+      ['1JC3QJqwqKQ', 'Chill Out Lounge #2（OpenTracks）', 4],
+      ['BDBilGscyNY', 'Deep Search（OpenTracks）', 4],
+      ['1cJXLNLgDpM', 'Deep Exploration（OpenTracks）', 4],
+      ['zTqU12yYb-o', 'Neon Liquid（OpenTracks）', 4],
+      ['H2pzEg_3oDk', '妖艶（OpenTracks）', 6],
+      ['MJtaPKw0Ylw', 'Sexy Noise（OpenTracks）', 6],
+      ['m7MDnYV8Xe0', 'Midnight Sexy（OpenTracks）', 6],
+      ['Jl8MdQ1czTM', 'Honny Trap（OpenTracks）', 6],
+      ['pzpvQAT56UI', 'Mellow Night（OpenTracks）', 6],
+      ['U-Xn6UmUiXA', 'Moonlit Lounge（OpenTracks）', 6],
+      ['xZeqvi-6_Y4', 'Strings In Night Club（OpenTracks）', 6],
+      ['hqV8zSRnmJU', 'Lazy night（気だるい夜）（OpenTracks）', 6],
+      ['JbH8r-K50hY', 'Midnight party（OpenTracks）', 6],
+      ['Nz8x3Hri-T8', 'Urban Night（OpenTracks）', 6],
+      ['zcRI1xQqO2o', 'Violet Vibes（OpenTracks）', 6]
     ] },
-    { id: 'jazz', group: 'style', since: 4, tracks: [
+    { id: 'jazz', since: 4, tracks: [
       ['md9Zz-8LcAM', '軽快なライトジャズ（OpenTracks）', 4],
       ['_q54qWNZ_1U', 'ミッドナイト・ジャズ（OpenTracks）', 4],
       ['jNX7PIF25RU', 'バーで流れそうなピアノジャズ（OpenTracks）', 4],
@@ -485,7 +573,7 @@
       ['rBJ56gnGYB0', '気分上々ジャズ（MusMus）', 4],
       ['S9OofzebHno', 'Muted Heart（MusMus）', 4]
     ] },
-    { id: 'piano', group: 'style', since: 4, tracks: [
+    { id: 'piano', since: 4, tracks: [
       ['PH_-nQbGmxA', 'Piano Melancholy2（PeriTune）', 4],
       ['DaJiwYeeLhg', 'Memories（PeriTune）', 4],
       ['iuEgJ5oOVz4', 'Minamo（PeriTune）', 4],
@@ -507,34 +595,56 @@
       ['vMwvA8Q5Cws', 'ワスレナグサ（音獅子）', 4],
       ['X3SVSgnzcR0', '切ない海辺（OpenTracks）', 4]
     ] },
-    { id: 'house', group: 'style', since: 4, tracks: [
-      ['jTUmOhTAVMo', 'house（OpenTracks）', 4],
-      ['vn8mcjwUg4o', 'Smoky house（OpenTracks）', 4],
-      ['gvfblaR3CCc', 'CLUB DEEP FOG（OpenTracks）', 4],
-      ['SwWayBn-2mQ', 'Club Star（OpenTracks）', 4],
-      ['rJPND1LZCxM', 'club jazz（OpenTracks）', 4],
-      ['IzwIW0OPK4o', 'クラブ茶室（OpenTracks）', 4],
-      ['KjIN51XEU9E', 'ウィッチクラブ（OpenTracks）', 4],
-      ['Mh-cHFVdIxE', 'Chill Out Lounge（OpenTracks）', 4],
-      ['1JC3QJqwqKQ', 'Chill Out Lounge #2（OpenTracks）', 4],
-      ['BDBilGscyNY', 'Deep Search（OpenTracks）', 4],
-      ['1cJXLNLgDpM', 'Deep Exploration（OpenTracks）', 4],
-      ['5ssZIiVCZIY', 'EDM NEW LIFE（OpenTracks）', 4],
-      ['CSA89IkSrWU', 'EDM SHIN SEKAI（OpenTracks）', 4],
-      ['57w8rfOhuW0', '重低音系ピアノEDM（OpenTracks）', 4],
-      ['n5Fijm7RsbE', '4つ打ちとピアニカとテープエコー（OpenTracks）', 4],
-      ['9L8pQN5n_c0', 'Pop Motivation（PeriTune）', 4],
-      ['zTqU12yYb-o', 'Neon Liquid（OpenTracks）', 4],
-      ['ILjwweyzM8w', 'Disco Digital（OpenTracks）', 4],
-      ['V4bDAjrq3L4', '1R DISCO（OpenTracks）', 4],
-      ['mQu2I8Mm8Tg', 'Space Disco（OpenTracks）', 4]
+    { id: 'classical', since: 6, tracks: [
+      ['vmgK3-wP_tQ', 'クラシック（OpenTracks）', 6],
+      ['5TefvTTWUVo', 'violin solo（OpenTracks）', 6],
+      ['csyrJOsA2QI', 'モーツァルト「Dies irae」（OpenTracks）', 6],
+      ['FxCoNFSTkDA', 'A.D.ENDによるクラシック（OpenTracks）', 6],
+      ['UADXGIbG7BI', '荘厳な教会（OpenTracks）', 6],
+      ['MmkPDZksLiU', '崖っぷちの四重奏（OpenTracks）', 6],
+      ['V8tHLfMIocY', 'Orchestra #04（OpenTracks）', 6],
+      ['twDsZYt0a0I', 'オーケストラ09（魔王魂）', 6],
+      ['LbnI8AZZqUk', 'オーケストラ03（魔王魂）', 6],
+      ['eWe3QiU6RH0', 'オーケストラ12（魔王魂）', 6],
+      ['QWGUX7zbIAc', 'シンフォニア第1番（魔王魂）', 6],
+      ['ToF1Lp0_yKE', 'シンフォニア第1番 piano ver.（魔王魂）', 6],
+      ['MfaWiGHZAgE', '卒業（音楽室ver.）（MusMus）', 6],
+      ['xPjpGnYrCAg', 'Nice Old Tradition（MusMus）', 6],
+      ['L2xRqyjyPCI', 'Royal_Baroque（PeriTune）', 6],
+      ['PtbNauHIywc', 'Obsession（PeriTune）', 6],
+      ['KcBRcEe_ZlA', 'Hesitation（PeriTune）', 6],
+      ['aEtc-L7Eadg', 'Snowy_Day3（PeriTune）', 6],
+      ['5mmHy8AoHTA', 'Entangle（PeriTune）', 6],
+      ['XYPpvr5PAcw', 'Cryptic_Canvas（PeriTune）', 6]
+    ] },
+    { id: 'ncs', since: 6, tracks: [
+      ['TW9d8vYrVFQ', 'Sky High（Elektronomia）', 6],
+      ['fzNMd3Tu1Zw', 'Energy（Elektronomia）', 6],
+      ['cNcy3J4x62M', 'Limitless（Elektronomia）', 6],
+      ['3nQNiWdeH2Q', 'Heroes Tonight（Janji feat. Johnning）', 6],
+      ['K4DyBUG242c', 'On & On（Cartoon feat. Daniel Levi）', 6],
+      ['p7ZsBPK656s', 'Blank（Disfigure）', 6],
+      ['L7kF4MXXCoA', 'Dreams pt. II（Lost Sky feat. Sara Skinner）', 6],
+      ['9rujCfYXhQc', 'Fearless（Lost Sky）', 6],
+      ['n4tK7LYFxI0', 'Shine（Spektrem）', 6],
+      ['q1ULJ92aldE', 'Feel Good（Syn Cole）', 6],
+      ['xN1WOlptE58', 'Dreamer（Alan Walker）', 6],
+      ['6FNHe3kf8_s', 'Nekozilla（Different Heaven）', 6],
+      ['jK2aIUmmdP4', 'My Heart（Different Heaven & EH!DE）', 6],
+      ['HpaHvUOk3F0', 'Far Away（Different Heaven）', 6],
+      ['7wNb0pHyGuI', 'Roots（Tobu）', 6],
+      ['9iHM6X6uUH8', 'Link（Jim Yosef）', 6],
+      ['x_OwcYTNbHs', 'Firefly（Jim Yosef）', 6],
+      ['EZUPEoj3Qjs', 'Samurai（Jim Yosef）', 6],
+      ['__CRWE-L45k', 'Symbolism（Electro-Light）', 6],
+      ['1WP_YLn1D1c', 'Eclipse（Jim Yosef）', 6]
     ] }
   ];
 
-  // タブはグループ（scene：場面／mood：雰囲気／world：舞台／style：音楽のジャンル）ごとに並べる。グループが変わるところで棚の行を改める。
-  // 版5でこの並びにした（保存済みの棚も1回だけ並べ替える）。
+  // タブは1列に順番どおり並べる（場面 → 雰囲気 → 舞台 → 音楽のジャンル）。版6でこの並びにした（保存済みの棚も1回だけ並べ替える）。
+  // 版6で「ハウス」を大人っぽいクラブ・ラウンジの「アダルト」（id: adult）にした。保存済みの house タブは adult に読み替え、DROPPED の曲を外す。
   // 初期の曲を足したら上げる。曲の3つ目の数字は、その曲を足したときの版。タブの since は、そのタブを足したときの版
-  const VERSION = 5;
+  const VERSION = 6;
 
   // YouTube で埋め込み再生できなくなった初期の曲と、その代わり（保存済みの棚でも差し替える）
   const REPLACED = {
@@ -543,12 +653,16 @@
     'ISHbwrrNTeM': ['_v9eOCZsKz4', '決戦（OpenTracks）']
   };
 
+  // 版6で「アダルト」に合わないので外した、元「ハウス」の曲（メモを書いた曲は残す）
+  const DROPPED = ['jTUmOhTAVMo', 'SwWayBn-2mQ', 'IzwIW0OPK4o', '5ssZIiVCZIY', 'CSA89IkSrWU', '57w8rfOhuW0', 'n5Fijm7RsbE', '9L8pQN5n_c0', 'ILjwweyzM8w', 'V4bDAjrq3L4', 'mQu2I8Mm8Tg'];
+
   window.JukeboxShelf = {
     VERSION,
     REPLACED,
-    ORDER_SINCE: 5,
+    ORDER_SINCE: 6,
+    RENAMED: { house: 'adult' },
+    DROPPED,
     order: TABS.map(tab => tab.id),
-    groupOf(id) { const tab = TABS.find(x => x.id === id); return tab ? tab.group : ''; },
     // 毎回まっさらなコピーを返す（画面側で書き換えるため）
     defaults() {
       return TABS.map(tab => ({ id: tab.id, name: '', tracks: tab.tracks.map(([yt, title]) => ({ yt, title })) }));
