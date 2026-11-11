@@ -136,6 +136,7 @@
   border-radius: 999px;
   background: var(--sheet);
   color: var(--ink-soft);
+  font-size: 12px;
   cursor: pointer;
 }
 .data-tools-close-button:hover { border-color: var(--pen-red); color: var(--pen-red); }
