@@ -50,7 +50,15 @@
     '出会い': ['First meeting', '만남'],
     '穏やかな日々': ['Quiet days', '평온한 나날'],
     '二人の時間': ['Time together', '둘만의 시간'],
-    '別離': ['Parting', '이별']
+    '別離': ['Parting', '이별'],
+    '旅立ち': ['Setting out', '여행의 시작'],
+    '村': ['The village', '마을'],
+    '酒場': ['The tavern', '주점'],
+    '森': ['The forest', '숲'],
+    '遺跡': ['Ancient ruins', '유적'],
+    '野営': ['Camp', '야영'],
+    '戦闘': ['Battle', '전투'],
+    '回想': ['Memories', '회상']
   };
 
   const LIST = [
@@ -161,6 +169,21 @@
       ['クライマックス', 'red', 'thinking', 'P626a-2Tip8', '真実（DOVA-SYNDROME）'],
       ['エピローグ', 'blue', 'romance-10', 'MfIWpMnEBbM', 'On The Moon（DOVA-SYNDROME）', '夕暮れの海'],
       ['感想戦', 'yellow', 'after-talk', '16Bj6aPi1A8', '2:23AM（DOVA-SYNDROME）']
+    ] },
+    // 曲はレコード棚のファンタジー・ケルト・ピアノから（戦闘のクライマックスと遺跡だけ、クライマックス・探索のタブから）
+    { id: 'fantasy', name: ['ファンタジー', 'Fantasy', '판타지'], desc: ['剣と魔法の冒険。旅立ち・村や酒場・森や遺跡の探索・野営・戦闘と結末まで。', 'Sword-and-sorcery adventure: setting out, villages and taverns, forests and ruins, camp, battle and the ending.', '검과 마법의 모험. 여행의 시작·마을과 주점·숲과 유적 탐색·야영·전투와 결말까지.'], scenes: [
+      ['導入', 'cream', 'handout', 'b1S2WGS5LHs', 'World OP（PeriTune）'],
+      ['旅立ち', 'yellow', 'p:sunburst', 'wg09BmCR2io', '冒険の始まり（OpenTracks）', '朝日の街道'],
+      ['村', 'green', 'p:dots', '3W5BsyOQetM', '目覚めの村（OpenTracks）', 'のどかな村'],
+      ['酒場', 'brown', 'p:stripes', 'vTKxZKMKQ8k', 'Tavern（PeriTune）', '酒場の灯り'],
+      ['森', 'teal', 'p:gradient', 'kovtTt-cqQ0', 'Fantasy Forest（OpenTracks）', '木漏れ日の森'],
+      ['遺跡', 'purple', 'p:rings', 'OchLgDH0Y_8', 'Lost_Place2（PeriTune）', '苔むした遺跡'],
+      ['野営', 'navy', 'p:dots', 'FEH597z2Egs', '月影（OpenTracks）', '焚き火と星空'],
+      ['戦闘', 'red', 'p:stripes', 'SM8igiyI7T0', 'ケルト風ロック（OpenTracks）', '剣と盾'],
+      ['回想', 'blue', 'p:gradient', 'Ii7_xeg51TA', 'Recollection（PeriTune）', '古い写本'],
+      ['クライマックス', 'orange', 'climax', 'wk5tpBHulVc', 'Dia Scriost（PeriTune）'],
+      ['エピローグ', 'pink', 'epilogue', 'vME5FKvqnGk', '安らぎの丘（もみじばミュージック）'],
+      ['感想戦', 'gray', 'after-talk', 'PVuMr9E0aD0', 'ゆったりくつろぎのピアノ（OpenTracks）']
     ] }
   ];
 
