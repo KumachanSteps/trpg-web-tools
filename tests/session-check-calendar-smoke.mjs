@@ -39,11 +39,13 @@ for (const id of [
   'daytimeLegend',
   'nightLegend',
   'allDayLegend',
+  'editDetailBtn',
+  'deleteDetailBtn',
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.25') || !html.includes('session_check_calendar.js?v=0.25') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.26') || !html.includes('session_check_calendar.js?v=0.26') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -94,6 +96,8 @@ for (const contract of [
   '.event.is-all-day',
   '.event.is-series',
   '.detail-row-status',
+  '.detail-head-actions',
+  '.detail-icon-button svg',
   '.task-delete',
 ]) {
   if (!css.includes(contract)) throw new Error(`Missing independent-panel layout contract: ${contract}`);
@@ -147,7 +151,7 @@ for (const contract of [
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.25'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.26'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
@@ -159,4 +163,8 @@ if (js.includes('<span>形式</span>') || js.includes('形式未設定')) {
   throw new Error('Legacy format display should be removed from calendar cards');
 }
 
-console.log('session-check-calendar smoke passed: normalized series, shared participants, series emphasis, and calendar controls are present');
+if (js.includes('id="editBtn"') || js.includes('id="deleteBtn"') || !html.includes('<svg viewBox="0 0 24 24"')) {
+  throw new Error('Detail edit/delete actions should use SVG header icons');
+}
+
+console.log('session-check-calendar smoke passed: compact data tools, SVG detail actions, stronger series emphasis, and calendar controls are present');
