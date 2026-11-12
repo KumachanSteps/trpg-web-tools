@@ -266,7 +266,11 @@
   }
 
   function normalizeSeriesText(value) {
-    return String(value || '').normalize('NFKC').replace(/[\s　]+/g, ' ').trim();
+    return String(value || '')
+      .normalize('NFKC')
+      .replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D\u2600-\u27BF\s　]+/gu, '')
+      .replace(/[\s　]+/g, ' ')
+      .trim();
   }
 
   function seriesBaseName(value) {
@@ -306,6 +310,18 @@
         session.seriesAuto = false;
       }
     });
+  }
+
+  function syncSeriesSharedFields(source) {
+    if (!source?.series) return 0;
+    let synced = 0;
+    sessions.forEach(session => {
+      if (session.id === source.id || session.series !== source.series) return;
+      session.gm = source.gm || '';
+      session.players = (source.players || []).map(player => ({ ...player }));
+      synced += 1;
+    });
+    return synced;
   }
 
   function save() {
@@ -509,6 +525,11 @@
     const leadingDays = (first.getDay() - calendarSettings.weekStartsOn + 7) % 7;
     start.setDate(1 - leadingDays);
 
+    const seriesCounts = sessions.reduce((counts, session) => {
+      if (session.series) counts.set(session.series, (counts.get(session.series) || 0) + 1);
+      return counts;
+    }, new Map());
+
     $('calendarGrid').innerHTML = Array.from({ length: 42 }, (_, i) => {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
@@ -519,7 +540,7 @@
         <button class="day ${d.getDay() === 0 ? 'is-sunday' : d.getDay() === 6 ? 'is-saturday' : ''} ${d.getMonth() !== cursor.getMonth() ? 'other' : ''} ${key === currentCalendarDateKey() ? 'today' : ''} ${isSelected ? 'selected' : ''}" type="button" data-date="${key}">
           <span class="day-head"><span class="day-num">${d.getDate()}</span><span class="day-add">＋</span></span>
           ${evs.map(session => `
-            <span class="event ${eventTimeClass(session)}" data-id="${esc(session.id)}" title="ダブルクリックで編集">
+            <span class="event ${eventTimeClass(session)} ${session.series && seriesCounts.get(session.series) > 1 ? 'is-series' : ''}" data-id="${esc(session.id)}" title="${session.series && seriesCounts.get(session.series) > 1 ? `${esc(session.series)}シリーズ · ` : ''}ダブルクリックで編集">
               <span class="event-time">● ${eventTimeLabel(session)}</span>
               <span class="event-title">${esc(session.scenario)}</span>
             </span>
@@ -579,7 +600,6 @@
       <button class="mini-card" data-id="${esc(session.id)}" type="button">
         <small>${eventTimeLabel(session)}</small>
         <strong>${esc(session.scenario)}</strong>
-        <span class="chip">${esc(session.format || '形式未設定')}</span>
         <span class="chip green">${esc(session.system || 'システム未設定')}</span>
       </button>`;
   }
@@ -693,8 +713,7 @@
       <div class="detail-row"><span>システム</span><b>${esc(session.system)}</b></div>
       <div class="detail-row"><span>日時</span><b>${esc(fmtDateTime(session))}</b></div>
       <div class="detail-row"><span>GM</span><b>${esc(session.gm)}</b></div>
-      <div class="detail-row"><span>形式</span><b>${esc(session.format)}</b></div>
-      <div class="detail-row"><span>ステータス</span><b><span class="chip green">${session.status === 'scheduled' ? '予定確定' : session.status === 'completed' ? '完了' : '調整中'}</span></b></div>
+      <div class="detail-row detail-row-status"><span>ステータス</span><b><span class="chip green">${session.status === 'scheduled' ? '予定確定' : session.status === 'completed' ? '完了' : '調整中'}</span></b></div>
       <h4>参加者（PL / PC）</h4>
       <div class="people">${(session.players || []).map(player => `<div class="person"><b>${esc(player.pl)}</b><span>${esc(player.pc)}</span></div>`).join('') || '<p>未登録</p>'}</div>
       <h4>関連リンク</h4>
@@ -771,7 +790,7 @@
     const nextStart = $('dateInput').value;
     const nextEnd = $('endTimeInput').value;
     const previousSeries = current.series || '';
-    const nextSeries = $('seriesInput').value.trim();
+    const nextSeries = normalizeSeriesText($('seriesInput').value);
     const keepAutoSeries = current.seriesAuto === true && nextSeries === previousSeries;
     const manuallyClearedSeries = Boolean(previousSeries) && !nextSeries;
     Object.assign(current, {
@@ -802,10 +821,12 @@
     if (nextStart !== displayedStartBeforeEdit) current.startInstant = '';
     if (nextEnd !== displayedEndBeforeEdit) current.endInstant = '';
     if (!editingId) sessions.push(current);
+    applyAutoSeriesGrouping();
+    const syncedSeriesCount = syncSeriesSharedFields(current);
     selectedId = current.id;
     selectedDate = sessionDate(current);
     $('sessionDialog').close();
-    toast('保存しました');
+    toast(syncedSeriesCount ? `保存し、同シリーズ${syncedSeriesCount}件へGM・参加者を反映しました` : '保存しました');
     render();
   });
 
@@ -1446,7 +1467,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.24', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.25', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
