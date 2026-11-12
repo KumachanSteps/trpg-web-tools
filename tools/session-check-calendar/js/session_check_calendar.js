@@ -698,6 +698,8 @@
     const session = sessions.find(item => item.id === selectedId);
     $('detailPane').hidden = !session && !selectedDate;
     $('detailPane').classList.toggle('has-session', Boolean(session));
+    $('editDetailBtn').hidden = !session;
+    $('deleteDetailBtn').hidden = !session;
     if (!session) {
       $('detailContent').className = 'detail-content empty';
       $('detailContent').textContent = selectedDate ? '予定なし' : '';
@@ -722,9 +724,9 @@
       <div class="detail-tasks">${(session.tasks || []).map(task => `<div class="task-row"><span>${task.done ? '☑' : '☐'} ${esc(task.title)}</span><span class="task-row-meta">${esc(task.due || '')} <span class="chip">${esc(task.status || '')}</span><button class="task-row-delete" type="button" data-task-id="${esc(task.id)}" aria-label="タスクを削除">×</button></span></div>`).join('') || '<p>未登録</p>'}</div>
       ${seriesSessions.length > 1 ? `<h4>同じシリーズ</h4><div class="series-list">${seriesSessions.map(item => `<button class="series-link ${item.id === session.id ? 'is-current' : ''}" type="button" data-series-id="${esc(item.id)}"><b>${esc(fmtDate(item.start))}</b>　${esc(item.scenario)}</button>`).join('')}</div>` : ''}
       <p>${esc(session.memo || '')}</p>
-      <div class="detail-actions"><button id="editBtn" class="hub-btn is-blue" type="button">編集</button><button id="deleteBtn" class="hub-btn danger" type="button">削除</button><button id="sendLogBtn" class="hub-btn is-note bridge-button" type="button">↗ 卓ログトラッカーへ送る</button></div>`;
-    $('editBtn').onclick = () => openDialog(session.id);
-    $('deleteBtn').onclick = deleteSelected;
+      <div class="detail-actions"><button id="sendLogBtn" class="hub-btn is-note bridge-button" type="button">↗ 卓ログトラッカーへ送る</button></div>`;
+    $('editDetailBtn').onclick = () => openDialog(session.id);
+    $('deleteDetailBtn').onclick = deleteSelected;
     $('sendLogBtn').onclick = () => sendToLogTracker(session);
     $('detailContent').querySelectorAll('.task-row-delete').forEach(button => button.onclick = () => deleteTask(session.id, button.dataset.taskId));
     $('detailContent').querySelectorAll('.series-link').forEach(button => button.onclick = () => {
@@ -1467,7 +1469,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.25', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.26', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓準備カレンダー v0.25 | TRPG WEBツール観測所</title>
+  <title>卓準備カレンダー v0.26 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.2" />
-  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.25" />
+  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.26" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body class="hub hub-unified-header" data-hub-tool="calendar">
@@ -22,7 +22,7 @@
           <a class="hub-portal" href="../../">← TRPG Webツール観測所</a>
           <div class="hub-title-row calendar-title-row">
             <span class="hub-icon" aria-hidden="true">▦</span>
-            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.25 <time datetime="2026-11-11">2026.11.11</time></p></div>
+            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.26 <time datetime="2026-11-12">2026.11.12</time></p></div>
           </div>
         </div>
         <nav class="hub-actions" aria-label="ツール操作">
@@ -86,7 +86,15 @@
           <section id="detailPane" class="detail-pane" aria-live="polite">
             <div class="detail-head">
               <h2>詳細</h2>
-              <button id="closeDetailBtn" type="button" aria-label="詳細を閉じる">×</button>
+              <div class="detail-head-actions">
+                <button id="editDetailBtn" class="detail-icon-button" type="button" aria-label="セッションを編集" title="編集" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>
+                </button>
+                <button id="deleteDetailBtn" class="detail-icon-button is-danger" type="button" aria-label="セッションを削除" title="削除" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="m6 7 1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg>
+                </button>
+                <button id="closeDetailBtn" class="detail-close-button" type="button" aria-label="詳細を閉じる" title="閉じる">×</button>
+              </div>
             </div>
             <div id="detailContent" class="detail-content empty"></div>
           </section>
@@ -198,6 +206,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
-  <script src="js/session_check_calendar.js?v=0.25"></script>
+  <script src="js/session_check_calendar.js?v=0.26"></script>
 </body>
 </html>

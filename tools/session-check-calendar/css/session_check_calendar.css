@@ -133,7 +133,7 @@
   pointer-events: auto;
   transform: translateX(0);
 }
-.calendar-header-tools .toolbar { flex-wrap: nowrap; gap: 4px; margin: 0; white-space: nowrap; }
+.calendar-header-tools .toolbar { height: 100%; flex-wrap: nowrap; justify-content: flex-end; gap: 4px; margin: 0; white-space: nowrap; }
 .calendar-header-tools .toolbar .hub-btn { min-height: 28px; padding: 4px 7px; font-size: 9.5px; }
 .data-tools-close-button {
   display: grid;
@@ -296,13 +296,21 @@
 .event.is-night { border-left-color: #465b91; background: #e2e7f3; color: #35466f; }
 .event.is-all-day { border-left-color: #4f7967; background: #dfede7; color: #315c4b; }
 .event.is-series {
-  box-shadow: inset 0 0 0 1px rgba(59, 85, 121, .24), 0 2px 5px rgba(46, 41, 34, .11);
+  border-left-width: 5px;
+  outline: 1px solid rgba(59, 85, 121, .38);
+  outline-offset: -1px;
+  background-image: linear-gradient(90deg, rgba(59, 85, 121, .12), transparent 72%);
+  box-shadow: 0 3px 8px rgba(46, 41, 34, .18);
   font-weight: 700;
 }
 [data-theme="night"] .event.is-daytime { border-left-color: #e2a65e; background: #3c3021; color: #f1c98f; }
 [data-theme="night"] .event.is-night { border-left-color: #9eb1df; background: #293044; color: #c3d1f2; }
 [data-theme="night"] .event.is-all-day { border-left-color: #8ec1aa; background: #24382f; color: #b6ddcb; }
-[data-theme="night"] .event.is-series { box-shadow: inset 0 0 0 1px rgba(157, 182, 216, .38), 0 2px 6px rgba(0, 0, 0, .28); }
+[data-theme="night"] .event.is-series {
+  outline-color: rgba(157, 182, 216, .6);
+  background-image: linear-gradient(90deg, rgba(157, 182, 216, .16), transparent 72%);
+  box-shadow: 0 3px 9px rgba(0, 0, 0, .34);
+}
 .event-time { display: block; opacity: 0.8; }
 .event-title { display: block; overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .time-legend { display: flex; justify-content: flex-end; gap: 7px; padding: 6px 12px; border-bottom: 1px solid var(--line); background: var(--sheet-sub); }
@@ -360,15 +368,25 @@
 .panel h2,
 .detail-head h2 { font-size: 17px; letter-spacing: 0.04em; }
 #weekRange { color: var(--muted); font-family: var(--font-body); font-size: 12px; font-weight: 700; }
-.detail-head button {
+.detail-head-actions { display: flex; align-items: center; gap: 5px; }
+.detail-head .detail-icon-button,
+.detail-head .detail-close-button {
+  display: grid;
   width: 30px;
   height: 30px;
+  place-items: center;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: var(--sheet-sub);
   color: var(--muted);
   cursor: pointer;
 }
+.detail-head .detail-icon-button:hover { background: var(--sys-coc6-bg); color: var(--pen-blue); }
+.detail-head .detail-icon-button.is-danger:hover { background: rgba(181, 82, 58, .09); color: var(--pen-red); }
+.detail-head .detail-close-button:hover { color: var(--ink); }
+.detail-head .detail-icon-button[hidden] { display: none; }
+.detail-icon-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .panel-note { margin: 10px 18px 0; color: var(--muted); font-size: 12px; }
 .stack-list,
 .task-list { display: grid; gap: 8px; padding: 12px 14px; }
@@ -482,8 +500,7 @@ button.mini-card:hover { border-color: var(--ink-soft); }
 .series-link:hover, .series-link.is-current { border-color: var(--pen-blue); color: var(--pen-blue); }
 .hub .link-pill { color: var(--ink-soft); }
 .link-pill span { color: var(--pen-blue); font-weight: 700; }
-.detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
-.bridge-button { grid-column: 1 / -1; }
+.detail-actions { display: grid; gap: 8px; margin-top: 16px; }
 .hub-btn.danger { border-color: rgba(181, 82, 58, 0.35); color: var(--pen-red); }
 
 /* ---------- ダイアログ ---------- */
