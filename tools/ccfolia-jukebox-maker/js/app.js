@@ -1740,6 +1740,8 @@
     if (!els.shelfTabs) return;
     const tabs = shelf.tabs;
     if (shelf.active >= tabs.length) shelf.active = Math.max(0, tabs.length - 1);
+    // 選んだ曲は開いているタブのもの。タブが替わったら（切り替え・削除・初期化）選択を外す
+    if (shelf.selTab !== tabs[shelf.active]) { shelf.selected.clear(); shelf.selTab = tabs[shelf.active]; }
     els.shelfTabs.innerHTML = '';
     els.shelfTabs.appendChild(h('div', { class: 'shelf-select-bar', id: 'shelfSelectBar' }));
     renderShelfSelectBar();
