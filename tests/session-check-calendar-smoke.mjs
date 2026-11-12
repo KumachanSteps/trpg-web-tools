@@ -45,7 +45,7 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.26') || !html.includes('session_check_calendar.js?v=0.26') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.27') || !html.includes('session_check_calendar.js?v=0.27') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -75,6 +75,7 @@ if (html.includes('id="collapseCalendarBtn"') || html.includes('id="collapseRigh
 
 for (const contract of [
   '.workspace-panel-body',
+  'body.hub .hub-main { padding-top: 14px; }',
   'overflow-y: auto',
   '.calendar-workspace-head',
   'justify-content: flex-end',
@@ -151,7 +152,7 @@ for (const contract of [
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.26'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.27'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
@@ -167,4 +168,4 @@ if (js.includes('id="editBtn"') || js.includes('id="deleteBtn"') || !html.includ
   throw new Error('Detail edit/delete actions should use SVG header icons');
 }
 
-console.log('session-check-calendar smoke passed: compact data tools, SVG detail actions, stronger series emphasis, and calendar controls are present');
+console.log('session-check-calendar smoke passed: tracker-aligned header, compact data tools, SVG detail actions, and calendar controls are present');
