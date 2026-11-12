@@ -8,12 +8,11 @@
   const TABS = [
     { id: 'intro', tracks: [
       ['CQyZ0x0GxMM', '物語の始まり（DOVA-SYNDROME）'],
+      ['k8wX3elrsbE', '不可解な事件簿的なBGM（DOVA-SYNDROME）', 2],
+      ['7VfFDhFGHFw', '不思議な森（DOVA-SYNDROME）', 2],
       ['6fwxJqoLJMk', 'Spectacular World'],
       ['Vh7_Tzav8Qs', 'BGM177_Fireworks'],
       ['lPYMqGa_xT4', '儚く透明な色（DOVA-SYNDROME）', 2],
-      ['6Y4c6hdvV4Y', 'Fairy Tale（OpenTracks）', 2],
-      ['k8wX3elrsbE', '不可解な事件簿的なBGM（DOVA-SYNDROME）', 2],
-      ['7VfFDhFGHFw', '不思議な森（DOVA-SYNDROME）', 2],
       ['4iRdNvIjG-o', 'the opening of a book（OpenTracks）', 3],
       ['W_yWwAaVlMg', '新しい朝（OpenTracks）', 3],
       ['ok2zfuNRHzE', '朝の訪れ（OpenTracks）', 3],
@@ -203,7 +202,15 @@
       ['3hKwejk03BA', 'すてきなシエスタ（OpenTracks）', 6],
       ['iSIS_T2VPMQ', 'いつもの居酒屋で（OpenTracks）', 6],
       ['fe4tkf9__Vo', 'Guitar Gentle（PeriTune）', 6],
-      ['ElB7i1nBZDQ', 'Retry（zukisuzuki）', 6]
+      ['ElB7i1nBZDQ', 'Retry（zukisuzuki）', 6],
+      ['hS6NUgyGFkg', 'ensolarado（DOVA-SYNDROME）', 7],
+      ['uSdtzlqVdVw', '青空空港（DOVA-SYNDROME）', 7],
+      ['kKg-aXVS1YI', 'おもちゃのダンス（OpenTracks）', 7],
+      ['Ul-ZPV_9jPw', 'カナリアスキップ（OpenTracks）', 7],
+      ['mv7O78oCJzM', 'ついてく、ついてく（OpenTracks）', 7],
+      ['N7f-gp9fTqc', 'Lovely Daily（OpenTracks）', 7],
+      ['4pqJA7aiVJc', 'パステルハウス（OpenTracks）', 7],
+      ['Xj2LwGR8cGI', 'なんということはない日常（OpenTracks）', 7]
     ] },
     { id: 'comic', tracks: [
       ['Nf_lqAWh-mE', 'コミカルな日常（DOVA-SYNDROME）'],
@@ -212,31 +219,18 @@
       ['DzY-e-cNFt0', '怪しい魔法薬（1時間）', 2],
       ['fDtc6_c9VgQ', '探偵事務所（DOVA-SYNDROME）', 2],
       ['JGzLOY7M0yE', '自宅にて（DOVA-SYNDROME）', 2],
-      ['hS6NUgyGFkg', 'ensolarado（DOVA-SYNDROME）', 2],
-      ['uSdtzlqVdVw', '青空空港（DOVA-SYNDROME）', 2],
       ['eo7w_Pnctvg', 'なんでしょう？（DOVA-SYNDROME）', 2],
-      ['f2yOXZA0dp0', '収穫祭（DOVA-SYNDROME）', 2],
-      ['KKzSCyV5H0E', 'ジョゼフは今日もご機嫌（DOVA-SYNDROME）', 2],
       ['0VN49iASgxk', 'ぐだぐだな感じ（OpenTracks）', 3],
       ['Csc8H5Gei5A', '大混乱!?（OpenTracks）', 3],
       ['QB5neGOqMXc', '漢祭り（OpenTracks）', 3],
-      ['DTJg5zIUbPo', 'ちんとんしゃんとんてん（OpenTracks）', 3],
       ['lJ7K3ZjAxCk', '爆走列車VINVIN号（OpenTracks）', 3],
-      ['kKg-aXVS1YI', 'おもちゃのダンス（OpenTracks）', 3],
       ['8hTkGwdU-6Y', '道化師の風船（OpenTracks）', 3],
       ['YvX9stltotY', 'ほんわかぷっぷー（OpenTracks）', 3],
       ['-Df1VcAMjtM', 'かけっこ競争（OpenTracks）', 3],
-      ['Ul-ZPV_9jPw', 'カナリアスキップ（OpenTracks）', 3],
       ['CPXoMRwbZxU', 'うららかな日の楽しいお散歩（OpenTracks）', 3],
       ['CwfnXmywNV0', 'お散歩日和（OpenTracks）', 3],
       ['ivKtNg3UVvM', '草泥棒（OpenTracks）', 3],
-      ['OnIv82UGqhQ', 'ダサいダンスミュージック（OpenTracks）', 3],
-      ['mv7O78oCJzM', 'ついてく、ついてく（OpenTracks）', 3],
-      ['4pqJA7aiVJc', 'パステルハウス（OpenTracks）', 3],
-      ['N7f-gp9fTqc', 'Lovely Daily（OpenTracks）', 3],
-      ['Xj2LwGR8cGI', 'なんということはない日常（OpenTracks）', 3],
-      ['b6GAQ7FwrMs', 'ベーコン・オン・ザ・ハムエッグ（OpenTracks）', 3],
-      ['vzmAgdly4Bc', '中華ラーメン（OpenTracks）', 3]
+      ['OnIv82UGqhQ', 'ダサいダンスミュージック（OpenTracks）', 3]
     ] },
     { id: 'moving', tracks: [
       ['dc0oRjmZtQs', 'BGM193_Glory'],
@@ -308,8 +302,8 @@
     ] },
     { id: 'unease', tracks: [
       ['Nfq8trmYyYo', '不穏（DOVA-SYNDROME）'],
-      ['IQcUAwpCfrY', '不穏の続き Op.61'],
       ['5Q1XCz5BLow', '不穏な探索'],
+      ['IQcUAwpCfrY', '不穏の続き Op.61'],
       ['Lq0-hoae0OU', '霧の思考'],
       ['biayjoKoIN8', 'Dark cave（DOVA-SYNDROME）', 2],
       ['_hrqKpdZw2Y', '不可解な謎（1時間・もみじばミュージック）', 2],
@@ -461,7 +455,8 @@
       ['d9zxwW9DjM4', '三味線独奏・間（OpenTracks）', 4],
       ['QeqsFZhWq9c', '本能寺炎舞 feat.津軽三味線（OpenTracks）', 4],
       ['gXL1S4xl_TU', '雪椿（MusMus）', 4],
-      ['wX9MuRyTahE', '祭りの夜（OpenTracks）', 4]
+      ['wX9MuRyTahE', '祭りの夜（OpenTracks）', 4],
+      ['DTJg5zIUbPo', 'ちんとんしゃんとんてん（OpenTracks）', 7]
     ] },
     { id: 'fantasy', since: 4, tracks: [
       ['b1S2WGS5LHs', 'World OP（PeriTune）', 4],
@@ -483,7 +478,8 @@
       ['7OsNHks3KLA', '魔法使いと振り子時計（OpenTracks）', 4],
       ['J-dWcPPS2FI', '魔法使いの街（OpenTracks）', 4],
       ['MnmDAO2kpT0', '古の世界地図（OpenTracks）', 4],
-      ['x-CEPYoX2zk', 'Peaceful Place（魔王魂）', 4]
+      ['x-CEPYoX2zk', 'Peaceful Place（魔王魂）', 4],
+      ['f2yOXZA0dp0', '収穫祭（DOVA-SYNDROME）', 7]
     ] },
     { id: 'celtic', since: 4, tracks: [
       ['OdImx0lVD8s', 'irish iris（OpenTracks）', 4],
@@ -494,18 +490,39 @@
       ['jZOHPeK8jDk', '爽やかなアイリッシュ的なBGM #2（OpenTracks）', 4],
       ['1n3K72j4tZ0', '爽やかなアイリッシュ的なBGM #3（OpenTracks）', 4],
       ['9ClwUllvdLc', 'アイリッシュ風の曲（OpenTracks）', 4],
-      ['Xix8Qejbnv0', 'BGM025 - 民族音楽1 - Irish（OpenTracks）', 4],
       ['DluKhKMGuoE', 'The Irish Washerwoman（OpenTracks）', 4],
       ['zitwWxs3RkE', 'Irish Talk（OpenTracks）', 4],
       ['9CZBjubS2jQ', 'Harvest（PeriTune）', 4],
-      ['jazsUbOkPZg', 'Soft Day2（PeriTune）', 4],
-      ['q2IEfQQwMPs', 'Soft Day（PeriTune）', 4],
       ['AP_d3z2B8XA', 'Harvest3（PeriTune）', 4],
+      ['rSVjfuOlPiY', 'Harvest4（PeriTune）', 4],
+      ['q2IEfQQwMPs', 'Soft Day（PeriTune）', 4],
+      ['jazsUbOkPZg', 'Soft Day2（PeriTune）', 4],
       ['fVm5ul0y0kk', 'Breeze2（PeriTune）', 4],
       ['iMkX3NxQYv0', 'Prairie（PeriTune）', 4],
       ['vTKxZKMKQ8k', 'Tavern（PeriTune）', 4],
-      ['rSVjfuOlPiY', 'Harvest4（PeriTune）', 4],
-      ['8w5krb_BWHE', 'Pastorale（PeriTune）', 4]
+      ['8w5krb_BWHE', 'Pastorale（PeriTune）', 4],
+      ['Xix8Qejbnv0', 'BGM025 - 民族音楽1 - Irish（OpenTracks）', 4],
+      ['oDKe9tL9NZY', 'Harvest2（PeriTune）', 7],
+      ['vwYP3opWhpw', 'Harvest5（PeriTune）', 7],
+      ['vsmQWHvmv4c', 'Harvest6（PeriTune）', 7],
+      ['mLBBkRA47_E', 'Harvest Festival（PeriTune）', 7],
+      ['RINkM_o-e4I', 'Breeze（PeriTune）', 7],
+      ['dega0GZx_fU', 'Breeze3（PeriTune）', 7],
+      ['jTqXAn5jFfo', 'Breeze4（PeriTune）', 7],
+      ['kf-3t4DC_IA', 'Prairie2（PeriTune）', 7],
+      ['u7dZzMA8cE4', 'Prairie3（PeriTune）', 7],
+      ['EOlXXpqlS5k', 'Prairie4（PeriTune）', 7],
+      ['XerGSyUXCUc', 'Prairie5（PeriTune）', 7],
+      ['TuCNhCOgLPU', 'Pastorale2（PeriTune）', 7],
+      ['bVkfQDpA6Tg', 'Pastorale3（PeriTune）', 7],
+      ['bBVBmWvwhi8', 'Poema（PeriTune）', 7],
+      ['ClSkj9028TM', 'Poema2（PeriTune）', 7],
+      ['eKebRViLLYw', 'Nostalgic2（PeriTune）', 7],
+      ['vQOBQz7z0p0', 'Nostalgic Jig（PeriTune）', 7],
+      ['FaU-muFm1K4', 'Bustling Village（PeriTune）', 7],
+      ['4qIjqhNigNI', 'Village Fete（PeriTune）', 7],
+      ['kg8yUzQ5jZc', 'Winds Embrace（PeriTune）', 7],
+      ['kDwZaYTKr9I', 'Whiteveil Streets（PeriTune）', 7]
     ] },
     { id: 'ethnic', since: 4, tracks: [
       ['yvBfWeEk2gA', 'Clay and Spice（PeriTune）', 4],
@@ -527,7 +544,8 @@
       ['imFy-VYkVSQ', 'スパニッシュな民族20（魔王魂）', 4],
       ['iDxwlZxqhVI', 'ラテンな民族19（魔王魂）', 4],
       ['gJM7KqPebk0', '砂漠を超えた先の国（OpenTracks）', 4],
-      ['9nqssnDnxWU', 'Phuniaya(フニェーヤ)（OpenTracks）', 4]
+      ['9nqssnDnxWU', 'Phuniaya(フニェーヤ)（OpenTracks）', 4],
+      ['vzmAgdly4Bc', '中華ラーメン（OpenTracks）', 7]
     ] },
     { id: 'adult', since: 4, tracks: [
       ['vn8mcjwUg4o', 'Smoky house（OpenTracks）', 4],
@@ -571,7 +589,9 @@
       ['lgW3U0WA3vg', '散りゆく葉よ（MusMus）', 4],
       ['2a1M4ORJY2k', '柔らかな嘘（MusMus）', 4],
       ['rBJ56gnGYB0', '気分上々ジャズ（MusMus）', 4],
-      ['S9OofzebHno', 'Muted Heart（MusMus）', 4]
+      ['S9OofzebHno', 'Muted Heart（MusMus）', 4],
+      ['KKzSCyV5H0E', 'ジョゼフは今日もご機嫌（DOVA-SYNDROME）', 7],
+      ['b6GAQ7FwrMs', 'ベーコン・オン・ザ・ハムエッグ（OpenTracks）', 7]
     ] },
     { id: 'piano', since: 4, tracks: [
       ['PH_-nQbGmxA', 'Piano Melancholy2（PeriTune）', 4],
@@ -644,13 +664,19 @@
   // タブは1列に順番どおり並べる（場面 → 雰囲気 → 舞台 → 音楽のジャンル）。版6でこの並びにした（保存済みの棚も1回だけ並べ替える）。
   // 版6で「ハウス」を大人っぽいクラブ・ラウンジの「アダルト」（id: adult）にした。保存済みの house タブは adult に読み替え、DROPPED の曲を外す。
   // 初期の曲を足したら上げる。曲の3つ目の数字は、その曲を足したときの版。タブの since は、そのタブを足したときの版
-  const VERSION = 6;
+  const VERSION = 7;
 
   // YouTube で埋め込み再生できなくなった初期の曲と、その代わり（保存済みの棚でも差し替える）
   const REPLACED = {
     '0mbmvlg8iZU': ['6Y4c6hdvV4Y', 'Fairy Tale（OpenTracks）'],
     'A_Tlq2opviQ': ['yeyfRn6zc8Q', 'Thief\'s time（音獅子）'],
     'ISHbwrrNTeM': ['_v9eOCZsKz4', '決戦（OpenTracks）']
+  };
+
+  // 版7で TK さんの棚に合わせて初期の並びを変えた。動かした曲は、保存済みの棚では元のタブから外して（メモを書いた曲は残す）新しいタブに足し直す
+  const MOVED_FROM = {
+    comic: ['hS6NUgyGFkg', 'uSdtzlqVdVw', 'kKg-aXVS1YI', 'Ul-ZPV_9jPw', 'mv7O78oCJzM', 'N7f-gp9fTqc', '4pqJA7aiVJc', 'Xj2LwGR8cGI', 'DTJg5zIUbPo', 'f2yOXZA0dp0', 'vzmAgdly4Bc', 'KKzSCyV5H0E', 'b6GAQ7FwrMs'],
+    intro: ['6Y4c6hdvV4Y']
   };
 
   // 版6で「アダルト」に合わないので外した、元「ハウス」の曲（メモを書いた曲は残す）
@@ -662,6 +688,8 @@
     ORDER_SINCE: 6,
     RENAMED: { house: 'adult' },
     DROPPED,
+    MOVED_FROM,
+    MOVED_SINCE: 7,
     order: TABS.map(tab => tab.id),
     // 毎回まっさらなコピーを返す（画面側で書き換えるため）
     defaults() {
