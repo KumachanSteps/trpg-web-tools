@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.47';
+  const VERSION = '0.48';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1654,7 +1654,7 @@
 
   /* ================= レコード棚（フリーBGMの棚） ================= */
 
-  const shelf = { tabs: [], active: 0, editing: false, armed: '' };
+  const shelf = { tabs: [], active: 0, editing: false, armed: '', selecting: false, selected: new Set() };
   const shelfSrc = yt => `https://youtu.be/${yt}`;
 
   function loadShelf() {
@@ -1694,6 +1694,17 @@
           tab.tracks = tab.tracks.filter(tr => tr.memo || !dropped.includes(tr.yt));
         });
       }
+      // 版7で初期の並びを変えた。動かした曲は元のタブから外し（メモを書いた曲・行き先のタブがない曲は残す）、下で新しいタブに足す
+      if (from < (JukeboxShelf.MOVED_SINCE || Infinity)) {
+        const moved = JukeboxShelf.MOVED_FROM || {};
+        const dest = {};
+        JukeboxShelf.additions(from).forEach(add => add.tracks.forEach(tr => { dest[tr.yt] = add.id; }));
+        shelf.tabs.forEach(tab => {
+          const ids = moved[tab.id];
+          if (!ids) return;
+          tab.tracks = tab.tracks.filter(tr => tr.memo || !ids.includes(tr.yt) || (dest[tr.yt] && !shelf.tabs.some(tb => tb.id === dest[tr.yt])));
+        });
+      }
       JukeboxShelf.additions(from).forEach(add => {
         let tab = shelf.tabs.find(tb => tb.id === add.id);
         // 前に保存したあとで足したタブは、棚の後ろに足す（それより前からあるタブを消していたら戻さない）
@@ -1730,16 +1741,19 @@
     const tabs = shelf.tabs;
     if (shelf.active >= tabs.length) shelf.active = Math.max(0, tabs.length - 1);
     els.shelfTabs.innerHTML = '';
+    els.shelfTabs.appendChild(h('div', { class: 'shelf-select-bar', id: 'shelfSelectBar' }));
+    renderShelfSelectBar();
     tabs.forEach((tab, i) => {
       const on = i === shelf.active;
       els.shelfTabs.appendChild(h('button', {
         type: 'button', role: 'tab', class: `shelf-tab${on ? ' is-active' : ''}`,
         'aria-selected': String(on), tabindex: on ? '0' : '-1',
-        onclick: () => { if (shelf.active === i) return; shelf.active = i; shelf.armed = ''; saveShelf(); renderShelf(true); },
+        onclick: () => { if (shelf.active === i) return; shelf.active = i; shelf.armed = ''; shelf.selected.clear(); saveShelf(); renderShelf(true); },
         onkeydown: e => {
           if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
           e.preventDefault();
           shelf.active = (i + (e.key === 'ArrowLeft' ? -1 : 1) + tabs.length) % tabs.length;
+          shelf.selected.clear();
           saveShelf();
           renderShelf(true);
           const next = els.shelfTabs.querySelector('.shelf-tab.is-active');
@@ -1757,6 +1771,78 @@
     renderShelfList(animate);
     const active = els.shelfTabs.querySelector('.shelf-tab.is-active');
     if (active && active.scrollIntoView) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  // 「複数を選択」：オンのあいだは曲の左にチェックを出し、選んだ曲をまとめて別のタブへ移したり棚から外したりできる
+  function renderShelfSelectBar() {
+    const bar = document.getElementById('shelfSelectBar');
+    if (!bar) return;
+    const tab = shelf.tabs[shelf.active];
+    const tracks = tab ? tab.tracks : [];
+    const picked = tracks.filter(tr => shelf.selected.has(tr.yt));
+    bar.innerHTML = '';
+    bar.classList.toggle('is-on', shelf.selecting);
+    bar.appendChild(h('label', { class: 'shelf-select-toggle' },
+      h('input', {
+        type: 'checkbox', checked: shelf.selecting || undefined, disabled: !tab || undefined,
+        onchange: e => { shelf.selecting = e.target.checked; shelf.selected.clear(); shelf.armed = ''; renderShelf(); }
+      }),
+      h('span', {}, t('shelf.selectMany'))));
+    if (!shelf.selecting || !tab) return;
+    const all = tracks.length > 0 && picked.length === tracks.length;
+    const others = shelf.tabs.map((x, i) => ({ x, i })).filter(o => o.i !== shelf.active);
+    const armed = shelf.armed === 'bulk';
+    bar.append(
+      h('span', { class: 'shelf-select-count', 'aria-live': 'polite' }, t('shelf.selectedCount', { n: picked.length })),
+      h('button', {
+        type: 'button', class: 'text-button', disabled: !tracks.length || undefined,
+        onclick: () => { if (all) shelf.selected.clear(); else tracks.forEach(tr => shelf.selected.add(tr.yt)); shelf.armed = ''; renderShelfList(); renderShelfSelectBar(); }
+      }, t(all ? 'shelf.selectNone' : 'shelf.selectAll')),
+      h('select', {
+        class: 'shelf-to', 'aria-label': t('shelf.moveSelected'), disabled: !picked.length || !others.length || undefined,
+        onchange: e => { const i = Number(e.target.value); e.target.value = ''; if (Number.isInteger(i) && i >= 0) moveSelectedTracks(i); }
+      },
+      h('option', { value: '' }, t('shelf.moveSelected')),
+      others.map(o => h('option', { value: String(o.i) }, shelfTabName(o.x)))),
+      h('button', {
+        type: 'button', class: `ghost-button small danger${armed ? ' is-armed' : ''}`, disabled: !picked.length || undefined,
+        onclick: () => {
+          if (!armed) { shelf.armed = 'bulk'; renderShelfSelectBar(); return; }
+          removeSelectedTracks();
+        }
+      }, t(armed ? 'shelf.removeSelectedSure' : 'shelf.removeSelected'))
+    );
+  }
+
+  function moveSelectedTracks(tabIndex) {
+    const src = shelf.tabs[shelf.active];
+    const dest = shelf.tabs[tabIndex];
+    if (!src || !dest || dest === src) return;
+    const picked = src.tracks.filter(tr => shelf.selected.has(tr.yt));
+    const moving = picked.filter(tr => !dest.tracks.some(x => x.yt === tr.yt));
+    const skip = picked.length - moving.length;
+    dest.tracks.push(...moving);
+    src.tracks = src.tracks.filter(tr => !moving.includes(tr));
+    moving.forEach(tr => shelf.selected.delete(tr.yt));
+    shelf.armed = '';
+    saveShelf();
+    renderShelf();
+    const name = shelfTabName(dest);
+    if (!moving.length) toast(t('shelf.alreadyIn', { tab: name }));
+    else toast(skip ? t('shelf.movedSkipped', { n: moving.length, tab: name, skip }) : t('shelf.movedMany', { n: moving.length, tab: name }));
+  }
+
+  function removeSelectedTracks() {
+    const tab = shelf.tabs[shelf.active];
+    if (!tab) return;
+    const gone = tab.tracks.filter(tr => shelf.selected.has(tr.yt));
+    if (gone.some(tr => bgm.src === shelfSrc(tr.yt)) && bgm.owner.startsWith('shelf:')) stopBgm();
+    tab.tracks = tab.tracks.filter(tr => !shelf.selected.has(tr.yt));
+    shelf.selected.clear();
+    shelf.armed = '';
+    saveShelf();
+    renderShelf();
+    if (gone.length) toast(t('shelf.removedMany', { n: gone.length }));
   }
 
   function focusShelfName() {
@@ -1830,8 +1916,18 @@
       const src = shelfSrc(tr.yt);
       const title = trackTitle(tr);
       const records = app.settings ? app.settings.disks.slice(0, app.settings.count) : [];
-      els.shelfList.appendChild(h('li', { class: 'shelf-track', dataset: { yt: tr.yt, index: String(ti) }, style: { '--i': String(ti) } },
-        h('button', {
+      const picked = shelf.selected.has(tr.yt);
+      els.shelfList.appendChild(h('li', { class: `shelf-track${picked ? ' is-picked' : ''}`, dataset: { yt: tr.yt, index: String(ti) }, style: { '--i': String(ti) } },
+        shelf.selecting ? h('label', { class: 'shelf-pick', title: title },
+          h('input', {
+            type: 'checkbox', checked: picked || undefined, 'aria-label': title,
+            onchange: e => {
+              if (e.target.checked) shelf.selected.add(tr.yt); else shelf.selected.delete(tr.yt);
+              e.target.closest('.shelf-track').classList.toggle('is-picked', e.target.checked);
+              shelf.armed = '';
+              renderShelfSelectBar();
+            }
+          })) : h('button', {
           type: 'button', class: 'shelf-grip', title: t('shelf.drag'), 'aria-label': `${t('shelf.drag')}: ${title}`,
           onpointerdown: e => startTrackDrag(e, ti),
           onkeydown: e => {

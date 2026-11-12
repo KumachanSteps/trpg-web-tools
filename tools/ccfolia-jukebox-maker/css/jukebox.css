@@ -393,6 +393,15 @@ button.marker.is-selected { outline: 2px solid var(--yellow); outline-offset: 1p
 
 /* レコード棚 */
 .shelf-tabs { position: sticky; top: 0; z-index: 40; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 -16px 12px; padding: 8px 16px 10px; background: var(--panel); box-shadow: 0 1px 0 var(--hair); }
+.shelf-select-bar { display: flex; flex: 0 0 100%; flex-wrap: wrap; align-items: center; gap: 6px 12px; min-height: 28px; }
+.shelf-select-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.78rem; font-weight: 700; cursor: pointer; user-select: none; }
+.shelf-select-toggle input, .shelf-pick input { width: 16px; height: 16px; margin: 0; accent-color: var(--yellow); cursor: pointer; }
+.shelf-select-bar.is-on .shelf-select-toggle { color: var(--yellow); }
+.shelf-select-count { color: var(--ink); font-size: 0.78rem; font-weight: 700; }
+.shelf-select-bar .shelf-to { max-width: 160px; }
+.shelf-select-bar .ghost-button.small { min-height: 28px; padding: 3px 10px; font-size: 0.74rem; }
+.shelf-pick { display: grid; place-items: center; width: 18px; height: 40px; cursor: pointer; }
+.shelf-track.is-picked { border-color: var(--line-strong); background: var(--yellow-soft); }
 .shelf-tab { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--hair); border-radius: 999px; background: transparent; color: var(--muted); font-size: 0.8rem; font-weight: 800; white-space: nowrap; cursor: pointer; transition: background 0.18s, color 0.18s, border-color 0.18s; }
 .shelf-tab:hover { border-color: var(--line-strong); color: var(--ink); }
 .shelf-tab.is-active { border-color: var(--yellow); background: var(--yellow); color: var(--yellow-ink); }
