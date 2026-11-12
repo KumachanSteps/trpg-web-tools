@@ -43,7 +43,7 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.24') || !html.includes('session_check_calendar.js?v=0.24') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.25') || !html.includes('session_check_calendar.js?v=0.25') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -92,6 +92,8 @@ for (const contract of [
   '.event.is-daytime',
   '.event.is-night',
   '.event.is-all-day',
+  '.event.is-series',
+  '.detail-row-status',
   '.task-delete',
 ]) {
   if (!css.includes(contract)) throw new Error(`Missing independent-panel layout contract: ${contract}`);
@@ -130,6 +132,7 @@ for (const contract of [
   "renderSelectionTarget",
   "seriesBaseName",
   "applyAutoSeriesGrouping",
+  "syncSeriesSharedFields",
   "seriesAuto",
   "DEFAULT_CALENDAR_SETTINGS",
   "weekStartsOn",
@@ -144,8 +147,16 @@ for (const contract of [
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.24'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.25'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
-console.log('session-check-calendar smoke passed: position-stable data tools, inset select arrows, week starts, time bands, and multi-calendar sync are present');
+if (!js.includes("'is-series'") || !js.includes('detail-row detail-row-status')) {
+  throw new Error('Series emphasis or status alignment contract is missing');
+}
+
+if (js.includes('<span>形式</span>') || js.includes('形式未設定')) {
+  throw new Error('Legacy format display should be removed from calendar cards');
+}
+
+console.log('session-check-calendar smoke passed: normalized series, shared participants, series emphasis, and calendar controls are present');
