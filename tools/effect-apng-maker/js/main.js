@@ -600,15 +600,15 @@ function lighterStep() {
 /* ---------- 書き出し ---------- */
 
 /** 書き出しの1コマを RGBA で返す関数を作る（背景の焼き込みもここで） */
-async function frameRenderer(a, s, w, h) {
+async function frameRenderer(a, s, w, h, out = app.output) {
   const inst = await new EffectInstance(a, s.params, {
-    w, h, duration: s.duration, fps: app.output.fps, play: renderPlay(a, s), direction: s.direction, seed: s.seed, opacity: s.opacity
+    w, h, duration: s.duration, fps: out.fps, play: renderPlay(a, s), direction: s.direction, seed: s.seed, opacity: s.opacity
   }, id => app.byId.get(id)).init();
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  const bake = app.output.bake;
+  const bake = out.bake;
   return time => {
     ctx.clearRect(0, 0, w, h);
     if (bake !== 'none') stage.drawBackground(ctx, w, h);
@@ -628,21 +628,23 @@ async function exportFile(format) {
   const webp = format === 'webp';
   if (!C || !C.isCompressionSupported()) { toast(m.unsupported, 'error'); return; }
   if (webp && !(C.isWebpSupported && C.isWebpSupported())) { toast(m.webpUnsupported, 'error'); return; }
-  const s = settings(a);
-  const [w, h] = SIZES[app.output.size];
+  // 書き出し中に設定が変わっても混ざらないよう、始めた時点の設定を写しておく
+  const s = structuredClone(settings(a));
+  const out = { ...app.output };
+  const [w, h] = SIZES[out.size];
   const play = renderPlay(a, s);
-  const times = frameTimes(s.duration, app.output.fps, play);
+  const times = frameTimes(s.duration, out.fps, play);
   const n = times.length;
   const job = { cancelled: false };
   app.exporting = job;
   setBusy(true);
   try {
-    const frameAt = await frameRenderer(a, s, w, h);
-    const usePalette = !webp && app.output.colors > 0;
+    const frameAt = await frameRenderer(a, s, w, h, out);
+    const usePalette = !webp && out.colors > 0;
     let quantizer = null;
     const share = usePalette ? 0.4 : 0;
     if (usePalette) {
-      quantizer = new C.PaletteQuantizer(app.output.colors);
+      quantizer = new C.PaletteQuantizer(out.colors);
       const an = new C.FrameAnalyzer(w, h, { quantizer });
       for (let i = 0; i < n; i++) {
         if (job.cancelled) throw Object.assign(new Error('cancel'), { code: 'CANCELLED' });
@@ -653,17 +655,17 @@ async function exportFile(format) {
     }
     const loops = loopsFor(s);
     const enc = webp
-      ? new C.WebpEncoder({ width: w, height: h, fps: app.output.fps, loops, quality: WEBP_QUALITY })
-      : new C.ApngEncoder({ width: w, height: h, fps: app.output.fps, loops, quantizer });
+      ? new C.WebpEncoder({ width: w, height: h, fps: out.fps, loops, quality: WEBP_QUALITY })
+      : new C.ApngEncoder({ width: w, height: h, fps: out.fps, loops, quantizer });
     for (let i = 0; i < n; i++) {
       if (job.cancelled) throw Object.assign(new Error('cancel'), { code: 'CANCELLED' });
       await enc.addFrame(frameAt(times[i]));
       if (i % 2 === 0 || i === n - 1) { setProgress(share + (i + 1) / n * (1 - share), m.exporting(i + 1, n)); await yieldToUi(); }
     }
     const blob = await enc.finish();
-    showResult(blob, a, s, w, h, n, loops, webp);
+    showResult(blob, a, s, w, h, n, loops, webp, out);
     toast(m.done, 'success');
-    track(webp ? 'export_webp' : 'export_apng', { asset_id: a.id, size_kb: Math.round(blob.size / 1024), frames: n, fps: app.output.fps, colors: app.output.colors, bake: app.output.bake });
+    track(webp ? 'export_webp' : 'export_apng', { asset_id: a.id, size_kb: Math.round(blob.size / 1024), frames: n, fps: out.fps, colors: out.colors, bake: out.bake });
   } catch (error) {
     if (error && error.code === 'CANCELLED') toast(m.cancelled);
     else { console.error(error); toast(m.failed, 'error'); }
@@ -673,16 +675,16 @@ async function exportFile(format) {
   }
 }
 
-function fileName(a, s, webp) {
+function fileName(a, s, webp, out = app.output) {
   const parts = [pick(a.name).replace(/[\\/:*?"<>|\s]+/g, '_')];
   if (a.type === 'transition') parts.push(s.direction);
   if (s.play === 'loop') parts.push(t().fileSuffixLoop.replace(/^_/, ''));
   if (s.play === 'count') parts.push(`x${loopsFor(s)}`);
-  if (app.output.bake !== 'none') parts.push('bg');
+  if (out.bake !== 'none') parts.push('bg');
   return `${parts.join('_')}.${webp ? 'webp' : 'png'}`;
 }
 
-function showResult(blob, a, s, w, h, n, loops, webp) {
+function showResult(blob, a, s, w, h, n, loops, webp, out) {
   const m = t();
   if (app.resultUrl) URL.revokeObjectURL(app.resultUrl);
   app.resultUrl = URL.createObjectURL(blob);
@@ -700,7 +702,7 @@ function showResult(blob, a, s, w, h, n, loops, webp) {
     els.download.setAttribute('aria-disabled', 'true');
   } else {
     els.download.href = app.resultUrl;
-    els.download.download = fileName(a, s, webp);
+    els.download.download = fileName(a, s, webp, out);
     els.download.removeAttribute('aria-disabled');
   }
   const use = a.type === 'transition' ? 'transition' : (a.use || []).includes('foreground') ? 'foreground' : 'overlay';
