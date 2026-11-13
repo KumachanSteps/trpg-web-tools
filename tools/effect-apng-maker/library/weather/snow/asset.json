@@ -1,0 +1,127 @@
+{
+  "id": "weather.snow",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 5,
+  "category": "weather",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "雪",
+    "en": "Snow",
+    "ko": "눈"
+  },
+  "desc": {
+    "ja": "粉雪かぼたん雪。風で流れる。",
+    "en": "Powder or large flakes, drifting with the wind.",
+    "ko": "가루눈 또는 함박눈. 바람에 흩날린다."
+  },
+  "tags": [
+    "雪",
+    "snow",
+    "눈",
+    "粉雪",
+    "ぼたん雪"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 6,
+    "min": 2,
+    "max": 10
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#ffffff",
+      "swatches": [
+        "#ffffff",
+        "#dfeeff"
+      ]
+    },
+    {
+      "key": "flake",
+      "type": "select",
+      "label": {
+        "ja": "雪の種類",
+        "en": "Flakes",
+        "ko": "눈 종류"
+      },
+      "default": "powder",
+      "options": [
+        {
+          "value": "powder",
+          "label": {
+            "ja": "粉雪",
+            "en": "Powder",
+            "ko": "가루눈"
+          }
+        },
+        {
+          "value": "large",
+          "label": {
+            "ja": "ぼたん雪",
+            "en": "Large flakes",
+            "ko": "함박눈"
+          }
+        }
+      ]
+    },
+    {
+      "key": "amount",
+      "type": "range",
+      "label": {
+        "ja": "量",
+        "en": "Amount",
+        "ko": "양"
+      },
+      "min": 0.2,
+      "max": 2.5,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "key": "wind",
+      "type": "range",
+      "label": {
+        "ja": "風",
+        "en": "Wind",
+        "ko": "바람"
+      },
+      "min": -1,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.25
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "id": "horror.flicker",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 4,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "蛍光灯のちらつき",
+    "en": "Flickering light",
+    "ko": "형광등 깜빡임"
+  },
+  "desc": {
+    "ja": "切れかけの明かりのように、ときどき暗く落ちる。",
+    "en": "Dims now and then like a dying light.",
+    "ko": "꺼져 가는 불빛처럼 가끔 어두워진다."
+  },
+  "tags": [
+    "ちらつき",
+    "蛍光灯",
+    "flicker",
+    "깜빡임"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 3,
+    "min": 1,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#0b1a10"
+      ]
+    },
+    {
+      "key": "rate",
+      "type": "range",
+      "label": {
+        "ja": "ちらつく頻度",
+        "en": "How often",
+        "ko": "빈도"
+      },
+      "min": 0.1,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.45
+    },
+    {
+      "key": "darkness",
+      "type": "range",
+      "label": {
+        "ja": "暗さ",
+        "en": "Darkness",
+        "ko": "어둠"
+      },
+      "min": 0.3,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.85
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 32
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

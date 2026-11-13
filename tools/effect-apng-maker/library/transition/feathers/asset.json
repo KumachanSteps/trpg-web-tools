@@ -1,0 +1,148 @@
+{
+  "id": "transition.feathers",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 6,
+  "category": "transition",
+  "kind": "procedural",
+  "type": "transition",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "羽根シルエット",
+    "en": "Feather silhouette",
+    "ko": "깃털 실루엣"
+  },
+  "desc": {
+    "ja": "羽根が舞い落ちて画面を覆う。",
+    "en": "Feathers drift down until they cover the screen.",
+    "ko": "깃털이 흩날려 내려와 화면을 덮는다."
+  },
+  "tags": [
+    "羽根",
+    "feather",
+    "깃털",
+    "天使"
+  ],
+  "use": [
+    "transition"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 1.6,
+    "min": 0.6,
+    "max": 5
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "覆う色",
+        "en": "Cover colour",
+        "ko": "덮는 색"
+      },
+      "default": "#ffffff",
+      "swatches": [
+        "#ffffff",
+        "#000000",
+        "#d9c7a1",
+        "#2b1d3a"
+      ]
+    },
+    {
+      "key": "from",
+      "type": "select",
+      "label": {
+        "ja": "始まる側",
+        "en": "Starts from",
+        "ko": "시작 방향"
+      },
+      "default": "top",
+      "options": [
+        {
+          "value": "left",
+          "label": {
+            "ja": "左",
+            "en": "Left",
+            "ko": "왼쪽"
+          }
+        },
+        {
+          "value": "right",
+          "label": {
+            "ja": "右",
+            "en": "Right",
+            "ko": "오른쪽"
+          }
+        },
+        {
+          "value": "top",
+          "label": {
+            "ja": "上",
+            "en": "Top",
+            "ko": "위"
+          }
+        },
+        {
+          "value": "bottom",
+          "label": {
+            "ja": "下",
+            "en": "Bottom",
+            "ko": "아래"
+          }
+        },
+        {
+          "value": "center",
+          "label": {
+            "ja": "中央",
+            "en": "Centre",
+            "ko": "중앙"
+          }
+        }
+      ]
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기"
+      },
+      "min": 0.06,
+      "max": 0.25,
+      "step": 0.01,
+      "default": 0.13
+    },
+    {
+      "key": "fall",
+      "type": "toggle",
+      "label": {
+        "ja": "落ちながら",
+        "en": "Falling",
+        "ko": "떨어지며"
+      },
+      "default": true
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

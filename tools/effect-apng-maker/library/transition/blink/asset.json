@@ -1,0 +1,88 @@
+{
+  "id": "transition.blink",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 7,
+  "category": "transition",
+  "kind": "procedural",
+  "type": "transition",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "まばたき",
+    "en": "Eye blink",
+    "ko": "눈 깜빡임"
+  },
+  "desc": {
+    "ja": "まぶたが閉じるように暗転する。気絶・目覚めの場面に。",
+    "en": "Fades like eyelids closing. For fainting and waking.",
+    "ko": "눈꺼풀이 감기듯 암전된다. 기절·깨어나는 장면에."
+  },
+  "tags": [
+    "まばたき",
+    "目",
+    "気絶",
+    "blink",
+    "eye",
+    "눈"
+  ],
+  "use": [
+    "transition"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 1.4,
+    "min": 0.5,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "覆う色",
+        "en": "Cover colour",
+        "ko": "덮는 색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#ffffff",
+        "#5a0010",
+        "#0d1b2f"
+      ]
+    },
+    {
+      "key": "soft",
+      "type": "range",
+      "label": {
+        "ja": "ぼかし",
+        "en": "Softness",
+        "ko": "흐림"
+      },
+      "min": 0.1,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.5
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

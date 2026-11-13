@@ -1,0 +1,123 @@
+{
+  "id": "weather.fog",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 6,
+  "category": "weather",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "霧",
+    "en": "Fog",
+    "ko": "안개"
+  },
+  "desc": {
+    "ja": "濃霧・薄い霧・足元だけの霧。",
+    "en": "Dense, thin, or ground-only fog.",
+    "ko": "짙은 안개·옅은 안개·발밑 안개."
+  },
+  "tags": [
+    "霧",
+    "もや",
+    "fog",
+    "mist",
+    "안개"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#dde4ec",
+      "swatches": [
+        "#dde4ec",
+        "#ffffff",
+        "#8a93a3",
+        "#b9d8c4"
+      ]
+    },
+    {
+      "key": "mode",
+      "type": "select",
+      "label": {
+        "ja": "種類",
+        "en": "Type",
+        "ko": "종류"
+      },
+      "default": "thin",
+      "options": [
+        {
+          "value": "thin",
+          "label": {
+            "ja": "薄い霧",
+            "en": "Thin",
+            "ko": "옅은 안개"
+          }
+        },
+        {
+          "value": "dense",
+          "label": {
+            "ja": "濃霧",
+            "en": "Dense",
+            "ko": "짙은 안개"
+          }
+        },
+        {
+          "value": "ground",
+          "label": {
+            "ja": "足元だけ",
+            "en": "Ground",
+            "ko": "발밑만"
+          }
+        }
+      ]
+    },
+    {
+      "key": "amount",
+      "type": "range",
+      "label": {
+        "ja": "量",
+        "en": "Amount",
+        "ko": "양"
+      },
+      "min": 0.3,
+      "max": 1.5,
+      "step": 0.05,
+      "default": 1
+    }
+  ],
+  "budget": {
+    "size": [
+      640,
+      360
+    ],
+    "fps": 8,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

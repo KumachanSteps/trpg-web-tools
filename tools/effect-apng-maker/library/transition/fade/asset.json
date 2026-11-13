@@ -1,0 +1,102 @@
+{
+  "id": "transition.fade",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 1,
+  "category": "transition",
+  "kind": "procedural",
+  "type": "transition",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "フェード",
+    "en": "Fade",
+    "ko": "페이드"
+  },
+  "desc": {
+    "ja": "画面が単色に溶けていく、いちばん基本の転換。",
+    "en": "The basic transition: the screen melts into one colour.",
+    "ko": "화면이 단색으로 녹아드는 가장 기본적인 전환."
+  },
+  "tags": [
+    "フェード",
+    "fade",
+    "페이드",
+    "暗転",
+    "fade out"
+  ],
+  "use": [
+    "transition"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 1.2,
+    "min": 0.4,
+    "max": 5
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "覆う色",
+        "en": "Cover colour",
+        "ko": "덮는 색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#ffffff",
+        "#5a0010",
+        "#0d1b2f"
+      ]
+    },
+    {
+      "key": "curve",
+      "type": "select",
+      "label": {
+        "ja": "動き方",
+        "en": "Curve",
+        "ko": "움직임"
+      },
+      "default": "smooth",
+      "options": [
+        {
+          "value": "smooth",
+          "label": {
+            "ja": "なめらか",
+            "en": "Smooth",
+            "ko": "부드럽게"
+          }
+        },
+        {
+          "value": "linear",
+          "label": {
+            "ja": "一定",
+            "en": "Linear",
+            "ko": "일정하게"
+          }
+        }
+      ]
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

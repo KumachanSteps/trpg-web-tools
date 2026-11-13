@@ -1,0 +1,127 @@
+{
+  "id": "element.wind",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 2,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "風の筋",
+    "en": "Wind streaks",
+    "ko": "바람 줄기"
+  },
+  "desc": {
+    "ja": "白い筋が横切って、強い風を見せる。",
+    "en": "White streaks cut across to show strong wind.",
+    "ko": "흰 줄기가 가로질러 강한 바람을 보여준다."
+  },
+  "tags": [
+    "風",
+    "wind",
+    "바람",
+    "暴風"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#ffffff",
+      "swatches": [
+        "#ffffff",
+        "#d6ecff",
+        "#c9b38a"
+      ]
+    },
+    {
+      "key": "dir",
+      "type": "select",
+      "label": {
+        "ja": "向き",
+        "en": "Direction",
+        "ko": "방향"
+      },
+      "default": "right",
+      "options": [
+        {
+          "value": "right",
+          "label": {
+            "ja": "右へ",
+            "en": "To the right",
+            "ko": "오른쪽으로"
+          }
+        },
+        {
+          "value": "left",
+          "label": {
+            "ja": "左へ",
+            "en": "To the left",
+            "ko": "왼쪽으로"
+          }
+        }
+      ]
+    },
+    {
+      "key": "strength",
+      "type": "range",
+      "label": {
+        "ja": "強さ",
+        "en": "Strength",
+        "ko": "세기"
+      },
+      "min": 0.3,
+      "max": 2,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "key": "angle",
+      "type": "range",
+      "label": {
+        "ja": "角度",
+        "en": "Angle",
+        "ko": "각도"
+      },
+      "min": -25,
+      "max": 25,
+      "step": 1,
+      "default": 4
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "id": "transition.wipe",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 2,
+  "category": "transition",
+  "kind": "procedural",
+  "type": "transition",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "ワイプ",
+    "en": "Wipe",
+    "ko": "와이프"
+  },
+  "desc": {
+    "ja": "画面の端から幕を引くように覆う。",
+    "en": "Covers the screen from one edge like a drawn sheet.",
+    "ko": "화면 끝에서부터 막을 치듯 덮는다."
+  },
+  "tags": [
+    "ワイプ",
+    "wipe",
+    "와이프"
+  ],
+  "use": [
+    "transition"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 1.0,
+    "min": 0.4,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "覆う色",
+        "en": "Cover colour",
+        "ko": "덮는 색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#ffffff",
+        "#5a0010",
+        "#0d1b2f"
+      ]
+    },
+    {
+      "key": "dir",
+      "type": "select",
+      "label": {
+        "ja": "始まる側",
+        "en": "Starts from",
+        "ko": "시작 방향"
+      },
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": {
+            "ja": "左",
+            "en": "Left",
+            "ko": "왼쪽"
+          }
+        },
+        {
+          "value": "right",
+          "label": {
+            "ja": "右",
+            "en": "Right",
+            "ko": "오른쪽"
+          }
+        },
+        {
+          "value": "top",
+          "label": {
+            "ja": "上",
+            "en": "Top",
+            "ko": "위"
+          }
+        },
+        {
+          "value": "bottom",
+          "label": {
+            "ja": "下",
+            "en": "Bottom",
+            "ko": "아래"
+          }
+        },
+        {
+          "value": "diagonal",
+          "label": {
+            "ja": "ななめ",
+            "en": "Diagonal",
+            "ko": "대각선"
+          }
+        }
+      ]
+    },
+    {
+      "key": "soft",
+      "type": "range",
+      "label": {
+        "ja": "境目のぼかし",
+        "en": "Edge softness",
+        "ko": "경계 흐림"
+      },
+      "min": 0,
+      "max": 0.4,
+      "step": 0.01,
+      "default": 0.12
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}
