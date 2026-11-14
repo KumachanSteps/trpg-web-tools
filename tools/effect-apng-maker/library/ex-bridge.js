@@ -59,8 +59,9 @@ function ghost(s) {
  *   variants: { 値: テンプレート id }（select の param で選ぶとき。キーは param の値）
  *   param:    variants を選ぶ param の key（既定 'variant'）
  *   ghost:    文字を透明にする（既定で透明。演出アセットなので文字は出さない）
+ *   patch:    (scene, P, renderer) => {}。設定に合わせて EX のシーンや描き方を書き換える
  */
-export function exTemplate({ template, variants, param = 'variant', ghost: hide = true }) {
+export function exTemplate({ template, variants, param = 'variant', ghost: hide = true, patch }) {
   return {
     async setup(P, S) {
       const ex = await loadEx();
@@ -69,9 +70,11 @@ export function exTemplate({ template, variants, param = 'variant', ghost: hide 
       if (!tpl) throw new Error(`EX template not found: ${id}`);
       const scene = ex.Presets.applyTemplate(ex.Presets.defaultScene('message', 'ja'), tpl, 'ja');
       if (hide) ghost(scene);
+
       const r = new ex.Engine.TextRenderer({});
+      const cut = patch ? patch(scene, P, r) : null;   // 数を返すと、その秒数までで切り上げる
       const prep = r.prepare(scene);
-      return { r, dur: prep.timeline.duration, sw: scene.width, sh: scene.height };
+      return { r, dur: cut > 0 ? Math.min(cut, prep.timeline.duration) : prep.timeline.duration, sw: scene.width, sh: scene.height };
     },
     draw(ctx, t, P, st, S) {
       // ずっとループのときは、EX の1周ぶんをこちらの1ループに合わせる（つなぎ目が出ない）

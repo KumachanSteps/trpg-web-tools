@@ -1,6 +1,6 @@
 {
   "id": "combat.thunder",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 8,
@@ -15,9 +15,9 @@
     "ko": "뇌명"
   },
   "desc": {
-    "ja": "稲妻が走り、画面が震える。",
-    "en": "Lightning strikes and the screen shakes.",
-    "ko": "번개가 치고 화면이 흔들린다."
+    "ja": "左右から電気が走り、中央でぶつかって火花が散る。",
+    "en": "Electricity races in from both sides and bursts into sparks at the centre.",
+    "ko": "좌우에서 전기가 달려와 중앙에서 부딪혀 불꽃이 튄다."
   },
   "tags": [
     "雷",
@@ -37,12 +37,23 @@
     ]
   },
   "duration": {
-    "default": 4,
-    "min": 2.2,
-    "max": 8.8
+    "default": 1.3,
+    "min": 0.6,
+    "max": 4
   },
   "transparent": true,
-  "params": [],
+  "params": [
+    {
+      "key": "charge",
+      "type": "toggle",
+      "label": {
+        "ja": "ぶつかったあとの帯電を出す",
+        "en": "Lingering charge after the spark",
+        "ko": "충돌 후 대전 표현"
+      },
+      "default": false
+    }
+  ],
   "budget": {
     "size": [
       960,
@@ -56,5 +67,5 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
   },
-  "poster": 0.1
+  "poster": 0.4
 }

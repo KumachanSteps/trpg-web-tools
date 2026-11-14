@@ -25,7 +25,7 @@ export default {
       // ループのつなぎ目をまたぐ流れ星は、前後の周回ぶんも描く（ずっとループでも途切れない）
       for (const k of S.play === 'loop' ? [-1, 0, 1] : [0]) {
         st.Star.meteor(ctx, {
-          tp: m.tp + k * D, x: m.x * w, y: m.y * h, ang, speed: 900 * unit * m.sp, len: 340 * unit, w: (m.big ? 4 : 3) * unit,
+          tp: m.tp + k * D, x: m.x * w, y: m.y * h, ang, speed: 900 * unit * m.sp, len: 340 * unit, w: (m.big ? 4 : 3) * unit * P.width,
           color: P.color, pre: 0.3, post: 0.35, seed: m.seed, sparks: 12, big: m.big
         }, sec);
       }

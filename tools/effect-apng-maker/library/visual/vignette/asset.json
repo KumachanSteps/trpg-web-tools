@@ -1,6 +1,6 @@
 {
   "id": "visual.vignette",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 2,
@@ -30,7 +30,7 @@
     "overlay"
   ],
   "playback": {
-    "default": "loop",
+    "default": "once",
     "allowed": [
       "loop",
       "once"
@@ -67,7 +67,7 @@
         "en": "Motion",
         "ko": "움직임"
       },
-      "default": "static",
+      "default": "closing",
       "options": [
         {
           "value": "static",
