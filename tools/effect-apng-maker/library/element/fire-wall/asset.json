@@ -1,0 +1,60 @@
+{
+  "id": "element.fire-wall",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 4,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "炎の壁",
+    "en": "Wall of fire",
+    "ko": "불의 벽"
+  },
+  "desc": {
+    "ja": "画面の下で炎が燃えさかる。",
+    "en": "Flames roar along the bottom of the screen.",
+    "ko": "화면 아래에서 불길이 타오른다."
+  },
+  "tags": [
+    "炎",
+    "火",
+    "fire",
+    "flame",
+    "불",
+    "화염"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  }
+}

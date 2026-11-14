@@ -1,0 +1,59 @@
+{
+  "id": "element.smoke",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 8,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "立ちのぼる黒煙",
+    "en": "Rising smoke",
+    "ko": "피어오르는 검은 연기"
+  },
+  "desc": {
+    "ja": "黒い煙が下から立ちのぼる。",
+    "en": "Black smoke rises from below.",
+    "ko": "검은 연기가 아래에서 피어오른다."
+  },
+  "tags": [
+    "煙",
+    "黒煙",
+    "火事",
+    "smoke",
+    "연기"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 6,
+    "min": 3,
+    "max": 12
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 12,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  }
+}

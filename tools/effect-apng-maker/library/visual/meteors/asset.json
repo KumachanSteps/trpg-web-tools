@@ -1,0 +1,143 @@
+{
+  "id": "visual.meteors",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 7,
+  "category": "visual",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "流れ星",
+    "en": "Shooting stars",
+    "ko": "별똥별"
+  },
+  "desc": {
+    "ja": "流れ星が尾を引いて流れ、きらめきを残す。",
+    "en": "Shooting stars streak by and leave sparkles.",
+    "ko": "별똥별이 꼬리를 끌며 지나가고 반짝임을 남긴다."
+  },
+  "tags": [
+    "流れ星",
+    "星",
+    "夜空",
+    "meteor",
+    "shooting star",
+    "star",
+    "별똥별",
+    "별"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 10
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "count",
+      "type": "range",
+      "label": {
+        "ja": "数",
+        "en": "Count",
+        "ko": "수"
+      },
+      "min": 1,
+      "max": 8,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#ffe9a8",
+      "swatches": [
+        "#ffe9a8",
+        "#ffffff",
+        "#8fd3ff",
+        "#ff9ad5"
+      ]
+    },
+    {
+      "key": "dir",
+      "type": "select",
+      "label": {
+        "ja": "流れる向き",
+        "en": "Direction",
+        "ko": "방향"
+      },
+      "default": "right",
+      "options": [
+        {
+          "value": "right",
+          "label": {
+            "ja": "右下へ",
+            "en": "Down right",
+            "ko": "오른쪽 아래로"
+          }
+        },
+        {
+          "value": "left",
+          "label": {
+            "ja": "左下へ",
+            "en": "Down left",
+            "ko": "왼쪽 아래로"
+          }
+        }
+      ]
+    },
+    {
+      "key": "stars",
+      "type": "toggle",
+      "label": {
+        "ja": "星空も出す",
+        "en": "Starry sky",
+        "ko": "별하늘"
+      },
+      "default": false
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기"
+      },
+      "min": 0.5,
+      "max": 2,
+      "step": 0.1,
+      "default": 1
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの部品を使用"
+  }
+}

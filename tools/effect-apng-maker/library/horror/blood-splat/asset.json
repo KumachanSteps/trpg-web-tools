@@ -1,0 +1,130 @@
+{
+  "id": "horror.blood-splat",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 6,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "血しぶき",
+    "en": "Blood splatter",
+    "ko": "피 튀김"
+  },
+  "desc": {
+    "ja": "血が画面に飛び散り、筋になって垂れる。",
+    "en": "Blood splashes onto the screen and runs down.",
+    "ko": "피가 화면에 튀고 줄기가 되어 흘러내린다."
+  },
+  "tags": [
+    "血",
+    "血しぶき",
+    "流血",
+    "blood",
+    "splatter",
+    "피"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2.5,
+    "min": 1,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "count",
+      "type": "select",
+      "label": {
+        "ja": "数",
+        "en": "Count",
+        "ko": "수"
+      },
+      "default": "1",
+      "options": [
+        {
+          "value": "1",
+          "label": {
+            "ja": "1か所",
+            "en": "One",
+            "ko": "한 곳"
+          }
+        },
+        {
+          "value": "2",
+          "label": {
+            "ja": "2か所",
+            "en": "Two",
+            "ko": "두 곳"
+          }
+        },
+        {
+          "value": "3",
+          "label": {
+            "ja": "3か所",
+            "en": "Three",
+            "ko": "세 곳"
+          }
+        }
+      ]
+    },
+    {
+      "key": "drip",
+      "type": "toggle",
+      "label": {
+        "ja": "垂れる",
+        "en": "Drips",
+        "ko": "흘러내림"
+      },
+      "default": true
+    },
+    {
+      "key": "fadeOut",
+      "type": "toggle",
+      "label": {
+        "ja": "最後に消える",
+        "en": "Fade out at end",
+        "ko": "끝에 사라짐"
+      },
+      "default": false
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기"
+      },
+      "min": 0.5,
+      "max": 2,
+      "step": 0.1,
+      "default": 1
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの部品を使用"
+  },
+  "poster": 0.6
+}

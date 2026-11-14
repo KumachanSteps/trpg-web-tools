@@ -1,0 +1,88 @@
+{
+  "id": "element.ash",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 7,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "風に舞う灰",
+    "en": "Drifting ash",
+    "ko": "흩날리는 재"
+  },
+  "desc": {
+    "ja": "灰が風に乗って流れていく。",
+    "en": "Ash drifts on the wind.",
+    "ko": "재가 바람을 타고 흘러간다."
+  },
+  "tags": [
+    "灰",
+    "燃えかす",
+    "ash",
+    "cinder",
+    "재"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 6,
+    "min": 3,
+    "max": 12
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "variant",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "grey",
+      "options": [
+        {
+          "value": "grey",
+          "label": {
+            "ja": "灰色",
+            "en": "Grey",
+            "ko": "회색"
+          }
+        },
+        {
+          "value": "black",
+          "label": {
+            "ja": "黒",
+            "en": "Black",
+            "ko": "검정"
+          }
+        }
+      ]
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "element.fire-breath",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 6,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "火炎ブレス",
+    "en": "Fire breath",
+    "ko": "화염 브레스"
+  },
+  "desc": {
+    "ja": "炎の息が画面を包む。",
+    "en": "A blast of fiery breath sweeps the screen.",
+    "ko": "불의 숨결이 화면을 덮는다."
+  },
+  "tags": [
+    "炎",
+    "ブレス",
+    "ドラゴン",
+    "fire",
+    "breath",
+    "dragon",
+    "불",
+    "브레스"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3.2,
+    "min": 1.6,
+    "max": 6.4
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  },
+  "poster": 0.55
+}

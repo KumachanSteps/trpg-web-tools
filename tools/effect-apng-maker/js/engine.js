@@ -70,13 +70,13 @@ export class EffectInstance {
         Object.entries(layer.map || {}).forEach(([to, from]) => { p[to] = this.params[from]; });
         const mod = await loadModule(sub);
         const subS = { ...S, play: sub.playback.allowed.includes(opts.play) ? opts.play : sub.playback.default };
-        this.layers.push({ asset: sub, mod, P: p, S: subS, state: mod.setup ? mod.setup(p, subS) : null });
+        this.layers.push({ asset: sub, mod, P: p, S: subS, state: mod.setup ? await mod.setup(p, subS) : null });
       }
       this.scratch = makeCanvas(opts.w, opts.h);
       this.sctx = this.scratch.getContext('2d');
     } else {
       const mod = await loadModule(asset);
-      this.layers.push({ asset, mod, P: this.params, S, state: mod.setup ? mod.setup(this.params, S) : null });
+      this.layers.push({ asset, mod, P: this.params, S, state: mod.setup ? await mod.setup(this.params, S) : null });
     }
     return this;
   }
