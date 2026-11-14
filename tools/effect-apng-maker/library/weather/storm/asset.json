@@ -1,0 +1,130 @@
+{
+  "id": "weather.storm",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 4,
+  "category": "weather",
+  "kind": "combo",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "嵐",
+    "en": "Storm",
+    "ko": "폭풍"
+  },
+  "desc": {
+    "ja": "大雨・風・雷光を重ねた組み合わせ。",
+    "en": "Heavy rain, wind and lightning flashes together.",
+    "ko": "폭우·바람·번개 빛을 겹친 조합."
+  },
+  "tags": [
+    "嵐",
+    "storm",
+    "폭풍",
+    "雨",
+    "雷"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 3,
+    "min": 2,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "rain",
+      "type": "range",
+      "label": {
+        "ja": "雨の量",
+        "en": "Rainfall",
+        "ko": "빗줄기 양"
+      },
+      "min": 0.5,
+      "max": 2.5,
+      "step": 0.1,
+      "default": 1.6
+    },
+    {
+      "key": "wind",
+      "type": "range",
+      "label": {
+        "ja": "風の強さ",
+        "en": "Wind",
+        "ko": "바람 세기"
+      },
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "default": 0.8
+    },
+    {
+      "key": "flash",
+      "type": "range",
+      "label": {
+        "ja": "雷光",
+        "en": "Lightning",
+        "ko": "번개 빛"
+      },
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.7
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  },
+  "layers": [
+    {
+      "asset": "weather.rain",
+      "params": {
+        "angle": 18,
+        "splash": true
+      },
+      "map": {
+        "strength": "rain"
+      }
+    },
+    {
+      "asset": "element.wind",
+      "params": {
+        "dir": "right",
+        "angle": 10
+      },
+      "map": {
+        "strength": "wind"
+      },
+      "skipIfZero": "wind"
+    },
+    {
+      "asset": "weather.lightning-flash",
+      "params": {
+        "flashes": 2
+      },
+      "map": {
+        "intensity": "flash"
+      },
+      "skipIfZero": "flash"
+    }
+  ]
+}

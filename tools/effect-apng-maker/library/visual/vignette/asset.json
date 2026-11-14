@@ -1,0 +1,137 @@
+{
+  "id": "visual.vignette",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 2,
+  "category": "visual",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "周囲が暗くなる",
+    "en": "Vignette",
+    "ko": "비네트"
+  },
+  "desc": {
+    "ja": "画面のふちを暗くする。止まったまま・迫る・呼吸する。",
+    "en": "Darkens the edges: still, closing in, or breathing.",
+    "ko": "화면 가장자리를 어둡게. 정지·좁혀옴·호흡."
+  },
+  "tags": [
+    "ビネット",
+    "暗い",
+    "vignette",
+    "dark",
+    "비네트"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3,
+    "min": 1,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#3a0008",
+        "#0d1b2f",
+        "#ffffff"
+      ]
+    },
+    {
+      "key": "mode",
+      "type": "select",
+      "label": {
+        "ja": "動き",
+        "en": "Motion",
+        "ko": "움직임"
+      },
+      "default": "static",
+      "options": [
+        {
+          "value": "static",
+          "label": {
+            "ja": "止まったまま",
+            "en": "Still",
+            "ko": "정지"
+          }
+        },
+        {
+          "value": "closing",
+          "label": {
+            "ja": "迫ってくる",
+            "en": "Closing in",
+            "ko": "좁혀옴"
+          }
+        },
+        {
+          "value": "breathing",
+          "label": {
+            "ja": "呼吸する",
+            "en": "Breathing",
+            "ko": "호흡"
+          }
+        }
+      ]
+    },
+    {
+      "key": "strength",
+      "type": "range",
+      "label": {
+        "ja": "強さ",
+        "en": "Strength",
+        "ko": "세기"
+      },
+      "min": 0.2,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.8
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "明るい範囲",
+        "en": "Clear area",
+        "ko": "밝은 범위"
+      },
+      "min": 0.1,
+      "max": 0.8,
+      "step": 0.05,
+      "default": 0.4
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

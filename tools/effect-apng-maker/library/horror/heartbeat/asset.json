@@ -1,0 +1,99 @@
+{
+  "id": "horror.heartbeat",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 2,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "鼓動する闇",
+    "en": "Heartbeat vignette",
+    "ko": "고동치는 어둠"
+  },
+  "desc": {
+    "ja": "画面のふちが心臓の鼓動のように脈打つ。",
+    "en": "The edges pulse like a heartbeat.",
+    "ko": "화면 가장자리가 심장 박동처럼 맥동한다."
+  },
+  "tags": [
+    "鼓動",
+    "心臓",
+    "heartbeat",
+    "vignette",
+    "심장"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#3a0008",
+        "#1a0030"
+      ]
+    },
+    {
+      "key": "bpm",
+      "type": "range",
+      "label": {
+        "ja": "速さ（BPM）",
+        "en": "Speed (BPM)",
+        "ko": "속도 (BPM)"
+      },
+      "min": 40,
+      "max": 150,
+      "step": 1,
+      "default": 72
+    },
+    {
+      "key": "strength",
+      "type": "range",
+      "label": {
+        "ja": "強さ",
+        "en": "Strength",
+        "ko": "세기"
+      },
+      "min": 0.3,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.85
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

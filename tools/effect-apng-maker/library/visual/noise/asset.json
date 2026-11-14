@@ -1,0 +1,123 @@
+{
+  "id": "visual.noise",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 1,
+  "category": "visual",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "ノイズ",
+    "en": "Noise",
+    "ko": "노이즈"
+  },
+  "desc": {
+    "ja": "フィルムの粒子、またはテレビの砂嵐。",
+    "en": "Film grain or TV static.",
+    "ko": "필름 입자 또는 TV 지직거림."
+  },
+  "tags": [
+    "ノイズ",
+    "砂嵐",
+    "noise",
+    "grain",
+    "static",
+    "노이즈"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 1,
+    "min": 0.5,
+    "max": 3
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "mode",
+      "type": "select",
+      "label": {
+        "ja": "種類",
+        "en": "Type",
+        "ko": "종류"
+      },
+      "default": "grain",
+      "options": [
+        {
+          "value": "grain",
+          "label": {
+            "ja": "フィルムの粒子",
+            "en": "Film grain",
+            "ko": "필름 입자"
+          }
+        },
+        {
+          "value": "static",
+          "label": {
+            "ja": "砂嵐",
+            "en": "TV static",
+            "ko": "TV 노이즈"
+          }
+        }
+      ]
+    },
+    {
+      "key": "amount",
+      "type": "range",
+      "label": {
+        "ja": "量",
+        "en": "Amount",
+        "ko": "양"
+      },
+      "min": 0.05,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.3
+    },
+    {
+      "key": "grain",
+      "type": "range",
+      "label": {
+        "ja": "粒の大きさ",
+        "en": "Grain size",
+        "ko": "입자 크기"
+      },
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "key": "tint",
+      "type": "toggle",
+      "label": {
+        "ja": "セピア寄り",
+        "en": "Sepia tint",
+        "ko": "세피아"
+      },
+      "default": false
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 12,
+    "colors": 32
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

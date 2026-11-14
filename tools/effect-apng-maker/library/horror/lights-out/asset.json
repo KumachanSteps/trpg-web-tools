@@ -1,0 +1,85 @@
+{
+  "id": "horror.lights-out",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 3,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "明かりが消える",
+    "en": "Lights out",
+    "ko": "불이 꺼진다"
+  },
+  "desc": {
+    "ja": "ちらついたあと、暗闇になって止まる。",
+    "en": "Flickers, then stays dark.",
+    "ko": "깜빡이다가 어둠 속에 멈춘다."
+  },
+  "tags": [
+    "停電",
+    "暗闇",
+    "lights out",
+    "blackout",
+    "정전"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2.5,
+    "min": 1,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#0d0614"
+      ]
+    },
+    {
+      "key": "darkness",
+      "type": "range",
+      "label": {
+        "ja": "最後の暗さ",
+        "en": "Final darkness",
+        "ko": "마지막 어둠"
+      },
+      "min": 0.5,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.92
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 32
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

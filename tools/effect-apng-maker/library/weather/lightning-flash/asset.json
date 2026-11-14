@@ -1,0 +1,100 @@
+{
+  "id": "weather.lightning-flash",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 2,
+  "category": "weather",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "雷光",
+    "en": "Lightning flash",
+    "ko": "번개 빛"
+  },
+  "desc": {
+    "ja": "画面全体が1〜3回、白く光る。",
+    "en": "The whole screen flashes 1 to 3 times.",
+    "ko": "화면 전체가 1~3번 하얗게 번쩍인다."
+  },
+  "tags": [
+    "雷",
+    "稲光",
+    "lightning",
+    "flash",
+    "번개"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once",
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 1.5,
+    "min": 0.6,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#eaf1ff",
+      "swatches": [
+        "#eaf1ff",
+        "#ffffff",
+        "#c9b8ff"
+      ]
+    },
+    {
+      "key": "flashes",
+      "type": "range",
+      "label": {
+        "ja": "回数",
+        "en": "Flashes",
+        "ko": "횟수"
+      },
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "key": "intensity",
+      "type": "range",
+      "label": {
+        "ja": "強さ",
+        "en": "Strength",
+        "ko": "세기"
+      },
+      "min": 0.2,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.85
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 32
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

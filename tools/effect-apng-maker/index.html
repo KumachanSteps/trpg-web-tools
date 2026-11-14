@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <script async src="../../assets/js/analytics.js"></script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- 限定テスト中：検索結果に出さない。一般公開のときに外す -->
+  <meta name="robots" content="noindex" />
+  <title>演出APNGメーカー｜TRPG WEBツール観測所</title>
+  <meta name="description" content="場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出すツールです。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="stylesheet" href="./css/effect-apng-maker.css?v=20261114-05" />
+</head>
+<body>
+  <div class="studio">
+    <header class="studio-header">
+      <div class="title-block">
+        <p class="eyebrow"><a class="portal-link" id="portalLink" href="../../"><span class="portal-long" data-i18n="portalLong">←TRPG WEBツール観測所</span><span class="portal-short" data-i18n="portalShort">← 観測所</span></a></p>
+        <h1><span data-i18n="title">演出APNGメーカー</span> <span class="test-badge" data-i18n="testBadge">限定テスト版</span> <span class="version-engrave">v0.10 / 2026.11.14</span></h1>
+      </div>
+      <p class="lead" data-i18n="lead">場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出します。</p>
+      <div class="header-actions">
+        <div class="language-switcher" id="languageSwitcher" role="group" aria-label="言語切替">
+          <button type="button" data-lang="ja" aria-pressed="true">JP</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+          <button type="button" data-lang="ko" aria-pressed="false">KR</button>
+        </div>
+        <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
+        <button class="ghost-button" type="button" id="rulesBtn" aria-expanded="false" aria-controls="rulesDrawer" data-i18n="rulesBtn">利用ルール</button>
+        <button class="ghost-button theme-button" type="button" id="themeBtn" aria-label="テーマ"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb"></span></span></button>
+      </div>
+    </header>
+
+    <section class="drawer" id="helpDrawer" hidden>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
+      <h2 data-i18n="helpTitle">使い方</h2>
+      <ol class="guide-list" id="helpSteps"></ol>
+      <div class="guide-notes" id="helpNotes"></div>
+    </section>
+    <section class="drawer" id="rulesDrawer" hidden>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
+      <h2 data-i18n="rulesTitle">利用ルール</h2>
+      <div class="rules-body" id="rulesBody"></div>
+    </section>
+
+    <nav class="mobile-tabs" id="mobileTabs" role="tablist">
+      <button type="button" role="tab" data-mobile-tab="library" aria-selected="true" data-i18n="libraryTitle">アセットライブラリ</button>
+      <button type="button" role="tab" data-mobile-tab="controls" aria-selected="false" data-i18n="controlsTitle">調整</button>
+      <button type="button" role="tab" data-mobile-tab="stage" aria-selected="false" data-i18n="stageTab">背景・立ち絵</button>
+      <button type="button" role="tab" data-mobile-tab="export" aria-selected="false" data-i18n="exportTitle">書き出し</button>
+    </nav>
+
+    <main class="studio-grid" id="studioGrid" data-mobile="library">
+      <!-- 左：アセットライブラリと調整 -->
+      <section class="panel side-panel">
+        <div class="side-section library-section" aria-labelledby="libraryHeading">
+          <div class="panel-head">
+            <h2 class="panel-title" id="libraryHeading" data-i18n="libraryTitle">アセットライブラリ</h2>
+            <span class="panel-count" id="libraryCount"></span>
+          </div>
+          <div class="search-row">
+            <label class="search-box"><span class="visually-hidden" data-i18n="searchPlaceholder">探す</span><input type="search" class="text-input" id="searchInput" autocomplete="off" /></label>
+            <div id="filterChips"><button type="button" class="chip fav-filter" data-filter="fav" aria-pressed="false">★ <span data-i18n="favourites">お気に入り</span></button></div>
+          </div>
+          <div class="category-tabs" id="categoryTabs" role="tablist"></div>
+          <div class="asset-grid" id="assetGrid" aria-live="polite"><p class="muted" data-i18n="loading">読み込んでいます…</p></div>
+        </div>
+
+        <div class="side-section controls-section" aria-labelledby="controlsHeading">
+          <div class="panel-head">
+            <h2 class="panel-title" id="controlsHeading" data-i18n="controlsTitle">調整</h2>
+            <button type="button" class="link-button" id="resetParamsBtn" data-i18n="resetParams">↺ 初期値に戻す</button>
+          </div>
+          <div class="asset-intro" id="assetIntro"></div>
+          <div class="control-block" id="commonControls"></div>
+          <div class="control-block">
+            <h3 class="block-title" data-i18n="effectSettings">このアセットの設定</h3>
+            <div id="paramControls"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右：プレビューと書き出し -->
+      <section class="panel preview-panel" aria-labelledby="previewHeading">
+        <div class="panel-head preview-head">
+          <h2 class="panel-title" id="previewHeading"><span data-i18n="previewTitle">プレビュー</span> <span class="current-asset" id="currentAssetName"></span></h2>
+          <div class="preview-bg" role="group" aria-labelledby="bgLabel">
+            <span class="preview-bg-label" id="bgLabel" data-i18n="bgTitle">背景</span>
+            <div class="chip-group" id="bgChoices">
+              <button type="button" class="chip" data-bg="night" data-i18n="bgNight">夜の街</button>
+              <button type="button" class="chip" data-bg="room" data-i18n="bgRoom">洋室</button>
+              <button type="button" class="chip" data-bg="dark" data-i18n="bgDark">暗いグレー</button>
+              <button type="button" class="chip" data-bg="checker" data-i18n="bgChecker">透明（市松）</button>
+              <button type="button" class="chip" data-bg="upload" id="bgUploadBtn" data-i18n="bgUpload">背景をアップロード</button>
+            </div>
+            <input type="file" id="bgFile" accept="image/png,image/jpeg,image/webp" hidden />
+          </div>
+        </div>
+        <div class="stage-frame">
+          <div class="stage" id="stage">
+            <div class="stage-layer" data-stage-bg></div>
+            <div class="stage-layer stage-chars" data-stage-chars-back></div>
+            <canvas class="stage-layer stage-fx" data-stage-fx></canvas>
+            <div class="stage-layer stage-chars" data-stage-chars-front></div>
+            <div class="stage-pick-hint" data-i18n="pickPoint">プレビューをクリックして位置を決めます</div>
+            <div class="stage-drop-hint" data-i18n="dropHint">ここに画像をドロップ</div>
+          </div>
+        </div>
+        <div class="transport">
+          <button type="button" class="icon-button play-button" id="playBtn" aria-label="再生">❚❚</button>
+          <input type="range" id="scrubber" min="0" max="1000" value="0" aria-label="位置" />
+          <span class="time-readout" id="timeReadout">0.0 / 0.0</span>
+          <label class="toggle-inline"><input type="checkbox" class="switch" id="loopPreview" checked /><span data-i18n="loopPreview">くり返し再生</span></label>
+        </div>
+
+        <div class="export-card" id="exportCard">
+          <div class="export-head">
+            <h2 class="panel-title" data-i18n="exportTitle">書き出し</h2>
+            <div class="estimate" id="estimate">
+              <span class="estimate-label" data-i18n="estimate">容量の目安</span>
+              <strong id="estimateValue">—</strong>
+              <div class="budget-bar"><span id="budgetFill"></span><i style="left:75%"></i></div>
+            </div>
+          </div>
+          <div id="outputControls" class="export-grid"></div>
+          <div class="estimate-row"><span class="budget-note" id="budgetNote"></span><button type="button" class="link-button" id="lightenBtn" data-i18n="lighten" hidden>軽くする</button></div>
+          <div class="export-primary">
+            <button type="button" class="accent-button export-main" id="exportApngBtn" data-i18n="exportApng">APNGを書き出す</button>
+            <button type="button" class="accent-button export-main webp-button" id="exportWebpBtn" data-i18n="exportWebp">WebPを書き出す</button>
+          </div>
+          <div class="progress" id="progress" hidden>
+            <div class="progress-bar"><span id="progressFill"></span></div>
+            <div class="progress-row"><span id="progressText"></span><button type="button" class="link-button" id="cancelBtn" data-i18n="cancel">中止</button></div>
+          </div>
+          <div class="result" id="result" hidden>
+            <img class="result-thumb" id="resultImg" alt="" />
+            <div class="result-body">
+              <p class="result-meta" id="resultMeta"></p>
+              <p class="budget-note" id="resultBudget"></p>
+              <a class="accent-button download-button" id="downloadLink" data-i18n="download">ダウンロード</a>
+              <p class="hint" id="ccfoliaTip"></p>
+              <p class="hint" data-i18n="webpNote"></p>
+              <p class="hint"><span data-i18n="resultRule"></span> <button type="button" class="link-button" data-copy-credit data-i18n="copyCredit">クレジットをコピー</button></p>
+            </div>
+          </div>
+        </div>
+        <div class="stage-tools" id="stageTools">
+          <div class="tool-group">
+            <h3 class="block-title" data-i18n="charsTitle">立ち絵</h3>
+            <div class="char-row">
+              <button type="button" class="ghost-button" id="charAddBtn" data-i18n="charAdd">＋ 立ち絵を追加</button>
+              <input type="file" id="charFile" accept="image/png,image/webp" multiple hidden />
+              <div class="char-list" id="charList"></div>
+              <button type="button" class="link-button" id="clearStageBtn" data-i18n="clearStage">ステージを片付ける</button>
+            </div>
+            <div class="char-edit" id="charEdit" hidden>
+              <label class="field-inline"><span data-i18n="charSize">大きさ</span><input type="range" id="charSize" min="0.15" max="2" step="0.01" /></label>
+              <label class="toggle-inline"><input type="checkbox" class="switch" id="charFlip" /><span data-i18n="charFlip">左右反転</span></label>
+              <label class="toggle-inline"><input type="checkbox" class="switch" id="charFront" /><span data-i18n="charFront">演出より手前</span></label>
+              <button type="button" class="link-button danger" id="charRemove" data-i18n="charRemove">削除</button>
+            </div>
+            <p class="hint"><span data-i18n="charHint"></span> <span data-i18n="privacy">画像はこのブラウザの中だけで使い、どこにも送信しません。</span></p>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <footer class="studio-footer">
+      <p id="footerNote1"></p>
+      <p id="footerNote2"></p>
+    </footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- APNG / WebP エンコーダー（文字画像APNGメーカーと同じもの。共通化は後の段階で） -->
+  <script src="./js/apng-encoder.js?v=20261114-01"></script>
+  <script src="./js/webp-encoder.js?v=20261114-01"></script>
+  <script type="module" src="./js/main.js?v=20261114-05"></script>
+</body>
+</html>

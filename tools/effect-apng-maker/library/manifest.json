@@ -1,0 +1,3353 @@
+{
+ "version": 1,
+ "categories": [
+  {
+   "id": "transition",
+   "name": {
+    "ja": "場面転換",
+    "en": "Transitions",
+    "ko": "장면 전환"
+   }
+  },
+  {
+   "id": "weather",
+   "name": {
+    "ja": "天候",
+    "en": "Weather",
+    "ko": "날씨"
+   }
+  },
+  {
+   "id": "element",
+   "name": {
+    "ja": "属性",
+    "en": "Elements",
+    "ko": "속성"
+   }
+  },
+  {
+   "id": "horror",
+   "name": {
+    "ja": "ホラー",
+    "en": "Horror",
+    "ko": "호러"
+   }
+  },
+  {
+   "id": "visual",
+   "name": {
+    "ja": "視覚効果",
+    "en": "Visual effects",
+    "ko": "시각 효과"
+   }
+  }
+ ],
+ "assets": [
+  {
+   "id": "transition.fade",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 1,
+   "category": "transition",
+   "kind": "procedural",
+   "type": "transition",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "フェード",
+    "en": "Fade",
+    "ko": "페이드"
+   },
+   "desc": {
+    "ja": "画面が単色に溶けていく、いちばん基本の転換。",
+    "en": "The basic transition: the screen melts into one colour.",
+    "ko": "화면이 단색으로 녹아드는 가장 기본적인 전환."
+   },
+   "tags": [
+    "フェード",
+    "fade",
+    "페이드",
+    "暗転",
+    "fade out"
+   ],
+   "use": [
+    "transition"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1.2,
+    "min": 0.4,
+    "max": 5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "覆う色",
+      "en": "Cover colour",
+      "ko": "덮는 색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#ffffff",
+      "#5a0010",
+      "#0d1b2f"
+     ]
+    },
+    {
+     "key": "curve",
+     "type": "select",
+     "label": {
+      "ja": "動き方",
+      "en": "Curve",
+      "ko": "움직임"
+     },
+     "default": "smooth",
+     "options": [
+      {
+       "value": "smooth",
+       "label": {
+        "ja": "なめらか",
+        "en": "Smooth",
+        "ko": "부드럽게"
+       }
+      },
+      {
+       "value": "linear",
+       "label": {
+        "ja": "一定",
+        "en": "Linear",
+        "ko": "일정하게"
+       }
+      }
+     ]
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "transition/fade"
+  },
+  {
+   "id": "transition.wipe",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 2,
+   "category": "transition",
+   "kind": "procedural",
+   "type": "transition",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "ワイプ",
+    "en": "Wipe",
+    "ko": "와이프"
+   },
+   "desc": {
+    "ja": "画面の端から幕を引くように覆う。",
+    "en": "Covers the screen from one edge like a drawn sheet.",
+    "ko": "화면 끝에서부터 막을 치듯 덮는다."
+   },
+   "tags": [
+    "ワイプ",
+    "wipe",
+    "와이프"
+   ],
+   "use": [
+    "transition"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1,
+    "min": 0.4,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "覆う色",
+      "en": "Cover colour",
+      "ko": "덮는 색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#ffffff",
+      "#5a0010",
+      "#0d1b2f"
+     ]
+    },
+    {
+     "key": "dir",
+     "type": "select",
+     "label": {
+      "ja": "始まる側",
+      "en": "Starts from",
+      "ko": "시작 방향"
+     },
+     "default": "left",
+     "options": [
+      {
+       "value": "left",
+       "label": {
+        "ja": "左",
+        "en": "Left",
+        "ko": "왼쪽"
+       }
+      },
+      {
+       "value": "right",
+       "label": {
+        "ja": "右",
+        "en": "Right",
+        "ko": "오른쪽"
+       }
+      },
+      {
+       "value": "top",
+       "label": {
+        "ja": "上",
+        "en": "Top",
+        "ko": "위"
+       }
+      },
+      {
+       "value": "bottom",
+       "label": {
+        "ja": "下",
+        "en": "Bottom",
+        "ko": "아래"
+       }
+      },
+      {
+       "value": "diagonal",
+       "label": {
+        "ja": "ななめ",
+        "en": "Diagonal",
+        "ko": "대각선"
+       }
+      }
+     ]
+    },
+    {
+     "key": "soft",
+     "type": "range",
+     "label": {
+      "ja": "境目のぼかし",
+      "en": "Edge softness",
+      "ko": "경계 흐림"
+     },
+     "min": 0,
+     "max": 0.4,
+     "step": 0.01,
+     "default": 0.12
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "transition/wipe"
+  },
+  {
+   "id": "transition.blinds",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 3,
+   "category": "transition",
+   "kind": "procedural",
+   "type": "transition",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "ブラインド",
+    "en": "Blinds",
+    "ko": "블라인드"
+   },
+   "desc": {
+    "ja": "細い帯が順に閉じていく。",
+    "en": "Slats close one after another.",
+    "ko": "가는 띠가 차례로 닫힌다."
+   },
+   "tags": [
+    "ブラインド",
+    "blinds",
+    "블라인드"
+   ],
+   "use": [
+    "transition"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1.2,
+    "min": 0.4,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "覆う色",
+      "en": "Cover colour",
+      "ko": "덮는 색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#ffffff",
+      "#5a0010",
+      "#0d1b2f"
+     ]
+    },
+    {
+     "key": "orient",
+     "type": "select",
+     "label": {
+      "ja": "向き",
+      "en": "Direction",
+      "ko": "방향"
+     },
+     "default": "horizontal",
+     "options": [
+      {
+       "value": "horizontal",
+       "label": {
+        "ja": "横",
+        "en": "Horizontal",
+        "ko": "가로"
+       }
+      },
+      {
+       "value": "vertical",
+       "label": {
+        "ja": "縦",
+        "en": "Vertical",
+        "ko": "세로"
+       }
+      }
+     ]
+    },
+    {
+     "key": "count",
+     "type": "range",
+     "label": {
+      "ja": "帯の数",
+      "en": "Slats",
+      "ko": "띠 수"
+     },
+     "min": 3,
+     "max": 24,
+     "step": 1,
+     "default": 10
+    },
+    {
+     "key": "stagger",
+     "type": "range",
+     "label": {
+      "ja": "時間差",
+      "en": "Stagger",
+      "ko": "시간차"
+     },
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.6
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 32
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "transition/blinds"
+  },
+  {
+   "id": "transition.iris",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 4,
+   "category": "transition",
+   "kind": "procedural",
+   "type": "transition",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "アイリス",
+    "en": "Iris",
+    "ko": "아이리스"
+   },
+   "desc": {
+    "ja": "丸い穴がすぼまって閉じる。中心はプレビュー上で選べる。",
+    "en": "A round hole shrinks shut. Pick the centre on the preview.",
+    "ko": "둥근 구멍이 좁아지며 닫힌다. 중심은 미리보기에서 고를 수 있다."
+   },
+   "tags": [
+    "アイリス",
+    "iris",
+    "아이리스",
+    "丸"
+   ],
+   "use": [
+    "transition"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1.2,
+    "min": 0.4,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "覆う色",
+      "en": "Cover colour",
+      "ko": "덮는 색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#ffffff",
+      "#5a0010",
+      "#0d1b2f"
+     ]
+    },
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    },
+    {
+     "key": "soft",
+     "type": "range",
+     "label": {
+      "ja": "境目のぼかし",
+      "en": "Edge softness",
+      "ko": "경계 흐림"
+     },
+     "min": 0,
+     "max": 0.2,
+     "step": 0.005,
+     "default": 0.02
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "transition/iris"
+  },
+  {
+   "id": "transition.petals",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 5,
+   "category": "transition",
+   "kind": "procedural",
+   "type": "transition",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "花びらシルエット",
+    "en": "Petal silhouette",
+    "ko": "꽃잎 실루엣"
+   },
+   "desc": {
+    "ja": "花びらの影が舞いながら画面を覆う。",
+    "en": "Petal silhouettes swirl in until they cover the screen.",
+    "ko": "꽃잎 그림자가 흩날리며 화면을 덮는다."
+   },
+   "tags": [
+    "花びら",
+    "桜",
+    "petal",
+    "sakura",
+    "꽃잎",
+    "벚꽃"
+   ],
+   "use": [
+    "transition"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1.6,
+    "min": 0.6,
+    "max": 5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "覆う色",
+      "en": "Cover colour",
+      "ko": "덮는 색"
+     },
+     "default": "#ffd7e4",
+     "swatches": [
+      "#ffd7e4",
+      "#ffffff",
+      "#000000",
+      "#7a0f2a"
+     ]
+    },
+    {
+     "key": "shape",
+     "type": "select",
+     "label": {
+      "ja": "花",
+      "en": "Flower",
+      "ko": "꽃"
+     },
+     "default": "sakura",
+     "options": [
+      {
+       "value": "sakura",
+       "label": {
+        "ja": "桜",
+        "en": "Cherry",
+        "ko": "벚꽃"
+       }
+      },
+      {
+       "value": "rose",
+       "label": {
+        "ja": "薔薇",
+        "en": "Rose",
+        "ko": "장미"
+       }
+      },
+      {
+       "value": "plum",
+       "label": {
+        "ja": "梅",
+        "en": "Plum",
+        "ko": "매화"
+       }
+      },
+      {
+       "value": "camellia",
+       "label": {
+        "ja": "椿",
+        "en": "Camellia",
+        "ko": "동백"
+       }
+      }
+     ]
+    },
+    {
+     "key": "from",
+     "type": "select",
+     "label": {
+      "ja": "始まる側",
+      "en": "Starts from",
+      "ko": "시작 방향"
+     },
+     "default": "left",
+     "options": [
+      {
+       "value": "left",
+       "label": {
+        "ja": "左",
+        "en": "Left",
+        "ko": "왼쪽"
+       }
+      },
+      {
+       "value": "right",
+       "label": {
+        "ja": "右",
+        "en": "Right",
+        "ko": "오른쪽"
+       }
+      },
+      {
+       "value": "top",
+       "label": {
+        "ja": "上",
+        "en": "Top",
+        "ko": "위"
+       }
+      },
+      {
+       "value": "bottom",
+       "label": {
+        "ja": "下",
+        "en": "Bottom",
+        "ko": "아래"
+       }
+      },
+      {
+       "value": "center",
+       "label": {
+        "ja": "中央",
+        "en": "Centre",
+        "ko": "중앙"
+       }
+      }
+     ]
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기"
+     },
+     "min": 0.06,
+     "max": 0.25,
+     "step": 0.01,
+     "default": 0.12
+    },
+    {
+     "key": "spin",
+     "type": "toggle",
+     "label": {
+      "ja": "回りながら",
+      "en": "Spin",
+      "ko": "회전"
+     },
+     "default": true
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "transition/petals"
+  },
+  {
+   "id": "transition.feathers",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 6,
+   "category": "transition",
+   "kind": "procedural",
+   "type": "transition",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "羽根シルエット",
+    "en": "Feather silhouette",
+    "ko": "깃털 실루엣"
+   },
+   "desc": {
+    "ja": "羽根が舞い落ちて画面を覆う。",
+    "en": "Feathers drift down until they cover the screen.",
+    "ko": "깃털이 흩날려 내려와 화면을 덮는다."
+   },
+   "tags": [
+    "羽根",
+    "feather",
+    "깃털",
+    "天使"
+   ],
+   "use": [
+    "transition"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1.6,
+    "min": 0.6,
+    "max": 5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "覆う色",
+      "en": "Cover colour",
+      "ko": "덮는 색"
+     },
+     "default": "#ffffff",
+     "swatches": [
+      "#ffffff",
+      "#000000",
+      "#d9c7a1",
+      "#2b1d3a"
+     ]
+    },
+    {
+     "key": "from",
+     "type": "select",
+     "label": {
+      "ja": "始まる側",
+      "en": "Starts from",
+      "ko": "시작 방향"
+     },
+     "default": "top",
+     "options": [
+      {
+       "value": "left",
+       "label": {
+        "ja": "左",
+        "en": "Left",
+        "ko": "왼쪽"
+       }
+      },
+      {
+       "value": "right",
+       "label": {
+        "ja": "右",
+        "en": "Right",
+        "ko": "오른쪽"
+       }
+      },
+      {
+       "value": "top",
+       "label": {
+        "ja": "上",
+        "en": "Top",
+        "ko": "위"
+       }
+      },
+      {
+       "value": "bottom",
+       "label": {
+        "ja": "下",
+        "en": "Bottom",
+        "ko": "아래"
+       }
+      },
+      {
+       "value": "center",
+       "label": {
+        "ja": "中央",
+        "en": "Centre",
+        "ko": "중앙"
+       }
+      }
+     ]
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기"
+     },
+     "min": 0.06,
+     "max": 0.25,
+     "step": 0.01,
+     "default": 0.13
+    },
+    {
+     "key": "fall",
+     "type": "toggle",
+     "label": {
+      "ja": "落ちながら",
+      "en": "Falling",
+      "ko": "떨어지며"
+     },
+     "default": true
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "transition/feathers"
+  },
+  {
+   "id": "transition.blink",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 7,
+   "category": "transition",
+   "kind": "procedural",
+   "type": "transition",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "まばたき",
+    "en": "Eye blink",
+    "ko": "눈 깜빡임"
+   },
+   "desc": {
+    "ja": "まぶたが閉じるように暗転する。気絶・目覚めの場面に。",
+    "en": "Fades like eyelids closing. For fainting and waking.",
+    "ko": "눈꺼풀이 감기듯 암전된다. 기절·깨어나는 장면에."
+   },
+   "tags": [
+    "まばたき",
+    "目",
+    "気絶",
+    "blink",
+    "eye",
+    "눈"
+   ],
+   "use": [
+    "transition"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1.4,
+    "min": 0.5,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "覆う色",
+      "en": "Cover colour",
+      "ko": "덮는 색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#ffffff",
+      "#5a0010",
+      "#0d1b2f"
+     ]
+    },
+    {
+     "key": "soft",
+     "type": "range",
+     "label": {
+      "ja": "ぼかし",
+      "en": "Softness",
+      "ko": "흐림"
+     },
+     "min": 0.1,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.5
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "transition/blink"
+  },
+  {
+   "id": "weather.rain",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 1,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "雨",
+    "en": "Rain",
+    "ko": "비"
+   },
+   "desc": {
+    "ja": "霧雨から大雨まで、量と角度で調整。",
+    "en": "From drizzle to downpour, set by amount and angle.",
+    "ko": "이슬비부터 폭우까지 양과 각도로 조절."
+   },
+   "tags": [
+    "雨",
+    "rain",
+    "비",
+    "大雨",
+    "霧雨"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop",
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#cfe3ff",
+     "swatches": [
+      "#cfe3ff",
+      "#ffffff",
+      "#9fb6cc"
+     ]
+    },
+    {
+     "key": "strength",
+     "type": "range",
+     "label": {
+      "ja": "雨の量",
+      "en": "Rainfall",
+      "ko": "빗줄기 양"
+     },
+     "min": 0.2,
+     "max": 2.5,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "angle",
+     "type": "range",
+     "label": {
+      "ja": "角度",
+      "en": "Angle",
+      "ko": "각도"
+     },
+     "min": -30,
+     "max": 30,
+     "step": 1,
+     "default": 10
+    },
+    {
+     "key": "splash",
+     "type": "toggle",
+     "label": {
+      "ja": "足元の跳ね返り",
+      "en": "Splashes",
+      "ko": "튀는 물방울"
+     },
+     "default": true
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "weather/rain"
+  },
+  {
+   "id": "weather.lightning-flash",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 2,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "雷光",
+    "en": "Lightning flash",
+    "ko": "번개 빛"
+   },
+   "desc": {
+    "ja": "画面全体が1〜3回、白く光る。",
+    "en": "The whole screen flashes 1 to 3 times.",
+    "ko": "화면 전체가 1~3번 하얗게 번쩍인다."
+   },
+   "tags": [
+    "雷",
+    "稲光",
+    "lightning",
+    "flash",
+    "번개"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once",
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 1.5,
+    "min": 0.6,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#eaf1ff",
+     "swatches": [
+      "#eaf1ff",
+      "#ffffff",
+      "#c9b8ff"
+     ]
+    },
+    {
+     "key": "flashes",
+     "type": "range",
+     "label": {
+      "ja": "回数",
+      "en": "Flashes",
+      "ko": "횟수"
+     },
+     "min": 1,
+     "max": 3,
+     "step": 1,
+     "default": 2
+    },
+    {
+     "key": "intensity",
+     "type": "range",
+     "label": {
+      "ja": "強さ",
+      "en": "Strength",
+      "ko": "세기"
+     },
+     "min": 0.2,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.85
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 32
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "weather/lightning-flash"
+  },
+  {
+   "id": "weather.lightning-strike",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 3,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "落雷",
+    "en": "Lightning strike",
+    "ko": "낙뢰"
+   },
+   "desc": {
+    "ja": "選んだ場所に稲妻が落ちる。",
+    "en": "A bolt strikes the spot you pick.",
+    "ko": "고른 곳에 번개가 떨어진다."
+   },
+   "tags": [
+    "雷",
+    "落雷",
+    "lightning",
+    "strike",
+    "번개",
+    "낙뢰"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once",
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 1.2,
+    "min": 0.6,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "target",
+     "type": "point",
+     "label": {
+      "ja": "落ちる場所",
+      "en": "Strike point",
+      "ko": "떨어지는 곳"
+     },
+     "default": {
+      "x": 0.55,
+      "y": 0.82
+     }
+    },
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "芯の色",
+      "en": "Core colour",
+      "ko": "심 색"
+     },
+     "default": "#ffffff",
+     "swatches": [
+      "#ffffff",
+      "#fff3c4"
+     ]
+    },
+    {
+     "key": "glow",
+     "type": "color",
+     "label": {
+      "ja": "光の色",
+      "en": "Glow colour",
+      "ko": "빛 색"
+     },
+     "default": "#8fb5ff",
+     "swatches": [
+      "#8fb5ff",
+      "#c49bff",
+      "#ffd36b"
+     ]
+    },
+    {
+     "key": "branches",
+     "type": "range",
+     "label": {
+      "ja": "枝の数",
+      "en": "Branches",
+      "ko": "갈래 수"
+     },
+     "min": 0,
+     "max": 6,
+     "step": 1,
+     "default": 3
+    },
+    {
+     "key": "width",
+     "type": "range",
+     "label": {
+      "ja": "太さ",
+      "en": "Width",
+      "ko": "굵기"
+     },
+     "min": 0.5,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "flash",
+     "type": "range",
+     "label": {
+      "ja": "閃光",
+      "en": "Flash",
+      "ko": "섬광"
+     },
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.6
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 24,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "weather/lightning-strike"
+  },
+  {
+   "id": "weather.storm",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 4,
+   "category": "weather",
+   "kind": "combo",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "嵐",
+    "en": "Storm",
+    "ko": "폭풍"
+   },
+   "desc": {
+    "ja": "大雨・風・雷光を重ねた組み合わせ。",
+    "en": "Heavy rain, wind and lightning flashes together.",
+    "ko": "폭우·바람·번개 빛을 겹친 조합."
+   },
+   "tags": [
+    "嵐",
+    "storm",
+    "폭풍",
+    "雨",
+    "雷"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 2,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "rain",
+     "type": "range",
+     "label": {
+      "ja": "雨の量",
+      "en": "Rainfall",
+      "ko": "빗줄기 양"
+     },
+     "min": 0.5,
+     "max": 2.5,
+     "step": 0.1,
+     "default": 1.6
+    },
+    {
+     "key": "wind",
+     "type": "range",
+     "label": {
+      "ja": "風の強さ",
+      "en": "Wind",
+      "ko": "바람 세기"
+     },
+     "min": 0,
+     "max": 2,
+     "step": 0.1,
+     "default": 0.8
+    },
+    {
+     "key": "flash",
+     "type": "range",
+     "label": {
+      "ja": "雷光",
+      "en": "Lightning",
+      "ko": "번개 빛"
+     },
+     "min": 0,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.7
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "layers": [
+    {
+     "asset": "weather.rain",
+     "params": {
+      "angle": 18,
+      "splash": true
+     },
+     "map": {
+      "strength": "rain"
+     }
+    },
+    {
+     "asset": "element.wind",
+     "params": {
+      "dir": "right",
+      "angle": 10
+     },
+     "map": {
+      "strength": "wind"
+     },
+     "skipIfZero": "wind"
+    },
+    {
+     "asset": "weather.lightning-flash",
+     "params": {
+      "flashes": 2
+     },
+     "map": {
+      "intensity": "flash"
+     },
+     "skipIfZero": "flash"
+    }
+   ],
+   "path": "weather/storm"
+  },
+  {
+   "id": "weather.snow",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 5,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "雪",
+    "en": "Snow",
+    "ko": "눈"
+   },
+   "desc": {
+    "ja": "粉雪かぼたん雪。風で流れる。",
+    "en": "Powder or large flakes, drifting with the wind.",
+    "ko": "가루눈 또는 함박눈. 바람에 흩날린다."
+   },
+   "tags": [
+    "雪",
+    "snow",
+    "눈",
+    "粉雪",
+    "ぼたん雪"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop",
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 6,
+    "min": 2,
+    "max": 10
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#ffffff",
+     "swatches": [
+      "#ffffff",
+      "#dfeeff"
+     ]
+    },
+    {
+     "key": "flake",
+     "type": "select",
+     "label": {
+      "ja": "雪の種類",
+      "en": "Flakes",
+      "ko": "눈 종류"
+     },
+     "default": "powder",
+     "options": [
+      {
+       "value": "powder",
+       "label": {
+        "ja": "粉雪",
+        "en": "Powder",
+        "ko": "가루눈"
+       }
+      },
+      {
+       "value": "large",
+       "label": {
+        "ja": "ぼたん雪",
+        "en": "Large flakes",
+        "ko": "함박눈"
+       }
+      }
+     ]
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양"
+     },
+     "min": 0.2,
+     "max": 2.5,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "wind",
+     "type": "range",
+     "label": {
+      "ja": "風",
+      "en": "Wind",
+      "ko": "바람"
+     },
+     "min": -1,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.25
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "weather/snow"
+  },
+  {
+   "id": "weather.fog",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 6,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "霧",
+    "en": "Fog",
+    "ko": "안개"
+   },
+   "desc": {
+    "ja": "濃霧・薄い霧・足元だけの霧。",
+    "en": "Dense, thin, or ground-only fog.",
+    "ko": "짙은 안개·옅은 안개·발밑 안개."
+   },
+   "tags": [
+    "霧",
+    "もや",
+    "fog",
+    "mist",
+    "안개"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#dde4ec",
+     "swatches": [
+      "#dde4ec",
+      "#ffffff",
+      "#8a93a3",
+      "#b9d8c4"
+     ]
+    },
+    {
+     "key": "mode",
+     "type": "select",
+     "label": {
+      "ja": "種類",
+      "en": "Type",
+      "ko": "종류"
+     },
+     "default": "thin",
+     "options": [
+      {
+       "value": "thin",
+       "label": {
+        "ja": "薄い霧",
+        "en": "Thin",
+        "ko": "옅은 안개"
+       }
+      },
+      {
+       "value": "dense",
+       "label": {
+        "ja": "濃霧",
+        "en": "Dense",
+        "ko": "짙은 안개"
+       }
+      },
+      {
+       "value": "ground",
+       "label": {
+        "ja": "足元だけ",
+        "en": "Ground",
+        "ko": "발밑만"
+       }
+      }
+     ]
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양"
+     },
+     "min": 0.3,
+     "max": 1.5,
+     "step": 0.05,
+     "default": 1
+    }
+   ],
+   "budget": {
+    "size": [
+     640,
+     360
+    ],
+    "fps": 8,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "weather/fog"
+  },
+  {
+   "id": "weather.sakura",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 7,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "桜吹雪",
+    "en": "Cherry blossom storm",
+    "ko": "벚꽃 눈보라"
+   },
+   "desc": {
+    "ja": "桜の花びらがひらひらと舞う。",
+    "en": "Cherry petals flutter down.",
+    "ko": "벚꽃잎이 팔랑팔랑 흩날린다."
+   },
+   "tags": [
+    "桜",
+    "花びら",
+    "sakura",
+    "cherry",
+    "벚꽃"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 6,
+    "min": 3,
+    "max": 10
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#ffc7d9",
+     "swatches": [
+      "#ffc7d9",
+      "#ffffff",
+      "#ffe0ea"
+     ]
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양"
+     },
+     "min": 0.3,
+     "max": 2.5,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기"
+     },
+     "min": 0.5,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "wind",
+     "type": "range",
+     "label": {
+      "ja": "風",
+      "en": "Wind",
+      "ko": "바람"
+     },
+     "min": -1,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.35
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "weather/sakura"
+  },
+  {
+   "id": "element.embers",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 1,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "火の粉",
+    "en": "Embers",
+    "ko": "불티"
+   },
+   "desc": {
+    "ja": "下から火の粉が舞い上がる。",
+    "en": "Sparks rise from below.",
+    "ko": "아래에서 불티가 날아오른다."
+   },
+   "tags": [
+    "火の粉",
+    "炎",
+    "ember",
+    "fire",
+    "불티",
+    "불"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop",
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 1,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#ff8a3d",
+     "swatches": [
+      "#ff8a3d",
+      "#ffcf5a",
+      "#5ab4ff",
+      "#c86bff"
+     ]
+    },
+    {
+     "key": "density",
+     "type": "range",
+     "label": {
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양"
+     },
+     "min": 0.2,
+     "max": 2.5,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기"
+     },
+     "min": 0.5,
+     "max": 2.5,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "wind",
+     "type": "range",
+     "label": {
+      "ja": "風",
+      "en": "Wind",
+      "ko": "바람"
+     },
+     "min": -1,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.2
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "element/embers"
+  },
+  {
+   "id": "element.wind",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 2,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "風の筋",
+    "en": "Wind streaks",
+    "ko": "바람 줄기"
+   },
+   "desc": {
+    "ja": "白い筋が横切って、強い風を見せる。",
+    "en": "White streaks cut across to show strong wind.",
+    "ko": "흰 줄기가 가로질러 강한 바람을 보여준다."
+   },
+   "tags": [
+    "風",
+    "wind",
+    "바람",
+    "暴風"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop",
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#ffffff",
+     "swatches": [
+      "#ffffff",
+      "#d6ecff",
+      "#c9b38a"
+     ]
+    },
+    {
+     "key": "dir",
+     "type": "select",
+     "label": {
+      "ja": "向き",
+      "en": "Direction",
+      "ko": "방향"
+     },
+     "default": "right",
+     "options": [
+      {
+       "value": "right",
+       "label": {
+        "ja": "右へ",
+        "en": "To the right",
+        "ko": "오른쪽으로"
+       }
+      },
+      {
+       "value": "left",
+       "label": {
+        "ja": "左へ",
+        "en": "To the left",
+        "ko": "왼쪽으로"
+       }
+      }
+     ]
+    },
+    {
+     "key": "strength",
+     "type": "range",
+     "label": {
+      "ja": "強さ",
+      "en": "Strength",
+      "ko": "세기"
+     },
+     "min": 0.3,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "angle",
+     "type": "range",
+     "label": {
+      "ja": "角度",
+      "en": "Angle",
+      "ko": "각도"
+     },
+     "min": -25,
+     "max": 25,
+     "step": 1,
+     "default": 4
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "element/wind"
+  },
+  {
+   "id": "element.light-particles",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 3,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "ex",
+   "name": {
+    "ja": "光の粒",
+    "en": "Light particles",
+    "ko": "빛 입자"
+   },
+   "desc": {
+    "ja": "やわらかい光の粒が漂う。神秘・回想の場面に。",
+    "en": "Soft motes of light drift. For mystic or flashback scenes.",
+    "ko": "부드러운 빛 입자가 떠다닌다. 신비·회상 장면에."
+   },
+   "tags": [
+    "光",
+    "粒",
+    "light",
+    "particles",
+    "빛"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop",
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 1,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#ffd27a",
+     "swatches": [
+      "#ffd27a",
+      "#8fd3ff",
+      "#ffffff",
+      "#c9a4ff"
+     ]
+    },
+    {
+     "key": "motion",
+     "type": "select",
+     "label": {
+      "ja": "動き",
+      "en": "Motion",
+      "ko": "움직임"
+     },
+     "default": "rise",
+     "options": [
+      {
+       "value": "rise",
+       "label": {
+        "ja": "立ちのぼる",
+        "en": "Rise",
+        "ko": "피어오름"
+       }
+      },
+      {
+       "value": "float",
+       "label": {
+        "ja": "漂う",
+        "en": "Float",
+        "ko": "떠다님"
+       }
+      }
+     ]
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양"
+     },
+     "min": 0.3,
+     "max": 2.5,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기"
+     },
+     "min": 0.5,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "element/light-particles"
+  },
+  {
+   "id": "horror.blood-seep",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 1,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "血のにじみ",
+    "en": "Blood seep",
+    "ko": "번지는 피"
+   },
+   "desc": {
+    "ja": "画面のふちから血がにじむ。",
+    "en": "Blood soaks in from the screen edges.",
+    "ko": "화면 가장자리에서 피가 번진다."
+   },
+   "tags": [
+    "血",
+    "blood",
+    "피",
+    "ホラー",
+    "horror"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once",
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 2.5,
+    "min": 1,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#8a0012",
+     "swatches": [
+      "#8a0012",
+      "#5a000c",
+      "#2b0a0a"
+     ]
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양"
+     },
+     "min": 0.2,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.6
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "horror/blood-seep"
+  },
+  {
+   "id": "horror.heartbeat",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 2,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "鼓動する闇",
+    "en": "Heartbeat vignette",
+    "ko": "고동치는 어둠"
+   },
+   "desc": {
+    "ja": "画面のふちが心臓の鼓動のように脈打つ。",
+    "en": "The edges pulse like a heartbeat.",
+    "ko": "화면 가장자리가 심장 박동처럼 맥동한다."
+   },
+   "tags": [
+    "鼓動",
+    "心臓",
+    "heartbeat",
+    "vignette",
+    "심장"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#3a0008",
+      "#1a0030"
+     ]
+    },
+    {
+     "key": "bpm",
+     "type": "range",
+     "label": {
+      "ja": "速さ（BPM）",
+      "en": "Speed (BPM)",
+      "ko": "속도 (BPM)"
+     },
+     "min": 40,
+     "max": 150,
+     "step": 1,
+     "default": 72
+    },
+    {
+     "key": "strength",
+     "type": "range",
+     "label": {
+      "ja": "強さ",
+      "en": "Strength",
+      "ko": "세기"
+     },
+     "min": 0.3,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.85
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "horror/heartbeat"
+  },
+  {
+   "id": "horror.lights-out",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 3,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "明かりが消える",
+    "en": "Lights out",
+    "ko": "불이 꺼진다"
+   },
+   "desc": {
+    "ja": "ちらついたあと、暗闇になって止まる。",
+    "en": "Flickers, then stays dark.",
+    "ko": "깜빡이다가 어둠 속에 멈춘다."
+   },
+   "tags": [
+    "停電",
+    "暗闇",
+    "lights out",
+    "blackout",
+    "정전"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 2.5,
+    "min": 1,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#0d0614"
+     ]
+    },
+    {
+     "key": "darkness",
+     "type": "range",
+     "label": {
+      "ja": "最後の暗さ",
+      "en": "Final darkness",
+      "ko": "마지막 어둠"
+     },
+     "min": 0.5,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.92
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 32
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "horror/lights-out"
+  },
+  {
+   "id": "horror.flicker",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 4,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "蛍光灯のちらつき",
+    "en": "Flickering light",
+    "ko": "형광등 깜빡임"
+   },
+   "desc": {
+    "ja": "切れかけの明かりのように、ときどき暗く落ちる。",
+    "en": "Dims now and then like a dying light.",
+    "ko": "꺼져 가는 불빛처럼 가끔 어두워진다."
+   },
+   "tags": [
+    "ちらつき",
+    "蛍光灯",
+    "flicker",
+    "깜빡임"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 1,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#0b1a10"
+     ]
+    },
+    {
+     "key": "rate",
+     "type": "range",
+     "label": {
+      "ja": "ちらつく頻度",
+      "en": "How often",
+      "ko": "빈도"
+     },
+     "min": 0.1,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.45
+    },
+    {
+     "key": "darkness",
+     "type": "range",
+     "label": {
+      "ja": "暗さ",
+      "en": "Darkness",
+      "ko": "어둠"
+     },
+     "min": 0.3,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.85
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 32
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "horror/flicker"
+  },
+  {
+   "id": "visual.noise",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 1,
+   "category": "visual",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "ノイズ",
+    "en": "Noise",
+    "ko": "노이즈"
+   },
+   "desc": {
+    "ja": "フィルムの粒子、またはテレビの砂嵐。",
+    "en": "Film grain or TV static.",
+    "ko": "필름 입자 또는 TV 지직거림."
+   },
+   "tags": [
+    "ノイズ",
+    "砂嵐",
+    "noise",
+    "grain",
+    "static",
+    "노이즈"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 1,
+    "min": 0.5,
+    "max": 3
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "mode",
+     "type": "select",
+     "label": {
+      "ja": "種類",
+      "en": "Type",
+      "ko": "종류"
+     },
+     "default": "grain",
+     "options": [
+      {
+       "value": "grain",
+       "label": {
+        "ja": "フィルムの粒子",
+        "en": "Film grain",
+        "ko": "필름 입자"
+       }
+      },
+      {
+       "value": "static",
+       "label": {
+        "ja": "砂嵐",
+        "en": "TV static",
+        "ko": "TV 노이즈"
+       }
+      }
+     ]
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양"
+     },
+     "min": 0.05,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.3
+    },
+    {
+     "key": "grain",
+     "type": "range",
+     "label": {
+      "ja": "粒の大きさ",
+      "en": "Grain size",
+      "ko": "입자 크기"
+     },
+     "min": 1,
+     "max": 6,
+     "step": 1,
+     "default": 2
+    },
+    {
+     "key": "tint",
+     "type": "toggle",
+     "label": {
+      "ja": "セピア寄り",
+      "en": "Sepia tint",
+      "ko": "세피아"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 12,
+    "colors": 32
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "visual/noise"
+  },
+  {
+   "id": "visual.vignette",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 2,
+   "category": "visual",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "TK",
+   "name": {
+    "ja": "周囲が暗くなる",
+    "en": "Vignette",
+    "ko": "비네트"
+   },
+   "desc": {
+    "ja": "画面のふちを暗くする。止まったまま・迫る・呼吸する。",
+    "en": "Darkens the edges: still, closing in, or breathing.",
+    "ko": "화면 가장자리를 어둡게. 정지·좁혀옴·호흡."
+   },
+   "tags": [
+    "ビネット",
+    "暗い",
+    "vignette",
+    "dark",
+    "비네트"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop",
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 1,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#3a0008",
+      "#0d1b2f",
+      "#ffffff"
+     ]
+    },
+    {
+     "key": "mode",
+     "type": "select",
+     "label": {
+      "ja": "動き",
+      "en": "Motion",
+      "ko": "움직임"
+     },
+     "default": "static",
+     "options": [
+      {
+       "value": "static",
+       "label": {
+        "ja": "止まったまま",
+        "en": "Still",
+        "ko": "정지"
+       }
+      },
+      {
+       "value": "closing",
+       "label": {
+        "ja": "迫ってくる",
+        "en": "Closing in",
+        "ko": "좁혀옴"
+       }
+      },
+      {
+       "value": "breathing",
+       "label": {
+        "ja": "呼吸する",
+        "en": "Breathing",
+        "ko": "호흡"
+       }
+      }
+     ]
+    },
+    {
+     "key": "strength",
+     "type": "range",
+     "label": {
+      "ja": "強さ",
+      "en": "Strength",
+      "ko": "세기"
+     },
+     "min": 0.2,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.8
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "明るい範囲",
+      "en": "Clear area",
+      "ko": "밝은 범위"
+     },
+     "min": 0.1,
+     "max": 0.8,
+     "step": 0.05,
+     "default": 0.4
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "visual/vignette"
+  },
+  {
+   "id": "visual.flash",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 3,
+   "category": "visual",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "フラッシュ",
+    "en": "Flash",
+    "ko": "플래시"
+   },
+   "desc": {
+    "ja": "一瞬の閃光。衝撃や気づきの瞬間に。",
+    "en": "A burst of light for impacts and revelations.",
+    "ko": "순간적인 섬광. 충격이나 깨달음의 순간에."
+   },
+   "tags": [
+    "フラッシュ",
+    "閃光",
+    "flash",
+    "섬광"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once",
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 0.8,
+    "min": 0.3,
+    "max": 3
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#ffffff",
+     "swatches": [
+      "#ffffff",
+      "#fff1b8",
+      "#ff3b3b",
+      "#9fd0ff"
+     ]
+    },
+    {
+     "key": "shape",
+     "type": "select",
+     "label": {
+      "ja": "広がり方",
+      "en": "Shape",
+      "ko": "형태"
+     },
+     "default": "full",
+     "options": [
+      {
+       "value": "full",
+       "label": {
+        "ja": "全体",
+        "en": "Full screen",
+        "ko": "전체"
+       }
+      },
+      {
+       "value": "radial",
+       "label": {
+        "ja": "中心から",
+        "en": "From a point",
+        "ko": "중심에서"
+       }
+      }
+     ]
+    },
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    },
+    {
+     "key": "intensity",
+     "type": "range",
+     "label": {
+      "ja": "強さ",
+      "en": "Strength",
+      "ko": "세기"
+     },
+     "min": 0.2,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.95
+    },
+    {
+     "key": "decay",
+     "type": "range",
+     "label": {
+      "ja": "消える速さ",
+      "en": "Fade speed",
+      "ko": "사라지는 속도"
+     },
+     "min": 2,
+     "max": 12,
+     "step": 0.5,
+     "default": 5
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 24,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "visual/flash"
+  },
+  {
+   "id": "visual.focus-lines",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 4,
+   "category": "visual",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "集中線",
+    "en": "Focus lines",
+    "ko": "집중선"
+   },
+   "desc": {
+    "ja": "漫画の集中線。中心は選べる。",
+    "en": "Manga focus lines toward a point you pick.",
+    "ko": "만화 집중선. 중심을 고를 수 있다."
+   },
+   "tags": [
+    "集中線",
+    "漫画",
+    "focus lines",
+    "speed lines",
+    "집중선"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 1,
+    "min": 0.5,
+    "max": 3
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#ffffff",
+      "#5a0010"
+     ]
+    },
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    },
+    {
+     "key": "inner",
+     "type": "range",
+     "label": {
+      "ja": "中心の空き",
+      "en": "Clear centre",
+      "ko": "중심 여백"
+     },
+     "min": 0.2,
+     "max": 1.2,
+     "step": 0.05,
+     "default": 0.6
+    },
+    {
+     "key": "density",
+     "type": "range",
+     "label": {
+      "ja": "線の数",
+      "en": "Lines",
+      "ko": "선 수"
+     },
+     "min": 40,
+     "max": 220,
+     "step": 10,
+     "default": 120
+    },
+    {
+     "key": "weight",
+     "type": "range",
+     "label": {
+      "ja": "線の太さ",
+      "en": "Line weight",
+      "ko": "선 굵기"
+     },
+     "min": 0.3,
+     "max": 1.6,
+     "step": 0.05,
+     "default": 0.8
+    },
+    {
+     "key": "speed",
+     "type": "range",
+     "label": {
+      "ja": "切り替わる速さ",
+      "en": "Change rate",
+      "ko": "바뀌는 속도"
+     },
+     "min": 2,
+     "max": 16,
+     "step": 1,
+     "default": 8
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 16,
+    "colors": 32
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "visual/focus-lines"
+  },
+  {
+   "id": "visual.letterbox",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 5,
+   "category": "visual",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "シネマスコープ",
+    "en": "Letterbox",
+    "ko": "레터박스"
+   },
+   "desc": {
+    "ja": "上下に黒帯が入り、映画のような画面に。",
+    "en": "Black bars slide in for a cinematic frame.",
+    "ko": "위아래 검은 띠가 들어와 영화 같은 화면으로."
+   },
+   "tags": [
+    "黒帯",
+    "映画",
+    "letterbox",
+    "cinema",
+    "레터박스"
+   ],
+   "use": [
+    "overlay",
+    "foreground"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1.2,
+    "min": 0.5,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#000000",
+     "swatches": [
+      "#000000",
+      "#0d0d10",
+      "#ffffff"
+     ]
+    },
+    {
+     "key": "mode",
+     "type": "select",
+     "label": {
+      "ja": "動き",
+      "en": "Motion",
+      "ko": "움직임"
+     },
+     "default": "in",
+     "options": [
+      {
+       "value": "in",
+       "label": {
+        "ja": "入ってくる",
+        "en": "Slide in",
+        "ko": "들어옴"
+       }
+      },
+      {
+       "value": "out",
+       "label": {
+        "ja": "出ていく",
+        "en": "Slide out",
+        "ko": "나감"
+       }
+      }
+     ]
+    },
+    {
+     "key": "height",
+     "type": "range",
+     "label": {
+      "ja": "帯の太さ",
+      "en": "Bar height",
+      "ko": "띠 두께"
+     },
+     "min": 0.05,
+     "max": 0.22,
+     "step": 0.01,
+     "default": 0.12
+    },
+    {
+     "key": "slide",
+     "type": "range",
+     "label": {
+      "ja": "動く時間の割合",
+      "en": "Slide time",
+      "ko": "이동 시간 비율"
+     },
+     "min": 0.2,
+     "max": 1,
+     "step": 0.05,
+     "default": 0.6
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 32
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "visual/letterbox"
+  },
+  {
+   "id": "visual.dust",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-14",
+   "order": 6,
+   "category": "visual",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "舞う埃",
+    "en": "Dust motes",
+    "ko": "떠도는 먼지"
+   },
+   "desc": {
+    "ja": "差しこむ光のなかを埃が漂う。古い屋敷や屋根裏に。",
+    "en": "Dust drifts in a beam of light. For old mansions and attics.",
+    "ko": "비쳐 드는 빛 속에 먼지가 떠다닌다. 낡은 저택·다락방에."
+   },
+   "tags": [
+    "埃",
+    "光",
+    "dust",
+    "attic",
+    "먼지",
+    "洋館"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 10
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "color",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색"
+     },
+     "default": "#fff0cf",
+     "swatches": [
+      "#fff0cf",
+      "#ffffff",
+      "#cfe6ff"
+     ]
+    },
+    {
+     "key": "beam",
+     "type": "toggle",
+     "label": {
+      "ja": "光の筋",
+      "en": "Light beam",
+      "ko": "빛줄기"
+     },
+     "default": true
+    },
+    {
+     "key": "origin",
+     "type": "range",
+     "label": {
+      "ja": "光の位置",
+      "en": "Beam position",
+      "ko": "빛 위치"
+     },
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "default": 0.3
+    },
+    {
+     "key": "angle",
+     "type": "range",
+     "label": {
+      "ja": "光の角度",
+      "en": "Beam angle",
+      "ko": "빛 각도"
+     },
+     "min": -40,
+     "max": 40,
+     "step": 1,
+     "default": -18
+    },
+    {
+     "key": "beamWidth",
+     "type": "range",
+     "label": {
+      "ja": "光の幅",
+      "en": "Beam width",
+      "ko": "빛 폭"
+     },
+     "min": 0.1,
+     "max": 0.6,
+     "step": 0.01,
+     "default": 0.28
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양"
+     },
+     "min": 0.3,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 12,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "path": "visual/dust"
+  }
+ ]
+}

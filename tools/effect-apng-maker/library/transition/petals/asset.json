@@ -1,0 +1,194 @@
+{
+  "id": "transition.petals",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 5,
+  "category": "transition",
+  "kind": "procedural",
+  "type": "transition",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "花びらシルエット",
+    "en": "Petal silhouette",
+    "ko": "꽃잎 실루엣"
+  },
+  "desc": {
+    "ja": "花びらの影が舞いながら画面を覆う。",
+    "en": "Petal silhouettes swirl in until they cover the screen.",
+    "ko": "꽃잎 그림자가 흩날리며 화면을 덮는다."
+  },
+  "tags": [
+    "花びら",
+    "桜",
+    "petal",
+    "sakura",
+    "꽃잎",
+    "벚꽃"
+  ],
+  "use": [
+    "transition"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 1.6,
+    "min": 0.6,
+    "max": 5
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "覆う色",
+        "en": "Cover colour",
+        "ko": "덮는 색"
+      },
+      "default": "#ffd7e4",
+      "swatches": [
+        "#ffd7e4",
+        "#ffffff",
+        "#000000",
+        "#7a0f2a"
+      ]
+    },
+    {
+      "key": "shape",
+      "type": "select",
+      "label": {
+        "ja": "花",
+        "en": "Flower",
+        "ko": "꽃"
+      },
+      "default": "sakura",
+      "options": [
+        {
+          "value": "sakura",
+          "label": {
+            "ja": "桜",
+            "en": "Cherry",
+            "ko": "벚꽃"
+          }
+        },
+        {
+          "value": "rose",
+          "label": {
+            "ja": "薔薇",
+            "en": "Rose",
+            "ko": "장미"
+          }
+        },
+        {
+          "value": "plum",
+          "label": {
+            "ja": "梅",
+            "en": "Plum",
+            "ko": "매화"
+          }
+        },
+        {
+          "value": "camellia",
+          "label": {
+            "ja": "椿",
+            "en": "Camellia",
+            "ko": "동백"
+          }
+        }
+      ]
+    },
+    {
+      "key": "from",
+      "type": "select",
+      "label": {
+        "ja": "始まる側",
+        "en": "Starts from",
+        "ko": "시작 방향"
+      },
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": {
+            "ja": "左",
+            "en": "Left",
+            "ko": "왼쪽"
+          }
+        },
+        {
+          "value": "right",
+          "label": {
+            "ja": "右",
+            "en": "Right",
+            "ko": "오른쪽"
+          }
+        },
+        {
+          "value": "top",
+          "label": {
+            "ja": "上",
+            "en": "Top",
+            "ko": "위"
+          }
+        },
+        {
+          "value": "bottom",
+          "label": {
+            "ja": "下",
+            "en": "Bottom",
+            "ko": "아래"
+          }
+        },
+        {
+          "value": "center",
+          "label": {
+            "ja": "中央",
+            "en": "Centre",
+            "ko": "중앙"
+          }
+        }
+      ]
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기"
+      },
+      "min": 0.06,
+      "max": 0.25,
+      "step": 0.01,
+      "default": 0.12
+    },
+    {
+      "key": "spin",
+      "type": "toggle",
+      "label": {
+        "ja": "回りながら",
+        "en": "Spin",
+        "ko": "회전"
+      },
+      "default": true
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

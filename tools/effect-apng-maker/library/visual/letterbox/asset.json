@@ -1,0 +1,128 @@
+{
+  "id": "visual.letterbox",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 5,
+  "category": "visual",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "シネマスコープ",
+    "en": "Letterbox",
+    "ko": "레터박스"
+  },
+  "desc": {
+    "ja": "上下に黒帯が入り、映画のような画面に。",
+    "en": "Black bars slide in for a cinematic frame.",
+    "ko": "위아래 검은 띠가 들어와 영화 같은 화면으로."
+  },
+  "tags": [
+    "黒帯",
+    "映画",
+    "letterbox",
+    "cinema",
+    "레터박스"
+  ],
+  "use": [
+    "overlay",
+    "foreground"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 1.2,
+    "min": 0.5,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#0d0d10",
+        "#ffffff"
+      ]
+    },
+    {
+      "key": "mode",
+      "type": "select",
+      "label": {
+        "ja": "動き",
+        "en": "Motion",
+        "ko": "움직임"
+      },
+      "default": "in",
+      "options": [
+        {
+          "value": "in",
+          "label": {
+            "ja": "入ってくる",
+            "en": "Slide in",
+            "ko": "들어옴"
+          }
+        },
+        {
+          "value": "out",
+          "label": {
+            "ja": "出ていく",
+            "en": "Slide out",
+            "ko": "나감"
+          }
+        }
+      ]
+    },
+    {
+      "key": "height",
+      "type": "range",
+      "label": {
+        "ja": "帯の太さ",
+        "en": "Bar height",
+        "ko": "띠 두께"
+      },
+      "min": 0.05,
+      "max": 0.22,
+      "step": 0.01,
+      "default": 0.12
+    },
+    {
+      "key": "slide",
+      "type": "range",
+      "label": {
+        "ja": "動く時間の割合",
+        "en": "Slide time",
+        "ko": "이동 시간 비율"
+      },
+      "min": 0.2,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.6
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 32
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

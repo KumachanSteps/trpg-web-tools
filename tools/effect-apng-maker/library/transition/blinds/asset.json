@@ -1,0 +1,126 @@
+{
+  "id": "transition.blinds",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 3,
+  "category": "transition",
+  "kind": "procedural",
+  "type": "transition",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "ブラインド",
+    "en": "Blinds",
+    "ko": "블라인드"
+  },
+  "desc": {
+    "ja": "細い帯が順に閉じていく。",
+    "en": "Slats close one after another.",
+    "ko": "가는 띠가 차례로 닫힌다."
+  },
+  "tags": [
+    "ブラインド",
+    "blinds",
+    "블라인드"
+  ],
+  "use": [
+    "transition"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 1.2,
+    "min": 0.4,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "覆う色",
+        "en": "Cover colour",
+        "ko": "덮는 색"
+      },
+      "default": "#000000",
+      "swatches": [
+        "#000000",
+        "#ffffff",
+        "#5a0010",
+        "#0d1b2f"
+      ]
+    },
+    {
+      "key": "orient",
+      "type": "select",
+      "label": {
+        "ja": "向き",
+        "en": "Direction",
+        "ko": "방향"
+      },
+      "default": "horizontal",
+      "options": [
+        {
+          "value": "horizontal",
+          "label": {
+            "ja": "横",
+            "en": "Horizontal",
+            "ko": "가로"
+          }
+        },
+        {
+          "value": "vertical",
+          "label": {
+            "ja": "縦",
+            "en": "Vertical",
+            "ko": "세로"
+          }
+        }
+      ]
+    },
+    {
+      "key": "count",
+      "type": "range",
+      "label": {
+        "ja": "帯の数",
+        "en": "Slats",
+        "ko": "띠 수"
+      },
+      "min": 3,
+      "max": 24,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "key": "stagger",
+      "type": "range",
+      "label": {
+        "ja": "時間差",
+        "en": "Stagger",
+        "ko": "시간차"
+      },
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.6
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 32
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

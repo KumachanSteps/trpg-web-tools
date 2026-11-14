@@ -1,0 +1,112 @@
+{
+  "id": "weather.sakura",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 7,
+  "category": "weather",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "桜吹雪",
+    "en": "Cherry blossom storm",
+    "ko": "벚꽃 눈보라"
+  },
+  "desc": {
+    "ja": "桜の花びらがひらひらと舞う。",
+    "en": "Cherry petals flutter down.",
+    "ko": "벚꽃잎이 팔랑팔랑 흩날린다."
+  },
+  "tags": [
+    "桜",
+    "花びら",
+    "sakura",
+    "cherry",
+    "벚꽃"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 6,
+    "min": 3,
+    "max": 10
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#ffc7d9",
+      "swatches": [
+        "#ffc7d9",
+        "#ffffff",
+        "#ffe0ea"
+      ]
+    },
+    {
+      "key": "amount",
+      "type": "range",
+      "label": {
+        "ja": "量",
+        "en": "Amount",
+        "ko": "양"
+      },
+      "min": 0.3,
+      "max": 2.5,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기"
+      },
+      "min": 0.5,
+      "max": 2,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "key": "wind",
+      "type": "range",
+      "label": {
+        "ja": "風",
+        "en": "Wind",
+        "ko": "바람"
+      },
+      "min": -1,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.35
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

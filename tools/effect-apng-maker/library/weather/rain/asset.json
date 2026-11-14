@@ -1,0 +1,110 @@
+{
+  "id": "weather.rain",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 1,
+  "category": "weather",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "TK",
+  "name": {
+    "ja": "雨",
+    "en": "Rain",
+    "ko": "비"
+  },
+  "desc": {
+    "ja": "霧雨から大雨まで、量と角度で調整。",
+    "en": "From drizzle to downpour, set by amount and angle.",
+    "ko": "이슬비부터 폭우까지 양과 각도로 조절."
+  },
+  "tags": [
+    "雨",
+    "rain",
+    "비",
+    "大雨",
+    "霧雨"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#cfe3ff",
+      "swatches": [
+        "#cfe3ff",
+        "#ffffff",
+        "#9fb6cc"
+      ]
+    },
+    {
+      "key": "strength",
+      "type": "range",
+      "label": {
+        "ja": "雨の量",
+        "en": "Rainfall",
+        "ko": "빗줄기 양"
+      },
+      "min": 0.2,
+      "max": 2.5,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "key": "angle",
+      "type": "range",
+      "label": {
+        "ja": "角度",
+        "en": "Angle",
+        "ko": "각도"
+      },
+      "min": -30,
+      "max": 30,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "key": "splash",
+      "type": "toggle",
+      "label": {
+        "ja": "足元の跳ね返り",
+        "en": "Splashes",
+        "ko": "튀는 물방울"
+      },
+      "default": true
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "id": "horror.blood-seep",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 1,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "血のにじみ",
+    "en": "Blood seep",
+    "ko": "번지는 피"
+  },
+  "desc": {
+    "ja": "画面のふちから血がにじむ。",
+    "en": "Blood soaks in from the screen edges.",
+    "ko": "화면 가장자리에서 피가 번진다."
+  },
+  "tags": [
+    "血",
+    "blood",
+    "피",
+    "ホラー",
+    "horror"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once",
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 2.5,
+    "min": 1,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "#8a0012",
+      "swatches": [
+        "#8a0012",
+        "#5a000c",
+        "#2b0a0a"
+      ]
+    },
+    {
+      "key": "amount",
+      "type": "range",
+      "label": {
+        "ja": "量",
+        "en": "Amount",
+        "ko": "양"
+      },
+      "min": 0.2,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.6
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  }
+}
