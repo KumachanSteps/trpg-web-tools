@@ -92,6 +92,8 @@ export class EffectInstance {
       target.save();
       if (L.asset.type === 'transition') {
         const p = coverAmount(opts.direction, t);
+        // 現れる側（in、inout の後半）かどうか。覆うときと現れるときで動きを変えたい転換が使う
+        L.S.revealing = opts.direction === 'in' || (opts.direction === 'inout' && t >= 0.5);
         if (p > 0.0005 && L.mod.cover) L.mod.cover(target, Math.min(1, p), L.P, L.state, L.S);
       } else if (L.mod.draw) {
         L.mod.draw(target, t, L.P, L.state, L.S);
