@@ -1,7 +1,7 @@
 # 演出APNGメーカー（Effect APNG Maker / 연출 APNG 메이커）
 
 場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出すツール。
-v0.11 は限定テスト版（`noindex`、ポータルのカードなし、直リンクのみ）。
+v0.12 は限定テスト版（`noindex`、ポータルのカードなし、直リンクのみ）。
 
 ## 画面
 
@@ -47,6 +47,17 @@ export default {
 - ループでは t=0 と t=1 が同じ絵になるように、動きを整数回の周回で作る（`kit.js` の `cycles` / `wrap`）。
 - 転換の in / out / inout は本体が `p` を作るので、`cover` は「覆う量 p」だけを描けばよい。
 - `kind: "combo"` は `layers` に既存のアセットを並べるだけ（例：嵐 = 雨＋風＋雷光）。
+- `setup` は async にしてよい（本体が await する）。
+
+### 文字画像APNGメーカーEX の演出を使う
+
+`ex/` に EX のエンジンと演出部品（`fx-*.js`、2026-11-10 の f3baa73 時点のコピー）を置いている。`library/ex-bridge.js` が必要になったときだけ読み込む。
+
+- EX のテンプレートをそのまま使う（戦闘演出・炎・灰・煙など）：
+  `export default exTemplate({ template: 'fireWall' })`、色違いは `exTemplate({ variants: { white: 'fangFxWhite', red: 'fangFxRed' } })`（`variant` という select の設定で選ぶ）。
+  文字は透明にして描く。EX の1回ぶんの長さを、こちらの「長さ」に引きのばして再生する。
+- 部品だけ使う（コウモリ・月・血しぶき・かぼちゃ・おばけ・流れ星など）：`const ex = await loadEx();` のあと `ex.Vampire.bat(...)` などを呼ぶ（`setup` を async にする）。
+- EX 側を直したときは `ex/` にコピーし直し、`ex-bridge.js` の `EX_VERSION` を上げる。
 
 ## 共通コード
 

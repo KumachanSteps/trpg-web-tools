@@ -1,0 +1,96 @@
+{
+  "id": "combat.fang",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 1,
+  "category": "combat",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "牙",
+    "en": "Fangs",
+    "ko": "송곳니"
+  },
+  "desc": {
+    "ja": "上下から牙が噛みつく。",
+    "en": "Fangs bite down from above and below.",
+    "ko": "위아래에서 송곳니가 문다."
+  },
+  "tags": [
+    "牙",
+    "噛みつき",
+    "fang",
+    "bite",
+    "송곳니"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop",
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "variant",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "white",
+      "options": [
+        {
+          "value": "white",
+          "label": {
+            "ja": "白",
+            "en": "White",
+            "ko": "흰색"
+          }
+        },
+        {
+          "value": "red",
+          "label": {
+            "ja": "赤",
+            "en": "Red",
+            "ko": "빨강"
+          }
+        },
+        {
+          "value": "black",
+          "label": {
+            "ja": "黒",
+            "en": "Black",
+            "ko": "검정"
+          }
+        }
+      ]
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  }
+}

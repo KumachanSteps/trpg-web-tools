@@ -1,0 +1,98 @@
+{
+  "id": "combat.bullet-crack",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 7,
+  "category": "combat",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "弾痕・ひび",
+    "en": "Bullet cracks",
+    "ko": "탄흔·균열"
+  },
+  "desc": {
+    "ja": "着弾の跡からひびが広がる。",
+    "en": "Cracks spread from the bullet impacts.",
+    "ko": "탄착점에서 금이 번진다."
+  },
+  "tags": [
+    "弾痕",
+    "銃",
+    "ひび",
+    "bullet",
+    "gun",
+    "crack",
+    "총",
+    "균열"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3,
+    "min": 1.5,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "variant",
+      "type": "select",
+      "label": {
+        "ja": "発数",
+        "en": "Shots",
+        "ko": "발 수"
+      },
+      "default": "1",
+      "options": [
+        {
+          "value": "1",
+          "label": {
+            "ja": "単発",
+            "en": "Single",
+            "ko": "단발"
+          }
+        },
+        {
+          "value": "2",
+          "label": {
+            "ja": "2連",
+            "en": "Double",
+            "ko": "2연발"
+          }
+        },
+        {
+          "value": "3",
+          "label": {
+            "ja": "3連",
+            "en": "Triple",
+            "ko": "3연발"
+          }
+        }
+      ]
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  }
+}

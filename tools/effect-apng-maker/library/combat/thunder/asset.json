@@ -1,0 +1,60 @@
+{
+  "id": "combat.thunder",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 8,
+  "category": "combat",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "雷鳴",
+    "en": "Thunderclap",
+    "ko": "뇌명"
+  },
+  "desc": {
+    "ja": "稲妻が走り、画面が震える。",
+    "en": "Lightning strikes and the screen shakes.",
+    "ko": "번개가 치고 화면이 흔들린다."
+  },
+  "tags": [
+    "雷",
+    "稲妻",
+    "戦闘",
+    "thunder",
+    "lightning",
+    "번개"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 4.4,
+    "min": 2.2,
+    "max": 8.8
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  },
+  "poster": 0.1
+}

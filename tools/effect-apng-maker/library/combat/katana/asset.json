@@ -1,0 +1,97 @@
+{
+  "id": "combat.katana",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 3,
+  "category": "combat",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "抜刀の一閃",
+    "en": "Iaido slash",
+    "ko": "발도 일섬"
+  },
+  "desc": {
+    "ja": "抜き打ちの一太刀が走る。",
+    "en": "A single quick-draw sword stroke.",
+    "ko": "빠르게 뽑은 칼이 한 번 번뜩인다."
+  },
+  "tags": [
+    "刀",
+    "斬撃",
+    "一閃",
+    "katana",
+    "slash",
+    "칼",
+    "베기"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 1.4,
+    "min": 0.7,
+    "max": 2.8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "variant",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색"
+      },
+      "default": "white",
+      "options": [
+        {
+          "value": "white",
+          "label": {
+            "ja": "白",
+            "en": "White",
+            "ko": "흰색"
+          }
+        },
+        {
+          "value": "red",
+          "label": {
+            "ja": "赤",
+            "en": "Red",
+            "ko": "빨강"
+          }
+        },
+        {
+          "value": "black",
+          "label": {
+            "ja": "黒",
+            "en": "Black",
+            "ko": "검정"
+          }
+        }
+      ]
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "element.fire-run",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-14",
+  "order": 5,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "走る炎",
+    "en": "Running fire",
+    "ko": "번지는 불길"
+  },
+  "desc": {
+    "ja": "炎が地面を走って燃え広がる。",
+    "en": "Fire races across the ground and spreads.",
+    "ko": "불길이 땅을 타고 번진다."
+  },
+  "tags": [
+    "炎",
+    "火",
+    "fire",
+    "flame",
+    "불"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3.8,
+    "min": 1.9,
+    "max": 7.6
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの演出を移植"
+  },
+  "poster": 0.5
+}
