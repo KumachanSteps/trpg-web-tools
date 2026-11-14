@@ -1,4 +1,4 @@
-import { TAU, makeParticles, wrap, rgba, glowDot } from '../../_kit.js';
+import { TAU, makeParticles, wrap, rgba, glowDot } from '../../kit.js';
 
 export default {
   setup(P, S) {

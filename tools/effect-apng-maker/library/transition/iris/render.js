@@ -1,4 +1,4 @@
-import { easeInOut } from '../../_kit.js';
+import { easeInOut } from '../../kit.js';
 
 export default {
   cover(ctx, p, P, st, S) {

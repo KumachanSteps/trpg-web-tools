@@ -1,4 +1,4 @@
-import { TAU, rng } from '../../_kit.js';
+import { TAU, rng } from '../../kit.js';
 
 // 漫画の集中線。数コマごとに線の並びが入れ替わる
 export default {

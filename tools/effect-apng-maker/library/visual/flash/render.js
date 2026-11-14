@@ -1,4 +1,4 @@
-import { rgba, span } from '../../_kit.js';
+import { rgba, span } from '../../kit.js';
 
 export default {
   draw(ctx, t, P, st, S) {

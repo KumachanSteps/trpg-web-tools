@@ -1,4 +1,4 @@
-import { TAU, makeParticles, rgba } from '../../_kit.js';
+import { TAU, makeParticles, rgba } from '../../kit.js';
 
 // 大きなもやの塊が、ゆっくり円をえがいて漂う（t=0 と t=1 で同じ位置に戻る）
 export default {

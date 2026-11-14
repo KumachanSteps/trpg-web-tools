@@ -1,4 +1,4 @@
-import { TAU, makeParticles, glowDot, rgba } from '../../_kit.js';
+import { TAU, makeParticles, glowDot, rgba } from '../../kit.js';
 
 // 差しこむ光の筋と、そのなかを漂う埃
 export default {

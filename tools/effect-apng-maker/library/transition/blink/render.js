@@ -1,4 +1,4 @@
-import { easeInOut } from '../../_kit.js';
+import { easeInOut } from '../../kit.js';
 
 // まぶたが閉じる。p=1 で完全に閉じる（out）、in は目が開く
 export default {

@@ -1,4 +1,4 @@
-import { clamp, easeInOut } from '../../_kit.js';
+import { clamp, easeInOut } from '../../kit.js';
 
 export default {
   cover(ctx, p, P, st, S) {

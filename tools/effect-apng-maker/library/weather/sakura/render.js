@@ -1,4 +1,4 @@
-import { TAU, makeParticles, wrap, rgba, shade, SHAPES } from '../../_kit.js';
+import { TAU, makeParticles, wrap, rgba, shade, SHAPES } from '../../kit.js';
 
 export default {
   setup(P, S) {

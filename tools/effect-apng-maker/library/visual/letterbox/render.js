@@ -1,4 +1,4 @@
-import { easeInOut, span } from '../../_kit.js';
+import { easeInOut, span } from '../../kit.js';
 
 // 映画のような黒帯。in は帯が入ってきて止まる、out は帯が出ていく
 export default {

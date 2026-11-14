@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const LIB = join(here, '..', 'library');
+const TOOL = join(here, '..');
 const OUT = join(LIB, 'manifest.json');
 
 // ライブラリのカテゴリ（並び順）。新しいカテゴリはここに足す
@@ -98,10 +99,21 @@ function checkAsset(a, folder) {
   if (a.kind === 'baked' && !existsSync(join(LIB, folder, a.frames || 'frames.png'))) fail(id, 'baked assets need their frames file');
 }
 
+// GitHub Pages（Jekyll）は _ や . で始まるファイル・フォルダを公開しない。
+// 混ざると公開サイトでだけ読み込めなくなるので、ここで止める（v0.10 で library/_kit.js が公開されず、演出が出なかった）。
+(function checkNames(dir) {
+  for (const name of readdirSync(dir)) {
+    if (name === '.DS_Store') continue;
+    const full = join(dir, name);
+    if (/^[_.]/.test(name)) fail(full.slice(TOOL.length + 1), 'names starting with "_" or "." are not published by GitHub Pages; rename it');
+    else if (statSync(full).isDirectory()) checkNames(full);
+  }
+})(TOOL);
+
 const assets = [];
 for (const cat of readdirSync(LIB)) {
   const catDir = join(LIB, cat);
-  if (cat.startsWith('_') || !statSync(catDir).isDirectory()) continue;
+  if (!statSync(catDir).isDirectory()) continue;
   for (const slug of readdirSync(catDir)) {
     const file = join(catDir, slug, 'asset.json');
     if (!existsSync(file)) continue;

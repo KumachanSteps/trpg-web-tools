@@ -1,4 +1,4 @@
-import { vignette, easeInOut, TAU } from '../../_kit.js';
+import { vignette, easeInOut, TAU } from '../../kit.js';
 
 export default {
   draw(ctx, t, P, st, S) {

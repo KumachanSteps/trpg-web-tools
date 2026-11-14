@@ -162,6 +162,7 @@ export const I18N = {
     footerNote1: 'このツールは開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> が個人で制作した非公式のTRPG支援ツールです。画像はすべてブラウザの中で処理され、サーバーには送信されません。',
     footerNote2: '不具合の報告や要望は、X の <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> までDMでお送りください。すべての報告・要望に返信・対応できるわけではありません。',
     loading: 'ライブラリを読み込んでいます…',
+    assetFailed: 'このアセットを読み込めませんでした。ページを再読み込みしてください',
     loadFailed: 'ライブラリを読み込めませんでした。ページを再読み込みしてください'
   },
 
@@ -317,6 +318,7 @@ export const I18N = {
     footerNote1: 'This is an unofficial, personally developed TRPG support tool by <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a>. Everything is processed in your browser and never sent to a server.',
     footerNote2: 'Please send bug reports and requests by DM to <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> on X. Not every report or request can be answered or addressed.',
     loading: 'Loading the library…',
+    assetFailed: 'Could not load this asset. Please reload the page.',
     loadFailed: 'Could not load the library. Please reload the page.'
   },
 
@@ -472,6 +474,7 @@ export const I18N = {
     footerNote1: '이 툴은 개발자 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 가 개인적으로 제작한 비공식 TRPG 지원 툴입니다. 이미지는 모두 브라우저 안에서 처리되며 서버로 전송되지 않습니다.',
     footerNote2: '버그 제보나 요청은 X의 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> 앞으로 DM을 보내 주세요. 다만 모든 제보나 요청에 답장·대응할 수 있는 것은 아닙니다.',
     loading: '라이브러리를 불러오는 중…',
+    assetFailed: '이 에셋을 불러오지 못했습니다. 페이지를 새로고침해 주세요',
     loadFailed: '라이브러리를 불러오지 못했습니다. 페이지를 새로고침해 주세요'
   }
 };

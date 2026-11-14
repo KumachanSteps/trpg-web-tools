@@ -1,4 +1,4 @@
-import { shapeCover } from '../../_kit.js';
+import { shapeCover } from '../../kit.js';
 
 export default {
   cover(ctx, p, P, st, S) {

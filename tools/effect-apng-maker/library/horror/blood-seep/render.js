@@ -1,4 +1,4 @@
-import { TAU, rng, rgba, shade, easeOut, clamp } from '../../_kit.js';
+import { TAU, rng, rgba, shade, easeOut, clamp } from '../../kit.js';
 
 // 画面の四辺から血がにじむ。境目はなめらかな「ゆらぎ」で不揃いに
 function edgeNoise(r) {

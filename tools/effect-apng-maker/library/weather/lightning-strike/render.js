@@ -1,4 +1,4 @@
-import { rng, boltPath, strokePath, rgba, span, clamp } from '../../_kit.js';
+import { rng, boltPath, strokePath, rgba, span, clamp } from '../../kit.js';
 
 export default {
   setup(P, S) {

@@ -139,8 +139,13 @@ h1 { margin: 0; font-size: 1.4rem; line-height: 1.25; font-weight: 900; word-bre
 }
 .theme-toggle-thumb::before { content: "☀️"; }
 body.is-dark .theme-toggle-track { background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(30, 64, 175, 0.72)); }
-body.is-dark .theme-toggle-thumb { transform: translateX(22px); background: #e2e8f0; color: #334155; }
-body.is-dark .theme-toggle-thumb::before { content: "🌙"; }
+body.is-dark .theme-toggle-thumb { transform: translateX(22px); background: #f1f5f9; }
+/* 月は色つきの絵文字ではなく、白い丸の上の濃い色のシルエットにする */
+body.is-dark .theme-toggle-thumb::before {
+  content: ""; width: 62%; height: 62%; background: #2b3a55;
+  -webkit-mask: var(--moon) center / contain no-repeat; mask: var(--moon) center / contain no-repeat;
+  --moon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z'/%3E%3C/svg%3E");
+}
 
 .link-button {
   padding: 2px 6px; border: 0; border-radius: 8px; background: transparent;
@@ -182,7 +187,7 @@ body.is-dark .webp-button { background: linear-gradient(135deg, #4a5a72, #2f62b6
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   gap: 14px;
-  align-items: start;
+  align-items: stretch;
 }
 .panel {
   min-width: 0;
@@ -198,7 +203,16 @@ body.is-dark .webp-button { background: linear-gradient(135deg, #4a5a72, #2f62b6
 .current-asset { margin-left: 4px; color: var(--muted); font-size: 0.86rem; font-weight: 700; }
 .block-title { margin: 0 0 8px; color: var(--blue); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.11em; text-transform: uppercase; }
 
-.side-panel { display: flex; flex-direction: column; gap: 14px; }
+.preview-panel { align-self: start; }
+/* 左パネルは自分の中身で行の高さを決めない（中身は絶対配置）。行の高さ＝右のプレビューパネルの高さになり、
+   左はそれに合わせて伸び、入りきらない分は左パネルの中でスクロールする */
+.side-panel { position: relative; padding: 0; overflow: hidden; }
+.side-scroll {
+  position: absolute; inset: 0; padding: 16px;
+  display: flex; flex-direction: column; gap: 14px;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
+}
+.side-section { flex: none; }
 .side-section { padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel-soft); }
 
 /* 入力欄 */
@@ -313,7 +327,8 @@ input.switch:checked::after { transform: translateX(16px); }
 .preview-panel {
   position: sticky; top: 12px;
   display: flex; flex-direction: column; gap: 10px;
-  max-height: calc(100vh - 24px); overflow: auto; scrollbar-gutter: stable;
+  /* ヘッダーの下に、ページをスクロールしなくても画面に収まる高さにする（--head は main.js がヘッダーの高さを入れる） */
+  max-height: max(480px, calc(100vh - var(--head, 0px) - 36px)); overflow: auto; scrollbar-gutter: stable;
 }
 .preview-head { flex-wrap: wrap; margin-bottom: 0; }
 .preview-bg { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -342,8 +357,9 @@ input.switch:checked::after { transform: translateX(16px); }
 .icon-button {
   display: grid; place-items: center; flex: none; width: 38px; height: 38px;
   border: 0; border-radius: 999px; background: linear-gradient(135deg, var(--blue), var(--blue-deep)); color: #ffffff;
-  font-size: 0.8rem; font-weight: 900; box-shadow: 0 6px 14px color-mix(in srgb, var(--blue) 30%, transparent);
+  font-size: 0.8rem; font-weight: 900; box-shadow: 0 2px 5px color-mix(in srgb, var(--blue) 18%, transparent);
 }
+body.is-dark .icon-button { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
 .icon-button:hover { filter: brightness(1.06); }
 .transport input[type="range"] { flex: 1; min-width: 0; }
 .time-readout { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.76rem; font-weight: 700; color: var(--muted); min-width: 84px; text-align: right; }
@@ -445,7 +461,8 @@ input.switch:checked::after { transform: translateX(16px); }
   .mobile-tabs { display: flex; gap: 4px; position: sticky; top: 0; z-index: 4; }
   .mobile-tabs button { flex: 1; padding: 6px 2px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--panel-solid); color: var(--muted); font-size: 0.74rem; font-weight: 800; white-space: nowrap; }
   .mobile-tabs button[aria-selected="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-ink); }
-  .side-panel { padding: 0; border: 0; background: none; box-shadow: none; }
+  .side-panel { padding: 0; border: 0; background: none; box-shadow: none; overflow: visible; }
+  .side-scroll { position: static; padding: 0; overflow: visible; gap: 8px; }
   .asset-grid { max-height: none; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .stage-tools, .export-card { display: none; }
   .studio-grid:not([data-mobile="library"]) .library-section { display: none; }
