@@ -991,9 +991,9 @@
     ]
    },
    "duration": {
-    "default": 3,
+    "default": 2,
     "min": 1,
-    "max": 6
+    "max": 4
    },
    "transparent": true,
    "params": [
@@ -1643,7 +1643,7 @@
     ]
    },
    "duration": {
-    "default": 6,
+    "default": 4,
     "min": 2,
     "max": 10
    },
@@ -1894,7 +1894,7 @@
     ]
    },
    "duration": {
-    "default": 6,
+    "default": 4,
     "min": 3,
     "max": 10
    },
@@ -2566,7 +2566,7 @@
     ]
    },
    "duration": {
-    "default": 6,
+    "default": 4,
     "min": 3,
     "max": 12
    },
@@ -2655,7 +2655,7 @@
     ]
    },
    "duration": {
-    "default": 6,
+    "default": 4,
     "min": 3,
     "max": 12
    },
@@ -5098,7 +5098,7 @@
     ]
    },
    "duration": {
-    "default": 4.4,
+    "default": 4,
     "min": 2.2,
     "max": 8.8
    },
