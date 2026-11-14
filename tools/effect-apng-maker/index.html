@@ -10,7 +10,7 @@
   <title>演出APNGメーカー｜TRPG WEBツール観測所</title>
   <meta name="description" content="場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出すツールです。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/effect-apng-maker.css?v=20261114-03" />
+  <link rel="stylesheet" href="./css/effect-apng-maker.css?v=20261114-04" />
 </head>
 <body>
   <div class="studio">
@@ -59,14 +59,11 @@
             <h2 class="panel-title" id="libraryHeading" data-i18n="libraryTitle">アセットライブラリ</h2>
             <span class="panel-count" id="libraryCount"></span>
           </div>
-          <label class="search-box"><span class="visually-hidden" data-i18n="searchPlaceholder">探す</span><input type="search" class="text-input" id="searchInput" autocomplete="off" /></label>
-          <div class="category-tabs" id="categoryTabs" role="tablist"></div>
-          <div class="filter-chips" id="filterChips">
-            <button type="button" class="chip" data-filter="transition" aria-pressed="false" data-i18n="filterTransition">転換</button>
-            <button type="button" class="chip" data-filter="loop" aria-pressed="false" data-i18n="filterLoop">ループ</button>
-            <button type="button" class="chip" data-filter="once" aria-pressed="false" data-i18n="filterOnce">1回</button>
-            <button type="button" class="chip" data-filter="fav" aria-pressed="false">★ <span data-i18n="favourites">お気に入り</span></button>
+          <div class="search-row">
+            <label class="search-box"><span class="visually-hidden" data-i18n="searchPlaceholder">探す</span><input type="search" class="text-input" id="searchInput" autocomplete="off" /></label>
+            <div id="filterChips"><button type="button" class="chip fav-filter" data-filter="fav" aria-pressed="false">★ <span data-i18n="favourites">お気に入り</span></button></div>
           </div>
+          <div class="category-tabs" id="categoryTabs" role="tablist"></div>
           <div class="asset-grid" id="assetGrid" aria-live="polite"><p class="muted" data-i18n="loading">読み込んでいます…</p></div>
         </div>
 
@@ -180,6 +177,6 @@
   <!-- APNG / WebP エンコーダー（文字画像APNGメーカーと同じもの。共通化は後の段階で） -->
   <script src="./js/apng-encoder.js?v=20261114-01"></script>
   <script src="./js/webp-encoder.js?v=20261114-01"></script>
-  <script type="module" src="./js/main.js?v=20261114-03"></script>
+  <script type="module" src="./js/main.js?v=20261114-04"></script>
 </body>
 </html>

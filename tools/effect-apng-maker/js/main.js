@@ -15,7 +15,6 @@ const MB = 1024 * 1024;
 const BUDGET_OK = 3 * MB;
 const BUDGET_MAX = 4 * MB;
 const WEBP_QUALITY = 0.9;
-const NEW_DAYS = 30;
 
 const $ = sel => document.querySelector(sel);
 const els = {
@@ -151,16 +150,9 @@ function renderTabs() {
   els.tabs.innerHTML = cats.map(c => `<button type="button" role="tab" data-cat="${c.id}" aria-selected="${c.id === app.category}">${escapeHtml(pick(c.name))}</button>`).join('');
 }
 
-function isNew(a) {
-  return (Date.now() - Date.parse(a.added)) / 864e5 < NEW_DAYS;
-}
-
 function matches(a) {
   if (app.category !== 'all' && a.category !== app.category) return false;
   if (app.filters.has('fav') && !store.favs.includes(a.id)) return false;
-  if (app.filters.has('transition') && a.type !== 'transition') return false;
-  if (app.filters.has('loop') && !a.playback.allowed.includes('loop')) return false;
-  if (app.filters.has('once') && !a.playback.allowed.includes('once')) return false;
   const q = app.query.trim().toLowerCase();
   if (!q) return true;
   const hay = [a.name.ja, a.name.en, a.name.ko, ...(a.tags || [])].join(' ').toLowerCase();
@@ -183,7 +175,6 @@ function renderLibrary() {
     const badges = [
       a.type === 'transition' ? `<span class="badge badge-transition">${t().badgeTransition}</span>` : (a.playback.default === 'loop' ? `<span class="badge">${t().badgeLoop}</span>` : `<span class="badge">${t().badgeOnce}</span>`),
       a.kind === 'combo' ? `<span class="badge">${t().badgeCombo}</span>` : '',
-      isNew(a) ? `<span class="badge badge-new">${t().badgeNew}</span>` : ''
     ].join('');
     return `<article class="asset-card${app.asset && app.asset.id === a.id ? ' is-active' : ''}" data-id="${a.id}" tabindex="0" role="button" aria-pressed="${app.asset && app.asset.id === a.id}">
       <div class="asset-thumb-wrap"><canvas class="asset-thumb" width="256" height="144" data-thumb="${a.id}"></canvas><span class="asset-badges">${badges}</span></div>
@@ -819,11 +810,7 @@ function bind() {
     if (!b) return;
     const f = b.dataset.filter;
     if (app.filters.has(f)) app.filters.delete(f);
-    else {
-      app.filters.add(f);
-      if (f === 'loop') app.filters.delete('once');
-      if (f === 'once') app.filters.delete('loop');
-    }
+    else app.filters.add(f);
     els.chips.querySelectorAll('[data-filter]').forEach(x => x.setAttribute('aria-pressed', String(app.filters.has(x.dataset.filter))));
     renderLibrary();
   });

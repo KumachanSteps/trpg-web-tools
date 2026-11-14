@@ -35,7 +35,6 @@ export const I18N = {
     badgeOnce: '1回',
     badgeTransition: '転換',
     badgeCombo: '組み合わせ',
-    badgeNew: 'NEW',
     // プレビュー
     previewTitle: 'プレビュー',
     play: '再生',
@@ -199,7 +198,6 @@ export const I18N = {
     badgeOnce: 'Once',
     badgeTransition: 'Transition',
     badgeCombo: 'Combo',
-    badgeNew: 'NEW',
     previewTitle: 'Preview',
     play: 'Play',
     pause: 'Pause',
@@ -359,7 +357,6 @@ export const I18N = {
     badgeOnce: '1회',
     badgeTransition: '전환',
     badgeCombo: '조합',
-    badgeNew: 'NEW',
     previewTitle: '미리보기',
     play: '재생',
     pause: '일시 정지',

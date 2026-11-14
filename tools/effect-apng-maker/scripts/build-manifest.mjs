@@ -16,8 +16,8 @@ const OUT = join(LIB, 'manifest.json');
 // ライブラリのカテゴリ（並び順）。新しいカテゴリはここに足す
 const CATEGORIES = [
   { id: 'transition', name: { ja: '場面転換', en: 'Transitions', ko: '장면 전환' } },
-  { id: 'element', name: { ja: '属性', en: 'Elements', ko: '속성' } },
   { id: 'weather', name: { ja: '天候', en: 'Weather', ko: '날씨' } },
+  { id: 'element', name: { ja: '属性', en: 'Elements', ko: '속성' } },
   { id: 'horror', name: { ja: 'ホラー', en: 'Horror', ko: '호러' } },
   { id: 'visual', name: { ja: '視覚効果', en: 'Visual effects', ko: '시각 효과' } },
   { id: 'magic', name: { ja: '魔法・神秘', en: 'Magic', ko: '마법·신비' } },

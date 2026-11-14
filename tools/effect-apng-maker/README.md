@@ -30,7 +30,7 @@ library/
 1. 近いアセットのフォルダをコピーして `asset.json` と `render.js` を書き換える。
 2. `node tools/effect-apng-maker/scripts/build-manifest.mjs` … `asset.json` を検査して `manifest.json` を作る（`--check` で検査だけ）。
 3. `node tools/effect-apng-maker/scripts/check-sizes.mjs [id,id]` … 初期設定で書き出して容量を確かめる（Playwright が必要。4MB 超で失敗）。
-4. PR にする。`status` は `test`（いまは全件）→ 一般公開のときに `public`。`draft` はライブラリに出ない。`added` から30日は NEW が付く。
+4. PR にする。`status` は `test`（いまは全件）→ 一般公開のときに `public`。`draft` はライブラリに出ない。
 
 ### render.js の決まりごと
 

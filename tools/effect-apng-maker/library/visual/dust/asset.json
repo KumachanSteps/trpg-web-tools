@@ -1,10 +1,10 @@
 {
-  "id": "ambience.dust",
+  "id": "visual.dust",
   "version": 1,
   "status": "test",
   "added": "2026-11-14",
-  "order": 1,
-  "category": "ambience",
+  "order": 6,
+  "category": "visual",
   "kind": "procedural",
   "type": "effect",
   "priority": "P1",
