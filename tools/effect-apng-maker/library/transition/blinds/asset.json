@@ -1,6 +1,6 @@
 {
   "id": "transition.blinds",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 3,
@@ -64,7 +64,7 @@
         "en": "Direction",
         "ko": "방향"
       },
-      "default": "horizontal",
+      "default": "vertical",
       "options": [
         {
           "value": "horizontal",
@@ -95,7 +95,7 @@
       "min": 3,
       "max": 24,
       "step": 1,
-      "default": 10
+      "default": 18
     },
     {
       "key": "stagger",

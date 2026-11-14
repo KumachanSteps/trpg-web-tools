@@ -1,6 +1,6 @@
 {
   "id": "element.fire-wall",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 4,
@@ -46,11 +46,11 @@
   "params": [],
   "budget": {
     "size": [
-      960,
-      540
+      640,
+      360
     ],
-    "fps": 15,
-    "colors": 128
+    "fps": 12,
+    "colors": 64
   },
   "license": {
     "type": "original",

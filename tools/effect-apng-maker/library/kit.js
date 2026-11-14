@@ -124,6 +124,10 @@ export function shapeCover(ctx, p, S, opts) {
         case 'right': order = 1 - cx / w; break;
         case 'top': order = cy / h; break;
         case 'bottom': order = 1 - cy / h; break;
+        case 'topleft': order = (cx / w + cy / h) / 2; break;
+        case 'topright': order = (1 - cx / w + cy / h) / 2; break;
+        case 'bottomleft': order = (cx / w + 1 - cy / h) / 2; break;
+        case 'bottomright': order = (2 - cx / w - cy / h) / 2; break;
         case 'center': order = Math.hypot(cx / w - 0.5, cy / h - 0.5) / 0.71; break;
         default: order = cx / w;
       }

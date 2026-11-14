@@ -1,6 +1,6 @@
 {
   "id": "transition.feathers",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 6,
@@ -49,7 +49,7 @@
         "en": "Cover colour",
         "ko": "덮는 색"
       },
-      "default": "#ffffff",
+      "default": "#000000",
       "swatches": [
         "#ffffff",
         "#000000",
@@ -97,6 +97,38 @@
             "ja": "下",
             "en": "Bottom",
             "ko": "아래"
+          }
+        },
+        {
+          "value": "topleft",
+          "label": {
+            "ja": "左上",
+            "en": "Top left",
+            "ko": "왼쪽 위"
+          }
+        },
+        {
+          "value": "topright",
+          "label": {
+            "ja": "右上",
+            "en": "Top right",
+            "ko": "오른쪽 위"
+          }
+        },
+        {
+          "value": "bottomleft",
+          "label": {
+            "ja": "左下",
+            "en": "Bottom left",
+            "ko": "왼쪽 아래"
+          }
+        },
+        {
+          "value": "bottomright",
+          "label": {
+            "ja": "右下",
+            "en": "Bottom right",
+            "ko": "오른쪽 아래"
           }
         },
         {

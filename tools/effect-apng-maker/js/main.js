@@ -3,7 +3,7 @@
  *   ライブラリ（左）→ 選んだアセットを プレビュー（中央）に重ね、調整（右）で設定を変えて書き出す。
  */
 import { I18N } from './i18n.js';
-import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261115-03';
+import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261115-04';
 import { Stage } from './stage.js';
 
 const C = window.TextApngCodec;
@@ -122,10 +122,12 @@ const app = {
 function settings(asset = app.asset) {
   if (!asset) return null;
   let s = store.perAsset[asset.id];
-  if (!s) {
+  // アセットの版が上がったら（初期値や設定項目が変わったら）、保存してある調整は使わず初期値からやり直す
+  if (!s || (s.v || 1) !== asset.version) {
     s = store.perAsset[asset.id] = {
+      v: asset.version,
       params: defaultParams(asset), play: asset.playback.default, count: 3,
-      direction: 'out', duration: asset.duration.default, opacity: 1, seed: 1
+      direction: 'out', duration: asset.duration.default, opacity: asset.opacity ?? 1, seed: 1
     };
   }
   s.params = { ...defaultParams(asset), ...s.params };
