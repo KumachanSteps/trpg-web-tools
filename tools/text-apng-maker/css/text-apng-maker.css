@@ -255,7 +255,13 @@ body.is-dark .header-nav-link:hover, body.is-dark .ghost-button:not(:disabled):h
 }
 
 body.is-dark .theme-toggle-track { background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(30, 64, 175, 0.72)); }
-body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e8f0; color: #334155; }
+body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #f1f5f9; }
+/* 夜：月は色つきの文字ではなく、白い丸の上の濃い色のシルエット（演出APNGメーカーと同じ） */
+body.is-dark .theme-toggle-thumb::before {
+  content: ""; width: 62%; height: 62%; background: #2b3a55;
+  -webkit-mask: var(--moon) center / contain no-repeat; mask: var(--moon) center / contain no-repeat;
+  --moon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z'/%3E%3C/svg%3E");
+}
 
 .version-engrave {
   position: absolute;
@@ -300,14 +306,10 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
   /* 観測所へのリンクはタイトルの上に移したので、ボタン列からは外す */
   .maker-header #portalLink { display: none; }
   .maker-header :is(.ghost-button, .x-share-link) { min-height: 2rem; padding: 0.34rem 0.8rem; font-size: 0.78rem; }
-  .maker-header .x-share-link { min-width: 2rem; padding: 0; font-size: 0.95rem; }
-  .maker-header #shortcutBtn { min-width: 2rem; padding: 0; font-size: 1.05rem; }
+  .maker-header #shortcutBtn { min-width: 2rem; padding: 0; font-size: 0.95rem; font-weight: 900; }
   .maker-header .language-switcher { min-height: 2rem; padding: 0 0.45rem; gap: 0; }
   .maker-header .lang-choice-button { padding: 0.2rem 0.38rem; font-size: 0.76rem; }
   .maker-header .lang-divider { font-size: 0.72rem; }
-  .maker-header .theme-button { min-width: 54px; }
-  .maker-header .theme-toggle-track { width: 46px; height: 24px; }
-  body.is-dark .maker-header .theme-toggle-thumb { transform: translateX(22px); }
 }
 
 /* 中くらいの画面：説明文を2行目へ */
@@ -1618,6 +1620,7 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
   body.is-header-compact .theme-toggle-track { width: 22px; height: 22px; border: 0; background: transparent; }
   body.is-header-compact .theme-toggle-thumb, body.is-dark.is-header-compact .theme-toggle-thumb { top: 2px; left: 2px; background: transparent; box-shadow: none; font-size: 0.9rem; transform: none; }
   body.is-dark.is-header-compact .theme-toggle-thumb { color: #e2e8f0; font-size: 1rem; }
+  body.is-dark.is-header-compact .theme-toggle-thumb::before { width: 80%; height: 80%; background: #e2e8f0; }
   body.is-header-compact .header-menu-button { display: inline-flex; order: 4; min-width: 2rem; padding: 0; font-size: 1.05rem; letter-spacing: 0; }
   body.is-header-compact .header-menu-button[aria-expanded="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-deep); }
   body.is-header-compact :is(#portalLink, #xShareLink, #helpBtn, #rulesBtn) { display: none; }

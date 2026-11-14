@@ -458,13 +458,13 @@
     syncSheetLabels();
     els.helpBtn.textContent = d.help;
     els.rulesBtn.textContent = d.rulesBtn;
-    // ボタン列を詰めるため、ショートカットはキーボードのアイコンだけにし、名前はツールチップと読み上げで伝える
-    els.shortcutBtn.innerHTML = '<span aria-hidden="true">⌨\uFE0E</span>';
+    // ボタン列を詰めるため、ショートカットは「?」のアイコンだけにし、名前はツールチップと読み上げで伝える
+    els.shortcutBtn.innerHTML = '<span aria-hidden="true">?</span>';
     els.shortcutBtn.setAttribute('aria-label', d.shortcuts);
     els.shortcutBtn.title = d.shortcuts;
     els.langSwitcher.setAttribute('aria-label', d.langGroup);
-    els.shareLink.setAttribute('aria-label', d.shareLabel);
-    els.shareLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${d.shareText} ${location.origin.startsWith('http') ? location.href.split('#')[0] : 'https://kumachansteps.github.io/trpg-web-tools/tools/text-apng-maker/'}`)}`;
+    if (els.shareLink) els.shareLink.setAttribute('aria-label', d.shareLabel);
+    if (els.shareLink) els.shareLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${d.shareText} ${location.origin.startsWith('http') ? location.href.split('#')[0] : 'https://kumachansteps.github.io/trpg-web-tools/tools/text-apng-maker/'}`)}`;
     els.langButtons.forEach(btn => {
       const on = btn.dataset.langChoice === app.lang;
       btn.classList.toggle('is-active', on);
@@ -636,7 +636,7 @@
   function syncThemeButton() {
     const dark = els.body.classList.contains('is-dark');
     const thumb = els.themeBtn.querySelector('.theme-toggle-thumb');
-    if (thumb) thumb.textContent = dark ? '☾' : '☀️';
+    if (thumb) thumb.textContent = dark ? '' : '☀️'; // 夜は CSS の月のシルエット（白い丸の上）
     const label = dark ? dict().themeDark : dict().themeLight;
     els.themeBtn.setAttribute('aria-label', label);
     els.themeBtn.title = label;
@@ -2667,7 +2667,7 @@
       if (els.header.classList.contains('is-menu-open') && !els.header.contains(event.target)) setHeaderMenu(false);
     });
     // メニューから共有・観測所へ移動したら閉じる
-    [els.portalLink, els.shareLink].forEach(link => link.addEventListener('click', () => setHeaderMenu(false)));
+    [els.portalLink, els.shareLink].filter(Boolean).forEach(link => link.addEventListener('click', () => setHeaderMenu(false)));
 
     window.addEventListener('scroll', syncHeaderCompact, { passive: true });
     const remeasure = () => requestAnimationFrame(measureSheet);
