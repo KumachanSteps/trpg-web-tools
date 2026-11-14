@@ -954,7 +954,7 @@
   },
   {
    "id": "transition.bats",
-   "version": 2,
+   "version": 3,
    "status": "test",
    "added": "2026-11-14",
    "order": 8,
@@ -1087,7 +1087,7 @@
      },
      "min": 0.5,
      "max": 2,
-     "step": 0.1,
+     "step": 0.5,
      "default": 1
     },
     {
@@ -1102,22 +1102,6 @@
      "max": 2,
      "step": 0.1,
      "default": 1
-    },
-    {
-     "key": "rim",
-     "type": "color",
-     "label": {
-      "ja": "ふちの色",
-      "en": "Rim colour",
-      "ko": "테두리 색"
-     },
-     "default": "#d02040",
-     "swatches": [
-      "#d02040",
-      "#ff8a1e",
-      "#8a6bff",
-      "#555566"
-     ]
     }
    ],
    "budget": {
@@ -1131,7 +1115,7 @@
    "license": {
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
-    "note": "文字画像APNGメーカーEXの部品を使用"
+    "note": "コウモリの絵は TK のハロウィン素材 H19"
    },
    "path": "transition/bats"
   },

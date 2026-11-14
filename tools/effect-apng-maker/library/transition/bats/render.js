@@ -1,119 +1,112 @@
-// コウモリの群れの場面転換（コウモリの絵は文字画像APNGメーカーEXの部品）
-//   rise  … 中央下からコウモリが集まって闇が広がる。現れるときは、闇がコウモリになって上へ飛び去る
-//   close … まわりからコウモリが集まって、真ん中へ閉じる。現れるときは真ん中から開く
-//   sweep … 群れが横切り、通ったあとが闇に沈む
-import { loadEx } from '../../ex-bridge.js';
-import { rng, easeInOut, wrap, clamp, TAU } from '../../kit.js';
+// コウモリの群れの場面転換。コウモリの絵は TK のハロウィン素材 H19（bat.png：羽ばたきの4コマ）をそのまま使う。
+// 闇の面を別に広げるのではなく、コウモリが持ち場に集まり、重なり合って画面を黒くしていく。
+//   rise  … 中央下から集まる。現れるときは、下から順に上へ飛び去る
+//   close … まわりから集まり、真ん中が最後に閉じる
+//   sweep … 横から集まる
+import { rng, clamp, smooth } from '../../kit.js';
 
-const BAND = 0.42;   // コウモリの帯の厚み（画面の半分を 1 とした長さ）
+const CW = 340, CH = 300;            // bat.png の1コマの大きさ
+const COLS = 24, ROWS = 14;          // 持ち場のます目
+const TRAVEL = 0.34;                 // 持ち場まで飛ぶのにかける p の長さ
+const SPREAD = 1 - TRAVEL - 0.06;    // 出発の時刻をばらす幅
+
+let sheetPromise = null;
+function loadSheet() {
+  if (!sheetPromise) {
+    sheetPromise = new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => reject(new Error('bat.png failed to load'));
+      im.src = new URL('./bat.png?v=1', import.meta.url).href;
+    });
+  }
+  return sheetPromise;
+}
 
 export default {
   async setup(P, S) {
-    const ex = await loadEx();
+    const im = await loadSheet();
+    // 覆う色に染めたコウモリ
+    const tint = document.createElement('canvas');
+    tint.width = im.width; tint.height = im.height;
+    const tc = tint.getContext('2d');
+    tc.drawImage(im, 0, 0);
+    tc.globalCompositeOperation = 'source-in';
+    tc.fillStyle = P.color;
+    tc.fillRect(0, 0, tint.width, tint.height);
+
     const r = rng(S.seed + 41);
-    const ring = Array.from({ length: Math.round(420 * P.amount) }, () => ({
-      th: r() * TAU, o: r() ** 1.6, s: 0.35 + 0.65 * r() ** 2, ph: r(), f: 9 + Math.floor(r() * 6), tilt: (r() - 0.5) * 0.7, jit: r()
-    })).sort((a, b) => b.o - a.o);
-    // 現れるときに、闇から離れて先に飛んでいく小さなコウモリ
-    const strays = Array.from({ length: Math.round(70 * P.amount) }, () => ({ th: r() * TAU, d: r(), s: 0.25 + 0.3 * r(), ph: r(), f: 10 + Math.floor(r() * 5) }));
-    const sweep = Array.from({ length: Math.round(46 * P.amount) }, () => ({
-      off: r(), y: r(), s: 0.45 + 0.75 * r() ** 1.5, ph: r(), f: 5 + Math.floor(r() * 4), tilt: (r() - 0.5) * 0.5
-    })).sort((a, b) => a.s - b.s);
-    return { Vamp: ex.Vampire, ring, strays, sweep };
+    const per = Math.max(1, Math.round(2 * P.amount));   // 1ますあたりの数
+    const bats = [];
+    for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) for (let k = 0; k < per; k++) {
+      bats.push({ x: (i + 0.5 + (r() - 0.5) * 1.1) / COLS, y: (j + 0.5 + (r() - 0.5) * 1.1) / ROWS, s: 0.75 + 0.6 * r(), ph: Math.floor(r() * 4), f: 9 + r() * 5, jit: r(), rot: (r() - 0.5) * 0.5, side: r() - 0.5 });
+    }
+    return { tint, bats };
   },
   cover(ctx, p, P, st, S) {
-    if (P.motion === 'sweep') return sweepCover(ctx, p, P, st, S);
     const { w, h } = S;
-    const rise = P.motion !== 'close';
-    // 中心と、横・縦の半径（rise は画面の下の中央から、close は画面の中央から）
-    const cx = w / 2, cy = rise ? h * 1.02 : h / 2, ax = w / 2, ay = rise ? h : h / 2;
-    const e = easeInOut(p);
-    // blob：闇のかたまりが広がる（rise で覆う）／ hole：闇に開いた穴が閉じる（close、rise で現れる）
-    const hole = !rise || S.revealing;
-    const R = hole ? 1.75 - e * 2.05 : -0.3 + e * 2.05;
     const unit = h / 540 * P.size;
-    const pt = (rad, th) => [cx + Math.cos(th) * rad * ax, cy - Math.sin(th) * rad * ay];
-    const edge = (rad, k) => {                       // 少し波打つ縁
-      ctx.moveTo(...pt(rad * (1 + 0.04 * Math.sin(5 * 0 + k)), 0));
-      for (let i = 1; i <= 72; i++) {
-        const th = i / 72 * TAU;
-        ctx.lineTo(...pt(Math.max(0, rad * (1 + 0.04 * Math.sin(5 * th + k) + 0.025 * Math.sin(11 * th + 2 * k))), th));
+    const reveal = !!S.revealing && P.motion === 'rise';
+    const q = reveal ? 1 - p : p;                  // reveal：0 で真っ黒 → 1 で何もない
+    const sec = p * S.duration;
+    const cell = w / COLS;
+    for (const b of st.bats) {
+      const hx = b.x * w, hy = b.y * h;
+      // 順番（0＝最初、1＝最後）と、飛んでくる元の位置
+      let order, sx, sy;
+      if (P.motion === 'close') {
+        const dx = b.x - 0.5, dy = b.y - 0.5;
+        const m = Math.min(1, Math.hypot(dx, dy) / 0.71);            // 0＝中央、1＝四隅（丸く閉じる）
+        order = 1 - m;
+        const len = Math.hypot(dx, dy) || 1;
+        sx = hx + dx / len * w * 0.75; sy = hy + dy / len * w * 0.75;
+      } else if (P.motion === 'sweep') {
+        const u = P.from === 'right' ? 1 - b.x : b.x;
+        order = u;
+        sx = P.from === 'right' ? w * 1.15 : -w * 0.15; sy = hy + b.side * h * 0.5;
+      } else {
+        order = clamp(Math.hypot((b.x - 0.5) * 1.1, (1 - b.y) * 1.25) / 1.37);
+        sx = w * (0.5 + b.side * 0.25); sy = h * 1.18;
       }
-      ctx.closePath();
-    };
-    ctx.save();
-    ctx.fillStyle = P.color;
-    ctx.beginPath();
-    if (hole) {
-      ctx.rect(0, 0, w, h);
-      if (R > 0) edge(R, p * 6);
-      ctx.fill('evenodd');
-    } else if (R - 0.02 > 0) {
-      edge(R - 0.02, p * 6);
-      ctx.fill();
-    }
-    // コウモリの帯：闇の縁の、明るい側に並ぶ
-    for (const b of st.ring) {
-      const rad = hole ? R - b.o * BAND + 0.04 : R + b.o * BAND - 0.04;
-      if (rad <= 0) continue;
-      const th = b.th + 0.05 * Math.sin(TAU * (p * 2 + b.jit));
-      const [x, y] = pt(rad, th);
-      if (x < -60 * unit || x > w + 60 * unit || y < -60 * unit || y > h + 60 * unit) continue;
-      const fp = wrap(p * b.f + b.ph);
-      const flap = fp < 0.5 ? fp * 2 : 2 - fp * 2;
-      // 外ほど小さくまばらに見えるよう、帯の外側のものは少し薄く
-      silhouette(st.Vamp, ctx, x, y, (16 + 30 * b.s) * unit, { flap, ang: b.tilt, rim: P.color });
-    }
-    // 現れるとき：闇から離れて先に飛び去る小さなコウモリ
-    if (S.revealing) {
-      for (const b of st.strays) {
-        const rad = R - BAND - b.d * 0.5;
-        if (rad <= 0) continue;
-        const [x, y] = pt(rad, b.th);
-        if (x < 0 || x > w || y < 0 || y > h) continue;
-        const fp = wrap(p * b.f + b.ph);
-        silhouette(st.Vamp, ctx, x, y - 30 * unit * b.d, (9 + 14 * b.s) * unit, { flap: fp < 0.5 ? fp * 2 : 2 - fp * 2, rim: P.color, alpha: clamp(1 - b.d * 1.2) });
+      const t0 = clamp(order * 0.86 + b.jit * 0.14) * SPREAD;
+      let x, y, k, alpha = 1;
+      if (reveal) {
+        // 持ち場を離れて上へ飛び去る（下のものから順に）
+        const a = (q - t0) / TRAVEL;
+        if (a >= 1.6) continue;
+        const e = a <= 0 ? 0 : a * a;
+        x = hx + b.side * w * 0.5 * e;
+        y = hy - h * 0.9 * e - 30 * unit * Math.sin(Math.min(a, 1) * Math.PI) * b.jit;
+        k = a <= 0 ? 1 : Math.max(0.3, 1 - 0.55 * a);
+        alpha = a <= 1 ? 1 : clamp(1 - (a - 1) / 0.6);
+      } else {
+        const a = (q - t0) / TRAVEL;
+        if (a <= 0) continue;
+        const e = smooth(a);
+        x = sx + (hx - sx) * e;
+        y = sy + (hy - sy) * e - 40 * unit * Math.sin(Math.min(a, 1) * Math.PI) * (b.jit - 0.3);
+        k = a >= 1 ? 1 : 0.35 + 0.65 * e;         // 遠くから近づくように、だんだん大きく
       }
+      if (y < -cell * 3 || y > h + cell * 3 || x < -cell * 3 || x > w + cell * 3) continue;
+      // 持ち場に着いたコウモリは、少しずつ大きく重なって、すき間を自分の黒で埋める
+      const settled = reveal ? clamp((t0 - q) / 0.12) : clamp((q - t0 - TRAVEL) / 0.12);
+      const span = cell * (2.3 + 2.6 * settled) * b.s * k * P.size;
+      const pose = (b.ph + Math.floor(sec * b.f)) % 4;
+      const dw = span, dh = span * CH / CW;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(x, y);
+      ctx.rotate(b.rot * (1 - 0.5 * settled));
+      ctx.drawImage(st.tint, pose * CW, 0, CW, CH, -dw / 2, -dh / 2, dw, dh);
+      // 体のあたりの黒：重なりが十分になったところだけ、羽の下に隠れて濃くなる
+      if (settled > 0) {
+        ctx.fillStyle = P.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, cell * 0.95 * settled, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
-    ctx.restore();
+    if (q >= 0.999 || (reveal && q <= 0.001)) { ctx.fillStyle = P.color; ctx.fillRect(0, 0, w, h); }
   }
 };
-
-// 影絵のコウモリ（EX の部品は大きいと赤い目を描くので、小さく描いてから拡大する）
-function silhouette(Vamp, ctx, x, y, s, o) {
-  const k = Math.max(1, s / 13);
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(k, k);
-  Vamp.bat(ctx, 0, 0, s / k, o);
-  ctx.restore();
-}
-
-function sweepCover(ctx, p, P, st, S) {
-  const { w, h } = S;
-  const unit = h / 540;
-  const dir = P.from === 'right' ? -1 : 1;
-  const e = easeInOut(p);
-  const front = -0.35 * w + e * 1.75 * w;          // 群れの先頭（左から数えた位置）
-  const edge = front - 0.1 * w;                     // ここまでを闇で覆う
-  ctx.save();
-  if (dir < 0) { ctx.translate(w, 0); ctx.scale(-1, 1); }
-  if (edge > 0) {
-    const g = ctx.createLinearGradient(edge - 0.12 * w, 0, edge + 0.04 * w, 0);
-    g.addColorStop(0, P.color);
-    g.addColorStop(1, P.color + '00');
-    ctx.fillStyle = P.color;
-    ctx.fillRect(0, 0, Math.min(w, edge - 0.12 * w), h);
-    ctx.fillStyle = g;
-    ctx.fillRect(Math.max(0, edge - 0.12 * w), 0, 0.16 * w, h);
-  }
-  for (const b of st.sweep) {
-    const x = front - b.off * 0.42 * w;
-    const y = (b.y * 1.1 - 0.05) * h + Math.sin((p * 3 + b.ph) * TAU) * 18 * unit;
-    const fp = wrap(p * b.f + b.ph);
-    const flap = fp < 0.5 ? fp * 2 : 2 - fp * 2;
-    if (x < -120 * unit || x > w + 120 * unit) continue;
-    st.Vamp.bat(ctx, x, y, b.s * 84 * unit * P.size, { flap, ang: b.tilt, dir: 1, rim: P.rim });
-  }
-  ctx.restore();
-}
