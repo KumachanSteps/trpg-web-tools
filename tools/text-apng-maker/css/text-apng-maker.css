@@ -507,6 +507,8 @@ html:lang(ja) :is(.mode-desc, .template-hint, .field-label, .field-row > label, 
 }
 
 .template-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* 「↺ 初期化」は見出しの「テンプレート」と同じ文字の大きさにする */
+.template-head .link-button { font-size: 0.78rem; line-height: 1.2; letter-spacing: 0.04em; }
 .template-hint { margin: 2px 0 8px; color: var(--muted); font-size: 0.74rem; }
 
 .link-button {
