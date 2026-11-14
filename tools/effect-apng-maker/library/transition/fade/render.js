@@ -1,4 +1,4 @@
-import { rgba, easeInOut } from '../../_kit.js';
+import { rgba, easeInOut } from '../../kit.js';
 
 export default {
   cover(ctx, p, P, st, S) {

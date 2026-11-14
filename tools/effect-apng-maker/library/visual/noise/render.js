@@ -1,4 +1,4 @@
-import { rng } from '../../_kit.js';
+import { rng } from '../../kit.js';
 
 // フレームごとに粒を描き直す。粒を大きくするほど・量を減らすほど軽くなる
 export default {

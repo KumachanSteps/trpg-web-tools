@@ -1,4 +1,4 @@
-import { rgba, easeInOut } from '../../_kit.js';
+import { rgba, easeInOut } from '../../kit.js';
 
 // dir は「どちらの端から覆っていくか」
 const AXES = {

@@ -21,6 +21,8 @@ const server = createServer(async (req, res) => {
   try {
     let path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (path.endsWith('/')) path += 'index.html';
+    // GitHub Pages（Jekyll）と同じく、_ や . で始まるファイル・フォルダは公開されないものとして扱う
+    if (path.split('/').some(seg => /^[_.]/.test(seg))) throw new Error('not published');
     const body = await readFile(join(ROOT, path));
     res.writeHead(200, { 'content-type': TYPES[extname(path)] || 'application/octet-stream' });
     res.end(body);

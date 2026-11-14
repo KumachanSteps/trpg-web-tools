@@ -1,4 +1,4 @@
-import { rgba, rng } from '../../_kit.js';
+import { rgba, rng } from '../../kit.js';
 
 // 画面全体が光る。1ループ（または1回）のなかで flashes 回
 export default {

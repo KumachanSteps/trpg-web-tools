@@ -1,4 +1,4 @@
-import { rng, rgba } from '../../_kit.js';
+import { rng, rgba } from '../../kit.js';
 
 // 切れかけの蛍光灯。ふだんは少し暗い程度で、ときどき大きく落ちる
 export default {

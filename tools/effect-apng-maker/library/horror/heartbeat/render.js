@@ -1,4 +1,4 @@
-import { vignette, wrap } from '../../_kit.js';
+import { vignette, wrap } from '../../kit.js';
 
 const bump = (x, c, wd) => Math.exp(-(((x - c) / wd) ** 2));
 

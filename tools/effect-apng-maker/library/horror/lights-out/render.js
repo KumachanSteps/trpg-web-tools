@@ -1,4 +1,4 @@
-import { rng, rgba, span, smooth } from '../../_kit.js';
+import { rng, rgba, span, smooth } from '../../kit.js';
 
 // ちらついたあと、暗くなって止まる（1回再生向け）
 export default {

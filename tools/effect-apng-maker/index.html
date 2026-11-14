@@ -10,14 +10,14 @@
   <title>演出APNGメーカー｜TRPG WEBツール観測所</title>
   <meta name="description" content="場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出すツールです。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/effect-apng-maker.css?v=20261114-05" />
+  <link rel="stylesheet" href="./css/effect-apng-maker.css?v=20261114-06" />
 </head>
 <body>
   <div class="studio">
     <header class="studio-header">
       <div class="title-block">
         <p class="eyebrow"><a class="portal-link" id="portalLink" href="../../"><span class="portal-long" data-i18n="portalLong">←TRPG WEBツール観測所</span><span class="portal-short" data-i18n="portalShort">← 観測所</span></a></p>
-        <h1><span data-i18n="title">演出APNGメーカー</span> <span class="test-badge" data-i18n="testBadge">限定テスト版</span> <span class="version-engrave">v0.10 / 2026.11.14</span></h1>
+        <h1><span data-i18n="title">演出APNGメーカー</span> <span class="test-badge" data-i18n="testBadge">限定テスト版</span> <span class="version-engrave">v0.11 / 2026.11.14</span></h1>
       </div>
       <p class="lead" data-i18n="lead">場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出します。</p>
       <div class="header-actions">
@@ -54,6 +54,7 @@
     <main class="studio-grid" id="studioGrid" data-mobile="library">
       <!-- 左：アセットライブラリと調整 -->
       <section class="panel side-panel">
+        <div class="side-scroll">
         <div class="side-section library-section" aria-labelledby="libraryHeading">
           <div class="panel-head">
             <h2 class="panel-title" id="libraryHeading" data-i18n="libraryTitle">アセットライブラリ</h2>
@@ -78,6 +79,7 @@
             <h3 class="block-title" data-i18n="effectSettings">このアセットの設定</h3>
             <div id="paramControls"></div>
           </div>
+        </div>
         </div>
       </section>
 
@@ -175,8 +177,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <!-- APNG / WebP エンコーダー（文字画像APNGメーカーと同じもの。共通化は後の段階で） -->
-  <script src="./js/apng-encoder.js?v=20261114-01"></script>
-  <script src="./js/webp-encoder.js?v=20261114-01"></script>
-  <script type="module" src="./js/main.js?v=20261114-05"></script>
+  <script src="./js/apng-encoder.js?v=20261114-06"></script>
+  <script src="./js/webp-encoder.js?v=20261114-06"></script>
+  <script type="module" src="./js/main.js?v=20261114-06"></script>
 </body>
 </html>

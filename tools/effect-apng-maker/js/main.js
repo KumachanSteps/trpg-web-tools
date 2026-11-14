@@ -462,9 +462,17 @@ async function rebuild() {
   const s = settings(a);
   const token = ++app.buildToken;
   const { w, h } = stage.previewSize;
-  const inst = await new EffectInstance(a, s.params, {
-    w, h, duration: s.duration, fps: app.output.fps, play: renderPlay(a, s), direction: s.direction, seed: s.seed, opacity: s.opacity
-  }, id => app.byId.get(id)).init();
+  let inst = null;
+  try {
+    inst = await new EffectInstance(a, s.params, {
+      w, h, duration: s.duration, fps: app.output.fps, play: renderPlay(a, s), direction: s.direction, seed: s.seed, opacity: s.opacity
+    }, id => app.byId.get(id)).init();
+  } catch (error) {
+    // 描画のファイルを読み込めなかったとき、何も出ないままにしないで知らせる
+    console.error(error);
+    if (token === app.buildToken) { app.instance = null; drawPreview(); toast(t().assetFailed, 'error'); }
+    return;
+  }
   if (token !== app.buildToken) return;
   app.instance = inst;
   drawPreview();
@@ -936,8 +944,18 @@ function setMobileTab(name) {
   document.querySelectorAll('[data-mobile-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mobileTab === name)));
 }
 
+// パネルの高さを「画面の高さ − ヘッダー」に収めるため、ヘッダーの高さを CSS に渡す
+function watchHeader() {
+  const header = $('.studio-header');
+  const set = () => document.documentElement.style.setProperty('--head', `${header.offsetHeight}px`);
+  set();
+  if (window.ResizeObserver) new ResizeObserver(set).observe(header);
+  else window.addEventListener('resize', set);
+}
+
 async function boot() {
   bind();
+  watchHeader();
   applyLanguage();
   setPlaying(true);
   await stage.restore();
