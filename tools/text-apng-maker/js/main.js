@@ -12,7 +12,7 @@
   const ICONS = window.TextApngIcons;
   const { ControlPanel, setPath, FX_LABELS, OPT, SCHEMA } = window.TextApngControls;
 
-  const VERSION = 'v1.12';
+  const VERSION = 'v1.13';
   const STORAGE_KEY = 'textApngMaker.v1';
   const LANG_KEY = 'textApngMakerLang';
   const LANGS = ['ja', 'ko', 'en', 'zh'];
@@ -444,7 +444,7 @@
     const d = dict();
     document.documentElement.lang = d.htmlLang;
     document.title = d.documentTitle;
-    els.eyebrow.textContent = d.portalName;
+    els.eyebrow.textContent = d.backToPortal;
     els.title.textContent = d.title;
     els.lead.textContent = d.lead;
     els.portalLong.textContent = d.backToPortal;
@@ -458,7 +458,10 @@
     syncSheetLabels();
     els.helpBtn.textContent = d.help;
     els.rulesBtn.textContent = d.rulesBtn;
-    els.shortcutBtn.textContent = d.shortcuts;
+    // ボタン列を詰めるため、ショートカットはキーボードのアイコンだけにし、名前はツールチップと読み上げで伝える
+    els.shortcutBtn.innerHTML = '<span aria-hidden="true">⌨\uFE0E</span>';
+    els.shortcutBtn.setAttribute('aria-label', d.shortcuts);
+    els.shortcutBtn.title = d.shortcuts;
     els.langSwitcher.setAttribute('aria-label', d.langGroup);
     els.shareLink.setAttribute('aria-label', d.shareLabel);
     els.shareLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${d.shareText} ${location.origin.startsWith('http') ? location.href.split('#')[0] : 'https://kumachansteps.github.io/trpg-web-tools/tools/text-apng-maker/'}`)}`;

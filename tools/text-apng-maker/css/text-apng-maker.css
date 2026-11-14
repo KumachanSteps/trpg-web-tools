@@ -271,6 +271,56 @@ body.is-dark .theme-toggle-thumb { transform: translateX(24px); background: #e2e
 .portal-short, .header-menu-button, .header-break, .sheet-bar { display: none; }
 .sheet-scroll { display: contents; }
 
+/* ---------- ツール画面のヘッダー（v1.13：演出APNGメーカーにそろえた低いヘッダー） ----------
+   1行目：観測所へのリンク／タイトル＋バージョン、横に説明文のブロック、右にボタン。terms.html は元の表示のまま */
+.maker-header .eyebrow { margin: 0; font-size: 0.7rem; letter-spacing: 0.11em; text-transform: none; }
+.eyebrow-portal-link { color: var(--blue); text-decoration: none; }
+.eyebrow-portal-link:hover { text-decoration: underline; }
+.maker-header .version-engrave {
+  position: static; margin-left: 8px;
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; opacity: 0.75;
+  vertical-align: middle; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+@media (min-width: 761px) {
+  .maker-header h1 { margin: 0; font-size: 1.4rem; line-height: 1.25; font-weight: 900; }
+  .maker-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "title lead actions";
+    column-gap: 20px;
+    row-gap: 2px;
+    align-items: start;
+    padding: 10px 16px 10px 20px;
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft, var(--shadow));
+  }
+  .maker-header .lead { max-width: 64ch; font-size: 0.8rem; line-height: 1.55; align-self: center; }
+  .maker-header .header-actions { gap: 6px; flex-wrap: nowrap; }
+  .maker-header .header-actions-end { gap: 6px; }
+  /* 観測所へのリンクはタイトルの上に移したので、ボタン列からは外す */
+  .maker-header #portalLink { display: none; }
+  .maker-header :is(.ghost-button, .x-share-link) { min-height: 2rem; padding: 0.34rem 0.8rem; font-size: 0.78rem; }
+  .maker-header .x-share-link { min-width: 2rem; padding: 0; font-size: 0.95rem; }
+  .maker-header #shortcutBtn { min-width: 2rem; padding: 0; font-size: 1.05rem; }
+  .maker-header .language-switcher { min-height: 2rem; padding: 0 0.45rem; gap: 0; }
+  .maker-header .lang-choice-button { padding: 0.2rem 0.38rem; font-size: 0.76rem; }
+  .maker-header .lang-divider { font-size: 0.72rem; }
+  .maker-header .theme-button { min-width: 54px; }
+  .maker-header .theme-toggle-track { width: 46px; height: 24px; }
+  body.is-dark .maker-header .theme-toggle-thumb { transform: translateX(22px); }
+}
+
+/* 中くらいの画面：説明文を2行目へ */
+@media (min-width: 761px) and (max-width: 1280px) {
+  .maker-header { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title actions" "lead lead"; }
+  .maker-header .lead { max-width: none; }
+}
+/* さらに狭いとき：ボタンを折り返してよい */
+@media (min-width: 761px) and (max-width: 960px) {
+  .maker-header { grid-template-columns: auto minmax(0, 1fr); }
+  .maker-header .header-actions { flex-wrap: wrap; }
+}
+
 /* ---------- ドロワー ---------- */
 
 .drawer {
@@ -1527,7 +1577,7 @@ body.is-exporting .settings-body { pointer-events: none; opacity: 0.7; }
   :where(.maker-header) :is(.eyebrow, .lead, #shortcutBtn) { display: none; }
   :where(.maker-header) .title-block { order: 1; flex: 1 1 0; min-width: 0; }
   :where(.maker-header) h1 { margin: 0; font-size: 1.22rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .version-engrave { position: static; margin-top: 3px; font-size: 0.64rem; line-height: 1.2; }
+  .maker-header .version-engrave { display: block; margin: 3px 0 0; font-size: 0.64rem; line-height: 1.2; }
   :where(.maker-header) :is(.header-actions, .header-actions-end) { display: contents; }
   :where(.maker-header) :is(.header-nav-link, .ghost-button, .x-share-link) { min-height: 2rem; padding: 0.3rem 0.62rem; font-size: 0.76rem; box-shadow: none; }
   .x-share-link { order: 2; min-width: 2rem; padding: 0; font-size: 0.95rem; }
