@@ -170,14 +170,13 @@ function renderLibrary() {
     els.grid.innerHTML = `<p class="muted empty">${escapeHtml(t().noResults)}</p>`;
     return;
   }
+  const catName = new Map(app.manifest.categories.map(c => [c.id, c.name]));
   els.grid.innerHTML = list.map(a => {
     const fav = store.favs.includes(a.id);
-    const badges = [
-      a.type === 'transition' ? `<span class="badge badge-transition">${t().badgeTransition}</span>` : (a.playback.default === 'loop' ? `<span class="badge">${t().badgeLoop}</span>` : `<span class="badge">${t().badgeOnce}</span>`),
-      a.kind === 'combo' ? `<span class="badge">${t().badgeCombo}</span>` : '',
-    ].join('');
+    // カテゴリ名は「すべて」のときだけサムネイルに出す（カテゴリで絞っているときは同じ名前が並ぶだけなので出さない）
+    const badge = app.category === 'all' ? `<span class="asset-badges"><span class="badge">${escapeHtml(pick(catName.get(a.category)))}</span></span>` : '';
     return `<article class="asset-card${app.asset && app.asset.id === a.id ? ' is-active' : ''}" data-id="${a.id}" tabindex="0" role="button" aria-pressed="${app.asset && app.asset.id === a.id}">
-      <div class="asset-thumb-wrap"><canvas class="asset-thumb" width="256" height="144" data-thumb="${a.id}"></canvas><span class="asset-badges">${badges}</span></div>
+      <div class="asset-thumb-wrap"><canvas class="asset-thumb" width="256" height="144" data-thumb="${a.id}"></canvas>${badge}</div>
       <div class="asset-meta"><span class="asset-name">${escapeHtml(pick(a.name))}</span></div>
       <button type="button" class="fav-button${fav ? ' is-on' : ''}" data-fav="${a.id}" aria-pressed="${fav}" title="${escapeHtml(fav ? t().unfav : t().fav)}" aria-label="${escapeHtml(fav ? t().unfav : t().fav)}">★</button>
     </article>`;

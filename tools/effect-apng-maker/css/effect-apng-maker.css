@@ -280,7 +280,6 @@ input.switch:checked::after { transform: translateX(16px); }
   padding: 0 5px; border-radius: 999px; background: rgba(8, 14, 26, 0.72); color: #e6eefb;
   font-size: 0.6rem; font-weight: 800; line-height: 1.55; letter-spacing: 0.02em; backdrop-filter: blur(2px);
 }
-.badge-transition { background: rgba(58, 120, 216, 0.88); color: #ffffff; }
 .asset-meta { padding: 4px 7px 5px; }
 .asset-name { display: block; font-size: 0.74rem; font-weight: 800; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fav-button {
