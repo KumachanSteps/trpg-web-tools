@@ -130,8 +130,6 @@
     loopCountLabel: $('loopCountLabel'),
     colorLabel: $('colorLabel'),
     colorSelect: $('colorSelect'),
-    posterInput: $('posterInput'),
-    posterText: $('posterText'),
     trimInput: $('trimInput'),
     trimText: $('trimText'),
     fileNameLabel: $('fileNameLabel'),
@@ -544,7 +542,6 @@
     els.loopCountLabel.textContent = d.loopCount;
     els.colorLabel.textContent = d.colorMode;
     Array.from(els.colorSelect.options).forEach(o => { o.textContent = (short.colorOptions && short.colorOptions[o.value]) || d.colorOptions[o.value]; });
-    els.posterText.textContent = d.poster;
     els.trimText.textContent = d.trim;
     els.fileNameLabel.textContent = d.fileName;
     els.fileNameAutoBadge.textContent = d.fileNameAuto;
@@ -1963,7 +1960,7 @@
           await yieldToUi();
         }
       }
-      if (opts.poster && !webp) analyzer.add(grab(prepared.timeline.posterTime));
+      if (!webp) analyzer.add(grab(prepared.timeline.posterTime));
       if (opts.trim && analyzer.bounds) {
         const m = 2;
         const b = analyzer.bounds;
@@ -1981,7 +1978,7 @@
       ? new C.WebpEncoder({ width: outW, height: outH, fps, loops, quality: WEBP_QUALITY })
       : new C.ApngEncoder({ width: outW, height: outH, fps, loops, quantizer });
     // APNG非対応の環境で出す静止画は APNG だけのもの
-    if (opts.poster && !webp) await encoder.setDefaultImage(shape(grab(prepared.timeline.posterTime)));
+    if (!webp) await encoder.setDefaultImage(shape(grab(prepared.timeline.posterTime)));
     const encoding = webp ? msg().encodingWebp : msg().encoding;
     for (let i = 0; i < count; i++) {
       checkCancel();
@@ -2332,14 +2329,14 @@
     els.loopSelect.value = o.loop;
     els.loopCount.value = String(o.loopCount);
     els.colorSelect.value = o.color;
-    els.posterInput.checked = Boolean(o.poster);
+    // 「APNG非対応の環境では完成状態の静止画を表示」の切り替えは v1.13 で外し、常にオン
+    o.poster = true;
     els.trimInput.checked = Boolean(o.trim);
     els.loopCountWrap.hidden = o.loop !== 'count';
     els.fpsSelect.addEventListener('change', () => { o.fps = Number(els.fpsSelect.value); updateInfo(); saveState(); });
     els.loopSelect.addEventListener('change', () => setExportLoop(els.loopSelect.value));
     els.loopCount.addEventListener('change', () => { o.loopCount = Math.max(1, Math.min(999, Number(els.loopCount.value) || 1)); els.loopCount.value = String(o.loopCount); saveState(); });
     els.colorSelect.addEventListener('change', () => { o.color = els.colorSelect.value; saveState(); });
-    els.posterInput.addEventListener('change', () => { o.poster = els.posterInput.checked; saveState(); });
     els.trimInput.addEventListener('change', () => { o.trim = els.trimInput.checked; saveState(); });
     els.fileNameInput.addEventListener('input', () => {
       const value = els.fileNameInput.value;

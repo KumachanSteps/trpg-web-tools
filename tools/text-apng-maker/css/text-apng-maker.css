@@ -296,7 +296,7 @@ body.is-dark .theme-toggle-thumb::before {
     column-gap: 20px;
     row-gap: 2px;
     align-items: start;
-    padding: 10px 16px 10px 20px;
+    padding: 6px 14px 6px 18px;
     border-radius: 18px;
     box-shadow: var(--shadow-soft, var(--shadow));
   }
@@ -305,11 +305,18 @@ body.is-dark .theme-toggle-thumb::before {
   .maker-header .header-actions-end { gap: 6px; }
   /* 観測所へのリンクはタイトルの上に移したので、ボタン列からは外す */
   .maker-header #portalLink { display: none; }
-  .maker-header :is(.ghost-button, .x-share-link) { min-height: 2rem; padding: 0.34rem 0.8rem; font-size: 0.78rem; }
-  .maker-header #shortcutBtn { min-width: 2rem; padding: 0; font-size: 0.95rem; font-weight: 900; }
-  .maker-header .language-switcher { min-height: 2rem; padding: 0 0.45rem; gap: 0; }
-  .maker-header .lang-choice-button { padding: 0.2rem 0.38rem; font-size: 0.76rem; }
+  .maker-header :is(.ghost-button, .x-share-link) { min-height: 1.75rem; padding: 0.26rem 0.68rem; font-size: 0.74rem; }
+  .maker-header #shortcutBtn { min-width: 1.75rem; padding: 0; font-size: 0.95rem; font-weight: 900; }
+  .maker-header .language-switcher { min-height: 1.75rem; padding: 0 0.4rem; gap: 0; }
+  .maker-header .lang-choice-button { padding: 0.15rem 0.34rem; font-size: 0.72rem; }
   .maker-header .lang-divider { font-size: 0.72rem; }
+  /* テーマ切り替え：枠とトラックの間の余白をなくし、トラックの外周に細い枠だけを残す */
+  .maker-header .theme-button { min-width: 0; min-height: 0; padding: 2px; }
+  .maker-header .theme-toggle-track { width: 44px; height: 22px; }
+  .maker-header .theme-toggle-thumb { width: 18px; height: 18px; }
+  body.is-dark .maker-header .theme-toggle-thumb { transform: translateX(22px); }
+  /* ヘッダーの上の余白を詰める */
+  .maker-shell { padding-top: 10px; }
 }
 
 /* 中くらいの画面：説明文を2行目へ */
@@ -500,6 +507,8 @@ html:lang(ja) :is(.mode-desc, .template-hint, .field-label, .field-row > label, 
 }
 
 .template-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* 「↺ 初期化」は見出しの「テンプレート」と同じ文字の大きさにする */
+.template-head .link-button { font-size: 0.78rem; line-height: 1.2; letter-spacing: 0.04em; }
 .template-hint { margin: 2px 0 8px; color: var(--muted); font-size: 0.74rem; }
 
 .link-button {
