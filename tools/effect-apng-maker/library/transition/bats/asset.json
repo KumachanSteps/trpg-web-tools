@@ -1,6 +1,6 @@
 {
   "id": "transition.bats",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 8,
@@ -15,9 +15,9 @@
     "ko": "박쥐 떼"
   },
   "desc": {
-    "ja": "コウモリの群れが横切り、通ったあとが闇に沈む。",
-    "en": "A swarm of bats sweeps across and leaves darkness behind.",
-    "ko": "박쥐 떼가 지나가며 뒤를 어둠으로 덮는다."
+    "ja": "コウモリが集まって闇になり、現れるときは闇がコウモリになって飛び去る。",
+    "en": "Bats gather into darkness; on reveal, the darkness scatters into bats.",
+    "ko": "박쥐가 모여 어둠이 되고, 나타날 때는 어둠이 박쥐가 되어 날아간다."
   },
   "tags": [
     "コウモリ",
@@ -37,12 +37,48 @@
     ]
   },
   "duration": {
-    "default": 1.8,
-    "min": 0.8,
-    "max": 5
+    "default": 3,
+    "min": 1,
+    "max": 6
   },
   "transparent": true,
   "params": [
+    {
+      "key": "motion",
+      "type": "select",
+      "label": {
+        "ja": "動き",
+        "en": "Motion",
+        "ko": "움직임"
+      },
+      "default": "rise",
+      "options": [
+        {
+          "value": "rise",
+          "label": {
+            "ja": "中央下から広がる",
+            "en": "Rise from bottom",
+            "ko": "아래 중앙에서 퍼짐"
+          }
+        },
+        {
+          "value": "close",
+          "label": {
+            "ja": "周りから閉じる",
+            "en": "Close from edges",
+            "ko": "가장자리에서 닫힘"
+          }
+        },
+        {
+          "value": "sweep",
+          "label": {
+            "ja": "横切る",
+            "en": "Sweep across",
+            "ko": "가로지름"
+          }
+        }
+      ]
+    },
     {
       "key": "color",
       "type": "color",
@@ -51,9 +87,9 @@
         "en": "Cover colour",
         "ko": "덮는 색"
       },
-      "default": "#0b0307",
+      "default": "#06030a",
       "swatches": [
-        "#0b0307",
+        "#06030a",
         "#000000",
         "#2a0510",
         "#1a1030"
