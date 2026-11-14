@@ -35,7 +35,7 @@ const els = {
 function loadStore() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
 }
-const store = Object.assign({ lang: null, theme: 'dark', current: null, favs: [], perAsset: {} }, loadStore());
+const store = Object.assign({ lang: null, theme: null, current: null, favs: [], perAsset: {} }, loadStore());
 let saveTimer = 0;
 function persist() {
   clearTimeout(saveTimer);
@@ -91,8 +91,10 @@ function escapeHtml(s) {
 /* ---------- テーマ ---------- */
 
 function applyTheme() {
-  const dark = store.theme !== 'light';
+  // まだ選んでいないときは端末の設定に合わせる（文字画像APNGメーカーと同じ）
+  const dark = store.theme ? store.theme === 'dark' : Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   document.body.classList.toggle('is-dark', dark);
+  $('#themeBtn').setAttribute('aria-pressed', String(dark));
   $('#themeBtn').title = dark ? t().themeDark : t().themeLight;
   $('#themeBtn').setAttribute('aria-label', $('#themeBtn').title);
 }
@@ -184,8 +186,8 @@ function renderLibrary() {
       isNew(a) ? `<span class="badge badge-new">${t().badgeNew}</span>` : ''
     ].join('');
     return `<article class="asset-card${app.asset && app.asset.id === a.id ? ' is-active' : ''}" data-id="${a.id}" tabindex="0" role="button" aria-pressed="${app.asset && app.asset.id === a.id}">
-      <canvas class="asset-thumb" width="320" height="180" data-thumb="${a.id}"></canvas>
-      <div class="asset-meta"><span class="asset-name">${escapeHtml(pick(a.name))}</span><span class="asset-badges">${badges}</span></div>
+      <div class="asset-thumb-wrap"><canvas class="asset-thumb" width="256" height="144" data-thumb="${a.id}"></canvas><span class="asset-badges">${badges}</span></div>
+      <div class="asset-meta"><span class="asset-name">${escapeHtml(pick(a.name))}</span></div>
       <button type="button" class="fav-button${fav ? ' is-on' : ''}" data-fav="${a.id}" aria-pressed="${fav}" title="${escapeHtml(fav ? t().unfav : t().fav)}" aria-label="${escapeHtml(fav ? t().unfav : t().fav)}">★</button>
     </article>`;
   }).join('');
@@ -354,7 +356,7 @@ function renderControls() {
     const v = s.params[p.key];
     const label = escapeHtml(pick(p.label));
     if (p.type === 'range') return field(label, rangeInput(`p:${p.key}`, p.min, p.max, p.step, v));
-    if (p.type === 'toggle') return `<label class="toggle-inline field"><input type="checkbox" data-param="${p.key}" ${v ? 'checked' : ''} /><span>${label}</span></label>`;
+    if (p.type === 'toggle') return `<label class="toggle-inline field"><input type="checkbox" class="switch" data-param="${p.key}" ${v ? 'checked' : ''} /><span>${label}</span></label>`;
     if (p.type === 'select') {
       if (p.options.length <= 4) return field(label, seg(`p:${p.key}`, p.options.map(o => [o.value, pick(o.label)]), v));
       return field(label, `<select data-param="${p.key}">${p.options.map(o => `<option value="${o.value}" ${o.value === v ? 'selected' : ''}>${escapeHtml(pick(o.label))}</option>`).join('')}</select>`);
@@ -781,7 +783,7 @@ function bind() {
     applyLanguage();
   }));
   $('#themeBtn').addEventListener('click', () => {
-    store.theme = store.theme === 'light' ? 'dark' : 'light';
+    store.theme = document.body.classList.contains('is-dark') ? 'light' : 'dark';
     persist();
     applyTheme();
   });
@@ -851,10 +853,11 @@ function bind() {
   els.grid.addEventListener('pointerleave', stopHover);
 
   // 調整
-  const panel = $('.controls-panel');
-  panel.addEventListener('input', onControlInput);
-  panel.addEventListener('change', e => { if (e.target.dataset.range) refreshEstimate(); else onControlInput(e); });
-  panel.addEventListener('click', onControlClick);
+  document.querySelectorAll('.controls-section, #exportCard').forEach(panel => {
+    panel.addEventListener('input', onControlInput);
+    panel.addEventListener('change', e => { if (e.target.dataset.range) refreshEstimate(); else onControlInput(e); });
+    panel.addEventListener('click', onControlClick);
+  });
   $('#resetParamsBtn').addEventListener('click', () => {
     if (!app.asset) return;
     delete store.perAsset[app.asset.id];
