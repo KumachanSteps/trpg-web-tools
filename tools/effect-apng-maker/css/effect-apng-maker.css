@@ -71,15 +71,15 @@ h1, h2, h3, p { margin-top: 0; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 a { color: var(--accent); }
 
-.studio { max-width: 1680px; margin: 0 auto; padding: 18px 20px 40px; }
+.studio { max-width: 1680px; margin: 0 auto; padding: 10px 20px 40px; }
 
 /* ---------- ヘッダー：暗い帯＋細い罫線 ---------- */
 .studio-header {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 8px 28px;
-  align-items: end;
-  padding: 6px 4px 16px;
+  gap: 4px 24px;
+  align-items: start;
+  padding: 0 4px 8px;
   border-bottom: 1px solid var(--line-strong);
   position: relative;
 }
@@ -91,20 +91,20 @@ a { color: var(--accent); }
   background: var(--accent);
   box-shadow: var(--glow);
 }
-.eyebrow { margin: 0 0 4px; font-size: 12px; letter-spacing: 0.08em; }
+.eyebrow { margin: 0 0 1px; font-size: 11px; letter-spacing: 0.08em; }
 .portal-link { color: var(--muted); text-decoration: none; }
 .portal-link:hover { color: var(--accent); }
 .portal-short { display: none; }
-h1 { margin: 0; font-size: 26px; letter-spacing: 0.06em; font-weight: 700; text-shadow: var(--glow); }
+h1 { margin: 0; font-size: 22px; line-height: 1.25; letter-spacing: 0.06em; font-weight: 700; text-shadow: var(--glow); }
 .test-badge {
-  display: inline-block; vertical-align: middle; margin-left: 8px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-  padding: 2px 8px; border: 1px solid var(--accent); color: var(--accent); border-radius: 999px;
+  display: inline-block; vertical-align: middle; margin-left: 6px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em;
+  padding: 1px 7px; border: 1px solid var(--accent); color: var(--accent); border-radius: 999px;
   text-shadow: none;
 }
-.version-engrave { font-size: 11px; color: var(--muted); letter-spacing: 0.12em; margin-top: 2px; font-variant-numeric: tabular-nums; }
-.lead { margin: 0; color: var(--muted); max-width: 64ch; align-self: center; }
-.header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.version-engrave { margin-left: 8px; font-size: 10.5px; font-weight: 400; color: var(--muted); opacity: 0.7; letter-spacing: 0.1em; text-shadow: none; vertical-align: middle; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lead { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; max-width: 64ch; align-self: end; }
+.header-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; align-self: start; }
 .language-switcher { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
 .language-switcher button { background: none; border: 0; padding: 5px 10px; font-size: 12px; letter-spacing: 0.06em; color: var(--muted); }
 .language-switcher button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
@@ -113,6 +113,8 @@ h1 { margin: 0; font-size: 26px; letter-spacing: 0.06em; font-weight: 700; text-
   border-radius: 999px; padding: 6px 14px; font-size: 13px;
 }
 .ghost-button:hover { border-color: var(--accent); color: var(--accent); }
+.header-actions .ghost-button { padding: 4px 12px; font-size: 12px; }
+.header-actions .language-switcher button { padding: 4px 9px; font-size: 11.5px; }
 .ghost-button.small { padding: 3px 10px; font-size: 12px; }
 .theme-button { padding: 6px 10px; }
 .theme-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); border: 1px solid var(--ink); vertical-align: -2px; }
@@ -337,11 +339,14 @@ body.is-dark select option { background: #0f141e; }
 @media (max-width: 760px) {
   .studio { padding: 10px 12px 32px; }
   .studio-header { grid-template-columns: 1fr; gap: 6px; }
-  .header-actions { justify-content: flex-start; }
+  .header-actions { position: absolute; top: 0; right: 0; flex-wrap: nowrap; gap: 4px; }
+  .header-actions .ghost-button { padding: 3px 9px; }
+  .header-actions .language-switcher button { padding: 3px 7px; }
+  .eyebrow { line-height: 26px; }
   .portal-long { display: none; }
   .portal-short { display: inline; }
-  h1 { font-size: 21px; }
-  .lead { font-size: 12.5px; }
+  h1 { font-size: 19px; }
+  .lead { font-size: 12px; }
   .studio-grid { grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
   .preview-panel { order: -1; position: sticky; top: 0; z-index: 5; padding: 8px; }
   .preview-panel .panel-head { display: none; }
