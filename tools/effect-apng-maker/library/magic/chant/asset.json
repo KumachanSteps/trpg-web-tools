@@ -1,0 +1,123 @@
+{
+  "id": "magic.chant",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 5,
+  "category": "magic",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "詠唱の光",
+    "en": "Gathering light",
+    "ko": "영창의 빛",
+    "zh": "咏唱之光"
+  },
+  "desc": {
+    "ja": "周囲から光の粒が渦を巻いて集まり、集まった所が脈打つ。",
+    "en": "Motes of light spiral in from all around, and the gathering point pulses.",
+    "ko": "주위에서 빛의 입자가 소용돌이치며 모이고, 모인 곳이 맥박친다.",
+    "zh": "光粒从四周旋转汇聚，汇聚处随之脉动。"
+  },
+  "tags": [
+    "魔法",
+    "詠唱",
+    "光",
+    "magic",
+    "spell",
+    "영창",
+    "咏唱"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "pal",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색",
+        "zh": "颜色"
+      },
+      "options": [
+        {
+          "value": "gold",
+          "label": {
+            "ja": "金",
+            "en": "Gold",
+            "ko": "금색",
+            "zh": "金色"
+          }
+        },
+        {
+          "value": "blue",
+          "label": {
+            "ja": "青",
+            "en": "Blue",
+            "ko": "푸른색",
+            "zh": "蓝色"
+          }
+        }
+      ],
+      "default": "blue"
+    },
+    {
+      "key": "center",
+      "type": "point",
+      "label": {
+        "ja": "中心",
+        "en": "Centre",
+        "ko": "중심",
+        "zh": "中心"
+      },
+      "default": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "key": "amount",
+      "type": "range",
+      "label": {
+        "ja": "粒の量",
+        "en": "Particles",
+        "ko": "입자 양",
+        "zh": "光粒数量"
+      },
+      "min": 0.3,
+      "max": 1.5,
+      "step": 0.1,
+      "default": 0.8
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}

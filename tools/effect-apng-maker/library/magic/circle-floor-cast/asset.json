@@ -1,0 +1,108 @@
+{
+  "id": "magic.circle-floor-cast",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 1,
+  "category": "magic",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "足元の魔法陣・展開",
+    "en": "Floor magic circle (cast)",
+    "ko": "발밑 마법진·전개",
+    "zh": "脚下魔法阵・展开"
+  },
+  "desc": {
+    "ja": "床に斜めから見た魔法陣が、中心から外へ描かれて展開し、光って回り出す。",
+    "en": "A magic circle is drawn outward on the floor, then lights up and starts to turn.",
+    "ko": "바닥에 비스듬히 보이는 마법진이 중심에서 바깥으로 그려지며 전개되고, 빛나며 돌기 시작한다.",
+    "zh": "地面上斜看的魔法阵由中心向外绘出展开，随后发光旋转。"
+  },
+  "tags": [
+    "魔法",
+    "魔法陣",
+    "magic",
+    "magic circle",
+    "마법",
+    "魔法阵"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "pal",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색",
+        "zh": "颜色"
+      },
+      "options": [
+        {
+          "value": "gold",
+          "label": {
+            "ja": "金",
+            "en": "Gold",
+            "ko": "금색",
+            "zh": "金色"
+          }
+        },
+        {
+          "value": "blue",
+          "label": {
+            "ja": "青",
+            "en": "Blue",
+            "ko": "푸른색",
+            "zh": "蓝色"
+          }
+        }
+      ],
+      "default": "gold"
+    },
+    {
+      "key": "center",
+      "type": "point",
+      "label": {
+        "ja": "中心",
+        "en": "Centre",
+        "ko": "중심",
+        "zh": "中心"
+      },
+      "default": {
+        "x": 0.5,
+        "y": 0.78
+      }
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.7
+}

@@ -1,0 +1,108 @@
+{
+  "id": "magic.circle-center-cast",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 3,
+  "category": "magic",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "魔法陣・展開",
+    "en": "Magic circle (cast)",
+    "ko": "마법진·전개",
+    "zh": "魔法阵・展开"
+  },
+  "desc": {
+    "ja": "光の点から線が走り、輪・模様・文字が描かれて、正面向きの大きな魔法陣が完成する。",
+    "en": "From a point of light, lines, rings, patterns and runes are drawn until a large magic circle is complete.",
+    "ko": "빛의 점에서 선이 달리고 고리·무늬·문자가 그려지며 커다란 마법진이 완성된다.",
+    "zh": "光点延伸出线条，绘出圆环、纹样与文字，巨大的正面魔法阵完成。"
+  },
+  "tags": [
+    "魔法",
+    "魔法陣",
+    "magic",
+    "magic circle",
+    "마법",
+    "魔法阵"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "pal",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색",
+        "zh": "颜色"
+      },
+      "options": [
+        {
+          "value": "gold",
+          "label": {
+            "ja": "金",
+            "en": "Gold",
+            "ko": "금색",
+            "zh": "金色"
+          }
+        },
+        {
+          "value": "blue",
+          "label": {
+            "ja": "青",
+            "en": "Blue",
+            "ko": "푸른색",
+            "zh": "蓝色"
+          }
+        }
+      ],
+      "default": "gold"
+    },
+    {
+      "key": "center",
+      "type": "point",
+      "label": {
+        "ja": "中心",
+        "en": "Centre",
+        "ko": "중심",
+        "zh": "中心"
+      },
+      "default": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 12,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.75
+}

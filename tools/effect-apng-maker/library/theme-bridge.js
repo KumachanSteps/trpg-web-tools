@@ -6,7 +6,7 @@
  * 時刻（秒）を渡すと必ず同じ絵になるので、プレビューと書き出しの絵がそろう。
  */
 
-const THEME_VERSION = '20261115-t1';
+const THEME_VERSION = '20261115-t2';
 const cache = new Map();
 
 /** テーマのコードを一度だけ読み込み、そのコードが window に置いたもの（FX など）を返す */
@@ -17,8 +17,9 @@ export function loadTheme(file) {
       .then(r => { if (!r.ok) throw new Error(`theme script failed: ${file}`); return r.text(); })
       .then(src => {
         const box = {};
+        // 魔法などは window.MG に置いた共通部品を、MG とそのまま書いて使うので、入れ物を with で名前の探し先に足す
         // eslint-disable-next-line no-new-func
-        new Function('window', 'globalThis', src)(box, box);
+        new Function('window', 'globalThis', `with (window) {\n${src}\n}`)(box, box);
         if (!box.FX || typeof box.FX.draw !== 'function') throw new Error(`theme has no FX.draw: ${file}`);
         return box;
       });
