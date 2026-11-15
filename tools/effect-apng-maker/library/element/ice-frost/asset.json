@@ -1,0 +1,74 @@
+{
+  "id": "element.ice-frost",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 9,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "凍りつく",
+    "en": "Freezing over",
+    "ko": "얼어붙음",
+    "zh": "冻结"
+  },
+  "desc": {
+    "ja": "画面の四辺・四隅から、羽のような霜がパキパキと伸びて凍りつく。",
+    "en": "Feathery frost crackles in from the edges and corners until the screen freezes.",
+    "ko": "화면 가장자리와 모서리에서 깃털 같은 서리가 뻗어 나가며 얼어붙는다.",
+    "zh": "羽毛般的霜从画面四边四角噼啪蔓延，画面随之冻结。"
+  },
+  "tags": [
+    "氷",
+    "凍る",
+    "ice",
+    "frost",
+    "얼음",
+    "冰"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3.6,
+    "min": 2,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "big",
+      "type": "toggle",
+      "label": {
+        "ja": "中央近くまで覆う",
+        "en": "Cover almost to the centre",
+        "ko": "중앙 가까이까지 덮기",
+        "zh": "覆盖到接近中央"
+      },
+      "default": false
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.9
+}

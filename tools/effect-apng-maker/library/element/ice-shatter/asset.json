@@ -1,0 +1,62 @@
+{
+  "id": "element.ice-shatter",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 11,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "氷の壁が砕ける",
+    "en": "Ice wall shatters",
+    "ko": "얼음 벽이 부서짐",
+    "zh": "冰墙碎裂"
+  },
+  "desc": {
+    "ja": "一撃でひびが走り、氷の壁の破片が回りながら飛び散って消える。",
+    "en": "One blow sends cracks through the ice wall, and its shards spin away and vanish.",
+    "ko": "일격에 금이 가고 얼음 벽의 파편이 회전하며 흩어져 사라진다.",
+    "zh": "一击之下裂纹蔓延，冰墙碎片旋转飞散后消失。"
+  },
+  "tags": [
+    "氷",
+    "凍る",
+    "ice",
+    "frost",
+    "얼음",
+    "冰"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3.3,
+    "min": 2,
+    "max": 5
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.35
+}

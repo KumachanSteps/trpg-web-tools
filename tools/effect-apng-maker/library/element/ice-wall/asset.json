@@ -1,0 +1,62 @@
+{
+  "id": "element.ice-wall",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 10,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "氷の壁",
+    "en": "Ice wall",
+    "ko": "얼음 벽",
+    "zh": "冰墙"
+  },
+  "desc": {
+    "ja": "画面いっぱいを覆う半透明の氷の壁。奥の光がゆらめき、あちこちが小さくきらめく。",
+    "en": "A translucent wall of ice covers the screen, with shifting light inside and small glints.",
+    "ko": "화면 가득 덮는 반투명한 얼음 벽. 안쪽 빛이 일렁이고 곳곳이 작게 반짝인다.",
+    "zh": "覆盖整个画面的半透明冰墙，内部光影摇曳，处处闪着细光。"
+  },
+  "tags": [
+    "氷",
+    "凍る",
+    "ice",
+    "frost",
+    "얼음",
+    "冰"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      640,
+      360
+    ],
+    "fps": 10,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}
