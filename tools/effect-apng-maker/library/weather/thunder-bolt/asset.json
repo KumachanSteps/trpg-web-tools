@@ -1,0 +1,63 @@
+{
+  "id": "weather.thunder-bolt",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 8,
+  "category": "weather",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "稲妻の一撃",
+    "en": "Lightning bolt",
+    "ko": "번개 일격",
+    "zh": "雷霆一击"
+  },
+  "desc": {
+    "ja": "前兆の明滅のあと、太い稲妻が中央に落ちて画面が白くなる。",
+    "en": "After flickering omens, a heavy bolt strikes the centre and the screen flashes white.",
+    "ko": "전조의 깜빡임 뒤 굵은 번개가 중앙에 떨어지고 화면이 하얘진다.",
+    "zh": "预兆闪烁后，粗大的闪电劈向中央，画面一片白。"
+  },
+  "tags": [
+    "雷",
+    "稲妻",
+    "落雷",
+    "lightning",
+    "thunder",
+    "번개",
+    "闪电"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3,
+    "min": 2,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.26
+}

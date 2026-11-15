@@ -1,7 +1,7 @@
 # 演出APNGメーカー（Effect APNG Maker / 연출 APNG 메이커）
 
 場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出すツール。
-v0.13 は限定テスト版（`noindex`、ポータルのカードなし、直リンクのみ）。
+v0.14 は限定テスト版（`noindex`、ポータルのカードなし、直リンクのみ）。
 
 ## 画面
 
@@ -59,6 +59,17 @@ export default {
   文字は透明にして描く。EX の1回ぶんの長さを、こちらの「長さ」に引きのばして再生する。
 - 部品だけ使う（コウモリ・月・血しぶき・かぼちゃ・おばけ・流れ星など）：`const ex = await loadEx();` のあと `ex.Vampire.bat(...)` などを呼ぶ（`setup` を async にする）。
 - EX 側を直したときは `ex/` にコピーし直し、`ex-bridge.js` の `EX_VERSION` を上げる。
+
+### EX のテーマ別素材（雨・雪・霧・風・雷・氷・水・魔法など）を使う
+
+元はプロジェクトのファイル `text-apng-maker-ex/themes/<テーマ>/src/*.js`。`ex/themes/` に英字のファイル名で写し、`library/theme-bridge.js` が必要になったときだけ読み込む。
+どのコードも `FX.draw(ctx, 幅, 高さ, 秒, 設定)` の形で `window.FX` を上書きし合うので、ファイルごとに別の入れ物で動かしている。
+
+- `export default themeAsset({ file: 'rain', opts: (P, S, box) => ({ level: 3 }), mirror: P => P.dir === 'left' })`
+- 1ループ＝アセットの長さ（設定の `loop` に長さを渡す）。元の長さが決まっている一回ものは `time: t => t * 3` のように渡す。
+- `scaleLayers(box.RAIN_PRESETS[lv], P.amount)` で粒の数を増減できる。
+- 移し替えの計画と残り：https://claude.ai/artifact/FFUuRBa9C6oB74BGL1YZQu
+- 元のコードを直したときは `ex/themes/` に写し直し、`theme-bridge.js` の `THEME_VERSION` を上げる。
 
 ## 共通コード
 

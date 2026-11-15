@@ -1261,7 +1261,7 @@
   },
   {
    "id": "weather.rain",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-14",
    "order": 1,
@@ -1269,7 +1269,7 @@
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
-   "origin": "TK",
+   "origin": "EX",
    "name": {
     "ja": "雨",
     "en": "Rain",
@@ -1277,10 +1277,10 @@
     "zh": "雨"
    },
    "desc": {
-    "ja": "霧雨から大雨まで、量と角度で調整。",
-    "en": "From drizzle to downpour, set by amount and angle.",
-    "ko": "이슬비부터 폭우까지 양과 각도로 조절.",
-    "zh": "从毛毛雨到大雨，用雨量和角度调整。"
+    "ja": "霧雨・小雨・本降り・大雨の4段階。量と向きを変えられる。",
+    "en": "Drizzle, light, steady or heavy rain, with adjustable amount and direction.",
+    "ko": "이슬비·가랑비·보통 비·폭우 4단계. 양과 방향을 바꿀 수 있다.",
+    "zh": "毛毛雨、小雨、中雨、大雨四档，可调数量和方向。"
    },
    "tags": [
     "雨",
@@ -1307,48 +1307,98 @@
    "transparent": true,
    "params": [
     {
-     "key": "color",
-     "type": "color",
+     "key": "level",
+     "type": "select",
      "label": {
-      "ja": "色",
-      "en": "Colour",
-      "ko": "색",
-      "zh": "颜色"
+      "ja": "降り方",
+      "en": "Intensity",
+      "ko": "강도",
+      "zh": "雨势"
      },
-     "default": "#cfe3ff",
-     "swatches": [
-      "#cfe3ff",
-      "#ffffff",
-      "#9fb6cc"
-     ]
+     "options": [
+      {
+       "value": "1",
+       "label": {
+        "ja": "霧雨",
+        "en": "Drizzle",
+        "ko": "이슬비",
+        "zh": "毛毛雨"
+       }
+      },
+      {
+       "value": "2",
+       "label": {
+        "ja": "小雨",
+        "en": "Light rain",
+        "ko": "가랑비",
+        "zh": "小雨"
+       }
+      },
+      {
+       "value": "3",
+       "label": {
+        "ja": "本降り",
+        "en": "Steady rain",
+        "ko": "보통 비",
+        "zh": "中雨"
+       }
+      },
+      {
+       "value": "4",
+       "label": {
+        "ja": "大雨",
+        "en": "Heavy rain",
+        "ko": "폭우",
+        "zh": "大雨"
+       }
+      }
+     ],
+     "default": "3"
     },
     {
-     "key": "strength",
+     "key": "amount",
      "type": "range",
      "label": {
-      "ja": "雨の量",
-      "en": "Rainfall",
-      "ko": "빗줄기 양",
-      "zh": "雨量"
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양",
+      "zh": "数量"
      },
-     "min": 0.2,
-     "max": 2.5,
+     "min": 0.3,
+     "max": 2,
      "step": 0.1,
      "default": 1
     },
     {
-     "key": "angle",
-     "type": "range",
+     "key": "dir",
+     "type": "select",
      "label": {
-      "ja": "角度",
-      "en": "Angle",
-      "ko": "각도",
-      "zh": "角度"
+      "ja": "向き",
+      "en": "Direction",
+      "ko": "방향",
+      "zh": "方向"
      },
-     "min": -30,
-     "max": 30,
-     "step": 1,
-     "default": 10
+     "options": [
+      {
+       "value": "right",
+       "label": {
+        "ja": "右へ",
+        "en": "To the right",
+        "ko": "오른쪽으로",
+        "zh": "向右"
+       }
+      },
+      {
+       "value": "left",
+       "label": {
+        "ja": "左へ",
+        "en": "To the left",
+        "ko": "왼쪽으로",
+        "zh": "向左"
+       }
+      }
+     ],
+     "default": "right"
     },
     {
      "key": "splash",
@@ -1372,7 +1422,8 @@
    },
    "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "path": "weather/rain"
   },
@@ -1635,15 +1686,15 @@
   },
   {
    "id": "weather.storm",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-14",
    "order": 4,
    "category": "weather",
-   "kind": "combo",
+   "kind": "procedural",
    "type": "effect",
    "priority": "P1",
-   "origin": "TK",
+   "origin": "EX",
    "name": {
     "ja": "嵐",
     "en": "Storm",
@@ -1651,17 +1702,17 @@
     "zh": "暴风雨"
    },
    "desc": {
-    "ja": "大雨・風・雷光を重ねた組み合わせ。",
-    "en": "Heavy rain, wind and lightning flashes together.",
-    "ko": "폭우·바람·번개 빛을 겹친 조합.",
-    "zh": "大雨、风与雷光叠加的组合。"
+    "ja": "横殴りの暴風雨。突風で強まり、もやが流れ、遠くで稲光。",
+    "en": "Driving rain in strong gusts, with drifting haze and distant lightning.",
+    "ko": "옆으로 몰아치는 폭풍우. 돌풍이 불고 안개가 흐르며 멀리서 번개가 친다.",
+    "zh": "横扫的暴风雨，阵风加剧、雾气流动，远处闪电。"
    },
    "tags": [
     "嵐",
+    "雨",
+    "風",
     "storm",
     "폭풍",
-    "雨",
-    "雷",
     "暴风雨"
    ],
    "use": [
@@ -1676,51 +1727,65 @@
    "duration": {
     "default": 3,
     "min": 2,
-    "max": 6
+    "max": 8
    },
    "transparent": true,
    "params": [
     {
-     "key": "rain",
+     "key": "amount",
      "type": "range",
      "label": {
-      "ja": "雨の量",
-      "en": "Rainfall",
-      "ko": "빗줄기 양",
-      "zh": "雨量"
+      "ja": "量",
+      "en": "Amount",
+      "ko": "양",
+      "zh": "数量"
      },
-     "min": 0.5,
-     "max": 2.5,
-     "step": 0.1,
-     "default": 1.6
-    },
-    {
-     "key": "wind",
-     "type": "range",
-     "label": {
-      "ja": "風の強さ",
-      "en": "Wind",
-      "ko": "바람 세기",
-      "zh": "风力"
-     },
-     "min": 0,
+     "min": 0.3,
      "max": 2,
      "step": 0.1,
      "default": 0.8
     },
     {
-     "key": "flash",
-     "type": "range",
+     "key": "dir",
+     "type": "select",
      "label": {
-      "ja": "雷光",
-      "en": "Lightning",
-      "ko": "번개 빛",
-      "zh": "雷光"
+      "ja": "向き",
+      "en": "Direction",
+      "ko": "방향",
+      "zh": "方向"
      },
-     "min": 0,
-     "max": 1,
-     "step": 0.05,
-     "default": 0.7
+     "options": [
+      {
+       "value": "right",
+       "label": {
+        "ja": "右へ",
+        "en": "To the right",
+        "ko": "오른쪽으로",
+        "zh": "向右"
+       }
+      },
+      {
+       "value": "left",
+       "label": {
+        "ja": "左へ",
+        "en": "To the left",
+        "ko": "왼쪽으로",
+        "zh": "向左"
+       }
+      }
+     ],
+     "default": "right"
+    },
+    {
+     "key": "flash",
+     "type": "toggle",
+     "label": {
+      "ja": "遠い稲光",
+      "en": "Distant lightning",
+      "ko": "먼 번개",
+      "zh": "远处闪电"
+     },
+     "default": true
     }
    ],
    "budget": {
@@ -1728,51 +1793,19 @@
      960,
      540
     ],
-    "fps": 20,
+    "fps": 12,
     "colors": 64
    },
    "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
-   "layers": [
-    {
-     "asset": "weather.rain",
-     "params": {
-      "angle": 18,
-      "splash": true
-     },
-     "map": {
-      "strength": "rain"
-     }
-    },
-    {
-     "asset": "element.wind",
-     "params": {
-      "dir": "right",
-      "angle": 10
-     },
-     "map": {
-      "strength": "wind"
-     },
-     "skipIfZero": "wind"
-    },
-    {
-     "asset": "weather.lightning-flash",
-     "params": {
-      "flashes": 2
-     },
-     "map": {
-      "intensity": "flash"
-     },
-     "skipIfZero": "flash"
-    }
-   ],
    "path": "weather/storm"
   },
   {
    "id": "weather.snow",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-14",
    "order": 5,
@@ -1780,7 +1813,7 @@
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
-   "origin": "TK",
+   "origin": "EX",
    "name": {
     "ja": "雪",
     "en": "Snow",
@@ -1788,17 +1821,18 @@
     "zh": "雪"
    },
    "desc": {
-    "ja": "粉雪かぼたん雪。風で流れる。",
-    "en": "Powder or large flakes, drifting with the wind.",
-    "ko": "가루눈 또는 함박눈. 바람에 흩날린다.",
-    "zh": "细雪或鹅毛大雪。随风飘动。"
+    "ja": "粉雪・ぼたん雪・吹雪（弱・強）。",
+    "en": "Powder snow, large flakes, or a light or heavy blizzard.",
+    "ko": "가루눈·함박눈·눈보라(약·강).",
+    "zh": "细雪、鹅毛大雪、暴风雪（弱・强）。"
    },
    "tags": [
     "雪",
+    "吹雪",
     "snow",
+    "blizzard",
     "눈",
-    "粉雪",
-    "ぼたん雪"
+    "雪"
    ],
    "use": [
     "overlay"
@@ -1818,33 +1852,17 @@
    "transparent": true,
    "params": [
     {
-     "key": "color",
-     "type": "color",
-     "label": {
-      "ja": "色",
-      "en": "Colour",
-      "ko": "색",
-      "zh": "颜色"
-     },
-     "default": "#ffffff",
-     "swatches": [
-      "#ffffff",
-      "#dfeeff"
-     ]
-    },
-    {
-     "key": "flake",
+     "key": "level",
      "type": "select",
      "label": {
-      "ja": "雪の種類",
-      "en": "Flakes",
-      "ko": "눈 종류",
-      "zh": "雪的种类"
+      "ja": "降り方",
+      "en": "Type",
+      "ko": "종류",
+      "zh": "类型"
      },
-     "default": "powder",
      "options": [
       {
-       "value": "powder",
+       "value": "1",
        "label": {
         "ja": "粉雪",
         "en": "Powder",
@@ -1853,15 +1871,34 @@
        }
       },
       {
-       "value": "large",
+       "value": "2",
        "label": {
         "ja": "ぼたん雪",
         "en": "Large flakes",
         "ko": "함박눈",
         "zh": "鹅毛大雪"
        }
+      },
+      {
+       "value": "3",
+       "label": {
+        "ja": "吹雪（弱）",
+        "en": "Blizzard (light)",
+        "ko": "눈보라(약)",
+        "zh": "暴风雪（弱）"
+       }
+      },
+      {
+       "value": "4",
+       "label": {
+        "ja": "吹雪（強）",
+        "en": "Blizzard (heavy)",
+        "ko": "눈보라(강)",
+        "zh": "暴风雪（强）"
+       }
       }
-     ]
+     ],
+     "default": "1"
     },
     {
      "key": "amount",
@@ -1872,24 +1909,41 @@
       "ko": "양",
       "zh": "数量"
      },
-     "min": 0.2,
-     "max": 2.5,
+     "min": 0.3,
+     "max": 2,
      "step": 0.1,
      "default": 1
     },
     {
-     "key": "wind",
-     "type": "range",
+     "key": "dir",
+     "type": "select",
      "label": {
-      "ja": "風",
-      "en": "Wind",
-      "ko": "바람",
-      "zh": "风"
+      "ja": "向き",
+      "en": "Direction",
+      "ko": "방향",
+      "zh": "方向"
      },
-     "min": -1,
-     "max": 1,
-     "step": 0.05,
-     "default": 0.25
+     "options": [
+      {
+       "value": "right",
+       "label": {
+        "ja": "右へ",
+        "en": "To the right",
+        "ko": "오른쪽으로",
+        "zh": "向右"
+       }
+      },
+      {
+       "value": "left",
+       "label": {
+        "ja": "左へ",
+        "en": "To the left",
+        "ko": "왼쪽으로",
+        "zh": "向左"
+       }
+      }
+     ],
+     "default": "right"
     }
    ],
    "budget": {
@@ -1902,13 +1956,14 @@
    },
    "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "path": "weather/snow"
   },
   {
    "id": "weather.fog",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-14",
    "order": 6,
@@ -1916,7 +1971,7 @@
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
-   "origin": "TK",
+   "origin": "EX",
    "name": {
     "ja": "霧",
     "en": "Fog",
@@ -1924,10 +1979,10 @@
     "zh": "雾"
    },
    "desc": {
-    "ja": "濃霧・薄い霧・足元だけの霧。",
-    "en": "Dense, thin, or ground-only fog.",
-    "ko": "짙은 안개·옅은 안개·발밑 안개.",
-    "zh": "浓雾、薄雾、仅脚下的雾。"
+    "ja": "濃霧・薄い霧・足元だけの霧。層と筋がゆっくり流れる。",
+    "en": "Dense, thin or ground fog, with slowly drifting layers.",
+    "ko": "짙은 안개·옅은 안개·발밑 안개. 층과 줄기가 천천히 흐른다.",
+    "zh": "浓雾、薄雾、仅脚下的雾，层层缓缓流动。"
    },
    "tags": [
     "霧",
@@ -1949,27 +2004,10 @@
    "duration": {
     "default": 4,
     "min": 2,
-    "max": 8
+    "max": 10
    },
    "transparent": true,
    "params": [
-    {
-     "key": "color",
-     "type": "color",
-     "label": {
-      "ja": "色",
-      "en": "Colour",
-      "ko": "색",
-      "zh": "颜色"
-     },
-     "default": "#dde4ec",
-     "swatches": [
-      "#dde4ec",
-      "#ffffff",
-      "#8a93a3",
-      "#b9d8c4"
-     ]
-    },
     {
      "key": "mode",
      "type": "select",
@@ -1977,9 +2015,8 @@
       "ja": "種類",
       "en": "Type",
       "ko": "종류",
-      "zh": "种类"
+      "zh": "类型"
      },
-     "default": "thin",
      "options": [
       {
        "value": "thin",
@@ -2008,21 +2045,39 @@
         "zh": "仅脚下"
        }
       }
-     ]
+     ],
+     "default": "thin"
     },
     {
-     "key": "amount",
-     "type": "range",
+     "key": "dir",
+     "type": "select",
      "label": {
-      "ja": "量",
-      "en": "Amount",
-      "ko": "양",
-      "zh": "数量"
+      "ja": "向き",
+      "en": "Direction",
+      "ko": "방향",
+      "zh": "方向"
      },
-     "min": 0.3,
-     "max": 1.5,
-     "step": 0.05,
-     "default": 1
+     "options": [
+      {
+       "value": "right",
+       "label": {
+        "ja": "右へ",
+        "en": "To the right",
+        "ko": "오른쪽으로",
+        "zh": "向右"
+       }
+      },
+      {
+       "value": "left",
+       "label": {
+        "ja": "左へ",
+        "en": "To the left",
+        "ko": "왼쪽으로",
+        "zh": "向左"
+       }
+      }
+     ],
+     "default": "right"
     }
    ],
    "budget": {
@@ -2030,12 +2085,13 @@
      640,
      360
     ],
-    "fps": 8,
+    "fps": 10,
     "colors": 64
    },
    "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "path": "weather/fog"
   },
@@ -2158,6 +2214,198 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
    "path": "weather/sakura"
+  },
+  {
+   "id": "weather.thunder-bolt",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 8,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "稲妻の一撃",
+    "en": "Lightning bolt",
+    "ko": "번개 일격",
+    "zh": "雷霆一击"
+   },
+   "desc": {
+    "ja": "前兆の明滅のあと、太い稲妻が中央に落ちて画面が白くなる。",
+    "en": "After flickering omens, a heavy bolt strikes the centre and the screen flashes white.",
+    "ko": "전조의 깜빡임 뒤 굵은 번개가 중앙에 떨어지고 화면이 하얘진다.",
+    "zh": "预兆闪烁后，粗大的闪电劈向中央，画面一片白。"
+   },
+   "tags": [
+    "雷",
+    "稲妻",
+    "落雷",
+    "lightning",
+    "thunder",
+    "번개",
+    "闪电"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 2,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.26,
+   "path": "weather/thunder-bolt"
+  },
+  {
+   "id": "weather.thunder-chain",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 9,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "連続落雷",
+    "en": "Lightning barrage",
+    "ko": "연속 낙뢰",
+    "zh": "连续落雷"
+   },
+   "desc": {
+    "ja": "稲妻が左右・奥と手前で次々に落ち、そのたびに画面が明るくなる。",
+    "en": "Bolts strike one after another, near and far, lighting the screen each time.",
+    "ko": "번개가 좌우·앞뒤로 연달아 떨어지며 그때마다 화면이 밝아진다.",
+    "zh": "闪电在左右远近接连落下，每次都照亮画面。"
+   },
+   "tags": [
+    "雷",
+    "稲妻",
+    "落雷",
+    "lightning",
+    "thunderstorm",
+    "번개",
+    "闪电"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "weather/thunder-chain"
+  },
+  {
+   "id": "weather.thunder-clouds",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 10,
+   "category": "weather",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "黒雲の稲光",
+    "en": "Thunderclouds",
+    "ko": "먹구름 번개",
+    "zh": "乌云闪电"
+   },
+   "desc": {
+    "ja": "流れる黒雲が内側から光る。ときどき雲の中を稲妻が這う。画面全体を覆う背景。",
+    "en": "Dark clouds glow from within as lightning crawls through them. Covers the whole screen.",
+    "ko": "흐르는 먹구름이 안에서 빛나고 가끔 구름 속을 번개가 기어간다. 화면 전체를 덮는 배경.",
+    "zh": "流动的乌云从内部发光，闪电不时在云中游走。覆盖整个画面的背景。"
+   },
+   "tags": [
+    "雷",
+    "雲",
+    "黒雲",
+    "thunder",
+    "clouds",
+    "먹구름",
+    "乌云"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 8
+   },
+   "transparent": false,
+   "params": [],
+   "budget": {
+    "size": [
+     640,
+     360
+    ],
+    "fps": 12,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.5,
+   "path": "weather/thunder-clouds"
   },
   {
    "id": "element.embers",
@@ -2284,7 +2532,7 @@
   },
   {
    "id": "element.wind",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-14",
    "order": 2,
@@ -2292,25 +2540,26 @@
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
-   "origin": "TK",
+   "origin": "EX",
    "name": {
-    "ja": "風の筋",
-    "en": "Wind streaks",
-    "ko": "바람 줄기",
-    "zh": "风的线条"
+    "ja": "風",
+    "en": "Wind",
+    "ko": "바람",
+    "zh": "风"
    },
    "desc": {
-    "ja": "白い筋が横切って、強い風を見せる。",
-    "en": "White streaks cut across to show strong wind.",
-    "ko": "흰 줄기가 가로질러 강한 바람을 보여준다.",
-    "zh": "白色线条横掠而过，表现强风。"
+    "ja": "強い風・暴風。風の筋に、木の葉や塵が流れる。",
+    "en": "Strong wind or a gale: streaks of wind carrying leaves and dust.",
+    "ko": "강한 바람·폭풍. 바람 줄기에 나뭇잎과 먼지가 날린다.",
+    "zh": "强风、狂风。风痕中夹着树叶和尘土。"
    },
    "tags": [
     "風",
-    "wind",
-    "바람",
     "暴風",
-    "风的线条"
+    "wind",
+    "gale",
+    "바람",
+    "风"
    ],
    "use": [
     "overlay"
@@ -2323,27 +2572,42 @@
     ]
    },
    "duration": {
-    "default": 2,
-    "min": 1,
-    "max": 6
+    "default": 4,
+    "min": 2,
+    "max": 8
    },
    "transparent": true,
    "params": [
     {
-     "key": "color",
-     "type": "color",
+     "key": "mode",
+     "type": "select",
      "label": {
-      "ja": "色",
-      "en": "Colour",
-      "ko": "색",
-      "zh": "颜色"
+      "ja": "強さ",
+      "en": "Strength",
+      "ko": "세기",
+      "zh": "强度"
      },
-     "default": "#ffffff",
-     "swatches": [
-      "#ffffff",
-      "#d6ecff",
-      "#c9b38a"
-     ]
+     "options": [
+      {
+       "value": "strong",
+       "label": {
+        "ja": "強い風",
+        "en": "Strong wind",
+        "ko": "강한 바람",
+        "zh": "强风"
+       }
+      },
+      {
+       "value": "storm",
+       "label": {
+        "ja": "暴風",
+        "en": "Gale",
+        "ko": "폭풍",
+        "zh": "狂风"
+       }
+      }
+     ],
+     "default": "strong"
     },
     {
      "key": "dir",
@@ -2354,7 +2618,6 @@
       "ko": "방향",
       "zh": "方向"
      },
-     "default": "right",
      "options": [
       {
        "value": "right",
@@ -2374,35 +2637,19 @@
         "zh": "向左"
        }
       }
-     ]
+     ],
+     "default": "right"
     },
     {
-     "key": "strength",
-     "type": "range",
+     "key": "debris",
+     "type": "toggle",
      "label": {
-      "ja": "強さ",
-      "en": "Strength",
-      "ko": "세기",
-      "zh": "强度"
+      "ja": "木の葉・塵",
+      "en": "Leaves and dust",
+      "ko": "나뭇잎·먼지",
+      "zh": "树叶・尘土"
      },
-     "min": 0.3,
-     "max": 2,
-     "step": 0.1,
-     "default": 1
-    },
-    {
-     "key": "angle",
-     "type": "range",
-     "label": {
-      "ja": "角度",
-      "en": "Angle",
-      "ko": "각도",
-      "zh": "角度"
-     },
-     "min": -25,
-     "max": 25,
-     "step": 1,
-     "default": 4
+     "default": true
     }
    ],
    "budget": {
@@ -2415,7 +2662,8 @@
    },
    "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "path": "element/wind"
   },

@@ -1,6 +1,6 @@
 {
   "id": "element.wind",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 2,
@@ -8,25 +8,26 @@
   "kind": "procedural",
   "type": "effect",
   "priority": "P1",
-  "origin": "TK",
+  "origin": "EX",
   "name": {
-    "ja": "風の筋",
-    "en": "Wind streaks",
-    "ko": "바람 줄기",
-    "zh": "风的线条"
+    "ja": "風",
+    "en": "Wind",
+    "ko": "바람",
+    "zh": "风"
   },
   "desc": {
-    "ja": "白い筋が横切って、強い風を見せる。",
-    "en": "White streaks cut across to show strong wind.",
-    "ko": "흰 줄기가 가로질러 강한 바람을 보여준다.",
-    "zh": "白色线条横掠而过，表现强风。"
+    "ja": "強い風・暴風。風の筋に、木の葉や塵が流れる。",
+    "en": "Strong wind or a gale: streaks of wind carrying leaves and dust.",
+    "ko": "강한 바람·폭풍. 바람 줄기에 나뭇잎과 먼지가 날린다.",
+    "zh": "强风、狂风。风痕中夹着树叶和尘土。"
   },
   "tags": [
     "風",
-    "wind",
-    "바람",
     "暴風",
-    "风的线条"
+    "wind",
+    "gale",
+    "바람",
+    "风"
   ],
   "use": [
     "overlay"
@@ -39,27 +40,42 @@
     ]
   },
   "duration": {
-    "default": 2,
-    "min": 1,
-    "max": 6
+    "default": 4,
+    "min": 2,
+    "max": 8
   },
   "transparent": true,
   "params": [
     {
-      "key": "color",
-      "type": "color",
+      "key": "mode",
+      "type": "select",
       "label": {
-        "ja": "色",
-        "en": "Colour",
-        "ko": "색",
-        "zh": "颜色"
+        "ja": "強さ",
+        "en": "Strength",
+        "ko": "세기",
+        "zh": "强度"
       },
-      "default": "#ffffff",
-      "swatches": [
-        "#ffffff",
-        "#d6ecff",
-        "#c9b38a"
-      ]
+      "options": [
+        {
+          "value": "strong",
+          "label": {
+            "ja": "強い風",
+            "en": "Strong wind",
+            "ko": "강한 바람",
+            "zh": "强风"
+          }
+        },
+        {
+          "value": "storm",
+          "label": {
+            "ja": "暴風",
+            "en": "Gale",
+            "ko": "폭풍",
+            "zh": "狂风"
+          }
+        }
+      ],
+      "default": "strong"
     },
     {
       "key": "dir",
@@ -70,7 +86,6 @@
         "ko": "방향",
         "zh": "方向"
       },
-      "default": "right",
       "options": [
         {
           "value": "right",
@@ -90,35 +105,19 @@
             "zh": "向左"
           }
         }
-      ]
+      ],
+      "default": "right"
     },
     {
-      "key": "strength",
-      "type": "range",
+      "key": "debris",
+      "type": "toggle",
       "label": {
-        "ja": "強さ",
-        "en": "Strength",
-        "ko": "세기",
-        "zh": "强度"
+        "ja": "木の葉・塵",
+        "en": "Leaves and dust",
+        "ko": "나뭇잎·먼지",
+        "zh": "树叶・尘土"
       },
-      "min": 0.3,
-      "max": 2,
-      "step": 0.1,
-      "default": 1
-    },
-    {
-      "key": "angle",
-      "type": "range",
-      "label": {
-        "ja": "角度",
-        "en": "Angle",
-        "ko": "각도",
-        "zh": "角度"
-      },
-      "min": -25,
-      "max": 25,
-      "step": 1,
-      "default": 4
+      "default": true
     }
   ],
   "budget": {
@@ -131,6 +130,7 @@
   },
   "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
   }
 }
