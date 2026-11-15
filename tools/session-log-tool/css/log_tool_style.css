@@ -1188,6 +1188,33 @@ body.night-mode .ccfolia-fields input,body.night-mode .cc-speaker,body.night-mod
 @keyframes rowImportedFlash{0%{background:rgba(250,204,102,.55)}100%{background:transparent}}
 .row-just-imported>td{animation:rowImportedFlash 2.2s ease-out}
 
+/* v1.105: keep primary header and table actions on one line */
+.header-actions{
+  min-width:0;
+  max-width:100%;
+}
+.header-action-row,
+.table-import-actions{
+  max-width:100%;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  overflow-y:hidden;
+  white-space:nowrap;
+  scrollbar-width:none;
+}
+.header-action-row::-webkit-scrollbar,
+.table-import-actions::-webkit-scrollbar{display:none}
+.header-action-row>.header-button,
+.table-import-actions>.header-button{flex:0 0 auto;white-space:nowrap}
+@media (min-width:840px) and (max-width:1100px){
+  .header-layout{grid-template-columns:minmax(0,1fr) auto}
+  .header-actions{align-items:flex-end}
+  .header-action-row{justify-content:flex-end}
+}
+@media (max-width:1100px){
+  .table-import-actions{width:100%;justify-content:flex-start}
+}
+
 /* v1.104.1: compact durable backup controls */
 .backup-panel{margin:0;border:1px solid var(--border-soft);border-radius:14px;background:rgba(255,255,255,.74);box-shadow:0 5px 16px rgba(15,23,42,.04);overflow:hidden}
 .backup-panel-summary{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:8px;min-height:42px;padding:7px 12px;list-style:none;cursor:pointer;user-select:none}
