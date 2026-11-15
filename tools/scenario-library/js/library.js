@@ -14,8 +14,8 @@
   var favs = {};
   var FAV_KEY = "library.favorites";
   var VIEW_KEY = "scenarioLibrary.view";
-  var VERSION = { version: "v0.3.0", updated: "2026.11.15" };
-  var state = { q: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: "relevance", selected: null, limit: PAGE };
+  var VERSION = { version: "v0.3.1", updated: "2026.11.15" };
+  var state = { q: "", author: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: "relevance", selected: null, limit: PAGE };
   var view = "grid";
   try { if (localStorage.getItem(VIEW_KEY) === "table") view = "table"; } catch (e) { /* 保存できない環境では毎回カード表示 */ }
 
@@ -25,7 +25,7 @@
   function init() {
     ["qInput", "sortSelect", "systemChips", "plSelect", "timeSelect", "priceSelect", "hoCheck", "notOwnedCheck", "resetBtn",
       "countLine", "resultGrid", "emptyState", "errorState", "moreBtn", "detail", "detailCover", "detailPills", "detailTitle",
-      "detailBy", "detailList", "detailFav", "detailBadges", "favCheck", "resultTable", "sourceLink", "shelfBtn",
+      "detailBy", "authorFilter", "detailList", "detailFav", "detailBadges", "favCheck", "resultTable", "sourceLink", "shelfBtn",
       "suggestLink", "sampleBanner", "statWorks", "statWriters", "statNew", "statShelf", "usageBtn", "usagePanel", "attribution"
     ].forEach(function (id) { els[id] = $(id); });
 
@@ -54,11 +54,15 @@
       });
     });
     els.detailFav.addEventListener("click", function () { if (state.selected) toggleFav(state.selected); });
-    // 作者・サークル名をクリックすると、その名前で絞り込む
+    // 作者・サークル名をクリックするとその名前で絞り込み、もう一度クリックすると外す
     els.detailBy.addEventListener("click", function (e) {
       var b = e.target.closest("[data-author]");
       if (!b) return;
-      searchFor(b.getAttribute("data-author"));
+      var name = b.getAttribute("data-author");
+      setAuthor(state.author === name ? "" : name);
+    });
+    els.authorFilter.addEventListener("click", function (e) {
+      if (e.target.closest("[data-clear-author]")) setAuthor("");
     });
     els.resetBtn.addEventListener("click", reset);
     els.moreBtn.addEventListener("click", function () { state.limit += PAGE; render(); });
@@ -107,7 +111,7 @@
   }
 
   function reset() {
-    state = { q: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: state.sort, selected: state.selected, limit: PAGE };
+    state = { q: "", author: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: state.sort, selected: state.selected, limit: PAGE };
     els.qInput.value = "";
     els.plSelect.value = "";
     els.timeSelect.value = "";
@@ -118,12 +122,16 @@
     render();
   }
 
-  function searchFor(name) {
-    state.q = name;
-    els.qInput.value = name;
+  function setAuthor(name) {
+    state.author = name;
     state.limit = PAGE;
     render();
-    els.qInput.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function authorsOf(sc) {
+    var names = (sc.writers || []).slice();
+    if (sc.circle && sc.circle.name) names.push(sc.circle.name);
+    return names;
   }
 
   function toggleFav(id) {
@@ -193,6 +201,7 @@
     var range = state.time ? state.time.split("-").map(Number) : null;
     var list = catalog.scenarios.filter(function (sc) {
       if (q && sc._search.indexOf(q) < 0) return false;
+      if (state.author && authorsOf(sc).indexOf(state.author) < 0) return false;
       if (state.sys && sc.system !== state.sys) return false;
       if (state.pl) {
         var p = sc.players || {};
@@ -236,7 +245,7 @@
   function favButton(sc, cls) {
     var on = !!favs[sc.id];
     return '<button type="button" class="lib-fav' + (cls ? " " + cls : "") + '" data-fav="' + esc(sc.id) + '" aria-pressed="' + on +
-      '" aria-label="お気に入り" title="お気に入り">' + (on ? "★" : "☆") + "</button>";
+      '" aria-label="お気に入り" title="お気に入り">' + "★</button>";
   }
 
   function likesLabel(sc) {
@@ -276,6 +285,10 @@
     els.countLine.textContent = list.length === total
       ? shown.length + " / " + total.toLocaleString("ja-JP")
       : list.length.toLocaleString("ja-JP") + " 件";
+    els.authorFilter.hidden = !state.author;
+    els.authorFilter.innerHTML = state.author
+      ? '<span class="lib-author-chip">' + esc(state.author) + '<button type="button" data-clear-author aria-label="作者の絞り込みを外す">×</button></span>'
+      : "";
     els.emptyState.hidden = list.length > 0;
     els.moreBtn.hidden = list.length <= state.limit;
 
@@ -290,8 +303,7 @@
       els.resultTable.innerHTML = "";
       els.resultGrid.innerHTML = shown.map(function (sc) {
         return '<div class="lib-card-wrap"><button type="button" class="lib-card" data-id="' + esc(sc.id) + '" aria-pressed="' + (sc.id === state.selected) + '">' +
-          cover(sc, "", '<span class="lib-card-source">' + esc((sc.source && sc.source.site) || "—") + "</span>" +
-            '<span class="lib-badges">' + badges(sc, false) + "</span>") +
+          cover(sc, "", '<span class="lib-badges">' + badges(sc, false) + "</span>") +
           '<span class="lib-card-body">' +
           '<span class="lib-card-title">' + esc(sc.title) + "</span>" +
           '<span class="lib-card-by">' + esc(byLine(sc)) + "</span>" +
@@ -328,14 +340,16 @@
     els.detailCover.innerHTML = (sc.cover_url ? '<img src="' + esc(sc.cover_url) + '" alt="" referrerpolicy="no-referrer" />' : "");
     var fav = !!favs[sc.id];
     els.detailFav.setAttribute("aria-pressed", String(fav));
-    els.detailFav.textContent = fav ? "★" : "☆";
     els.detailBadges.innerHTML = badges(sc, true);
     els.detailPills.innerHTML = pills(sc) + '<span class="hub-pill">' + hoLabel(sc) + "</span>";
     els.detailTitle.textContent = sc.title;
-    var names = (sc.writers || []).slice();
-    if (sc.circle && sc.circle.name) names.push(sc.circle.name);
+    var names = authorsOf(sc);
     els.detailBy.innerHTML = names.length
-      ? names.map(function (n) { return '<button type="button" class="lib-author" data-author="' + esc(n) + '" title="この名前で絞り込む">' + esc(n) + "</button>"; }).join(" ・ ")
+      ? names.map(function (n) {
+        var on = state.author === n;
+        return '<button type="button" class="lib-author" data-author="' + esc(n) + '" aria-pressed="' + on + '" title="' +
+          (on ? "絞り込みを外す" : "この名前で絞り込む") + '">' + esc(n) + "</button>";
+      }).join(" ・ ")
       : "作者不明";
     var src = sc.source || {};
     var rows = [
