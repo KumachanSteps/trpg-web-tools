@@ -1,0 +1,108 @@
+{
+  "id": "magic.circle-floor",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 2,
+  "category": "magic",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "足元の魔法陣",
+    "en": "Floor magic circle",
+    "ko": "발밑 마법진",
+    "zh": "脚下魔法阵"
+  },
+  "desc": {
+    "ja": "展開済みの魔法陣が、床でゆっくり回り続ける。光の粒が立ちのぼる。",
+    "en": "A finished magic circle turns slowly on the floor as motes of light rise.",
+    "ko": "완성된 마법진이 바닥에서 천천히 돌고 빛의 입자가 피어오른다.",
+    "zh": "展开完毕的魔法阵在地面缓缓旋转，光粒升起。"
+  },
+  "tags": [
+    "魔法",
+    "魔法陣",
+    "magic",
+    "magic circle",
+    "마법",
+    "魔法阵"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "pal",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색",
+        "zh": "颜色"
+      },
+      "options": [
+        {
+          "value": "gold",
+          "label": {
+            "ja": "金",
+            "en": "Gold",
+            "ko": "금색",
+            "zh": "金色"
+          }
+        },
+        {
+          "value": "blue",
+          "label": {
+            "ja": "青",
+            "en": "Blue",
+            "ko": "푸른색",
+            "zh": "蓝色"
+          }
+        }
+      ],
+      "default": "gold"
+    },
+    {
+      "key": "center",
+      "type": "point",
+      "label": {
+        "ja": "中心",
+        "en": "Centre",
+        "ko": "중심",
+        "zh": "中心"
+      },
+      "default": {
+        "x": 0.5,
+        "y": 0.78
+      }
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 12,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}

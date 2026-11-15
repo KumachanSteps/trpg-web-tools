@@ -1,0 +1,108 @@
+{
+  "id": "magic.circle-center",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 4,
+  "category": "magic",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "魔法陣",
+    "en": "Magic circle",
+    "ko": "마법진",
+    "zh": "魔法阵"
+  },
+  "desc": {
+    "ja": "正面向きの大きな魔法陣が、光りながら回り続ける。",
+    "en": "A large magic circle facing the viewer glows and keeps turning.",
+    "ko": "정면을 향한 커다란 마법진이 빛나며 계속 돈다.",
+    "zh": "巨大的正面魔法阵持续发光旋转。"
+  },
+  "tags": [
+    "魔法",
+    "魔法陣",
+    "magic",
+    "magic circle",
+    "마법",
+    "魔法阵"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 3,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "pal",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색",
+        "zh": "颜色"
+      },
+      "options": [
+        {
+          "value": "gold",
+          "label": {
+            "ja": "金",
+            "en": "Gold",
+            "ko": "금색",
+            "zh": "金色"
+          }
+        },
+        {
+          "value": "blue",
+          "label": {
+            "ja": "青",
+            "en": "Blue",
+            "ko": "푸른색",
+            "zh": "蓝色"
+          }
+        }
+      ],
+      "default": "gold"
+    },
+    {
+      "key": "center",
+      "type": "point",
+      "label": {
+        "ja": "中心",
+        "en": "Centre",
+        "ko": "중심",
+        "zh": "中心"
+      },
+      "default": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 12,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}

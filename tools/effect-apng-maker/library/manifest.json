@@ -47,6 +47,15 @@
    }
   },
   {
+   "id": "magic",
+   "name": {
+    "ja": "魔法・神秘",
+    "en": "Magic",
+    "ko": "마법·신비",
+    "zh": "魔法·神秘"
+   }
+  },
+  {
    "id": "combat",
    "name": {
     "ja": "戦闘",
@@ -4497,6 +4506,676 @@
    },
    "opacity": 0.5,
    "path": "visual/meteors"
+  },
+  {
+   "id": "magic.circle-floor-cast",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 1,
+   "category": "magic",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "足元の魔法陣・展開",
+    "en": "Floor magic circle (cast)",
+    "ko": "발밑 마법진·전개",
+    "zh": "脚下魔法阵・展开"
+   },
+   "desc": {
+    "ja": "床に斜めから見た魔法陣が、中心から外へ描かれて展開し、光って回り出す。",
+    "en": "A magic circle is drawn outward on the floor, then lights up and starts to turn.",
+    "ko": "바닥에 비스듬히 보이는 마법진이 중심에서 바깥으로 그려지며 전개되고, 빛나며 돌기 시작한다.",
+    "zh": "地面上斜看的魔法阵由中心向外绘出展开，随后发光旋转。"
+   },
+   "tags": [
+    "魔法",
+    "魔法陣",
+    "magic",
+    "magic circle",
+    "마법",
+    "魔法阵"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "pal",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "gold",
+       "label": {
+        "ja": "金",
+        "en": "Gold",
+        "ko": "금색",
+        "zh": "金色"
+       }
+      },
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "푸른색",
+        "zh": "蓝色"
+       }
+      }
+     ],
+     "default": "gold"
+    },
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.78
+     }
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.7,
+   "path": "magic/circle-floor-cast"
+  },
+  {
+   "id": "magic.circle-floor",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 2,
+   "category": "magic",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "足元の魔法陣",
+    "en": "Floor magic circle",
+    "ko": "발밑 마법진",
+    "zh": "脚下魔法阵"
+   },
+   "desc": {
+    "ja": "展開済みの魔法陣が、床でゆっくり回り続ける。光の粒が立ちのぼる。",
+    "en": "A finished magic circle turns slowly on the floor as motes of light rise.",
+    "ko": "완성된 마법진이 바닥에서 천천히 돌고 빛의 입자가 피어오른다.",
+    "zh": "展开完毕的魔法阵在地面缓缓旋转，光粒升起。"
+   },
+   "tags": [
+    "魔法",
+    "魔法陣",
+    "magic",
+    "magic circle",
+    "마법",
+    "魔法阵"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "pal",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "gold",
+       "label": {
+        "ja": "金",
+        "en": "Gold",
+        "ko": "금색",
+        "zh": "金色"
+       }
+      },
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "푸른색",
+        "zh": "蓝色"
+       }
+      }
+     ],
+     "default": "gold"
+    },
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.78
+     }
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 12,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "magic/circle-floor"
+  },
+  {
+   "id": "magic.circle-center-cast",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 3,
+   "category": "magic",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "魔法陣・展開",
+    "en": "Magic circle (cast)",
+    "ko": "마법진·전개",
+    "zh": "魔法阵・展开"
+   },
+   "desc": {
+    "ja": "光の点から線が走り、輪・模様・文字が描かれて、正面向きの大きな魔法陣が完成する。",
+    "en": "From a point of light, lines, rings, patterns and runes are drawn until a large magic circle is complete.",
+    "ko": "빛의 점에서 선이 달리고 고리·무늬·문자가 그려지며 커다란 마법진이 완성된다.",
+    "zh": "光点延伸出线条，绘出圆环、纹样与文字，巨大的正面魔法阵完成。"
+   },
+   "tags": [
+    "魔法",
+    "魔法陣",
+    "magic",
+    "magic circle",
+    "마법",
+    "魔法阵"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "pal",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "gold",
+       "label": {
+        "ja": "金",
+        "en": "Gold",
+        "ko": "금색",
+        "zh": "金色"
+       }
+      },
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "푸른색",
+        "zh": "蓝色"
+       }
+      }
+     ],
+     "default": "gold"
+    },
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 12,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.75,
+   "path": "magic/circle-center-cast"
+  },
+  {
+   "id": "magic.circle-center",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 4,
+   "category": "magic",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "魔法陣",
+    "en": "Magic circle",
+    "ko": "마법진",
+    "zh": "魔法阵"
+   },
+   "desc": {
+    "ja": "正面向きの大きな魔法陣が、光りながら回り続ける。",
+    "en": "A large magic circle facing the viewer glows and keeps turning.",
+    "ko": "정면을 향한 커다란 마법진이 빛나며 계속 돈다.",
+    "zh": "巨大的正面魔法阵持续发光旋转。"
+   },
+   "tags": [
+    "魔法",
+    "魔法陣",
+    "magic",
+    "magic circle",
+    "마법",
+    "魔法阵"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "pal",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "gold",
+       "label": {
+        "ja": "金",
+        "en": "Gold",
+        "ko": "금색",
+        "zh": "金色"
+       }
+      },
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "푸른색",
+        "zh": "蓝色"
+       }
+      }
+     ],
+     "default": "gold"
+    },
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 12,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "magic/circle-center"
+  },
+  {
+   "id": "magic.chant",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 5,
+   "category": "magic",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "詠唱の光",
+    "en": "Gathering light",
+    "ko": "영창의 빛",
+    "zh": "咏唱之光"
+   },
+   "desc": {
+    "ja": "周囲から光の粒が渦を巻いて集まり、集まった所が脈打つ。",
+    "en": "Motes of light spiral in from all around, and the gathering point pulses.",
+    "ko": "주위에서 빛의 입자가 소용돌이치며 모이고, 모인 곳이 맥박친다.",
+    "zh": "光粒从四周旋转汇聚，汇聚处随之脉动。"
+   },
+   "tags": [
+    "魔法",
+    "詠唱",
+    "光",
+    "magic",
+    "spell",
+    "영창",
+    "咏唱"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "pal",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "gold",
+       "label": {
+        "ja": "金",
+        "en": "Gold",
+        "ko": "금색",
+        "zh": "金色"
+       }
+      },
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "푸른색",
+        "zh": "蓝色"
+       }
+      }
+     ],
+     "default": "blue"
+    },
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "粒の量",
+      "en": "Particles",
+      "ko": "입자 양",
+      "zh": "光粒数量"
+     },
+     "min": 0.3,
+     "max": 1.5,
+     "step": 0.1,
+     "default": 0.8
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "magic/chant"
+  },
+  {
+   "id": "magic.rise",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 6,
+   "category": "magic",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "光が立ちのぼる",
+    "en": "Rising light",
+    "ko": "피어오르는 빛",
+    "zh": "升腾之光"
+   },
+   "desc": {
+    "ja": "画面の下から、柔らかな光の柱と光の粒がゆっくり立ちのぼる。回復・浄化の場面に。",
+    "en": "Soft pillars and motes of light rise slowly from below. For healing or cleansing.",
+    "ko": "화면 아래에서 부드러운 빛기둥과 빛 입자가 천천히 피어오른다. 회복·정화 장면에.",
+    "zh": "柔和的光柱与光粒从画面下方缓缓升起。适合治愈、净化场景。"
+   },
+   "tags": [
+    "魔法",
+    "回復",
+    "光",
+    "magic",
+    "heal",
+    "회복",
+    "治愈"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "pal",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "gold",
+       "label": {
+        "ja": "金",
+        "en": "Gold",
+        "ko": "금색",
+        "zh": "金色"
+       }
+      },
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "푸른색",
+        "zh": "蓝色"
+       }
+      }
+     ],
+     "default": "gold"
+    },
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "粒の量",
+      "en": "Particles",
+      "ko": "입자 양",
+      "zh": "光粒数量"
+     },
+     "min": 0.3,
+     "max": 1.5,
+     "step": 0.1,
+     "default": 1
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "magic/rise"
   },
   {
    "id": "combat.fang",

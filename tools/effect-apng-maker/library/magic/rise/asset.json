@@ -1,0 +1,109 @@
+{
+  "id": "magic.rise",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 6,
+  "category": "magic",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "光が立ちのぼる",
+    "en": "Rising light",
+    "ko": "피어오르는 빛",
+    "zh": "升腾之光"
+  },
+  "desc": {
+    "ja": "画面の下から、柔らかな光の柱と光の粒がゆっくり立ちのぼる。回復・浄化の場面に。",
+    "en": "Soft pillars and motes of light rise slowly from below. For healing or cleansing.",
+    "ko": "화면 아래에서 부드러운 빛기둥과 빛 입자가 천천히 피어오른다. 회복·정화 장면에.",
+    "zh": "柔和的光柱与光粒从画面下方缓缓升起。适合治愈、净化场景。"
+  },
+  "tags": [
+    "魔法",
+    "回復",
+    "光",
+    "magic",
+    "heal",
+    "회복",
+    "治愈"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "pal",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색",
+        "zh": "颜色"
+      },
+      "options": [
+        {
+          "value": "gold",
+          "label": {
+            "ja": "金",
+            "en": "Gold",
+            "ko": "금색",
+            "zh": "金色"
+          }
+        },
+        {
+          "value": "blue",
+          "label": {
+            "ja": "青",
+            "en": "Blue",
+            "ko": "푸른색",
+            "zh": "蓝色"
+          }
+        }
+      ],
+      "default": "gold"
+    },
+    {
+      "key": "amount",
+      "type": "range",
+      "label": {
+        "ja": "粒の量",
+        "en": "Particles",
+        "ko": "입자 양",
+        "zh": "光粒数量"
+      },
+      "min": 0.3,
+      "max": 1.5,
+      "step": 0.1,
+      "default": 1
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}
