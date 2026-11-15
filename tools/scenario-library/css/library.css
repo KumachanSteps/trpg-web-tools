@@ -12,7 +12,7 @@
 
 .lib-layout { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
 .lib-results { flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-.lib-results-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 0 4px; }
+.lib-results-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 4px; }
 .lib-results-head h2 { font-size: 19px; letter-spacing: 0.04em; }
 .lib-count { font-size: 13px; color: var(--muted); }
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
@@ -47,7 +47,7 @@
   font-size: 10.5px;
   font-weight: 700;
 }
-.lib-card-mine { position: absolute; right: 8px; top: 8px; z-index: 1; font-family: var(--font-body); }
+
 .lib-card-body { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 12px; }
 .lib-card-title { font-family: var(--font-head); font-size: 16px; font-weight: 500; letter-spacing: 0.03em; color: var(--ink); line-height: 1.35; }
 .lib-card-by { font-size: 12px; color: var(--muted); }
@@ -60,19 +60,79 @@
 .lib-detail-head { padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--line); }
 .lib-detail-head h2 { font-size: 22px; letter-spacing: 0.04em; }
 .lib-by { margin: 0; color: var(--muted); font-size: 13px; }
+.lib-dl[hidden] { display: none; }
 .lib-dl { margin: 0; padding: 12px 20px; display: grid; grid-template-columns: 72px 1fr; gap: 8px 10px; font-size: 13px; border-bottom: 1px solid var(--line); }
 .lib-dl dt { color: var(--muted); }
 .lib-dl dd { margin: 0; color: var(--ink-soft); overflow-wrap: anywhere; }
-.lib-mine { padding: 12px 20px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--line); }
-.lib-mine-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
-.lib-mine-grid > * { padding: 8px 4px; border-radius: 9px; background: var(--sheet-sub); color: var(--ink-soft); text-decoration: none; }
-.lib-mine-grid strong { display: block; font-size: 15px; }
-.lib-mine-grid span { font-size: 11px; color: var(--muted); }
-.lib-mine-grid .is-soon { opacity: 0.6; }
 .lib-actions { padding: 14px 20px 18px; display: flex; flex-direction: column; gap: 8px; }
 .lib-actions .hub-linkbtn { align-self: center; }
 
+/* ヘッダー（卓準備カレンダーにそろえる） */
+.lib-title-lockup { display: flex; min-width: 0; align-items: flex-end; gap: 8px; }
+.hub-header.is-unified { min-height: 124px; }
+.hub-header.is-unified .lib-title-lockup .hub-version { margin: 0 0 3px; opacity: .62; white-space: nowrap; font-size: 9px; }
+
+/* 収録状況の4カード（低く） */
+.lib-stats .hub-stat { padding: 10px 16px; }
+.lib-stats .hub-stat > div { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 10px; }
+.lib-stats .hub-stat strong { margin: 0; font-size: 20px; }
+
+/* 表示形式の切り替え */
+.lib-view { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--sheet); }
+.lib-view-btn { width: 36px; height: 32px; border: 0; background: transparent; color: var(--muted); font-size: 16px; cursor: pointer; }
+.lib-view-btn + .lib-view-btn { border-left: 1px solid var(--line); }
+.lib-view-btn[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
+
+/* お気に入り */
+.lib-card-wrap { position: relative; display: flex; }
+.lib-card-wrap > .lib-card { flex: 1; }
+.lib-fav {
+  width: 30px; height: 30px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--sheet); color: var(--muted);
+  font-size: 16px; line-height: 1; cursor: pointer;
+}
+.lib-fav[aria-pressed="true"] { color: #d9a400; border-color: #e3c25a; }
+.lib-fav.on-card { position: absolute; right: 8px; top: 8px; z-index: 2; }
+.lib-fav.is-large { position: absolute; right: 12px; top: 12px; z-index: 2; width: 36px; height: 36px; font-size: 19px; }
+
+/* 所持・未所持・プレイ済みのバッジ */
+.lib-badges { position: absolute; right: 8px; bottom: 8px; z-index: 1; display: flex; gap: 4px; }
+.lib-detail-coverbox { position: relative; }
+.lib-detail-coverbox .lib-badges { right: 12px; bottom: 12px; }
+.lib-badge {
+  padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--sheet); color: var(--muted);
+  font-family: var(--font-body); font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.lib-badge.is-owned { border-color: var(--note-line); background: var(--note); color: var(--note-ink); }
+.lib-badge.is-played { border-color: var(--ok-line); background: var(--ok-bg); color: var(--ok-ink); }
+
+/* 作者名（クリックで絞り込み） */
+.lib-author { padding: 0; border: 0; background: none; color: var(--pen-blue); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.lib-author:hover { color: var(--ink); }
+
+/* テーブル表示 */
+.lib-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--sheet); box-shadow: var(--shadow); }
+.lib-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lib-table th { position: sticky; top: 0; padding: 9px 10px; text-align: left; font-size: 11.5px; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; border-bottom: 1px solid var(--line); background: var(--sheet-sub); white-space: nowrap; }
+.lib-table td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); color: var(--ink-soft); vertical-align: middle; white-space: nowrap; }
+.lib-table tbody tr { cursor: pointer; }
+.lib-table tbody tr:hover { background: var(--sheet-sub); }
+.lib-table tbody tr[aria-selected="true"] { background: var(--note); box-shadow: inset 3px 0 0 var(--pen-blue); }
+.lib-table .lib-col-title { white-space: normal; min-width: 200px; font-family: var(--font-head); font-weight: 500; color: var(--ink); }
+.lib-table .lib-col-by { white-space: normal; min-width: 120px; color: var(--muted); }
+.lib-table .lib-col-fav { width: 40px; padding-right: 0; }
+.lib-table .lib-col-num { text-align: right; }
+.lib-table .lib-fav { width: 26px; height: 26px; font-size: 14px; }
+.lib-col-badges .lib-badge + .lib-badge { margin-left: 4px; }
+.lib-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
 @media (max-width: 760px) {
+  .lib-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .lib-stats .hub-stat p { letter-spacing: 0.04em; }
+  .lib-title-lockup { align-items: baseline; flex-wrap: wrap; gap: 4px 7px; }
   .lib-detail { position: static; }
   .lib-sources { margin-left: 0; }
 }

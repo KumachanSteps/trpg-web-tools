@@ -11,7 +11,13 @@
   var owned = {};
   var folderOwned = {};
   var plays = {};
-  var state = { q: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, sort: "relevance", selected: null, limit: PAGE };
+  var favs = {};
+  var FAV_KEY = "library.favorites";
+  var VIEW_KEY = "scenarioLibrary.view";
+  var VERSION = { version: "v0.3.0", updated: "2026.11.15" };
+  var state = { q: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: "relevance", selected: null, limit: PAGE };
+  var view = "grid";
+  try { if (localStorage.getItem(VIEW_KEY) === "table") view = "table"; } catch (e) { /* 保存できない環境では毎回カード表示 */ }
 
   function $(id) { return document.getElementById(id); }
   var esc = Hub.escape;
@@ -19,7 +25,7 @@
   function init() {
     ["qInput", "sortSelect", "systemChips", "plSelect", "timeSelect", "priceSelect", "hoCheck", "notOwnedCheck", "resetBtn",
       "countLine", "resultGrid", "emptyState", "errorState", "moreBtn", "detail", "detailCover", "detailPills", "detailTitle",
-      "detailBy", "detailPrice", "detailSource", "detailAliases", "detailTags", "mineShelf", "mineLog", "sourceLink", "shelfBtn",
+      "detailBy", "detailList", "detailFav", "detailBadges", "favCheck", "resultTable", "sourceLink", "shelfBtn",
       "suggestLink", "sampleBanner", "statWorks", "statWriters", "statNew", "statShelf", "usageBtn", "usagePanel", "attribution"
     ].forEach(function (id) { els[id] = $(id); });
 
@@ -39,6 +45,21 @@
     els.priceSelect.addEventListener("change", function () { state.price = els.priceSelect.value; state.limit = PAGE; render(); });
     els.hoCheck.addEventListener("change", function () { state.ho = els.hoCheck.checked; state.limit = PAGE; render(); });
     els.notOwnedCheck.addEventListener("change", function () { state.notOwned = els.notOwnedCheck.checked; state.limit = PAGE; render(); });
+    els.favCheck.addEventListener("change", function () { state.fav = els.favCheck.checked; state.limit = PAGE; render(); });
+    Array.prototype.forEach.call(document.querySelectorAll(".lib-view-btn"), function (b) {
+      b.addEventListener("click", function () {
+        view = b.getAttribute("data-view");
+        try { localStorage.setItem(VIEW_KEY, view); } catch (e) { /* 表示形式の保存は任意 */ }
+        render();
+      });
+    });
+    els.detailFav.addEventListener("click", function () { if (state.selected) toggleFav(state.selected); });
+    // 作者・サークル名をクリックすると、その名前で絞り込む
+    els.detailBy.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-author]");
+      if (!b) return;
+      searchFor(b.getAttribute("data-author"));
+    });
     els.resetBtn.addEventListener("click", reset);
     els.moreBtn.addEventListener("click", function () { state.limit += PAGE; render(); });
     els.shelfBtn.addEventListener("click", toggleShelf);
@@ -47,18 +68,26 @@
       els.usagePanel.hidden = !open;
       els.usageBtn.setAttribute("aria-expanded", String(open));
     });
-    els.resultGrid.addEventListener("click", function (e) {
+    var pick = function (e) {
+      var fav = e.target.closest("[data-fav]");
+      if (fav) { toggleFav(fav.getAttribute("data-fav")); return; }
       var card = e.target.closest("[data-id]");
       if (!card) return;
       state.selected = card.getAttribute("data-id");
       render();
       if (window.matchMedia("(max-width: 760px)").matches) els.detail.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    els.resultGrid.addEventListener("click", pick);
+    els.resultTable.addEventListener("click", pick);
+    els.resultTable.addEventListener("keydown", function (e) {
+      if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr[data-id]")) { e.preventDefault(); pick(e); }
     });
 
-    Promise.all([Hub.loadCatalog(), Hub.shelf.load()])
+    Promise.all([Hub.loadCatalog(), Hub.shelf.load(), Hub.store.get(FAV_KEY)])
       .then(function (res) {
         catalog = res[0];
         shelf = res[1];
+        (res[2] || []).forEach(function (id) { favs[id] = true; });
         refreshOwned();
         plays = Hub.countPlays(catalog);
         renderChrome();
@@ -78,13 +107,29 @@
   }
 
   function reset() {
-    state = { q: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, sort: state.sort, selected: state.selected, limit: PAGE };
+    state = { q: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: state.sort, selected: state.selected, limit: PAGE };
     els.qInput.value = "";
     els.plSelect.value = "";
     els.timeSelect.value = "";
     els.priceSelect.value = "";
     els.hoCheck.checked = false;
     els.notOwnedCheck.checked = false;
+    els.favCheck.checked = false;
+    render();
+  }
+
+  function searchFor(name) {
+    state.q = name;
+    els.qInput.value = name;
+    state.limit = PAGE;
+    render();
+    els.qInput.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function toggleFav(id) {
+    if (favs[id]) delete favs[id];
+    else favs[id] = true;
+    Hub.store.set(FAV_KEY, Object.keys(favs));
     render();
   }
 
@@ -166,22 +211,36 @@
       if (state.price === "paid" && !(sc.price && sc.price.max > 0)) return false;
       if (state.ho && sc.secret_ho !== true) return false;
       if (state.notOwned && owned[sc.id]) return false;
+      if (state.fav && !favs[sc.id]) return false;
       return true;
     });
     var dateOf = function (sc) { return String(sc.published_at || sc.first_seen_at || ""); };
     var byNew = function (a, b) { return dateOf(b).localeCompare(dateOf(a)); };
     if (state.sort === "new" || (state.sort === "relevance" && !q)) list.sort(byNew);
     else if (state.sort === "short") list.sort(function (a, b) { return ((a.duration || {}).min || 1e9) - ((b.duration || {}).min || 1e9); });
+    else if (state.sort === "likes") list.sort(function (a, b) { return (b.likes || 0) - (a.likes || 0) || byNew(a, b); });
     else if (state.sort === "title") list.sort(function (a, b) { return a.title.localeCompare(b.title, "ja"); });
     else list.sort(function (a, b) { return score(b, q) - score(a, q) || byNew(a, b); });
     return list;
   }
 
-  function mineBadge(sc) {
-    var n = plays[sc.id] || 0;
-    if (n) return '<span class="hub-pill lib-card-mine">通過済み</span>';
-    if (owned[sc.id]) return '<span class="hub-pill is-note lib-card-mine">本棚にあり</span>';
-    return "";
+  // 所持・未所持・プレイ済みのバッジ（表紙の右下）
+  function badges(sc, withUnowned) {
+    var out = "";
+    if (plays[sc.id]) out += '<span class="lib-badge is-played">プレイ済み</span>';
+    if (owned[sc.id]) out += '<span class="lib-badge is-owned">所持</span>';
+    else if (withUnowned) out += '<span class="lib-badge">未所持</span>';
+    return out;
+  }
+
+  function favButton(sc, cls) {
+    var on = !!favs[sc.id];
+    return '<button type="button" class="lib-fav' + (cls ? " " + cls : "") + '" data-fav="' + esc(sc.id) + '" aria-pressed="' + on +
+      '" aria-label="お気に入り" title="お気に入り">' + (on ? "★" : "☆") + "</button>";
+  }
+
+  function likesLabel(sc) {
+    return sc.likes == null ? "—" : "♥ " + Number(sc.likes).toLocaleString("ja-JP");
   }
 
   function cover(sc, cls, label) {
@@ -222,16 +281,42 @@
 
     if (!state.selected || !catalog.byId[state.selected]) state.selected = shown.length ? shown[0].id : null;
 
-    els.resultGrid.innerHTML = shown.map(function (sc) {
-      return '<button type="button" class="lib-card" data-id="' + esc(sc.id) + '" aria-pressed="' + (sc.id === state.selected) + '">' +
-        cover(sc, "", '<span class="lib-card-source">' + esc((sc.source && sc.source.site) || "—") + "</span>" + mineBadge(sc)) +
-        '<span class="lib-card-body">' +
-        '<span class="lib-card-title">' + esc(sc.title) + "</span>" +
-        '<span class="lib-card-by">' + esc(byLine(sc)) + "</span>" +
-        '<span class="lib-pills">' + pills(sc) + "</span>" +
-        '<span class="lib-card-foot"><span>' + esc(Hub.priceLabel(sc.price)) + "</span><span>" + hoLabel(sc) + "</span></span>" +
-        "</span></button>";
-    }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll(".lib-view-btn"), function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === view));
+    });
+    els.resultGrid.hidden = view !== "grid";
+    els.resultTable.hidden = view !== "table";
+    if (view === "grid") {
+      els.resultTable.innerHTML = "";
+      els.resultGrid.innerHTML = shown.map(function (sc) {
+        return '<div class="lib-card-wrap"><button type="button" class="lib-card" data-id="' + esc(sc.id) + '" aria-pressed="' + (sc.id === state.selected) + '">' +
+          cover(sc, "", '<span class="lib-card-source">' + esc((sc.source && sc.source.site) || "—") + "</span>" +
+            '<span class="lib-badges">' + badges(sc, false) + "</span>") +
+          '<span class="lib-card-body">' +
+          '<span class="lib-card-title">' + esc(sc.title) + "</span>" +
+          '<span class="lib-card-by">' + esc(byLine(sc)) + "</span>" +
+          '<span class="lib-pills">' + pills(sc) + "</span>" +
+          '<span class="lib-card-foot"><span>' + esc(Hub.priceLabel(sc.price)) + "</span><span>" + hoLabel(sc) + "</span></span>" +
+          "</span></button>" + favButton(sc, "on-card") + "</div>";
+      }).join("");
+    } else {
+      els.resultGrid.innerHTML = "";
+      els.resultTable.innerHTML = '<table class="lib-table"><thead><tr>' +
+        '<th class="lib-col-fav"><span class="lib-sr">お気に入り</span></th><th>タイトル</th><th>作者・サークル</th><th>システム</th>' +
+        '<th>人数</th><th>時間</th><th>価格</th><th>いいね</th><th>状態</th></tr></thead><tbody>' +
+        shown.map(function (sc) {
+          return '<tr data-id="' + esc(sc.id) + '" tabindex="0" aria-selected="' + (sc.id === state.selected) + '">' +
+            '<td class="lib-col-fav">' + favButton(sc, "") + "</td>" +
+            '<td class="lib-col-title">' + esc(sc.title) + "</td>" +
+            '<td class="lib-col-by">' + esc(byLine(sc)) + "</td>" +
+            '<td><span class="hub-pill sys-' + esc(sc.system) + '">' + esc(Hub.SYSTEMS[sc.system] || "不明") + "</span></td>" +
+            "<td>" + esc(Hub.playersLabel(sc.players)) + "</td>" +
+            "<td>" + esc(Hub.durationLabel(sc.duration)) + "</td>" +
+            "<td>" + esc(Hub.priceLabel(sc.price)) + "</td>" +
+            '<td class="lib-col-num">' + esc(likesLabel(sc)) + "</td>" +
+            '<td class="lib-col-badges">' + badges(sc, false) + "</td></tr>";
+        }).join("") + "</tbody></table>";
+    }
 
     renderDetail(state.selected ? catalog.byId[state.selected] : null);
   }
@@ -241,17 +326,27 @@
     if (!sc) return;
     els.detailCover.className = "hub-cover lib-detail-cover sys-" + sc.system;
     els.detailCover.innerHTML = (sc.cover_url ? '<img src="' + esc(sc.cover_url) + '" alt="" referrerpolicy="no-referrer" />' : "");
+    var fav = !!favs[sc.id];
+    els.detailFav.setAttribute("aria-pressed", String(fav));
+    els.detailFav.textContent = fav ? "★" : "☆";
+    els.detailBadges.innerHTML = badges(sc, true);
     els.detailPills.innerHTML = pills(sc) + '<span class="hub-pill">' + hoLabel(sc) + "</span>";
     els.detailTitle.textContent = sc.title;
-    els.detailBy.textContent = byLine(sc);
-    els.detailPrice.textContent = Hub.priceLabel(sc.price);
+    var names = (sc.writers || []).slice();
+    if (sc.circle && sc.circle.name) names.push(sc.circle.name);
+    els.detailBy.innerHTML = names.length
+      ? names.map(function (n) { return '<button type="button" class="lib-author" data-author="' + esc(n) + '" title="この名前で絞り込む">' + esc(n) + "</button>"; }).join(" ・ ")
+      : "作者不明";
     var src = sc.source || {};
-    els.detailSource.textContent = (src.site || "不明") +
-      (sc.published_at ? " ・ " + sc.published_at + " 公開" : sc.first_seen_at ? " ・ " + sc.first_seen_at + " 収録" : "");
-    els.detailAliases.textContent = (sc.aliases && sc.aliases.length) ? sc.aliases.join(" / ") : "—";
-    els.detailTags.textContent = (sc.tags && sc.tags.length) ? sc.tags.join("、") : "—";
-    els.mineShelf.textContent = owned[sc.id] ? "あり" : "なし";
-    els.mineLog.textContent = (plays[sc.id] || 0) + " 回";
+    var rows = [
+      ["価格", Hub.priceLabel(sc.price)],
+      ["いいね", sc.likes == null ? "" : Number(sc.likes).toLocaleString("ja-JP")],
+      [sc.published_at ? "公開" : "収録", sc.published_at || sc.first_seen_at || ""],
+      ["別名", (sc.aliases || []).join(" / ")],
+      ["タグ", (sc.tags || []).join("、")]
+    ].filter(function (r) { return r[1]; });
+    els.detailList.innerHTML = rows.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("");
+    els.detailList.hidden = !rows.length;
 
     if (src.url) {
       els.sourceLink.href = src.url;
@@ -273,8 +368,8 @@
     var params = new URLSearchParams({
       toolId: "scenario-library",
       toolName: "シナリオライブラリ",
-      version: "v0.1.1",
-      updated: "2026.10.24",
+      version: VERSION.version,
+      updated: VERSION.updated,
       sourceUrl: location.origin + location.pathname + "?id=" + encodeURIComponent(sc.id)
     });
     els.suggestLink.href = "../../report/?" + params.toString();
