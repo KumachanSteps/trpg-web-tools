@@ -320,3 +320,15 @@ html[data-design="paper"] body .date-cell { color: var(--ink); }
   html[data-design="paper"] body .app-shell { width: calc(100% - 24px); padding-bottom: 72px; }
   html[data-design="paper"] body .floating-add-button { bottom: 72px; }
 }
+
+/* v1.107: final paper-theme guard against legacy column breakpoints */
+html[data-design="paper"] body .table-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+html[data-design="paper"] body .table-import-actions {
+  width: auto;
+  min-width: 0;
+  justify-content: flex-end;
+}

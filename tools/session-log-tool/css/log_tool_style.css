@@ -1224,6 +1224,19 @@ body.night-mode .ccfolia-fields input,body.night-mode .cc-speaker,body.night-mod
   .table-import-actions>.header-button{padding-inline:9px;font-size:11px}
 }
 
+/* v1.107: title and actions stay in one deterministic grid row */
+.table-header{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+}
+.table-header>div:first-child{min-width:0}
+.table-import-actions{
+  width:auto;
+  min-width:0;
+  justify-content:flex-end;
+}
+
 /* v1.104.1: compact durable backup controls */
 .backup-panel{margin:0;border:1px solid var(--border-soft);border-radius:14px;background:rgba(255,255,255,.74);box-shadow:0 5px 16px rgba(15,23,42,.04);overflow:hidden}
 .backup-panel-summary{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:8px;min-height:42px;padding:7px 12px;list-style:none;cursor:pointer;user-select:none}
