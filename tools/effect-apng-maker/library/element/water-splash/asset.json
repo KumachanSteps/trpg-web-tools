@@ -1,0 +1,62 @@
+{
+  "id": "element.water-splash",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 13,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "水しぶき",
+    "en": "Splash",
+    "ko": "물보라",
+    "zh": "水花"
+  },
+  "desc": {
+    "ja": "画面の中央下で白い飛沫が弾け、こちらへ向かって飛び散る。",
+    "en": "White spray bursts at the bottom centre and flies toward the viewer.",
+    "ko": "화면 중앙 아래에서 하얀 물보라가 터져 이쪽으로 튀어 온다.",
+    "zh": "白色水花在画面中下方炸开，朝镜头飞溅而来。"
+  },
+  "tags": [
+    "水",
+    "water",
+    "물",
+    "水花",
+    "しぶき",
+    "splash"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2.4,
+    "min": 1.5,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}

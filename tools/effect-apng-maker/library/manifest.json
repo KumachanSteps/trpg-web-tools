@@ -3167,6 +3167,527 @@
    "path": "element/smoke"
   },
   {
+   "id": "element.ice-frost",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 9,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "凍りつく",
+    "en": "Freezing over",
+    "ko": "얼어붙음",
+    "zh": "冻结"
+   },
+   "desc": {
+    "ja": "画面の四辺・四隅から、羽のような霜がパキパキと伸びて凍りつく。",
+    "en": "Feathery frost crackles in from the edges and corners until the screen freezes.",
+    "ko": "화면 가장자리와 모서리에서 깃털 같은 서리가 뻗어 나가며 얼어붙는다.",
+    "zh": "羽毛般的霜从画面四边四角噼啪蔓延，画面随之冻结。"
+   },
+   "tags": [
+    "氷",
+    "凍る",
+    "ice",
+    "frost",
+    "얼음",
+    "冰"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3.6,
+    "min": 2,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "big",
+     "type": "toggle",
+     "label": {
+      "ja": "中央近くまで覆う",
+      "en": "Cover almost to the centre",
+      "ko": "중앙 가까이까지 덮기",
+      "zh": "覆盖到接近中央"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.9,
+   "path": "element/ice-frost"
+  },
+  {
+   "id": "element.ice-wall",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 10,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "氷の壁",
+    "en": "Ice wall",
+    "ko": "얼음 벽",
+    "zh": "冰墙"
+   },
+   "desc": {
+    "ja": "画面いっぱいを覆う半透明の氷の壁。奥の光がゆらめき、あちこちが小さくきらめく。",
+    "en": "A translucent wall of ice covers the screen, with shifting light inside and small glints.",
+    "ko": "화면 가득 덮는 반투명한 얼음 벽. 안쪽 빛이 일렁이고 곳곳이 작게 반짝인다.",
+    "zh": "覆盖整个画面的半透明冰墙，内部光影摇曳，处处闪着细光。"
+   },
+   "tags": [
+    "氷",
+    "凍る",
+    "ice",
+    "frost",
+    "얼음",
+    "冰"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [],
+   "budget": {
+    "size": [
+     640,
+     360
+    ],
+    "fps": 10,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "element/ice-wall"
+  },
+  {
+   "id": "element.ice-shatter",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 11,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "氷の壁が砕ける",
+    "en": "Ice wall shatters",
+    "ko": "얼음 벽이 부서짐",
+    "zh": "冰墙碎裂"
+   },
+   "desc": {
+    "ja": "一撃でひびが走り、氷の壁の破片が回りながら飛び散って消える。",
+    "en": "One blow sends cracks through the ice wall, and its shards spin away and vanish.",
+    "ko": "일격에 금이 가고 얼음 벽의 파편이 회전하며 흩어져 사라진다.",
+    "zh": "一击之下裂纹蔓延，冰墙碎片旋转飞散后消失。"
+   },
+   "tags": [
+    "氷",
+    "凍る",
+    "ice",
+    "frost",
+    "얼음",
+    "冰"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3.3,
+    "min": 2,
+    "max": 5
+   },
+   "transparent": true,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.35,
+   "path": "element/ice-shatter"
+  },
+  {
+   "id": "element.ice-melt",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 12,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "氷の壁が溶ける",
+    "en": "Ice wall melts",
+    "ko": "얼음 벽이 녹음",
+    "zh": "冰墙融化"
+   },
+   "desc": {
+    "ja": "氷の壁の角が丸くなり、しずくが垂れ、低くなって水たまりごと消える。",
+    "en": "The ice wall softens, drips and sinks until it vanishes with its puddle.",
+    "ko": "얼음 벽의 모서리가 둥글어지고 물방울이 떨어지며 낮아져 물웅덩이째 사라진다.",
+    "zh": "冰墙棱角变圆、滴水、渐渐变矮，连同水洼一起消失。"
+   },
+   "tags": [
+    "氷",
+    "凍る",
+    "ice",
+    "frost",
+    "얼음",
+    "冰"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 12,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "element/ice-melt"
+  },
+  {
+   "id": "element.water-splash",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 13,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "水しぶき",
+    "en": "Splash",
+    "ko": "물보라",
+    "zh": "水花"
+   },
+   "desc": {
+    "ja": "画面の中央下で白い飛沫が弾け、こちらへ向かって飛び散る。",
+    "en": "White spray bursts at the bottom centre and flies toward the viewer.",
+    "ko": "화면 중앙 아래에서 하얀 물보라가 터져 이쪽으로 튀어 온다.",
+    "zh": "白色水花在画面中下方炸开，朝镜头飞溅而来。"
+   },
+   "tags": [
+    "水",
+    "water",
+    "물",
+    "水花",
+    "しぶき",
+    "splash"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 2.4,
+    "min": 1.5,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "element/water-splash"
+  },
+  {
+   "id": "element.water-rise",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 14,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "水位上昇",
+    "en": "Rising water",
+    "ko": "수위 상승",
+    "zh": "水位上涨"
+   },
+   "desc": {
+    "ja": "波打つ水面が下から上がってきて、選んだ高さで止まる。",
+    "en": "A rippling water surface rises from below and stops at the chosen height.",
+    "ko": "물결치는 수면이 아래에서 올라와 정한 높이에서 멈춘다.",
+    "zh": "波动的水面从下方升起，停在设定的高度。"
+   },
+   "tags": [
+    "水",
+    "water",
+    "물",
+    "水花",
+    "浸水",
+    "flood"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "level",
+     "type": "range",
+     "label": {
+      "ja": "止まる高さ",
+      "en": "Final height",
+      "ko": "멈추는 높이",
+      "zh": "停止高度"
+     },
+     "min": 0.2,
+     "max": 0.8,
+     "step": 0.05,
+     "default": 0.5
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.85,
+   "path": "element/water-rise"
+  },
+  {
+   "id": "element.underwater",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 15,
+   "category": "element",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "水のなか",
+    "en": "Underwater",
+    "ko": "물속",
+    "zh": "水中"
+   },
+   "desc": {
+    "ja": "画面全体に重ねる水中の層。色の膜、差しこむ光、ゆらめく光の網目、漂う粒。",
+    "en": "An underwater layer for the whole screen: tinted water, light shafts, caustics and drifting motes.",
+    "ko": "화면 전체에 겹치는 물속 층. 색의 막, 비쳐 드는 빛, 일렁이는 빛 그물, 떠다니는 입자.",
+    "zh": "覆盖整个画面的水下图层：色调、斜射光、摇曳的光网与漂浮的微粒。"
+   },
+   "tags": [
+    "水",
+    "water",
+    "물",
+    "水花",
+    "水中",
+    "underwater",
+    "물속"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "select",
+     "label": {
+      "ja": "水の色",
+      "en": "Water colour",
+      "ko": "물 색",
+      "zh": "水色"
+     },
+     "options": [
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "푸른색",
+        "zh": "蓝色"
+       }
+      },
+      {
+       "value": "black",
+       "label": {
+        "ja": "黒",
+        "en": "Black",
+        "ko": "검은색",
+        "zh": "黑色"
+       }
+      },
+      {
+       "value": "red",
+       "label": {
+        "ja": "赤",
+        "en": "Red",
+        "ko": "붉은색",
+        "zh": "红色"
+       }
+      }
+     ],
+     "default": "blue"
+    },
+    {
+     "key": "bubbles",
+     "type": "toggle",
+     "label": {
+      "ja": "泡",
+      "en": "Bubbles",
+      "ko": "거품",
+      "zh": "气泡"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     640,
+     360
+    ],
+    "fps": 12,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "element/underwater"
+  },
+  {
    "id": "horror.heartbeat",
    "version": 1,
    "status": "test",

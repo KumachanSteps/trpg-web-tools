@@ -1,0 +1,115 @@
+{
+  "id": "element.underwater",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 15,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "水のなか",
+    "en": "Underwater",
+    "ko": "물속",
+    "zh": "水中"
+  },
+  "desc": {
+    "ja": "画面全体に重ねる水中の層。色の膜、差しこむ光、ゆらめく光の網目、漂う粒。",
+    "en": "An underwater layer for the whole screen: tinted water, light shafts, caustics and drifting motes.",
+    "ko": "화면 전체에 겹치는 물속 층. 색의 막, 비쳐 드는 빛, 일렁이는 빛 그물, 떠다니는 입자.",
+    "zh": "覆盖整个画面的水下图层：色调、斜射光、摇曳的光网与漂浮的微粒。"
+  },
+  "tags": [
+    "水",
+    "water",
+    "물",
+    "水花",
+    "水中",
+    "underwater",
+    "물속"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "select",
+      "label": {
+        "ja": "水の色",
+        "en": "Water colour",
+        "ko": "물 색",
+        "zh": "水色"
+      },
+      "options": [
+        {
+          "value": "blue",
+          "label": {
+            "ja": "青",
+            "en": "Blue",
+            "ko": "푸른색",
+            "zh": "蓝色"
+          }
+        },
+        {
+          "value": "black",
+          "label": {
+            "ja": "黒",
+            "en": "Black",
+            "ko": "검은색",
+            "zh": "黑色"
+          }
+        },
+        {
+          "value": "red",
+          "label": {
+            "ja": "赤",
+            "en": "Red",
+            "ko": "붉은색",
+            "zh": "红色"
+          }
+        }
+      ],
+      "default": "blue"
+    },
+    {
+      "key": "bubbles",
+      "type": "toggle",
+      "label": {
+        "ja": "泡",
+        "en": "Bubbles",
+        "ko": "거품",
+        "zh": "气泡"
+      },
+      "default": false
+    }
+  ],
+  "budget": {
+    "size": [
+      640,
+      360
+    ],
+    "fps": 12,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}

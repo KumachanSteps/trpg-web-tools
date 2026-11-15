@@ -1,0 +1,62 @@
+{
+  "id": "element.ice-melt",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 12,
+  "category": "element",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "氷の壁が溶ける",
+    "en": "Ice wall melts",
+    "ko": "얼음 벽이 녹음",
+    "zh": "冰墙融化"
+  },
+  "desc": {
+    "ja": "氷の壁の角が丸くなり、しずくが垂れ、低くなって水たまりごと消える。",
+    "en": "The ice wall softens, drips and sinks until it vanishes with its puddle.",
+    "ko": "얼음 벽의 모서리가 둥글어지고 물방울이 떨어지며 낮아져 물웅덩이째 사라진다.",
+    "zh": "冰墙棱角变圆、滴水、渐渐变矮，连同水洼一起消失。"
+  },
+  "tags": [
+    "氷",
+    "凍る",
+    "ice",
+    "frost",
+    "얼음",
+    "冰"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 12,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}
