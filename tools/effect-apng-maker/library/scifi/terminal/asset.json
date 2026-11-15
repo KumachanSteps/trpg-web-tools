@@ -1,0 +1,65 @@
+{
+  "id": "scifi.terminal",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 3,
+  "category": "scifi",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "ターミナル背景",
+    "en": "Terminal screen",
+    "ko": "터미널 배경",
+    "zh": "终端画面"
+  },
+  "desc": {
+    "ja": "左上と右下に、コマンドと01の行が打ち込まれ続ける。中央は空けてある。画面全体を覆う背景。",
+    "en": "Commands and lines of 0s and 1s keep typing out in the top left and bottom right, leaving the centre clear. Covers the whole screen.",
+    "ko": "왼쪽 위와 오른쪽 아래에 명령어와 01 행이 계속 입력된다. 가운데는 비워 둔다. 화면 전체를 덮는 배경.",
+    "zh": "左上与右下不断打出命令与01行，中央留空。覆盖整个画面的背景。"
+  },
+  "tags": [
+    "サイバー",
+    "デジタル",
+    "cyber",
+    "digital",
+    "사이버",
+    "赛博",
+    "ターミナル",
+    "terminal",
+    "hacker"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 10
+  },
+  "transparent": false,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.5
+}
