@@ -32,11 +32,12 @@ def test_export_writes_manifest_and_shards(conn, synthetic, tmp_path):
     assert "Example Anthology" in a["aliases"]
 
 
-def test_unknown_stays_null(conn, synthetic, tmp_path):
+def test_unknown_players_are_estimated_rest_stays_null(conn, synthetic, tmp_path):
+    # Priority fields are not left empty (decided 2026-10-24): no count -> 2-4, marked estimated.
     _setup(conn, synthetic)
     manifest = export_catalog(conn, tmp_path)
     b = {s["id"]: s for s in json.loads((tmp_path / manifest["shards"][0]["path"]).read_text(encoding="utf-8"))["scenarios"]}["SCN-TEST-B"]
-    assert b["secret_ho"] is None and b["players"] == {"min": None, "max": None}
+    assert b["secret_ho"] is None and b["players"] == {"min": 2, "max": 4, "estimated": True}
     assert b["system"] == "UNKNOWN" and b["duration"]["min"] is None
 
 

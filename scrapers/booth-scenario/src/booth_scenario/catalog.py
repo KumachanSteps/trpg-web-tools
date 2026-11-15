@@ -62,6 +62,19 @@ def _price(variants: list[dict]) -> dict:
     return {"min": min(prices), "max": max(prices)} if prices else {"min": None, "max": None}
 
 
+def _page_values(conn, iid: int, table: str) -> list[dict]:
+    out = []
+    for (fp,) in conn.execute("SELECT field_path FROM extraction_evidence WHERE booth_item_id=? AND field_path LIKE ?", (iid, table + ":%")):
+        try:
+            v = json.loads(fp.partition(":")[2])
+        except json.JSONDecodeError:
+            continue
+        v.setdefault("approximate", 0)
+        v.setdefault("secret_handouts", None)
+        out.append(v)
+    return out
+
+
 def _json_list(text: str | None) -> list:
     if not text:
         return []
@@ -87,6 +100,17 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         FROM variant_scenarios vs JOIN product_variants pv USING(variant_id) WHERE vs.scenario_id = ?""", (sid,))
     modes = _rows(conn, "SELECT * FROM scenario_session_modes WHERE scenario_id = ?", (sid,))
     durations = _rows(conn, "SELECT * FROM scenario_durations WHERE scenario_id = ?", (sid,))
+    # A work in a collection has no counts of its own: borrow what the product
+    # page says (marked as estimated), so priority fields are not left empty.
+    est_players = est_duration = False
+    if main and not modes:
+        modes = _page_values(conn, main["booth_item_id"], "scenario_session_modes")
+        if not modes:
+            modes = [{"mode": "MULTI_PL", "player_min": 2, "player_max": 4}]  # the reviewer's default
+        est_players = True
+    if main and not durations:
+        durations = _page_values(conn, main["booth_item_id"], "scenario_durations")
+        est_duration = bool(durations)
     supplements = sorted(r[0] for r in conn.execute(
         "SELECT system_code FROM scenario_systems WHERE scenario_id = ? AND support_type = 'SUPPLEMENT'", (sid,)))
     has_ho_condition = conn.execute("SELECT 1 FROM scenario_conditions WHERE scenario_id = ? AND category = 'HO'", (sid,)).fetchone()
@@ -103,8 +127,8 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         "aliases": titles,
         "system": system,
         "supplements": supplements,
-        "players": _players(modes),
-        "duration": _duration(durations),
+        "players": {**_players(modes), **({"estimated": True} if est_players else {})},
+        "duration": {**_duration(durations), **({"estimated": True} if est_duration else {})},
         "secret_ho": _secret_ho(modes, bool(has_ho_condition)),
         "price": _price(variants),
         "writers": [],
