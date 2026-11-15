@@ -12,12 +12,14 @@
   "name": {
     "ja": "雷鳴",
     "en": "Thunderclap",
-    "ko": "뇌명"
+    "ko": "뇌명",
+    "zh": "雷鸣"
   },
   "desc": {
     "ja": "左右から電気が走り、中央でぶつかって火花が散る。",
     "en": "Electricity races in from both sides and bursts into sparks at the centre.",
-    "ko": "좌우에서 전기가 달려와 중앙에서 부딪혀 불꽃이 튄다."
+    "ko": "좌우에서 전기가 달려와 중앙에서 부딪혀 불꽃이 튄다.",
+    "zh": "电流从左右两侧奔来，在中央相撞迸出火花。"
   },
   "tags": [
     "雷",
@@ -25,7 +27,8 @@
     "戦闘",
     "thunder",
     "lightning",
-    "번개"
+    "번개",
+    "雷鸣"
   ],
   "use": [
     "overlay"
@@ -49,7 +52,8 @@
       "label": {
         "ja": "ぶつかったあとの帯電を出す",
         "en": "Lingering charge after the spark",
-        "ko": "충돌 후 대전 표현"
+        "ko": "충돌 후 대전 표현",
+        "zh": "显示相撞后的带电效果"
       },
       "default": false
     }

@@ -16,19 +16,19 @@ const OUT = join(LIB, 'manifest.json');
 
 // ライブラリのカテゴリ（並び順）。新しいカテゴリはここに足す
 const CATEGORIES = [
-  { id: 'transition', name: { ja: '場面転換', en: 'Transitions', ko: '장면 전환' } },
-  { id: 'weather', name: { ja: '天候', en: 'Weather', ko: '날씨' } },
-  { id: 'element', name: { ja: '属性', en: 'Elements', ko: '속성' } },
-  { id: 'horror', name: { ja: 'ホラー', en: 'Horror', ko: '호러' } },
-  { id: 'visual', name: { ja: '視覚効果', en: 'Visual effects', ko: '시각 효과' } },
-  { id: 'magic', name: { ja: '魔法・神秘', en: 'Magic', ko: '마법·신비' } },
-  { id: 'combat', name: { ja: '戦闘', en: 'Combat', ko: '전투' } },
-  { id: 'ambience', name: { ja: '環境・場所', en: 'Ambience', ko: '환경·장소' } },
-  { id: 'emotion', name: { ja: '感情・コミカル', en: 'Emotion & comedy', ko: '감정·코믹' } },
-  { id: 'scifi', name: { ja: 'サイバー', en: 'Sci-fi', ko: '사이버' } }
+  { id: 'transition', name: { ja: '場面転換', en: 'Transitions', ko: '장면 전환', zh: '转场' } },
+  { id: 'weather', name: { ja: '天候', en: 'Weather', ko: '날씨', zh: '天气' } },
+  { id: 'element', name: { ja: '属性', en: 'Elements', ko: '속성', zh: '属性' } },
+  { id: 'horror', name: { ja: 'ホラー', en: 'Horror', ko: '호러', zh: '恐怖' } },
+  { id: 'visual', name: { ja: '視覚効果', en: 'Visual effects', ko: '시각 효과', zh: '视觉效果' } },
+  { id: 'magic', name: { ja: '魔法・神秘', en: 'Magic', ko: '마법·신비', zh: '魔法·神秘' } },
+  { id: 'combat', name: { ja: '戦闘', en: 'Combat', ko: '전투', zh: '战斗' } },
+  { id: 'ambience', name: { ja: '環境・場所', en: 'Ambience', ko: '환경·장소', zh: '环境·场所' } },
+  { id: 'emotion', name: { ja: '感情・コミカル', en: 'Emotion & comedy', ko: '감정·코믹', zh: '情感·搞笑' } },
+  { id: 'scifi', name: { ja: 'サイバー', en: 'Sci-fi', ko: '사이버', zh: '赛博' } }
 ];
 const CAT_IDS = CATEGORIES.map(c => c.id);
-const LANGS = ['ja', 'en', 'ko'];
+const LANGS = ['ja', 'en', 'ko', 'zh'];
 const PARAM_TYPES = ['range', 'color', 'select', 'toggle', 'point'];
 const PLAYBACKS = ['loop', 'once'];
 const STATUSES = ['draft', 'test', 'public'];
@@ -38,7 +38,7 @@ const errors = [];
 const fail = (id, msg) => errors.push(`${id}: ${msg}`);
 
 function checkText(id, field, value) {
-  if (!value || typeof value !== 'object') return fail(id, `${field} must be { ja, en, ko }`);
+  if (!value || typeof value !== 'object') return fail(id, `${field} must be { ja, en, ko, zh }`);
   LANGS.forEach(l => { if (!value[l] || typeof value[l] !== 'string') fail(id, `${field}.${l} is missing`); });
 }
 

@@ -12,19 +12,22 @@
   "name": {
     "ja": "フェード",
     "en": "Fade",
-    "ko": "페이드"
+    "ko": "페이드",
+    "zh": "淡入淡出"
   },
   "desc": {
     "ja": "画面が単色に溶けていく、いちばん基本の転換。",
     "en": "The basic transition: the screen melts into one colour.",
-    "ko": "화면이 단색으로 녹아드는 가장 기본적인 전환."
+    "ko": "화면이 단색으로 녹아드는 가장 기본적인 전환.",
+    "zh": "画面渐渐融为单色，最基本的转场。"
   },
   "tags": [
     "フェード",
     "fade",
     "페이드",
     "暗転",
-    "fade out"
+    "fade out",
+    "淡入淡出"
   ],
   "use": [
     "transition"
@@ -48,7 +51,8 @@
       "label": {
         "ja": "覆う色",
         "en": "Cover colour",
-        "ko": "덮는 색"
+        "ko": "덮는 색",
+        "zh": "覆盖颜色"
       },
       "default": "#000000",
       "swatches": [
@@ -64,7 +68,8 @@
       "label": {
         "ja": "動き方",
         "en": "Curve",
-        "ko": "움직임"
+        "ko": "움직임",
+        "zh": "变化方式"
       },
       "default": "smooth",
       "options": [
@@ -73,7 +78,8 @@
           "label": {
             "ja": "なめらか",
             "en": "Smooth",
-            "ko": "부드럽게"
+            "ko": "부드럽게",
+            "zh": "平滑"
           }
         },
         {
@@ -81,7 +87,8 @@
           "label": {
             "ja": "一定",
             "en": "Linear",
-            "ko": "일정하게"
+            "ko": "일정하게",
+            "zh": "匀速"
           }
         }
       ]

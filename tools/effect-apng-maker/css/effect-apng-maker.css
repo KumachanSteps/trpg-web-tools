@@ -66,7 +66,7 @@ body {
     radial-gradient(circle at 12% 8%, rgba(106, 214, 255, 0.2), transparent 32%),
     radial-gradient(circle at 90% 12%, rgba(58, 120, 216, 0.18), transparent 28%),
     var(--bg);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", "Noto Sans KR", "Yu Gothic UI", sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", "Noto Sans KR", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Yu Gothic UI", sans-serif;
   line-height: 1.5;
   font-size: 14px;
 }
@@ -178,6 +178,24 @@ body.is-dark .webp-button { background: linear-gradient(135deg, #4a5a72, #2f62b6
 .drawer h3 { font-size: 0.86rem; margin: 14px 0 6px; color: var(--blue); }
 .drawer ul, .drawer ol { margin: 0; padding-left: 1.3em; }
 .drawer li { margin: 4px 0; }
+/* ショートカット一覧 */
+#shortcutBtn { min-width: 1.75rem; padding-left: 0; padding-right: 0; font-weight: 900; }
+.shortcut-grid { display: grid; grid-template-columns: minmax(260px, auto) 1fr; gap: 7px 9px; margin-top: 10px; }
+.shortcut-grid > div, .shortcut-grid > span {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 34px; padding: 6px 10px;
+  border: 1px solid var(--line); border-radius: 13px; background: var(--panel-soft); font-size: 0.82rem; font-weight: 700;
+}
+.shortcut-grid kbd {
+  display: inline-flex; align-items: center; min-height: 21px; padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--blue) 45%, transparent); border-radius: 999px; background: var(--blue-soft);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 900;
+}
+.shortcut-grid b { color: var(--muted); }
+@media (max-width: 760px) {
+  .shortcut-grid { grid-template-columns: 1fr; }
+  .shortcut-grid > span { margin-bottom: 4px; }
+  #shortcutBtn { display: none; }
+}
 .drawer-close { position: absolute; right: 12px; top: 10px; background: none; border: 0; font-size: 22px; color: var(--muted); }
 .guide-notes p, .hint { color: var(--muted); font-size: 0.75rem; margin: 6px 0 0; line-height: 1.5; }
 .credit-line code { background: var(--field); border: 1px solid var(--line); padding: 2px 8px; border-radius: 6px; }

@@ -12,12 +12,14 @@
   "name": {
     "ja": "流れ星",
     "en": "Shooting stars",
-    "ko": "별똥별"
+    "ko": "별똥별",
+    "zh": "流星"
   },
   "desc": {
     "ja": "流れ星が尾を引いて流れ、きらめきを残す。",
     "en": "Shooting stars streak by and leave sparkles.",
-    "ko": "별똥별이 꼬리를 끌며 지나가고 반짝임을 남긴다."
+    "ko": "별똥별이 꼬리를 끌며 지나가고 반짝임을 남긴다.",
+    "zh": "流星拖着尾巴划过，留下点点闪光。"
   },
   "tags": [
     "流れ星",
@@ -27,7 +29,8 @@
     "shooting star",
     "star",
     "별똥별",
-    "별"
+    "별",
+    "流星"
   ],
   "use": [
     "overlay"
@@ -52,7 +55,8 @@
       "label": {
         "ja": "数",
         "en": "Count",
-        "ko": "수"
+        "ko": "수",
+        "zh": "数量"
       },
       "min": 1,
       "max": 8,
@@ -65,7 +69,8 @@
       "label": {
         "ja": "色",
         "en": "Colour",
-        "ko": "색"
+        "ko": "색",
+        "zh": "颜色"
       },
       "default": "#ffe9a8",
       "swatches": [
@@ -81,7 +86,8 @@
       "label": {
         "ja": "流れる向き",
         "en": "Direction",
-        "ko": "방향"
+        "ko": "방향",
+        "zh": "流动方向"
       },
       "default": "right",
       "options": [
@@ -90,7 +96,8 @@
           "label": {
             "ja": "右下へ",
             "en": "Down right",
-            "ko": "오른쪽 아래로"
+            "ko": "오른쪽 아래로",
+            "zh": "向右下"
           }
         },
         {
@@ -98,7 +105,8 @@
           "label": {
             "ja": "左下へ",
             "en": "Down left",
-            "ko": "왼쪽 아래로"
+            "ko": "왼쪽 아래로",
+            "zh": "向左下"
           }
         }
       ]
@@ -109,7 +117,8 @@
       "label": {
         "ja": "星空も出す",
         "en": "Starry sky",
-        "ko": "별하늘"
+        "ko": "별하늘",
+        "zh": "同时显示星空"
       },
       "default": false
     },
@@ -119,7 +128,8 @@
       "label": {
         "ja": "線の太さ",
         "en": "Line width",
-        "ko": "선 굵기"
+        "ko": "선 굵기",
+        "zh": "线条粗细"
       },
       "min": 0.3,
       "max": 3,
@@ -132,7 +142,8 @@
       "label": {
         "ja": "大きさ",
         "en": "Size",
-        "ko": "크기"
+        "ko": "크기",
+        "zh": "大小"
       },
       "min": 0.5,
       "max": 2,

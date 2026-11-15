@@ -12,19 +12,22 @@
   "name": {
     "ja": "爪痕",
     "en": "Claw marks",
-    "ko": "발톱 자국"
+    "ko": "발톱 자국",
+    "zh": "爪痕"
   },
   "desc": {
     "ja": "獣の爪が画面を引き裂く。",
     "en": "Beast claws tear across the screen.",
-    "ko": "짐승의 발톱이 화면을 찢는다."
+    "ko": "짐승의 발톱이 화면을 찢는다.",
+    "zh": "野兽的利爪撕裂画面。"
   },
   "tags": [
     "爪",
     "引っかき",
     "claw",
     "scratch",
-    "발톱"
+    "발톱",
+    "爪痕"
   ],
   "use": [
     "overlay"
@@ -48,7 +51,8 @@
       "label": {
         "ja": "色",
         "en": "Colour",
-        "ko": "색"
+        "ko": "색",
+        "zh": "颜色"
       },
       "default": "white",
       "options": [
@@ -57,7 +61,8 @@
           "label": {
             "ja": "白",
             "en": "White",
-            "ko": "흰색"
+            "ko": "흰색",
+            "zh": "白"
           }
         },
         {
@@ -65,7 +70,8 @@
           "label": {
             "ja": "赤",
             "en": "Red",
-            "ko": "빨강"
+            "ko": "빨강",
+            "zh": "红"
           }
         },
         {
@@ -73,7 +79,8 @@
           "label": {
             "ja": "黒",
             "en": "Black",
-            "ko": "검정"
+            "ko": "검정",
+            "zh": "黑"
           }
         }
       ]
