@@ -179,7 +179,7 @@ body.is-dark .webp-button { background: linear-gradient(135deg, #4a5a72, #2f62b6
 .drawer ul, .drawer ol { margin: 0; padding-left: 1.3em; }
 .drawer li { margin: 4px 0; }
 /* ショートカット一覧 */
-#shortcutBtn { min-width: 1.75rem; padding-left: 0; padding-right: 0; font-weight: 900; }
+#shortcutBtn { flex: none; width: 2rem; height: 2rem; min-width: 0; min-height: 0; padding: 0; border-radius: 50%; font-weight: 900; }
 .shortcut-grid { display: grid; grid-template-columns: minmax(260px, auto) 1fr; gap: 7px 9px; margin-top: 10px; }
 .shortcut-grid > div, .shortcut-grid > span {
   display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 34px; padding: 6px 10px;
@@ -465,6 +465,7 @@ body.is-dark .icon-button { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
   .studio-header { grid-template-columns: 1fr; gap: 4px; padding: 8px 12px; position: relative; }
   .header-actions { position: absolute; top: 6px; right: 8px; flex-wrap: nowrap; gap: 4px; }
   .header-actions .ghost-button { min-height: 1.75rem; padding: 0.2rem 0.55rem; font-size: 0.72rem; }
+  .header-actions #shortcutBtn { width: 1.75rem; height: 1.75rem; min-height: 0; padding: 0; }
   .language-switcher { min-height: 1.75rem; padding: 0 0.25rem; }
   .language-switcher button { padding: 0.1rem 0.28rem; font-size: 0.7rem; }
   .theme-button { min-width: 0; }
