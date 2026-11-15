@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.1" />
-  <link rel="stylesheet" href="css/library.css?v=0.3.2" />
+  <link rel="stylesheet" href="css/library.css?v=0.3.3" />
 </head>
 <body class="hub hub-unified-header" data-hub-tool="library">
   <nav id="hubRail"></nav>
@@ -23,7 +23,7 @@
           <a class="hub-portal" href="https://kumachansteps.github.io/trpg-web-tools/">← TRPG Webツール観測所</a>
           <div class="hub-title-row">
             <span class="hub-icon" aria-hidden="true">⌕</span>
-            <div class="lib-title-lockup"><h1>シナリオライブラリ</h1><p class="hub-version">v0.3.2 <time datetime="2026-11-15">2026.11.15</time></p></div>
+            <div class="lib-title-lockup"><h1>シナリオライブラリ</h1><p class="hub-version">v0.3.3 <time datetime="2026-11-15">2026.11.15</time></p></div>
           </div>
         </div>
         <div class="hub-actions">
@@ -106,7 +106,7 @@
         <div id="resultTable" class="lib-table-wrap" hidden></div>
         <div id="emptyState" class="hub-empty" hidden>見つかりませんでした</div>
         <div id="errorState" class="hub-empty" hidden></div>
-        <button id="moreBtn" class="hub-btn is-large lib-more" type="button" hidden>さらに表示</button>
+        <nav id="pager" class="lib-pager" aria-label="ページ" hidden></nav>
       </section>
 
       <aside id="detail" class="hub-panel lib-detail" aria-label="選択中の作品" hidden>
@@ -126,10 +126,10 @@
           <button id="shelfBtn" class="hub-btn is-note is-large" type="button">本棚に追加</button>
           <a id="suggestLink" class="hub-linkbtn" href="../../report/" target="_blank" rel="noopener">修正を提案</a>
         </div>
+        <p id="attribution" class="hub-footnote">CC BY 4.0</p>
       </aside>
     </div>
 
-    <p id="attribution" class="hub-footnote">CC BY 4.0</p>
   </main>
 
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
@@ -137,6 +137,6 @@
   <script src="../../shared/hub/scenario-core.js?v=0.1.2"></script>
   <script src="../../shared/hub/catalog.js?v=0.1.0"></script>
   <script src="../../shared/hub/bookshelf-data.js?v=0.1.0"></script>
-  <script src="js/library.js?v=0.3.2"></script>
+  <script src="js/library.js?v=0.3.3"></script>
 </body>
 </html>

@@ -2,7 +2,8 @@
   "use strict";
 
   var Hub = window.Hub;
-  var PAGE = 60;
+  // 1ページの件数（テーブルは50件、カードは4列でそろう24件）
+  var PAGE_SIZE = { table: 50, grid: 24 };
   var NEW_DAYS = 30;
 
   var els = {};
@@ -14,8 +15,8 @@
   var favs = {};
   var FAV_KEY = "library.favorites";
   var VIEW_KEY = "scenarioLibrary.view";
-  var VERSION = { version: "v0.3.2", updated: "2026.11.15" };
-  var state = { q: "", author: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: "relevance", selected: null, limit: PAGE };
+  var VERSION = { version: "v0.3.3", updated: "2026.11.15" };
+  var state = { q: "", author: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: "relevance", selected: null, page: 1 };
   var view = "grid";
   try { if (localStorage.getItem(VIEW_KEY) === "table") view = "table"; } catch (e) { /* 保存できない環境では毎回カード表示 */ }
 
@@ -24,7 +25,7 @@
 
   function init() {
     ["qInput", "sortSelect", "systemChips", "plSelect", "timeSelect", "priceSelect", "hoCheck", "notOwnedCheck", "resetBtn",
-      "countLine", "resultGrid", "emptyState", "errorState", "moreBtn", "detail", "detailCover", "detailPills", "detailTitle",
+      "countLine", "resultGrid", "emptyState", "errorState", "pager", "detail", "detailCover", "detailPills", "detailTitle",
       "detailBy", "authorFilter", "detailList", "detailFav", "detailBadges", "favCheck", "resultTable", "sourceLink", "shelfBtn",
       "suggestLink", "sampleBanner", "statWorks", "statWriters", "statNew", "statShelf", "usageBtn", "usagePanel", "attribution"
     ].forEach(function (id) { els[id] = $(id); });
@@ -37,18 +38,19 @@
     var timer = null;
     els.qInput.addEventListener("input", function () {
       clearTimeout(timer);
-      timer = setTimeout(function () { state.q = els.qInput.value; state.limit = PAGE; render(); }, 120);
+      timer = setTimeout(function () { state.q = els.qInput.value; state.page = 1; render(); }, 120);
     });
     els.sortSelect.addEventListener("change", function () { state.sort = els.sortSelect.value; render(); });
-    els.plSelect.addEventListener("change", function () { state.pl = els.plSelect.value; state.limit = PAGE; render(); });
-    els.timeSelect.addEventListener("change", function () { state.time = els.timeSelect.value; state.limit = PAGE; render(); });
-    els.priceSelect.addEventListener("change", function () { state.price = els.priceSelect.value; state.limit = PAGE; render(); });
-    els.hoCheck.addEventListener("change", function () { state.ho = els.hoCheck.checked; state.limit = PAGE; render(); });
-    els.notOwnedCheck.addEventListener("change", function () { state.notOwned = els.notOwnedCheck.checked; state.limit = PAGE; render(); });
-    els.favCheck.addEventListener("change", function () { state.fav = els.favCheck.checked; state.limit = PAGE; render(); });
+    els.plSelect.addEventListener("change", function () { state.pl = els.plSelect.value; state.page = 1; render(); });
+    els.timeSelect.addEventListener("change", function () { state.time = els.timeSelect.value; state.page = 1; render(); });
+    els.priceSelect.addEventListener("change", function () { state.price = els.priceSelect.value; state.page = 1; render(); });
+    els.hoCheck.addEventListener("change", function () { state.ho = els.hoCheck.checked; state.page = 1; render(); });
+    els.notOwnedCheck.addEventListener("change", function () { state.notOwned = els.notOwnedCheck.checked; state.page = 1; render(); });
+    els.favCheck.addEventListener("change", function () { state.fav = els.favCheck.checked; state.page = 1; render(); });
     Array.prototype.forEach.call(document.querySelectorAll(".lib-view-btn"), function (b) {
       b.addEventListener("click", function () {
         view = b.getAttribute("data-view");
+        state.page = 1;
         try { localStorage.setItem(VIEW_KEY, view); } catch (e) { /* 表示形式の保存は任意 */ }
         render();
       });
@@ -65,7 +67,16 @@
       if (e.target.closest("[data-clear-author]")) setAuthor("");
     });
     els.resetBtn.addEventListener("click", reset);
-    els.moreBtn.addEventListener("click", function () { state.limit += PAGE; render(); });
+    els.pager.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-page]");
+      if (!b || b.disabled) return;
+      state.page = Number(b.getAttribute("data-page"));
+      render();
+      // 新しいページは先頭から見せる
+      els.resultTable.scrollTop = 0;
+      var top = document.querySelector(".lib-layout").getBoundingClientRect().top;
+      if (top < 0) window.scrollBy({ top: top - 12, behavior: "smooth" });
+    });
     els.shelfBtn.addEventListener("click", toggleShelf);
     els.usageBtn.addEventListener("click", function () {
       var open = els.usagePanel.hidden;
@@ -111,7 +122,7 @@
   }
 
   function reset() {
-    state = { q: "", author: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: state.sort, selected: state.selected, limit: PAGE };
+    state = { q: "", author: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: state.sort, selected: state.selected, page: 1 };
     els.qInput.value = "";
     els.plSelect.value = "";
     els.timeSelect.value = "";
@@ -124,7 +135,7 @@
 
   function setAuthor(name) {
     state.author = name;
-    state.limit = PAGE;
+    state.page = 1;
     render();
   }
 
@@ -176,7 +187,7 @@
       var b = e.target.closest("[data-sys]");
       if (!b) return;
       state.sys = b.getAttribute("data-sys");
-      state.limit = PAGE;
+      state.page = 1;
       render();
     });
   }
@@ -282,23 +293,27 @@
       b.setAttribute("aria-pressed", String(b.getAttribute("data-sys") === state.sys));
     });
     var list = filtered();
-    var shown = list.slice(0, state.limit);
+    var size = PAGE_SIZE[view];
+    var pages = Math.max(1, Math.ceil(list.length / size));
+    if (state.page > pages) state.page = pages;
+    var from = (state.page - 1) * size;
+    var shown = list.slice(from, from + size);
     var total = catalog.scenarios.length;
-    els.countLine.textContent = list.length === total
-      ? shown.length + " / " + total.toLocaleString("ja-JP")
-      : list.length.toLocaleString("ja-JP") + " 件";
+    els.countLine.textContent = (list.length ? (from + 1) + "–" + (from + shown.length) + " / " : "0 / ") +
+      list.length.toLocaleString("ja-JP") + (list.length === total ? "" : " 件（全 " + total.toLocaleString("ja-JP") + "）");
+    renderPager(pages);
     els.authorFilter.hidden = !state.author;
     els.authorFilter.innerHTML = state.author
       ? '<span class="lib-author-chip">' + esc(state.author) + '<button type="button" data-clear-author aria-label="作者の絞り込みを外す">×</button></span>'
       : "";
     els.emptyState.hidden = list.length > 0;
-    els.moreBtn.hidden = list.length <= state.limit;
 
     if (!state.selected || !catalog.byId[state.selected]) state.selected = shown.length ? shown[0].id : null;
 
     Array.prototype.forEach.call(document.querySelectorAll(".lib-view-btn"), function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === view));
     });
+    document.querySelector(".lib-layout").setAttribute("data-view", view);
     els.resultGrid.hidden = view !== "grid";
     els.resultTable.hidden = view !== "table";
     if (view === "grid") {
@@ -333,6 +348,24 @@
     }
 
     renderDetail(state.selected ? catalog.byId[state.selected] : null);
+  }
+
+  function renderPager(pages) {
+    els.pager.hidden = pages <= 1;
+    if (pages <= 1) { els.pager.innerHTML = ""; return; }
+    var cur = state.page;
+    var nums = [];
+    for (var i = 1; i <= pages; i++) {
+      if (i === 1 || i === pages || Math.abs(i - cur) <= 2) nums.push(i);
+      else if (nums[nums.length - 1] !== "…") nums.push("…");
+    }
+    var btn = function (page, label, extra) {
+      return '<button type="button" class="lib-page' + (extra || "") + '" data-page="' + page + '"' +
+        (page < 1 || page > pages ? " disabled" : "") + (page === cur && !extra ? ' aria-current="page"' : "") + ">" + label + "</button>";
+    };
+    els.pager.innerHTML = btn(cur - 1, "‹", " is-step") +
+      nums.map(function (n) { return n === "…" ? '<span class="lib-page-gap">…</span>' : btn(n, String(n)); }).join("") +
+      btn(cur + 1, "›", " is-step");
   }
 
   function renderDetail(sc) {
