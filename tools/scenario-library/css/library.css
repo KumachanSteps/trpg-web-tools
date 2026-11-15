@@ -16,7 +16,6 @@
 .lib-results-head h2 { font-size: 19px; letter-spacing: 0.04em; }
 .lib-count { font-size: 13px; color: var(--muted); }
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
-.lib-more { align-self: center; }
 
 .lib-card {
   display: flex;
@@ -52,6 +51,7 @@
 .lib-dl dd { margin: 0; color: var(--ink-soft); overflow-wrap: anywhere; }
 .lib-actions { padding: 14px 20px 18px; display: flex; flex-direction: column; gap: 8px; }
 .lib-actions .hub-linkbtn { align-self: center; }
+.lib-detail .hub-footnote { padding: 0 20px 16px; font-size: 11px; }
 
 /* ヘッダー（卓準備カレンダーにそろえる） */
 .lib-title-lockup { display: flex; min-width: 0; align-items: flex-end; gap: 8px; }
@@ -125,6 +125,29 @@
 .lib-table .lib-fav svg { width: 15px; height: 15px; stroke-width: 1.5; filter: none; }
 .lib-col-badges .lib-badge + .lib-badge { margin-left: 4px; }
 .lib-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ページ送り */
+.lib-pager { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; }
+.lib-pager[hidden] { display: none; }
+.lib-page {
+  min-width: 32px; height: 32px; padding: 0 8px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--sheet);
+  color: var(--ink-soft); font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.lib-page:hover:not([disabled]) { border-color: var(--ink-soft); }
+.lib-page[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--sheet); }
+.lib-page[disabled] { opacity: 0.35; cursor: default; }
+.lib-page-gap { padding: 0 2px; color: var(--muted); }
+
+/* テーブル表示: 一覧と詳細カードを画面の高さに収め、表の中だけをスクロールする */
+@media (min-width: 761px) {
+  /* 下の余白（48px）と上の余白（18px）を除いた高さ。ページを一番下まで送ると、表と詳細カードの上辺が画面の上にそろう */
+  .lib-layout[data-view="table"] { height: calc(100vh - 66px); min-height: 420px; flex-wrap: nowrap; align-items: stretch; }
+  .lib-layout[data-view="table"] .lib-results { height: 100%; }
+  .lib-layout[data-view="table"] .lib-table-wrap { flex: 1 1 auto; min-height: 0; overflow: auto; }
+  .lib-layout[data-view="table"] .lib-detail { align-self: flex-start; max-height: 100%; overflow-y: auto; position: static; }
+  .lib-table thead th { z-index: 1; }
+}
 
 @media (max-width: 760px) {
   .lib-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
