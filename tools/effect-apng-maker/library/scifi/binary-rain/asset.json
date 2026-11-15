@@ -1,0 +1,96 @@
+{
+  "id": "scifi.binary-rain",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 1,
+  "category": "scifi",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "01の帯",
+    "en": "Binary rain",
+    "ko": "01의 띠",
+    "zh": "01数据流"
+  },
+  "desc": {
+    "ja": "「0」と「1」の縦の帯が、奥・中・手前の3層で速さ違いに流れ落ちる。",
+    "en": "Columns of 0s and 1s stream down in three layers at different speeds.",
+    "ko": "0과 1이 세로로 늘어선 띠가 앞·중간·뒤 3층으로 속도를 달리해 흘러내린다.",
+    "zh": "由0和1组成的竖条分前中后三层，以不同速度向下流动。"
+  },
+  "tags": [
+    "サイバー",
+    "デジタル",
+    "cyber",
+    "digital",
+    "사이버",
+    "赛博",
+    "01",
+    "matrix"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "color",
+      "type": "select",
+      "label": {
+        "ja": "色",
+        "en": "Colour",
+        "ko": "색",
+        "zh": "颜色"
+      },
+      "options": [
+        {
+          "value": "green",
+          "label": {
+            "ja": "緑",
+            "en": "Green",
+            "ko": "초록",
+            "zh": "绿色"
+          }
+        },
+        {
+          "value": "cyan",
+          "label": {
+            "ja": "シアン",
+            "en": "Cyan",
+            "ko": "시안",
+            "zh": "青色"
+          }
+        }
+      ],
+      "default": "green"
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}

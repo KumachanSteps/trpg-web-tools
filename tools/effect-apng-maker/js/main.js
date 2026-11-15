@@ -3,7 +3,7 @@
  *   ライブラリ（左）→ 選んだアセットを プレビュー（中央）に重ね、調整（右）で設定を変えて書き出す。
  */
 import { I18N } from './i18n.js';
-import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261115-10';
+import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261115-11';
 import { Stage } from './stage.js';
 
 const C = window.TextApngCodec;

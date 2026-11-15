@@ -63,6 +63,15 @@
     "ko": "전투",
     "zh": "战斗"
    }
+  },
+  {
+   "id": "scifi",
+   "name": {
+    "ja": "サイバー",
+    "en": "Sci-fi",
+    "ko": "사이버",
+    "zh": "赛博"
+   }
   }
  ],
  "assets": [
@@ -6868,6 +6877,234 @@
    },
    "poster": 0.4,
    "path": "combat/thunder"
+  },
+  {
+   "id": "scifi.binary-rain",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 1,
+   "category": "scifi",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "01の帯",
+    "en": "Binary rain",
+    "ko": "01의 띠",
+    "zh": "01数据流"
+   },
+   "desc": {
+    "ja": "「0」と「1」の縦の帯が、奥・中・手前の3層で速さ違いに流れ落ちる。",
+    "en": "Columns of 0s and 1s stream down in three layers at different speeds.",
+    "ko": "0과 1이 세로로 늘어선 띠가 앞·중간·뒤 3층으로 속도를 달리해 흘러내린다.",
+    "zh": "由0和1组成的竖条分前中后三层，以不同速度向下流动。"
+   },
+   "tags": [
+    "サイバー",
+    "デジタル",
+    "cyber",
+    "digital",
+    "사이버",
+    "赛博",
+    "01",
+    "matrix"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "green",
+       "label": {
+        "ja": "緑",
+        "en": "Green",
+        "ko": "초록",
+        "zh": "绿色"
+       }
+      },
+      {
+       "value": "cyan",
+       "label": {
+        "ja": "シアン",
+        "en": "Cyan",
+        "ko": "시안",
+        "zh": "青色"
+       }
+      }
+     ],
+     "default": "green"
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "scifi/binary-rain"
+  },
+  {
+   "id": "scifi.glitch",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 2,
+   "category": "scifi",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "グリッチ背景",
+    "en": "Glitch screen",
+    "ko": "글리치 배경",
+    "zh": "故障画面"
+   },
+   "desc": {
+    "ja": "暗い画面が、静かな間をはさんで横ずれ・色ずれ・ブロックノイズ・砂嵐で乱れる。画面全体を覆う背景。",
+    "en": "A dark screen breaks up with tearing, colour shift, block noise and static between quiet moments. Covers the whole screen.",
+    "ko": "어두운 화면이 고요한 틈을 두고 가로 어긋남·색 어긋남·블록 노이즈·노이즈로 흐트러진다. 화면 전체를 덮는 배경.",
+    "zh": "昏暗画面在平静间隙中出现横向错位、色偏、块状噪点与雪花。覆盖整个画面的背景。"
+   },
+   "tags": [
+    "サイバー",
+    "デジタル",
+    "cyber",
+    "digital",
+    "사이버",
+    "赛博",
+    "グリッチ",
+    "glitch"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": false,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.5,
+   "path": "scifi/glitch"
+  },
+  {
+   "id": "scifi.terminal",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 3,
+   "category": "scifi",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "ターミナル背景",
+    "en": "Terminal screen",
+    "ko": "터미널 배경",
+    "zh": "终端画面"
+   },
+   "desc": {
+    "ja": "左上と右下に、コマンドと01の行が打ち込まれ続ける。中央は空けてある。画面全体を覆う背景。",
+    "en": "Commands and lines of 0s and 1s keep typing out in the top left and bottom right, leaving the centre clear. Covers the whole screen.",
+    "ko": "왼쪽 위와 오른쪽 아래에 명령어와 01 행이 계속 입력된다. 가운데는 비워 둔다. 화면 전체를 덮는 배경.",
+    "zh": "左上与右下不断打出命令与01行，中央留空。覆盖整个画面的背景。"
+   },
+   "tags": [
+    "サイバー",
+    "デジタル",
+    "cyber",
+    "digital",
+    "사이버",
+    "赛博",
+    "ターミナル",
+    "terminal",
+    "hacker"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 10
+   },
+   "transparent": false,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.5,
+   "path": "scifi/terminal"
   }
  ]
 }
