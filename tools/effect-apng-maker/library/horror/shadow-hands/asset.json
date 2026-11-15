@@ -1,0 +1,66 @@
+{
+  "id": "horror.shadow-hands",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 6,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "影の手",
+    "en": "Shadow hands",
+    "ko": "그림자 손",
+    "zh": "影之手"
+  },
+  "desc": {
+    "ja": "画面の下から黒い影の手が何本も伸び、何かをつかもうと指を動かしては引っ込む。",
+    "en": "Black shadow hands reach up from below, flexing their fingers as if grasping, then sink back.",
+    "ko": "화면 아래에서 검은 그림자 손이 여러 개 뻗어 무언가를 잡으려는 듯 손가락을 움직이다 움츠러든다.",
+    "zh": "黑色影之手从画面下方伸出，手指仿佛想抓住什么般蠕动，又缩回去。"
+  },
+  "tags": [
+    "闇",
+    "影",
+    "ホラー",
+    "dark",
+    "shadow",
+    "horror",
+    "어둠",
+    "黑暗",
+    "手",
+    "hands"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 10
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.45
+}

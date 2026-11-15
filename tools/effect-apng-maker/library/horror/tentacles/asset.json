@@ -1,0 +1,80 @@
+{
+  "id": "horror.tentacles",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 7,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "触手の影",
+    "en": "Tentacle shadows",
+    "ko": "촉수 그림자",
+    "zh": "触手之影"
+  },
+  "desc": {
+    "ja": "画面の端・隅から黒い触手の影が伸び、ゆっくりうねり、ときどきぴくりと動く。",
+    "en": "Black tentacle shadows reach in from the edges and corners, writhing slowly and twitching now and then.",
+    "ko": "화면 가장자리와 모서리에서 검은 촉수 그림자가 뻗어 천천히 꿈틀거리고 가끔 움찔한다.",
+    "zh": "黑色触手之影从画面边角伸入，缓缓蠕动，不时抽动。"
+  },
+  "tags": [
+    "闇",
+    "影",
+    "ホラー",
+    "dark",
+    "shadow",
+    "horror",
+    "어둠",
+    "黑暗",
+    "触手",
+    "クトゥルフ",
+    "tentacle",
+    "cthulhu"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 10
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "suckers",
+      "type": "toggle",
+      "label": {
+        "ja": "吸盤",
+        "en": "Suckers",
+        "ko": "빨판",
+        "zh": "吸盘"
+      },
+      "default": true
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}

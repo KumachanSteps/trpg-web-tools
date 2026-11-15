@@ -1,0 +1,79 @@
+{
+  "id": "horror.sanity-noise",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 8,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "正気の揺らぎ",
+    "en": "Sanity glitch",
+    "ko": "정신의 흔들림",
+    "zh": "理智动摇"
+  },
+  "desc": {
+    "ja": "うすい砂嵐と走査線の静かな間と、横ずれ・色ずれ・赤い染まり・暗転の乱れをくり返す。SANチェックの場面に。",
+    "en": "Quiet static and scanlines alternate with bursts of tearing, colour shift, red tint and blackouts. For sanity checks.",
+    "ko": "옅은 노이즈와 주사선의 고요한 순간과, 가로 어긋남·색 어긋남·붉은 물듦·암전의 흐트러짐이 반복된다. SAN 체크 장면에.",
+    "zh": "淡淡的雪花与扫描线的平静，和横向错位、色偏、染红、黑屏的紊乱交替出现。适合理智检定场景。"
+  },
+  "tags": [
+    "ホラー",
+    "SAN",
+    "正気度",
+    "ノイズ",
+    "glitch",
+    "sanity",
+    "노이즈",
+    "理智"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "strength",
+      "type": "range",
+      "label": {
+        "ja": "乱れの強さ",
+        "en": "Intensity",
+        "ko": "흐트러짐 세기",
+        "zh": "紊乱强度"
+      },
+      "min": 0.3,
+      "max": 1.5,
+      "step": 0.1,
+      "default": 1
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.5
+}

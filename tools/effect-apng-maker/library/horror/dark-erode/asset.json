@@ -1,0 +1,66 @@
+{
+  "id": "horror.dark-erode",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 5,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "黒いもやの侵食",
+    "en": "Creeping darkness",
+    "ko": "검은 안개의 잠식",
+    "zh": "黑雾侵蚀"
+  },
+  "desc": {
+    "ja": "画面の端から黒いもやが渦を巻いて流れ込み、大半を侵す。中央はかすかに残る。",
+    "en": "Black mist swirls in from the edges and swallows most of the screen, leaving the centre faintly visible.",
+    "ko": "화면 가장자리에서 검은 안개가 소용돌이치며 흘러들어 대부분을 잠식한다. 가운데는 희미하게 남는다.",
+    "zh": "黑雾从画面边缘旋卷涌入，吞没大半画面，只在中央隐约留存。"
+  },
+  "tags": [
+    "闇",
+    "影",
+    "ホラー",
+    "dark",
+    "shadow",
+    "horror",
+    "어둠",
+    "黑暗",
+    "侵食",
+    "もや"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.7
+}

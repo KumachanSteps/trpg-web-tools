@@ -3795,7 +3795,7 @@
   },
   {
    "id": "horror.lights-out",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-14",
    "order": 3,
@@ -3803,26 +3803,30 @@
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
-   "origin": "suggested",
+   "origin": "EX",
    "name": {
     "ja": "明かりが消える",
     "en": "Lights out",
-    "ko": "불이 꺼진다",
+    "ko": "불이 꺼짐",
     "zh": "灯光熄灭"
    },
    "desc": {
-    "ja": "ちらついたあと、暗闇になって止まる。",
-    "en": "Flickers, then stays dark.",
-    "ko": "깜빡이다가 어둠 속에 멈춘다.",
-    "zh": "闪烁之后陷入黑暗并停住。"
+    "ja": "周りから暗くなり、明かりが二度ほどちらついて戻ったあと、中央にかすかな明るさを残して暗闇に沈む。",
+    "en": "Darkness closes in, the light flickers back twice, then all sinks into darkness but a faint glow at the centre.",
+    "ko": "주변부터 어두워지고 불빛이 두어 번 깜빡이며 돌아오다가, 가운데 희미한 빛만 남기고 어둠에 잠긴다.",
+    "zh": "四周渐暗，灯光闪烁两次又恢复，最后只在中央留下微光，沉入黑暗。"
    },
    "tags": [
-    "停電",
-    "暗闇",
-    "lights out",
-    "blackout",
-    "정전",
-    "灯光熄灭"
+    "闇",
+    "影",
+    "ホラー",
+    "dark",
+    "shadow",
+    "horror",
+    "어둠",
+    "黑暗",
+    "暗転",
+    "blackout"
    ],
    "use": [
     "overlay"
@@ -3834,54 +3838,26 @@
     ]
    },
    "duration": {
-    "default": 2.5,
-    "min": 1,
+    "default": 4,
+    "min": 2,
     "max": 6
    },
    "transparent": true,
-   "params": [
-    {
-     "key": "color",
-     "type": "color",
-     "label": {
-      "ja": "色",
-      "en": "Colour",
-      "ko": "색",
-      "zh": "颜色"
-     },
-     "default": "#000000",
-     "swatches": [
-      "#000000",
-      "#0d0614"
-     ]
-    },
-    {
-     "key": "darkness",
-     "type": "range",
-     "label": {
-      "ja": "最後の暗さ",
-      "en": "Final darkness",
-      "ko": "마지막 어둠",
-      "zh": "最终暗度"
-     },
-     "min": 0.5,
-     "max": 1,
-     "step": 0.05,
-     "default": 0.92
-    }
-   ],
+   "params": [],
    "budget": {
     "size": [
      960,
      540
     ],
-    "fps": 20,
-    "colors": 32
+    "fps": 15,
+    "colors": 64
    },
    "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
+   "poster": 0.6,
    "path": "horror/lights-out"
   },
   {
@@ -3987,6 +3963,394 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
    "path": "horror/flicker"
+  },
+  {
+   "id": "horror.dark-erode",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 5,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "黒いもやの侵食",
+    "en": "Creeping darkness",
+    "ko": "검은 안개의 잠식",
+    "zh": "黑雾侵蚀"
+   },
+   "desc": {
+    "ja": "画面の端から黒いもやが渦を巻いて流れ込み、大半を侵す。中央はかすかに残る。",
+    "en": "Black mist swirls in from the edges and swallows most of the screen, leaving the centre faintly visible.",
+    "ko": "화면 가장자리에서 검은 안개가 소용돌이치며 흘러들어 대부분을 잠식한다. 가운데는 희미하게 남는다.",
+    "zh": "黑雾从画面边缘旋卷涌入，吞没大半画面，只在中央隐约留存。"
+   },
+   "tags": [
+    "闇",
+    "影",
+    "ホラー",
+    "dark",
+    "shadow",
+    "horror",
+    "어둠",
+    "黑暗",
+    "侵食",
+    "もや"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.7,
+   "path": "horror/dark-erode"
+  },
+  {
+   "id": "horror.shadow-hands",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 6,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "影の手",
+    "en": "Shadow hands",
+    "ko": "그림자 손",
+    "zh": "影之手"
+   },
+   "desc": {
+    "ja": "画面の下から黒い影の手が何本も伸び、何かをつかもうと指を動かしては引っ込む。",
+    "en": "Black shadow hands reach up from below, flexing their fingers as if grasping, then sink back.",
+    "ko": "화면 아래에서 검은 그림자 손이 여러 개 뻗어 무언가를 잡으려는 듯 손가락을 움직이다 움츠러든다.",
+    "zh": "黑色影之手从画面下方伸出，手指仿佛想抓住什么般蠕动，又缩回去。"
+   },
+   "tags": [
+    "闇",
+    "影",
+    "ホラー",
+    "dark",
+    "shadow",
+    "horror",
+    "어둠",
+    "黑暗",
+    "手",
+    "hands"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 10
+   },
+   "transparent": true,
+   "params": [],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.45,
+   "path": "horror/shadow-hands"
+  },
+  {
+   "id": "horror.tentacles",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 7,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "触手の影",
+    "en": "Tentacle shadows",
+    "ko": "촉수 그림자",
+    "zh": "触手之影"
+   },
+   "desc": {
+    "ja": "画面の端・隅から黒い触手の影が伸び、ゆっくりうねり、ときどきぴくりと動く。",
+    "en": "Black tentacle shadows reach in from the edges and corners, writhing slowly and twitching now and then.",
+    "ko": "화면 가장자리와 모서리에서 검은 촉수 그림자가 뻗어 천천히 꿈틀거리고 가끔 움찔한다.",
+    "zh": "黑色触手之影从画面边角伸入，缓缓蠕动，不时抽动。"
+   },
+   "tags": [
+    "闇",
+    "影",
+    "ホラー",
+    "dark",
+    "shadow",
+    "horror",
+    "어둠",
+    "黑暗",
+    "触手",
+    "クトゥルフ",
+    "tentacle",
+    "cthulhu"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 10
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "suckers",
+     "type": "toggle",
+     "label": {
+      "ja": "吸盤",
+      "en": "Suckers",
+      "ko": "빨판",
+      "zh": "吸盘"
+     },
+     "default": true
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.3,
+   "path": "horror/tentacles"
+  },
+  {
+   "id": "horror.sanity-noise",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 8,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "正気の揺らぎ",
+    "en": "Sanity glitch",
+    "ko": "정신의 흔들림",
+    "zh": "理智动摇"
+   },
+   "desc": {
+    "ja": "うすい砂嵐と走査線の静かな間と、横ずれ・色ずれ・赤い染まり・暗転の乱れをくり返す。SANチェックの場面に。",
+    "en": "Quiet static and scanlines alternate with bursts of tearing, colour shift, red tint and blackouts. For sanity checks.",
+    "ko": "옅은 노이즈와 주사선의 고요한 순간과, 가로 어긋남·색 어긋남·붉은 물듦·암전의 흐트러짐이 반복된다. SAN 체크 장면에.",
+    "zh": "淡淡的雪花与扫描线的平静，和横向错位、色偏、染红、黑屏的紊乱交替出现。适合理智检定场景。"
+   },
+   "tags": [
+    "ホラー",
+    "SAN",
+    "正気度",
+    "ノイズ",
+    "glitch",
+    "sanity",
+    "노이즈",
+    "理智"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "loop",
+    "allowed": [
+     "loop"
+    ]
+   },
+   "duration": {
+    "default": 4,
+    "min": 2,
+    "max": 8
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "strength",
+     "type": "range",
+     "label": {
+      "ja": "乱れの強さ",
+      "en": "Intensity",
+      "ko": "흐트러짐 세기",
+      "zh": "紊乱强度"
+     },
+     "min": 0.3,
+     "max": 1.5,
+     "step": 0.1,
+     "default": 1
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+   },
+   "poster": 0.5,
+   "path": "horror/sanity-noise"
+  },
+  {
+   "id": "horror.blood-splutter",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 9,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "血しぶき",
+    "en": "Blood splatter",
+    "ko": "피 튀김",
+    "zh": "血花飞溅"
+   },
+   "desc": {
+    "ja": "血がびしゃっと弾けて広がり、すっと薄れて消える。",
+    "en": "Blood bursts and spreads in a splash, then fades away.",
+    "ko": "피가 철퍽 터져 퍼졌다가 스르르 옅어지며 사라진다.",
+    "zh": "鲜血啪地炸开扩散，随后渐渐淡去消失。"
+   },
+   "tags": [
+    "血",
+    "血しぶき",
+    "ホラー",
+    "blood",
+    "splatter",
+    "피",
+    "血"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기",
+      "zh": "大小"
+     },
+     "min": 0.5,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
+   },
+   "poster": 0.45,
+   "path": "horror/blood-splutter"
   },
   {
    "id": "visual.noise",
