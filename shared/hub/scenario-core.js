@@ -54,23 +54,32 @@
   };
 
   // 人数ラベル（タイマン / 2PL / 3〜4PL）
+  // 推定値（ページに書かれていない人数・時間）は末尾に「?」を付ける。
   Hub.playersLabel = function (p) {
+    var label = playersText(p);
+    return p && p.estimated ? label + "?" : label;
+  };
+  function playersText(p) {
     if (!p) return "人数不明";
     if (p.label) return p.label;
     if (p.min == null && p.max == null) return "人数不明";
     if (p.min === 1 && (p.max === 1 || p.max == null)) return "タイマン";
     if (p.min === p.max || p.max == null) return p.min + "PL";
     return p.min + "〜" + p.max + "PL";
-  };
+  }
 
   // 分 → 「4h」「3〜6h」
   Hub.durationLabel = function (d) {
+    var label = durationText(d);
+    return d && d.estimated ? label + "?" : label;
+  };
+  function durationText(d) {
     if (!d || (d.min == null && d.max == null)) return "時間不明";
     var h = function (m) { return (Math.round(m / 6) / 10).toString().replace(/\.0$/, "") + "h"; };
     if (d.max == null || d.min === d.max) return (d.approximate ? "約" : "") + h(d.min);
     if (d.min == null) return "〜" + h(d.max);
     return h(d.min).replace("h", "") + "〜" + h(d.max);
-  };
+  }
 
   Hub.priceLabel = function (p) {
     if (!p || (p.min == null && p.max == null)) return "価格不明";
