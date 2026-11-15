@@ -14,7 +14,7 @@
   var favs = {};
   var FAV_KEY = "library.favorites";
   var VIEW_KEY = "scenarioLibrary.view";
-  var VERSION = { version: "v0.3.1", updated: "2026.11.15" };
+  var VERSION = { version: "v0.3.2", updated: "2026.11.15" };
   var state = { q: "", author: "", sys: "", pl: "", time: "", price: "", ho: false, notOwned: false, fav: false, sort: "relevance", selected: null, limit: PAGE };
   var view = "grid";
   try { if (localStorage.getItem(VIEW_KEY) === "table") view = "table"; } catch (e) { /* 保存できない環境では毎回カード表示 */ }
@@ -242,10 +242,12 @@
     return out;
   }
 
+  var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>';
+
   function favButton(sc, cls) {
     var on = !!favs[sc.id];
     return '<button type="button" class="lib-fav' + (cls ? " " + cls : "") + '" data-fav="' + esc(sc.id) + '" aria-pressed="' + on +
-      '" aria-label="お気に入り" title="お気に入り">' + "★</button>";
+      '" aria-label="お気に入り" title="お気に入り">' + STAR + "</button>";
   }
 
   function likesLabel(sc) {
