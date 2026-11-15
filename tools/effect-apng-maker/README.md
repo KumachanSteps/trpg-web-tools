@@ -1,7 +1,7 @@
 # 演出APNGメーカー（Effect APNG Maker / 연출 APNG 메이커）
 
 場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出すツール。
-v0.18 は限定テスト版（`noindex`、ポータルのカードなし、直リンクのみ）。
+v0.19 は限定テスト版（`noindex`、ポータルのカードなし、直リンクのみ）。
 
 ## 画面
 
@@ -70,6 +70,11 @@ export default {
 - `scaleLayers(box.RAIN_PRESETS[lv], P.amount)` で粒の数を増減できる。
 - 移し替えの計画と残り：https://claude.ai/artifact/FFUuRBa9C6oB74BGL1YZQu
 - 元のコードを直したときは `ex/themes/` に写し直し、`theme-bridge.js` の `THEME_VERSION` を上げる。
+
+### 描画コードのない APNG（コマ画像）を使う
+
+斬撃・ナナメ／弧のように、EX で APNG だけが残っているものは、コマを 960×540 に縮めて横4列に並べたシート（`frames.webp`）にして、`library/frames.js` の `frameAsset({ src, n, cols, fw, fh })` で描く。
+`P.color` で色を変えられる（`blue` 元の色 / `white` / `red` / `black`）。
 
 ## 共通コード
 

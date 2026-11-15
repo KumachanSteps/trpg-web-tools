@@ -6879,6 +6879,236 @@
    "path": "combat/thunder"
   },
   {
+   "id": "combat.slash-diagonal",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 9,
+   "category": "combat",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "斬撃・ナナメ",
+    "en": "Diagonal slash",
+    "ko": "참격·대각선",
+    "zh": "斩击・斜斩"
+   },
+   "desc": {
+    "ja": "右上から左下へ、光る一閃が斜めに走り、閃光がはじける。",
+    "en": "A glowing slash streaks diagonally from top right to bottom left and bursts into a flash.",
+    "ko": "오른쪽 위에서 왼쪽 아래로 빛나는 일섬이 비스듬히 달리고 섬광이 터진다.",
+    "zh": "一道发光的斩击从右上斜劈向左下，迸出闪光。"
+   },
+   "tags": [
+    "斬撃",
+    "戦闘",
+    "剣",
+    "slash",
+    "sword",
+    "참격",
+    "斩击"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 0.6,
+    "min": 0.4,
+    "max": 1.5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "파랑",
+        "zh": "蓝"
+       }
+      },
+      {
+       "value": "white",
+       "label": {
+        "ja": "白",
+        "en": "White",
+        "ko": "흰색",
+        "zh": "白"
+       }
+      },
+      {
+       "value": "red",
+       "label": {
+        "ja": "赤",
+        "en": "Red",
+        "ko": "빨강",
+        "zh": "红"
+       }
+      },
+      {
+       "value": "black",
+       "label": {
+        "ja": "黒",
+        "en": "Black",
+        "ko": "검정",
+        "zh": "黑"
+       }
+      }
+     ],
+     "default": "blue"
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 25,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの斬撃APNG（TKさんの手本をもとに制作）を移植"
+   },
+   "poster": 0.4,
+   "path": "combat/slash-diagonal"
+  },
+  {
+   "id": "combat.slash-crescent",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-15",
+   "order": 10,
+   "category": "combat",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "斬撃・弧",
+    "en": "Crescent slash",
+    "ko": "참격·호",
+    "zh": "斩击・弧斩"
+   },
+   "desc": {
+    "ja": "三日月のような弧を描いて、光る斬撃が走り抜ける。",
+    "en": "A glowing slash sweeps through in a crescent-moon arc.",
+    "ko": "초승달 같은 호를 그리며 빛나는 참격이 지나간다.",
+    "zh": "发光的斩击划出新月般的弧线一闪而过。"
+   },
+   "tags": [
+    "斬撃",
+    "戦闘",
+    "剣",
+    "slash",
+    "sword",
+    "참격",
+    "斩击",
+    "三日月",
+    "crescent"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 1.1,
+    "min": 0.6,
+    "max": 2.5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "color",
+     "type": "select",
+     "label": {
+      "ja": "色",
+      "en": "Colour",
+      "ko": "색",
+      "zh": "颜色"
+     },
+     "options": [
+      {
+       "value": "blue",
+       "label": {
+        "ja": "青",
+        "en": "Blue",
+        "ko": "파랑",
+        "zh": "蓝"
+       }
+      },
+      {
+       "value": "white",
+       "label": {
+        "ja": "白",
+        "en": "White",
+        "ko": "흰색",
+        "zh": "白"
+       }
+      },
+      {
+       "value": "red",
+       "label": {
+        "ja": "赤",
+        "en": "Red",
+        "ko": "빨강",
+        "zh": "红"
+       }
+      },
+      {
+       "value": "black",
+       "label": {
+        "ja": "黒",
+        "en": "Black",
+        "ko": "검정",
+        "zh": "黑"
+       }
+      }
+     ],
+     "default": "blue"
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 25,
+    "colors": 128
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの斬撃APNG（TKさんの手本をもとに制作）を移植"
+   },
+   "poster": 0.2,
+   "path": "combat/slash-crescent"
+  },
+  {
    "id": "scifi.binary-rain",
    "version": 1,
    "status": "test",
