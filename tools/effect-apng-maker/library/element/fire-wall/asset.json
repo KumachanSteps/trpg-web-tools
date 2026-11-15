@@ -12,12 +12,14 @@
   "name": {
     "ja": "炎の壁",
     "en": "Wall of fire",
-    "ko": "불의 벽"
+    "ko": "불의 벽",
+    "zh": "火墙"
   },
   "desc": {
     "ja": "画面の下で炎が燃えさかる。",
     "en": "Flames roar along the bottom of the screen.",
-    "ko": "화면 아래에서 불길이 타오른다."
+    "ko": "화면 아래에서 불길이 타오른다.",
+    "zh": "火焰在画面下方熊熊燃烧。"
   },
   "tags": [
     "炎",
@@ -25,7 +27,8 @@
     "fire",
     "flame",
     "불",
-    "화염"
+    "화염",
+    "火墙"
   ],
   "use": [
     "overlay"

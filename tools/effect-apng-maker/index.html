@@ -10,14 +10,14 @@
   <title>演出APNGメーカー｜TRPG WEBツール観測所</title>
   <meta name="description" content="場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出すツールです。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/effect-apng-maker.css?v=20261115-04" />
+  <link rel="stylesheet" href="./css/effect-apng-maker.css?v=20261115-05" />
 </head>
 <body>
   <div class="studio">
     <header class="studio-header">
       <div class="title-block">
         <p class="eyebrow"><a class="portal-link" id="portalLink" href="../../"><span class="portal-long" data-i18n="portalLong">←TRPG WEBツール観測所</span><span class="portal-short" data-i18n="portalShort">← 観測所</span></a></p>
-        <h1><span data-i18n="title">演出APNGメーカー</span> <span class="test-badge" data-i18n="testBadge">限定テスト版</span> <span class="version-engrave">v0.12 / 2026.11.15</span></h1>
+        <h1><span data-i18n="title">演出APNGメーカー</span> <span class="test-badge" data-i18n="testBadge">限定テスト版</span> <span class="version-engrave">v0.13 / 2026.11.15</span></h1>
       </div>
       <p class="lead" data-i18n="lead">場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出します。</p>
       <div class="header-actions">
@@ -25,9 +25,11 @@
           <button type="button" data-lang="ja" aria-pressed="true">JP</button>
           <button type="button" data-lang="en" aria-pressed="false">EN</button>
           <button type="button" data-lang="ko" aria-pressed="false">KR</button>
+          <button type="button" data-lang="zh" aria-pressed="false" title="简体中文">CN</button>
         </div>
         <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer" data-i18n="help">使い方</button>
         <button class="ghost-button" type="button" id="rulesBtn" aria-expanded="false" aria-controls="rulesDrawer" data-i18n="rulesBtn">利用ルール</button>
+        <button class="ghost-button" type="button" id="shortcutBtn" aria-expanded="false" aria-controls="shortcutDrawer" aria-label="ショートカット" title="ショートカット"><span aria-hidden="true">?</span></button>
         <button class="ghost-button theme-button" type="button" id="themeBtn" aria-label="テーマ"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb"></span></span></button>
       </div>
     </header>
@@ -42,6 +44,11 @@
       <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
       <h2 data-i18n="rulesTitle">利用ルール</h2>
       <div class="rules-body" id="rulesBody"></div>
+    </section>
+    <section class="drawer" id="shortcutDrawer" hidden>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
+      <h2 data-i18n="shortcutTitle">ショートカット一覧</h2>
+      <div class="shortcut-grid" id="shortcutGrid"></div>
     </section>
 
     <nav class="mobile-tabs" id="mobileTabs" role="tablist">
@@ -177,8 +184,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <!-- APNG / WebP エンコーダー（文字画像APNGメーカーと同じもの。共通化は後の段階で） -->
-  <script src="./js/apng-encoder.js?v=20261115-04"></script>
-  <script src="./js/webp-encoder.js?v=20261115-04"></script>
-  <script type="module" src="./js/main.js?v=20261115-04"></script>
+  <script src="./js/apng-encoder.js?v=20261115-05"></script>
+  <script src="./js/webp-encoder.js?v=20261115-05"></script>
+  <script type="module" src="./js/main.js?v=20261115-05"></script>
 </body>
 </html>

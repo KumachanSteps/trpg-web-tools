@@ -3,7 +3,7 @@
  *   ライブラリ（左）→ 選んだアセットを プレビュー（中央）に重ね、調整（右）で設定を変えて書き出す。
  */
 import { I18N } from './i18n.js';
-import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261115-04';
+import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261115-05';
 import { Stage } from './stage.js';
 
 const C = window.TextApngCodec;
@@ -45,7 +45,8 @@ function persist() {
 
 /* ---------- 言語 ---------- */
 
-let lang = store.lang || ((navigator.language || 'ja').startsWith('ko') ? 'ko' : (navigator.language || 'ja').startsWith('ja') ? 'ja' : 'en');
+const browserLang = (navigator.language || 'ja').toLowerCase();
+let lang = store.lang || (browserLang.startsWith('ko') ? 'ko' : browserLang.startsWith('zh') ? 'zh' : browserLang.startsWith('ja') ? 'ja' : 'en');
 if (!I18N[lang]) lang = 'ja';
 const t = () => I18N[lang];
 const pick = obj => (obj && (obj[lang] || obj.en || obj.ja)) || '';
@@ -62,6 +63,11 @@ function applyLanguage() {
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
   $('#languageSwitcher').setAttribute('aria-label', m.langGroup);
   $('#helpSteps').innerHTML = m.helpSteps.map(s => `<li>${escapeHtml(s.replace(/^\d+\.\s*/, ''))}</li>`).join('');
+  const sb = $('#shortcutBtn');
+  sb.setAttribute('aria-label', m.shortcuts);
+  sb.title = m.shortcuts;
+  $('#shortcutGrid').innerHTML = m.shortcutRows.map(([keys, text]) =>
+    `<div>${keys.split(' + ').map(k => `<kbd>${escapeHtml(k)}</kbd>`).join('<b>+</b>')}</div><span>${escapeHtml(text)}</span>`).join('');
   $('#helpNotes').innerHTML = m.helpNotes.map(s => `<p>${escapeHtml(s)}</p>`).join('');
   const r = m.rules;
   $('#rulesBody').innerHTML = `<p>${escapeHtml(r.intro)}</p>
@@ -148,7 +154,7 @@ function loopsFor(s) {
 /* ---------- ライブラリ ---------- */
 
 function renderTabs() {
-  const cats = [{ id: 'all', name: { ja: t().all, en: t().all, ko: t().all } }, ...app.manifest.categories];
+  const cats = [{ id: 'all', name: { ja: t().all, en: t().all, ko: t().all, zh: t().all } }, ...app.manifest.categories];
   els.tabs.innerHTML = cats.map(c => `<button type="button" role="tab" data-cat="${c.id}" aria-selected="${c.id === app.category}">${escapeHtml(pick(c.name))}</button>`).join('');
 }
 
@@ -157,7 +163,7 @@ function matches(a) {
   if (app.filters.has('fav') && !store.favs.includes(a.id)) return false;
   const q = app.query.trim().toLowerCase();
   if (!q) return true;
-  const hay = [a.name.ja, a.name.en, a.name.ko, ...(a.tags || [])].join(' ').toLowerCase();
+  const hay = [a.name.ja, a.name.en, a.name.ko, a.name.zh, ...(a.tags || [])].join(' ').toLowerCase();
   return q.split(/\s+/).every(w => hay.includes(w));
 }
 
@@ -787,12 +793,12 @@ function bind() {
     persist();
     applyTheme();
   });
-  [['#helpBtn', '#helpDrawer'], ['#rulesBtn', '#rulesDrawer']].forEach(([b, d]) => {
+  [['#helpBtn', '#helpDrawer'], ['#rulesBtn', '#rulesDrawer'], ['#shortcutBtn', '#shortcutDrawer']].forEach(([b, d]) => {
     $(b).addEventListener('click', () => {
       const drawer = $(d);
       const open = drawer.hidden;
       document.querySelectorAll('.drawer').forEach(x => { x.hidden = true; });
-      document.querySelectorAll('#helpBtn, #rulesBtn').forEach(x => x.setAttribute('aria-expanded', 'false'));
+      document.querySelectorAll('#helpBtn, #rulesBtn, #shortcutBtn').forEach(x => x.setAttribute('aria-expanded', 'false'));
       drawer.hidden = !open;
       $(b).setAttribute('aria-expanded', String(open));
     });
@@ -800,10 +806,34 @@ function bind() {
   document.addEventListener('click', e => {
     if (e.target.closest('[data-close-drawer]')) {
       e.target.closest('.drawer').hidden = true;
-      document.querySelectorAll('#helpBtn, #rulesBtn').forEach(x => x.setAttribute('aria-expanded', 'false'));
+      document.querySelectorAll('#helpBtn, #rulesBtn, #shortcutBtn').forEach(x => x.setAttribute('aria-expanded', 'false'));
     }
     if (e.target.closest('[data-copy-credit]')) copyCredit();
   });
+
+  // ショートカット（文字画像APNGメーカーと同じ押し方：Cmd/Ctrl/Alt + Shift + キー）
+  const KEY_ACTIONS = {
+    KeyP: () => setPlaying(!app.playing),
+    KeyE: () => exportFile('apng'),
+    KeyK: () => exportFile('webp'),
+    KeyT: () => $('#themeBtn').click()
+  };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const open = [...document.querySelectorAll('.drawer')].filter(d => !d.hidden);
+      if (!open.length) return;
+      open.forEach(d => { d.hidden = true; });
+      document.querySelectorAll('#helpBtn, #rulesBtn, #shortcutBtn').forEach(x => x.setAttribute('aria-expanded', 'false'));
+      e.preventDefault();
+      return;
+    }
+    if (!(e.shiftKey && (e.metaKey || e.ctrlKey || e.altKey))) return;
+    const action = KEY_ACTIONS[e.code];
+    if (!action) return;
+    e.preventDefault();
+    e.stopPropagation();
+    action();
+  }, true);
 
   // ライブラリ
   els.tabs.addEventListener('click', e => {

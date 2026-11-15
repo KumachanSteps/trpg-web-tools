@@ -12,12 +12,14 @@
   "name": {
     "ja": "火炎ブレス",
     "en": "Fire breath",
-    "ko": "화염 브레스"
+    "ko": "화염 브레스",
+    "zh": "火焰吐息"
   },
   "desc": {
     "ja": "炎の息が画面を包む。",
     "en": "A blast of fiery breath sweeps the screen.",
-    "ko": "불의 숨결이 화면을 덮는다."
+    "ko": "불의 숨결이 화면을 덮는다.",
+    "zh": "火焰吐息席卷画面。"
   },
   "tags": [
     "炎",
@@ -27,7 +29,8 @@
     "breath",
     "dragon",
     "불",
-    "브레스"
+    "브레스",
+    "火焰吐息"
   ],
   "use": [
     "overlay"

@@ -12,19 +12,22 @@
   "name": {
     "ja": "集中線",
     "en": "Focus lines",
-    "ko": "집중선"
+    "ko": "집중선",
+    "zh": "集中线"
   },
   "desc": {
     "ja": "漫画の集中線。中心は選べる。",
     "en": "Manga focus lines toward a point you pick.",
-    "ko": "만화 집중선. 중심을 고를 수 있다."
+    "ko": "만화 집중선. 중심을 고를 수 있다.",
+    "zh": "漫画式集中线。可选择中心。"
   },
   "tags": [
     "集中線",
     "漫画",
     "focus lines",
     "speed lines",
-    "집중선"
+    "집중선",
+    "集中线"
   ],
   "use": [
     "overlay"
@@ -48,7 +51,8 @@
       "label": {
         "ja": "色",
         "en": "Colour",
-        "ko": "색"
+        "ko": "색",
+        "zh": "颜色"
       },
       "default": "#000000",
       "swatches": [
@@ -63,7 +67,8 @@
       "label": {
         "ja": "中心",
         "en": "Centre",
-        "ko": "중심"
+        "ko": "중심",
+        "zh": "中心"
       },
       "default": {
         "x": 0.5,
@@ -76,7 +81,8 @@
       "label": {
         "ja": "中心の空き",
         "en": "Clear centre",
-        "ko": "중심 여백"
+        "ko": "중심 여백",
+        "zh": "中心留白"
       },
       "min": 0.2,
       "max": 1.2,
@@ -89,7 +95,8 @@
       "label": {
         "ja": "線の数",
         "en": "Lines",
-        "ko": "선 수"
+        "ko": "선 수",
+        "zh": "线条数"
       },
       "min": 40,
       "max": 220,
@@ -102,7 +109,8 @@
       "label": {
         "ja": "線の太さ",
         "en": "Line weight",
-        "ko": "선 굵기"
+        "ko": "선 굵기",
+        "zh": "线条粗细"
       },
       "min": 0.05,
       "max": 1.6,
@@ -115,7 +123,8 @@
       "label": {
         "ja": "切り替わる速さ",
         "en": "Change rate",
-        "ko": "바뀌는 속도"
+        "ko": "바뀌는 속도",
+        "zh": "切换速度"
       },
       "min": 2,
       "max": 16,

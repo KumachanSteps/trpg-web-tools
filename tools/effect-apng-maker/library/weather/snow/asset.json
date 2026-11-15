@@ -12,12 +12,14 @@
   "name": {
     "ja": "雪",
     "en": "Snow",
-    "ko": "눈"
+    "ko": "눈",
+    "zh": "雪"
   },
   "desc": {
     "ja": "粉雪かぼたん雪。風で流れる。",
     "en": "Powder or large flakes, drifting with the wind.",
-    "ko": "가루눈 또는 함박눈. 바람에 흩날린다."
+    "ko": "가루눈 또는 함박눈. 바람에 흩날린다.",
+    "zh": "细雪或鹅毛大雪。随风飘动。"
   },
   "tags": [
     "雪",
@@ -49,7 +51,8 @@
       "label": {
         "ja": "色",
         "en": "Colour",
-        "ko": "색"
+        "ko": "색",
+        "zh": "颜色"
       },
       "default": "#ffffff",
       "swatches": [
@@ -63,7 +66,8 @@
       "label": {
         "ja": "雪の種類",
         "en": "Flakes",
-        "ko": "눈 종류"
+        "ko": "눈 종류",
+        "zh": "雪的种类"
       },
       "default": "powder",
       "options": [
@@ -72,7 +76,8 @@
           "label": {
             "ja": "粉雪",
             "en": "Powder",
-            "ko": "가루눈"
+            "ko": "가루눈",
+            "zh": "细雪"
           }
         },
         {
@@ -80,7 +85,8 @@
           "label": {
             "ja": "ぼたん雪",
             "en": "Large flakes",
-            "ko": "함박눈"
+            "ko": "함박눈",
+            "zh": "鹅毛大雪"
           }
         }
       ]
@@ -91,7 +97,8 @@
       "label": {
         "ja": "量",
         "en": "Amount",
-        "ko": "양"
+        "ko": "양",
+        "zh": "数量"
       },
       "min": 0.2,
       "max": 2.5,
@@ -104,7 +111,8 @@
       "label": {
         "ja": "風",
         "en": "Wind",
-        "ko": "바람"
+        "ko": "바람",
+        "zh": "风"
       },
       "min": -1,
       "max": 1,

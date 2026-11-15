@@ -12,17 +12,20 @@
   "name": {
     "ja": "ブラインド",
     "en": "Blinds",
-    "ko": "블라인드"
+    "ko": "블라인드",
+    "zh": "百叶窗"
   },
   "desc": {
     "ja": "細い帯が順に閉じていく。",
     "en": "Slats close one after another.",
-    "ko": "가는 띠가 차례로 닫힌다."
+    "ko": "가는 띠가 차례로 닫힌다.",
+    "zh": "细条依次合上。"
   },
   "tags": [
     "ブラインド",
     "blinds",
-    "블라인드"
+    "블라인드",
+    "百叶窗"
   ],
   "use": [
     "transition"
@@ -46,7 +49,8 @@
       "label": {
         "ja": "覆う色",
         "en": "Cover colour",
-        "ko": "덮는 색"
+        "ko": "덮는 색",
+        "zh": "覆盖颜色"
       },
       "default": "#000000",
       "swatches": [
@@ -62,7 +66,8 @@
       "label": {
         "ja": "向き",
         "en": "Direction",
-        "ko": "방향"
+        "ko": "방향",
+        "zh": "方向"
       },
       "default": "vertical",
       "options": [
@@ -71,7 +76,8 @@
           "label": {
             "ja": "横",
             "en": "Horizontal",
-            "ko": "가로"
+            "ko": "가로",
+            "zh": "横向"
           }
         },
         {
@@ -79,7 +85,8 @@
           "label": {
             "ja": "縦",
             "en": "Vertical",
-            "ko": "세로"
+            "ko": "세로",
+            "zh": "纵向"
           }
         }
       ]
@@ -90,7 +97,8 @@
       "label": {
         "ja": "帯の数",
         "en": "Slats",
-        "ko": "띠 수"
+        "ko": "띠 수",
+        "zh": "条数"
       },
       "min": 3,
       "max": 24,
@@ -103,7 +111,8 @@
       "label": {
         "ja": "時間差",
         "en": "Stagger",
-        "ko": "시간차"
+        "ko": "시간차",
+        "zh": "时间差"
       },
       "min": 0,
       "max": 1,

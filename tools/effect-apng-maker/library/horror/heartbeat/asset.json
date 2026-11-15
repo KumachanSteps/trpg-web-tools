@@ -12,19 +12,22 @@
   "name": {
     "ja": "鼓動する闇",
     "en": "Heartbeat vignette",
-    "ko": "고동치는 어둠"
+    "ko": "고동치는 어둠",
+    "zh": "搏动的黑暗"
   },
   "desc": {
     "ja": "画面のふちが心臓の鼓動のように脈打つ。",
     "en": "The edges pulse like a heartbeat.",
-    "ko": "화면 가장자리가 심장 박동처럼 맥동한다."
+    "ko": "화면 가장자리가 심장 박동처럼 맥동한다.",
+    "zh": "画面边缘像心跳一样搏动。"
   },
   "tags": [
     "鼓動",
     "心臓",
     "heartbeat",
     "vignette",
-    "심장"
+    "심장",
+    "搏动的黑暗"
   ],
   "use": [
     "overlay"
@@ -48,7 +51,8 @@
       "label": {
         "ja": "色",
         "en": "Colour",
-        "ko": "색"
+        "ko": "색",
+        "zh": "颜色"
       },
       "default": "#000000",
       "swatches": [
@@ -63,7 +67,8 @@
       "label": {
         "ja": "速さ（BPM）",
         "en": "Speed (BPM)",
-        "ko": "속도 (BPM)"
+        "ko": "속도 (BPM)",
+        "zh": "速度（BPM）"
       },
       "min": 40,
       "max": 150,
@@ -76,7 +81,8 @@
       "label": {
         "ja": "強さ",
         "en": "Strength",
-        "ko": "세기"
+        "ko": "세기",
+        "zh": "强度"
       },
       "min": 0.3,
       "max": 1,

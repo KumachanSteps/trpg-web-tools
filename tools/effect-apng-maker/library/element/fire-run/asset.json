@@ -12,19 +12,22 @@
   "name": {
     "ja": "走る炎",
     "en": "Running fire",
-    "ko": "번지는 불길"
+    "ko": "번지는 불길",
+    "zh": "蔓延的火焰"
   },
   "desc": {
     "ja": "炎が地面を走って燃え広がる。",
     "en": "Fire races across the ground and spreads.",
-    "ko": "불길이 땅을 타고 번진다."
+    "ko": "불길이 땅을 타고 번진다.",
+    "zh": "火焰沿地面奔走并蔓延。"
   },
   "tags": [
     "炎",
     "火",
     "fire",
     "flame",
-    "불"
+    "불",
+    "蔓延的火焰"
   ],
   "use": [
     "overlay"

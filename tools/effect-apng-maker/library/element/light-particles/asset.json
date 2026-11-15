@@ -12,19 +12,22 @@
   "name": {
     "ja": "光の粒",
     "en": "Light particles",
-    "ko": "빛 입자"
+    "ko": "빛 입자",
+    "zh": "光粒"
   },
   "desc": {
     "ja": "やわらかい光の粒が漂う。神秘・回想の場面に。",
     "en": "Soft motes of light drift. For mystic or flashback scenes.",
-    "ko": "부드러운 빛 입자가 떠다닌다. 신비·회상 장면에."
+    "ko": "부드러운 빛 입자가 떠다닌다. 신비·회상 장면에.",
+    "zh": "柔和的光粒飘浮。适合神秘、回忆的场景。"
   },
   "tags": [
     "光",
     "粒",
     "light",
     "particles",
-    "빛"
+    "빛",
+    "光粒"
   ],
   "use": [
     "overlay"
@@ -49,7 +52,8 @@
       "label": {
         "ja": "色",
         "en": "Colour",
-        "ko": "색"
+        "ko": "색",
+        "zh": "颜色"
       },
       "default": "#ffd27a",
       "swatches": [
@@ -65,7 +69,8 @@
       "label": {
         "ja": "動き",
         "en": "Motion",
-        "ko": "움직임"
+        "ko": "움직임",
+        "zh": "动态"
       },
       "default": "rise",
       "options": [
@@ -74,7 +79,8 @@
           "label": {
             "ja": "立ちのぼる",
             "en": "Rise",
-            "ko": "피어오름"
+            "ko": "피어오름",
+            "zh": "升腾"
           }
         },
         {
@@ -82,7 +88,8 @@
           "label": {
             "ja": "漂う",
             "en": "Float",
-            "ko": "떠다님"
+            "ko": "떠다님",
+            "zh": "飘浮"
           }
         }
       ]
@@ -93,7 +100,8 @@
       "label": {
         "ja": "量",
         "en": "Amount",
-        "ko": "양"
+        "ko": "양",
+        "zh": "数量"
       },
       "min": 0.3,
       "max": 2.5,
@@ -106,7 +114,8 @@
       "label": {
         "ja": "大きさ",
         "en": "Size",
-        "ko": "크기"
+        "ko": "크기",
+        "zh": "大小"
       },
       "min": 0.5,
       "max": 2,
