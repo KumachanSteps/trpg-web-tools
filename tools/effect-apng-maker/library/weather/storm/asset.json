@@ -1,14 +1,14 @@
 {
   "id": "weather.storm",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 4,
   "category": "weather",
-  "kind": "combo",
+  "kind": "procedural",
   "type": "effect",
   "priority": "P1",
-  "origin": "TK",
+  "origin": "EX",
   "name": {
     "ja": "嵐",
     "en": "Storm",
@@ -16,17 +16,17 @@
     "zh": "暴风雨"
   },
   "desc": {
-    "ja": "大雨・風・雷光を重ねた組み合わせ。",
-    "en": "Heavy rain, wind and lightning flashes together.",
-    "ko": "폭우·바람·번개 빛을 겹친 조합.",
-    "zh": "大雨、风与雷光叠加的组合。"
+    "ja": "横殴りの暴風雨。突風で強まり、もやが流れ、遠くで稲光。",
+    "en": "Driving rain in strong gusts, with drifting haze and distant lightning.",
+    "ko": "옆으로 몰아치는 폭풍우. 돌풍이 불고 안개가 흐르며 멀리서 번개가 친다.",
+    "zh": "横扫的暴风雨，阵风加剧、雾气流动，远处闪电。"
   },
   "tags": [
     "嵐",
+    "雨",
+    "風",
     "storm",
     "폭풍",
-    "雨",
-    "雷",
     "暴风雨"
   ],
   "use": [
@@ -41,51 +41,65 @@
   "duration": {
     "default": 3,
     "min": 2,
-    "max": 6
+    "max": 8
   },
   "transparent": true,
   "params": [
     {
-      "key": "rain",
+      "key": "amount",
       "type": "range",
       "label": {
-        "ja": "雨の量",
-        "en": "Rainfall",
-        "ko": "빗줄기 양",
-        "zh": "雨量"
+        "ja": "量",
+        "en": "Amount",
+        "ko": "양",
+        "zh": "数量"
       },
-      "min": 0.5,
-      "max": 2.5,
-      "step": 0.1,
-      "default": 1.6
-    },
-    {
-      "key": "wind",
-      "type": "range",
-      "label": {
-        "ja": "風の強さ",
-        "en": "Wind",
-        "ko": "바람 세기",
-        "zh": "风力"
-      },
-      "min": 0,
+      "min": 0.3,
       "max": 2,
       "step": 0.1,
       "default": 0.8
     },
     {
-      "key": "flash",
-      "type": "range",
+      "key": "dir",
+      "type": "select",
       "label": {
-        "ja": "雷光",
-        "en": "Lightning",
-        "ko": "번개 빛",
-        "zh": "雷光"
+        "ja": "向き",
+        "en": "Direction",
+        "ko": "방향",
+        "zh": "方向"
       },
-      "min": 0,
-      "max": 1,
-      "step": 0.05,
-      "default": 0.7
+      "options": [
+        {
+          "value": "right",
+          "label": {
+            "ja": "右へ",
+            "en": "To the right",
+            "ko": "오른쪽으로",
+            "zh": "向右"
+          }
+        },
+        {
+          "value": "left",
+          "label": {
+            "ja": "左へ",
+            "en": "To the left",
+            "ko": "왼쪽으로",
+            "zh": "向左"
+          }
+        }
+      ],
+      "default": "right"
+    },
+    {
+      "key": "flash",
+      "type": "toggle",
+      "label": {
+        "ja": "遠い稲光",
+        "en": "Distant lightning",
+        "ko": "먼 번개",
+        "zh": "远处闪电"
+      },
+      "default": true
     }
   ],
   "budget": {
@@ -93,44 +107,12 @@
       960,
       540
     ],
-    "fps": 20,
+    "fps": 12,
     "colors": 64
   },
   "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
-  },
-  "layers": [
-    {
-      "asset": "weather.rain",
-      "params": {
-        "angle": 18,
-        "splash": true
-      },
-      "map": {
-        "strength": "rain"
-      }
-    },
-    {
-      "asset": "element.wind",
-      "params": {
-        "dir": "right",
-        "angle": 10
-      },
-      "map": {
-        "strength": "wind"
-      },
-      "skipIfZero": "wind"
-    },
-    {
-      "asset": "weather.lightning-flash",
-      "params": {
-        "flashes": 2
-      },
-      "map": {
-        "intensity": "flash"
-      },
-      "skipIfZero": "flash"
-    }
-  ]
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  }
 }

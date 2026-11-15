@@ -1,0 +1,63 @@
+{
+  "id": "weather.thunder-clouds",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 10,
+  "category": "weather",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "黒雲の稲光",
+    "en": "Thunderclouds",
+    "ko": "먹구름 번개",
+    "zh": "乌云闪电"
+  },
+  "desc": {
+    "ja": "流れる黒雲が内側から光る。ときどき雲の中を稲妻が這う。画面全体を覆う背景。",
+    "en": "Dark clouds glow from within as lightning crawls through them. Covers the whole screen.",
+    "ko": "흐르는 먹구름이 안에서 빛나고 가끔 구름 속을 번개가 기어간다. 화면 전체를 덮는 배경.",
+    "zh": "流动的乌云从内部发光，闪电不时在云中游走。覆盖整个画面的背景。"
+  },
+  "tags": [
+    "雷",
+    "雲",
+    "黒雲",
+    "thunder",
+    "clouds",
+    "먹구름",
+    "乌云"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 8
+  },
+  "transparent": false,
+  "params": [],
+  "budget": {
+    "size": [
+      640,
+      360
+    ],
+    "fps": 12,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.5
+}

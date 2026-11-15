@@ -1,6 +1,6 @@
 {
   "id": "weather.snow",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-14",
   "order": 5,
@@ -8,7 +8,7 @@
   "kind": "procedural",
   "type": "effect",
   "priority": "P1",
-  "origin": "TK",
+  "origin": "EX",
   "name": {
     "ja": "雪",
     "en": "Snow",
@@ -16,17 +16,18 @@
     "zh": "雪"
   },
   "desc": {
-    "ja": "粉雪かぼたん雪。風で流れる。",
-    "en": "Powder or large flakes, drifting with the wind.",
-    "ko": "가루눈 또는 함박눈. 바람에 흩날린다.",
-    "zh": "细雪或鹅毛大雪。随风飘动。"
+    "ja": "粉雪・ぼたん雪・吹雪（弱・強）。",
+    "en": "Powder snow, large flakes, or a light or heavy blizzard.",
+    "ko": "가루눈·함박눈·눈보라(약·강).",
+    "zh": "细雪、鹅毛大雪、暴风雪（弱・强）。"
   },
   "tags": [
     "雪",
+    "吹雪",
     "snow",
+    "blizzard",
     "눈",
-    "粉雪",
-    "ぼたん雪"
+    "雪"
   ],
   "use": [
     "overlay"
@@ -46,33 +47,17 @@
   "transparent": true,
   "params": [
     {
-      "key": "color",
-      "type": "color",
-      "label": {
-        "ja": "色",
-        "en": "Colour",
-        "ko": "색",
-        "zh": "颜色"
-      },
-      "default": "#ffffff",
-      "swatches": [
-        "#ffffff",
-        "#dfeeff"
-      ]
-    },
-    {
-      "key": "flake",
+      "key": "level",
       "type": "select",
       "label": {
-        "ja": "雪の種類",
-        "en": "Flakes",
-        "ko": "눈 종류",
-        "zh": "雪的种类"
+        "ja": "降り方",
+        "en": "Type",
+        "ko": "종류",
+        "zh": "类型"
       },
-      "default": "powder",
       "options": [
         {
-          "value": "powder",
+          "value": "1",
           "label": {
             "ja": "粉雪",
             "en": "Powder",
@@ -81,15 +66,34 @@
           }
         },
         {
-          "value": "large",
+          "value": "2",
           "label": {
             "ja": "ぼたん雪",
             "en": "Large flakes",
             "ko": "함박눈",
             "zh": "鹅毛大雪"
           }
+        },
+        {
+          "value": "3",
+          "label": {
+            "ja": "吹雪（弱）",
+            "en": "Blizzard (light)",
+            "ko": "눈보라(약)",
+            "zh": "暴风雪（弱）"
+          }
+        },
+        {
+          "value": "4",
+          "label": {
+            "ja": "吹雪（強）",
+            "en": "Blizzard (heavy)",
+            "ko": "눈보라(강)",
+            "zh": "暴风雪（强）"
+          }
         }
-      ]
+      ],
+      "default": "1"
     },
     {
       "key": "amount",
@@ -100,24 +104,41 @@
         "ko": "양",
         "zh": "数量"
       },
-      "min": 0.2,
-      "max": 2.5,
+      "min": 0.3,
+      "max": 2,
       "step": 0.1,
       "default": 1
     },
     {
-      "key": "wind",
-      "type": "range",
+      "key": "dir",
+      "type": "select",
       "label": {
-        "ja": "風",
-        "en": "Wind",
-        "ko": "바람",
-        "zh": "风"
+        "ja": "向き",
+        "en": "Direction",
+        "ko": "방향",
+        "zh": "方向"
       },
-      "min": -1,
-      "max": 1,
-      "step": 0.05,
-      "default": 0.25
+      "options": [
+        {
+          "value": "right",
+          "label": {
+            "ja": "右へ",
+            "en": "To the right",
+            "ko": "오른쪽으로",
+            "zh": "向右"
+          }
+        },
+        {
+          "value": "left",
+          "label": {
+            "ja": "左へ",
+            "en": "To the left",
+            "ko": "왼쪽으로",
+            "zh": "向左"
+          }
+        }
+      ],
+      "default": "right"
     }
   ],
   "budget": {
@@ -130,6 +151,7 @@
   },
   "license": {
     "type": "original",
-    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
   }
 }

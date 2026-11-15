@@ -1,0 +1,63 @@
+{
+  "id": "weather.thunder-chain",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 9,
+  "category": "weather",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "連続落雷",
+    "en": "Lightning barrage",
+    "ko": "연속 낙뢰",
+    "zh": "连续落雷"
+  },
+  "desc": {
+    "ja": "稲妻が左右・奥と手前で次々に落ち、そのたびに画面が明るくなる。",
+    "en": "Bolts strike one after another, near and far, lighting the screen each time.",
+    "ko": "번개가 좌우·앞뒤로 연달아 떨어지며 그때마다 화면이 밝아진다.",
+    "zh": "闪电在左右远近接连落下，每次都照亮画面。"
+  },
+  "tags": [
+    "雷",
+    "稲妻",
+    "落雷",
+    "lightning",
+    "thunderstorm",
+    "번개",
+    "闪电"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "loop",
+    "allowed": [
+      "loop"
+    ]
+  },
+  "duration": {
+    "default": 4,
+    "min": 3,
+    "max": 8
+  },
+  "transparent": true,
+  "params": [],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 128
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
+  },
+  "poster": 0.3
+}
