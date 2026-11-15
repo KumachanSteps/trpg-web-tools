@@ -1212,7 +1212,16 @@ body.night-mode .ccfolia-fields input,body.night-mode .cc-speaker,body.night-mod
   .header-action-row{justify-content:flex-end}
 }
 @media (max-width:1100px){
-  .table-import-actions{width:100%;justify-content:flex-start}
+  .table-header{flex-direction:row;align-items:center}
+  .table-header>div:first-child{flex:0 0 auto;min-width:0}
+  .table-header h2{white-space:nowrap}
+  .table-import-actions{width:auto;min-width:0;flex:1 1 auto;justify-content:flex-end}
+}
+@media (max-width:620px){
+  .table-header{gap:8px;padding-inline:12px}
+  .table-header h2{font-size:17px}
+  .table-import-actions{gap:5px}
+  .table-import-actions>.header-button{padding-inline:9px;font-size:11px}
 }
 
 /* v1.104.1: compact durable backup controls */
