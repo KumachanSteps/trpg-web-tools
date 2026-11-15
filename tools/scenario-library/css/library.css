@@ -12,7 +12,7 @@
 
 .lib-layout { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
 .lib-results { flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-.lib-results-head { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+.lib-results-head { display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px dashed var(--line); }
 .lib-results-head h2 { font-size: 19px; letter-spacing: 0.04em; }
 .lib-count { font-size: 13px; color: var(--muted); }
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
@@ -73,19 +73,19 @@
 .lib-card-wrap { position: relative; display: flex; }
 .lib-card-wrap > .lib-card { flex: 1; }
 .hub .lib-fav {
-  width: 30px; height: 30px; padding: 0;
+  width: 26px; height: 26px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   border: 0; background: none; cursor: pointer;
-  font-size: 22px; line-height: 1;
-  color: transparent;
-  -webkit-text-stroke: 1.4px rgba(224, 150, 42, 0.8);
-  filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.85));
+  color: rgba(224, 150, 42, 0.85);
   transition: transform 0.12s;
 }
+.lib-fav svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; filter: drop-shadow(0 0 1.2px rgba(255, 255, 255, 0.9)); }
 .lib-fav:hover { transform: scale(1.12); }
-.hub .lib-fav[aria-pressed="true"] { color: #f2b632; -webkit-text-stroke-color: #df9a2b; }
-.lib-fav.on-card { position: absolute; right: 8px; top: 8px; z-index: 2; }
-.hub .lib-fav.is-large { position: absolute; right: 10px; top: 10px; z-index: 2; width: 36px; height: 36px; font-size: 27px; }
+.hub .lib-fav[aria-pressed="true"] { color: #df9a2b; }
+.lib-fav[aria-pressed="true"] svg { fill: #f2b632; }
+.lib-fav.on-card { position: absolute; right: 6px; top: 6px; z-index: 2; }
+.hub .lib-fav.is-large { position: absolute; right: 10px; top: 10px; z-index: 2; width: 30px; height: 30px; }
+.lib-fav.is-large svg { width: 22px; height: 22px; }
 
 /* 所持・未所持・プレイ済みのバッジ */
 .lib-badges { position: absolute; right: 8px; bottom: 8px; z-index: 1; display: flex; gap: 4px; }
@@ -121,7 +121,8 @@
 .lib-table .lib-col-by { white-space: normal; min-width: 120px; color: var(--muted); }
 .lib-table .lib-col-fav { width: 40px; padding-right: 0; }
 .lib-table .lib-col-num { text-align: right; }
-.hub .lib-table .lib-fav { width: 26px; height: 26px; font-size: 19px; filter: none; }
+.hub .lib-table .lib-fav { width: 22px; height: 22px; color: var(--ink-soft); }
+.lib-table .lib-fav svg { width: 15px; height: 15px; stroke-width: 1.5; filter: none; }
 .lib-col-badges .lib-badge + .lib-badge { margin-left: 4px; }
 .lib-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
