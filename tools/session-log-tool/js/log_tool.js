@@ -1,9 +1,10 @@
 (function(){
   const STORAGE_KEY = "sessionLogTool.state.v1";
-  const APP_VERSION = "v1.107";
+  const APP_VERSION = "v1.108";
   window.SESSION_LOG_APP_VERSION = APP_VERSION;
   const REPORT_GENERATOR_URL = "../session-report-generator/index.html";
   const REPORT_PENDING_IMPORT_KEY = "trpgWebTools.sessionReportGenerator.pendingImport";
+  const CALENDAR_PENDING_IMPORT_KEY = "trpgWebTools.sessionLogTracker.pendingImport";
   const SELF_NAMES_KEY = "sessionLogTool.selfNames.v1";
   const DEFAULT_SELF_NAMES = ["自分", "自分自身", "GM", "KP", "DL", "くま。", "Kuma", "KumachanSteps"];
   const SYSTEM_OPTIONS = ["CoC 7版", "CoC 6版", "エモクロア", "マダミス"];
@@ -86,6 +87,8 @@
   let dragInsertSide = "before";
   let resizingColumn = null;
   let editingId = null;
+  let editingCalendarImport = false;
+  let pendingCalendarImportPayload = null;
   const EXPORT_MODES = ["all", "system", "role", "sessions"];
   let exportMode = "all";
   let exportQuery = "";
@@ -103,6 +106,7 @@
     renderStorageRecoveryNotice();
     storageWriteEnabled = true;
     await initBackupManager();
+    receivePendingCalendarImport();
   }
 
   function collectElements(){
@@ -772,12 +776,14 @@
     return rows;
   }
 
-  function openSessionDialog(id){
+  function openSessionDialog(id, draft = null, options = {}){
     editingId = id || null;
+    editingCalendarImport = Boolean(options.calendarImport && !id);
     const today = new Date().toISOString().slice(0,10);
-    const row = id ? state.rows.find(r=>r.id===id) : { id: cryptoId(), date: today, dates: [today], scenario:"", system:"CoC 6版", role:"PL", gm:"", players:"", pc:"", status:"新規", time:"", note:"", hashtag:"", longNote:"" };
+    const emptyRow = { id: cryptoId(), date: today, dates: [today], scenario:"", system:"CoC 6版", role:"PL", gm:"", players:"", pc:"", status:"新規", time:"", note:"", hashtag:"", longNote:"" };
+    const row = id ? state.rows.find(r=>r.id===id) : draft ? { ...emptyRow, ...clone(draft), id: emptyRow.id } : emptyRow;
     normalizeRowDates(row);
-    els.sessionDialogTitle.textContent = id ? "卓情報を編集" : "卓を追加";
+    els.sessionDialogTitle.textContent = id ? "卓情報を編集" : editingCalendarImport ? "卓準備カレンダーから卓を追加" : "卓を追加";
     els.deleteSessionBtn.hidden = !id;
     els.sessionFormFields.innerHTML = "";
 
@@ -850,6 +856,8 @@
 
   function handleSessionSave(event){
     event.preventDefault();
+    const calendarImportWasActive = editingCalendarImport;
+    const wasNewRow = !editingId;
     const form = new FormData(els.sessionForm);
     const row = editingId ? state.rows.find(r=>r.id===editingId) : { id: cryptoId() };
     getDialogColumns().filter(c=>c.key !== "date").forEach(col=>{
@@ -863,10 +871,83 @@
     row.date = row.dates[0] || "";
     row.longNote = els.longNoteInput.value;
     delete row.sample; // 手で編集したらサンプル扱いを解除
-    if(!editingId) state.rows.push(row);
+    if(wasNewRow) state.rows.push(row);
     activeId = row.id;
     els.sessionDialog.close();
-    saveAndRender();
+    editingCalendarImport = false;
+    const saved = saveState();
+    if(!saved && wasNewRow){
+      state.rows = state.rows.filter(item=>item.id !== row.id);
+      activeId = state.rows[0]?.id || null;
+    }
+    renderAll();
+    if(calendarImportWasActive && saved){
+      consumePendingCalendarImport();
+      setTimeout(receivePendingCalendarImport, 0);
+    }else if(calendarImportWasActive){
+      showLogToast("保存できなかったため受信データを残しました");
+    }
+  }
+
+  function receivePendingCalendarImport(){
+    if(els.sessionDialog?.open) return;
+    try{
+      const raw = localStorage.getItem(CALENDAR_PENDING_IMPORT_KEY);
+      if(!raw) return;
+      const payload = JSON.parse(raw);
+      const items = Array.isArray(payload?.items) ? payload.items : [];
+      if(payload?.source !== "session-check-calendar" || !items.length){
+        console.warn("卓準備カレンダーの受信データ形式を確認できませんでした", payload);
+        showLogToast("カレンダー連携データを確認できませんでした");
+        return;
+      }
+      pendingCalendarImportPayload = payload;
+      openSessionDialog(null, calendarImportItemToRow(items[0]), { calendarImport:true });
+      showLogToast("卓準備カレンダーから1件受信しました");
+    }catch(error){
+      console.error("卓準備カレンダーの受信データを読み込めませんでした", error);
+      showLogToast("カレンダー連携データの読み込みに失敗しました");
+    }
+  }
+
+  function calendarImportItemToRow(item){
+    const dates = unique([...(Array.isArray(item?.dates) ? item.dates : []), item?.latestDate || ""]
+      .map(value=>String(value || "").slice(0,10)).filter(isIsoDate)).sort();
+    const people = Array.isArray(item?.players) ? item.players : [];
+    const links = Array.isArray(item?.links) ? item.links : [];
+    const linkByLabel = label=>links.find(link=>String(link?.label || "").trim().toLowerCase() === label)?.url || "";
+    const hashtags = Array.isArray(item?.hashtags) ? item.hashtags : splitTags(item?.hashtags || item?.tags || "");
+    const calendarStatus = String(item?.status || "");
+    return {
+      date: dates[0] || "",
+      dates,
+      scenario: item?.scenario || item?.title || "",
+      system: item?.system || "",
+      role: item?.role || "PL",
+      gm: item?.gm || item?.keeper || "",
+      players: people.map(person=>person?.pl || person?.player || "").filter(Boolean).join("、"),
+      pc: people.map(person=>person?.pc || person?.character || "").filter(Boolean).join("、"),
+      status: calendarStatus === "completed" ? "完結" : calendarStatus === "active" ? "継続" : "予定",
+      note: item?.memo || item?.note || "",
+      longNote: item?.memo || item?.note || "",
+      campaign: item?.series || item?.campaign || "",
+      hashtag: hashtags.map(tag=>String(tag).replace(/^#/, "").trim()).filter(Boolean).map(tag=>`#${tag}`).join(" "),
+      sessionUrl: linkByLabel("session"),
+      scenarioUrl: linkByLabel("scenario"),
+      kansouUrl: linkByLabel("kansou"),
+    };
+  }
+
+  function consumePendingCalendarImport(){
+    try{
+      const payload = pendingCalendarImportPayload || JSON.parse(localStorage.getItem(CALENDAR_PENDING_IMPORT_KEY) || "null");
+      const remaining = Array.isArray(payload?.items) ? payload.items.slice(1) : [];
+      if(remaining.length) localStorage.setItem(CALENDAR_PENDING_IMPORT_KEY, JSON.stringify({ ...payload, items:remaining }));
+      else localStorage.removeItem(CALENDAR_PENDING_IMPORT_KEY);
+      pendingCalendarImportPayload = null;
+    }catch(error){
+      console.error("カレンダー連携データの受信完了処理に失敗しました", error);
+    }
   }
 
   async function deleteEditingSession(){
@@ -2978,6 +3059,6 @@
   }
 
   function exposeApi(){
-    window.SessionLogApp = { exportJson, openSessionDialog, closeDrawer, setSelfNames, openImportDialog };
+    window.SessionLogApp = { exportJson, openSessionDialog, closeDrawer, setSelfNames, openImportDialog, receivePendingCalendarImport };
   }
 })();
