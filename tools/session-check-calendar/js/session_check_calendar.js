@@ -1033,8 +1033,32 @@
     };
   }
 
+  function trackerSystemName(value) {
+    const system = String(value || '').normalize('NFKC').trim();
+    if (system === '新クトゥルフ神話TRPG') return 'CoC 7版';
+    if (system === 'クトゥルフ神話TRPG') return 'CoC 6版';
+    return system;
+  }
+
+  function createLogBridgeItem(session) {
+    const seriesSessions = session.series
+      ? sessions.filter(item => item.series === session.series)
+      : [session];
+    const dates = [...new Set(seriesSessions.map(item => sessionDate(item)).filter(Boolean))].sort();
+    const sourceWithSystem = seriesSessions.find(item => String(item.system || '').trim()) || session;
+    return {
+      ...createBridgeItem(session),
+      scenario: session.series || session.scenario,
+      system: trackerSystemName(sourceWithSystem.system),
+      dates,
+      latestDate: dates[dates.length - 1] || sessionDate(session),
+      sessionCount: seriesSessions.length,
+      series: session.series || '',
+    };
+  }
+
   function sendToLogTracker(session) {
-    const payload = { source: 'session-check-calendar', version: '1.0', createdAt: new Date().toISOString(), items: [createBridgeItem(session)] };
+    const payload = { source: 'session-check-calendar', version: '1.0', createdAt: new Date().toISOString(), items: [createLogBridgeItem(session)] };
     try {
       if (localStorage.getItem(LOG_KEY) && !confirm('未取り込みの卓ログデータがすでにあります。新しいデータで上書きしますか？')) return;
       localStorage.setItem(LOG_KEY, JSON.stringify(payload));
@@ -1666,7 +1690,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.34', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.35', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
