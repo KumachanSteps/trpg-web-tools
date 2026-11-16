@@ -81,12 +81,12 @@ SUPPLEMENTS = [
     ("TEIKOKU", r"帝国とクトゥルフ|クトゥルフと帝国", False),
     ("PULP", r"パルプ\s*・?\s*クトゥルフ|pulp\s*cthulhu", False),
     ("COC2010", r"クトゥルフ\s*2010", False),
-    ("COC2015", r"クトゥルフ\s*2015", False),
+    ("COC2015", r"クトゥルフ\s*2015|(ルルブ|ルールブック)\s*2015", False),
     ("CULT_NOW", r"カルト\s*・?\s*ナウ", False),
     ("MALLEUS", r"マレウス\s*・?\s*モンストロルム", False),
     ("KEEPER_COMPANION", r"キーパー\s*・?\s*コンパニオン", False),
 ]
-_SUPPLEMENT_USE = r"(を|の)?\s*(使用|準拠|必須|必要|前提|対応|採用|推奨|ルール)"
+_SUPPLEMENT_USE = r"(を|の)?\s*(所持|使用|準拠|必須|必要|前提|対応|採用|推奨|ルール)"
 _SUPPLEMENT_RX = [
     (code, re.compile(rf"(?:{name})[^、。]{{0,12}}サプリ|サプリ[^、。]{{0,12}}(?:{name})"
                       rf"|[『「【]\s*(クトゥルフ神話TRPG\s*)?(サプリ(メント)?\s*)?(?:{name})[^』」】]{{0,10}}[』」】]\s*{_SUPPLEMENT_USE}"
@@ -100,16 +100,37 @@ _SUPPLEMENT_LIST = re.compile(r"(使用|必要|推奨)?\s*サプリ(メント)?\
 _SUPPLEMENT_NAME = [(code, re.compile(name, re.I)) for code, name, _ in SUPPLEMENTS]
 
 
+# "なくても遊べますが、あるとより楽しめます" / "所持を推奨": not needed, but recommended.
+_SUPPLEMENT_OPTIONAL = re.compile(r"あると|あれば|推奨|おすすめ|オススメ|お勧め|お薦め")
+
+
+def supplement_support(ln: str) -> str:
+    """SUPPLEMENT when the line says the book is used or needed;
+    SUPPLEMENT_RECOMMENDED when it is only recommended."""
+    return "SUPPLEMENT_RECOMMENDED" if _SUPPLEMENT_OPTIONAL.search(ln) and not re.search(r"必須|必要です|前提", ln) else "SUPPLEMENT"
+
+
 def extract_supplements(ln: str) -> list[str]:
-    """Supplement codes one line says the scenario uses."""
-    if _SUPPLEMENT_NEG.search(ln):
+    """Supplement codes one line says the scenario uses or recommends."""
+    if _SUPPLEMENT_NEG.search(ln) and not _SUPPLEMENT_OPTIONAL.search(ln):
         return []
     listed = _SUPPLEMENT_LIST.search(ln)
     rest = ln[listed.end():] if listed else ""
-    return [code for (code, rx), (_, name) in zip(_SUPPLEMENT_RX, _SUPPLEMENT_NAME) if rx.search(ln) or name.search(rest)]
+    found = [code for (code, rx), (_, name) in zip(_SUPPLEMENT_RX, _SUPPLEMENT_NAME) if rx.search(ln) or name.search(rest)]
+    # "ルルブ2015とマレウス・モンストロルムの所持が必須", "サプリ「A」「B」があると…":
+    # every other book named on the line; "「クトゥルフと帝国」はなくても遊べますが、
+    # あると…" names a recommended one.
+    if found or (_SUPPLEMENT_OPTIONAL.search(ln) and re.search(r"(なく|無く|なし|無し)\s*(て)?\s*も", ln)):
+        found += [code for code, name, place in SUPPLEMENTS if not place and code not in found and re.search(name, ln, re.I)]
+    return found
 
 
 _COC6_EXPLICIT = re.compile(r"CoC\s*6|6版|6th", re.I)
+_SYS_HEADER = re.compile(r"[\[【■◆●・#▽▼]?\s*(使用|対応)?\s*システム\s*[】\]]?\s*[:：]?", re.I)
+_SYS_HEADER_STOP = re.compile(r"^[\[【■◆●#▽▼]")
+# "（6版プレイ用補遺あり）": another edition the book also covers.
+_RULEBOOK_FOR = re.compile(r"ルールブック\s*[「『][^」』]+[」』]\s*に\s*対応した\s*シナリオ")
+_SYS_EXTRA = re.compile(r"補遺|プレイ用|にも対応|も対応|変換|対応可")
 
 
 # Rights notices name the game ("『クトゥルフ神話TRPG』の二次創作物") without saying
@@ -120,16 +141,40 @@ _RIGHTS_LINE = re.compile(r"権利を有する|二次創作|著作権|ガイド�
 def extract_systems(text: str) -> list[Hit]:
     hits: list[Hit] = []
     seen = set()
-    for ln in lines(text):
+    ls = lines(text)
+    for i, ln in enumerate(ls):
         if _RIGHTS_LINE.search(ln):
             continue
+        # "■対応システム" alone on a line: the systems are on the next lines
+        # ("新クトゥルフ神話TRPG（7版）" / "（6版プレイ用補遺あり）").
+        if _SYS_HEADER.fullmatch(ln):
+            body = []
+            for x in ls[i + 1:i + 6]:
+                if re.fullmatch(r"[―\-=ー─━_~・\s]+", x):
+                    continue  # a rule line under the heading
+                if _SYS_HEADER_STOP.match(x) or not any(rx.search(x) for _, rx in _SYS_PATTERNS):
+                    break
+                body.append(x)
+            for x in body:
+                for code, rx in _SYS_PATTERNS:
+                    if not rx.search(x) or (code == "COC6" and _SYS_PATTERNS[0][1].search(x) and not _COC6_EXPLICIT.search(x)):
+                        continue
+                    support = "SUPPORTED" if _SYS_EXTRA.search(x) else "NATIVE"
+                    if (code, support) not in seen:
+                        seen.add((code, support))
+                        hits.append(Hit("scenario_systems", {"system_code": code, "support_type": support}, f"{ln} {x}"))
+            continue
+        support = supplement_support(ln)
         for code in extract_supplements(ln):
-            if (code, "SUPPLEMENT") not in seen:
-                seen.add((code, "SUPPLEMENT"))
-                hits.append(Hit("scenario_systems", {"system_code": code, "support_type": "SUPPLEMENT"}, ln))
+            if code not in seen:
+                seen.add(code)
+                hits.append(Hit("scenario_systems", {"system_code": code, "support_type": support}, ln))
         if re.search(r"変換|コンバート|convert", ln, re.I):
             support = "CONVERSION_PATCH" if re.search(r"パッチ|変換表|変換データ|patch", ln, re.I) else "CONVERTIBLE"
-        elif re.match(r"^[\[【■◆●・]?\s*(使用)?システム|^system", ln, re.I):
+        elif re.match(r"^[\[【■◆●・#▽▼]?\s*(使用)?システム|^system", ln, re.I):
+            support = "NATIVE"
+        elif _RULEBOOK_FOR.search(ln):
+            # "ルールブック「新クトゥルフ神話TRPG」に対応したシナリオです": written for it.
             support = "NATIVE"
         elif "対応" in ln:
             support = "SUPPORTED"
@@ -184,9 +229,9 @@ def extract_systems_meta(title: str, tags: list[str]) -> list[Hit]:
 
 # -- session modes --------------------------------------------------------------
 _RANGE_PL = re.compile(
-    r"(?:PL|プレイヤー(?:人数)?|人\s*数|探索者数?|共鳴者数?)\s*(?:は|数)?\s*[::.…】\]]*\s*(?:新規|固定)?\s*(\d+)\s*(?:人|名)?"
+    r"(?:PL|プレイヤー(?:人数)?|人\s*数|探索者数?|共鳴者数?)\s*(?:は|数)?\s*[::.…】\]\-－ー]*\s*(?:新規|固定)?\s*(\d+)\s*(?:人|名)?"
     r"\s*(?:(~|から)\s*(\d+)?\s*(?:人|名)?)?\s*(前後)?"
-    r"(?!\s*(?:~\s*\d+\s*)?(?:歳|才|年|月|日|時|分|%))"
+    r"(?!\s*(?:~\s*\d+\s*)?(?:歳|才|年|月|日|時|分|%))(?!\s*(?:人|名)?\s*に対し)"
     r"|(\d+)\s*(?:人|名)?\s*(?:~\s*(\d+)\s*)?(?:PL(?!発言|視点|目線|側)|人用|人\s*(?:PL\s*)?固定|名\s*(?:PL\s*)?固定)", re.I)
 OPEN_PLAYERS_MAX = 4  # "1人から" / "1人~捌けるだけ" are read as up to 4 (reviewer's convention)
 # Translated blurbs repeat the play info, sometimes with other numbers.
@@ -233,6 +278,7 @@ _ONE_ON_ONE = re.compile(r"タイマン|KP\s*1\s*[::/]?\s*PL\s*1|一対一|1\s*�
 _ONE_ON_ONE_NEG = re.compile(
     r"(タイマン|一対一|1\s*対\s*1).{0,12}?(不可|非推奨|推奨(し|致し|いたし)?(ない|ません|かね)|でき(ない|ません)|出来(ない|ません)|"
     r"向き?ません|向いて(い)?ない|不向き|NG|×|お控え|ご遠慮|(では|じゃ)(ない|ありません)|対応(して(い|お)?り?)?ません|対象外|想定(して(い|お)?り?)?(ない|ません))|(不可|非推奨)\s*[::]?\s*タイマン")
+_OTHER_WORK = re.compile(r"番外編|おまけ|特典|限定|含まれ|付属|同梱|収録")
 _SECRET = re.compile(r"秘匿")
 _SECRET_NEG = re.compile(r"秘匿\s*(HO|ハンドアウト)?\s*(は|が)?\s*(なし|無し|ありません|ございません|無い|ない)")
 
@@ -274,7 +320,7 @@ def extract_session_modes(text: str) -> list[Hit]:
         if _TRANSLATION.search(ln):
             continue
         # "【人数】" alone on a line: the value is on the next one.
-        if re.fullmatch(r"[【\[■●◆]?\s*(?:プレイ|推奨)?人\s*数\s*[】\]]?\s*[::]?", ln) and i + 1 < len(ls):
+        if re.fullmatch(r"[【\[■●◆#▽▼]?\s*(?:プレイ|推奨|プレイヤー)?人\s*数\s*[】\]]?\s*[::]?", ln) and i + 1 < len(ls):
             ln = "人数:" + ls[i + 1]
         stated = ln
         for rx, repl in _WITH_FACILITATOR:
@@ -289,7 +335,8 @@ def extract_session_modes(text: str) -> list[Hit]:
                   else _player_ranges(ln))
         lo, hi = ranges[0] if ranges else (None, None)
         multi = next((r for r in ranges if r[1] >= 2), None)
-        gmless = bool(_GMLESS.search(ln)) and not _GMLESS_NEG.search(ln)
+        # "書籍版にはKPレス「…」が含まれます": a bonus work, not this one.
+        gmless = bool(_GMLESS.search(ln)) and not _GMLESS_NEG.search(ln) and not (lo is None and _OTHER_WORK.search(ln))
         # A question ("タイマンでまわしちゃだめ?") is not a statement of the mode.
         one_on_one = bool(_ONE_ON_ONE.search(ln)) and not _ONE_ON_ONE_NEG.search(ln) and not re.search(r"[?？]\s*$", ln)
         if not one_on_one and multi and multi[0] <= 2 and _COMPANION_OK.search(ln):
@@ -312,7 +359,8 @@ def extract_session_modes(text: str) -> list[Hit]:
                 # "4人（GMなし）or 5人（GM+PL4人）": also playable with a facilitator.
                 add("MULTI_PL", multi[0], multi[1], "UNKNOWN", "UNKNOWN", ln, 1 if multi[0] == multi[1] else 0)
             continue
-        if re.search(r"ソロ(シナリオ|用|向け|プレイ)?", ln):
+        # "ほぼソロ探索のシナリオ" describes the story; "書籍版限定のソロシナリオ" is a bonus work.
+        if re.search(r"ソロ(シナリオ|用|向け|プレイ)?", ln) and not re.search(r"ソロ\s*探索", ln) and not (lo is None and _OTHER_WORK.search(ln)):
             add("SOLO", 1, 1, facilitator or "UNKNOWN", companion or "UNKNOWN", ln)
             continue
         if lo is None:
@@ -320,7 +368,9 @@ def extract_session_modes(text: str) -> list[Hit]:
         if lo == hi == 1:
             # One player with a KP; a named KPC/DPC makes it a タイマン table.
             add("ONE_ON_ONE" if companion else "SOLO", 1, 1, facilitator or "UNKNOWN", companion or "UNKNOWN", ln)
-            if not companion:
+            if not companion and re.search(r"NPC", ln):
+                hits[-1].value["companion_role"] = "NPC"  # "PL1名で遊ぶ場合、汎用NPCを使用する"
+            elif not companion:
                 hits[-1].value["from_count"] = 1  # "1PL" alone; a KPC elsewhere makes it タイマン
         else:
             add("MULTI_PL", lo, hi, facilitator or "UNKNOWN", companion or "UNKNOWN", ln, 1 if lo == hi else 0)
@@ -405,7 +455,7 @@ def default_roles(v: dict, systems: set[str]) -> dict:
 # -- durations ------------------------------------------------------------------
 # One time: "3時間", "1時間半", "1時間30分", "90分", "9h", "2.5時間".
 _T = r"(\d+(?:\.\d+)?)\s*(時間|h(?![a-z])|分)?\s*(半|\d+\s*分)?"
-_TIME = re.compile(rf"(約|およそ|目安)?\s*{_T}\s*(?:(~|から|-)\s*(?:{_T})?)?(程度|前後|ほど|以上)?", re.I)
+_TIME = re.compile(rf"(約|およそ|目安)?\s*{_T}\s*(?:(~|から|-)\s*(?:{_T})?)?(程度|前後|ほど|以上)?(?!\s*で\s*(?:分か|わか|読め|解る))", re.I)
 
 
 def _minutes(v: str, unit: str, extra: str | None) -> int:
@@ -451,6 +501,26 @@ def _count(s: str) -> int:
 _EPISODE_HEAD = re.compile(r"^[・●■▶◆]?\s*(其ノ[一二三四五六七八九十\d]|第\s*[\d一二三四五六七八九十]+\s*(話|章|幕)|Act\s*\d|Chapter\s*\d|EP\s*\d)", re.I)
 
 
+_EPISODE_TIME = re.compile(r"(?:(\d+)\s*~\s*)?(\d+)\s*話\s*[…:：.・]+\s*([^、,/]+)")
+
+
+def _campaign_total(ln: str):
+    """Sum of per-episode times on one line ("0話…1h、1~6話…3h~4h"), or None."""
+    if not re.search(r"全\s*\d+\s*話", ln):
+        return None
+    lo = hi = 0
+    parts = _EPISODE_TIME.findall(ln)
+    if len(parts) < 2:
+        return None
+    for a, b, seg in parts:
+        r = _time_range(seg)
+        if not r:
+            return None
+        n = int(b) - int(a) + 1 if a else 1
+        lo, hi = lo + r[0] * n, hi + r[1] * n
+    return lo, hi
+
+
 def extract_durations(text: str) -> list[Hit]:
     """Play time. A time that does not say text or voice counts as a voice
     session (the reviewer's convention)."""
@@ -458,7 +528,7 @@ def extract_durations(text: str) -> list[Hit]:
     ls = lines(text)
     for i, ln in enumerate(ls):
         # "◆時間" alone on a line: the value is on the next one.
-        if re.fullmatch(r"[【\[■●◆・]?\s*(?:プレイ|所要|想定)?\s*時\s*間\s*[】\]]?\s*[:：]?", ln) and i + 1 < len(ls):
+        if re.fullmatch(r"[【\[■●◆・#▽▼]?\s*(?:プレイ|所要|想定)?\s*時\s*間\s*[】\]]?\s*[:：]?", ln) and i + 1 < len(ls):
             ln = "時間:" + ls[i + 1]
         # Notes right under the line ("※全エピソードを遊ぶ場合の時間") qualify it.
         notes = []
@@ -466,6 +536,13 @@ def extract_durations(text: str) -> list[Hit]:
             if not nl.startswith(("※", "*")):
                 break
             notes.append(nl)
+        # Story text ("1時間程度のエキシビションマッチ…のテストプレイ") is not play info.
+        if len(ln) > 80 and not re.search(r"(プレイ|所要|想定|推定)\s*時\s*間|ボイセ|テキセ", ln):
+            continue
+        # A campaign's episode list: "全7話：0話…1h、1～6話…3h~4h程度".
+        if (camp := _campaign_total(ln)):
+            hits.append(Hit("scenario_durations", {"mode": "VOICE", "scope": "ALL_EPISODES", "min_minutes": camp[0], "max_minutes": camp[1], "approximate": 1}, ln))
+            continue
         # A play-time line names it ("プレイ時間", "所要", "ボイセ") or gives the
         # time as a labelled value ("・駐車場:1時間"); a tagline like
         # 「たった1時間のふたりごと」 does neither.

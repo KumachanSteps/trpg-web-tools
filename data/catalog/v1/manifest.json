@@ -1,18 +1,18 @@
 {
  "schema": "catalog/v1",
- "version": "78b8fa49191b34ba",
- "generated_at": "2026-11-15T18:15:13+00:00",
+ "version": "48eb27153a234997",
+ "generated_at": "2026-11-16T06:01:14+00:00",
  "sample": false,
  "license": "CC BY 4.0",
  "attribution": "シナリオカタログ © KumachanSteps / TRPG WEBツール観測所（CC BY 4.0）",
  "counts": {
-  "scenarios": 368
+  "scenarios": 366
  },
  "shards": [
   {
    "path": "scenarios-000.json",
-   "count": 368,
-   "sha256": "b8ce2502f62acee71c3db79abd39e402ad10bbed7d43817ec1a4da781df25c76"
+   "count": 366,
+   "sha256": "6370ab498fc60803107aa8d0a8eec1e4c0f7eb134aa1b94f241d927f289f6992"
   }
  ]
 }
