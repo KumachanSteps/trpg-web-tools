@@ -686,9 +686,8 @@
           <span></span>
         </label>
         <button class="task-main" type="button">
-          <strong>${esc(task.title)}</strong>
-          <small>${esc(task.scenario)}　${esc(task.due || '期限なし')}</small>
-          <span class="chip ${task.status === '完了' ? 'green' : task.status === '期限切れ' ? 'red' : 'amber'}">${esc(task.status || '未着手')}</span>
+          <span class="task-title-line"><strong>${esc(task.title)}</strong><span class="chip ${task.status === '完了' ? 'green' : task.status === '期限切れ' ? 'red' : 'amber'}">${esc(task.status || '未着手')}</span></span>
+          <small class="task-sub"><span>${esc(task.scenario)}</span><span class="task-due">${esc(task.due || '期限なし')}</span></small>
         </button>
         <button class="task-delete" type="button" aria-label="${esc(task.title)}を削除" title="タスクを削除">×</button>
         <span class="drag-grip" aria-hidden="true">⋮⋮</span>
@@ -796,7 +795,7 @@
       <h4>関連リンク</h4>
       <div class="links">${(session.links || []).map(link => `<a class="link-pill" href="${esc(link.url || '#')}" target="_blank" rel="noopener noreferrer">🔗 ${esc(link.label)} <span>↗</span></a>`).join('') || '<p>未登録</p>'}</div>
       <h4>${session.series ? 'シリーズ共通の準備タスク' : '準備タスク'}</h4>
-      <div class="detail-tasks">${detailTasks.map(task => `<div class="task-row"><label class="task-check detail-task-check" aria-label="${esc(task.title)}を完了にする"><input type="checkbox" data-task-toggle="${esc(task.id)}" data-session-id="${esc(task.sessionId)}" ${task.done ? 'checked' : ''} /><span aria-hidden="true"></span></label><span>${esc(task.title)}${seriesSessions.length > 1 ? `<small class="task-origin">${esc(fmtDate(task.sessionStart))} · ${esc(task.sessionScenario)}</small>` : ''}</span><span class="task-row-meta">${esc(task.due || '')} <span class="chip">${esc(task.status || '')}</span><button class="task-row-delete" type="button" data-task-id="${esc(task.id)}" data-session-id="${esc(task.sessionId)}" aria-label="タスクを削除">×</button></span></div>`).join('') || '<p>未登録</p>'}</div>
+      <div class="detail-tasks">${detailTasks.map(task => `<div class="task-row ${task.done ? 'done' : ''}"><label class="task-check detail-task-check" aria-label="${esc(task.title)}を完了にする"><input type="checkbox" data-task-toggle="${esc(task.id)}" data-session-id="${esc(task.sessionId)}" ${task.done ? 'checked' : ''} /><span aria-hidden="true"></span></label><span class="task-row-text"><span class="task-row-title">${esc(task.title)}</span>${task.due ? `<small class="task-row-due">${esc(task.due)}</small>` : ''}${seriesSessions.length > 1 ? `<small class="task-origin">${esc(fmtDate(task.sessionStart))} · ${esc(task.sessionScenario)}</small>` : ''}</span><span class="task-row-meta"><span class="chip">${esc(task.status || '')}</span><button class="task-row-delete" type="button" data-task-id="${esc(task.id)}" data-session-id="${esc(task.sessionId)}" aria-label="タスクを削除">×</button></span></div>`).join('') || '<p>未登録</p>'}</div>
       ${seriesSessions.length > 1 ? `<h4>同じシリーズ</h4><div class="series-list">${seriesSessions.map(item => `<button class="series-link ${item.id === session.id ? 'is-current' : ''}" type="button" data-series-id="${esc(item.id)}"><b>${esc(fmtDate(item.start))}</b>　${esc(item.scenario)}</button>`).join('')}</div>` : ''}
       <p>${esc(session.memo || '')}</p>
       <div class="detail-actions"><button id="sendLogBtn" class="hub-btn is-note bridge-button" type="button">↗ 卓ログトラッカーへ送る</button><button id="readLogBtn" class="hub-btn bridge-button" type="button">↙ 卓ログから情報を補完</button><button id="generateTasksBtn" class="hub-btn is-blue bridge-button" type="button">＋ タスク生成</button></div>`;
