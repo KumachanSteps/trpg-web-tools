@@ -50,7 +50,7 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.31') || !html.includes('session_check_calendar.js?v=0.31') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.33') || !html.includes('session_check_calendar.js?v=0.33') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -115,7 +115,6 @@ for (const contract of [
   '.status-chip.status-active',
   '.status-chip.status-completed',
   '.event.status-active',
-  '.task-origin',
 ]) {
   if (!css.includes(contract)) throw new Error(`Missing independent-panel layout contract: ${contract}`);
 }
@@ -185,7 +184,7 @@ for (const contract of [
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.31'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.33'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
@@ -203,6 +202,10 @@ if (js.includes('id="editBtn"') || js.includes('id="deleteBtn"') || !html.includ
 
 if (!html.includes('<span class="hub-icon calendar-app-icon"') || html.includes('<span class="hub-icon" aria-hidden="true">▦</span>')) {
   throw new Error('Calendar header must use the SVG calendar icon');
+}
+
+if (js.includes('task-origin') || js.includes('sessionScenario') || css.includes('.task-origin')) {
+  throw new Error('Series task rows should not repeat the event date and scenario');
 }
 
 for (const option of ['value="tentative">調整中', 'value="scheduled" selected>予定確定', 'value="active">現行', 'value="completed">完了']) {
