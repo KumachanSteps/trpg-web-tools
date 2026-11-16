@@ -544,7 +544,6 @@ button.mini-card:hover { border-color: var(--ink-soft); }
 .task-row-text { display: grid; gap: 1px; }
 .task-row-due { color: var(--muted); font-size: 11px; line-height: 1.3; }
 .detail-task-check { flex: 0 0 22px; }
-.task-origin { display: block; margin-top: 2px; color: var(--faint); font-size: 9px; font-weight: 500; }
 .task-row-meta { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: 6px; }
 .task-row-meta .chip { margin: 0; }
 .series-list { display: grid; gap: 6px; }
