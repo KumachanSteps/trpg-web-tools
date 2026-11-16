@@ -50,7 +50,7 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.33') || !html.includes('session_check_calendar.js?v=0.33') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.34') || !html.includes('session_check_calendar.js?v=0.34') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -184,7 +184,7 @@ for (const contract of [
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.33'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.34'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
@@ -206,6 +206,10 @@ if (!html.includes('<span class="hub-icon calendar-app-icon"') || html.includes(
 
 if (js.includes('task-origin') || js.includes('sessionScenario') || css.includes('.task-origin')) {
   throw new Error('Series task rows should not repeat the event date and scenario');
+}
+
+if (!js.includes("series: session.series || ''")) {
+  throw new Error('Calendar bridge should include the series name');
 }
 
 for (const option of ['value="tentative">調整中', 'value="scheduled" selected>予定確定', 'value="active">現行', 'value="completed">完了']) {

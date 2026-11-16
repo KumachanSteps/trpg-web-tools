@@ -4,7 +4,7 @@ const html = readFileSync(new URL('../tools/session-log-tool/index.html', import
 const css = readFileSync(new URL('../tools/session-log-tool/css/log_tool_style.css', import.meta.url), 'utf8');
 const js = readFileSync(new URL('../tools/session-log-tool/js/log_tool.js', import.meta.url), 'utf8');
 
-if (!html.includes('v1.107') || !html.includes('log_tool_style.css?v=1.107.0') || !html.includes('log_tool.js?v=1.107')) {
+if (!html.includes('v1.108') || !html.includes('log_tool_style.css?v=1.108.0') || !html.includes('log_tool.js?v=1.108')) {
   throw new Error('Session log tracker version assets were not updated');
 }
 
@@ -27,8 +27,19 @@ for (const contract of [
   if (!css.includes(contract)) throw new Error(`Missing responsive no-wrap contract: ${contract}`);
 }
 
-if (!js.includes('const APP_VERSION = "v1.107"')) {
+if (!js.includes('const APP_VERSION = "v1.108"')) {
   throw new Error('Session log tracker app version was not updated');
+}
+
+for (const contract of [
+  'CALENDAR_PENDING_IMPORT_KEY',
+  'receivePendingCalendarImport',
+  'calendarImportItemToRow',
+  'consumePendingCalendarImport',
+  '卓準備カレンダーから卓を追加',
+  'calendarImportWasActive',
+]) {
+  if (!js.includes(contract)) throw new Error(`Missing calendar receiver contract: ${contract}`);
 }
 
 console.log('session-log responsive smoke passed: table title and actions share one grid row');
