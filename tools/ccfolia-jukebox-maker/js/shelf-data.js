@@ -158,7 +158,12 @@
       ['275b9_v0-xk', 'Sagittarius（OpenTracks）', 3],
       ['9EOavqZG6mA', '情動カタルシス（OpenTracks）', 3],
       ['zOgZXB-FftA', 'EpicBattle J（PeriTune）', 3],
-      ['KXr37qaQ9TQ', 'トランセンド（OpenTracks）', 3]
+      ['KXr37qaQ9TQ', 'トランセンド（OpenTracks）', 3],
+      ['X3po362vhW0', 'Puppeteer（PeriTune）', 8],
+      ['xg8r8QnV2Ok', 'Dark Fairies（PeriTune）', 8],
+      ['38RvGvpb8Y0', 'Crimson Moon（PeriTune）', 8],
+      ['eN6XI-e2CEs', '魔王の魂 オーケストラ11（魔王魂）', 8],
+      ['T_3r2AKxYzM', '宿敵との戦い（OpenTracks）', 8]
     ] },
     { id: 'epilogue', since: 6, tracks: [
       ['hvJSNTvahnE', 'Epilogue（OpenTracks）', 6],
@@ -230,7 +235,16 @@
       ['CPXoMRwbZxU', 'うららかな日の楽しいお散歩（OpenTracks）', 3],
       ['CwfnXmywNV0', 'お散歩日和（OpenTracks）', 3],
       ['ivKtNg3UVvM', '草泥棒（OpenTracks）', 3],
-      ['OnIv82UGqhQ', 'ダサいダンスミュージック（OpenTracks）', 3]
+      ['OnIv82UGqhQ', 'ダサいダンスミュージック（OpenTracks）', 3],
+      ['gTdsddApStM', 'Spooktacular（PeriTune）', 8],
+      ['_FLvB80m7rM', 'Spooktacular2（PeriTune）', 8],
+      ['GaILzmjKZDM', 'Spook（PeriTune）', 8],
+      ['ySANjE2HEfc', 'Spook5（PeriTune）', 8],
+      ['sC0PyH79IwE', 'Cackle Cauldron（PeriTune）', 8],
+      ['LAWL-iBMCcM', 'ハロウィンパーティー（OpenTracks）', 8],
+      ['EUMFEo4ksxk', 'ハロウィンポルカ（OpenTracks）', 8],
+      ['u0oMijzmURI', '魔女っ娘ハロウィン大作戦（OpenTracks）', 8],
+      ['Lq3LI6CYWSk', 'Halloween Waltz（OpenTracks）', 8]
     ] },
     { id: 'moving', tracks: [
       ['dc0oRjmZtQs', 'BGM193_Glory'],
@@ -298,7 +312,9 @@
       ['3D-FRWkzyaw', 'Loneliness（魔王魂）', 3],
       ['fX-UqsfxBK8', '泡沫の夢（OpenTracks）', 3],
       ['RcyEMBXuMMk', '悲しい記憶（OpenTracks）', 3],
-      ['LyAtr5D49y0', '雨に消える声（OpenTracks）', 3]
+      ['LyAtr5D49y0', '雨に消える声（OpenTracks）', 3],
+      ['-MUrlQdlJxo', 'Grief2（PeriTune）', 8],
+      ['et3LAvulwpI', 'Glass Cradle（PeriTune）', 8]
     ] },
     { id: 'unease', tracks: [
       ['Nfq8trmYyYo', '不穏（DOVA-SYNDROME）'],
@@ -363,7 +379,12 @@
       ['cjXpkqMsf6Y', 'Black Mass（OpenTracks）', 3],
       ['nKoAH-_e1OU', 'Retribution from the Dead（OpenTracks）', 3],
       ['G9mfStPbzMk', '闇の中に囚われしもの（OpenTracks）', 3],
-      ['Uk77rLz9lc0', '弟切草（OpenTracks）', 3]
+      ['Uk77rLz9lc0', '弟切草（OpenTracks）', 3],
+      ['AJOIm1rSB0g', '異形（OpenTracks）', 8],
+      ['js8K1ctfkLE', '異形の祭り（OpenTracks）', 8],
+      ['PfROCX0tRTg', 'Forgotten Past（PeriTune）', 8],
+      ['581iXkCU7yQ', 'Creep（PeriTune）', 8],
+      ['JWtVbfZQle4', 'Deep Frost Calling（PeriTune）', 8]
     ] },
     { id: 'digital', tracks: [
       ['_wwur8OsNd8', 'cyber'],
@@ -433,7 +454,17 @@
       ['5RuFTqsLXAA', 'Solemnity2（PeriTune）', 3],
       ['vWMTZVW7oyc', 'Rosa Nera（PeriTune）', 3],
       ['VjT4j3GDFvA', '愛しのファムファタル（nonai sound）', 3],
-      ['-7G5GxrYutI', 'NOIR（OpenTracks）', 3]
+      ['-7G5GxrYutI', 'NOIR（OpenTracks）', 3],
+      ['BCLyxchT_H4', 'Midnight Masquerade（PeriTune）', 8],
+      ['dkEOtrDdtNc', 'Enchanter3（PeriTune）', 8],
+      ['A9pEAvMnl6Q', 'ChoirWaltz（PeriTune）', 8],
+      ['ioV04ndvBqE', '月下舞踏（OpenTracks）', 8],
+      ['zzts1Nft9XM', '謗りが蔓延る舞踏会（OpenTracks）', 8],
+      ['O5Q409fcIAw', '魔王（OpenTracks）', 8],
+      ['bc_WaORjB4k', '魔王城（OpenTracks）', 8],
+      ['oRp-j9XCtu4', '大魔王（OpenTracks）', 8],
+      ['Ew41bjO76io', '宵闇ヴィクトリア（OpenTracks）', 8],
+      ['px7rADu6T3c', 'ヴァンパイアガール（OpenTracks）', 8]
     ] },
     { id: 'wafu', since: 4, tracks: [
       ['Ls55uJx9Ne0', '和テイスト（OpenTracks）', 4],
@@ -635,7 +666,9 @@
       ['KcBRcEe_ZlA', 'Hesitation（PeriTune）', 6],
       ['aEtc-L7Eadg', 'Snowy_Day3（PeriTune）', 6],
       ['5mmHy8AoHTA', 'Entangle（PeriTune）', 6],
-      ['XYPpvr5PAcw', 'Cryptic_Canvas（PeriTune）', 6]
+      ['XYPpvr5PAcw', 'Cryptic_Canvas（PeriTune）', 6],
+      ['fjmUiWNqLhk', 'Solemnity（PeriTune）', 8],
+      ['1YRjJqrFsps', 'Pray Organ（PeriTune）', 8]
     ] },
     { id: 'ncs', since: 6, tracks: [
       ['TW9d8vYrVFQ', 'Sky High（Elektronomia）', 6],
@@ -658,13 +691,23 @@
       ['EZUPEoj3Qjs', 'Samurai（Jim Yosef）', 6],
       ['__CRWE-L45k', 'Symbolism（Electro-Light）', 6],
       ['1WP_YLn1D1c', 'Eclipse（Jim Yosef）', 6]
+    ] },
+    { id: 'jingle', since: 8, tracks: [
+      ['Lryrm9lTZUE', 'Jingle Halloween 1-5（PeriTune）', 8],
+      ['tIiOQN4ZeQ0', '教会の鐘と神聖なコーラスのジングル（OpenTracks）', 8],
+      ['EAl76PWp1i0', 'オルガンと鐘の音のジングル（OpenTracks）', 8],
+      ['sdQ18e5-oPU', '鐘の音とコーラスのジングル（OpenTracks）', 8],
+      ['SGpLSVWDKPk', 'オルガンジングル（OpenTracks）', 8],
+      ['G_vdC4iD5eM', 'ゴシック・ジングル（OpenTracks）', 8],
+      ['jKiveDBMmHo', 'ヴァンパイア・ジングル（OpenTracks）', 8],
+      ['C8M5y70P-Zs', '怪しげなジングル（OpenTracks）', 8]
     ] }
   ];
 
   // タブは1列に順番どおり並べる（場面 → 雰囲気 → 舞台 → 音楽のジャンル）。版6でこの並びにした（保存済みの棚も1回だけ並べ替える）。
   // 版6で「ハウス」を大人っぽいクラブ・ラウンジの「アダルト」（id: adult）にした。保存済みの house タブは adult に読み替え、DROPPED の曲を外す。
   // 初期の曲を足したら上げる。曲の3つ目の数字は、その曲を足したときの版。タブの since は、そのタブを足したときの版
-  const VERSION = 7;
+  const VERSION = 8;
 
   // YouTube で埋め込み再生できなくなった初期の曲と、その代わり（保存済みの棚でも差し替える）
   const REPLACED = {
