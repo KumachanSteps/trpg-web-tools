@@ -1,6 +1,6 @@
 {
   "id": "horror.blood-spray",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-16",
   "order": 10,
@@ -16,10 +16,10 @@
     "zh": "从角落飞溅的血"
   },
   "desc": {
-    "ja": "画面の下の隅から、血がななめ上へ勢いよく飛び散る。",
-    "en": "Blood sprays diagonally upward from a bottom corner of the screen.",
-    "ko": "화면 아래 구석에서 피가 비스듬히 위로 세차게 튄다.",
-    "zh": "鲜血从画面下方角落斜向上猛地飞溅。"
+    "ja": "画面の下の隅から、血が向かいの上の隅へ向かってななめに勢いよく飛び散る。",
+    "en": "Blood sprays diagonally from a bottom corner toward the opposite top corner.",
+    "ko": "화면 아래 구석에서 피가 맞은편 위 구석을 향해 비스듬히 세차게 튄다.",
+    "zh": "鲜血从画面下方角落朝对面上角斜向猛地飞溅。"
   },
   "tags": [
     "血",
@@ -82,15 +82,29 @@
       "key": "angle",
       "type": "range",
       "label": {
-        "ja": "飛ぶ向き（傾き）",
-        "en": "Angle",
-        "ko": "튀는 방향(기울기)",
-        "zh": "飞溅角度"
+        "ja": "向きの調整（0 で向かいの隅へ）",
+        "en": "Aim (0 = opposite corner)",
+        "ko": "방향 조정 (0이면 맞은편 구석)",
+        "zh": "方向调整（0＝对角）"
       },
-      "min": 20,
-      "max": 70,
+      "min": -30,
+      "max": 30,
       "step": 5,
-      "default": 40
+      "default": 0
+    },
+    {
+      "key": "reach",
+      "type": "range",
+      "label": {
+        "ja": "届く距離",
+        "en": "Reach",
+        "ko": "닿는 거리",
+        "zh": "飞溅距离"
+      },
+      "min": 0.5,
+      "max": 1.2,
+      "step": 0.05,
+      "default": 1
     },
     {
       "key": "size",

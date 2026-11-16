@@ -37,14 +37,20 @@ export default {
     const fade = stay ? 1 : 1 - smooth((t - 0.65) / 0.35);
     if (fade <= 0.003) return;
     // 飛ぶ向き（画面の上を 0 として、右へ傾ける角度）と、引きのばし
-    const ang = (P.angle ?? 40) * Math.PI / 180;
-    const k = 1.35 * u * size;           // 絵 540px → 画面の大きさ
-    const along = 2.2, across = 0.95;     // 飛ぶ向きに長く
+    // 既定は「向かいの上の隅」へ向かう向き（画面の対角線）。P.angle で傾け直せる（0 で対角線そのまま）
+    const diag = Math.atan2(W + 24 * u, H + 30 * u);
+    const ang = diag + (P.angle ?? 0) * Math.PI / 180;
+    // 向かいの隅までの長さ。いちばん遠い飛沫がそこへ届くように引きのばす
+    const dist = Math.hypot(W + 24 * u, H + 30 * u);
+    const k = 1.35 * u * size;
+    const reach = P.reach ?? 1;           // 絵 540px → 画面の大きさ
+    // 写真の血の、中心からいちばん遠い飛沫までが約 300px（絵の大きさで）。それが dist に届く倍率
+    const along = (dist * reach) / (300 * k * 1.0), across = 0.72;     // 飛ぶ向きに長く
     const layers = [
       // 細い飛沫まで含む全体：少し遅れて、遠くまで
       { im: st.all, R: 470 * easeOut((t - 0.03) / 0.3, 3), a: smooth((t - 0.04) / 0.12), s: 0.82 + 0.18 * easeOut((t - 0.04) / 0.4), blur: 0 },
       // 中心の濃い所：先に、近くに
-      { im: st.core, R: 300 * easeOut(t / 0.18, 3), a: smooth(t / 0.06), s: 0.7 + 0.3 * easeOut(t / 0.3), blur: 5 * (1 - easeOut(t / 0.25)) }
+      { im: st.core, R: 240 * easeOut(t / 0.18, 3), a: smooth(t / 0.06), s: 0.7 + 0.3 * easeOut(t / 0.3), blur: 5 * (1 - easeOut(t / 0.25)) }
     ];
     const tc = st.tmp.getContext('2d');
     for (const l of layers) {
