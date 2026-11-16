@@ -1,0 +1,135 @@
+{
+  "id": "horror.blood-spray",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-16",
+  "order": 10,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "隅から飛び散る血",
+    "en": "Blood spray from the corner",
+    "ko": "구석에서 튀는 피",
+    "zh": "从角落飞溅的血"
+  },
+  "desc": {
+    "ja": "画面の下の隅から、血がななめ上へ勢いよく飛び散る。",
+    "en": "Blood sprays diagonally upward from a bottom corner of the screen.",
+    "ko": "화면 아래 구석에서 피가 비스듬히 위로 세차게 튄다.",
+    "zh": "鲜血从画面下方角落斜向上猛地飞溅。"
+  },
+  "tags": [
+    "血",
+    "血しぶき",
+    "ホラー",
+    "blood",
+    "spray",
+    "splatter",
+    "피",
+    "血"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "side",
+      "type": "select",
+      "label": {
+        "ja": "隅",
+        "en": "Corner",
+        "ko": "구석",
+        "zh": "角落"
+      },
+      "options": [
+        {
+          "value": "left",
+          "label": {
+            "ja": "左下",
+            "en": "Bottom left",
+            "ko": "왼쪽 아래",
+            "zh": "左下"
+          }
+        },
+        {
+          "value": "right",
+          "label": {
+            "ja": "右下",
+            "en": "Bottom right",
+            "ko": "오른쪽 아래",
+            "zh": "右下"
+          }
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "key": "angle",
+      "type": "range",
+      "label": {
+        "ja": "飛ぶ向き（傾き）",
+        "en": "Angle",
+        "ko": "튀는 방향(기울기)",
+        "zh": "飞溅角度"
+      },
+      "min": 20,
+      "max": 70,
+      "step": 5,
+      "default": 40
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기",
+        "zh": "大小"
+      },
+      "min": 0.6,
+      "max": 1.6,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "key": "stay",
+      "type": "toggle",
+      "label": {
+        "ja": "最後まで残す",
+        "en": "Keep at the end",
+        "ko": "끝까지 남기기",
+        "zh": "保留到最后"
+      },
+      "default": false
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶき（写真の血）を使用"
+  },
+  "poster": 0.5
+}
