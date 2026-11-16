@@ -269,12 +269,28 @@
   }
 
   function applyAutomaticStatuses() {
-    const todayKey = currentCalendarDateKey();
+    const now = zonedDateTime(new Date());
+    const groups = new Map();
     sessions.forEach(session => {
-      if (session.status === 'tentative') return;
-      const targetDate = sessionDate(session);
-      if (!targetDate) return;
-      session.status = targetDate < todayKey ? 'completed' : targetDate === todayKey ? 'active' : 'scheduled';
+      const key = session.series ? `series:${session.series}` : `session:${session.id}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(session);
+    });
+    groups.forEach(group => {
+      const starts = group.map(sessionDisplayStart).filter(Boolean).sort();
+      const dates = group.map(sessionDate).filter(Boolean).sort();
+      if (!starts.length || !dates.length) return;
+      const firstStart = starts[0].length === 10 ? `${starts[0]}T00:00` : starts[0];
+      const lastDate = dates[dates.length - 1];
+      const sharedStatus = now.date > lastDate
+        ? 'completed'
+        : now.datetime >= firstStart
+          ? 'active'
+          : 'scheduled';
+      group.forEach(session => {
+        if (sharedStatus === 'scheduled' && session.status === 'tentative') return;
+        session.status = sharedStatus;
+      });
     });
   }
 
@@ -1638,7 +1654,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.29', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.30', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
