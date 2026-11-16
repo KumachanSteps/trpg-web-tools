@@ -21,6 +21,12 @@
       optional: ['キャラクター設定整理', '駒画像準備', 'セッション前確認'],
     },
   };
+  const SESSION_STATUS = {
+    tentative: { label: '調整中', className: 'status-tentative' },
+    scheduled: { label: '予定確定', className: 'status-scheduled' },
+    active: { label: '現行', className: 'status-active' },
+    completed: { label: '完了', className: 'status-completed' },
+  };
   const DEFAULT_CALENDAR_SETTINGS = {
     timeZone: 'Asia/Tokyo',
     weekStartsOn: 0,
@@ -249,7 +255,27 @@
       links: Array.isArray(session.links) ? session.links : [],
       hashtags: Array.isArray(session.hashtags) ? session.hashtags : splitTags(session.hashtags || ''),
       tasks: normalizeTasks(session.tasks),
+      status: normalizeCalendarStatus(session.status),
     }));
+  }
+
+  function normalizeCalendarStatus(value) {
+    if (value === 'tentative' || value === 'active' || value === 'completed') return value;
+    return 'scheduled';
+  }
+
+  function statusMeta(status) {
+    return SESSION_STATUS[normalizeCalendarStatus(status)];
+  }
+
+  function applyAutomaticStatuses() {
+    const todayKey = currentCalendarDateKey();
+    sessions.forEach(session => {
+      if (session.status === 'tentative') return;
+      const targetDate = sessionDate(session);
+      if (!targetDate) return;
+      session.status = targetDate < todayKey ? 'completed' : targetDate === todayKey ? 'active' : 'scheduled';
+    });
   }
 
   function isSampleSession(session) {
@@ -463,6 +489,7 @@
 
   function render() {
     applyAutoSeriesGrouping();
+    applyAutomaticStatuses();
     renderCalendar();
     renderSelectionTarget();
     renderToday();
@@ -556,7 +583,7 @@
         <button class="day ${d.getDay() === 0 ? 'is-sunday' : d.getDay() === 6 ? 'is-saturday' : ''} ${d.getMonth() !== cursor.getMonth() ? 'other' : ''} ${key === currentCalendarDateKey() ? 'today' : ''} ${hasSelectedSeries ? 'is-series-day' : ''} ${isSelected ? 'selected' : ''}" type="button" data-date="${key}">
           <span class="day-head"><span class="day-num">${d.getDate()}</span><span class="day-add">＋</span></span>
           ${evs.map(session => `
-            <span class="event ${eventTimeClass(session)} ${session.series && seriesCounts.get(session.series) > 1 ? 'is-series' : ''}" data-id="${esc(session.id)}" title="${session.series && seriesCounts.get(session.series) > 1 ? `${esc(session.series)}シリーズ · ` : ''}ダブルクリックで編集">
+            <span class="event ${eventTimeClass(session)} ${statusMeta(session.status).className} ${session.series && seriesCounts.get(session.series) > 1 ? 'is-series' : ''}" data-id="${esc(session.id)}" title="${esc(statusMeta(session.status).label)} · ${session.series && seriesCounts.get(session.series) > 1 ? `${esc(session.series)}シリーズ · ` : ''}ダブルクリックで編集">
               <span class="event-time">● ${eventTimeLabel(session)}</span>
               <span class="event-title">${esc(session.scenario)}</span>
             </span>
@@ -612,11 +639,12 @@
   }
 
   function miniSession(session) {
+    const meta = statusMeta(session.status);
     return `
       <button class="mini-card" data-id="${esc(session.id)}" type="button">
         <small>${eventTimeLabel(session)}</small>
         <strong>${esc(session.scenario)}</strong>
-        <span class="chip green">${esc(session.system || 'システム未設定')}</span>
+        <span><span class="chip green">${esc(session.system || 'システム未設定')}</span><span class="chip status-chip ${meta.className}">${meta.label}</span></span>
       </button>`;
   }
 
@@ -725,13 +753,14 @@
     const seriesSessions = session.series
       ? sessions.filter(item => item.series === session.series).sort((a, b) => String(a.start).localeCompare(String(b.start)))
       : [];
+    const sessionStatus = statusMeta(session.status);
     $('detailContent').innerHTML = `
       <h3 class="detail-title">${esc(session.scenario)}</h3>
       ${session.series ? `<div class="detail-row"><span>シリーズ</span><b>${esc(session.series)}</b></div>` : ''}
       <div class="detail-row"><span>システム</span><b>${esc(session.system)}</b></div>
       <div class="detail-row"><span>日時</span><b>${esc(fmtDateTime(session))}</b></div>
       <div class="detail-row"><span>GM</span><b>${esc(session.gm)}</b></div>
-      <div class="detail-row detail-row-status"><span>ステータス</span><b><span class="chip green">${session.status === 'scheduled' ? '予定確定' : session.status === 'completed' ? '完了' : '調整中'}</span></b></div>
+      <div class="detail-row detail-row-status"><span>ステータス</span><b><span class="chip status-chip ${sessionStatus.className}">${sessionStatus.label}</span></b></div>
       <h4>参加者（PL / PC）</h4>
       <div class="people">${(session.players || []).map(player => `<div class="person"><b>${esc(player.pl)}</b><span>${esc(player.pc)}</span></div>`).join('') || '<p>未登録</p>'}</div>
       <h4>関連リンク</h4>
@@ -1089,7 +1118,7 @@
       end: '',
       gm: item.gm || item.keeper || '',
       format: item.format || '',
-      status: item.status || 'scheduled',
+      status: normalizeCalendarStatus(item.status),
       memo: item.memo || item.note || '',
       hashtags: Array.isArray(item.hashtags) ? item.hashtags : splitTags(item.tags || ''),
       players: Array.isArray(item.players) ? item.players : [],
@@ -1109,7 +1138,7 @@
       end: '',
       gm: row.gm || row.keeper || row.kp || '',
       format: row.format || '',
-      status: row.status || 'scheduled',
+      status: normalizeCalendarStatus(row.status),
       memo: row.memo || row.note || row.comment || '',
       hashtags: Array.isArray(row.hashtags) ? row.hashtags : splitTags(row.tags || row.hashtag || ''),
       players: Array.isArray(row.players) ? row.players : [],
@@ -1609,7 +1638,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.28', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.29', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
