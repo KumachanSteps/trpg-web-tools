@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.49';
+  const VERSION = '0.50';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -16,8 +16,8 @@
   const PL_CUR_KEY = 'ccfoliaJukebox.playlist';
   const ROOM_BOX_KEY = 'ccfoliaJukebox.roomBox';
   const LANGS = ['ja', 'en', 'ko'];
-  const MAX_DISKS = Jukebox.MAX_DISKS;   // ココフォリアの部屋に入るレコードの上限
-  // 「上限を超えて並べる」をオンにしたときの上限。13枚目からは部屋に入れず、BGMを並べて聴き比べるためだけに使う
+  const MAX_DISKS = Jukebox.MAX_DISKS;   // 標準のレコードの上限
+  // 「上限を超えて並べる」をオンにしたときの上限。12枚を超えた分は、棚のレコードを小さくして部屋に全部並べる
   const LIST_MAX = 50;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
 
@@ -352,9 +352,6 @@
     while (settings.disks.length < settings.count) settings.disks.push(blankDisk(settings.disks.length));
   }
 
-  // 部屋に入るレコードの枚数（上限を超えて並べていても12枚まで）
-  const roomCount = () => Math.min(app.settings.count, MAX_DISKS);
-
   // 初期BGMが入る前に保存した設定は、URLが空のプリセット写真のレコードに1回だけ初期BGMを入れる
   // 2: ハンドアウトと密談の初期BGMを差し替え（前の初期URLのままなら新しいURLにする）
   function withDefaultBgm(disk, version) {
@@ -379,9 +376,8 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(app.settings)); } catch (error) { /* noop */ }
   }
 
-  // 部屋に入るレコード。all を付けると、上限を超えて並べたぶんも含めた全部（設定欄のサムネイル用）
-  function activeDisks(all) {
-    return app.settings.disks.slice(0, all ? app.settings.count : roomCount()).map((disk, i) => ({
+  function activeDisks() {
+    return app.settings.disks.slice(0, app.settings.count).map((disk, i) => ({
       ...disk,
       name: disk.name.trim() || `${t('set.diskName')}${i + 1}`,
       file: app.files[i] || null
@@ -422,7 +418,6 @@
       const after = rows.find(r => { const b = r.getBoundingClientRect(); return y < b.top + b.height / 2; });
       if (after) { if (after !== row.nextSibling) list.insertBefore(row, after); }
       else if (row !== list.lastElementChild) list.appendChild(row);
-      markExtraRows();
       // パネルの端に近づいたら自動でスクロール
       const panel = list.closest('.panel');
       if (panel) {
@@ -551,26 +546,16 @@
       });
       els.diskList.appendChild(row);
     });
-    markExtraRows();
     refreshPreviews();
     syncBgmUi();
   }
 
-  // 13枚目から下の行に、部屋に入らない印を付ける（並べ替えの途中でも見た目の位置で付け直す）
-  function markExtraRows() {
-    [...els.diskList.querySelectorAll('.disk-row')].forEach((row, i) => {
-      row.classList.toggle('is-extra', i >= MAX_DISKS);
-      row.classList.toggle('is-extra-first', i === MAX_DISKS);
-      if (i === MAX_DISKS) row.dataset.extraLabel = t('set.extraDivider');
-      else delete row.dataset.extraLabel;
-    });
-  }
 
   // 設定欄のサムネイル（ジャケット＋レコード＋曲名）を描き直す
   let previewSeq = 0;
   async function refreshPreviews() {
     const seq = ++previewSeq;
-    const disks = activeDisks(true);
+    const disks = activeDisks();
     for (let i = 0; i < disks.length; i += 1) {
       const holder = els.diskList.querySelector(`[data-preview="${i}"]`);
       if (!holder) continue;
