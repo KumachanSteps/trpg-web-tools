@@ -41,11 +41,16 @@ for (const id of [
   'allDayLegend',
   'editDetailBtn',
   'deleteDetailBtn',
+  'trackerImportDialog',
+  'trackerMatchList',
+  'taskGeneratorDialog',
+  'taskTemplateTree',
+  'addCustomTaskBtn',
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.27') || !html.includes('session_check_calendar.js?v=0.27') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.28') || !html.includes('session_check_calendar.js?v=0.28') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -100,6 +105,11 @@ for (const contract of [
   '.detail-head-actions',
   '.detail-icon-button svg',
   '.task-delete',
+  '.calendar-app-icon svg',
+  '.day.is-series-day:not(.selected)',
+  '.tracker-match-list',
+  '.task-template-tree',
+  '.template-check',
 ]) {
   if (!css.includes(contract)) throw new Error(`Missing independent-panel layout contract: ${contract}`);
 }
@@ -148,11 +158,18 @@ for (const contract of [
   "dataToolsCloseBtn",
   "dataToolsToggleBtn').hidden = dataToolsOpen",
   "dataToolsCloseBtn').hidden = !dataToolsOpen",
+  'LOG_STORAGE_KEY',
+  'openTrackerImportDialog',
+  'trackerPlayers',
+  'openTaskGenerator',
+  'TASK_TEMPLATES',
+  'data-task-toggle',
+  'is-series-day',
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.27'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.28'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
@@ -166,6 +183,10 @@ if (js.includes('<span>形式</span>') || js.includes('形式未設定')) {
 
 if (js.includes('id="editBtn"') || js.includes('id="deleteBtn"') || !html.includes('<svg viewBox="0 0 24 24"')) {
   throw new Error('Detail edit/delete actions should use SVG header icons');
+}
+
+if (!html.includes('<span class="hub-icon calendar-app-icon"') || html.includes('<span class="hub-icon" aria-hidden="true">▦</span>')) {
+  throw new Error('Calendar header must use the SVG calendar icon');
 }
 
 console.log('session-check-calendar smoke passed: tracker-aligned header, compact data tools, SVG detail actions, and calendar controls are present');

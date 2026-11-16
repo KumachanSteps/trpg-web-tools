@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>卓準備カレンダー v0.27 | TRPG WEBツール観測所</title>
+  <title>卓準備カレンダー v0.28 | TRPG WEBツール観測所</title>
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="../../shared/hub/hub.css?v=0.1.2" />
-  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.27" />
+  <link rel="stylesheet" href="css/session_check_calendar.css?v=0.28" />
   <script async src="../../assets/js/analytics.js"></script>
 </head>
 <body class="hub hub-unified-header" data-hub-tool="calendar">
@@ -21,8 +21,8 @@
         <div class="hub-header-left">
           <a class="hub-portal" href="../../">← TRPG Webツール観測所</a>
           <div class="hub-title-row calendar-title-row">
-            <span class="hub-icon" aria-hidden="true">▦</span>
-            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.27 <time datetime="2026-11-12">2026.11.12</time></p></div>
+            <span class="hub-icon calendar-app-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/><path d="M7 14h2M11 14h2M15 14h2M7 18h2M11 18h2M15 18h2"/></svg></span>
+            <div class="calendar-title-lockup"><h1>卓準備カレンダー</h1><p class="hub-version">v0.28 <time datetime="2026-11-15">2026.11.15</time></p></div>
           </div>
         </div>
         <nav class="hub-actions" aria-label="ツール操作">
@@ -204,8 +204,33 @@
     </form>
   </dialog>
 
+  <dialog id="trackerImportDialog" class="modal tracker-import-modal">
+    <form id="trackerImportForm" method="dialog">
+      <div class="modal-head"><h2>卓ログから情報を補完</h2><button value="cancel" type="submit" formnovalidate aria-label="閉じる">×</button></div>
+      <div class="tracker-import-body">
+        <p>シナリオ名が一致する卓ログから、システム・GM/KP・PC/PL情報を取り込みます。既存のカレンダー情報は空欄でない値だけ更新されます。</p>
+        <div id="trackerMatchList" class="tracker-match-list"></div>
+      </div>
+      <div class="modal-actions"><span></span><span></span><button value="cancel" type="submit" formnovalidate>キャンセル</button><button id="confirmTrackerImportBtn" class="primary" value="default" type="submit">選択した卓ログで補完</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="taskGeneratorDialog" class="modal task-generator-modal">
+    <form id="taskGeneratorForm" method="dialog">
+      <div class="modal-head"><h2>準備タスクを生成</h2><button value="cancel" type="submit" formnovalidate aria-label="閉じる">×</button></div>
+      <div class="task-generator-body">
+        <fieldset class="role-switch" aria-label="担当ロール"><legend>担当ロール</legend><label><input type="radio" name="taskRole" value="gm" checked /><span>KP / GM</span></label><label><input type="radio" name="taskRole" value="pl" /><span>PL</span></label></fieldset>
+        <p>必要な項目を選択してください。生成後は右パネルの丸いチェックで完了にできます。</p>
+        <div id="taskTemplateTree" class="task-template-tree"></div>
+        <div class="custom-task-row"><input id="customTaskInput" placeholder="独自タスクを追加" /><button id="addCustomTaskBtn" type="button">＋ 追加</button></div>
+        <label class="generator-due">共通の期限（任意）<input id="generatedTaskDueInput" type="date" /></label>
+      </div>
+      <div class="modal-actions"><span></span><span></span><button value="cancel" type="submit" formnovalidate>キャンセル</button><button class="primary" value="default" type="submit">選択したタスクを生成</button></div>
+    </form>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
-  <script src="js/session_check_calendar.js?v=0.27"></script>
+  <script src="js/session_check_calendar.js?v=0.28"></script>
 </body>
 </html>

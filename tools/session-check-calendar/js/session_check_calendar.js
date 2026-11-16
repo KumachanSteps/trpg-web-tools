@@ -10,6 +10,17 @@
   const CALENDAR_SETTINGS_KEY = 'trpgWebTools.sessionCheckCalendar.settings';
   const REPORT_KEY = 'trpgWebTools.sessionReportGenerator.pendingImport';
   const LOG_KEY = 'trpgWebTools.sessionLogTracker.pendingImport';
+  const LOG_STORAGE_KEY = 'sessionLogTool.state.v1';
+  const TASK_TEMPLATES = {
+    gm: {
+      core: ['部屋作成', '部屋調整', 'キャラシ確認', '録画準備'],
+      optional: ['BGM調整', '戦闘描写調整', 'NPC立ち絵準備', 'ハンドアウト準備'],
+    },
+    pl: {
+      core: ['キャラシ作成', '立ち絵準備'],
+      optional: ['キャラクター設定整理', '駒画像準備', 'セッション前確認'],
+    },
+  };
   const DEFAULT_CALENDAR_SETTINGS = {
     timeZone: 'Asia/Tokyo',
     weekStartsOn: 0,
@@ -39,6 +50,8 @@
   let panelState = loadPanelState();
   let googleSyncTimer = 0;
   let googleSyncing = false;
+  let trackerMatches = [];
+  let customGeneratedTasks = [];
 
   function loadCalendarSettings() {
     try {
@@ -529,6 +542,8 @@
       if (session.series) counts.set(session.series, (counts.get(session.series) || 0) + 1);
       return counts;
     }, new Map());
+    const selectedSession = sessions.find(session => session.id === selectedId);
+    const selectedSeries = selectedSession?.series || '';
 
     $('calendarGrid').innerHTML = Array.from({ length: 42 }, (_, i) => {
       const d = new Date(start);
@@ -536,8 +551,9 @@
       const key = dateKey(d);
       const evs = sessions.filter(session => sessionDate(session) === key);
       const isSelected = selectedDate === key;
+      const hasSelectedSeries = Boolean(selectedSeries && evs.some(session => session.series === selectedSeries));
       return `
-        <button class="day ${d.getDay() === 0 ? 'is-sunday' : d.getDay() === 6 ? 'is-saturday' : ''} ${d.getMonth() !== cursor.getMonth() ? 'other' : ''} ${key === currentCalendarDateKey() ? 'today' : ''} ${isSelected ? 'selected' : ''}" type="button" data-date="${key}">
+        <button class="day ${d.getDay() === 0 ? 'is-sunday' : d.getDay() === 6 ? 'is-saturday' : ''} ${d.getMonth() !== cursor.getMonth() ? 'other' : ''} ${key === currentCalendarDateKey() ? 'today' : ''} ${hasSelectedSeries ? 'is-series-day' : ''} ${isSelected ? 'selected' : ''}" type="button" data-date="${key}">
           <span class="day-head"><span class="day-num">${d.getDate()}</span><span class="day-add">＋</span></span>
           ${evs.map(session => `
             <span class="event ${eventTimeClass(session)} ${session.series && seriesCounts.get(session.series) > 1 ? 'is-series' : ''}" data-id="${esc(session.id)}" title="${session.series && seriesCounts.get(session.series) > 1 ? `${esc(session.series)}シリーズ · ` : ''}ダブルクリックで編集">
@@ -721,13 +737,16 @@
       <h4>関連リンク</h4>
       <div class="links">${(session.links || []).map(link => `<a class="link-pill" href="${esc(link.url || '#')}" target="_blank" rel="noopener noreferrer">🔗 ${esc(link.label)} <span>↗</span></a>`).join('') || '<p>未登録</p>'}</div>
       <h4>準備タスク</h4>
-      <div class="detail-tasks">${(session.tasks || []).map(task => `<div class="task-row"><span>${task.done ? '☑' : '☐'} ${esc(task.title)}</span><span class="task-row-meta">${esc(task.due || '')} <span class="chip">${esc(task.status || '')}</span><button class="task-row-delete" type="button" data-task-id="${esc(task.id)}" aria-label="タスクを削除">×</button></span></div>`).join('') || '<p>未登録</p>'}</div>
+      <div class="detail-tasks">${(session.tasks || []).map(task => `<div class="task-row"><label class="task-check detail-task-check" aria-label="${esc(task.title)}を完了にする"><input type="checkbox" data-task-toggle="${esc(task.id)}" ${task.done ? 'checked' : ''} /><span aria-hidden="true"></span></label><span>${esc(task.title)}</span><span class="task-row-meta">${esc(task.due || '')} <span class="chip">${esc(task.status || '')}</span><button class="task-row-delete" type="button" data-task-id="${esc(task.id)}" aria-label="タスクを削除">×</button></span></div>`).join('') || '<p>未登録</p>'}</div>
       ${seriesSessions.length > 1 ? `<h4>同じシリーズ</h4><div class="series-list">${seriesSessions.map(item => `<button class="series-link ${item.id === session.id ? 'is-current' : ''}" type="button" data-series-id="${esc(item.id)}"><b>${esc(fmtDate(item.start))}</b>　${esc(item.scenario)}</button>`).join('')}</div>` : ''}
       <p>${esc(session.memo || '')}</p>
-      <div class="detail-actions"><button id="sendLogBtn" class="hub-btn is-note bridge-button" type="button">↗ 卓ログトラッカーへ送る</button></div>`;
+      <div class="detail-actions"><button id="sendLogBtn" class="hub-btn is-note bridge-button" type="button">↗ 卓ログトラッカーへ送る</button><button id="readLogBtn" class="hub-btn bridge-button" type="button">↙ 卓ログから情報を補完</button><button id="generateTasksBtn" class="hub-btn is-blue bridge-button" type="button">＋ タスク生成</button></div>`;
     $('editDetailBtn').onclick = () => openDialog(session.id);
     $('deleteDetailBtn').onclick = deleteSelected;
     $('sendLogBtn').onclick = () => sendToLogTracker(session);
+    $('readLogBtn').onclick = () => openTrackerImportDialog(session);
+    $('generateTasksBtn').onclick = () => openTaskGenerator(session);
+    $('detailContent').querySelectorAll('[data-task-toggle]').forEach(input => input.onchange = () => toggleTask(session.id, input.dataset.taskToggle, input.checked));
     $('detailContent').querySelectorAll('.task-row-delete').forEach(button => button.onclick = () => deleteTask(session.id, button.dataset.taskId));
     $('detailContent').querySelectorAll('.series-link').forEach(button => button.onclick = () => {
       selectedId = button.dataset.seriesId;
@@ -853,6 +872,60 @@
     render();
   });
 
+  $('trackerImportForm').addEventListener('submit', event => {
+    if (event.submitter?.value === 'cancel') return;
+    event.preventDefault();
+    const session = sessions.find(item => item.id === selectedId);
+    const selected = $('trackerImportForm').querySelector('input[name="trackerMatch"]:checked');
+    const row = trackerMatches[Number(selected?.value)];
+    if (!session || !row) return;
+    if (String(row.system || '').trim()) session.system = String(row.system).trim();
+    if (String(row.gm || row.keeper || '').trim()) session.gm = String(row.gm || row.keeper).trim();
+    const players = trackerPlayers(row);
+    if (players.length) session.players = players;
+    const synced = syncSeriesSharedFields(session);
+    $('trackerImportDialog').close();
+    toast(synced ? `卓ログで補完し、同シリーズ${synced}件へGM・参加者を反映しました` : '卓ログの情報で補完しました');
+    render();
+  });
+
+  $('taskGeneratorForm').addEventListener('change', event => {
+    if (event.target.name === 'taskRole') renderTaskTemplateTree(event.target.value);
+  });
+
+  $('addCustomTaskBtn').onclick = () => {
+    const title = $('customTaskInput').value.trim();
+    if (!title) return toast('追加するタスク名を入力してください');
+    const selectedTitles = [...$('taskTemplateTree').querySelectorAll('[data-generated-task]:checked')].map(input => input.value);
+    if (!customGeneratedTasks.includes(title)) customGeneratedTasks.push(title);
+    if (!selectedTitles.includes(title)) selectedTitles.push(title);
+    $('customTaskInput').value = '';
+    const role = $('taskGeneratorForm').querySelector('input[name="taskRole"]:checked')?.value || 'gm';
+    renderTaskTemplateTree(role, selectedTitles);
+  };
+
+  $('taskGeneratorForm').addEventListener('submit', event => {
+    if (event.submitter?.value === 'cancel') return;
+    event.preventDefault();
+    const session = sessions.find(item => item.id === selectedId);
+    if (!session) return;
+    session.tasks = normalizeTasks(session.tasks);
+    const titles = [...$('taskTemplateTree').querySelectorAll('[data-generated-task]:checked')].map(input => input.value.trim()).filter(Boolean);
+    const existing = new Set((session.tasks || []).map(task => task.title));
+    const due = $('generatedTaskDueInput').value;
+    let added = 0;
+    titles.forEach(title => {
+      if (existing.has(title)) return;
+      session.tasks.push({ id: newId('task'), title, due, status: '未着手', done: false, order: (getTaskItems().length + added + 1) * 10 });
+      existing.add(title);
+      added += 1;
+    });
+    session.tasks = normalizeTasks(session.tasks);
+    $('taskGeneratorDialog').close();
+    toast(added ? `${added}件の準備タスクを生成しました` : '追加できる新しいタスクはありません');
+    render();
+  });
+
   function deleteSelected() {
     if (!selectedId || !confirm('このセッションを削除しますか？')) return;
     const selected = sessions.find(session => session.id === selectedId);
@@ -913,6 +986,73 @@
     } catch {
       alert(`ブラウザの保存領域に書き込めませんでした。JSONをコピーしてください。\n${JSON.stringify(payload)}`);
     }
+  }
+
+  function trackerPeople(value) {
+    return String(value || '').split(/[、,，\/／&＆＋+;；\n\r]+|\s+と\s+|\s+and\s+/i).map(item => item.trim()).filter(Boolean);
+  }
+
+  function trackerPlayers(row) {
+    const pls = trackerPeople(row.players);
+    const pcs = trackerPeople(row.pc);
+    const length = Math.max(pls.length, pcs.length);
+    return Array.from({ length }, (_, index) => ({ pl: pls[index] || '', pc: pcs[index] || '' }))
+      .filter(player => player.pl || player.pc);
+  }
+
+  function trackerScenarioKey(value) {
+    return normalizeSeriesText(value).toLocaleLowerCase('ja').replace(/[\s　・･:：!！?？「」『』【】()（）.,。…]+/g, '');
+  }
+
+  function loadTrackerRows() {
+    try {
+      const state = JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || '{}');
+      return Array.isArray(state.rows) ? state.rows : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function openTrackerImportDialog(session) {
+    const exactKey = trackerScenarioKey(session.scenario);
+    const seriesKey = trackerScenarioKey(session.series || seriesBaseName(session.scenario));
+    trackerMatches = loadTrackerRows().filter(row => {
+      const key = trackerScenarioKey(row.scenario || row.title);
+      return key && (key === exactKey || (seriesKey && (key === seriesKey || key.includes(seriesKey) || seriesKey.includes(key))));
+    }).sort((a, b) => {
+      const target = sessionDate(session);
+      const aDates = Array.isArray(a.dates) ? a.dates : [];
+      const bDates = Array.isArray(b.dates) ? b.dates : [];
+      const aDate = String(aDates[aDates.length - 1] || a.date || '');
+      const bDate = String(bDates[bDates.length - 1] || b.date || '');
+      return Number(bDate === target) - Number(aDate === target) || bDate.localeCompare(aDate);
+    });
+    if (!trackerMatches.length) return toast('一致するシナリオの卓ログが見つかりません');
+    $('trackerMatchList').innerHTML = trackerMatches.map((row, index) => {
+      const dates = Array.isArray(row.dates) ? row.dates.join(' / ') : (row.date || '日付未設定');
+      return `<label class="tracker-match"><input type="radio" name="trackerMatch" value="${index}" ${index === 0 ? 'checked' : ''}/><span><b>${esc(row.scenario || row.title || '名称未設定')}</b><small>${esc(dates)} · ${esc(row.system || 'システム未設定')} · ${esc(row.role || '役割未設定')}</small><small>GM/KP: ${esc(row.gm || '未登録')}　PL: ${esc(row.players || '未登録')}　PC: ${esc(row.pc || '未登録')}</small></span></label>`;
+    }).join('');
+    $('trackerImportDialog').showModal();
+  }
+
+  function renderTaskTemplateTree(role = 'gm', selectedTitles = null) {
+    const template = TASK_TEMPLATES[role] || TASK_TEMPLATES.gm;
+    const isChecked = (title, core) => selectedTitles ? selectedTitles.includes(title) : core;
+    const rows = (titles, branch, core) => titles.map(title => `<label class="template-task"><input type="checkbox" data-generated-task value="${esc(title)}" ${isChecked(title, core) ? 'checked' : ''}/><span class="template-check" aria-hidden="true"></span><span>${esc(title)}</span>${branch === 'optional' ? '<small>追加</small>' : ''}</label>`).join('');
+    $('taskTemplateTree').innerHTML = `<section><h3>基本タスク</h3>${rows(template.core, 'core', true)}</section><section class="optional-task-branch"><h3>＋ 調整・追加タスク</h3>${rows(template.optional, 'optional', false)}<div id="customTaskList">${customGeneratedTasks.map(title => `<label class="template-task is-custom"><input type="checkbox" data-generated-task value="${esc(title)}" ${isChecked(title, true) ? 'checked' : ''}/><span class="template-check" aria-hidden="true"></span><span>${esc(title)}</span><button type="button" data-remove-custom="${esc(title)}" aria-label="${esc(title)}を削除">×</button></label>`).join('')}</div></section>`;
+    $('taskTemplateTree').querySelectorAll('[data-remove-custom]').forEach(button => button.onclick = () => {
+      customGeneratedTasks = customGeneratedTasks.filter(title => title !== button.dataset.removeCustom);
+      renderTaskTemplateTree(role);
+    });
+  }
+
+  function openTaskGenerator(session) {
+    selectedId = session.id;
+    customGeneratedTasks = [];
+    $('taskGeneratorForm').reset();
+    $('generatedTaskDueInput').value = sessionDate(session);
+    renderTaskTemplateTree('gm');
+    $('taskGeneratorDialog').showModal();
   }
 
   function sendToReportGenerator() {
@@ -1469,7 +1609,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.27', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.28', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
