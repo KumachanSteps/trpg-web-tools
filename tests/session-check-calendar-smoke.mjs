@@ -50,7 +50,7 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.28') || !html.includes('session_check_calendar.js?v=0.28') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.29') || !html.includes('session_check_calendar.js?v=0.29') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -110,6 +110,11 @@ for (const contract of [
   '.tracker-match-list',
   '.task-template-tree',
   '.template-check',
+  '.status-chip.status-tentative',
+  '.status-chip.status-scheduled',
+  '.status-chip.status-active',
+  '.status-chip.status-completed',
+  '.event.status-active',
 ]) {
   if (!css.includes(contract)) throw new Error(`Missing independent-panel layout contract: ${contract}`);
 }
@@ -165,11 +170,14 @@ for (const contract of [
   'TASK_TEMPLATES',
   'data-task-toggle',
   'is-series-day',
+  'SESSION_STATUS',
+  'applyAutomaticStatuses',
+  'statusMeta',
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.28'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.29'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
@@ -187,6 +195,10 @@ if (js.includes('id="editBtn"') || js.includes('id="deleteBtn"') || !html.includ
 
 if (!html.includes('<span class="hub-icon calendar-app-icon"') || html.includes('<span class="hub-icon" aria-hidden="true">▦</span>')) {
   throw new Error('Calendar header must use the SVG calendar icon');
+}
+
+for (const option of ['value="tentative">調整中', 'value="scheduled" selected>予定確定', 'value="active">現行', 'value="completed">完了']) {
+  if (!html.includes(option)) throw new Error(`Missing session status option: ${option}`);
 }
 
 console.log('session-check-calendar smoke passed: tracker-aligned header, compact data tools, SVG detail actions, and calendar controls are present');
