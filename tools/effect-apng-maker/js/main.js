@@ -3,7 +3,7 @@
  *   ライブラリ（左）→ 選んだアセットを プレビュー（中央）に重ね、調整（右）で設定を変えて書き出す。
  */
 import { I18N } from './i18n.js';
-import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261115-12';
+import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261116-01';
 import { Stage } from './stage.js';
 
 const C = window.TextApngCodec;
@@ -114,6 +114,7 @@ const app = {
   query: '',
   asset: null,
   instance: null,
+  cache: null,       // 重い演出のプレビュー：前もって描きためたコマ
   buildToken: 0,
   playing: true,
   time: 0,
@@ -184,7 +185,9 @@ function renderLibrary() {
     // カテゴリ名は「すべて」のときだけサムネイルに出す（カテゴリで絞っているときは同じ名前が並ぶだけなので出さない）
     const badge = app.category === 'all' ? `<span class="asset-badges"><span class="badge">${escapeHtml(pick(catName.get(a.category)))}</span></span>` : '';
     return `<article class="asset-card${app.asset && app.asset.id === a.id ? ' is-active' : ''}" data-id="${a.id}" tabindex="0" role="button" aria-pressed="${app.asset && app.asset.id === a.id}">
-      <div class="asset-thumb-wrap"><canvas class="asset-thumb" width="256" height="144" data-thumb="${a.id}"></canvas>${badge}</div>
+      <div class="asset-thumb-wrap">${a.thumb
+        ? `<img class="asset-thumb" src="${LIB_URL}${a.path}/${a.thumb}" width="256" height="144" alt="" loading="lazy" decoding="async" data-thumb-img="${a.id}" />`
+        : `<canvas class="asset-thumb" width="256" height="144" data-thumb="${a.id}"></canvas>`}${badge}</div>
       <div class="asset-meta"><span class="asset-name">${escapeHtml(pick(a.name))}</span></div>
       <button type="button" class="fav-button${fav ? ' is-on' : ''}" data-fav="${a.id}" aria-pressed="${fav}" title="${escapeHtml(fav ? t().unfav : t().fav)}" aria-label="${escapeHtml(fav ? t().unfav : t().fav)}">★</button>
     </article>`;
@@ -220,6 +223,7 @@ function posterTime(a) {
   return a.playback.default === 'once' ? 0.25 : 0.3;
 }
 
+const LIB_URL = new URL('../library/', import.meta.url).href;
 const posterCache = new Map();
 async function drawPoster(canvas, time = null, inst = null) {
   const a = app.byId.get(canvas.dataset.thumb);
@@ -247,8 +251,15 @@ async function drawPoster(canvas, time = null, inst = null) {
 let hoverAnim = null;
 function startHover(card) {
   stopHover();
-  const canvas = card.querySelector('canvas[data-thumb]');
   const a = app.byId.get(card.dataset.id);
+  let canvas = card.querySelector('canvas[data-thumb]');
+  // サムネイルが画像のときは、マウスを乗せている間だけ、上に動くキャンバスを重ねる
+  if (!canvas && a && card.querySelector('img[data-thumb-img]')) {
+    canvas = Object.assign(document.createElement('canvas'), { width: 256, height: 144, className: 'asset-thumb asset-thumb-live' });
+    canvas.dataset.thumb = a.id;
+    canvas.dataset.live = '1';
+    card.querySelector('.asset-thumb-wrap').appendChild(canvas);
+  }
   if (!canvas || !a) return;
   const started = performance.now();
   const dur = a.duration.default;
@@ -281,7 +292,8 @@ function stopHover() {
   if (!hoverAnim) return;
   const canvas = hoverAnim.card.querySelector('canvas[data-thumb]');
   hoverAnim = null;
-  if (canvas) drawPoster(canvas);
+  if (canvas && canvas.dataset.live) canvas.remove();
+  else if (canvas) drawPoster(canvas);
 }
 
 /* ---------- アセットを選ぶ ---------- */
@@ -464,17 +476,52 @@ function scheduleRebuild() {
   rebuildTimer = setTimeout(() => { rebuild(); refreshEstimate(); }, 60);
 }
 
+// 1コマを描くのにこれより時間がかかる演出は、その場で描かずに、前もって描きためてから再生する
+const LIVE_BUDGET_MS = 18;
+// 描きためるときの大きさ（これより大きいプレビューでも、この大きさで描いて拡大して見せる）と、1秒あたりのコマ数
+const CACHE_MAX = { w: 640, h: 360 };
+const CACHE_FPS = 15;
+
+function makeInstance(a, s, w, h, fps) {
+  return new EffectInstance(a, s.params, {
+    w, h, duration: s.duration, fps, play: renderPlay(a, s), direction: s.direction, seed: s.seed, opacity: s.opacity
+  }, id => app.byId.get(id)).init();
+}
+
+/** 1コマを描くのにかかる時間（ミリ秒）を、2回描いて短い方で測る */
+function measureDraw(inst) {
+  let best = Infinity;
+  for (const tt of [0.37, 0.61]) {
+    const t0 = performance.now();
+    inst.draw(tt);
+    best = Math.min(best, performance.now() - t0);
+  }
+  return best;
+}
+
 async function rebuild() {
   const a = app.asset;
   if (!a) return;
   const s = settings(a);
   const token = ++app.buildToken;
   const { w, h } = stage.previewSize;
+  if (app.cache) { app.cache.frames.forEach(f => f && f.close && f.close()); app.cache = null; }
   let inst = null;
+  let cached = false;
   try {
-    inst = await new EffectInstance(a, s.params, {
-      w, h, duration: s.duration, fps: app.output.fps, play: renderPlay(a, s), direction: s.direction, seed: s.seed, opacity: s.opacity
-    }, id => app.byId.get(id)).init();
+    // まず小さめの大きさで作って重さを測る。プレビューの大きさに直して軽ければ、その場で描く
+    const scale = Math.min(1, CACHE_MAX.w / w, CACHE_MAX.h / h);
+    const cw = Math.max(2, Math.round(w * scale)), ch = Math.max(2, Math.round(h * scale));
+    const small = await makeInstance(a, s, cw, ch, app.output.fps);
+    if (token !== app.buildToken) return;
+    // 重いと分かっている演出（asset.json の heavy）は測らずに描きためる（測るだけで画面が止まるため）
+    const ms = a.heavy ? Infinity : measureDraw(small) / (scale * scale);
+    if (ms <= LIVE_BUDGET_MS) {
+      inst = scale === 1 ? small : await makeInstance(a, s, w, h, app.output.fps);
+    } else {
+      inst = small;
+      cached = true;
+    }
   } catch (error) {
     // 描画のファイルを読み込めなかったとき、何も出ないままにしないで知らせる
     console.error(error);
@@ -483,7 +530,34 @@ async function rebuild() {
   }
   if (token !== app.buildToken) return;
   app.instance = inst;
+  if (cached) fillCache(inst, s, token);
   drawPreview();
+}
+
+/** 重い演出のコマを、画面を止めないように1コマずつ描きためる */
+async function fillCache(inst, s, token) {
+  const play = renderPlay(app.asset, s);
+  const times = frameTimes(s.duration, Math.min(CACHE_FPS, app.output.fps), play);
+  const cache = { token, play, times, frames: new Array(times.length).fill(null), ready: 0 };
+  app.cache = cache;
+  for (let i = 0; i < times.length; i++) {
+    if (app.buildToken !== token || app.cache !== cache) return;
+    // 書き出し中は書き出しを優先する
+    while (app.exporting) { await new Promise(r => setTimeout(r, 200)); if (app.cache !== cache) return; }
+    inst.draw(times[i]);
+    cache.frames[i] = await createImageBitmap(inst.canvas);
+    cache.ready = i + 1;
+    if (!app.playing || cache.ready === times.length || i % 4 === 0) drawPreview();
+    await new Promise(r => setTimeout(r, 0));
+  }
+}
+
+function cacheFrame(cache, tt) {
+  const n = cache.times.length;
+  const idx = cache.play === 'loop' ? Math.floor(tt * n) % n : Math.round(tt * (n - 1));
+  if (cache.frames[idx]) return cache.frames[idx];
+  for (let i = Math.min(idx, cache.ready - 1); i >= 0; i--) if (cache.frames[i]) return cache.frames[i];
+  return null;
 }
 
 function drawPreview() {
@@ -494,15 +568,30 @@ function drawPreview() {
   const s = settings();
   const dur = s.duration;
   const tt = Math.min(1, app.time / dur);
-  inst.composite(ctx, tt, 0, 0, stage.fx.width, stage.fx.height);
+  const cache = app.cache;
+  if (cache && cache.token === app.buildToken) {
+    const bmp = cacheFrame(cache, tt);
+    if (bmp) {
+      const prev = ctx.globalAlpha;
+      ctx.globalAlpha = prev * (s.opacity ?? 1);
+      ctx.drawImage(bmp, 0, 0, stage.fx.width, stage.fx.height);
+      ctx.globalAlpha = prev;
+    }
+  } else {
+    inst.composite(ctx, tt, 0, 0, stage.fx.width, stage.fx.height);
+  }
   els.scrub.value = String(Math.round(tt * 1000));
-  els.time.textContent = `${Math.min(app.time, dur).toFixed(1)} / ${dur.toFixed(1)}${t().seconds}`;
+  const preparing = cache && cache.ready < cache.times.length;
+  els.time.textContent = preparing
+    ? t().previewPreparing(cache.ready, cache.times.length)
+    : `${Math.min(app.time, dur).toFixed(1)} / ${dur.toFixed(1)}${t().seconds}`;
 }
 
 function tick(now) {
   const dt = app.lastTick ? (now - app.lastTick) / 1000 : 0;
   app.lastTick = now;
-  if (app.playing && app.instance && !app.exporting) {
+  const preparing = app.cache && app.cache.ready < app.cache.times.length;
+  if (app.playing && app.instance && !app.exporting && !preparing) {
     const s = settings();
     const once = renderPlay(app.asset, s) === 'once';
     app.time += dt;
@@ -545,13 +634,19 @@ async function runEstimate() {
   const play = renderPlay(a, s);
   const times = frameTimes(s.duration, app.output.fps, play);
   const n = times.length;
-  const k = Math.min(n, 10);
+  // 重い演出（プレビューを描きためているもの）は、調べるコマを減らす
+  const k = Math.min(n, app.cache ? 5 : 10);
   // 1回再生のものは、動きの多い真ん中あたりを調べる
   const start = play === 'once' ? Math.max(0, Math.floor(n / 2 - k / 2)) : 0;
   try {
     const frameAt = await frameRenderer(a, s, w, h);
     const pixels = [];
-    for (let i = start; i < start + k; i++) pixels.push(frameAt(times[i]));
+    for (let i = start; i < start + k; i++) {
+      // 1コマごとに画面へ手を返す（重い演出で画面が止まらないように）
+      await yieldToUi();
+      if (token !== app.estimateToken) return;
+      pixels.push(frameAt(times[i]));
+    }
     if (token !== app.estimateToken) return;
     let quantizer = null;
     if (app.output.colors) {
@@ -1007,7 +1102,7 @@ async function boot() {
   selectAsset(first, { scroll: true });
   requestAnimationFrame(tick);
   // 自動テスト用の入口（画面の操作と同じ経路で書き出す）
-  window.__effectApngMaker = { app, stage, selectAsset, exportFile, settings, frameRenderer, drawPreview, rebuild, SIZES };
+  window.__effectApngMaker = { app, stage, selectAsset, exportFile, settings, frameRenderer, drawPreview, rebuild, SIZES, drawPoster };
 }
 
 boot();

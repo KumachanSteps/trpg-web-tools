@@ -313,6 +313,7 @@ input.switch:checked::after { transform: translateX(16px); }
 .asset-card.is-active { border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 22%, transparent); }
 .asset-thumb-wrap { position: relative; }
 .asset-thumb { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; background: #111827; }
+.asset-thumb-live { position: absolute; inset: 0; }
 .asset-badges { position: absolute; left: 4px; bottom: 4px; display: flex; flex-wrap: wrap; gap: 2px; pointer-events: none; }
 .badge {
   padding: 0 5px; border-radius: 999px; background: rgba(8, 14, 26, 0.72); color: #e6eefb;

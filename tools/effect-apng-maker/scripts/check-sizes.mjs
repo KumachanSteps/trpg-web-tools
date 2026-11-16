@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp' };
 const OK = 3 * 1024 * 1024;
 const MAX = 4 * 1024 * 1024;
 

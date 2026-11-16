@@ -1,7 +1,7 @@
 # 演出APNGメーカー（Effect APNG Maker / 연출 APNG 메이커）
 
 場面転換・天候・ホラー演出などのAPNG素材を、ライブラリから選んで調整し、ココフォリアの部屋で使える形で書き出すツール。
-v0.19 は限定テスト版（`noindex`、ポータルのカードなし、直リンクのみ）。
+v0.20 は限定テスト版（`noindex`、ポータルのカードなし、直リンクのみ）。
 
 ## 画面
 
@@ -29,8 +29,9 @@ library/
 
 1. 近いアセットのフォルダをコピーして `asset.json` と `render.js` を書き換える。
 2. `node tools/effect-apng-maker/scripts/build-manifest.mjs` … `asset.json` を検査して `manifest.json` を作る（`--check` で検査だけ）。
-3. `node tools/effect-apng-maker/scripts/check-sizes.mjs [id,id]` … 初期設定で書き出して容量を確かめる（Playwright が必要。4MB 超で失敗）。
-4. PR にする。`status` は `test`（いまは全件）→ 一般公開のときに `public`。`draft` はライブラリに出ない。
+3. `node tools/effect-apng-maker/scripts/build-thumbs.mjs [id,id]` … ライブラリの静止画サムネイル（`thumb.webp`）を作る。そのあともう一度 `build-manifest.mjs` を流す。
+4. `node tools/effect-apng-maker/scripts/check-sizes.mjs [id,id]` … 初期設定で書き出して容量を確かめる（Playwright が必要。4MB 超で失敗）。
+5. PR にする。`status` は `test`（いまは全件）→ 一般公開のときに `public`。`draft` はライブラリに出ない。
 
 ### render.js の決まりごと
 
@@ -48,6 +49,8 @@ export default {
 - 転換の in / out / inout は本体が `p` を作るので、`cover` は「覆う量 p」だけを描けばよい。
 - `kind: "combo"` は `layers` に既存のアセットを並べるだけ（例：嵐 = 雨＋風＋雷光）。
 - `setup` は async にしてよい（本体が await する）。
+- 1コマを描くのが重い（プレビューの大きさで 18ms 超）ものは、プレビューでは前もって描きためてから再生する（本体が自動で測る）。
+  最初の1コマの下ごしらえだけで重いと分かっているものは `asset.json` に `"heavy": true` を書くと、測らずに描きためる。
 - 長さの初期値：新しく足す場面転換は 2 秒までを目安にする（すでに 2 秒以下のものはそのまま）。演出も、よほど長い流れでない限り 4 秒以内にする（TK 2026-11-14）。
 
 ### 文字画像APNGメーカーEX の演出を使う
@@ -69,6 +72,8 @@ export default {
 - 1ループ＝アセットの長さ（設定の `loop` に長さを渡す）。元の長さが決まっている一回ものは `time: t => t * 3` のように渡す。
 - `scaleLayers(box.RAIN_PRESETS[lv], P.amount)` で粒の数を増減できる。
 - 移し替えの計画と残り：https://claude.ai/artifact/FFUuRBa9C6oB74BGL1YZQu
+- 1コマが重いものは `res: 0.5` のように内部の大きさを下げて描ける（引きのばして重ねる）。いまは 氷_端から凍りつく（0.65）と 黒雲の稲光（0.5）。
+- `with (window)` で動かすと名前を引くたびに遅くなる（数十倍）ので使わない。コードが `window.X =` で置く名前は、`theme-bridge.js` が変数として用意する。
 - 元のコードを直したときは `ex/themes/` に写し直し、`theme-bridge.js` の `THEME_VERSION` を上げる。
 
 ### 描画コードのない APNG（コマ画像）を使う

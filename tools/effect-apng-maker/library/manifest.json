@@ -183,7 +183,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "transition/fade"
+   "path": "transition/fade",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "transition.wipe",
@@ -332,7 +333,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "transition/wipe"
+   "path": "transition/wipe",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "transition.blinds",
@@ -468,7 +470,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "transition/blinds"
+   "path": "transition/blinds",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "transition.iris",
@@ -574,7 +577,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "transition/iris"
+   "path": "transition/iris",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "transition.petals",
@@ -804,7 +808,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "transition/petals"
+   "path": "transition/petals",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "transition.feathers",
@@ -1001,7 +1006,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "transition/feathers"
+   "path": "transition/feathers",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "transition.blink",
@@ -1095,7 +1101,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "transition/blink"
+   "path": "transition/blink",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "transition.bats",
@@ -1275,7 +1282,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "コウモリの絵は TK のハロウィン素材 H19"
    },
-   "path": "transition/bats"
+   "path": "transition/bats",
+   "thumb": "thumb.webp?v=3"
   },
   {
    "id": "weather.rain",
@@ -1443,7 +1451,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
-   "path": "weather/rain"
+   "path": "weather/rain",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "weather.lightning-flash",
@@ -1550,7 +1559,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "weather/lightning-flash"
+   "path": "weather/lightning-flash",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "weather.lightning-strike",
@@ -1700,7 +1710,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "weather/lightning-strike"
+   "path": "weather/lightning-strike",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "weather.storm",
@@ -1819,7 +1830,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
-   "path": "weather/storm"
+   "path": "weather/storm",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "weather.snow",
@@ -1977,7 +1989,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
-   "path": "weather/snow"
+   "path": "weather/snow",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "weather.fog",
@@ -2111,7 +2124,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
-   "path": "weather/fog"
+   "path": "weather/fog",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "weather.sakura",
@@ -2231,7 +2245,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "weather/sakura"
+   "path": "weather/sakura",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "weather.thunder-bolt",
@@ -2295,7 +2310,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.26,
-   "path": "weather/thunder-bolt"
+   "path": "weather/thunder-bolt",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "weather.thunder-chain",
@@ -2359,11 +2375,12 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "weather/thunder-chain"
+   "path": "weather/thunder-chain",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "weather.thunder-clouds",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-15",
    "order": 10,
@@ -2423,7 +2440,9 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.5,
-   "path": "weather/thunder-clouds"
+   "heavy": true,
+   "path": "weather/thunder-clouds",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "element.embers",
@@ -2546,7 +2565,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "element/embers"
+   "path": "element/embers",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.wind",
@@ -2683,7 +2703,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
-   "path": "element/wind"
+   "path": "element/wind",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "element.light-particles",
@@ -2822,7 +2843,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "element/light-particles"
+   "path": "element/light-particles",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.fire-wall",
@@ -2886,7 +2908,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "element/fire-wall"
+   "path": "element/fire-wall",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "element.fire-run",
@@ -2949,7 +2972,8 @@
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
    "poster": 0.5,
-   "path": "element/fire-run"
+   "path": "element/fire-run",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "element.fire-breath",
@@ -3015,7 +3039,8 @@
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
    "poster": 0.55,
-   "path": "element/fire-breath"
+   "path": "element/fire-breath",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "element.ash",
@@ -3110,7 +3135,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "element/ash"
+   "path": "element/ash",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.smoke",
@@ -3173,11 +3199,12 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "element/smoke"
+   "path": "element/smoke",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.ice-frost",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-15",
    "order": 9,
@@ -3248,7 +3275,9 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.9,
-   "path": "element/ice-frost"
+   "heavy": true,
+   "path": "element/ice-frost",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "element.ice-wall",
@@ -3311,7 +3340,9 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "element/ice-wall"
+   "heavy": true,
+   "path": "element/ice-wall",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.ice-shatter",
@@ -3374,7 +3405,9 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.35,
-   "path": "element/ice-shatter"
+   "heavy": true,
+   "path": "element/ice-shatter",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.ice-melt",
@@ -3437,7 +3470,9 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "element/ice-melt"
+   "heavy": true,
+   "path": "element/ice-melt",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.water-splash",
@@ -3500,7 +3535,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "element/water-splash"
+   "path": "element/water-splash",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.water-rise",
@@ -3578,7 +3614,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.85,
-   "path": "element/water-rise"
+   "path": "element/water-rise",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "element.underwater",
@@ -3694,7 +3731,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "element/underwater"
+   "path": "element/underwater",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "horror.heartbeat",
@@ -3800,7 +3838,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "horror/heartbeat"
+   "path": "horror/heartbeat",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "horror.lights-out",
@@ -3867,7 +3906,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.6,
-   "path": "horror/lights-out"
+   "path": "horror/lights-out",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "horror.flicker",
@@ -3971,7 +4011,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "horror/flicker"
+   "path": "horror/flicker",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "horror.dark-erode",
@@ -4038,7 +4079,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.7,
-   "path": "horror/dark-erode"
+   "path": "horror/dark-erode",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "horror.shadow-hands",
@@ -4105,7 +4147,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.45,
-   "path": "horror/shadow-hands"
+   "path": "horror/shadow-hands",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "horror.tentacles",
@@ -4186,7 +4229,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "horror/tentacles"
+   "path": "horror/tentacles",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "horror.sanity-noise",
@@ -4266,7 +4310,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.5,
-   "path": "horror/sanity-noise"
+   "path": "horror/sanity-noise",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "horror.blood-splutter",
@@ -4359,7 +4404,8 @@
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
    },
    "poster": 0.45,
-   "path": "horror/blood-splutter"
+   "path": "horror/blood-splutter",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "visual.noise",
@@ -4492,7 +4538,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "visual/noise"
+   "path": "visual/noise",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "visual.vignette",
@@ -4640,7 +4687,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "visual/vignette"
+   "path": "visual/vignette",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "visual.flash",
@@ -4792,7 +4840,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "visual/flash"
+   "path": "visual/flash",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "visual.focus-lines",
@@ -4940,7 +4989,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "visual/focus-lines"
+   "path": "visual/focus-lines",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "visual.letterbox",
@@ -5078,7 +5128,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "visual/letterbox"
+   "path": "visual/letterbox",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "visual.dust",
@@ -5230,7 +5281,8 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "path": "visual/dust"
+   "path": "visual/dust",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "visual.meteors",
@@ -5399,7 +5451,8 @@
     "note": "文字画像APNGメーカーEXの部品を使用"
    },
    "opacity": 0.5,
-   "path": "visual/meteors"
+   "path": "visual/meteors",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "magic.circle-floor-cast",
@@ -5508,7 +5561,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.7,
-   "path": "magic/circle-floor-cast"
+   "path": "magic/circle-floor-cast",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "magic.circle-floor",
@@ -5617,7 +5671,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "magic/circle-floor"
+   "path": "magic/circle-floor",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "magic.circle-center-cast",
@@ -5726,7 +5781,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.75,
-   "path": "magic/circle-center-cast"
+   "path": "magic/circle-center-cast",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "magic.circle-center",
@@ -5835,7 +5891,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "magic/circle-center"
+   "path": "magic/circle-center",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "magic.chant",
@@ -5959,7 +6016,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "magic/chant"
+   "path": "magic/chant",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "magic.rise",
@@ -6069,7 +6127,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "magic/rise"
+   "path": "magic/rise",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.fang",
@@ -6173,7 +6232,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "combat/fang"
+   "path": "combat/fang",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.claw",
@@ -6276,7 +6336,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "combat/claw"
+   "path": "combat/claw",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.katana",
@@ -6381,7 +6442,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "combat/katana"
+   "path": "combat/katana",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.katana-x",
@@ -6485,7 +6547,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "combat/katana-x"
+   "path": "combat/katana-x",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.slash-hard",
@@ -6588,7 +6651,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "combat/slash-hard"
+   "path": "combat/slash-hard",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.bullet-glass",
@@ -6694,7 +6758,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "combat/bullet-glass"
+   "path": "combat/bullet-glass",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.bullet-crack",
@@ -6800,7 +6865,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
-   "path": "combat/bullet-crack"
+   "path": "combat/bullet-crack",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.thunder",
@@ -6876,7 +6942,8 @@
     "note": "文字画像APNGメーカーEXの演出を移植"
    },
    "poster": 0.4,
-   "path": "combat/thunder"
+   "path": "combat/thunder",
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "combat.slash-diagonal",
@@ -6990,7 +7057,8 @@
     "note": "文字画像APNGメーカーEXの斬撃APNG（TKさんの手本をもとに制作）を移植"
    },
    "poster": 0.4,
-   "path": "combat/slash-diagonal"
+   "path": "combat/slash-diagonal",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "combat.slash-crescent",
@@ -7106,7 +7174,8 @@
     "note": "文字画像APNGメーカーEXの斬撃APNG（TKさんの手本をもとに制作）を移植"
    },
    "poster": 0.2,
-   "path": "combat/slash-crescent"
+   "path": "combat/slash-crescent",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "scifi.binary-rain",
@@ -7203,7 +7272,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.3,
-   "path": "scifi/binary-rain"
+   "path": "scifi/binary-rain",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "scifi.glitch",
@@ -7268,7 +7338,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.5,
-   "path": "scifi/glitch"
+   "path": "scifi/glitch",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "scifi.terminal",
@@ -7334,7 +7405,8 @@
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
    },
    "poster": 0.5,
-   "path": "scifi/terminal"
+   "path": "scifi/terminal",
+   "thumb": "thumb.webp?v=1"
   }
  ]
 }

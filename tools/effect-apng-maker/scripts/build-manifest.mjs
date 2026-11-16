@@ -125,7 +125,9 @@ for (const cat of readdirSync(LIB)) {
       continue;
     }
     checkAsset(a, `${cat}/${slug}`);
-    assets.push({ ...a, path: `${cat}/${slug}` });
+    // サムネイル画像（scripts/build-thumbs.mjs で作る）があれば使う。なければ画面で描く
+    const thumb = existsSync(join(catDir, slug, 'thumb.webp')) ? `thumb.webp?v=${a.version}` : undefined;
+    assets.push({ ...a, path: `${cat}/${slug}`, ...(thumb ? { thumb } : {}) });
   }
 }
 
