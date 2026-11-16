@@ -1,6 +1,6 @@
 {
   "id": "element.ice-frost",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-15",
   "order": 9,
@@ -70,5 +70,6 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
   },
-  "poster": 0.9
+  "poster": 0.9,
+  "heavy": true
 }

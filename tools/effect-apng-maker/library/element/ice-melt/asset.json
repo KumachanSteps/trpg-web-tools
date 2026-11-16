@@ -58,5 +58,6 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXのテーマ別素材を移植"
   },
-  "poster": 0.3
+  "poster": 0.3,
+  "heavy": true
 }
