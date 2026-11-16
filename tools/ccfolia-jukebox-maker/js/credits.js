@@ -4,12 +4,12 @@
 (function () {
   'use strict';
   window.JukeboxBgmSources = [
-    { name: "OpenTracks（旧DOVA-SYNDROME）", count: 386, channel: "https://www.youtube.com/@opentracksbgm", site: "https://opentracks.com/" },
-    { name: "PeriTune", count: 72, channel: "https://www.youtube.com/@PeriTune", site: "https://peritune.com/" },
+    { name: "OpenTracks（旧DOVA-SYNDROME）", count: 407, channel: "https://www.youtube.com/@opentracksbgm", site: "https://opentracks.com/" },
+    { name: "PeriTune", count: 112, channel: "https://www.youtube.com/@PeriTune", site: "https://peritune.com/" },
     { name: "NoCopyrightSounds (NCS)", count: 21, channel: "https://www.youtube.com/@NoCopyrightSounds", site: "https://ncs.io/" },
     { name: "もみじばミュージック", count: 17, channel: "https://www.youtube.com/@momiziba" },
     { name: "MusMus", count: 14, channel: "https://www.youtube.com/@musmusch", site: "https://musmus.main.jp/" },
-    { name: "魔王魂（森田交一）", count: 11, channel: "https://www.youtube.com/@koichi_maou", site: "https://maou.audio/" },
+    { name: "魔王魂（森田交一）", count: 12, channel: "https://www.youtube.com/@koichi_maou", site: "https://maou.audio/" },
     { name: "コニシユカ / nonai sound", count: 9, channel: "https://www.youtube.com/@yuconishi", site: "https://nonaisound.com/" },
     { name: "MATSU", count: 8, channel: "https://www.youtube.com/@matsubgm" },
     { name: "柊情景音楽店", count: 8, channel: "https://www.youtube.com/@HiiragiMusic" },
