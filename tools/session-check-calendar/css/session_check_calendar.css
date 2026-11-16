@@ -533,6 +533,7 @@ button.mini-card:hover { border-color: var(--ink-soft); }
 }
 .task-row > span:not(.task-row-meta) { min-width: 0; flex: 1; }
 .detail-task-check { flex: 0 0 22px; }
+.task-origin { display: block; margin-top: 2px; color: var(--faint); font-size: 9px; font-weight: 500; }
 .task-row-meta { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .series-list { display: grid; gap: 6px; }
 .series-link { width: 100%; border: 1px solid var(--line-soft); border-radius: 9px; padding: 7px 9px; background: var(--sheet-sub); color: var(--ink-soft); text-align: left; cursor: pointer; }

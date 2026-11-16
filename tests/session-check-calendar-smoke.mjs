@@ -50,7 +50,7 @@ for (const id of [
   if (!html.includes(`id="${id}"`)) throw new Error(`Missing calendar control: ${id}`);
 }
 
-if (!html.includes('v0.30') || !html.includes('session_check_calendar.js?v=0.30') || !html.includes('hub.css?v=0.1.2')) {
+if (!html.includes('v0.31') || !html.includes('session_check_calendar.js?v=0.31') || !html.includes('hub.css?v=0.1.2')) {
   throw new Error('Calendar version assets were not updated');
 }
 
@@ -115,6 +115,7 @@ for (const contract of [
   '.status-chip.status-active',
   '.status-chip.status-completed',
   '.event.status-active',
+  '.task-origin',
 ]) {
   if (!css.includes(contract)) throw new Error(`Missing independent-panel layout contract: ${contract}`);
 }
@@ -176,11 +177,15 @@ for (const contract of [
   "session.series ? `series:${session.series}` : `session:${session.id}`",
   'now.datetime >= firstStart',
   'now.date > lastDate',
+  'detailTaskItems',
+  'シリーズ共通の準備タスク',
+  'data-session-id',
+  '予備日',
 ]) {
   if (!js.includes(contract)) throw new Error(`Missing Google sync contract: ${contract}`);
 }
 
-if (!js.includes("version: '0.30'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
+if (!js.includes("version: '0.31'") || js.includes('www.googleapis.com/calendar/v3/calendars/')) {
   throw new Error('Calendar export version or legacy Google preview is incorrect');
 }
 
