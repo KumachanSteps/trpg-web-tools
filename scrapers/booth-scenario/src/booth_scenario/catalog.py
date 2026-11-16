@@ -113,6 +113,13 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         est_duration = bool(durations)
     supplements = sorted(r[0] for r in conn.execute(
         "SELECT system_code FROM scenario_systems WHERE scenario_id = ? AND support_type = 'SUPPLEMENT'", (sid,)))
+    supplements_rec = sorted(r[0] for r in conn.execute(
+        "SELECT system_code FROM scenario_systems WHERE scenario_id = ? AND support_type = 'SUPPLEMENT_RECOMMENDED'", (sid,)))
+    links = {}
+    for (v,) in conn.execute("SELECT normalized_value_json FROM scenario_conditions WHERE scenario_id = ? AND category = 'OTHER'", (sid,)):
+        v = json.loads(v or "{}")
+        if v.get("kind") in ("SEQUEL", "SERIES") and v.get("title"):
+            links.setdefault(v["kind"], v["title"])
     has_ho_condition = conn.execute("SELECT 1 FROM scenario_conditions WHERE scenario_id = ? AND category = 'HO'", (sid,)).fetchone()
     titles = []
     for p in products:
@@ -127,6 +134,9 @@ def scenario_record(conn: sqlite3.Connection, sc: dict) -> dict:
         "aliases": titles,
         "system": system,
         "supplements": supplements,
+        "supplements_recommended": supplements_rec,
+        "sequel_of": links.get("SEQUEL"),
+        "series": links.get("SERIES"),
         "players": {**_players(modes), **({"estimated": True} if est_players else {})},
         "duration": {**_duration(durations), **({"estimated": True} if est_duration else {})},
         "secret_ho": _secret_ho(modes, bool(has_ho_condition)),

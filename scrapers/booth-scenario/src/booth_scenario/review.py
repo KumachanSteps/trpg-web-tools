@@ -28,7 +28,7 @@ MEMBER_SEP = "／"
 FIELD_HELP = {
     "product_kind": "SINGLE / COLLECTION / SAME_PAGE_VARIANTS / ASSET_ONLY / UNDETERMINED",
     "members": "作品名（単品は作品名1つ、アンソロジーは収録作品を／区切り）",
-    "systems": "COC6 / COC7 / EMOKLORE / MADAMIS / STORYPLAYING / OTHER と NATIVE / SUPPORTED / CONVERTIBLE / CONVERSION_PATCH を : でつなぎ ; 区切り。使用サプリは SUPPLEMENT:コード（GASLIGHT / DREAMLANDS / HIEIZAN / ARKHAM / MISKATONIC / TEIKOKU / PULP / COC2010 / COC2015 / CULT_NOW / MALLEUS / KEEPER_COMPANION）",
+    "systems": "COC6 / COC7 / EMOKLORE / MADAMIS / STORYPLAYING / OTHER と NATIVE / SUPPORTED / CONVERTIBLE / CONVERSION_PATCH を : でつなぎ ; 区切り。使用・必須のサプリは SUPPLEMENT:コード、推奨だけのサプリは SUPPLEMENT_REC:コード（GASLIGHT / DREAMLANDS / HIEIZAN / ARKHAM / MISKATONIC / TEIKOKU / PULP / COC2010 / COC2015 / CULT_NOW / MALLEUS / KEEPER_COMPANION）",
     "session_modes": "例: ONE_ON_ONE 1-1 KP/KPC ; MULTI_PL 2-4 KP/NONE SECRET（秘匿HOあり）",
     "durations": "例: VOICE MAIN 180-240 ; TEXT UNSPECIFIED 480-480（分）",
     "assets": "例: NPC_IMAGE:INCLUDED ; BGM_AUDIO:EXPLICITLY_ABSENT",
@@ -142,7 +142,9 @@ def auto_fields(conn, iid: int, kind: str | None = None) -> dict[str, str]:
     return {
         "product_kind": cls["product_kind"] if cls else "UNDETERMINED",
         "members": MEMBER_SEP.join(members),
-        "systems": _uniq_sorted(f"SUPPLEMENT:{v['system_code']}" if v["support_type"] == "SUPPLEMENT" else f"{v['system_code']}:{v['support_type']}"
+        "systems": _uniq_sorted(f"SUPPLEMENT:{v['system_code']}" if v["support_type"] == "SUPPLEMENT"
+                                else f"SUPPLEMENT_REC:{v['system_code']}" if v["support_type"] == "SUPPLEMENT_RECOMMENDED"
+                                else f"{v['system_code']}:{v['support_type']}"
                                 for v in _evidence_values(conn, iid, "scenario_systems")),
         "session_modes": _uniq_sorted(
             f"{v['mode']} {v.get('player_min')}-{v.get('player_max')} {v.get('facilitator_role')}/{v.get('companion_role')}"
@@ -552,7 +554,10 @@ def _norm_value(field: str, value: str) -> frozenset:
     parts = re.split(r"\s*;\s*|\n", value)
     if field == "systems":
         # "SUPPLEMENT:GASLIGHT" is also written for GASLIGHT:SUPPLEMENT.
+        # "SUPPLEMENT_REC:TEIKOKU" is a recommended one; "COC6:SUPPORT" means SUPPORTED.
+        parts = [re.sub(r"^\s*SUPPLEMENT_REC(OMMENDED)?\s*:\s*(\w+)", r"\2:SUPPLEMENT_RECOMMENDED", p, flags=re.I) for p in parts]
         parts = [re.sub(r"^\s*SUPPLEMENT\s*:\s*(\w+)", r"\1:SUPPLEMENT", p, flags=re.I) for p in parts]
+        parts = [re.sub(r":\s*SUPPORT\s*$", ":SUPPORTED", p, flags=re.I) for p in parts]
     return frozenset(re.sub(r"\s+", " ", p.strip()).upper() for p in parts if p.strip())
 
 

@@ -17,7 +17,7 @@ from .rules import Hit, lines
 # -- recommended skills / stats ---------------------------------------------------
 # "推奨技能：…", "準 推奨：…", "必須技能", and the softer "振る機会がある技能" /
 # "使える技能" / "場合によっては使うかも", which read as 準推奨 (SEMI).
-_SKILL_LABEL = re.compile(r"(?P<lv>準\s*推奨|推奨|必須)\s*(技能|スキル)|^[・▶●◆■]?\s*(?P<bare>推奨)\s*(?=[:：])|(?P<semi>準\s*推奨|振る機会(が|の)?ある技能|使える技能|場合によっては使うかも)(?=\s*[(（:：])")
+_SKILL_LABEL = re.compile(r"(?P<lv>準\s*推奨|推奨|必須)\s*(される\s*)?(技能|スキル)|^[・▶●◆■]?\s*(?P<bare>推奨)\s*(?=[:：])|(?P<semi>準\s*推奨|振る機会(が|の)?ある技能|使える技能|場合によっては使うかも)(?=\s*[(（:：])")
 _NOT_REC = re.compile(r"非推奨\s*[:：]\s*(.+)|[:：]\s*([^:：]{1,20}?)\s*非推奨")
 _STATUS_LABEL = re.compile(r"推奨\s*(ステータス|能力値|ステ(?!ージ)|status)|(STR|CON|POW|DEX|APP|SIZ|INT|EDU|SAN)\s*\d+\s*以上", re.I)
 _NONE = re.compile(r"^(特に)?(なし|無し|ありません|不要|自由|なんでも|何でも)")
@@ -39,7 +39,12 @@ def _value_after(ls: list[str], k: int, m: re.Match) -> str:
 
 
 def _split_skills(v: str) -> list[str]:
+    # "強いて言えば目星と聞き耳", "運動系技能を使用する機会が多くある。…"
+    v = re.sub(r"^(強いて|しいて)(言|い)えば\s*", "", v)
+    if re.fullmatch(r"[^、,，/／・\s<《＜「〈]{1,8}と[^、,，/／・\s]{1,8}", v):
+        v = v.replace("と", "、")
     v = re.sub(r"[（(][^）)]*(なくても|あれば|あったら|振る機会|など|代用|代替|スムーズ|便利)[^）)]*[）)]", "", v)
+    v = re.sub(r"(を|が)\s*(使用|使う|使え|振る|振れ|役立|活躍|多く)[^（(]*$", "", v)
     # Keep "芸術(歌唱、演技)" whole: hide separators inside brackets while splitting.
     v = re.sub(r"[（(][^）)]*[）)]", lambda m: m.group(0).replace("、", "\0").replace(",", "\1"), v)
     parts = re.split(r"[、,，/／・\s]+|(?<=[>》＞」〉])\s*(?=[<《＜「〈])|or|もしくは|または|及び|および|と(?=[<《＜「〈])", v)
@@ -309,6 +314,30 @@ def loss_from_difficulty(text: str) -> list[Hit]:
     return []
 
 
+# "「忘れじの理想郷」の続編です", "前作『…』の続編として", "シナリオ群「幽罪」の収録作品".
+_SEQUEL = re.compile(r"[「『]\s*([^」』]{1,60}?)\s*[」』]\s*(?:の|から)\s*続(編|き)")
+_SERIES = re.compile(r"(?:シリーズ|シナリオ群|シナリオ集)\s*[「『]\s*([^」』]{1,40}?)\s*[」』]\s*(?:の|に)?\s*(収録|作品|一作|第|$)"
+                     r"|[「『]\s*([^」』]{1,40}?)\s*[」』]\s*シリーズ")
+
+
+def extract_links(text: str) -> list[Hit]:
+    """The work this one follows, and the series it belongs to."""
+    hits, kinds = [], set()
+    for ln in lines(text):
+        # Rights notices: "『クトゥルフ神話TRPG』シリーズの二次創作物".
+        if _TRANSLATION.search(ln) or re.search(r"権利を有する|二次創作|著作権|©", ln):
+            continue
+        if "SEQUEL" not in kinds and (m := _SEQUEL.search(ln)):
+            kinds.add("SEQUEL")
+            hits.append(Hit("scenario_conditions", {"category": "OTHER", "kind": "SEQUEL", "title": m.group(1)}, ln, confidence=0.7))
+        if "SERIES" not in kinds and (m := _SERIES.search(ln)):
+            title = m.group(1) or m.group(3)
+            if not re.fullmatch(r".*(TRPG|クトゥルフ神話|エモクロア|マーダーミステリー).*|第\s*\S{1,3}\s*弾", title):
+                kinds.add("SERIES")
+                hits.append(Hit("scenario_conditions", {"category": "OTHER", "kind": "SERIES", "title": title}, ln, confidence=0.6))
+    return hits
+
+
 def extract_tendency(text: str) -> list[Hit]:
     loss = list(extract_loss(text)) or loss_from_difficulty(text)
-    return extract_skills(text) + loss + extract_modification(text) + extract_content_warnings(text)
+    return extract_skills(text) + loss + extract_modification(text) + extract_content_warnings(text) + extract_links(text)

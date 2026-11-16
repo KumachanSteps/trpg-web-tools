@@ -67,6 +67,11 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
   - 章ごとの時間（其ノ一・第1話・Act1）は `EPISODE`、それらの合計に近い時間は `ALL_EPISODES`。アンソロジーの「1~6時間の短編7本収録」のような要約行は使わない。
   - 単品の作品名は商品名から【CoCシナリオ】や SPLL 番号などを除いたもの（「」『』があればその中）。
   - 権利表記の行（「『クトゥルフ神話TRPG』の二次創作物」など）はシステム判定に使わない。本文にシステムが書いてあればタイトル・タグからは足さない。
+  - （2026-11-16 TK、テストバッチ3）「■対応システム」の見出しだけの行は、下に並ぶシステムを `NATIVE`（「6版プレイ用補遺あり」は `SUPPORTED`）。「ルールブック「新クトゥルフ神話TRPG」に対応したシナリオ」は `NATIVE`。
+  - CoC サプリは、使用・必須なら `SUPPLEMENT:コード`、なくても遊べるが推奨（「あるとより楽しめます」「所持を推奨」）なら `SUPPLEMENT_REC:コード`（DB の support type は `SUPPLEMENT_RECOMMENDED`、migration 012）。「参考にしています。なくてもプレイ可能」は記録しない。
+  - 「人数 - 6人」「# プレイヤー人数」「# プレイ時間」も読む。「プレイヤー1人に対して」は人数ではない。書籍版限定・番外編などの別作品のKPレス／ソロは数えない。「PL1名で遊ぶ場合、汎用NPCを使用」は `SOLO` で同行者 `NPC`。
+  - キャンペーンの「全7話：0話…1h、1~6話…3h~4h」は話数を掛けた合計（1140-1500）を `ALL_EPISODES` に。「3分で分かる」や長い物語文中の時間は使わない。
+  - トレーラー画像にしか書かれていない人数・時間は本文から読めないため、推定値のまま（採点では外れになる）。
 
 ### シナリオの傾向（`tendency.py`、migration 009）
 
@@ -77,6 +82,7 @@ booth-scenario discover-selectors data/snapshots/item_3403696.html --text "既�
 - ロスト率の記載がなければ「難易度：低」などをロスト率として使う（KP難易度・PL難易度は除く）。
 - **改変**（`MODIFICATION`）: `ALLOWED` / `CONDITIONAL` / `FORBIDDEN`。許可と禁止が両方ある・範囲の条件付きは `CONDITIONAL`。「改変データの配布」など再配布の話は数えない。
 - **地雷・注意要素**（`CONTENT_WARNING`）: 「含まれる要素」「以下の要素」「これらの要素を含む」の一覧は要素をすべて原文で、「注意事項」などの下は注意すべき話題（グロ・自殺・PvP など）を含む要素だけ。R-15G なども。検索用に `GORE` / `PVP` などのタグも付け、採点はタグで比べる。
+- **続編・シリーズ**（`OTHER`、`kind` が `SEQUEL` / `SERIES`）: 「「忘れじの理想郷」の続編」「前作『…』の続編」、「シナリオ群「幽罪」」「『人殺しの家』シリーズ」。カタログでは `sequel_of` / `series`。
 - **公開日**（`products.published_at`）: 商品 JSON の `published_at`。それ以前に取得した商品は再取得で埋まります。
 
 傾向だけを確認する表: `export-review --fields skills lost_rate modification content_warnings`。取り込むと既存のラベルに追加されます。

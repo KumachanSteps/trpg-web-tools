@@ -263,5 +263,50 @@ def test_coc_supplements():
     assert [(h.value["system_code"], h.value["support_type"]) for h in hits] == [("COC6", "NATIVE"), ("HIEIZAN", "SUPPLEMENT")]
     assert sup("◆ 使用サプリ ： 基本ルールブック 6 版、マレウス・モンストロルム") == ["MALLEUS"]
     assert sup("サプリメント(マレウス・モンストロルム、キーパーコンパニオン、クトゥルフ・カルト・ナウ)を元にした") == ["CULT_NOW", "MALLEUS", "KEEPER_COMPANION"]
-    assert sup("サプリ「キーパーコンパニオン」があると回しやすいが、基本ルールブック6版のみで回せる") == []
+    # "あると回しやすい" but playable without it: a recommended supplement.
+    assert sup("サプリ「キーパーコンパニオン」があると回しやすいが、基本ルールブック6版のみで回せる") == ["KEEPER_COMPANION"]
     assert sup("使用サプリ：なし") == []
+
+
+def test_test_batch_3():
+    from booth_scenario.rules import extract_durations, extract_session_modes, extract_systems
+    from booth_scenario.tendency import extract_links, extract_skills
+
+    def sys_(t):
+        return [(h.value["system_code"], h.value["support_type"]) for h in extract_systems(t)]
+
+    def modes(t):
+        return [(h.value["mode"], h.value["player_min"], h.value["player_max"]) for h in extract_session_modes(t)]
+
+    def times(t):
+        return [(h.value["min_minutes"], h.value["max_minutes"]) for h in extract_durations(t)]
+
+    # A system heading with the list on the next lines; 補遺 marks a supported edition.
+    assert sys_("■対応システム\n新クトゥルフ神話TRPG（7版）\n（6版プレイ用補遺あり）") == [("COC7", "NATIVE"), ("COC6", "SUPPORTED")]
+    assert sys_("対応システム\n――――\n・クトゥルフ神話TRPG（6版/クラシック版）\n・新クトゥルフ神話TRPG（7版/新版）") == [("COC6", "NATIVE"), ("COC7", "NATIVE")]
+    assert sys_("※ルールブック「新クトゥルフ神話TRPG」に対応したシナリオです") == [("COC7", "NATIVE")]
+    # Required and recommended supplements.
+    assert sys_("※KP はルルブ 2015 とマレウス・モンストロルムの所持が必須。") == [("MALLEUS", "SUPPLEMENT"), ("COC2015", "SUPPLEMENT")]
+    assert sys_("※「クトゥルフと帝国」はなくても遊べますが、あるとより1920年代日本をお楽しみいただけます。") == [("TEIKOKU", "SUPPLEMENT_RECOMMENDED")]
+    assert sys_("※ マレウス・モンストロルムの内容を参考にしています。該当ソースブックがなくてもプレイ可能です。") == []
+    # Player counts.
+    assert modes("■人数 - 6人（＋ＧＭ必須）") == [("MULTI_PL", 6, 6)]
+    assert modes("# プレイヤー人数\n6人(うち1名はゲームマスター(GM)としてゲーム全体の進行を行う)") == [("MULTI_PL", 6, 6)]
+    assert modes("●人数\n5人(プレイヤー5名)\nGM不要\nプレイヤー1人に対してキャラクター1人を選択し") == [("GMLESS_MULTI", 5, 5)]
+    assert ("GMLESS_SOLO", 1, 1) not in modes("書籍版にはフルセットの内容とKPレス「うずぶちの夏と君」が含まれます")
+    assert modes("書籍版限定で付属していたCoC6版ソロシナリオ(KPレス)です。") == []
+    sm = extract_session_modes("人数：KP側PC＋PC1名、またはPL1名\n┗PL1名で遊ぶ場合、シナリオ付属の汎用NPCを使用する。")
+    assert [(h.value["mode"], h.value["companion_role"]) for h in sm] == [("ONE_ON_ONE", "KPC"), ("SOLO", "NPC")]
+    # Play time.
+    assert times("# プレイ時間\n150分(最大)") == [(150, 150)]
+    assert times("-プレイヤー資料×2~3分で分かるクトゥルフ神話TRPG") == []
+    assert times("・CPシナリオ（全7話：0話…1h、1～6話…3h~4h程度）") == [(1140, 1500)]
+    long_story = "新しいゲームのテストプレイという名目で招かれたギャンブラーたち。それは1時間程度のエキシビションマッチであり、ちょっとしたクイズに答えるだけのゲームである。特に今回は危険は全くない。"
+    assert times(long_story) == []
+    # Skills.
+    sk = [h.value for h in extract_skills("推奨技能：強いて言えば目星と聞き耳\n●推奨技能：運動系技能を使用する機会が多くある。")]
+    assert [v["skills"] for v in sk] == [["目星", "聞き耳"], ["運動系技能"]]
+    assert extract_skills("推奨される技能：〈芸術：茶道〉もしくは〈歴史〉、〈目星〉")[0].value["skills"] == ["芸術:茶道", "歴史", "目星"]
+    # Sequel and series.
+    assert [h.value["title"] for h in extract_links("「忘れじの理想郷」の続編です。\nエモクロアTRPG公式シナリオ群「幽罪」")] == ["忘れじの理想郷", "幽罪"]
+    assert extract_links("本作は『クトゥルフ神話TRPG』シリーズの二次創作物です。") == []

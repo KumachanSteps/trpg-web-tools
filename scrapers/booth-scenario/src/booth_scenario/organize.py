@@ -35,10 +35,11 @@ _SECTION_HEAD = re.compile(r"収録(作品|シナリオ|作|タイトル|一覧|
 _MEMBER_COUNT = re.compile(r"(?:全\s*)?(\d+)\s*(?:本|作品|作|編|シナリオ)(?:を)?\s*(?:収録|入り|セット)|収録数\s*[::]?\s*(\d+)|シナリオ\s*全\s*(\d+)\s*本")
 # "通常セット" or "スチルセット" are not bundles of several works.
 _BUNDLE_LABEL = re.compile(r"全.{0,8}セット|シリーズ.{0,4}セット|アソート|まとめ|全部|コンプリート|一式|全\s*\d*\s*話|全作|全\s*\d+\s*本|\d+\s*本セット|バンドル|合本|詰め合わせ|全シナリオ|bundle", re.I)
-_ROLE_PACKET = re.compile(r"^\s*(HO\s*\d|(GM|KP|DL|PL)\s*用)", re.I)
+# "HO1", "GM用", "PC1 タマコ", "【支援用】_PC1（シトリン）": one role's packet of a murder mystery.
+_ROLE_PACKET = re.compile(r"^\s*(HO\s*\d|(GM|KP|DL|PL)\s*用|PC\s*\d)|^\s*【[^】]*】\s*_?\s*(PC|HO)\s*\d", re.I)
 _FORMAT_LABEL = re.compile(
     r"PDF|テキスト|txt|word|版|部屋|ルーム|素材|付き|付|通常|フル|DL|ダウンロード|紙|書籍|冊子|物理|匿名配送|おまけ|支援|投げ銭|ブースト|データ|"
-    r"本編|画像|のみ|pack|edition|ver|中文|English|英語|韓国語|한국어|日本語|配信|KPレス|タイマン|HO\s*\d|PL", re.I)
+    r"本編|画像|のみ|pack|edition|ver|中文|English|英語|韓国語|한국어|日本語|配信|KPレス|タイマン|HO\s*\d|PL|共有|ネタバレ|prelude|プレリュード", re.I)
 _QUOTED = re.compile(r"[『「]([^』」]{1,60})[』」]")
 _BULLET = re.compile(r"^(?:[・●○◆◇■□▼▽▍★☆♦◎※\-*]|\d+[.)．、]|[①-⑳]|第\s*\d+\s*話|No\.?\s*\d+)\s*")
 _SCENARIO_SIGNAL = re.compile(r"シナリオ|scenario|クトゥルフ|CoC|エモクロア|TRPG|探索者|KP|PL|マーダーミステリー|マダミス|murder\s*mystery", re.I)
@@ -87,7 +88,7 @@ def work_title(title: str) -> str:
     rest = re.sub(r"[(（《〈<]([^)）》〉>]*)[)）》〉>]", lambda m: " " if _TITLE_LABEL.search(m.group(1)) else m.group(0), rest)
     rest = re.sub(r"^[\s▼▽■□◆◇●○★☆▶]+", "", rest)
     # "稲妻のように燃えて寄せ｜COC6&7th": a system label after a bar.
-    rest = re.sub(r"\s*\|[^|]*(C[оo]C|クトゥルフ|エモクロア|TRPG|\d\s*(th|版))[^|]*$", "", rest, flags=re.I)
+    rest = re.sub(r"\s*\|[^|]*(C[оo]C|クトゥルフ|エモクロア|emo-?klore|マダミス|マーダーミステリー|TRPG|\d\s*(th|版))[^|]*$", "", rest, flags=re.I)
     # Edition words at the end: "月の御殿 オンライン版", "(印刷用データ)".
     rest = re.sub(r"\s*[(（]?\s*(オンライン|オフライン|印刷用|PDF|データ|テキスト)(版|データ)?\s*[)）]?\s*$", "", rest)
     rest = _TITLE_SYSTEM.sub(" ", rest)
