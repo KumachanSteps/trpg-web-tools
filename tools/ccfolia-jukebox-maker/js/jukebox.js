@@ -24,6 +24,8 @@
     { id: 'navy', line: '#4a5c9e' }
   ];
   const colorOf = id => COLORS.find(c => c.id === id) || COLORS[0];
+  // ココフォリアの部屋の棚の標準の枚数。「上限を超えて並べる」をオンにすると、これを超えた分は棚を小さくして並べる
+  const MAX_DISKS = 12;
 
   // プレーヤー画像の中のターンテーブル中心（画像幅・高さに対する割合）と、レコードを置く大きさ
   const PLATTER = { cx: 0.413, cy: 0.4625, size: 0.625 };
@@ -176,13 +178,20 @@
 
   function slotLayout(n, bare) {
     const area = { x: -10, y: -16, w: 44, h: 32 };
-    const cols = n <= 4 ? 2 : n <= 9 ? 3 : 4;
-    const rows = Math.ceil(n / cols);
-    const gapX = 1.5;
-    const gapY = 1;
+    // 12枚を超えたら（「上限を超えて並べる」）すき間を詰め、いちばん大きく並べられる列の数を選ぶ
+    const many = n > MAX_DISKS;
+    const gapX = many ? 0.75 : 1.5;
+    const gapY = many ? 0.5 : 1;
     // スロット画像は 幅:高さ = SLOT.w:SLOT.h（ジャケットからレコードが3割はみ出す分、横長）
     const ratio = bare ? BARE.h / BARE.w : SLOT.h / SLOT.w;
-    const w = Math.min((area.w - gapX * (cols - 1)) / cols, ((area.h - gapY * (rows - 1)) / rows) / ratio);
+    const fit = c => {
+      const rws = Math.ceil(n / c);
+      return Math.min((area.w - gapX * (c - 1)) / c, ((area.h - gapY * (rws - 1)) / rws) / ratio);
+    };
+    let cols = n <= 4 ? 2 : n <= 9 ? 3 : 4;
+    if (many) for (let c = 5; c <= 12; c += 1) if (fit(c) > fit(cols)) cols = c;
+    const rows = Math.ceil(n / cols);
+    const w = fit(cols);
     const h = w * ratio;
     const totalW = cols * w + (cols - 1) * gapX;
     const totalH = rows * h + (rows - 1) * gapY;
@@ -647,5 +656,5 @@
   let backdropUrl = '';
   const backdropPreview = () => backdropUrl || (backdropUrl = drawBackdrop().toDataURL('image/jpeg', 0.8));
 
-  global.Jukebox = { MAX_DISKS: 12, backdropPreview, COLORS, COVER_STYLES, PHOTOS, EXTRA_PHOTOS, photoOf, photoUrl, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
+  global.Jukebox = { MAX_DISKS, backdropPreview, COLORS, COVER_STYLES, PHOTOS, EXTRA_PHOTOS, photoOf, photoUrl, SLEEVE, colorOf, FIELD, build, assetUrl, makeCover, slotPreview, drawPattern, loadImage };
 })(window);

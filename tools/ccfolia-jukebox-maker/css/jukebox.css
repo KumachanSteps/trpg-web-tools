@@ -142,10 +142,6 @@ body.is-panel-dragging, body.is-panel-dragging * { cursor: grabbing !important; 
 .disk-row.is-dragging { opacity: 0.85; outline: 2px solid var(--disk); outline-offset: 1px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); }
 .disk-row.is-drop { outline: 2px dashed var(--yellow); outline-offset: 2px; }
 .field-note { margin: 4px 0 0; color: var(--muted); font-size: 0.72rem; line-height: 1.5; }
-/* 上限を超えて並べたレコード（13枚目から）：部屋に入らないので点線で区切って少し沈める */
-.disk-row.is-extra { border-style: dashed; border-left-style: solid; }
-.disk-row.is-extra-first { margin-top: 26px; }
-.disk-row.is-extra-first::before { content: attr(data-extra-label); position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); padding-top: 6px; border-top: 1px dashed var(--hair); color: var(--muted); font-size: 0.7rem; font-weight: 700; }
 .cover-label { margin: 2px 0 0; }
 .no-cover .cover-label, .no-cover .cover-row { display: none; }
 .no-cover .disk-thumb { aspect-ratio: 272 / 304; cursor: default; }
