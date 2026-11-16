@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.48';
+  const VERSION = '0.49';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -16,7 +16,9 @@
   const PL_CUR_KEY = 'ccfoliaJukebox.playlist';
   const ROOM_BOX_KEY = 'ccfoliaJukebox.roomBox';
   const LANGS = ['ja', 'en', 'ko'];
-  const MAX_DISKS = Jukebox.MAX_DISKS;
+  const MAX_DISKS = Jukebox.MAX_DISKS;   // ココフォリアの部屋に入るレコードの上限
+  // 「上限を超えて並べる」をオンにしたときの上限。13枚目からは部屋に入れず、BGMを並べて聴き比べるためだけに使う
+  const LIST_MAX = 50;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
 
   const $ = id => document.getElementById(id);
@@ -25,7 +27,7 @@
     importBtn: $('importBtn'), importFile: $('importFile'), backBtn: $('backBtn'),
     playBtn: $('playBtn'), exportBtn: $('exportBtn'),
     jukeboxPanel: $('jukeboxPanel'), importPanel: $('importPanel'), importName: $('importName'),
-    roomBox: $('roomBox'), roomPeek: $('roomPeek'), roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), showCover: $('showCover'),
+    roomBox: $('roomBox'), roomPeek: $('roomPeek'), roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), overLimit: $('overLimit'), overLimitNote: $('overLimitNote'), showCover: $('showCover'),
     backdropField: $('backdropField'), backdropThumb: $('backdropThumb'), backdropImg: $('backdropImg'), backdropOpen: $('backdropOpen'), backdropClear: $('backdropClear'), backdropFile: $('backdropFile'),
     diskList: $('diskList'), resetBtn: $('resetBtn'),
     shapeLabel: $('shapeLabel'), shapeResetBtn: $('shapeResetBtn'),
@@ -310,15 +312,48 @@
         cover: readCover(s.cover)
       };
     });
-    return {
+    // 上限を超えて並べたぶん（13枚目から。オフのあいだも消さない）。初期のBGMや写真はないので、空のレコードを元にそろえる
+    const overLimit = saved.overLimit === true || Number(saved.count) > MAX_DISKS;
+    const extra = saved.disks.slice(MAX_DISKS, LIST_MAX); // オフにしても中身は取っておく
+    extra.forEach((s, j) => {
+      const disk = blankDisk(MAX_DISKS + j);
+      const o = s && typeof s === 'object' ? s : {};
+      disks.push({
+        color: Jukebox.COLORS.some(c => c.id === o.color) ? o.color : disk.color,
+        name: safeText(o.name, 40) ?? '',
+        bgm: safeText(o.bgm, 150) ?? '',
+        bgmAuto: o.bgmAuto === true,
+        bgmFor: typeof o.bgmFor === 'string' ? o.bgmFor.slice(0, 20) : '',
+        url: safeUrl(o.url),
+        cover: readCover(o.cover)
+      });
+    });
+    const count = Math.min(overLimit ? LIST_MAX : MAX_DISKS, Math.max(1, Number(saved.count) || base.count));
+    const out = {
       roomName: safeText(saved.roomName, 80) ?? base.roomName,
       stopName: safeText(saved.stopName, 40) ?? base.stopName,
-      count: Math.min(MAX_DISKS, Math.max(1, Number(saved.count) || base.count)),
+      count,
+      overLimit,
       showCover: saved.showCover !== false,
       disks: disks.map(disk => withDefaultBgm(disk, Number(saved.bgmDefaults) || 0)),
       bgmDefaults: 2
     };
+    fillDisks(out);
+    return out;
   }
+
+  // 13枚目からの空のレコード（ラベルの色は順にずらす）
+  function blankDisk(i) {
+    return { color: Jukebox.COLORS[i % Jukebox.COLORS.length].id, name: '', bgm: '', bgmAuto: false, bgmFor: '', url: '', cover: { style: 'plain' } };
+  }
+
+  // 枚数ぶんのレコードがそろっているようにする（上限を超えて増やしたときに空のレコードを足す）
+  function fillDisks(settings) {
+    while (settings.disks.length < settings.count) settings.disks.push(blankDisk(settings.disks.length));
+  }
+
+  // 部屋に入るレコードの枚数（上限を超えて並べていても12枚まで）
+  const roomCount = () => Math.min(app.settings.count, MAX_DISKS);
 
   // 初期BGMが入る前に保存した設定は、URLが空のプリセット写真のレコードに1回だけ初期BGMを入れる
   // 2: ハンドアウトと密談の初期BGMを差し替え（前の初期URLのままなら新しいURLにする）
@@ -344,8 +379,9 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(app.settings)); } catch (error) { /* noop */ }
   }
 
-  function activeDisks() {
-    return app.settings.disks.slice(0, app.settings.count).map((disk, i) => ({
+  // 部屋に入るレコード。all を付けると、上限を超えて並べたぶんも含めた全部（設定欄のサムネイル用）
+  function activeDisks(all) {
+    return app.settings.disks.slice(0, all ? app.settings.count : roomCount()).map((disk, i) => ({
       ...disk,
       name: disk.name.trim() || `${t('set.diskName')}${i + 1}`,
       file: app.files[i] || null
@@ -375,16 +411,18 @@
     if (e.button !== 0) return;
     e.preventDefault();
     const list = els.diskList;
-    const row = list.children[from];
+    const rowsOf = () => [...list.querySelectorAll('.disk-row')];
+    const row = rowsOf()[from];
     if (!row) return;
     row.classList.add('is-dragging');
     list.classList.add('is-sorting');
     const move = ev => {
-      const rows = [...list.children].filter(r => r !== row);
+      const rows = rowsOf().filter(r => r !== row);
       const y = ev.clientY;
       const after = rows.find(r => { const b = r.getBoundingClientRect(); return y < b.top + b.height / 2; });
       if (after) { if (after !== row.nextSibling) list.insertBefore(row, after); }
       else if (row !== list.lastElementChild) list.appendChild(row);
+      markExtraRows();
       // パネルの端に近づいたら自動でスクロール
       const panel = list.closest('.panel');
       if (panel) {
@@ -399,7 +437,7 @@
       window.removeEventListener('pointercancel', end);
       row.classList.remove('is-dragging');
       list.classList.remove('is-sorting');
-      const to = [...list.children].indexOf(row);
+      const to = rowsOf().indexOf(row);
       if (!moveDisk(from, to)) renderSettings();
     };
     // 行を DOM の中で動かすとポインターキャプチャが外れるので、window で受ける
@@ -413,8 +451,11 @@
     els.roomName.value = s.roomName;
     updateRoomPeek();
     els.stopName.value = s.stopName;
+    els.overLimit.checked = s.overLimit === true;
+    els.diskCount.max = String(s.overLimit ? LIST_MAX : MAX_DISKS);
     els.diskCount.value = String(s.count);
     els.diskCountOut.textContent = String(s.count);
+    els.overLimitNote.hidden = !(s.overLimit && s.count > MAX_DISKS);
     els.showCover.checked = s.showCover !== false;
     els.diskList.classList.toggle('no-cover', s.showCover === false);
     els.diskList.innerHTML = '';
@@ -510,15 +551,26 @@
       });
       els.diskList.appendChild(row);
     });
+    markExtraRows();
     refreshPreviews();
     syncBgmUi();
+  }
+
+  // 13枚目から下の行に、部屋に入らない印を付ける（並べ替えの途中でも見た目の位置で付け直す）
+  function markExtraRows() {
+    [...els.diskList.querySelectorAll('.disk-row')].forEach((row, i) => {
+      row.classList.toggle('is-extra', i >= MAX_DISKS);
+      row.classList.toggle('is-extra-first', i === MAX_DISKS);
+      if (i === MAX_DISKS) row.dataset.extraLabel = t('set.extraDivider');
+      else delete row.dataset.extraLabel;
+    });
   }
 
   // 設定欄のサムネイル（ジャケット＋レコード＋曲名）を描き直す
   let previewSeq = 0;
   async function refreshPreviews() {
     const seq = ++previewSeq;
-    const disks = activeDisks();
+    const disks = activeDisks(true);
     for (let i = 0; i < disks.length; i += 1) {
       const holder = els.diskList.querySelector(`[data-preview="${i}"]`);
       if (!holder) continue;
@@ -1516,7 +1568,7 @@
       const db = await audioDb();
       await new Promise((resolve, reject) => {
         const tx = db.transaction('files', 'readwrite');
-        tx.objectStore('files').put(app.files.slice(0, MAX_DISKS).map(f => f || null), 'disks');
+        tx.objectStore('files').put(app.files.slice(0, LIST_MAX).map(f => f || null), 'disks');
         tx.oncomplete = resolve;
         tx.onerror = () => reject(tx.error);
         tx.onabort = () => reject(tx.error);
@@ -2298,7 +2350,7 @@
 
   function plSig(snap) {
     const s = snap.settings;
-    const body = JSON.stringify([s.roomName, s.stopName, s.count, s.showCover !== false,
+    const body = JSON.stringify([s.roomName, s.stopName, s.count, s.showCover !== false, s.overLimit === true,
       s.disks.map(d => [d.color, d.name, d.bgm, d.url, d.cover])]) + '|' + (snap.backdrop || '');
     let x = 0x811c9dc5;
     for (let i = 0; i < body.length; i++) { x ^= body.charCodeAt(i); x = Math.imul(x, 0x01000193); }
@@ -2446,7 +2498,7 @@
 
   // 切り替える前の状態を控えておく（音声ファイルも含めて1つだけ）
   async function plKeepUndo() {
-    const undo = { ...plSnapshot(), files: app.files.slice(0, MAX_DISKS).map(f => f || null), current: pl.current };
+    const undo = { ...plSnapshot(), files: app.files.slice(0, LIST_MAX).map(f => f || null), current: pl.current };
     try {
       await idbRun('files', 'readwrite', st => st.put(undo, 'undo'));
       pl.undo = true;
@@ -2574,9 +2626,9 @@
     const name = (safeText(data.name, 60) || '').trim() || file.name.replace(/\.jukebox\.json$|\.json$/i, '').slice(0, 60) || t('pl.newName');
     const rec = {
       id: plId(), name, memo: (safeText(data.memo, 200) || '').trim(), createdAt: now, savedAt: now,
-      settings: normalizeSettings({ ...data.settings, disks: data.settings.disks.slice(0, MAX_DISKS), bgmDefaults: 2 }),
+      settings: normalizeSettings({ ...data.settings, disks: data.settings.disks.slice(0, LIST_MAX), bgmDefaults: 2 }),
       backdrop: isImageData(data.backdrop) ? data.backdrop : '',
-      audio: Array.isArray(data.audio) ? data.audio.filter(n => Number.isInteger(n) && n > 0 && n <= MAX_DISKS) : []
+      audio: Array.isArray(data.audio) ? data.audio.filter(n => Number.isInteger(n) && n > 0 && n <= LIST_MAX) : []
     };
     try { await plPut(rec); } catch (error) { toast(t('pl.saveFailed'), 'error'); return; }
     pl.tab = 'mine';
@@ -2863,7 +2915,15 @@
     els.roomName.addEventListener('input', () => { app.settings.roomName = els.roomName.value; updateRoomPeek(); changed(false); });
     els.stopName.addEventListener('input', () => { app.settings.stopName = els.stopName.value; changed(false); });
     els.diskCount.addEventListener('input', () => {
-      app.settings.count = Math.min(MAX_DISKS, Math.max(1, Number(els.diskCount.value) || 1));
+      app.settings.count = Math.min(app.settings.overLimit ? LIST_MAX : MAX_DISKS, Math.max(1, Number(els.diskCount.value) || 1));
+      fillDisks(app.settings);
+      changed(true);
+    });
+    // 上限を超えて並べる（BGMの吟味用）。オフにしたら12枚に戻すが、13枚目からの中身は消さずに取っておく
+    els.overLimit.addEventListener('change', () => {
+      app.settings.overLimit = els.overLimit.checked;
+      if (!app.settings.overLimit) app.settings.count = Math.min(app.settings.count, MAX_DISKS);
+      track('ccfolia_jukebox_over_limit', { on: els.overLimit.checked });
       changed(true);
     });
     els.showCover.addEventListener('change', () => {
