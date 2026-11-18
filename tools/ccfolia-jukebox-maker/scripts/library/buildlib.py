@@ -61,7 +61,7 @@ for tr in cat:
             add(tags, OT.get(tg['code'], {}))
         status = 's'  # source-tagged
     if tr['yt'] in ptmap:
-        for slug in ptmap[tr['yt']]:
+        for slug in sorted(ptmap[tr['yt']]):
             add(tags, PT.get(slug, PT_JA.get(slug, {})))
         status = 's'
     title = clean_title(tr['title'])
@@ -126,6 +126,8 @@ out = f"""/* KPレス・ジュークボックスメーカー — Music Library�
   const LEGACY_TABS = {js(legacy)};
   // 版9で外した曲（ジングル。効果音ライブラリを作るまで提供しない）
   const DROPPED = {js(JINGLE)};
+  // 埋め込み再生できなくなって差し替えた曲（版8まで）。古い棚を作り直すとき、メモごと新しい曲へ移す
+  const REPLACED = {{ '0mbmvlg8iZU': ['6Y4c6hdvV4Y', 'Fairy Tale'], 'A_Tlq2opviQ': ['yeyfRn6zc8Q', 'Thief\\'s time'], 'ISHbwrrNTeM': ['_v9eOCZsKz4', '決戦'] }};
 
   const byId = new Map();
   const list = TRACKS.map(([yt, title, composer, source, scene, tone, setting, status]) => {{
@@ -138,6 +140,7 @@ out = f"""/* KPレス・ジュークボックスメーカー — Music Library�
     VERSION,
     LEGACY_TABS,
     DROPPED,
+    REPLACED,
     SCENES: {js(SCENES)},
     TONES: {js(TONES)},
     SETTINGS: {js(SETTINGS)},

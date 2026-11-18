@@ -1722,6 +1722,7 @@
       shelf.view = ['all', 'star', 'shelf'].includes(saved.view) ? saved.view : 'all';
       shelf.active = Number.isInteger(saved.active) ? Math.max(0, Math.min(shelf.tabs.length - 1, saved.active)) : 0;
       if (shelf.view === 'shelf' && !shelf.tabs.length) shelf.view = 'all';
+      keepUserTracks();
       return;
     }
     // 版8までの棚（タブごとに曲を持つ形）があれば、新しい分類に作り直す。メモと自分で足した曲・タブは残す
@@ -1733,8 +1734,11 @@
     if (!old || !Array.isArray(old.tabs)) return;
     const legacy = JukeboxLibrary.LEGACY_TABS;
     const dropped = new Set(JukeboxLibrary.DROPPED);
+    // 埋め込みできなくなって差し替えた曲は、先に新しい曲へ読み替える（メモも新しい曲に付ける）
+    const repl = JukeboxLibrary.REPLACED || {};
     old.tabs.forEach(tab => {
       if (!tab || typeof tab.id !== 'string' || !Array.isArray(tab.tracks)) return;
+      tab.tracks = tab.tracks.map(tr => (tr && repl[tr.yt] ? { ...tr, yt: repl[tr.yt][0], title: repl[tr.yt][1] } : tr));
       tab.tracks.forEach(tr => { if (tr && YT_RE.test(tr.yt) && typeof tr.memo === 'string' && tr.memo.trim()) shelf.memos[tr.yt] = tr.memo.slice(0, 100); });
       const tracks = cleanTracks(tab.tracks).filter(tr => !dropped.has(tr.yt));
       const id = tab.id === 'house' ? 'adult' : tab.id;
@@ -1748,8 +1752,16 @@
         if (dest) { if (!dest.tracks.some(x => x.yt === tr.yt)) dest.tracks.push(tr); } else if (!shelf.extra.some(x => x.yt === tr.yt)) shelf.extra.push(tr);
       });
     });
+    keepUserTracks();
     shelf.migrated = true;
     saveShelf();
+  }
+
+  // 自分で足した曲（曲マスタにない曲）は、棚から外しても ALL と★に残るよう、棚とは別にも持つ
+  function keepUserTracks() {
+    shelf.tabs.forEach(tab => tab.tracks.forEach(tr => {
+      if (!libTrack(tr.yt) && !shelf.extra.some(x => x.yt === tr.yt)) shelf.extra.push({ yt: tr.yt, title: tr.title || '' });
+    }));
   }
 
   function saveShelf() {
@@ -2331,7 +2343,7 @@
     shelf.hidden = shelf.hidden.filter(x => x !== yt);
     const tr = known ? { yt, title: known.title || '' } : { yt, title: ytTitles[yt] || '' };
     if (view.kind === 'shelf') view.tab.tracks.push(tr);
-    else if (!known) shelf.extra.push(tr);
+    if (!libTrack(yt) && !shelf.extra.some(x => x.yt === yt)) shelf.extra.push(view.kind === 'shelf' ? { ...tr } : tr);
     if (view.kind === 'star' && !shelf.stars.includes(yt)) shelf.stars.push(yt);
     saveShelf();
     renderShelf();
@@ -2340,6 +2352,7 @@
       fetchYoutubeTitle(yt).then(title => {
         if (!title || tr.title) return;
         tr.title = title;
+        shelf.extra.concat(...shelf.tabs.map(tab => tab.tracks)).forEach(x => { if (x.yt === yt && !x.title) x.title = title; });
         saveShelf();
         renderShelfList(false, true);
       });
