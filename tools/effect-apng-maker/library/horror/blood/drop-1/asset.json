@@ -1,6 +1,6 @@
 {
   "id": "horror.blood-drop-1",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-18",
   "order": 13,
@@ -16,10 +16,10 @@
     "zh": "血滴（1滴）"
   },
   "desc": {
-    "ja": "血のしずくがこちらへ飛んできて、画面の真ん中にぶつかって弾け、ガラスを伝って垂れる。",
-    "en": "A drop of blood flies towards the viewer, bursts against the middle of the screen and runs down the glass.",
-    "ko": "핏방울이 이쪽으로 날아와 화면 한가운데에 부딪혀 터지고, 유리를 타고 흘러내린다.",
-    "zh": "一滴血朝观者飞来，撞在画面正中溅开，并顺着玻璃流下。"
+    "ja": "血のしずくがこちらへ飛んできて、画面の真ん中にぶつかって弾ける。",
+    "en": "A drop of blood flies towards the viewer and bursts against the middle of the screen.",
+    "ko": "핏방울이 이쪽으로 날아와 화면 한가운데에 부딪혀 터진다.",
+    "zh": "一滴血朝观者飞来，撞在画面正中溅开。"
   },
   "tags": [
     "血",
