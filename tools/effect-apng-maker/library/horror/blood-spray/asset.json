@@ -1,6 +1,6 @@
 {
   "id": "horror.blood-spray",
-  "version": 2,
+  "version": 3,
   "status": "test",
   "added": "2026-11-16",
   "order": 10,
@@ -16,10 +16,10 @@
     "zh": "从角落飞溅的血"
   },
   "desc": {
-    "ja": "画面の下の隅から、血が向かいの上の隅へ向かってななめに勢いよく飛び散る。",
-    "en": "Blood sprays diagonally from a bottom corner toward the opposite top corner.",
-    "ko": "화면 아래 구석에서 피가 맞은편 위 구석을 향해 비스듬히 세차게 튄다.",
-    "zh": "鲜血从画面下方角落朝对面上角斜向猛地飞溅。"
+    "ja": "画面の下の隅から、向かいの上の隅へ向かって血がななめに勢いよく飛び散る。画面のおよそ7割に広がる。",
+    "en": "Blood sprays diagonally from a bottom corner toward the opposite top corner, covering about 70% of the screen.",
+    "ko": "화면 아래 구석에서 맞은편 위 구석을 향해 피가 비스듬히 세차게 튄다. 화면의 약 70%에 퍼진다.",
+    "zh": "鲜血从画面下方角落朝对面上角斜向猛地飞溅，覆盖约七成画面。"
   },
   "tags": [
     "血",

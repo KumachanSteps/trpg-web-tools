@@ -43,7 +43,9 @@ export default {
     // 向かいの隅までの長さ。いちばん遠い飛沫がそこへ届くように引きのばす
     const dist = Math.hypot(W + 24 * u, H + 30 * u);
     const k = 1.35 * u * size;
-    const reach = P.reach ?? 1;           // 絵 540px → 画面の大きさ
+    const reach = P.reach ?? 1;
+    // 全体を隅を中心に縮めて、血が画面のおよそ 7 割に収まるようにする（TK 2026-11-18）
+    const ZOOM = 0.7;
     // 写真の血の、中心からいちばん遠い飛沫までが約 300px（絵の大きさで）。それが dist に届く倍率
     const along = (dist * reach) / (300 * k * 1.0), across = 0.72;     // 飛ぶ向きに長く
     const layers = [
@@ -79,6 +81,7 @@ export default {
       // 隅（少し画面の外）に中心を置き、飛ぶ向きに回して引きのばす
       if (right) { ctx.translate(W, 0); ctx.scale(-1, 1); }
       ctx.translate(-24 * u, H + 30 * u);
+      ctx.scale(ZOOM, ZOOM);
       ctx.rotate(ang);
       ctx.scale(across * k, along * k);
       // 写真の血のいちばん長い筋（右上向き）を、飛ぶ向きにそろえる
