@@ -20,7 +20,6 @@ const CATEGORIES = [
   { id: 'weather', name: { ja: '天候', en: 'Weather', ko: '날씨', zh: '天气' } },
   { id: 'element', name: { ja: '属性', en: 'Elements', ko: '속성', zh: '属性' } },
   { id: 'horror', name: { ja: 'ホラー', en: 'Horror', ko: '호러', zh: '恐怖' } },
-  { id: 'blood', name: { ja: '血', en: 'Blood', ko: '피', zh: '鲜血' } },
   { id: 'visual', name: { ja: '視覚効果', en: 'Visual effects', ko: '시각 효과', zh: '视觉效果' } },
   { id: 'magic', name: { ja: '魔法・神秘', en: 'Magic', ko: '마법·신비', zh: '魔法·神秘' } },
   { id: 'combat', name: { ja: '戦闘', en: 'Combat', ko: '전투', zh: '战斗' } },
@@ -71,7 +70,9 @@ function checkParam(id, p, keys) {
 
 function checkAsset(a, folder) {
   const id = a.id || folder;
-  const [cat, slug] = folder.split('/');
+  // cat/slug、または同じ種類をまとめたフォルダの中の cat/group/slug（id は cat.group-slug）
+  const [cat, ...rest] = folder.split('/');
+  const slug = rest.join('-');
   if (a.id !== `${cat}.${slug}`) fail(id, `id must be "${cat}.${slug}" to match its folder`);
   if (a.category !== cat) fail(id, `category must be "${cat}"`);
   if (!CAT_IDS.includes(cat)) fail(id, `unknown category "${cat}" (add it to CATEGORIES)`);
@@ -115,7 +116,15 @@ const assets = [];
 for (const cat of readdirSync(LIB)) {
   const catDir = join(LIB, cat);
   if (!statSync(catDir).isDirectory()) continue;
-  for (const slug of readdirSync(catDir)) {
+  // asset.json のないフォルダは、同じ種類のアセットをまとめたフォルダ（例: horror/blood/drip）として 1 段だけ中を見る
+  const slugs = [];
+  for (const name of readdirSync(catDir)) {
+    const dir = join(catDir, name);
+    if (!statSync(dir).isDirectory()) continue;
+    if (existsSync(join(dir, 'asset.json'))) slugs.push(name);
+    else for (const sub of readdirSync(dir)) if (existsSync(join(dir, sub, 'asset.json'))) slugs.push(`${name}/${sub}`);
+  }
+  for (const slug of slugs) {
     const file = join(catDir, slug, 'asset.json');
     if (!existsSync(file)) continue;
     let a;

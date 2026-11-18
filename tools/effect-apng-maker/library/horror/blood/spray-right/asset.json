@@ -1,10 +1,10 @@
 {
-  "id": "blood.spray-right",
+  "id": "horror.blood-spray-right",
   "version": 4,
   "status": "test",
   "added": "2026-11-18",
-  "order": 3,
-  "category": "blood",
+  "order": 11,
+  "category": "horror",
   "kind": "procedural",
   "type": "effect",
   "priority": "P1",
