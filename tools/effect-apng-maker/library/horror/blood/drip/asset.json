@@ -1,10 +1,10 @@
 {
-  "id": "blood.drip",
+  "id": "horror.blood-drip",
   "version": 9,
   "status": "test",
   "added": "2026-11-16",
-  "order": 4,
-  "category": "blood",
+  "order": 12,
+  "category": "horror",
   "kind": "procedural",
   "type": "effect",
   "priority": "P1",

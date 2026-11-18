@@ -38,15 +38,6 @@
    }
   },
   {
-   "id": "blood",
-   "name": {
-    "ja": "血",
-    "en": "Blood",
-    "ko": "피",
-    "zh": "鲜血"
-   }
-  },
-  {
    "id": "visual",
    "name": {
     "ja": "視覚効果",
@@ -4323,12 +4314,12 @@
    "thumb": "thumb.webp?v=1"
   },
   {
-   "id": "blood.splatter",
+   "id": "horror.blood-splutter",
    "version": 2,
    "status": "test",
    "added": "2026-11-15",
-   "order": 1,
-   "category": "blood",
+   "order": 9,
+   "category": "horror",
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
@@ -4413,16 +4404,16 @@
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
    },
    "poster": 0.45,
-   "path": "blood/splatter",
+   "path": "horror/blood/splutter",
    "thumb": "thumb.webp?v=2"
   },
   {
-   "id": "blood.spray-left",
+   "id": "horror.blood-spray-left",
    "version": 4,
    "status": "test",
    "added": "2026-11-16",
-   "order": 2,
-   "category": "blood",
+   "order": 10,
+   "category": "horror",
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
@@ -4533,16 +4524,16 @@
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶき（写真の血）を使用"
    },
    "poster": 0.5,
-   "path": "blood/spray-left",
+   "path": "horror/blood/spray-left",
    "thumb": "thumb.webp?v=4"
   },
   {
-   "id": "blood.spray-right",
+   "id": "horror.blood-spray-right",
    "version": 4,
    "status": "test",
    "added": "2026-11-18",
-   "order": 3,
-   "category": "blood",
+   "order": 11,
+   "category": "horror",
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
@@ -4653,16 +4644,16 @@
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶき（写真の血）を使用"
    },
    "poster": 0.5,
-   "path": "blood/spray-right",
+   "path": "horror/blood/spray-right",
    "thumb": "thumb.webp?v=4"
   },
   {
-   "id": "blood.drip",
+   "id": "horror.blood-drip",
    "version": 9,
    "status": "test",
    "added": "2026-11-16",
-   "order": 4,
-   "category": "blood",
+   "order": 12,
+   "category": "horror",
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
@@ -4743,7 +4734,7 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
    "poster": 0.55,
-   "path": "blood/drip",
+   "path": "horror/blood/drip",
    "thumb": "thumb.webp?v=9"
   },
   {

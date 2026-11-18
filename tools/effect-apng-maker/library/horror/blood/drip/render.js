@@ -5,8 +5,8 @@
 //   ・長さはまちまち（画面の下まで届く長い筋、途中で止まる筋、帯のふちのこぶのような短い筋）
 //   ・帯の中には小さな泡の穴（壁を伝う血なので、しずくが切れて落ちることはしない：TK 2026-11-18）
 // 中は平らな暗い深紅、縁だけ細く明るい赤（blood-liquid.js の style 'rim'）
-import { rng, clamp, smooth } from '../../kit.js';
-import { liquidState, drawLiquid } from '../../blood-liquid.js';
+import { rng, clamp, smooth } from '../../../kit.js';
+import { liquidState, drawLiquid } from '../../../blood-liquid.js';
 
 const TAU = Math.PI * 2;
 const easeIn = (x, p = 1.6) => Math.pow(clamp(x), p);

@@ -3,7 +3,7 @@
  *   ライブラリ（左）→ 選んだアセットを プレビュー（中央）に重ね、調整（右）で設定を変えて書き出す。
  */
 import { I18N } from './i18n.js';
-import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261118-09';
+import { loadManifest, EffectInstance, defaultParams, frameTimes } from './engine.js?v=20261118-10';
 import { Stage } from './stage.js';
 
 const C = window.TextApngCodec;
@@ -36,7 +36,7 @@ function loadStore() {
 }
 const store = Object.assign({ lang: null, theme: null, current: null, favs: [], perAsset: {} }, loadStore());
 // 名前（id）が変わったアセット：お気に入り・選択中を新しい id に引きつぐ（設定は version が上がったので引きつがない）
-const RENAMED = { 'horror.blood-splutter': 'blood.splatter', 'horror.blood-spray': 'blood.spray-left', 'horror.blood-drip': 'blood.drip' };
+const RENAMED = { 'horror.blood-spray': 'horror.blood-spray-left', 'blood.splatter': 'horror.blood-splutter', 'blood.spray-left': 'horror.blood-spray-left', 'blood.spray-right': 'horror.blood-spray-right', 'blood.drip': 'horror.blood-drip' };
 store.favs = [...new Set(store.favs.map(id => RENAMED[id] || id))];
 if (RENAMED[store.current]) store.current = RENAMED[store.current];
 for (const old of Object.keys(RENAMED)) delete store.perAsset[old];
