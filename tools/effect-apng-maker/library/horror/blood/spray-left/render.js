@@ -1,7 +1,7 @@
 // 画面の下の隅から、血がななめ上へ向かって勢いよく飛び散る（1回再生）
 // 血の絵は「血しぶき」と同じ EX の写真の血（fx-vampire-blood-data.js の core / all）。隅に中心を置き、飛ぶ向きに引きのばして、隅から外へ広がるように見せる
-import { loadEx } from '../../ex-bridge.js';
-import { clamp, smooth } from '../../kit.js';
+import { loadEx } from '../../../ex-bridge.js';
+import { clamp, smooth } from '../../../kit.js';
 
 function makeCanvas(w, h) {
   if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);

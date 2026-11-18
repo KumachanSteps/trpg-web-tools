@@ -1,5 +1,5 @@
 // 文字画像APNGメーカーEX の血しぶき（吸血鬼判定の「ブラッドスプラッター（画像再現）」、fx-vampire.js の splutter）を描く
-import { loadEx } from '../../ex-bridge.js';
+import { loadEx } from '../../../ex-bridge.js';
 
 export default {
   async setup(P, S) {

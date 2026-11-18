@@ -1,0 +1,118 @@
+{
+  "id": "horror.blood-spray-right",
+  "version": 4,
+  "status": "test",
+  "added": "2026-11-18",
+  "order": 11,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "血しぶき（右下から斜め）",
+    "en": "Blood spray from bottom right",
+    "ko": "피 튀김 (오른쪽 아래에서 대각선)",
+    "zh": "血花飞溅（从右下斜向）"
+  },
+  "desc": {
+    "ja": "画面の右下の隅から、向かいの左上へ向かって血が勢いよく飛び散る。",
+    "en": "Blood bursts from the bottom-right corner diagonally towards the top left.",
+    "ko": "화면 오른쪽 아래 구석에서 맞은편 왼쪽 위를 향해 피가 힘차게 튄다.",
+    "zh": "鲜血从画面右下角朝左上方斜向猛烈飞溅。"
+  },
+  "tags": [
+    "血",
+    "血しぶき",
+    "ホラー",
+    "blood",
+    "spray",
+    "splatter",
+    "피",
+    "血"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "angle",
+      "type": "range",
+      "label": {
+        "ja": "向きの調整（0 で向かいの隅へ）",
+        "en": "Aim (0 = opposite corner)",
+        "ko": "방향 조정 (0이면 맞은편 구석)",
+        "zh": "方向调整（0＝对角）"
+      },
+      "min": -30,
+      "max": 30,
+      "step": 5,
+      "default": 0
+    },
+    {
+      "key": "reach",
+      "type": "range",
+      "label": {
+        "ja": "届く距離",
+        "en": "Reach",
+        "ko": "닿는 거리",
+        "zh": "飞溅距离"
+      },
+      "min": 0.5,
+      "max": 1.2,
+      "step": 0.05,
+      "default": 1
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기",
+        "zh": "大小"
+      },
+      "min": 0.6,
+      "max": 1.6,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "key": "stay",
+      "type": "toggle",
+      "label": {
+        "ja": "最後まで残す",
+        "en": "Keep at the end",
+        "ko": "끝까지 남기기",
+        "zh": "保留到最后"
+      },
+      "default": false
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶき（写真の血）を使用"
+  },
+  "poster": 0.5
+}

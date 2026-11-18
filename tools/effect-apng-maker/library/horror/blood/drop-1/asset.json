@@ -1,31 +1,32 @@
 {
-  "id": "horror.blood-splutter",
-  "version": 1,
+  "id": "horror.blood-drop-1",
+  "version": 4,
   "status": "test",
-  "added": "2026-11-15",
-  "order": 9,
+  "added": "2026-11-18",
+  "order": 13,
   "category": "horror",
   "kind": "procedural",
   "type": "effect",
   "priority": "P1",
-  "origin": "EX",
+  "origin": "suggested",
   "name": {
-    "ja": "血しぶき",
-    "en": "Blood splatter",
-    "ko": "피 튀김",
-    "zh": "血花飞溅"
+    "ja": "血のしずく（1滴）",
+    "en": "Blood drop hits the screen (1)",
+    "ko": "핏방울 (1방울)",
+    "zh": "血滴（1滴）"
   },
   "desc": {
-    "ja": "血がびしゃっと弾けて広がり、すっと薄れて消える。",
-    "en": "Blood bursts and spreads in a splash, then fades away.",
-    "ko": "피가 철퍽 터져 퍼졌다가 스르르 옅어지며 사라진다.",
-    "zh": "鲜血啪地炸开扩散，随后渐渐淡去消失。"
+    "ja": "血のしずくがこちらへ飛んできて、画面の真ん中にぶつかって弾ける。",
+    "en": "A drop of blood flies towards the viewer and bursts against the middle of the screen.",
+    "ko": "핏방울이 이쪽으로 날아와 화면 한가운데에 부딪혀 터진다.",
+    "zh": "一滴血朝观者飞来，撞在画面正中溅开。"
   },
   "tags": [
     "血",
-    "血しぶき",
+    "しずく",
     "ホラー",
     "blood",
+    "drop",
     "splatter",
     "피",
     "血"
@@ -40,9 +41,9 @@
     ]
   },
   "duration": {
-    "default": 2,
-    "min": 1,
-    "max": 4
+    "default": 2.5,
+    "min": 1.5,
+    "max": 5
   },
   "transparent": true,
   "params": [
@@ -73,14 +74,25 @@
       "max": 2,
       "step": 0.1,
       "default": 1
+    },
+    {
+      "key": "stay",
+      "type": "toggle",
+      "label": {
+        "ja": "最後まで残す",
+        "en": "Keep at the end",
+        "ko": "끝까지 남기기",
+        "zh": "保留到最后"
+      },
+      "default": false
     }
   ],
   "budget": {
     "size": [
-      960,
-      540
+      1280,
+      720
     ],
-    "fps": 20,
+    "fps": 15,
     "colors": 64
   },
   "license": {
@@ -88,5 +100,5 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
   },
-  "poster": 0.45
+  "poster": 0.6
 }

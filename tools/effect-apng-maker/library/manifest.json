@@ -4315,7 +4315,7 @@
   },
   {
    "id": "horror.blood-splutter",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-15",
    "order": 9,
@@ -4325,10 +4325,10 @@
    "priority": "P1",
    "origin": "EX",
    "name": {
-    "ja": "血しぶき",
-    "en": "Blood splatter",
-    "ko": "피 튀김",
-    "zh": "血花飞溅"
+    "ja": "血しぶき（中央）",
+    "en": "Blood splatter (centre)",
+    "ko": "피 튀김 (중앙)",
+    "zh": "血花飞溅（中央）"
    },
    "desc": {
     "ja": "血がびしゃっと弾けて広がり、すっと薄れて消える。",
@@ -4404,12 +4404,12 @@
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
    },
    "poster": 0.45,
-   "path": "horror/blood-splutter",
-   "thumb": "thumb.webp?v=1"
+   "path": "horror/blood/splutter",
+   "thumb": "thumb.webp?v=2"
   },
   {
-   "id": "horror.blood-spray",
-   "version": 3,
+   "id": "horror.blood-spray-left",
+   "version": 4,
    "status": "test",
    "added": "2026-11-16",
    "order": 10,
@@ -4419,16 +4419,16 @@
    "priority": "P1",
    "origin": "EX",
    "name": {
-    "ja": "隅から飛び散る血",
-    "en": "Blood spray from the corner",
-    "ko": "구석에서 튀는 피",
-    "zh": "从角落飞溅的血"
+    "ja": "血しぶき（左下から斜め）",
+    "en": "Blood spray from bottom left",
+    "ko": "피 튀김 (왼쪽 아래에서 대각선)",
+    "zh": "血花飞溅（从左下斜向）"
    },
    "desc": {
-    "ja": "画面の下の隅から、向かいの上の隅へ向かって血がななめに勢いよく飛び散る。画面のおよそ7割に広がる。",
-    "en": "Blood sprays diagonally from a bottom corner toward the opposite top corner, covering about 70% of the screen.",
-    "ko": "화면 아래 구석에서 맞은편 위 구석을 향해 피가 비스듬히 세차게 튄다. 화면의 약 70%에 퍼진다.",
-    "zh": "鲜血从画面下方角落朝对面上角斜向猛地飞溅，覆盖约七成画面。"
+    "ja": "画面の左下の隅から、向かいの右上へ向かって血が勢いよく飛び散る。",
+    "en": "Blood bursts from the bottom-left corner diagonally towards the top right.",
+    "ko": "화면 왼쪽 아래 구석에서 맞은편 오른쪽 위를 향해 피가 힘차게 튄다.",
+    "zh": "鲜血从画面左下角朝右上方斜向猛烈飞溅。"
    },
    "tags": [
     "血",
@@ -4456,37 +4456,6 @@
    },
    "transparent": true,
    "params": [
-    {
-     "key": "side",
-     "type": "select",
-     "label": {
-      "ja": "隅",
-      "en": "Corner",
-      "ko": "구석",
-      "zh": "角落"
-     },
-     "options": [
-      {
-       "value": "left",
-       "label": {
-        "ja": "左下",
-        "en": "Bottom left",
-        "ko": "왼쪽 아래",
-        "zh": "左下"
-       }
-      },
-      {
-       "value": "right",
-       "label": {
-        "ja": "右下",
-        "en": "Bottom right",
-        "ko": "오른쪽 아래",
-        "zh": "右下"
-       }
-      }
-     ],
-     "default": "left"
-    },
     {
      "key": "angle",
      "type": "range",
@@ -4555,14 +4524,14 @@
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶき（写真の血）を使用"
    },
    "poster": 0.5,
-   "path": "horror/blood-spray",
-   "thumb": "thumb.webp?v=3"
+   "path": "horror/blood/spray-left",
+   "thumb": "thumb.webp?v=4"
   },
   {
-   "id": "horror.blood-drip",
+   "id": "horror.blood-spray-right",
    "version": 4,
    "status": "test",
-   "added": "2026-11-16",
+   "added": "2026-11-18",
    "order": 11,
    "category": "horror",
    "kind": "procedural",
@@ -4570,16 +4539,136 @@
    "priority": "P1",
    "origin": "EX",
    "name": {
-    "ja": "上から垂れる血",
-    "en": "Blood dripping down",
-    "ko": "위에서 흘러내리는 피",
-    "zh": "从上方流下的血"
+    "ja": "血しぶき（右下から斜め）",
+    "en": "Blood spray from bottom right",
+    "ko": "피 튀김 (오른쪽 아래에서 대각선)",
+    "zh": "血花飞溅（从右下斜向）"
    },
    "desc": {
-    "ja": "画面の上の血の帯から、しずく形の血が何本も垂れ落ち、その後ろから血の幕が下りてきて画面を覆う。",
-    "en": "Teardrop streaks of blood drip from a band along the top, then a sheet of blood follows and covers the screen.",
-    "ko": "화면 위쪽 피의 띠에서 물방울 모양의 피가 여러 줄 흘러내리고, 그 뒤로 피의 막이 내려와 화면을 덮는다.",
-    "zh": "鲜血从画面上缘的血带中化作水滴状流下，随后血幕降下覆盖整个画面。"
+    "ja": "画面の右下の隅から、向かいの左上へ向かって血が勢いよく飛び散る。",
+    "en": "Blood bursts from the bottom-right corner diagonally towards the top left.",
+    "ko": "화면 오른쪽 아래 구석에서 맞은편 왼쪽 위를 향해 피가 힘차게 튄다.",
+    "zh": "鲜血从画面右下角朝左上方斜向猛烈飞溅。"
+   },
+   "tags": [
+    "血",
+    "血しぶき",
+    "ホラー",
+    "blood",
+    "spray",
+    "splatter",
+    "피",
+    "血"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "angle",
+     "type": "range",
+     "label": {
+      "ja": "向きの調整（0 で向かいの隅へ）",
+      "en": "Aim (0 = opposite corner)",
+      "ko": "방향 조정 (0이면 맞은편 구석)",
+      "zh": "方向调整（0＝对角）"
+     },
+     "min": -30,
+     "max": 30,
+     "step": 5,
+     "default": 0
+    },
+    {
+     "key": "reach",
+     "type": "range",
+     "label": {
+      "ja": "届く距離",
+      "en": "Reach",
+      "ko": "닿는 거리",
+      "zh": "飞溅距离"
+     },
+     "min": 0.5,
+     "max": 1.2,
+     "step": 0.05,
+     "default": 1
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기",
+      "zh": "大小"
+     },
+     "min": 0.6,
+     "max": 1.6,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "stay",
+     "type": "toggle",
+     "label": {
+      "ja": "最後まで残す",
+      "en": "Keep at the end",
+      "ko": "끝까지 남기기",
+      "zh": "保留到最后"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶき（写真の血）を使用"
+   },
+   "poster": 0.5,
+   "path": "horror/blood/spray-right",
+   "thumb": "thumb.webp?v=4"
+  },
+  {
+   "id": "horror.blood-drip",
+   "version": 9,
+   "status": "test",
+   "added": "2026-11-16",
+   "order": 12,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "垂れる血（上から）",
+    "en": "Blood dripping from the top",
+    "ko": "흘러내리는 피 (위에서)",
+    "zh": "流下的血（从上方）"
+   },
+   "desc": {
+    "ja": "画面の上の血の帯から、付け根が広がり先がしずくになった細い血の筋が壁を伝うように何本も垂れ、最後は帯が下りて画面を覆う。",
+    "en": "Thin streaks of blood with flared roots and droplet tips run down from a band along the top as if down a wall, and the band finally comes down and covers the screen.",
+    "ko": "화면 위쪽 피의 띠에서 뿌리가 넓고 끝이 물방울인 가는 피 줄기가 벽을 타고 흐르듯 여러 줄 흘러내리고, 마지막에 띠가 내려와 화면을 덮는다.",
+    "zh": "鲜血从画面上缘的血带中沿墙流下，形成根部宽、末端呈水滴状的细长血痕，最后血带降下覆盖整个画面。"
    },
    "tags": [
     "血",
@@ -4645,8 +4734,558 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
    "poster": 0.55,
-   "path": "horror/blood-drip",
+   "path": "horror/blood/drip",
+   "thumb": "thumb.webp?v=9"
+  },
+  {
+   "id": "horror.blood-drip-reveal",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-18",
+   "order": 13,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "流れ落ちる血（場面が見える）",
+    "en": "Blood running off (reveal)",
+    "ko": "흘러내리는 피 (장면 드러내기)",
+    "zh": "流下的血（显现画面）"
+   },
+   "desc": {
+    "ja": "画面を覆っていた血が下へ流れ落ち、筋を残しながら場面が見えてくる。「上から垂れる血」と組み合わせて場面転換に。",
+    "en": "Blood covering the screen runs off downwards, leaving streaks behind, and the scene appears. Pair it with \"Blood dripping from the top\" for a scene change.",
+    "ko": "화면을 덮고 있던 피가 아래로 흘러내리며 줄기를 남기고, 장면이 드러난다. \"흘러내리는 피 (위에서)\"와 함께 장면 전환에.",
+    "zh": "覆盖画面的血向下流去，留下血痕，画面随之显现。可与“流下的血（从上方）”搭配用于转场。"
+   },
+   "tags": [
+    "血",
+    "垂れる",
+    "場面転換",
+    "ホラー",
+    "blood",
+    "drip",
+    "reveal",
+    "피",
+    "血"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 2,
+    "max": 6
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "amount",
+     "type": "range",
+     "label": {
+      "ja": "筋の数",
+      "en": "Streaks",
+      "ko": "줄기 수",
+      "zh": "血痕数量"
+     },
+     "min": 0.5,
+     "max": 1.6,
+     "step": 0.1,
+     "default": 1
+    }
+   ],
+   "budget": {
+    "size": [
+     1280,
+     720
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+   },
+   "poster": 0.4,
+   "path": "horror/blood/drip-reveal",
+   "thumb": "thumb.webp?v=1"
+  },
+  {
+   "id": "horror.blood-drop-1",
+   "version": 4,
+   "status": "test",
+   "added": "2026-11-18",
+   "order": 13,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "血のしずく（1滴）",
+    "en": "Blood drop hits the screen (1)",
+    "ko": "핏방울 (1방울)",
+    "zh": "血滴（1滴）"
+   },
+   "desc": {
+    "ja": "血のしずくがこちらへ飛んできて、画面の真ん中にぶつかって弾ける。",
+    "en": "A drop of blood flies towards the viewer and bursts against the middle of the screen.",
+    "ko": "핏방울이 이쪽으로 날아와 화면 한가운데에 부딪혀 터진다.",
+    "zh": "一滴血朝观者飞来，撞在画面正中溅开。"
+   },
+   "tags": [
+    "血",
+    "しずく",
+    "ホラー",
+    "blood",
+    "drop",
+    "splatter",
+    "피",
+    "血"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 2.5,
+    "min": 1.5,
+    "max": 5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기",
+      "zh": "大小"
+     },
+     "min": 0.5,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "stay",
+     "type": "toggle",
+     "label": {
+      "ja": "最後まで残す",
+      "en": "Keep at the end",
+      "ko": "끝까지 남기기",
+      "zh": "保留到最后"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     1280,
+     720
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
+   },
+   "poster": 0.6,
+   "path": "horror/blood/drop-1",
    "thumb": "thumb.webp?v=4"
+  },
+  {
+   "id": "horror.blood-drop-2",
+   "version": 4,
+   "status": "test",
+   "added": "2026-11-18",
+   "order": 14,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "血のしずく（2滴）",
+    "en": "Blood drops hit the screen (2)",
+    "ko": "핏방울 (2방울)",
+    "zh": "血滴（2滴）"
+   },
+   "desc": {
+    "ja": "血のしずくが2滴、少し間をおいてこちらへ飛んできて画面にぶつかり、弾ける。",
+    "en": "Two drops of blood fly towards the viewer one after another and burst against the screen.",
+    "ko": "핏방울 두 개가 잠시 간격을 두고 이쪽으로 날아와 화면에 부딪혀 터진다.",
+    "zh": "两滴血先后朝观者飞来，撞在画面上溅开。"
+   },
+   "tags": [
+    "血",
+    "しずく",
+    "ホラー",
+    "blood",
+    "drop",
+    "splatter",
+    "피",
+    "血"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 1.5,
+    "max": 5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기",
+      "zh": "大小"
+     },
+     "min": 0.5,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "stay",
+     "type": "toggle",
+     "label": {
+      "ja": "最後まで残す",
+      "en": "Keep at the end",
+      "ko": "끝까지 남기기",
+      "zh": "保留到最后"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     1280,
+     720
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
+   },
+   "poster": 0.6,
+   "path": "horror/blood/drop-2",
+   "thumb": "thumb.webp?v=4"
+  },
+  {
+   "id": "horror.blood-drop-3",
+   "version": 4,
+   "status": "test",
+   "added": "2026-11-18",
+   "order": 15,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "血のしずく（3滴）",
+    "en": "Blood drops hit the screen (3)",
+    "ko": "핏방울 (3방울)",
+    "zh": "血滴（3滴）"
+   },
+   "desc": {
+    "ja": "血のしずくが3滴、次々とこちらへ飛んできて画面にぶつかり、弾ける。",
+    "en": "Three drops of blood fly towards the viewer in turn and burst against the screen.",
+    "ko": "핏방울 세 개가 차례로 이쪽으로 날아와 화면에 부딪혀 터진다.",
+    "zh": "三滴血接连朝观者飞来，撞在画面上溅开。"
+   },
+   "tags": [
+    "血",
+    "しずく",
+    "ホラー",
+    "blood",
+    "drop",
+    "splatter",
+    "피",
+    "血"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 1.5,
+    "max": 5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.5
+     }
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기",
+      "zh": "大小"
+     },
+     "min": 0.5,
+     "max": 2,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "stay",
+     "type": "toggle",
+     "label": {
+      "ja": "最後まで残す",
+      "en": "Keep at the end",
+      "ko": "끝까지 남기기",
+      "zh": "保留到最后"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     1280,
+     720
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
+   },
+   "poster": 0.6,
+   "path": "horror/blood/drop-3",
+   "thumb": "thumb.webp?v=4"
+  },
+  {
+   "id": "horror.blood-handprint",
+   "version": 1,
+   "status": "test",
+   "added": "2026-11-18",
+   "order": 17,
+   "category": "horror",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "suggested",
+   "name": {
+    "ja": "血の手形",
+    "en": "Bloody handprint",
+    "ko": "피 묻은 손자국",
+    "zh": "血手印"
+   },
+   "desc": {
+    "ja": "血まみれの手のひらが画面にバンと押しつけられ、手形が残って血が垂れる。",
+    "en": "A bloody palm slams against the screen, leaving a handprint that runs down.",
+    "ko": "피투성이 손바닥이 화면에 쾅 하고 찍혀 손자국이 남고 피가 흘러내린다.",
+    "zh": "沾满鲜血的手掌猛地拍在画面上，留下手印，鲜血顺势流下。"
+   },
+   "tags": [
+    "血",
+    "手形",
+    "ホラー",
+    "blood",
+    "hand",
+    "handprint",
+    "피",
+    "血"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 3,
+    "min": 1.5,
+    "max": 5
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "center",
+     "type": "point",
+     "label": {
+      "ja": "中心",
+      "en": "Centre",
+      "ko": "중심",
+      "zh": "中心"
+     },
+     "default": {
+      "x": 0.5,
+      "y": 0.56
+     }
+    },
+    {
+     "key": "hand",
+     "type": "select",
+     "label": {
+      "ja": "手",
+      "en": "Hand",
+      "ko": "손",
+      "zh": "手"
+     },
+     "options": [
+      {
+       "value": "right",
+       "label": {
+        "ja": "右手",
+        "en": "Right hand",
+        "ko": "오른손",
+        "zh": "右手"
+       }
+      },
+      {
+       "value": "left",
+       "label": {
+        "ja": "左手",
+        "en": "Left hand",
+        "ko": "왼손",
+        "zh": "左手"
+       }
+      }
+     ],
+     "default": "right"
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기",
+      "zh": "大小"
+     },
+     "min": 0.6,
+     "max": 1.6,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "tilt",
+     "type": "range",
+     "label": {
+      "ja": "傾き",
+      "en": "Tilt",
+      "ko": "기울기",
+      "zh": "倾斜"
+     },
+     "min": -30,
+     "max": 30,
+     "step": 5,
+     "default": 0
+    },
+    {
+     "key": "stay",
+     "type": "toggle",
+     "label": {
+      "ja": "最後まで残す",
+      "en": "Keep at the end",
+      "ko": "끝까지 남기기",
+      "zh": "保留到最后"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     1280,
+     720
+    ],
+    "fps": 15,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
+   },
+   "poster": 0.5,
+   "path": "horror/blood/handprint",
+   "thumb": "thumb.webp?v=1"
   },
   {
    "id": "visual.noise",

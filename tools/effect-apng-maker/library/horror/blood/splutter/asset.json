@@ -1,0 +1,92 @@
+{
+  "id": "horror.blood-splutter",
+  "version": 2,
+  "status": "test",
+  "added": "2026-11-15",
+  "order": 9,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "EX",
+  "name": {
+    "ja": "血しぶき（中央）",
+    "en": "Blood splatter (centre)",
+    "ko": "피 튀김 (중앙)",
+    "zh": "血花飞溅（中央）"
+  },
+  "desc": {
+    "ja": "血がびしゃっと弾けて広がり、すっと薄れて消える。",
+    "en": "Blood bursts and spreads in a splash, then fades away.",
+    "ko": "피가 철퍽 터져 퍼졌다가 스르르 옅어지며 사라진다.",
+    "zh": "鲜血啪地炸开扩散，随后渐渐淡去消失。"
+  },
+  "tags": [
+    "血",
+    "血しぶき",
+    "ホラー",
+    "blood",
+    "splatter",
+    "피",
+    "血"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 4
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "center",
+      "type": "point",
+      "label": {
+        "ja": "中心",
+        "en": "Centre",
+        "ko": "중심",
+        "zh": "中心"
+      },
+      "default": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기",
+        "zh": "大小"
+      },
+      "min": 0.5,
+      "max": 2,
+      "step": 0.1,
+      "default": 1
+    }
+  ],
+  "budget": {
+    "size": [
+      960,
+      540
+    ],
+    "fps": 20,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
+  },
+  "poster": 0.45
+}
