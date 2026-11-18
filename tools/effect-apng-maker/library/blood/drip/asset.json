@@ -1,19 +1,19 @@
 {
-  "id": "horror.blood-drip",
-  "version": 8,
+  "id": "blood.drip",
+  "version": 9,
   "status": "test",
   "added": "2026-11-16",
-  "order": 11,
-  "category": "horror",
+  "order": 4,
+  "category": "blood",
   "kind": "procedural",
   "type": "effect",
   "priority": "P1",
   "origin": "EX",
   "name": {
-    "ja": "上から垂れる血",
-    "en": "Blood dripping down",
-    "ko": "위에서 흘러내리는 피",
-    "zh": "从上方流下的血"
+    "ja": "垂れる血（上から）",
+    "en": "Blood dripping from the top",
+    "ko": "흘러내리는 피 (위에서)",
+    "zh": "流下的血（从上方）"
   },
   "desc": {
     "ja": "画面の上の血の帯から、付け根が広がり先がしずくになった細い血の筋が壁を伝うように何本も垂れ、最後は帯が下りて画面を覆う。",

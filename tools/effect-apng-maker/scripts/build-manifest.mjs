@@ -20,6 +20,7 @@ const CATEGORIES = [
   { id: 'weather', name: { ja: '天候', en: 'Weather', ko: '날씨', zh: '天气' } },
   { id: 'element', name: { ja: '属性', en: 'Elements', ko: '속성', zh: '属性' } },
   { id: 'horror', name: { ja: 'ホラー', en: 'Horror', ko: '호러', zh: '恐怖' } },
+  { id: 'blood', name: { ja: '血', en: 'Blood', ko: '피', zh: '鲜血' } },
   { id: 'visual', name: { ja: '視覚効果', en: 'Visual effects', ko: '시각 효과', zh: '视觉效果' } },
   { id: 'magic', name: { ja: '魔法・神秘', en: 'Magic', ko: '마법·신비', zh: '魔法·神秘' } },
   { id: 'combat', name: { ja: '戦闘', en: 'Combat', ko: '전투', zh: '战斗' } },
