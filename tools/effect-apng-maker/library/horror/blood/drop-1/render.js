@@ -30,6 +30,12 @@ export function makeDrops(P, S, count) {
     const np = 1 + Math.floor(r() * 2.4);
     const pa = r() * TAU;
     for (let i = 0; i < np; i++) pools.push({ a: pa + (i ? (r() < 0.5 ? 1 : -1) * (0.8 + 1.4 * r()) : 0), d: 0.85 + 0.25 * r(), rr: 0.3 + 0.24 * r() });
+    // 3滴のとき：となりの液だまりは 1 個だけ、小さめで少し離す（3 つ並ぶと重たく見えるため。TK 2026-11-18）
+    if (count === 3) {
+      pools.length = Math.min(pools.length, 1);
+      for (const pl of pools) { pl.d = 1.0 + 0.12 * (pl.d - 0.85) / 0.25; pl.rr = 0.2 + 0.14 * (pl.rr - 0.3) / 0.24; }
+      for (const w of edge) w.amp *= 0.55;   // 角ばって見えないように、ふちのゆがみを弱く
+    }
     // ふちのとげ（細かく、びっしり）
     const spines = [];
     const ns = 46 + Math.floor(r() * 20);
@@ -43,7 +49,7 @@ export function makeDrops(P, S, count) {
     // 細かいしぶき
     const specks = [];
     for (let i = 0; i < 40; i++) specks.push({ a: r() * TAU, d: 1.2 + 1.6 * Math.pow(r(), 0.8), rr: 0.012 + 0.03 * Math.pow(r(), 2) });
-    return { ...L, jx: (r() - 0.5) * 0.03, jy: (r() - 0.5) * 0.03, edge, pools, spines, dashes, needles, specks };
+    return { ...L, jx: (r() - 0.5) * 0.03, jy: (r() - 0.5) * 0.03, edge, pools, spines, dashes, needles, specks, poolSpikes: count === 3 ? 20 : 12, spMin: count === 3 ? 11 : 7 };
   });
   return { drops, liq: liquidState(), seed: S.seed * 7 + count };
 }
@@ -107,15 +113,15 @@ export function drawDrops(ctx, t, P, st, S) {
         const pr = R * pl.rr * ep;
         if (pr < 0.5) continue;
         g.beginPath(); g.arc(px, py, pr, 0, TAU); g.fill();
-        for (let j = 0; j < 12; j++) {
+        for (let j = 0; j < d.poolSpikes; j++) {
           const ns = d.spines.length, s = d.spines[(((j * 5 + Math.round(pl.a * 10)) % ns) + ns) % ns];
-          const a = s.a + j * 0.52;
+          const a = s.a + j * (d.poolSpikes === 12 ? 0.52 : TAU / d.poolSpikes);
           spike(g, px, py, a, pr * 0.85, pr * (1.05 + s.len * 0.8), Math.max(1.6 * u, R * s.w * 0.7), 0.6);
         }
       }
       // ふちのとげ（細かく、びっしり）
       for (const s of d.spines) {
-        const r1 = (R + Math.max(7 * u, R * s.len) * e2) * e;
+        const r1 = (R + Math.max(d.spMin * u, R * s.len) * e2) * e;
         spike(g, cx, cy, s.a, R * 0.88 * e, r1, Math.max(1.8 * u, R * s.w), 0.6);
         if (s.dot) radialDot(g, cx, cy, s.a, r1 + R * 0.05, R * 0.028, 1.3);
       }

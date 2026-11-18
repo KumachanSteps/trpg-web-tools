@@ -5032,7 +5032,7 @@
   },
   {
    "id": "horror.blood-drop-3",
-   "version": 5,
+   "version": 6,
    "status": "test",
    "added": "2026-11-18",
    "order": 15,
@@ -5134,7 +5134,7 @@
    },
    "poster": 0.6,
    "path": "horror/blood/drop-3",
-   "thumb": "thumb.webp?v=5"
+   "thumb": "thumb.webp?v=6"
   },
   {
    "id": "horror.blood-handprint",
