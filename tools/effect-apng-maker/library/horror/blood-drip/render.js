@@ -1,10 +1,11 @@
-// 画面の上の血の帯から、しずく形の血が何本も垂れ落ち、その後ろから血の幕が下りてきて画面を覆う（1回再生）
-// 形の見本は TK の「上から垂れる血」の画像（2026-11-18）：波打つ帯、付け根が広がり、首が細く、先がしずく形にふくらむ。長さはまちまち
-// 中は平らな暗い深紅、縁だけ細く明るい赤（blood-liquid.js の style 'rim'）。太さのちがう筋が、それぞれの速さで伸びる
+// 上から血が何本もの太い筋になって流れ落ち、筋のすき間（アーチ形の穴）が下がりながら細くなって、画面を血で覆う（1回再生）
+// 動きの見本は TK が送った「血が流れ落ちて画面を覆う」動画（2026-11-18）：
+//   太さのまちまちな筋が速く下まで落ちる → 筋と筋の間は上が丸いアーチになり、そのアーチが下へ下がりながら幅もせばまる
+//   → 最後は下から突き出た細い影のとげが小さくなって消える
+// 形は「x ごとに血がどこまで来ているか（高さ）」の 1 本の線で作り、blood-liquid.js の style 'rim' で縁どりする
 import { rng, clamp, smooth } from '../../kit.js';
 import { liquidState, drawLiquid } from '../../blood-liquid.js';
 
-const TAU = Math.PI * 2;
 const easeIn = (x, p = 1.6) => Math.pow(clamp(x), p);
 
 export default {
@@ -12,79 +13,85 @@ export default {
     const r = rng(S.seed * 7 + 11);
     const amount = P.amount ?? 1;
     const W0 = 960;   // 16:9 の幅（高さ 540 のとき）。大きさはこの単位で持つ
-    // 垂れる筋：左から順に、すき間をあけて並べる
-    const drips = [];
-    let x = 10 + 40 * r();
-    while (x < W0 - 10) {
-      const w = r() < 0.18 ? 26 + 8 * r() : 42 + 26 * Math.pow(r(), 1.2);
-      drips.push({
-        x, w,
-        t0: 0.2 * r(),
-        sp: 0.75 + 0.7 * r(),
-        lag: r(),
-        stop: 0.14 + 0.62 * Math.pow(r(), 0.75),   // 覆わないときに止まる長さ（画面の高さに対して）
-        wob: (r() - 0.5) * 2, wp: r() * TAU
+    // 筋とすき間を左から交互に並べる
+    const cols = [], gaps = [];
+    let x = -30 - 20 * r();
+    for (;;) {
+      const q = r();
+      const w = q < 0.2 ? 12 + 12 * r() : q < 0.38 ? 86 + 60 * r() : 30 + 42 * r();
+      cols.push({ a: x, b: x + w, t0: 0.16 * r(), sp: 0.8 + 0.6 * r(), lag: r(), stop: 0.3 + 0.5 * Math.pow(r(), 0.8) });
+      x += w;
+      if (x > W0 + 30) break;
+      const g = (16 + 46 * Math.pow(r(), 0.9)) / amount;
+      gaps.push({
+        a: x, b: x + g,
+        d0: 0.12 + 0.2 * r(),          // アーチが下がりはじめる時刻
+        dur: 0.55 + 0.25 * r(),        // 下まで下がりきるまで
+        c0: 0.42 + 0.3 * r(),          // 幅がせばまりはじめる時刻
+        arch: 1.3 + 1.1 * r(),         // アーチの高さ（すき間の幅に対して）
+        stop: 0.03 + 0.12 * r()       // 覆わないときに止まるアーチの高さ（画面の高さに対して）
       });
-      x += w + (56 + 80 * r()) / amount;
+      x += g;
     }
-    // 帯の下の縁のゆるいふくらみ（垂れきらない血）
-    const sags = [];
-    for (let i = 0; i < 18; i++) sags.push({ x: r() * W0, w: 26 + 46 * r(), d: 6 + 16 * r() });
-    return { drips, sags, liq: liquidState() };
+    return { cols, gaps, liq: liquidState() };
   },
   draw(ctx, t, P, st, S) {
     const { w: W, h: H } = S;
     const u = H / 540;
     const sx = W / (960 * u);
     const cover = P.cover !== false;
-    // 幕（帯）の下の端。覆うときは最後に画面の下まで、覆わないときは少しだけ下がる
-    const bandMax = 62 * u;
-    const sheetEnd = cover ? H + 80 * u : bandMax;
-    const grow = smooth(t / 0.18);
-    const sheet = cover
-      ? bandMax * grow + (sheetEnd - bandMax) * easeIn((t - 0.22) / 0.74, 1.7)
-      : bandMax * grow;
-    // 筋の先までの長さ（速さは前の版のまま。覆わないときは筋ごとの長さで止まる）
-    const lenOf = d => {
-      const q = clamp((t - d.t0) * d.sp * 2.1);
-      if (q <= 0) return 0;
-      let L = d.w * u * 0.3 + (H * 1.3) * Math.pow(q, 1.35) * (1 - 0.3 * d.lag);
-      if (!cover) L = Math.min(L, d.stop * H);
-      return L;
+    const band = 14 * u * smooth(t / 0.1);
+    const far = H + 120 * u;
+    // 筋の先までの長さ（速さは前の版のまま）
+    const tipOf = c => {
+      const q = clamp((t - c.t0) * c.sp * 2.1);
+      if (q <= 0) return band;
+      let L = (c.b - c.a) * u * 0.3 + H * 1.3 * Math.pow(q, 1.35) * (1 - 0.3 * c.lag);
+      if (!cover) L = Math.min(L, c.stop * H);
+      else L = Math.max(L, far * easeIn((t - 0.45) / 0.4));   // 覆うときは、遅い筋も最後は必ず下まで届く
+      return band + L;
+    };
+    const tips = st.cols.map(tipOf);
+    // x ごとの血の下の端
+    const X = v => v * u * sx;
+    const segs = [];
+    st.cols.forEach((c, i) => segs.push({ kind: 'c', i, a: X(c.a), b: X(c.b) }));
+    st.gaps.forEach((g, i) => segs.push({ kind: 'g', i, a: X(g.a), b: X(g.b) }));
+    segs.sort((p, q) => p.a - q.a);
+    const yAt = x => {
+      let s = segs[0];
+      for (const z of segs) { if (x >= z.a) s = z; else break; }
+      if (s.kind === 'c') {
+        const hw = (s.b - s.a) / 2, cx = (s.a + s.b) / 2;
+        const e = Math.min(1, Math.abs(x - cx) / hw);
+        const R = Math.min(hw, 40 * u) * 0.95;                   // 先の丸み
+        return Math.max(band, tips[s.i] - R * (1 - Math.sqrt(1 - e * e)));
+      }
+      const g = st.gaps[s.i];
+      const gw = s.b - s.a, cx = (s.a + s.b) / 2;
+      const tipNear = x < cx ? tips[s.i] : tips[s.i + 1];
+      // 幅がせばまる（両どなりの筋が太る）
+      const close = cover ? easeIn((t - g.c0) / (0.97 - g.c0), 1.3) : 0;
+      const hw = gw / 2 * (1 - close);
+      const d = Math.abs(x - cx);
+      if (d >= hw) return tipNear;
+      // アーチのいちばん上が下がる
+      let top = band + (far - band) * easeIn((t - g.d0) / g.dur, 1.5);
+      if (!cover) top = Math.min(top, band + g.stop * H);
+      const e = d / hw;
+      const ah = Math.max(gw * g.arch, 30 * u);
+      const yArch = top + ah * (1 - Math.sqrt(1 - e * e));
+      return Math.max(band, Math.min(yArch, tipNear));
     };
     drawLiquid(ctx, W, H, st.liq, (g, k) => {
       g.save();
       g.scale(k, k);
-      // 帯（上からつながった血の面）
-      g.fillRect(-40 * u, -60 * u, W + 80 * u, sheet + 60 * u);
-      for (const q of st.sags) {
-        g.beginPath(); g.ellipse(q.x * u * sx, sheet, q.w * u * 0.5, q.d * u * grow, 0, 0, TAU); g.fill();
-      }
-      // しずく形の筋：付け根は帯へ広がり（なだらかなすそ）、首は細く、先は丸くふくらむ
-      for (const d of st.drips) {
-        const L = lenOf(d);
-        if (L <= 0.5) continue;
-        const w = d.w * u, cx0 = d.x * u * sx;
-        const bulbR = w * 0.44 * Math.min(1, 0.6 + L / (w * 3));   // 伸びはじめは小さく
-        const cy = L - bulbR * 1.35;                                // しずくの中心（帯の下の端から）
-        const neckEnd = Math.max(0, cy);
-        const half = yr => {
-          const f = clamp(yr / Math.max(1, neckEnd));
-          const flare = 1.35 * Math.exp(-yr / (0.75 * w));            // 付け根のすそ
-          const neck = w / 2 * (1 + flare) * (1 - 0.34 * f);         // 下へいくほど少し細く
-          // しずくの手前でなめらかにふくらみ、しずくの幅につながる（首とのつなぎ目を作らない）
-          const b = smooth((f - 0.55) / 0.45);
-          return neck + (bulbR * 0.98 - neck) * b * b;
-        };
-        const xOf = yr => cx0 + d.wob * w * 0.06 * Math.sin(yr / H * 5 + d.wp);
-        const steps = 28;
-        g.beginPath();
-        for (let j = 0; j <= steps; j++) { const yr = -10 * u + (neckEnd + 10 * u) * j / steps; const y = sheet + yr; const x = xOf(yr) - half(yr); j ? g.lineTo(x, y) : g.moveTo(x, y); }
-        for (let j = steps; j >= 0; j--) { const yr = -10 * u + (neckEnd + 10 * u) * j / steps; g.lineTo(xOf(yr) + half(yr), sheet + yr); }
-        g.closePath(); g.fill();
-        // 先のしずく（少し縦長）
-        g.beginPath(); g.ellipse(xOf(cy), sheet + cy, bulbR, bulbR * 1.35, 0, 0, TAU); g.fill();
-      }
+      g.beginPath();
+      g.moveTo(-60 * u, -60 * u);
+      const step = 1.5 / k;
+      for (let x = -40 * u; x <= W + 40 * u; x += step) g.lineTo(x, yAt(x));
+      g.lineTo(W + 60 * u, -60 * u);
+      g.closePath(); g.fill();
       g.restore();
     }, { res: 0.6, u, edge: 3.5, dome: 10, style: 'rim' });
   }
