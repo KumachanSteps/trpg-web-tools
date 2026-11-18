@@ -1,0 +1,104 @@
+{
+  "id": "horror.blood-drop-3",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-18",
+  "order": 15,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "血のしずく（3滴）",
+    "en": "Blood drops hit the screen (3)",
+    "ko": "핏방울 (3방울)",
+    "zh": "血滴（3滴）"
+  },
+  "desc": {
+    "ja": "血のしずくが3滴、次々とこちらへ飛んできて画面にぶつかり、弾けて垂れる。",
+    "en": "Three drops of blood fly towards the viewer in turn, burst against the screen and run down.",
+    "ko": "핏방울 세 개가 차례로 이쪽으로 날아와 화면에 부딪혀 터지고 흘러내린다.",
+    "zh": "三滴血接连朝观者飞来，撞在画面上溅开并流下。"
+  },
+  "tags": [
+    "血",
+    "しずく",
+    "ホラー",
+    "blood",
+    "drop",
+    "splatter",
+    "피",
+    "血"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3,
+    "min": 1.5,
+    "max": 5
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "center",
+      "type": "point",
+      "label": {
+        "ja": "中心",
+        "en": "Centre",
+        "ko": "중심",
+        "zh": "中心"
+      },
+      "default": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "key": "size",
+      "type": "range",
+      "label": {
+        "ja": "大きさ",
+        "en": "Size",
+        "ko": "크기",
+        "zh": "大小"
+      },
+      "min": 0.5,
+      "max": 2,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "key": "stay",
+      "type": "toggle",
+      "label": {
+        "ja": "最後まで残す",
+        "en": "Keep at the end",
+        "ko": "끝까지 남기기",
+        "zh": "保留到最后"
+      },
+      "default": false
+    }
+  ],
+  "budget": {
+    "size": [
+      1280,
+      720
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
+  },
+  "poster": 0.6
+}

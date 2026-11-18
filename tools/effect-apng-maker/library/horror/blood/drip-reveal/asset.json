@@ -1,0 +1,79 @@
+{
+  "id": "horror.blood-drip-reveal",
+  "version": 1,
+  "status": "test",
+  "added": "2026-11-18",
+  "order": 13,
+  "category": "horror",
+  "kind": "procedural",
+  "type": "effect",
+  "priority": "P1",
+  "origin": "suggested",
+  "name": {
+    "ja": "流れ落ちる血（場面が見える）",
+    "en": "Blood running off (reveal)",
+    "ko": "흘러내리는 피 (장면 드러내기)",
+    "zh": "流下的血（显现画面）"
+  },
+  "desc": {
+    "ja": "画面を覆っていた血が下へ流れ落ち、筋を残しながら場面が見えてくる。「上から垂れる血」と組み合わせて場面転換に。",
+    "en": "Blood covering the screen runs off downwards, leaving streaks behind, and the scene appears. Pair it with \"Blood dripping from the top\" for a scene change.",
+    "ko": "화면을 덮고 있던 피가 아래로 흘러내리며 줄기를 남기고, 장면이 드러난다. \"흘러내리는 피 (위에서)\"와 함께 장면 전환에.",
+    "zh": "覆盖画面的血向下流去，留下血痕，画面随之显现。可与“流下的血（从上方）”搭配用于转场。"
+  },
+  "tags": [
+    "血",
+    "垂れる",
+    "場面転換",
+    "ホラー",
+    "blood",
+    "drip",
+    "reveal",
+    "피",
+    "血"
+  ],
+  "use": [
+    "overlay"
+  ],
+  "playback": {
+    "default": "once",
+    "allowed": [
+      "once"
+    ]
+  },
+  "duration": {
+    "default": 3,
+    "min": 2,
+    "max": 6
+  },
+  "transparent": true,
+  "params": [
+    {
+      "key": "amount",
+      "type": "range",
+      "label": {
+        "ja": "筋の数",
+        "en": "Streaks",
+        "ko": "줄기 수",
+        "zh": "血痕数量"
+      },
+      "min": 0.5,
+      "max": 1.6,
+      "step": 0.1,
+      "default": 1
+    }
+  ],
+  "budget": {
+    "size": [
+      1280,
+      720
+    ],
+    "fps": 15,
+    "colors": 64
+  },
+  "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
+  },
+  "poster": 0.4
+}
