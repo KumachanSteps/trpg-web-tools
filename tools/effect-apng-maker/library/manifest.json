@@ -4820,7 +4820,7 @@
   },
   {
    "id": "horror.blood-drop-1",
-   "version": 4,
+   "version": 5,
    "status": "test",
    "added": "2026-11-18",
    "order": 13,
@@ -4922,11 +4922,11 @@
    },
    "poster": 0.6,
    "path": "horror/blood/drop-1",
-   "thumb": "thumb.webp?v=4"
+   "thumb": "thumb.webp?v=5"
   },
   {
    "id": "horror.blood-drop-2",
-   "version": 4,
+   "version": 5,
    "status": "test",
    "added": "2026-11-18",
    "order": 14,
@@ -5028,11 +5028,11 @@
    },
    "poster": 0.6,
    "path": "horror/blood/drop-2",
-   "thumb": "thumb.webp?v=4"
+   "thumb": "thumb.webp?v=5"
   },
   {
    "id": "horror.blood-drop-3",
-   "version": 4,
+   "version": 5,
    "status": "test",
    "added": "2026-11-18",
    "order": 15,
@@ -5134,7 +5134,7 @@
    },
    "poster": 0.6,
    "path": "horror/blood/drop-3",
-   "thumb": "thumb.webp?v=4"
+   "thumb": "thumb.webp?v=5"
   },
   {
    "id": "horror.blood-handprint",

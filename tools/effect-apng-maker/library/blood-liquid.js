@@ -18,6 +18,37 @@ const C_LO = [96, 4, 10];
 const R_IN = [92, 10, 18];
 const R_RIM = [214, 40, 52];
 const R_GLOW = [190, 24, 36];
+// しみの描き方（style: 'stain'）の色：TK の血しぶきの見本（水彩のような濃淡）から拾った色。明るい所・中くらい・濃い所
+const S_LI = [172, 10, 10];
+const S_MID = [140, 4, 4];
+const S_DK = [88, 4, 8];
+
+// しみの濃淡用のなめらかなまだら（seed ごとに 1 回だけ作る）
+function stainNoise(st, bw, bh, seed) {
+  const key = `${bw}x${bh}:${seed}`;
+  if (st.noiseKey === key) return st.noise;
+  let a = (seed * 9301 + 49297) % 233280 || 1;
+  const rnd = () => { a = (a * 9301 + 49297) % 233280; return a / 233280; };
+  const out = new Float32Array(bw * bh);
+  // 大きさのちがうまだらを 3 枚重ねる
+  for (const [cells, wgt] of [[7, 0.55], [16, 0.3], [38, 0.15]]) {
+    const gw = cells + 1, gh = Math.ceil(cells * bh / bw) + 1;
+    const grid = new Float32Array(gw * gh);
+    for (let i = 0; i < grid.length; i++) grid[i] = rnd();
+    for (let y = 0; y < bh; y++) {
+      const fy = y / bh * (gh - 1), y0 = Math.floor(fy), ty = fy - y0, sy = ty * ty * (3 - 2 * ty);
+      const y1 = Math.min(gh - 1, y0 + 1);
+      for (let x = 0; x < bw; x++) {
+        const fx = x / bw * (gw - 1), x0 = Math.floor(fx), tx = fx - x0, sx = tx * tx * (3 - 2 * tx);
+        const x1 = Math.min(gw - 1, x0 + 1);
+        const v = (grid[y0 * gw + x0] * (1 - sx) + grid[y0 * gw + x1] * sx) * (1 - sy) + (grid[y1 * gw + x0] * (1 - sx) + grid[y1 * gw + x1] * sx) * sy;
+        out[y * bw + x] += v * wgt;
+      }
+    }
+  }
+  st.noise = out; st.noiseKey = key;
+  return out;
+}
 
 /** 描くための入れ物を作る。shape(g, k) は内部の大きさ（k 倍）で形を白く描く関数 */
 export function liquidState() {
@@ -28,7 +59,8 @@ export function liquidState() {
  * 形を描いて、液体として ctx に重ねる。
  *   shape: (g, k) => void  … g に白で形を描く。座標は「実寸 × k」で描く（k = res）
  *   opt:   { res=0.5, edge=3（なめらかさ・実寸 px）, dome=9（ふくらみ・実寸 px）, alpha=1, u=H/540,
- *            style: 'gloss'（つやのある立体）| 'rim'（平らな深紅＋明るい縁どり） }
+ *            style: 'gloss'（つやのある立体）| 'rim'（平らな深紅＋明るい縁どり）| 'stain'（水彩のような濃淡の深紅、縁は少し濃く、縁どりなし）,
+ *            seed（stain のまだらの種） }
  */
 export function drawLiquid(ctx, W, H, st, shape, opt = {}) {
   const k = opt.res ?? 0.5;
@@ -64,6 +96,8 @@ export function drawLiquid(ctx, W, H, st, shape, opt = {}) {
   const out = st.img.data;
   const alphaAll = opt.alpha ?? 1;
   const rim = opt.style === 'rim';
+  const stain = opt.style === 'stain';
+  const N = stain ? stainNoise(st, bw, bh, opt.seed ?? 1) : null;
   // 光の向き（左上から少し手前）
   const lx = -0.45, ly = -0.6, lz = 0.66;
   const slope = 2.2 / (u * k);  // 高さの差 → 傾き。大きさが変わっても同じ見た目になるように
@@ -74,6 +108,24 @@ export function drawLiquid(ctx, W, H, st, shape, opt = {}) {
       const a = A[i + 3] / 255;
       // しきい値でくっきりさせる（0.42〜0.58 の間で立ち上がる）
       let e = (a - 0.42) / 0.16;
+      if (stain) {
+        // しみの描き方：まだらの濃淡＋厚い所と縁が少し濃い。外側はくっきり（にじみなし）
+        if (e <= 0) { out[i + 3] = 0; continue; }
+        if (e > 1) e = 1;
+        const edgeA = e * e * (3 - 2 * e);
+        let rr = (a - 0.5) / 0.45; rr = rr < 0 ? 0 : rr > 1 ? 1 : rr;
+        const rimK = 1 - rr * rr * (3 - 2 * rr);
+        const h = D[i + 3] / 255;
+        let v = N[y * bw + x] * 1.25 - 0.12;              // まだら 0〜1
+        v = v * 0.7 + h * 0.25 + rimK * 0.3;               // 厚い所・縁ほど濃い
+        v = v < 0 ? 0 : v > 1 ? 1 : v;
+        let r, g, b;
+        if (v < 0.5) { const q = v / 0.5; r = S_LI[0] + (S_MID[0] - S_LI[0]) * q; g = S_LI[1] + (S_MID[1] - S_LI[1]) * q; b = S_LI[2] + (S_MID[2] - S_LI[2]) * q; }
+        else { const q = (v - 0.5) / 0.5; r = S_MID[0] + (S_DK[0] - S_MID[0]) * q; g = S_MID[1] + (S_DK[1] - S_MID[1]) * q; b = S_MID[2] + (S_DK[2] - S_MID[2]) * q; }
+        out[i] = r; out[i + 1] = g; out[i + 2] = b;
+        out[i + 3] = 255 * edgeA * alphaAll;
+        continue;
+      }
       if (rim) {
         // 縁どりの描き方：中は暗い深紅でほぼ平ら、縁だけ細く明るい赤、外にうすい赤のにじみ
         if (e <= 0) {
