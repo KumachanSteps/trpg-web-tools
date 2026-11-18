@@ -1,6 +1,6 @@
 {
   "id": "horror.blood-drop-2",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-18",
   "order": 14,
@@ -16,10 +16,10 @@
     "zh": "血滴（2滴）"
   },
   "desc": {
-    "ja": "血のしずくが2滴、少し間をおいてこちらへ飛んできて画面にぶつかり、弾けて垂れる。",
-    "en": "Two drops of blood fly towards the viewer one after another, burst against the screen and run down.",
-    "ko": "핏방울 두 개가 잠시 간격을 두고 이쪽으로 날아와 화면에 부딪혀 터지고 흘러내린다.",
-    "zh": "两滴血先后朝观者飞来，撞在画面上溅开并流下。"
+    "ja": "血のしずくが2滴、少し間をおいてこちらへ飛んできて画面にぶつかり、弾ける。",
+    "en": "Two drops of blood fly towards the viewer one after another and burst against the screen.",
+    "ko": "핏방울 두 개가 잠시 간격을 두고 이쪽으로 날아와 화면에 부딪혀 터진다.",
+    "zh": "两滴血先后朝观者飞来，撞在画面上溅开。"
   },
   "tags": [
     "血",

@@ -1,6 +1,6 @@
 {
   "id": "horror.blood-drop-3",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-18",
   "order": 15,
@@ -16,10 +16,10 @@
     "zh": "血滴（3滴）"
   },
   "desc": {
-    "ja": "血のしずくが3滴、次々とこちらへ飛んできて画面にぶつかり、弾けて垂れる。",
-    "en": "Three drops of blood fly towards the viewer in turn, burst against the screen and run down.",
-    "ko": "핏방울 세 개가 차례로 이쪽으로 날아와 화면에 부딪혀 터지고 흘러내린다.",
-    "zh": "三滴血接连朝观者飞来，撞在画面上溅开并流下。"
+    "ja": "血のしずくが3滴、次々とこちらへ飛んできて画面にぶつかり、弾ける。",
+    "en": "Three drops of blood fly towards the viewer in turn and burst against the screen.",
+    "ko": "핏방울 세 개가 차례로 이쪽으로 날아와 화면에 부딪혀 터진다.",
+    "zh": "三滴血接连朝观者飞来，撞在画面上溅开。"
   },
   "tags": [
     "血",

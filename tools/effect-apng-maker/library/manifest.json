@@ -4820,7 +4820,7 @@
   },
   {
    "id": "horror.blood-drop-1",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-18",
    "order": 13,
@@ -4836,10 +4836,10 @@
     "zh": "血滴（1滴）"
    },
    "desc": {
-    "ja": "血のしずくがこちらへ飛んできて、画面の真ん中にぶつかって弾け、ガラスを伝って垂れる。",
-    "en": "A drop of blood flies towards the viewer, bursts against the middle of the screen and runs down the glass.",
-    "ko": "핏방울이 이쪽으로 날아와 화면 한가운데에 부딪혀 터지고, 유리를 타고 흘러내린다.",
-    "zh": "一滴血朝观者飞来，撞在画面正中溅开，并顺着玻璃流下。"
+    "ja": "血のしずくがこちらへ飛んできて、画面の真ん中にぶつかって弾ける。",
+    "en": "A drop of blood flies towards the viewer and bursts against the middle of the screen.",
+    "ko": "핏방울이 이쪽으로 날아와 화면 한가운데에 부딪혀 터진다.",
+    "zh": "一滴血朝观者飞来，撞在画面正中溅开。"
    },
    "tags": [
     "血",
@@ -4922,11 +4922,11 @@
    },
    "poster": 0.6,
    "path": "horror/blood/drop-1",
-   "thumb": "thumb.webp?v=1"
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "horror.blood-drop-2",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-18",
    "order": 14,
@@ -4942,10 +4942,10 @@
     "zh": "血滴（2滴）"
    },
    "desc": {
-    "ja": "血のしずくが2滴、少し間をおいてこちらへ飛んできて画面にぶつかり、弾けて垂れる。",
-    "en": "Two drops of blood fly towards the viewer one after another, burst against the screen and run down.",
-    "ko": "핏방울 두 개가 잠시 간격을 두고 이쪽으로 날아와 화면에 부딪혀 터지고 흘러내린다.",
-    "zh": "两滴血先后朝观者飞来，撞在画面上溅开并流下。"
+    "ja": "血のしずくが2滴、少し間をおいてこちらへ飛んできて画面にぶつかり、弾ける。",
+    "en": "Two drops of blood fly towards the viewer one after another and burst against the screen.",
+    "ko": "핏방울 두 개가 잠시 간격을 두고 이쪽으로 날아와 화면에 부딪혀 터진다.",
+    "zh": "两滴血先后朝观者飞来，撞在画面上溅开。"
    },
    "tags": [
     "血",
@@ -5028,11 +5028,11 @@
    },
    "poster": 0.6,
    "path": "horror/blood/drop-2",
-   "thumb": "thumb.webp?v=1"
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "horror.blood-drop-3",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-18",
    "order": 15,
@@ -5048,10 +5048,10 @@
     "zh": "血滴（3滴）"
    },
    "desc": {
-    "ja": "血のしずくが3滴、次々とこちらへ飛んできて画面にぶつかり、弾けて垂れる。",
-    "en": "Three drops of blood fly towards the viewer in turn, burst against the screen and run down.",
-    "ko": "핏방울 세 개가 차례로 이쪽으로 날아와 화면에 부딪혀 터지고 흘러내린다.",
-    "zh": "三滴血接连朝观者飞来，撞在画面上溅开并流下。"
+    "ja": "血のしずくが3滴、次々とこちらへ飛んできて画面にぶつかり、弾ける。",
+    "en": "Three drops of blood fly towards the viewer in turn and burst against the screen.",
+    "ko": "핏방울 세 개가 차례로 이쪽으로 날아와 화면에 부딪혀 터진다.",
+    "zh": "三滴血接连朝观者飞来，撞在画面上溅开。"
    },
    "tags": [
     "血",
@@ -5134,7 +5134,7 @@
    },
    "poster": 0.6,
    "path": "horror/blood/drop-3",
-   "thumb": "thumb.webp?v=1"
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "horror.blood-handprint",

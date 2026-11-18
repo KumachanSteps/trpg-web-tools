@@ -1,9 +1,9 @@
 // 血のしずくが見ている人のほうへ飛んできて、画面（ガラス）にぶつかって弾ける（1回再生）
-// ぶつかると中心のかたまりから放射状に血が伸び、まわりに細かいしずくが散る。そのあと下へ数本の筋が伝う
+// ぶつかると中心のかたまりから放射状に血が伸び、まわりに細かいしずくが散る
+// 地面に落ちたしずくとして描くので、そのあと下へ伝う筋は作らない（TK 2026-11-18）。runs は乱数の並びを保つために残す
 // 1滴・2滴・3滴のカードで同じ描き方を使う（count だけちがう）
 import { rng, clamp, smooth } from '../../../kit.js';
 import { liquidState, drawLiquid } from '../../../blood-liquid.js';
-import { drawStreak } from '../streak.js';
 
 const TAU = Math.PI * 2;
 const easeOut = (x, p = 3) => 1 - Math.pow(1 - clamp(x), p);
@@ -95,14 +95,6 @@ export function drawDrops(ctx, t, P, st, S) {
       for (const s of d.sats) {
         const dd = R * s.d * e2;
         g.beginPath(); g.arc(cx + Math.cos(s.a) * dd, cy + Math.sin(s.a) * dd, R * s.rr * Math.min(1, e2 * 1.5), 0, TAU); g.fill();
-      }
-      // ガラスを下へ伝う筋
-      for (const run of d.runs) {
-        const tt = t - d.hit - run.delay;
-        if (tt <= 0) continue;
-        const L = H * 0.42 * run.sp * easeOut(tt / 0.6, 1.8) * size * d.s;
-        const sx = cx + Math.cos(run.a) * R * 0.55, sy = cy + Math.sin(run.a) * R * 0.55;
-        drawStreak(g, sx, sy, L, R * run.n, { root: 2.2, wob: run.wob, wp: run.wp, H });
       }
     }
     g.restore();
