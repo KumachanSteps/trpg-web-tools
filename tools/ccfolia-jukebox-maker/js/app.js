@@ -39,6 +39,8 @@
     cropZoom: $('cropZoom'), cropOpen: $('cropOpen'), cropFile: $('cropFile'), cropFit: $('cropFit'), cropOk: $('cropOk'), cropRemove: $('cropRemove'),
     plStatus: $('plStatus'), plMenuBtn: $('plMenuBtn'), plMenu: $('plMenu'), plFile: $('plFile'),
     plTabs: $('plTabs'), plMineCount: $('plMineCount'), plGrid: $('plGrid'), plSaveBtn: $('plSaveBtn'), plImportBtn: $('plImportBtn'),
+    sitesFilter: $('sitesFilter'), sitesGrid: $('sitesGrid'),
+    shelfMode: $('shelfMode'), shelfSearch: $('shelfSearch'), shelfSearchForm: $('shelfSearchForm'), shelfSearchInput: $('shelfSearchInput'), searchPanels: $('searchPanels'), searchSummary: $('searchSummary'),
     plModal: $('plModal'), plModalTitle: $('plModalTitle'), plModalNote: $('plModalNote'), plForm: $('plForm'),
     plNameField: $('plNameField'), plName: $('plName'), plMemoField: $('plMemoField'), plMemo: $('plMemo'),
     plImagesField: $('plImagesField'), plImages: $('plImages'), plModalActions: $('plModalActions'),
@@ -164,9 +166,11 @@
     d.helpNotes.forEach(text => els.helpNotes.appendChild(h('p', null, text)));
     renderSettings();
     renderShape();
+    if (shelf.mode === 'search') renderSearchPanels();
     renderShelf();
     plStatus();
     renderPlaylists();
+    renderSites();
     renderAll();
   }
 
@@ -1802,14 +1806,17 @@
 
   // 今ひらいている一覧
   function curView() {
+    // 条件から探す：ライブラリ全体から絞り込んだ一覧。棚には属さないので ALL と同じ扱い（足す・ドラッグで棚へ）
+    if (shelf.mode === 'search') return { kind: 'all', search: true, tab: null, tracks: searchResults() };
     if (shelf.view === 'all') return { kind: 'all', tab: null, tracks: allTracks() };
     if (shelf.view === 'star') return { kind: 'star', tab: null, tracks: starTracks() };
     const tab = shelf.tabs[shelf.active];
     return tab ? { kind: 'shelf', tab, tracks: tab.tracks } : { kind: 'all', tab: null, tracks: allTracks() };
   }
-  const viewKey = () => (shelf.view === 'shelf' ? shelf.tabs[shelf.active] || 'none' : shelf.view);
+  const viewKey = () => (shelf.mode === 'search' ? `search:${searchKey()}` : shelf.view === 'shelf' ? shelf.tabs[shelf.active] || 'none' : shelf.view);
 
   function openView(view, index) {
+    if (shelf.mode === 'search') { setShelfMode('shelves'); if (shelf.view === view && (view !== 'shelf' || shelf.active === index)) return; }
     if (shelf.view === view && (view !== 'shelf' || shelf.active === index)) return;
     shelf.view = view;
     if (view === 'shelf') shelf.active = index;
@@ -1833,7 +1840,7 @@
     // ALL・★・各棚を1列に並べる。←→キーで順に動く
     const entries = [{ view: 'all', label: t('shelf.all'), count: allTracks().length }, { view: 'star', label: `★ ${t('shelf.star')}`, count: starTracks().length }]
       .concat(tabs.map((tab, i) => ({ view: 'shelf', index: i, label: shelfTabName(tab), count: tab.tracks.length })));
-    const isOn = en => en.view === shelf.view && (en.view !== 'shelf' || en.index === shelf.active);
+    const isOn = en => shelf.mode !== 'search' && en.view === shelf.view && (en.view !== 'shelf' || en.index === shelf.active);
     entries.forEach((en, k) => {
       const on = isOn(en);
       els.shelfTabs.appendChild(h('button', {
@@ -2055,13 +2062,161 @@
   const SHELF_PAGE = 80;
   let shelfShown = SHELF_PAGE;
 
+  /* ---------- 条件から探す（Scene は OR、Tone・Setting は AND、軸どうしは AND。キーワードは確定したものだけ） ---------- */
+  const SEARCH_AXES = ['scene', 'tone', 'setting'];
+  const search = { scene: [], tone: [], setting: [], q: '', composer: '', open: { scene: true, tone: false, setting: false } };
+  try { const o = JSON.parse(localStorage.getItem('ccfoliaJukebox.searchOpen')); if (o && typeof o === 'object') SEARCH_AXES.forEach(a => { if (typeof o[a] === 'boolean') search.open[a] = o[a]; }); } catch (error) { /* noop */ }
+  const AXIS_IDS = { scene: () => JukeboxLibrary.SCENES, tone: () => JukeboxLibrary.TONES, setting: () => JukeboxLibrary.SETTINGS };
+  const tagName = (axis, id) => t(`search.tags.${axis}.${id}`);
+  // 検索に使うタグ：配布元タグ・旧タブ由来の仮タグと確認済みタグ。曲名だけから推定した候補（suggested）は使わない
+  const usableTags = (yt, axis) => { const m = libTrack(yt); return m ? m.tags.filter(x => x.axis === axis && x.status !== 'suggested').map(x => x.id) : []; };
+  const searchActive = () => SEARCH_AXES.some(a => search[a].length) || Boolean(search.q) || Boolean(search.composer);
+  const searchKey = () => JSON.stringify([search.scene, search.tone, search.setting, search.q, search.composer]);
+  let tagCounts = null;
+  function countTags() {
+    if (tagCounts) return tagCounts;
+    tagCounts = { scene: {}, tone: {}, setting: {} };
+    JukeboxLibrary.tracks.forEach(m => SEARCH_AXES.forEach(a => usableTags(m.yt, a).forEach(id => { tagCounts[a][id] = (tagCounts[a][id] || 0) + 1; })));
+    return tagCounts;
+  }
+  function trackHaystack(tr) {
+    const m = libTrack(tr.yt);
+    const parts = [trackTitle(tr), trackBy(tr)];
+    if (m) {
+      parts.push(m.composer || '', m.source || '', ...m.styles);
+      m.tags.filter(x => x.status !== 'suggested').forEach(x => { parts.push(tagName(x.axis, x.id), ((I18N.ja.search.tags[x.axis] || {})[x.id]) || '', x.id); });
+    }
+    return parts.join('\n').toLowerCase();
+  }
+  function searchResults() {
+    if (!searchActive()) return [];
+    const words = search.q.toLowerCase().split(/\s+/).filter(Boolean);
+    return allTracks().filter(tr => {
+      if (search.composer && trackBy(tr) !== search.composer) return false;
+      if (search.scene.length && !usableTags(tr.yt, 'scene').some(id => search.scene.includes(id))) return false;
+      for (const a of ['tone', 'setting']) {
+        if (search[a].length) { const has = usableTags(tr.yt, a); if (!search[a].every(id => has.includes(id))) return false; }
+      }
+      if (words.length) { const hay = trackHaystack(tr); if (!words.every(w => hay.includes(w))) return false; }
+      return true;
+    });
+  }
+  const shelfScroll = { shelves: 0, search: 0 };
+  function setShelfMode(mode) {
+    if ((shelf.mode || 'shelves') === mode) return;
+    const panel = els.layout.querySelector('[data-panel="stage"]');
+    shelfScroll[shelf.mode || 'shelves'] = panel ? panel.scrollTop : 0;
+    shelf.mode = mode;
+    shelf.selecting = false;
+    shelf.selected.clear();
+    shelf.armed = '';
+    shelf.editing = false;
+    syncShelfMode();
+    renderShelf(true);
+    // 棚に戻ったら、前に見ていた棚とスクロール位置をそのまま出す
+    if (panel) requestAnimationFrame(() => { panel.scrollTop = shelfScroll[mode] || 0; });
+  }
+  function syncShelfMode() {
+    const on = shelf.mode === 'search';
+    els.shelfMode.querySelectorAll('[data-shelf-mode]').forEach(btn => {
+      const active = btn.dataset.shelfMode === (on ? 'search' : 'shelves');
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+    els.shelfSearch.hidden = !on;
+    document.getElementById('shelfPane').classList.toggle('is-search', on);
+    if (on) renderSearchPanels();
+  }
+  // カードの作曲者・タグから入るとき：前の条件は消して、押した項目だけで探す
+  function searchFor(cond) {
+    SEARCH_AXES.forEach(a => { search[a] = []; });
+    search.q = '';
+    search.composer = cond.composer || '';
+    if (cond.axis) { search[cond.axis] = [cond.id]; search.open[cond.axis] = true; }
+    els.shelfSearchInput.value = '';
+    if (shelf.mode === 'search') { renderSearchPanels(); renderShelf(); } else setShelfMode('search');
+    const panel = els.layout.querySelector('[data-panel="stage"]');
+    if (panel) requestAnimationFrame(() => { panel.scrollTop = 0; });
+  }
+  function toggleSearchTag(axis, id) {
+    const list = search[axis];
+    search[axis] = list.includes(id) ? list.filter(x => x !== id) : list.concat(id);
+    renderSearchPanels();
+    renderShelf();
+  }
+  function renderSearchPanels() {
+    const counts = countTags();
+    els.searchPanels.innerHTML = '';
+    SEARCH_AXES.forEach(axis => {
+      const open = search.open[axis];
+      const n = search[axis].length;
+      const bodyId = `searchAxis-${axis}`;
+      els.searchPanels.appendChild(h('section', { class: `search-axis${open ? ' is-open' : ''}`, dataset: { axis } },
+        h('button', {
+          type: 'button', class: 'search-axis-head', 'aria-expanded': String(open), 'aria-controls': bodyId,
+          onclick: () => {
+            search.open[axis] = !search.open[axis];
+            try { localStorage.setItem('ccfoliaJukebox.searchOpen', JSON.stringify(search.open)); } catch (error) { /* noop */ }
+            renderSearchPanels();
+          }
+        },
+        h('span', { class: 'search-axis-caret', 'aria-hidden': 'true' }, '▸'),
+        h('span', { class: 'search-axis-name' }, t(`search.${axis}`)),
+        h('span', { class: 'search-axis-hint' }, t(`search.${axis}Hint`)),
+        n ? h('span', { class: 'search-axis-count' }, t('search.selected', { n })) : null),
+        h('div', { class: 'search-chips', id: bodyId, hidden: !open || undefined },
+          AXIS_IDS[axis]().map(id => {
+            const on = search[axis].includes(id);
+            const c = counts[axis][id] || 0;
+            return h('button', {
+              type: 'button', class: `search-chip${on ? ' is-on' : ''}${c ? '' : ' is-zero'}`, 'aria-pressed': String(on), dataset: { tag: `${axis}:${id}` },
+              onclick: () => toggleSearchTag(axis, id)
+            }, tagName(axis, id), h('span', { class: 'search-chip-count' }, String(c)));
+          }))));
+    });
+  }
+  function renderSearchSummary(count) {
+    const box = els.searchSummary;
+    box.innerHTML = '';
+    if (!searchActive()) { box.appendChild(h('p', { class: 'search-none' }, t('search.none'))); box.appendChild(h('p', { class: 'search-note' }, t('search.note'))); return; }
+    const pills = [];
+    const pill = (label, onRemove) => pills.push(h('span', { class: 'search-pill' }, label,
+      h('button', { type: 'button', class: 'search-pill-x', title: t('search.remove'), 'aria-label': `${t('search.remove')}: ${label}`, onclick: onRemove }, '×')));
+    if (search.composer) pill(`${t('search.composer')}: ${search.composer}`, () => { search.composer = ''; renderShelf(); });
+    if (search.q) pill(`${t('search.keyword')}: ${search.q}`, () => { search.q = ''; els.shelfSearchInput.value = ''; renderShelf(); });
+    SEARCH_AXES.forEach(axis => search[axis].forEach(id => pill(`${t(`search.${axis}`)}: ${tagName(axis, id)}`, () => toggleSearchTag(axis, id))));
+    box.appendChild(h('div', { class: 'search-pills' },
+      h('strong', { class: 'search-count' }, t('search.results', { n: count })),
+      pills,
+      h('button', {
+        type: 'button', class: 'text-button search-clear',
+        onclick: () => { SEARCH_AXES.forEach(a => { search[a] = []; }); search.q = ''; search.composer = ''; els.shelfSearchInput.value = ''; renderSearchPanels(); renderShelf(); }
+      }, t('search.clearAll'))));
+  }
+  // カードに出すタグ（検索に使うものだけ。押すとそのタグで探す）
+  function trackTagChips(yt) {
+    const m = libTrack(yt);
+    if (!m) return null;
+    const tags = m.tags.filter(x => x.status !== 'suggested');
+    if (!tags.length) return null;
+    return h('span', { class: 'shelf-tags' }, tags.map(x => h('button', {
+      type: 'button', class: `shelf-tag is-${x.axis}`, title: `${t('search.tagLink')}: ${t(`search.${x.axis}`)} ${tagName(x.axis, x.id)}`,
+      onclick: () => searchFor({ axis: x.axis, id: x.id })
+    }, tagName(x.axis, x.id))));
+  }
+
   function renderShelfList(animate, more) {
     const view = curView();
     if (!more) shelfShown = SHELF_PAGE;
     els.shelfList.innerHTML = '';
     els.shelfAdd.hidden = false;
-    if (!view.tracks.length) {
-      els.shelfList.appendChild(h('li', { class: 'shelf-empty' }, t(view.kind === 'star' ? 'shelf.emptyStar' : 'shelf.emptyTab')));
+    if (view.search) renderSearchSummary(view.tracks.length);
+    if (!view.tracks.length && view.search) {
+      if (searchActive()) els.shelfList.appendChild(h('li', { class: 'shelf-empty' }, t('search.zero')));
+    } else if (!view.tracks.length) {
+      // 初期の棚で、確定・仮の曲がまだない棚は「確認中」と出す（自動推定の候補は公開しないので数だけ）
+      const pending = view.kind === 'shelf' && JukeboxLibrary.shelfIds.includes(view.tab.id) ? JukeboxLibrary.candidates(view.tab.id).length : 0;
+      els.shelfList.appendChild(h('li', { class: 'shelf-empty' }, view.kind === 'star' ? t('shelf.emptyStar') : pending ? t('shelf.emptyReview', { n: pending }) : t('shelf.emptyTab')));
     }
     const records = app.settings ? app.settings.disks.slice(0, app.settings.count) : [];
     const canReorder = view.kind !== 'all';
@@ -2105,7 +2260,8 @@
         h('span', { class: 'shelf-meta' },
           h('span', { class: 'shelf-headrow' },
             h('span', { class: 'shelf-title', title }, title),
-            by ? h('span', { class: 'shelf-by', title: by }, by) : null),
+            by ? h('button', { type: 'button', class: 'shelf-by', title: `${t('search.byLink')}: ${by}`, onclick: () => searchFor({ composer: by }) }, by) : null),
+          trackTagChips(tr.yt),
           // URLと同じ行に、曲ごとの小さなメモ（このブラウザに保存。同じ曲ならどの棚でも同じメモ）
           h('span', { class: 'shelf-subrow' },
           h('span', { class: 'shelf-sub' }, `youtu.be/${tr.yt}`),
@@ -2218,7 +2374,7 @@
     const grip = e.currentTarget;
     const row = grip.closest('.shelf-track');
     const scroller = row.closest('.panel');
-    const canReorder = shelf.view !== 'all';
+    const canReorder = shelf.view !== 'all' && shelf.mode !== 'search';
     grip.setPointerCapture(e.pointerId);
     // 指の右下に小さな札を出して、落とす先（タブや曲）が隠れないようにする
     const img = row.querySelector('.shelf-sleeve img');
@@ -2248,7 +2404,7 @@
       target = null;
       const tabBtn = under && under.closest('.shelf-tab');
       const overRow = under && under.closest('.shelf-track');
-      if (tabBtn && !tabBtn.classList.contains('is-active') && tabBtn.dataset.view !== 'all' && !(tabBtn.dataset.view === 'star' && shelf.view === 'star')) {
+      if (tabBtn && !tabBtn.classList.contains('is-active') && tabBtn.dataset.view !== 'all' && !(tabBtn.dataset.view === 'star' && shelf.view === 'star' && shelf.mode !== 'search')) {
         tabBtn.classList.add('is-drop');
         target = { tab: { view: tabBtn.dataset.view, index: Number(tabBtn.dataset.index) } };
       } else if (canReorder && overRow && overRow.parentNode === els.shelfList && overRow !== row) {
@@ -2389,6 +2545,12 @@
       renderShelf(true);
       toast(t('shelf.resetDone'));
     });
+    els.shelfMode.querySelectorAll('[data-shelf-mode]').forEach(btn => btn.addEventListener('click', () => setShelfMode(btn.dataset.shelfMode)));
+    els.shelfSearchForm.addEventListener('submit', e => {
+      e.preventDefault();
+      search.q = els.shelfSearchInput.value.trim().slice(0, 80);
+      if (shelf.mode !== 'search') setShelfMode('search'); else renderShelf();
+    });
     // シーンプレビューとレコード棚の切り替え
     // 言語の切り替えなどでボタンの幅が変わったら玉も合わせる
     if (window.ResizeObserver) new ResizeObserver(() => placeSwitchThumb()).observe(els.viewSwitch);
@@ -2417,8 +2579,48 @@
     els.viewSwitch.style.setProperty('--thumb-w', `${btn.offsetWidth}px`);
   }
 
+  /* ================= BGM素材サイト紹介（外部サイトへのリンクだけ。音源の取得はしない） ================= */
+  let sitesFeature = '';
+  const escapeHtml = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function siteText(list) { return list[{ ja: 0, en: 1, ko: 2 }[app.lang] || 0]; }
+  function renderSites() {
+    if (!els.sitesGrid || !window.JukeboxSites) return;
+    const { FEATURES, SITES } = window.JukeboxSites;
+    if (!els.sitesFilter.dataset.bound) {
+      els.sitesFilter.dataset.bound = '1';
+      els.sitesFilter.addEventListener('click', e => {
+        const btn = e.target.closest('[data-site-feature]');
+        if (!btn) return;
+        sitesFeature = btn.dataset.siteFeature === sitesFeature ? '' : btn.dataset.siteFeature;
+        renderSites();
+      });
+    }
+    const used = [];
+    SITES.forEach(site => site.features.forEach(f => { if (!used.includes(f)) used.push(f); }));
+    if (sitesFeature && !used.includes(sitesFeature)) sitesFeature = '';
+    const chip = (id, label, n) => `<button class="sites-chip${sitesFeature === id ? ' is-on' : ''}" type="button" data-site-feature="${id}" aria-pressed="${sitesFeature === id}">${escapeHtml(label)}<span class="sites-chip-count">${n}</span></button>`;
+    els.sitesFilter.innerHTML = chip('', t('sites.all'), SITES.length)
+      + used.map(f => chip(f, siteText(FEATURES[f]), SITES.filter(s => s.features.includes(f)).length)).join('');
+    const shown = SITES.filter(s => !sitesFeature || s.features.includes(sitesFeature));
+    const ext = 'target="_blank" rel="noopener noreferrer"';
+    els.sitesGrid.innerHTML = shown.length ? shown.map(site => `
+      <li class="site-card" data-site="${site.id}">
+        <h4 class="site-name">${escapeHtml(site.name)}</h4>
+        <p class="site-intro">${escapeHtml(siteText(site.intro))}</p>
+        <ul class="site-tags">${site.features.map(f => `<li class="site-tag${f === sitesFeature ? ' is-on' : ''}">${escapeHtml(siteText(FEATURES[f]))}</li>`).join('')}</ul>
+        <div class="site-links">
+          <a class="site-link is-main" href="${escapeHtml(site.url)}" ${ext}>${escapeHtml(t('sites.official'))} ↗</a>
+          ${site.terms
+            ? `<a class="site-link" href="${escapeHtml(site.terms.url)}" ${ext} title="${escapeHtml(siteText(site.terms.label))}">${escapeHtml(t('sites.terms'))} ↗</a>`
+            : `<span class="site-link is-missing">${escapeHtml(t('sites.termsMissing'))}</span>`}
+        </div>
+        ${site.terms ? '' : `<p class="site-note">${escapeHtml(siteText(site.termsNote))}</p>`}
+        <p class="site-check">${escapeHtml(t('sites.check'))}</p>
+      </li>`).join('') : `<li class="sites-empty">${escapeHtml(t('sites.empty'))}</li>`;
+  }
+
   let paneAnims = [];
-  const PANES = ['preview', 'shelf', 'lists'];
+  const PANES = ['preview', 'shelf', 'lists', 'sites'];
   function setPane(name, animate) {
     const panel = els.layout.querySelector('[data-panel="stage"]');
     const from = app.pane;
@@ -2453,6 +2655,7 @@
       finish();
       if (name === 'shelf') renderShelfList();
       if (name === 'lists') renderPlaylists();
+      if (name === 'sites') renderSites();
       return;
     }
     drawLinks();
@@ -2467,6 +2670,7 @@
       finish();
       if (name === 'shelf') renderShelfList(true);
       if (name === 'lists') renderPlaylists();
+      if (name === 'sites') renderSites();
       const inn = incoming.animate([
         { opacity: 0, transform: `translateX(${dir * 44}px)`, filter: 'blur(3px)' },
         { opacity: 1, transform: 'translateX(0)', filter: 'blur(0)' }

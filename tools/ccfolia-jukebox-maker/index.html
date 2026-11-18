@@ -9,7 +9,7 @@
   <meta name="description" content="ココフォリアのクリックアクションと /scene コマンドで動く、KPがいなくても使えるジュークボックス部屋を作るツールです。シーンとマーカーパネルのつながりを線で一覧できます。" />
   <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
   <link rel="shortcut icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
-  <link rel="stylesheet" href="./css/jukebox.css?v=20261118-01" />
+  <link rel="stylesheet" href="./css/jukebox.css?v=20261118-02" />
 </head>
 <body>
   <div class="app-shell">
@@ -80,9 +80,10 @@
           <h2 class="visually-hidden" id="stageHeading" data-i18n="graph.heading">シーンプレビュー</h2>
           <div class="view-switch" id="viewSwitch" role="tablist" aria-labelledby="stageHeading">
             <span class="view-switch-thumb" aria-hidden="true"></span>
-            <button class="view-switch-btn is-active" type="button" role="tab" id="viewTabPreview" aria-selected="true" aria-controls="previewPane" data-view-btn="preview" data-i18n="graph.heading">シーンプレビュー</button>
-            <button class="view-switch-btn" type="button" role="tab" id="viewTabShelf" aria-selected="false" aria-controls="shelfPane" data-view-btn="shelf" tabindex="-1" data-i18n="shelf.heading">レコード棚</button>
-            <button class="view-switch-btn" type="button" role="tab" id="viewTabLists" aria-selected="false" aria-controls="listsPane" data-view-btn="lists" tabindex="-1" data-i18n="pl.menu">プレイリスト</button>
+            <button class="view-switch-btn is-active" type="button" role="tab" id="viewTabPreview" aria-selected="true" aria-controls="previewPane" data-view-btn="preview"><span class="vs-full" data-i18n="graph.heading">シーンプレビュー</span><span class="vs-short" data-i18n="viewShort.preview">シーンプレビュー</span></button>
+            <button class="view-switch-btn" type="button" role="tab" id="viewTabShelf" aria-selected="false" aria-controls="shelfPane" data-view-btn="shelf" tabindex="-1"><span class="vs-full" data-i18n="shelf.heading">レコード棚</span><span class="vs-short" data-i18n="viewShort.shelf">レコード棚</span></button>
+            <button class="view-switch-btn" type="button" role="tab" id="viewTabLists" aria-selected="false" aria-controls="listsPane" data-view-btn="lists" tabindex="-1"><span class="vs-full" data-i18n="pl.menu">プレイリスト</span><span class="vs-short" data-i18n="viewShort.lists">プレイリスト</span></button>
+            <button class="view-switch-btn" type="button" role="tab" id="viewTabSites" aria-selected="false" aria-controls="sitesPane" data-view-btn="sites" tabindex="-1"><span class="vs-full" data-i18n="sites.menu">素材サイト</span><span class="vs-short" data-i18n="viewShort.sites">素材サイト</span></button>
           </div>
           <div class="segment-group preview-only bar-end" role="group">
             <button class="segment" type="button" data-lines="all" data-i18n="graph.showAll">すべての線</button>
@@ -100,6 +101,18 @@
           </div>
         </div>
         <div class="view-pane shelf" id="shelfPane" role="tabpanel" aria-labelledby="viewTabShelf" data-view-pane="shelf" hidden>
+          <div class="shelf-mode" id="shelfMode" role="group" data-i18n-label="search.modeLabel" aria-label="探し方">
+            <button class="shelf-mode-btn is-active" type="button" data-shelf-mode="shelves" aria-pressed="true" data-i18n="search.modeShelves">棚から探す</button>
+            <button class="shelf-mode-btn" type="button" data-shelf-mode="search" aria-pressed="false" data-i18n="search.modeSearch">条件から探す</button>
+          </div>
+          <div class="shelf-search" id="shelfSearch" hidden>
+            <form class="shelf-search-form" id="shelfSearchForm" role="search">
+              <input class="text-input" id="shelfSearchInput" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="search.placeholder" placeholder="曲名・作曲者・配布元・タグ" />
+              <button class="ghost-button small" type="submit" data-i18n="search.go">検索</button>
+            </form>
+            <div class="search-panels" id="searchPanels"></div>
+            <div class="search-summary" id="searchSummary" aria-live="polite"></div>
+          </div>
           <div class="shelf-tabs" id="shelfTabs" role="tablist" data-i18n-label="shelf.tabsLabel" aria-label="タブ"></div>
           <div class="shelf-edit" id="shelfEdit" hidden></div>
           <ul class="shelf-list" id="shelfList"></ul>
@@ -120,6 +133,13 @@
           </div>
           <ul class="pl-grid" id="plGrid"></ul>
           <p class="muted-note pl-hint" data-i18n="pl.hint"></p>
+        </div>
+        <div class="view-pane sites" id="sitesPane" role="tabpanel" aria-labelledby="viewTabSites" data-view-pane="sites" hidden>
+          <h3 class="sites-heading" data-i18n="sites.heading">BGM素材サイト紹介</h3>
+          <p class="muted-note sites-lead" data-i18n="sites.lead"></p>
+          <div class="sites-filter" id="sitesFilter" role="group" data-i18n-label="sites.filterLabel" aria-label="特徴で絞り込む"></div>
+          <ul class="sites-grid" id="sitesGrid"></ul>
+          <p class="sites-foot" data-i18n="sites.foot"></p>
         </div>
       </section>
 
@@ -262,12 +282,13 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="./js/i18n.js?v=20261118-01"></script>
-  <script src="./js/ccfolia.js?v=20261118-01"></script>
-  <script src="./js/jukebox.js?v=20261118-01"></script>
-  <script src="./js/library-data.js?v=20261118-01"></script>
-  <script src="./js/presets.js?v=20261118-01"></script>
-  <script src="./js/credits.js?v=20261118-01"></script>
-  <script src="./js/app.js?v=20261118-01"></script>
+  <script src="./js/i18n.js?v=20261118-02"></script>
+  <script src="./js/ccfolia.js?v=20261118-02"></script>
+  <script src="./js/jukebox.js?v=20261118-02"></script>
+  <script src="./js/library-data.js?v=20261118-02"></script>
+  <script src="./js/presets.js?v=20261118-02"></script>
+  <script src="./js/sites.js?v=20261118-02"></script>
+  <script src="./js/credits.js?v=20261118-02"></script>
+  <script src="./js/app.js?v=20261118-02"></script>
 </body>
 </html>
