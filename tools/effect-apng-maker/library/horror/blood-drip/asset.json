@@ -1,6 +1,6 @@
 {
   "id": "horror.blood-drip",
-  "version": 6,
+  "version": 7,
   "status": "test",
   "added": "2026-11-16",
   "order": 11,
@@ -16,10 +16,10 @@
     "zh": "从上方流下的血"
   },
   "desc": {
-    "ja": "上から太さのまちまちな血の筋が一気に流れ落ち、筋のすき間のアーチが下がりながら細くなって、画面を血で覆う。",
-    "en": "Streaks of blood of varied widths pour down from the top; the arched gaps between them sink and narrow until blood covers the screen.",
-    "ko": "굵기가 제각각인 피 줄기가 위에서 단숨에 흘러내리고, 줄기 사이의 아치형 틈이 내려가며 좁아져 화면을 피로 덮는다.",
-    "zh": "粗细不一的血流从上方倾泻而下，血流之间的拱形缝隙一边下沉一边收窄，最终鲜血覆盖整个画面。"
+    "ja": "画面の上の血の帯から、付け根が広がり先がしずくになった細い血の筋が何本も垂れ、しずくが落ち、最後は帯が下りて画面を覆う。",
+    "en": "Thin streaks of blood with flared roots and droplet tips run down from a band along the top, drops fall off, and the band finally comes down and covers the screen.",
+    "ko": "화면 위쪽 피의 띠에서 뿌리가 넓고 끝이 물방울인 가는 피 줄기가 여러 줄 흘러내리고, 방울이 떨어지며, 마지막에 띠가 내려와 화면을 덮는다.",
+    "zh": "鲜血从画面上缘的血带中流下，形成根部宽、末端呈水滴状的细长血痕，血滴不断坠落，最后血带降下覆盖整个画面。"
   },
   "tags": [
     "血",
