@@ -3,7 +3,7 @@
 //   ・筋は細い。付け根は帯からじょうごのように広がり、下へ行くほどゆっくり細くなる
 //   ・先は首が少しくびれてから、首より少し太い丸いしずくになる（半円で終わらせない）
 //   ・長さはまちまち（画面の下まで届く長い筋、途中で止まる筋、帯のふちのこぶのような短い筋）
-//   ・止まった筋の先から、しずくが切れて落ちる。帯の中には小さな泡の穴
+//   ・帯の中には小さな泡の穴（壁を伝う血なので、しずくが切れて落ちることはしない：TK 2026-11-18）
 // 中は平らな暗い深紅、縁だけ細く明るい赤（blood-liquid.js の style 'rim'）
 import { rng, clamp, smooth } from '../../kit.js';
 import { liquidState, drawLiquid } from '../../blood-liquid.js';
@@ -30,8 +30,7 @@ export default {
         sp: 0.75 + 0.7 * r(),
         lag: r(),
         stop: type === 'long' ? 0.5 + 0.35 * r() : type === 'mid' ? 0.12 + 0.3 * r() : 0.035 + 0.05 * r(),
-        drop: type !== 'long' && r() < 0.55,         // 先からしずくが切れて落ちる
-        dropDelay: 0.04 + 0.2 * r(),
+        _keep: [r(), r()],                            // 並びを v0.29 と同じにするため、乱数を同じだけ使う
         wob: (r() - 0.5) * 2, wp: r() * TAU
       });
       // ときどき 2 本が付け根を分け合うほど近い
@@ -77,7 +76,7 @@ export default {
         g.beginPath(); g.ellipse(q.x * u * sx, sheet, q.w * u * 0.5, q.d * u * grow, 0, 0, TAU); g.fill();
       }
       for (const d of st.drips) {
-        const { L, tStop } = lenOf(d);
+        const { L } = lenOf(d);
         if (L <= 0.5) continue;
         const n = d.nw * u / 2;                                  // 首の半分の太さ
         const cx0 = d.x * u * sx;
@@ -101,13 +100,6 @@ export default {
         g.closePath(); g.fill();
         // 先のしずく：下がわずかに重い丸
         g.beginPath(); g.ellipse(xOf(cy), sheet + cy, bR, bR * 1.1, 0, 0, TAU); g.fill();
-        // 止まった筋の先から、しずくが切れて落ちる
-        if (d.drop && t > tStop + d.dropDelay) {
-          const td = t - tStop - d.dropDelay;
-          const dy = H * 2.6 * td * td + bR * 2.4 * clamp(td / 0.05);
-          const dr = bR * 0.8;
-          g.beginPath(); g.ellipse(xOf(cy), sheet + cy + dy, dr, dr * (1.1 + Math.min(0.5, td * 3)), 0, 0, TAU); g.fill();
-        }
       }
       // 帯の中の泡の穴（帯が下りはじめると閉じる）
       g.globalCompositeOperation = 'destination-out';
