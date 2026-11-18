@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.50';
+  const VERSION = '0.51';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1691,119 +1691,157 @@
 
   /* ================= レコード棚（フリーBGMの棚） ================= */
 
-  const shelf = { tabs: [], active: 0, editing: false, armed: '', selecting: false, selected: new Set() };
+  // 棚は「曲マスタ（js/library-data.js）」と「棚への所属」を分けて持つ。1曲が複数の棚に入ってもよく、
+  // ALL はすべての曲（重複なし）、★ はお気に入り。メモ・お気に入り・ライブラリから消した曲は曲ID（YouTube ID）ごとに持つ。
+  const LIB_KEY = 'ccfoliaJukebox.library';
+  const shelf = {
+    tabs: [], memos: {}, stars: [], hidden: [], extra: [],
+    view: 'all', active: 0, editing: false, armed: '', selecting: false, selected: new Set(), selKey: null, migrated: false
+  };
   const shelfSrc = yt => `https://youtu.be/${yt}`;
+  const YT_RE = /^[\w-]{11}$/;
+  const libTrack = yt => JukeboxLibrary.track(yt);
+  const cleanTracks = list => {
+    const seen = new Set();
+    return (Array.isArray(list) ? list : []).filter(tr => tr && YT_RE.test(tr.yt) && !seen.has(tr.yt) && seen.add(tr.yt))
+      .map(tr => ({ yt: tr.yt, title: typeof tr.title === 'string' ? tr.title.slice(0, 150) : '' }));
+  };
+  const cleanIds = list => [...new Set((Array.isArray(list) ? list : []).filter(yt => typeof yt === 'string' && YT_RE.test(yt)))];
 
   function loadShelf() {
     let saved = null;
-    try { saved = JSON.parse(localStorage.getItem(SHELF_KEY) || 'null'); } catch (error) { saved = null; }
+    try { saved = JSON.parse(localStorage.getItem(LIB_KEY) || 'null'); } catch (error) { saved = null; }
     const ok = saved && Array.isArray(saved.tabs) && saved.tabs.every(tab => tab && typeof tab.id === 'string' && Array.isArray(tab.tracks));
-    shelf.tabs = ok
-      ? saved.tabs.map(tab => ({
-        id: tab.id,
-        name: typeof tab.name === 'string' ? tab.name.slice(0, 30) : '',
-        tracks: tab.tracks.filter(tr => tr && /^[\w-]{11}$/.test(tr.yt)).map(tr => ({ yt: tr.yt, title: typeof tr.title === 'string' ? tr.title.slice(0, 150) : '', memo: typeof tr.memo === 'string' ? tr.memo.slice(0, 100) : '' }))
-      }))
-      : JukeboxShelf.defaults();
-    shelf.active = ok && Number.isInteger(saved.active) ? Math.max(0, Math.min(shelf.tabs.length - 1, saved.active)) : 0;
-    // 埋め込みできなくなった初期の曲は、保存済みの棚でも代わりの曲にする（メモは残す）
-    const repl = JukeboxShelf.REPLACED || {};
-    let swapped = false;
-    shelf.tabs.forEach(tab => {
-      tab.tracks = tab.tracks.flatMap(tr => {
-        const to = repl[tr.yt];
-        if (!to) return [tr];
-        swapped = true;
-        return tab.tracks.some(x => x.yt === to[0]) ? [] : [{ ...tr, yt: to[0], title: to[1] }];
+    if (ok) {
+      shelf.tabs = saved.tabs.map(tab => ({ id: tab.id, name: typeof tab.name === 'string' ? tab.name.slice(0, 30) : '', tracks: cleanTracks(tab.tracks) }));
+      shelf.memos = {};
+      if (saved.memos && typeof saved.memos === 'object') Object.keys(saved.memos).forEach(yt => { if (YT_RE.test(yt) && typeof saved.memos[yt] === 'string' && saved.memos[yt]) shelf.memos[yt] = saved.memos[yt].slice(0, 100); });
+      shelf.stars = cleanIds(saved.stars);
+      shelf.hidden = cleanIds(saved.hidden);
+      shelf.extra = cleanTracks(saved.extra);
+      shelf.view = ['all', 'star', 'shelf'].includes(saved.view) ? saved.view : 'all';
+      shelf.active = Number.isInteger(saved.active) ? Math.max(0, Math.min(shelf.tabs.length - 1, saved.active)) : 0;
+      if (shelf.view === 'shelf' && !shelf.tabs.length) shelf.view = 'all';
+      return;
+    }
+    // 版8までの棚（タブごとに曲を持つ形）があれば、新しい分類に作り直す。メモと自分で足した曲・タブは残す
+    let old = null;
+    try { old = JSON.parse(localStorage.getItem(SHELF_KEY) || 'null'); } catch (error) { old = null; }
+    shelf.tabs = JukeboxLibrary.defaults();
+    shelf.view = 'all';
+    shelf.active = 0;
+    if (!old || !Array.isArray(old.tabs)) return;
+    const legacy = JukeboxLibrary.LEGACY_TABS;
+    const dropped = new Set(JukeboxLibrary.DROPPED);
+    old.tabs.forEach(tab => {
+      if (!tab || typeof tab.id !== 'string' || !Array.isArray(tab.tracks)) return;
+      tab.tracks.forEach(tr => { if (tr && YT_RE.test(tr.yt) && typeof tr.memo === 'string' && tr.memo.trim()) shelf.memos[tr.yt] = tr.memo.slice(0, 100); });
+      const tracks = cleanTracks(tab.tracks).filter(tr => !dropped.has(tr.yt));
+      const id = tab.id === 'house' ? 'adult' : tab.id;
+      if (!Object.prototype.hasOwnProperty.call(legacy, id)) {
+        // 自分で足したタブは、そのまま自分の棚として残す
+        shelf.tabs.push({ id: tab.id, name: (typeof tab.name === 'string' && tab.name.trim() ? tab.name : t('shelf.newTab')).slice(0, 30), tracks });
+        return;
+      }
+      const dest = legacy[id] && shelf.tabs.find(x => x.id === legacy[id]);
+      tracks.filter(tr => !libTrack(tr.yt)).forEach(tr => {
+        if (dest) { if (!dest.tracks.some(x => x.yt === tr.yt)) dest.tracks.push(tr); } else if (!shelf.extra.some(x => x.yt === tr.yt)) shelf.extra.push(tr);
       });
     });
-    if (ok && swapped) saveShelf();
-    // 前に保存した棚には、その後に足した初期の曲を、残っているタブの後ろに足す（消した曲は戻さない）
-    const from = ok && Number.isInteger(saved.v) ? saved.v : 1;
-    if (ok && from < JukeboxShelf.VERSION) {
-      // 版6で id を変えたタブ（ハウス → アダルト）は読み替え、合わなくなった初期の曲を外す（メモを書いた曲は残す）
-      if (from < 6) {
-        const renamed = JukeboxShelf.RENAMED || {};
-        const dropped = JukeboxShelf.DROPPED || [];
-        shelf.tabs.forEach(tab => {
-          if (!renamed[tab.id] || shelf.tabs.some(tb => tb.id === renamed[tab.id])) return;
-          tab.id = renamed[tab.id];
-          tab.tracks = tab.tracks.filter(tr => tr.memo || !dropped.includes(tr.yt));
-        });
-      }
-      // 版7で初期の並びを変えた。動かした曲は元のタブから外し（メモを書いた曲・行き先のタブがない曲は残す）、下で新しいタブに足す
-      if (from < (JukeboxShelf.MOVED_SINCE || Infinity)) {
-        const moved = JukeboxShelf.MOVED_FROM || {};
-        const dest = {};
-        JukeboxShelf.additions(from).forEach(add => add.tracks.forEach(tr => { dest[tr.yt] = add.id; }));
-        shelf.tabs.forEach(tab => {
-          const ids = moved[tab.id];
-          if (!ids) return;
-          tab.tracks = tab.tracks.filter(tr => tr.memo || !ids.includes(tr.yt) || (dest[tr.yt] && !shelf.tabs.some(tb => tb.id === dest[tr.yt])));
-        });
-      }
-      JukeboxShelf.additions(from).forEach(add => {
-        let tab = shelf.tabs.find(tb => tb.id === add.id);
-        // 前に保存したあとで足したタブは、棚の後ろに足す（それより前からあるタブを消していたら戻さない）
-        if (!tab && add.since > from) { tab = { id: add.id, name: '', tracks: [] }; shelf.tabs.push(tab); }
-        if (!tab) return;
-        add.tracks.forEach(tr => { if (!tab.tracks.some(x => x.yt === tr.yt)) tab.tracks.push(tr); });
-      });
-      // 版6より前に保存した棚は、初期のタブを新しい並びにする（自分で足したタブは後ろへ、開いていたタブはそのまま）
-      if (ok && from < (JukeboxShelf.ORDER_SINCE || 0)) {
-        const activeTab = shelf.tabs[shelf.active];
-        const rank = id => { const k = JukeboxShelf.order.indexOf(id); return k < 0 ? Infinity : k; };
-        shelf.tabs = shelf.tabs.map((tab, i) => ({ tab, i })).sort((x, y) => (rank(x.tab.id) - rank(y.tab.id)) || (x.i - y.i)).map(x => x.tab);
-        shelf.active = Math.max(0, shelf.tabs.indexOf(activeTab));
-      }
-      saveShelf();
-    }
+    shelf.migrated = true;
+    saveShelf();
   }
 
   function saveShelf() {
-    try { localStorage.setItem(SHELF_KEY, JSON.stringify({ v: JukeboxShelf.VERSION, active: shelf.active, tabs: shelf.tabs })); } catch (error) { /* noop */ }
+    const tabs = shelf.tabs.map(tab => ({ id: tab.id, name: tab.name, tracks: tab.tracks.map(tr => (libTrack(tr.yt) || !tr.title ? { yt: tr.yt } : { yt: tr.yt, title: tr.title })) }));
+    const data = { v: JukeboxLibrary.VERSION, view: shelf.view, active: shelf.active, tabs, memos: shelf.memos, stars: shelf.stars, hidden: shelf.hidden, extra: shelf.extra };
+    try { localStorage.setItem(LIB_KEY, JSON.stringify(data)); } catch (error) { /* noop */ }
   }
 
-  // 初期のタブは言語ごとの名前、名前を変えたタブや足したタブはその名前
+  // 初期の棚は言語ごとの名前、名前を変えた棚や足した棚はその名前
   function shelfTabName(tab) {
     if (tab.name) return tab.name;
     const name = t(`shelf.tabs.${tab.id}`);
     return name === `shelf.tabs.${tab.id}` ? t('shelf.newTab') : name;
   }
 
-  const trackTitle = tr => tr.title || ytTitles[tr.yt] || `youtu.be/${tr.yt}`;
+  const trackTitle = tr => (libTrack(tr.yt) || {}).title || tr.title || ytTitles[tr.yt] || `youtu.be/${tr.yt}`;
+  const trackBy = tr => { const m = libTrack(tr.yt); return m ? (m.composer || m.source || '') : ''; };
+
+  // ALL：曲マスタの順、そのあと自分で足した曲。ライブラリから消した曲は出さない
+  function allTracks() {
+    const hidden = new Set(shelf.hidden);
+    const seen = new Set();
+    const out = [];
+    const push = tr => { if (!seen.has(tr.yt) && !hidden.has(tr.yt)) { seen.add(tr.yt); out.push(tr); } };
+    JukeboxLibrary.tracks.forEach(m => push({ yt: m.yt, title: '' }));
+    shelf.tabs.forEach(tab => tab.tracks.forEach(push));
+    shelf.extra.forEach(push);
+    return out;
+  }
+  function findTrack(yt) {
+    if (shelf.hidden.includes(yt)) return null;
+    for (const tab of shelf.tabs) { const tr = tab.tracks.find(x => x.yt === yt); if (tr) return tr; }
+    const ex = shelf.extra.find(x => x.yt === yt);
+    if (ex) return ex;
+    return libTrack(yt) ? { yt, title: '' } : null;
+  }
+  const starTracks = () => shelf.stars.map(findTrack).filter(Boolean);
+
+  // 今ひらいている一覧
+  function curView() {
+    if (shelf.view === 'all') return { kind: 'all', tab: null, tracks: allTracks() };
+    if (shelf.view === 'star') return { kind: 'star', tab: null, tracks: starTracks() };
+    const tab = shelf.tabs[shelf.active];
+    return tab ? { kind: 'shelf', tab, tracks: tab.tracks } : { kind: 'all', tab: null, tracks: allTracks() };
+  }
+  const viewKey = () => (shelf.view === 'shelf' ? shelf.tabs[shelf.active] || 'none' : shelf.view);
+
+  function openView(view, index) {
+    if (shelf.view === view && (view !== 'shelf' || shelf.active === index)) return;
+    shelf.view = view;
+    if (view === 'shelf') shelf.active = index;
+    shelf.armed = '';
+    shelf.selected.clear();
+    if (view !== 'shelf') shelf.editing = false;
+    saveShelf();
+    renderShelf(true);
+  }
 
   function renderShelf(animate) {
     if (!els.shelfTabs) return;
     const tabs = shelf.tabs;
     if (shelf.active >= tabs.length) shelf.active = Math.max(0, tabs.length - 1);
-    // 選んだ曲は開いているタブのもの。タブが替わったら（切り替え・削除・初期化）選択を外す
-    if (shelf.selTab !== tabs[shelf.active]) { shelf.selected.clear(); shelf.selTab = tabs[shelf.active]; }
+    if (shelf.view === 'shelf' && !tabs.length) shelf.view = 'all';
+    // 選んだ曲は開いている一覧のもの。一覧が替わったら（切り替え・削除・初期化）選択を外す
+    if (shelf.selKey !== viewKey()) { shelf.selected.clear(); shelf.selKey = viewKey(); }
     els.shelfTabs.innerHTML = '';
     els.shelfTabs.appendChild(h('div', { class: 'shelf-select-bar', id: 'shelfSelectBar' }));
     renderShelfSelectBar();
-    tabs.forEach((tab, i) => {
-      const on = i === shelf.active;
+    // ALL・★・各棚を1列に並べる。←→キーで順に動く
+    const entries = [{ view: 'all', label: t('shelf.all'), count: allTracks().length }, { view: 'star', label: `★ ${t('shelf.star')}`, count: starTracks().length }]
+      .concat(tabs.map((tab, i) => ({ view: 'shelf', index: i, label: shelfTabName(tab), count: tab.tracks.length })));
+    const isOn = en => en.view === shelf.view && (en.view !== 'shelf' || en.index === shelf.active);
+    entries.forEach((en, k) => {
+      const on = isOn(en);
       els.shelfTabs.appendChild(h('button', {
-        type: 'button', role: 'tab', class: `shelf-tab${on ? ' is-active' : ''}`,
-        'aria-selected': String(on), tabindex: on ? '0' : '-1',
-        onclick: () => { if (shelf.active === i) return; shelf.active = i; shelf.armed = ''; shelf.selected.clear(); saveShelf(); renderShelf(true); },
+        type: 'button', role: 'tab', class: `shelf-tab${on ? ' is-active' : ''}${en.view !== 'shelf' ? ` shelf-tab-${en.view}` : ''}`,
+        'aria-selected': String(on), tabindex: on ? '0' : '-1', dataset: { view: en.view, index: en.view === 'shelf' ? String(en.index) : '' },
+        onclick: () => openView(en.view, en.index),
         onkeydown: e => {
           if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
           e.preventDefault();
-          shelf.active = (i + (e.key === 'ArrowLeft' ? -1 : 1) + tabs.length) % tabs.length;
-          shelf.selected.clear();
-          saveShelf();
-          renderShelf(true);
-          const next = els.shelfTabs.querySelector('.shelf-tab.is-active');
-          if (next) next.focus();
+          const next = entries[(k + (e.key === 'ArrowLeft' ? -1 : 1) + entries.length) % entries.length];
+          openView(next.view, next.index);
+          const btn = els.shelfTabs.querySelector('.shelf-tab.is-active');
+          if (btn) btn.focus();
         }
-      }, shelfTabName(tab), h('span', { class: 'shelf-tab-count' }, String(tab.tracks.length))));
+      }, en.label, h('span', { class: 'shelf-tab-count' }, String(en.count))));
     });
     els.shelfTabs.appendChild(h('button', { type: 'button', class: 'shelf-tab-tool', title: t('shelf.addTab'), 'aria-label': t('shelf.addTab'), onclick: addShelfTab }, '＋'));
     els.shelfTabs.appendChild(h('button', {
       type: 'button', class: `shelf-tab-tool${shelf.editing ? ' is-on' : ''}`, title: t('shelf.editTab'), 'aria-label': t('shelf.editTab'),
-      'aria-pressed': String(shelf.editing), disabled: !tabs.length || undefined,
+      'aria-pressed': String(shelf.editing), disabled: shelf.view !== 'shelf' || !tabs.length || undefined,
       onclick: () => { shelf.editing = !shelf.editing; shelf.armed = ''; renderShelf(); if (shelf.editing) focusShelfName(); }
     }, '✎'));
     renderShelfEdit();
@@ -1812,25 +1850,27 @@
     if (active && active.scrollIntoView) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
-  // 「複数を選択」：オンのあいだは曲の左にチェックを出し、選んだ曲をまとめて別のタブへ移したり棚から外したりできる
+  // 「複数を選択」：オンのあいだは曲の左にチェックを出し、選んだ曲をまとめて棚へ移したり（ALL・★からは足したり）外したりできる
   function renderShelfSelectBar() {
     const bar = document.getElementById('shelfSelectBar');
     if (!bar) return;
-    const tab = shelf.tabs[shelf.active];
-    const tracks = tab ? tab.tracks : [];
+    const view = curView();
+    const tracks = view.tracks;
     const picked = tracks.filter(tr => shelf.selected.has(tr.yt));
     bar.innerHTML = '';
     bar.classList.toggle('is-on', shelf.selecting);
     bar.appendChild(h('label', { class: 'shelf-select-toggle' },
       h('input', {
-        type: 'checkbox', checked: shelf.selecting || undefined, disabled: !tab || undefined,
+        type: 'checkbox', checked: shelf.selecting || undefined,
         onchange: e => { shelf.selecting = e.target.checked; shelf.selected.clear(); shelf.armed = ''; renderShelf(); }
       }),
       h('span', {}, t('shelf.selectMany'))));
-    if (!shelf.selecting || !tab) return;
+    if (!shelf.selecting) return;
     const all = tracks.length > 0 && picked.length === tracks.length;
-    const others = shelf.tabs.map((x, i) => ({ x, i })).filter(o => o.i !== shelf.active);
+    const others = shelf.tabs.map((x, i) => ({ x, i })).filter(o => !(view.kind === 'shelf' && o.i === shelf.active));
     const armed = shelf.armed === 'bulk';
+    const moveLabel = view.kind === 'shelf' ? t('shelf.moveSelected') : t('shelf.addSelected');
+    const removeLabel = { shelf: 'shelf.removeSelected', star: 'shelf.unstarSelected', all: 'shelf.deleteSelected' }[view.kind];
     bar.append(
       h('span', { class: 'shelf-select-count', 'aria-live': 'polite' }, t('shelf.selectedCount', { n: picked.length })),
       h('button', {
@@ -1838,10 +1878,16 @@
         onclick: () => { if (all) shelf.selected.clear(); else tracks.forEach(tr => shelf.selected.add(tr.yt)); shelf.armed = ''; renderShelfList(); renderShelfSelectBar(); }
       }, t(all ? 'shelf.selectNone' : 'shelf.selectAll')),
       h('select', {
-        class: 'shelf-to', 'aria-label': t('shelf.moveSelected'), disabled: !picked.length || !others.length || undefined,
-        onchange: e => { const i = Number(e.target.value); e.target.value = ''; if (Number.isInteger(i) && i >= 0) moveSelectedTracks(i); }
+        class: 'shelf-to', 'aria-label': moveLabel, disabled: !picked.length || (!others.length && view.kind === 'star') || undefined,
+        onchange: e => {
+          const v = e.target.value;
+          e.target.value = '';
+          if (v === 'star') starSelected();
+          else if (v !== '') moveSelectedTracks(Number(v));
+        }
       },
-      h('option', { value: '' }, t('shelf.moveSelected')),
+      h('option', { value: '' }, moveLabel),
+      view.kind !== 'star' ? h('option', { value: 'star' }, `★ ${t('shelf.star')}`) : null,
       others.map(o => h('option', { value: String(o.i) }, shelfTabName(o.x)))),
       h('button', {
         type: 'button', class: `ghost-button small danger${armed ? ' is-armed' : ''}`, disabled: !picked.length || undefined,
@@ -1849,39 +1895,68 @@
           if (!armed) { shelf.armed = 'bulk'; renderShelfSelectBar(); return; }
           removeSelectedTracks();
         }
-      }, t(armed ? 'shelf.removeSelectedSure' : 'shelf.removeSelected'))
+      }, t(armed ? 'shelf.removeSelectedSure' : removeLabel))
     );
   }
 
+  // 棚から棚へは移す。ALL・★からは、選んだ棚に足す（元の一覧には残る）
   function moveSelectedTracks(tabIndex) {
-    const src = shelf.tabs[shelf.active];
+    const view = curView();
     const dest = shelf.tabs[tabIndex];
-    if (!src || !dest || dest === src) return;
-    const picked = src.tracks.filter(tr => shelf.selected.has(tr.yt));
+    if (!dest || dest === view.tab) return;
+    const picked = view.tracks.filter(tr => shelf.selected.has(tr.yt));
     const moving = picked.filter(tr => !dest.tracks.some(x => x.yt === tr.yt));
     const skip = picked.length - moving.length;
-    dest.tracks.push(...moving);
-    src.tracks = src.tracks.filter(tr => !moving.includes(tr));
-    moving.forEach(tr => shelf.selected.delete(tr.yt));
+    dest.tracks.push(...moving.map(tr => ({ yt: tr.yt, title: tr.title || '' })));
+    if (view.kind === 'shelf') {
+      view.tab.tracks = view.tab.tracks.filter(tr => !moving.some(m => m.yt === tr.yt));
+      moving.forEach(tr => shelf.selected.delete(tr.yt));
+    }
     shelf.armed = '';
     saveShelf();
     renderShelf();
     const name = shelfTabName(dest);
     if (!moving.length) toast(t('shelf.alreadyIn', { tab: name }));
+    else if (view.kind !== 'shelf') toast(t('shelf.addedMany', { n: moving.length, tab: name }));
     else toast(skip ? t('shelf.movedSkipped', { n: moving.length, tab: name, skip }) : t('shelf.movedMany', { n: moving.length, tab: name }));
   }
 
+  function starSelected() {
+    const picked = curView().tracks.filter(tr => shelf.selected.has(tr.yt));
+    let n = 0;
+    picked.forEach(tr => { if (!shelf.stars.includes(tr.yt)) { shelf.stars.push(tr.yt); n += 1; } });
+    shelf.armed = '';
+    saveShelf();
+    renderShelf();
+    toast(t('shelf.starredMany', { n }));
+  }
+
+  // ライブラリから消す：どの棚からも外し、★からも外す（初期の曲は「初期の棚に戻す」で戻る）
+  function deleteFromLibrary(ids) {
+    const set = new Set(ids);
+    if (bgm.owner.startsWith('shelf:') && set.has(bgm.owner.slice(6))) stopBgm();
+    shelf.tabs.forEach(tab => { tab.tracks = tab.tracks.filter(tr => !set.has(tr.yt)); });
+    shelf.extra = shelf.extra.filter(tr => !set.has(tr.yt));
+    shelf.stars = shelf.stars.filter(yt => !set.has(yt));
+    ids.forEach(yt => { if (libTrack(yt) && !shelf.hidden.includes(yt)) shelf.hidden.push(yt); });
+  }
+
   function removeSelectedTracks() {
-    const tab = shelf.tabs[shelf.active];
-    if (!tab) return;
-    const gone = tab.tracks.filter(tr => shelf.selected.has(tr.yt));
-    if (gone.some(tr => bgm.src === shelfSrc(tr.yt)) && bgm.owner.startsWith('shelf:')) stopBgm();
-    tab.tracks = tab.tracks.filter(tr => !shelf.selected.has(tr.yt));
+    const view = curView();
+    const gone = view.tracks.filter(tr => shelf.selected.has(tr.yt));
+    if (view.kind === 'shelf') {
+      if (gone.some(tr => bgm.src === shelfSrc(tr.yt)) && bgm.owner.startsWith('shelf:')) stopBgm();
+      view.tab.tracks = view.tab.tracks.filter(tr => !shelf.selected.has(tr.yt));
+    } else if (view.kind === 'star') {
+      shelf.stars = shelf.stars.filter(yt => !shelf.selected.has(yt));
+    } else {
+      deleteFromLibrary(gone.map(tr => tr.yt));
+    }
     shelf.selected.clear();
     shelf.armed = '';
     saveShelf();
     renderShelf();
-    if (gone.length) toast(t('shelf.removedMany', { n: gone.length }));
+    if (gone.length) toast(t({ shelf: 'shelf.removedMany', star: 'shelf.unstarredMany', all: 'shelf.deletedMany' }[view.kind], { n: gone.length }));
   }
 
   function focusShelfName() {
@@ -1890,7 +1965,7 @@
   }
 
   function renderShelfEdit() {
-    const tab = shelf.tabs[shelf.active];
+    const tab = shelf.view === 'shelf' ? shelf.tabs[shelf.active] : null;
     els.shelfEdit.innerHTML = '';
     els.shelfEdit.hidden = !shelf.editing || !tab;
     if (els.shelfEdit.hidden) return;
@@ -1923,7 +1998,9 @@
           if (!armed) { shelf.armed = 'tab'; renderShelfEdit(); return; }
           shelf.tabs.splice(shelf.active, 1);
           shelf.armed = '';
-          if (!shelf.tabs.length) shelf.editing = false;
+          shelf.editing = false;
+          if (!shelf.tabs.length) shelf.view = 'all';
+          else shelf.active = Math.min(shelf.active, shelf.tabs.length - 1);
           saveShelf();
           renderShelf(true);
         }
@@ -1934,6 +2011,7 @@
 
   function addShelfTab() {
     shelf.tabs.push({ id: `c${Date.now().toString(36)}`, name: t('shelf.newTab'), tracks: [] });
+    shelf.view = 'shelf';
     shelf.active = shelf.tabs.length - 1;
     shelf.editing = true;
     shelf.armed = '';
@@ -1942,21 +2020,47 @@
     focusShelfName();
   }
 
-  function renderShelfList(animate) {
-    const tab = shelf.tabs[shelf.active];
+  function toggleStar(yt) {
+    const i = shelf.stars.indexOf(yt);
+    if (i >= 0) shelf.stars.splice(i, 1); else shelf.stars.push(yt);
+    saveShelf();
+    // ★の一覧を開いているときは外した曲が消えるので描き直す。ほかは数とボタンだけ直す
+    if (shelf.view === 'star') { renderShelf(); return; }
+    const count = els.shelfTabs.querySelector('.shelf-tab-star .shelf-tab-count');
+    if (count) count.textContent = String(starTracks().length);
+    els.shelfList.querySelectorAll(`.shelf-track[data-yt="${yt}"] .shelf-star`).forEach(syncStarBtn);
+  }
+  function syncStarBtn(btn) {
+    const on = shelf.stars.includes(btn.closest('.shelf-track').dataset.yt);
+    btn.textContent = on ? '★' : '☆';
+    btn.classList.toggle('is-on', on);
+    btn.title = t(on ? 'shelf.unstar' : 'shelf.starAdd');
+    btn.setAttribute('aria-label', btn.title);
+    btn.setAttribute('aria-pressed', String(on));
+  }
+
+  // 一覧を少しずつ描く（ALL は数百曲あるので、最初の分だけ描いて残りは「もっと見る」で）
+  const SHELF_PAGE = 80;
+  let shelfShown = SHELF_PAGE;
+
+  function renderShelfList(animate, more) {
+    const view = curView();
+    if (!more) shelfShown = SHELF_PAGE;
     els.shelfList.innerHTML = '';
-    els.shelfAdd.hidden = !tab;
-    if (!tab) {
-      els.shelfList.appendChild(h('li', { class: 'shelf-empty' }, t('shelf.noTabs')));
-      return;
+    els.shelfAdd.hidden = false;
+    if (!view.tracks.length) {
+      els.shelfList.appendChild(h('li', { class: 'shelf-empty' }, t(view.kind === 'star' ? 'shelf.emptyStar' : 'shelf.emptyTab')));
     }
-    if (!tab.tracks.length) els.shelfList.appendChild(h('li', { class: 'shelf-empty' }, t('shelf.emptyTab')));
-    tab.tracks.forEach((tr, ti) => {
+    const records = app.settings ? app.settings.disks.slice(0, app.settings.count) : [];
+    const canReorder = view.kind !== 'all';
+    view.tracks.slice(0, shelfShown).forEach((tr, ti) => {
       const src = shelfSrc(tr.yt);
       const title = trackTitle(tr);
-      const records = app.settings ? app.settings.disks.slice(0, app.settings.count) : [];
+      const by = trackBy(tr);
       const picked = shelf.selected.has(tr.yt);
-      els.shelfList.appendChild(h('li', { class: `shelf-track${picked ? ' is-picked' : ''}`, dataset: { yt: tr.yt, index: String(ti) }, style: { '--i': String(ti) } },
+      const delArmed = shelf.armed === `del:${tr.yt}`;
+      const removeKey = { shelf: 'shelf.remove', star: 'shelf.unstar', all: delArmed ? 'shelf.deleteTrackSure' : 'shelf.deleteTrack' }[view.kind];
+      els.shelfList.appendChild(h('li', { class: `shelf-track${picked ? ' is-picked' : ''}`, dataset: { yt: tr.yt, index: String(ti) }, style: { '--i': String(Math.min(ti, 30)) } },
         shelf.selecting ? h('label', { class: 'shelf-pick', title: title },
           h('input', {
             type: 'checkbox', checked: picked || undefined, 'aria-label': title,
@@ -1967,14 +2071,14 @@
               renderShelfSelectBar();
             }
           })) : h('button', {
-          type: 'button', class: 'shelf-grip', title: t('shelf.drag'), 'aria-label': `${t('shelf.drag')}: ${title}`,
+          type: 'button', class: 'shelf-grip', title: t(canReorder ? 'shelf.drag' : 'shelf.dragAll'), 'aria-label': `${t(canReorder ? 'shelf.drag' : 'shelf.dragAll')}: ${title}`,
           onpointerdown: e => startTrackDrag(e, ti),
           onkeydown: e => {
-            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+            if (!canReorder || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
             e.preventDefault();
             const to = ti + (e.key === 'ArrowUp' ? -1 : 1);
-            if (to < 0 || to >= tab.tracks.length) return;
-            moveTrack(ti, shelf.active, to);
+            if (to < 0 || to >= view.tracks.length) return;
+            reorderTrack(ti, to);
             const grip = els.shelfList.querySelector(`.shelf-track[data-index="${to}"] .shelf-grip`);
             if (grip) grip.focus();
           }
@@ -1987,17 +2091,20 @@
         h('img', { src: `https://i.ytimg.com/vi/${tr.yt}/mqdefault.jpg`, alt: '', loading: 'lazy', decoding: 'async' }),
         h('span', { class: 'shelf-sleeve-icon', 'aria-hidden': 'true' })),
         h('span', { class: 'shelf-meta' },
-          h('span', { class: 'shelf-title', title }, title),
-          // URLと同じ行に、曲ごとの小さなメモ（このブラウザの棚に保存）
+          h('span', { class: 'shelf-headrow' },
+            h('span', { class: 'shelf-title', title }, title),
+            by ? h('span', { class: 'shelf-by', title: by }, by) : null),
+          // URLと同じ行に、曲ごとの小さなメモ（このブラウザに保存。同じ曲ならどの棚でも同じメモ）
           h('span', { class: 'shelf-subrow' },
           h('span', { class: 'shelf-sub' }, `youtu.be/${tr.yt}`),
           h('input', {
-            type: 'text', class: 'shelf-memo', value: tr.memo || '', maxlength: '100', placeholder: t('shelf.memo'),
+            type: 'text', class: 'shelf-memo', value: shelf.memos[tr.yt] || '', maxlength: '100', placeholder: t('shelf.memo'),
             'aria-label': `${t('shelf.memo')}: ${title}`, spellcheck: 'false',
-            oninput: e => { tr.memo = e.target.value.slice(0, 100); saveShelf(); },
+            oninput: e => { const v = e.target.value.slice(0, 100); if (v) shelf.memos[tr.yt] = v; else delete shelf.memos[tr.yt]; saveShelf(); },
             onkeydown: e => { if (e.key === 'Enter') e.target.blur(); }
           }))),
         h('span', { class: 'shelf-actions' },
+          h('button', { type: 'button', class: 'shelf-icon shelf-star', onclick: () => toggleStar(tr.yt) }),
           h('button', { type: 'button', class: 'shelf-icon shelf-copy', title: t('shelf.copy'), 'aria-label': t('shelf.copy'), onclick: () => copyText(src) }),
           h('select', {
             class: 'shelf-to', title: t('shelf.toRecord'), 'aria-label': t('shelf.toRecord'), disabled: Boolean(app.imported) || !records.length || undefined,
@@ -2011,17 +2118,33 @@
           }, '▶︎'),
           h('a', { class: 'shelf-icon', href: `https://www.youtube.com/watch?v=${tr.yt}`, target: '_blank', rel: 'noopener', title: t('sound.openYoutube'), 'aria-label': t('sound.openYoutube') }, '↗'),
           h('button', {
-            type: 'button', class: 'shelf-icon shelf-remove', title: t('shelf.remove'), 'aria-label': t('shelf.remove'),
+            type: 'button', class: `shelf-icon shelf-remove${delArmed ? ' is-armed' : ''}`, title: t(removeKey), 'aria-label': `${t(removeKey)}: ${title}`,
             onclick: () => {
-              if (bgm.src === src && bgm.owner.startsWith('shelf:')) stopBgm();
-              tab.tracks.splice(ti, 1);
+              if (view.kind === 'shelf') {
+                if (bgm.src === src && bgm.owner.startsWith('shelf:')) stopBgm();
+                view.tab.tracks = view.tab.tracks.filter(x => x.yt !== tr.yt);
+              } else if (view.kind === 'star') {
+                shelf.stars = shelf.stars.filter(yt => yt !== tr.yt);
+              } else {
+                // ライブラリから消すのは2回押したとき
+                if (!delArmed) { shelf.armed = `del:${tr.yt}`; renderShelfList(false, true); return; }
+                deleteFromLibrary([tr.yt]);
+                toast(t('shelf.deletedMany', { n: 1 }));
+              }
+              shelf.armed = '';
               saveShelf();
               renderShelf();
             }
-          }, '×'))));
+          }, delArmed ? '!' : '×'))));
     });
+    if (view.tracks.length > shelfShown) {
+      els.shelfList.appendChild(h('li', { class: 'shelf-more' },
+        h('button', { type: 'button', class: 'ghost-button small', onclick: () => { shelfShown += SHELF_PAGE * 3; renderShelfList(false, true); } },
+          t('shelf.showMore', { n: view.tracks.length - shelfShown }))));
+    }
     // コピーのアイコン（2枚重ねの四角）
     els.shelfList.querySelectorAll('.shelf-copy').forEach(btn => { btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>'; });
+    els.shelfList.querySelectorAll('.shelf-star').forEach(syncStarBtn);
     if (animate) els.shelfList.classList.remove('is-entering'), void els.shelfList.offsetWidth, els.shelfList.classList.add('is-entering');
     syncShelfUi();
   }
@@ -2030,39 +2153,60 @@
   function refreshShelfRecords() {
     if (!els.shelfList || !app.settings) return;
     const records = app.settings.disks.slice(0, app.settings.count);
-    els.shelfList.querySelectorAll('.shelf-to').forEach(select => {
+    els.shelfList.querySelectorAll('.shelf-actions .shelf-to').forEach(select => {
       while (select.options.length > 1) select.remove(1);
       records.forEach((disk, i) => select.appendChild(h('option', { value: String(i) }, `${i + 1}. ${disk.name || '—'}`)));
       select.disabled = Boolean(app.imported) || !records.length;
     });
   }
 
-  // 曲を動かす。同じタブの中なら位置 to へ、別のタブなら最後に足す
-  function moveTrack(from, tabIndex, to) {
-    const src = shelf.tabs[shelf.active];
-    const dest = shelf.tabs[tabIndex];
-    if (!src || !dest || !src.tracks[from]) return;
-    if (dest === src) {
-      const [tr] = src.tracks.splice(from, 1);
-      src.tracks.splice(Math.max(0, Math.min(src.tracks.length, to)), 0, tr);
-    } else {
-      const tr = src.tracks[from];
-      if (dest.tracks.some(x => x.yt === tr.yt)) { toast(t('shelf.alreadyIn', { tab: shelfTabName(dest) })); return; }
-      src.tracks.splice(from, 1);
-      dest.tracks.push(tr);
-      toast(t('shelf.moved', { tab: shelfTabName(dest) }));
+  // 同じ一覧の中で並べ替える（棚と★だけ。ALL は曲マスタの順）
+  function reorderTrack(from, to) {
+    const view = curView();
+    if (view.kind === 'shelf') {
+      const [tr] = view.tab.tracks.splice(from, 1);
+      view.tab.tracks.splice(Math.max(0, Math.min(view.tab.tracks.length, to)), 0, tr);
+    } else if (view.kind === 'star') {
+      const ids = starTracks().map(tr => tr.yt);
+      const [yt] = ids.splice(from, 1);
+      ids.splice(Math.max(0, Math.min(ids.length, to)), 0, yt);
+      shelf.stars = ids;
+    } else return;
+    saveShelf();
+    renderShelfList(false, true);
+  }
+
+  // タブの上に落とした曲：棚から棚へは移す、ALL・★からは足す、★のタブならお気に入りに入れる
+  function dropOnTab(from, target) {
+    const view = curView();
+    const tr = view.tracks[from];
+    if (!tr) return;
+    if (target.view === 'star') {
+      if (!shelf.stars.includes(tr.yt)) { shelf.stars.push(tr.yt); toast(t('shelf.starredMany', { n: 1 })); } else toast(t('shelf.alreadyStar'));
+      saveShelf();
+      renderShelf();
+      return;
     }
+    const dest = shelf.tabs[target.index];
+    if (!dest || dest === view.tab) return;
+    if (dest.tracks.some(x => x.yt === tr.yt)) { toast(t('shelf.alreadyIn', { tab: shelfTabName(dest) })); return; }
+    dest.tracks.push({ yt: tr.yt, title: tr.title || '' });
+    if (view.kind === 'shelf') {
+      view.tab.tracks.splice(from, 1);
+      toast(t('shelf.moved', { tab: shelfTabName(dest) }));
+    } else toast(t('shelf.added', { tab: shelfTabName(dest) }));
     saveShelf();
     renderShelf();
   }
 
-  // つまみを押したまま動かす：曲の上なら差し込む位置、タブの上ならそのタブへ移す
+  // つまみを押したまま動かす：曲の上なら差し込む位置（棚と★）、タブの上ならその棚へ（ALL のタブには落とせない）
   function startTrackDrag(e, from) {
     if (e.button !== 0) return;
     e.preventDefault();
     const grip = e.currentTarget;
     const row = grip.closest('.shelf-track');
     const scroller = row.closest('.panel');
+    const canReorder = shelf.view !== 'all';
     grip.setPointerCapture(e.pointerId);
     // 指の右下に小さな札を出して、落とす先（タブや曲）が隠れないようにする
     const img = row.querySelector('.shelf-sleeve img');
@@ -2092,10 +2236,10 @@
       target = null;
       const tabBtn = under && under.closest('.shelf-tab');
       const overRow = under && under.closest('.shelf-track');
-      if (tabBtn) {
-        const ti = [...els.shelfTabs.querySelectorAll('.shelf-tab')].indexOf(tabBtn);
-        if (ti >= 0 && ti !== shelf.active) { tabBtn.classList.add('is-drop'); target = { tab: ti }; }
-      } else if (overRow && overRow.parentNode === els.shelfList && overRow !== row) {
+      if (tabBtn && !tabBtn.classList.contains('is-active') && tabBtn.dataset.view !== 'all' && !(tabBtn.dataset.view === 'star' && shelf.view === 'star')) {
+        tabBtn.classList.add('is-drop');
+        target = { tab: { view: tabBtn.dataset.view, index: Number(tabBtn.dataset.index) } };
+      } else if (canReorder && overRow && overRow.parentNode === els.shelfList && overRow !== row) {
         const r = overRow.getBoundingClientRect();
         const after = ev.clientY > r.top + r.height / 2;
         overRow.classList.add(after ? 'drop-after' : 'drop-before');
@@ -2119,8 +2263,8 @@
       document.body.classList.remove('is-panel-dragging');
       clear();
       if (!target || ev.type !== 'pointerup' || !row.isConnected) return;
-      if (target.tab !== undefined) moveTrack(from, target.tab);
-      else if (target.to !== from) moveTrack(from, shelf.active, target.to);
+      if (target.tab) dropOnTab(from, target.tab);
+      else if (target.to !== from) reorderTrack(from, target.to);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', end);
@@ -2171,26 +2315,33 @@
     if (app.files[i]) { app.files[i] = null; saveFiles(); }
     changed(true);
     toast(t('shelf.assigned', { n: i + 1, name: disk.name || '' }));
-    track('ccfolia_jukebox_shelf_assign', { tab: (shelf.tabs[shelf.active] || {}).id || '' });
+    const view = curView();
+    track('ccfolia_jukebox_shelf_assign', { tab: view.kind === 'shelf' ? view.tab.id : view.kind });
   }
 
+  // URLで曲を足す：棚を開いていればその棚へ、ALL・★ならライブラリへ（★なら★にも）
   function addShelfUrl(raw) {
-    const tab = shelf.tabs[shelf.active];
+    const view = curView();
     const yt = youtubeId(raw);
-    if (!tab) return;
     if (!yt) { toast(t('shelf.badUrl'), 'error'); return; }
-    if (tab.tracks.some(tr => tr.yt === yt)) { toast(t('shelf.already')); return; }
-    const tr = { yt, title: ytTitles[yt] || '' };
-    tab.tracks.push(tr);
+    const known = findTrack(yt);
+    if (view.kind === 'shelf') {
+      if (view.tab.tracks.some(tr => tr.yt === yt)) { toast(t('shelf.already')); return; }
+    } else if (known && (view.kind === 'all' || shelf.stars.includes(yt))) { toast(t('shelf.already')); return; }
+    shelf.hidden = shelf.hidden.filter(x => x !== yt);
+    const tr = known ? { yt, title: known.title || '' } : { yt, title: ytTitles[yt] || '' };
+    if (view.kind === 'shelf') view.tab.tracks.push(tr);
+    else if (!known) shelf.extra.push(tr);
+    if (view.kind === 'star' && !shelf.stars.includes(yt)) shelf.stars.push(yt);
     saveShelf();
     renderShelf();
     els.shelfUrl.value = '';
-    if (!tr.title) {
+    if (!tr.title && !libTrack(yt)) {
       fetchYoutubeTitle(yt).then(title => {
         if (!title || tr.title) return;
         tr.title = title;
         saveShelf();
-        renderShelfList();
+        renderShelfList(false, true);
       });
     }
   }
@@ -2214,7 +2365,11 @@
       clearTimeout(resetArmed);
       resetArmed = 0;
       els.shelfReset.textContent = t('shelf.reset');
-      shelf.tabs = JukeboxShelf.defaults();
+      // 初期の棚に戻す：棚・自分で足した曲・ライブラリから消した曲を初期に戻す（メモとお気に入りは残す）
+      shelf.tabs = JukeboxLibrary.defaults();
+      shelf.extra = [];
+      shelf.hidden = [];
+      shelf.view = 'all';
       shelf.active = 0;
       shelf.editing = false;
       saveShelf();
@@ -3066,6 +3221,8 @@
     bindRoomBox();
     applyLanguage();
     rebuild();
+    // 版8までの棚を新しい分類に作り直したときは一度だけ知らせる
+    if (shelf.migrated) toast(t('shelf.migrated'));
     // 前に選んだ音声ファイルを読み戻してから、曲名の自動入力を始める
     loadFiles().then(files => {
       if (!files.some(Boolean) || app.files.some(Boolean)) return;

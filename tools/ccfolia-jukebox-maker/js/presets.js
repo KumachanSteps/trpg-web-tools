@@ -1,7 +1,7 @@
 /* KPレス・ジュークボックスメーカー — プリセット（ジャンル別のシーン構成とBGM）
  * scenes: [シーン名, ラベル色ID, ジャケット, YouTube ID, 曲名, 新しい写真の希望]
  *   ジャケットは写真ID（assets/covers/<id>.jpg）か 'p:模様名'（写真が届くまでの代わり）。
- * シーン名の英語・韓国語は NAMES。曲はレコード棚（js/shelf-data.js）から選んでいる。
+ * シーン名の英語・韓国語は NAMES。曲はレコード棚（js/library-data.js）から選んでいる。
  * 選曲は試聴前の仮決め（2026-11-08、ChatGPT との設計会話をもとに TK さんが確認予定）。 */
 (function (global) {
   'use strict';
