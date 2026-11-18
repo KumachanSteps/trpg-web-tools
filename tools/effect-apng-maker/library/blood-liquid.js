@@ -14,6 +14,10 @@ function makeCanvas(w, h) {
 const C_HI = [196, 20, 30];
 const C_MID = [142, 10, 18];
 const C_LO = [96, 4, 10];
+// 縁どりの描き方（style: 'rim'）の色：中の深紅・縁の明るい赤・外のにじみ
+const R_IN = [92, 10, 18];
+const R_RIM = [214, 40, 52];
+const R_GLOW = [190, 24, 36];
 
 /** 描くための入れ物を作る。shape(g, k) は内部の大きさ（k 倍）で形を白く描く関数 */
 export function liquidState() {
@@ -23,7 +27,8 @@ export function liquidState() {
 /**
  * 形を描いて、液体として ctx に重ねる。
  *   shape: (g, k) => void  … g に白で形を描く。座標は「実寸 × k」で描く（k = res）
- *   opt:   { res=0.5, edge=3（なめらかさ・実寸 px）, dome=9（ふくらみ・実寸 px）, alpha=1, u=H/540 }
+ *   opt:   { res=0.5, edge=3（なめらかさ・実寸 px）, dome=9（ふくらみ・実寸 px）, alpha=1, u=H/540,
+ *            style: 'gloss'（つやのある立体）| 'rim'（平らな深紅＋明るい縁どり） }
  */
 export function drawLiquid(ctx, W, H, st, shape, opt = {}) {
   const k = opt.res ?? 0.5;
@@ -58,6 +63,7 @@ export function drawLiquid(ctx, W, H, st, shape, opt = {}) {
 
   const out = st.img.data;
   const alphaAll = opt.alpha ?? 1;
+  const rim = opt.style === 'rim';
   // 光の向き（左上から少し手前）
   const lx = -0.45, ly = -0.6, lz = 0.66;
   const slope = 2.2 / (u * k);  // 高さの差 → 傾き。大きさが変わっても同じ見た目になるように
@@ -68,6 +74,27 @@ export function drawLiquid(ctx, W, H, st, shape, opt = {}) {
       const a = A[i + 3] / 255;
       // しきい値でくっきりさせる（0.42〜0.58 の間で立ち上がる）
       let e = (a - 0.42) / 0.16;
+      if (rim) {
+        // 縁どりの描き方：中は暗い深紅でほぼ平ら、縁だけ細く明るい赤、外にうすい赤のにじみ
+        if (e <= 0) {
+          const gl = (a - 0.18) / 0.24;
+          if (gl <= 0) { out[i + 3] = 0; continue; }
+          out[i] = R_GLOW[0]; out[i + 1] = R_GLOW[1]; out[i + 2] = R_GLOW[2]; out[i + 3] = 255 * 0.28 * gl * gl * alphaAll;
+          continue;
+        }
+        if (e > 1) e = 1;
+        const edgeA = e * e * (3 - 2 * e);
+        let rr = (a - 0.5) / 0.4; rr = rr < 0 ? 0 : rr > 1 ? 1 : rr;
+        const rimK = 1 - rr * rr * (3 - 2 * rr);          // 縁ほど 1
+        const h = D[i + 3] / 255;
+        const inner = 0.86 + 0.14 * (1 - h);              // 中はわずかに明暗
+        const r = R_IN[0] * inner + (R_RIM[0] - R_IN[0] * inner) * rimK;
+        const g = R_IN[1] * inner + (R_RIM[1] - R_IN[1] * inner) * rimK;
+        const b = R_IN[2] * inner + (R_RIM[2] - R_IN[2] * inner) * rimK;
+        out[i] = r; out[i + 1] = g; out[i + 2] = b;
+        out[i + 3] = 255 * Math.max(edgeA, 0.28) * alphaAll;
+        continue;
+      }
       if (e <= 0) { out[i + 3] = 0; continue; }
       if (e > 1) e = 1;
       e = e * e * (3 - 2 * e);

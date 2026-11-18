@@ -4560,7 +4560,7 @@
   },
   {
    "id": "horror.blood-drip",
-   "version": 1,
+   "version": 2,
    "status": "test",
    "added": "2026-11-16",
    "order": 11,
@@ -4576,10 +4576,10 @@
     "zh": "从上方流下的血"
    },
    "desc": {
-    "ja": "画面の上の端から血がにじみ出て、何本も筋になって垂れていく。最後の形で止まる。",
-    "en": "Blood seeps from the top edge and runs down in streaks, then stays.",
-    "ko": "화면 위쪽 가장자리에서 피가 배어 나와 여러 줄기로 흘러내리고, 마지막 모양으로 멈춘다.",
-    "zh": "鲜血从画面上缘渗出，化作数道血痕向下流淌，最后停住。"
+    "ja": "画面の上から太い血の筋が何本も垂れ落ち、その後ろから血の幕が下りてきて画面を覆う。",
+    "en": "Thick streaks of blood run down from the top, then a sheet of blood follows and covers the screen.",
+    "ko": "화면 위에서 굵은 피 줄기가 여러 개 흘러내리고, 그 뒤로 피의 막이 내려와 화면을 덮는다.",
+    "zh": "粗大的血流从画面上方淌下，随后血幕降下覆盖整个画面。"
    },
    "tags": [
     "血",
@@ -4616,37 +4616,20 @@
       "zh": "血痕数量"
      },
      "min": 0.5,
-     "max": 2,
+     "max": 1.6,
      "step": 0.1,
      "default": 1
     },
     {
-     "key": "reach",
-     "type": "range",
+     "key": "cover",
+     "type": "toggle",
      "label": {
-      "ja": "垂れる長さ",
-      "en": "Length",
-      "ko": "흘러내리는 길이",
-      "zh": "流下长度"
+      "ja": "最後に画面を覆う",
+      "en": "Cover the screen at the end",
+      "ko": "마지막에 화면 덮기",
+      "zh": "最后覆盖画面"
      },
-     "min": 0.4,
-     "max": 1.2,
-     "step": 0.05,
-     "default": 1
-    },
-    {
-     "key": "band",
-     "type": "range",
-     "label": {
-      "ja": "上の帯の太さ",
-      "en": "Top band",
-      "ko": "위쪽 띠 두께",
-      "zh": "上缘厚度"
-     },
-     "min": 0.3,
-     "max": 2,
-     "step": 0.1,
-     "default": 1
+     "default": true
     }
    ],
    "budget": {
@@ -4661,9 +4644,9 @@
     "type": "original",
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
-   "poster": 0.95,
+   "poster": 0.55,
    "path": "horror/blood-drip",
-   "thumb": "thumb.webp?v=1"
+   "thumb": "thumb.webp?v=2"
   },
   {
    "id": "visual.noise",
