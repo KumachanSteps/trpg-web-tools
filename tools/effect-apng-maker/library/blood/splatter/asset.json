@@ -1,19 +1,19 @@
 {
-  "id": "horror.blood-splutter",
-  "version": 1,
+  "id": "blood.splatter",
+  "version": 2,
   "status": "test",
   "added": "2026-11-15",
-  "order": 9,
-  "category": "horror",
+  "order": 1,
+  "category": "blood",
   "kind": "procedural",
   "type": "effect",
   "priority": "P1",
   "origin": "EX",
   "name": {
-    "ja": "血しぶき",
-    "en": "Blood splatter",
-    "ko": "피 튀김",
-    "zh": "血花飞溅"
+    "ja": "血しぶき（中央）",
+    "en": "Blood splatter (centre)",
+    "ko": "피 튀김 (중앙)",
+    "zh": "血花飞溅（中央）"
   },
   "desc": {
     "ja": "血がびしゃっと弾けて広がり、すっと薄れて消える。",

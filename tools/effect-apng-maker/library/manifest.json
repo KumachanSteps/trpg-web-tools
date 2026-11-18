@@ -38,6 +38,15 @@
    }
   },
   {
+   "id": "blood",
+   "name": {
+    "ja": "血",
+    "en": "Blood",
+    "ko": "피",
+    "zh": "鲜血"
+   }
+  },
+  {
    "id": "visual",
    "name": {
     "ja": "視覚効果",
@@ -4314,21 +4323,21 @@
    "thumb": "thumb.webp?v=1"
   },
   {
-   "id": "horror.blood-splutter",
-   "version": 1,
+   "id": "blood.splatter",
+   "version": 2,
    "status": "test",
    "added": "2026-11-15",
-   "order": 9,
-   "category": "horror",
+   "order": 1,
+   "category": "blood",
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
    "origin": "EX",
    "name": {
-    "ja": "血しぶき",
-    "en": "Blood splatter",
-    "ko": "피 튀김",
-    "zh": "血花飞溅"
+    "ja": "血しぶき（中央）",
+    "en": "Blood splatter (centre)",
+    "ko": "피 튀김 (중앙)",
+    "zh": "血花飞溅（中央）"
    },
    "desc": {
     "ja": "血がびしゃっと弾けて広がり、すっと薄れて消える。",
@@ -4404,31 +4413,31 @@
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶきを移植"
    },
    "poster": 0.45,
-   "path": "horror/blood-splutter",
-   "thumb": "thumb.webp?v=1"
+   "path": "blood/splatter",
+   "thumb": "thumb.webp?v=2"
   },
   {
-   "id": "horror.blood-spray",
-   "version": 3,
+   "id": "blood.spray-left",
+   "version": 4,
    "status": "test",
    "added": "2026-11-16",
-   "order": 10,
-   "category": "horror",
+   "order": 2,
+   "category": "blood",
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
    "origin": "EX",
    "name": {
-    "ja": "隅から飛び散る血",
-    "en": "Blood spray from the corner",
-    "ko": "구석에서 튀는 피",
-    "zh": "从角落飞溅的血"
+    "ja": "血しぶき（左下から斜め）",
+    "en": "Blood spray from bottom left",
+    "ko": "피 튀김 (왼쪽 아래에서 대각선)",
+    "zh": "血花飞溅（从左下斜向）"
    },
    "desc": {
-    "ja": "画面の下の隅から、向かいの上の隅へ向かって血がななめに勢いよく飛び散る。画面のおよそ7割に広がる。",
-    "en": "Blood sprays diagonally from a bottom corner toward the opposite top corner, covering about 70% of the screen.",
-    "ko": "화면 아래 구석에서 맞은편 위 구석을 향해 피가 비스듬히 세차게 튄다. 화면의 약 70%에 퍼진다.",
-    "zh": "鲜血从画面下方角落朝对面上角斜向猛地飞溅，覆盖约七成画面。"
+    "ja": "画面の左下の隅から、向かいの右上へ向かって血が勢いよく飛び散る。",
+    "en": "Blood bursts from the bottom-left corner diagonally towards the top right.",
+    "ko": "화면 왼쪽 아래 구석에서 맞은편 오른쪽 위를 향해 피가 힘차게 튄다.",
+    "zh": "鲜血从画面左下角朝右上方斜向猛烈飞溅。"
    },
    "tags": [
     "血",
@@ -4456,37 +4465,6 @@
    },
    "transparent": true,
    "params": [
-    {
-     "key": "side",
-     "type": "select",
-     "label": {
-      "ja": "隅",
-      "en": "Corner",
-      "ko": "구석",
-      "zh": "角落"
-     },
-     "options": [
-      {
-       "value": "left",
-       "label": {
-        "ja": "左下",
-        "en": "Bottom left",
-        "ko": "왼쪽 아래",
-        "zh": "左下"
-       }
-      },
-      {
-       "value": "right",
-       "label": {
-        "ja": "右下",
-        "en": "Bottom right",
-        "ko": "오른쪽 아래",
-        "zh": "右下"
-       }
-      }
-     ],
-     "default": "left"
-    },
     {
      "key": "angle",
      "type": "range",
@@ -4555,25 +4533,145 @@
     "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶき（写真の血）を使用"
    },
    "poster": 0.5,
-   "path": "horror/blood-spray",
-   "thumb": "thumb.webp?v=3"
+   "path": "blood/spray-left",
+   "thumb": "thumb.webp?v=4"
   },
   {
-   "id": "horror.blood-drip",
-   "version": 8,
+   "id": "blood.spray-right",
+   "version": 4,
    "status": "test",
-   "added": "2026-11-16",
-   "order": 11,
-   "category": "horror",
+   "added": "2026-11-18",
+   "order": 3,
+   "category": "blood",
    "kind": "procedural",
    "type": "effect",
    "priority": "P1",
    "origin": "EX",
    "name": {
-    "ja": "上から垂れる血",
-    "en": "Blood dripping down",
-    "ko": "위에서 흘러내리는 피",
-    "zh": "从上方流下的血"
+    "ja": "血しぶき（右下から斜め）",
+    "en": "Blood spray from bottom right",
+    "ko": "피 튀김 (오른쪽 아래에서 대각선)",
+    "zh": "血花飞溅（从右下斜向）"
+   },
+   "desc": {
+    "ja": "画面の右下の隅から、向かいの左上へ向かって血が勢いよく飛び散る。",
+    "en": "Blood bursts from the bottom-right corner diagonally towards the top left.",
+    "ko": "화면 오른쪽 아래 구석에서 맞은편 왼쪽 위를 향해 피가 힘차게 튄다.",
+    "zh": "鲜血从画面右下角朝左上方斜向猛烈飞溅。"
+   },
+   "tags": [
+    "血",
+    "血しぶき",
+    "ホラー",
+    "blood",
+    "spray",
+    "splatter",
+    "피",
+    "血"
+   ],
+   "use": [
+    "overlay"
+   ],
+   "playback": {
+    "default": "once",
+    "allowed": [
+     "once"
+    ]
+   },
+   "duration": {
+    "default": 2,
+    "min": 1,
+    "max": 4
+   },
+   "transparent": true,
+   "params": [
+    {
+     "key": "angle",
+     "type": "range",
+     "label": {
+      "ja": "向きの調整（0 で向かいの隅へ）",
+      "en": "Aim (0 = opposite corner)",
+      "ko": "방향 조정 (0이면 맞은편 구석)",
+      "zh": "方向调整（0＝对角）"
+     },
+     "min": -30,
+     "max": 30,
+     "step": 5,
+     "default": 0
+    },
+    {
+     "key": "reach",
+     "type": "range",
+     "label": {
+      "ja": "届く距離",
+      "en": "Reach",
+      "ko": "닿는 거리",
+      "zh": "飞溅距离"
+     },
+     "min": 0.5,
+     "max": 1.2,
+     "step": 0.05,
+     "default": 1
+    },
+    {
+     "key": "size",
+     "type": "range",
+     "label": {
+      "ja": "大きさ",
+      "en": "Size",
+      "ko": "크기",
+      "zh": "大小"
+     },
+     "min": 0.6,
+     "max": 1.6,
+     "step": 0.1,
+     "default": 1
+    },
+    {
+     "key": "stay",
+     "type": "toggle",
+     "label": {
+      "ja": "最後まで残す",
+      "en": "Keep at the end",
+      "ko": "끝까지 남기기",
+      "zh": "保留到最后"
+     },
+     "default": false
+    }
+   ],
+   "budget": {
+    "size": [
+     960,
+     540
+    ],
+    "fps": 20,
+    "colors": 64
+   },
+   "license": {
+    "type": "original",
+    "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所",
+    "note": "文字画像APNGメーカーEXの吸血鬼判定の血しぶき（写真の血）を使用"
+   },
+   "poster": 0.5,
+   "path": "blood/spray-right",
+   "thumb": "thumb.webp?v=4"
+  },
+  {
+   "id": "blood.drip",
+   "version": 9,
+   "status": "test",
+   "added": "2026-11-16",
+   "order": 4,
+   "category": "blood",
+   "kind": "procedural",
+   "type": "effect",
+   "priority": "P1",
+   "origin": "EX",
+   "name": {
+    "ja": "垂れる血（上から）",
+    "en": "Blood dripping from the top",
+    "ko": "흘러내리는 피 (위에서)",
+    "zh": "流下的血（从上方）"
    },
    "desc": {
     "ja": "画面の上の血の帯から、付け根が広がり先がしずくになった細い血の筋が壁を伝うように何本も垂れ、最後は帯が下りて画面を覆う。",
@@ -4645,8 +4743,8 @@
     "credit": "演出APNGメーカー / くま。TRPG WEBツール観測所"
    },
    "poster": 0.55,
-   "path": "horror/blood-drip",
-   "thumb": "thumb.webp?v=8"
+   "path": "blood/drip",
+   "thumb": "thumb.webp?v=9"
   },
   {
    "id": "visual.noise",
