@@ -464,7 +464,8 @@
       ['bc_WaORjB4k', '魔王城（OpenTracks）', 8],
       ['oRp-j9XCtu4', '大魔王（OpenTracks）', 8],
       ['Ew41bjO76io', '宵闇ヴィクトリア（OpenTracks）', 8],
-      ['px7rADu6T3c', 'ヴァンパイアガール（OpenTracks）', 8]
+      ['px7rADu6T3c', 'ヴァンパイアガール（OpenTracks）', 8],
+      ['YOqOMSlFEnQ', 'オーケストラ23「be proudly」（魔王魂）', 9]
     ] },
     { id: 'wafu', since: 4, tracks: [
       ['Ls55uJx9Ne0', '和テイスト（OpenTracks）', 4],
@@ -707,7 +708,7 @@
   // タブは1列に順番どおり並べる（場面 → 雰囲気 → 舞台 → 音楽のジャンル）。版6でこの並びにした（保存済みの棚も1回だけ並べ替える）。
   // 版6で「ハウス」を大人っぽいクラブ・ラウンジの「アダルト」（id: adult）にした。保存済みの house タブは adult に読み替え、DROPPED の曲を外す。
   // 初期の曲を足したら上げる。曲の3つ目の数字は、その曲を足したときの版。タブの since は、そのタブを足したときの版
-  const VERSION = 8;
+  const VERSION = 9;
 
   // YouTube で埋め込み再生できなくなった初期の曲と、その代わり（保存済みの棚でも差し替える）
   const REPLACED = {
