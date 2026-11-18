@@ -671,14 +671,41 @@
       .sort((a, b) => (a.order - b.order) || (a.due || '').localeCompare(b.due || ''));
   }
 
-  function renderTasks() {
+  function taskDueDateKey(value) {
+    const match = String(value || '').trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (!match) return '';
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(year, month - 1, day, 12);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return '';
+    return dateKey(date);
+  }
+
+  function currentWeekBounds() {
     const start = new Date(`${currentCalendarDateKey()}T12:00`);
-    start.setDate(start.getDate() - start.getDay());
+    const offset = (start.getDay() - calendarSettings.weekStartsOn + 7) % 7;
+    start.setDate(start.getDate() - offset);
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
+    return { start, end, startKey: dateKey(start), endKey: dateKey(end) };
+  }
+
+  function getCurrentWeekTaskItems() {
+    const { startKey, endKey } = currentWeekBounds();
+    return getTaskItems()
+      .map(task => ({ ...task, dueKey: taskDueDateKey(task.due) }))
+      .filter(task => task.dueKey && task.dueKey >= startKey && task.dueKey <= endKey)
+      .sort((a, b) => a.dueKey.localeCompare(b.dueKey)
+        || Number(a.order || 0) - Number(b.order || 0)
+        || String(a.title || '').localeCompare(String(b.title || ''), 'ja'));
+  }
+
+  function renderTasks() {
+    const { start, end } = currentWeekBounds();
     $('weekRange').textContent = `(${start.getMonth() + 1}/${start.getDate()}〜${end.getMonth() + 1}/${end.getDate()})`;
 
-    const tasks = getTaskItems();
+    const tasks = getCurrentWeekTaskItems();
     $('taskList').innerHTML = tasks.slice(0, 8).map(task => `
       <article class="task-card ${task.done ? 'done' : ''}" draggable="true" data-session-id="${esc(task.sessionId)}" data-task-id="${esc(task.id)}">
         <label class="task-check" aria-label="${esc(task.title)}を完了にする">
@@ -1690,7 +1717,7 @@
   $('languageBtn').onclick = () => toast('JP/EN切替は後続アップデートで対応予定です');
   $('closeDetailBtn').onclick = () => { selectedId = ''; renderDetail(); applyPanelState(); };
   $('showAllTasksBtn').onclick = () => alert(getTaskItems().map(task => `${task.done ? '☑' : '☐'} ${task.title} / ${task.scenario} / ${task.due || '期限なし'}`).join('\n') || 'タスクはありません。');
-  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.35', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
+  $('exportJsonBtn').onclick = () => download('session-check-calendar.json', JSON.stringify({ version: '0.36', exportedAt: new Date().toISOString(), calendarSettings, sessions }, null, 2), 'application/json');
   $('exportIcalBtn').onclick = () => download('session-check-calendar.ics', toIcal(), 'text/calendar');
   $('importInput').onchange = async event => {
     const file = event.target.files[0];
