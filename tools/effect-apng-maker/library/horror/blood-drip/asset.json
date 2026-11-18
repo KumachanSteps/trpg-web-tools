@@ -1,6 +1,6 @@
 {
   "id": "horror.blood-drip",
-  "version": 2,
+  "version": 3,
   "status": "test",
   "added": "2026-11-16",
   "order": 11,
@@ -74,8 +74,8 @@
   ],
   "budget": {
     "size": [
-      960,
-      540
+      1280,
+      720
     ],
     "fps": 15,
     "colors": 64
