@@ -4560,7 +4560,7 @@
   },
   {
    "id": "horror.blood-drip",
-   "version": 4,
+   "version": 5,
    "status": "test",
    "added": "2026-11-16",
    "order": 11,
@@ -4646,7 +4646,7 @@
    },
    "poster": 0.55,
    "path": "horror/blood-drip",
-   "thumb": "thumb.webp?v=4"
+   "thumb": "thumb.webp?v=5"
   },
   {
    "id": "visual.noise",

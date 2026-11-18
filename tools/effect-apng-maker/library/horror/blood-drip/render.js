@@ -16,16 +16,16 @@ export default {
     const drips = [];
     let x = 10 + 40 * r();
     while (x < W0 - 10) {
-      const w = r() < 0.15 ? 20 + 8 * r() : 32 + 30 * Math.pow(r(), 1.2);
+      const w = r() < 0.18 ? 26 + 8 * r() : 42 + 26 * Math.pow(r(), 1.2);
       drips.push({
         x, w,
         t0: 0.2 * r(),
         sp: 0.75 + 0.7 * r(),
         lag: r(),
-        stop: 0.12 + 0.55 * Math.pow(r(), 0.9),   // 覆わないときに止まる長さ（画面の高さに対して）
+        stop: 0.14 + 0.62 * Math.pow(r(), 0.75),   // 覆わないときに止まる長さ（画面の高さに対して）
         wob: (r() - 0.5) * 2, wp: r() * TAU
       });
-      x += w + (34 + 90 * r()) / amount;
+      x += w + (56 + 80 * r()) / amount;
     }
     // 帯の下の縁のゆるいふくらみ（垂れきらない血）
     const sags = [];
@@ -38,7 +38,7 @@ export default {
     const sx = W / (960 * u);
     const cover = P.cover !== false;
     // 幕（帯）の下の端。覆うときは最後に画面の下まで、覆わないときは少しだけ下がる
-    const bandMax = 48 * u;
+    const bandMax = 62 * u;
     const sheetEnd = cover ? H + 80 * u : bandMax;
     const grow = smooth(t / 0.18);
     const sheet = cover
@@ -65,15 +65,15 @@ export default {
         const L = lenOf(d);
         if (L <= 0.5) continue;
         const w = d.w * u, cx0 = d.x * u * sx;
-        const bulbR = w * 0.6 * Math.min(1, 0.55 + L / (w * 3));   // 伸びはじめは小さく
-        const cy = L - bulbR * 1.12;                                // しずくの中心（帯の下の端から）
+        const bulbR = w * 0.44 * Math.min(1, 0.6 + L / (w * 3));   // 伸びはじめは小さく
+        const cy = L - bulbR * 1.35;                                // しずくの中心（帯の下の端から）
         const neckEnd = Math.max(0, cy);
         const half = yr => {
           const f = clamp(yr / Math.max(1, neckEnd));
-          const flare = 0.95 * Math.exp(-yr / (0.36 * w));            // 付け根のすそ
-          const neck = w / 2 * (1 + flare) * (1 - 0.3 * f);         // 下へいくほど少し細く
+          const flare = 1.35 * Math.exp(-yr / (0.75 * w));            // 付け根のすそ
+          const neck = w / 2 * (1 + flare) * (1 - 0.34 * f);         // 下へいくほど少し細く
           // しずくの手前でなめらかにふくらみ、しずくの幅につながる（首とのつなぎ目を作らない）
-          const b = smooth((f - 0.62) / 0.38);
+          const b = smooth((f - 0.55) / 0.45);
           return neck + (bulbR * 0.98 - neck) * b * b;
         };
         const xOf = yr => cx0 + d.wob * w * 0.06 * Math.sin(yr / H * 5 + d.wp);
@@ -83,7 +83,7 @@ export default {
         for (let j = steps; j >= 0; j--) { const yr = -10 * u + (neckEnd + 10 * u) * j / steps; g.lineTo(xOf(yr) + half(yr), sheet + yr); }
         g.closePath(); g.fill();
         // 先のしずく（少し縦長）
-        g.beginPath(); g.ellipse(xOf(cy), sheet + cy, bulbR, bulbR * 1.12, 0, 0, TAU); g.fill();
+        g.beginPath(); g.ellipse(xOf(cy), sheet + cy, bulbR, bulbR * 1.35, 0, 0, TAU); g.fill();
       }
       g.restore();
     }, { res: 0.6, u, edge: 3.5, dome: 10, style: 'rim' });
