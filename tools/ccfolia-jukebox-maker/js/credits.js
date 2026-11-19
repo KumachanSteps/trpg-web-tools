@@ -4,8 +4,8 @@
 (function () {
   'use strict';
   window.JukeboxBgmSources = [
-    { name: "OpenTracks（旧DOVA-SYNDROME）", count: 407, channel: "https://www.youtube.com/@opentracksbgm", site: "https://opentracks.com/" },
-    { name: "PeriTune", count: 112, channel: "https://www.youtube.com/@PeriTune", site: "https://peritune.com/" },
+    { name: "OpenTracks（旧DOVA-SYNDROME）", count: 400, channel: "https://www.youtube.com/@opentracksbgm", site: "https://opentracks.com/" },
+    { name: "PeriTune", count: 111, channel: "https://www.youtube.com/@PeriTune", site: "https://peritune.com/" },
     { name: "NoCopyrightSounds (NCS)", count: 21, channel: "https://www.youtube.com/@NoCopyrightSounds", site: "https://ncs.io/" },
     { name: "もみじばミュージック", count: 17, channel: "https://www.youtube.com/@momiziba" },
     { name: "MusMus", count: 14, channel: "https://www.youtube.com/@musmusch", site: "https://musmus.main.jp/" },
