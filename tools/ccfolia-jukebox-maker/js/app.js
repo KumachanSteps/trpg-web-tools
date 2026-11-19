@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.53';
+  const VERSION = '0.54';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -18,7 +18,7 @@
   const LANGS = ['ja', 'en', 'ko'];
   const MAX_DISKS = Jukebox.MAX_DISKS;   // 標準のレコードの上限
   // 「上限を超えて並べる」をオンにしたときの上限。12枚を超えた分は、棚のレコードを小さくして部屋に全部並べる
-  const LIST_MAX = 50;
+  const LIST_MAX = 25;
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
 
   const $ = id => document.getElementById(id);

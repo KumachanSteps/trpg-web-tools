@@ -44,13 +44,13 @@ KP／GM・PLが行う繰り返し作業や情報整理の負担を軽くし、TR
 
 - [かんたんアイコンメーカー](https://kumachansteps.github.io/trpg-web-tools/tools/kantan-icon-maker/) — 立ち絵PNGから1:1アイコンを作成
 - [CoCハウスルール表メーカー](https://kumachansteps.github.io/trpg-web-tools/tools/house-rule-table/) — ハウスルールを表にまとめて画像・テキスト出力
-- ダイス表ツール — オリジナルダイス表の作成・管理
 - [OBS TRPGサポーター](https://kumachansteps.github.io/trpg-web-tools/tools/obs-trpg-supporter/) — 録画・配信用のOBSブラウザソース（CCFOLIA）のURL・CSSをまとめて切り替え、オーバーレイを作成
 
 開発中のツールは、仕様・表示・保存形式・URLが予告なく変更される場合があります。
 
 ### 構想中
 
+- ダイス表ツール
 - シナリオ情報カードビルダー
 - キャラクタ星間図
 - シナリオDTPデザイナー
@@ -85,6 +85,10 @@ KP／GM・PLが行う繰り返し作業や情報整理の負担を軽くし、TR
 
 6. **仕様・規約の変更**  
    ツールの機能、公開状態、URLおよび本規約は、運営上の必要に応じて変更される場合があります。
+
+7. **スクリプトの複製について**  
+   AIその他のツールを使用して、本サイトのスクリプト（プログラムコード）を複製・コピーする行為はお控えください。  
+   Please refrain from using AI and other tools to copy the website script.
 
 全文は[利用規約・免責事項](https://kumachansteps.github.io/trpg-web-tools/terms.html)をご確認ください。データの取り扱いについては[プライバシーポリシー](https://kumachansteps.github.io/trpg-web-tools/privacy.html)をご確認ください。
 
