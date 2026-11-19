@@ -12,7 +12,7 @@ SETTINGS = ['modern', 'japanese', 'western-classic', 'fantasy', 'cyber', 'scifi-
             'post-apocalyptic', 'school', 'mansion', 'urban', 'nature', 'ruins', 'sacred']
 SHELVES = ['intro', 'daily', 'comic', 'conversation', 'exploration', 'deduction', 'negotiation', 'unease',
            'horror', 'tension', 'battle', 'sad', 'moving', 'climax', 'epilogue']
-SHELF_JA = dict(zip(SHELVES, '導入 日常 コミカル 会話・交流 探索 推理・議論 密談・駆け引き 不穏・謎 ホラー・恐怖 緊迫・危機 戦闘・対決 悲しい・切ない 感動・希望 クライマックス エピローグ'.split()))
+SHELF_JA = dict(zip(SHELVES, '導入 日常 コミカル 交流 探索 推理 駆け引き 不穏 ホラー 緊迫 戦闘 悲しい 感動 クライマックス エピローグ'.split()))
 TAG_JA = {
     'scene': dict(zip(SCENES, '導入 日常 交流 移動 探索 推理 駆け引き 潜入 異変 チェイス 戦闘 儀式 騒動 回想 別離 再会 真相 決断 休憩 終幕'.split())),
     'tone': dict(zip(TONES, '軽快 穏やか 爽やか コミカル 優雅 ロマンチック 郷愁 幻想 感動 希望 高揚 不穏 恐怖 狂気 緊迫 無機質 陰鬱 悲哀 孤独 絶望 壮大 激しい 勇壮 疾走 静か 重厚'.split())),
