@@ -9,15 +9,15 @@
 | intro | 導入 | Scene: 導入 | — |
 | explore | 探索 | Scene: 探索 | — |
 | deduction | 推理 | Scene: 推理 | — |
-| tension | 緊迫 | Tone: 緊迫 | — |
+| tension | 緊迫 | Scene: 緊迫 / Tone: 緊迫 | — |
 | climax | クライマックス | — | — |
 | epilogue | エピローグ | Scene: 終幕 | — |
 | daily | 日常 | Scene: 日常 | — |
-| comic | コミカル | Tone: コミカル | — |
-| moving | 感動 | Tone: 感動 | — |
-| sad | 悲しい | Tone: 悲哀 | — |
-| unease | 不穏 | Tone: 不穏 | — |
-| horror | ホラー | Tone: 恐怖 | — |
+| comic | コミカル | Scene: コミカル / Tone: コミカル | — |
+| moving | 感動 | Scene: 感動 / Tone: 感動 | — |
+| sad | 悲しい | Scene: 悲しい / Tone: 悲哀 | — |
+| unease | 不穏 | Scene: 不穏 / Tone: 不穏 | — |
+| horror | 不穏 | Scene: 不穏 / Tone: 恐怖 | — |
 | digital | — | — | デジタル |
 | mansion | — | Setting: 洋館・古城 | — |
 | wafu | — | Setting: 和風 | 和楽器・和風 |
@@ -144,21 +144,17 @@
 | キーワード（正規表現） | タグ |
 |---|---|
 | `戦い / 戦闘 / 合戦 / 決戦 / 対決 / バトル / battle / fight / combat / duel` | Scene: 戦闘 |
-| `追跡 / 逃走 / 逃げ / チェイス / chase / escape / pursuit` | Scene: チェイス |
+| `追跡 / 逃走 / 逃げ / チェイス / chase / escape / pursuit` | Scene: パニック |
 | `儀式 / ritual / 魔術 / 召喚` | Scene: 儀式 |
 | `回想 / 追憶 / 記憶 / 思い出 / memor / remini` | Scene: 回想 |
 | `真相 / 真実 / truth / reveal` | Scene: 真相 |
 | `休憩 / ティータイム / tea ?time / coffee / cafe / カフェ / 喫茶` | Scene: 休憩 |
 | `潜入 / 隠密 / sneak / stealth / infiltrat` | Scene: 潜入 |
-| `旅 / journey / travel / 街角 / town / street / 散歩 / walk` | Scene: 移動 |
-| `密談 / 交渉 / 取引 / 駆け引き / deal / casino / poker / 陰謀 / conspir` | Scene: 駆け引き |
-| `異変 / 異常 / 怪異 / anomal` | Scene: 異変 |
-| `別れ / 別離 / さよなら / farewell / goodbye / 弔 / 葬 / requiem / レクイエム` | Scene: 別離 |
-| `再会 / reunion` | Scene: 再会 |
-| `決断 / 決意 / 覚悟 / resolve / decision` | Scene: 決断 |
-| `騒動 / ドタバタ / ハプニング / 混乱 / panic / chaos` | Scene: 騒動 |
+| `異変 / 異常 / 怪異 / anomal` | Scene: 不穏 |
+| `別れ / 別離 / さよなら / farewell / goodbye / 弔 / 葬 / requiem / レクイエム` | Scene: 悲しい |
+| `再会 / reunion` | Scene: 感動 |
+| `騒動 / ドタバタ / ハプニング / 混乱 / panic / chaos` | Scene: パニック |
 | `エンディング / ending / epilogue / 終幕 / 後日` | Scene: 終幕 |
-| `会話 / 談笑 / おしゃべり / talk / chat / lounge / ラウンジ` | Scene: 交流 |
 | `夜会 / 舞踏 / ワルツ / waltz / masquerade` | Setting: 洋館・古城 |
 | `館 / 屋敷 / 洋館 / 城 / castle / mansion / manor` | Setting: 洋館・古城 |
 | `聖 / 教会 / 大聖堂 / church / cathedral / pray / 祈り / 賛美 / hymn / chapel` | Setting: 聖堂・宗教施設 |
@@ -177,8 +173,8 @@
 
 ## 候補の棚（公開しない。レビュー用）
 
-- Scene タグから: 戦闘 → 戦闘、駆け引き → 駆け引き、交流 → 交流、探索 → 探索、推理 → 推理、日常 → 日常、導入 → 導入、終幕 → エピローグ（状態を問わず）
-- 公開棚がない曲だけ、Tone タグ（仮）に合ったものすべて: 恐怖 → ホラー、不穏 → 不穏、緊迫 → 緊迫、絶望 → 悲しい、悲哀 → 悲しい、感動 → 感動、希望 → 感動、コミカル → コミカル
+- Scene タグから: 導入 → 導入、日常 → 日常、コミカル → コミカル、探索 → 探索、推理 → 推理、不穏 → 不穏、緊迫 → 緊迫、戦闘 → 戦闘、悲しい → 悲しい、感動 → 感動、終幕 → エピローグ（状態を問わず）
+- 公開棚がない曲だけ、Tone タグ（仮）に合ったものすべて: 恐怖 → 不穏、不穏 → 不穏、緊迫 → 緊迫、絶望 → 悲しい、悲哀 → 悲しい、感動 → 感動、希望 → 感動、コミカル → コミカル
 
 ## 作曲者
 
@@ -209,17 +205,14 @@ OpenTracks の曲ページに載っている作曲者か、1人で運営して�
 | 導入 | 26 | 0 |
 | 日常 | 28 | 96 |
 | コミカル | 27 | 12 |
-| 交流 | 0 | 5 |
 | 探索 | 20 | 0 |
 | 推理 | 41 | 0 |
-| 駆け引き | 0 | 1 |
-| 不穏 | 34 | 39 |
-| ホラー | 32 | 28 |
+| 不穏 | 66 | 49 |
 | 緊迫 | 33 | 38 |
-| 戦闘 | 0 | 22 |
-| 悲しい | 31 | 77 |
+| 戦闘 | 19 | 3 |
+| 悲しい | 31 | 83 |
 | 感動 | 35 | 38 |
 | クライマックス | 29 | 0 |
 | エピローグ | 20 | 1 |
 
-タグの状態（曲ごと）: provisional 580、suggested 7、untagged 53
+タグの状態（曲ごと）: provisional 580、suggested 5、untagged 55

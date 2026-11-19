@@ -124,6 +124,9 @@ for tr in cat:
     shelves = OrderedDict()
     if shelf:
         shelves[shelf] = 'provisional'
+    for (axis, tid), info in tags.items():
+        if axis == 'scene' and tid in PUBLIC_BY_PROVIDER_SCENE and info['source'] == 'provider_tag' and info['status'] != 'suggested':
+            shelves.setdefault(PUBLIC_BY_PROVIDER_SCENE[tid], 'provisional')
     cands = []
     for (axis, tid), info in tags.items():
         # scene tags from the title count even as 'suggested'; provider tags demoted for bulk / clashing tagging do not
@@ -212,7 +215,7 @@ out = f"""/* KPレス・ジュークボックスメーカー — Music Library�
  *   情報源 p=配布元サイトのタグ l=旧タブ t=曲名のキーワード m=手作業、状態 s=候補 p=仮 c=確認済み。
  *   楽器・音楽ジャンルはタグにせず、音楽スタイルとして別に持つ。
  *   作曲者は配布元サイトに載っているか、1人のチャンネルのときだけ入れる（推測では埋めない）。
- * SHELVES: 用途別15棚。ids は公開する所属（旧タブから引き継いだ仮の所属。末尾 ! は確認済み）、
+ * SHELVES: 用途別12棚。ids は公開する所属（旧タブから引き継いだ仮の所属と、戦闘は配布元の戦闘タグ。末尾 ! は確認済み）、
  *   candidates は自動推定の候補（公開しない。レビュー用）。棚の所属はタグとは別に持ち、タグを直しても変わらない。
  * 曲そのものはこのツールに含めず、YouTube の埋め込みで音声だけを流す。使える範囲は各動画の概要欄で確かめてもらう。
  * このファイルは scripts/library/buildlib.py で書き出している。 */
@@ -220,7 +223,7 @@ out = f"""/* KPレス・ジュークボックスメーカー — Music Library�
   'use strict';
 
   // 曲や棚の初期値を変えたら上げる（保存済みの棚に新しい曲を足すため）
-  const VERSION = 9;
+  const VERSION = 10;
 
   const TRACKS = [
 {(',' + chr(10)).join(rows)}
@@ -232,6 +235,9 @@ out = f"""/* KPレス・ジュークボックスメーカー — Music Library�
 
   // 版8までの棚（ccfoliaJukebox.shelf）のタブを、新しい棚に読み替える。null は対応する棚なし
   const LEGACY_TABS = {js(legacy)};
+  // 版10で棚を15から12にした。ホラーは不穏にまとめ、会話・交流と密談・駆け引きは外した（曲が入っていれば自分の棚として残す）
+  const MERGED_SHELVES = {{ horror: 'unease' }};
+  const REMOVED_SHELVES = {{ conversation: '会話・交流', negotiation: '密談・駆け引き' }};
   // 版9で外した曲（ジングル。効果音ライブラリを作るまで提供しない）
   const DROPPED = {js(JINGLE)};
   // 埋め込み再生できなくなって差し替えた曲（版8まで）。古い棚を作り直すとき、メモごと新しい曲へ移す
@@ -251,6 +257,8 @@ out = f"""/* KPレス・ジュークボックスメーカー — Music Library�
   window.JukeboxLibrary = {{
     VERSION,
     LEGACY_TABS,
+    MERGED_SHELVES,
+    REMOVED_SHELVES,
     DROPPED,
     REPLACED,
     SCENES: {js(SCENES)},

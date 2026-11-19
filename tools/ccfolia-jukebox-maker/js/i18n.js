@@ -217,7 +217,7 @@
       byLink: 'この作曲者の曲を探す',
       tagLink: 'このタグで探す',
       tags: {
-        scene: { 'intro': '導入', 'daily': '日常', 'social': '交流', 'travel': '移動', 'exploration': '探索', 'deduction': '推理', 'negotiation': '駆け引き', 'infiltration': '潜入', 'anomaly': '異変', 'chase': 'チェイス', 'battle': '戦闘', 'ritual': '儀式', 'incident': '騒動', 'flashback': '回想', 'parting': '別離', 'reunion': '再会', 'revelation': '真相', 'decision': '決断', 'break': '休憩', 'ending': '終幕' },
+        scene: { 'intro': '導入', 'daily': '日常', 'comic': 'コミカル', 'exploration': '探索', 'deduction': '推理', 'infiltration': '潜入', 'unease': '不穏', 'tension': '緊迫', 'battle': '戦闘', 'ritual': '儀式', 'panic': 'パニック', 'flashback': '回想', 'sad': '悲しい', 'moving': '感動', 'revelation': '真相', 'break': '休憩', 'ending': '終幕' },
         tone: { 'light': '軽快', 'calm': '穏やか', 'fresh': '爽やか', 'comical': 'コミカル', 'elegant': '優雅', 'romantic': 'ロマンチック', 'nostalgic': '郷愁', 'fantastical': '幻想', 'moving': '感動', 'hopeful': '希望', 'uplifting': '高揚', 'uneasy': '不穏', 'fearful': '恐怖', 'madness': '狂気', 'tense': '緊迫', 'cold': '無機質', 'gloomy': '陰鬱', 'sad': '悲哀', 'lonely': '孤独', 'despair': '絶望', 'grand': '壮大', 'intense': '激しい', 'heroic': '勇壮', 'driving': '疾走', 'quiet': '静か', 'weighty': '重厚' },
         setting: { 'modern': '現代', 'japanese': '和風', 'western-classic': '西洋古典', 'fantasy': 'ファンタジー', 'cyber': 'サイバー', 'scifi-space': 'SF・宇宙', 'steampunk': 'スチームパンク', 'cthulhu': 'クトゥルフ神話', 'post-apocalyptic': '終末・荒廃', 'school': '学園', 'mansion': '洋館・古城', 'urban': '都市・裏社会', 'nature': '自然・野外', 'ruins': '遺跡・地下', 'sacred': '聖堂・宗教施設' }
       }
@@ -240,9 +240,9 @@
       heading: 'レコード棚',
       hint: 'YouTubeで公開されているフリーBGMを、場面や用途ごとの棚に並べています（ALL はすべての曲、★ はお気に入り）。ジャケットか「レコードへ」の右の ▶︎ を押すと、音声だけを試聴できます。「レコードへ」でそのままレコードに入れるか、URLをコピーして使ってください。',
       tabsLabel: 'BGMのタブ',
-      tabs: { intro: '導入', daily: '日常', comic: 'コミカル', conversation: '交流', exploration: '探索', deduction: '推理', negotiation: '駆け引き', unease: '不穏', horror: 'ホラー', tension: '緊迫', battle: '戦闘', sad: '悲しい', moving: '感動', climax: 'クライマックス', epilogue: 'エピローグ' },
+      tabs: { intro: '導入', daily: '日常', comic: 'コミカル', exploration: '探索', deduction: '推理', unease: '不穏', tension: '緊迫', battle: '戦闘', sad: '悲しい', moving: '感動', climax: 'クライマックス', epilogue: 'エピローグ' },
       all: 'ALL',
-      star: 'お気に入り',
+      star: 'Fav',
       starAdd: 'お気に入りに入れる',
       unstar: 'お気に入りから外す',
       alreadyStar: 'この曲はもうお気に入りにあります。',
@@ -259,7 +259,7 @@
       addedMany: '{n}曲を「{tab}」に追加しました。',
       dragAll: 'ドラッグして棚のタブの上で離すと、その棚に追加',
       showMore: 'さらに表示（残り{n}曲）',
-      migrated: 'レコード棚を新しい分類（15の棚）に作り直しました。メモと、自分で足した曲・タブは残っています。',
+      migrated: 'レコード棚を新しい分類（12の棚）に作り直しました。メモと、自分で足した曲・タブは残っています。',
       newTab: '新しいタブ',
       addTab: 'タブを足す',
       editTab: 'このタブを編集',
@@ -550,7 +550,7 @@
       byLink: 'Find tracks by this composer',
       tagLink: 'Search with this tag',
       tags: {
-        scene: { 'intro': 'Opening', 'daily': 'Everyday', 'social': 'Social', 'travel': 'Travel', 'exploration': 'Exploration', 'deduction': 'Deduction', 'negotiation': 'Negotiation', 'infiltration': 'Infiltration', 'anomaly': 'Anomaly', 'chase': 'Chase', 'battle': 'Battle', 'ritual': 'Ritual', 'incident': 'Commotion', 'flashback': 'Flashback', 'parting': 'Parting', 'reunion': 'Reunion', 'revelation': 'Revelation', 'decision': 'Decision', 'break': 'Break', 'ending': 'Ending' },
+        scene: { 'intro': 'Opening', 'daily': 'Everyday', 'comic': 'Comical', 'exploration': 'Exploration', 'deduction': 'Deduction', 'infiltration': 'Infiltration', 'unease': 'Unease', 'tension': 'Tension', 'battle': 'Battle', 'ritual': 'Ritual', 'panic': 'Panic', 'flashback': 'Flashback', 'sad': 'Sad', 'moving': 'Moving', 'revelation': 'Revelation', 'break': 'Break', 'ending': 'Ending' },
         tone: { 'light': 'Light', 'calm': 'Calm', 'fresh': 'Fresh', 'comical': 'Comical', 'elegant': 'Elegant', 'romantic': 'Romantic', 'nostalgic': 'Nostalgic', 'fantastical': 'Fantastical', 'moving': 'Moving', 'hopeful': 'Hopeful', 'uplifting': 'Uplifting', 'uneasy': 'Uneasy', 'fearful': 'Fearful', 'madness': 'Madness', 'tense': 'Tense', 'cold': 'Cold', 'gloomy': 'Gloomy', 'sad': 'Sad', 'lonely': 'Lonely', 'despair': 'Despair', 'grand': 'Grand', 'intense': 'Intense', 'heroic': 'Heroic', 'driving': 'Driving', 'quiet': 'Quiet', 'weighty': 'Weighty' },
         setting: { 'modern': 'Modern', 'japanese': 'Japanese', 'western-classic': 'Western classic', 'fantasy': 'Fantasy', 'cyber': 'Cyber', 'scifi-space': 'Sci-fi / space', 'steampunk': 'Steampunk', 'cthulhu': 'Cthulhu Mythos', 'post-apocalyptic': 'Post-apocalyptic', 'school': 'School', 'mansion': 'Mansion / castle', 'urban': 'City / underworld', 'nature': 'Nature / outdoors', 'ruins': 'Ruins / underground', 'sacred': 'Sacred places' }
       }
@@ -573,9 +573,9 @@
       heading: 'Record shelf',
       hint: 'Free BGM published on YouTube, sorted onto shelves by scene and use (ALL shows every track, ★ your favorites). Press a sleeve or the ▶︎ next to "To record" to listen (audio only). Use "To record" to put a track onto a record, or copy its URL.',
       tabsLabel: 'BGM tabs',
-      tabs: { intro: 'Intro', daily: 'Daily life', comic: 'Comical', conversation: 'Conversation', exploration: 'Exploration', deduction: 'Deduction', negotiation: 'Negotiation', unease: 'Unease', horror: 'Horror', tension: 'Tension', battle: 'Battle', sad: 'Sad', moving: 'Moving', climax: 'Climax', epilogue: 'Epilogue' },
+      tabs: { intro: 'Intro', daily: 'Daily life', comic: 'Comical', exploration: 'Exploration', deduction: 'Deduction', unease: 'Unease', tension: 'Tension', battle: 'Battle', sad: 'Sad', moving: 'Moving', climax: 'Climax', epilogue: 'Epilogue' },
       all: 'ALL',
-      star: 'Favorites',
+      star: 'Fav',
       starAdd: 'Add to favorites',
       unstar: 'Remove from favorites',
       alreadyStar: 'This track is already in your favorites.',
@@ -592,7 +592,7 @@
       addedMany: 'Added {n} track(s) to "{tab}".',
       dragAll: 'Drag onto a shelf tab to add it to that shelf',
       showMore: 'Show more ({n} left)',
-      migrated: 'The Record shelf now uses the new 15 shelves. Your memos and the tracks and tabs you added are kept.',
+      migrated: 'The Record shelf now uses the new 12 shelves. Your memos and the tracks and tabs you added are kept.',
       newTab: 'New tab',
       addTab: 'Add a tab',
       editTab: 'Edit this tab',
@@ -883,7 +883,7 @@
       byLink: '이 작곡가의 곡 찾기',
       tagLink: '이 태그로 찾기',
       tags: {
-        scene: { 'intro': '도입', 'daily': '일상', 'social': '교류', 'travel': '이동', 'exploration': '탐색', 'deduction': '추리', 'negotiation': '흥정', 'infiltration': '잠입', 'anomaly': '이변', 'chase': '추격', 'battle': '전투', 'ritual': '의식', 'incident': '소동', 'flashback': '회상', 'parting': '이별', 'reunion': '재회', 'revelation': '진상', 'decision': '결단', 'break': '휴식', 'ending': '결말' },
+        scene: { 'intro': '도입', 'daily': '일상', 'comic': '코믹', 'exploration': '탐색', 'deduction': '추리', 'infiltration': '잠입', 'unease': '불온', 'tension': '긴박', 'battle': '전투', 'ritual': '의식', 'panic': '패닉', 'flashback': '회상', 'sad': '슬픔', 'moving': '감동', 'revelation': '진상', 'break': '휴식', 'ending': '결말' },
         tone: { 'light': '경쾌', 'calm': '잔잔', 'fresh': '상쾌', 'comical': '코믹', 'elegant': '우아', 'romantic': '로맨틱', 'nostalgic': '향수', 'fantastical': '환상', 'moving': '감동', 'hopeful': '희망', 'uplifting': '고양', 'uneasy': '불온', 'fearful': '공포', 'madness': '광기', 'tense': '긴박', 'cold': '무기질', 'gloomy': '음울', 'sad': '비애', 'lonely': '고독', 'despair': '절망', 'grand': '웅장', 'intense': '격렬', 'heroic': '용맹', 'driving': '질주', 'quiet': '고요', 'weighty': '중후' },
         setting: { 'modern': '현대', 'japanese': '일본풍', 'western-classic': '서양 고전', 'fantasy': '판타지', 'cyber': '사이버', 'scifi-space': 'SF·우주', 'steampunk': '스팀펑크', 'cthulhu': '크툴루 신화', 'post-apocalyptic': '종말·황폐', 'school': '학원', 'mansion': '저택·고성', 'urban': '도시·뒷세계', 'nature': '자연·야외', 'ruins': '유적·지하', 'sacred': '성당·종교 시설' }
       }
@@ -906,7 +906,7 @@
       heading: '레코드 선반',
       hint: 'YouTube에 공개된 무료 BGM을 장면·용도별 선반에 모았습니다(ALL은 모든 곡, ★는 즐겨찾기). 재킷이나 "레코드로" 오른쪽의 ▶︎를 누르면 소리만 미리 들을 수 있습니다. "레코드로"로 바로 레코드에 넣거나 URL을 복사해 쓰세요.',
       tabsLabel: 'BGM 탭',
-      tabs: { intro: '도입', daily: '일상', comic: '코믹', conversation: '교류', exploration: '탐색', deduction: '추리', negotiation: '흥정', unease: '불온', horror: '호러', tension: '긴박', battle: '전투', sad: '슬픔', moving: '감동', climax: '클라이맥스', epilogue: '에필로그' },
+      tabs: { intro: '도입', daily: '일상', comic: '코믹', exploration: '탐색', deduction: '추리', unease: '불온', tension: '긴박', battle: '전투', sad: '슬픔', moving: '감동', climax: '클라이맥스', epilogue: '에필로그' },
       all: 'ALL',
       star: '즐겨찾기',
       starAdd: '즐겨찾기에 추가',
@@ -925,7 +925,7 @@
       addedMany: '{n}곡을 「{tab}」에 추가했습니다.',
       dragAll: '선반 탭 위로 끌어다 놓으면 그 선반에 추가',
       showMore: '더 보기 (남은 {n}곡)',
-      migrated: '레코드 선반을 새 분류(15개 선반)로 다시 만들었습니다. 메모와 직접 추가한 곡·탭은 그대로입니다.',
+      migrated: '레코드 선반을 새 분류(12개 선반)로 다시 만들었습니다. 메모와 직접 추가한 곡·탭은 그대로입니다.',
       newTab: '새 탭',
       addTab: '탭 추가',
       editTab: '이 탭 편집',
