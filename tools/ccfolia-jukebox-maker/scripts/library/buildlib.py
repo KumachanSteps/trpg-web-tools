@@ -237,7 +237,7 @@ out = f"""/* KPレス・ジュークボックスメーカー — Music Library�
   const LEGACY_TABS = {js(legacy)};
   // 版10で棚を15から12にした。ホラーは不穏にまとめ、会話・交流と密談・駆け引きは外した（曲が入っていれば自分の棚として残す）
   const MERGED_SHELVES = {{ horror: 'unease' }};
-  const REMOVED_SHELVES = {{ conversation: '会話・交流', negotiation: '密談・駆け引き' }};
+  const REMOVED_SHELVES = {{ conversation: '交流', negotiation: '駆け引き' }};
   // 版9で外した曲（ジングル。効果音ライブラリを作るまで提供しない）
   const DROPPED = {js(JINGLE)};
   // 埋め込み再生できなくなって差し替えた曲（版8まで）。古い棚を作り直すとき、メモごと新しい曲へ移す

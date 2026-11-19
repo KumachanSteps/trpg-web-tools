@@ -153,7 +153,7 @@
 | `異変 / 異常 / 怪異 / anomal` | Scene: 不穏 |
 | `別れ / 別離 / さよなら / farewell / goodbye / 弔 / 葬 / requiem / レクイエム` | Scene: 悲しい |
 | `再会 / reunion` | Scene: 感動 |
-| `騒動 / ドタバタ / ハプニング / 混乱 / panic / chaos` | Scene: パニック |
+| `パニック / 恐慌 / 騒動 / ドタバタ / ハプニング / 混乱 / panic / chaos` | Scene: パニック |
 | `エンディング / ending / epilogue / 終幕 / 後日` | Scene: 終幕 |
 | `夜会 / 舞踏 / ワルツ / waltz / masquerade` | Setting: 洋館・古城 |
 | `館 / 屋敷 / 洋館 / 城 / castle / mansion / manor` | Setting: 洋館・古城 |

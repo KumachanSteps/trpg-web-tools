@@ -1733,7 +1733,7 @@
       }
       if (Object.prototype.hasOwnProperty.call(removed, tab.id)) {
         if (!tab.tracks.length) return;
-        tab.name = tab.name || removed[tab.id];
+        if (!tab.name) { const label = t(`shelf.removedTabs.${tab.id}`); tab.name = label.startsWith('shelf.') ? removed[tab.id] : label; }
         tab.id = `c${Date.now().toString(36)}${tabs.length}`;
       }
       tabs.push(tab);

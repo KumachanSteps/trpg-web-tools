@@ -138,7 +138,7 @@ TITLE = [
     (r'異変|異常|怪異|anomal', {'scene': ['unease']}),
     (r'別れ|別離|さよなら|farewell|goodbye|弔|葬|requiem|レクイエム', {'scene': ['sad']}),
     (r'再会|reunion', {'scene': ['moving']}),
-    (r'騒動|ドタバタ|ハプニング|混乱|panic|chaos', {'scene': ['panic']}),
+    (r'パニック|恐慌|騒動|ドタバタ|ハプニング|混乱|panic|chaos', {'scene': ['panic']}),
     (r'エンディング|ending|epilogue|終幕|後日', {'scene': ['ending']}),
     (r'夜会|舞踏|ワルツ|waltz|masquerade', {'setting': ['mansion']}),
     (r'館|屋敷|洋館|城|castle|mansion|manor', {'setting': ['mansion']}),
