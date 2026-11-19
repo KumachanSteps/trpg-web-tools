@@ -1,6 +1,6 @@
 {
   "id": "horror.blood-handprint",
-  "version": 1,
+  "version": 2,
   "status": "test",
   "added": "2026-11-18",
   "order": 17,
@@ -16,10 +16,10 @@
     "zh": "血手印"
   },
   "desc": {
-    "ja": "血まみれの手のひらが画面にバンと押しつけられ、手形が残って血が垂れる。",
-    "en": "A bloody palm slams against the screen, leaving a handprint that runs down.",
-    "ko": "피투성이 손바닥이 화면에 쾅 하고 찍혀 손자국이 남고 피가 흘러내린다.",
-    "zh": "沾满鲜血的手掌猛地拍在画面上，留下手印，鲜血顺势流下。"
+    "ja": "血まみれの手のひらが画面にバンと押しつけられ、かすれた手形が残って、手のつけ根から血が細く垂れる。",
+    "en": "A bloody palm slams against the screen, leaving a smudged handprint with thin streaks running down from the heel of the hand.",
+    "ko": "피투성이 손바닥이 화면에 쾅 하고 찍혀 번진 손자국이 남고, 손목 쪽에서 피가 가늘게 흘러내린다.",
+    "zh": "沾满鲜血的手掌猛地拍在画面上，留下斑驳的手印，鲜血从掌根细细流下。"
   },
   "tags": [
     "血",
@@ -58,7 +58,7 @@
       },
       "default": {
         "x": 0.5,
-        "y": 0.56
+        "y": 0.45
       }
     },
     {
