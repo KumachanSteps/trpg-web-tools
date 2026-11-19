@@ -5138,7 +5138,7 @@
   },
   {
    "id": "horror.blood-handprint",
-   "version": 2,
+   "version": 4,
    "status": "test",
    "added": "2026-11-18",
    "order": 17,
@@ -5196,7 +5196,7 @@
      },
      "default": {
       "x": 0.5,
-      "y": 0.45
+      "y": 0.42
      }
     },
     {
@@ -5285,7 +5285,7 @@
    },
    "poster": 0.5,
    "path": "horror/blood/handprint",
-   "thumb": "thumb.webp?v=2"
+   "thumb": "thumb.webp?v=4"
   },
   {
    "id": "visual.noise",

@@ -1,9 +1,12 @@
 // 血まみれの手のひらが、画面（ガラス）にバン！と押しつけられ、かすれた手形が残って、手のつけ根から血が細く垂れる（1回再生）
-// 形の見本は TK の手形の画像（2026-11-19）：
-//   ・指は「指先の腹」がいちばん濃く、指の途中はとぎれとぎれの小さなしみ。つけ根の関節はほとんど付かない
-//   ・手のひらの上のほうはかすれて、ぽつぽつしたしみだけ。下のほう（手のつけ根）は血がたまって濃く、
-//     まん中に手のひらのくぼみの抜け（下向きの三角）がある。ふちは乾いた筆のようにざらざら
-//   ・手のつけ根から、細くて長い筋が 4〜5 本、まっすぐ下へ垂れる（先は小さなしずく）
+// 形の見本は TK の手形の画像（2026-11-19、2 枚目）。手は少しななめ（指先が右上、手のつけ根が左下）：
+//   ・指は指先の腹だけが濃い、ななめの細長い楕円。指の途中はほとんど付かない（ところどころ小さなしみ）
+//   ・左はしの小指は外へ開き、右の親指は右上へ長くのびて手のひらの右側へつながる
+//   ・手のひらの上のほうはほぼ白く抜け、ぽつぽつしたしみだけ。下は濃い大きなかたまりで、
+//     まん中が上から V 字に切れこみ、手のつけ根は左右 2 つのふくらみに分かれる（あいだに小さな抜け）
+//   ・ふちは乾いた筆のようにざらざら（とくに左上のふち）
+//   ・手のつけ根から細い筋が 4 本、まっすぐ下へ垂れる。右のふちからも短い筋が 1 本（TK：垂れ方はこのままでよい）
+// 形は見本の画像の座標（幅 547 × 高さ 1000 の画像の px）でそのまま書き、手のひらの幅 350px を hu に合わせて縮める
 // 色は水彩のような濃淡の深紅（blood-liquid.js の style 'stain'。血のしずくと同じ）
 import { rng, clamp, smooth } from '../../../kit.js';
 import { liquidState, drawLiquid } from '../../../blood-liquid.js';
@@ -11,139 +14,160 @@ import { drawStreak } from '../streak.js';
 
 const TAU = Math.PI * 2;
 const easeOut = (x, p = 3) => 1 - Math.pow(1 - clamp(x), p);
-const HIT = 0.06;   // 手がぶつかる時刻
+const HIT = 0.06;            // 手がぶつかる時刻
+const OX = 270, OY = 400;    // 見本の画像で、手形の中心とみなす点
+const PALM = 350 / 1.25;     // 見本の画像での手のひらの幅（px）を、hu の 1.25 倍に合わせる
 
-// 手の形（手のひらの中心が原点、y は下向き、手のひらの幅がおよそ 1）。右手
-const FINGERS = [
-  // 付け根の位置, 向き（上から右回り、度）, 長さ, 太さ
-  { bx: -0.33, by: -0.46, a: -12, len: 0.86, w: 0.2 },   // 人さし指
-  { bx: -0.1, by: -0.52, a: -2, len: 0.98, w: 0.21 },    // 中指
-  { bx: 0.14, by: -0.48, a: 8, len: 0.9, w: 0.2 },       // 薬指
-  { bx: 0.36, by: -0.36, a: 20, len: 0.7, w: 0.175 }     // 小指
+// 手のひらの下の濃いかたまり（見本の画像の px）
+const MASS = [
+  [95, 378], [130, 371], [170, 364], [205, 372], [222, 396], [234, 430], [246, 462], [262, 454], [284, 426],
+  [306, 400], [330, 374], [352, 345], [376, 318], [402, 298], [426, 318], [430, 345], [416, 372], [402, 410],
+  [390, 455], [374, 492], [356, 535], [340, 572], [326, 602], [306, 607], [298, 586], [284, 576], [268, 586],
+  [258, 612], [240, 616], [229, 596], [222, 562], [196, 548], [165, 526], [136, 496], [118, 460], [104, 420]
 ];
-const THUMB = { bx: -0.44, by: 0.1, a: -52, len: 0.78, w: 0.24 };
+// 指先の腹：中心, 半径, 向き（度。上が右へ傾くほど＋）
+const PADS = [
+  { x: 40, y: 258, rx: 21, ry: 50, a: -28 },     // 小指（外へ開く）
+  { x: 255, y: 44, rx: 22, ry: 40, a: 6 },       // 薬指
+  { x: 380, y: 62, rx: 27, ry: 60, a: 20 },      // 中指
+  { x: 440, y: 128, rx: 27, ry: 62, a: 22 },     // 人さし指
+  { x: 518, y: 252, rx: 25, ry: 40, a: 48 }      // 親指の先
+];
+// 指先の腹の下に続く、とぎれた小さなしみ
+const PAD_TAILS = [
+  { x: 64, y: 305, rx: 9, ry: 14, a: -28 },
+  { x: 246, y: 98, rx: 18, ry: 13, a: 0 }, { x: 228, y: 92, rx: 9, ry: 8, a: 0 },
+  { x: 358, y: 118, rx: 12, ry: 10, a: 20 },
+  { x: 412, y: 182, rx: 12, ry: 11, a: 22 }
+];
+// 親指の付け根から手のひらの右へつながる帯（太さつき）
+const THUMB = [[505, 270, 16], [480, 296, 17], [455, 320, 18], [432, 340, 18]];
+// 手のひらの上のほうのしみ
+const BLOTS = [
+  { x: 336, y: 186, rx: 17, ry: 15 }, { x: 228, y: 186, rx: 11, ry: 9 }, { x: 236, y: 205, rx: 14, ry: 8 },
+  { x: 400, y: 240, rx: 6, ry: 7 },
+  { x: 266, y: 268, rx: 24, ry: 20 }, { x: 240, y: 264, rx: 12, ry: 14 }, { x: 236, y: 300, rx: 12, ry: 10 },
+  { x: 302, y: 274, rx: 10, ry: 9 }, { x: 330, y: 300, rx: 20, ry: 16 }, { x: 318, y: 332, rx: 13, ry: 10 },
+  { x: 342, y: 270, rx: 9, ry: 9 }, { x: 240, y: 332, rx: 8, ry: 9 }, { x: 268, y: 406, rx: 8, ry: 7 },
+  { x: 296, y: 404, rx: 6, ry: 6 }, { x: 304, y: 372, rx: 7, ry: 5 }, { x: 186, y: 365, rx: 16, ry: 7 },
+  { x: 78, y: 352, rx: 5, ry: 4 }, { x: 84, y: 364, rx: 4, ry: 4 },
+  // もう少し赤を増やす（TK 2026-11-19）：手のひらのまん中〜指のつけ根にしみを足す
+  { x: 290, y: 240, rx: 16, ry: 13 }, { x: 214, y: 240, rx: 12, ry: 15 }, { x: 362, y: 238, rx: 14, ry: 12 },
+  { x: 280, y: 320, rx: 16, ry: 12 }, { x: 352, y: 320, rx: 12, ry: 14 }, { x: 214, y: 340, rx: 13, ry: 10 },
+  { x: 150, y: 352, rx: 18, ry: 9 }, { x: 290, y: 190, rx: 12, ry: 10 }, { x: 385, y: 200, rx: 10, ry: 11 },
+  { x: 262, y: 360, rx: 10, ry: 8 }, { x: 120, y: 340, rx: 9, ry: 6 }
+];
+// 手のつけ根から垂れる筋：位置, 長さ, 首の太さの半分（px）
+const RUNS = [
+  { x: 188, y: 548, len: 150, n: 4.2, delay: 0.1 },
+  { x: 258, y: 608, len: 215, n: 5.2, delay: 0.04 },
+  { x: 311, y: 600, len: 180, n: 4.6, delay: 0.14 },
+  { x: 328, y: 590, len: 290, n: 5.4, delay: 0.08 },
+  { x: 390, y: 470, len: 58, n: 4.4, delay: 0.12 }   // 右のふちの短い筋
+];
 
 export default {
   setup(P, S) {
     const r = rng(S.seed * 17 + 3);
-    const all = [...FINGERS, THUMB].map(f => ({ ...f, a: f.a + (r() - 0.5) * 6, len: f.len * (0.95 + 0.1 * r()) }));
-    // 指：指先の腹＋途中のとぎれたしみ
-    const fingers = all.map((f, i) => {
-      const mids = [];
-      const nm = 2 + Math.floor(r() * 3);
-      for (let j = 0; j < nm; j++) mids.push({ q: 0.3 + 0.3 * r(), side: (r() - 0.5) * 0.6, rx: 0.05 + 0.05 * r(), ry: 0.04 + 0.05 * r(), rot: r() * Math.PI });
-      const base = r() < 0.4 ? { q: 0.12 + 0.1 * r(), side: (r() - 0.5) * 0.6, rx: 0.03 + 0.04 * r() } : null;
-      return { ...f, thumb: i === 4, pad: 0.4 + 0.1 * r(), mids, base };
-    });
-    // 手のひらの上のほうのぽつぽつしたしみ
-    const dabs = [];
-    for (let i = 0; i < 16; i++) dabs.push({ x: -0.42 + 0.84 * r(), y: -0.42 + 0.34 * r(), rx: 0.025 + 0.07 * Math.pow(r(), 1.5), ry: 0.02 + 0.05 * r(), rot: r() * Math.PI });
-    // 指のつけ根の下のとぎれた帯（指の腹のつけ根）
-    for (const f of FINGERS) for (let j = 0; j < 2; j++) dabs.push({ x: f.bx + (r() - 0.5) * 0.14, y: f.by + 0.06 + (r() - 0.5) * 0.08, rx: 0.05 + 0.05 * r(), ry: 0.035 + 0.035 * r(), rot: r() * Math.PI });
-    const hollowEdge = [];
-    for (let i = 0; i < 4; i++) hollowEdge.push({ k: 3 + Math.floor(r() * 6), ph: r() * TAU });
-    // 手のつけ根の濃いところのふち（でこぼこ）
-    const heelEdge = [];
-    for (let i = 0; i < 6; i++) heelEdge.push({ k: 2 + Math.floor(r() * 8), amp: 0.02 + 0.03 * r(), ph: r() * TAU });
-    // 乾いた筆のようなかすれ：抜く点と、ふちの外の細かい点
-    const grain = [];
-    for (let i = 0; i < 320; i++) { const a = r() * TAU, d = 0.36 + 0.24 * r(); grain.push({ x: Math.cos(a) * d * 1.1, y: 0.05 + Math.sin(a) * d * 1.05, rr: 0.004 + 0.01 * Math.pow(r(), 2) }); }
+    const j = (v, a) => v + (r() - 0.5) * a;
+    const mass = MASS.map(([x, y]) => [j(x, 6), j(y, 6)]);
+    // ふちのざらざら：ふちにそって、外へ出る小さなでっぱりと、内へ食いこむ小さな抜け
+    const bumps = [], bites = [];
+    for (let i = 0; i < mass.length; i++) {
+      const [x0, y0] = mass[i], [x1, y1] = mass[(i + 1) % mass.length];
+      const L = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(L / 5);
+      for (let k = 0; k < n; k++) {
+        const q = (k + r()) / n, x = x0 + (x1 - x0) * q, y = y0 + (y1 - y0) * q;
+        const rough = y0 < 400 && x0 < 240 ? 1.6 : 1;   // 左上のふちはとくにかすれる
+        if (r() < 0.55) bumps.push({ x: j(x, 8 * rough), y: j(y, 8 * rough), rr: (1.5 + 4 * Math.pow(r(), 2)) * rough });
+        if (r() < 0.45) bites.push({ x: j(x, 6), y: j(y, 6), rr: 1.5 + 3.5 * Math.pow(r(), 1.5) });
+      }
+    }
+    // 左上のふちの外の、乾いた筆の飛び
     const stipple = [];
-    for (let i = 0; i < 90; i++) stipple.push({ x: -0.62 + 1.24 * r(), y: -0.5 + 1.1 * r(), rr: 0.005 + 0.01 * r() });
-    // 手のつけ根から垂れる細い筋
-    const runs = [];
-    const xs = [-0.28, -0.1, 0.06, 0.2];
-    for (const x of xs) runs.push({ x: x + (r() - 0.5) * 0.08, y: 0.5, sp: 0.5 + 0.45 * r(), n: 0.016 + 0.01 * r(), delay: 0.04 + 0.16 * r(), wob: (r() - 0.5) * 0.6, wp: r() * TAU });
-    runs.push({ x: 0.4 + 0.04 * r(), y: 0.28, sp: 0.15 + 0.1 * r(), n: 0.014, delay: 0.1 + 0.1 * r(), wob: 0, wp: 0 });   // 右のふちの短い筋
-    return { fingers, dabs, hollowEdge, heelEdge, grain, stipple, runs, liq: liquidState(), seed: S.seed * 5 + 17 };
+    for (let i = 0; i < 70; i++) stipple.push({ x: 60 + 180 * r(), y: 330 + 60 * r() - (r() < 0.3 ? 40 : 0), rr: 1 + 2.5 * Math.pow(r(), 2) });
+    for (let i = 0; i < 30; i++) stipple.push({ x: 200 + 200 * r(), y: 160 + 200 * r(), rr: 1 + 2 * Math.pow(r(), 2) });
+    // かたまりの中の小さな抜け
+    const holes = [];
+    for (let i = 0; i < 26; i++) holes.push({ x: 110 + 280 * r(), y: 380 + 200 * r(), rr: 1.2 + 3 * Math.pow(r(), 2) });
+    holes.push({ x: 268, y: 594, rr: 11 }, { x: 278, y: 588, rr: 8 });   // 手のつけ根の 2 つのふくらみのあいだ
+    const pads = PADS.map(p => ({ ...p, x: j(p.x, 4), y: j(p.y, 4), a: j(p.a, 5), ry: p.ry * (0.95 + 0.1 * r()) }));
+    const padBits = [];
+    for (const p of pads) for (let i = 0; i < 9; i++) {
+      const q = r() * TAU, a = p.a * Math.PI / 180;
+      const ex = Math.cos(q) * p.rx * 0.95, ey = Math.sin(q) * p.ry * 0.95;
+      padBits.push({ x: p.x + ex * Math.cos(a) - ey * Math.sin(a), y: p.y + ex * Math.sin(a) + ey * Math.cos(a), rr: 2 + 4 * r() });
+    }
+    // 手のひらの上のしみは、楕円の中に小さなしみを 3〜5 個重ねて、まだらに
+    const blots = [];
+    for (const o of BLOTS) {
+      const n = o.rx > 9 ? 4 + Math.floor(r() * 3) : 1;
+      for (let i = 0; i < n; i++) {
+        const q = r() * TAU, d = n > 1 ? 0.55 * Math.sqrt(r()) : 0;
+        blots.push({ x: o.x + Math.cos(q) * o.rx * d, y: o.y + Math.sin(q) * o.ry * d, rx: o.rx * (n > 1 ? 0.6 + 0.3 * r() : 1.1), ry: o.ry * (n > 1 ? 0.6 + 0.3 * r() : 1.1), a: r() * 180 });
+      }
+    }
+    const runs = RUNS.map(d => ({ ...d, len: d.len * (0.9 + 0.2 * r()), wob: (r() - 0.5) * 0.5, wp: r() * TAU }));
+    return { blots, mass, bumps, bites, stipple, holes, pads, padBits, runs, liq: liquidState(), seed: S.seed * 5 + 17 };
   },
   draw(ctx, t, P, st, S) {
     const { w: W, h: H } = S;
     const u = H / 540;
     if (t < HIT) return;
     const size = P.size ?? 1;
-    const c = P.center ?? { x: 0.5, y: 0.45 };
+    const c = P.center ?? { x: 0.5, y: 0.42 };
     const mirror = P.hand === 'left' ? -1 : 1;
     const tilt = (P.tilt ?? 0) * Math.PI / 180;
     const hu = 150 * u * size;                       // 手のひらの幅（px）
     const slam = 1 + 0.1 * (1 - easeOut((t - HIT) / 0.07, 2.5));   // ぶつかった直後だけ少し大きい
+    const k0 = hu * slam / PALM;                     // 見本の画像の 1px → 画面の px
     const fade = P.stay ? 1 : 1 - smooth((t - 0.88) / 0.12);
     if (fade <= 0) return;
     const cx = c.x * W, cy = c.y * H;
+    const dot = (g, x, y, rr) => { g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill(); };
+    const oval = (g, o) => { g.beginPath(); g.ellipse(o.x, o.y, o.rx, o.ry, (o.a ?? 0) * Math.PI / 180, 0, TAU); g.fill(); };
     drawLiquid(ctx, W, H, st.liq, (g, k) => {
       g.save();
       g.scale(k, k);
       g.save();
       g.translate(cx, cy);
       g.rotate(tilt);
-      g.scale(hu * slam * mirror, hu * slam);
-      // 手のつけ根の濃いところ：下がふくらんだ形、まん中に下向きの三角の抜け
+      g.scale(k0 * mirror, k0);
+      g.translate(-OX, -OY);
+      // 手のひらの下の濃いかたまり
       g.beginPath();
-      for (let i = 0; i <= 60; i++) {
-        const a = i / 60 * TAU;
-        let rad = 1;
-        for (const w of st.heelEdge) rad += w.amp * Math.sin(a * w.k + w.ph);
-        const x = Math.cos(a) * 0.52 * rad, y = 0.16 + Math.sin(a) * (Math.sin(a) > 0 ? 0.38 : 0.4) * rad;
-        i ? g.lineTo(x, y) : g.moveTo(x, y);
-      }
+      st.mass.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
       g.closePath(); g.fill();
-      // 親指のつけ根から手のひらの左へつながる帯
-      g.beginPath(); g.ellipse(-0.36, 0.08, 0.16, 0.26, -0.3, 0, TAU); g.fill();
-      // 右のふち（小指側）
-      g.beginPath(); g.ellipse(0.4, -0.02, 0.1, 0.28, 0.15, 0, TAU); g.fill();
-      // 手のひらの上のほうのしみ
-      for (const d of st.dabs) { g.beginPath(); g.ellipse(d.x, d.y, d.rx, d.ry, d.rot, 0, TAU); g.fill(); }
-      // 指
-      for (const f of st.fingers) {
-        const a = f.a * Math.PI / 180, dx = Math.sin(a), dy = -Math.cos(a), px = -dy, py = dx;
-        const at = (q, side) => [f.bx + dx * f.len * q + px * side * f.w / 2, f.by + dy * f.len * q + py * side * f.w / 2];
-        // 指先の腹（いちばん濃い、少し縦長）
-        const [tx, ty] = at(1 - f.pad * 0.55, 0);
-        g.beginPath(); g.ellipse(tx, ty, f.w * 0.5, f.len * f.pad * 0.6, a, 0, TAU); g.fill();
-        const [t2x, t2y] = at(1 - f.pad * 0.78, -0.15);
-        g.beginPath(); g.ellipse(t2x, t2y, f.w * 0.38, f.len * f.pad * 0.3, a + 0.3, 0, TAU); g.fill();
-        if (f.thumb) {   // 親指は手のひらまで続く
-          const [mx, my] = at(0.45, 0.1);
-          g.beginPath(); g.ellipse(mx, my, f.w * 0.42, f.len * 0.3, a, 0, TAU); g.fill();
-        }
-        for (const m of f.mids) {
-          // 小さなしみを 3 つ重ねて、まだらに
-          for (const [dq, ds, sc] of [[0, 0, 1], [0.06, 0.35, 0.6], [-0.05, -0.3, 0.55]]) { const [x, y] = at(m.q + dq, m.side + ds); g.beginPath(); g.ellipse(x, y, m.rx * sc, m.ry * sc, m.rot + dq * 9, 0, TAU); g.fill(); }
-        }
-        if (f.base) { const [x, y] = at(f.base.q, f.base.side); g.beginPath(); g.arc(x, y, f.base.rx, 0, TAU); g.fill(); }
+      for (const b of st.bumps) dot(g, b.x, b.y, b.rr);
+      // 親指の付け根の帯
+      for (let i = 0; i < THUMB.length - 1; i++) {
+        const [x0, y0, w0] = THUMB[i], [x1, y1, w1] = THUMB[i + 1];
+        for (let q = 0; q <= 1; q += 0.25) dot(g, x0 + (x1 - x0) * q, y0 + (y1 - y0) * q, w0 + (w1 - w0) * q);
       }
-      // ふちの外の細かい点（乾いた筆の飛び）
-      for (const s of st.stipple) { g.beginPath(); g.arc(s.x * 1.05, s.y, s.rr, 0, TAU); g.fill(); }
-      // 抜け：手のひらのくぼみ（下向きの三角）と、かすれ
+      // 指先の腹と、そのふちのざらざら
+      for (const p of st.pads) oval(g, p);
+      for (const b of st.padBits) dot(g, b.x, b.y, b.rr);
+      for (const o of PAD_TAILS) oval(g, o);
+      // 手のひらの上のほうのしみと、乾いた筆の飛び
+      for (const o of st.blots) oval(g, o);
+      for (const s of st.stipple) dot(g, s.x, s.y, s.rr);
+      // 抜け：ふちの食いこみと、かたまりの中の小さな抜け
       g.globalCompositeOperation = 'destination-out';
-      g.beginPath();
-      // ふちが少しゆがんだ、丸みのある下向きの三角
-      for (let i = 0; i <= 40; i++) {
-        const q = i / 40 * TAU;
-        const tri = 1 + 0.32 * Math.cos(3 * (q - Math.PI / 2));     // 3 つの角（下向き）
-        let rad = 0.11 * tri;
-        for (const w of st.hollowEdge) rad += 0.012 * Math.sin(q * w.k + w.ph);
-        const x = -0.02 + Math.cos(q) * rad, y = -0.04 + Math.sin(q) * rad * 1.15;
-        i ? g.lineTo(x, y) : g.moveTo(x, y);
-      }
-      g.closePath(); g.fill();
-      for (const s of st.grain) {
-        // 上のほうほどかすれる（手のつけ根はあまり抜かない）
-        g.beginPath(); g.arc(s.x, s.y, s.rr, 0, TAU); g.fill();
-      }
+      for (const b of st.bites) dot(g, b.x, b.y, b.rr);
+      for (const h of st.holes) dot(g, h.x, h.y, h.rr);
       g.globalCompositeOperation = 'source-over';
       g.restore();
       // 手のつけ根から垂れる細い筋（手の向きによらず、画面の下へ）
       const toScreen = (x, y) => {
-        const X = x * hu * slam * mirror, Y = y * hu * slam;
+        const X = (x - OX) * k0 * mirror, Y = (y - OY) * k0;
         return [cx + X * Math.cos(tilt) - Y * Math.sin(tilt), cy + X * Math.sin(tilt) + Y * Math.cos(tilt)];
       };
       for (const run of st.runs) {
         const tt = t - HIT - run.delay;
         if (tt <= 0) continue;
         const p = toScreen(run.x, run.y);
-        const L = hu * 1.45 * run.sp * easeOut(tt / 0.6, 1.6);
-        drawStreak(g, p[0], p[1] - hu * 0.04, L, Math.max(1.6 * u, hu * run.n), { root: 2.6, wob: run.wob, wp: run.wp, H });
+        const L = run.len * k0 * easeOut(tt / 0.6, 1.6);
+        drawStreak(g, p[0], p[1], L, Math.max(1.4 * u, run.n * k0), { root: 2.4, wob: run.wob, wp: run.wp, H });
       }
       g.restore();
     }, { res: 1, u, edge: 1.5, dome: 10, style: 'stain', seed: st.seed, alpha: fade });

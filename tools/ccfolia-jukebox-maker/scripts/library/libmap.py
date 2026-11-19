@@ -12,7 +12,7 @@ SETTINGS = ['modern', 'japanese', 'western-classic', 'fantasy', 'cyber', 'scifi-
             'post-apocalyptic', 'school', 'mansion', 'urban', 'nature', 'ruins', 'sacred']
 SHELVES = ['intro', 'daily', 'comic', 'conversation', 'exploration', 'deduction', 'negotiation', 'unease',
            'horror', 'tension', 'battle', 'sad', 'moving', 'climax', 'epilogue']
-SHELF_JA = dict(zip(SHELVES, '導入 日常 コミカル 会話・交流 探索 推理・議論 密談・駆け引き 不穏・謎 ホラー・恐怖 緊迫・危機 戦闘・対決 悲しい・切ない 感動・希望 クライマックス エピローグ'.split()))
+SHELF_JA = dict(zip(SHELVES, '導入 日常 コミカル 交流 探索 推理 駆け引き 不穏 ホラー 緊迫 戦闘 悲しい 感動 クライマックス エピローグ'.split()))
 TAG_JA = {
     'scene': dict(zip(SCENES, '導入 日常 交流 移動 探索 推理 駆け引き 潜入 異変 チェイス 戦闘 儀式 騒動 回想 別離 再会 真相 決断 休憩 終幕'.split())),
     'tone': dict(zip(TONES, '軽快 穏やか 爽やか コミカル 優雅 ロマンチック 郷愁 幻想 感動 希望 高揚 不穏 恐怖 狂気 緊迫 無機質 陰鬱 悲哀 孤独 絶望 壮大 激しい 勇壮 疾走 静か 重厚'.split())),
@@ -183,3 +183,21 @@ PERSON_CHANNELS = {
     'https://www.youtube.com/@nanigashisuzuki': '鈴木何某',
     'https://www.youtube.com/@ryo_lion': '音獅子',
 }
+
+# ---- v0.52: OpenTracks bulk tagging ----
+# Some creators tick (almost) every mood box on their OpenTracks page. The tags are really on the song's own page
+# (checked 2026-11-19), but they no longer describe the song. A track counts as bulk-tagged when its own page carries
+# both sides of at least BULK_MIN_PAIRS of these opposite moods. Then every OpenTracks mood / rhythm tag of that track
+# becomes 'suggested' (kept as evidence, not used for search or shelf candidates), and its OpenTracks genre and
+# instrument codes are not copied to musicStyles. With exactly one opposite pair, only the codes of that pair become
+# 'suggested' (the page contradicts itself there; other tags stay). No cap on the number of tags is used.
+OT_OPPOSED = [
+    ('m01', 'm16'),  # 明るい × 暗い
+    ('m02', 'm17'),  # 楽しい × 悲しい
+    ('m03', 'm15'),  # 温かい × 冷たい
+    ('m04', 'm20'),  # 穏やか × 激しい
+    ('m27', 'm26'),  # 希望 × 絶望
+    ('m09', 'm19'),  # 可愛い × 恐ろしい
+    ('m23', 'm28'),  # ｺﾒﾃﾞｨｰ × ｼﾘｱｽ
+]
+BULK_MIN_PAIRS = 2
