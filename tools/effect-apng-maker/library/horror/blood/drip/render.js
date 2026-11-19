@@ -3,7 +3,8 @@
 //   ・筋は細い。付け根は帯からじょうごのように広がり、下へ行くほどゆっくり細くなる
 //   ・先は首が少しくびれてから、首より少し太い丸いしずくになる（半円で終わらせない）
 //   ・長さはまちまち（画面の下まで届く長い筋、途中で止まる筋、帯のふちのこぶのような短い筋）
-//   ・帯の中には小さな泡の穴（壁を伝う血なので、しずくが切れて落ちることはしない：TK 2026-11-18）
+//   ・壁を伝う血なので、しずくが切れて落ちることはしない（TK 2026-11-18）
+//   ・帯の中に泡のような穴は開けない（TK 2026-11-19）
 // 中は平らな暗い深紅、縁だけ細く明るい赤（blood-liquid.js の style 'rim'）
 import { rng, clamp, smooth } from '../../../kit.js';
 import { liquidState, drawLiquid } from '../../../blood-liquid.js';
@@ -39,10 +40,7 @@ export default {
     // 帯のふちのゆるいふくらみ
     const sags = [];
     for (let i = 0; i < 22; i++) sags.push({ x: r() * W0, w: 20 + 40 * r(), d: 4 + 10 * r() });
-    // 帯の中の小さな泡の穴
-    const holes = [];
-    for (let i = 0; i < 7; i++) holes.push({ x: 40 + r() * (W0 - 80), y: 0.35 + 0.4 * r(), rx: 2.5 + 2.5 * r(), ry: 4 + 4 * r(), t0: 0.12 + 0.2 * r() });
-    return { drips, sags, holes, liq: liquidState() };
+    return { drips, sags, liq: liquidState() };
   },
   draw(ctx, t, P, st, S) {
     const { w: W, h: H } = S;
@@ -100,14 +98,6 @@ export default {
         g.closePath(); g.fill();
         // 先のしずく：下がわずかに重い丸
         g.beginPath(); g.ellipse(xOf(cy), sheet + cy, bR, bR * 1.1, 0, 0, TAU); g.fill();
-      }
-      // 帯の中の泡の穴（帯が下りはじめると閉じる）
-      g.globalCompositeOperation = 'destination-out';
-      const shrink = cover ? 1 - smooth((t - 0.32) / 0.2) : 1;
-      for (const h of st.holes) {
-        const a = smooth((t - h.t0) / 0.12) * shrink;
-        if (a <= 0.02) continue;
-        g.beginPath(); g.ellipse(h.x * u * sx, bandMax * h.y, h.rx * u * a, h.ry * u * a, 0.15, 0, TAU); g.fill();
       }
       g.restore();
     }, { res: 0.8, u, edge: 2.4, dome: 8, style: 'rim' });
