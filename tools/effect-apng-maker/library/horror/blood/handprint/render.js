@@ -50,7 +50,12 @@ const BLOTS = [
   { x: 302, y: 274, rx: 10, ry: 9 }, { x: 330, y: 300, rx: 20, ry: 16 }, { x: 318, y: 332, rx: 13, ry: 10 },
   { x: 342, y: 270, rx: 9, ry: 9 }, { x: 240, y: 332, rx: 8, ry: 9 }, { x: 268, y: 406, rx: 8, ry: 7 },
   { x: 296, y: 404, rx: 6, ry: 6 }, { x: 304, y: 372, rx: 7, ry: 5 }, { x: 186, y: 365, rx: 16, ry: 7 },
-  { x: 78, y: 352, rx: 5, ry: 4 }, { x: 84, y: 364, rx: 4, ry: 4 }
+  { x: 78, y: 352, rx: 5, ry: 4 }, { x: 84, y: 364, rx: 4, ry: 4 },
+  // もう少し赤を増やす（TK 2026-11-19）：手のひらのまん中〜指のつけ根にしみを足す
+  { x: 290, y: 240, rx: 16, ry: 13 }, { x: 214, y: 240, rx: 12, ry: 15 }, { x: 362, y: 238, rx: 14, ry: 12 },
+  { x: 280, y: 320, rx: 16, ry: 12 }, { x: 352, y: 320, rx: 12, ry: 14 }, { x: 214, y: 340, rx: 13, ry: 10 },
+  { x: 150, y: 352, rx: 18, ry: 9 }, { x: 290, y: 190, rx: 12, ry: 10 }, { x: 385, y: 200, rx: 10, ry: 11 },
+  { x: 262, y: 360, rx: 10, ry: 8 }, { x: 120, y: 340, rx: 9, ry: 6 }
 ];
 // 手のつけ根から垂れる筋：位置, 長さ, 首の太さの半分（px）
 const RUNS = [
@@ -96,10 +101,10 @@ export default {
     // 手のひらの上のしみは、楕円の中に小さなしみを 3〜5 個重ねて、まだらに
     const blots = [];
     for (const o of BLOTS) {
-      const n = o.rx > 9 ? 3 + Math.floor(r() * 3) : 1;
+      const n = o.rx > 9 ? 4 + Math.floor(r() * 3) : 1;
       for (let i = 0; i < n; i++) {
         const q = r() * TAU, d = n > 1 ? 0.55 * Math.sqrt(r()) : 0;
-        blots.push({ x: o.x + Math.cos(q) * o.rx * d, y: o.y + Math.sin(q) * o.ry * d, rx: o.rx * (n > 1 ? 0.55 + 0.3 * r() : 1), ry: o.ry * (n > 1 ? 0.55 + 0.3 * r() : 1), a: r() * 180 });
+        blots.push({ x: o.x + Math.cos(q) * o.rx * d, y: o.y + Math.sin(q) * o.ry * d, rx: o.rx * (n > 1 ? 0.6 + 0.3 * r() : 1.1), ry: o.ry * (n > 1 ? 0.6 + 0.3 * r() : 1.1), a: r() * 180 });
       }
     }
     const runs = RUNS.map(d => ({ ...d, len: d.len * (0.9 + 0.2 * r()), wob: (r() - 0.5) * 0.5, wp: r() * TAU }));
