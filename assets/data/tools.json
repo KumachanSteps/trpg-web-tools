@@ -505,7 +505,7 @@
   {
     "id": "dice-table-tool",
     "icon": "🎲",
-    "status": "production",
+    "status": "idea",
     "category": "scenarioPrep",
     "badges": [
       "preSession",
@@ -517,7 +517,7 @@
       "シナリオ準備",
       "ダイス表"
     ],
-    "href": "./tools/dice-table-tool/",
+    "href": "",
     "name": {
       "ja": "ダイス表ツール",
       "en": "Dice Table Tool",
