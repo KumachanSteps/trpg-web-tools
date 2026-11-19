@@ -2,19 +2,21 @@
 # Every tag carries a source (provider_tag / legacy_shelf / title_keyword / manual) and a status
 # (suggested / provisional / confirmed). Genres and instruments go to musicStyles, never to Scene/Tone/Setting.
 
-SCENES = ['intro', 'daily', 'social', 'travel', 'exploration', 'deduction', 'negotiation', 'infiltration',
-          'anomaly', 'chase', 'battle', 'ritual', 'incident', 'flashback', 'parting', 'reunion',
-          'revelation', 'decision', 'break', 'ending']
+# Scene list set by TK on 2026-11-19 (17 chips)
+SCENES = ['intro', 'daily', 'comic', 'exploration', 'deduction', 'infiltration', 'unease', 'tension', 'battle',
+          'ritual', 'panic', 'flashback', 'sad', 'moving', 'revelation', 'break', 'ending']
 TONES = ['light', 'calm', 'fresh', 'comical', 'elegant', 'romantic', 'nostalgic', 'fantastical', 'moving',
          'hopeful', 'uplifting', 'uneasy', 'fearful', 'madness', 'tense', 'cold', 'gloomy', 'sad', 'lonely',
          'despair', 'grand', 'intense', 'heroic', 'driving', 'quiet', 'weighty']
 SETTINGS = ['modern', 'japanese', 'western-classic', 'fantasy', 'cyber', 'scifi-space', 'steampunk', 'cthulhu',
             'post-apocalyptic', 'school', 'mansion', 'urban', 'nature', 'ruins', 'sacred']
-SHELVES = ['intro', 'daily', 'comic', 'conversation', 'exploration', 'deduction', 'negotiation', 'unease',
-           'horror', 'tension', 'battle', 'sad', 'moving', 'climax', 'epilogue']
-SHELF_JA = dict(zip(SHELVES, '導入 日常 コミカル 交流 探索 推理 駆け引き 不穏 ホラー 緊迫 戦闘 悲しい 感動 クライマックス エピローグ'.split()))
+# Shelf list set by TK on 2026-11-19 (12 shelves after ALL and Fav). horror was merged into unease;
+# conversation and negotiation were dropped.
+SHELVES = ['intro', 'daily', 'comic', 'exploration', 'deduction', 'unease', 'tension', 'battle', 'sad', 'moving',
+           'climax', 'epilogue']
+SHELF_JA = dict(zip(SHELVES, '導入 日常 コミカル 探索 推理 不穏 緊迫 戦闘 悲しい 感動 クライマックス エピローグ'.split()))
 TAG_JA = {
-    'scene': dict(zip(SCENES, '導入 日常 交流 移動 探索 推理 駆け引き 潜入 異変 チェイス 戦闘 儀式 騒動 回想 別離 再会 真相 決断 休憩 終幕'.split())),
+    'scene': dict(zip(SCENES, '導入 日常 コミカル 探索 推理 潜入 不穏 緊迫 戦闘 儀式 パニック 回想 悲しい 感動 真相 休憩 終幕'.split())),
     'tone': dict(zip(TONES, '軽快 穏やか 爽やか コミカル 優雅 ロマンチック 郷愁 幻想 感動 希望 高揚 不穏 恐怖 狂気 緊迫 無機質 陰鬱 悲哀 孤独 絶望 壮大 激しい 勇壮 疾走 静か 重厚'.split())),
     'setting': dict(zip(SETTINGS, '現代 和風 西洋古典 ファンタジー サイバー SF・宇宙 スチームパンク クトゥルフ神話 終末・荒廃 学園 洋館・古城 都市・裏社会 自然・野外 遺跡・地下 聖堂・宗教施設'.split())),
 }
@@ -25,15 +27,15 @@ OLD_TABS = {
     'intro':     ('intro',       {'scene': ['intro']}, []),
     'explore':   ('exploration', {'scene': ['exploration']}, []),
     'deduction': ('deduction',   {'scene': ['deduction']}, []),
-    'tension':   ('tension',     {'tone': ['tense']}, []),
+    'tension':   ('tension',     {'scene': ['tension'], 'tone': ['tense']}, []),
     'climax':    ('climax',      {}, []),
     'epilogue':  ('epilogue',    {'scene': ['ending']}, []),
     'daily':     ('daily',       {'scene': ['daily']}, []),
-    'comic':     ('comic',       {'tone': ['comical']}, []),
-    'moving':    ('moving',      {'tone': ['moving']}, []),
-    'sad':       ('sad',         {'tone': ['sad']}, []),
-    'unease':    ('unease',      {'tone': ['uneasy']}, []),
-    'horror':    ('horror',      {'tone': ['fearful']}, []),
+    'comic':     ('comic',       {'scene': ['comic'], 'tone': ['comical']}, []),
+    'moving':    ('moving',      {'scene': ['moving'], 'tone': ['moving']}, []),
+    'sad':       ('sad',         {'scene': ['sad'], 'tone': ['sad']}, []),
+    'unease':    ('unease',      {'scene': ['unease'], 'tone': ['uneasy']}, []),
+    'horror':    ('unease',      {'scene': ['unease'], 'tone': ['fearful']}, []),  # horror shelf merged into unease
     'digital':   (None,          {}, ['デジタル']),
     'mansion':   (None,          {'setting': ['mansion']}, []),
     'wafu':      (None,          {'setting': ['japanese']}, ['和楽器・和風']),
@@ -127,21 +129,17 @@ PT = {
 # title keywords -> tags (always 'suggested': candidates, not facts)
 TITLE = [
     (r'戦い|戦闘|合戦|決戦|対決|バトル|battle|fight|combat|duel', {'scene': ['battle']}),
-    (r'追跡|逃走|逃げ|チェイス|chase|escape|pursuit', {'scene': ['chase']}),
+    (r'追跡|逃走|逃げ|チェイス|chase|escape|pursuit', {'scene': ['panic']}),
     (r'儀式|ritual|魔術|召喚', {'scene': ['ritual']}),
     (r'回想|追憶|記憶|思い出|memor|remini', {'scene': ['flashback']}),
     (r'真相|真実|truth|reveal', {'scene': ['revelation']}),
     (r'休憩|ティータイム|tea ?time|coffee|cafe|カフェ|喫茶', {'scene': ['break']}),
     (r'潜入|隠密|sneak|stealth|infiltrat', {'scene': ['infiltration']}),
-    (r'旅|journey|travel|街角|town|street|散歩|walk', {'scene': ['travel']}),
-    (r'密談|交渉|取引|駆け引き|deal|casino|poker|陰謀|conspir', {'scene': ['negotiation']}),
-    (r'異変|異常|怪異|anomal', {'scene': ['anomaly']}),
-    (r'別れ|別離|さよなら|farewell|goodbye|弔|葬|requiem|レクイエム', {'scene': ['parting']}),
-    (r'再会|reunion', {'scene': ['reunion']}),
-    (r'決断|決意|覚悟|resolve|decision', {'scene': ['decision']}),
-    (r'騒動|ドタバタ|ハプニング|混乱|panic|chaos', {'scene': ['incident']}),
+    (r'異変|異常|怪異|anomal', {'scene': ['unease']}),
+    (r'別れ|別離|さよなら|farewell|goodbye|弔|葬|requiem|レクイエム', {'scene': ['sad']}),
+    (r'再会|reunion', {'scene': ['moving']}),
+    (r'パニック|恐慌|騒動|ドタバタ|ハプニング|混乱|panic|chaos', {'scene': ['panic']}),
     (r'エンディング|ending|epilogue|終幕|後日', {'scene': ['ending']}),
-    (r'会話|談笑|おしゃべり|talk|chat|lounge|ラウンジ', {'scene': ['social']}),
     (r'夜会|舞踏|ワルツ|waltz|masquerade', {'setting': ['mansion']}),
     (r'館|屋敷|洋館|城|castle|mansion|manor', {'setting': ['mansion']}),
     (r'聖|教会|大聖堂|church|cathedral|pray|祈り|賛美|hymn|chapel', {'setting': ['sacred']}),
@@ -161,10 +159,13 @@ TITLE = [
 
 # candidate shelves (never published automatically): first match on the track's non-suggested tags,
 # plus scene-based candidates from any status
-CANDIDATE_BY_SCENE = {'battle': 'battle', 'negotiation': 'negotiation', 'social': 'conversation',
-                      'exploration': 'exploration', 'deduction': 'deduction', 'daily': 'daily', 'intro': 'intro', 'ending': 'epilogue'}
-CANDIDATE_BY_TONE = [('fearful', 'horror'), ('uneasy', 'unease'), ('tense', 'tension'), ('despair', 'sad'), ('sad', 'sad'),
+CANDIDATE_BY_SCENE = {x: x for x in ['intro', 'daily', 'comic', 'exploration', 'deduction', 'unease', 'tension', 'battle', 'sad', 'moving']}
+CANDIDATE_BY_SCENE['ending'] = 'epilogue'
+CANDIDATE_BY_TONE = [('fearful', 'unease'), ('uneasy', 'unease'), ('tense', 'tension'), ('despair', 'sad'), ('sad', 'sad'),
                      ('moving', 'moving'), ('hopeful', 'moving'), ('comical', 'comic')]
+# Scenes where the distributor's own tag (not a guess) is enough for a provisional, public shelf membership.
+# Battle has no old tab, so without this the 戦闘 shelf would be empty (PeriTune 'fight').
+PUBLIC_BY_PROVIDER_SCENE = {'battle': 'battle'}
 
 PERSON_CHANNELS = {
     'https://www.youtube.com/@peritune': 'PeriTune',

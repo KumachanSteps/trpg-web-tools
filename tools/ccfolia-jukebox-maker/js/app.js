@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.52';
+  const VERSION = '0.53';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -1712,6 +1712,44 @@
   };
   const cleanIds = list => [...new Set((Array.isArray(list) ? list : []).filter(yt => typeof yt === 'string' && YT_RE.test(yt)))];
 
+  // 版9（15棚）から版10（12棚）へ：ホラーの曲は不穏へまとめ、会話・交流と密談・駆け引きは外す
+  // （自分で曲を入れていたら、その名前の自分の棚として残す）。戦闘は新しく入った初期の曲を足す
+  function upgradeShelves10() {
+    const merged = JukeboxLibrary.MERGED_SHELVES || {};
+    const removed = JukeboxLibrary.REMOVED_SHELVES || {};
+    const tabs = [];
+    let activeTab = shelf.tabs[shelf.active];
+    shelf.tabs.forEach(tab => {
+      if (merged[tab.id] && !tab.name) {
+        const dest = shelf.tabs.find(x => x.id === merged[tab.id]);
+        if (dest) {
+          tab.tracks.forEach(tr => { if (!dest.tracks.some(x => x.yt === tr.yt)) dest.tracks.push(tr); });
+          if (activeTab === tab) activeTab = dest;
+          return;
+        }
+        tab.id = merged[tab.id];
+      } else if (merged[tab.id]) {
+        tab.id = `c${Date.now().toString(36)}${tabs.length}`;
+      }
+      if (Object.prototype.hasOwnProperty.call(removed, tab.id)) {
+        if (!tab.tracks.length) return;
+        if (!tab.name) { const label = t(`shelf.removedTabs.${tab.id}`); tab.name = label.startsWith('shelf.') ? removed[tab.id] : label; }
+        tab.id = `c${Date.now().toString(36)}${tabs.length}`;
+      }
+      tabs.push(tab);
+    });
+    const fresh = JukeboxLibrary.defaults();
+    tabs.forEach(tab => {
+      if (tab.id !== 'battle') return;
+      const def = fresh.find(x => x.id === 'battle');
+      def.tracks.forEach(tr => { if (!shelf.hidden.includes(tr.yt) && !tab.tracks.some(x => x.yt === tr.yt)) tab.tracks.push(tr); });
+    });
+    shelf.tabs = tabs;
+    const idx = tabs.indexOf(activeTab);
+    if (idx >= 0) shelf.active = idx;
+    else { shelf.active = 0; if (shelf.view === 'shelf') shelf.view = 'all'; }
+  }
+
   function loadShelf() {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(LIB_KEY) || 'null'); } catch (error) { saved = null; }
@@ -1727,6 +1765,7 @@
       shelf.active = Number.isInteger(saved.active) ? Math.max(0, Math.min(shelf.tabs.length - 1, saved.active)) : 0;
       if (shelf.view === 'shelf' && !shelf.tabs.length) shelf.view = 'all';
       keepUserTracks();
+      if (!(saved.v >= 10)) { upgradeShelves10(); shelf.migrated = true; saveShelf(); }
       return;
     }
     // 版8までの棚（タブごとに曲を持つ形）があれば、新しい分類に作り直す。メモと自分で足した曲・タブは残す
