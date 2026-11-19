@@ -2,6 +2,7 @@
 #  -> <tool dir>/js/library-data.js, <work dir>/libreport.json, and (with <report dir>) the review CSVs + migration report
 import json, sys, re, os, csv, unicodedata, urllib.parse
 from collections import Counter, OrderedDict
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 sys.path.insert(0, sys.argv[1])
 from libmap import *  # noqa
 
@@ -18,6 +19,16 @@ for line in open(f'{S}/pt/tagmap.tsv', encoding='utf8'):
 credits = open(f'{TOOL}/js/credits.js', encoding='utf8').read()
 src_by_channel = {ch.lower(): name for name, ch in re.findall(r'name: "([^"]+)", count: \d+, channel: "([^"]+)"', credits)}
 JINGLE = [t['yt'] for t in cat if t['tab'] == 'jingle']
+# composers checked by hand from the official video description or the distribution page (scripts/library/composers.tsv)
+COMPOSER_FILL = {}
+for line in open(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'composers.tsv'), encoding='utf8').read().splitlines()[1:]:
+    p = line.split('\t')
+    if len(p) >= 5 and p[3]:
+        COMPOSER_FILL[p[0]] = (p[3], p[4])
+
+def ot_opposed(o):
+    codes = {tg['code'] for tg in (o or {}).get('tags', [])}
+    return [(a, b) for a, b in OT_OPPOSED if a in codes and b in codes]
 SRC_WORDS = r'OpenTracks|DOVA-SYNDROME|DOVA|PeriTune|魔王魂|MusMus|もみじばミュージック|もみじば|h/mix|nonai|zukisuzuki|音獅子|しゃろう|MATSU|Tak_mfk|たう|zippy|柊情景音楽店|NCS'
 SUFFIX = re.compile(r'（[^（）]*(' + SRC_WORDS + r')[^（）]*）\s*$')
 
@@ -46,6 +57,7 @@ for tr in cat:
     ch = (a.get('author_url') or '').lower()
     source = src_by_channel.get(ch)
     composer = PERSON_CHANNELS.get(ch)
+    composer_ev = 'YouTube チャンネル（作曲者本人のチャンネル）' if composer else ''
     tags = OrderedDict()   # (axis, id) -> {source, status, evidence[]}
     styles = []
 
@@ -72,17 +84,28 @@ for tr in cat:
     for s_ in legacy_styles:
         style(s_)
     o = ot.get(tr['yt'])
+    opposed = ot_opposed(o)
+    bulk = len(opposed) >= BULK_MIN_PAIRS
+    clash = {c for pr in opposed for c in pr}
     if o:
-        composer = o.get('composer') or composer
+        if o.get('composer'):
+            composer, composer_ev = o['composer'], f"OpenTracks 曲ページ /bgm/detail/{o.get('detailId')}"
         for tg in o.get('tags', []):
             code, name = tg['code'], unicodedata.normalize('NFKC', tg['name'])
             if code in OT:
                 t_, st = OT[code]
+                note = ''
+                if bulk:
+                    st, note = 'suggested', '（一括付与）'
+                elif code in clash:
+                    st, note = 'suggested', '（対立タグ）'
                 for axis, vals in t_.items():
                     for v in vals:
-                        put(axis, v, 'provider_tag', st, f'OpenTracks {code} {name}')
-            if code in OT_STYLE_CODES:
+                        put(axis, v, 'provider_tag', st, f'OpenTracks {code} {name}{note}')
+            if code in OT_STYLE_CODES and not bulk:
                 style(name)
+    if not composer and tr['yt'] in COMPOSER_FILL:
+        composer, composer_ev = COMPOSER_FILL[tr['yt']]
     for slug in sorted(ptmap.get(tr['yt'], [])):
         t_, st, sty = PT.get(slug, ({}, '', []))
         for axis, vals in t_.items():
@@ -103,7 +126,8 @@ for tr in cat:
         shelves[shelf] = 'provisional'
     cands = []
     for (axis, tid), info in tags.items():
-        if axis == 'scene' and tid in CANDIDATE_BY_SCENE:
+        # scene tags from the title count even as 'suggested'; provider tags demoted for bulk / clashing tagging do not
+        if axis == 'scene' and tid in CANDIDATE_BY_SCENE and not (info['status'] == 'suggested' and info['source'] == 'provider_tag'):
             sh = CANDIDATE_BY_SCENE[tid]
             if sh not in shelves and sh not in cands:
                 cands.append(sh)
@@ -112,12 +136,13 @@ for tr in cat:
             info = tags.get(('tone', tone))
             if info and info['status'] != 'suggested' and sh not in cands:
                 cands.append(sh)
-                break
     for sh in cands:
         shelves[sh] = 'candidate'
     tracks.append({'yt': tr['yt'], 'title': title, 'composer': composer, 'source': source, 'legacyTab': tr['tab'],
                    'tags': list(tags.values()), 'styles': styles, 'shelves': shelves,
-                   'otDetail': (o or {}).get('detailId'), 'ptTags': sorted(ptmap.get(tr['yt'], []))})
+                   'otDetail': (o or {}).get('detailId'), 'ptTags': sorted(ptmap.get(tr['yt'], [])),
+                   'composerEvidence': composer_ev if composer else '', 'otRawTags': [tg['code'] + ' ' + unicodedata.normalize('NFKC', tg['name']) for tg in (o or {}).get('tags', [])],
+                   'otBulk': bulk, 'otOpposed': opposed})
 
 def tag_status(t):
     if not t['tags']:
