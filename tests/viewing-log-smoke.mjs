@@ -3,6 +3,7 @@ import vm from "node:vm";
 
 const root = new URL("../", import.meta.url);
 const html = readFileSync(new URL("tools/viewing-log/index.html", root), "utf8");
+const styles = readFileSync(new URL("tools/viewing-log/styles.css", root), "utf8");
 const shell = readFileSync(new URL("shared/hub/shell.js", root), "utf8");
 const app = readFileSync(new URL("tools/viewing-log/app.js", root), "utf8");
 const backupManager = readFileSync(new URL("tools/viewing-log/backup-manager.js", root), "utf8");
@@ -34,8 +35,14 @@ for (const contract of [
 ]) {
   if (!app.includes(contract) && !html.includes(contract)) throw new Error(`Viewing-log editor contract is missing: ${contract}`);
 }
-if (!html.includes('<option selected>Verified</option>') || !html.includes('app.js?v=1.107') || !html.includes('v1.107')) {
-  throw new Error("New viewing logs must default to Verified and load the v1.107 editor");
+if (!html.includes('<option selected>Verified</option>') || !html.includes('app.js?v=1.108') || !html.includes('v1.108')) {
+  throw new Error("New viewing logs must default to Verified and load the v1.108 editor");
+}
+for (const contract of ['grid-template-columns:minmax(0,1fr) 42px', '.stat-card>div { min-width:0; }', 'overflow:hidden', 'styles.css?v=1.108']) {
+  if (!styles.includes(contract) && !html.includes(contract)) throw new Error(`Responsive Stat card contract is missing: ${contract}`);
+}
+if (app.includes('<small>${escapeHtml(note)}</small>') || app.includes('累計 ${fmt.format(watches)} 回の視聴イベント')) {
+  throw new Error("Stat card supplemental notes should not be rendered");
 }
 for (const required of ['class="site-header"', 'id="kpiGrid"', 'id="backupPanel"', 'class="view-switcher"', 'data-view="log"', 'data-view="scenarios"', 'data-view="channels"']) {
   if (!html.includes(required)) throw new Error(`Paper viewing-log layout is missing: ${required}`);
