@@ -481,16 +481,14 @@ function renderDashboard() {
   const sessions = uniqueCount(active, "sessionId");
   const scenarioCount = new Set(active.filter((v) => v.canonical.scenario).map(scenarioKey)).size;
   const channelCount = new Set(active.map((v) => v.channelName).filter((name) => name && name !== "チャンネル不明")).size;
-  const watches = active.reduce((sum, v) => sum + Number(v.watchCount || 0), 0);
-  const ownedVideos = active.filter(isOwnedChannel).length;
   const cards = [
-    ["視聴した動画", fmt.format(active.length), `累計 ${fmt.format(watches)} 回の視聴イベント${state.manualImport ? ` · 手動ログから ${fmt.format(state.manualImport.addedVideos)}本追加` : ""}`],
-    ["視聴した卓", fmt.format(sessions), `${fmt.format(active.length - sessions)} 本は同卓の続編・別POV`],
-    ["シナリオ", fmt.format(scenarioCount), "Canonical名で重複を集約"],
-    ["チャンネル", fmt.format(channelCount), `所有チャンネルの配信 ${fmt.format(ownedVideos)}本を識別`],
+    ["視聴した動画", fmt.format(active.length)],
+    ["視聴した卓", fmt.format(sessions)],
+    ["シナリオ", fmt.format(scenarioCount)],
+    ["チャンネル", fmt.format(channelCount)],
   ];
   const units = ["本", "卓", "本", "ch"];
-  $("#kpiGrid").innerHTML = cards.map(([label, value, note], index) => `<article class="stat-card"><div><p>${label}</p><strong>${value}</strong><small>${escapeHtml(note)}</small></div><span>${units[index]}</span></article>`).join("");
+  $("#kpiGrid").innerHTML = cards.map(([label, value], index) => `<article class="stat-card"><div><p>${label}</p><strong>${value}</strong></div><span>${units[index]}</span></article>`).join("");
 }
 
 function qualityLegend(label, value, color) {
