@@ -22,7 +22,7 @@
       <div class="header-layout">
         <div class="header-left">
           <div class="header-tags"><a class="portal-link" href="../../index.html">← TRPG WEBツール観測所</a><a class="header-pill" href="../session-log-tool/index.html">卓ログトラッカーと連携</a></div>
-          <div class="title-row"><div class="tool-icon" aria-hidden="true">▶</div><div class="title-lockup"><h1 class="site-title">配信視聴ログ</h1><p class="header-version">v1.106 <time datetime="2026-11-10">2026.11.10</time></p></div></div>
+          <div class="title-row"><div class="tool-icon" aria-hidden="true">▶</div><div class="title-lockup"><h1 class="site-title">配信視聴ログ</h1><p class="header-version">v1.107 <time datetime="2026-11-21">2026.11.21</time></p></div></div>
         </div>
         <div class="header-actions"><div class="header-action-row"><a class="header-button plain" href="../../index.html">←TRPG WEBツール観測所</a><button id="themeButton" class="header-button plain" type="button">Light/Night</button></div></div>
       </div>
@@ -79,7 +79,7 @@
         <div class="editor-pair"><label class="editor-field"><span>System<em>確認</em></span><input name="system" type="text" list="systemSuggestions" placeholder="CoC6 / CoC7 / エモクロア / マダミス"></label><label class="editor-field"><span>Scenario<em>確認</em></span><input name="scenario" type="text"></label></div>
         <datalist id="systemSuggestions"><option value="CoC6"><option value="CoC7"><option value="エモクロア"><option value="マダミス"><option value="システム不明"><option value="その他"></datalist>
         <div class="editor-pair"><label class="editor-field"><span>GM / KP / DL<em>編集可</em></span><input name="gmKpDl" type="text"></label><label class="editor-field"><span>PL<em>編集可</em></span><input name="pl" type="text"></label></div>
-        <div class="editor-pair"><label class="editor-field"><span>カウント区分<em>Session＝卓として集計</em></span><select name="classification"><option>Session</option><option>Review</option><option>Related</option><option>Non-TRPG</option></select></label><label class="editor-field"><span>Review Status<em>本登録時</em></span><select name="reviewStatus"><option>Partial</option><option>Verified</option><option>Open</option><option>Corrected</option><option>Excluded</option></select></label></div>
+        <div class="editor-pair"><label class="editor-field"><span>カウント区分<em>Session＝卓として集計</em></span><select name="classification"><option>Session</option><option>Review</option><option>Related</option><option>Non-TRPG</option></select></label><label class="editor-field"><span>Review Status<em>本登録時</em></span><select name="reviewStatus"><option selected>Verified</option><option>Partial</option><option>Open</option><option>Corrected</option><option>Excluded</option></select></label></div>
         <label class="editor-field"><span>メモ<em>任意</em></span><textarea name="notes" placeholder="登録理由や補足"></textarea></label>
         <div class="metadata-preview"><img id="addVideoThumbnail" alt="" hidden><div><strong id="addPreviewTitle"></strong><span id="addPreviewChannel"></span></div></div>
         <div class="dialog-actions"><button id="cancelAddRecord" class="button ghost" type="button">キャンセル</button><button id="submitAddRecord" class="button primary" type="submit">この内容で本登録</button></div>
@@ -104,6 +104,6 @@
   <script src="data/videos-data.js"></script>
   <script src="../../shared/hub/shell.js?v=1.105.0"></script>
   <script src="backup-manager.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=1.107"></script>
 </body>
 </html>

@@ -295,6 +295,8 @@ function applySavedOverride(video) {
   video._sourceRelatedType = video.relatedType || "";
   video._sourceDeleted = Boolean(video.deleted);
   video._sourceDeletedAt = video.deletedAt || null;
+  video._sourceFirstWatchedAt = video.firstWatchedAt || null;
+  video._sourceLastWatchedAt = video.lastWatchedAt || null;
   video.canonical.system = canonicalSystemName(video.canonical.system);
   video.baseCanonical = { ...video.canonical };
   video.baseSource = { ...video.source };
@@ -318,6 +320,7 @@ function applySavedOverride(video) {
   if (saved.reviewStatus) video.reviewStatus = saved.reviewStatus;
   if (saved.quality) video.quality = saved.quality;
   if (saved.notes !== undefined) video.notes = saved.notes;
+  applyViewingDateOverride(video, saved);
   video.deleted = saved.deleted !== undefined ? Boolean(saved.deleted) : video._sourceDeleted;
   video.deletedAt = saved.deletedAt !== undefined ? saved.deletedAt : video._sourceDeletedAt;
   applyGmPlaceholder(video, saved);
@@ -810,6 +813,33 @@ function localDateValue(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+function viewingDateValue(value) {
+  const match = String(value || "").trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return "";
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day, 12);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return "";
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
+
+function replaceViewingDate(value, watchedAt) {
+  const suffix = String(value || "").slice(10);
+  return `${watchedAt}${suffix || " 12:00:00"}`;
+}
+
+function applyViewingDateOverride(video, saved = {}) {
+  const watchedAt = viewingDateValue(saved.watchedAt);
+  if (!watchedAt) return;
+  const sourceFirst = video._sourceFirstWatchedAt || video.firstWatchedAt;
+  const sourceLast = video._sourceLastWatchedAt || video.lastWatchedAt;
+  video.lastWatchedAt = replaceViewingDate(sourceLast, watchedAt);
+  if (viewingDateValue(sourceFirst) === viewingDateValue(sourceLast)) {
+    video.firstWatchedAt = replaceViewingDate(sourceFirst, watchedAt);
+  }
+}
+
 function youtubeIdForVideo(video) {
   return video?.youtubeVideoId || youtubeVideoIdFromUrl(video?.url || "") || video?.id || "";
 }
@@ -843,7 +873,7 @@ function fillAddRecordForm({ videoId, metadata = null, existing = null }) {
   form.elements.gmKpDl.value = existing?.canonical?.gmKpDl || inferRoleFromTitle(title, "GM|KP|DL");
   form.elements.pl.value = existing?.canonical?.pl || inferRoleFromTitle(title, "PL");
   form.elements.classification.value = classification;
-  form.elements.reviewStatus.value = existing?.reviewStatus || "Partial";
+  form.elements.reviewStatus.value = "Verified";
   form.elements.notes.value = existing ? "再視聴として追加" : "";
   $("#addPreviewTitle").textContent = title || "タイトルを手動入力してください";
   $("#addPreviewChannel").textContent = channelName || "チャンネル名を手動入力してください";
@@ -1036,7 +1066,8 @@ function editorMarkup(video, saved) {
   const recordAction = video.deleted
     ? `<button id="restoreRecord" class="button secondary" type="button">削除を取り消す</button>`
     : `<button id="deleteRecord" class="button danger" type="button">視聴ログから削除</button>`;
-  return `<div class="evidence-block"><h3>Evidence</h3><div class="evidence-title">${escapeHtml(video.title)}</div>${video.description ? `<pre class="evidence-description">${escapeHtml(video.description)}</pre>` : `<p class="source-note">概要欄メタデータは未保存です。タイトルと既存抽出値を根拠に表示しています。</p>`}${videoLink}</div>${manualNotice}<div class="layer-grid"><div class="layer-card"><span>Raw / Existing</span><strong>${escapeHtml(video.raw.scenario || "なし")}</strong></div><div class="layer-card"><span>Parsed</span><strong>${escapeHtml(parsed.scenario || "なし")}</strong></div><div class="layer-card"><span>Canonical</span><strong>${escapeHtml(video.canonical.scenario || "該当なし")}</strong></div></div>${provisionalNotice}<form id="editorForm" class="editor-form"><div class="editor-pair">${editorField("system", "System", saved.system, base.system, video.source.system)}${editorField("scenario", "Scenario", saved.scenario, base.scenario, video.source.scenario)}</div><div class="editor-pair">${editorField("gmKpDl", "GM / KP / DL", video.canonical.gmKpDl, base.gmKpDl, video.source.gmKpDl)}${editorField("pl", "PL", saved.pl, base.pl, video.source.pl)}</div><div class="editor-pair">${editorField("scenarioAuthor", "Scenario Author", saved.scenarioAuthor, base.scenarioAuthor, video.source.scenarioAuthor)}${editorField("scenarioUrl", "Scenario URL", saved.scenarioUrl, base.scenarioUrl, video.source.scenarioUrl, "url")}</div><div class="editor-pair"><label class="editor-field"><span>カウント区分 <em>Session＝卓として集計</em></span><select name="classification">${selectOptions(["Session", "Review", "Related", "Non-TRPG"], saved.classification || video.classification)}</select></label><label class="editor-field"><span>関連動画種別 <em>Related用</em></span><select name="relatedType">${selectOptions(["", "雑談・感想", "企画・バラエティ", "紹介・告知", "解説・ガイド", "映像・朗読", "その他の関連動画"], saved.relatedType ?? video.relatedType ?? "")}</select></label></div><label class="editor-field"><span>Review Status <em>手動</em></span><select name="reviewStatus">${selectOptions(["Open", "Partial", "Verified", "Corrected", "Excluded"], saved.reviewStatus || video.reviewStatus)}</select></label><label class="editor-field"><span>メモ <em>このブラウザに保存</em></span><textarea name="notes" placeholder="修正理由や確認内容">${escapeHtml(saved.notes ?? video.notes ?? "")}</textarea></label><p class="source-note">卓数・シナリオ・チャンネル集計に含まれるのはカウント区分がSessionの記録だけです。RelatedではScenarioを該当なしとして扱い、関連動画種別で内容を整理します。</p><div class="editor-actions">${recordAction}<span class="editor-action-spacer"></span><button id="resetOverride" class="button ghost" type="button">Overrideを解除</button><button class="button primary" type="submit">修正を保存</button></div></form>`;
+  return `<div class="evidence-block"><h3>Evidence</h3><div class="evidence-title">${escapeHtml(video.title)}</div>${video.description ? `<pre class="evidence-description">${escapeHtml(video.description)}</pre>` : `<p class="source-note">概要欄メタデータは未保存です。タイトルと既存抽出値を根拠に表示しています。</p>`}${videoLink}</div>${manualNotice}<div class="layer-grid"><div class="layer-card"><span>Raw / Existing</span><strong>${escapeHtml(video.raw.scenario || "なし")}</strong></div><div class="layer-card"><span>Parsed</span><strong>${escapeHtml(parsed.scenario || "なし")}</strong></div><div class="layer-card"><span>Canonical</span><strong>${escapeHtml(video.canonical.scenario || "該当なし")}</strong></div></div>${provisionalNotice}<form id="editorForm" class="editor-form"><div class="editor-pair">${editorField("system", "System", saved.system, base.system, video.source.system)}${editorField("scenario", "Scenario", saved.scenario, base.scenario, video.source.scenario)}</div><div class="editor-pair">${editorField("gmKpDl", "GM / KP / DL", video.canonical.gmKpDl, base.gmKpDl, video.source.gmKpDl)}${editorField("pl", "PL", saved.pl, base.pl, video.source.pl)}</div><div class="editor-pair">${editorField("scenarioAuthor", "Scenario Author", saved.scenarioAuthor, base.scenarioAuthor, video.source.scenarioAuthor)}${editorField("scenarioUrl", "Scenario URL", saved.scenarioUrl, base.scenarioUrl, video.source.scenarioUrl, "url")}</div><div class="editor-pair"><label class="editor-field"><span>カウント区分 <em>Session＝卓として集計</em></span><select name="classification">${selectOptions(["Session", "Review", "Related", "Non-TRPG"], saved.classification || video.classification)}</select></label><label class="editor-field"><span>関連動画種別 <em>Related用</em></span><select name="relatedType">${selectOptions(["", "雑談・感想", "企画・バラエティ", "紹介・告知", "解説・ガイド", "映像・朗読", "その他の関連動画"], saved.relatedType ?? video.relatedType ?? "")}</select></label></div>
+<div class="editor-pair"><label class="editor-field"><span>視聴日 <em>一覧・並び順へ反映</em></span><input name="watchedAt" type="date" value="${escapeHtml(saved.watchedAt || viewingDateValue(video.lastWatchedAt))}" required></label><label class="editor-field"><span>Review Status <em>手動</em></span><select name="reviewStatus">${selectOptions(["Open", "Partial", "Verified", "Corrected", "Excluded"], saved.reviewStatus || video.reviewStatus)}</select></label></div><label class="editor-field"><span>メモ <em>このブラウザに保存</em></span><textarea name="notes" placeholder="修正理由や確認内容">${escapeHtml(saved.notes ?? video.notes ?? "")}</textarea></label><p class="source-note">卓数・シナリオ・チャンネル集計に含まれるのはカウント区分がSessionの記録だけです。RelatedではScenarioを該当なしとして扱い、関連動画種別で内容を整理します。</p><div class="editor-actions">${recordAction}<span class="editor-action-spacer"></span><button id="resetOverride" class="button ghost" type="button">Overrideを解除</button><button class="button primary" type="submit">修正を保存</button></div></form>`;
 }
 
 function editorField(name, label, value, placeholder, source, type = "text") {
@@ -1050,6 +1081,8 @@ function selectOptions(values, current) {
 function saveEditor(event, video) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
+  const watchedAt = viewingDateValue(form.get("watchedAt"));
+  if (!watchedAt) return showToast("視聴日を入力してください。");
   const previous = state.overrides.records[video.id] || {};
   const next = {
     system: canonicalSystemName(String(form.get("system") || "").trim()),
@@ -1060,6 +1093,7 @@ function saveEditor(event, video) {
     scenarioUrl: String(form.get("scenarioUrl") || "").trim(),
     classification: form.get("classification"),
     relatedType: String(form.get("relatedType") || "").trim(),
+    watchedAt,
     reviewStatus: form.get("reviewStatus"),
     notes: String(form.get("notes") || "").trim(),
     gmKpDlConfirmed: Boolean(String(form.get("gmKpDl") || "").trim()),
@@ -1081,6 +1115,8 @@ function saveEditor(event, video) {
 function applyOverrideToVideo(video, saved) {
   video.canonical = { ...video.baseCanonical };
   video.source = { ...video.baseSource };
+  video.firstWatchedAt = video._sourceFirstWatchedAt;
+  video.lastWatchedAt = video._sourceLastWatchedAt;
   ["system", "scenario", "gmKpDl", "pl", "scenarioUrl", "scenarioAuthor"].forEach((field) => {
     if (saved[field]) {
       video.canonical[field] = field === "system" ? canonicalSystemName(saved[field]) : saved[field];
@@ -1097,6 +1133,7 @@ function applyOverrideToVideo(video, saved) {
   }
   video.reviewStatus = saved.reviewStatus || video._sourceReviewStatus;
   video.notes = saved.notes || "";
+  applyViewingDateOverride(video, saved);
   video.deleted = saved.deleted !== undefined ? Boolean(saved.deleted) : video._sourceDeleted;
   video.deletedAt = saved.deletedAt !== undefined ? saved.deletedAt : video._sourceDeletedAt;
   applyGmPlaceholder(video, saved);
@@ -1214,6 +1251,8 @@ function resetOverride(video) {
   video.relatedType = video._sourceRelatedType || "";
   video.reviewStatus = video._sourceReviewStatus || "Open";
   video.notes = "";
+  video.firstWatchedAt = video._sourceFirstWatchedAt;
+  video.lastWatchedAt = video._sourceLastWatchedAt;
   video.deleted = video._sourceDeleted;
   video.deletedAt = video._sourceDeletedAt;
   applyGmPlaceholder(video);
