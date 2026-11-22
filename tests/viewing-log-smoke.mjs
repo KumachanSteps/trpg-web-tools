@@ -25,6 +25,18 @@ if (!app.includes("matchesReviewPreset") || !app.includes("applyReviewPreset")) 
 if (!app.includes('$$(".view-switcher [data-view]")')) {
   throw new Error("Viewing database switcher is not wired");
 }
+for (const contract of [
+  'name="watchedAt" type="date"',
+  'applyViewingDateOverride',
+  'const watchedAt = viewingDateValue(form.get("watchedAt"))',
+  'video.lastWatchedAt = replaceViewingDate',
+  'form.elements.reviewStatus.value = "Verified"',
+]) {
+  if (!app.includes(contract) && !html.includes(contract)) throw new Error(`Viewing-log editor contract is missing: ${contract}`);
+}
+if (!html.includes('<option selected>Verified</option>') || !html.includes('app.js?v=1.107') || !html.includes('v1.107')) {
+  throw new Error("New viewing logs must default to Verified and load the v1.107 editor");
+}
 for (const required of ['class="site-header"', 'id="kpiGrid"', 'id="backupPanel"', 'class="view-switcher"', 'data-view="log"', 'data-view="scenarios"', 'data-view="channels"']) {
   if (!html.includes(required)) throw new Error(`Paper viewing-log layout is missing: ${required}`);
 }
