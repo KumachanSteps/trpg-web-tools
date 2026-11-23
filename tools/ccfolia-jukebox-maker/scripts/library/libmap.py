@@ -2,23 +2,25 @@
 # Every tag carries a source (provider_tag / legacy_shelf / title_keyword / manual) and a status
 # (suggested / provisional / confirmed). Genres and instruments go to musicStyles, never to Scene/Tone/Setting.
 
-# Scene list set by TK on 2026-11-19 (17 chips)
+# Scene list set by TK on 2026-11-19 (17 chips); festival, travel and chase added on 2026-11-23 (v0.57)
 SCENES = ['intro', 'daily', 'comic', 'exploration', 'deduction', 'infiltration', 'unease', 'tension', 'battle',
-          'ritual', 'panic', 'flashback', 'sad', 'moving', 'revelation', 'break', 'ending']
+          'ritual', 'panic', 'flashback', 'sad', 'moving', 'revelation', 'break', 'ending', 'festival', 'travel', 'chase']
 TONES = ['light', 'calm', 'fresh', 'comical', 'elegant', 'romantic', 'nostalgic', 'fantastical', 'moving',
          'hopeful', 'uplifting', 'uneasy', 'fearful', 'madness', 'tense', 'cold', 'gloomy', 'sad', 'lonely',
          'despair', 'grand', 'intense', 'heroic', 'driving', 'quiet', 'weighty']
-SETTINGS = ['modern', 'japanese', 'western-classic', 'fantasy', 'cyber', 'scifi-space', 'steampunk', 'cthulhu',
-            'post-apocalyptic', 'school', 'mansion', 'urban', 'nature', 'ruins', 'sacred']
+# v0.57 (TK, 2026-11-23): modern and western-classic dropped (no track had them); urban renamed 都市・夜の街;
+# cafe-bar, village, retro and lab added
+SETTINGS = ['japanese', 'fantasy', 'cyber', 'scifi-space', 'steampunk', 'cthulhu', 'post-apocalyptic', 'school',
+            'mansion', 'urban', 'nature', 'ruins', 'sacred', 'cafe-bar', 'village', 'retro', 'lab']
 # Shelf list set by TK on 2026-11-19 (12 shelves after ALL and Fav). horror was merged into unease;
 # conversation and negotiation were dropped.
 SHELVES = ['intro', 'daily', 'comic', 'exploration', 'deduction', 'unease', 'tension', 'battle', 'sad', 'moving',
            'climax', 'epilogue']
 SHELF_JA = dict(zip(SHELVES, '導入 日常 コミカル 探索 推理 不穏 緊迫 戦闘 悲しい 感動 クライマックス エピローグ'.split()))
 TAG_JA = {
-    'scene': dict(zip(SCENES, '導入 日常 コミカル 探索 推理 潜入 不穏 緊迫 戦闘 儀式 パニック 回想 悲しい 感動 真相 休憩 終幕'.split())),
+    'scene': dict(zip(SCENES, '導入 日常 コミカル 探索 推理 潜入 不穏 緊迫 戦闘 儀式 パニック 回想 悲しい 感動 真相 休憩 終幕 祭り 旅・移動 追跡・逃走'.split())),
     'tone': dict(zip(TONES, '軽快 穏やか 爽やか コミカル 優雅 ロマンチック 郷愁 幻想 感動 希望 高揚 不穏 恐怖 狂気 緊迫 無機質 陰鬱 悲哀 孤独 絶望 壮大 激しい 勇壮 疾走 静か 重厚'.split())),
-    'setting': dict(zip(SETTINGS, '現代 和風 西洋古典 ファンタジー サイバー SF・宇宙 スチームパンク クトゥルフ神話 終末・荒廃 学園 洋館・古城 都市・裏社会 自然・野外 遺跡・地下 聖堂・宗教施設'.split())),
+    'setting': dict(zip(SETTINGS, '和風 ファンタジー サイバー SF・宇宙 スチームパンク クトゥルフ神話 終末・荒廃 学園 洋館・古城 都市・夜の街 自然・野外 遺跡・地下 聖堂・宗教施設 カフェ・酒場 村・田舎 昭和・レトロ 病院・研究所'.split())),
 }
 
 # old tab -> (shelf with provisional membership or None, legacy tags, music styles)
@@ -104,7 +106,7 @@ PT = {
     'fantasy': ({'setting': ['fantasy']}, 'provisional', []), 'fierce': ({'tone': ['intense']}, 'provisional', []),
     'fight': ({'scene': ['battle']}, 'provisional', []), 'fun': ({'tone': ['light']}, 'provisional', []),
     'gentle': ({'tone': ['calm']}, 'provisional', []), 'gorgeous': ({'tone': ['elegant']}, 'provisional', []),
-    'gothic': ({'setting': ['western-classic']}, 'suggested', ['ゴシック']), 'healing': ({'tone': ['calm']}, 'provisional', ['ヒーリング']),
+    'gothic': ({'setting': ['mansion']}, 'suggested', ['ゴシック']), 'healing': ({'tone': ['calm']}, 'provisional', ['ヒーリング']),
     'hope': ({'tone': ['hopeful']}, 'provisional', []), 'horror': ({'tone': ['fearful']}, 'provisional', []),
     'hot': ({'tone': ['uplifting']}, 'suggested', []), 'japanese_style': ({'setting': ['japanese']}, 'provisional', ['和風']),
     'kind': ({'tone': ['calm']}, 'provisional', []), 'magnificent': ({'tone': ['grand']}, 'provisional', []),
@@ -129,11 +131,18 @@ PT = {
 # title keywords -> tags (always 'suggested': candidates, not facts)
 TITLE = [
     (r'戦い|戦闘|合戦|決戦|対決|バトル|battle|fight|combat|duel', {'scene': ['battle']}),
-    (r'追跡|逃走|逃げ|チェイス|chase|escape|pursuit', {'scene': ['panic']}),
+    (r'追跡|逃走|逃げ|追われ|チェイス|chase|escape|pursuit|jailbreak', {'scene': ['chase']}),
+    (r'祭|festival|carnival|カーニバル|縁日', {'scene': ['festival']}),
+    (r'旅|journey|travel|voyage|departure|道中', {'scene': ['travel']}),
     (r'儀式|ritual|魔術|召喚', {'scene': ['ritual']}),
     (r'回想|追憶|記憶|思い出|memor|remini', {'scene': ['flashback']}),
     (r'真相|真実|truth|reveal', {'scene': ['revelation']}),
     (r'休憩|ティータイム|tea ?time|coffee|cafe|カフェ|喫茶', {'scene': ['break']}),
+    (r'カフェ|喫茶|cafe|coffee|酒場|居酒屋|tavern|pub\b|saloon|ラウンジ|lounge', {'setting': ['cafe-bar']}),
+    (r'村|田舎|田園|畦道|village|countryside|hamlet', {'setting': ['village']}),
+    (r'大正|昭和|浪漫|レトロ(?!ゲーム)|retro', {'setting': ['retro']}),
+    (r'病院|研究所|研究施設|実験|ラボ|laborator|hospital|clinic', {'setting': ['lab']}),
+    (r'夜の街|繁華街|ネオン|neon|裏社会|都会|downtown', {'setting': ['urban']}),
     (r'潜入|隠密|sneak|stealth|infiltrat', {'scene': ['infiltration']}),
     (r'異変|異常|怪異|anomal', {'scene': ['unease']}),
     (r'別れ|別離|さよなら|farewell|goodbye|弔|葬|requiem|レクイエム', {'scene': ['sad']}),
@@ -225,7 +234,10 @@ COMMENT = [
     (r'回想|思い出(?!す|せ|し)', {'scene': ['flashback']}),
     (r'儀式|黒ミサ', {'scene': ['ritual']}),
     (r'潜入|スパイ|隠密', {'scene': ['infiltration']}),
-    (r'パニック|逃走|逃げ', {'scene': ['panic']}),
+    (r'パニック|大混乱|大騒ぎ', {'scene': ['panic']}),
+    (r'追跡|追いかけ|追われ|逃走|逃げ|チェイス', {'scene': ['chase']}),
+    (r'お祭り|祭り|祭囃子|縁日|フェスティバル|カーニバル', {'scene': ['festival']}),
+    (r'旅(?!館|行|の動画|動画)|道中|移動シーン|移動中', {'scene': ['travel']}),
     (r'真相|真実', {'scene': ['revelation']}),
     (r'休憩|カフェ|喫茶', {'scene': ['break']}),
     # tone
@@ -255,10 +267,15 @@ COMMENT = [
     (r'遺跡|ダンジョン|洞窟|地下', {'setting': ['ruins']}),
     (r'洋館|屋敷|お城|古城', {'setting': ['mansion']}),
     (r'教会|聖堂|神殿|聖歌', {'setting': ['sacred']}),
-    (r'都市|都会|夜の街', {'setting': ['urban']}),
+    (r'都市|都会|夜の街|繁華街|ネオン|裏社会', {'setting': ['urban']}),
+    (r'カフェ|喫茶|酒場|居酒屋|(?<!サイ)バー[での・]|ラウンジ', {'setting': ['cafe-bar']}),
+    (r'村|田舎|田園|農村|畦道', {'setting': ['village']}),
+    (r'大正|昭和|浪漫|レトロ(?!ゲーム|なゲーム)', {'setting': ['retro']}),
+    (r'病院(?![^。]{0,15}待合)|研究所|研究施設|実験施設|実験室|ラボ', {'setting': ['lab']}),
     (r'学校|学園', {'setting': ['school']}),
     (r'クトゥルフ', {'setting': ['cthulhu']}),
 ]
+# v0.57: travel skips 旅行 / 旅の動画 (lists of video uses), cafe-bar skips サイバー, lab skips 病院の待合室 BGM
 COMMENT_NEG = r'^[^。、！!？?\n]{0,3}?(ではな|じゃな|なく|ない|ません)'
 
 # every id in COMMENT must exist on its axis (catches typos such as a scene id that was renamed)

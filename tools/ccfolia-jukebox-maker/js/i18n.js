@@ -215,9 +215,9 @@
       byLink: 'この作曲者の曲を探す',
       tagLink: 'このタグで探す',
       tags: {
-        scene: { 'intro': '導入', 'daily': '日常', 'comic': 'コミカル', 'exploration': '探索', 'deduction': '推理', 'infiltration': '潜入', 'unease': '不穏', 'tension': '緊迫', 'battle': '戦闘', 'ritual': '儀式', 'panic': 'パニック', 'flashback': '回想', 'sad': '悲しい', 'moving': '感動', 'revelation': '真相', 'break': '休憩', 'ending': '終幕' },
+        scene: { 'intro': '導入', 'daily': '日常', 'comic': 'コミカル', 'exploration': '探索', 'deduction': '推理', 'infiltration': '潜入', 'unease': '不穏', 'tension': '緊迫', 'battle': '戦闘', 'ritual': '儀式', 'panic': 'パニック', 'flashback': '回想', 'sad': '悲しい', 'moving': '感動', 'revelation': '真相', 'break': '休憩', 'ending': '終幕', 'festival': '祭り', 'travel': '旅・移動', 'chase': '追跡・逃走' },
         tone: { 'light': '軽快', 'calm': '穏やか', 'fresh': '爽やか', 'comical': 'コミカル', 'elegant': '優雅', 'romantic': 'ロマンチック', 'nostalgic': '郷愁', 'fantastical': '幻想', 'moving': '感動', 'hopeful': '希望', 'uplifting': '高揚', 'uneasy': '不穏', 'fearful': '恐怖', 'madness': '狂気', 'tense': '緊迫', 'cold': '無機質', 'gloomy': '陰鬱', 'sad': '悲哀', 'lonely': '孤独', 'despair': '絶望', 'grand': '壮大', 'intense': '激しい', 'heroic': '勇壮', 'driving': '疾走', 'quiet': '静か', 'weighty': '重厚' },
-        setting: { 'modern': '現代', 'japanese': '和風', 'western-classic': '西洋古典', 'fantasy': 'ファンタジー', 'cyber': 'サイバー', 'scifi-space': 'SF・宇宙', 'steampunk': 'スチームパンク', 'cthulhu': 'クトゥルフ神話', 'post-apocalyptic': '終末・荒廃', 'school': '学園', 'mansion': '洋館・古城', 'urban': '都市・裏社会', 'nature': '自然・野外', 'ruins': '遺跡・地下', 'sacred': '聖堂・宗教施設' }
+        setting: { 'japanese': '和風', 'fantasy': 'ファンタジー', 'cyber': 'サイバー', 'scifi-space': 'SF・宇宙', 'steampunk': 'スチームパンク', 'cthulhu': 'クトゥルフ神話', 'post-apocalyptic': '終末・荒廃', 'school': '学園', 'mansion': '洋館・古城', 'urban': '都市・夜の街', 'nature': '自然・野外', 'ruins': '遺跡・地下', 'sacred': '聖堂・宗教施設', 'cafe-bar': 'カフェ・酒場', 'village': '村・田舎', 'retro': '昭和・レトロ', 'lab': '病院・研究所' }
       }
     },
     sites: {
@@ -547,9 +547,9 @@
       byLink: 'Find tracks by this composer',
       tagLink: 'Search with this tag',
       tags: {
-        scene: { 'intro': 'Opening', 'daily': 'Everyday', 'comic': 'Comical', 'exploration': 'Exploration', 'deduction': 'Deduction', 'infiltration': 'Infiltration', 'unease': 'Unease', 'tension': 'Tension', 'battle': 'Battle', 'ritual': 'Ritual', 'panic': 'Panic', 'flashback': 'Flashback', 'sad': 'Sad', 'moving': 'Moving', 'revelation': 'Revelation', 'break': 'Break', 'ending': 'Ending' },
+        scene: { 'intro': 'Opening', 'daily': 'Everyday', 'comic': 'Comical', 'exploration': 'Exploration', 'deduction': 'Deduction', 'infiltration': 'Infiltration', 'unease': 'Unease', 'tension': 'Tension', 'battle': 'Battle', 'ritual': 'Ritual', 'panic': 'Panic', 'flashback': 'Flashback', 'sad': 'Sad', 'moving': 'Moving', 'revelation': 'Revelation', 'break': 'Break', 'ending': 'Ending', 'festival': 'Festival', 'travel': 'Journey / travel', 'chase': 'Chase / escape' },
         tone: { 'light': 'Light', 'calm': 'Calm', 'fresh': 'Fresh', 'comical': 'Comical', 'elegant': 'Elegant', 'romantic': 'Romantic', 'nostalgic': 'Nostalgic', 'fantastical': 'Fantastical', 'moving': 'Moving', 'hopeful': 'Hopeful', 'uplifting': 'Uplifting', 'uneasy': 'Uneasy', 'fearful': 'Fearful', 'madness': 'Madness', 'tense': 'Tense', 'cold': 'Cold', 'gloomy': 'Gloomy', 'sad': 'Sad', 'lonely': 'Lonely', 'despair': 'Despair', 'grand': 'Grand', 'intense': 'Intense', 'heroic': 'Heroic', 'driving': 'Driving', 'quiet': 'Quiet', 'weighty': 'Weighty' },
-        setting: { 'modern': 'Modern', 'japanese': 'Japanese', 'western-classic': 'Western classic', 'fantasy': 'Fantasy', 'cyber': 'Cyber', 'scifi-space': 'Sci-fi / space', 'steampunk': 'Steampunk', 'cthulhu': 'Cthulhu Mythos', 'post-apocalyptic': 'Post-apocalyptic', 'school': 'School', 'mansion': 'Mansion / castle', 'urban': 'City / underworld', 'nature': 'Nature / outdoors', 'ruins': 'Ruins / underground', 'sacred': 'Sacred places' }
+        setting: { 'japanese': 'Japanese', 'fantasy': 'Fantasy', 'cyber': 'Cyber', 'scifi-space': 'Sci-fi / space', 'steampunk': 'Steampunk', 'cthulhu': 'Cthulhu Mythos', 'post-apocalyptic': 'Post-apocalyptic', 'school': 'School', 'mansion': 'Mansion / castle', 'urban': 'City / nightlife', 'nature': 'Nature / outdoors', 'ruins': 'Ruins / underground', 'sacred': 'Sacred places', 'cafe-bar': 'Café / tavern', 'village': 'Village / countryside', 'retro': 'Retro Japan (Taisho / Showa)', 'lab': 'Hospital / lab' }
       }
     },
     sites: {
@@ -879,9 +879,9 @@
       byLink: '이 작곡가의 곡 찾기',
       tagLink: '이 태그로 찾기',
       tags: {
-        scene: { 'intro': '도입', 'daily': '일상', 'comic': '코믹', 'exploration': '탐색', 'deduction': '추리', 'infiltration': '잠입', 'unease': '불온', 'tension': '긴박', 'battle': '전투', 'ritual': '의식', 'panic': '패닉', 'flashback': '회상', 'sad': '슬픔', 'moving': '감동', 'revelation': '진상', 'break': '휴식', 'ending': '결말' },
+        scene: { 'intro': '도입', 'daily': '일상', 'comic': '코믹', 'exploration': '탐색', 'deduction': '추리', 'infiltration': '잠입', 'unease': '불온', 'tension': '긴박', 'battle': '전투', 'ritual': '의식', 'panic': '패닉', 'flashback': '회상', 'sad': '슬픔', 'moving': '감동', 'revelation': '진상', 'break': '휴식', 'ending': '결말', 'festival': '축제', 'travel': '여행·이동', 'chase': '추격·도주' },
         tone: { 'light': '경쾌', 'calm': '잔잔', 'fresh': '상쾌', 'comical': '코믹', 'elegant': '우아', 'romantic': '로맨틱', 'nostalgic': '향수', 'fantastical': '환상', 'moving': '감동', 'hopeful': '희망', 'uplifting': '고양', 'uneasy': '불온', 'fearful': '공포', 'madness': '광기', 'tense': '긴박', 'cold': '무기질', 'gloomy': '음울', 'sad': '비애', 'lonely': '고독', 'despair': '절망', 'grand': '웅장', 'intense': '격렬', 'heroic': '용맹', 'driving': '질주', 'quiet': '고요', 'weighty': '중후' },
-        setting: { 'modern': '현대', 'japanese': '일본풍', 'western-classic': '서양 고전', 'fantasy': '판타지', 'cyber': '사이버', 'scifi-space': 'SF·우주', 'steampunk': '스팀펑크', 'cthulhu': '크툴루 신화', 'post-apocalyptic': '종말·황폐', 'school': '학원', 'mansion': '저택·고성', 'urban': '도시·뒷세계', 'nature': '자연·야외', 'ruins': '유적·지하', 'sacred': '성당·종교 시설' }
+        setting: { 'japanese': '일본풍', 'fantasy': '판타지', 'cyber': '사이버', 'scifi-space': 'SF·우주', 'steampunk': '스팀펑크', 'cthulhu': '크툴루 신화', 'post-apocalyptic': '종말·황폐', 'school': '학원', 'mansion': '저택·고성', 'urban': '도시·밤거리', 'nature': '자연·야외', 'ruins': '유적·지하', 'sacred': '성당·종교 시설', 'cafe-bar': '카페·술집', 'village': '마을·시골', 'retro': '쇼와·레트로', 'lab': '병원·연구소' }
       }
     },
     sites: {
