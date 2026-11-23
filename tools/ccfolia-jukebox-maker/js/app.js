@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '0.54';
+  const VERSION = '0.55';
   const LAYOUT_KEY = 'ccfoliaJukebox.layout';
   const PANELS = ['scenes', 'stage', 'settings'];
   const STORAGE_KEY = 'ccfoliaJukebox.v1';
@@ -18,7 +18,8 @@
   const LANGS = ['ja', 'en', 'ko'];
   const MAX_DISKS = Jukebox.MAX_DISKS;   // 標準のレコードの上限
   // 「上限を超えて並べる」をオンにしたときの上限。12枚を超えた分は、棚のレコードを小さくして部屋に全部並べる
-  const LIST_MAX = 25;
+  const LIST_MAX = 25;                   // レコードの上限（v0.55 から常に25枚まで）
+  const DEFAULT_COUNT = 9;               // 初めて開いたとき・初期設定に戻したときの枚数
   const IMPORT_COLORS = ['#e3b938', '#5fb98a', '#5a80b8', '#e07a3c', '#d98aa0', '#4f9a96', '#8a62a8', '#c0483c', '#b0b0b0', '#e8d3a8'];
 
   const $ = id => document.getElementById(id);
@@ -27,7 +28,7 @@
     importBtn: $('importBtn'), importFile: $('importFile'), backBtn: $('backBtn'),
     playBtn: $('playBtn'), exportBtn: $('exportBtn'),
     jukeboxPanel: $('jukeboxPanel'), importPanel: $('importPanel'), importName: $('importName'),
-    roomBox: $('roomBox'), roomPeek: $('roomPeek'), roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), overLimit: $('overLimit'), overLimitNote: $('overLimitNote'), showCover: $('showCover'),
+    roomBox: $('roomBox'), roomPeek: $('roomPeek'), roomName: $('roomName'), stopName: $('stopName'), diskCount: $('diskCount'), diskCountOut: $('diskCountOut'), showCover: $('showCover'),
     backdropField: $('backdropField'), backdropThumb: $('backdropThumb'), backdropImg: $('backdropImg'), backdropOpen: $('backdropOpen'), backdropClear: $('backdropClear'), backdropFile: $('backdropFile'),
     diskList: $('diskList'), resetBtn: $('resetBtn'),
     shapeLabel: $('shapeLabel'), shapeResetBtn: $('shapeResetBtn'),
@@ -282,7 +283,7 @@
     return {
       roomName: d.set.roomNameDefault,
       stopName: d.set.stopNameDefault,
-      count: Jukebox.PHOTOS.length,
+      count: DEFAULT_COUNT,
       showCover: true,
       // マーダーミステリー向けの12テーマ（ラベル色と写真ジャケット付き）
       // BGMの初期値は、テーマに合うYouTubeのフリーBGM
@@ -316,9 +317,8 @@
         cover: readCover(s.cover)
       };
     });
-    // 上限を超えて並べたぶん（13枚目から。オフのあいだも消さない）。初期のBGMや写真はないので、空のレコードを元にそろえる
-    const overLimit = saved.overLimit === true || Number(saved.count) > MAX_DISKS;
-    const extra = saved.disks.slice(MAX_DISKS, LIST_MAX); // オフにしても中身は取っておく
+    // 13枚目から25枚目まで。初期のBGMや写真はないので、空のレコードを元にそろえる（26枚目からは読まない）
+    const extra = saved.disks.slice(MAX_DISKS, LIST_MAX);
     extra.forEach((s, j) => {
       const disk = blankDisk(MAX_DISKS + j);
       const o = s && typeof s === 'object' ? s : {};
@@ -332,12 +332,11 @@
         cover: readCover(o.cover)
       });
     });
-    const count = Math.min(overLimit ? LIST_MAX : MAX_DISKS, Math.max(1, Number(saved.count) || base.count));
+    const count = Math.min(LIST_MAX, Math.max(1, Number(saved.count) || base.count));
     const out = {
       roomName: safeText(saved.roomName, 80) ?? base.roomName,
       stopName: safeText(saved.stopName, 40) ?? base.stopName,
       count,
-      overLimit,
       showCover: saved.showCover !== false,
       disks: disks.map(disk => withDefaultBgm(disk, Number(saved.bgmDefaults) || 0)),
       bgmDefaults: 2
@@ -450,11 +449,9 @@
     els.roomName.value = s.roomName;
     updateRoomPeek();
     els.stopName.value = s.stopName;
-    els.overLimit.checked = s.overLimit === true;
-    els.diskCount.max = String(s.overLimit ? LIST_MAX : MAX_DISKS);
+    els.diskCount.max = String(LIST_MAX);
     els.diskCount.value = String(s.count);
     els.diskCountOut.textContent = String(s.count);
-    els.overLimitNote.hidden = !(s.overLimit && s.count > MAX_DISKS);
     els.showCover.checked = s.showCover !== false;
     els.diskList.classList.toggle('no-cover', s.showCover === false);
     els.diskList.innerHTML = '';
@@ -2746,7 +2743,8 @@
 
   function plSig(snap) {
     const s = snap.settings;
-    const body = JSON.stringify([s.roomName, s.stopName, s.count, s.showCover !== false, s.overLimit === true,
+    // 5つめの false は、v0.54 まであった「上限を超えて並べる」の場所（保存済みの印を変えないため）
+    const body = JSON.stringify([s.roomName, s.stopName, s.count, s.showCover !== false, false,
       s.disks.map(d => [d.color, d.name, d.bgm, d.url, d.cover])]) + '|' + (snap.backdrop || '');
     let x = 0x811c9dc5;
     for (let i = 0; i < body.length; i++) { x ^= body.charCodeAt(i); x = Math.imul(x, 0x01000193); }
@@ -3311,15 +3309,8 @@
     els.roomName.addEventListener('input', () => { app.settings.roomName = els.roomName.value; updateRoomPeek(); changed(false); });
     els.stopName.addEventListener('input', () => { app.settings.stopName = els.stopName.value; changed(false); });
     els.diskCount.addEventListener('input', () => {
-      app.settings.count = Math.min(app.settings.overLimit ? LIST_MAX : MAX_DISKS, Math.max(1, Number(els.diskCount.value) || 1));
+      app.settings.count = Math.min(LIST_MAX, Math.max(1, Number(els.diskCount.value) || 1));
       fillDisks(app.settings);
-      changed(true);
-    });
-    // 上限を超えて並べる（BGMの吟味用）。オフにしたら12枚に戻すが、13枚目からの中身は消さずに取っておく
-    els.overLimit.addEventListener('change', () => {
-      app.settings.overLimit = els.overLimit.checked;
-      if (!app.settings.overLimit) app.settings.count = Math.min(app.settings.count, MAX_DISKS);
-      track('ccfolia_jukebox_over_limit', { on: els.overLimit.checked });
       changed(true);
     });
     els.showCover.addEventListener('change', () => {

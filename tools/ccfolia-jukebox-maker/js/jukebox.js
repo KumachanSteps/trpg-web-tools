@@ -178,7 +178,7 @@
 
   function slotLayout(n, bare) {
     const area = { x: -10, y: -16, w: 44, h: 32 };
-    // 12枚を超えたら（「上限を超えて並べる」）すき間を詰め、いちばん大きく並べられる列の数を選ぶ
+    // 12枚を超えたら（最大25枚）すき間を詰め、いちばん大きく並べられる列の数を選ぶ
     const many = n > MAX_DISKS;
     const gapX = many ? 0.75 : 1.5;
     const gapY = many ? 0.5 : 1;

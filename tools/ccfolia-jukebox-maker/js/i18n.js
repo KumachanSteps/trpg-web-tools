@@ -56,8 +56,6 @@
       backdropClear: '外す',
       backdropNotSaved: '画像が大きすぎてブラウザに保存できませんでした。このページを開いている間だけ使えます。',
       count: 'レコードの枚数',
-      overLimit: '上限を超えて並べる（BGMの吟味用）',
-      overLimitNote: '12枚を超えた分も部屋に入ります。棚のレコードは枚数に合わせて小さくなります（最大25枚）。',
       showCover: 'ジャケットを表示する',
       disks: 'レコード（テーマがシーン名になります）',
       diskName: 'テーマ',
@@ -190,7 +188,7 @@
       empty: 'まだプレイリストはありません。設定欄の「プレイリスト ▾」か、上の「今の設定を保存」で保存できます。',
       startPreset: 'このプリセットで始める',
       presetStandard: '汎用マダミス',
-      presetStandardMemo: 'マーダーミステリー全般に使える12シーン（最初の設定と同じ）'
+      presetStandardMemo: 'マーダーミステリー全般に使える12シーン（最初の設定の9枚に、クライマックス・エピローグ・感想戦を足したもの）'
     },
     viewShort: { preview: 'プレビュー', shelf: 'レコード棚', lists: 'リスト', sites: '素材サイト' },
     search: {
@@ -390,8 +388,6 @@
       backdropClear: 'Remove',
       backdropNotSaved: 'The image is too large to save in the browser. It works only while this page stays open.',
       count: 'Number of records',
-      overLimit: 'Go past the limit (for choosing BGM)',
-      overLimitNote: 'Records past 12 go into the room too. The shelf records shrink to fit (up to 25).',
       showCover: 'Show sleeves',
       disks: 'Records (the theme becomes the scene name)',
       diskName: 'Theme',
@@ -524,7 +520,7 @@
       empty: 'No playlists yet. Save one from "Playlists ▾" in the settings or with "Save current setup" above.',
       startPreset: 'Start with this preset',
       presetStandard: 'General murder mystery',
-      presetStandardMemo: '12 scenes for any murder mystery (same as the default setup)'
+      presetStandardMemo: '12 scenes for any murder mystery (the default 9 plus Climax, Epilogue and After talk)'
     },
     viewShort: { preview: 'Preview', shelf: 'Shelf', lists: 'Lists', sites: 'Sites' },
     search: {
@@ -724,8 +720,6 @@
       backdropClear: '제거',
       backdropNotSaved: '이미지가 너무 커서 브라우저에 저장하지 못했습니다. 이 페이지를 연 동안에만 사용할 수 있습니다.',
       count: '레코드 장수',
-      overLimit: '상한을 넘겨 늘어놓기(BGM 고르기용)',
-      overLimitNote: '12장을 넘는 레코드도 방에 들어갑니다. 선반의 레코드는 장수에 맞춰 작아집니다(최대 25장).',
       showCover: '재킷 표시',
       disks: '레코드 (테마가 장면 이름이 됩니다)',
       diskName: '테마',
@@ -858,7 +852,7 @@
       empty: '아직 플레이리스트가 없습니다. 설정 칸의 "플레이리스트 ▾"나 위의 "지금 설정을 저장"으로 저장할 수 있습니다.',
       startPreset: '이 프리셋으로 시작',
       presetStandard: '범용 머더 미스터리',
-      presetStandardMemo: '머더 미스터리 전반에 쓸 수 있는 12장면(처음 설정과 같음)'
+      presetStandardMemo: '머더 미스터리 전반에 쓸 수 있는 12장면(처음 설정의 9장에 클라이맥스·에필로그·애프터 토크를 더한 것)'
     },
     viewShort: { preview: '미리보기', shelf: '선반', lists: '목록', sites: '소재' },
     search: {
