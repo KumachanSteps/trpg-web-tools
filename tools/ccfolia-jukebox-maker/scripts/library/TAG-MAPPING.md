@@ -95,7 +95,7 @@
 | fun | Tone: 軽快 | 仮 | — |
 | gentle | Tone: 穏やか | 仮 | — |
 | gorgeous | Tone: 優雅 | 仮 | — |
-| gothic | Setting: 西洋古典 | 候補 | ゴシック |
+| gothic | Setting: 洋館・古城 | 候補 | ゴシック |
 | healing | Tone: 穏やか | 仮 | ヒーリング |
 | hope | Tone: 希望 | 仮 | — |
 | horror | Tone: 恐怖 | 仮 | — |
@@ -160,7 +160,10 @@
 | `回想 / 思い出(?!す / せ / し)` | Scene: 回想 |
 | `儀式 / 黒ミサ` | Scene: 儀式 |
 | `潜入 / スパイ / 隠密` | Scene: 潜入 |
-| `パニック / 逃走 / 逃げ` | Scene: パニック |
+| `パニック / 大混乱 / 大騒ぎ` | Scene: パニック |
+| `追跡 / 追いかけ / 追われ / 逃走 / 逃げ / チェイス` | Scene: 追跡・逃走 |
+| `お祭り / 祭り / 祭囃子 / 縁日 / フェスティバル / カーニバル` | Scene: 祭り |
+| `旅(?!館 / 行 / の動画 / 動画) / 道中 / 移動シーン / 移動中` | Scene: 旅・移動 |
 | `真相 / 真実` | Scene: 真相 |
 | `休憩 / カフェ / 喫茶` | Scene: 休憩 |
 | `切な` | Tone: 悲哀 |
@@ -188,7 +191,11 @@
 | `遺跡 / ダンジョン / 洞窟 / 地下` | Setting: 遺跡・地下 |
 | `洋館 / 屋敷 / お城 / 古城` | Setting: 洋館・古城 |
 | `教会 / 聖堂 / 神殿 / 聖歌` | Setting: 聖堂・宗教施設 |
-| `都市 / 都会 / 夜の街` | Setting: 都市・裏社会 |
+| `都市 / 都会 / 夜の街 / 繁華街 / ネオン / 裏社会` | Setting: 都市・夜の街 |
+| `カフェ / 喫茶 / 酒場 / 居酒屋 / (?<!サイ)バー[での・] / ラウンジ` | Setting: カフェ・酒場 |
+| `村 / 田舎 / 田園 / 農村 / 畦道` | Setting: 村・田舎 |
+| `大正 / 昭和 / 浪漫 / レトロ(?!ゲーム / なゲーム)` | Setting: 昭和・レトロ |
+| `病院(?![^。]{0,15}待合) / 研究所 / 研究施設 / 実験施設 / 実験室 / ラボ` | Setting: 病院・研究所 |
 | `学校 / 学園` | Setting: 学園 |
 | `クトゥルフ` | Setting: クトゥルフ神話 |
 
@@ -197,11 +204,18 @@
 | キーワード（正規表現） | タグ |
 |---|---|
 | `戦い / 戦闘 / 合戦 / 決戦 / 対決 / バトル / battle / fight / combat / duel` | Scene: 戦闘 |
-| `追跡 / 逃走 / 逃げ / チェイス / chase / escape / pursuit` | Scene: パニック |
+| `追跡 / 逃走 / 逃げ / 追われ / チェイス / chase / escape / pursuit / jailbreak` | Scene: 追跡・逃走 |
+| `祭 / festival / carnival / カーニバル / 縁日` | Scene: 祭り |
+| `旅 / journey / travel / voyage / departure / 道中` | Scene: 旅・移動 |
 | `儀式 / ritual / 魔術 / 召喚` | Scene: 儀式 |
 | `回想 / 追憶 / 記憶 / 思い出 / memor / remini` | Scene: 回想 |
 | `真相 / 真実 / truth / reveal` | Scene: 真相 |
 | `休憩 / ティータイム / tea ?time / coffee / cafe / カフェ / 喫茶` | Scene: 休憩 |
+| `カフェ / 喫茶 / cafe / coffee / 酒場 / 居酒屋 / tavern / pub\b / saloon / ラウンジ / lounge` | Setting: カフェ・酒場 |
+| `村 / 田舎 / 田園 / 畦道 / village / countryside / hamlet` | Setting: 村・田舎 |
+| `大正 / 昭和 / 浪漫 / レトロ(?!ゲーム) / retro` | Setting: 昭和・レトロ |
+| `病院 / 研究所 / 研究施設 / 実験 / ラボ / laborator / hospital / clinic` | Setting: 病院・研究所 |
+| `夜の街 / 繁華街 / ネオン / neon / 裏社会 / 都会 / downtown` | Setting: 都市・夜の街 |
 | `潜入 / 隠密 / sneak / stealth / infiltrat` | Scene: 潜入 |
 | `異変 / 異常 / 怪異 / anomal` | Scene: 不穏 |
 | `別れ / 別離 / さよなら / farewell / goodbye / 弔 / 葬 / requiem / レクイエム` | Scene: 悲しい |
@@ -268,4 +282,4 @@ OpenTracks の曲ページに載っている作曲者か、1人で運営して�
 | クライマックス | 29 | 0 |
 | エピローグ | 20 | 6 |
 
-タグの状態（曲ごと）: provisional 581、suggested 4、untagged 55
+タグの状態（曲ごと）: provisional 581、suggested 6、untagged 53
