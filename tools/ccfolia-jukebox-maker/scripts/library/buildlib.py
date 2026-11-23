@@ -3,7 +3,6 @@
 import json, sys, re, os, csv, unicodedata, urllib.parse
 from collections import Counter, OrderedDict
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
-sys.path.insert(0, sys.argv[1])
 from libmap import *  # noqa
 
 S, TOOL = sys.argv[1], sys.argv[2]
@@ -42,7 +41,7 @@ def clean_title(t):
 
 RANK = {'suggested': 0, 'provisional': 1, 'confirmed': 2}
 AX = {'scene': 's', 'tone': 't', 'setting': 'g'}
-SRC = {'provider_tag': 'p', 'legacy_shelf': 'l', 'title_keyword': 't', 'manual': 'm'}
+SRC = {'provider_tag': 'p', 'provider_comment': 'c', 'legacy_shelf': 'l', 'title_keyword': 't', 'manual': 'm'}
 ST = {'suggested': 's', 'provisional': 'p', 'confirmed': 'c'}
 
 tracks, seen = [], set()
@@ -113,6 +112,18 @@ for tr in cat:
                 put(axis, v, 'provider_tag', st, f'PeriTune {slug}')
         for s_ in sty:
             style(s_)
+    # v0.56: the composer's own comment on the OpenTracks page (after the search tags, so it can restore demoted ones)
+    comment = (o or {}).get('comment') or ''
+    comment_hits = []
+    for rx, t_ in COMMENT:
+        for m in re.finditer(rx, comment):
+            if re.match(COMMENT_NEG, comment[m.end():]):
+                continue
+            for axis, vals in t_.items():
+                for v in vals:
+                    put(axis, v, 'provider_comment', 'provisional', f'OpenTracks コメント「{m.group(0)}」')
+            comment_hits.append(m.group(0))
+            break
     title = clean_title(tr['title'])
     for rx, t_ in TITLE:
         m = re.search(rx, title, re.I)
@@ -145,7 +156,7 @@ for tr in cat:
                    'tags': list(tags.values()), 'styles': styles, 'shelves': shelves,
                    'otDetail': (o or {}).get('detailId'), 'ptTags': sorted(ptmap.get(tr['yt'], [])),
                    'composerEvidence': composer_ev if composer else '', 'otRawTags': [tg['code'] + ' ' + unicodedata.normalize('NFKC', tg['name']) for tg in (o or {}).get('tags', [])],
-                   'otBulk': bulk, 'otOpposed': opposed})
+                   'otBulk': bulk, 'otOpposed': opposed, 'otComment': comment, 'commentHits': comment_hits})
 
 def tag_status(t):
     if not t['tags']:
@@ -212,7 +223,7 @@ legacy['jingle'] = None
 out = f"""/* KPレス・ジュークボックスメーカー — Music Library（レコード棚）の曲マスタと初期の棚
  * TRACKS: [YouTube ID, 曲名, 作曲者|null, 配布元|null, 旧タブ, タグ, 音楽スタイル（| 区切り）]
  *   タグは「軸:ID:情報源:状態」を空白区切り。軸 s=Scene t=Tone g=Setting、
- *   情報源 p=配布元サイトのタグ l=旧タブ t=曲名のキーワード m=手作業、状態 s=候補 p=仮 c=確認済み。
+ *   情報源 p=配布元サイトのタグ c=配布元の曲ページのコメント l=旧タブ t=曲名のキーワード m=手作業、状態 s=候補 p=仮 c=確認済み。
  *   楽器・音楽ジャンルはタグにせず、音楽スタイルとして別に持つ。
  *   作曲者は配布元サイトに載っているか、1人のチャンネルのときだけ入れる（推測では埋めない）。
  * SHELVES: 用途別12棚。ids は公開する所属（旧タブから引き継いだ仮の所属と、戦闘は配布元の戦闘タグ。末尾 ! は確認済み）、
@@ -244,7 +255,7 @@ out = f"""/* KPレス・ジュークボックスメーカー — Music Library�
   const REPLACED = {{ '0mbmvlg8iZU': ['6Y4c6hdvV4Y', 'Fairy Tale'], 'A_Tlq2opviQ': ['yeyfRn6zc8Q', 'Thief\\'s time'], 'ISHbwrrNTeM': ['_v9eOCZsKz4', '決戦'] }};
 
   const AXIS = {{ s: 'scene', t: 'tone', g: 'setting' }};
-  const SOURCE = {{ p: 'provider_tag', l: 'legacy_shelf', t: 'title_keyword', m: 'manual' }};
+  const SOURCE = {{ p: 'provider_tag', c: 'provider_comment', l: 'legacy_shelf', t: 'title_keyword', m: 'manual' }};
   const STATUS = {{ s: 'suggested', p: 'provisional', c: 'confirmed' }};
   const byId = new Map();
   const list = TRACKS.map(([yt, title, composer, source, legacy, tagText, styleText]) => {{

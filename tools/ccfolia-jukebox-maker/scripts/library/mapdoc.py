@@ -1,7 +1,7 @@
-# python3 -I mapdoc2.py <work dir> > TAG-MAPPING.md   (rules from libmap.py, counts from libreport.json)
-import sys, json
+# python3 -I mapdoc.py <work dir> > TAG-MAPPING.md   (rules from the libmap.py next to this script, counts from libreport.json)
+import sys, json, os
 from collections import Counter
-sys.path.insert(0, sys.argv[1])
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 from libmap import *  # noqa
 S = sys.argv[1]
 rep = json.load(open(f'{S}/libreport.json', encoding='utf8'))
@@ -46,6 +46,15 @@ w('| タグ | タグ | 状態 | 音楽スタイル |')
 w('|---|---|---|---|')
 for slug, (tags, st, sty) in PT.items():
     w(f"| {slug} | {fmt(tags) if tags else '—'} | {STJ[st] if tags else '—'} | {'、'.join(sty) or '—'} |")
+w('')
+w('## OpenTracks の曲ページのコメント（情報源 provider_comment・仮）')
+w('')
+w('作曲者が曲ページに書いた説明から拾う。検索タグと同じ「仮」で、検索と候補の棚に使う（公開棚には入れない）。一括付与で候補に下げたタグも、コメントに同じことが書いてあれば仮に戻る。すぐ後に否定（ではない・なく・ない・ません）が続く言葉は拾わない。')
+w('')
+w('| キーワード（正規表現） | タグ |')
+w('|---|---|')
+for rx, tags in COMMENT:
+    w(f"| `{rx.replace('|', ' / ')}` | {fmt(tags)} |")
 w('')
 w('## 曲名のキーワード（情報源 title_keyword・すべて候補）')
 w('')
