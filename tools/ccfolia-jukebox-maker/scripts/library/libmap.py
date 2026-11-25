@@ -202,3 +202,68 @@ OT_OPPOSED = [
     ('m23', 'm28'),  # ｺﾒﾃﾞｨｰ × ｼﾘｱｽ
 ]
 BULK_MIN_PAIRS = 2
+
+# ---- v0.56: OpenTracks comments ----
+# The comment on an OpenTracks song page is the composer's own description ("戦闘シーンとか緊迫した場面に", "切なくも優しい曲").
+# Words below give 'provisional' tags with source provider_comment (as reliable as the site's search tags, used for search and
+# shelf candidates, never for a public shelf). A tag that bulk tagging demoted to 'suggested' comes back as 'provisional'
+# when the comment says the same thing. A word followed by a negation (「明るい曲ではなく」「怖くない」) is skipped.
+COMMENT = [
+    # scene
+    (r'戦闘|バトル|ボス戦|決戦', {'scene': ['battle']}),
+    (r'探索|ダンジョン|冒険|フィールド', {'scene': ['exploration']}),
+    (r'推理|謎解き|捜査|探偵|ミステリ(?!アス)', {'scene': ['deduction']}),
+    (r'日常|ほのぼの|のんびり', {'scene': ['daily']}),
+    (r'コミカル|コメディ|ギャグ|ドタバタ|おどけ', {'scene': ['comic'], 'tone': ['comical']}),
+    (r'緊迫|緊張|ピンチ|危機|サスペンス', {'scene': ['tension'], 'tone': ['tense']}),
+    (r'不穏|不気味|怪しい|怪しげ', {'scene': ['unease'], 'tone': ['uneasy']}),
+    (r'ホラー|恐怖|怖い|恐ろし', {'scene': ['unease'], 'tone': ['fearful']}),
+    (r'悲しい|悲しげ|悲しみ|別れ', {'scene': ['sad'], 'tone': ['sad']}),
+    (r'感動|泣け|泣き', {'scene': ['moving'], 'tone': ['moving']}),
+    (r'エンディング|エピローグ|スタッフロール', {'scene': ['ending']}),
+    (r'オープニング|導入|タイトル画面', {'scene': ['intro']}),
+    (r'回想|思い出(?!す|せ|し)', {'scene': ['flashback']}),
+    (r'儀式|黒ミサ', {'scene': ['ritual']}),
+    (r'潜入|スパイ|隠密', {'scene': ['infiltration']}),
+    (r'パニック|逃走|逃げ', {'scene': ['panic']}),
+    (r'真相|真実', {'scene': ['revelation']}),
+    (r'休憩|カフェ|喫茶', {'scene': ['break']}),
+    # tone
+    (r'切な', {'tone': ['sad']}),
+    (r'寂し|淋し|孤独', {'tone': ['lonely']}),
+    (r'穏やか|優し|ほのぼの', {'tone': ['calm']}),
+    (r'静か', {'tone': ['quiet']}),
+    (r'明るい|明るく', {'tone': ['light']}),
+    (r'爽やか', {'tone': ['fresh']}),
+    (r'壮大', {'tone': ['grand']}),
+    (r'激し', {'tone': ['intense']}),
+    (r'重厚', {'tone': ['weighty']}),
+    (r'希望', {'tone': ['hopeful']}),
+    (r'おしゃれ|お洒落|オシャレ|優雅', {'tone': ['elegant']}),
+    (r'ロマンチック|ロマンティック|恋愛|恋人|恋心', {'tone': ['romantic']}),
+    (r'懐かし|郷愁|ノスタルジ', {'tone': ['nostalgic']}),
+    (r'神秘|幻想', {'tone': ['fantastical']}),
+    (r'疾走', {'tone': ['driving']}),
+    (r'狂気', {'tone': ['madness']}),
+    (r'絶望', {'tone': ['despair']}),
+    # setting
+    (r'ファンタジー|異世界|魔法|中世', {'setting': ['fantasy']}),
+    (r'和風|和楽器|時代劇', {'setting': ['japanese']}),
+    (r'サイバー', {'setting': ['cyber']}),
+    (r'宇宙|近未来|SF', {'setting': ['scifi-space']}),
+    (r'森の|の森|森林|大自然|自然の中|自然豊か|草原', {'setting': ['nature']}),
+    (r'遺跡|ダンジョン|洞窟|地下', {'setting': ['ruins']}),
+    (r'洋館|屋敷|お城|古城', {'setting': ['mansion']}),
+    (r'教会|聖堂|神殿|聖歌', {'setting': ['sacred']}),
+    (r'都市|都会|夜の街', {'setting': ['urban']}),
+    (r'学校|学園', {'setting': ['school']}),
+    (r'クトゥルフ', {'setting': ['cthulhu']}),
+]
+COMMENT_NEG = r'^[^。、！!？?\n]{0,3}?(ではな|じゃな|なく|ない|ません)'
+
+# every id in COMMENT must exist on its axis (catches typos such as a scene id that was renamed)
+_AXES = {'scene': SCENES, 'tone': TONES, 'setting': SETTINGS}
+for _rx, _t in COMMENT:
+    for _a, _vals in _t.items():
+        for _v in _vals:
+            assert _v in _AXES[_a], f'COMMENT: unknown {_a} id {_v!r}'
