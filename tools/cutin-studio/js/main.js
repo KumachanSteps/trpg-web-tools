@@ -67,7 +67,7 @@ function defaults(tpl) {
     texts: { ...tpl.texts },
     color: tpl.color, color2: tpl.color2 || '#3b2a6e',
     fontMain: tpl.fonts.main || 'heavy', fontName: tpl.fonts.name || 'gothic', localFont: '',
-    speed: 1, exit: true
+    speed: 1, exit: true, flash: 1
   };
 }
 function settings(tpl = app.tpl) {
@@ -83,7 +83,7 @@ function optsFor(tpl, s) {
     color: s.color, color2: s.color2,
     fontMain: fontFamily(s.fontMain, s.localFont), fontName: fontFamily(s.fontName, s.localFont),
     fontUi: fontFamily('gothic'), fontEn: '"Anton", "Arial Narrow", sans-serif',
-    nameSpacing: tpl.nameSpacing
+    nameSpacing: tpl.nameSpacing, flash: s.flash
   };
 }
 function durationOf(s) { return (s.exit ? DURATION : HOLD_END) / s.speed; }
@@ -211,6 +211,7 @@ function renderControls() {
   html += field(tpl.id === 'eyes' ? 'ひとことの書体' : '名前の書体', fontSelect('fontName', s.fontName), 'half');
   if (s.fontMain === 'local' || s.fontName === 'local') html += field('PCのフォント名', `<input type="text" class="text-input" data-local-font value="${escapeHtml(s.localFont)}" placeholder="例：游明朝、Hiragino Mincho ProN" />`);
   html += field('速さ', `<div class="range-row"><input type="range" data-speed min="0.5" max="2" step="0.05" value="${s.speed}" /><output data-speed-out>${s.speed.toFixed(2)}倍</output></div>`);
+  html += field('フラッシュ', `<select data-flash>${[[1.4, '強め'], [1, 'ふつう'], [0.5, '弱め'], [0, 'なし']].map(([v, l]) => `<option value="${v}" ${v === s.flash ? 'selected' : ''}>${l}</option>`).join('')}</select>`, 'half');
   html += `<label class="toggle-inline field"><input type="checkbox" class="switch" data-exit ${s.exit ? 'checked' : ''} /><span>退場あり（オフにすると決めの形で止まります）</span></label>`;
   els.styleControls.innerHTML = html;
   renderOutput();
@@ -232,6 +233,7 @@ function onControlInput(e) {
   else if (el.dataset.font) { s[el.dataset.font] = el.value; renderControls(); ensureFonts(s).then(redrawAll); }
   else if ('localFont' in el.dataset) { s.localFont = el.value; ensureFonts(s).then(redrawAll); }
   else if ('speed' in el.dataset) { s.speed = Number(el.value); els.styleControls.querySelector('[data-speed-out]').textContent = `${s.speed.toFixed(2)}倍`; }
+  else if ('flash' in el.dataset) { s.flash = Number(el.value); }
   else if ('exit' in el.dataset) { s.exit = el.checked; app.time = 0; }
   else if (el.dataset.outSelect) { store.output[el.dataset.outSelect] = Number(el.value); }
   else return;

@@ -10,6 +10,8 @@ export const HOLD_END = 2.0;   // 退場なしのときは、ここで止める
 
 // いま描いている立ち絵（render() が差し替える）
 let P = null, P2 = null;
+// フラッシュの強さ（0 = なし、1 = ふつう）。render() が差し替える
+let FL = 1;
 
 const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
 const seg = (t, a, b) => clamp((t - a) / (b - a));
@@ -40,8 +42,8 @@ function fitFont(g, text, size, family, maxW) {
 function portraitWithFlash(g, fx, fy, fw, t0, t, o = {}) {
   face(g, o.src || P.src, fx, fy, fw, o);
   const k = seg(t, t0, t0 + 0.32);
-  if (k > 0 && k < 1 && !o.noFlash) {
-    const a = Math.pow(1 - k, 1.6);
+  if (k > 0 && k < 1 && !o.noFlash && FL > 0) {
+    const a = Math.min(1, Math.pow(1 - k, 1.6) * FL);
     face(g, o.white || P.white, fx, fy, fw, { ...o, alpha: (o.alpha ?? 1) * a });
     g.save(); g.globalCompositeOperation = 'lighter';
     g.filter = `blur(${10 + 20 * k}px)`;
@@ -51,7 +53,7 @@ function portraitWithFlash(g, fx, fy, fw, t0, t, o = {}) {
 }
 function screenFlash(g, t, t0, dur, amt = 0.9, color = '255,255,255') {
   const k = seg(t, t0, t0 + dur); if (k <= 0 || k >= 1) return;
-  g.fillStyle = `rgba(${color},${amt * Math.pow(1 - k, 2)})`; g.fillRect(0, 0, W, H);
+  g.fillStyle = `rgba(${color},${Math.min(1, amt * FL) * Math.pow(1 - k, 2)})`; g.fillRect(0, 0, W, H);
 }
 // 光の筋が斜めに走る（表示の瞬間の閃光）
 function glint(g, t, t0, dur, ang = -0.35) {
@@ -405,7 +407,7 @@ export function fontFamily(key, localName) {
  *   t: 速さ1倍のときの秒。exit=false なら HOLD_END で止める。
  */
 export function render(g, w, h, tpl, t, opts, portrait, rival = null) {
-  P = portrait; P2 = rival;
+  P = portrait; P2 = rival; FL = opts.flash ?? 1;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.globalAlpha = 1; g.filter = 'none'; g.globalCompositeOperation = 'source-over';
