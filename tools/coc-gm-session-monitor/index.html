@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- 限定テスト中：検索結果に出さない。キャラ名・PL名を扱うので解析タグも読み込まない -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>CoC GMセッションモニター｜TRPG WEBツール観測所</title>
+  <meta name="description" content="CoC 6版・7版の卓で、探索者のMP・SAN管理、能力値・技能の比較、choice、ダイス表、卓報告をまとめて扱うGM補助ツールです。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="stylesheet" href="./css/style.css?v=20261128-01" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <a class="portal-link" href="../../">← 観測所</a>
+      <h1>CoC GMセッションモニター <span class="version">v0.10 / 2026.11.28</span></h1>
+      <span class="badge-test">限定テスト版</span>
+    </div>
+    <div class="table-switch">
+      <label for="tableSelect" class="sr-only">卓を選ぶ</label>
+      <select id="tableSelect"></select>
+      <button type="button" class="btn ghost" id="tableMenuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="tableMenu">卓 ▾</button>
+      <div class="menu" id="tableMenu" role="menu" hidden>
+        <button type="button" role="menuitem" data-action="new-table">新しい卓</button>
+        <button type="button" role="menuitem" data-action="edit-table">卓の設定</button>
+        <button type="button" role="menuitem" data-action="dup-table">卓を複製</button>
+        <button type="button" role="menuitem" data-action="archive-table">アーカイブ / 復元</button>
+        <hr />
+        <button type="button" role="menuitem" data-action="export">バックアップを保存（JSON）</button>
+        <button type="button" role="menuitem" data-action="import">バックアップから復元</button>
+        <hr />
+        <button type="button" role="menuitem" data-action="delete-table" class="danger">この卓を削除</button>
+        <button type="button" role="menuitem" data-action="reset-all" class="danger">全データを消去</button>
+      </div>
+      <span class="save-state" id="saveState" role="status" aria-live="polite"></span>
+    </div>
+  </header>
+
+  <nav class="subnav" aria-label="パネル">
+    <button type="button" data-jump="importPanel" id="navImport">読込</button>
+    <button type="button" data-jump="cardsPanel">探索者</button>
+    <button type="button" data-jump="comparePanel">比較</button>
+    <button type="button" data-jump="checkPanel" id="navCheck">チェック</button>
+    <button type="button" data-jump="choicePanel">choice</button>
+    <button type="button" data-jump="dicePanel">ダイス表</button>
+    <button type="button" data-jump="reportPanel">卓報告</button>
+  </nav>
+
+  <div class="archived-banner" id="archivedBanner" hidden>
+    この卓はアーカイブ中です。編集するには卓メニューの「アーカイブ / 復元」で復元してください。
+  </div>
+
+  <main id="workspace">
+    <fieldset id="workspaceFields" class="plain">
+      <legend class="sr-only">卓のデータ</legend>
+
+      <section class="panel" id="importPanel">
+        <details id="importDetails">
+          <summary><span class="panel-title">キャラクター読み込み</span> <span class="muted" id="importSummary"></span></summary>
+          <div class="import-body">
+            <p class="hint">いあきゃら・キャラッシュ・Charaeno の「ココフォリア駒出力（こま形式JSON）」、またはキャラクター保管所のテキストを貼り付けます。駒JSONは続けて複数貼れます。</p>
+            <textarea id="importText" rows="6" placeholder='{"kind":"character","data":{...}}'></textarea>
+            <div class="row gap">
+              <button type="button" class="btn" id="importPreviewBtn">読み取る</button>
+              <button type="button" class="btn ghost" id="manualAddBtn">手入力で追加</button>
+              <span class="muted" id="importStatus" role="status"></span>
+            </div>
+            <div id="importPreview"></div>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel" id="cardsPanel">
+        <div class="time-bar">
+          <label for="hoursInput">時間経過</label>
+          <input type="number" id="hoursInput" min="0" step="0.5" value="1" inputmode="decimal" />
+          <span>時間</span>
+          <button type="button" class="btn" id="advanceBtn">経過させる</button>
+          <label class="check"><input type="checkbox" id="advanceBaseline" checked /> 基準SANも更新</label>
+          <span class="muted game-clock" id="gameClock"></span>
+          <span class="spacer"></span>
+          <button type="button" class="btn ghost" id="displayBtn">表示項目</button>
+          <button type="button" class="btn ghost" id="rulesBtn">ルール設定</button>
+        </div>
+        <div class="cards" id="cards"></div>
+        <details class="changelog" id="logDetails">
+          <summary>変動ログ <span class="muted" id="logCount"></span></summary>
+          <div class="row gap"><button type="button" class="btn ghost small" id="undoBtn">直前の操作を取り消す</button></div>
+          <ol class="log-list" id="logList"></ol>
+        </details>
+      </section>
+
+      <div class="columns">
+        <div class="col-main">
+          <section class="panel" id="comparePanel">
+            <details open>
+              <summary><span class="panel-title">技能・能力値の比較</span></summary>
+              <h3 class="sub-title">能力値</h3>
+              <div class="table-wrap" id="abilityWrap"></div>
+              <p class="legend muted">7版は「原値 / 6版相当（÷5）」。★は6版相当で比べた最大値。合計・平均は8能力値のみ。</p>
+
+              <h3 class="sub-title">技能</h3>
+              <div class="skill-controls">
+                <input type="search" id="skillQuery" placeholder="技能名で表示（複数はカンマ・スペース区切り　例：目星 聞き耳）" aria-label="技能名で絞り込み" />
+                <select id="skillFilter" aria-label="表示する技能">
+                  <option value="all">すべての技能</option>
+                  <option value="grown">誰かが伸ばした技能</option>
+                  <option value="high">強調ライン以上がある技能</option>
+                </select>
+                <select id="skillSort" aria-label="並び順">
+                  <option value="category">カテゴリ順</option>
+                  <option value="name">名称順</option>
+                  <option value="max">最大値順</option>
+                </select>
+                <label class="check"><input type="checkbox" id="skillFill" checked /> 初期値で補完</label>
+              </div>
+              <div class="skill-controls">
+                <label class="check"><input type="checkbox" id="skillRare" /> まれな技能・小項目の初期値まで表示する</label>
+                <label class="check"><input type="checkbox" id="skillStarFilled" checked /> 補完値も★に含める</label>
+                <label for="skillThreshold">強調</label>
+                <input type="number" id="skillThreshold" min="0" max="999" value="70" class="num-sm" />
+                <span>%以上</span>
+              </div>
+              <div class="chips-row"><span class="chips-label">カテゴリ：</span><div class="chips" id="categoryChips"></div></div>
+              <div class="chips-row"><span class="chips-label">類似技能：</span><div class="chips" id="tagChips"></div></div>
+              <div class="table-wrap" id="skillWrap"></div>
+              <p class="legend muted">
+                <span class="lg lg-star">★</span>行の最高値　<span class="lg lg-high"></span>強調ライン以上　<span class="lg-filled">灰色の数字</span>…記載がなく初期値で補完　<span>—</span>…その版に無い技能　<span>?</span>…算出できない<br />
+                技能名をクリックすると行に色を付けて固定。数値をクリックすると判定コマンド（6版 CCB / 7版 CC）をコピーします。
+              </p>
+            </details>
+          </section>
+        </div>
+
+        <div class="col-side">
+          <section class="panel" id="checkPanel">
+            <details open>
+              <summary><span class="panel-title">行動チェックリスト</span> <span class="muted" id="checkCount"></span></summary>
+              <div class="row gap wrap">
+                <input type="text" id="checkInput" placeholder="項目を追加（選択式は「質問 | A | B」）" aria-label="チェック項目" />
+                <button type="button" class="btn" id="checkAddBtn">追加</button>
+                <button type="button" class="btn ghost" id="checkHeadingBtn">見出し</button>
+              </div>
+              <details class="inner">
+                <summary>まとめて追加・操作</summary>
+                <textarea id="checkBulk" rows="4" placeholder="1行1項目。「# 見出し」「質問 | A | B」も使えます"></textarea>
+                <div class="row gap wrap">
+                  <button type="button" class="btn ghost small" id="checkBulkBtn">まとめて追加</button>
+                  <button type="button" class="btn ghost small" id="checkAllBtn">全チェック</button>
+                  <button type="button" class="btn ghost small" id="checkNoneBtn">全解除</button>
+                  <button type="button" class="btn ghost small danger" id="checkClearBtn">すべて削除</button>
+                </div>
+              </details>
+              <div class="row gap wrap">
+                <label class="check"><input type="checkbox" id="checkPerChar" /> 探索者ごとのチェック欄を表示</label>
+                <label class="check"><input type="checkbox" id="checkOpenOnly" /> 未完了のみ</label>
+              </div>
+              <div id="checkList"></div>
+            </details>
+          </section>
+
+          <section class="panel" id="choicePanel">
+            <details open>
+              <summary><span class="panel-title">choiceコマンド</span></summary>
+              <div class="chips" id="choiceChips"></div>
+              <div class="row gap wrap">
+                <label for="choiceCount">選ぶ数</label>
+                <input type="number" id="choiceCount" min="1" value="1" class="num-sm" />
+                <label class="check"><input type="checkbox" id="choiceSecret" /> シークレット</label>
+                <label for="choiceNameMode" class="sr-only">名前の形式</label>
+                <select id="choiceNameMode">
+                  <option value="name">PC名</option>
+                  <option value="short">短縮名（姓まで）</option>
+                  <option value="ho">HO名</option>
+                </select>
+              </div>
+              <input type="text" id="choiceComment" placeholder="コメント（例：誰が気づく？）" aria-label="コメント" />
+              <div class="output-row">
+                <output id="choiceOut" class="cmd"></output>
+                <button type="button" class="btn" id="choiceCopy">コピー</button>
+              </div>
+              <p class="hint" id="choiceNote"></p>
+            </details>
+          </section>
+
+          <section class="panel" id="dicePanel">
+            <details open>
+              <summary><span class="panel-title">オリジナルダイス表</span></summary>
+              <div class="chips" id="diceTabs"></div>
+              <input type="text" id="diceName" placeholder="表の名前（例：飲み物表）" aria-label="表の名前" />
+              <textarea id="diceItems" rows="5" placeholder="結果を1行に1つずつ入力&#10;水&#10;緑茶&#10;麦茶"></textarea>
+              <div class="output-row">
+                <pre id="diceOut" class="cmd"></pre>
+                <div class="stack">
+                  <button type="button" class="btn" id="diceCopy">表をコピー</button>
+                  <button type="button" class="btn ghost small" id="diceChoiceCopy">choiceでコピー</button>
+                </div>
+              </div>
+              <p class="hint">同じ結果を複数行に書くと、その分だけ出やすくなります（空行は無視）。表の書式はBCDiceのオリジナル表形式です。ココフォリアの <code>/roll-table</code> での読み込みはまだ実機で確かめていません。</p>
+              <div class="row gap wrap">
+                <button type="button" class="btn ghost small" id="diceExport">JSONを保存</button>
+                <button type="button" class="btn ghost small" id="diceImport">JSONを読み込む</button>
+                <button type="button" class="btn ghost small danger" id="diceDelete">この表を削除</button>
+              </div>
+            </details>
+          </section>
+
+          <section class="panel" id="reportPanel">
+            <details open>
+              <summary><span class="panel-title">卓報告</span> <span class="muted">登録済みのPCから作成</span></summary>
+              <div class="grid3">
+                <label>シナリオ名<input type="text" id="repScenario" placeholder="例：悪霊の家" /></label>
+                <label>KP名<input type="text" id="repKp" placeholder="KPの名前" /></label>
+                <label>版<select id="repEdition"><option value="auto">自動</option><option value="6e">6版</option><option value="7e">7版</option></select></label>
+              </div>
+              <label class="block">日付<input type="date" id="repDate" /></label>
+              <div class="output-row">
+                <textarea id="repOut" rows="6" aria-label="卓報告テキスト"></textarea>
+                <button type="button" class="btn" id="repCopy">コピー</button>
+              </div>
+              <p class="hint">HO名・PL名は各カードの設定の内容を使います。SAN・メモは出力しません。</p>
+              <button type="button" class="btn ghost" id="repSend">卓報告ジェネレーターで続きを作る</button>
+
+              <h3 class="sub-title">卓後のログ</h3>
+              <p class="hint">ココフォリアのログ（HTML / テキスト）を貼るか読み込んで、成長チェッカーやダイス解析アナライザーへ渡します。ログはこのツールには保存しません。</p>
+              <textarea id="logText" rows="4" placeholder="ログを貼り付け"></textarea>
+              <div class="row gap wrap">
+                <input type="file" id="logFile" accept=".html,.htm,.txt,text/html,text/plain" aria-label="ログファイルを読み込む" />
+                <button type="button" class="btn ghost" id="sendGrowth">成長チェッカーで開く</button>
+                <button type="button" class="btn ghost" id="sendDice">ダイス解析で開く</button>
+              </div>
+            </details>
+          </section>
+        </div>
+      </div>
+    </fieldset>
+  </main>
+
+  <footer class="app-footer muted">
+    データはこのブラウザの中だけに保存されます（サーバーには送りません）。大事な卓は「バックアップを保存」でJSONを残してください。バックアップには探索者名・PL名・HOが平文で入ります。
+  </footer>
+
+  <dialog id="dialog" aria-labelledby="dialogTitle">
+    <form method="dialog" id="dialogForm">
+      <h2 id="dialogTitle"></h2>
+      <div id="dialogBody"></div>
+      <div class="dialog-actions" id="dialogActions"></div>
+    </form>
+  </dialog>
+
+  <div class="toast-stack" id="toasts" aria-live="polite"></div>
+  <input type="file" id="hiddenFile" accept="application/json,.json" hidden />
+
+  <script src="../../shared/coc-palette/parser.js"></script>
+  <script src="../../shared/coc-palette/sources.js"></script>
+  <script src="../../shared/coc-palette/schema.js"></script>
+  <script src="./js/core.js?v=20261128-01"></script>
+  <script src="./js/store.js?v=20261128-01"></script>
+  <script src="./js/app.js?v=20261128-01"></script>
+</body>
+</html>

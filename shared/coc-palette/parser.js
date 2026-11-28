@@ -1351,7 +1351,12 @@ window.ChatPaletteParser = (() => {
     canonicalizeSkillLine,
     normalizeSkillName,
     normalizeSkillNameForEdition,
-    normalizeCommand
+    normalizeCommand,
+    // 参照用（CoC GMセッションモニターの技能比較で使用）。読み取り専用として扱うこと。
+    categorize,
+    initialValueCandidates,
+    INITIAL_6E,
+    INITIAL_7E
   };
 })();
 
