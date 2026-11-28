@@ -198,6 +198,7 @@
   }
 
   function undoLast() {
+    if (isArchived()) { toast("アーカイブ中の卓は変更できません。", "warn"); return; }
     var t = T();
     for (var i = t.events.length - 1; i >= 0; i--) {
       var ev = t.events[i];
@@ -533,6 +534,10 @@
   function commitImport() {
     if (isArchived()) return;
     var t = T();
+    // 念のため、更新対象が今の卓の参加者かを確かめる
+    pendingImports.forEach(function (item) {
+      if (item.existing && t.participants.indexOf(item.existing) < 0) { item.existing = null; item.mode = "add"; }
+    });
     var added = 0, updated = 0;
     pendingImports.forEach(function (item) {
       if (item.error || !item.include) return;
@@ -1254,7 +1259,13 @@
     if (focusable) focusable.focus({ preventScroll: true });
   }
 
+  var renderedTableId = null;
   function renderAll() {
+    // 卓を切り替えたら、前の卓で作った取込プレビュー（既存参加者への参照を含む）は捨てる
+    if (renderedTableId !== state.currentTableId) {
+      if (renderedTableId !== null && pendingImports.length) { pendingImports = []; renderImportPreview(); }
+      renderedTableId = state.currentTableId;
+    }
     renderTableSelect();
     renderCards();
     renderLog();
