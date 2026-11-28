@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <script async src="../../assets/js/analytics.js"></script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- 限定テスト中：検索結果に出さない。一般公開のときに外す -->
+  <meta name="robots" content="noindex" />
+  <title>カットイン作成スタジオ｜TRPG WEBツール観測所</title>
+  <meta name="description" content="立ち絵を入れるだけで、ココフォリアのカットインで使える動く画像（APNG / WebP）を作れるツールです。" />
+  <link rel="icon" href="../../assets/img/kuma_icon.png?v=20260910" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Dela+Gothic+One&family=M+PLUS+1:wght@900&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@900&family=Zen+Maru+Gothic:wght@900&family=Zen+Old+Mincho:wght@900&display=swap" />
+  <link rel="stylesheet" href="./css/cutin-studio.css?v=20261128-01" />
+</head>
+<body>
+  <div class="studio">
+    <header class="studio-header">
+      <div class="title-block">
+        <p class="eyebrow"><a class="portal-link" id="portalLink" href="../../"><span class="portal-long">←TRPG WEBツール観測所</span><span class="portal-short">← 観測所</span></a></p>
+        <h1><span>カットイン作成スタジオ</span> <span class="version-engrave">v0.10 / 2026.11.28</span></h1>
+      </div>
+      <p class="lead">立ち絵を入れて型を選ぶだけで、ココフォリアのカットインで使える動く画像（APNG / WebP）を作れます。</p>
+      <div class="header-actions">
+        <button class="ghost-button" type="button" id="helpBtn" aria-expanded="false" aria-controls="helpDrawer">使い方</button>
+        <button class="ghost-button" type="button" id="rulesBtn" aria-expanded="false" aria-controls="rulesDrawer">利用ルール</button>
+        <button class="ghost-button" type="button" id="shortcutBtn" aria-expanded="false" aria-controls="shortcutDrawer" aria-label="ショートカット" title="ショートカット"><span aria-hidden="true">?</span></button>
+        <button class="ghost-button theme-button" type="button" id="themeBtn" aria-label="テーマ"><span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb"></span></span></button>
+      </div>
+    </header>
+
+    <section class="drawer" id="helpDrawer" hidden>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
+      <h2>使い方</h2>
+      <ol class="guide-list">
+        <li>1. 右下の「立ち絵」で画像（PNG・WebP・JPG）を選びます。白い背景の画像は、背景を自動で消して透過にします。</li>
+        <li>2. 顔の位置は自動で合わせます。ずれているときは「顔の位置」の小さな画面で丸をドラッグして直します。</li>
+        <li>3. 左の「型」からカットインの型を選び、「調整」で文字・色・書体・速さを変えます。変えた内容は型ごとにこのブラウザに保存されます。</li>
+        <li>4. プレビューの立ち絵はドラッグで動かせます。マウスホイール（スマホは2本指）で拡大・縮小します。</li>
+        <li>5. 「書き出し」で APNG（または WebP）を書き出し、ココフォリアのカットインに登録します。容量は3MB前後を目安にしてください（5MBを超えるとダウンロードできません）。</li>
+      </ol>
+      <div class="guide-notes">
+        <p>※ 立ち絵はこのブラウザの中（IndexedDB）にだけ保存され、サーバーには送信されません。</p>
+        <p>※ ココフォリアのカットインでは「1回再生」の画像が流れないことがあるため、書き出しの初期値は「ずっとループ」です。カットインに効果音をつけると、音が鳴り終わったところでカットインが消えます。</p>
+        <p>※ 限定テスト版です。型や機能は順次追加していきます。</p>
+      </div>
+    </section>
+    <section class="drawer" id="rulesDrawer" hidden>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
+      <h2>利用ルール</h2>
+      <div class="rules-body" id="rulesBody">
+        <p>本メーカーで生成したAPNG画像は、TRPGセッション・配信・動画・ゲームなどの素材として使用できます。使用にあたっての申請・報告は不要です。</p>
+        <h3>許可</h3>
+        <ul>
+          <li>商用・非商用、個人・法人を問わず、TRPGセッション・配信・動画・ゲーム・Webサイト等の制作物での使用</li>
+          <li>生成したAPNG素材の加工（速度、色彩、大きさ、合成等）</li>
+          <li>TRPGシナリオ本文、ココフォリアルームデータ、配布ZIP等への収録</li>
+        </ul>
+        <h3>禁止</h3>
+        <ul>
+          <li>加工・改変の有無を問わず、生成物そのものを素材として二次配布・販売・転売・譲渡する行為</li>
+          <li>生成物を素材として不特定多数へ公開する行為（素材集・素材パック・テンプレート集への収録を含む）</li>
+          <li>生成物の自作発言、および本ツールそのもの・主要部分の無断複製、再配布、転載</li>
+        </ul>
+        <p class="hint">※作品の一部としての同梱、およびセッションに必要な範囲での参加者間の共有は可能です。APNG素材そのものの提供を主目的とした配布はできません。</p>
+        <h3>クレジット</h3>
+        <p>公開・頒布・収益化を伴うコンテンツで使用する場合は、以下のクレジットを記載してください。</p>
+        <p class="credit-line"><code id="creditText">カットイン作成スタジオ / くま。TRPG WEBツール観測所</code> <button type="button" class="link-button" data-copy-credit>クレジットをコピー</button></p>
+        <p class="hint">作品説明、動画・配信の概要欄、Readme、配布ページ等、閲覧者が確認できる場所への記載で構いません。個人的なセッションや非公開での使用では不要です。</p>
+        <p class="hint">※読み込む立ち絵の権利は、それぞれの権利者の規約に従ってください。</p>
+      </div>
+    </section>
+    <section class="drawer" id="shortcutDrawer" hidden>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="閉じる">×</button>
+      <h2>ショートカット一覧</h2>
+      <div class="shortcut-grid">
+        <kbd>Esc</kbd><span>使い方・利用ルール・ショートカットを閉じる</span>
+        <kbd>Cmd/Ctrl + Shift + P</kbd><span>再生 / 一時停止</span>
+        <kbd>Cmd/Ctrl + Shift + E</kbd><span>APNGを書き出す</span>
+        <kbd>Cmd/Ctrl + Shift + K</kbd><span>WebPを書き出す</span>
+        <kbd>Cmd/Ctrl + Shift + T</kbd><span>テーマを切り替える</span>
+      </div>
+    </section>
+
+    <nav class="mobile-tabs" id="mobileTabs" role="tablist">
+      <button type="button" role="tab" data-mobile-tab="library" aria-selected="true">型</button>
+      <button type="button" role="tab" data-mobile-tab="controls" aria-selected="false">調整</button>
+      <button type="button" role="tab" data-mobile-tab="stage" aria-selected="false">立ち絵</button>
+      <button type="button" role="tab" data-mobile-tab="export" aria-selected="false">書き出し</button>
+    </nav>
+
+    <main class="studio-grid" id="studioGrid" data-mobile="library">
+      <!-- 左：型と調整 -->
+      <section class="panel side-panel">
+        <div class="side-scroll">
+          <div class="side-section library-section" aria-labelledby="libraryHeading">
+            <div class="panel-head">
+              <h2 class="panel-title" id="libraryHeading">型</h2>
+              <span class="panel-count">マウスを乗せると動きます</span>
+            </div>
+            <div class="asset-grid tpl-grid" id="tplGrid"></div>
+          </div>
+
+          <div class="side-section controls-section" aria-labelledby="controlsHeading">
+            <div class="panel-head">
+              <h2 class="panel-title" id="controlsHeading">調整</h2>
+              <button type="button" class="link-button" id="resetTplBtn">↺ この型を初期値に戻す</button>
+            </div>
+            <div class="control-block" id="textControls"></div>
+            <div class="control-block" id="styleControls"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右：プレビューと書き出し -->
+      <section class="panel preview-panel" aria-labelledby="previewHeading">
+        <div class="panel-head preview-head">
+          <h2 class="panel-title" id="previewHeading">プレビュー <span class="current-asset" id="currentTplName"></span></h2>
+          <div class="preview-bg" role="group" aria-labelledby="bgLabel">
+            <span class="preview-bg-label" id="bgLabel">背景</span>
+            <div class="chip-group" id="bgChoices">
+              <button type="button" class="chip" data-bg="room">部屋（確認用）</button>
+              <button type="button" class="chip" data-bg="dark">暗いグレー</button>
+              <button type="button" class="chip" data-bg="checker">透明（市松）</button>
+            </div>
+          </div>
+        </div>
+        <div class="stage-frame">
+          <div class="stage" id="stage">
+            <canvas class="stage-layer stage-fx" id="stageCanvas" width="960" height="540"></canvas>
+            <div class="stage-drop-hint">ここに立ち絵をドロップ</div>
+          </div>
+        </div>
+        <div class="transport">
+          <button type="button" class="icon-button play-button" id="playBtn" aria-label="一時停止">❚❚</button>
+          <input type="range" id="scrubber" min="0" max="1000" value="0" aria-label="位置" />
+          <span class="time-readout" id="timeReadout">0.0 / 0.0</span>
+          <span class="hint stage-hint">立ち絵はドラッグで移動、ホイールで拡大・縮小</span>
+        </div>
+
+        <div class="export-card" id="exportCard">
+          <div class="export-head">
+            <h2 class="panel-title">書き出し</h2>
+            <div class="estimate" id="estimate">
+              <span class="estimate-label">容量の目安</span>
+              <strong id="estimateValue">—</strong>
+              <div class="budget-bar"><span id="budgetFill"></span><i style="left:60%"></i></div>
+            </div>
+          </div>
+          <div id="outputControls" class="export-grid"></div>
+          <div class="estimate-row"><span class="budget-note" id="budgetNote"></span><button type="button" class="link-button" id="lightenBtn" hidden>軽くする</button></div>
+          <div class="export-primary">
+            <button type="button" class="accent-button export-main" id="exportApngBtn">APNGを書き出す</button>
+            <button type="button" class="accent-button export-main webp-button" id="exportWebpBtn">WebPを書き出す</button>
+          </div>
+          <div class="progress" id="progress" hidden>
+            <div class="progress-bar"><span id="progressFill"></span></div>
+            <div class="progress-row"><span id="progressText"></span><button type="button" class="link-button" id="cancelBtn">中止</button></div>
+          </div>
+          <div class="result" id="result" hidden>
+            <img class="result-thumb" id="resultImg" alt="書き出した画像" />
+            <div class="result-body">
+              <p class="result-meta" id="resultMeta"></p>
+              <p class="budget-note" id="resultBudget"></p>
+              <a class="accent-button download-button" id="downloadLink">ダウンロード</a>
+              <p class="hint">ココフォリアでは、ルームの「カットイン」に画像を登録して使います。「ずっとループ」のまま登録してください。</p>
+              <p class="hint">ココフォリア v1.33.5 以降で APNG がうまく動かないときは、WebP 版をお試しください。</p>
+              <p class="hint">公開・頒布・収益化するときは、クレジットの記載をお願いします。 <button type="button" class="link-button" data-copy-credit>クレジットをコピー</button></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-tools" id="stageTools">
+          <div class="tool-group">
+            <h3 class="block-title">立ち絵</h3>
+            <div class="char-row">
+              <button type="button" class="ghost-button" id="portraitBtn">＋ 立ち絵を選ぶ</button>
+              <input type="file" id="portraitFile" accept="image/png,image/webp,image/jpeg" hidden />
+              <span class="hint" id="portraitName">まだ選んでいません（仮の立ち絵で表示中）</span>
+              <button type="button" class="link-button danger" id="portraitRemove" hidden>削除</button>
+            </div>
+            <div class="portrait-edit" id="portraitEdit">
+              <div class="face-box">
+                <canvas id="faceCanvas" width="220" height="220" aria-label="顔の位置"></canvas>
+                <p class="hint">顔の位置：丸をドラッグして顔の真ん中に合わせます。</p>
+              </div>
+              <div class="portrait-fields">
+                <label class="field-inline"><span>顔の大きさ</span><input type="range" id="faceSize" min="0.3" max="3" step="0.01" /></label>
+                <label class="field-inline"><span>拡大・縮小</span><input type="range" id="portraitZoom" min="0.4" max="2.5" step="0.01" /></label>
+                <label class="toggle-inline"><input type="checkbox" class="switch" id="portraitFlip" /><span>左右反転</span></label>
+                <label class="toggle-inline"><input type="checkbox" class="switch" id="removeWhite" /><span>白い背景を消す</span></label>
+                <div class="row-buttons">
+                  <button type="button" class="link-button" id="faceAuto">顔の位置を自動で合わせ直す</button>
+                  <button type="button" class="link-button" id="placeReset">位置と大きさを戻す</button>
+                </div>
+              </div>
+            </div>
+            <p class="hint">画像はこのブラウザの中だけで使い、どこにも送信しません。読み込む立ち絵の権利は、それぞれの権利者の規約に従ってください。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="studio-footer">
+      <p>このツールは開発者 <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> が個人で制作した非公式のTRPG支援ツールです。画像はすべてブラウザの中で処理され、サーバーには送信されません。</p>
+      <p>不具合の報告や要望は、X の <a href="https://x.com/KumachanSteps" target="_blank" rel="noopener noreferrer">@KumachanSteps</a> までDMでお送りください。すべての報告・要望に返信・対応できるわけではありません。</p>
+    </footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- APNG / WebP エンコーダー（文字画像APNGメーカー・演出APNGメーカーと同じもの） -->
+  <script src="./js/apng-encoder.js?v=20261128-01"></script>
+  <script src="./js/webp-encoder.js?v=20261128-01"></script>
+  <script type="module" src="./js/main.js?v=20261128-01"></script>
+</body>
+</html>
