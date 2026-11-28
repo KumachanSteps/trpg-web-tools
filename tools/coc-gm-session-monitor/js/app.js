@@ -338,10 +338,30 @@
         return el("button", { type: "button", class: "chip", text: displayName(p) + "（表示する）", onclick: function () { p.visible = true; touch(); renderAll(); } });
       }))));
     }
+    fitNames();
     var pcCount = t.participants.length;
     $("navImport").textContent = "読込 " + pcCount + "/" + (t.slots || pcCount);
     $("importSummary").textContent = pcCount + "人登録 / 予定" + (t.slots || "—") + "人";
   }
+
+  // カードの名前を1行に収める：18px から 12px まで縮め、それでも入らなければ省略記号（全文は title）
+  var NAME_MAX = 18, NAME_MIN = 12;
+  function fitNames() {
+    document.querySelectorAll("#cards .name").forEach(function (node) {
+      var size = NAME_MAX;
+      node.style.fontSize = size + "px";
+      while (size > NAME_MIN && node.scrollWidth > node.clientWidth + 1) {
+        size -= 0.5;
+        node.style.fontSize = size + "px";
+      }
+    });
+  }
+  var fitTimer = null;
+  window.addEventListener("resize", function () {
+    if (fitTimer) cancelAnimationFrame(fitTimer);
+    fitTimer = requestAnimationFrame(fitNames);
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitNames);
 
   function statBox(p, field) {
     var max = maxOf(p, field);
@@ -386,11 +406,9 @@
         el("span", { class: "swatch", "aria-hidden": "true" }),
         el("div", { class: "card-name" }, [
           c.ruby ? el("div", { class: "ruby", text: c.ruby }) : null,
-          el("div", { class: "name", text: c.name || "名称未設定" })
+          el("div", { class: "name", title: c.name || "", text: c.name || "名称未設定" })
         ]),
         el("div", { class: "card-tools" }, [
-          el("button", { type: "button", class: "icon-btn", title: "前へ", "aria-label": "前へ移動", disabled: idx === 0, text: "←", onclick: function () { move(p, -1); } }),
-          el("button", { type: "button", class: "icon-btn", title: "後ろへ", "aria-label": "後ろへ移動", disabled: idx === count - 1, text: "→", onclick: function () { move(p, 1); } }),
           c.sourceUrl && /^https:\/\//.test(c.sourceUrl) ? el("a", { class: "icon-btn", href: c.sourceUrl, target: "_blank", rel: "noopener noreferrer", title: "キャラシを開く", "aria-label": "キャラシを開く", text: "↗" }) : null,
           el("button", { type: "button", class: "icon-btn", title: "設定", "aria-label": displayName(p) + "の設定", text: "⚙", onclick: function () { openParticipantSettings(p); } })
         ])
@@ -400,7 +418,11 @@
         p.role !== "PC" ? el("span", { class: "chip", text: ROLE_LABELS[p.role] || p.role }) : null,
         p.ho ? el("span", { class: "chip", text: p.ho }) : null,
         el("span", { class: "muted", text: "PL" }),
-        el("span", { class: p.pl ? "" : "muted", text: p.pl || "未入力" })
+        el("span", { class: p.pl ? "" : "muted", text: p.pl || "未入力" }),
+        count > 1 ? el("span", { class: "order-tools" }, [
+          el("button", { type: "button", class: "icon-btn", title: "前へ", "aria-label": "前へ移動", disabled: idx === 0, text: "←", onclick: function () { move(p, -1); } }),
+          el("button", { type: "button", class: "icon-btn", title: "後ろへ", "aria-label": "後ろへ移動", disabled: idx === count - 1, text: "→", onclick: function () { move(p, 1); } })
+        ]) : null
       ]),
       el("div", { class: "stats" }, stats.map(function (f) { return statBox(p, f); })),
       el("div", { class: "card-info" }, info),
