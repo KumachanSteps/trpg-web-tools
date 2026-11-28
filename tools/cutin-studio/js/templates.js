@@ -99,8 +99,13 @@ function slash(g, t, o) {
   const pin = outExpo(seg(t, 0.1, 0.55));
   portraitWithFlash(g, -170 + (1 - pin) * 300 - Math.max(0, t - 0.3) * 22, -10, 150, 0.14, t, { alpha: clamp(pin * 3) });
   g.restore();
-  g.fillStyle = acc; g.fillRect(x0, -bh / 2 - 7, x1 - x0, 7);
-  g.fillStyle = '#fff'; g.fillRect(x0, bh / 2, x1 - x0, 4);
+  // ふち線も退場に合わせて細く・薄くし、最後のコマには残さない
+  if (out < 1) {
+    g.globalAlpha = 1 - out;
+    g.fillStyle = acc; g.fillRect(x0, -bh / 2 - 7 * (1 - out), x1 - x0, 7 * (1 - out));
+    g.fillStyle = '#fff'; g.fillRect(x0, bh / 2, x1 - x0, 4 * (1 - out));
+    g.globalAlpha = 1;
+  }
   g.restore();
   const k = seg(t, 0.28, 0.42);
   if (k > 0 && out < 1) {
@@ -168,7 +173,11 @@ function eyes(g, t, o) {
   g.globalAlpha = 0.12; g.fillStyle = '#000'; for (let y = cy - 80; y < cy + 80; y += 3) g.fillRect(0, y, W, 1);
   g.restore();
   // ふち線
-  g.fillStyle = acc; g.fillRect(0, cy - bh / 2 - 3, W, 3); g.fillRect(0, cy + bh / 2, W, 3);
+  if (out < 1) {
+    g.save(); g.globalAlpha = 1 - out; g.fillStyle = acc;
+    g.fillRect(0, cy - bh / 2 - 3, W, 3); g.fillRect(0, cy + bh / 2, W, 3);
+    g.restore();
+  }
   // 台詞と名前
   const nk = outCubic(seg(t, 0.4, 0.8));
   if (nk > 0 && out < 1) {
@@ -346,7 +355,7 @@ function tate(g, t, o) {
   strip(660, 170, 1, 0.08, w => {
     g.fillStyle = acc; g.fillRect(-w / 2, -420, w, 840);
     g.fillStyle = 'rgba(0,0,0,.18)'; for (let y = -420; y < 420; y += 14) g.fillRect(-w / 2, y + ((t * 300) % 14), w, 5);
-    const n = Math.max(1, [...o.main].length), size = Math.min(128, Math.floor(720 / n) - 6), gap = 6;
+    const n = Math.max(1, [...o.main].length), size = Math.min(128, Math.floor(500 / n) - 6), gap = 6; // 画面の高さ 540 に収める
     g.font = `${size}px ${o.fontMain}`; g.textAlign = 'center'; g.textBaseline = 'middle';
     const top = -((n - 1) * (size + gap)) / 2;
     vtext(g, o.main, 0, top, size, gap, (ch, i, x, y, rot) => {
